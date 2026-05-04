@@ -15,6 +15,7 @@ export default function AudioSetupDocsPage() {
         { id: 'desktop-app', label: 'Desktop app — easiest' },
         { id: 'browser-tab', label: 'Browser tab share' },
         { id: 'virtual-loopback', label: 'Virtual loopback (BlackHole / VoiceMeeter)' },
+        { id: 'room-mic', label: 'Room mic (Bluetooth speaker)' },
         { id: 'mic-only', label: 'Mic-only fallback' },
         { id: 'devices', label: 'Microphone & speakers' },
         { id: 'troubleshooting', label: 'Troubleshooting' },
@@ -30,7 +31,10 @@ export default function AudioSetupDocsPage() {
           <li><strong>The interviewer's voice</strong> — captured separately so the AI assistant can answer the questions you're being asked.</li>
         </ul>
         <p className="text-[15px] leading-relaxed mt-3" style={{ color: 'var(--text-secondary)' }}>
-          The first time you open the interview screen, the audio setup wizard runs automatically. It picks the best capture path for your environment, lets you confirm with a live level meter, and saves your choice for next time.
+          The first time you open the interview screen, the audio setup wizard runs automatically.
+          It picks the best capture path for your environment, lets you confirm with a live level
+          meter, and saves your choice to your account &mdash; so the same setup follows you across
+          devices.
         </p>
         <DocsCallout variant="tip">
           Use headphones during the interview. With speakers, the interviewer's voice leaks into your mic and Camora's echo cancellation strips it before we can analyze it.
@@ -68,6 +72,11 @@ export default function AudioSetupDocsPage() {
                 <td className="py-2">Install BlackHole / VoiceMeeter / Loopback</td>
               </tr>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                <td className="py-2 pr-4">In-person interview / phone-on-speaker / JBL / Bluetooth speaker</td>
+                <td className="py-2 pr-4">Room mic</td>
+                <td className="py-2">Voice enrollment required</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid var(--border)' }}>
                 <td className="py-2 pr-4">Safari / Firefox + anything</td>
                 <td className="py-2 pr-4">Mic-only fallback</td>
                 <td className="py-2">None — quality is lower</td>
@@ -85,8 +94,10 @@ export default function AudioSetupDocsPage() {
         <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li>Install the desktop app from <a href="/docs/desktop" className="font-bold" style={{ color: 'var(--accent)' }}>/docs/desktop</a>.</li>
           <li>Open Camora and start a live interview.</li>
-          <li>The wizard picks <strong>Desktop loopback</strong> automatically. Click <strong>Connect system audio</strong>.</li>
-          <li>On macOS 13+, grant Screen Recording permission once when prompted (it's required for the system-audio API even though we don't record video).</li>
+          <li>The wizard picks <strong>Desktop loopback</strong> automatically. Click <strong>Connect</strong>.</li>
+          <li>On macOS 13+, the wizard surfaces a Screen Recording permission card with one-click
+            <strong> Open System Settings</strong> and <strong>Restart Camora</strong> buttons. Grant
+            permission, then restart &mdash; required even though we don&apos;t record video.</li>
         </ol>
       </section>
 
@@ -98,9 +109,9 @@ export default function AudioSetupDocsPage() {
         <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li>Open the interview platform <strong>in a Chrome tab</strong> (Zoom Web, Google Meet, Teams Web). Join the meeting.</li>
           <li>Open Camora in a second tab. The setup wizard appears.</li>
-          <li>Click <strong>Share interviewer tab</strong>.</li>
-          <li>In the picker: pick the <strong>Chrome Tab</strong> tab at the top, select the meeting tab, and <strong>check &quot;Share tab audio&quot;</strong> at the bottom-left. The checkbox is the most common point of failure.</li>
-          <li>The level meter rises when the interviewer speaks. Hit <strong>Save and continue</strong>.</li>
+          <li>In the wizard, pick the <strong>Share a browser tab</strong> method card and click <strong>Connect</strong>.</li>
+          <li>In the browser picker: pick the <strong>Chrome Tab</strong> tab at the top, select the meeting tab, and <strong>check &quot;Share tab audio&quot;</strong> at the bottom-left. The checkbox is the most common point of failure.</li>
+          <li>The level meter rises when the interviewer speaks. Close the wizard &mdash; Camora has saved the choice.</li>
         </ol>
         <DocsCallout variant="warning">
           If you pick &quot;Window&quot; or &quot;Entire screen&quot; instead of &quot;Chrome Tab&quot;, the audio checkbox is not offered and capture fails silently. Always pick &quot;Chrome Tab&quot;.
@@ -142,6 +153,32 @@ export default function AudioSetupDocsPage() {
         </p>
       </section>
 
+      <section id="room-mic" className="mb-10 scroll-mt-24">
+        <h2 className="text-2xl font-bold mb-3">Room mic (Bluetooth speaker / phone-on-speaker)</h2>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          Use this when there&apos;s no system audio to capture &mdash; in-person interviews, the
+          interviewer is on a phone played through a JBL / Bluetooth speaker, or you&apos;re
+          listening on a laptop speaker rather than headphones. Camora captures the room with your
+          mic and uses voice filtering to drop your own voice from the stream, so Sona only sees
+          the interviewer.
+        </p>
+        <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
+          <li>In the setup wizard, pick the <strong>Room mic / any speaker</strong> method card.</li>
+          <li>The wizard will require <strong>voice enrollment</strong> first if you haven&apos;t
+            already done it &mdash; without it, Sona would treat your voice as the interviewer.
+            Read the prompt aloud once (~5 seconds). See
+            <a href="/docs/voice-filtering" className="font-bold ml-1" style={{ color: 'var(--accent)' }}>Voice filtering</a> for
+            details.</li>
+          <li>Click <strong>Connect</strong>. The wizard auto-enables the Filter and you&apos;re
+            done.</li>
+        </ol>
+        <DocsCallout variant="warning">
+          Room mic only works reliably when the interviewer&apos;s voice is clearly louder than
+          ambient noise. Quiet rooms, decent speakers, single interviewer &mdash; works well.
+          Cafe / open-office / panel-with-quiet-panelists &mdash; quality drops fast.
+        </DocsCallout>
+      </section>
+
       <section id="mic-only" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Mic-only fallback</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
@@ -172,7 +209,8 @@ export default function AudioSetupDocsPage() {
           <li>The interviewer might just be silent — wait for them to talk.</li>
           <li>For tab share: did you pick <strong>Chrome Tab</strong> (not &quot;Window&quot; or &quot;Entire Screen&quot;)? Did you check <strong>Share tab audio</strong>?</li>
           <li>For virtual loopback: is your meeting client's <em>output</em> set to the virtual device, not its input?</li>
-          <li>Click <strong>Stop and reconnect</strong> in the wizard and try again.</li>
+          <li>The wizard surfaces method-mismatch warnings &mdash; if you tried Desktop loopback in a regular browser, it&apos;ll tell you. Switch to a method that fits your environment.</li>
+          <li>Click <strong>Disconnect</strong> in the wizard and try a different method card.</li>
         </ul>
 
         <h3 className="text-lg font-bold mt-4 mb-2">&quot;Browser unsupported&quot; banner</h3>
@@ -195,8 +233,8 @@ export default function AudioSetupDocsPage() {
         <h3 className="text-lg font-bold mt-4 mb-2">Audio worked yesterday, now nothing</h3>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li>If you switched headphones / mics, the OS may have shifted to a different default. Open the wizard and re-pick.</li>
-          <li>If you're on macOS, sometimes the Screen Recording permission needs to be re-granted after OS updates: <strong>System Settings → Privacy &amp; Security → Screen Recording</strong>.</li>
-          <li>Use the <strong>Reset to defaults</strong> link at the bottom of the wizard if all else fails.</li>
+          <li>If you're on macOS, sometimes the Screen Recording permission needs to be re-granted after OS updates: <strong>System Settings → Privacy &amp; Security → Screen Recording</strong>. The wizard&apos;s <strong>Open System Settings</strong> button takes you straight there.</li>
+          <li>If everything is wrong: pick a different method card in the wizard. Camora picks the new one and forgets the previous selection.</li>
         </ul>
       </section>
     </DocsPageLayout>
