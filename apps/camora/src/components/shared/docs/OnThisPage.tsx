@@ -58,27 +58,22 @@ export default function OnThisPage({
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-3">
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-[var(--text-muted)]"
+      {/* Glassy pill capsule label for the rail. */}
+      <div className="relative mb-3 pl-3">
+        <span
           aria-hidden="true"
+          className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r-full"
+          style={{ background: 'var(--cam-primary)' }}
+        />
+        <span
+          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.16em]"
+          style={{
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--cam-gold-leaf)',
+            color: 'var(--cam-gold-leaf-text)',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.45)',
+          }}
         >
-          <line x1="8" y1="6" x2="21" y2="6" />
-          <line x1="8" y1="12" x2="21" y2="12" />
-          <line x1="8" y1="18" x2="21" y2="18" />
-          <line x1="3" y1="6" x2="3.01" y2="6" />
-          <line x1="3" y1="12" x2="3.01" y2="12" />
-          <line x1="3" y1="18" x2="3.01" y2="18" />
-        </svg>
-        <span className="text-[12px] font-semibold uppercase tracking-wider text-[var(--text-primary)]">
           {title}
         </span>
       </div>

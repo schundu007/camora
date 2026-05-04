@@ -109,10 +109,34 @@ export default function DocsSidebar() {
       className="text-[13.5px]"
       style={{ color: 'var(--text-primary)' }}
     >
+      {/* Sidebar header — glassy pill capsule labeling the section. */}
+      <div className="relative mb-5 pl-3">
+        <span
+          aria-hidden="true"
+          className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r-full"
+          style={{ background: 'var(--cam-primary)' }}
+        />
+        <span
+          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.16em]"
+          style={{
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--cam-gold-leaf)',
+            color: 'var(--cam-gold-leaf-text)',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.45)',
+          }}
+        >
+          Documentation
+        </span>
+      </div>
+
       {isOwner && (
         <div
-          className="mb-5 inline-flex rounded-lg p-0.5"
-          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+          className="mb-5 inline-flex rounded-full p-0.5"
+          style={{
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--cam-gold-leaf)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4)',
+          }}
         >
           <ModeButton active={effectiveMode === 'user'} onClick={() => setMode('user')} label="User" />
           <ModeButton active={effectiveMode === 'admin'} onClick={() => setMode('admin')} label="Admin" />
@@ -137,10 +161,11 @@ function ModeButton({
     <button
       type="button"
       onClick={onClick}
-      className="px-3 py-1 rounded-md text-[12px] font-bold uppercase tracking-wide transition-colors"
+      className="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.1em] transition-colors"
       style={{
-        background: active ? 'var(--accent)' : 'transparent',
+        background: active ? 'var(--cam-primary)' : 'transparent',
         color: active ? '#fff' : 'var(--text-secondary)',
+        boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.18)' : 'none',
       }}
     >
       {label}
