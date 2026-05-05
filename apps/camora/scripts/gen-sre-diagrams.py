@@ -346,6 +346,126 @@ def diag_oncall_rotation():
     print('Generated: h1-oncall-rotation')
 
 
+# ── A2.1: SLI formula breakdown ─────────────────────────────────────
+def diag_sli_formula():
+    g = base_graph('a2_1_sli_formula', 'SLI formula — good events / valid events (with concrete examples)')
+    n(g, 'all',   'All events\n(every request, read,\nwrite, etc.)', 'gray')
+    n(g, 'valid', 'Valid events\n= events your service\nis responsible for\n\n(exclude 4xx client errors,\nrequests for missing endpoints)', 'navy')
+    n(g, 'good',  'Good events\n= valid AND succeeded\nper SLI definition\n\n(2xx + 3xx for availability,\nlatency < 500ms for latency)', 'green')
+    n(g, 'sli',   'SLI = good / valid\n\n99,890 / 100,000 = 99.89%', 'gold')
+    n(g, 'ex',    'Worked example:\n100,000 requests/30d\n95 client errors (excluded)\n15 server errors (counted)\n\n→ valid: 99,985\n→ good: 99,970\n→ SLI: 99.985%', 'purple')
+    e(g, 'all',   'valid', 'filter')
+    e(g, 'valid', 'good',  'count successes')
+    e(g, 'good',  'sli',   'divide')
+    e(g, 'ex',    'sli',   'apply', '#94a3b8', 'dotted')
+    g.render(os.path.join(OUT, 'a2_1-sli-formula'), cleanup=True)
+    print('Generated: a2_1-sli-formula')
+
+
+# ── A2.2: SLO tier decision matrix ──────────────────────────────────
+def diag_slo_tiers():
+    g = base_graph('a2_2_slo_tiers', 'SLO tier decision matrix — pick the target that matches business cost')
+    n(g, 't1', '99% SLO\n3.65 days/year down\nCost: $\nUse: internal tools,\nbatch jobs, dev', 'gray')
+    n(g, 't2', '99.9% SLO\n8h 45min/year\nCost: $$\nUse: most B2B SaaS,\nstandard customer-facing', 'green')
+    n(g, 't3', '99.95% SLO\n4h 22min/year\nCost: $$$\nUse: revenue-critical\nflows (checkout, billing)', 'gold')
+    n(g, 't4', '99.99% SLO\n52 min/year\nCost: $$$$\nUse: enterprise SLAs,\npayment processing,\nfinancial settlement', 'red')
+    n(g, 't5', '99.999% SLO\n5 min/year\nCost: $$$$$\nUse: telecom, life-safety,\ncritical infrastructure\n(rare; reserved)', 'purple')
+    e(g, 't1', 't2', 'each step ~10x cost')
+    e(g, 't2', 't3')
+    e(g, 't3', 't4')
+    e(g, 't4', 't5')
+    g.render(os.path.join(OUT, 'a2_2-slo-tiers'), cleanup=True)
+    print('Generated: a2_2-slo-tiers')
+
+
+# ── A2.3: SLI/SLO/SLA worked example for an HTTP service ───────────
+def diag_sli_slo_sla_example():
+    g = base_graph('a2_3_sli_slo_sla_example', 'Worked example — HTTP checkout service: SLI -> SLO -> SLA')
+    n(g, 'svc',  'HTTP checkout service\n10,000 RPS peak\n100M requests / 30 days', 'gray')
+    n(g, 'sli',  'SLI definition\n"% of HTTP requests\nthat return 2xx in < 500ms"\n\n(success-and-fast)', 'navy')
+    n(g, 'slo',  'SLO target\n99.95% over 30 days\n\n(internal target;\nteam-owned)', 'green')
+    n(g, 'eb',   'Error budget\n= 1 - 99.95%\n= 0.05% of 30 days\n= 21.6 minutes/month\nor ~50,000 requests', 'gold')
+    n(g, 'sla',  'SLA contract\n99.9% availability\nor refund 10% credit\n\n(external; legal-owned;\nlooser than SLO by 1x9)', 'purple')
+    n(g, 'cust', 'Customer\n(reads SLA;\nfiles credit if violated)', 'gray')
+    e(g, 'svc',  'sli',  'measure')
+    e(g, 'sli',  'slo',  'compare to')
+    e(g, 'slo',  'eb',   'derives')
+    e(g, 'slo',  'sla',  'tighter than')
+    e(g, 'sla',  'cust', 'binds')
+    g.render(os.path.join(OUT, 'a2_3-sli-slo-sla-example'), cleanup=True)
+    print('Generated: a2_3-sli-slo-sla-example')
+
+
+# ── A4.1: Error budget calculation worked example ──────────────────
+def diag_error_budget_calc():
+    g = base_graph('a4_1_error_budget_calc', 'Error budget — calculation in minutes AND requests (worked example)')
+    n(g, 'inp',  'Inputs:\nSLO = 99.9%\nWindow = 30 days\nTraffic = 10,000 RPS', 'gray')
+    n(g, 'fmla', 'Formula:\nbudget % = 1 - SLO\n\nbudget time = budget % × window\nbudget requests = budget % × total_requests', 'navy')
+    n(g, 'mins', 'Time budget:\n0.1% × 30d × 24h × 60min\n= 0.1% × 43,200 min\n= 43.2 min/month\n= 1.44 min/day\n= 8.6 sec/hour', 'green')
+    n(g, 'reqs', 'Request budget:\n0.1% × 10,000 RPS × 86,400 s/d × 30 d\n= 0.1% × 25.92 billion\n= 25.92 million failed\nrequests/month allowed', 'gold')
+    n(g, 'split','Split between:\n• Planned outages (deploys)\n• Unplanned outages\n• Latency over threshold\n• Test traffic (non-prod\nrequests)', 'purple')
+    e(g, 'inp',  'fmla')
+    e(g, 'fmla', 'mins', 'time')
+    e(g, 'fmla', 'reqs', 'requests')
+    e(g, 'mins', 'split', 'allocate', '#94a3b8', 'dotted')
+    e(g, 'reqs', 'split', 'allocate', '#94a3b8', 'dotted')
+    g.render(os.path.join(OUT, 'a4_1-error-budget-calc'), cleanup=True)
+    print('Generated: a4_1-error-budget-calc')
+
+
+# ── A4.2: Error budget policy zones ─────────────────────────────────
+def diag_error_budget_policy():
+    g = base_graph('a4_2_error_budget_policy', 'Error budget policy — 4 zones, 4 actions')
+    n(g, 'p1',  '> 50% remaining\n(healthy)\nShip features freely\nNormal velocity', 'green')
+    n(g, 'p2',  '25-50% remaining\n(yellow)\nReview risky deploys\nAdd canary bake time', 'gold')
+    n(g, 'p3',  '< 25% remaining\n(red)\nFreeze new features\nFocus on reliability fixes', 'red')
+    n(g, 'p4',  '0% (exhausted)\n(emergency)\nAll-hands reliability\nNo feature work\nuntil budget recovers', 'purple')
+    e(g, 'p1', 'p2', 'budget burns')
+    e(g, 'p2', 'p3')
+    e(g, 'p3', 'p4')
+    e(g, 'p4', 'p1', 'recovers\n(time + fixes)', '#16a34a', 'dashed')
+    g.render(os.path.join(OUT, 'a4_2-error-budget-policy'), cleanup=True)
+    print('Generated: a4_2-error-budget-policy')
+
+
+# ── D2.1: MTTR / MTTD / MTBF on the incident timeline ───────────────
+def diag_mttr_timeline():
+    g = base_graph('d2_1_mttr_timeline', 'Incident lifecycle — MTTD / MTT-Mitigate / MTT-Resolve / MTBF')
+    g.attr(rankdir='LR')
+    n(g, 't0', 'Last good state\n(steady)', 'green')
+    n(g, 'inc', 'INCIDENT START\n(symptom appears)', 'red')
+    n(g, 'det', 'Detected\n(alert fires)\n← MTTD →', 'gold')
+    n(g, 'ack', 'Acknowledged\n+ on-call paged', 'navy')
+    n(g, 'mit', 'MITIGATED\n(symptom gone,\nroot cause not yet known)', 'navy')
+    n(g, 'res', 'RESOLVED\n(root cause fixed)\n← MTT-Resolve →', 'green')
+    n(g, 'next','Next incident\n(MTBF = time between\nthese two)', 'red')
+    e(g, 't0',  'inc',  'failure', '#dc2626')
+    e(g, 'inc', 'det',  'MTTD')
+    e(g, 'det', 'ack',  'page latency')
+    e(g, 'ack', 'mit',  'MTT-Mitigate')
+    e(g, 'mit', 'res',  'fix')
+    e(g, 'res', 'next', 'MTBF\n(stable run)', '#16a34a', 'dashed')
+    g.render(os.path.join(OUT, 'd2_1-mttr-timeline'), cleanup=True)
+    print('Generated: d2_1-mttr-timeline')
+
+
+# ── D2.2: Availability formula visualization ────────────────────────
+def diag_availability_formula():
+    g = base_graph('d2_2_availability', 'Availability formula — Avail = MTBF / (MTBF + MTTR), worked')
+    n(g, 'fmla', 'Availability\n= MTBF / (MTBF + MTTR)\n\n(time service is up\n/ total time)', 'navy')
+    n(g, 'a1', 'Example A:\nMTBF = 30 days = 720 h\nMTTR = 1 hour\n\n720 / 721 = 99.86%\n(~12 hr down/yr)', 'gold')
+    n(g, 'a2', 'Example B:\nMTBF = 30 days = 720 h\nMTTR = 30 min = 0.5 h\n\n720 / 720.5 = 99.93%\n(~6 hr down/yr)\n← halved MTTR =\n2x improvement', 'green')
+    n(g, 'a3', 'Example C:\nMTBF = 60 days = 1440 h\nMTTR = 1 hour\n\n1440 / 1441 = 99.93%\n(~6 hr down/yr)\n← doubled MTBF =\nsame improvement\nbut harder to achieve', 'purple')
+    n(g, 'lever','Lever rule:\nReducing MTTR is\ntypically 5-10x cheaper\nthan increasing MTBF\n→ invest in observability,\nrunbooks, automation', 'red')
+    e(g, 'fmla', 'a1')
+    e(g, 'fmla', 'a2')
+    e(g, 'fmla', 'a3')
+    e(g, 'a2',   'lever', 'apply')
+    e(g, 'a3',   'lever', 'apply', '#94a3b8', 'dashed')
+    g.render(os.path.join(OUT, 'd2_2-availability'), cleanup=True)
+    print('Generated: d2_2-availability')
+
+
 if __name__ == '__main__':
     diag_sli_slo_sla()
     diag_burn_rate()
@@ -364,4 +484,11 @@ if __name__ == '__main__':
     diag_circuit_breaker()
     diag_cascading_failure()
     diag_oncall_rotation()
-    print('SRE diagrams batches 1-8 complete.')
+    diag_sli_formula()
+    diag_slo_tiers()
+    diag_sli_slo_sla_example()
+    diag_error_budget_calc()
+    diag_error_budget_policy()
+    diag_mttr_timeline()
+    diag_availability_formula()
+    print('SRE diagrams batches 1-9 complete (24 diagrams).')
