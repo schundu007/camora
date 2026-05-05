@@ -2212,13 +2212,52 @@ What success looks like. Median branch lifetime under 24 hours, p95 under 48 hou
     visualizations: [
       {
         title: 'Runner architecture — hosted, self-hosted, and ARC',
-        description: 'Workflow events trigger jobs queued by GitHub\'s scheduler. Hosted runners (ubuntu-latest, macos-latest, windows-latest) run in GitHub-managed VMs with 7-minute startup. Self-hosted runners run on your infrastructure for GPU, ARM, on-prem dependencies. Actions Runner Controller (ARC) on Kubernetes spawns ephemeral pod-per-job for security and elasticity.',
+        description: `Walking the diagram left → right: GitHub.com receives an event (push, pull_request, schedule, workflow_dispatch). The Workflow YAML at .github/workflows/*.yml is parsed by GitHub's scheduler, which queues each job. Jobs land on one of three runner types depending on your runs-on label.
+
+Hosted runners are ephemeral GitHub-managed VMs with a ~30s cold-start. Each job runs in a fresh VM destroyed at job end — no state persists between jobs. ubuntu-latest is the default; Windows is 2x cost, macOS is 10x. Larger runners (4-vCPU, 8-vCPU, GPU) launched 2023 for build-bottleneck workloads.
+
+Self-hosted runners are agents you run on your VMs/boxes. Multiple jobs hit the same runner serially; state persists between jobs (this is the security footgun — a malicious PR can plant a backdoor the next job inherits). Use only for GPU/ARM/on-prem when ARC isn't viable.
+
+ARC (Actions Runner Controller) is the modern self-hosted answer: a Kubernetes operator that spawns one ephemeral pod per job, destroyed at end. Combines self-hosted compute with hosted-runner security properties.
+
+OIDC token: every job can request a short-lived JWT from GitHub's OIDC provider, exchanged with AWS STS / GCP / Azure for 1-hour federated credentials. Eliminates long-lived cloud keys in repo secrets — the single highest-value security improvement for any production GHA setup.`,
         image: '/diagrams/devops/ct1-gha.png',
       },
       {
         title: 'Typical PR pipeline — lint, test, security, build, deploy, gate',
-        description: 'Pull request triggers parallel lint, test, security-scan jobs. Build job reuses cache; Docker push to GHCR with SHA-pinned tag. Deploy to staging via OIDC token (no long-lived cloud creds). Branch protection + merge queue gate the merge.',
+        description: `Step-by-step walkthrough of a production-grade PR pipeline:
+
+1. Pull request opened → GitHub scheduler dispatches three jobs in parallel: lint+format (~30s with actionlint, eslint, prettier), unit tests (3-8min, matrix sharded across [node, python, go] versions), security scans (Semgrep SAST, Dependabot SCA, Checkov for IaC files). Parallelism here is the difference between 4-minute PRs and 12-minute PRs.
+
+2. All three pass → Build job runs. Restores actions/cache for dependencies (lockfile-keyed); restores buildx layer cache via type=gha. Docker build pushes to GHCR with the commit SHA as the immutable tag.
+
+3. Deploy job uses OIDC: configure-aws-credentials assumes the staging deploy IAM role via the GitHub-minted JWT. No AWS_ACCESS_KEY_ID anywhere; CloudTrail logs the AssumeRoleWithWebIdentity call for audit. kubectl apply or helm upgrade rolls out the new image tag.
+
+4. Branch protection requires status checks (lint, test, security, build) green before merge. Required reviewers (at least one) approve the diff. Merge queue (GA 2023) handles the "PR was green but rebase makes it red" failure mode by serializing and re-testing in queue order.
+
+The structure scales: paths-filter at the top of the workflow can skip backend tests on a frontend-only PR. Composite actions extract repeated setup steps into reusable units. Reusable workflows host the entire pipeline shape in a central .github repo, consumed by every service repo as one line: uses: myorg/.github/.github/workflows/build-deploy.yml@v1.`,
         image: '/diagrams/devops/ct1b-gha-workflow.png',
+      },
+      {
+        title: 'OIDC trust chain — JWT → STS → temporary credentials',
+        description: `Sequence of what happens at runtime when a workflow assumes an AWS role via OIDC:
+
+1. Workflow declares permissions: id-token: write. GitHub's runner provisions a JWT with claims for this specific run: sub: repo:myorg/myrepo:ref:refs/heads/main, aud: sts.amazonaws.com, plus standard JWT fields (iss, exp, iat, jti).
+
+2. The aws-actions/configure-aws-credentials action calls AWS STS AssumeRoleWithWebIdentity, passing the JWT as the WebIdentityToken parameter and the target role ARN.
+
+3. STS validates the JWT signature against GitHub's OIDC provider (registered once per AWS account at https://token.actions.githubusercontent.com). If signature is valid and not expired, STS evaluates the role's trust policy.
+
+4. Trust policy conditions check the JWT claims. The standard pattern restricts by sub: StringLike on sub == "repo:myorg/myrepo:ref:refs/heads/main" means only main-branch jobs from this exact repo can assume the role. Other branches, forks, other repos all fail at this step.
+
+5. If trust policy allows, STS returns temporary credentials (AccessKeyId, SecretAccessKey, SessionToken) with a 1-hour lifetime, scoped to the role's permissions. Action exports these as environment variables for the rest of the job.
+
+6. Subsequent aws CLI / SDK calls use the temporary credentials. CloudTrail logs every call with the role ARN and the OIDC sub claim — full audit trail.
+
+7. Job ends → credentials expire (or were already short-lived). Nothing persists. No long-lived secret to leak, rotate, or revoke.
+
+The same pattern works for GCP (Workload Identity Federation), Azure (federated identity credentials), and HashiCorp Vault. By 2026 this is the default for cloud auth from CI; long-lived keys are deprecated practice.`,
+        image: '/diagrams/devops/ct1-gha.png',
       },
     ],
     introduction: `GitHub Actions launched November 2019, hit GA April 2020, and overtook Jenkins as the most-used CI/CD tool by 2022. JetBrains 2024 State of Developer Ecosystem: ~33% adoption, ahead of Jenkins (~28%) and GitLab CI (~21%). For any team already on GitHub, it's the path of least resistance — but the depth is non-trivial: hosted vs self-hosted runners, OIDC federation, reusable workflows, composite actions, marketplace supply chain, monorepo scaling. This topic is the operational reality.
@@ -2441,6 +2480,153 @@ The fix:
 The 40-char SHA is content-addressed — if upstream re-tags, your reference still points at the original commit. Comment the human-readable version. Dependabot can update SHAs automatically with PRs.
 
 Per StepSecurity\'s guide: SHA-pin every third-party action. Tags are acceptable only for actions you own or trust unconditionally (and even then, SHA pin is safer).`,
+      },
+      {
+        term: 'Recipe: monorepo build with Turborepo + path-filter',
+        definition: `Combines paths-filter (for non-Turborepo paths like infra/docs) and Turborepo's affected-only graph for the actual code:
+
+\`\`\`yaml
+jobs:
+  changed:
+    runs-on: ubuntu-latest
+    outputs:
+      infra: \${{ steps.f.outputs.infra }}
+    steps:
+      - uses: actions/checkout@<sha>
+        with: { fetch-depth: 0 }            # Turborepo needs full history
+      - uses: dorny/paths-filter@<sha>
+        id: f
+        with: { filters: 'infra: infra/**' }
+
+  build:
+    needs: changed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@<sha>
+        with: { fetch-depth: 0 }
+      - uses: pnpm/action-setup@<sha>
+        with: { version: 9 }
+      - uses: actions/setup-node@<sha>
+        with: { node-version: '20', cache: 'pnpm' }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build test --cache-dir=.turbo --filter='[origin/main]'
+
+  infra-validate:
+    needs: changed
+    if: needs.changed.outputs.infra == 'true'
+    runs-on: ubuntu-latest
+    steps: [...]
+\`\`\`
+
+\`--filter='[origin/main]'\` tells Turborepo: "only run for packages changed since main." Combined with remote cache (Vercel, self-hosted), unaffected packages produce instant cache hits. A 12-minute "rebuild everything" pipeline becomes 1-3 minutes for a typical PR. Each unchanged package's build/test is skipped entirely.`,
+      },
+      {
+        term: 'Recipe: Docker build with SLSA provenance + cosign signing',
+        definition: `Modern supply-chain-hardened image build:
+
+\`\`\`yaml
+permissions:
+  contents: read
+  packages: write
+  id-token: write           # for keyless cosign signing
+
+steps:
+  - uses: actions/checkout@<sha>
+  - uses: docker/setup-buildx-action@<sha>
+  - uses: docker/login-action@<sha>
+    with:
+      registry: ghcr.io
+      username: \${{ github.actor }}
+      password: \${{ secrets.GITHUB_TOKEN }}
+  - uses: docker/metadata-action@<sha>
+    id: meta
+    with:
+      images: ghcr.io/\${{ github.repository }}/api
+      tags: |
+        type=sha,format=long
+        type=ref,event=tag
+  - uses: docker/build-push-action@<sha>
+    id: push
+    with:
+      push: true
+      tags: \${{ steps.meta.outputs.tags }}
+      cache-from: type=gha
+      cache-to:   type=gha,mode=max
+      provenance: true       # SLSA Level 2 build provenance attestation
+      sbom: true             # SPDX SBOM attestation
+  - uses: sigstore/cosign-installer@<sha>
+  - run: cosign sign --yes ghcr.io/\${{ github.repository }}/api@\${{ steps.push.outputs.digest }}
+\`\`\`
+
+What you get: an OCI image with attached attestations for SLSA provenance (which commit, builder, inputs produced this image) and SPDX SBOM (every package and version inside). cosign signs the image keylessly using the OIDC token — verifiable later via cosign verify --certificate-identity-regexp='https://github.com/myorg/myrepo/.*'. Production deploys can require these attestations as a precondition (Kyverno admission policy in K8s).`,
+      },
+      {
+        term: 'Recipe: debug a stuck workflow (canceled, queued, no-show)',
+        definition: `Common failure modes and how to triage:
+
+Workflow shows "Queued" indefinitely. Hosted runner exhaustion or self-hosted runners offline. Check Actions → Runners in repo/org settings — are runners reporting "Idle"? For hosted, check status.github.com for the Actions service. For self-hosted/ARC, check controller logs: kubectl logs -n actions-runner-system deployment/arc-controller-manager.
+
+Workflow says "Cancelled" with no error. Almost always a concurrency block — a newer push canceled this run. Look at concurrency: { cancel-in-progress: true } in the workflow. Also check for branch deletion (deleting a branch cancels all in-flight runs on it).
+
+Workflow runs but skips all jobs. Check the if: conditions. Common gotcha: if: github.event_name == 'push' on every job, but the trigger was pull_request. Fix by either adjusting the conditions or the on: triggers.
+
+Job stays "Pending" past 30 minutes. For hosted: bumped against concurrent-job limits (20 for free, 60 for Pro, 180 for Team, 500 for Enterprise). For ARC: kubectl describe pod -n runners on the pending pod — usually scheduling failures (no nodes, resource requests too high, taint/toleration mismatch).
+
+Workflow exits with "Process completed with exit code 1" and no further detail. Step output was suppressed because of - run: command > /dev/null or because the action swallowed the error. Add ACTIONS_STEP_DEBUG: true to repo secrets and re-run from the Actions UI to get verbose step traces.
+
+Composite action returns wrong outputs. Composite actions need explicit outputs declaration; assigning to $GITHUB_OUTPUT in a step doesn't propagate without:
+
+\`\`\`yaml
+outputs:
+  result:
+    value: \${{ steps.compute.outputs.result }}
+runs:
+  using: composite
+  steps:
+    - id: compute
+      run: echo "result=hello" >> $GITHUB_OUTPUT
+      shell: bash
+\`\`\``,
+      },
+      {
+        term: 'Recipe: required-reviewer production deploy via Environments',
+        definition: `Use GitHub Environments to gate production with human approval:
+
+Step 1 — create the environment in repo settings → Environments → New "production" → Required reviewers (designate 2 people) → Wait timer (5 min) → Deployment branches: only main.
+
+Step 2 — workflow references the environment:
+
+\`\`\`yaml
+jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://app.example.com
+    permissions:
+      id-token: write
+      contents: read
+    concurrency:
+      group: deploy-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@<sha>
+      - uses: aws-actions/configure-aws-credentials@<sha>
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/gha-deploy-prod
+          aws-region: us-east-1
+      - run: ./scripts/deploy-prod.sh
+\`\`\`
+
+Step 3 — IAM trust policy on gha-deploy-prod scopes by environment claim:
+
+\`\`\`json
+"StringLike": {
+  "token.actions.githubusercontent.com:sub": "repo:myorg/myrepo:environment:production"
+}
+\`\`\`
+
+Now: PR merges to main → workflow reaches deploy-prod job → pauses with "Awaiting approval" → designated reviewer clicks Approve in the Actions UI → 5-minute wait timer → deploy proceeds with the environment-scoped IAM role. Even compromised-main can't auto-deploy without human approval. Compromised IAM role can't be assumed from any other branch (the sub claim won't match).`,
       },
     ],
     approach: [

@@ -2853,7 +2853,7 @@ export default function TopicDetail({
                       <span className="text-[14px] font-semibold text-[var(--text-primary)] landing-display">{kc.term}</span>
                     </div>
                     <div className="px-4 py-3 text-[14px] text-[var(--text-secondary)] leading-relaxed landing-body">
-                      {kc.definition}
+                      <FormattedContent content={kc.definition} color="amber" />
                     </div>
                   </div>
                 ))}
