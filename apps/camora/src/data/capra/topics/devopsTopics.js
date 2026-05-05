@@ -4232,4 +4232,1149 @@ These are the answers a Jenkins-fluent senior engineer should give without prepa
     ],
   },
 
+  // ─────────────────────────────────────────────────────────────────────
+  // GitLab CI — integrated DevSecOps platform; ~21% market share
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'gitlab-ci-deep-dive',
+    title: 'GitLab CI — .gitlab-ci.yml, Runners, Auto DevOps, DevSecOps',
+    icon: 'gitlab',
+    color: '#16a34a',
+    questions: 6,
+    description: 'The integrated DevSecOps platform — SCM + CI + container registry + SAST/DAST + dependency scanning in one product. .gitlab-ci.yml stages, shared/group/specific runners, Auto DevOps, child pipelines, dynamic environments, OIDC to clouds.',
+    visualizations: [
+      {
+        title: '.gitlab-ci.yml — stages, runners, includes, rules',
+        description: `Walking the diagram: a merge request or push triggers GitLab to evaluate .gitlab-ci.yml at the repo root. The YAML defines stages (sequential phases), jobs (parallel within a stage), and rules (conditional inclusion).
+
+Workflow rules at the top of the file decide which kind of pipeline runs: workflow:rules:if "$CI_PIPELINE_SOURCE == 'merge_request_event'" creates an MR pipeline; if "$CI_COMMIT_BRANCH == 'main'" creates a branch pipeline; schedule triggers a scheduled pipeline. Without explicit workflow rules, GitLab can create both branch AND MR pipelines for the same commit (the "duplicate pipeline" problem).
+
+includes pulls in YAML fragments from other repos or paths. Three flavours:
+- include: local (./ci/build.yml) — files in the same repo
+- include: project — pulls from a sibling repo at a specific ref/file
+- include: template — GitLab's curated templates (Jobs/Build.gitlab-ci.yml etc.)
+
+extends inherits job config from another job — Ruby/Python-style inheritance for jobs. Combined with hidden jobs (.template-job: with leading dot), this is the canonical reuse mechanism.
+
+needs: directives create a DAG dependency between jobs across stages — a job can start as soon as its prerequisites finish, even if other jobs in earlier stages are still running. Without needs, jobs wait for ALL of the previous stage to complete.
+
+Jobs land on runners. Three categories:
+- Shared runners — GitLab.com hosted; free minutes per tier; default for OSS / small teams.
+- Group runners — self-hosted at the GitLab group level; shared across projects in that group.
+- Project runners — self-hosted per project; isolated.
+
+Self-hosted runners use one of several executors: docker (most common — each job in a Docker container), kubernetes (each job in a K8s pod, the modern default), shell (legacy, persistent state, supply-chain footgun), virtualbox/hyperv (for OS-specific builds).
+
+Environments and Deploy tracks let you declare named target environments (staging, production, review/feature-X). The deploy track concept ties pipeline jobs to environment state — GitLab tracks which commit is deployed where, supports manual rollback button, supports stop environment (kills review apps).
+
+Built-in container registry. Every project gets a Docker registry at registry.gitlab.com/group/project. CI jobs push to it; deploys pull from it. No separate registry to set up.`,
+        image: '/diagrams/devops/ct3-gitlab-ci.png',
+      },
+      {
+        title: 'Pipeline lifecycle — MR pipeline, merged-result, merge-train',
+        description: `GitLab differentiates pipeline types in ways GHA does not.
+
+Branch pipeline. Triggered by push to a branch. Default. Runs against the actual commit on the branch.
+
+Merge request pipeline. Triggered by MR open/update. Runs against the source branch's HEAD commit. Useful for "test what's in the MR." Note: this does NOT include changes from main since the branch was created — if main has moved, the MR pipeline doesn't see those changes.
+
+Merged-result pipeline. The differentiator. GitLab simulates the merge into target branch and runs the pipeline on the simulated post-merge tree. Catches the "PR was green but rebase broke it" failure mode that GHA addresses with merge queues. Configured via workflow:rules:if "$CI_MERGE_REQUEST_EVENT_TYPE == 'merge_train'" or workflow:auto_cancel:on_new_commit: interruptible.
+
+Merge train. Multiple MRs queued for merge. Each MR's pipeline runs against the simulated state where all earlier MRs in the train have already merged. If MR-1's pipeline succeeds, it merges; MR-2's pipeline rebases onto MR-1's merged state and re-runs. Serializes merges to prevent the "all green individually but red after merge" race condition. GHA's merge queue (GA 2023) is the equivalent.
+
+Child pipelines. A job can trigger a downstream pipeline via trigger:include. The parent pipeline waits for the child (or doesn't, with strategy:depend / strategy:detach). Used for: monorepo per-service pipelines (parent detects which service changed, triggers that service's child pipeline), staged complex deploys (parent triggers infra child pipeline, then app child pipeline).
+
+Dynamic child pipelines. Generate the child .yml at runtime as a job artifact, then trigger it. Powerful pattern for monorepos: a "generator" job reads service config and emits a generated-pipeline.yml with one job per service that changed; that gets triggered as a child. Equivalent of Jenkins's dynamic parallel from a list, but more composable.
+
+Review apps. A pipeline job can deploy a review app (review/$CI_COMMIT_REF_SLUG environment) on every MR — typically a Helm chart deployed to a per-MR namespace. Stop environment job runs on MR close to clean up. The full preview-deploy-per-PR pattern that vanilla GHA requires you to build manually.`,
+        image: '/diagrams/devops/ct3-gitlab-ci.png',
+      },
+      {
+        title: 'Auto DevOps + integrated DevSecOps scanning',
+        description: `GitLab's full-stack DevSecOps story is what differentiates it from GHA + plugins.
+
+Auto DevOps. A canned .gitlab-ci.yml template that detects your language (Node, Python, Java, Go, Ruby, etc.) and runs: build, test, code quality, SAST, dependency scanning, container scanning, license compliance, DAST (against review apps), and Auto Deploy to a Kubernetes cluster (Helm-based). Enable it in project settings; no .gitlab-ci.yml needed for the basic case. Useful for prototyping; most production projects override the auto-template with explicit jobs.
+
+Built-in security scans (Ultimate tier or via Open Source equivalents):
+- SAST — static analysis. Languages-specific scanners (Semgrep for many, eslint for JS, bandit for Python, etc.). Results posted as MR comments + Vulnerability dashboard.
+- DAST — dynamic scanning. Runs OWASP ZAP against the review app deployed by the pipeline.
+- Dependency Scanning — SCA. Scans lockfiles for known CVEs (Trivy / OSV-based).
+- Container Scanning — image CVE scan via Trivy.
+- License Compliance — flags license issues per dependency.
+- Secret Detection — scans the repo and pipeline output for leaked secrets (API keys, tokens).
+- IaC Scanning — Terraform/CloudFormation/K8s manifest analysis.
+
+Each scan emits a JSON report uploaded as artifact:reports:sast (or similar). GitLab merges reports into the MR widget showing severity, dedup, and resolution status. The Vulnerability Management workflow tracks fixes across releases.
+
+Compliance Pipelines. Org-level pipelines that run on every project regardless of project's own .gitlab-ci.yml. Used for required compliance jobs (license check, secret scan, supply-chain attestation). Project teams can't bypass them.
+
+Compared to GHA + bolt-ons: GitLab gives you all this in one product with one auth model, one UI, one billing. GHA gives you Code Scanning + Dependabot + Secret Scanning natively, but DAST and DevSecOps reporting are bolted on (Snyk, Aqua, etc.). The integration tax is real either way; GitLab is more cohesive, GHA is more modular.
+
+OIDC to clouds works the same as GHA: each job mints a JWT, exchanged with AWS STS / GCP / Azure for short-lived credentials. id_tokens: keyword in the job specifies the OIDC audience; the trust policy on the cloud side validates claims (project_path, ref, environment).`,
+        image: '/diagrams/devops/ct3-gitlab-ci.png',
+      },
+    ],
+    introduction: `GitLab CI is the CI half of the integrated GitLab DevSecOps platform — SCM, CI/CD, container registry, package registry, security scanning, issue tracking, all in one product. JetBrains 2024 DevEcosystem: ~21% market share, third behind GitHub Actions (~33%) and Jenkins (~28%).
+
+The pitch is integration. Where GHA gives you CI tightly coupled to GitHub but you stitch in registry/scanning/deploy from third parties, GitLab gives you the full vertical stack from one vendor. For some orgs that's the right trade — one auth model, one billing relationship, one dashboard. For others it's vendor lock-in or feature surface they don't need.
+
+When to pick GitLab CI:
+
+Already on GitLab. The integration tax of using something else doesn't pay off. .gitlab-ci.yml is the natural fit.
+
+Want integrated DevSecOps reporting. Vulnerability dashboard, license compliance, SAST + DAST + SCA all in one MR widget — saves the integration work of bolting Snyk/Aqua/Sonar onto GHA.
+
+Self-managed (on-prem) requirement. GitLab Self-Managed runs the whole platform on your infrastructure — better UX than self-managed Jenkins, more cohesive than self-managed GHA Server (GitHub Enterprise Server). Common in regulated industries (banking, government, defence).
+
+Compliance and governance needs. Compliance Pipelines run on every project regardless of what the project team does. Org-level enforcement of required jobs.
+
+Mid-size companies with cohesive platform requirements. The "we want one tool that does it all" use case.
+
+When NOT:
+
+Already on GitHub. The integration tax goes the other way. GHA + Dependabot + GHCR + GitHub Code Scanning is closer to GitLab's coverage than people give it credit for.
+
+Want max ecosystem reach. GHA's marketplace is significantly larger than GitLab CI's; thousands more community actions vs GitLab CI components.
+
+Cost-sensitive at scale. GitLab.com SaaS pricing for Ultimate (which includes DAST/SAST) is $99/user/month; GHA Pro is $4/user/month. The all-in-one bundle is expensive.
+
+Three load-bearing concepts every GitLab CI interview answer needs:
+
+1. Workflow rules at the top of .gitlab-ci.yml decide pipeline kind. Without them, GitLab creates both branch AND MR pipelines for the same commit ("duplicate pipeline" problem). Standard pattern: workflow:rules: that include MR pipelines for non-default branches and branch pipelines for default only.
+
+2. Merge train is the GitLab answer to merge queue. Serializes MR merges with simulated-rebase pipelines so "all green individually but red after merge" doesn't happen. Premium tier feature; canonical for high-traffic main branches.
+
+3. Child pipelines + dynamic child pipelines unlock monorepo workflows. A parent pipeline detects which paths changed and triggers a child pipeline tailored to that subset. Generated child pipelines (artifacts:reports:terraform / dynamic .yml as artifact) make this fully programmatic.`,
+    whenToUse: [
+      'Already on GitLab — the integrated platform value compounds',
+      'Self-managed CI/CD requirement (regulated, on-prem) where Jenkins\'s UX is too rough',
+      'Want SAST/DAST/SCA/license compliance integrated, not bolted on',
+      'Compliance Pipelines for org-level mandatory jobs',
+      'Mid-size company that wants single-vendor for SCM + CI + registry + scanning',
+    ],
+    keyConcepts: [
+      {
+        term: '.gitlab-ci.yml structure',
+        definition: `Lives at repo root. Single root, stages + jobs:
+
+\`\`\`yaml
+# Workflow rules — control which pipelines run
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Stages execute in order; jobs in a stage run in parallel
+stages: [build, test, security, deploy]
+
+variables:
+  REGISTRY: $CI_REGISTRY_IMAGE
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+
+# Hidden job templates (leading dot = not executed; only inherited)
+.runner-large:
+  tags: [k8s-large]
+  resource_group: deploy-prod    # mutex across pipelines
+
+build:
+  stage: build
+  image: maven:3.9-eclipse-temurin-21
+  cache:
+    key: maven-$CI_COMMIT_REF_SLUG
+    paths: [.m2/repository]
+  script:
+    - mvn -B -Dmaven.repo.local=.m2/repository clean package
+  artifacts:
+    paths: [target/*.jar]
+    expire_in: 1 week
+    reports:
+      junit: target/surefire-reports/*.xml
+
+test:
+  stage: test
+  needs: [build]                 # DAG: start as soon as build finishes
+  parallel: 4                    # split into 4 parallel runs
+  script:
+    - ./run-shard.sh $CI_NODE_INDEX/$CI_NODE_TOTAL
+
+deploy:prod:
+  stage: deploy
+  extends: .runner-large
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  environment:
+    name: production
+    url: https://app.example.com
+  script:
+    - kubectl set image deployment/api api=$REGISTRY:$IMAGE_TAG
+\`\`\`
+
+Note resource_group: deploy-prod creates a mutex — only one pipeline can be in this job at a time. Equivalent of GHA's concurrency: { group: ..., cancel-in-progress: false }.`,
+      },
+      {
+        term: 'Workflow rules + duplicate pipeline problem',
+        definition: `Without explicit workflow rules, GitLab creates BOTH a branch pipeline AND an MR pipeline for the same commit when a branch has an open MR. Wastes runner minutes; confuses status checks.
+
+The fix:
+
+\`\`\`yaml
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"   # MR pipeline
+    - if: $CI_COMMIT_TAG                                   # tag pipeline (releases)
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH          # main branch pipeline only
+    - if: $CI_PIPELINE_SOURCE == "schedule"                # scheduled
+    - when: never                                          # explicit deny for everything else
+\`\`\`
+
+This means: any push to a feature branch with an open MR runs only the MR pipeline. Push to main runs the branch pipeline. Tags run their own. Everything else gets no pipeline.
+
+Inverse pattern — branch pipelines for everything except when an MR exists:
+
+\`\`\`yaml
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"
+      when: never
+    - when: always
+\`\`\`
+
+The GitLab docs call this the "duplicate pipeline" problem and offer canonical recipes. Always start with explicit workflow rules.`,
+      },
+      {
+        term: 'Runners + executors',
+        definition: `Three categories by ownership:
+
+Shared runners. GitLab.com-hosted. Free tier: 400 CI minutes/month for private projects, unlimited for public OSS. Paid tiers: 10k-50k minutes. Use for OSS, small teams, CI bursts.
+
+Group runners. Self-hosted at the GitLab group level. Shared across all projects in the group. Use for company-wide self-hosted runners with consistent config (e.g., a fleet of K8s-executor runners for the whole engineering org).
+
+Project runners. Self-hosted per project. Isolated. Use for projects with unique requirements (GPU, specific OS, on-prem dependencies).
+
+Six executors:
+
+shell — runs jobs as shell commands directly on the runner host. Persistent state between jobs (the supply-chain footgun). Avoid except for legacy.
+
+docker — runs each job in a fresh Docker container. The popular default. State doesn't persist between jobs (each job: fresh container). Privileged Docker access requires running runner in privileged mode (security risk).
+
+kubernetes — runs each job in a fresh K8s pod. Modern default. Pod is destroyed at job end. ServiceAccount-scoped permissions. Combined with cluster-autoscaler / Karpenter, you get elastic CI capacity. Equivalent of GHA ARC.
+
+docker-machine — auto-scales VMs on cloud (AWS, GCP, etc.). Older, deprecated path; use kubernetes executor instead in 2026.
+
+ssh — runs on remote SSH host. For specific hardware that can't be containerized.
+
+virtualbox / hyperv / parallels — VM executors for OS-specific builds (Windows-on-Mac, etc.).
+
+Recommended: kubernetes executor with autoscaling for the modern stack. Helm chart gitlab-runner installs the runner-controller; jobs spawn as pods.`,
+      },
+      {
+        term: 'Auto DevOps',
+        definition: `Canned .gitlab-ci.yml that auto-detects your language and runs the full DevSecOps cycle without user-written CI config.
+
+Enable in project settings → CI/CD → Auto DevOps. Behind the scenes, GitLab includes an internal Auto-DevOps.gitlab-ci.yml that:
+
+1. Detects language via Heroku-style buildpack auto-detection.
+2. Builds with Auto Build (typically using Cloud Native Buildpacks).
+3. Runs Auto Test (language-appropriate test runner).
+4. Code Quality (Code Climate-style metrics).
+5. SAST, Secret Detection, Dependency Scanning (always-on).
+6. Container Scanning on the built image.
+7. DAST against the review app.
+8. License Compliance.
+9. Auto Deploy to Kubernetes via Helm (review app per branch, staging on default branch, production on tag).
+
+Use cases:
+- Greenfield prototyping — instant CI/CD with sensible defaults.
+- Internal tools where the team doesn't want to write CI.
+
+Limitations:
+- Opinionated — heavy customization fights the auto-template.
+- Helm-based deploy assumes a specific cluster setup (cluster integration in GitLab settings).
+- Most production projects override the template with explicit jobs after they outgrow defaults.
+
+Pattern: start with Auto DevOps to bootstrap; gradually replace stages with explicit jobs as you need control. The Auto-DevOps.gitlab-ci.yml is itself includable — \`include: template: Auto-DevOps.gitlab-ci.yml\` — so you can pull in just the parts you want and override the rest.`,
+      },
+      {
+        term: 'OIDC to AWS / GCP / Azure',
+        definition: `Same pattern as GHA OIDC. Each job mints a JWT; cloud STS validates and returns short-lived credentials.
+
+Job declares id_tokens with a custom audience:
+
+\`\`\`yaml
+deploy_aws:
+  stage: deploy
+  image: amazon/aws-cli:2
+  id_tokens:
+    AWS_TOKEN:
+      aud: https://gitlab.example.com
+  script:
+    - >
+      export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s"
+      $(aws sts assume-role-with-web-identity
+      --role-arn arn:aws:iam::123456789012:role/gitlab-deploy-prod
+      --role-session-name "gitlab-$CI_PIPELINE_ID"
+      --web-identity-token "$AWS_TOKEN"
+      --duration-seconds 3600
+      --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]"
+      --output text))
+    - aws s3 sync ./dist s3://my-bucket/
+\`\`\`
+
+The IAM role's trust policy validates the JWT:
+
+\`\`\`json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": { "Federated": "arn:aws:iam::123:oidc-provider/gitlab.example.com" },
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+      "StringEquals": {
+        "gitlab.example.com:aud": "https://gitlab.example.com"
+      },
+      "StringLike": {
+        "gitlab.example.com:sub": "project_path:mygroup/myproject:ref_type:branch:ref:main"
+      }
+    }
+  }]
+}
+\`\`\`
+
+The sub claim restricts which project + ref can assume the role. Same security pattern as GHA. By 2026 this replaces stored AWS keys in GitLab's CI/CD variables.`,
+      },
+      {
+        term: 'Recipe: monorepo with dynamic child pipelines',
+        definition: `Pattern for a 30-service monorepo where each service has its own pipeline:
+
+\`\`\`yaml
+# .gitlab-ci.yml at repo root
+stages: [generate, trigger]
+
+generate-pipeline:
+  stage: generate
+  image: alpine
+  script:
+    - apk add yq jq git
+    # Detect changed services from MR diff
+    - changed_services=$(git diff --name-only $CI_MERGE_REQUEST_DIFF_BASE_SHA HEAD | grep '^services/' | cut -d/ -f2 | sort -u)
+    - >
+      cat > generated-pipeline.yml <<EOF
+      stages: [build, test, deploy]
+      EOF
+    - >
+      for svc in $changed_services; do
+        cat services/$svc/ci.yml >> generated-pipeline.yml
+      done
+  artifacts:
+    paths: [generated-pipeline.yml]
+
+trigger-services:
+  stage: trigger
+  needs: [generate-pipeline]
+  trigger:
+    include:
+      - artifact: generated-pipeline.yml
+        job: generate-pipeline
+    strategy: depend
+\`\`\`
+
+Each services/$svc/ci.yml fragment looks like:
+
+\`\`\`yaml
+build:payments:
+  stage: build
+  script: [docker build -t $REGISTRY/payments:$CI_COMMIT_SHORT_SHA services/payments]
+test:payments:
+  stage: test
+  needs: [build:payments]
+  script: [cd services/payments && pnpm test]
+deploy:payments:
+  stage: deploy
+  needs: [test:payments]
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  environment: { name: prod/payments }
+  script: [kubectl set image deployment/payments payments=$REGISTRY/payments:$CI_COMMIT_SHORT_SHA]
+\`\`\`
+
+Behavior: PR touches only services/payments → only payments builds, tests, deploys. Fan-out is implicit; unchanged services don't run. Equivalent of paths-filter + Turborepo affected-only in GHA, but expressed as native GitLab CI dynamic pipelines.`,
+      },
+      {
+        term: 'Recipe: review app per MR with stop environment',
+        definition: `Deploy a unique preview environment for every MR, automatically destroyed when the MR closes:
+
+\`\`\`yaml
+review:
+  stage: deploy
+  image: alpine/helm:3.16
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    url: https://$CI_COMMIT_REF_SLUG.review.example.com
+    on_stop: stop_review
+    auto_stop_in: 1 week
+  script:
+    - >
+      helm upgrade --install review-$CI_COMMIT_REF_SLUG ./chart
+      --namespace review-$CI_COMMIT_REF_SLUG
+      --create-namespace
+      --set image.tag=$CI_COMMIT_SHORT_SHA
+      --set ingress.hostname=$CI_COMMIT_REF_SLUG.review.example.com
+
+stop_review:
+  stage: deploy
+  image: alpine/helm:3.16
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    action: stop
+  script:
+    - helm uninstall review-$CI_COMMIT_REF_SLUG -n review-$CI_COMMIT_REF_SLUG
+    - kubectl delete namespace review-$CI_COMMIT_REF_SLUG
+  needs: []
+\`\`\`
+
+What this does: each MR opens a deploy job that creates a unique namespace + Helm release at <branch-slug>.review.example.com. The MR widget shows a "View deployment" button linking to that URL. Reviewers, PMs, designers can interact with the actual deployed feature in the MR.
+
+When MR closes/merges, GitLab triggers stop_review (auto-via on_stop or manual button). Cleanup destroys the namespace.
+
+auto_stop_in: 1 week is a safety net — stale review apps auto-destroy after a week, preventing orphan namespaces if someone forgets to close MRs.
+
+DAST runs against the review app — the dynamic security scan exercises the actual deployed feature.
+
+This is the pattern Vercel/Netlify popularized for static sites; GitLab provides the primitives to do it for any K8s-deployed app.`,
+      },
+      {
+        term: 'Recipe: merge train for high-traffic main',
+        definition: `Merge train serializes MR merges with simulated-rebase pipelines:
+
+\`\`\`yaml
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_EVENT_TYPE == "merged_result"
+    - if: $CI_MERGE_REQUEST_EVENT_TYPE == "merge_train"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+build:
+  stage: build
+  interruptible: true            # safe to cancel if newer pipeline starts in train
+  script: [...]
+
+test:
+  stage: test
+  interruptible: true
+  needs: [build]
+  parallel: 6
+  script: [...]
+\`\`\`
+
+Configure merge train in project settings → Merge Requests → enable "Merge train". Optional: "Pipelines must succeed" + "Merge in order" require pipelines green before joining train.
+
+Train operation:
+1. MR-1 author clicks "Merge when pipeline succeeds (and add to train)".
+2. GitLab creates a merge_train pipeline that simulates merging MR-1 onto current target branch.
+3. If MR-1 pipeline succeeds, merge happens.
+4. MR-2 added to train: GitLab creates merge_train pipeline simulating MR-2 merged AFTER MR-1's merged state.
+5. If MR-2 pipeline succeeds, merge happens (MR-1 already merged at this point).
+6. If MR-2 pipeline fails, MR-2 is removed from train; subsequent MRs continue.
+
+interruptible: true on jobs lets train rebuild faster — when MR-3 is added to a train where MR-2 is still running, MR-2's pipeline cancels and restarts atop MR-3. Without interruptible:, train pipelines are slower.
+
+Equivalent of GHA's merge queue (GA 2023). Solves the "all green individually but red after merge" race condition. Mandatory for high-traffic main branches in 2026.`,
+      },
+      {
+        term: 'Recipe: matrix + parallel for cross-platform tests',
+        definition: `Two GitLab CI primitives for parallel execution:
+
+parallel: N — run the same job N times with different CI_NODE_INDEX:
+
+\`\`\`yaml
+test:
+  parallel: 6
+  script:
+    - ./run-tests-shard.sh $CI_NODE_INDEX $CI_NODE_TOTAL
+\`\`\`
+
+CI_NODE_INDEX is 1..N; CI_NODE_TOTAL is N. Test runner consumes them to shard tests by timing or hash.
+
+parallel:matrix — cross-product of variables:
+
+\`\`\`yaml
+test:
+  parallel:
+    matrix:
+      - OS: [linux, macos]
+        NODE: ['18', '20', '22']
+      - OS: [windows]
+        NODE: ['20']     # only test latest on Windows
+  tags:
+    - $OS
+  script:
+    - npm install
+    - npm test
+\`\`\`
+
+That's 2×3 + 1×1 = 7 jobs in parallel. Each job has $OS and $NODE set. The runner with matching tag (windows / linux / macos) executes.
+
+Combined: parallel:matrix declares the cross-product, then add parallel:N to each matrix entry to shard within. Possible but rarely needed; usually one or the other.
+
+Compared to GHA matrix: GitLab's parallel:matrix has slightly more flexible shape (multiple matrix entries with different inclusions), but GHA's matrix:include lets you add specific extras. Roughly equivalent expressivity.`,
+      },
+      {
+        term: 'Recipe: Compliance Pipelines for org-level governance',
+        definition: `Org-level pipelines that run on every project regardless of project's own .gitlab-ci.yml. Used for required compliance jobs.
+
+Setup at the group level → Settings → Compliance → Compliance frameworks. Define a framework with a pipeline configuration:
+
+\`\`\`yaml
+# compliance-framework.gitlab-ci.yml in central security repo
+include:
+  - project: $CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME
+    file: $CI_PROJECT_PATH:$CI_DEFAULT_BRANCH:.gitlab-ci.yml
+    inputs:
+      run_compliance: true
+
+compliance:secret-scan:
+  stage: compliance
+  image: zricethezav/gitleaks
+  script:
+    - gitleaks detect --source . --report-path leaks.json
+  artifacts:
+    reports:
+      secret_detection: leaks.json
+
+compliance:sbom:
+  stage: compliance
+  image: anchore/syft
+  script:
+    - syft packages dir:. -o cyclonedx-json > sbom.json
+  artifacts:
+    paths: [sbom.json]
+    expire_in: 1 year      # retention for audit
+
+compliance:license-check:
+  stage: compliance
+  image: licensee/licensee
+  script:
+    - licensee detect --json > license-report.json
+\`\`\`
+
+Apply the framework to specific projects via project settings or group default. Once applied, every pipeline run on that project runs the compliance jobs in addition to project-defined jobs. Project teams can't bypass them.
+
+Use cases:
+- Security: secret scan, SBOM generation, supply-chain attestation on every build.
+- Legal: license scan, code provenance.
+- Audit: deploy logs, change records to immutable storage.
+- Regulatory (SOC 2, HIPAA, FedRAMP): mandated jobs running on every release.
+
+Equivalent in GHA: required workflows (org-level) introduced in 2023 — similar concept, less mature reporting integration than GitLab's Vulnerability dashboard.`,
+      },
+    ],
+    approach: [
+      'Always declare explicit workflow:rules: at the top of .gitlab-ci.yml — avoid duplicate pipelines',
+      'Use kubernetes executor for self-hosted runners; never shell',
+      'OIDC to clouds with id_tokens — no long-lived AWS keys in CI/CD variables',
+      'Compliance Pipelines for org-level mandatory jobs (security, license, SBOM)',
+      'Merge train for high-traffic main branches; mark jobs as interruptible: true',
+      'Review apps with on_stop: cleanup; auto_stop_in safety net for orphans',
+      'Child pipelines (especially dynamic) for monorepos with per-service pipelines',
+      'extends + hidden job templates (.template-name) for DRY job config',
+      'needs: directives to build a DAG; faster than stage-only sequential model',
+      'Built-in container registry — push from build job, pull from deploy job; no ECR/GHCR/GAR',
+    ],
+    pitfalls: [
+      'No explicit workflow rules — duplicate pipelines (branch + MR for same commit) waste runner minutes',
+      'Shell executor on self-hosted runner — supply-chain footgun, persistent state',
+      'Long-lived cloud keys in CI/CD variables — same risk as Jenkins; use OIDC',
+      'Manual rules on jobs without when: never default — silently runs job in unexpected contexts',
+      'Forgetting needs: when refactoring stages — jobs serialize unnecessarily and pipelines slow down',
+      'Review apps without on_stop or auto_stop_in — orphan namespaces accumulate forever',
+      'Auto DevOps in production with no overrides — opinionated defaults rarely match real architecture',
+      'Compliance Pipelines without testing — they run on every pipeline; a bug breaks every project at once',
+      '$CI_JOB_TOKEN scoped to API access without restriction — token can read other projects unless restricted',
+      'rules: with both if: and only/except (legacy) — only/except is deprecated; use rules: exclusively',
+    ],
+    keyQuestions: [
+      {
+        question: 'When does GitLab CI win over GitHub Actions?',
+        answer: `Three concrete scenarios. Outside these, GHA is usually the right call.
+
+Scenario 1: already on GitLab. The integration tax is real. Using GitLab for SCM and GHA for CI means: separate auth, separate UI, separate billing, complex webhooks bridging the two, no native MR widget for CI status. .gitlab-ci.yml is the natural fit if your code is in GitLab. If you're choosing a new platform: GitLab vs GitHub is the more relevant decision; GitLab CI vs GHA follows from that.
+
+Scenario 2: integrated DevSecOps requirement. GitLab Ultimate ships SAST, DAST, SCA, Container Scanning, License Compliance, Secret Detection, IaC Scanning, Coverage-guided fuzz testing, and a unified Vulnerability Management workflow. Reports merge into the MR widget; the Vulnerability dashboard tracks across projects; SLAs and severity-based workflows are built in. GHA gives you Code Scanning + Dependabot + Secret Scanning natively (good!), but DAST and the unified vulnerability view are bolted on (Snyk, Aqua, etc.). For orgs with mature security programs that want everything in one product with one auth model, GitLab is the cleaner story.
+
+Scenario 3: self-managed (on-prem) requirement. GitLab Self-Managed runs the whole platform — SCM, CI, registry, scanning, container registry — on your infrastructure. UX is significantly better than self-managed Jenkins. More cohesive than GitHub Enterprise Server, which still requires you to bolt on third-party security tools. Common in regulated industries (banking, government, defence) and EU GDPR-strict environments where data residency matters.
+
+Other concrete wins:
+
+Compliance Pipelines. Org-level pipelines that run on every project, not bypassable by project teams. Built-in solution to "every project must run secret scan + SBOM + license check." GHA's required workflows (2023) are the equivalent but less mature.
+
+Merge train. Pre-dates GHA merge queue. Interruptible jobs let train rebuild quickly when new MRs join.
+
+Built-in container registry. registry.gitlab.com/group/project at no extra setup. GHA + GHCR is similarly free for GitHub repos but the integration is one fewer hop in GitLab.
+
+Review apps with environment management. GitLab tracks deployments per environment; the deploy track concept is more mature than GHA Environments.
+
+Where GHA wins:
+
+Action marketplace. ~25k actions vs GitLab CI components (smaller registry as of 2026).
+
+Already on GitHub. Mirroring code from GitHub to GitLab just to use GitLab CI is silly.
+
+Cost at scale. GitLab Ultimate is $99/user/month; GHA Pro is $4. The integrated bundle is expensive — you're paying for SAST/DAST/etc. you might not use.
+
+Community ecosystem. GitHub Actions Awesome lists, broader OSS adoption.
+
+Pragmatic 2026 decision tree:
+
+On GitLab → GitLab CI. Don't fight the platform.
+
+Want self-managed CI with integrated DevSecOps, willing to pay → GitLab Self-Managed Ultimate.
+
+Cost-conscious, on GitHub → GHA + Snyk/Trivy/Semgrep individually.
+
+Greenfield, no constraint → wherever your code lives. Both are good products in 2026.
+
+The 21% market share GitLab CI holds is durable — driven by GitLab itself. Migration off GitLab is rare; migration to GitLab is mostly from on-prem Jenkins shops that want a better UX.`,
+      },
+      {
+        question: 'Walk through the difference between branch pipeline, MR pipeline, merged-result pipeline, and merge train.',
+        answer: `Four pipeline types in GitLab; understanding the differences is foundational and a common interview question.
+
+Branch pipeline. Triggered by push to any branch. Runs against the actual commit on the branch. The original CI pattern. Created by default when you push.
+
+When it's right: feature branches; release branches; default branch (main).
+
+MR pipeline. Triggered by MR open or MR update (push to source branch with open MR). Runs against the source branch's HEAD commit. Created when CI_PIPELINE_SOURCE == 'merge_request_event'.
+
+What it tests: the source branch's HEAD as it currently is. Does NOT include changes from target branch since the MR was opened.
+
+The "duplicate pipeline" problem: by default, a push to a branch with an open MR creates BOTH a branch pipeline AND an MR pipeline for the same commit. Wastes runner minutes; confuses status checks. Fix is explicit workflow:rules: that include MR pipelines and exclude branch pipelines for non-default branches.
+
+Merged-result pipeline. Triggered by MR open/update if the project is configured for "Pipelines must succeed before merging" with the merged-results option. GitLab simulates the merge into the target branch and runs the pipeline against the simulated post-merge tree.
+
+Why this matters: catches the failure mode where the source branch and target branch are both green individually, but the merged result is red because of conflicting changes. Common case: source branch removes a function; target branch adds a new caller of that function. Both branches green; merged-result fails.
+
+Configured via workflow:rules: $CI_MERGE_REQUEST_EVENT_TYPE == 'merged_result' and project settings → Merge Requests → "Pipelines must succeed" + "Pipelines must succeed before merging" with the merged-result option enabled.
+
+Cost: 2x pipelines per MR update (one MR pipeline + one merged-result pipeline). Often disabled in favor of merge train (covers similar ground).
+
+Merge train. The most sophisticated. Serializes merges using simulated-rebase pipelines for each MR in queue order.
+
+Mechanics:
+1. Author clicks "Merge when pipeline succeeds (add to train)".
+2. GitLab creates a merge_train pipeline simulating the merge of THIS MR onto the current target branch state.
+3. If pipeline succeeds, merge happens.
+4. Next MR added to train: pipeline simulates merge atop the JUST-MERGED state of MR-1.
+5. Each MR's pipeline tests against the post-merge state of all earlier MRs in the train.
+
+Why this is essential for high-traffic main: in a busy repo, between when MR-1's pipeline starts and when MR-1 actually merges, other MRs (-2, -3, -4) may merge first. MR-1's pipeline tested against an outdated target. Merge train re-tests against the current target before each merge.
+
+Compared to GHA merge queue (GA 2023): same concept, similar UX. Merge queue serializes via the same simulated-rebase pattern.
+
+interruptible: true on jobs is critical for merge train. When MR-2 is added to train while MR-1's pipeline is running, train can cancel MR-1's pipeline and restart atop MR-1+MR-2 if it's faster. Without interruptible:, train serializes strictly.
+
+When to use which:
+
+Branch pipeline only: small repos, single contributor, low merge frequency.
+
+MR pipeline (with workflow rules to avoid duplicate): default for any team-shared repo with PRs.
+
+Merged-result pipeline: when "PR is green" must mean "post-merge will be green" (high-stakes deploys; catches conflicts).
+
+Merge train: high-traffic main branches; multiple MRs/hour; cost of broken main is high.
+
+A 2026 interview answer that demonstrates understanding: "I always start with workflow rules to prevent duplicate pipelines. For low-traffic repos, MR pipelines are sufficient. For high-traffic repos with frequent simultaneous merges, merge train is the right answer — solves the same problem GHA's merge queue does, with the same trade-off of slower individual MR throughput in exchange for guaranteed-green post-merge state."`,
+      },
+      {
+        question: 'How do you build a monorepo CI in GitLab with dynamic child pipelines?',
+        answer: `Dynamic child pipelines are GitLab's killer monorepo pattern. Pattern: parent pipeline detects what changed; generates a tailored child .yml at runtime; triggers the child.
+
+End-to-end example for a 30-service monorepo:
+
+Step 1 — repo layout:
+
+\`\`\`
+.gitlab-ci.yml
+ci/
+├── generate.sh
+└── compliance.yml
+services/
+├── payments/
+│   ├── ci.yml
+│   ├── Dockerfile
+│   └── src/
+├── search/
+│   ├── ci.yml
+│   └── ...
+└── ...
+\`\`\`
+
+Step 2 — root .gitlab-ci.yml:
+
+\`\`\`yaml
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+stages: [generate, trigger]
+
+generate:
+  stage: generate
+  image: alpine:3.20
+  script:
+    - apk add --no-cache git bash
+    - bash ci/generate.sh > generated-pipeline.yml
+    - cat generated-pipeline.yml
+  artifacts:
+    paths: [generated-pipeline.yml]
+
+trigger:
+  stage: trigger
+  needs: [generate]
+  trigger:
+    include:
+      - artifact: generated-pipeline.yml
+        job: generate
+    strategy: depend
+\`\`\`
+
+strategy: depend means parent waits for child completion and inherits child's status.
+
+Step 3 — ci/generate.sh detects changed services:
+
+\`\`\`bash
+#!/bin/bash
+set -e
+
+# Determine diff range
+if [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
+  diff_base="$CI_MERGE_REQUEST_DIFF_BASE_SHA"
+else
+  diff_base="HEAD~1"
+fi
+
+# Find changed services
+changed_services=$(git diff --name-only "$diff_base" HEAD \\
+  | grep '^services/' | cut -d/ -f2 | sort -u)
+
+if [ -z "$changed_services" ]; then
+  echo "no-op: { script: ['echo No services changed'], image: alpine }"
+  exit 0
+fi
+
+# Emit pipeline header
+cat <<EOF
+include:
+  - local: ci/compliance.yml
+
+stages: [build, test, deploy]
+
+variables:
+  REGISTRY: \$CI_REGISTRY_IMAGE
+  IMAGE_TAG: \$CI_COMMIT_SHORT_SHA
+EOF
+
+# Emit per-service jobs by including each service's ci.yml
+for svc in $changed_services; do
+  if [ -f "services/$svc/ci.yml" ]; then
+    sed "s|{SVC}|$svc|g" "services/$svc/ci.yml"
+  fi
+done
+\`\`\`
+
+Step 4 — services/payments/ci.yml (template; {SVC} replaced by the generator):
+
+\`\`\`yaml
+build:{SVC}:
+  stage: build
+  image: gcr.io/kaniko-project/executor:debug
+  script:
+    - >
+      /kaniko/executor
+      --dockerfile services/{SVC}/Dockerfile
+      --context services/{SVC}
+      --destination $REGISTRY/{SVC}:$IMAGE_TAG
+      --cache=true
+
+test:{SVC}:
+  stage: test
+  needs: [build:{SVC}]
+  image: $REGISTRY/{SVC}:$IMAGE_TAG
+  script:
+    - cd /app && pnpm test
+
+deploy:{SVC}:staging:
+  stage: deploy
+  needs: [test:{SVC}]
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  environment: { name: staging/{SVC}, url: https://staging.example.com/{SVC} }
+  image: bitnami/kubectl:latest
+  script:
+    - kubectl set image deployment/{SVC} {SVC}=$REGISTRY/{SVC}:$IMAGE_TAG -n staging
+    - kubectl rollout status deployment/{SVC} -n staging --timeout=5m
+\`\`\`
+
+Step 5 — ci/compliance.yml is included at the top of the generated pipeline; mandatory jobs run regardless of which services changed:
+
+\`\`\`yaml
+secret-scan:
+  stage: build
+  image: zricethezav/gitleaks
+  script: [gitleaks detect --source . --report-path leaks.json]
+  artifacts: { reports: { secret_detection: leaks.json } }
+
+sbom:
+  stage: build
+  image: anchore/syft
+  script: [syft dir:. -o cyclonedx-json > sbom.json]
+  artifacts: { paths: [sbom.json] }
+\`\`\`
+
+Behavior end-to-end:
+
+1. MR touches services/payments/src/handler.ts.
+2. Parent pipeline runs: generate job inspects diff, finds changed_services="payments". Emits generated-pipeline.yml with build:payments + test:payments + deploy:payments + always-on compliance jobs.
+3. Trigger job triggers the child pipeline with that YAML.
+4. Child pipeline runs: 4 jobs total. Other 29 services aren't built or tested.
+
+Wall-time impact: 30-service monorepo where naive "build everything" takes 45 minutes. With dynamic child pipelines, a single-service change runs in 4-6 minutes.
+
+Compared to GHA: GHA equivalent is paths-filter + matrix sharding + Turborepo. GitLab's dynamic child pipeline is more native — the entire pipeline shape is generated, not just job inclusion. For complex monorepo patterns (per-service stages with different compliance requirements), GitLab's model is more flexible.
+
+When to use vs not:
+
+Use dynamic child pipelines for: 10+ service monorepos with independent service pipelines; complex parent-child workflows where the child's structure depends on runtime data; multi-language monorepos with language-specific pipeline patterns.
+
+Don't bother for: small monorepos (<5 services); when paths-only conditional rules: changes: [] cover the case; when service pipelines are nearly identical (extends inheritance is simpler).
+
+Operational notes:
+
+Generated pipelines hit the same lint as static pipelines. Test the generator locally; eyeball the generated YAML.
+
+Variables don't auto-propagate from parent to child unless you use trigger:variables: or inherit. Be explicit.
+
+Child pipeline's CI_PROJECT_PATH / CI_COMMIT_SHA is the same as parent — they share commit context. But the child has its own pipeline ID, separate retry/cancel UI.
+
+This pattern is the most-cited reason teams stay on GitLab CI for monorepos in 2026.`,
+      },
+      {
+        question: 'Walk through GitLab\'s integrated DevSecOps scanning — SAST, DAST, SCA, container, license.',
+        answer: `GitLab's integrated security scanning is its biggest differentiator over GHA. Five+ scanner categories, all reporting into one Vulnerability dashboard with merged MR widget.
+
+Setup: enable Auto DevOps OR include the security templates explicitly:
+
+\`\`\`yaml
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
+  - template: Jobs/License-Scanning.gitlab-ci.yml
+  - template: DAST.gitlab-ci.yml
+\`\`\`
+
+Each template defines jobs with artifacts:reports:<scanner_type> — GitLab parses these reports and merges them.
+
+SAST (Static Application Security Testing). Detects vulnerabilities in source code. GitLab's SAST job auto-detects language and dispatches to language-specific scanners:
+- JS/TS → ESLint Security plugin / Semgrep
+- Python → Bandit / Semgrep
+- Java/Kotlin → Semgrep / SpotBugs Find Security Bugs
+- Ruby → Brakeman
+- Go → gosec / Semgrep
+- C/C++ → flawfinder
+
+Output: SAST report (JSON) flagging vulnerabilities by file, line, severity (Critical/High/Medium/Low/Info), CWE category. Posted as MR comments + Vulnerability dashboard entry.
+
+\`\`\`yaml
+sast:
+  stage: test
+  variables:
+    SAST_EXCLUDED_PATHS: 'tests/, vendor/'
+\`\`\`
+
+Secret Detection. Scans repo + pipeline output for leaked secrets (AWS keys, GitHub tokens, JWT secrets, private keys). Default in 2026: gitleaks.
+
+\`\`\`yaml
+secret_detection:
+  variables:
+    SECRET_DETECTION_HISTORIC_SCAN: "false"   # only scan latest commits
+\`\`\`
+
+Setting SECRET_DETECTION_HISTORIC_SCAN: true scans entire git history — useful first time; expensive recurring.
+
+Dependency Scanning (SCA). Scans lockfiles for known CVEs:
+- npm/yarn/pnpm-lock.yaml
+- requirements.txt / Pipfile.lock / poetry.lock
+- pom.xml / build.gradle / sbt
+- go.sum
+- Gemfile.lock
+- composer.lock
+
+Output flags packages by CVE ID, severity, fix-available version. The widget recommends specific package version bumps.
+
+Container Scanning. Scans built Docker images for OS-level CVEs (apt/apk/yum packages). Default scanner: Trivy.
+
+\`\`\`yaml
+container_scanning:
+  variables:
+    CS_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+\`\`\`
+
+Catches the "Alpine 3.18 has a critical CVE in libssl" cases that source-code SAST can't see.
+
+License Scanning. Detects licenses of every dependency. Flags GPL/AGPL/copyleft licenses if your policy forbids them. Configurable allow/deny lists.
+
+DAST (Dynamic Application Security Testing). Runs OWASP ZAP against the deployed review app:
+
+\`\`\`yaml
+include:
+  - template: DAST.gitlab-ci.yml
+
+variables:
+  DAST_WEBSITE: https://$CI_COMMIT_REF_SLUG.review.example.com
+  DAST_FULL_SCAN_ENABLED: "true"
+
+dast:
+  needs: [review]      # depends on review-app deploy
+\`\`\`
+
+DAST Full Scan exercises the running application — XSS, SQL injection, CSRF, auth bypass tests. Significantly slower than SAST (10-30 min); often runs only on main branch or on a schedule, not every MR.
+
+API Security Testing. DAST for APIs — feeds an OpenAPI spec or HAR file, fuzzes endpoints.
+
+Coverage-guided Fuzz Testing. For mature security programs. Generates malformed inputs, runs them against the binary, watches for crashes. Catches memory safety issues in C/C++/Rust.
+
+IaC Scanning. Static analysis of Terraform / CloudFormation / Helm / Kubernetes manifests for security issues (public S3 buckets, privileged containers, etc.). Integrates Checkov / KICS.
+
+Vulnerability Management workflow. All reports merge into the project's Vulnerability dashboard:
+- Sortable by severity, scanner, status (Detected/Confirmed/Resolved/Dismissed).
+- Per-vuln: history, related MR, similar findings.
+- Bulk actions: dismiss many at once with reason ("False positive — sandbox-only env").
+- Compliance reporting: export to CSV for audit.
+
+The Security & Compliance Center aggregates Vulnerability data across all projects in a group. Single pane of glass for the security team.
+
+Compared to GHA + bolt-ons:
+
+GHA path: GitHub Code Scanning (CodeQL — GitHub's SAST), Dependabot alerts (SCA), Secret Scanning, plus you wire in third-party scanners (Snyk, Aqua, Semgrep) per scanner type.
+
+GHA strengths: CodeQL is excellent (better than GitLab's Semgrep-based SAST in many languages); Dependabot is mature; bolt-on options like Snyk give best-in-breed for each category.
+
+GitLab strengths: one product, one auth, one dashboard, one policy. For orgs with mature security programs that want unified reporting, GitLab is much less integration work.
+
+When to lean into GitLab DevSecOps:
+- Compliance-driven (SOC 2, FedRAMP, HIPAA) where audit trail across projects matters.
+- Security team wants single-pane view across hundreds of projects.
+- Budget allows Ultimate tier.
+
+When GHA + best-of-breed is fine:
+- Smaller orgs where unified reporting is overkill.
+- Already have Snyk/Aqua/Semgrep contracts.
+- Need best-in-class SAST (CodeQL is genuinely better than Semgrep for some languages).
+
+The 2026 pragmatic stance: GitLab's integrated story is real and valuable but expensive. It's the killer feature for "security-first" orgs and largely irrelevant for "ship-fast" startups.`,
+      },
+      {
+        question: 'How do GitLab runners scale on Kubernetes for a busy CI workload?',
+        answer: `GitLab Runner on Kubernetes is the production pattern for self-hosted CI scaling. Helm chart + autoscaling + queue management.
+
+Architecture:
+
+GitLab Runner Manager runs as a Deployment in K8s. It registers with GitLab as a runner; polls GitLab API for queued jobs; for each job, creates a Pod via the Kubernetes API; monitors the pod; reports job status back to GitLab.
+
+The runner manager itself is small (200m CPU, 256Mi memory). The actual job execution happens in spawned pods.
+
+Helm install:
+
+\`\`\`yaml
+# values.yaml
+gitlabUrl: https://gitlab.example.com
+runnerRegistrationToken: \${GITLAB_RUNNER_TOKEN}
+
+concurrent: 50                    # max parallel jobs across all spawned pods
+
+runners:
+  config: |
+    [[runners]]
+      name = "k8s-runner"
+      url = "https://gitlab.example.com"
+      executor = "kubernetes"
+      [runners.kubernetes]
+        namespace = "gitlab-runners"
+        image = "alpine:3.20"
+        privileged = false        # security; build steps that need privileged use kaniko, not docker-dind
+        cpu_request = "100m"
+        memory_request = "128Mi"
+        cpu_limit = "2000m"
+        memory_limit = "4Gi"
+        service_account = "gitlab-runner-builder"
+        [runners.kubernetes.pod_security_context]
+          run_as_non_root = true
+          run_as_user = 1000
+          fs_group = 1000
+        [[runners.kubernetes.pod_labels]]
+          team = "platform"
+\`\`\`
+
+Job execution sequence:
+
+1. GitLab queues a job; runner manager polls and pulls it.
+2. Runner manager creates a pod with: helper container (manages workspace, uploads artifacts), build container (runs the user script), service containers (sidecar databases for integration tests).
+3. Pod schedules on a K8s node. Cluster autoscaler / Karpenter provisions nodes if capacity is short.
+4. Helper container clones the repo, sets up workspace.
+5. Build container runs the user script. Output streams to runner manager → GitLab.
+6. Job ends; pod terminates.
+7. Cluster autoscaler / Karpenter de-provisions idle nodes.
+
+Scaling tuning:
+
+concurrent (in values.yaml). Max parallel jobs across this runner. Set high (50, 100, 200) to allow elastic burst. Backed by the underlying K8s capacity.
+
+Pod resource requests/limits. Critical for scheduling. Default 0/0 means pods schedule anywhere and get OOMkilled randomly. Set realistic requests (1 CPU, 2Gi memory typical) and limits.
+
+Multiple runner manager deployments per workload type. Different pod templates for different job types:
+- gitlab-runner-build: large pods for builds (4 CPU, 8Gi).
+- gitlab-runner-test: medium pods for tests (1 CPU, 2Gi).
+- gitlab-runner-gpu: GPU-enabled pods for ML training.
+
+Each is a separate Helm release with tags: matching the workload.
+
+Karpenter / cluster-autoscaler integration. Modern best practice: use Karpenter (AWS) or equivalent (GKE node auto-provisioning, AKS Karpenter as of 2024) for fast node provisioning. Pods queued for scheduling trigger Karpenter to provision a node within ~30s — vs cluster-autoscaler's traditional ~3min. Significant CI throughput improvement.
+
+Spot instances for cost savings. Karpenter NodePool config can prefer spot instances. CI jobs are interruptible (with proper retry config) and tolerate spot interruption. 60-80% cost savings on EC2 for CI workloads is typical.
+
+Resource quota on the gitlab-runners namespace. Prevents runaway pipelines from consuming all cluster capacity:
+
+\`\`\`yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata: { name: gitlab-runner-quota, namespace: gitlab-runners }
+spec:
+  hard:
+    pods: "200"
+    requests.cpu: "200"
+    requests.memory: 400Gi
+\`\`\`
+
+NetworkPolicy. Default-deny egress from gitlab-runners namespace except to: GitLab itself (for runner manager), container registries (for image pulls), package mirrors (for dependencies), the cluster API (for kubectl jobs that need it). Prevents lateral movement.
+
+Service account scoping. Per pod template. Build pods get read-only access; deploy pods assume IAM roles via IRSA scoped to their target environment. No long-lived credentials in CI/CD variables.
+
+Metrics. GitLab Runner exposes Prometheus metrics on port 9252:
+- gitlab_runner_concurrent: configured concurrency.
+- gitlab_runner_jobs: total jobs by state.
+- gitlab_runner_job_duration_seconds histogram.
+
+Pair with kube-state-metrics for pod-level scheduling visibility.
+
+Common operational issues:
+
+Pods stuck Pending. Resource requests too high vs node capacity, or quota exceeded. kubectl describe pod and Karpenter logs.
+
+Build slowness. Pod cold-start dominates. Use prewarmed nodes (Karpenter NodePool maxPodsPerNode + reserved capacity) for high-volume CI.
+
+DOcker-in-Docker (DinD) pain. Privileged containers, security risk, performance overhead. Migrate to kaniko for image builds (rootless, no Docker daemon). buildah is another option.
+
+Cache backend. Pod-local cache disappears at pod end. Configure shared S3-compatible cache (MinIO, S3, GCS) in runner config. Reused across pods for the same project + branch.
+
+Autoscale ceilings. Karpenter has its own concurrency limits; the K8s API has rate limits (default 50 QPS) that bite at very high scale (1000+ concurrent pods). Tune --kube-api-qps on the runner.
+
+Realistic scale: a 50-engineer org running this pattern on EKS with Karpenter handles 1000+ jobs/day with 200-pod peak concurrency. Cost: $1-3k/month in EC2 for the spawned pod compute (mostly spot), plus minor overhead for the runner managers. Significantly cheaper than equivalent GitLab.com hosted minutes at this scale.
+
+Equivalent in GHA: ARC (Actions Runner Controller) with gha-runner-scale-set Helm chart. Same architecture, same trade-offs. The Kubernetes-native CI runner pattern is identical across GitLab and GHA — the differences are platform integration, not runner architecture.`,
+      },
+      {
+        question: 'Quick-fire interview answers — GitLab CI essentials.',
+        answer: `Rapid-fire facts and one-liner answers.
+
+Q: What's the structure of .gitlab-ci.yml?
+A: Stages (sequential phases), jobs (parallel within a stage), with workflow:rules at the top deciding pipeline kind. Jobs land on runners (shared, group, or project).
+
+Q: Stages vs needs?
+A: Stages run sequentially; jobs in a stage run in parallel. needs: creates a DAG — a job starts as soon as its prerequisites finish, regardless of stage. Faster pipelines.
+
+Q: Branch pipeline vs MR pipeline vs merged-result pipeline vs merge train?
+A: Branch = test commit on branch. MR = test source branch HEAD. Merged-result = test simulated post-merge tree. Merge train = serialize merges with simulated-rebase pipelines for high-traffic main.
+
+Q: What's the duplicate pipeline problem?
+A: Without explicit workflow rules, GitLab creates BOTH branch and MR pipeline for the same commit when an MR is open. Wastes minutes. Fix: workflow:rules: that excludes branch pipelines for non-default branches.
+
+Q: Three runner executors?
+A: shell (legacy, persistent state — supply-chain footgun), docker (Docker container per job), kubernetes (K8s pod per job — modern default).
+
+Q: What is Auto DevOps?
+A: Canned .gitlab-ci.yml that auto-detects language and runs build/test/security/deploy. Useful for prototyping; most production projects override after outgrowing defaults.
+
+Q: How does OIDC to AWS work?
+A: Job declares id_tokens with custom audience. AWS IAM trust policy validates the JWT (issuer, sub claim restricting project/ref). aws sts assume-role-with-web-identity returns short-lived credentials. No long-lived AWS keys in CI/CD variables.
+
+Q: What is a Compliance Pipeline?
+A: Org-level pipeline that runs on every project, not bypassable by project teams. Used for required compliance jobs (secret scan, SBOM, license check). Group-level setting.
+
+Q: Built-in DevSecOps scanners?
+A: SAST, DAST, Dependency Scanning (SCA), Container Scanning, License Scanning, Secret Detection, IaC Scanning. All emit reports merged into MR widget + Vulnerability dashboard.
+
+Q: What is a child pipeline?
+A: Pipeline triggered by a parent's trigger:include job. Strategy: depend (parent waits, inherits status) or detach (parent doesn't wait). Used for monorepo per-service pipelines.
+
+Q: Dynamic child pipeline?
+A: Generate the child .yml at runtime as a job artifact, then trigger it. Pattern: parent detects changed services, generates a tailored pipeline including only those services. Killer monorepo feature.
+
+Q: extends vs include?
+A: extends inherits job config from another job (Ruby/Python-style inheritance). include pulls YAML fragments from other files/repos. Combine: include the template file, extend the template job.
+
+Q: parallel: N vs parallel:matrix?
+A: parallel: N runs the same job N times with CI_NODE_INDEX 1..N (test sharding). parallel:matrix runs cross-product of variable sets (cross-platform / multi-version).
+
+Q: Resource group?
+A: Job-level mutex. resource_group: deploy-prod ensures only one job in this group runs at a time across pipelines. Prevents concurrent prod deploys.
+
+Q: Review apps?
+A: Per-MR ephemeral deployment. environment:name: review/$CI_COMMIT_REF_SLUG with on_stop: stop_review and auto_stop_in: 1 week. The full preview-per-PR pattern.
+
+Q: Built-in container registry?
+A: registry.gitlab.com/group/project. Free for private projects. CI jobs push, deploys pull. No separate registry to set up.
+
+Q: GitLab.com vs Self-Managed?
+A: GitLab.com is SaaS — multi-tenant, managed by GitLab. Self-Managed runs on your infrastructure. Self-Managed adds Premium+Ultimate tier features at perpetual licensing cost.
+
+Q: Premium vs Ultimate?
+A: Premium ($29/user/month) = merge train, code owners, multi-LDAP, multi-cluster K8s deploy. Ultimate ($99/user/month) = full DevSecOps (DAST, IaC scanning, fuzz testing, vulnerability management, compliance frameworks, security dashboards).
+
+Q: When does GitLab CI win over GHA?
+A: Already on GitLab; integrated DevSecOps requirement; self-managed (on-prem) with mature UX; Compliance Pipelines for org-level governance; mid-size company wanting single-vendor stack.
+
+Q: When does GHA win?
+A: Already on GitHub; cost-conscious at scale; want max marketplace ecosystem; CodeQL SAST quality matters; smaller security needs.
+
+Q: Migration from GitLab CI to GHA?
+A: Workflow:rules → on:; runners:tags → runs-on:; extends → reusable workflow + composite action; child pipelines → reusable workflow with workflow_call:; environments map directly; OIDC pattern is identical. Multi-quarter project for any non-trivial setup.
+
+Q: Most common .gitlab-ci.yml mistake?
+A: No explicit workflow rules → duplicate pipelines. Or: shell executor on self-hosted runner → supply-chain footgun.
+
+These are the answers a GitLab-fluent senior engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.gitlab.com/ee/ci/yaml/',
+      'https://docs.gitlab.com/ee/ci/pipelines/merge_trains.html',
+      'https://docs.gitlab.com/ee/ci/pipelines/downstream_pipelines.html',
+      'https://docs.gitlab.com/ee/topics/autodevops/',
+      'https://docs.gitlab.com/ee/ci/cloud_services/aws/',
+      'https://docs.gitlab.com/runner/executors/kubernetes.html',
+      'https://www.jetbrains.com/lp/devecosystem-2024/',
+    ],
+  },
+
 ];
