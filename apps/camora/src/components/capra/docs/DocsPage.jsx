@@ -2892,6 +2892,76 @@ export default function DocsPage({ onBack }) {
                   </div>
                 </>
               )}
+
+              {/* Site Reliability Engineering Content */}
+              {activePage === 'sre' && (
+                <>
+                  <div className="mb-6">
+                    <SectionHero
+                      eyebrow="Production Reliability"
+                      title="Site Reliability Engineering"
+                      subtitle="53 topics across 9 sub-categories — SLOs, observability, incidents, automation, capacity, reliability patterns, on-call, security."
+                      className="mb-4"
+                    />
+                    <div className="space-y-3">
+                    {sreCategories.map((category) => {
+                      const categoryTopics = filteredTopics.filter(t => sreTopicCategoryMap[t.id] === category.id);
+                      if (categoryTopics.length === 0) return null;
+                      return (
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                          />
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3">
+                            {categoryTopics.map((topic) => {
+                              const isCompleted = completedTopics[topic.id];
+                              const isStarred = starredTopics[topic.id];
+                              const isLocked = contentAccess.isTopicLocked('sre', topic.id);
+                              return (
+                                <div
+                                  key={topic.id}
+                                  onClick={() => !isLocked && setSelectedTopic(topic.id)}
+                                  className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
+                                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: topic.color }} />
+                                        <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
+                                        {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
+                                        {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
+                                      </div>
+                                      <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{topic.description}</p>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ color: 'var(--accent)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                                          {topic.questions} questions
+                                        </span>
+                                        {topic.visualizations?.length > 0 && (
+                                          <span className="text-[10px] landing-mono text-[var(--text-muted)]">
+                                            {topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0 mt-1">
+                                      {isStarred && <Icon name="star" size={12} className="text-[var(--accent)]" />}
+                                      <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
