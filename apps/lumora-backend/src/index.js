@@ -156,6 +156,68 @@ async function runMigrations() {
       // ai_hours_usage / teams / team_* / ai_hour_topups indexes are
       // owned by ascend-backend (single source of truth for billing
       // schema).
+
+      // ── RAG: pgvector extension ────────────────────────────────────
+      // text-embedding-3-small is 1536-dim. HNSW indexes give us ~10ms
+      // top-k cosine search at our scale (low five-figures of chunks).
+      `CREATE EXTENSION IF NOT EXISTS vector`,
+
+      // Global knowledge base — Capra Prepare topic chunks. One row per
+      // section of a topic (introduction / keyConcepts / whenToUse /
+      // questions[N]). source_kind currently = 'capra-topic'; reserved
+      // for future: 'company-blog', 'official-doc' (Plan C).
+      `CREATE TABLE IF NOT EXISTS lumora_kb_chunks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        source_kind VARCHAR(40) NOT NULL,
+        source TEXT NOT NULL,
+        topic_id TEXT NOT NULL,
+        topic_title TEXT NOT NULL,
+        section TEXT NOT NULL,
+        content TEXT NOT NULL,
+        token_count INTEGER NOT NULL,
+        embedding vector(1536) NOT NULL,
+        metadata JSONB DEFAULT '{}'::jsonb,
+        content_hash VARCHAR(64) NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(source, topic_id, section)
+      )`,
+      `CREATE INDEX IF NOT EXISTS lumora_kb_chunks_hnsw
+         ON lumora_kb_chunks USING hnsw (embedding vector_cosine_ops)
+         WITH (m = 16, ef_construction = 64)`,
+      `CREATE INDEX IF NOT EXISTS lumora_kb_chunks_topic
+         ON lumora_kb_chunks (source, topic_id)`,
+
+      // Per-user Prep Kit chunks — JD body, resume body, uploaded docs.
+      // Strict per-user namespace; queries always filter by user_id.
+      // doc_kind: 'jd' | 'resume' | 'cover_letter' | 'upload'.
+      `CREATE TABLE IF NOT EXISTS lumora_user_doc_chunks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        company_key VARCHAR(120),
+        doc_kind VARCHAR(40) NOT NULL,
+        section TEXT,
+        content TEXT NOT NULL,
+        token_count INTEGER NOT NULL,
+        embedding vector(1536) NOT NULL,
+        metadata JSONB DEFAULT '{}'::jsonb,
+        prep_state_version BIGINT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
+      `CREATE INDEX IF NOT EXISTS lumora_user_doc_chunks_user
+         ON lumora_user_doc_chunks (user_id, prep_state_version)`,
+      `CREATE INDEX IF NOT EXISTS lumora_user_doc_chunks_hnsw
+         ON lumora_user_doc_chunks USING hnsw (embedding vector_cosine_ops)
+         WITH (m = 16, ef_construction = 64)`,
+
+      // ── RAG: column-width upgrades ─────────────────────────────────
+      // The first cut shipped these as VARCHAR. Widening to TEXT before
+      // the tables are populated avoids a full-table rewrite later.
+      // ALTER ... TYPE TEXT on a TEXT column is a fast no-op.
+      `ALTER TABLE lumora_kb_chunks ALTER COLUMN source TYPE TEXT`,
+      `ALTER TABLE lumora_kb_chunks ALTER COLUMN topic_id TYPE TEXT`,
+      `ALTER TABLE lumora_kb_chunks ALTER COLUMN section TYPE TEXT`,
+      `ALTER TABLE lumora_user_doc_chunks ALTER COLUMN section TYPE TEXT`,
     ];
 
     // Postgres error codes for "already exists" — the legitimate swallow
