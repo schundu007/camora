@@ -20,6 +20,7 @@ import { authenticate } from '../middleware/authenticate.js';
 import { refreshCompanyContext } from '../services/companyContext.js';
 import { indexUserPrepDocs } from '../services/userDocIndexer.js';
 import { buildSessionKit } from '../services/sessionKit.js';
+import { buildWebWatchlist } from '../services/webWatchlist.js';
 
 const router = Router();
 
@@ -86,7 +87,8 @@ router.put('/state', async (req, res, next) => {
       // run them in parallel.
       indexUserPrepDocs({ userId: req.user.id, prepData: data })
         .then(() => buildSessionKit({ userId: req.user.id, prepData: data }))
-        .catch((err) => console.warn('[prep] index/kit pipeline failed:', err.message));
+        .then(() => buildWebWatchlist({ userId: req.user.id, prepData: data }))
+        .catch((err) => console.warn('[prep] index/kit/watchlist pipeline failed:', err.message));
     } catch {}
 
     res.json({ updated_at: r.rows[0].updated_at });

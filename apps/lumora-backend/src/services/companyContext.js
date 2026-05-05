@@ -26,7 +26,7 @@ const SUMMARY_MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 // `eng` URL is the engineering blog landing page; the `github` is the
 // org slug (we hit the public REST API). Both are optional; one is
 // enough to produce a useful briefing.
-const COMPANY_SOURCES = {
+export const COMPANY_SOURCES = {
   NVIDIA: { eng: 'https://developer.nvidia.com/blog/', github: 'NVIDIA' },
   Google: { eng: 'https://blog.google/technology/research/', github: 'google' },
   Meta: { eng: 'https://engineering.fb.com/', github: 'facebook' },
