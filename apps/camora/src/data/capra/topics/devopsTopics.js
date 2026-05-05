@@ -7297,4 +7297,1004 @@ Operational lesson: Tekton inherits all K8s operational concerns (PVCs, scheduli
     ],
   },
 
+  // ─────────────────────────────────────────────────────────────────────
+  // Argo Workflows — general-purpose K8s workflow orchestration
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'argo-workflows',
+    title: 'Argo Workflows — DAG / Steps for Kubernetes',
+    icon: 'tool',
+    color: '#16a34a',
+    questions: 5,
+    description: 'CNCF Graduated K8s-native workflow engine. Workflow CRD with DAG/steps templates, artifacts via S3/GCS, parameters + results, CronWorkflow for scheduled batch, Argo Events for triggers. Powers Kubeflow Pipelines, Couler, BlackRock\'s data platform.',
+    visualizations: [
+      {
+        title: 'Argo Workflows architecture — Workflow, Templates, Artifacts',
+        description: `Argo Workflows is a general-purpose orchestration engine (data pipelines, ML training, CI/CD, batch jobs). Each step is a Pod, scheduled and orchestrated by the Argo Workflows controller.
+
+Core CRD: Workflow. The complete pipeline definition + runtime state in one resource. A Workflow has:
+- entrypoint — the template to start with
+- arguments — parameters passed in
+- templates — named units of execution (DAG, steps, container, script, resource, suspend)
+- volumeClaimTemplates — PVCs created per workflow
+
+Six template types:
+1. container — runs an image with command/args
+2. script — runs an inline script in a chosen image
+3. dag — declarative DAG with explicit dependencies between named tasks
+4. steps — sequential list of parallel groups
+5. resource — applies/patches/deletes a K8s resource
+6. suspend — pauses for external trigger (manual gate, async event)
+
+Artifacts pass data between steps. Stored in S3, GCS, MinIO, or Azure Blob — configured cluster-wide via artifactRepository. A step's outputs.artifacts get uploaded; the next step's inputs.artifacts get downloaded. Compared to Tekton workspaces (PVCs), artifacts are object-storage-backed, so they survive the workflow's PVC lifecycle.
+
+Parameters propagate values through the workflow. Each template can declare inputs.parameters and outputs.parameters. {{steps.foo.outputs.parameters.bar}} references upstream output.
+
+Argo Server provides REST/gRPC API + UI. Workflow controller watches Workflow CRDs and creates Pods. WorkflowTemplate (cluster or namespace scoped) is a reusable Workflow definition referenced by other Workflows.
+
+CronWorkflow schedules a Workflow on a cron expression — declarative scheduled batch.`,
+        image: '/diagrams/devops/ct6-argo-wf.png',
+      },
+      {
+        title: 'DAG template + fan-out / fan-in pattern',
+        description: `DAG templates are Argo's strength. Express complex dependencies declaratively.
+
+Walking through a typical ML training fan-out / fan-in:
+
+1. validate-data step (single Pod) — checks input data shape.
+2. fan-out: process-shard step runs in parallel for each shard (withSequence: 0..9 spawns 10 parallel Pods).
+3. fan-in: aggregate-results step depends on all 10 shards completing; collects their artifacts.
+4. train-model step depends on aggregate; runs the actual training (long-running, GPU pod).
+5. evaluate step runs after train.
+6. publish-or-rollback step uses when expression: deploy if accuracy > threshold; otherwise notify-only.
+
+The DAG template:
+
+\`\`\`yaml
+- name: ml-pipeline
+  dag:
+    tasks:
+      - name: validate
+        template: validate-data
+      - name: process-shard
+        depends: validate
+        template: process-one-shard
+        arguments:
+          parameters:
+            - { name: shard-id, value: '{{item}}' }
+        withSequence: { count: '10' }
+      - name: aggregate
+        depends: process-shard
+        template: aggregate-results
+      - name: train
+        depends: aggregate
+        template: train-model
+      - name: evaluate
+        depends: train
+        template: evaluate-model
+      - name: deploy
+        depends: evaluate
+        when: '{{tasks.evaluate.outputs.parameters.accuracy}} > 0.85'
+        template: deploy-model
+\`\`\`
+
+Argo provides:
+- withSequence — fan out by integer range
+- withItems — fan out by explicit list
+- withParam — fan out by JSON list parameter (often computed dynamically)
+
+Retry strategy per task or globally:
+
+\`\`\`yaml
+- name: train
+  retryStrategy:
+    limit: 3
+    retryPolicy: 'Always'
+    backoff:
+      duration: '1m'
+      factor: 2
+      maxDuration: '10m'
+  template: train-model
+\`\`\`
+
+Exit handlers run on workflow completion regardless of outcome:
+
+\`\`\`yaml
+spec:
+  onExit: notify-team
+  templates:
+    - name: notify-team
+      script:
+        image: alpine
+        command: [sh]
+        source: |
+          echo "Workflow {{workflow.name}} finished: {{workflow.status}}"
+\`\`\``,
+        image: '/diagrams/devops/ct6-argo-wf.png',
+      },
+    ],
+    introduction: `Argo Workflows is the Kubernetes-native general-purpose workflow engine. CNCF Graduated (graduated November 2022). Originated at Applatix → Intuit (2017+), now broadly adopted at BlackRock, NVIDIA, GitHub, Adobe, NASA JPL.
+
+Its scope is wider than Tekton's. Where Tekton is purpose-built for CI/CD, Argo Workflows is positioned as the general orchestration engine: data pipelines (extract-transform-load), ML training pipelines (Kubeflow Pipelines is built on Argo Workflows), batch processing (image processing, video transcoding, scientific computation), CI/CD as one of many use cases, scheduled cron jobs, event-driven workflows.
+
+Where Argo Workflows wins:
+
+General-purpose orchestration. ML training, data engineering, CI/CD, batch — same primitives apply. Often the choice when CI is one of many workflow types in the org.
+
+Strong DAG model. Declarative dependencies, parallel fan-out (withSequence/withItems/withParam), conditional execution (when), exit handlers (onExit), retry strategies. More expressive than Tekton's runAfter + when.
+
+Kubeflow Pipelines compatibility. ML pipelines on Kubernetes is the dominant Argo use case. Kubeflow Pipelines compiles ML workflows to Argo Workflow YAMLs. If you're doing ML on K8s, Argo is in the stack.
+
+Better UI than Tekton. The Argo UI's DAG visualization and log viewer are notably more polished. Real-time updates, suspend/resume buttons, parameter editing.
+
+Argo Events. Companion CNCF Incubating project for event-driven triggers — Kafka, S3, calendar, custom webhooks, GitHub. More flexible than Tekton Triggers for non-CI events.
+
+Memoization. Built-in caching of step outputs across workflow runs (via memoize: { key, maxAge, cache: { configMap: ... } }). Useful for expensive deterministic steps in ML and data pipelines.
+
+Where Argo Workflows loses:
+
+Less CI-specific. No Tekton Catalog of CI Tasks. No automatic SLSA signing (Tekton Chains). No GitHub-flavored interceptor. Building a CI pipeline on Argo means writing the integration yourself.
+
+YAML is verbose. A typical Argo Workflow is more lines than the equivalent Tekton Pipeline because of the templates: list shape and inputs/outputs declarations.
+
+Operationally heavier. Argo Workflows controller + Argo Server + (optional) Argo Events controllers. More components to operate.
+
+Smaller CI ecosystem. The Tekton-specific CI catalog doesn't exist for Argo; build steps need to be authored.
+
+When to pick Argo Workflows:
+
+ML pipelines on Kubernetes. Kubeflow Pipelines runs on Argo. If you're doing ML at scale on K8s, Argo is in your stack regardless.
+
+Mixed workload orchestration. CI + data pipelines + batch + cron in one engine. Operational coherence — one controller to operate, one UI for all workflow types.
+
+Already on Argo CD. Argo Workflows + Argo CD + Argo Rollouts + Argo Events is "the Argo stack" — operationally consistent.
+
+Heavy DAG-shaped batch processing. Image processing, video transcoding, scientific computation. Argo's fan-out + retry + memoization model fits naturally.
+
+When NOT:
+
+Pure CI/CD shop without other workload types. Tekton's CI specificity (Catalog, Chains, Triggers) is more valuable.
+
+Smaller org without K8s-deep operations. Argo is real infrastructure investment; doesn't pay off at small scale.
+
+OSS projects on GitHub. GHA wins.
+
+Three load-bearing concepts:
+
+1. DAG templates with declarative dependencies (depends:) and parallel fan-out (withSequence/withItems/withParam) are Argo's strength. Express complex parallelism naturally.
+
+2. Artifacts via S3/GCS for cross-step data flow. Object storage means artifacts survive PVC lifecycle and are reusable across workflows.
+
+3. Argo Events for general event-driven orchestration. Kafka, S3, calendar, webhooks — the broader event surface that Tekton Triggers doesn't cover.`,
+    whenToUse: [
+      'ML pipelines on Kubernetes (Kubeflow Pipelines runs on Argo)',
+      'Mixed workload orchestration: CI + data + batch + scheduled in one engine',
+      'Already on the Argo stack (Argo CD + Argo Rollouts + Argo Events)',
+      'Heavy DAG-shaped batch processing (image/video, scientific compute)',
+      'Event-driven workflows beyond CI (Kafka, S3, calendar triggers)',
+    ],
+    keyConcepts: [
+      {
+        term: 'Workflow CRD — DAG with parameters and artifacts',
+        definition: `The complete workflow definition. One Workflow resource = one execution.
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata: { generateName: ml-pipeline- }
+spec:
+  entrypoint: ml-pipeline
+  arguments:
+    parameters:
+      - { name: dataset-version, value: 'v2025.10' }
+      - { name: epochs, value: '100' }
+  volumeClaimTemplates:
+    - metadata: { name: shared-data }
+      spec:
+        accessModes: [ReadWriteMany]
+        resources: { requests: { storage: 50Gi } }
+        storageClassName: efs
+
+  templates:
+    - name: ml-pipeline
+      dag:
+        tasks:
+          - name: download
+            template: download-data
+            arguments:
+              parameters:
+                - { name: version, value: '{{workflow.parameters.dataset-version}}' }
+          - name: train
+            depends: download
+            template: train-model
+            arguments:
+              artifacts:
+                - { name: data, from: '{{tasks.download.outputs.artifacts.dataset}}' }
+              parameters:
+                - { name: epochs, value: '{{workflow.parameters.epochs}}' }
+          - name: evaluate
+            depends: train
+            template: evaluate-model
+            arguments:
+              artifacts:
+                - { name: model, from: '{{tasks.train.outputs.artifacts.model}}' }
+
+    - name: download-data
+      inputs: { parameters: [{ name: version }] }
+      outputs:
+        artifacts:
+          - { name: dataset, path: /data/dataset.parquet }
+      container:
+        image: myorg/data-fetcher:v1
+        command: [python, fetch.py, '--version', '{{inputs.parameters.version}}', '--out', '/data/dataset.parquet']
+
+    - name: train-model
+      inputs:
+        parameters: [{ name: epochs }]
+        artifacts: [{ name: data, path: /data/input.parquet }]
+      outputs:
+        artifacts: [{ name: model, path: /model/checkpoint.pt }]
+      container:
+        image: myorg/trainer:v1
+        command: [python, train.py, '--epochs', '{{inputs.parameters.epochs}}', '--data', '/data/input.parquet', '--out', '/model/checkpoint.pt']
+        resources:
+          requests: { 'nvidia.com/gpu': 1, memory: 32Gi }
+          limits: { 'nvidia.com/gpu': 1, memory: 32Gi }
+\`\`\`
+
+Notice how artifacts flow: download produces dataset → train consumes as data → train produces model → evaluate consumes. Argo handles upload/download to/from artifact repository automatically.`,
+      },
+      {
+        term: 'WorkflowTemplate — reusable workflow',
+        definition: `WorkflowTemplate is a saved Workflow definition referenceable from other Workflows. Two scopes:
+- WorkflowTemplate — namespace-scoped
+- ClusterWorkflowTemplate — cluster-scoped
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata: { name: build-and-push, namespace: ci }
+spec:
+  arguments:
+    parameters:
+      - { name: image-name, default: 'myorg/api' }
+      - { name: image-tag, default: 'latest' }
+  entrypoint: main
+  templates:
+    - name: main
+      dag:
+        tasks:
+          - name: clone
+            template: git-clone
+          - name: build
+            depends: clone
+            template: kaniko-build
+            arguments:
+              parameters:
+                - { name: dest, value: '{{workflow.parameters.image-name}}:{{workflow.parameters.image-tag}}' }
+\`\`\`
+
+Referenced from a calling Workflow:
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata: { generateName: deploy- }
+spec:
+  workflowTemplateRef:
+    name: build-and-push           # references WorkflowTemplate
+  arguments:
+    parameters:
+      - { name: image-tag, value: 'v1.2.3' }
+\`\`\`
+
+Or composed inside another workflow:
+
+\`\`\`yaml
+templates:
+  - name: deploy-pipeline
+    dag:
+      tasks:
+        - name: build
+          templateRef:
+            name: build-and-push
+            template: main
+            clusterScope: false
+\`\`\`
+
+Equivalent of GHA reusable workflows or Tekton's Pipeline-as-template pattern. Versioning via name suffix or Git ref (since they're typically GitOps-managed).`,
+      },
+      {
+        term: 'Artifact repositories',
+        definition: `Configured cluster-wide via the artifact-repositories ConfigMap in the Argo Workflows namespace.
+
+\`\`\`yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: artifact-repositories
+  namespace: argo
+  annotations:
+    workflows.argoproj.io/default-artifact-repository: default-s3
+data:
+  default-s3: |
+    archiveLogs: true
+    s3:
+      endpoint: s3.amazonaws.com
+      bucket: argo-workflow-artifacts
+      region: us-east-1
+      keyFormat: '{{workflow.namespace}}/{{workflow.name}}/{{pod.name}}'
+      useSDKCreds: true             # uses IRSA on EKS
+\`\`\`
+
+Other backends: GCS, Azure Blob, MinIO, OCI registry (newer; uses ORAS to push artifacts as OCI artifacts).
+
+Per-step artifact configuration:
+
+\`\`\`yaml
+outputs:
+  artifacts:
+    - name: model
+      path: /model/checkpoint.pt
+      archive: { tar: { compressionLevel: 9 } }   # gzipped tar
+      s3:
+        bucket: my-models
+        key: '{{workflow.name}}/checkpoint.tar.gz'
+\`\`\`
+
+archiveLogs: true also uploads pod logs to artifact repo, queryable via Argo UI even after the pod is gone.
+
+Compared to Tekton workspaces: Argo artifacts are object-storage-backed (durable, cheap, queryable cross-workflow). Tekton workspaces are PVC-backed (per-workflow lifecycle, faster I/O within a workflow). Different trade-offs; both valid.`,
+      },
+      {
+        term: 'CronWorkflow — scheduled batch',
+        definition: `Schedules a Workflow on a cron expression.
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata: { name: nightly-etl, namespace: data }
+spec:
+  schedule: '0 2 * * *'                      # 2 AM daily
+  timezone: 'America/New_York'
+  startingDeadlineSeconds: 0                  # 0 = no deadline
+  concurrencyPolicy: 'Replace'                # if last run still going, cancel it
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 10
+  workflowSpec:
+    entrypoint: etl-pipeline
+    workflowTemplateRef:
+      name: nightly-etl-template
+\`\`\`
+
+concurrencyPolicy options:
+- Allow — multiple concurrent runs
+- Forbid — skip new runs if previous still running
+- Replace — cancel previous, start new
+
+History limits prune old runs automatically.
+
+Compared to standard K8s CronJob: CronWorkflow gives you DAG, artifacts, retries, conditional execution, the full Argo Workflow feature set. CronJob is just "run a Pod on schedule." For non-trivial scheduled batch, CronWorkflow is significantly more capable.
+
+Compared to Tekton: Tekton Pipelines doesn't have a native cron primitive — you use a separate K8s CronJob to kubectl create the PipelineRun. Argo's CronWorkflow is built-in and more ergonomic for scheduled work.`,
+      },
+      {
+        term: 'Argo Events — triggers',
+        definition: `Argo Events is the companion CNCF Incubating project that handles triggers for Argo Workflows (and other targets).
+
+Three CRDs:
+- EventBus — message bus (NATS by default; Jetstream-backed) that fans events between sources and sensors.
+- EventSource — produces events from external systems (Kafka, S3, calendar, GitHub, GitLab, BitBucket, AWS SNS/SQS, Azure Service Bus, generic webhook, Redis, MQTT, NATS).
+- Sensor — consumes events and triggers actions (create Workflow, HTTP request, K8s resource, AWS Lambda, etc.).
+
+\`\`\`yaml
+# EventSource — listen to GitHub webhooks
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata: { name: github, namespace: argo-events }
+spec:
+  service: { ports: [{ port: 12000, targetPort: 12000 }] }
+  github:
+    myrepo:
+      repositories: [{ owner: myorg, name: api }]
+      webhook:
+        endpoint: /push
+        port: '12000'
+        method: POST
+        url: 'https://argo-events.example.com'
+      events: [push, pull_request]
+      apiToken: { name: github-token, key: token }
+      webhookSecret: { name: github-hmac, key: hmac }
+      contentType: json
+---
+# Sensor — fire a Workflow on push events
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata: { name: github-push-sensor, namespace: argo-events }
+spec:
+  template:
+    serviceAccountName: argo-events-sa
+  dependencies:
+    - name: github-push
+      eventSourceName: github
+      eventName: myrepo
+      filters:
+        data:
+          - path: 'body.ref'
+            type: string
+            value: ['refs/heads/main']
+  triggers:
+    - template:
+        name: trigger-build
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata: { generateName: build- }
+              spec:
+                workflowTemplateRef: { name: build-and-push }
+                arguments:
+                  parameters:
+                    - { name: commit-sha, value: '' }
+          parameters:
+            - src:
+                dependencyName: github-push
+                dataKey: body.after
+              dest: spec.arguments.parameters.0.value
+\`\`\`
+
+Filter expressions (data filters, time filters, context filters) ensure only matching events trigger workflows. Sensor's trigger creates a new Workflow per event.
+
+Compared to Tekton Triggers: Argo Events is broader-purpose (Kafka, S3, calendar, etc. are first-class) but more complex to operate (separate controllers + EventBus + sensors). Tekton Triggers is simpler for pure-CI use cases; Argo Events is the right answer when triggers come from many event sources beyond webhooks.`,
+      },
+      {
+        term: 'Recipe: ML training pipeline with GPU + memoization',
+        definition: `Production ML pipeline on EKS with GPU nodes, IRSA auth to S3, and memoization of expensive deterministic steps:
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata: { generateName: train- }
+spec:
+  entrypoint: train-pipeline
+  serviceAccountName: ml-runner   # IRSA-bound to S3 access role
+  arguments:
+    parameters:
+      - { name: dataset-uri, value: 's3://datasets/v2025.10/' }
+      - { name: hyperparams, value: '{"lr": 0.001, "batch_size": 64}' }
+
+  templates:
+    - name: train-pipeline
+      dag:
+        tasks:
+          - name: validate
+            template: validate-data
+
+          - name: preprocess
+            depends: validate
+            template: preprocess
+            memoize:
+              key: 'preprocess-{{workflow.parameters.dataset-uri}}'
+              maxAge: '720h'                    # 30 days
+              cache: { configMap: { name: argo-memoize, key: preprocess } }
+
+          - name: train
+            depends: preprocess
+            template: train-gpu
+            arguments:
+              parameters:
+                - { name: hyperparams, value: '{{workflow.parameters.hyperparams}}' }
+              artifacts:
+                - { name: data, from: '{{tasks.preprocess.outputs.artifacts.processed}}' }
+
+          - name: evaluate
+            depends: train
+            template: evaluate
+            arguments:
+              artifacts:
+                - { name: model, from: '{{tasks.train.outputs.artifacts.model}}' }
+
+          - name: register
+            depends: evaluate
+            when: '{{tasks.evaluate.outputs.parameters.accuracy}} > 0.85'
+            template: register-mlflow
+
+      onExit: notify
+
+    - name: train-gpu
+      inputs:
+        parameters: [{ name: hyperparams }]
+        artifacts: [{ name: data, path: /data/processed.parquet }]
+      outputs:
+        artifacts: [{ name: model, path: /model/checkpoint.pt, s3: { key: '{{workflow.name}}/model.pt' } }]
+      container:
+        image: nvcr.io/nvidia/pytorch:24.10-py3
+        command: [python, /scripts/train.py]
+        args:
+          - '--data=/data/processed.parquet'
+          - '--hyperparams={{inputs.parameters.hyperparams}}'
+          - '--out=/model/checkpoint.pt'
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+            memory: 64Gi
+            cpu: 8
+        volumeMounts:
+          - { name: scripts, mountPath: /scripts }
+      volumes:
+        - { name: scripts, configMap: { name: training-scripts } }
+      nodeSelector:
+        node.kubernetes.io/instance-type: 'g5.4xlarge'
+      tolerations:
+        - { key: nvidia.com/gpu, operator: Exists, effect: NoSchedule }
+
+    - name: notify
+      script:
+        image: curlimages/curl
+        command: [sh]
+        source: |
+          curl -X POST $SLACK_WEBHOOK -d '{"text":"Workflow {{workflow.name}}: {{workflow.status}}"}'
+\`\`\`
+
+Notable patterns:
+- memoize on preprocess: same dataset → cached output, skip recompute. Cache key includes dataset URI; maxAge ensures eventual refresh.
+- nodeSelector + tolerations: schedules training pod on GPU nodes (Karpenter provisions them on demand).
+- IRSA via serviceAccountName: pod's S3 access uses federated identity, not stored credentials.
+- when expression on register: only register the model if accuracy passes threshold.
+- onExit: notify regardless of outcome.
+
+This is the canonical ML pipeline pattern Kubeflow Pipelines also generates under the hood.`,
+      },
+      {
+        term: 'Recipe: parallel batch processing with withParam',
+        definition: `Process a list of items in parallel, fan-in results. Common pattern for image/video/document batch jobs.
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata: { generateName: process-images- }
+spec:
+  entrypoint: main
+  arguments:
+    parameters:
+      - { name: input-bucket, value: 's3://uploads/2025-10/' }
+
+  templates:
+    - name: main
+      dag:
+        tasks:
+          - name: list-images
+            template: list-s3
+            arguments:
+              parameters:
+                - { name: bucket, value: '{{workflow.parameters.input-bucket}}' }
+
+          - name: process
+            depends: list-images
+            template: process-one
+            arguments:
+              parameters:
+                - { name: image-key, value: '{{item}}' }
+            withParam: '{{tasks.list-images.outputs.parameters.image-list}}'
+
+          - name: aggregate
+            depends: process
+            template: aggregate-results
+
+    - name: list-s3
+      inputs: { parameters: [{ name: bucket }] }
+      outputs:
+        parameters:
+          - name: image-list
+            valueFrom: { path: /tmp/list.json }
+      script:
+        image: amazon/aws-cli:2
+        command: [sh]
+        source: |
+          aws s3 ls {{inputs.parameters.bucket}} | awk '{print $4}' | jq -R -s -c 'split("\\n") | map(select(.!=""))' > /tmp/list.json
+
+    - name: process-one
+      inputs: { parameters: [{ name: image-key }] }
+      script:
+        image: myorg/image-processor:v1
+        command: [python, /scripts/process.py]
+        args: ['--input', '{{inputs.parameters.image-key}}']
+\`\`\`
+
+withParam: '{{tasks.list-images.outputs.parameters.image-list}}' fans out: list-images outputs a JSON array of image keys; process-one runs once per element with {{item}} interpolated.
+
+Argo Workflows handles concurrency: spawns up to parallelism: N pods at once (configurable cluster-wide or per-Workflow), waits for all to complete before continuing the DAG.
+
+Equivalent in Tekton: Tekton has matrix at the Pipeline level (Tekton v0.45+) but it's less ergonomic than Argo's withParam for dynamic lists. For batch processing of computed lists, Argo wins.`,
+      },
+    ],
+    approach: [
+      'Use WorkflowTemplate for reusable patterns; reference via workflowTemplateRef from calling Workflows',
+      'Configure cluster-wide artifact repository (S3/GCS/MinIO) once; per-step artifacts inherit',
+      'CronWorkflow for scheduled batch — better than K8s CronJob + kubectl wrapper',
+      'Argo Events for non-webhook triggers (Kafka, S3, calendar, custom)',
+      'IRSA / Workload Identity for cloud auth — no long-lived keys',
+      'memoize on expensive deterministic steps (preprocess, feature extraction)',
+      'GPU nodes via nodeSelector + tolerations + Karpenter NodePool',
+      'archiveLogs: true in artifact repo so pod logs survive in S3 for query',
+    ],
+    pitfalls: [
+      'No artifact repository configured — outputs.artifacts silently fail or store in default ephemeral location',
+      'Without parallelism: cap, fan-out can spawn thousands of pods overwhelming the scheduler',
+      'memoize key not specific enough — stale cache returned for different inputs',
+      'No history limits on CronWorkflow — Workflow resources accumulate forever',
+      'Using emptyDir volumes for cross-step data — only shares within a single pod, not across DAG steps',
+      'Argo Events with webhook EventSource exposed without HMAC validation — anyone can fire workflows',
+      'Workflow controller resource limits too small — slow reconciliation under load',
+      'GPU pods without resource limits — node oversubscription, kernel panics on driver issues',
+    ],
+    keyQuestions: [
+      {
+        question: 'When do you pick Argo Workflows over Tekton?',
+        answer: `Five concrete situations where Argo Workflows is the right answer.
+
+1. ML training pipelines on Kubernetes. Kubeflow Pipelines compiles to Argo Workflows under the hood. If you're doing ML at scale on K8s, Argo is in the stack regardless of preference. Tekton's CI focus doesn't extend cleanly to ML training (long-running GPU jobs, complex DAGs, large artifacts).
+
+2. Mixed workload orchestration. CI + data engineering + batch + cron in one engine. Operating one Argo controller for everything is operationally simpler than running Tekton (CI) + Kubeflow (ML) + custom CronJobs (batch).
+
+3. Already on the Argo stack. Argo CD + Argo Rollouts + Argo Events + Argo Workflows is "the Argo stack" — Intuit, BlackRock, NVIDIA, Adobe all run versions of it. Operational coherence: same team, same UI patterns, same RBAC.
+
+4. Complex DAG-shaped batch processing. Image/video transcoding fan-out, scientific computation with parameter sweeps, ETL pipelines with branching logic. Argo's DAG model + withSequence/withItems/withParam expresses these naturally.
+
+5. Event-driven workflows beyond CI. Kafka events triggering data processing, S3 events triggering image pipelines, calendar events triggering report generation. Argo Events covers more event surface than Tekton Triggers.
+
+When Tekton wins:
+
+Pure CI/CD shop. Tekton's CI-specific primitives (Catalog, Chains, Triggers with GitHub interceptor) are more valuable than Argo's general-purpose orchestration.
+
+SLSA provenance is required. Tekton Chains auto-signs PipelineRun outputs; Argo doesn't have a built-in equivalent.
+
+CI-specific reuse via Catalog. Tekton Hub has 200+ curated CI Tasks (kaniko, cosign, helm-upgrade). Argo doesn't have an equivalent curated CI catalog.
+
+Hybrid: many real-world deployments run both. Tekton for CI/CD specifically, Argo Workflows for ML and data pipelines. Both can coexist on the same cluster in different namespaces. The Argo controller and Tekton controller don't conflict.
+
+Pragmatic 2026 stance: Argo Workflows has slightly broader adoption due to its general-purpose nature and the Kubeflow gravity well; Tekton has the CI-specific edge. Pick based on dominant workload type.`,
+      },
+      {
+        question: 'Walk through ML pipeline architecture on Argo Workflows.',
+        answer: `Reference architecture for an ML training pipeline running on EKS with GPU nodes, IRSA, S3 artifact storage, and Kubeflow Pipelines on top.
+
+Cluster setup:
+- EKS cluster with 1+ GPU NodePool managed by Karpenter (g5.xlarge through g5.48xlarge). Tainted with nvidia.com/gpu=present:NoSchedule so only pods with GPU tolerations land there.
+- Argo Workflows installed via Helm to argo namespace.
+- Argo Workflows controller scaled up (4 vCPU, 8Gi) to handle high-concurrency ML workloads.
+- S3 bucket argo-workflow-artifacts for artifacts; configured cluster-wide via artifact-repositories ConfigMap.
+- IRSA: service accounts in workflow namespaces bound to IAM roles for S3 access, ECR pulls, etc.
+
+Optional: Kubeflow Pipelines on top. Kubeflow Pipelines compiles its Python DSL to Argo Workflow YAMLs. Useful for ML engineers who prefer Python over YAML; many shops skip it and write Workflow YAML directly for production.
+
+ML-specific considerations:
+
+Data versioning. Datasets stored in S3 with semantic versions (s3://datasets/v2025.10/). Workflow params include the dataset URI; memoize keys include it.
+
+Feature stores. Feast / Tecton sit alongside; Argo workflows query them via SDK calls within steps. Feature retrieval steps can be memoized.
+
+Model registry. MLflow runs as a service in the cluster; Argo workflow's last step calls mlflow.log_model() to register. Version is the workflow name + git SHA.
+
+Training. The train-gpu template above. Single-GPU jobs request nvidia.com/gpu: 1; multi-GPU jobs request nvidia.com/gpu: 4 with PyTorch DDP. Distributed training across nodes uses Kubeflow's MPIJob/PyTorchJob CRDs (separate from Argo) or just larger-instance single-node training.
+
+Hyperparameter sweeps. Argo's withParam fans out a list of hyperparameter combinations; each fan-out item is a separate training run. Aggregate step picks the best by validation accuracy.
+
+Evaluation. Slice analysis (per-segment metrics), bias/fairness checks, performance comparison vs production model. Computed in a CPU-only container after training.
+
+Promotion. when expression in DAG: register-model only runs if evaluate's accuracy parameter exceeds threshold. Failed promotions fire onExit notification.
+
+Serving handoff. After register-model, optional kserve-deploy step that creates a KServe InferenceService from the registered model artifact. Or a separate Argo Workflow triggered manually after manual model review.
+
+Operational considerations:
+
+Cost. GPU nodes are expensive. Spot GPUs save 60-80% but require workload tolerance — Karpenter spot consolidation will preempt nodes; training workflows need checkpointing to recover. Argo's retryStrategy handles the retry but checkpoint/resume is application-level.
+
+Memoization. Preprocess, feature extraction, validation — deterministic steps that don't change with different hyperparameters. memoize cache hits save 30-90% of pipeline runtime on hyperparameter sweeps.
+
+Logging. Argo's archiveLogs: true puts pod stdout/stderr in S3 (queryable in Argo UI). For richer ML observability, integrate Weights & Biases / MLflow / TensorBoard from within training steps.
+
+Failure modes:
+- OOM kills on training pods → bigger memory request, smaller batch size, gradient accumulation.
+- GPU node provisioning latency (Karpenter ~30-60s for fresh g5) → use NodePool with reserved capacity for time-sensitive jobs.
+- S3 throughput limits on artifact upload/download → use multi-part upload, larger instance with higher network bandwidth.
+- Spot GPU preemption mid-training → checkpoint frequently, set retryStrategy with appropriate backoff.
+
+Real-world scale: 50-100 ML engineers running ~500 training pipelines/day. ~$50-150k/month in EKS GPU compute. Single Argo Workflows controller handles it; bottleneck is usually GPU availability, not Argo.
+
+Compared to managed alternatives:
+- SageMaker Pipelines / Vertex AI Pipelines — managed services, less ops overhead, more vendor lock.
+- Kubeflow Pipelines on Argo — open, K8s-native, more flexibility, more ops overhead.
+
+Pick based on team's K8s expertise and openness to vendor lock-in. Many large ML orgs run Kubeflow on Argo for portability + flexibility despite operational cost.`,
+      },
+      {
+        question: 'Fan-out / fan-in patterns — withSequence vs withItems vs withParam.',
+        answer: `Three Argo primitives for parallelism. Each fits different scenarios.
+
+withSequence: count: '10' generates a parallel run for each integer in [0, 10).
+
+\`\`\`yaml
+- name: process-shard
+  template: process-one-shard
+  arguments:
+    parameters:
+      - { name: shard-id, value: '{{item}}' }
+  withSequence:
+    count: '10'
+\`\`\`
+
+Use when: known fixed count of parallel tasks (test sharding, pre-defined number of partitions). {{item}} is 0..9. Variants: start: '0', end: '10' for explicit range.
+
+withItems: explicit list of values.
+
+\`\`\`yaml
+- name: deploy-region
+  template: deploy-to-region
+  arguments:
+    parameters:
+      - { name: region, value: '{{item}}' }
+  withItems:
+    - us-east-1
+    - eu-west-1
+    - ap-northeast-1
+\`\`\`
+
+Use when: known small list of values (deploy to N regions, run smoke test in M environments, build for K target architectures). Items are static at workflow submission time.
+
+withParam: '{{...}}' fan out by JSON array parameter, often computed at runtime.
+
+\`\`\`yaml
+- name: process
+  template: process-one
+  arguments:
+    parameters:
+      - { name: file-key, value: '{{item}}' }
+  withParam: '{{tasks.list-files.outputs.parameters.file-list}}'
+\`\`\`
+
+Use when: list is dynamic — produced by an upstream step. Examples: list S3 files matching a prefix; list users to migrate; list services to rebuild based on git diff. Most powerful and common.
+
+Fan-in is implicit: any task with depends: process automatically waits for all parallel runs to complete.
+
+\`\`\`yaml
+- name: aggregate
+  depends: process
+  template: aggregate-results
+\`\`\`
+
+Aggregate's outputs.artifacts can collect results from each fan-out task via the loop variable {{item}} → step naming. Argo automatically organizes output artifacts.
+
+Items with structure (multi-field records):
+
+\`\`\`yaml
+withItems:
+  - { region: us-east-1, instance-type: g5.xlarge }
+  - { region: eu-west-1, instance-type: g5.4xlarge }
+\`\`\`
+
+Reference fields via {{item.region}} and {{item.instance-type}}.
+
+Limits:
+
+Argo's parallelism: N at workflow level caps concurrent pods. Without it, fan-out can overwhelm the scheduler:
+
+\`\`\`yaml
+spec:
+  parallelism: 50               # max 50 concurrent steps
+\`\`\`
+
+Cluster-level parallelism via controller config caps total concurrent steps across all workflows. Important for multi-tenant clusters.
+
+Comparison with Tekton's matrix:
+
+Tekton v0.45+ added matrix at Pipeline level:
+
+\`\`\`yaml
+- name: build-matrix
+  taskRef: { name: build }
+  matrix:
+    params:
+      - { name: arch, value: [amd64, arm64] }
+      - { name: os, value: [linux, darwin] }
+\`\`\`
+
+Argo's withParam is more dynamic (consumes runtime-generated lists); Tekton's matrix is more static (declared at Pipeline definition). For batch processing of computed lists, Argo wins; for static cross-products, Tekton's matrix is cleaner.
+
+Real-world patterns:
+
+Image processing: list S3 → withParam fan-out to N parallel processors → aggregate.
+
+Hyperparameter sweep: withItems over hyperparameter sets → train each in parallel → withParam aggregate over best.
+
+Multi-region deploy: withItems over regions → deploy each → aggregate health checks.
+
+Test sharding: withSequence: count: '8' → 8 parallel test containers → aggregate junit.
+
+Each pattern is a one-line variation on the same DAG.`,
+      },
+      {
+        question: 'How do you handle artifacts and parameters across Argo Workflow steps?',
+        answer: `Parameters and artifacts are Argo's data-flow primitives. Different mechanisms for different data shapes.
+
+Parameters — small structured values (strings, numbers, JSON). Pass via inputs.parameters / outputs.parameters.
+
+\`\`\`yaml
+- name: extract-version
+  outputs:
+    parameters:
+      - name: version
+        valueFrom: { path: /tmp/version.txt }
+  script:
+    image: alpine
+    command: [sh, -c]
+    source: |
+      curl -s https://api.github.com/repos/myorg/api/releases/latest | jq -r .tag_name > /tmp/version.txt
+\`\`\`
+
+Outputs are read from a file (path) or a variable (parameter). Downstream tasks reference via {{tasks.extract-version.outputs.parameters.version}}.
+
+Limit: parameter values are stored in the Workflow CRD's status field. Etcd has a 1MB resource size limit; large parameters bloat the resource. Anything >a few KB should be an artifact, not a parameter.
+
+Artifacts — files or directories of arbitrary size. Stored in object storage (S3/GCS/MinIO); referenced by path within step containers.
+
+\`\`\`yaml
+- name: train
+  outputs:
+    artifacts:
+      - name: model
+        path: /model/checkpoint.pt
+  container:
+    image: myorg/trainer:v1
+    command: [python, train.py, '--out', '/model/checkpoint.pt']
+
+- name: evaluate
+  inputs:
+    artifacts:
+      - name: model
+        path: /model/checkpoint.pt
+        from: '{{tasks.train.outputs.artifacts.model}}'
+  container:
+    image: myorg/evaluator:v1
+    command: [python, eval.py, '--model', '/model/checkpoint.pt']
+\`\`\`
+
+Argo handles upload at end of train step (path → S3) and download at start of evaluate step (S3 → path). Artifact is durable; archive of completed workflow can be re-evaluated later.
+
+Artifact archival options:
+
+\`\`\`yaml
+outputs:
+  artifacts:
+    - name: data
+      path: /data/output.parquet
+      archive: { tar: { compressionLevel: 9 } }
+\`\`\`
+
+Or none (default), or zip. Tar+gzip is good for many small files; raw is good for one large file.
+
+Artifact retention is configured cluster-wide via artifact-repositories ConfigMap. Typical: lifecycle policy on S3 bucket auto-deletes after 30-90 days.
+
+Cross-workflow artifact reference. A new Workflow can reference an artifact from a previous Workflow by its S3 key:
+
+\`\`\`yaml
+inputs:
+  artifacts:
+    - name: prior-model
+      path: /input/model.pt
+      s3:
+        key: 'workflow-2024-10-15-abc/model.pt'
+        bucket: my-models
+\`\`\`
+
+Useful for re-running evaluation on archived models.
+
+Result vs parameter vs artifact summary:
+
+- result (small string from step's stdout): use for outputs <1KB. valueFrom: { result: ... }
+- parameter (file content as string): use for medium values <few KB. valueFrom: { path: ... }
+- artifact (file or directory): use for anything large or binary. outputs.artifacts.
+
+A common mistake: using parameters for what should be artifacts. A 100KB JSON output as parameter bloats the Workflow CRD; eventually etcd refuses the update. Use artifact (S3-backed); reference by name.
+
+Volume mounts vs artifacts:
+
+Argo also supports volume mounts via volumeClaimTemplates. PVC created per Workflow, mounted into multiple steps. Faster than artifact upload/download for many small intermediate files (no S3 round-trip). Trade-off: PVC is namespace-bound and per-workflow; artifact survives.
+
+\`\`\`yaml
+spec:
+  volumeClaimTemplates:
+    - metadata: { name: workdir }
+      spec: { ... }
+  templates:
+    - name: process
+      container:
+        volumeMounts: [{ name: workdir, mountPath: /work }]
+\`\`\`
+
+Hybrid pattern: PVC for fast intermediate state within a workflow; artifact for durable outputs that survive workflow completion.
+
+Compared to Tekton workspaces:
+
+Tekton workspaces are PVC-backed by default; data persists across Tasks within a Pipeline. Slower for cross-Task transfer (PVC re-mount per Pod).
+
+Argo's artifact (S3) approach decouples storage from workflow lifecycle. Better for long-lived results, cross-workflow reference, audit/replay. Slower per-step for upload/download but survives PVC garbage collection.
+
+Both models work; Argo's is more durable, Tekton's is faster within a single Pipeline.`,
+      },
+      {
+        question: 'Quick-fire interview answers — Argo Workflows essentials.',
+        answer: `Rapid-fire facts.
+
+Q: What's Argo Workflows' value?
+A: K8s-native general-purpose workflow engine. CNCF Graduated. Pipelines as CRDs; orchestration via DAG/steps/templates.
+
+Q: Six template types?
+A: container, script, dag, steps, resource, suspend.
+
+Q: DAG vs steps?
+A: DAG declares task dependencies via depends:. Steps is sequential list of parallel groups. Both can express the same workflow; DAG is more flexible for complex deps.
+
+Q: Three fan-out primitives?
+A: withSequence (integer range), withItems (explicit list), withParam (JSON array from upstream output).
+
+Q: What's a WorkflowTemplate?
+A: Reusable saved Workflow definition. Referenced via workflowTemplateRef. Namespace-scoped; ClusterWorkflowTemplate is cluster-scoped.
+
+Q: Artifacts vs parameters?
+A: Parameters are small structured values (strings, JSON <few KB) stored in Workflow CRD. Artifacts are files/directories stored in object storage (S3/GCS/MinIO). Use parameters for small, artifacts for large/binary.
+
+Q: How are artifacts stored?
+A: Cluster-wide artifact-repositories ConfigMap. Default backend: S3/GCS/MinIO/Azure Blob. Per-step optionally overrides. archiveLogs: true also uploads pod logs.
+
+Q: What's a CronWorkflow?
+A: Scheduled Workflow. concurrencyPolicy (Allow/Forbid/Replace) handles overlap. successfulJobsHistoryLimit / failedJobsHistoryLimit prune.
+
+Q: What's Argo Events?
+A: Companion CNCF Incubating project. EventBus + EventSource + Sensor. Triggers from Kafka/S3/calendar/webhooks/GitHub/etc. firing Workflows or other targets.
+
+Q: Memoization?
+A: memoize: { key, maxAge, cache } caches step output across runs. Skip recompute on cache hit. Useful for expensive deterministic steps.
+
+Q: Retry strategy?
+A: retryStrategy with limit, retryPolicy (Always / OnError / OnFailure / OnTransientError), exponential backoff via duration/factor/maxDuration.
+
+Q: Exit handler?
+A: onExit at workflow level. Runs after main DAG regardless of outcome. Used for cleanup and notifications.
+
+Q: When does Argo Workflows beat Tekton?
+A: ML pipelines on K8s; mixed workload orchestration; on the Argo stack already; complex DAG batch processing; event-driven workflows beyond CI.
+
+Q: When does Tekton beat Argo Workflows?
+A: Pure CI/CD; SLSA provenance via Chains; CI-specific Catalog; smaller operational overhead for CI-only.
+
+Q: Major Argo Workflows users?
+A: Intuit, BlackRock, NVIDIA, Adobe, NASA JPL. Kubeflow Pipelines compiles to Argo.
+
+Q: Multi-tenancy?
+A: Namespace per team. Argo controllers cluster-wide. RBAC enforces isolation.
+
+Q: Cloud auth?
+A: ServiceAccount with IRSA / Workload Identity / Federated Identity. Avoid long-lived keys.
+
+Q: parallelism: cap?
+A: Workflow-level cap on concurrent pods. Without it, fan-out can overwhelm the scheduler.
+
+Q: Most common Argo mistake?
+A: Large data as parameters instead of artifacts → etcd resource bloat, eventual workflow update failures.
+
+These are the answers an Argo Workflows-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://argoproj.github.io/argo-workflows/',
+      'https://argoproj.github.io/argo-events/',
+      'https://www.kubeflow.org/docs/components/pipelines/',
+      'https://argoproj.github.io/argo-workflows/walk-through/dag/',
+      'https://argoproj.github.io/argo-workflows/memoization/',
+    ],
+  },
+
 ];
