@@ -2732,10 +2732,19 @@ export default function DocsPage({ onBack }) {
                                   className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
                                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                                 >
-                                  <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    <span
+                                      className="w-9 h-9 rounded-md flex items-center justify-center shrink-0"
+                                      style={{
+                                        background: `${topic.color}1A`,
+                                        border: `1px solid ${topic.color}40`,
+                                        color: topic.color,
+                                      }}
+                                    >
+                                      <Icon name={topic.icon || 'folder'} size={18} />
+                                    </span>
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: topic.color }} />
                                         <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
                                         {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
                                         {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
@@ -2803,10 +2812,19 @@ export default function DocsPage({ onBack }) {
                                   className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
                                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                                 >
-                                  <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    <span
+                                      className="w-9 h-9 rounded-md flex items-center justify-center shrink-0"
+                                      style={{
+                                        background: `${topic.color}1A`,
+                                        border: `1px solid ${topic.color}40`,
+                                        color: topic.color,
+                                      }}
+                                    >
+                                      <Icon name={topic.icon || 'map'} size={18} />
+                                    </span>
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: topic.color }} />
                                         <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
                                         {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
                                         {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
@@ -2849,7 +2867,34 @@ export default function DocsPage({ onBack }) {
                       className="mb-4"
                     />
                     <div className="space-y-3">
-                    {engBlogCategories.map((category) => {
+                    {(() => {
+                      // Per-company domain overrides for logo.dev. The default is
+                      // `${company}.com` derived from the topic id (`meta-eng-blog`
+                      // → `meta` → `meta.com`); only edge-case TLDs and non-matching
+                      // brand domains are listed here.
+                      const ENG_BLOG_DOMAIN = {
+                        meta: 'meta.com', google: 'google.com', amazon: 'amazon.com',
+                        netflix: 'netflix.com', instagram: 'instagram.com',
+                        linkedin: 'linkedin.com', uber: 'uber.com', stripe: 'stripe.com',
+                        shopify: 'shopify.com', slack: 'slack.com', github: 'github.com',
+                        figma: 'figma.com', notion: 'notion.so', discord: 'discord.com',
+                        airbnb: 'airbnb.com', doordash: 'doordash.com', instacart: 'instacart.com',
+                        ebay: 'ebay.com', paypal: 'paypal.com', coinbase: 'coinbase.com',
+                        razorpay: 'razorpay.com', flipkart: 'flipkart.com', swiggy: 'swiggy.com',
+                        zomato: 'zomato.com', booking: 'booking.com', twitter: 'x.com',
+                        pinterest: 'pinterest.com', reddit: 'reddit.com', snap: 'snapchat.com',
+                        spotify: 'spotify.com', twitch: 'twitch.tv', tinder: 'tinder.com',
+                        quora: 'quora.com', canva: 'canva.com', atlassian: 'atlassian.com',
+                        dropbox: 'dropbox.com', salesforce: 'salesforce.com',
+                        walmart: 'walmart.com', lyft: 'lyft.com',
+                      };
+                      const LOGO_TOKEN = 'pk_WTNVbqXXTuqc9alm89LirQ';
+                      const logoFor = (topicId) => {
+                        const key = topicId.replace(/-eng-blog$/, '');
+                        const domain = ENG_BLOG_DOMAIN[key] || `${key}.com`;
+                        return `https://img.logo.dev/${domain}?token=${LOGO_TOKEN}&size=72&format=png`;
+                      };
+                      return engBlogCategories.map((category) => {
                       const categoryTopics = filteredTopics.filter(t => engBlogCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
@@ -2871,10 +2916,26 @@ export default function DocsPage({ onBack }) {
                                   className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
                                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                                 >
-                                  <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    <span
+                                      className="w-9 h-9 rounded-md flex items-center justify-center shrink-0 overflow-hidden"
+                                      style={{
+                                        background: `${topic.color}1A`,
+                                        border: `1px solid ${topic.color}40`,
+                                      }}
+                                    >
+                                      <img
+                                        src={logoFor(topic.id)}
+                                        alt={`${topic.title} logo`}
+                                        width={28}
+                                        height={28}
+                                        loading="lazy"
+                                        style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 4 }}
+                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                      />
+                                    </span>
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: topic.color }} />
                                         <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
                                         {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
                                         {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
@@ -2902,7 +2963,8 @@ export default function DocsPage({ onBack }) {
                           </div>
                         </div>
                       );
-                    })}
+                    });
+                    })()}
                     </div>
                   </div>
                 </>
