@@ -105,6 +105,13 @@ export const sreTopics = [
     color: '#3b82f6',
     questions: 4,
     description: 'The Treynor definition, the relationship to DevOps, and the eight SRE principles.',
+    visualizations: [
+      {
+        title: 'SRE vs DevOps — class SRE implements interface DevOps',
+        description: 'DevOps is the philosophy (no silos, gradual change, accidents are normal); SRE is one specific implementation with measurable artifacts (50% engineering cap, SLOs, error budgets, blameless postmortems).',
+        image: '/diagrams/sre/a1-sre-vs-devops.png',
+      },
+    ],
     introduction: `Site Reliability Engineering (SRE) was created at Google in 2003 by Ben Treynor Sloss. Treynor's one-line definition — quoted verbatim across the SRE Book — is "what happens when you ask a software engineer to design an operations team." That framing is load-bearing: SRE is not "ops with code on the side." It's an engineering discipline whose product happens to be production reliability.
 
 The relationship to DevOps is best summarised by the SRE Workbook's chapter title: \`class SRE implements interface DevOps\`. DevOps is the broad cultural philosophy (no silos, change should be gradual, accidents are normal, measurement is crucial); SRE is one prescriptive implementation of that philosophy with opinionated, measurable artifacts: SLOs, error budgets, a 50% toil cap, blameless postmortems.
@@ -491,6 +498,13 @@ Ties to budget: a 14.4× sustained burn would eat the whole 30-day budget in jus
     color: '#3b82f6',
     questions: 3,
     description: 'The economic + UX argument for setting reliability targets below 100%, and how to make the tradeoff legible to product.',
+    visualizations: [
+      {
+        title: 'Risk vs Velocity — error budget as the negotiation frame',
+        description: 'Three states: too cautious (under-spend → tighten SLO), balanced (healthy ~80% burn), over-aggressive (>100% burn → launch freeze). Error budget makes the trade-off explicit.',
+        image: '/diagrams/sre/a6-risk-velocity.png',
+      },
+    ],
     introduction: `Maximising reliability and maximising feature velocity are in tension. The SRE response is not to pick a winner — it\'s to make the tradeoff quantitative via SLOs and error budgets so both sides can negotiate against the same number.
 
 The headline argument from SRE Book Ch 3, verbatim: "Extreme reliability comes at a cost: maximizing stability limits how fast new features can be developed and dramatically increases costs." And Ch 1\'s epigraph: "Hope is not a strategy."
@@ -581,6 +595,13 @@ The goal: product sees that SRE is not arbitrarily blocking launches — SRE is 
     color: '#3b82f6',
     questions: 4,
     description: 'The six characteristics of toil, the 50% cap as floor-on-engineering, and the four-step legacy lifecycle.',
+    visualizations: [
+      {
+        title: 'SRE Book 50% rule — toil ceiling forces engineering investment',
+        description: 'SRE team capped at 50% toil; the other 50% is engineering work that compounds. When toil exceeds the cap: reduce, hand back to dev, or drop service ownership.',
+        image: '/diagrams/sre/a5-toil-split.png',
+      },
+    ],
     introduction: `Toil is the SRE\'s anti-feature. Quoting SRE Book Ch 5 verbatim:
 
 > "Toil is the kind of work tied to running a production service that tends to be manual, repetitive, automatable, tactical, devoid of enduring value, and that scales linearly as a service grows."
@@ -683,6 +704,13 @@ The cost-benefit rule for automation: time saved over the automation\'s lifetime
     color: '#3b82f6',
     questions: 3,
     description: 'How to find what to actually measure — the multi-step user task whose end-to-end success defines the service.',
+    visualizations: [
+      {
+        title: 'Critical User Journey → SLI selection',
+        description: 'Workbook Ch 2: decompose user intent into CUJ steps; pick SLIs (availability, latency, freshness) per step; set SLO target on the end-to-end CUJ.',
+        image: '/diagrams/sre/a4-cuj.png',
+      },
+    ],
     introduction: `An SLO measured at the wrong layer is worse than no SLO. A service can hit 99.99% on individual API calls while 30% of user checkouts fail because the calls compose into a path that breaks somewhere in the middle. The thing that matters is the end-to-end user task, not the per-call success rate.
 
 The Workbook (Ch 2) names this the Critical User Journey (CUJ) — "a multi-step user task whose end-to-end success is what really matters." For an e-commerce site, the CUJ is "complete a checkout," not "API responds 200 on individual route." For a streaming service, it\'s "start watching this title within 5 seconds of clicking play," not "metadata service responds."
@@ -784,6 +812,13 @@ Implementing quality SLIs is harder than availability — you usually need appli
     color: '#3b82f6',
     questions: 3,
     description: 'The middle path between "no SLO" and "halt-the-launches SLO" — and when to graduate from one to the other.',
+    visualizations: [
+      {
+        title: 'SLO progression — aspirational → enforced',
+        description: 'Aspirational SLOs gather data without binding action; enforced SLOs trigger error-budget halts. Most teams should aspire-then-enforce after 1-2 quarters of measurement.',
+        image: '/diagrams/sre/a6-risk-velocity.png',
+      },
+    ],
     introduction: `Not every SLO needs to gate launches on day one. The Workbook (Ch 2) explicitly recognises aspirational SLOs — targets you track but don\'t enforce. The point is to start measuring, build instrumentation, calibrate the SLI, then graduate to enforcement when the data is trustworthy.
 
 The progression is roughly:
@@ -1333,6 +1368,13 @@ Multi-cloud is a related answer: if your DR strategy depends on AWS being up to 
     color: '#22c55e',
     questions: 3,
     description: 'Amdahl\'s Law, the NALSD method, and how Google does back-of-envelope on a whiteboard.',
+    visualizations: [
+      {
+        title: 'NALSD — Non-Abstract Large System Design',
+        description: 'Workbook Ch 12 four-question loop: Is it possible? Can we do better? Is it feasible at 10x/100x? Is it resilient under failure? Use real numbers (KB/event, RTT, ops/sec/host).',
+        image: '/diagrams/sre/b5-nalsd.png',
+      },
+    ],
     introduction: `Scaling problems usually don\'t look like "we need bigger machines." They look like "this design works at 10K QPS but breaks at 100K." The bottleneck is some component whose growth pattern the original design didn\'t anticipate.
 
 Google\'s framework for this — from SRE Workbook Ch 12 — is Non-Abstract Large System Design (NALSD): "the ability to assess, design, and evaluate large systems." The thesis: "all systems will eventually have to run on real computers in real datacenters using real networks." You can\'t hand-wave the math.
@@ -1449,6 +1491,13 @@ The diagnostic: if your monitoring shows uniform CPU across most shards but one 
     color: '#22c55e',
     questions: 3,
     description: 'Where the latency goes, where to put cache, how deadlines propagate, and the SRE Book\'s rules for not making it worse.',
+    visualizations: [
+      {
+        title: 'Latency budget waterfall — apportion 500ms across components',
+        description: 'Apportion the SLO latency target across the request path: auth, cache, DB, fan-out, render. If any component exceeds its budget, fail fast or degrade.',
+        image: '/diagrams/sre/b6-latency-budget.png',
+      },
+    ],
     introduction: `Performance optimization is the discipline of making something faster without breaking it. The non-discipline is what most engineering teams do — making changes that are faster most of the time and creating subtle correctness or reliability issues at the tail.
 
 The SRE Book\'s framing (Ch 21 + 22): performance isn\'t a single number. The interesting question is the tail — p99 and p99.9 — because that\'s what users feel. A change that improves the median by 20% but adds 5× to the p99 is usually a regression.
@@ -1568,6 +1617,13 @@ The detection: use histograms with exponentially-bucketed boundaries (Prometheus
     color: '#22c55e',
     questions: 3,
     description: 'When you actually need consensus, the algorithms (Paxos / Raft / Zab), and the CAP framing.',
+    visualizations: [
+      {
+        title: 'Raft consensus — leader election state machine',
+        description: 'FOLLOWER → (timeout) → CANDIDATE → (majority votes) → LEADER. Higher term seen reverts to FOLLOWER. Used by etcd, Consul, CockroachDB, TiDB.',
+        image: '/diagrams/sre/b7-raft.png',
+      },
+    ],
     introduction: `Distributed consensus is the protocol problem at the heart of every reliable distributed system: how do N machines agree on a value when some of them might fail or be partitioned? It\'s not a footnote — it\'s a foundation.
 
 You need consensus when (SRE Book Ch 23): leader election, group membership, lease/lock validity, reliable distributed queuing, message commitment, datastore values. Anywhere a single piece of state must be consistent across multiple machines, you need consensus underneath.
@@ -1935,6 +1991,13 @@ Google SRE Book Ch 6 quote: "It\'s important to distinguish between the latency 
     color: '#06b6d4',
     questions: 3,
     description: 'The SRE Workbook\'s SLI taxonomy and how to pick which to measure for which service.',
+    visualizations: [
+      {
+        title: '6 SLI types (Workbook Ch 2) by service shape',
+        description: 'Request/response: availability + latency + quality. Pipeline: freshness + correctness + coverage. Storage: durability + availability + latency. Pick by workload type.',
+        image: '/diagrams/sre/c3-sli-types.png',
+      },
+    ],
     introduction: `Picking the right SLI is the single most consequential observability decision. A bad SLI makes a service look healthy when users are unhappy; a good SLI fires when users feel pain.
 
 The SRE Workbook (Ch 2) names six SLI types, each appropriate for a different kind of work:
@@ -2186,6 +2249,13 @@ Trade-offs: eBPF requires a recent kernel (4.18+ for most features, 5.x preferre
     color: '#06b6d4',
     questions: 3,
     description: 'Structured JSON over text, log levels, sampling, correlation IDs, and the cost reality.',
+    visualizations: [
+      {
+        title: 'Logs cost control — sample at source, drop fields, tier retention',
+        description: 'Source sampling (10% normal + 100% errors) cuts ingest 10x. Drop unused fields. Hot tier 7d + cold S3 90d gives 10x storage cost reduction.',
+        image: '/diagrams/sre/c5-logs-cost.png',
+      },
+    ],
     introduction: `Logging is the most expensive of the three pillars at scale and the most often abused. Two engineers logging "everything at INFO" can quintuple a service\'s log spend without proportional debug value.
 
 Rules that hold up in production:
@@ -2458,6 +2528,13 @@ What I\'d tell a team setting up tracing: aim for <5% CPU overhead, <2% addition
     color: '#06b6d4',
     questions: 3,
     description: 'The SRE Book\'s alerting principles, multi-window multi-burn-rate, and avoiding alert fatigue.',
+    visualizations: [
+      {
+        title: 'Alert on SYMPTOMS, not causes',
+        description: 'SRE Book Ch 6: cause-based alerts (DB CPU > 90%) produce false positives. Symptom-based alerts (p99 > 500ms) are user-pain-driven and actionable. Multi-window burn rate confirms.',
+        image: '/diagrams/sre/c7-symptom-alert.png',
+      },
+    ],
     introduction: `Alerting is where observability meets human attention. Bad alerting is the leading cause of SRE burnout. Good alerting is rare and load-bearing.
 
 The SRE Book\'s core principle (Ch 6, paraphrased): alert on symptoms, not on causes. "Did something break?" is a better question than "Is the database CPU above 90%?"
@@ -2594,6 +2671,13 @@ The first month is painful — you\'re killing alerts and people are nervous. Th
     color: '#06b6d4',
     questions: 3,
     description: 'Dashboard hierarchy (overview → service → resource), heatmaps for tail latency, and what NOT to put on a dashboard.',
+    visualizations: [
+      {
+        title: 'Dashboard hierarchy — overview → service → resource',
+        description: 'Tier 1 (overview, 30-second glance for exec/on-call). Tier 2 (service-level RED/Golden Signals). Tier 3 (per-host USE method, PSI pressure metrics).',
+        image: '/diagrams/sre/c8-dashboard-hierarchy.png',
+      },
+    ],
     introduction: `Dashboards are how humans consume metrics. Bad dashboards are noise; great dashboards orient on-call instantly.
 
 The hierarchy that works:
@@ -2752,6 +2836,13 @@ The principle: anything that COULD cause a metric change should be visible on th
     color: '#06b6d4',
     questions: 3,
     description: 'Why cardinality blows up Prometheus, the math behind log/trace cost, and how to control them.',
+    visualizations: [
+      {
+        title: 'Cardinality bomb — labels × values multiply',
+        description: 'Adding user_id label to a metric with 100K users explodes 25K series → 2.5B series → Prometheus OOM. Move high-cardinality dimensions to logs/traces instead.',
+        image: '/diagrams/sre/c9-cardinality-bomb.png',
+      },
+    ],
     introduction: `Observability is one of the largest line items in modern infrastructure budgets. Datadog's S-1 reveals customers spending double-digit percentages of cloud spend on observability alone. Understanding the cost levers is now an SRE-grade skill.
 
 Cardinality is the number of distinct combinations of label values for a metric. \`http_requests_total{service, route, status, method}\` with 5 services × 100 routes × 10 statuses × 5 methods = 25,000 time series. Add \`user_id\` as a label and your 100K-user system becomes 25,000 × 100,000 = 2.5 billion time series. Prometheus chokes on millions; billions are an OOM.
@@ -3250,6 +3341,13 @@ The interview-quality framing: every "we want N nines" claim should come with an
     color: '#ef4444',
     questions: 3,
     description: 'Industry-standard SEV definitions, who responds at each level, and how to avoid sev-creep.',
+    visualizations: [
+      {
+        title: 'SEV1/2/3/4 — quick decision tree',
+        description: 'Many users blocked / data loss → SEV-1. Many degraded / key feature down → SEV-2. Some users / workaround exists → SEV-3. Cosmetic → SEV-4.',
+        image: '/diagrams/sre/d3-sev-tree.png',
+      },
+    ],
     introduction: `Severity levels triage incident response. Get them wrong and you either page the on-call SRE for cosmetic UI bugs (alert fatigue) or wait business hours to fix a billing outage (career-limiting).
 
 Industry-standard four-tier model (used by Google, Meta, Atlassian, PagerDuty, most major tech companies):
@@ -3615,6 +3713,13 @@ The general rule: when in doubt, do the postmortem. The cost of writing one for 
     color: '#ef4444',
     questions: 3,
     description: 'The Toyota technique adapted for SRE: where it works, where it lies, and "contributing factors" as the modern alternative.',
+    visualizations: [
+      {
+        title: 'Five Whys vs Contributing Factors',
+        description: 'Five Whys (Toyota, 1970s) finds ONE linear cause; modern human-factors (Sidney Dekker) lists ALL conditions that had to be true. Use Five Whys to brainstorm; document as factors.',
+        image: '/diagrams/sre/d4-five-whys.png',
+      },
+    ],
     introduction: `Five Whys is a root-cause analysis technique from Toyota's manufacturing process, adapted into SRE postmortem practice. The mechanic: ask "why?" five times, each time peeling back a layer.
 
 Worked example (a checkout outage):
@@ -3778,6 +3883,13 @@ Quote from the SRE Book Ch 15: "User error" is too convenient an explanation. It
     color: '#ef4444',
     questions: 3,
     description: 'Status page discipline, the 15-minute update cadence, and the structure of executive briefs.',
+    visualizations: [
+      {
+        title: 'Incident comm — 15-min cadence with structured updates',
+        description: 'T+0 detection → T+15 first update → every 15 min thereafter. Identifying / Investigating / Mitigating / Resolved. Customers panic on silence; cadence de-escalates.',
+        image: '/diagrams/sre/d6-status-cadence.png',
+      },
+    ],
     introduction: `Communications during an incident is high-leverage and underinvested. Customers, executives, and internal teams all need updates; the cost of doing it badly is reputational. The good news: it\'s a learnable skill with clear patterns.
 
 The audiences and their needs:
@@ -3962,6 +4074,13 @@ The bonus: a third-party status page also lets you communicate during incidents 
     color: '#ef4444',
     questions: 3,
     description: 'Practicing failure deliberately. Google\'s DiRT, Netflix Chaos Monkey, modern chaos engineering tools.',
+    visualizations: [
+      {
+        title: 'Failure-practice maturity — 5 levels',
+        description: 'Tabletop → game day in staging → Chaos Monkey in prod → tail experiments (region drains) → company-wide DiRT week. Each level needs the previous to be reliable.',
+        image: '/diagrams/sre/d7-chaos-maturity.png',
+      },
+    ],
     introduction: `Practicing failure is the SRE discipline that separates "we hope it works" from "we know it works." Three related practices:
 
 1. Game Days — scheduled, full-team incident simulations.
@@ -4138,6 +4257,13 @@ Practical staging: most companies start with chaos engineering (technical, autom
     color: '#f59e0b',
     questions: 3,
     description: 'The SRE Book\'s definition of toil, why measuring it is hard, and how the 50% cap actually works.',
+    visualizations: [
+      {
+        title: 'Toil — 6 properties (all must be true)',
+        description: "Manual AND repetitive AND automatable AND tactical AND no enduring value AND scales linearly with the service. If any one fails, it's not toil — it's a different kind of work.",
+        image: '/diagrams/sre/e1-toil-six.png',
+      },
+    ],
     introduction: `Toil is one of the SRE Book\'s most precise terms. Verbatim definition (Ch 5):
 
 "Toil is the kind of work tied to running a production service that tends to be manual, repetitive, automatable, tactical, devoid of enduring value, and that scales linearly as a service grows."
@@ -4314,6 +4440,13 @@ Each is a 1-3 month project that returns hundreds of hours/year. The 50% enginee
     color: '#f59e0b',
     questions: 3,
     description: 'The IaC landscape, declarative vs imperative, and why state management is the hard part.',
+    visualizations: [
+      {
+        title: 'IaC landscape — Terraform vs Pulumi vs Crossplane vs CDK',
+        description: 'Terraform: HCL declarative, multi-cloud, de-facto standard. Pulumi: real languages. Crossplane: Kubernetes-native, GitOps-friendly. CDK: AWS-only with TypeScript/Python.',
+        image: '/diagrams/sre/e2-iac-compare.png',
+      },
+    ],
     introduction: `Infrastructure as Code (IaC) treats infrastructure provisioning as software: version-controlled, code-reviewed, deployed via automation. Has been the SRE standard since ~2015; the question now is which tool, not whether.
 
 The major players:
@@ -4723,6 +4856,13 @@ The mistake low-performing teams make: "we\'ll deploy carefully, once a month, w
     color: '#f59e0b',
     questions: 3,
     description: 'Git as the source of truth for infrastructure and applications, the pull model, and reconciliation loops.',
+    visualizations: [
+      {
+        title: 'GitOps 4 principles (Weaveworks 2017)',
+        description: 'Declarative + Versioned & Immutable + Pulled Automatically + Continuously Reconciled. Argo CD (Web UI) and Flux (lightweight) are the canonical implementations.',
+        image: '/diagrams/sre/e4-gitops.png',
+      },
+    ],
     introduction: `GitOps is a deployment philosophy: Git is the source of truth for desired state; agents continuously reconcile actual state to match Git. Coined by Weaveworks (2017); widely adopted in Kubernetes shops.
 
 The four GitOps principles (from gitops.tech):
@@ -4933,6 +5073,13 @@ In 2026, this stack (GitOps + canary + SLO-gated rollback) is the modern standar
     color: '#f59e0b',
     questions: 3,
     description: 'Kubernetes liveness probes, autoscaling, automated runbooks, and the limits of self-healing.',
+    visualizations: [
+      {
+        title: 'Self-healing — 6 levels of automated recovery',
+        description: 'L1 process restart → L2 instance replace → L3 capacity autoscale → L4 region failover → L5 application circuit breakers → L6 runbook automation. Stack them; each prevents a class of failure.',
+        image: '/diagrams/sre/e5-self-healing.png',
+      },
+    ],
     introduction: `Self-healing is the discipline of building systems that recover from failures without human intervention. The fewer pages, the fewer mistakes; the higher the availability per engineer-hour invested.
 
 Layers of self-healing:
@@ -5154,6 +5301,13 @@ The right framing: autoscaling is a TOOL, not a SUBSTITUTE for capacity planning
     color: '#8b5cf6',
     questions: 3,
     description: 'The Google SRE Book\'s capacity planning model: predict demand, allocate resources, validate against reality.',
+    visualizations: [
+      {
+        title: 'Capacity planning — forecast → provision → reconcile',
+        description: 'Predict demand from history + business inputs. Provision with buffer for failure-mode (N+1 / N+2). Reconcile actual vs forecast and adjust the model. Iterate quarterly.',
+        image: '/diagrams/sre/f1-capacity-loop.png',
+      },
+    ],
     introduction: `Capacity planning is the SRE discipline of ensuring you have the right amount of resources for current and future load — not too much (waste money) and not too little (outages).
 
 The SRE Book Ch 18 framework: capacity planning is predictive, not reactive. By the time you\'re scaling under load, it\'s already too late for non-trivial provisioning (rack-scale, contract-scale, region-scale). Plan ahead.
@@ -5320,6 +5474,13 @@ Hidden trap: dependencies. Your service has N+1; does your database? Cache? Mess
     color: '#8b5cf6',
     questions: 3,
     description: 'How to forecast service load: simple growth, seasonal decomposition, Prophet / ARIMA, and when ML is overkill.',
+    visualizations: [
+      {
+        title: 'Forecasting hierarchy — fit complexity to need',
+        description: 'Linear with seasonality covers ~80% of cases. Holt-Winters / ARIMA for statistical TS. Prophet for holidays + trend changes. ML rarely needed for capacity.',
+        image: '/diagrams/sre/f2-forecast.png',
+      },
+    ],
     introduction: `Capacity planning needs forecasts. Forecasting is its own discipline. The good news: most production services don\'t need fancy models — simple ones work.
 
 The forecast hierarchy (lowest to highest sophistication):
@@ -5717,6 +5878,13 @@ The stress test\'s value isn\'t in "passing" — it\'s in identifying the cascad
     color: '#8b5cf6',
     questions: 3,
     description: 'The Kubernetes autoscaling toolkit, when each fits, and predictive vs reactive scaling.',
+    visualizations: [
+      {
+        title: 'Autoscaling layers — pick by signal',
+        description: 'HPA (pods on CPU/custom metric). VPA (resources). KEDA (event-driven, Kafka lag/SQS). Karpenter (nodes, 30-60s spin-up). Predictive for known peaks. Combine layers.',
+        image: '/diagrams/sre/f4-autoscale.png',
+      },
+    ],
     introduction: `Autoscaling automates capacity decisions. It\'s never the whole story (you still need capacity planning) but it absorbs predictable variance and rare spikes.
 
 The Kubernetes autoscaling toolkit:
@@ -5932,6 +6100,13 @@ When NOT to use predictive:
     color: '#8b5cf6',
     questions: 3,
     description: 'Why each additional 9 costs 10×, FinOps for SRE, and the right cost-of-downtime conversation with finance.',
+    visualizations: [
+      {
+        title: 'Cost-of-9s — each additional 9 ~10x engineering investment',
+        description: '99% (3.65d/yr) base. 99.9% (8h45m) ~10x. 99.99% (52min) ~100x. 99.999% (5min) ~1000x — reserved for telecom/life-safety. Pick the lowest 9-count that satisfies cost-of-downtime.',
+        image: '/diagrams/sre/f5-cost-curve.png',
+      },
+    ],
     introduction: `Reliability has a cost curve. Each additional 9 of availability roughly costs 10× the engineering investment of the previous. Understanding the curve is essential to setting SLOs that match business reality.
 
 The cost-of-9s reality (from SRE Workbook Ch 4 + industry data):
@@ -6143,6 +6318,13 @@ Cultural shift: from "cloud cost is finance\'s problem" to "cloud cost is part o
     color: '#8b5cf6',
     questions: 3,
     description: 'The connection-pool ceiling, read replicas, write throughput, and sharding strategies.',
+    visualizations: [
+      {
+        title: 'DB connection pool — bulkhead per workload',
+        description: "PgBouncer / RDS Proxy multiplies effective connections 10-50x. Separate pools per workload (user / admin / batch). One slow query in batch pool doesn't starve user requests.",
+        image: '/diagrams/sre/f6-db-pool.png',
+      },
+    ],
     introduction: `Databases are usually the first thing to break under load and the hardest thing to scale. Database capacity planning is its own subspecialty.
 
 The connection-pool ceiling.
@@ -6850,6 +7032,13 @@ Other-language equivalents:
     color: '#ec4899',
     questions: 3,
     description: 'The art of returning a partial / cached / fallback response instead of failing.',
+    visualizations: [
+      {
+        title: 'Graceful degradation — 3 patterns',
+        description: 'Cached fallback (last-known-good with stale=true). Partial response (omit recommendations, show product). Default response (generic best-sellers). Hard fail reserved for security/integrity.',
+        image: '/diagrams/sre/g7-graceful-deg.png',
+      },
+    ],
     introduction: `Graceful degradation is the discipline of "serve less when you can\'t serve everything" instead of "fail completely." Often the difference between an outage and a recoverable incident.
 
 The three patterns:
@@ -7071,6 +7260,13 @@ Common pitfall: SREs build sophisticated graceful degradation, then never look a
     color: '#ec4899',
     questions: 3,
     description: 'The exponential-backoff formula, why jitter is mandatory, and AWS\'s "full jitter" recommendation.',
+    visualizations: [
+      {
+        title: 'Retry storm — without vs with jittered backoff',
+        description: '10K clients retry @ T+200ms without jitter → thunder herd extends outage. AWS Full Jitter (random(0, base × 2^n)) spreads retries → service recovers. Mandatory.',
+        image: '/diagrams/sre/g3-retry-storm.png',
+      },
+    ],
     introduction: `Retries are the most common cause of cascading failure. The intuition is fine ("if a request fails, try again"); the implementation is subtle.
 
 The three knobs:
@@ -7316,6 +7512,13 @@ The cultural framing: retries help individual requests; retry budget protects th
     color: '#ec4899',
     questions: 3,
     description: 'How and when to deliberately reject requests so the rest succeed. Priority-based shedding, queue management, the AWS framing.',
+    visualizations: [
+      {
+        title: 'Load shedding — tag by priority, drop low first',
+        description: '70-80% load: drop LOW (prefetch, analytics). 80-90%: drop NORMAL (anonymous). 90%+: drop HIGH but KEEP CRITICAL (auth, payment confirmation). Better 70% successful UX than 0%.',
+        image: '/diagrams/sre/g4-load-shed.png',
+      },
+    ],
     introduction: `Load shedding is the discipline of rejecting some requests so that others succeed. Counterintuitive — engineers want to serve every request. The right reframe: serving 70% of requests successfully is much better than failing 100% of requests because the system collapsed.
 
 The SRE Book Ch 21 (Handling Overload) is the canonical treatment. Quote: "Avoid serving requests that you can\'t serve gracefully. The point of load shedding is to reduce the load on the server such that it can return to a healthy state and serve the rest of its load."
@@ -7568,7 +7771,20 @@ Both should include \`Retry-After\` header to tell clients when to retry.`,
     color: '#ec4899',
     questions: 3,
     description: 'What idempotency means precisely, idempotency keys, and the financial-systems pattern.',
+    visualizations: [
+      {
+        title: 'Idempotency key — Stripe-style payment dedup',
+        description: 'Client generates UUID; server stores (key, response) in dedup table with 24h TTL. Retry with same key returns same response — no double-charge.',
+        image: '/diagrams/sre/g5-idempotency.png',
+      },
+    ],
     introduction: `Idempotent = an operation that can be performed multiple times with the same result. \`f(x) = f(f(x))\`. Critical for retries: if an operation isn\'t idempotent, retries cause duplicate side effects.
+
+The canonical case: a payment API. Without idempotency, a network timeout that triggers a client retry can charge the user twice — the first request succeeded but the response was lost; the retry creates a second charge. With an idempotency key, the server detects the duplicate and returns the original response.
+
+The industry standard: Stripe-style idempotency keys. Client generates a UUID per logical operation; sends with the request as \`Idempotency-Key: abc-123\`. Server stores the (key, response) in a dedup table with a 24-hour TTL. Subsequent requests with the same key get the original response — no re-execution, no double-charge.
+
+Not every operation needs explicit idempotency. \`PUT\` and \`DELETE\` are naturally idempotent (set state / remove resource). \`GET\` is by definition. The danger zone is \`POST\` for creation (charges, messages, transactions) — those need keys.
 
 Idempotent operations:
 - \`PUT /users/123\` with body \`{name: "Alice"}\` — sets state. Multiple calls = same state.
@@ -7851,6 +8067,13 @@ Stripe\'s opinion (from their docs): "Idempotency is fundamental to building rel
     color: '#ec4899',
     questions: 3,
     description: 'Per-dependency thread pools, the ship-bulkhead analogy, and how Hystrix popularized the pattern.',
+    visualizations: [
+      {
+        title: 'Bulkhead — per-dependency thread pool',
+        description: 'Separate thread pools per dependency. Slow Dep B blocks only its 30-thread pool; Dep C and D continue normally. Prevents one bad dep from exhausting the whole service.',
+        image: '/diagrams/sre/g6-bulkhead.png',
+      },
+    ],
     introduction: `Bulkheads are an isolation pattern from Michael Nygard\'s Release It! (2007). The analogy: ship hulls are divided into watertight compartments (bulkheads); a hole in one compartment doesn\'t flood the entire ship.
 
 In software: isolate resource pools so a failure in one can\'t exhaust the whole service\'s capacity.
@@ -8122,6 +8345,13 @@ In 2026 with Java 21 virtual threads being mainstream, the bulkhead pattern is s
     color: '#ec4899',
     questions: 3,
     description: 'Why every external call needs a timeout, deadline propagation across services, and choosing the right values.',
+    visualizations: [
+      {
+        title: 'Deadline propagation — gRPC context',
+        description: "SRE Book Ch 22: every RPC carries the remaining deadline. Service B can decline work if it won't fit the budget. Built into gRPC; OTel context can carry it for HTTP.",
+        image: '/diagrams/sre/g8-deadline.png',
+      },
+    ],
     introduction: `Every external call must have a timeout. This is non-negotiable. A call without a timeout is a call that can hang forever; under load, hung calls are how services collapse.
 
 The SRE Book Ch 22 quote: "RPCs inherit and decrease deadlines as they descend the stack so a server doesn\'t waste cycles on a request whose caller already gave up."
@@ -8669,6 +8899,13 @@ The data: the cost of replacing a senior SRE is 6-12 months of lost productivity
     color: '#14b8a6',
     questions: 3,
     description: 'Recognizing burnout signals, the SRE Workbook\'s sustainable on-call framework, and the metrics that protect engineer health.',
+    visualizations: [
+      {
+        title: 'On-call sustainability — measure + remediate',
+        description: 'Track pages/shift, incident time %, attrition. Audit top noisy services (80% pages from 20% services). Kill noisy alerts (>3x without action). Ship postmortem fixes. Hand-back valve.',
+        image: '/diagrams/sre/h5-oncall-health.png',
+      },
+    ],
     introduction: `On-call burnout is the leading cause of SRE attrition. Engineers who started with passion become apathetic. Quality drops. Recruitment becomes a treadmill. The fix is structural; "be a more resilient engineer" is not the answer.
 
 The SRE Workbook Ch 11 sustainable-on-call framework:
@@ -8933,6 +9170,13 @@ Painful but the only sustainable path. Otherwise, every service decays into a no
     color: '#14b8a6',
     questions: 3,
     description: 'The runbook structure that works under stress, when to update them, and the path to runbook automation.',
+    visualizations: [
+      {
+        title: 'Runbook structure — scannable at 3am',
+        description: 'Summary → pre-conditions → diagnosis → decision tree → mitigation → verification → escalation. Brief. Linked from alerts. Updated after every incident.',
+        image: '/diagrams/sre/h3-runbook.png',
+      },
+    ],
     introduction: `A runbook is a document that tells an on-call engineer "if X happens, do Y." Good runbooks are the difference between a 5-minute mitigation and a 60-minute investigation. Bad runbooks are wiki pages that become stale and unread.
 
 The runbook structure that works under stress:
@@ -9226,6 +9470,13 @@ The discipline: even fully-automated runbooks should track their auto-remediatio
     color: '#14b8a6',
     questions: 3,
     description: 'How to acknowledge, investigate, escalate, and close pages without burning out or losing customer trust.',
+    visualizations: [
+      {
+        title: 'Pager protocol — first 10 minutes',
+        description: 'T+0 ack (stops escalation). T+1-2 incident channel. T+2-5 dashboard + runbook. T+5-7 mitigate / IC / escalate decision. T+7-10 execute path + Slack update.',
+        image: '/diagrams/sre/h4-pager-protocol.png',
+      },
+    ],
     introduction: `Pager discipline is the soft skill of running a productive on-call shift. The mechanics are easy; the rhythm is learned.
 
 The acknowledge-first principle:
@@ -9518,6 +9769,13 @@ Post-incident:
     color: '#14b8a6',
     questions: 3,
     description: 'How SRE organizes itself. Embedded vs centralized vs platform team models, and when each fits.',
+    visualizations: [
+      {
+        title: 'SRE team models — pick by scale',
+        description: 'Embedded (1-3 SREs/product, 10-50 eng). Centralized (1 team many products, 50-200 eng). Platform (owns K8s/observability/CI/CD, 200+). Hybrid (most common, 500+).',
+        image: '/diagrams/sre/h2-team-models.png',
+      },
+    ],
     introduction: `SRE team structure matters more than people realize. The wrong structure produces dysfunctional outcomes regardless of individual talent.
 
 The four common models:
@@ -9798,6 +10056,13 @@ The bottom line: SRE is engineering applied to reliability. If the work is mostl
     color: '#6366f1',
     questions: 3,
     description: 'Google\'s Building Secure & Reliable Systems framework, why security IS reliability, and the cross-discipline overlap.',
+    visualizations: [
+      {
+        title: 'Reliability + Security — shared engineering primitives',
+        description: 'Reliability and security overlap on: defense in depth, least privilege, audit logging, incident command, game days. Security adds: adversaries, threat models, breach notification.',
+        image: '/diagrams/sre/i1-rel-sec.png',
+      },
+    ],
     introduction: `Reliability and security are deeply linked. A system that\'s "available" but compromised is failed; a system that\'s "secure" but unavailable is failed. Google\'s Building Secure & Reliable Systems (BSRS, 2020) is the canonical SRE-meets-security text.
 
 The thesis: many security and reliability practices are the same practices applied to different threat models.
@@ -10079,6 +10344,13 @@ The 80/20: secret management + least privilege + audit logging covers most of wh
     color: '#6366f1',
     questions: 3,
     description: 'Where secrets should live, the GitOps challenge, and modern secret-rotation patterns.',
+    visualizations: [
+      {
+        title: 'Dynamic secrets — Vault DB plugin pattern',
+        description: 'Service requests creds at startup; Vault creates short-lived DB role (TTL 1h). Compromise window bounded to 1 hour vs static creds (year+). Per-instance audit trail.',
+        image: '/diagrams/sre/i2-dynamic-secrets.png',
+      },
+    ],
     introduction: `Secrets are credentials that grant access: API keys, database passwords, TLS private keys, OAuth tokens, encryption keys. Improper secret management is one of the most common security incident causes.
 
 Where secrets should NEVER live:
@@ -10367,6 +10639,13 @@ Prevention is much cheaper than response:
     color: '#6366f1',
     questions: 3,
     description: 'BeyondCorp, the death of the perimeter, and how SREs implement defense in depth.',
+    visualizations: [
+      {
+        title: 'Zero Trust — BeyondCorp identity-aware proxy',
+        description: 'User + MFA + Device cert pass through Identity-Aware Proxy on every request. No VPN. No perimeter. Service mesh enforces mTLS internally. Audit log immutable.',
+        image: '/diagrams/sre/i3-zero-trust.png',
+      },
+    ],
     introduction: `Zero Trust is the security model that replaced "trust the network." Originated as Google\'s BeyondCorp (2014); now the mainstream approach.
 
 The old model (perimeter security):
@@ -10674,6 +10953,13 @@ The high-value moves:
     color: '#6366f1',
     questions: 3,
     description: 'How dependencies became the leading attack vector, and the post-SolarWinds defenses (SBOM, signed artifacts, SLSA).',
+    visualizations: [
+      {
+        title: 'SLSA — Supply chain levels for software artifacts',
+        description: 'L1 documented build → L2 tamper-resistant signed provenance (Sigstore, in-toto) → L3 hermetic isolated builds → L4 two-party review + reproducible. Most teams target L2 in 2026.',
+        image: '/diagrams/sre/i4-slsa.png',
+      },
+    ],
     introduction: `Supply chain attacks target the dependencies a system relies on, not the system itself. The attacker compromises a library, a package, a CI tool, an infrastructure provider — anything upstream of your code — and your build inherits the compromise.
 
 The notable incidents:
@@ -11001,6 +11287,13 @@ For a new system in 2026: cosign + Kyverno is the table-stakes setup. Cost: a da
     color: '#6366f1',
     questions: 3,
     description: 'How security incidents differ from reliability incidents. The NIST framework, forensics, legal obligations.',
+    visualizations: [
+      {
+        title: 'NIST 800-61 — Security incident response',
+        description: "Preparation (plan, tools, runbooks) → Detection & Analysis (SIEM, EDR) → Containment / Eradication / Recovery (don't alert attacker; preserve forensics) → Post-incident (lessons, disclosure).",
+        image: '/diagrams/sre/i5-nist-phases.png',
+      },
+    ],
     introduction: `Security incident response shares the incident-command structure with reliability incidents but has critical differences: an active adversary, legal/regulatory obligations, and the need for forensics.
 
 The NIST framework (SP 800-61):
