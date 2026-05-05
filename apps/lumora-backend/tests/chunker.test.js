@@ -76,3 +76,20 @@ describe('estimateTokens', () => {
     expect(estimateTokens('a'.repeat(400))).toBeLessThan(120);
   });
 });
+
+describe('rehash', () => {
+  it('produces a different hash when content changes', async () => {
+    const { chunkTopic, rehash } = await import('../src/services/chunker.js');
+    const topic = { id: 't1', title: 'T1', introduction: 'i' };
+    const [c] = chunkTopic(topic, { source: 'x' });
+    const original = c.contentHash;
+    const mutated = rehash({ ...c, content: 'mutated content' });
+    expect(mutated.contentHash).not.toBe(original);
+  });
+  it('produces the same hash for unchanged content', async () => {
+    const { chunkTopic, rehash } = await import('../src/services/chunker.js');
+    const topic = { id: 't1', title: 'T1', introduction: 'i' };
+    const [c] = chunkTopic(topic, { source: 'x' });
+    expect(rehash(c).contentHash).toBe(c.contentHash);
+  });
+});
