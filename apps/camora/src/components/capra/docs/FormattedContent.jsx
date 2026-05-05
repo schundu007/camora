@@ -212,8 +212,12 @@ export default function FormattedContent({ content }) {
       const flushList = () => {
         if (currentList.length > 0) {
           const items = currentList;
+          // Indent bullets ml-8 (32px) so they're visually subordinate to
+          // the preceding numbered item / heading / subheading instead of
+          // aligning at the same x-position as "1." / "2." markers. PPT-
+          // style nesting: bullets read as children of the line above.
           currentSection.body.push(
-            <ul key={`list-${blockIdx}-${listKeyCounter++}`} className="grid grid-cols-1 gap-1.5 my-2">
+            <ul key={`list-${blockIdx}-${listKeyCounter++}`} className="grid grid-cols-1 gap-1.5 my-2 ml-8">
               {items.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0" />
