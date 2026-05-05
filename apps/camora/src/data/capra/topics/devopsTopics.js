@@ -15063,4 +15063,1406 @@ These are answers a Prometheus-fluent SRE should give without preparation.`,
     ],
   },
 
+  {
+    id: 'log-aggregation-stacks',
+    title: 'Log Aggregation — Loki, ELK, OpenSearch, Fluent Bit, Vector',
+    icon: 'activity',
+    color: '#f97316',
+    questions: 5,
+    description: 'Centralized logs across services. Three storage models: full-text indexed (Elasticsearch / OpenSearch), label-indexed (Loki, ~10x cheaper), columnar (ClickHouse, hyperscale). Collection layer: Fluent Bit / Vector / Promtail / OpenTelemetry. Cost vs query power trade-off.',
+    visualizations: [
+      {
+        title: 'Log aggregation pipeline — collection → processing → storage → query',
+        description: `Three layers of log infrastructure.
+
+Layer 1: Collection. Logs are emitted by applications to stdout/stderr (in containers) or files. A log forwarder reads them and ships to a backend.
+
+Common forwarders:
+- Fluent Bit — lightweight (~5MB memory). Default for cloud-native. CNCF Graduated 2024.
+- Vector — Rust-based; high throughput; rich transformation language (VRL).
+- Promtail — Grafana's forwarder, optimized for Loki.
+- OpenTelemetry Collector — unified for traces+metrics+logs (covered in OTel topic).
+- Fluentd — older; heavier than Fluent Bit. Still common in legacy.
+
+Forwarders typically run as DaemonSet on K8s (one per node), tail /var/log/pods/*.log. Parse, enrich (add K8s metadata), ship.
+
+Layer 2: Processing.
+
+Light: parse JSON, regex extract fields, redact PII, drop noise (health checks, debug logs in prod).
+
+Heavy: tail-sample, deduplicate, transform (Vector's VRL is best-in-class), route by content (errors → Datadog, info → Loki).
+
+Layer 3: Storage.
+
+Three storage models with very different cost/capability profiles:
+
+Model A: full-text indexed (Elasticsearch, OpenSearch).
+- Every log line indexed for full-text search.
+- Fast text queries: error AND service:payments → instant.
+- Expensive: indexes are 50-200% the size of raw logs. Memory-intensive.
+- $$ at scale: 1TB/day raw logs → multi-million $/year for Elastic Cloud or self-hosted multi-node cluster.
+
+Model B: label-indexed (Loki, by Grafana Labs).
+- Index small label set (cluster, namespace, service, level). Logs stored as compressed chunks.
+- Fast for label-filtered queries: {service="payments"} |= "error" — first the index narrows by labels, then grep through chunks.
+- Slow for full-text without labels (worst case = scanning gigabytes).
+- Cheap: storage in S3/GCS. ~10x cheaper than Elastic at scale.
+
+Model C: columnar (ClickHouse, Hyperloglog).
+- OLAP-style storage; columnar compression.
+- Fast for analytical queries: count(*) by service grouped over time.
+- Schema-on-write; requires structured logs.
+- Hyperscale: Uber, ByteDance, Cloudflare run ClickHouse for logs at PB/day.
+
+Cloud SaaS: Datadog Logs, Splunk, New Relic Logs, Sumo Logic, Logz.io. Hosted versions of the above; vendor-friendly UX; aggressive pricing.
+
+Layer 4: Query + Visualization.
+
+Each backend has its own query language:
+- Elastic / OpenSearch: KQL, Lucene query syntax, ES SQL.
+- Loki: LogQL — Prometheus-PromQL-style for logs.
+- ClickHouse: SQL.
+- Datadog: proprietary search syntax.
+
+Grafana visualizes Loki natively + Elastic/OpenSearch via plugins. Dashboards show error rate over time, top errors, log volume per service.`,
+        image: '/diagrams/devops/o4-log-agg.png',
+      },
+      {
+        title: 'Loki architecture — labels + chunks',
+        description: `Loki's distinctive design: don't index log content. Index a small label set; store log lines as compressed chunks.
+
+Components:
+- distributor: receives log streams via Promtail/Fluent Bit/OTel push. Validates labels; hashes by label set; forwards to ingesters.
+- ingester: writes logs to memory + WAL; flushes chunks to object storage every ~30 min (or 1MB compressed).
+- querier: serves queries. Fetches index entries; pulls chunks from object storage; greps content.
+- query-frontend: caches query results, splits long queries, parallelizes.
+- compactor: merges old chunks for query efficiency.
+- ruler: evaluates LogQL alert rules + recording rules at scale.
+- index gateway: serves index queries (smaller cache layer between querier and storage).
+
+Storage backends:
+- Object storage (S3/GCS/Azure Blob/MinIO) for chunks.
+- Index: BoltDB shipper (default; index files in object storage), or external (Cassandra, BigTable, Bigtable).
+
+The label model:
+
+\`\`\`
+{cluster="prod-us-east-1", namespace="payments", pod="payments-7f8b9c-abc12", container="api"}
+\`\`\`
+
+Each unique combination of label values = one stream. Logs in a stream are stored as a chunk. Chunks are compressed (~10x); flushed to S3 when full or old.
+
+Cardinality discipline:
+
+Loki's cardinality story is opposite of Prometheus. Prometheus expects ~100k unique series; Loki expects ~10k unique streams per cluster.
+
+Bad: trace_id, request_id, user_id as labels. Each unique value = new stream.
+
+Good: cluster, namespace, app, pod, container, level. Bounded cardinality (cluster × namespace × app ≪ 10k).
+
+High-cardinality data goes IN the log line, not as a label. Query: {service="payments"} |= "trace_id=abc123" — label index narrows; grep finds match.
+
+LogQL examples:
+
+\`\`\`logql
+{service="payments"}                                          # all logs from payments
+{service="payments"} |= "error"                                # contains "error"
+{service="payments"} |= "error" != "ECONNREFUSED"              # contains error, NOT ECONNREFUSED
+{service="payments"} | json | level="error"                     # parse JSON; filter level
+{service="payments"} | logfmt | duration > 1s                  # parse logfmt; filter
+sum by (service) (rate({namespace="prod"} |= "error" [5m]))    # error rate per service
+\`\`\`
+
+Loki's value: 10x cheaper storage than Elastic. 1TB/day raw logs cost ~$60/month in S3 (vs $5k+/month in Elastic Cloud). Compute for ingesters/queriers is the dominant cost (~$1-2k/month for moderate scale).`,
+        image: '/diagrams/devops/o4-log-agg.png',
+      },
+    ],
+    introduction: `Logs are the third leg of observability after metrics and traces. They contain the most semantic detail per event but at the highest cost per useful query. Modern log aggregation balances cost (storage + indexing) against query capability.
+
+The 2026 landscape:
+
+Elastic Stack / OpenSearch. Elastic was the dominant log search platform from ~2015-2021. Elasticsearch + Logstash + Kibana (ELK). Strong full-text search. Lock-in concerns and license shift in 2021 (Elastic License v2 not OSS-compatible) caused AWS to fork as OpenSearch (Apache 2.0). Now: Elastic for vendor-friendly; OpenSearch for OSS-friendly; both production-ready.
+
+Grafana Loki. Released 2018 by Grafana Labs. Designed explicitly to be cheap: don't index log content, index labels only. ~10x cheaper than Elastic at scale. CNCF (under the Grafana umbrella). Default for cost-conscious cloud-native shops.
+
+ClickHouse. OLAP database; weaponized for log storage at hyperscale (Uber, Cloudflare, ByteDance). Columnar; compression-friendly; SQL. Steep learning curve; powerful at PB/day scale.
+
+Cloud SaaS. Datadog Logs, Splunk Cloud, New Relic Logs. Vendor-managed; aggressive pricing scales with volume. Dominant in mid-size shops; expensive at scale.
+
+Forwarders: Fluent Bit (default cloud-native; CNCF Graduated 2024), Vector (Rust; high throughput; best transformation language), Promtail (Grafana's; optimized for Loki), OTel Collector (unified for traces/metrics/logs).
+
+Why log aggregation at all:
+
+Cross-service debugging. Single-service logs in stdout don't show distributed flow. Centralized logs with trace_id correlation reveal cross-service issues.
+
+Long retention for compliance. SOC 2, HIPAA, PCI mandate log retention (90d-7y). Container logs are ephemeral; centralized logs are durable.
+
+Search at scale. Grep across 100 services' logs without distributed shell access.
+
+Anomaly detection. Spike in 500s logged → alert. Pattern detection across log volume.
+
+Forensics. Post-incident: what happened in the 30 minutes leading to the outage? Centralized logs are the answer.
+
+Where logging fails:
+
+Cardinality. Each log line is more verbose than a metric data point. Storage cost is 100-1000x metrics for equivalent observation rate.
+
+Latency. Logs typically have 1-30s ingestion delay. Not real-time.
+
+Querying high-volume logs. "Find all logs where user.id = 42" across petabytes is fundamentally expensive regardless of backend.
+
+Three load-bearing concepts every logging interview answer needs:
+
+1. Three storage models: full-text indexed (Elasticsearch / OpenSearch), label-indexed (Loki), columnar (ClickHouse). Cost vs query capability trade-off.
+
+2. Forwarder layer: Fluent Bit / Vector / Promtail / OTel Collector parse + enrich + ship logs. K8s deployment is DaemonSet.
+
+3. Cardinality discipline (Loki) vs index size (Elasticsearch). Loki: <10k label streams per cluster. Elastic: index size 50-200% of raw logs.`,
+    whenToUse: [
+      'Multi-service architectures where centralized debugging matters',
+      'Long retention for compliance (SOC 2, HIPAA, PCI)',
+      'High-volume logs where cost of storage matters (Loki saves 10x vs Elastic)',
+      'Replacing distributed grep across N services',
+      'Anomaly detection on log patterns',
+    ],
+    keyConcepts: [
+      {
+        term: 'Loki vs Elasticsearch — cost and query trade-offs',
+        definition: `The defining choice for OSS log aggregation in 2026.
+
+Elasticsearch / OpenSearch: full-text indexed.
+
+Every log line tokenized; inverted index built. Query "service:payments AND error" → instant.
+
+Cost structure:
+- Storage: index is 50-200% of raw log size. 1TB raw = 1.5-3TB on disk.
+- Memory: indexes loaded into RAM for fast queries. ~25% of disk size in RAM.
+- Compute: index merges, refreshes, reindexes — CPU-heavy.
+
+For 1TB/day raw logs, 30-day retention:
+- Disk: 60-90TB.
+- RAM: 15-23TB across the cluster.
+- Compute: ~50-100 vCPU for moderate query load.
+- Cost (Elastic Cloud or self-hosted EBS): $5k-15k/month.
+
+Strengths:
+- Best-in-class full-text search. KQL / Lucene queries are powerful.
+- Mature aggregation framework. Date histograms, percentiles, derivatives.
+- Kibana UI is polished.
+
+Weaknesses:
+- Storage cost dominant.
+- License: Elastic moved to non-OSS license in 2021. OpenSearch (AWS fork) is Apache 2.0; new deployments increasingly choose OpenSearch.
+- Cardinality of fields impacts index size; field explosion is a real concern.
+
+Loki: label-indexed.
+
+Index small label set (cluster, namespace, service, level). Log content stored as compressed chunks.
+
+Query mechanism:
+1. Index narrows by labels: {service="payments"} → list of chunks.
+2. Querier fetches matching chunks from S3.
+3. Grep through chunks for content match.
+
+Cost structure:
+- Storage: chunks compressed ~10x. 1TB raw = ~100GB compressed.
+- Object storage: S3/GCS/Azure Blob. ~$0.023/GB/month.
+- Compute: ingesters + queriers — moderate.
+
+For 1TB/day raw logs, 30-day retention:
+- S3: 3TB. ~$70/month.
+- Compute: 5-10 vCPU. ~$300-500/month.
+- Cost: ~$400-600/month total.
+
+Strengths:
+- ~10x cheaper than Elasticsearch at scale.
+- Native Grafana integration.
+- Cardinality-aware: forces good label hygiene; punishes high-cardinality at usage time.
+
+Weaknesses:
+- Full-text search without labels = full chunk scan. Slow.
+- Schema flexibility: structured logs (JSON) parse with | json operator; works but less ergonomic than ES.
+- Query language (LogQL) less expressive than KQL/Lucene for complex full-text patterns.
+
+When to pick Elasticsearch / OpenSearch:
+- Full-text search is the primary use case.
+- Volume <1TB/day where cost is manageable.
+- Existing Elastic investment.
+- Need rich aggregations beyond LogQL.
+
+When to pick Loki:
+- Cost-conscious at >100GB/day.
+- Already on Grafana stack.
+- K8s-native shop.
+- Most queries narrow by service/namespace/cluster (label hits effective).
+
+When to pick ClickHouse:
+- Hyperscale (>10TB/day).
+- Analytical queries (group by, aggregations) over log data.
+- Have ClickHouse expertise.
+
+Many large orgs run hybrid: Loki for high-volume logs (web, infra); Elasticsearch for low-volume but rich-search (audit, security).`,
+      },
+      {
+        term: 'LogQL — Loki query language',
+        definition: `LogQL borrows PromQL syntax for logs. Two query types: log queries (return logs) and metric queries (aggregate logs as metrics).
+
+Log queries:
+
+\`\`\`logql
+{service="payments"}
+{service="payments", env="prod"}
+{service=~"payments|search"}                    # regex match
+{service="payments"} |= "error"                  # contains
+{service="payments"} != "DEBUG"                  # not contains
+{service="payments"} |= "error" != "expected"    # chain filters
+{service="payments"} |~ "error.*timeout"         # regex match
+{service="payments"} !~ "expected.*timeout"      # regex not match
+\`\`\`
+
+Parse structured logs:
+
+\`\`\`logql
+{service="payments"} | json                                     # parse JSON, fields available
+{service="payments"} | json | level="error"                      # filter on parsed field
+{service="payments"} | logfmt                                    # parse key=value logfmt
+{service="payments"} | logfmt | latency > 1s                     # numeric comparison
+{service="payments"} | regexp "user_id=(?P<user>\\\\d+)"          # extract via regex
+\`\`\`
+
+Metric queries (transform logs to metrics):
+
+\`\`\`logql
+sum by (service) (rate({namespace="prod"} |= "error" [5m]))     # error rate per service
+sum by (level) (count_over_time({service="payments"} | json [5m]))  # log count per level
+\`\`\`
+
+Use case: alert on log-derived metrics. Without separate metrics infrastructure, derive "error log rate" from logs alone.
+
+Recording rules in Loki (Loki ruler component):
+
+\`\`\`yaml
+groups:
+  - name: payments-log-metrics
+    rules:
+      - record: payments:error_log_rate:5m
+        expr: sum(rate({service="payments"} |= "error" [5m]))
+\`\`\`
+
+Pre-computed; queryable as metrics in Grafana via Loki datasource.
+
+Common patterns:
+
+Find unique values:
+
+\`\`\`logql
+sum by (user_id) (count_over_time({service="payments"} | json [1h])) > 10
+\`\`\`
+
+Top N error sources:
+
+\`\`\`logql
+topk(10, sum by (service, error_type) (count_over_time({namespace="prod"} | json | level="error" [1h])))
+\`\`\`
+
+Find slow requests:
+
+\`\`\`logql
+{service="api"} | logfmt | latency_ms > 1000
+\`\`\`
+
+Trace ID lookup (cross-correlate with Tempo):
+
+\`\`\`logql
+{namespace="prod"} | trace_id="abc123def456"
+\`\`\`
+
+Limitations vs PromQL: aggregations less powerful (no histogram_quantile equivalent on log data; would need bucket-emit pattern). Streaming queries (live tail) supported.
+
+LogQL gotchas:
+- |= is contains (substring match); fast.
+- |~ is regex; slower.
+- | json parses every line; slow if not pre-filtered by labels.
+- Always filter by labels first; content filters/parsers next.`,
+      },
+      {
+        term: 'Forwarder choice — Fluent Bit, Vector, Promtail, OTel Collector',
+        definition: `Forwarders read logs from sources, transform, ship to backends. Four common choices in 2026.
+
+Fluent Bit. CNCF Graduated 2024. C-based; ~5MB memory footprint. Default for cloud-native.
+
+\`\`\`yaml
+[INPUT]
+    Name              tail
+    Path              /var/log/pods/*/*.log
+    Parser            cri
+    Tag               kube.*
+    Refresh_Interval  10
+    Mem_Buf_Limit     50MB
+
+[FILTER]
+    Name              kubernetes
+    Match             kube.*
+    Kube_URL          https://kubernetes.default.svc:443
+    Kube_CA_File      /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    Kube_Token_File   /var/run/secrets/kubernetes.io/serviceaccount/token
+    Merge_Log         On
+    Keep_Log          Off
+
+[OUTPUT]
+    Name              loki
+    Match             *
+    Host              loki.observability
+    Port              3100
+    Labels            cluster=\${CLUSTER}, namespace=\$kubernetes['namespace_name'], service=\$kubernetes['labels']['app']
+    Auto_Kubernetes_Labels off
+\`\`\`
+
+Strengths: tiny memory, fast, C-based reliability. Standard for K8s DaemonSet log forwarder. Outputs to Loki, Elasticsearch, S3, Kafka, OTLP, custom.
+
+Weaknesses: simple filter language; complex transformations awkward.
+
+Vector. Rust-based. By Datadog (acquired Timber.io 2021); OSS Apache 2.0.
+
+\`\`\`toml
+[sources.kubernetes_logs]
+type = "kubernetes_logs"
+
+[transforms.parse_json]
+type = "remap"
+inputs = ["kubernetes_logs"]
+source = '''
+. = parse_json!(.message) ?? .
+.timestamp = del(.["@timestamp"]) ?? now()
+.service = .kubernetes.labels.app
+'''
+
+[transforms.redact_pii]
+type = "remap"
+inputs = ["parse_json"]
+source = '''
+.user_email = redact(.user_email, filters: ["us_social_security_number", "email"])
+del(.password)
+'''
+
+[sinks.loki]
+type = "loki"
+inputs = ["redact_pii"]
+endpoint = "http://loki.observability:3100"
+labels = { cluster = "prod-us-east-1", namespace = "{{ kubernetes.namespace }}", service = "{{ service }}" }
+encoding.codec = "json"
+\`\`\`
+
+Strengths: VRL (Vector Remap Language) is the best transformation language in the space. Multi-pipeline routing (one source → many sinks). Higher throughput than Fluent Bit.
+
+Weaknesses: ~50MB memory (10x Fluent Bit). Newer; smaller community.
+
+Promtail. Grafana Labs. Tightly integrated with Loki.
+
+\`\`\`yaml
+clients:
+  - url: http://loki.observability:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: kubernetes-pods
+    kubernetes_sd_configs: [{ role: pod }]
+    pipeline_stages:
+      - cri: {}
+      - json:
+          expressions:
+            level: level
+            timestamp: timestamp
+            msg: msg
+      - labels:
+          level:
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+\`\`\`
+
+Strengths: native Loki integration; automatic K8s service discovery; pipeline stages for parse/transform.
+
+Weaknesses: Loki-specific (won't ship to Elastic); less actively developed than Vector.
+
+OpenTelemetry Collector. Unified for traces+metrics+logs.
+
+\`\`\`yaml
+receivers:
+  filelog:
+    include: [/var/log/pods/*/*/*.log]
+    operators:
+      - type: regex_parser
+        regex: '^(?P<time>\\\\S+)\\\\s+(?P<stream>\\\\w+)\\\\s+(?P<log>.*)$'
+processors:
+  k8sattributes: { auth_type: serviceAccount }
+  batch: { timeout: 10s }
+exporters:
+  loki:
+    endpoint: http://loki.observability:3100/loki/api/v1/push
+service:
+  pipelines:
+    logs:
+      receivers: [filelog]
+      processors: [k8sattributes, batch]
+      exporters: [loki]
+\`\`\`
+
+Strengths: one Collector for all three signals; standardized config; future-proof (OTel ecosystem).
+
+Weaknesses: heavier than Fluent Bit (~30MB); transformation language less rich than Vector's VRL.
+
+Decision matrix:
+- Default cloud-native, tight memory budget: Fluent Bit.
+- Complex transformations / multi-sink routing: Vector.
+- Loki-only, Grafana-stack: Promtail.
+- Already deploying OTel Collector for traces/metrics: extend to logs.
+
+Hybrid common: Fluent Bit per node for pure forwarding; Vector at gateway for heavy transformation; both pushing to Loki.`,
+      },
+      {
+        term: 'Structured logging best practices',
+        definition: `Logs are most valuable when structured (JSON or logfmt). Unstructured plain-text logs become unsearchable at scale.
+
+Bad (unstructured):
+\`\`\`
+2026-01-15 14:23:45 ERROR Failed to charge user 42 for $99.99: Stripe error: card_declined
+\`\`\`
+
+Good (JSON):
+\`\`\`json
+{
+  "timestamp": "2026-01-15T14:23:45.123Z",
+  "level": "error",
+  "service": "payments",
+  "message": "Failed to charge user",
+  "user_id": "42",
+  "amount": 99.99,
+  "currency": "USD",
+  "error_type": "card_declined",
+  "stripe_error_code": "card_declined",
+  "trace_id": "abc123def456",
+  "span_id": "789012"
+}
+\`\`\`
+
+Why structured wins:
+- Searchable: filter by user_id=42, error_type=card_declined.
+- Aggregatable: rate(error_type=card_declined) over time.
+- Correlatable: trace_id links to distributed trace.
+- Type-safe: amount is a number, not a string to parse.
+
+Library support:
+
+Python:
+\`\`\`python
+import structlog
+log = structlog.get_logger()
+log.error('charge failed', user_id=42, amount=99.99, error_type='card_declined')
+\`\`\`
+
+Node.js:
+\`\`\`javascript
+const log = require('pino')();
+log.error({ user_id: 42, amount: 99.99, error_type: 'card_declined' }, 'charge failed');
+\`\`\`
+
+Go:
+\`\`\`go
+import "log/slog"   // standard library since Go 1.21
+slog.Error("charge failed", "user_id", 42, "amount", 99.99, "error_type", "card_declined")
+\`\`\`
+
+Java:
+\`\`\`java
+import org.slf4j.Logger;
+import net.logstash.logback.argument.StructuredArguments;
+log.error("charge failed", StructuredArguments.kv("user_id", 42), StructuredArguments.kv("amount", 99.99));
+\`\`\`
+
+Standard fields (semantic conventions):
+- timestamp: ISO 8601.
+- level: trace, debug, info, warn, error, fatal (lowercase).
+- service: app/service name.
+- message: human-readable summary.
+- trace_id, span_id: from active OTel span.
+- error.type, error.stack: for error logs.
+- http.method, http.path, http.status_code: for request logs.
+
+OTel semantic conventions for logs (catching up to traces' maturity in 2024+) standardize these field names.
+
+Anti-patterns:
+
+1. Logging full request body. Captures PII, blows up storage. Log only metadata (size, user_id, route).
+
+2. Logging in tight loops. Per-row logs in a 1M-row processing job → 1M log lines per job. Aggregate at job level instead.
+
+3. Multi-line stack traces without proper handling. Forwarders may treat each line as separate record. Use multi-line parsers (Fluent Bit's multiline filter).
+
+4. Mixing log formats in same service. JSON in some places, plain text in others. Backend can't parse consistently.
+
+5. Sensitive data: passwords, tokens, full credit card numbers, API keys. Redact at forwarder level. Never trust app-level redaction alone.
+
+PII redaction at forwarder:
+
+Vector's VRL:
+\`\`\`
+.user_email = redact(.user_email, filters: ["email"])
+del(.password)
+del(.api_key)
+del(.credit_card)
+\`\`\`
+
+Fluent Bit's modify filter:
+\`\`\`
+[FILTER]
+    Name      modify
+    Match     *
+    Remove    password
+    Remove    api_key
+\`\`\`
+
+Log levels in production:
+- error / fatal: actually erroneous; alert-worthy.
+- warn: degraded but functional; review.
+- info: significant business events (user registered, order placed). Production volume.
+- debug: development only; disable in prod (reduces volume 10-100x).
+
+trace level: never in prod; very chatty.
+
+Sampling for high-volume info logs:
+
+If info logs are too voluminous, sample at forwarder (1 in 10 lines kept). Loses fidelity; saves cost. Reserve full sampling for error/warn levels.`,
+      },
+      {
+        term: 'Recipe: Loki + Promtail on EKS with multi-tenant retention',
+        definition: `Production Loki deployment.
+
+Step 1 — install Loki via Helm chart (loki-distributed):
+
+\`\`\`yaml
+# loki-values.yaml
+loki:
+  schemaConfig:
+    configs:
+      - from: 2024-01-01
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+
+  storage:
+    type: s3
+    s3:
+      endpoint: s3.amazonaws.com
+      region: us-east-1
+      bucketnames: my-org-loki-chunks
+
+  limits_config:
+    max_query_lookback: 90d
+    retention_period: 90d
+    ingestion_rate_mb: 10
+    ingestion_burst_size_mb: 20
+    max_label_name_length: 1024
+    max_label_value_length: 4096
+    cardinality_limit: 100000
+
+distributor:
+  replicas: 3
+  resources:
+    requests: { cpu: 200m, memory: 512Mi }
+
+ingester:
+  replicas: 3
+  persistence:
+    enabled: true
+    size: 50Gi
+
+querier:
+  replicas: 3
+
+queryFrontend:
+  replicas: 2
+
+queryScheduler:
+  replicas: 2
+
+compactor:
+  replicas: 1
+  retention_enabled: true
+  delete_request_store: s3
+
+ruler:
+  replicas: 2
+  enabled: true
+  storage:
+    type: s3
+    s3: { bucketnames: my-org-loki-rules }
+
+tableManager:
+  retention_deletes_enabled: true
+  retention_period: 90d
+
+multiTenancyEnabled: true
+\`\`\`
+
+Step 2 — Promtail DaemonSet:
+
+\`\`\`yaml
+# promtail-values.yaml
+config:
+  clients:
+    - url: http://loki-distributor.observability:3100/loki/api/v1/push
+      tenant_id: \${CLUSTER_NAME}
+
+  snippets:
+    pipelineStages:
+      - cri: {}
+      - json:
+          expressions:
+            level: level
+            ts: ts
+            msg: msg
+            trace_id: trace_id
+            span_id: span_id
+      - labels:
+          level:
+      - timestamp:
+          source: ts
+          format: RFC3339Nano
+
+\`\`\`
+
+\`\`\`bash
+helm install promtail grafana/promtail \\
+  --namespace observability \\
+  -f promtail-values.yaml
+\`\`\`
+
+Step 3 — multi-tenant per-team config:
+
+\`\`\`yaml
+# Loki overrides per tenant
+overrides:
+  team-payments:
+    retention_period: 365d        # 1 year for payments compliance
+    ingestion_rate_mb: 20
+    max_query_lookback: 365d
+
+  team-search:
+    retention_period: 30d
+    ingestion_rate_mb: 5
+
+  free-tier-tenant:
+    retention_period: 7d
+    ingestion_rate_mb: 1
+\`\`\`
+
+Tenants identified via X-Scope-OrgID header on push and query.
+
+Step 4 — Grafana datasource:
+
+\`\`\`yaml
+apiVersion: 1
+datasources:
+  - name: Loki
+    type: loki
+    url: http://loki-query-frontend.observability:3100
+    jsonData:
+      maxLines: 5000
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: 'trace_id=(\\\\w+)'
+          name: TraceID
+          url: '$\${__value.raw}'
+\`\`\`
+
+derivedFields: in Loki query results, render trace_id as link to Tempo. Click → trace flame graph.
+
+Step 5 — alert rules via PrometheusRule (Loki Ruler):
+
+\`\`\`yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: log-alerts
+  namespace: observability
+spec:
+  groups:
+    - name: log-alerts
+      rules:
+        - alert: HighErrorLogRate
+          expr: |
+            sum by (service, namespace) (
+              rate({namespace="prod"} |= "error" | json | level="error" [5m])
+            ) > 10
+          for: 5m
+          labels: { severity: warning }
+          annotations:
+            summary: "High error log rate for {{ $labels.service }}"
+
+        - alert: ApplicationCrashLoop
+          expr: |
+            sum by (service, pod) (
+              count_over_time({namespace="prod"} |= "panic:" [10m])
+            ) > 3
+          for: 0m
+          labels: { severity: critical }
+\`\`\`
+
+Step 6 — observability for Loki itself. Loki emits Prometheus metrics on /metrics. ServiceMonitor for kube-prometheus-stack. Key metrics:
+- loki_distributor_lines_received_total (ingest rate)
+- loki_ingester_chunks_flushed_total (chunk flush rate)
+- loki_request_duration_seconds (query latency)
+- loki_logql_querystats_latency_seconds_sum (LogQL query perf)
+
+Cost analysis:
+
+100 services, 50KB/sec average log volume, 30-day retention = 130GB/day raw, 13GB/day compressed.
+
+S3: 13GB × 30 = 390GB. ~$10/month.
+
+Compute: 5-10 vCPU + 20Gi memory. ~$300-500/month.
+
+Total: ~$400/month moderate scale.
+
+Compare Datadog Logs at this volume: $5k-15k/month. Loki ~30x cheaper.
+
+Operational: Loki is K8s-native; runs alongside Prometheus/Tempo on same cluster; shared object storage.`,
+      },
+    ],
+    approach: [
+      'Choose backend by volume: Elastic/OpenSearch <1TB/day, Loki >100GB/day cost-conscious, ClickHouse hyperscale',
+      'Forwarder by need: Fluent Bit (default), Vector (heavy transformation), Promtail (Loki-only), OTel Collector (unified)',
+      'Structured logging in apps (JSON or logfmt); never plain text in production',
+      'OTel semantic conventions: timestamp, level, service, trace_id, span_id, error.type',
+      'PII redaction at forwarder (Vector VRL or Fluent Bit modify filter); never trust app-level',
+      'Multi-tenant Loki: X-Scope-OrgID header; per-tenant retention overrides',
+      'Loki cardinality discipline: <10k label streams per cluster; high-cardinality data IN log line, not as label',
+      'Trace correlation: trace_id field in every log; Grafana derivedFields link to Tempo',
+      'Alert via Loki ruler: log-derived metrics (rate of error logs, crash loops)',
+    ],
+    pitfalls: [
+      'High-cardinality labels in Loki (user_id, request_id, full path) — explodes streams; ingest blocked',
+      'Plain-text unstructured logs — unsearchable at scale; always JSON or logfmt',
+      'Logging full request body — captures PII, blows storage',
+      'Per-row logs in tight loops — millions of lines per job; aggregate at job level',
+      'Multi-line stack traces without multiline parser — each line = separate log record',
+      'Sensitive data (passwords, API keys, credit cards) without forwarder redaction',
+      'Debug-level logs in production — 10-100x more volume; reduce log level',
+      'No retention policy — costs grow indefinitely; S3 lifecycle / Loki retention configs essential',
+      'Mixing log forwarder configs (some pods Fluent Bit, others Promtail) — inconsistent enrichment',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you choose between Loki and Elasticsearch?',
+        answer: `The choice depends on volume, query patterns, cost sensitivity, and existing investment.
+
+Volume thresholds:
+
+Below ~100GB/day: cost difference negligible; choose by query patterns.
+
+100GB-1TB/day: Loki saves 5-10x on storage cost. Worth migrating from Elastic if cost matters.
+
+Above 1TB/day: Loki saves $50k+/year vs Elastic. Migration ROI obvious.
+
+At >10TB/day: consider ClickHouse for analytical queries; both Loki and Elastic struggle.
+
+Query patterns:
+
+Loki wins when:
+- Most queries narrow by labels first (service, namespace, pod). The label index hits effectively; chunk scan is cheap.
+- "Show me logs from payments service in the last hour with 'timeout'." Label hit (service=payments) + small chunk scan.
+- Long-term retention with occasional historical queries. Cheap S3 storage; rare query cost is acceptable.
+
+Elasticsearch wins when:
+- Full-text search across services without label filter. "Find logs containing 'card_declined' across all services" — index makes it fast.
+- Complex aggregations over log content. Date histograms, terms aggregations, percentile aggregations.
+- Audit / security logs where every search is full-text exploratory.
+
+Real-world example breakdown:
+
+Engineer queries "show me payment errors in last 24 hours":
+- Loki: {service="payments", level="error"} — label index narrow → small chunk scan → results in ~1s.
+- Elastic: KQL service:payments AND level:error AND @timestamp:>now-24h — index hit → results in ~500ms.
+
+Both fast. Loki ~2x slower but acceptable.
+
+Engineer queries "show me any log line containing 'OutOfMemory' across all services in last 30 days":
+- Loki: {} |= "OutOfMemory" over 30 days — no label narrow; full scan of 30 days of all services. Slow (minutes).
+- Elastic: message:OutOfMemory AND @timestamp:>now-30d — index hit; results in ~1s.
+
+Elastic dominates this query pattern.
+
+If the second query is rare (once a month during incidents), Loki is fine. If it's daily (security team running content searches), Elastic justifies cost.
+
+Cost-volume crossover analysis:
+
+Self-hosted on EKS, 1TB/day raw logs, 30-day retention.
+
+Elasticsearch:
+- Storage: 30TB-90TB (50-200% index overhead). EBS gp3: ~$3k/month.
+- Memory: ~10TB RAM across cluster. ~$2k/month.
+- Compute: 30-50 vCPU sustained. ~$2k/month.
+- Total: ~$7k/month.
+
+Loki:
+- S3: 3TB compressed. ~$70/month.
+- Compute: 10-20 vCPU. ~$500-1000/month.
+- Total: ~$600-1100/month.
+
+Difference: ~$6k/month, ~$72k/year. Worth significant engineering effort.
+
+Migration patterns:
+
+Hybrid: Loki for high-volume application logs; Elastic for low-volume security/audit logs. Different forwarder routes per log source.
+
+Phase migration: parallel ingest both for 1-2 months. Verify Loki query patterns satisfy team needs. Cut over.
+
+Logz.io / Splunk Cloud / SaaS: take both off the table; vendor handles. Pricing aggressive at scale.
+
+Pragmatic 2026 stance:
+- Greenfield K8s shop with cost focus → Loki.
+- Existing Elastic shop with manageable volume → stay.
+- Existing Elastic shop hitting cost ceiling → migrate to Loki.
+- Security team with rich-search needs → keep Elastic for security; Loki for everything else.
+- Hyperscale (>10TB/day) → ClickHouse.
+
+OpenSearch (Apache 2.0 fork of Elasticsearch) doesn't change the cost equation meaningfully — same architecture, same trade-offs. It addresses license concerns, not cost.`,
+      },
+      {
+        question: 'Walk through structured logging best practices and PII handling.',
+        answer: `Structured logging is the foundation of usable log infrastructure at scale. Plain-text logs become unsearchable and expensive to operate.
+
+Why structured wins:
+
+Searchability: filter by user_id=42 across millions of logs in seconds. With plain text: regex grep, slow, error-prone.
+
+Aggregation: count logs by error_type, group by service. Trivial with structured; nightmare with plain text parsing.
+
+Correlation: trace_id field links logs to distributed traces. Click in Grafana → jump to Tempo.
+
+Type safety: amount: 99.99 is numeric. Compare/threshold/sum it. Plain text: parse "for $99.99" with regex.
+
+Format choice — JSON vs logfmt:
+
+JSON: nested objects, arrays, type information.
+
+\`\`\`json
+{"timestamp":"2026-01-15T14:23:45Z","level":"error","service":"payments","user":{"id":42,"tier":"enterprise"},"amount":99.99,"error":"card_declined"}
+\`\`\`
+
+logfmt: key=value flat:
+
+\`\`\`
+timestamp=2026-01-15T14:23:45Z level=error service=payments user_id=42 user_tier=enterprise amount=99.99 error=card_declined
+\`\`\`
+
+JSON: more expressive (nesting); larger size; some parsers handle better. logfmt: smaller; flat; popular in Go ecosystem (Heroku origin).
+
+Both valid. Loki's | json and | logfmt parsers handle each. Choose one and stick with it across the org.
+
+Standard fields (OTel semantic conventions, finalizing 2024-2026):
+
+- timestamp: ISO 8601 (RFC 3339). UTC. Microsecond precision if available.
+- level: lowercase string — trace, debug, info, warn, error, fatal.
+- service: app name. Same value as resource.service.name in OTel.
+- message: human-readable summary. The "what" of the log.
+- trace_id, span_id: hex strings from active OTel span. Auto-injected by OTel SDK's logging integration.
+- error.type, error.message, error.stack: for error logs.
+- HTTP-related: http.method, http.route, http.status_code, http.user_agent.
+- DB-related: db.system, db.operation, db.statement (sanitized).
+- Custom domain fields: snake_case, dotted hierarchy (user.id, payment.amount, payment.currency).
+
+Example error log:
+
+\`\`\`json
+{
+  "timestamp": "2026-01-15T14:23:45.123Z",
+  "level": "error",
+  "service": "payments",
+  "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "span_id": "00f067aa0ba902b7",
+  "message": "Payment failed",
+  "user": {"id": "42", "tier": "enterprise"},
+  "payment": {"amount": 99.99, "currency": "USD"},
+  "error": {
+    "type": "stripe.card_declined",
+    "message": "Your card was declined.",
+    "stack": "..."
+  },
+  "http": {"method": "POST", "route": "/api/charge"}
+}
+\`\`\`
+
+PII handling — what NOT to log:
+
+Personally identifying:
+- Email addresses (use user.id; map to email out-of-band).
+- Full names.
+- Phone numbers.
+- Physical addresses.
+- IP addresses (in some jurisdictions; tokenize or hash).
+
+Sensitive financial:
+- Full credit card numbers.
+- CVV.
+- Bank account numbers.
+- Social Security Numbers.
+- Routing numbers.
+
+Authentication:
+- Passwords (any form).
+- API keys.
+- OAuth tokens.
+- Session cookies.
+- JWTs (header + payload may be OK; signature should not).
+
+Health (HIPAA):
+- Diagnoses.
+- Prescription names.
+- Patient identifiers.
+
+PII redaction at forwarder layer:
+
+Don't trust app-level redaction alone. Apps have bugs; engineers forget. Forwarder is the safety net.
+
+Vector VRL example:
+
+\`\`\`
+.user.email_hash = sha256(.user.email)
+del(.user.email)
+
+.payment.card.last_four = string!(.payment.card.number) |> string |> truncate(., -4)
+del(.payment.card.number)
+del(.payment.card.cvv)
+
+if exists(.password) { del(.password) }
+if exists(.api_key) { del(.api_key) }
+if exists(.token) { del(.token) }
+
+# Drop any field matching common patterns
+. = compact(.)
+\`\`\`
+
+Fluent Bit modify filter:
+
+\`\`\`
+[FILTER]
+    Name modify
+    Match *
+    Remove password
+    Remove api_key
+    Remove token
+    Remove credit_card_number
+    Remove ssn
+\`\`\`
+
+Loki ingest can also apply pipelines, but redaction at forwarder is the standard pattern.
+
+Audit logging vs operational logging:
+
+Audit logs (security-critical: who logged in, who accessed what data) have different requirements:
+- Cannot drop / sample.
+- Long retention (1-7 years per regulation).
+- Tamper-evident (signed, immutable storage).
+- Separate destination (security-focused SIEM, not general Loki).
+
+Operational logs (debugging, performance) can be sampled, dropped, shorter retention.
+
+Configuration: separate forwarder rules. Audit log filename → security backend; everything else → general backend.
+
+Compliance considerations:
+
+GDPR (EU): right to be forgotten. User requests deletion → must purge all logs containing their data. Field-level: hash user.id at ingest so deletion = deleting hash mapping (cheaper). Or: use synthetic IDs not reversible to PII.
+
+HIPAA: 6+ year retention. PII restrictions. Encrypted at rest. Access audit.
+
+PCI: cannot store full card numbers. Last-4 + expiry only. Tokenized.
+
+SOC 2: audit log retention, access controls.
+
+Effective hygiene: tag logs with retention class label. Backend lifecycle policy purges by class.
+
+\`\`\`
+{cluster="prod", retention_class="audit"}      # 7-year retention
+{cluster="prod", retention_class="ops"}        # 30-day retention
+\`\`\`
+
+Real-world: dedicated logging engineer audits log content quarterly. Reviews random samples for PII leakage; updates redaction rules. Annual data classification review.`,
+      },
+      {
+        question: 'How do you correlate logs with traces and metrics?',
+        answer: `The three signals are most valuable when correlated. Pivoting between them — metric anomaly → exemplar trace → logs from that trace — collapses MTTR from hours to minutes.
+
+The correlation primitive: trace_id.
+
+Every log line emitted during an active OTel span includes trace_id. Every metric exemplar references a trace_id. Traces are queried by trace_id.
+
+The flow:
+
+Step 1: alert fires on metric. Example: "p99 latency >2s for 5min on payments service".
+
+Step 2: open metrics dashboard. See latency histogram. Click p99 bucket.
+
+Step 3: Grafana queries Tempo for exemplar traces (sample traceIDs attached to metric). Returns 5-10 sample traceIDs.
+
+Step 4: click a traceID. Grafana renders flame graph from Tempo. Identify slow span (e.g., "stripe-call: 1.5s").
+
+Step 5: click the span. Grafana queries Loki for logs in time range with trace_id=abc123. Shows all logs from this trace's execution.
+
+Step 6: read logs. Find error message: "Stripe API error: rate_limited". Root cause identified.
+
+Total time from alert to root cause: <5 minutes.
+
+Without correlation: hours of grep across services + dashboards.
+
+Setup requirements:
+
+OTel SDK in apps. Auto-instruments HTTP, DB, queue. Creates trace context. Propagates via W3C traceparent header.
+
+OTel logging integration. Inject trace_id + span_id into log records:
+
+Python:
+\`\`\`python
+import logging
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+
+# Once at startup:
+logging.getLogger().addHandler(LoggingHandler())
+
+# Log calls auto-include trace_id from current span:
+logging.info('charge initiated', extra={'user_id': 42})
+# Resulting log record includes:
+# - trace_id: <current span's traceID>
+# - span_id: <current span's spanID>
+# - flags: trace flags
+\`\`\`
+
+Node.js:
+\`\`\`javascript
+const { context, trace } = require('@opentelemetry/api');
+const log = require('pino')();
+
+function getTraceContext() {
+  const span = trace.getSpan(context.active());
+  if (!span) return {};
+  const ctx = span.spanContext();
+  return { trace_id: ctx.traceId, span_id: ctx.spanId };
+}
+
+log.info({ ...getTraceContext(), user_id: 42 }, 'charge initiated');
+\`\`\`
+
+Go:
+\`\`\`go
+import (
+    "go.opentelemetry.io/otel/trace"
+    "log/slog"
+)
+
+func logWithTrace(ctx context.Context, msg string, args ...any) {
+    span := trace.SpanFromContext(ctx)
+    if span.SpanContext().IsValid() {
+        args = append(args, "trace_id", span.SpanContext().TraceID().String())
+        args = append(args, "span_id", span.SpanContext().SpanID().String())
+    }
+    slog.InfoContext(ctx, msg, args...)
+}
+\`\`\`
+
+Java:
+\`\`\`java
+import io.opentelemetry.context.Context;
+import io.opentelemetry.api.trace.Span;
+import org.slf4j.MDC;
+
+Span span = Span.fromContext(Context.current());
+if (span.getSpanContext().isValid()) {
+    MDC.put("trace_id", span.getSpanContext().getTraceId());
+    MDC.put("span_id", span.getSpanContext().getSpanId());
+}
+log.info("charge initiated user_id={}", userId);
+\`\`\`
+
+Loki configuration: trace_id field automatically becomes searchable.
+
+Grafana datasource derivedFields:
+
+\`\`\`yaml
+apiVersion: 1
+datasources:
+  - name: Loki
+    type: loki
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: 'trace_id=(\\\\w+)'
+          name: TraceID
+          url: '$\${__value.raw}'
+\`\`\`
+
+In a Loki query result, every log line with trace_id=abc123 → "abc123" rendered as link to Tempo trace.
+
+Tempo datasource tracesToLogsV2:
+
+\`\`\`yaml
+- name: Tempo
+  type: tempo
+  jsonData:
+    tracesToLogsV2:
+      datasourceUid: loki
+      spanStartTimeShift: '-30s'
+      spanEndTimeShift: '30s'
+      filterByTraceID: true
+      tags: [{ key: 'service.name', value: 'service' }]
+\`\`\`
+
+In a Tempo trace, click a span → "View related logs" → Grafana queries Loki for trace_id=<span.traceID> in time range. Logs from this span's execution.
+
+Metric exemplars (from previous Prometheus topic): metric histogram bucket → trace_id sample. Click bucket → trace.
+
+Async / queue boundaries: trace context propagates via Kafka headers, message body. Logs emitted on consumer side reference original trace.
+
+Cross-region: trace flows globally (W3C standard). Logs flow to per-region backend; queryable globally if backend federates.
+
+Common gotchas:
+
+Logs emitted outside span scope: no trace_id. Engineer can't pivot back. Solution: ensure auto-instrumentation creates spans around request handlers; all logs within handlers are in scope.
+
+Sampling mismatch: trace dropped (1% sampling) but logs retained. Logs reference non-existent trace. Either sample logs same way as traces, or accept partial correlation (engineer sees logs but no trace for them).
+
+Trace ID format mismatch. OTel uses 32-char hex. Older systems may use shorter. Standardize on OTel format.
+
+Clock skew: span end time and log time differ by hours due to clock skew. Correlation broken. NTP-sync clocks; alert on >100ms skew across nodes.
+
+Real-world impact: teams that wire correlation see MTTR drop 50-80%. Engineers learn to start at metrics, pivot to traces, drill to logs. Without correlation: each signal queried independently; correlation by timestamp/service is manual and error-prone.`,
+      },
+      {
+        question: 'How do you control log volume and cost at scale?',
+        answer: `Log volume scales with traffic, deployments, services. Without controls, costs spiral. Multi-layered approach:
+
+Layer 1: log level discipline.
+
+Production should run at info level. debug and trace are 10-100x more verbose; only useful in dev/staging.
+
+\`\`\`yaml
+# Helm values per environment
+prod:
+  logLevel: info
+staging:
+  logLevel: info
+dev:
+  logLevel: debug
+\`\`\`
+
+Engineers should be able to dynamically adjust log level via env var or config (without redeploy) for incident debugging.
+
+Layer 2: drop noise at forwarder.
+
+Health checks, /metrics scrapes, /readiness probes — high-volume, low-value. Drop at forwarder.
+
+Vector example:
+\`\`\`
+[transforms.drop_noise]
+type = "filter"
+inputs = ["kubernetes_logs"]
+condition = '!includes(.path, "/health") && !includes(.path, "/ready") && !includes(.path, "/metrics")'
+\`\`\`
+
+Reduces volume 30-70% depending on health check frequency.
+
+Layer 3: sample high-volume info logs.
+
+If info logs are 90% of volume but only 5% useful for debugging, sample at forwarder.
+
+\`\`\`
+[transforms.sample_info]
+type = "sample"
+inputs = ["kubernetes_logs"]
+rate = 10                  # keep 1 in 10
+condition = '.level == "info"'
+\`\`\`
+
+Keep 100% of error/warn; sample info to 10%. Saves cost; preserves error fidelity.
+
+Layer 4: deduplicate at ingestion.
+
+Repeating identical logs (CI tools logging same line per record) waste storage. Vector's dedupe transform:
+
+\`\`\`
+[transforms.dedupe]
+type = "dedupe"
+inputs = ["sampled"]
+fields.match = ["service", "message"]
+cache.num_events = 5000
+\`\`\`
+
+Drop logs with identical (service, message) within last 5000 events.
+
+Layer 5: compress at backend.
+
+Loki: chunks compressed by default (gzip/snappy). 10x compression typical.
+
+Elastic: index compression options (best_compression vs default). 30-50% savings; query slightly slower.
+
+ClickHouse: native columnar compression. 20-50x for log content.
+
+Layer 6: short retention by default; per-tenant override.
+
+Default: 7-30 days. Critical (audit, security): 1-7 years. Most operational logs aren't useful past 30 days.
+
+Loki per-tenant:
+\`\`\`yaml
+overrides:
+  team-payments-prod:
+    retention_period: 90d         # operational
+  team-payments-audit:
+    retention_period: 2555d       # 7 years for SOC2
+  team-search-prod:
+    retention_period: 14d
+\`\`\`
+
+S3 lifecycle for long-term archive:
+\`\`\`json
+{
+  "Rules": [{
+    "ID": "log-archive-glacier",
+    "Status": "Enabled",
+    "Transitions": [
+      { "Days": 90, "StorageClass": "GLACIER_IR" },
+      { "Days": 365, "StorageClass": "DEEP_ARCHIVE" }
+    ]
+  }]
+}
+\`\`\`
+
+90 days hot → Glacier. 1 year → Deep Archive. Cost $0.001/GB/month vs S3 standard $0.023.
+
+Layer 7: index discipline.
+
+Elastic: limit field count per index. mapping.total_fields.limit = 1000. Field explosion (each request body field becoming an indexed field) blows index size.
+
+Loki: <10k label streams per cluster. High-cardinality data IN log line, not as label.
+
+Layer 8: monitoring log volume itself.
+
+Track in Prometheus:
+- log_lines_received_per_minute by service
+- log_bytes_per_day by service
+- log_storage_GB by service
+
+Alert on:
+- Service log volume increased >50% week over week (regression).
+- Top 5 services by volume (cost attribution).
+
+Cost analysis (typical mid-size org):
+
+Naive: 100 services × 10 lines/sec × 200 bytes/line × 24h = 17GB/day raw → 510GB/month.
+
+Drop noise (50%): 8.5GB/day.
+Sample info (50% of remaining): 4.3GB/day.
+Compress (10:1 in Loki): 430MB/day = 13GB/month.
+
+S3 storage: 13GB × 30d retention = 390GB. ~$10/month.
+
+Compute (Loki ingesters/queriers): ~$300-500/month.
+
+Total: ~$400/month for 100 services.
+
+Without controls: 510GB/month uncompressed = ~$500/month S3 alone, +$1k+ compute. ~$1.5-2k/month.
+
+3-4x savings from discipline.
+
+Real-world cost outliers:
+
+Service team starts logging full HTTP request bodies at info level. Volume spike 50x. Detect via volume monitoring; force fix or block at forwarder.
+
+CI cluster running excessive debug-level logs. Fix log level config; volume drops 100x.
+
+Library bug: chatty error logs with same message every iteration. Dedupe at forwarder + bug fix.
+
+Pragmatic 2026 stance: cost discipline scales. Without it, log infrastructure cost grows linearly with engineer count and service count. With it, costs grow much slower. Logging engineer (or shared SRE responsibility) reviews monthly.`,
+      },
+      {
+        question: 'Quick-fire interview answers — log aggregation essentials.',
+        answer: `Rapid-fire facts.
+
+Q: Three storage models?
+A: Full-text indexed (Elasticsearch / OpenSearch — fast search, expensive). Label-indexed (Loki — cheap S3-backed, narrow-by-label fast). Columnar (ClickHouse — hyperscale analytical).
+
+Q: Loki vs Elasticsearch cost?
+A: Loki ~10x cheaper at scale. 1TB/day raw: Elastic ~$7k/month, Loki ~$600-1100/month. Elasticsearch's index is 50-200% of raw size; Loki stores compressed chunks in S3.
+
+Q: When use Elasticsearch?
+A: Full-text search across services without label filter is primary use case. Audit/security logs. <100GB/day where cost is manageable. Existing Elastic investment.
+
+Q: When use Loki?
+A: Cost-conscious at >100GB/day. K8s-native shop. Already on Grafana stack. Most queries narrow by service/namespace.
+
+Q: When use ClickHouse?
+A: Hyperscale (>10TB/day). Analytical queries (group by, aggregations) over log data. Have ClickHouse expertise.
+
+Q: Forwarder choices?
+A: Fluent Bit (default cloud-native, ~5MB memory, CNCF Graduated 2024). Vector (Rust, best transformation language VRL). Promtail (Loki-only, Grafana). OTel Collector (unified for traces+metrics+logs).
+
+Q: LogQL?
+A: Loki's query language. PromQL-style for logs. {service="payments"} |= "error" — label index narrow + content grep. histogram_quantile equivalent missing; metrics aggregation supported via rate/count_over_time.
+
+Q: Loki cardinality discipline?
+A: <10k unique label streams per cluster. High-cardinality data (user_id, trace_id) IN log line, not as label. Bounded labels: cluster, namespace, service, level, pod.
+
+Q: Structured logging format?
+A: JSON or logfmt. Standard fields: timestamp (ISO 8601), level (lowercase), service, message, trace_id, span_id, error.type. Plain text never in production.
+
+Q: PII redaction layer?
+A: At forwarder (Vector VRL or Fluent Bit modify filter). Drop password, api_key, token, credit_card_number. Hash user_email if needed for correlation. Don't trust app-level redaction alone.
+
+Q: Trace correlation?
+A: trace_id field in every log via OTel SDK's logging integration. Grafana derivedFields render as link to Tempo. Click trace_id → trace flame graph.
+
+Q: Multi-tenant Loki?
+A: X-Scope-OrgID header on push and query. Per-tenant retention, ingestion rate, query lookback overrides.
+
+Q: Retention strategy?
+A: 7-30 days operational; 1-7 years compliance/audit. S3 lifecycle: hot → Glacier (90d) → Deep Archive (1y).
+
+Q: Volume control techniques?
+A: Log level discipline (info in prod), drop noise at forwarder (health/metrics endpoints), sample high-volume info logs, deduplicate identical entries, compress at backend, short default retention.
+
+Q: Most common log anti-pattern?
+A: Plain-text unstructured logs. Or: high-cardinality labels in Loki (user_id, request_id) blowing up streams.
+
+Q: Logs vs traces vs metrics?
+A: Metrics — aggregate numeric (RED, USE), cheap, indexed. Traces — request flow across services, sampled, expensive but rich. Logs — semantic detail per event, most verbose. Three legs of observability.
+
+Q: When NOT use logs?
+A: For aggregation queries (use metrics). For request flow analysis (use traces). For real-time dashboards (use metrics with exemplars).
+
+Q: Audit logs vs operational logs?
+A: Audit — cannot drop/sample, long retention (1-7y), tamper-evident, separate SIEM. Operational — sampled, dropped, short retention.
+
+Q: Sampled trace + retained logs?
+A: Logs reference trace_id of dropped trace. Either sample logs same way as traces, or accept partial correlation.
+
+Q: Datadog Logs vs OSS?
+A: Datadog ~10-30x more expensive at moderate scale. Use Datadog if vendor UX matters and budget allows; OSS (Loki + Grafana) if cost-conscious or already on Grafana stack.
+
+Q: Most common cost outlier?
+A: Service team logs full HTTP request bodies at info level → volume spike 10-100x. Monitor log volume per service; alert on regressions.
+
+These are answers a logging-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://grafana.com/docs/loki/latest/',
+      'https://opensearch.org/docs/latest/',
+      'https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html',
+      'https://vector.dev/docs/',
+      'https://docs.fluentbit.io/manual',
+      'https://opentelemetry.io/docs/specs/semconv/general/logs/',
+    ],
+  },
+
 ];
