@@ -327,6 +327,25 @@ def diag_cascading_failure():
     print('Generated: g2-cascade')
 
 
+# ── H1: On-call rotation flow ───────────────────────────────────────
+def diag_oncall_rotation():
+    g = base_graph('h1_oncall', 'On-call rotation — primary, secondary, escalation')
+    n(g, 'page',  'Page fires\n(SLO breach,\nalert, incident)', 'red')
+    n(g, 'pri',   'Primary on-call\n(acknowledge\nwithin 5 min)', 'navy')
+    n(g, 'sec',   'Secondary on-call\n(if primary doesn\'t\nacknowledge in 10 min)', 'gold')
+    n(g, 'mgr',   'Manager / Lead\n(escalation if\nincident severity\nor duration warrants)', 'purple')
+    n(g, 'sme',   'Subject Matter Expert\n(pulled in by IC\nfor deep technical issue)', 'green')
+    n(g, 'ic',    'Incident Commander\n(if SEV-1 / SEV-2)', 'red')
+    e(g, 'page', 'pri',   'route to\nprimary')
+    e(g, 'pri',  'sec',   'no ack\nin 10 min', '#dc2626', 'dashed')
+    e(g, 'pri',  'ic',    'declare\nincident')
+    e(g, 'sec',  'ic',    'if escalates')
+    e(g, 'ic',   'mgr',   'escalate\nseverity / duration')
+    e(g, 'ic',   'sme',   'pull in for\ntechnical depth')
+    g.render(os.path.join(OUT, 'h1-oncall-rotation'), cleanup=True)
+    print('Generated: h1-oncall-rotation')
+
+
 if __name__ == '__main__':
     diag_sli_slo_sla()
     diag_burn_rate()
@@ -344,4 +363,5 @@ if __name__ == '__main__':
     diag_load_testing()
     diag_circuit_breaker()
     diag_cascading_failure()
-    print('SRE diagrams batches 1-7 complete.')
+    diag_oncall_rotation()
+    print('SRE diagrams batches 1-8 complete.')

@@ -80,6 +80,18 @@ export const sreTopicCategoryMap = {
   'idempotency':               'patterns',
   'bulkheads':                 'patterns',
   'timeouts-deadlines':        'patterns',
+  // On-call & Operations
+  'oncall-structure':          'oncall',
+  'oncall-sustainability':     'oncall',
+  'runbooks':                  'oncall',
+  'pager-discipline':          'oncall',
+  'sre-team-models':           'oncall',
+  // Security
+  'reliability-security-overlap': 'security',
+  'secret-management':         'security',
+  'zero-trust-defense':        'security',
+  'supply-chain-security':     'security',
+  'security-incident-response':'security',
 };
 
 export const sreTopics = [
@@ -8315,6 +8327,1391 @@ Skipping any leaves a failure mode open. The mature production service has all f
     references: [
       'https://sre.google/sre-book/addressing-cascading-failures/',
       'https://grpc.io/blog/deadlines/',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // H. On-call & SRE Operations
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'oncall-structure',
+    title: 'On-call Structure — Primary, Secondary, Follow-the-Sun',
+    icon: 'clock',
+    color: '#14b8a6',
+    questions: 3,
+    description: 'How rotations work, the primary/secondary backup model, follow-the-sun for global teams.',
+    visualizations: [
+      {
+        title: 'On-call rotation flow',
+        description: 'Page → primary (5 min ack) → secondary (10 min) → IC (if SEV-1) → SMEs as needed → manager escalation for severity/duration.',
+        image: '/diagrams/sre/h1-oncall-rotation.png',
+      },
+    ],
+    introduction: `**On-call** is the discipline of "someone is always available to respond to production issues." How that\'s organized matters — bad on-call drives engineers out of SRE; good on-call is sustainable.
+
+**The two-tier model (standard):**
+
+**Primary on-call**: gets paged first. Acknowledges within ~5 min; investigates; mitigates.
+
+**Secondary on-call**: backup. Paged if primary doesn\'t acknowledge in 10 min. Also paged for parallel incidents or when the primary needs help.
+
+**Tertiary / Manager / IC**: escalation. Page when:
+- Incident is SEV-1.
+- Primary + secondary need help.
+- Decision-making authority is needed (rollback approval, customer comms, etc.).
+
+**Page routing:**
+
+When a page fires:
+1. Routed to primary on-call via PagerDuty / Opsgenie / similar.
+2. Phone call, SMS, push notification, escalating in intensity.
+3. If primary doesn\'t acknowledge in 5-10 min: routed to secondary.
+4. If secondary doesn\'t acknowledge in 10 min: routed to manager / on-call lead.
+5. Each escalation should be visible in the incident channel.
+
+**Rotation patterns:**
+
+**Weekly rotation**: each engineer is on-call for 7 days, then off for N weeks. Standard for most teams.
+- Pros: predictable; engineer fully focused on on-call duties.
+- Cons: a bad week is 7 days; harder to schedule around.
+
+**Daily rotation**: one engineer per day. Used for smaller teams.
+- Pros: short bad days; easier scheduling.
+- Cons: less context per shift; constant handoff.
+
+**Follow-the-sun**: rotations across geographic regions (US daytime, EU daytime, APAC daytime).
+- Pros: nobody on-call at night; healthier sleep.
+- Cons: requires teams in multiple regions; handoff complexity.
+- Tools: PagerDuty, Opsgenie support follow-the-sun schedules natively.
+
+**Shift length:**
+
+- **Single 7-day shift**: most common. Engineer is "on" for the whole week.
+- **Split shifts** (M-W-F primary, Tue-Thu secondary): less common; reduces fatigue at cost of complexity.
+- **24-hour rotations**: only for ops-heavy teams (NOC, support). Burns engineers out.
+
+**Compensation:**
+
+- **No compensation**: nominal; assumed part of role. Common at smaller US tech companies.
+- **Hourly bonus during on-call** (typically $X/hour while assigned): common at larger tech companies and consulting.
+- **Per-page payment**: each acknowledged page = $Y. Used at companies with very lean on-call duty.
+- **Time-in-lieu**: each on-call hour = N hours of TOIL allowance. European pattern.
+
+The pattern: compensation increases with the load and decreases with the rotation length. Tight rotations + heavy load = better pay.
+
+**Page volume targets:**
+
+Healthy on-call: **< 2 pages per shift** for a 1-week rotation. Pages should be:
+- Real (action required).
+- Solvable within 15-30 min.
+- Documented (runbooks).
+
+Unhealthy on-call: **> 5 pages per shift sustained**. Burns engineers out; loses pattern recognition; mistakes increase.
+
+**The on-call sustainability rule** (Google SRE Book Ch 11): if on-call is sustained-painful, it\'s a bug, not a fact of life. Find the noisy services / alerts / patterns and fix them.`,
+    whenToUse: [
+      'Setting up on-call rotation for a new team',
+      'Reviewing existing on-call — is it sustainable?',
+      'Hiring SREs — communicate the on-call expectations clearly',
+      'Quarterly review — page volume per engineer',
+    ],
+    keyConcepts: [
+      { term: 'Primary / secondary / escalation', definition: 'Standard tiered model. Primary first; secondary if no ack; escalate up the chain for severity.' },
+      { term: 'Follow-the-sun', definition: 'Rotation across regions so no one is on at night. Requires multi-region team; tools like PagerDuty support.' },
+      { term: 'Rotation pattern', definition: 'Weekly (most common), daily (small teams), or split shifts. Match to team size.' },
+      { term: 'Compensation', definition: 'No-pay (small companies), hourly bonus (mid), per-page (lean), time-in-lieu (EU). Match to load.' },
+      { term: 'Page volume target', definition: '<2 pages/shift healthy. >5 pages/shift unhealthy. Drives sustainability.' },
+      { term: 'Sustainability rule', definition: 'Painful on-call is a bug. Fix the noisy services / alerts; don\'t accept the pain as default.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through how on-call escalation works.',
+        answer: `Page lifecycle:
+
+**T+0**: Alert fires. PagerDuty (or similar) routes to primary on-call.
+- Phone call + SMS + push notification.
+- Primary has 5 min to acknowledge.
+
+**T+5**: If acknowledged, primary investigates.
+- Joins incident Slack channel.
+- Reads alert details + linked runbook.
+- Starts investigation.
+
+**T+10**: If NOT acknowledged, escalation: secondary on-call paged.
+- Same notification sequence.
+- Secondary now responsible.
+
+**T+20**: If still not acknowledged, manager / on-call lead paged.
+- Last-resort escalation.
+
+**During the incident:**
+- Primary (or secondary) is the IC by default for low/medium severity.
+- For SEV-1: explicit IC role; might be a different person (rotating IC duty).
+- IC pulls in SMEs (subject matter experts) as needed via Slack page.
+- IC pages manager / leader for severity decisions (SLA implications, customer comms approval, etc.).
+
+**Communication:**
+- All discussion in incident-specific Slack channel.
+- Voice bridge for active discussion.
+- Status page updated by Comms Lead (or IC).
+
+**Handoffs:**
+- Long incidents (>4h): handoff to next shift.
+- Explicit verbal: "John, you are now IC. I\'m off-shift."
+- Brief: situation, what\'s been tried, hypothesis, next steps.
+- Document the handoff in the incident channel.
+
+**End of incident:**
+- IC declares "incident resolved" when symptom is mitigated.
+- Postmortem owner assigned.
+- On-call returns to normal (waiting for next page).
+
+**The escalation discipline:**
+- Don\'t escalate just because you\'re tired or unsure. Try to investigate yourself first (10-15 min).
+- DO escalate for genuine confusion ("I have no idea what\'s happening") or for severity beyond your authority.
+- Escalation is a tool, not a failure. Senior engineers escalate too; it\'s part of the job.`,
+      },
+      {
+        question: 'How do you implement follow-the-sun on-call?',
+        answer: `**Three-region rotation across timezones with explicit handoffs.**
+
+**Setup:**
+
+- **Region 1**: US-West (e.g., team in San Francisco). On-call hours: 9am-5pm Pacific.
+- **Region 2**: EU (e.g., team in London or Berlin). On-call hours: 9am-5pm GMT.
+- **Region 3**: APAC (e.g., team in Sydney or Singapore). On-call hours: 9am-5pm local.
+
+The handoff windows roughly: SF → APAC at 5pm Pacific (which is 11am Sydney); APAC → EU at 5pm Sydney (8am London); EU → SF at 5pm London (9am SF).
+
+**Configuration in PagerDuty / Opsgenie:**
+- Schedule per region: "Region 1 covers Mon-Fri 9am-5pm Pacific."
+- Layered schedules: when one region is "off-shift," next region becomes on-call.
+- Holidays and weekends require explicit policy (one region typically owns; others are escalation only).
+
+**Handoff protocol:**
+
+At the end of each region\'s shift:
+1. Write a brief handoff note in a shared doc / Slack channel.
+   - Active incidents.
+   - Recent alerts that fired but resolved.
+   - Watch items ("if X spikes, the issue is likely Y").
+   - Anything paused / waiting on input.
+2. Optionally: 10-min sync call with the incoming region.
+3. Update PagerDuty schedule (usually automatic).
+
+**Communication:**
+- Shared Slack channel for the rotation; old context visible.
+- Standing handoff doc updated daily.
+- Monthly cross-region sync to align processes.
+
+**Trade-offs:**
+
+**Pros:**
+- No-night-pages: each engineer\'s on-call duty is during business hours.
+- Faster MTTR: incidents during the awake-region\'s hours don\'t require waking anyone.
+- Higher engineer happiness: night pages are the worst part of on-call.
+
+**Cons:**
+- Requires multi-region team (large enough for rotation in each region).
+- Handoff overhead (context loss; bugs missed at handoffs).
+- Cross-region communication latency.
+- Coordination: cross-region sync meetings, etc.
+
+**When it\'s worth it:**
+- Large engineering org (>50 engineers across multiple regions).
+- High page volume that night-pages affect engineer health.
+- Services with global customers and tight SLOs.
+
+**When it\'s not:**
+- Small team in one region.
+- Low page volume; the night-pages are rare.
+- Single-time-zone customer base.
+
+**Real example:** Google\'s SREs follow-the-sun for production services. PagerDuty\'s own SREs do too. Most large tech companies with > 200 engineers globally adopt it for at least the highest-tier services.`,
+      },
+      {
+        question: 'What\'s a sustainable on-call load?',
+        answer: `**Healthy benchmarks (industry consensus):**
+
+- **< 2 pages per 7-day shift** during business hours.
+- **< 1 page per shift** outside business hours.
+- **Total < 5 pages/week** across all hours.
+- **MTT-to-investigation < 10 minutes** (good runbooks + dashboards).
+- **No back-to-back pages** (overlapping incidents from different alerts).
+
+**Why these numbers:**
+
+- 2 pages/shift means you can context-switch and recover.
+- < 1 page/night means your sleep isn\'t systematically destroyed.
+- < 5 pages/week total means on-call doesn\'t consume the engineer\'s capacity for project work.
+
+**Unhealthy signs:**
+
+- > 5 pages/shift average.
+- > 2 night pages per shift.
+- Pages that are "non-actionable" (the engineer can\'t do anything).
+- Pages that fire repeatedly with the same root cause.
+- Engineers requesting to be removed from rotation.
+
+**The Google SRE Book\'s framing**: if on-call is unsustainable, **it\'s a bug, not a fact**. The fix isn\'t "tougher engineers"; it\'s reducing the pages.
+
+**The path to sustainable on-call:**
+
+1. **Audit pages per week per engineer**. Pull data from PagerDuty / Opsgenie.
+
+2. **Categorize each page**: actionable / self-resolved / false-positive / ticket-worthy-only.
+
+3. **Kill noisy alerts**: any alert that fires > 3× without action gets killed or fixed.
+
+4. **Fix recurring root causes**: if the same incident recurs, root-fix it. Postmortem follow-up.
+
+5. **Tune thresholds**: alerts firing on transient blips → use multi-window multi-burn-rate.
+
+6. **Move tickets to tickets**: not every alert needs a page. SEV-3+ goes to ticket queue.
+
+7. **Reduce service ownership**: if a service is producing too much toil, hand it back to dev.
+
+**The cultural fix:**
+- Leadership endorses "page volume is a team-health metric."
+- Manager reviews pager load monthly with each engineer.
+- New engineers shadow before going on rotation alone.
+- Retrospectives after every shift: was that a sustainable shift?
+
+**The hardest part**: getting buy-in to **kill** alerts. People fear "what if we miss something?" The reverse fear should be louder: "what if engineers burn out and quit?"
+
+The data: the cost of replacing a senior SRE is 6-12 months of lost productivity + recruiting cost. Burned-out SREs leave. The cost of an alert that didn\'t fire (but should have) is one delayed incident detection. Almost always worth the trade-off.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/being-on-call/',
+      'https://response.pagerduty.com/training/incident_commander/',
+      'https://increment.com/on-call/',
+    ],
+  },
+
+  {
+    id: 'oncall-sustainability',
+    title: 'On-call Sustainability — Burnout Prevention and Pager Load',
+    icon: 'heart',
+    color: '#14b8a6',
+    questions: 3,
+    description: 'Recognizing burnout signals, the SRE Workbook\'s sustainable on-call framework, and the metrics that protect engineer health.',
+    introduction: `**On-call burnout is the leading cause of SRE attrition.** Engineers who started with passion become apathetic. Quality drops. Recruitment becomes a treadmill. The fix is structural; "be a more resilient engineer" is not the answer.
+
+**The SRE Workbook Ch 11 sustainable-on-call framework:**
+
+The Workbook quote: *"The on-call rotation should be sustainable, allowing for time outside of work to recover and recharge."*
+
+Concrete targets:
+- **< 25% of work time on incident response** (rough Google guideline).
+- **< 2 pages per 12-hour shift**.
+- **No more than 1-in-N rotation** where N is comfortable for the team (e.g., 1-in-6 weeks).
+
+**Burnout signals (individual):**
+- Pager-induced anxiety even when off-shift.
+- Reluctance to be on-call ("I dread the rotation").
+- Decreased response quality (skipping investigation, defaulting to "restart the service").
+- Decreased project work output during on-call weeks.
+- Sleep quality drops; reports of insomnia or anxiety.
+- Resignation considerations ("I\'d quit if I had to keep doing this").
+
+**Burnout signals (team):**
+- Page volume increasing month-over-month with no plan to address.
+- New SREs leaving within 6-12 months.
+- Postmortem action items not shipping (no engineering time available).
+- Senior engineers stop volunteering for on-call.
+- Recruitment is harder ("I heard your on-call is brutal").
+
+**Mitigation tactics:**
+
+**1. Reduce page volume.**
+- Kill noisy alerts.
+- Convert non-actionable alerts to dashboards.
+- Use multi-window multi-burn-rate (no flapping).
+- Postmortem follow-up shipping (recurring incidents fixed).
+
+**2. Adequate rotation depth.**
+- Minimum 4-6 weeks between shifts.
+- More if page volume is high (1-in-6 with 5 pages/shift = ~1 page/day life unscheduled).
+- Compensate: time-off after a heavy shift; mental-health days.
+
+**3. Tools and runbooks.**
+- Better runbooks = faster mitigation = shorter incidents = less stress.
+- Better dashboards = less time spent diagnosing = less mental load.
+- Better automation = fewer pages = less interruption.
+
+**4. Compensation.**
+- Pay for on-call (hourly, per-page, or stipend).
+- Time-in-lieu (extra PTO for on-call hours).
+- Recognition (visible appreciation; on-call is hard work).
+
+**5. Cultural support.**
+- Manager checks in mid-rotation: "how\'s on-call going?"
+- Retrospective after each shift: any patterns?
+- Public acknowledgment of difficult shifts.
+- "It\'s OK to escalate" — destigmatize calling for help.
+
+**The 80% rule (industry observation):** 80% of pages come from 20% of services. The fix is targeted: identify the noisy services and engineer them down. Often: more automation, better SLO design, better dependency hardening.
+
+**The leadership commitment:**
+
+Sustainable on-call requires leadership to **invest engineering time in reducing page volume**. The 50% engineering time the SRE Book mandates is directly for this.
+
+Without that time investment, page volume creeps up; eventually engineers burn out and quit; new hires absorb the existing pain; the cycle continues.
+
+Leadership must:
+- Track page volume as a team-health metric.
+- Allocate engineering time to address top sources.
+- Endorse killing noisy alerts.
+- Reward postmortem action-item completion.
+- Listen to engineer feedback during 1:1s.
+
+**The escalation valve:**
+
+When on-call becomes painful, the engineering team should be able to **say no** — refuse new services, push back on roadmap, or hand back ownership. Without this valve, on-call gets worse forever.
+
+The SRE / dev contract: SRE owns reliability for services that meet quality bars (good monitoring, runbooks, dependency tests). If a service is below the bar, dev owns the pager. Inverts the incentive: dev now wants to fix the service rather than push it to SRE.`,
+    whenToUse: [
+      'Quarterly team-health reviews — measure page volume and trends',
+      'On-call retrospectives — what made this shift hard?',
+      '1:1 with team members — pager-load discussion as standard agenda item',
+      'Hiring conversations — communicate on-call expectations honestly',
+    ],
+    keyConcepts: [
+      { term: '< 25% time on incidents', definition: 'Google SRE Book guideline. More = unsustainable. Track over a quarter.' },
+      { term: '80% of pages from 20% of services', definition: 'Page volume usually concentrated. Target the noisy 20% for engineering investment.' },
+      { term: 'Burnout signals (individual)', definition: 'Pager anxiety, response quality drops, skipping investigation, considering resignation.' },
+      { term: 'Burnout signals (team)', definition: 'Increasing page volume, attrition < 1 year, postmortem items not shipping, hiring difficulty.' },
+      { term: 'Engineering time investment', definition: '50% engineering time = the resource for page-reduction work. Without it, on-call decays.' },
+      { term: 'Hand-back valve', definition: 'SRE can refuse services that don\'t meet quality bar. Inverts incentive: dev wants to fix.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you reduce on-call burden when it\'s already high?',
+        answer: `Six-step playbook:
+
+**Step 1: Measure.**
+- Pull page data from PagerDuty / Opsgenie for the last 90 days.
+- Per-service page count.
+- Per-engineer page count.
+- Page distribution by hour of day, day of week.
+- Percentage actionable vs non-actionable.
+
+**Step 2: Categorize the top noisy services.**
+- 80% of pages usually come from 20% of services.
+- For each top service: what alert is firing? What\'s the underlying cause?
+- Categories: noisy alert (false positive), recurring incident (real but unfixed), known bug (deferred fix), capacity issue.
+
+**Step 3: Kill the obviously-bad alerts.**
+- Alerts that fire > 5x without action: kill or fix.
+- Alerts with no runbook: kill or write the runbook.
+- Cause-based alerts that already have symptom-based equivalents: kill the cause-based.
+
+This often cuts page volume 30-50% in the first week. High ROI.
+
+**Step 4: Engineer down recurring incidents.**
+- Each recurring incident has a postmortem with action items.
+- Allocate engineering time (the 50% engineering allocation) to those action items.
+- Track: how many action items shipped this month?
+
+**Step 5: Improve runbooks for remaining alerts.**
+- Every page should be linked to a runbook with concrete steps.
+- New on-call engineer should be able to resolve from the runbook.
+- Runbooks live in the wiki; linked from each alert.
+
+**Step 6: Cultural shift.**
+- Page volume becomes a team OKR / KPI.
+- Visible to leadership.
+- Engineering time explicitly allocated to reduction.
+- Hand-back conversations for services that won\'t cooperate.
+
+**Realistic timeline:**
+- First month: 30-50% reduction from killing noisy alerts.
+- 3-6 months: another 30% reduction from postmortem follow-through.
+- Ongoing: 5-10% reduction per quarter as engineering investment continues.
+
+The result: a team that started at 15 pages/shift gets to 3-5 pages/shift over 6 months. Engineer happiness rebounds; attrition drops; recruitment improves.
+
+**The cultural barrier**: leadership must endorse "kill alerts." Without that, engineers fear "what if we miss something." With endorsement, killing noisy alerts becomes routine.`,
+      },
+      {
+        question: 'How do you have an honest on-call conversation with a candidate?',
+        answer: `**Be specific, quantitative, and honest.** SRE candidates are getting savvier; vague reassurances are a red flag.
+
+**Things to share:**
+
+**1. Rotation structure:**
+- "Primary 1 week per 6 weeks; secondary 1 week per 6 weeks."
+- "Follow-the-sun across SF/EU/Sydney; you\'d only be on during business hours your region."
+- "Weekly rotation."
+
+**2. Page volume:**
+- "Average 3 pages per shift."
+- "Median: 2; p90: 5."
+- "Last 6 months: trending down 15% as we\'ve been killing noisy alerts."
+
+**3. Page severity mix:**
+- "70% are real incidents; 20% are noisy alerts we\'re still working on; 10% are false positives we\'re killing."
+- "About 1 SEV-1 per quarter; you might be IC for one in your first year."
+
+**4. Sustainability metrics:**
+- "We measure pages/engineer/week and discuss in monthly team review."
+- "Last year, we did N postmortem follow-throughs that reduced page volume by 30%."
+
+**5. Compensation:**
+- "On-call is part of the role; not separately compensated, but we have generous PTO and you can take days off after heavy shifts."
+- OR "$X/hour during on-call, plus per-shift bonus."
+- OR "1 day off in lieu per week of on-call."
+
+**6. Support:**
+- "You\'ll shadow on-call for 4 weeks before going solo."
+- "Manager is on call as escalation; senior engineers always available."
+- "We have a no-blame postmortem culture."
+
+**7. The reality:**
+- "On-call is hard. Some shifts are uneventful; some have a difficult incident at 3am. You\'ll have stressful moments."
+- "We invest in making it better, but it\'s never going to be zero pages."
+
+**Things to NOT say:**
+- "Our on-call is super easy; you\'ll barely notice."
+- "We have great runbooks so it\'s never stressful." (Even great runbooks don\'t cover novel issues.)
+- Vague reassurances without numbers.
+
+**The candidate red flags (from the candidate side):**
+- Inconsistent answers from different team members.
+- Refusal to share page volume data.
+- Manager dismisses concerns about burnout.
+- "We expect engineers to handle anything."
+
+A candidate who\'s seen on-call burnout will recognize these. Honesty here builds trust; lying loses both the hire and the existing team\'s trust.
+
+**The conversation structure I\'d recommend:**
+
+> "Let me share our on-call setup honestly. We\'re an SRE team of 12 engineers; we run a 1-in-6 weekly rotation. Our average page volume last quarter was 3.2 pages per shift, with p99 of 8 (one really bad shift). We\'re investing engineering time to reduce noise; postmortem action items completed at 75% rate this year. SEV-1s are rare — about 4 per year. We compensate with X. Onboarding includes 4 weeks of shadowing. What questions do you have?"
+
+This is the conversation that hires the engineers who stay 5 years.`,
+      },
+      {
+        question: 'When should an SRE team REFUSE to take on a new service?',
+        answer: `**When the service doesn\'t meet baseline reliability standards** AND **the dev team isn\'t willing to invest in fixing them**.
+
+The standard checklist for "ready for SRE ownership":
+
+**Required:**
+- Documented SLOs with realistic targets.
+- Symptom-based monitoring (not just CPU/memory).
+- Working dashboards covering RED/USE.
+- Runbooks for known failure modes.
+- Working canary deploy with auto-rollback.
+- Clean incident history (no recurring issues unresolved).
+- Stable architecture (not in active major rewrite).
+
+**Strongly preferred:**
+- Documented load test results.
+- Documented dependency map.
+- Capacity model.
+- Clear ownership and escalation paths.
+
+**The conversation:**
+
+When dev wants SRE to take a new service, the SRE lead reviews the checklist. If the service falls short:
+
+- "Service X doesn\'t have working canary; if you want SRE on-call, we need that first."
+- "The dependency map shows 12 unmanaged downstream services. We can\'t take on-call for failures we can\'t reason about."
+- "Last quarter\'s incidents show 3 recurring SEV-1s; the action items weren\'t shipped. We need those resolved before SRE assumes pager."
+
+The negotiation:
+- **Dev fixes the gaps**: SRE assumes pager.
+- **Dev refuses to fix**: SRE refuses; dev keeps the pager. Inverts incentive.
+- **Dev partially fixes, asks for transition**: SRE provides ramp-up support but doesn\'t take final pager until checklist is met.
+
+**Why this matters:**
+
+Without this discipline, SRE accumulates services with poor reliability standards. Page volume grows. Engineers burn out. The team becomes "ops 2.0" instead of engineering reliability.
+
+With the discipline, the dev team has incentive to invest in reliability up-front. SRE\'s pager is a privilege earned, not a right granted.
+
+**The cultural enforcement:**
+
+SRE leadership must back this. "You can\'t refuse" is the death sentence for sustainable on-call. The right framing is: SRE is a partnership with dev; partnerships require both parties to meet quality bars; otherwise the partnership doesn\'t form.
+
+**Real example**: Google\'s SRE has formal "production readiness review" (PRR) before assuming a service. The service must pass. Without PRR, SRE doesn\'t take on-call. This has been Google\'s discipline for 20 years.
+
+Smaller companies often don\'t formalize PRR but should have informal version: a checklist + conversation + signed agreement.
+
+**The escape hatch for legacy services:**
+
+Existing SRE-owned services that have decayed below the bar: trigger a "remediation period" where dev partners with SRE to bring back to standards. If not done in N months, SRE returns the pager.
+
+Painful but the only sustainable path. Otherwise, every service decays into a noisy mess that SRE owns forever.`,
+      },
+    ],
+    references: [
+      'https://sre.google/workbook/on-call/',
+      'https://increment.com/on-call/',
+      'https://www.oncall.org/',
+    ],
+  },
+
+  {
+    id: 'runbooks',
+    title: 'Runbooks — Writing Them So They Actually Get Used',
+    icon: 'book',
+    color: '#14b8a6',
+    questions: 3,
+    description: 'The runbook structure that works under stress, when to update them, and the path to runbook automation.',
+    introduction: `**A runbook** is a document that tells an on-call engineer "if X happens, do Y." Good runbooks are the difference between a 5-minute mitigation and a 60-minute investigation. Bad runbooks are wiki pages that become stale and unread.
+
+**The runbook structure that works under stress:**
+
+**1. One-line summary at top.**
+What this runbook is for. Searchable; in alert text; quoted in pages.
+
+**2. Pre-conditions / when this fires.**
+Which alert(s) fire? What does the symptom look like?
+
+**3. Initial diagnosis.**
+What dashboards / queries to check FIRST. Prioritized.
+
+**4. Decision tree.**
+- "If you see X → do A."
+- "If you see Y → do B."
+- "If neither → escalate."
+
+**5. Mitigation steps.**
+Concrete, copy-pasteable commands. If it\'s a multi-step process, numbered.
+
+**6. Verification.**
+"After mitigation, check that [specific metric] is back to normal."
+
+**7. Escalation.**
+"If the above doesn\'t work, page [X]; provide [Y] info."
+
+**8. Post-incident.**
+"After the immediate issue is resolved, file a [postmortem ticket / followup task]."
+
+**The brevity discipline:**
+
+Runbook should be **scannable in 30 seconds** by a stressed engineer at 3am. Walls of text are unread.
+
+- Lead with the action.
+- Bullet points over paragraphs.
+- Diagrams where they help.
+- No background context unless essential (link to it instead).
+
+**Runbook formats:**
+
+- **Wiki page** (Confluence, Notion, internal docs): most common; risk of staleness.
+- **Markdown in repo**: better; reviewed via PR; lives with the code.
+- **Embedded in alert**: alert message includes the runbook URL or excerpt.
+- **Slack workflow / chatops**: interactive ("type !runbook checkout-down").
+
+**The 2026 trend: runbook automation.**
+
+Beyond text-based runbooks: **executable runbooks** that automate the steps:
+- **Rundeck**: orchestrate scripted procedures with audit trail.
+- **StackStorm**: event-driven automation.
+- **AWS Systems Manager**: managed service for automated runbook execution.
+- **Custom Lambdas + alert webhooks**: alert fires → Lambda runs the mitigation → engineer notified.
+
+The goal: routine mitigations become **auto-remediated**; engineer is informed but doesn\'t need to act. Reduces page volume; reduces MTT-Mitigate.
+
+**When auto-remediation HURTS:**
+- Pattern not well-understood (might apply wrong fix).
+- Side effects not fully bounded.
+- Underlying bug masked (auto-remediation hides recurring problem).
+- Misconfigured (auto-remediation makes things worse).
+
+The discipline: every auto-remediation **alerts even when it succeeds** so the underlying pattern is visible.
+
+**Runbook hygiene:**
+
+- **Updated after every incident**: if the runbook didn\'t cover what happened, update it.
+- **Tested in game days**: simulate the alert; verify the runbook works.
+- **Reviewed quarterly**: stale links, deprecated commands, removed dependencies.
+- **Linked from every alert**: alert → runbook URL → instant context.
+
+**The "runbook orphan" problem:**
+
+A common failure: runbook exists, is detailed, but **no one knows it exists**. The on-call engineer can\'t find it; or finds an outdated version. Or finds it after the incident.
+
+The fix:
+- Alert messages link the runbook URL directly. Click → runbook.
+- Runbooks discoverable via Slack (bot lookup).
+- Runbooks tagged by service / alert / SLO.
+- Runbooks in a single, searchable index.
+
+**The minimum-viable runbook:**
+
+If you can\'t write a full runbook for a new alert, write the **minimum**:
+- "This alert means X."
+- "Check dashboard at [link]."
+- "If unsure, escalate to [name/team]."
+
+Even this minimum is better than nothing. Iterate over time.`,
+    whenToUse: [
+      'Every new alert — write a minimum runbook before the alert fires for the first time',
+      'Postmortem follow-up — update runbook with what we learned',
+      'Quarterly hygiene — review existing runbooks for staleness',
+      'On-call training — new engineers read N runbooks during onboarding',
+    ],
+    keyConcepts: [
+      { term: 'Runbook structure', definition: 'Summary + pre-conditions + diagnosis + decision tree + mitigation + verification + escalation. Scannable.' },
+      { term: 'Brevity discipline', definition: 'Scannable in 30 seconds. Bullets, not paragraphs. Stressed engineer can\'t read walls of text.' },
+      { term: 'Embedded in alert', definition: 'Alert message links the runbook URL. Click → context. Removes "where was that runbook?" friction.' },
+      { term: 'Runbook automation', definition: 'Rundeck / StackStorm / Lambdas execute the steps. Reduces MTT-Mitigate; eliminates routine pages.' },
+      { term: 'Hygiene cadence', definition: 'Update after every incident. Test in game days. Review quarterly. Without hygiene, runbooks decay.' },
+      { term: 'Minimum-viable runbook', definition: '3 lines: meaning, dashboard, escalation. Better than nothing. Iterate.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'What does a good runbook look like?',
+        answer: `Concrete example for a hypothetical alert "checkout p99 latency > 1s":
+
+\`\`\`markdown
+# Runbook: checkout-p99-latency-high
+
+**Summary**: Checkout service\'s p99 latency exceeded 1s for 5 minutes.
+
+## Pre-conditions
+- Alert: \`checkout_p99_latency_seconds > 1\` for 5m
+- Dashboard: [Checkout Service Health](https://grafana.../checkout)
+
+## Initial Diagnosis (60 seconds)
+1. Open the dashboard above.
+2. Check the Latency panel: is the spike global or just one endpoint?
+3. Check the Errors panel: any spike in 5xx? If yes → likely a real outage; not just slow.
+4. Check the Dependencies panel: are downstream latencies (DB, payment-gateway, fraud) elevated?
+
+## Decision Tree
+- **If DB latency is high** → see [DB-slow runbook](/runbooks/db-slow)
+- **If payment-gateway latency is high** → see [payment-gateway-slow](/runbooks/payment-gw-slow)
+- **If fraud-service latency is high** → see [fraud-slow](/runbooks/fraud-slow)
+- **If everything looks normal but p99 still high** → likely autoscaling lag; continue below.
+- **If errors are spiking** → page IC immediately for SEV-2.
+
+## Mitigation
+- Check current pod count: \`kubectl get pods -n checkout\`
+- If at HPA min: scale up manually: \`kubectl scale --replicas=20 deployment/checkout -n checkout\`
+- If at HPA max: alert capacity-team via #capacity Slack; escalate.
+
+## Verification
+- After mitigation, p99 should drop within 5 minutes.
+- Watch [Latency panel] for return to normal (< 500ms).
+- If not normalized in 10 min, escalate.
+
+## Escalation
+- Page: @checkout-team-secondary
+- Provide: alert link, dashboard link, mitigation tried.
+- For SEV-2+: declare incident.
+
+## Post-incident
+- File followup: [Why was the autoscaling lagging?]
+- Tag the postmortem with this runbook for refinement.
+\`\`\`
+
+The features:
+- **One-line summary** at top.
+- **Specific links**: dashboard, related runbooks.
+- **Decision tree**: branches based on observed symptoms.
+- **Concrete commands**: copy-paste-able kubectl.
+- **Verification step**: not just "fix and forget."
+- **Escalation path**: who to page, what info to provide.
+- **Post-incident**: connect to longer-term improvement.
+
+**What makes it good**:
+- Scannable at 3am.
+- Branches on real diagnostic signals.
+- Has copy-pasteable commands.
+- Tells you when you\'re done.
+- Tells you when to escalate.
+
+**Common mistakes**:
+- Walls of text without bullets.
+- "Investigate" with no concrete steps.
+- Missing the escalation path.
+- No verification ("how do I know it\'s fixed?").
+- Stale commands (refer to deprecated tools).`,
+      },
+      {
+        question: 'How do you keep runbooks from going stale?',
+        answer: `**Runbook hygiene is a discipline, not a one-time activity.**
+
+**1. Update after every incident.**
+- Postmortem template includes: "Was the runbook accurate? What needs to change?"
+- Action item: update the runbook.
+- Owner assigned; due in 5 business days (matches postmortem cadence).
+
+**2. Test in game days.**
+- Quarterly game day: simulate the alert; have on-call run the runbook end-to-end.
+- Findings: missing steps, wrong commands, broken links.
+- Update.
+
+**3. Quarterly automated hygiene.**
+- Bot crawls all runbooks; checks for:
+  - Broken links (URLs that 404).
+  - References to deprecated tools / services.
+  - Last-updated date > 6 months ago without recent incident.
+- Reports to team channel; assigns owners.
+
+**4. Runbooks in version control.**
+- Markdown files in a Git repo, not buried in a wiki.
+- Pull request to update; reviewer ensures clarity.
+- Easy to diff: "what changed since last incident?"
+
+**5. Embedded in alerts.**
+- Alert message: "Runbook: [URL]"
+- Click the URL during a real incident → if it 404s, you know immediately.
+- Forces freshness.
+
+**6. Templated runbook structure.**
+- Standard sections every runbook has.
+- Consistency makes scanning easier; missing sections are visible.
+
+**7. Cultural reinforcement.**
+- Postmortem reviewer asks: "did the runbook help? Was it accurate?"
+- If the runbook was wrong: fix is part of the postmortem follow-up.
+- If the runbook didn\'t exist: write one.
+
+**The signs of healthy runbook hygiene:**
+- Most runbooks updated within last 6 months.
+- Every runbook is linked from at least one alert.
+- New incidents typically result in runbook updates.
+- Game-day exercises succeed using the runbook.
+
+**The signs of decay:**
+- Runbooks 2+ years old, references to deprecated services.
+- New incidents repeatedly reveal outdated runbooks.
+- Alert messages don\'t link to runbooks.
+- New on-calls struggle even with "documented" runbooks.
+
+The cultural fix: runbook hygiene is part of incident response, not a separate "documentation" task. Tied to the immediate work.`,
+      },
+      {
+        question: 'When should you automate a runbook vs keep it manual?',
+        answer: `**Automate when**:
+- The procedure is **deterministic** — same input always produces same correct output.
+- The procedure is **frequent** — reduces toil meaningfully.
+- The procedure is **safe** — no destructive side effects on edge cases.
+- The procedure is **observable** — automation can verify success.
+- The procedure is **reversible** — if automation goes wrong, easy to undo.
+
+Examples that should be automated:
+- Restart a stuck process (Kubernetes already does this via liveness probes).
+- Auto-scale based on metric (HPA).
+- Rotate a stale certificate (cert-manager).
+- Drain an unhealthy node and replace (cluster autoscaler).
+- Increase queue worker count when backlog grows (KEDA).
+
+**Keep manual when**:
+- The procedure requires **judgment** — "is this really the failure mode?"
+- The procedure is **rare** — automation maintenance cost > manual cost.
+- The procedure has **side effects** — automation could make things worse.
+- The procedure requires **business context** — "is this customer worth the effort?"
+- The procedure is **pre-decisional** — needs human authorization (rollback approval).
+
+Examples that should stay manual:
+- Production rollback (often needs an IC decision).
+- Database migration (high-stakes; needs explicit approval).
+- Customer comms (needs voice/judgment).
+- Security incident response (often needs careful investigation).
+- Anything that affects compliance/legal.
+
+**The hybrid pattern (semi-automated)**:
+- Automation prepares the action (script, command, dry-run).
+- Human reviews and approves.
+- Automation executes after approval.
+
+Examples:
+- "Suggest rollback to last good version; engineer approves; automation rolls back."
+- "Identify slow query; engineer reviews; automation kills the query."
+
+**The graduated automation path**:
+
+1. **Manual runbook**: written, used, refined.
+2. **Documented procedure**: scripts ready but executed by hand.
+3. **Semi-automated**: automation prepares; human approves.
+4. **Fully automated with notification**: automation runs; team notified.
+5. **Fully automated, silent**: automation runs invisibly.
+
+Most procedures should NOT reach level 5 — silent automation hides patterns. Level 4 (notification) is the sweet spot for "auto-remediated common issues."
+
+**The discipline**: even fully-automated runbooks should track their auto-remediation rate as a metric. If "disk-expand" auto-remediation fires 5×/day, the underlying cause needs investigation, not silence.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/being-on-call/',
+      'https://docs.rundeck.com/docs/learning/getting-started/',
+      'https://github.com/dastergon/awesome-sre',
+    ],
+  },
+
+  {
+    id: 'pager-discipline',
+    title: 'Pager Discipline — Acknowledge Fast, Escalate Without Shame',
+    icon: 'phone',
+    color: '#14b8a6',
+    questions: 3,
+    description: 'How to acknowledge, investigate, escalate, and close pages without burning out or losing customer trust.',
+    introduction: `**Pager discipline** is the soft skill of running a productive on-call shift. The mechanics are easy; the rhythm is learned.
+
+**The acknowledge-first principle:**
+
+When the pager fires:
+1. **Acknowledge within 5 minutes** (PagerDuty / Opsgenie call). Stops the escalation chain; tells team you\'re on it.
+2. **Open laptop; verify the alert is real.** Don\'t go deep yet; just confirm.
+3. **Post in incident channel**: "I\'m on this; investigating."
+
+The acknowledgment is the **stopping signal**. Without it, escalation continues; secondary on-call gets paged; manager gets paged; everyone is woken up unnecessarily.
+
+Even if you\'re not sure what\'s happening: acknowledge, then investigate. The 30 seconds of "let me check first" is a 30-second window where the system thinks you\'re unavailable.
+
+**The triage rhythm (first 10 minutes):**
+
+Minute 0-2:
+- Acknowledge.
+- Open laptop, dashboard, runbook.
+- Confirm: real or false-positive?
+
+Minute 2-5:
+- Read the alert details.
+- Check the dashboard the alert points to.
+- Apply the runbook\'s initial diagnosis steps.
+
+Minute 5-10:
+- Make a decision: simple mitigation OR escalate to incident OR investigate further.
+- If simple: execute mitigation.
+- If incident: declare; assemble team; assume IC role.
+- If investigate: post status update; continue debugging.
+
+**The escalation rule:**
+
+Don\'t feel shame about escalating. The right escalation triggers:
+- **You don\'t know what\'s happening** after 10-15 min of investigation.
+- **The severity is beyond your authority** (e.g., approving rollback for a Tier-1 service).
+- **You need parallel work** (one person investigating, one fixing, one communicating).
+- **You\'re tired or impaired** (early morning, tail end of long shift).
+
+**The "I don\'t know" framing:**
+
+Senior engineers escalate too. The framing: "given my current level of context, I think we need [X]." It\'s information-sharing, not failure.
+
+**Status updates (every 15 minutes during an incident):**
+
+Even if there\'s no progress:
+- "Still investigating. Hypothesis: [X]. Trying [Y]. Next update in 15 min."
+
+Silence breeds anxiety. Engineers and customers want to know SOMEONE is working on it.
+
+**The "stop-the-bleeding" principle:**
+
+In active incidents:
+- **Mitigate first; understand later.** Stop the symptom before doing root-cause analysis.
+- **Reversible mitigations preferred.** Rollback, traffic shift, feature flag flip — easy to undo if wrong.
+- **High-confidence mitigations preferred.** "If we revert deploy v3.2.1, we know it stops" beats "we think this query optimization will help."
+
+**Closing the loop:**
+
+After mitigation:
+- Verify the symptom is gone (5-15 min of monitoring).
+- Declare incident resolved.
+- Update status page final.
+- Initiate postmortem ticket.
+
+**The "post-page audit":**
+
+After every shift, review:
+- Pages received: how many, when, what alerts fired?
+- For each: was the runbook adequate? Was the response time good? What can be improved?
+- Action items for ongoing improvement.
+
+**The cultural element:**
+
+A team where:
+- Engineers acknowledge fast → fewer chained escalations, less collective stress.
+- Engineers escalate without shame → faster resolution, less burnout, better outcomes.
+- Engineers communicate continuously → less anxiety, more trust.
+
+vs a team where:
+- Engineers delay acknowledgment → escalations cascade up the org.
+- Engineers fear escalation → struggle alone, miss things, burn out.
+- Engineers go silent during incidents → leadership and customers panic.
+
+The discipline is learnable. The cultural endorsement is required. SRE leads model the behavior; managers reward the right patterns.`,
+    whenToUse: [
+      'Every active page — apply the discipline',
+      'On-call onboarding — train new engineers in this rhythm',
+      'Postmortem reviews — was the response correctly disciplined?',
+      'Cultural conversations — "escalation isn\'t failure" should be common ground',
+    ],
+    keyConcepts: [
+      { term: 'Acknowledge within 5 min', definition: 'Stops the escalation chain. Even if you\'re not sure: ack, then investigate.' },
+      { term: 'Triage rhythm', definition: '10-min protocol: ack → verify → diagnose → mitigate / escalate / investigate. Predictable.' },
+      { term: 'Escalation without shame', definition: 'Senior engineers escalate too. Triggers: don\'t know, beyond authority, need parallelism, impaired.' },
+      { term: '15-min status updates', definition: 'Even with no progress, post update. Silence breeds anxiety. Predictable cadence reduces stress.' },
+      { term: 'Mitigate first, understand later', definition: 'Stop the symptom; root-cause goes to postmortem. SRE Book Ch 14 verbatim.' },
+      { term: 'Reversible mitigation preferred', definition: 'Rollback, traffic shift, flag flip. Easy to undo if hypothesis was wrong.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through the first 10 minutes of an on-call page.',
+        answer: `Standardized 10-min protocol:
+
+**T+0 (page fires)**:
+- PagerDuty calls. Phone rings; SMS arrives; push notification.
+
+**T+0-1 min**:
+- Wake up. Acknowledge the page on phone (PagerDuty app or call-back).
+- This stops the escalation chain.
+
+**T+1-2 min**:
+- Open laptop.
+- Find incident Slack channel; introduce: "I\'ve got it; investigating."
+- Read the alert text.
+
+**T+2-5 min**:
+- Click the dashboard link in the alert.
+- Click the runbook link in the alert.
+- Apply the runbook\'s "initial diagnosis" steps:
+  - What\'s the symptom?
+  - Is it global or scoped?
+  - Did anything change recently (deploy markers, autoscaling events)?
+
+**T+5-7 min**:
+- Make a decision:
+  - **Real incident, known cause** (e.g., bad deploy): execute mitigation per runbook (rollback).
+  - **Real incident, unclear cause**: declare incident; assemble team; assume IC role.
+  - **False positive**: dismiss; file ticket to fix the alert.
+  - **Beyond my knowledge**: escalate.
+
+**T+7-10 min**:
+- Execute the chosen path.
+- Post status update in incident channel.
+- If mitigating: verify the action was taken; watch for change in symptom.
+
+**T+10**:
+- Either symptom is mitigating, or you\'re in active incident with team assembled.
+
+**Common mistakes:**
+
+- **Going deep before acknowledging**: 30 seconds of investigation means escalation starts. Acknowledge first.
+- **Going deep instead of escalating**: 20 minutes alone struggling vs 5 min + escalation = better outcome with team.
+- **Silent investigation**: team / leaders don\'t know what\'s happening. Update Slack.
+- **Trying to root-cause before mitigating**: customer is hurting now; fix first.
+
+The cultural endorsement: acknowledge fast, escalate without shame, mitigate before root-cause, communicate continuously. Each is independently learnable; together they\'re a healthy on-call culture.`,
+      },
+      {
+        question: 'How do you escalate effectively without making it worse?',
+        answer: `**Make the escalation a precise information transfer, not a panic dump.**
+
+The wrong way (panic):
+> "Help! Something\'s wrong! I don\'t know what to do!"
+
+The right way (precise):
+> "I have a SEV-2 active. Symptom: checkout p99 latency at 3s for 10 min. I\'ve checked: dependencies look fine, recent deploys clean, autoscaling at max. Hypothesis: DB connection pool exhausted but I can\'t confirm. I\'ve been at this 15 min and need help debugging the DB layer. Pulling in Bob (DB SME)."
+
+The components of a good escalation:
+
+1. **Severity statement**: "SEV-2 active for 10 min."
+2. **Symptom**: specific metrics and timing.
+3. **What you\'ve checked**: prevents the helper from re-checking.
+4. **Hypothesis**: your current best guess.
+5. **What you need**: specific help (debug X, approve Y, decide Z).
+6. **The ask**: who you\'re paging or pulling in.
+
+**Triggers to escalate:**
+
+**Don't know triggers:**
+- 10-15 min of investigation, no clear path forward.
+- Symptom doesn\'t match any runbook.
+- Multiple hypotheses, can\'t narrow down.
+
+**Beyond authority triggers:**
+- Action requires manager / leader approval (e.g., declaring SEV-1).
+- Customer-facing communication needed.
+- Spending decision (e.g., emergency cloud capacity).
+
+**Parallelism triggers:**
+- One person investigating + one mitigating + one communicating = better outcome.
+- Issue spans multiple services; need SMEs from each.
+
+**Impaired triggers:**
+- It\'s 3am and you\'re exhausted.
+- Tail end of a long shift; tired.
+- Personal situation (illness, family emergency).
+
+**The "no shame" cultural piece:**
+
+Senior engineers escalate. CTOs escalate. The reason is structural: more brains on the problem = better outcomes. Solo heroism is anti-pattern.
+
+The team\'s job: when someone escalates, the team responds with help, not judgment. "Got you. What do you need?" not "really? Couldn\'t you handle it?"
+
+Leadership reinforces: in postmortems, "engineer didn\'t escalate when they should have" is a system failure, not a personal failure. The fix is cultural: make escalation easy and rewarded.
+
+**The "pre-emptive escalation":**
+
+Sometimes the right move is to escalate BEFORE you\'re stuck. Examples:
+- "This looks like a DB issue. Pulling in DB SME now while I investigate."
+- "Customer-facing incident; pulling in Comms Lead to start status page updates."
+
+Pre-emptive parallelism is faster than serial.`,
+      },
+      {
+        question: 'What\'s the right way to communicate during an active incident?',
+        answer: `**Continuously, predictably, in the right channel.**
+
+**Channels and their purposes:**
+
+- **Incident-specific Slack channel**: durable record. Status updates, links, error messages, runbook references, decisions.
+- **Voice bridge / Zoom**: active discussion, decision-making. Ephemeral.
+- **Status page**: customer-facing. Filtered, periodic.
+- **Executive update channel**: leaders. Filtered, periodic.
+
+**The 15-minute cadence:**
+
+During an active SEV-1 / SEV-2:
+- Post a status update every 15 minutes in the incident channel.
+- Even if there\'s no progress: "Still investigating. Hypothesis: X. Trying Y. Next update in 15 min."
+- Silence breeds anxiety; engineers/customers wonder if anyone\'s working.
+
+**The structure of a good status update:**
+
+\`\`\`
+**Status: 14:30 UTC** — 23 min into the incident.
+
+**Symptom**: Checkout p99 latency at 3s; error rate at 12%.
+**Affected**: ~30% of users on US-East.
+**Hypothesis**: DB connection pool exhausted; investigating cause.
+**Action**: Bob investigating DB; Alice on rollback prep; Carol drafting status page update.
+**ETA mitigation**: estimated 14:45 UTC.
+**Next update**: 14:45 UTC or sooner if mitigation lands.
+\`\`\`
+
+Components:
+- Time elapsed.
+- Current symptom (what users see).
+- Affected (specific blast radius).
+- Hypothesis (if any).
+- Active actions and owners.
+- ETA (when known) or "investigating."
+- Next-update time.
+
+**The voice bridge:**
+
+For active discussion, fast decisions, debug-together:
+- IC controls the bridge (mute on their command).
+- Decisions made on bridge get **echoed to the Slack channel** for durability.
+- Engineers joining late catch up via Slack, not by listening to the bridge from the start.
+
+**Status page (customer-facing):**
+
+Different audience; different content:
+- "We are investigating reports of slow checkout." — vague enough to not commit to specifics.
+- "Most customers are unaffected." — quantify if possible.
+- Update every 15-30 minutes.
+- Final update on resolution.
+
+Don\'t use technical jargon. Customer doesn\'t care that "etcd cluster is partitioned"; they care that "checkout might be slow."
+
+**Executive update:**
+
+Concise (5-10 lines), every 15-30 min during a SEV-1:
+- Time elapsed.
+- Customer impact (count + revenue).
+- Mitigation status.
+- ETA.
+- IC + Comms Lead.
+
+Format consistency matters. If every SEV-1 has the same shape, executives know exactly where to look.
+
+**Post-incident:**
+
+- Final status update: "Resolved at HH:MM UTC. [Brief description.] No data lost. Postmortem within 5 business days."
+- Customer thank-you / apology if appropriate (PR-tested).
+- Internal followup: postmortem ticket, action items, debrief.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/managing-incidents/',
+      'https://response.pagerduty.com/training/incident_commander/',
+    ],
+  },
+
+  {
+    id: 'sre-team-models',
+    title: 'SRE Team Models — Embedded, Centralized, Platform',
+    icon: 'users',
+    color: '#14b8a6',
+    questions: 3,
+    description: 'How SRE organizes itself. Embedded vs centralized vs platform team models, and when each fits.',
+    introduction: `**SRE team structure** matters more than people realize. The wrong structure produces dysfunctional outcomes regardless of individual talent.
+
+**The four common models:**
+
+**1. Embedded SRE.**
+- One or more SREs assigned to a product team.
+- SRE pages on the product\'s services.
+- SRE participates in product team meetings; influences design.
+- Pros: deep product knowledge; tight integration.
+- Cons: SRE practices vary across teams; harder to share lessons.
+
+**2. Centralized SRE.**
+- One SRE team owns reliability for many product services.
+- SRE pages across multiple products.
+- SRE has its own roadmap; partners with product teams.
+- Pros: consistent practices; shared lessons; specialization.
+- Cons: less product context; risk of becoming "ops 2.0."
+
+**3. Platform SRE.**
+- SRE owns the platform layer (Kubernetes, observability, CI/CD, IaC).
+- Product teams own their services\' on-call.
+- SRE doesn\'t page on individual products.
+- Pros: clear separation of concerns; platform improvements benefit all.
+- Cons: platform team can become disconnected from product reality.
+
+**4. Hybrid.**
+- Mix of the above.
+- Often: platform SRE for foundational layers + embedded SRE for critical services.
+
+**The Google SRE Book\'s lineage:**
+
+Originally (pre-2010): Centralized SRE. SRE owned reliability for major products (Search, Gmail, Maps). Product teams owned features.
+
+Today (post-2020): Hybrid. Centralized SRE for largest services + embedded SRE for high-stakes products + platform SRE for shared infrastructure.
+
+**The embedded vs centralized debate:**
+
+Embedded:
+- SRE knows the product\'s SLOs, dependencies, traffic patterns intimately.
+- SRE can influence architecture decisions early.
+- Faster mitigation because SRE knows the system.
+- Risk: SRE drifts toward "infrastructure engineer for the product team."
+
+Centralized:
+- Consistent practices; cross-team learning.
+- Specialization (database SRE, networking SRE, observability SRE).
+- Risk: SRE becomes "alert responders" without deep product context.
+- Risk: hand-back conversations are harder ("our team has a contract").
+
+**The pragmatic mix at scale:**
+
+- **Foundational layers** (Kubernetes, observability, CI/CD, IaC, internal services): platform SRE owns.
+- **High-stakes products** (revenue-critical, customer-facing): embedded SRE inside the product team.
+- **Standard products** (internal tools, utilities): product team owns; central SRE consults.
+- **Shared services** (DB, message broker, cache): centralized SRE owns the platform; product teams use it.
+
+**The "you build it, you run it" model:**
+
+Originated by Werner Vogels at Amazon. Every team owns the on-call for their own services; no separate SRE team.
+
+Pros:
+- Strong incentive to write reliable code.
+- No ops/dev silo.
+- Engineers feel pain of bad reliability; fix it.
+
+Cons:
+- Each team reinvents reliability practices.
+- No specialization for hard problems (capacity, observability, CI/CD).
+- Engineering teams spend time on reliability that could be spent on features.
+- Burnout risk for engineers who weren\'t hired for on-call.
+
+In practice: pure "you build it, you run it" works at smaller scales (hundreds of engineers). At larger scales (thousands), some platform SRE function emerges.
+
+**Picking a model:**
+
+- **<50 engineers**: probably no dedicated SRE team yet. Distribute ops responsibility; consult external when needed.
+- **50-200 engineers**: 1-3 SREs total. Centralized; partner with product teams.
+- **200-1000 engineers**: SRE function with multiple teams. Hybrid: platform SRE + product-aligned SRE for the most critical products.
+- **1000+ engineers**: full hybrid; embedded SREs in critical product teams; platform SREs for foundations; central SRE for cross-cutting concerns.
+
+**The cultural elements regardless of model:**
+
+- SLO-driven (not uptime-driven).
+- Blameless postmortems.
+- 50% engineering time / 50% on-call.
+- Engineering practices, not ops practices.
+- Influence over product decisions, not just reaction.`,
+    whenToUse: [
+      'Org design — when should you start an SRE function?',
+      'Hiring conversations — what model are we?',
+      'Cross-team friction — is the model creating problems?',
+      'Scaling — when to evolve from one model to another?',
+    ],
+    keyConcepts: [
+      { term: 'Embedded SRE', definition: 'SRE assigned to product team. Deep product knowledge; risk of drifting away from SRE practice.' },
+      { term: 'Centralized SRE', definition: 'One team owns reliability for many products. Consistent practices; risk of "ops 2.0."' },
+      { term: 'Platform SRE', definition: 'Owns foundational layers (K8s, observability, CI/CD). Product teams own their services. Clear separation.' },
+      { term: 'Hybrid', definition: 'Most large companies. Platform SRE + embedded for critical + centralized for cross-cutting. Best of all.' },
+      { term: '"You build it, you run it"', definition: 'Amazon model: every team owns their on-call. Strong dev/reliability link; doesn\'t scale past ~1000 engineers.' },
+      { term: 'Engineering vs ops culture', definition: 'SRE writes code, designs systems, automates. NOT ticket-handlers. The cultural distinction.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'When should I start an SRE team?',
+        answer: `**Start an SRE function when reliability has become a distinct engineering problem that\'s not adequately handled by product teams alone.**
+
+**Signs you need SRE:**
+- **Recurring production incidents** that pull product engineers off feature work for days.
+- **Reliability problems that span multiple services** (capacity, observability, CI/CD).
+- **You have 50+ engineers** and no one is professionally focused on reliability.
+- **Customer SLAs being missed** with no clear ownership of fixing it.
+- **Toil consuming significant engineering time** (>15% of total).
+- **Post-launch reliability is poor** despite "good" code.
+
+**Signs you DON\'T need SRE yet:**
+- **<20 engineers** total: distribute ops; everyone wears multiple hats.
+- **Reliability is fine**: services have low incident rates; SLOs are met.
+- **No dedicated time would help**: the issues are product-design problems, not infrastructure problems.
+
+**The progression:**
+
+**Stage 1 (10-30 engineers)**:
+- No dedicated SRE.
+- Ops + reliability is everyone\'s problem.
+- Maybe one engineer with "reliability" in their title and ops scope.
+- Use cloud-managed services aggressively (RDS, EKS, etc.) to reduce ops burden.
+
+**Stage 2 (30-100 engineers)**:
+- 1-3 SREs as a small centralized team.
+- Focus: shared infrastructure (CI/CD, observability, K8s if any).
+- Partner with product teams; not yet on-call for product services.
+
+**Stage 3 (100-500 engineers)**:
+- 5-15 SREs across 1-2 teams.
+- Platform SRE for foundational layers.
+- Possibly embedded SREs for the most critical products.
+- Some product teams owning their on-call; others partnering with central SRE.
+
+**Stage 4 (500+ engineers)**:
+- 20+ SREs across multiple teams.
+- Hybrid: platform + embedded + centralized.
+- SRE leadership (managers + senior staff).
+- Production readiness review (PRR) process for new services.
+
+**Common mistake**: starting SRE too early ("we hired a senior SRE for our 15-person company") wastes the resource. SRE specializes in scale problems; small companies have product problems first.
+
+**Common mistake**: starting SRE too late ("we\'re drowning in incidents but haven\'t hired") makes SRE\'s job impossible from day one.
+
+**The hire-1 trigger**: the company has more than 50 engineers AND reliability problems are systematic AND there\'s a clear "operations" workload (deploys, monitoring, capacity, on-call) that needs ownership. Typically: 50-100 engineers, growing fast, hitting limits.
+
+**The hire-N trigger**: SRE-1 is overwhelmed; can\'t scale across products; specializes; needs help. Typically: 6-12 months after hiring SRE-1.`,
+      },
+      {
+        question: 'Embedded vs centralized SRE — how do you choose?',
+        answer: `**Mostly: do both, in proportion to your scale and product diversity.**
+
+**Embedded works well for**:
+- Critical products with deep complexity (large e-commerce checkout, real-time messaging, payment processing).
+- Product teams that benefit from continuous reliability input on architecture.
+- Services where "the SRE understands the product" matters more than "consistent SRE practice."
+
+**Centralized works well for**:
+- Foundational platforms (Kubernetes, observability, CI/CD).
+- Shared services consumed by many products (auth, message broker, DB).
+- When you have many small products that don\'t individually justify embedded SRE.
+
+**The hybrid recipe (most common at scale):**
+
+- **Platform SRE**: owns the foundational layers. Centralized.
+- **Critical-product SRE**: embedded into the product team. 1-3 SREs per critical product.
+- **Standard-product SRE**: not embedded; product teams own their on-call with central SRE consultation.
+- **Cross-cutting SRE**: capacity planning, security, performance — central function.
+
+**Org structure**:
+- All SREs report into an SRE org (not product engineering).
+- Embedded SREs are dotted-line to the product team for daily work; solid line to SRE manager.
+- Prevents "SRE becomes ops engineer for the product team" drift.
+- Career path inside the SRE function (not stuck in product team).
+
+**Decision criteria for embedded vs not**:
+
+- **Product complexity**: high → embed.
+- **Reliability stakes**: high → embed.
+- **Product team\'s SRE skills**: low → embed.
+- **Number of distinct products**: many → can\'t embed all → centralize for most.
+
+**Failure modes**:
+
+**Pure embedded**: SRE practices drift; cross-team learning lost; SREs feel isolated from peers.
+- Fix: weekly cross-SRE sync; quarterly all-hands; rotate SREs across products.
+
+**Pure centralized**: SRE becomes ticket-handler; lose product context; "us vs them" culture.
+- Fix: shadow product teams; participate in design reviews; embed temporarily for major launches.
+
+**The escalation valve regardless of model**:
+
+When a product\'s reliability isn\'t meeting bar:
+- Embedded model: SRE works with team; if not addressed, escalate to leadership.
+- Centralized model: SRE refuses to take on-call; product team owns it.
+
+This valve is essential; without it, SRE absorbs all the dysfunction.`,
+      },
+      {
+        question: 'How is SRE different from DevOps and SysAdmin?',
+        answer: `**Three different things; the SRE Book makes the distinction precise.**
+
+**DevOps**: a **cultural philosophy**. No silos between dev and ops; gradual change; measurement-driven; accidents are normal. Broad framework.
+
+**SRE**: a **prescriptive implementation** of DevOps. Specific practices: SLOs, error budgets, 50% toil cap, blameless postmortems, automation as primary work product. SRE Book Ch 1: "class SRE implements interface DevOps."
+
+**SysAdmin / Operations**: traditional ops role. Reactive: "the system is broken; fix it." Often ticket-handling, manual procedures. Pre-DevOps; pre-SRE.
+
+**Concrete differences:**
+
+**SysAdmin / Ops**:
+- Ticket-driven work.
+- Manual processes (deploys, scaling, restarts).
+- "Keep the lights on."
+- Limited code-writing; mostly scripts.
+- Reactive to alerts.
+- Ownership of "infrastructure."
+
+**SRE**:
+- SLO-driven work.
+- Automated processes; manual is an anti-pattern.
+- "Engineer reliability into the system."
+- Software engineering as primary skill.
+- Proactive: design for reliability; reduce toil; automate.
+- Ownership of "production reliability" as an engineering problem.
+
+**The 50% cap is the most precise distinction**: SREs spend at least 50% of their time on engineering work, NOT on operations. SysAdmins spend 100% on operations. SRE refuses the 100%-ops trap.
+
+**The "rebrand" trap**:
+
+Many companies rename their SysAdmin team to "SRE" without changing the work. The result is SysAdmins with a new title doing the same operational work. They\'re not SREs in the SRE Book sense.
+
+The test: do they have a 50% engineering time? Do they own SLOs (with consequences for the dev team when budget is exhausted)? Do they refuse work that doesn\'t meet quality bar?
+
+If no: rebranded ops, not SRE.
+If yes: actual SRE.
+
+**The hiring distinction**:
+
+- SysAdmin: ops experience, scripting skills, on-call experience.
+- SRE: software engineering skills, ops experience, systems thinking, willingness to own reliability as an engineering problem.
+
+Many SRE job postings describe SysAdmin work. Look for the 50% engineering allocation, the SLO authority, the engineering culture. Without these, the role is rebranded ops.
+
+**The DevOps engineer overlap**:
+
+- "DevOps engineer" can mean anything from "person who maintains CI/CD" to "tooling engineer" to "SRE-lite."
+- Often: more focus on tooling, less on production reliability.
+- Can be a stepping stone to SRE for engineers without SRE experience.
+
+**The career path**:
+
+Common evolution: SysAdmin → DevOps engineer → SRE → SRE manager → Director of SRE / Engineering.
+
+Each step adds: more code, more ownership of reliability, more product influence, less reactive ops work.
+
+**The bottom line**: SRE is engineering applied to reliability. If the work is mostly reactive ops, it\'s not SRE; it\'s ops with a fancy title.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/introduction/',
+      'https://landing.google.com/sre/sre-book/chapters/sre-vs-devops/',
+      'https://martinfowler.com/articles/microservices.html#ProductsNotProjects',
     ],
   },
 ];
