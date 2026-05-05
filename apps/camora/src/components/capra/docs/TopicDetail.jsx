@@ -2657,7 +2657,7 @@ export default function TopicDetail({
             const quoteMatch = topicDetails.introduction.match(/^"([^"]+)"\s*(.*)/s);
             return (
               <section id="overview" className="scroll-mt-24 mt-14 first:mt-0">
-                <h2 className="prep-section-heading landing-display pb-3 mb-5 border-b border-[var(--border)]">Overview</h2>
+                <ContentHeading title="Overview" />
                 {quoteMatch ? (
                   <>
                     <div className="pl-4 border-l-2 border-[var(--accent)] mb-4">
@@ -2674,21 +2674,12 @@ export default function TopicDetail({
 
           {/* 2. Key Principles — full width, separate card */}
           {topicDetails.principles && topicDetails.principles.length > 0 && (
-            <section id="principles" className="scroll-mt-24">
-              <div className="flex items-baseline justify-between pb-3 border-b border-[var(--border)]">
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)] landing-mono">
-                    Behavioral · Principles
-                  </div>
-                  <h2 className="mt-1 text-lg font-semibold text-[var(--text-primary)] landing-display">
-                    Key Principles
-                  </h2>
-                </div>
-                <span className="text-[10px] uppercase tracking-[0.14em] text-[var(--text-muted)] landing-mono">
-                  {topicDetails.principles.length}
-                </span>
-              </div>
-              <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+            <section id="principles" className="scroll-mt-24 mt-14 first:mt-0">
+              <ContentHeading
+                title="Key Principles"
+                actions={<GlassPill>{topicDetails.principles.length} principles</GlassPill>}
+              />
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
                 {topicDetails.principles.map((principle, i) => (
                   <li key={i} className="flex items-baseline gap-3 text-sm landing-body text-[var(--text-secondary)]">
                     <span className="text-[10px] landing-mono text-[var(--text-muted)] tabular-nums flex-shrink-0">
@@ -2703,21 +2694,12 @@ export default function TopicDetail({
 
           {/* 3. STAR Framework Example — learn the method BEFORE seeing questions */}
           {topicDetails.starExample && (
-            <section id="star-example" className="scroll-mt-24">
-              <div className="flex items-baseline justify-between pb-3 border-b border-[var(--border)]">
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)] landing-mono">
-                    Behavioral · Framework
-                  </div>
-                  <h3 className="mt-1 text-lg font-semibold text-[var(--text-primary)] landing-display">
-                    STAR Framework Example
-                  </h3>
-                </div>
-                <span className="text-[10px] uppercase tracking-[0.14em] text-[var(--text-muted)] landing-mono">
-                  4 steps
-                </span>
-              </div>
-              <ol className="mt-5 relative">
+            <section id="star-example" className="scroll-mt-24 mt-14 first:mt-0">
+              <ContentHeading
+                title="STAR Framework Example"
+                actions={<GlassPill>4 steps</GlassPill>}
+              />
+              <ol className="relative">
                 <div className="absolute left-[11px] top-2 bottom-2 w-px bg-[var(--border)]" aria-hidden="true" />
                 {Object.entries(topicDetails.starExample).map(([key, value], idx) => {
                   const label = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
@@ -2963,8 +2945,10 @@ export default function TopicDetail({
         if (related.length === 0) return null;
         return (
           <div className="mt-10 pt-6 border-t" style={{ borderColor: 'var(--border)' }}>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-1.5" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>RELATED</p>
-            <h3 className="prep-section-heading mb-4" style={{ fontFamily: 'var(--font-display)' }}>You might also explore</h3>
+            <ContentHeading
+              title="You might also explore"
+              actions={<GlassPill>{related.length} related</GlassPill>}
+            />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {related.map(t => (
                 <button
