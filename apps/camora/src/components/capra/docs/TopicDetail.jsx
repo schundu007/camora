@@ -2721,22 +2721,27 @@ export default function TopicDetail({
         );
 
         // Slide-card frame around section content — gives each conceptual
-        // unit a clear boundary instead of one long scroll.
+        // unit a clear boundary instead of one long scroll. Inner content
+        // uses max-w-[72ch] mx-auto so prose is centered within the card
+        // (PPT-style: comfortable reading width, balanced gutters).
         const SlideCard = ({ children }) => (
           <div
             className="rounded-lg overflow-hidden"
             style={{
               background: 'var(--bg-surface)',
               border: '1px solid var(--border)',
-              padding: '20px 24px',
+              padding: '32px 40px',
             }}
           >
-            <div className="prep-content max-w-[72ch]">{children}</div>
+            <div className="prep-content max-w-[72ch] mx-auto">{children}</div>
           </div>
         );
 
         return (
-        <div className="space-y-6">
+        // Centered slide-deck container — caps width at max-w-5xl (~1024px)
+        // and auto-centers, so SRE topics read like a PPT deck instead of
+        // edge-to-edge browser-width wall of text.
+        <div className="space-y-6 max-w-5xl mx-auto">
 
           {/* ── Topic stats banner — one-glance agenda + key counts ── */}
           <div
@@ -2925,7 +2930,7 @@ export default function TopicDetail({
                       </button>
                       {isExpanded && (
                         <div className="px-5 py-4 border-t border-[var(--border)]">
-                          <div className="prep-content max-w-[72ch]">
+                          <div className="prep-content max-w-[72ch] mx-auto">
                             <FormattedContent content={item.answer} color="blue" />
                           </div>
                         </div>
