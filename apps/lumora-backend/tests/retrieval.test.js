@@ -265,3 +265,66 @@ describe('retrieve writes to retrievalLogger', () => {
     expect(logMock.mock.calls[0][0].chunks).toEqual([]);
   });
 });
+
+describe('retrieve.lowConfidence', () => {
+  it('flags lowConfidence=true when no chunks returned', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_WARM_KIT = 'false';
+    vi.doMock('../src/services/retrievalLogger.js', () => ({ logRetrieval: vi.fn().mockResolvedValue(undefined) }));
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: vi.fn().mockResolvedValue([]),
+      hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
+    }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    const r = await retrieve({ question: 'q', userId: null });
+    expect(r.lowConfidence).toBe(true);
+  });
+
+  it('flags lowConfidence=false when top chunk has strong rrfScore', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_WARM_KIT = 'false';
+    vi.doMock('../src/services/retrievalLogger.js', () => ({ logRetrieval: vi.fn().mockResolvedValue(undefined) }));
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: vi.fn().mockResolvedValue([
+        { tier: 'kb', id: 'k1', content: 'a', rrfScore: 0.05 },
+      ]),
+      hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
+    }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    const r = await retrieve({ question: 'q', userId: null });
+    expect(r.lowConfidence).toBe(false);
+  });
+
+  it('flags lowConfidence=true when top rrfScore is below threshold', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_WARM_KIT = 'false';
+    vi.doMock('../src/services/retrievalLogger.js', () => ({ logRetrieval: vi.fn().mockResolvedValue(undefined) }));
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: vi.fn().mockResolvedValue([
+        { tier: 'kb', id: 'k1', content: 'a', rrfScore: 0.01 },
+      ]),
+      hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
+    }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    const r = await retrieve({ question: 'q', userId: null });
+    expect(r.lowConfidence).toBe(true);
+  });
+
+  it('returns lowConfidence=true on timeout', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_WARM_KIT = 'false';
+    vi.doMock('../src/services/retrievalLogger.js', () => ({ logRetrieval: vi.fn().mockResolvedValue(undefined) }));
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: vi.fn().mockImplementation(() => new Promise((res) => setTimeout(() => res([]), 500))),
+      hybridSearchUserDocs: vi.fn(),
+    }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    const r = await retrieve({ question: 'q', userId: null, timeoutMs: 50 });
+    expect(r.timedOut).toBe(true);
+    expect(r.lowConfidence).toBe(true);
+  });
+});

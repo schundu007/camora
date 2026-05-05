@@ -120,9 +120,10 @@ export async function retrieve(opts) {
           usedRerank: willRerank,
         }).catch(() => {}),
       );
-      return { chunks: [], timedOut: true, latencyMs };
+      return { chunks: [], timedOut: true, latencyMs, lowConfidence: true };
     }
     const { chunks, usedKit } = winner;
+    const lowConfidence = detectLowConfidence(chunks);
     import('./retrievalLogger.js').then(({ logRetrieval }) =>
       logRetrieval({
         userId,
@@ -135,10 +136,23 @@ export async function retrieve(opts) {
         usedRerank: willRerank,
       }).catch(() => {}),
     );
-    return { chunks, timedOut: false, latencyMs };
+    return { chunks, timedOut: false, latencyMs, lowConfidence };
   } finally {
     clearTimeout(timer);
   }
+}
+
+const LOW_RERANK_THRESHOLD = 0.20;
+const LOW_RRF_THRESHOLD = 0.025;
+const HIGH_DISTANCE_THRESHOLD = 0.5;
+
+function detectLowConfidence(chunks) {
+  if (!chunks || chunks.length === 0) return true;
+  const top = chunks[0];
+  if (typeof top.rerankScore === 'number') return top.rerankScore < LOW_RERANK_THRESHOLD;
+  if (typeof top.rrfScore === 'number') return top.rrfScore < LOW_RRF_THRESHOLD;
+  if (typeof top.distance === 'number') return top.distance > HIGH_DISTANCE_THRESHOLD;
+  return false;
 }
 
 export function formatRetrievedContext(chunks) {
