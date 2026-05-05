@@ -106,6 +106,14 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       console.warn(`[inference] retrieval timed out after ${retrieved.latencyMs}ms`);
     }
 
+    // Auto-fire web search when retrieval is weak. User-explicit useSearch
+    // (set via the UI toggle) always wins; this only flips false → true.
+    const autoWebOk = process.env.RAG_AUTO_WEB_SEARCH === 'true';
+    const effectiveUseSearch = useSearch || (autoWebOk && retrieved.lowConfidence);
+    if (!useSearch && effectiveUseSearch) {
+      console.info(`[inference] auto-enabling web search (low-confidence retrieval)`);
+    }
+
     // Start SSE
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
@@ -140,7 +148,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 
     // Stream tokens
     for await (const evt of streamResponse(question, history, {
-      useSearch,
+      useSearch: effectiveUseSearch,
       resumeContext: user.resume_text || null,
       technicalContext: user.technical_context || null,
       systemContext: systemContext || null,
@@ -443,12 +451,20 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       sendSSE(res, 'citations', citations);
     }
 
+    // Auto-fire web search when retrieval is weak. User-explicit useSearch
+    // (set via the UI toggle) always wins; this only flips false → true.
+    const autoWebOk = process.env.RAG_AUTO_WEB_SEARCH === 'true';
+    const effectiveUseSearch = useSearch || (autoWebOk && retrieved.lowConfidence);
+    if (!useSearch && effectiveUseSearch) {
+      console.info(`[inference] auto-enabling web search (low-confidence retrieval)`);
+    }
+
     // Stream tokens (empty history for new conversation).
     // Pass abortController.signal so the Anthropic call halts when the
     // client disconnects — without this, navigating away mid-answer
     // keeps tokens billing to completion.
     for await (const evt of streamResponse(question, [], {
-      useSearch,
+      useSearch: effectiveUseSearch,
       resumeContext: user.resume_text || null,
       technicalContext: user.technical_context || null,
       systemContext: systemContext || null,
