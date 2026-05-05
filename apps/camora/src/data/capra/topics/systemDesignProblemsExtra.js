@@ -6737,18 +6737,8 @@ spec:
       {
         question: 'How does blue-green deployment achieve zero-downtime?',
         answer: `**Blue-Green Architecture**:
-\`\`\`
-Load Balancer / DNS
-       |
-  ┌────┴────┐
-  ▼         ▼
- BLUE      GREEN
-(v1.2)    (v1.3)   <- new version deployed here while blue handles traffic
- active    standby
 
-After validation: switch traffic from BLUE -> GREEN
-GREEN becomes active, BLUE becomes standby
-\`\`\`
+A load balancer (or DNS record) sits in front of two identical environments — Blue (currently active, running v1.2) and Green (currently standby, where v1.3 has just been deployed). All production traffic continues to land on Blue while Green is validated. Once Green passes its checks, the load balancer's target group is flipped so Green becomes active and Blue moves to standby — Blue is now the instant-rollback target if something goes wrong.
 
 **Deployment Steps**:
 1. **Prepare Green**: deploy new version to Green environment (identical to Blue in capacity)

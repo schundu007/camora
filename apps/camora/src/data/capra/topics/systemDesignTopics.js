@@ -1254,20 +1254,10 @@ This reduces primary database load by ~99%. Instagram uses this exact pattern �
           answer: `**Replication**: Keeping identical copies of data on multiple machines for read scaling, high availability, and disaster recovery.
 
 **Primary-Replica (Leader-Follower)** — the most common pattern:
-\`\`\`
-        Writes
-          │
-    ┌─────▼────��┐
-    │  Primary   │
-    └─────┬─────┘
-          │ WAL / Binlog stream
-    ┌─────┴─────┐
-    ▼           ▼
-┌───────┐  ┌───────┐
-│Replica│  │Replica│
-└──────���┘  └───────┘
-   Reads     Reads
-\`\`\`
+
+![Primary-replica replication — writes to primary, reads from replicas](/diagrams/systemdesign/primary-replica.png)
+
+All writes land on the Primary. The Primary streams its WAL (or binlog) to each Replica, and read traffic is served from the Replicas to scale reads horizontally.
 
 **Synchronous replication**:
 - Primary waits for at least one replica to confirm the write before returning success
@@ -1989,30 +1979,9 @@ Keep a slightly stale copy of data even after TTL expires. Serve the stale copy 
           question: 'How do you design a distributed cache?',
           answer: `A distributed cache spreads data across multiple nodes to achieve horizontal scalability, fault tolerance, and high throughput beyond what a single machine can provide.
 
-\`\`\`
-           ┌──────────────────────────────────────────┐
-           │            Cache Cluster                 │
-           │  ┌────────┐  ┌────────┐  ┌────────┐     │
-           │  │ Node 1 │  │ Node 2 │  │ Node 3 │     │
-           │  │ Slots   │  │ Slots   │  │ Slots   │     │
-           │  │ 0-5460 │  │5461-10922│ │10923-16383│  │
-           │  └────────┘  └────────┘  └────────┘     │
-           │      │            │            │         │
-           │  ┌────────┐  ┌────────┐  ┌────────┐     │
-           │  │Replica 1│ │Replica 2│ │Replica 3│     │
-           │  └────────┘  └────────┘  └────────┘     │
-           └──────────────────────────────────────────┘
-                          ▲
-                          │ Consistent Hashing / Hash Slots
-                          │
-           ┌──────────────────────────────────────────┐
-           │            App Servers                   │
-           │  ┌────────┐  ┌────────┐  ┌────────┐     │
-           │  │Server 1│  │Server 2│  │Server 3│     │
-           │  │ L1 Cache│  │ L1 Cache│  │ L1 Cache│   │
-           │  └────────┘  └────────┘  └────────┘     │
-           └──────────────────────────────────────────┘
-\`\`\`
+![Distributed cache — sharded cluster with replicas behind app servers](/diagrams/systemdesign/distributed-cache.png)
+
+App servers each keep a small L1 cache and route lookups via consistent hashing (or hash slots, in Redis Cluster) to the right cache node. Each shard has a replica for failover; on primary loss the replica is promoted with no manual reshard.
 
 **Key Design Decisions**:
 
@@ -2861,11 +2830,9 @@ SQS Concepts:
         {
           question: 'What are the main messaging patterns and when do you use each?',
           answer: `**Point-to-Point (Queue) — Task Distribution**:
-\`\`\`
-Producer ───▶ Queue ───▶ Consumer A (gets message 1)
-                    ───▶ Consumer B (gets message 2)
-                    ───▶ Consumer C (gets message 3)
-\`\`\`
+
+![Point-to-point queue — competing consumers, each message processed once](/diagrams/systemdesign/pubsub-queue.png)
+
 - Each message processed by exactly one consumer — competing consumers pattern
 - Messages deleted after successful acknowledgment
 - Use for: Background jobs, email sending, image processing, order fulfillment
@@ -2873,22 +2840,18 @@ Producer ───▶ Queue ───▶ Consumer A (gets message 1)
 - Scaling: Add more consumers to increase throughput linearly
 
 **Publish-Subscribe (Fan-out) — Event Broadcasting**:
-\`\`\`
-              ┌───▶ Analytics Service (gets ALL messages)
-Producer ───▶ Topic ───▶ Notification Service (gets ALL messages)
-              └───▶ Audit Service (gets ALL messages)
-\`\`\`
+
+![Pub/Sub topic — each subscriber gets every message independently](/diagrams/systemdesign/pubsub-topic.png)
+
 - Each message delivered to every subscriber independently
 - Subscribers are decoupled — publisher does not know who is listening
 - Use for: Event notifications, audit logging, cache invalidation, CDC propagation
 - Examples: Kafka topics (between consumer groups), SNS, RabbitMQ fanout exchanges
 
 **Consumer Groups (Kafka) — Best of Both Worlds**:
-\`\`\`
-              ┌───▶ Consumer 1 ─┐ Group A (analytics — shares load)
-Producer ───▶ Topic ───▶ Consumer 2 ─┘
-              └───▶ Consumer 3 ──── Group B (notifications — gets all)
-\`\`\`
+
+![Kafka consumer groups — pub/sub between groups, queue within group](/diagrams/systemdesign/consumer-groups.png)
+
 - Pub/sub between groups (each group gets all messages), queue within group (partitions distributed)
 - Each partition assigned to exactly one consumer within a group at any time
 - The key insight: you can add new consumer groups at any time without affecting existing ones — Kafka retains messages regardless of consumption
@@ -3064,26 +3027,10 @@ def on_message(msg):
         {
           question: 'How do dead letter queues and poison message handling work?',
           answer: `**Dead Letter Queue (DLQ)** — the safety net for failed messages:
-\`\`\`
-┌──────────┐    ┌─────────────┐    ┌──────────┐
-│ Producer │───▶│  Main Queue │───▶│ Consumer │
-└──────────┘    └──────┬──────┘    └────┬─────┘
-                       │                │
-                       │   Retry 1: ✗   │
-                       │   Retry 2: ✗   │
-                       │   Retry 3: ✗   │
-                       ▼                │
-                ┌─────────────┐         │
-                │     DLQ     │◀────────┘
-                └──────┬──────┘
-                       │
-               ┌───────┴───────┐
-               ▼               ▼
-        ┌───────────┐   ┌───────────┐
-        │  Alerting │   │  Manual   │
-        │ (PagerDuty)│  │  Replay   │
-        └───────────┘   └───────────┘
-\`\`\`
+
+![Dead letter queue — retries exhausted → DLQ → alert + manual replay](/diagrams/systemdesign/dlq.png)
+
+A consumer that exhausts its retry budget routes the offending message to a DLQ instead of blocking the main queue. The DLQ then drives two outputs: an alert (PagerDuty / Slack) for on-call awareness, and a manual replay pipeline so engineers can triage, fix the root cause, and reinject the message.
 
 **DLQ Implementation by Platform**:
 
@@ -3393,20 +3340,9 @@ CQRS with message queue:
 4. **Performance isolation**: Heavy analytical queries don't slow down write transactions
 
 **CQRS + Event Sourcing** — the full pattern:
-\`\`\`
-┌──────────┐     ┌───────────┐     ┌─────────────────┐
-│ Command  │────▶│ Event     │────▶│ Kafka Topic     │
-│ Handler  │     │ Store     │     │ (order-events)  │
-└──────────┘     └───────────┘     └────────┬────────┘
-                                            │
-                    ┌───────────────────────┬┘
-                    ▼                       ▼
-             ┌────────────┐         ┌────────────┐
-             │ Read Model │         │ Read Model │
-             │ (Postgres) │         │ (Elastic)  │
-             │ for lists  │         │ for search │
-             └────────────┘         └────────────┘
-\`\`\`
+
+![CQRS + event sourcing — command side, event log, projected read models](/diagrams/systemdesign/cqrs-event-sourcing.png)
+
 - Command handler validates and stores events in the event store
 - Events published to Kafka for downstream consumers
 - Each read model consumer builds its own optimized projection from the event stream
@@ -3591,17 +3527,9 @@ Topic: user-events, 12 partitions, 3 brokers
         {
           question: 'What are the key architectural patterns used with message queues?',
           answer: `**1. Saga Pattern** — distributed transactions via message choreography:
-\`\`\`
-Order Service          Payment Service       Inventory Service
-     │                      │                      │
-     │──OrderCreated───────▶│                      │
-     │                      │──PaymentCharged─────▶│
-     │                      │                      │──InventoryReserved──▶ Done
-     │                      │                      │
-     │  If payment fails:   │                      │
-     │◀──PaymentFailed──────│                      │
-     │──OrderCancelled─────▶│                      │
-\`\`\`
+
+![Saga (choreography) — events flow service-to-service; compensation on failure](/diagrams/systemdesign/saga-choreography.png)
+
 - Each service listens for events and responds with its own events
 - Compensating actions undo previous steps if a later step fails
 - No distributed transactions — each service manages its own DB transaction
@@ -28593,12 +28521,12 @@ MVCC (Multi-Version Concurrency Control):
 
 **Performance comparison**:
 
-  Isolation Level    | Throughput | Locks Held | Anomaly Risk
-  ────────────────── |────────────|────────────|─────────────
-  Read Uncommitted   | Highest    | None       | All possible
-  Read Committed     | High       | Short (row)| Non-repeatable, phantom
-  Repeatable Read    | Medium     | Long (row) | Phantom (in theory)
-  Serializable       | Lowest     | Range locks| None
+| Isolation Level | Throughput | Locks Held | Anomaly Risk |
+|---|---|---|---|
+| Read Uncommitted | Highest | None | All possible |
+| Read Committed | High | Short (row) | Non-repeatable, phantom |
+| Repeatable Read | Medium | Long (row) | Phantom (in theory) |
+| Serializable | Lowest | Range locks | None |
 
 **Interview tip**: Know that the default isolation level for PostgreSQL and MySQL is NOT serializable. If your design requires serializable, you must explicitly set it, and be prepared to discuss the performance cost.`
         },
@@ -28608,35 +28536,19 @@ MVCC (Multi-Version Concurrency Control):
 
 **How it works (PostgreSQL implementation)**:
 
-  Each row has hidden columns:
-  ┌──────────┬──────┬────────┬────────────┐
-  │ data     │ xmin │ xmax   │ visible to │
-  ├──────────┼──────┼────────┼────────────┤
-  │ bal=500  │ 100  │ 105    │ txn < 105  │
-  │ bal=400  │ 105  │ 110    │ 105 <= txn < 110 │
-  │ bal=300  │ 110  │ ∞      │ txn >= 110 │
-  └──────────┴──────┴────────┴────────────┘
+Each row has hidden columns \`xmin\` (the transaction that created this version) and \`xmax\` (the transaction that replaced or deleted it). The database picks the version visible to the current transaction by checking those bounds against the active snapshot:
 
-  xmin: Transaction ID that created this version
-  xmax: Transaction ID that deleted/replaced this version
+| data | xmin | xmax | visible to |
+|---|---|---|---|
+| bal=500 | 100 | 105 | txn < 105 |
+| bal=400 | 105 | 110 | 105 ≤ txn < 110 |
+| bal=300 | 110 | ∞ | txn ≥ 110 |
 
-  Txn 108 (snapshot at start): sees bal=400 (version from txn 105)
-  Txn 112 (snapshot at start): sees bal=300 (version from txn 110)
-  Both read without blocking each other or the writer!
+So Txn 108, whose snapshot sits between 105 and 110, sees \`bal=400\`. Txn 112, taken after 110 committed, sees \`bal=300\`. Both read without blocking the writer or each other.
 
-**Key principle**: Writers create new versions, readers read old versions.
+**Key principle**: writers create new versions, readers read old versions.
 
-**Snapshot isolation**:
-  At transaction start, take a snapshot of all committed transaction IDs
-  During the transaction, only see data committed before the snapshot
-
-  Time: ─────────────────────────>
-  Txn A starts (snapshot)
-     │                Txn B commits (writes new data)
-     │                     │
-     │ reads data ────────>│ A sees OLD data (snapshot)
-     │                     │
-  Txn A commits             Txn C starts -> sees Txn B's data
+**Snapshot isolation**: at transaction start the engine captures a snapshot of all currently committed transaction IDs and only sees data that was committed before that point. Concretely, if Txn A starts, then Txn B commits a new version of the row, A still reads the old version from its snapshot. A new transaction C, started after B's commit, sees B's version.
 
 **Write conflicts under MVCC**:
 
@@ -28668,49 +28580,11 @@ MVCC (Multi-Version Concurrency Control):
 
 **Protocol**:
 
-  Phase 1: PREPARE
-  ┌─────────────┐
-  │ Coordinator │
-  └──────┬──────┘
-         │ "Can you commit?"
-    ┌────┴────┬───────┐
-    v         v       v
-  ┌─────┐ ┌─────┐ ┌─────┐
-  │ DB1 │ │ DB2 │ │ DB3 │
-  │ YES │ │ YES │ │ YES │
-  └──┬──┘ └──┬──┘ └──┬──┘
-     │       │       │
-     └───────┴───────┘
-         All YES
+*Phase 1 — PREPARE.* The coordinator asks every participant ("DB1, DB2, DB3") whether they can commit. Each participant writes a prepare record to its WAL, takes locks, and replies YES or NO. The coordinator collects the votes.
 
-  Phase 2: COMMIT
-  ┌─────────────┐
-  │ Coordinator │
-  └──────┬──────┘
-         │ "COMMIT!"
-    ┌────┴────┬───────┐
-    v         v       v
-  ┌─────┐ ┌─────┐ ┌─────┐
-  │ DB1 │ │ DB2 │ │ DB3 │
-  │ OK  │ │ OK  │ │ OK  │
-  └─────┘ └─────┘ └─────┘
+*Phase 2 — COMMIT or ABORT.* If every participant voted YES, the coordinator broadcasts COMMIT and each participant releases locks after applying the write. If even one participant voted NO, the coordinator broadcasts ABORT and every participant rolls back.
 
-  If ANY participant says NO in Phase 1:
-  Coordinator sends ABORT to all -> all rollback
-
-**The blocking problem**:
-  After a participant votes YES in Phase 1:
-  - It CANNOT abort on its own (promised to commit)
-  - It CANNOT commit on its own (waiting for coordinator)
-  - If coordinator crashes: PARTICIPANT IS STUCK (holding locks!)
-
-  Coordinator crashes after Phase 1:
-  ┌─────────────┐
-  │ Coordinator │ <- DEAD
-  └─────────────┘
-  DB1: "I voted YES... now what?" (holding locks, can't proceed)
-  DB2: "I voted YES... now what?" (holding locks, can't proceed)
-  -> Locks held indefinitely until coordinator recovers
+**The blocking problem**: Once a participant has voted YES in Phase 1 it has promised to commit, so it cannot abort on its own; it also cannot commit until it hears from the coordinator. If the coordinator crashes between Phase 1 and Phase 2, every participant that voted YES is stuck holding locks, waiting for the coordinator to recover. Locks pile up, throughput collapses, and even nodes that are themselves healthy cannot make progress.
 
 **Why 2PC is problematic for microservices**:
 1. **Blocking**: Participants hold locks while waiting
@@ -28752,34 +28626,27 @@ MVCC (Multi-Version Concurrency Control):
 
 **Polyglot persistence (use both!)**:
 
-  E-Commerce System:
-  ┌──────────────────────────────────────────────────────┐
-  │                  Application Layer                    │
-  └─────┬───────────┬────────────┬───────────┬───────────┘
-        │           │            │           │
-  ┌─────▼─────┐ ┌───▼────┐ ┌────▼─────┐ ┌───▼────────┐
-  │PostgreSQL │ │ Redis  │ │Cassandra │ │Elasticsearch│
-  │  (ACID)   │ │ (BASE) │ │ (BASE)   │ │  (BASE)    │
-  │           │ │        │ │          │ │            │
-  │ Orders    │ │Sessions│ │ Activity │ │ Product    │
-  │ Payments  │ │ Cache  │ │ Feed     │ │ Search     │
-  │ Inventory │ │ Carts  │ │ Analytics│ │ Catalog    │
-  └───────────┘ └────────┘ └──────────┘ └────────────┘
-    Strong         Fast       Scalable    Full-text
-    consistency    reads      writes      search
+A real e-commerce stack pairs each data type with the store best suited for it. The application layer fans requests out to several engines in parallel:
+
+| Store | Model | Holds | Strength |
+|---|---|---|---|
+| PostgreSQL | ACID | Orders, Payments, Inventory | Strong consistency |
+| Redis | BASE | Sessions, Cache, Carts | Fast reads |
+| Cassandra | BASE | Activity feed, Analytics | Scalable writes |
+| Elasticsearch | BASE | Product search, Catalog | Full-text search |
 
 **Per-operation mapping**:
 
-  Operation           | Model | Store       | Why
-  ────────────────────|───────|─────────────|──────────────
-  Place order         | ACID  | PostgreSQL  | Atomic multi-table
-  Update cart         | BASE  | Redis       | Fast, ephemeral
-  Post to feed        | BASE  | Cassandra   | High write volume
-  Search products     | BASE  | Elasticsearch| Slight index lag OK
-  Process payment     | ACID  | PostgreSQL  | Cannot lose money
-  View recommendations| BASE  | Cassandra   | Stale data acceptable
-  User registration   | ACID  | PostgreSQL  | Unique constraints
-  Track page view     | BASE  | Kafka->Cass | High volume, approximate
+| Operation | Model | Store | Why |
+|---|---|---|---|
+| Place order | ACID | PostgreSQL | Atomic multi-table |
+| Update cart | BASE | Redis | Fast, ephemeral |
+| Post to feed | BASE | Cassandra | High write volume |
+| Search products | BASE | Elasticsearch | Slight index lag OK |
+| Process payment | ACID | PostgreSQL | Cannot lose money |
+| View recommendations | BASE | Cassandra | Stale data acceptable |
+| User registration | ACID | PostgreSQL | Unique constraints |
+| Track page view | BASE | Kafka → Cassandra | High volume, approximate |
 
 **The hybrid pattern in practice**:
 - ACID for the "write path" of critical operations
@@ -28822,14 +28689,14 @@ MVCC (Multi-Version Concurrency Control):
 
 **Decision matrix**:
 
-  Factor                | Pessimistic      | Optimistic
-  ──────────────────────|──────────────────|──────────────────
-  Conflict frequency    | High (>10%)      | Low (<5%)
-  Transaction duration  | Long             | Short
-  Retry cost            | N/A (no retries) | Must handle retries
-  Throughput            | Lower (blocking) | Higher (no locks)
-  Deadlock risk         | Yes              | No
-  Implementation        | FOR UPDATE       | Version/ETag/CAS
+| Factor | Pessimistic | Optimistic |
+|---|---|---|
+| Conflict frequency | High (>10%) | Low (<5%) |
+| Transaction duration | Long | Short |
+| Retry cost | N/A (no retries) | Must handle retries |
+| Throughput | Lower (blocking) | Higher (no locks) |
+| Deadlock risk | Yes | No |
+| Implementation | FOR UPDATE | Version / ETag / CAS |
 
 **Use pessimistic when**:
 - High contention (popular items, hot rows)
@@ -29472,15 +29339,14 @@ DynamoDB is the natural database choice for serverless architectures on AWS, pai
   Sort Key (SK): ORDER#<orderId>
 
   Single-Table Design Example:
-  ┌──────────────────┬─────────────────────┬──────────┬─────────┐
-  | PK               | SK                  | Type     | Data    |
-  ├──────────────────┼─────────────────────┼──────────┼─────────┤
-  | USER#123         | PROFILE             | User     | {name}  |
-  | USER#123         | ORDER#2024-001      | Order    | {total} |
-  | USER#123         | ORDER#2024-002      | Order    | {total} |
-  | ORDER#2024-001   | ITEM#sku-abc        | OrderItem| {qty}   |
-  | ORDER#2024-001   | ITEM#sku-def        | OrderItem| {qty}   |
-  └──────────────────┴─────────────────────┴──────────┴─────────┘
+
+  | PK             | SK             | Type      | Data    |
+  |----------------|----------------|-----------|---------|
+  | USER#123       | PROFILE        | User      | {name}  |
+  | USER#123       | ORDER#2024-001 | Order     | {total} |
+  | USER#123       | ORDER#2024-002 | Order     | {total} |
+  | ORDER#2024-001 | ITEM#sku-abc   | OrderItem | {qty}   |
+  | ORDER#2024-001 | ITEM#sku-def   | OrderItem | {qty}   |
 
   Global Secondary Index (GSI1):
   GSI1PK: ORDER#<orderId>

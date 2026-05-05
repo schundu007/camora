@@ -2914,64 +2914,7 @@ Quick quality first: 360p available in minutes, 4K later`
         title: 'Production Architecture',
         diagramSrc: '/diagrams/youtube/impl-advanced.png',
         svgTemplate: 'youtubeAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           YOUTUBE PRODUCTION                                     │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│  UPLOAD PIPELINE                                                                │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │ Client → Chunked Upload → Upload Service → Message Queue            │        │
-│  │    │                            │               │                    │        │
-│  │    └── Resume Capability        │               ▼                    │        │
-│  │                            ┌────▼────┐   ┌──────────────┐           │        │
-│  │                            │Raw Store│──▶│  Transcode   │           │        │
-│  │                            │  (S3)   │   │  Coordinator │           │        │
-│  │                            └─────────┘   └──────┬───────┘           │        │
-│  │                                                 │                    │        │
-│  │         ┌───────────────────────────────────────┼───────────────┐   │        │
-│  │         ▼                   ▼                   ▼               ▼   │        │
-│  │   ┌──────────┐        ┌──────────┐        ┌──────────┐   ┌──────┐  │        │
-│  │   │ 360p GPU │        │ 720p GPU │        │1080p GPU │   │ 4K   │  │        │
-│  │   │ Worker   │        │ Worker   │        │ Worker   │   │Worker│  │        │
-│  │   └────┬─────┘        └────┬─────┘        └────┬─────┘   └──┬───┘  │        │
-│  │        └───────────────────┼───────────────────┼────────────┘      │        │
-│  │                            ▼                                        │        │
-│  │                   ┌─────────────────┐                              │        │
-│  │                   │ Transcoded Store│                              │        │
-│  │                   │ (Multi-Region)  │                              │        │
-│  │                   └─────────────────┘                              │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  STREAMING / CDN                                                                │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  Client ◀──▶ Edge PoP ◀──▶ Regional PoP ◀──▶ Origin                 │        │
-│  │    │           │              │                │                     │        │
-│  │    │    ┌──────┴─────┐  ┌─────┴────┐    ┌─────┴────┐               │        │
-│  │    │    │Edge Cache  │  │Regional  │    │ Origin   │               │        │
-│  │    │    │(Popular)   │  │Cache     │    │ Storage  │               │        │
-│  │    │    └────────────┘  └──────────┘    └──────────┘               │        │
-│  │    │                                                                 │        │
-│  │    └── Adaptive Bitrate (HLS/DASH)                                  │        │
-│  │        - Quality selection based on bandwidth                        │        │
-│  │        - Seamless quality switching                                  │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  RECOMMENDATION ENGINE                                                          │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  User Activity ──▶ Kafka ──▶ ML Pipeline ──▶ Feature Store         │        │
-│  │        │                          │                │                 │        │
-│  │        │                    ┌─────▼─────┐    ┌────▼────┐           │        │
-│  │        │                    │Candidate  │    │Ranking  │           │        │
-│  │        │                    │Generation │──▶ │Model    │──▶ Feed   │        │
-│  │        │                    │(1000s)    │    │(Top 50) │           │        │
-│  │        │                    └───────────┘    └─────────┘           │        │
-│  │        │                                                            │        │
-│  │        └── Watch history, likes, subscriptions, demographics        │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Chunked upload with resume: Handle large files (up to 256GB)',
           'Parallel transcoding: Each resolution processed independently',
@@ -3627,17 +3570,7 @@ Why Cassandra wins for messages:
       basicImplementation: {
         title: 'Basic Implementation',
         description: 'Single chat server handling WebSocket connections and message routing. Suitable for prototyping but cannot scale beyond a single machine.',
-        architecture: `
-┌────────┐    ┌──────────────┐    ┌─────────────┐
-│ Client │◀══▶│  Chat Server │───▶│ Message DB  │
-│  (WS)  │    │  (WebSocket) │    └─────────────┘
-└────────┘    └──────────────┘
-                     │
-                     ▼
-              ┌─────────────┐
-              │   Redis     │
-              │ (Sessions)  │
-              └─────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Single server limits concurrent connections to ~100K users maximum',
           'No message persistence if the server process crashes mid-delivery',
@@ -3651,25 +3584,7 @@ Why Cassandra wins for messages:
       advancedImplementation: {
         title: 'Distributed Chat System',
         description: 'Horizontally scalable architecture with 10,000+ chat servers, cross-server message routing via Kafka, persistent offline queues, and multi-region deployment for global low-latency messaging.',
-        architecture: `
-┌────────┐    ┌──────────────┐    ┌─────────────┐
-│ Client │◀══▶│   Gateway    │───▶│ Chat Server │
-│  (WS)  │    │ (Load Bal.)  │    │   Cluster   │
-└────────┘    └──────────────┘    └─────────────┘
-                                        │
-                    ┌───────────────────┼───────────────────┐
-                    ▼                   ▼                   ▼
-             ┌───────────┐      ┌─────────────┐     ┌─────────────┐
-             │  Kafka    │      │   Redis     │     │ Message DB  │
-             │ (Message  │      │ (Sessions/  │     │ (Cassandra) │
-             │   Bus)    │      │  Presence)  │     └─────────────┘
-             └───────────┘      └─────────────┘
-                    │                                ┌─────────────┐
-                    ▼                                │ Media Store │
-             ┌─────────────┐                        │    (S3)     │
-             │ Push Service│                        └─────────────┘
-             │  (Offline)  │
-             └─────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Consistent hashing routes each user to a specific chat server based on userId, enabling efficient connection lookup',
           'Kafka serves as the cross-server message bus: when sender and recipient are on different servers, Kafka routes the message reliably',
@@ -4844,34 +4759,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
         description: 'Monolithic service with pull-based feed generation',
         diagramSrc: '/diagrams/instagram/impl-basic.png',
         svgTemplate: 'instagram',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           INSTAGRAM BASIC                               │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌──────────┐      ┌──────────────┐      ┌──────────────────┐          │
-│  │  Client  │─────▶│ API Gateway  │─────▶│   App Server     │          │
-│  └──────────┘      └──────────────┘      └────────┬─────────┘          │
-│                                                    │                    │
-│                    ┌───────────────────────────────┼──────────────┐     │
-│                    │                               │              │     │
-│               ┌────▼────┐    ┌─────────┐    ┌─────▼────┐        │     │
-│               │ Media   │    │ Users   │    │  Posts   │        │     │
-│               │ Storage │    │   DB    │    │   DB     │        │     │
-│               │  (S3)   │    │(Postgres)│   │(Postgres)│        │     │
-│               └─────────┘    └─────────┘    └──────────┘        │     │
-│                    │                                              │     │
-│               ┌────▼──────────────────────────────────────┐      │     │
-│               │                   CDN                      │      │     │
-│               └────────────────────────────────────────────┘      │     │
-│                                                                         │
-│  FEED GENERATION (Pull Model):                                          │
-│  1. Get list of followed users                                         │
-│  2. Query recent posts from each user                                  │
-│  3. Merge, sort by timestamp                                           │
-│  4. Return top N posts                                                 │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Feed query is slow: N+1 queries for each followed user',
           'Celebrities cause fan-out explosion',
@@ -4885,74 +4773,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
         title: 'Production Architecture',
         diagramSrc: '/diagrams/instagram/impl-advanced.png',
         svgTemplate: 'instagramAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           INSTAGRAM PRODUCTION                                   │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│  MEDIA UPLOAD PIPELINE                                                          │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │ Client ─▶ Upload Service ─▶ S3 Raw ─▶ Image Processing Queue       │        │
-│  │                                              │                       │        │
-│  │         ┌───────────────────────────────────┼───────────────┐       │        │
-│  │         ▼                   ▼               ▼               ▼       │        │
-│  │   ┌──────────┐        ┌──────────┐   ┌──────────┐    ┌──────────┐  │        │
-│  │   │Thumbnail │        │  320px   │   │  640px   │    │  1080px  │  │        │
-│  │   │ 150px    │        │ resize   │   │ resize   │    │ original │  │        │
-│  │   └────┬─────┘        └────┬─────┘   └────┬─────┘    └────┬─────┘  │        │
-│  │        └───────────────────┴──────────────┴───────────────┘        │        │
-│  │                            ▼                                        │        │
-│  │                   ┌─────────────────┐                              │        │
-│  │                   │  S3 Processed   │─▶ CDN                        │        │
-│  │                   └─────────────────┘                              │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  FEED GENERATION (Hybrid Push/Pull)                                             │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  NEW POST ───▶ Fan-out Service                                      │        │
-│  │                     │                                                │        │
-│  │     ┌───────────────┼────────────────┐                              │        │
-│  │     ▼               ▼                ▼                              │        │
-│  │ ┌────────┐    ┌──────────┐    ┌──────────────┐                     │        │
-│  │ │Active  │    │ Regular  │    │ Celebrity    │                     │        │
-│  │ │Follower│    │ Follower │    │ Followers    │                     │        │
-│  │ │(<1000) │    │ (1K-100K)│    │   (>100K)    │                     │        │
-│  │ │        │    │          │    │              │                     │        │
-│  │ │  PUSH  │    │  PUSH    │    │   SKIP       │                     │        │
-│  │ │to feed │    │ to feed  │    │ (pull later) │                     │        │
-│  │ │ cache  │    │  cache   │    │              │                     │        │
-│  │ └────────┘    └──────────┘    └──────────────┘                     │        │
-│  │                                                                      │        │
-│  │  FEED READ ───▶ Feed Service                                        │        │
-│  │                     │                                                │        │
-│  │     ┌───────────────┴────────────────┐                              │        │
-│  │     ▼                                ▼                              │        │
-│  │ ┌──────────┐                  ┌──────────────┐                     │        │
-│  │ │Get cached│                  │Pull celebrity│                     │        │
-│  │ │feed posts│──────────────────│posts on-demand│                    │        │
-│  │ └────┬─────┘                  └──────┬───────┘                     │        │
-│  │      └────────────┬──────────────────┘                              │        │
-│  │                   ▼                                                  │        │
-│  │           ┌──────────────┐                                          │        │
-│  │           │ ML Ranker    │ ─▶ Personalized Feed                    │        │
-│  │           │(engagement)  │                                          │        │
-│  │           └──────────────┘                                          │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  STORIES                                                                        │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  Redis Cluster (Sorted Set per user)                                │        │
-│  │  ┌─────────────────────────────────────────────────────────┐        │        │
-│  │  │ user:123:stories = { storyId: expiryTimestamp, ... }   │        │        │
-│  │  │                                                         │        │        │
-│  │  │ TTL-based cleanup: ZREMRANGEBYSCORE stories 0 NOW()    │        │        │
-│  │  └─────────────────────────────────────────────────────────┘        │        │
-│  │                                                                      │        │
-│  │  Query: ZRANGEBYSCORE user:123:stories NOW() +INF                   │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Hybrid feed model: Push for regular users, pull for celebrity followers',
           'Image processing pipeline: Multiple resolutions generated async',
@@ -5941,28 +5762,7 @@ Changes are pushed through notification service, client then fetches full delta.
         description: 'Simple upload/download without block-level sync',
         diagramSrc: '/diagrams/dropbox/impl-basic.png',
         svgTemplate: 'dropbox',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           DROPBOX BASIC                                 │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌──────────┐      ┌──────────────┐      ┌──────────────────┐          │
-│  │  Client  │─────▶│ API Gateway  │─────▶│   File Service   │          │
-│  │  (Sync)  │      └──────────────┘      └────────┬─────────┘          │
-│  └──────────┘                                      │                    │
-│                                           ┌────────┴────────┐           │
-│                                           │                 │           │
-│                                    ┌──────▼──────┐   ┌──────▼──────┐   │
-│                                    │  Metadata   │   │  File Store │   │
-│                                    │     DB      │   │    (S3)     │   │
-│                                    └─────────────┘   └─────────────┘   │
-│                                                                         │
-│  SYNC PROCESS:                                                          │
-│  1. Poll server for changes every 30 seconds                           │
-│  2. Download entire changed files                                      │
-│  3. Upload entire modified files                                       │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Entire file uploaded/downloaded on any change',
           'Polling wastes bandwidth when no changes',
@@ -5976,68 +5776,7 @@ Changes are pushed through notification service, client then fetches full delta.
         title: 'Production Architecture',
         diagramSrc: '/diagrams/dropbox/impl-advanced.png',
         svgTemplate: 'dropboxAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           DROPBOX PRODUCTION                                     │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│  CLIENT (Desktop/Mobile)                                                        │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌───────────┐  │        │
-│  │  │ File Watcher│  │Block Chunker│  │  Local DB   │  │Sync Engine│  │        │
-│  │  │ (inotify)   │  │(4MB blocks) │  │(SQLite)     │  │           │  │        │
-│  │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └─────┬─────┘  │        │
-│  │         └────────────────┴────────────────┴───────────────┘        │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                      │                                           │
-│                                      ▼                                           │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                            API GATEWAY                               │        │
-│  │    Load Balancer → Auth → Rate Limit → Route to Service             │        │
-│  └────────────────────────────────────┬────────────────────────────────┘        │
-│                                       │                                          │
-│     ┌─────────────────────────────────┼─────────────────────────────────┐       │
-│     │                                 │                                  │       │
-│     ▼                                 ▼                                  ▼       │
-│  ┌──────────────┐            ┌──────────────┐               ┌────────────────┐  │
-│  │ Block Server │            │Metadata Svc  │               │ Notification   │  │
-│  │              │            │              │               │    Service     │  │
-│  │ - Upload     │            │- File tree   │               │                │  │
-│  │ - Download   │            │- Versions    │               │ - Long polling │  │
-│  │ - Dedup check│            │- Permissions │               │ - WebSocket    │  │
-│  └──────┬───────┘            └──────┬───────┘               └────────────────┘  │
-│         │                           │                                            │
-│         ▼                           ▼                                            │
-│  ┌──────────────┐            ┌──────────────┐                                   │
-│  │ Block Store  │            │ Metadata DB  │                                   │
-│  │    (S3)      │            │  (Postgres)  │                                   │
-│  │              │            │              │                                   │
-│  │Content-addr- │            │- Sharded by  │                                   │
-│  │essed storage │            │  userId      │                                   │
-│  │              │            │- Versioned   │                                   │
-│  └──────────────┘            └──────────────┘                                   │
-│                                                                                  │
-│  SYNC FLOW                                                                      │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  1. File change detected → compute block hashes                      │        │
-│  │  2. Send hashes to server → receive missing block list              │        │
-│  │  3. Upload only missing blocks (dedup!)                              │        │
-│  │  4. Commit file metadata with new block list                        │        │
-│  │  5. Notification service pushes change to other devices             │        │
-│  │  6. Other devices sync only changed blocks                          │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  DEDUPLICATION                                                                  │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  Block Hash: SHA-256 of block content                               │        │
-│  │  Same content → Same hash → Stored once globally                    │        │
-│  │                                                                      │        │
-│  │  Example: 1M users upload same PDF                                  │        │
-│  │           → Stored ONCE, referenced 1M times                        │        │
-│  │           → Massive storage savings                                 │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Block-level sync: 4MB chunks, only upload changed blocks',
           'Content-addressed storage: SHA-256 hash as block ID',
@@ -6718,36 +6457,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
         description: 'Simple streaming with single CDN',
         diagramSrc: '/diagrams/netflix/impl-basic.png',
         svgTemplate: 'netflix',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────┐
-│                            NETFLIX BASIC                                │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌──────────┐      ┌──────────────┐      ┌──────────────────┐          │
-│  │  Client  │─────▶│ API Gateway  │─────▶│   App Server     │          │
-│  └──────────┘      └──────────────┘      └────────┬─────────┘          │
-│       │                                           │                     │
-│       │                               ┌───────────┴───────────┐        │
-│       │                               │                       │        │
-│       │                        ┌──────▼──────┐        ┌───────▼──────┐ │
-│       │                        │ Content DB  │        │ User DB      │ │
-│       │                        │ (Postgres)  │        │ (Postgres)   │ │
-│       │                        └─────────────┘        └──────────────┘ │
-│       │                                                                 │
-│       │            ┌─────────────────────────────────────┐             │
-│       └───────────▶│              CDN                     │◀──┐        │
-│         (stream)   │     (Third-party: Akamai)           │   │        │
-│                    └─────────────────────────────────────┘   │        │
-│                                                               │        │
-│                                               ┌───────────────┘        │
-│                                               │                        │
-│                                        ┌──────▼──────┐                 │
-│                                        │  Video      │                 │
-│                                        │  Storage    │                 │
-│                                        │    (S3)     │                 │
-│                                        └─────────────┘                 │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Third-party CDN is expensive at scale',
           'Limited control over edge placement',
@@ -6761,72 +6471,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
         title: 'Production Architecture',
         diagramSrc: '/diagrams/netflix/impl-advanced.png',
         svgTemplate: 'netflixAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           NETFLIX PRODUCTION                                     │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│  CONTROL PLANE (AWS)                                                            │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  ┌──────────┐  ┌───────────┐  ┌────────────┐  ┌────────────────┐   │        │
-│  │  │ API Svc  │  │Browse Svc │  │Playback Svc│  │Recommendation  │   │        │
-│  │  └────┬─────┘  └─────┬─────┘  └──────┬─────┘  │   Service      │   │        │
-│  │       │              │               │         └────────────────┘   │        │
-│  │       └──────────────┴───────────────┘                              │        │
-│  │                      │                                               │        │
-│  │  ┌───────────────────▼────────────────────────────────────────┐    │        │
-│  │  │                    DATA LAYER                               │    │        │
-│  │  │  ┌─────────┐  ┌──────────┐  ┌──────────┐  ┌────────────┐   │    │        │
-│  │  │  │Cassandra│  │   EVCache│  │Elasticsearch│  │  Kafka  │   │    │        │
-│  │  │  │(history)│  │  (cache) │  │  (search)  │  │(events) │   │    │        │
-│  │  │  └─────────┘  └──────────┘  └──────────┘  └────────────┘   │    │        │
-│  │  └────────────────────────────────────────────────────────────┘    │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  DATA PLANE (Open Connect CDN)                                                  │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  CLIENT ──▶ ISP OCA ──▶ IXP OCA ──▶ Regional ──▶ Origin (S3)       │        │
-│  │    │          │            │                                         │        │
-│  │    │    ┌─────┴────┐  ┌────┴────┐                                   │        │
-│  │    │    │ 95% hit  │  │ 4% hit  │  (1% goes to origin)             │        │
-│  │    │    │ rate     │  │ rate    │                                   │        │
-│  │    │    └──────────┘  └─────────┘                                   │        │
-│  │    │                                                                 │        │
-│  │    └── Adaptive Bitrate Selection                                   │        │
-│  │        - Measure bandwidth continuously                              │        │
-│  │        - Switch quality mid-stream                                   │        │
-│  │        - Buffer 30-60 seconds ahead                                  │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  CONTENT PIPELINE                                                               │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  Master ──▶ Encoding ──▶ Quality Check ──▶ Encryption ──▶ Deploy   │        │
-│  │    │           │              │                │             │       │        │
-│  │    │     Multiple         Automated        DRM (Widevine,    │       │        │
-│  │    │     bitrates         testing         PlayReady)       │       │        │
-│  │    │     & codecs                                     ▼       │        │
-│  │    │                                          ┌────────────┐  │        │
-│  │    └── 8K Master                             │Predictive  │  │        │
-│  │        10+ encoded versions                  │Placement   │  │        │
-│  │        (144p to 4K HDR)                     │Algorithm   │  │        │
-│  │                                              └────────────┘  │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  RECOMMENDATION ENGINE                                                          │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  Watch Events ──▶ Spark/Flink ──▶ Feature Store ──▶ ML Models     │        │
-│  │                                                         │            │        │
-│  │                                      ┌──────────────────┘            │        │
-│  │                                      ▼                               │        │
-│  │                              ┌──────────────┐                       │        │
-│  │                              │ Personalized │                       │        │
-│  │                              │  Rankings    │                       │        │
-│  │                              │ + Artwork    │                       │        │
-│  │                              └──────────────┘                       │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Open Connect CDN: 17,000+ edge servers at ISPs worldwide',
           'Control/Data plane separation: AWS for logic, Open Connect for video',
@@ -8118,65 +7763,7 @@ cart {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/ecommerce-platform/impl-advanced.png',
         svgTemplate: 'ecommerceAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           AMAZON PRODUCTION                                      │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                         API GATEWAY                                  │        │
-│  │    Auth → Rate Limit → Route → Load Balance                         │        │
-│  └────────────────────────────────┬────────────────────────────────────┘        │
-│                                   │                                              │
-│     ┌────────────┬────────────────┼────────────────┬─────────────┐              │
-│     │            │                │                │             │              │
-│     ▼            ▼                ▼                ▼             ▼              │
-│  ┌──────┐   ┌────────┐    ┌──────────┐    ┌───────────┐   ┌──────────┐         │
-│  │Search│   │Product │    │   Cart   │    │  Order    │   │ Payment  │         │
-│  │ Svc  │   │  Svc   │    │   Svc    │    │   Svc     │   │   Svc    │         │
-│  └──┬───┘   └───┬────┘    └────┬─────┘    └─────┬─────┘   └────┬─────┘         │
-│     │           │              │                │              │                │
-│     ▼           ▼              ▼                ▼              ▼                │
-│  ┌──────┐   ┌────────┐    ┌────────┐    ┌──────────┐    ┌──────────┐           │
-│  │Elastic│   │Product │    │ Redis  │    │Order DB  │    │Payment   │           │
-│  │search │   │  DB    │    │(Cart)  │    │(Postgres)│    │Gateway   │           │
-│  └──────┘   └────────┘    └────────┘    └──────────┘    └──────────┘           │
-│                                                                                  │
-│  INVENTORY SERVICE                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  ┌──────────────┐     ┌────────────┐     ┌───────────────┐         │        │
-│  │  │ Inventory DB │◀───│ Inventory  │◀───│  Reservation   │         │        │
-│  │  │  (Postgres)  │     │  Service   │     │    Queue       │         │        │
-│  │  │              │     │            │     │   (SQS)        │         │        │
-│  │  │ Partitioned  │     │ Optimistic │     │               │         │        │
-│  │  │ by warehouse │     │  Locking   │     │               │         │        │
-│  │  └──────────────┘     └────────────┘     └───────────────┘         │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  CHECKOUT SAGA (Orchestrator Pattern)                                           │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │   ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐        │        │
-│  │   │ Reserve │───▶│ Charge  │───▶│ Create  │───▶│ Notify  │        │        │
-│  │   │Inventory│    │ Payment │    │  Order  │    │  User   │        │        │
-│  │   └────┬────┘    └────┬────┘    └────┬────┘    └─────────┘        │        │
-│  │        │              │              │                             │        │
-│  │        ▼              ▼              ▼                             │        │
-│  │   (compensate)   (compensate)   (compensate)                      │        │
-│  │    Release        Refund        Cancel order                      │        │
-│  │                                                                      │        │
-│  │   State machine tracks progress, handles retries & compensations   │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  EVENT BUS (Kafka)                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  order.created ──▶ Inventory, Shipping, Analytics, Recommendation  │        │
-│  │  payment.completed ──▶ Order, Notification                         │        │
-│  │  inventory.low ──▶ Procurement, Alerting                           │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Microservices: Each domain has own database and scales independently',
           'Saga pattern: Distributed transactions with compensation',
@@ -8960,26 +8547,7 @@ presence {
         description: 'Simple last-write-wins without real-time collaboration',
         diagramSrc: '/diagrams/google-docs/impl-basic.png',
         svgTemplate: 'googleDocs',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────┐
-│                          GOOGLE DOCS BASIC                              │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌──────────┐      ┌──────────────┐      ┌──────────────────┐          │
-│  │  Client  │─────▶│ API Gateway  │─────▶│  Doc Service     │          │
-│  └──────────┘      └──────────────┘      └────────┬─────────┘          │
-│                                                    │                    │
-│  EDITING:                                 ┌────────▼─────────┐          │
-│  1. Load document                         │    PostgreSQL    │          │
-│  2. Edit locally                          │                  │          │
-│  3. Save entire document                  │  - Documents     │          │
-│  4. Overwrite what's in DB                │  - Content       │          │
-│                                           │                  │          │
-│  PROBLEM: User A and B both editing       └──────────────────┘          │
-│           A saves → B saves                                             │
-│           A's changes are lost!                                         │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Last-write-wins causes data loss',
           'No real-time collaboration',
@@ -8993,71 +8561,7 @@ presence {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/google-docs/impl-advanced.png',
         svgTemplate: 'googleDocsAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           GOOGLE DOCS PRODUCTION                                 │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│  CLIENTS                                                                        │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐                          │        │
-│  │  │ Client A │  │ Client B │  │ Client C │  ... (up to 100)         │        │
-│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘                          │        │
-│  │       │              │              │                               │        │
-│  │       └──────────────┼──────────────┘                               │        │
-│  │                      │ WebSocket                                    │        │
-│  │                      ▼                                               │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  COLLABORATION LAYER                                                            │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  ┌────────────────────────────────────────────────────────┐         │        │
-│  │  │              WebSocket Gateway                          │         │        │
-│  │  │   (Sticky sessions per document via consistent hash)   │         │        │
-│  │  └────────────────────────┬───────────────────────────────┘         │        │
-│  │                           │                                          │        │
-│  │  ┌────────────────────────▼───────────────────────────────┐         │        │
-│  │  │            Collaboration Server (per document)          │         │        │
-│  │  │                                                          │         │        │
-│  │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐ │         │        │
-│  │  │  │ OT Engine   │  │  Presence   │  │  Op Buffer      │ │         │        │
-│  │  │  │             │  │  Manager    │  │  (in-memory)    │ │         │        │
-│  │  │  │- Transform  │  │             │  │                 │ │         │        │
-│  │  │  │- Compose    │  │- Cursors    │  │- Recent ops     │ │         │        │
-│  │  │  │- Apply      │  │- Selections │  │- For new joins  │ │         │        │
-│  │  │  └─────────────┘  └─────────────┘  └─────────────────┘ │         │        │
-│  │  └────────────────────────────────────────────────────────┘         │        │
-│  │                           │                                          │        │
-│  └───────────────────────────┼──────────────────────────────────────────┘        │
-│                              │                                                   │
-│  PERSISTENCE LAYER           │                                                   │
-│  ┌───────────────────────────┼──────────────────────────────────────────┐       │
-│  │                           ▼                                           │       │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │       │
-│  │  │ Operation    │  │  Snapshot    │  │  Document    │               │       │
-│  │  │    Log       │  │   Store      │  │   Metadata   │               │       │
-│  │  │ (Cassandra)  │  │    (GCS)     │  │  (Spanner)   │               │       │
-│  │  │              │  │              │  │              │               │       │
-│  │  │- All ops     │  │- Periodic    │  │- Ownership   │               │       │
-│  │  │- For history │  │  snapshots   │  │- Sharing     │               │       │
-│  │  │- Replay      │  │- Quick load  │  │- Permissions │               │       │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘               │       │
-│  └───────────────────────────────────────────────────────────────────────┘       │
-│                                                                                  │
-│  OPERATION FLOW                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  1. Client sends operation with baseRevision                        │        │
-│  │  2. Server checks: is baseRevision current?                         │        │
-│  │     - Yes: Apply directly, broadcast to all clients                 │        │
-│  │     - No: Transform against ops since baseRevision                 │        │
-│  │  3. Assign new revision number, persist to op log                  │        │
-│  │  4. Broadcast transformed op to all connected clients              │        │
-│  │  5. Each client transforms its pending ops against received op     │        │
-│  │  6. All clients converge to same document state                    │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'OT engine: Transforms concurrent operations for consistency',
           'Sticky WebSocket: All clients for a doc connect to same server',
@@ -9831,28 +9335,7 @@ Step 2 — Merchant payout:
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Simple payment processing without compliance isolation',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         PAYMENT SYSTEM BASIC                            │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌──────────┐      ┌──────────────┐      ┌──────────────────┐          │
-│  │  Client  │─────▶│   API Server │─────▶│   Payment DB     │          │
-│  └──────────┘      └──────┬───────┘      └──────────────────┘          │
-│                           │                                             │
-│                           │                                             │
-│                    ┌──────▼───────┐                                    │
-│                    │  Card Network │                                    │
-│                    │ (Visa, MC)    │                                    │
-│                    └───────────────┘                                    │
-│                                                                         │
-│  PROBLEMS:                                                              │
-│  - Card data stored in main DB (PCI violation)                         │
-│  - No idempotency (double charges possible)                            │
-│  - Single database = single point of failure                           │
-│  - No fraud detection                                                  │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Card data in main database (PCI violation)',
           'No idempotency - retries cause double charges',
@@ -9866,82 +9349,7 @@ Step 2 — Merchant payout:
         title: 'Production Architecture',
         diagramSrc: '/diagrams/payment-system/impl-advanced.png',
         svgTemplate: 'paymentAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           PAYMENT SYSTEM PRODUCTION                              │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│  CLIENT SIDE                                                                    │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  ┌──────────┐                       ┌───────────────┐               │        │
-│  │  │ Checkout │── Card Data ────────▶│  Stripe.js    │               │        │
-│  │  │   Form   │                       │ (Tokenization)│               │        │
-│  │  └──────────┘                       └───────┬───────┘               │        │
-│  │                                             │ (pm_xxx token)        │        │
-│  │       ┌─────────────────────────────────────┘                       │        │
-│  │       ▼                                                              │        │
-│  │  ┌────────────┐                                                     │        │
-│  │  │ Merchant   │── Token only (no card data) ────────────────────▶  │        │
-│  │  │  Server    │                                                     │        │
-│  │  └────────────┘                                                     │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  STRIPE INFRASTRUCTURE                                                          │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │  ┌─────────────────────────────────────────────────────────────┐    │        │
-│  │  │                      API GATEWAY                             │    │        │
-│  │  │   Auth → Rate Limit → Idempotency → Route                   │    │        │
-│  │  └────────────────────────────┬────────────────────────────────┘    │        │
-│  │                               │                                      │        │
-│  │     ┌─────────────────────────┼──────────────────────────────┐      │        │
-│  │     ▼                         ▼                              ▼      │        │
-│  │  ┌────────┐            ┌────────────┐               ┌────────────┐  │        │
-│  │  │Payment │            │   Fraud    │               │   Ledger   │  │        │
-│  │  │Service │◀──────────▶│  Service   │               │  Service   │  │        │
-│  │  └───┬────┘            └────────────┘               └──────┬─────┘  │        │
-│  │      │                                                      │        │        │
-│  │      │                   CARDHOLDER DATA ENV (PCI)          │        │        │
-│  │      │    ┌──────────────────────────────────────────┐     │        │        │
-│  │      │    │                                          │     │        │        │
-│  │      └───▶│  ┌──────────┐         ┌──────────┐      │     │        │        │
-│  │           │  │   Token  │────────▶│   Card   │      │     │        │        │
-│  │           │  │  Service │         │   Vault  │      │     │        │        │
-│  │           │  └────┬─────┘         │   (HSM)  │      │     │        │        │
-│  │           │       │               └──────────┘      │     │        │        │
-│  │           │       ▼                                  │     │        │        │
-│  │           │  ┌──────────────┐                       │     │        │        │
-│  │           │  │ Card Network │                       │     │        │        │
-│  │           │  │ Integration  │                       │     │        │        │
-│  │           │  │(Visa/MC/Amex)│                       │     │        │        │
-│  │           │  └──────────────┘                       │     │        │        │
-│  │           └──────────────────────────────────────────┘     │        │        │
-│  │                                                            │        │        │
-│  │  ┌────────────────────────────────────────────────────────┴──┐     │        │
-│  │  │                     LEDGER DATABASE                        │     │        │
-│  │  │  Double-entry bookkeeping for all money movements         │     │        │
-│  │  │  ┌─────────────────────────────────────────────────────┐  │     │        │
-│  │  │  │ Every payment:                                       │  │     │        │
-│  │  │  │   DEBIT  stripe_balance    $100                     │  │     │        │
-│  │  │  │   CREDIT customer_payable  $100                     │  │     │        │
-│  │  │  └─────────────────────────────────────────────────────┘  │     │        │
-│  │  └────────────────────────────────────────────────────────────┘     │        │
-│  │                                                                      │        │
-│  └──────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  FRAUD DETECTION                                                                │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  Real-time scoring on every payment:                                │        │
-│  │  - Velocity checks (too many payments from same card)              │        │
-│  │  - Location anomalies (card used in different country)             │        │
-│  │  - Amount patterns (unusual purchase amount)                       │        │
-│  │  - Device fingerprinting                                           │        │
-│  │  - ML models trained on chargeback data                            │        │
-│  │                                                                      │        │
-│  │  Actions: Block, 3DS challenge, flag for review                    │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Client-side tokenization: Card data never touches merchant server',
           'PCI-isolated vault: Card numbers stored in HSM-backed vault',
@@ -10696,16 +10104,7 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
         description: 'Query → Search Service → Elasticsearch with index shards for parallel query processing',
         diagramSrc: '/diagrams/search-engine/impl-basic.png',
         svgTemplate: 'searchEngine',
-        architecture: `
-│ └───────┘      └───────┘       └───────┘       └───────┘       │
-│            │                                                     │
-│            ▼                                                     │
-│   ┌─────────────────┐                                            │
-│   │  Result Merger  │                                            │
-│   │  (Top K, Rank)  │                                            │
-│   └─────────────────┘                                            │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Single datacenter = high latency for distant users',
           'No query caching',
@@ -10718,63 +10117,7 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
         title: 'Production Search Architecture',
         diagramSrc: '/diagrams/search-engine/impl-advanced.png',
         svgTemplate: 'searchEngineAdvanced',
-        architecture: `
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                    Google-Scale Search Architecture                           │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                        CRAWLING PIPELINE                             │    │
-│  │  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐      │    │
-│  │  │   URL    │───▶│  Crawl   │───▶│  Parser  │───▶│  Index   │      │    │
-│  │  │ Frontier │    │ Workers  │    │ (Extract)│    │ Builder  │      │    │
-│  │  └──────────┘    └──────────┘    └──────────┘    └──────────┘      │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                         │                                    │
-│                                         ▼                                    │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                     DISTRIBUTED INDEX (100+ PB)                      │    │
-│  │  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐               │    │
-│  │  │   Hot Tier  │   │  Warm Tier  │   │  Cold Tier  │               │    │
-│  │  │  (Memory)   │   │   (SSD)     │   │   (Disk)    │               │    │
-│  │  │ Top 1% docs │   │ Next 10%   │   │  Long tail  │               │    │
-│  │  └─────────────┘   └─────────────┘   └─────────────┘               │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                        SERVING LAYER                                 │    │
-│  │                                                                      │    │
-│  │      ┌─────────────────────────────────────────────────────────┐    │    │
-│  │      │                    QUERY FRONTEND                        │    │    │
-│  │      │   ┌────────┐  ┌─────────┐  ┌────────┐  ┌────────────┐   │    │    │
-│  │      │   │ Parse  │─▶│ Spell   │─▶│ Expand │─▶│  Intent    │   │    │    │
-│  │      │   │ Query  │  │ Check   │  │ Query  │  │ Detection  │   │    │    │
-│  │      │   └────────┘  └─────────┘  └────────┘  └────────────┘   │    │    │
-│  │      └──────────────────────────────┬──────────────────────────┘    │    │
-│  │                                     │                               │    │
-│  │   Query Cache ◀─────────────────────┤                               │    │
-│  │   (60% hit)                         │                               │    │
-│  │                                     ▼                               │    │
-│  │      ┌─────────────────────────────────────────────────────────┐    │    │
-│  │      │              INDEX SERVERS (1000s)                       │    │    │
-│  │      │  ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐      │    │    │
-│  │      │  │Shard 1│ │Shard 2│ │Shard 3│ │  ...  │ │Shard N│      │    │    │
-│  │      │  └───┬───┘ └───┬───┘ └───┬───┘ └───┬───┘ └───┬───┘      │    │    │
-│  │      └──────┼─────────┼─────────┼─────────┼─────────┼──────────┘    │    │
-│  │             └─────────┴─────────┴─────────┴─────────┘               │    │
-│  │                                     │                               │    │
-│  │                                     ▼                               │    │
-│  │      ┌─────────────────────────────────────────────────────────┐    │    │
-│  │      │                   RANKING PIPELINE                       │    │    │
-│  │      │   ┌────────┐   ┌──────────┐   ┌──────────────────────┐  │    │    │
-│  │      │   │Stage 1 │──▶│ Stage 2  │──▶│     Stage 3          │  │    │    │
-│  │      │   │BM25+PR │   │ML Ranker │   │ Personalization+Ads  │  │    │    │
-│  │      │   │(10K)   │   │ (1K)     │   │      (100)           │  │    │    │
-│  │      │   └────────┘   └──────────┘   └──────────────────────┘  │    │    │
-│  │      └─────────────────────────────────────────────────────────┘    │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Tiered index: Hot (1% in memory), warm (10% on SSD), cold (disk)',
           'Document-partitioned sharding across 1000s of servers',
@@ -11412,63 +10755,7 @@ const userTime = convertToTimezone(now(), user.timezone);
         title: 'Production Notification Architecture',
         diagramSrc: '/diagrams/notification-system/impl-advanced.png',
         svgTemplate: 'notificationAdvanced',
-        architecture: `
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                    Production Notification System                             │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │                          INGESTION LAYER                               │  │
-│  │  ┌──────────┐    ┌────────────────┐    ┌────────────────────┐         │  │
-│  │  │   API    │───▶│  Validation &  │───▶│   Priority Router   │         │  │
-│  │  │ Gateway  │    │  Preference    │    │                    │         │  │
-│  │  └──────────┘    │    Check       │    └────────┬───────────┘         │  │
-│  │                  └────────────────┘             │                      │  │
-│  └─────────────────────────────────────────────────┼──────────────────────┘  │
-│                                                    │                         │
-│  ┌─────────────────────────────────────────────────┼──────────────────────┐  │
-│  │                      QUEUE LAYER (Kafka)        │                      │  │
-│  │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐           │  │
-│  │  │  URGENT Queue  │  │  NORMAL Queue  │  │  BATCH Queue   │           │  │
-│  │  │  (P0 - OTP)    │  │ (P1 - Updates) │  │ (P2 - Marketing)│           │  │
-│  │  │  100 partitions│  │ 50 partitions  │  │ 20 partitions  │           │  │
-│  │  └───────┬────────┘  └───────┬────────┘  └───────┬────────┘           │  │
-│  └──────────┼───────────────────┼───────────────────┼────────────────────┘  │
-│             │                   │                   │                        │
-│  ┌──────────┼───────────────────┼───────────────────┼────────────────────┐  │
-│  │          ▼                   ▼                   ▼                    │  │
-│  │  ┌────────────────────────────────────────────────────────────────┐  │  │
-│  │  │                    WORKER POOLS (Auto-scaling)                  │  │  │
-│  │  │  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐           │  │  │
-│  │  │  │Push Workers │   │Email Workers│   │ SMS Workers │           │  │  │
-│  │  │  │   (100)     │   │    (50)     │   │    (20)     │           │  │  │
-│  │  │  └──────┬──────┘   └──────┬──────┘   └──────┬──────┘           │  │  │
-│  │  └─────────┼─────────────────┼─────────────────┼──────────────────┘  │  │
-│  │            │                 │                 │                     │  │
-│  │  ┌─────────┼─────────────────┼─────────────────┼──────────────────┐  │  │
-│  │  │         ▼                 ▼                 ▼                  │  │  │
-│  │  │  ┌─────────────────────────────────────────────────────────┐  │  │  │
-│  │  │  │              PROVIDER ABSTRACTION LAYER                  │  │  │  │
-│  │  │  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐        │  │  │  │
-│  │  │  │  │   FCM   │ │  APNS   │ │SendGrid │ │ Twilio  │        │  │  │  │
-│  │  │  │  │(Primary)│ │(Primary)│ │(Primary)│ │(Primary)│        │  │  │  │
-│  │  │  │  └─────────┘ └─────────┘ └─────────┘ └─────────┘        │  │  │  │
-│  │  │  │  ┌─────────┐             ┌─────────┐ ┌─────────┐        │  │  │  │
-│  │  │  │  │  Expo   │             │ Mailgun │ │  Nexmo  │        │  │  │  │
-│  │  │  │  │(Backup) │             │ (Backup)│ │ (Backup)│        │  │  │  │
-│  │  │  │  └─────────┘             └─────────┘ └─────────┘        │  │  │  │
-│  │  │  └─────────────────────────────────────────────────────────┘  │  │  │
-│  │  └───────────────────────────────────────────────────────────────┘  │  │
-│  └─────────────────────────────────────────────────────────────────────┘  │
-│                                                                           │
-│  ┌───────────────────────────────────────────────────────────────────────┐│
-│  │                      SUPPORTING SERVICES                               ││
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐      ││
-│  │  │ Template   │  │ Preference │  │  Analytics │  │ Dead Letter│      ││
-│  │  │  Service   │  │  Service   │  │  Service   │  │   Queue    │      ││
-│  │  └────────────┘  └────────────┘  └────────────┘  └────────────┘      ││
-│  └───────────────────────────────────────────────────────────────────────┘│
-└──────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Priority queues with different worker pool sizes',
           'Kafka partitions for horizontal scaling',
@@ -12138,33 +11425,7 @@ Rules evaluated in order: specific overrides general.
         description: 'Single server rate limiting with Redis',
         diagramSrc: '/diagrams/rate-limiter/impl-basic.png',
         svgTemplate: 'distributedRateLimiter',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────┐
-│                     Basic Rate Limiter                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   ┌──────────┐        ┌──────────────┐       ┌──────────────┐  │
-│   │  Client  │───────▶│  API Server  │──────▶│   Backend    │  │
-│   └──────────┘        └──────────────┘       │   Service    │  │
-│                              │               └──────────────┘  │
-│                              │                                  │
-│                              ▼                                  │
-│                       ┌──────────────┐                         │
-│                       │    Redis     │                         │
-│                       │   (Single)   │                         │
-│                       │              │                         │
-│                       │ Token Bucket │                         │
-│                       │    State     │                         │
-│                       └──────────────┘                         │
-│                                                                 │
-│   Request Flow:                                                 │
-│   1. Request arrives at API server                              │
-│   2. Extract rate limit key (user_id, IP, API key)             │
-│   3. Execute Lua script on Redis (atomic check)                │
-│   4. If allowed: forward to backend                            │
-│   5. If denied: return 429 Too Many Requests                   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Single point of failure (Redis)',
           'Single server bottleneck',
@@ -12178,74 +11439,7 @@ Rules evaluated in order: specific overrides general.
         title: 'Production Distributed Rate Limiter',
         diagramSrc: '/diagrams/rate-limiter/impl-advanced.png',
         svgTemplate: 'rateLimiterDistributed',
-        architecture: `
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                    Production Rate Limiter Architecture                       │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────┐                                                             │
-│  │   Clients   │                                                             │
-│  └──────┬──────┘                                                             │
-│         │                                                                    │
-│         ▼                                                                    │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                         CDN / Edge                                   │    │
-│  │                    (First-line rate limiting)                        │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│         │                                                                    │
-│         ▼                                                                    │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                      Load Balancer (L7)                              │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│         │                                                                    │
-│         ▼                                                                    │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │                        API Gateway Cluster                            │   │
-│  │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐               │   │
-│  │  │  Gateway 1  │    │  Gateway 2  │    │  Gateway 3  │               │   │
-│  │  │             │    │             │    │             │               │   │
-│  │  │ Local Cache │    │ Local Cache │    │ Local Cache │               │   │
-│  │  │  (Rules +   │    │  (Rules +   │    │  (Rules +   │               │   │
-│  │  │  Hot Keys)  │    │  Hot Keys)  │    │  Hot Keys)  │               │   │
-│  │  └──────┬──────┘    └──────┬──────┘    └──────┬──────┘               │   │
-│  └─────────┼─────────────────┼─────────────────┼────────────────────────┘   │
-│            │                 │                 │                             │
-│            └─────────────────┼─────────────────┘                             │
-│                              ▼                                               │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │                      Redis Cluster (6 nodes)                          │   │
-│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐                               │   │
-│  │  │Primary 1│  │Primary 2│  │Primary 3│   ← Sharded by key hash       │   │
-│  │  └────┬────┘  └────┬────┘  └────┬────┘                               │   │
-│  │       │            │            │                                     │   │
-│  │  ┌────┴────┐  ┌────┴────┐  ┌────┴────┐                               │   │
-│  │  │Replica 1│  │Replica 2│  │Replica 3│   ← Automatic failover        │   │
-│  │  └─────────┘  └─────────┘  └─────────┘                               │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                              │                                               │
-│            ┌─────────────────┼─────────────────┐                            │
-│            ▼                 ▼                 ▼                            │
-│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐                    │
-│  │   Backend    │   │   Backend    │   │   Backend    │                    │
-│  │  Service 1   │   │  Service 2   │   │  Service 3   │                    │
-│  └──────────────┘   └──────────────┘   └──────────────┘                    │
-│                                                                              │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │                      Config & Monitoring                              │   │
-│  │  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐                 │   │
-│  │  │   Config    │   │  CloudWatch │   │   Admin     │                 │   │
-│  │  │   Service   │──▶│    Logs     │   │ Dashboard   │                 │   │
-│  │  │  (Rules)    │   └─────────────┘   └─────────────┘                 │   │
-│  │  └──────┬──────┘                                                      │   │
-│  │         │                                                             │   │
-│  │         ▼                                                             │   │
-│  │  ┌─────────────┐                                                      │   │
-│  │  │ SNS/Lambda  │ ← Real-time rule propagation                        │   │
-│  │  │  (Updates)  │                                                      │   │
-│  │  └─────────────┘                                                      │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Edge rate limiting at CDN for DDoS protection',
           'Redis Cluster with 3 primaries + 3 replicas',
@@ -12960,27 +12154,7 @@ queue_positions {
         description: 'Simple booking without queue or advanced locking',
         diagramSrc: '/diagrams/ticketmaster/impl-basic.png',
         svgTemplate: 'ticketBooking',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         TICKETMASTER BASIC                              │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌──────────┐      ┌──────────────┐      ┌──────────────────┐          │
-│  │  Client  │─────▶│ Load Balancer│─────▶│   App Server     │          │
-│  └──────────┘      └──────────────┘      └────────┬─────────┘          │
-│                                                    │                    │
-│  BOOKING FLOW:                            ┌────────▼─────────┐          │
-│  1. View seats (no lock)                  │    PostgreSQL    │          │
-│  2. Click "Buy"                           │   - Events       │          │
-│  3. Payment form                          │   - Seats        │          │
-│  4. Submit payment                        │   - Bookings     │          │
-│  5. Update seat status                    └──────────────────┘          │
-│                                                                         │
-│  PROBLEM: Two users can buy same seat                                  │
-│           Both see "available", both submit payment                    │
-│           Last write wins OR duplicate booking                         │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Race condition: Multiple users can select same seat',
           'No protection during checkout process',
@@ -12994,87 +12168,7 @@ queue_positions {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/ticketmaster/impl-advanced.png',
         svgTemplate: 'ticketmasterAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           TICKETMASTER PRODUCTION                                │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│  TRAFFIC MANAGEMENT                                                             │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  ┌──────────┐                                                        │        │
-│  │  │ 14M Users│                                                        │        │
-│  │  └────┬─────┘                                                        │        │
-│  │       │                                                              │        │
-│  │       ▼                                                              │        │
-│  │  ┌──────────────────────────────────────────────────────────┐       │        │
-│  │  │               VIRTUAL WAITING ROOM                        │       │        │
-│  │  │                                                           │       │        │
-│  │  │   ┌─────────┐  ┌─────────┐  ┌─────────┐                 │       │        │
-│  │  │   │Position │  │Position │  │Position │  ... 14M        │       │        │
-│  │  │   │   1     │  │   2     │  │   3     │                 │       │        │
-│  │  │   └────┬────┘  └────┬────┘  └────┬────┘                 │       │        │
-│  │  │        │            │            │                       │       │        │
-│  │  │        └────────────┼────────────┘                       │       │        │
-│  │  │                     ▼                                     │       │        │
-│  │  │   Let through: 100 users/second (controlled rate)        │       │        │
-│  │  └───────────────────────────────────────────────────────────┘       │        │
-│  │                        │                                              │        │
-│  │                        ▼                                              │        │
-│  │  ┌───────────────────────────────────────────────────────────┐       │        │
-│  │  │                SHOPPING EXPERIENCE                         │       │        │
-│  │  │            (10K concurrent shoppers max)                   │       │        │
-│  │  └───────────────────────────────────────────────────────────┘       │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  SEAT SELECTION & BOOKING                                                       │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │    ┌──────────┐         ┌──────────────┐        ┌──────────────┐   │        │
-│  │    │ Seat Map │────────▶│ Seat Service │───────▶│    Redis     │   │        │
-│  │    │(Cached)  │         │              │        │  (Seat Locks) │   │        │
-│  │    └──────────┘         └──────┬───────┘        │              │   │        │
-│  │                                │                │  SETNX       │   │        │
-│  │                                │                │  seat:123 →  │   │        │
-│  │                                │                │  userId:456  │   │        │
-│  │                                │                │  TTL: 15min  │   │        │
-│  │                                │                └──────────────┘   │        │
-│  │                                ▼                                    │        │
-│  │                      ┌──────────────────┐                          │        │
-│  │                      │    PostgreSQL    │                          │        │
-│  │                      │                  │                          │        │
-│  │                      │ UPDATE seats     │                          │        │
-│  │                      │ SET status=SOLD  │                          │        │
-│  │                      │ WHERE id=123     │                          │        │
-│  │                      │ AND status=HELD  │                          │        │
-│  │                      │ AND version=X    │                          │        │
-│  │                      └──────────────────┘                          │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  HOLD & CHECKOUT FLOW                                                           │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                                                                      │        │
-│  │   SELECT SEATS ──▶ HOLD (10min) ──▶ PAYMENT ──▶ CONFIRM            │        │
-│  │        │               │              │             │                │        │
-│  │        │          Redis lock     Payment API    Update DB          │        │
-│  │        │          with TTL       (Stripe)       Release lock       │        │
-│  │        │               │              │             │                │        │
-│  │        │          Auto-release    Idempotent    Create ticket      │        │
-│  │        │          on timeout      with holdId   with barcode       │        │
-│  │        │                                                            │        │
-│  │   RELEASE ◀─────────── (if timeout or cancel) ◀────────────────    │        │
-│  │                                                                      │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-│  REAL-TIME UPDATES                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  Seat status changes ──▶ Redis Pub/Sub ──▶ WebSocket ──▶ Clients  │        │
-│  │                                                                      │        │
-│  │  - Seat sold/released: Update map in <500ms                        │        │
-│  │  - Queue position: Update every 10 seconds                         │        │
-│  │  - Hold expiry countdown: Client-side timer                        │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Virtual waiting room: Queue absorbs traffic spikes',
           'Controlled admission: Only N users shopping at once',
@@ -13577,26 +12671,7 @@ Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (
         description: 'In-memory trie with pre-computed suggestions',
         diagramSrc: '/diagrams/typeahead/impl-basic.png',
         svgTemplate: 'typeahead',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────┐
-│                    Basic Typeahead System                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│   ┌──────────┐        ┌──────────────┐       ┌──────────────┐   │
-│   │   User   │───────▶│  API Server  │──────▶│  In-Memory   │   │
-│   │  Types   │        │              │       │    Trie      │   │
-│   └──────────┘        └──────────────┘       │              │   │
-│                                              │ Pre-computed │   │
-│                                              │ suggestions  │   │
-│                                              └──────────────┘   │
-│                                                     │           │
-│                                                     ▼           │
-│                                              ┌──────────────┐   │
-│                                              │   Analytics  │   │
-│                                              │   (Batch)    │   │
-│                                              └──────────────┘   │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Single server = limited scalability',
           'No CDN caching',
@@ -13609,53 +12684,7 @@ Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (
         title: 'Production Typeahead Architecture',
         diagramSrc: '/diagrams/typeahead/impl-advanced.png',
         svgTemplate: 'typeaheadAdvanced',
-        architecture: `
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                    Production Typeahead System                                │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────┐                                                             │
-│  │   Client    │                                                             │
-│  │  (Debounce) │                                                             │
-│  └──────┬──────┘                                                             │
-│         │                                                                    │
-│         ▼                                                                    │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                    CDN Edge Cache (99% hit rate)                     │    │
-│  │              Cached: 1-3 char prefixes, common queries               │    │
-│  └────────────────────────────────┬────────────────────────────────────┘    │
-│                                   │ (Cache miss)                             │
-│                                   ▼                                          │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                        Load Balancer                                 │    │
-│  └────────────────────────────────┬────────────────────────────────────┘    │
-│                                   │                                          │
-│  ┌────────────────────────────────┼────────────────────────────────────┐    │
-│  │                  TYPEAHEAD SERVICE CLUSTER                           │    │
-│  │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐              │    │
-│  │  │  Server 1   │    │  Server 2   │    │  Server 3   │              │    │
-│  │  │             │    │             │    │             │              │    │
-│  │  │ ┌─────────┐ │    │ ┌─────────┐ │    │ ┌─────────┐ │              │    │
-│  │  │ │ Trie    │ │    │ │ Trie    │ │    │ │ Trie    │ │              │    │
-│  │  │ │(Shard A)│ │    │ │(Shard B)│ │    │ │(Shard C)│ │              │    │
-│  │  │ └─────────┘ │    │ └─────────┘ │    │ └─────────┘ │              │    │
-│  │  │ ┌─────────┐ │    │ ┌─────────┐ │    │ ┌─────────┐ │              │    │
-│  │  │ │ Redis   │ │    │ │ Redis   │ │    │ │ Redis   │ │              │    │
-│  │  │ │ Cache   │ │    │ │ Cache   │ │    │ │ Cache   │ │              │    │
-│  │  │ └─────────┘ │    │ └─────────┘ │    │ └─────────┘ │              │    │
-│  │  └─────────────┘    └─────────────┘    └─────────────┘              │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                   │                                          │
-│                                   ▼                                          │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                     DATA PIPELINE (Real-time)                        │    │
-│  │  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐      │    │
-│  │  │  Search  │───▶│  Kafka   │───▶│  Flink   │───▶│   Trie   │      │    │
-│  │  │   Logs   │    │          │    │ (1 min)  │    │ Updater  │      │    │
-│  │  └──────────┘    └──────────┘    └──────────┘    └──────────┘      │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Client-side debouncing (wait 100ms after keystroke)',
           'CDN caching for short prefixes (99% hit rate)',
@@ -16166,23 +15195,7 @@ When a user has zero listening history, recommendations must still feel relevant
         description: 'Simple audio serving with basic playlists',
         diagramSrc: '/diagrams/spotify/impl-basic.png',
         svgTemplate: 'spotify',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────┐
-│                    Basic Spotify System                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│   ┌──────────┐        ┌──────────────┐       ┌──────────────┐   │
-│   │  Client  │───────▶│  API Server  │──────▶│  PostgreSQL  │   │
-│   │          │        │              │       │  (Metadata)  │   │
-│   └──────────┘        └──────────────┘       └──────────────┘   │
-│        │                     │                                   │
-│        │                     ▼                                   │
-│        │              ┌──────────────┐                          │
-│        └─────────────▶│     S3       │                          │
-│         (Audio)       │  (Audio Files)│                          │
-│                       └──────────────┘                          │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'No CDN = high latency for distant users',
           'No adaptive bitrate',
@@ -16195,65 +15208,7 @@ When a user has zero listening history, recommendations must still feel relevant
         title: 'Production Spotify Architecture',
         diagramSrc: '/diagrams/spotify/impl-advanced.png',
         svgTemplate: 'spotifyAdvanced',
-        architecture: `
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                       Production Spotify Architecture                         │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────┐                                                             │
-│  │   Clients   │                                                             │
-│  └──────┬──────┘                                                             │
-│         │                                                                    │
-│  ┌──────┼───────────────────────────────────────────────────────────────┐   │
-│  │      │              CONTENT DELIVERY                                  │   │
-│  │      ▼                                                                │   │
-│  │  ┌─────────────────────────────────────────────────────────────┐     │   │
-│  │  │                   Global CDN Network                         │     │   │
-│  │  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐        │     │   │
-│  │  │  │  Edge   │  │  Edge   │  │  Edge   │  │  Edge   │        │     │   │
-│  │  │  │  US-W   │  │  US-E   │  │   EU    │  │  APAC   │        │     │   │
-│  │  │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘        │     │   │
-│  │  └───────┼────────────┼────────────┼────────────┼─────────────┘     │   │
-│  │          └────────────┴────────────┴────────────┘                   │   │
-│  │                              │ (cache miss)                          │   │
-│  │                              ▼                                       │   │
-│  │                   ┌──────────────────┐                              │   │
-│  │                   │   Audio Origin   │◀────┐                        │   │
-│  │                   │    (S3/GCS)      │     │                        │   │
-│  │                   └──────────────────┘     │ Transcode              │   │
-│  │                                            │                        │   │
-│  │                   ┌──────────────────┐     │                        │   │
-│  │                   │  Audio Pipeline  │─────┘                        │   │
-│  │                   │  (Ingestion)     │                              │   │
-│  │                   └──────────────────┘                              │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                                                              │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │                        SERVICE LAYER                                  │   │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐     │   │
-│  │  │  Catalog   │  │  Playlist  │  │  Search    │  │  Connect   │     │   │
-│  │  │  Service   │  │  Service   │  │  Service   │  │  Service   │     │   │
-│  │  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘     │   │
-│  │        │               │               │               │             │   │
-│  │  ┌─────┴───────────────┴───────────────┴───────────────┴─────┐      │   │
-│  │  │                    DATA LAYER                              │      │   │
-│  │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌───────────┐ │      │   │
-│  │  │  │Cassandra │  │PostgreSQL│  │Elastic-  │  │   Redis   │ │      │   │
-│  │  │  │(Activity)│  │(Metadata)│  │  search  │  │  (Cache)  │ │      │   │
-│  │  │  └──────────┘  └──────────┘  └──────────┘  └───────────┘ │      │   │
-│  │  └────────────────────────────────────────────────────────────┘      │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                                                              │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │                     RECOMMENDATION ENGINE                             │   │
-│  │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐            │   │
-│  │  │   Listening  │───▶│    Spark     │───▶│   Model      │            │   │
-│  │  │   History    │    │  (Training)  │    │   Serving    │            │   │
-│  │  │   (Kafka)    │    │              │    │              │            │   │
-│  │  └──────────────┘    └──────────────┘    └──────────────┘            │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Global CDN with edge caching for popular tracks',
           'Adaptive bitrate streaming (96/160/320 kbps)',
@@ -17807,23 +16762,7 @@ Constraints:
         description: 'Simple order flow without optimization',
         diagramSrc: '/diagrams/doordash/impl-basic.png',
         svgTemplate: 'doordash',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────┐
-│                   Basic Food Delivery System                     │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌──────────┐     ┌──────────────┐     ┌──────────────┐        │
-│  │ Customer │────▶│  API Server  │────▶│  PostgreSQL  │        │
-│  │   App    │     │              │     │              │        │
-│  └──────────┘     └──────────────┘     └──────────────┘        │
-│                          │                                      │
-│                          │                                      │
-│  ┌──────────┐            │                                      │
-│  │  Driver  │◀───────────┘                                      │
-│  │   App    │                                                   │
-│  └──────────┘                                                   │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'No dispatch optimization',
           'Manual driver assignment',
@@ -17836,60 +16775,7 @@ Constraints:
         title: 'Production Food Delivery Architecture',
         diagramSrc: '/diagrams/doordash/impl-advanced.png',
         svgTemplate: 'doordashAdvanced',
-        architecture: `
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                    Production DoorDash Architecture                           │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐                      │
-│  │  Customer   │    │  Restaurant │    │   Driver    │                      │
-│  │    App      │    │    App      │    │    App      │                      │
-│  └──────┬──────┘    └──────┬──────┘    └──────┬──────┘                      │
-│         │                  │                  │                              │
-│         └──────────────────┼──────────────────┘                              │
-│                            ▼                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                      API Gateway                                     │    │
-│  └────────────────────────────┬────────────────────────────────────────┘    │
-│                               │                                              │
-│  ┌────────────────────────────┼────────────────────────────────────────┐    │
-│  │                      SERVICE LAYER                                   │    │
-│  │                                                                      │    │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐    │    │
-│  │  │ Restaurant │  │   Order    │  │  Dispatch  │  │  Tracking  │    │    │
-│  │  │  Service   │  │  Service   │  │  Service   │  │  Service   │    │    │
-│  │  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘    │    │
-│  │        │               │               │               │            │    │
-│  │  ┌─────┴───────────────┴───────────────┴───────────────┴─────┐     │    │
-│  │  │                    MESSAGE BUS (Kafka)                     │     │    │
-│  │  │  Topics: orders, driver_locations, dispatch_events         │     │    │
-│  │  └─────┬───────────────┬───────────────┬───────────────┬─────┘     │    │
-│  │        │               │               │               │            │    │
-│  │        ▼               ▼               ▼               ▼            │    │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐   │    │
-│  │  │    ETA     │  │  Payment   │  │Notification│  │  Analytics │   │    │
-│  │  │  Service   │  │  Service   │  │  Service   │  │  Service   │   │    │
-│  │  └────────────┘  └────────────┘  └────────────┘  └────────────┘   │    │
-│  └──────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │                         DATA LAYER                                    │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │   │
-│  │  │  PostgreSQL  │  │ TimescaleDB  │  │    Redis     │               │   │
-│  │  │   (Orders,   │  │  (Location   │  │   (Driver    │               │   │
-│  │  │ Restaurants) │  │   History)   │  │   Status)    │               │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘               │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                                                              │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │                      ML PLATFORM                                      │   │
-│  │  ┌────────────────┐    ┌────────────────┐    ┌────────────────┐     │   │
-│  │  │  ETA Model     │    │ Demand Forecast│    │ Dispatch       │     │   │
-│  │  │  (Prediction)  │    │    Model       │    │ Optimization   │     │   │
-│  │  └────────────────┘    └────────────────┘    └────────────────┘     │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Kafka for real-time event streaming',
           'TimescaleDB for location time-series data',
@@ -18468,39 +17354,7 @@ Where credibility considers:
         description: 'Handle trends for one geographic area',
         diagramSrc: '/diagrams/twitter-trends/impl-basic.png',
         svgTemplate: 'twitterTrending',
-        architecture: `
-┌─────────────────────────────────────────────────────────────┐
-│                    Tweet Ingestion                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   Tweets → [Kafka] → [Flink Stream Processor]               │
-│              │              │                               │
-│              │              ├─ Extract hashtags             │
-│              │              ├─ Filter spam                  │
-│              │              └─ Update Count-Min Sketch      │
-│              │                       │                      │
-│              │                       ▼                      │
-│              │              ┌─────────────────┐             │
-│              │              │ Windowed Counts │             │
-│              │              │ (Redis Sorted   │             │
-│              │              │  Sets by score) │             │
-│              │              └─────────────────┘             │
-│              │                       │                      │
-│              │                       ▼                      │
-│              │              ┌─────────────────┐             │
-│              │              │ Trend Ranker    │             │
-│              │              │ (every 5 min)   │             │
-│              │              └─────────────────┘             │
-│              │                       │                      │
-│              │                       ▼                      │
-│              │              ┌─────────────────┐             │
-│              │              │ Trends Cache    │             │
-│              │              │ (CDN backed)    │             │
-│              │              └─────────────────┘             │
-│                                      │                      │
-│   Client ←──────── API Gateway ←─────┘                      │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Single region only - no geo trends',
           'Flink as SPOF - lose data if it fails',
@@ -18513,63 +17367,7 @@ Where credibility considers:
         title: 'Global Multi-Region Architecture',
         diagramSrc: '/diagrams/twitter-trends/impl-advanced.png',
         svgTemplate: 'twitterTrendsAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           Global Trends Platform                            │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌─────────────────────┐     ┌─────────────────────┐                       │
-│   │    Tweet Stream     │     │   User Metadata     │                       │
-│   │ (Geo-partitioned    │     │ (credibility,       │                       │
-│   │  by region)         │     │  location, etc.)    │                       │
-│   └──────────┬──────────┘     └──────────┬──────────┘                       │
-│              │                           │                                  │
-│              ▼                           ▼                                  │
-│   ┌────────────────────────────────────────────────────┐                    │
-│   │              Apache Flink Cluster                  │                    │
-│   │  ┌──────────────────────────────────────────────┐  │                    │
-│   │  │ Per-Region Stream Jobs (100+ parallel)      │  │                    │
-│   │  │                                              │  │                    │
-│   │  │  Tweet → Spam Filter → Hashtag Extract →    │  │                    │
-│   │  │         Count-Min Sketch Update              │  │                    │
-│   │  └──────────────────────────────────────────────┘  │                    │
-│   │  ┌──────────────────────────────────────────────┐  │                    │
-│   │  │ Aggregation Job (windowed every 5 min)      │  │                    │
-│   │  │                                              │  │                    │
-│   │  │  Per-region counts → Anomaly detection →    │  │                    │
-│   │  │         Trend scoring → Ranking              │  │                    │
-│   │  └──────────────────────────────────────────────┘  │                    │
-│   └────────────────────────────────────────────────────┘                    │
-│                              │                                              │
-│              ┌───────────────┼───────────────┐                              │
-│              ▼               ▼               ▼                              │
-│   ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐               │
-│   │ Regional Trends │ │ National Trends │ │  Global Trends  │               │
-│   │ (100+ regions)  │ │ (per country)   │ │ (worldwide)     │               │
-│   │    Redis        │ │    Redis        │ │    Redis        │               │
-│   └─────────────────┘ └─────────────────┘ └─────────────────┘               │
-│              │               │               │                              │
-│              └───────────────┴───────────────┘                              │
-│                              │                                              │
-│                              ▼                                              │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                    CDN Edge Cache                   │                   │
-│   │    (Trends cached at edge, TTL = 1 minute)         │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                              │                                              │
-│   ┌───────────────┐   ┌──────┴──────┐   ┌───────────────┐                   │
-│   │  Mobile App   │   │  Web Client │   │ Third-party   │                   │
-│   │   (cached)    │   │  (cached)   │   │ API consumers │                   │
-│   └───────────────┘   └─────────────┘   └───────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │              Batch Processing (Spark)               │                   │
-│   │  - Historical baseline computation                  │                   │
-│   │  - Spam network analysis                            │                   │
-│   │  - Model training for anomaly detection             │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Geo-partitioned streams for regional trends',
           'Hierarchical aggregation: city → region → country → global',
@@ -18581,61 +17379,14 @@ Where credibility considers:
 
       trendFlow: {
         title: 'Trend Detection Flow',
-        steps: `
-┌──────────────────────────────────────────────────────────────────┐
-│                     Trend Detection Pipeline                     │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  1. INGEST                                                       │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ Tweet arrives with: text, hashtags, user_id, location    │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                              │                                   │
-│                              ▼                                   │
-│  2. FILTER                                                       │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ Spam check:                                               │   │
-│  │ - User credibility score                                  │   │
-│  │ - Rate limit check (tweets/min for user+hashtag)          │   │
-│  │ - Known bot list check                                    │   │
-│  │ Result: weight = 0.0 (spam) to 1.0 (trusted)              │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                              │                                   │
-│                              ▼                                   │
-│  3. COUNT                                                        │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ For each hashtag in tweet:                                │   │
-│  │   count_min_sketch[region].add(hashtag, weight)           │   │
-│  │   unique_users[hashtag].add(user_id)  # HyperLogLog       │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                              │                                   │
-│                              ▼                                   │
-│  4. AGGREGATE (every 5 minutes)                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ For each hashtag with count > threshold:                  │   │
-│  │   current_rate = count / 5_minutes                        │   │
-│  │   baseline = get_historical_baseline(hashtag, time)       │   │
-│  │   z_score = (current_rate - baseline) / std_dev           │   │
-│  │   unique_users = hyperloglog.count()                      │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                              │                                   │
-│                              ▼                                   │
-│  5. RANK                                                         │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ trend_score = z_score × log(count) × user_diversity      │   │
-│  │ Apply time decay: score × e^(-λt)                         │   │
-│  │ Sort by trend_score, take top 10 per region               │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                              │                                   │
-│                              ▼                                   │
-│  6. PUBLISH                                                      │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ Write top trends to Redis (sorted set)                    │   │
-│  │ Invalidate CDN cache                                      │   │
-│  │ Push to connected clients via WebSocket                   │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘`,
+        steps: [
+          '1. INGEST: Tweet arrives with text, hashtags, user_id, location.',
+          '2. FILTER: Spam check via user credibility score, rate limit (tweets/min for user+hashtag), and bot list. Result: weight = 0.0 (spam) to 1.0 (trusted).',
+          '3. COUNT: For each hashtag in tweet — count_min_sketch[region].add(hashtag, weight), and unique_users[hashtag].add(user_id) via HyperLogLog.',
+          '4. AGGREGATE (every 5 min): For each hashtag with count > threshold — current_rate = count / 5_minutes; baseline = get_historical_baseline(hashtag, time); z_score = (current_rate - baseline) / std_dev; unique_users = hyperloglog.count().',
+          '5. RANK: trend_score = z_score × log(count) × user_diversity. Apply time decay: score × e^(-λt). Sort by trend_score, take top 10 per region.',
+          '6. PUBLISH: Write top trends to Redis (sorted set), invalidate CDN cache, push to connected clients via WebSocket.'
+        ],
       },
 
       discussionPoints: [
@@ -19214,30 +17965,7 @@ Cons: Storage not immediately reclaimed
         description: 'Single server with direct S3 access',
         diagramSrc: '/diagrams/pastebin/impl-basic.png',
         svgTemplate: 'pastebin',
-        architecture: `
-┌─────────────────────────────────────────────────────────────┐
-│                    Pastebin Architecture                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   Client ──────────────────────────────────────────────────►│
-│      │                                                      │
-│      ▼                                                      │
-│   ┌─────────────────┐                                       │
-│   │   API Server    │                                       │
-│   │   (Node.js)     │                                       │
-│   └────────┬────────┘                                       │
-│            │                                                │
-│      ┌─────┴─────┐                                          │
-│      ▼           ▼                                          │
-│   ┌──────┐   ┌──────┐                                       │
-│   │ DB   │   │ S3   │                                       │
-│   │(meta)│   │(data)│                                       │
-│   └──────┘   └──────┘                                       │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-
-Write: API → Generate key → Upload S3 → Save metadata
-Read: API → Lookup metadata → Redirect to S3 (or proxy)`,
+        architecture: 'See diagram above.',
         problems: [
           'Single server bottleneck',
           'No caching - every read hits DB',
@@ -19250,48 +17978,7 @@ Read: API → Lookup metadata → Redirect to S3 (or proxy)`,
         title: 'Production Architecture',
         diagramSrc: '/diagrams/pastebin/impl-advanced.png',
         svgTemplate: 'pastebinAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      Production Pastebin                                │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│   ┌─────────────┐     ┌─────────────┐     ┌─────────────┐               │
-│   │   Client    │────▶│     CDN     │────▶│   Origin    │               │
-│   │             │     │ (CloudFront)│     │ (if miss)   │               │
-│   └─────────────┘     └─────────────┘     └──────┬──────┘               │
-│                                                  │                      │
-│          For writes:                             ▼                      │
-│          ┌───────────────────────────────────────────────────┐          │
-│          │                Load Balancer                      │          │
-│          └───────────────────────┬───────────────────────────┘          │
-│                    ┌─────────────┼─────────────┐                        │
-│                    ▼             ▼             ▼                        │
-│          ┌──────────────┐┌──────────────┐┌──────────────┐               │
-│          │  API Server  ││  API Server  ││  API Server  │               │
-│          └──────────────┘└──────────────┘└──────────────┘               │
-│                    │             │             │                        │
-│                    └─────────────┼─────────────┘                        │
-│                                  ▼                                      │
-│                    ┌─────────────────────────┐                          │
-│                    │       Redis Cache       │                          │
-│                    │  (hot paste metadata)   │                          │
-│                    └─────────────────────────┘                          │
-│                                  │                                      │
-│                    ┌─────────────┼─────────────┐                        │
-│                    ▼             ▼             ▼                        │
-│          ┌──────────────┐┌──────────────┐┌──────────────┐               │
-│          │  PostgreSQL  ││ PostgreSQL   ││      S3      │               │
-│          │   Primary    ││  Replica     ││  (content)   │               │
-│          └──────────────┘└──────────────┘└──────────────┘               │
-│                                                                         │
-│          ┌────────────────────────────────────────────────┐             │
-│          │              Background Workers                │             │
-│          │  - Key generation (pre-populate pool)          │             │
-│          │  - Expiration cleanup                          │             │
-│          │  - Analytics aggregation                       │             │
-│          └────────────────────────────────────────────────┘             │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'CDN caches paste content globally',
           'Pre-signed S3 URLs for direct download (bypass API)',
@@ -19684,19 +18371,7 @@ Bloom filter for fast "definitely not seen" checks before expensive hash lookups
         description: 'Single-threaded crawler',
         diagramSrc: '/diagrams/web-crawler/impl-basic.png',
         svgTemplate: 'webCrawler',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         WEB CRAWLER BASIC                               │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  Seed URLs → Queue → Fetcher → Parser → Link Extract → Back to Queue  │
-│                         │                                               │
-│                         ▼                                               │
-│                    Storage (files)                                      │
-│                                                                         │
-│  PROBLEMS: Single-threaded, no politeness, no duplicate detection      │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: ['Single-threaded: Max 100 pages/min', 'No politeness', 'No duplicate detection']
       },
 
@@ -19704,31 +18379,7 @@ Bloom filter for fast "definitely not seen" checks before expensive hash lookups
         title: 'Production Architecture',
         diagramSrc: '/diagrams/web-crawler/impl-advanced.png',
         svgTemplate: 'webCrawlerAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           WEB CRAWLER PRODUCTION                                 │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│  URL FRONTIER                                                                   │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  Front Queues (priority)  ────▶  Back Queues (per domain)          │        │
-│  │  [High] [Med] [Low]              [example.com] [wiki.org] ...      │        │
-│  │                                  Rate limited per domain            │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                      │                                           │
-│  DISTRIBUTED FETCHERS                ▼                                           │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  [Fetcher 1] [Fetcher 2] ... [Fetcher 10,000]                      │        │
-│  │  Partitioned by domain hash                                         │        │
-│  └────────────────────────────────┬────────────────────────────────────┘        │
-│                                   │                                              │
-│  CONTENT PIPELINE                 ▼                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │  Parser ──▶ Duplicate Detector ──▶ Link Extractor ──▶ Storage      │        │
-│  │              (Simhash + Bloom)      (Normalize URLs)                │        │
-│  └─────────────────────────────────────────────────────────────────────┘        │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'URL Frontier: Priority + per-domain politeness',
           'Distributed fetchers partitioned by domain',
@@ -20439,30 +19090,7 @@ When a normal user (<10K followers) posts:
         description: 'Simple pull model - compute feed on read',
         diagramSrc: '/diagrams/facebook-newsfeed/impl-basic.png',
         svgTemplate: 'facebookFeed',
-        architecture: `
-┌─────────────────────────────────────────────────────────────┐
-│                   Basic Feed System                         │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   User requests feed                                        │
-│          │                                                  │
-│          ▼                                                  │
-│   ┌──────────────┐                                          │
-│   │  API Server  │                                          │
-│   └──────┬───────┘                                          │
-│          │                                                  │
-│          ▼                                                  │
-│   1. Get friends list from Social Graph DB                  │
-│   2. Query posts table for each friend's recent posts       │
-│   3. Rank all posts                                         │
-│   4. Return top N                                           │
-│                                                             │
-│   ┌──────────────┐     ┌──────────────┐                     │
-│   │ Social Graph │     │    Posts     │                     │
-│   │      DB      │     │     DB       │                     │
-│   └──────────────┘     └──────────────┘                     │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'N+1 query problem (query per friend)',
           'Expensive ranking on every read',
@@ -20476,68 +19104,7 @@ When a normal user (<10K followers) posts:
         title: 'Hybrid Fan-out Architecture',
         diagramSrc: '/diagrams/facebook-newsfeed/impl-advanced.png',
         svgTemplate: 'facebookFeedAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      Facebook News Feed Architecture                        │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│                           POST CREATION PATH                                │
-│   ┌─────────────────────────────────────────────────────────────────┐       │
-│   │ User creates post → Post Service → [Kafka: posts] → Fan-out    │       │
-│   │                                                        │        │       │
-│   │              ┌─────────────────────────────────────────┘        │       │
-│   │              ▼                                                  │       │
-│   │   Normal users (< 10K followers):                               │       │
-│   │     Write to each follower's feed cache (Redis)                 │       │
-│   │                                                                 │       │
-│   │   Celebrities (> 10K followers):                                │       │
-│   │     Store in celebrity_posts table only                         │       │
-│   │     Followers pull at read time                                 │       │
-│   └─────────────────────────────────────────────────────────────────┘       │
-│                                                                             │
-│                           FEED READ PATH                                    │
-│   ┌─────────────────────────────────────────────────────────────────┐       │
-│   │                                                                 │       │
-│   │   User → CDN (cached feed) → Load Balancer → Feed Service       │       │
-│   │                                         │                       │       │
-│   │              ┌──────────────────────────┘                       │       │
-│   │              ▼                                                  │       │
-│   │   ┌──────────────────────────────────────────────────────┐      │       │
-│   │   │               Feed Aggregation                       │      │       │
-│   │   │                                                      │      │       │
-│   │   │  1. Get cached feed items (Redis)  ◄──────────────┐  │      │       │
-│   │   │  2. Get celebrity posts (pull)     ◄─────────────┐│  │      │       │
-│   │   │  3. Merge all candidates                         ││  │      │       │
-│   │   │  4. Send to Ranking Service        ─────────────►││  │      │       │
-│   │   │                                                  ││  │      │       │
-│   │   └──────────────────────────────────────────────────┘│  │      │       │
-│   │                                         │             │  │      │       │
-│   │              ┌──────────────────────────┘             │  │      │       │
-│   │              ▼                                        │  │      │       │
-│   │   ┌──────────────────┐  ┌─────────────────────────────┴┐ │      │       │
-│   │   │  Ranking Service │  │       Redis Cluster          │ │      │       │
-│   │   │  (ML inference)  │  │  (feed cache per user)       │ │      │       │
-│   │   │                  │  │  TTL = 5 minutes             │ │      │       │
-│   │   │  Light ranker    │  └──────────────────────────────┘ │      │       │
-│   │   │  Heavy ranker    │                                   │      │       │
-│   │   │  Business rules  │                                   │      │       │
-│   │   └──────────────────┘                                   │      │       │
-│   │              │                                           │      │       │
-│   │              ▼                                           │      │       │
-│   │   Return ranked feed to user                             │      │       │
-│   └─────────────────────────────────────────────────────────────────┘       │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────────────────┐       │
-│   │                    DATA STORES                                  │       │
-│   │                                                                 │       │
-│   │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐ │       │
-│   │  │   Posts    │  │   Social   │  │   User     │  │   Media    │ │       │
-│   │  │    DB      │  │   Graph    │  │  Features  │  │   (S3+CDN) │ │       │
-│   │  │ (sharded)  │  │   (TAO)    │  │  (ML)      │  │            │ │       │
-│   │  └────────────┘  └────────────┘  └────────────┘  └────────────┘ │       │
-│   └─────────────────────────────────────────────────────────────────┘       │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Hybrid fan-out: push for normal users, pull for celebrities',
           'Pre-computed feed cache in Redis (5 min TTL)',
@@ -21152,27 +19719,7 @@ Merkle Tree sync:
         description: 'In-memory hash map with persistence',
         diagramSrc: '/diagrams/key-value-store/impl-basic.png',
         svgTemplate: 'keyValueStore',
-        architecture: `
-┌─────────────────────────────────────────────────────────────┐
-│                  Single Node KV Store                       │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   Client → API Server → In-Memory Hash Map                  │
-│                              │                              │
-│                              ▼                              │
-│                    ┌─────────────────┐                      │
-│                    │  Write-Ahead    │                      │
-│                    │     Log         │                      │
-│                    │  (durability)   │                      │
-│                    └─────────────────┘                      │
-│                              │                              │
-│                              ▼                              │
-│                    ┌─────────────────┐                      │
-│                    │   SSTable       │                      │
-│                    │  (compacted)    │                      │
-│                    └─────────────────┘                      │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Single point of failure',
           'Memory limited to one machine',
@@ -21185,53 +19732,7 @@ Merkle Tree sync:
         title: 'Distributed Key-Value Store',
         diagramSrc: '/diagrams/key-value-store/impl-advanced.png',
         svgTemplate: 'keyValueAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      Distributed Key-Value Store                            │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌─────────────┐                                                           │
-│   │   Client    │                                                           │
-│   └──────┬──────┘                                                           │
-│          │                                                                  │
-│          ▼                                                                  │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │              Coordinator / Router                   │                   │
-│   │  - Route requests based on consistent hash          │                   │
-│   │  - Manage quorum for reads/writes                   │                   │
-│   │  - Handle timeouts and retries                      │                   │
-│   └────────────────────────┬────────────────────────────┘                   │
-│                            │                                                │
-│          ┌─────────────────┼─────────────────┐                              │
-│          ▼                 ▼                 ▼                              │
-│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐                       │
-│   │  Storage    │   │  Storage    │   │  Storage    │                       │
-│   │  Node 1     │   │  Node 2     │   │  Node 3     │  ← N storage nodes    │
-│   │             │   │             │   │             │                       │
-│   │ ┌─────────┐ │   │ ┌─────────┐ │   │ ┌─────────┐ │                       │
-│   │ │MemTable│ │   │ │MemTable│ │   │ │MemTable│ │  ← In-memory writes     │
-│   │ └────┬────┘ │   │ └────┬────┘ │   │ └────┬────┘ │                       │
-│   │      ▼      │   │      ▼      │   │      ▼      │                       │
-│   │ ┌─────────┐ │   │ ┌─────────┐ │   │ ┌─────────┐ │                       │
-│   │ │   WAL   │ │   │ │   WAL   │ │   │ │   WAL   │ │  ← Write-ahead log    │
-│   │ └────┬────┘ │   │ └────┬────┘ │   │ └────┬────┘ │                       │
-│   │      ▼      │   │      ▼      │   │      ▼      │                       │
-│   │ ┌─────────┐ │   │ ┌─────────┐ │   │ ┌─────────┐ │                       │
-│   │ │SSTables │ │   │ │SSTables │ │   │ │SSTables │ │  ← Sorted on disk     │
-│   │ └─────────┘ │   │ └─────────┘ │   │ └─────────┘ │                       │
-│   └─────────────┘   └─────────────┘   └─────────────┘                       │
-│          │                 │                 │                              │
-│          └─────────────────┴─────────────────┘                              │
-│                            │                                                │
-│                            ▼                                                │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                 Gossip Protocol                     │                   │
-│   │  - Cluster membership                               │                   │
-│   │  - Failure detection                                │                   │
-│   │  - Partition map synchronization                    │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Consistent hashing with virtual nodes for partitioning',
           'Configurable N/W/R for tunable consistency',
@@ -21874,26 +20375,7 @@ No coordination, but:
         description: 'Simple in-memory generator',
         diagramSrc: '/diagrams/unique-id-generator/impl-basic.png',
         svgTemplate: 'distributedId',
-        architecture: `
-┌─────────────────────────────────────────────────────────────┐
-│                  Single Server Generator                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   Client → API Server → Snowflake Generator                 │
-│                              │                              │
-│                    ┌─────────┴─────────┐                    │
-│                    │                   │                    │
-│                    ▼                   ▼                    │
-│             ┌──────────┐         ┌──────────┐               │
-│             │ Clock    │         │ Sequence │               │
-│             │ (NTP)    │         │ Counter  │               │
-│             └──────────┘         └──────────┘               │
-│                    │                   │                    │
-│                    └─────────┬─────────┘                    │
-│                              ▼                              │
-│                    Generate 64-bit ID                       │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Single point of failure',
           'Limited to 4096 IDs/ms',
@@ -21906,55 +20388,7 @@ No coordination, but:
         title: 'Distributed Snowflake Service',
         diagramSrc: '/diagrams/unique-id-generator/impl-advanced.png',
         svgTemplate: 'distributedIdAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      Distributed ID Generation                              │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌─────────────┐                                                           │
-│   │   Client    │                                                           │
-│   │ (embedded   │  ← Each service can embed ID generator                    │
-│   │  library)   │     No network call needed!                               │
-│   └──────┬──────┘                                                           │
-│          │                                                                  │
-│          ▼                                                                  │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │              Local Snowflake Generator              │                   │
-│   │                                                     │                   │
-│   │   machine_id = assigned at startup                  │                   │
-│   │   sequence = thread-local counter                   │                   │
-│   │   timestamp = System.currentTimeMillis()            │                   │
-│   │                                                     │                   │
-│   │   Generate: (timestamp << 22) | (machine << 12)     │                   │
-│   │             | sequence                              │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │              Machine ID Assignment                  │                   │
-│   │                                                     │                   │
-│   │   ┌──────────────────────────────────────────────┐  │                   │
-│   │   │           ZooKeeper / etcd Cluster           │  │                   │
-│   │   │                                              │  │                   │
-│   │   │   /snowflake/machines/                       │  │                   │
-│   │   │     ├── machine-0001 → server-a.prod         │  │                   │
-│   │   │     ├── machine-0002 → server-b.prod         │  │                   │
-│   │   │     └── machine-0003 → server-c.prod         │  │                   │
-│   │   │                                              │  │                   │
-│   │   │   Ephemeral nodes: auto-delete on crash      │  │                   │
-│   │   │   Leases: prevent rapid ID reuse             │  │                   │
-│   │   └──────────────────────────────────────────────┘  │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                    Monitoring                       │                   │
-│   │                                                     │                   │
-│   │   - IDs generated per second (per machine)          │                   │
-│   │   - Sequence exhaustion events                      │                   │
-│   │   - Clock skew alerts                               │                   │
-│   │   - Machine ID utilization                          │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Embedded library - no network overhead',
           'ZooKeeper for machine ID assignment',
@@ -22893,20 +21327,7 @@ Monitor and alert on:
         description: 'RSS ingestion with basic ranking',
         diagramSrc: '/diagrams/news-aggregator/impl-basic.png',
         svgTemplate: 'googleNews',
-        architecture: `
-┌─────────────────────────────────────────────────────────────┐
-│                  Basic News Aggregator                      │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   RSS Feeds → Poller (cron) → PostgreSQL                    │
-│                                    │                        │
-│                                    ▼                        │
-│   Client → API Server → Query by category/time              │
-│                                    │                        │
-│                                    ▼                        │
-│                         ORDER BY published_at DESC          │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'No deduplication - same story shown multiple times',
           'No personalization',
@@ -22919,74 +21340,7 @@ Monitor and alert on:
         title: 'Production News Platform',
         diagramSrc: '/diagrams/news-aggregator/impl-advanced.png',
         svgTemplate: 'googleNewsAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      Google News Architecture                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                 Ingestion Layer                     │                   │
-│   │                                                     │                   │
-│   │   RSS Poller ─────►┐                                │                   │
-│   │   Web Crawler ────►├──► Kafka ──► Content Workers   │                   │
-│   │   API Partners ───►┘     │            │             │                   │
-│   │                          │            ▼             │                   │
-│   │                          │    ┌──────────────┐      │                   │
-│   │                          │    │ NLP Pipeline │      │                   │
-│   │                          │    │ - Entities   │      │                   │
-│   │                          │    │ - Categories │      │                   │
-│   │                          │    │ - Embeddings │      │                   │
-│   │                          │    └──────┬───────┘      │                   │
-│   │                          │           │              │                   │
-│   └──────────────────────────│───────────│──────────────┘                   │
-│                              │           │                                  │
-│                              ▼           ▼                                  │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                  Storage Layer                      │                   │
-│   │                                                     │                   │
-│   │   ┌──────────────┐ ┌──────────────┐ ┌────────────┐  │                   │
-│   │   │ PostgreSQL   │ │Elasticsearch │ │ Vector DB  │  │                   │
-│   │   │ (metadata)   │ │ (search)     │ │ (clusters) │  │                   │
-│   │   └──────────────┘ └──────────────┘ └────────────┘  │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                              │                                              │
-│                              ▼                                              │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                 Clustering Service                  │                   │
-│   │                                                     │                   │
-│   │   New article arrives:                              │                   │
-│   │   1. Query vector DB for similar articles           │                   │
-│   │   2. Assign to existing story or create new         │                   │
-│   │   3. Update story headline and metadata             │                   │
-│   │   4. Trigger trending detection                     │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                              │                                              │
-│                              ▼                                              │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                  Feed Generation                    │                   │
-│   │                                                     │                   │
-│   │   User request → User profile lookup                │                   │
-│   │                       │                             │                   │
-│   │         ┌─────────────┼─────────────┐               │                   │
-│   │         ▼             ▼             ▼               │                   │
-│   │   Candidate      Personalize    Re-rank             │                   │
-│   │   Stories          Scores      + Diversity          │                   │
-│   │         │             │             │               │                   │
-│   │         └─────────────┴─────────────┘               │                   │
-│   │                       │                             │                   │
-│   │                       ▼                             │                   │
-│   │   ┌──────────────────────────────────────────────┐  │                   │
-│   │   │              Redis Cache                     │  │                   │
-│   │   │   (pre-computed feeds, 5 min TTL)            │  │                   │
-│   │   └──────────────────────────────────────────────┘  │                   │
-│   │                       │                             │                   │
-│   │                       ▼                             │                   │
-│   │                    CDN (edge cache)                 │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Distributed crawlers with Kafka for async processing',
           'ML pipeline for entity extraction and categorization',
@@ -23857,24 +22211,7 @@ DEL temp:friends:player123 temp:result
         description: 'Simple sorted set implementation',
         diagramSrc: '/diagrams/leaderboard/impl-basic.png',
         svgTemplate: 'leaderboard',
-        architecture: `
-┌─────────────────────────────────────────────────────────────┐
-│                  Basic Leaderboard                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   Game Client → API Server → Redis Sorted Set               │
-│                                   │                         │
-│                                   ▼                         │
-│                    ┌──────────────────────────┐             │
-│                    │     Redis Commands       │             │
-│                    │                          │             │
-│                    │  ZADD (update score)     │             │
-│                    │  ZREVRANK (get rank)     │             │
-│                    │  ZREVRANGE (top N)       │             │
-│                    │                          │             │
-│                    └──────────────────────────┘             │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Single Redis instance = SPOF',
           'No persistence (data loss on Redis restart)',
@@ -23887,57 +22224,7 @@ DEL temp:friends:player123 temp:result
         title: 'Production Leaderboard System',
         diagramSrc: '/diagrams/leaderboard/impl-advanced.png',
         svgTemplate: 'leaderboardAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      Production Leaderboard                                 │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌─────────────┐                                                           │
-│   │ Game Server │ ──► Score Update ──► Write Aggregator                     │
-│   └─────────────┘                           │                               │
-│                                             ▼                               │
-│                                    ┌───────────────┐                        │
-│                                    │ Kafka Topics  │                        │
-│                                    │ (per game)    │                        │
-│                                    └───────┬───────┘                        │
-│                                            │                                │
-│                              ┌─────────────┴─────────────┐                  │
-│                              ▼                           ▼                  │
-│                    ┌──────────────────┐        ┌──────────────────┐         │
-│                    │  Score Processor │        │  Score Processor │         │
-│                    │  (consumer 1)    │        │  (consumer 2)    │         │
-│                    └────────┬─────────┘        └────────┬─────────┘         │
-│                             │                           │                   │
-│                             └───────────┬───────────────┘                   │
-│                                         ▼                                   │
-│                    ┌─────────────────────────────────────────┐              │
-│                    │              Redis Cluster              │              │
-│                    │                                         │              │
-│                    │   ┌───────────┐   ┌───────────┐         │              │
-│                    │   │  Shard 1  │   │  Shard 2  │  ...    │              │
-│                    │   │ (games A-M)│   │ (games N-Z)│         │              │
-│                    │   └───────────┘   └───────────┘         │              │
-│                    │                                         │              │
-│                    └─────────────────────────────────────────┘              │
-│                                         │                                   │
-│                                         ▼                                   │
-│                    ┌─────────────────────────────────────────┐              │
-│                    │           Persistence Layer             │              │
-│                    │                                         │              │
-│                    │   - Async backup to PostgreSQL          │              │
-│                    │   - Daily snapshots of top 1000         │              │
-│                    │   - Score history for anti-cheat        │              │
-│                    │                                         │              │
-│                    └─────────────────────────────────────────┘              │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────────────────┐       │
-│   │                      Read Path                                  │       │
-│   │                                                                 │       │
-│   │   Client → CDN (top 100 cached) → API → Redis (direct lookup)   │       │
-│   │                                                                 │       │
-│   └─────────────────────────────────────────────────────────────────┘       │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Kafka for write buffering and exactly-once delivery',
           'Redis Cluster for horizontal scaling',
@@ -24952,26 +23239,7 @@ Every layer is safe to retry independently.
         description: 'Single database with basic search',
         diagramSrc: '/diagrams/hotel-booking/impl-basic.png',
         svgTemplate: 'hotelBooking',
-        architecture: `
-┌─────────────────────────────────────────────────────────────┐
-│                  Basic Hotel Booking                        │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   Client → API Server → PostgreSQL                          │
-│                              │                              │
-│                    ┌─────────┴─────────┐                    │
-│                    │                   │                    │
-│                    ▼                   ▼                    │
-│            ┌──────────────┐    ┌──────────────┐             │
-│            │   Hotels     │    │  Bookings    │             │
-│            │   Inventory  │    │              │             │
-│            └──────────────┘    └──────────────┘             │
-│                                                             │
-│   Search: SELECT * FROM hotels                              │
-│           WHERE ST_DWithin(location, point, radius)         │
-│           AND EXISTS (availability subquery)                │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Slow search (geo + availability join)',
           'Database bottleneck under load',
@@ -24984,70 +23252,7 @@ Every layer is safe to retry independently.
         title: 'Production Booking Platform',
         diagramSrc: '/diagrams/hotel-booking/impl-advanced.png',
         svgTemplate: 'hotelBookingAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      Hotel Booking Platform                                 │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                    Search Flow                      │                   │
-│   │                                                     │                   │
-│   │   User → CDN → API Gateway → Search Service         │                   │
-│   │                                   │                 │                   │
-│   │              ┌────────────────────┴────────────┐    │                   │
-│   │              ▼                                 ▼    │                   │
-│   │   ┌──────────────────┐            ┌──────────────────┐                  │
-│   │   │  Elasticsearch   │            │  Redis Cache     │                  │
-│   │   │  (geo + filters) │            │  (query results) │                  │
-│   │   └────────┬─────────┘            └──────────────────┘                  │
-│   │            │                                        │                   │
-│   │            ▼                                        │                   │
-│   │   ┌──────────────────┐                              │                   │
-│   │   │ Availability DB  │ (sharded by hotel_id)        │                   │
-│   │   │ (exact check)    │                              │                   │
-│   │   └──────────────────┘                              │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                    Booking Flow                     │                   │
-│   │                                                     │                   │
-│   │   User → API Gateway → Booking Service              │                   │
-│   │                             │                       │                   │
-│   │              ┌──────────────┴──────────────┐        │                   │
-│   │              ▼                             ▼        │                   │
-│   │   ┌──────────────────┐          ┌──────────────────┐│                   │
-│   │   │ Inventory Service│          │ Payment Service  ││                   │
-│   │   │ (pessimistic     │          │ (Stripe, etc.)   ││                   │
-│   │   │  locking)        │          │                  ││                   │
-│   │   └────────┬─────────┘          └────────┬─────────┘│                   │
-│   │            │                             │          │                   │
-│   │            └─────────────┬───────────────┘          │                   │
-│   │                          ▼                          │                   │
-│   │              ┌──────────────────┐                   │                   │
-│   │              │  Booking DB      │                   │                   │
-│   │              │  (confirmed)     │                   │                   │
-│   │              └──────────────────┘                   │                   │
-│   │                          │                          │                   │
-│   │                          ▼                          │                   │
-│   │              ┌──────────────────┐                   │                   │
-│   │              │  Kafka           │                   │                   │
-│   │              │  (notifications) │                   │                   │
-│   │              └──────────────────┘                   │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                  Pricing Service                    │                   │
-│   │                                                     │                   │
-│   │   - Dynamic pricing based on demand                 │                   │
-│   │   - Competitor rate monitoring                      │                   │
-│   │   - Yield management algorithms                     │                   │
-│   │   - Special offers and promotions                   │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Two-phase search: Elasticsearch candidates → DB availability',
           'Pessimistic locking for booking to prevent double-booking',
@@ -26061,25 +24266,7 @@ Compared to PostGIS ST_DWithin: S2 cell range queries can be 10x faster for larg
         description: 'Static tiles with simple routing',
         diagramSrc: '/diagrams/google-maps/impl-basic.png',
         svgTemplate: 'googleMaps',
-        architecture: `
-┌─────────────────────────────────────────────────────────────┐
-│                  Basic Maps System                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   Client → CDN → Pre-rendered tiles (static)                │
-│                                                             │
-│   Client → API → Routing (Dijkstra on full graph)           │
-│                     │                                       │
-│                     ▼                                       │
-│             ┌──────────────┐                                │
-│             │ Road Graph   │                                │
-│             │ (in memory)  │                                │
-│             └──────────────┘                                │
-│                                                             │
-│   No real-time traffic                                      │
-│   No ETA prediction                                         │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Slow routing (Dijkstra too slow at scale)',
           'No real-time traffic',
@@ -26092,70 +24279,7 @@ Compared to PostGIS ST_DWithin: S2 cell range queries can be 10x faster for larg
         title: 'Production Maps Platform',
         diagramSrc: '/diagrams/google-maps/impl-advanced.png',
         svgTemplate: 'googleMapsAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      Google Maps Architecture                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                   Map Tiles                         │                   │
-│   │                                                     │                   │
-│   │   Client → CDN → Tile Server → Object Storage       │                   │
-│   │              │                                      │                   │
-│   │              └─► Vector tiles (compact, styleable)  │                   │
-│   │                  Raster tiles (compatibility)       │                   │
-│   │                  Satellite imagery                  │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                   Routing                           │                   │
-│   │                                                     │                   │
-│   │   Client → Load Balancer → Routing Service          │                   │
-│   │                                  │                  │                   │
-│   │              ┌───────────────────┴──────────────┐   │                   │
-│   │              ▼                                  ▼   │                   │
-│   │   ┌──────────────────┐         ┌──────────────────┐ │                   │
-│   │   │ Graph Server     │         │ Traffic Server   │ │                   │
-│   │   │ (Contraction     │         │ (real-time       │ │                   │
-│   │   │  Hierarchies)    │         │  edge weights)   │ │                   │
-│   │   └──────────────────┘         └──────────────────┘ │                   │
-│   │              │                          │           │                   │
-│   │              └────────────┬─────────────┘           │                   │
-│   │                           ▼                         │                   │
-│   │   Combine graph + traffic → optimal route           │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                   Traffic                           │                   │
-│   │                                                     │                   │
-│   │   Phones → Location Service → Kafka → Flink         │                   │
-│   │                                          │          │                   │
-│   │              ┌───────────────────────────┴───┐      │                   │
-│   │              ▼                               ▼      │                   │
-│   │   ┌──────────────────┐         ┌──────────────────┐ │                   │
-│   │   │ Traffic Store    │         │ Traffic Tiles    │ │                   │
-│   │   │ (segment speeds) │         │ (color overlay)  │ │                   │
-│   │   └──────────────────┘         └──────────────────┘ │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                   Places                            │                   │
-│   │                                                     │                   │
-│   │   Client → Places API → Elasticsearch               │                   │
-│   │                              │                      │                   │
-│   │                    ┌─────────┴─────────┐            │                   │
-│   │                    ▼                   ▼            │                   │
-│   │            ┌─────────────┐     ┌─────────────┐      │                   │
-│   │            │ Geo-search  │     │ Text-search │      │                   │
-│   │            │ (nearby)    │     │ (by name)   │      │                   │
-│   │            └─────────────┘     └─────────────┘      │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Vector tiles: Smaller, styleable, rendered client-side',
           'Contraction Hierarchies: <1ms routing queries',
@@ -26752,23 +24876,7 @@ For very large meetings (webinars):
         description: 'Peer-to-peer for 2 participants',
         diagramSrc: '/diagrams/zoom/impl-basic.png',
         svgTemplate: 'zoom',
-        architecture: `
-┌─────────────────────────────────────────────────────────────┐
-│                  Basic P2P Video Call                       │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   Alice ←──────── Signaling Server ──────────► Bob          │
-│      │                                            │         │
-│      │  1. Exchange SDP via WebSocket             │         │
-│      │  2. Exchange ICE candidates                │         │
-│      │                                            │         │
-│      └────────── Direct P2P Media ───────────────┘          │
-│                 (WebRTC UDP stream)                         │
-│                                                             │
-│   STUN Server: Helps discover public IPs                    │
-│   TURN Server: Relay when direct fails                      │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           'Only works for 2-4 participants (N² problem)',
           'No recording',
@@ -26781,68 +24889,7 @@ For very large meetings (webinars):
         title: 'Production Video Conferencing',
         diagramSrc: '/diagrams/zoom/impl-advanced.png',
         svgTemplate: 'zoomAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      Video Conferencing Platform                            │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                  Meeting Lifecycle                  │                   │
-│   │                                                     │                   │
-│   │   User → API Gateway → Meeting Service              │                   │
-│   │                             │                       │                   │
-│   │              ┌──────────────┴──────────────┐        │                   │
-│   │              ▼                             ▼        │                   │
-│   │   ┌──────────────────┐          ┌──────────────────┐│                   │
-│   │   │ PostgreSQL       │          │ Redis            ││                   │
-│   │   │ (meeting data)   │          │ (active sessions)││                   │
-│   │   └──────────────────┘          └──────────────────┘│                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                    Media Path                       │                   │
-│   │                                                     │                   │
-│   │   Client → Signaling Server (WebSocket)             │                   │
-│   │                    │                                │                   │
-│   │                    ▼                                │                   │
-│   │   ┌─────────────────────────────────────────────┐   │                   │
-│   │   │              SFU Cluster                    │   │                   │
-│   │   │                                             │   │                   │
-│   │   │   ┌─────────┐   ┌─────────┐   ┌─────────┐   │   │                   │
-│   │   │   │ SFU 1   │←→│ SFU 2   │←→│ SFU 3   │   │   │                   │
-│   │   │   │(US-West)│   │(US-East)│   │(Europe) │   │   │                   │
-│   │   │   └─────────┘   └─────────┘   └─────────┘   │   │                   │
-│   │   │         │             │             │       │   │                   │
-│   │   │   ┌─────┴─────────────┴─────────────┴────┐  │   │                   │
-│   │   │   │         TURN Server Pool            │  │   │                   │
-│   │   │   │     (NAT traversal fallback)        │  │   │                   │
-│   │   │   └─────────────────────────────────────┘  │   │                   │
-│   │   │                                             │   │                   │
-│   │   └─────────────────────────────────────────────┘   │                   │
-│   │                    │                                │                   │
-│   │                    ▼                                │                   │
-│   │   ┌─────────────────────────────────────────────┐   │                   │
-│   │   │           Recording Pipeline                │   │                   │
-│   │   │                                             │   │                   │
-│   │   │  SFU → Recording Bot → Transcoding → S3    │   │                   │
-│   │   │              (joins as participant)         │   │                   │
-│   │   │                                             │   │                   │
-│   │   └─────────────────────────────────────────────┘   │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                 Quality Optimization                │                   │
-│   │                                                     │                   │
-│   │   - Simulcast: Encode 3 quality levels              │                   │
-│   │   - Bandwidth estimation: Adjust quality dynamically│                   │
-│   │   - Active speaker detection: Focus bandwidth       │                   │
-│   │   - FEC: Forward error correction for packet loss   │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'SFU-based architecture for scalability',
           'Cascaded SFUs for global distribution',
@@ -27549,24 +25596,7 @@ Privacy: Option to view anonymously (hides viewer)
         description: 'Basic profiles and connections',
         diagramSrc: '/diagrams/linkedin/impl-basic.png',
         svgTemplate: 'linkedin',
-        architecture: `
-┌─────────────────────────────────────────────────────────────┐
-│                  Basic LinkedIn Clone                       │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   Client → API Server → PostgreSQL                          │
-│                              │                              │
-│              ┌───────────────┼───────────────┐              │
-│              ▼               ▼               ▼              │
-│       ┌──────────┐   ┌──────────┐   ┌──────────┐            │
-│       │ Profiles │   │Connections│   │  Jobs   │            │
-│       └──────────┘   └──────────┘   └──────────┘            │
-│                                                             │
-│   2nd degree = SQL subquery (slow)                          │
-│   Search = SQL LIKE (very slow)                             │
-│   Feed = Sort by time (no ranking)                          │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         problems: [
           '2nd degree queries are O(N²)',
           'SQL search doesn\'t scale',
@@ -27579,84 +25609,7 @@ Privacy: Option to view anonymously (hides viewer)
         title: 'Production LinkedIn Architecture',
         diagramSrc: '/diagrams/linkedin/impl-advanced.png',
         svgTemplate: 'linkedinAdvanced',
-        architecture: `
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      LinkedIn Platform                                      │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                  Profile Service                    │                   │
-│   │                                                     │                   │
-│   │   Client → API Gateway → Profile Service            │                   │
-│   │                               │                     │                   │
-│   │              ┌────────────────┴────────────┐        │                   │
-│   │              ▼                             ▼        │                   │
-│   │   ┌──────────────────┐          ┌──────────────────┐│                   │
-│   │   │ PostgreSQL       │          │ Elasticsearch    ││                   │
-│   │   │ (profile data)   │          │ (search index)   ││                   │
-│   │   └──────────────────┘          └──────────────────┘│                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                  Graph Service                      │                   │
-│   │                                                     │                   │
-│   │   ┌─────────────────────────────────────────────┐   │                   │
-│   │   │            Graph Database (Liquid)          │   │                   │
-│   │   │                                             │   │                   │
-│   │   │   - 900M member nodes                       │   │                   │
-│   │   │   - 100B connection edges                   │   │                   │
-│   │   │   - Real-time 2nd degree queries            │   │                   │
-│   │   │   - "People You May Know" computation       │   │                   │
-│   │   │                                             │   │                   │
-│   │   └─────────────────────────────────────────────┘   │                   │
-│   │                                                     │                   │
-│   │   Redis: Connection sets for fast mutual lookup     │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                  Jobs Service                       │                   │
-│   │                                                     │                   │
-│   │   ┌──────────────────┐   ┌──────────────────┐       │                   │
-│   │   │ Elasticsearch    │   │ ML Ranking       │       │                   │
-│   │   │ (job search)     │──►│ Service          │       │                   │
-│   │   └──────────────────┘   └──────────────────┘       │                   │
-│   │          │                        │                 │                   │
-│   │          └────────────────────────┘                 │                   │
-│   │                    │                                │                   │
-│   │                    ▼                                │                   │
-│   │   Candidate-Job matching: Skill overlap + ML        │                   │
-│   │   Recommendations: Collaborative filtering          │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                  Feed Service                       │                   │
-│   │                                                     │                   │
-│   │   Post → Kafka → Fan-out Workers                    │                   │
-│   │                        │                            │                   │
-│   │              ┌─────────┴─────────┐                  │                   │
-│   │              ▼                   ▼                  │                   │
-│   │   ┌──────────────────┐   ┌──────────────────┐       │                   │
-│   │   │ Redis            │   │ Ranking Service  │       │                   │
-│   │   │ (feed cache)     │   │ (ML + rules)     │       │                   │
-│   │   └──────────────────┘   └──────────────────┘       │                   │
-│   │                                                     │                   │
-│   │   Mix: Connection posts + Sponsored + Recommended   │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────┐                   │
-│   │                  Messaging Service                  │                   │
-│   │                                                     │                   │
-│   │   WebSocket → Message Router → Kafka → Storage      │                   │
-│   │                                                     │                   │
-│   │   Similar to Slack/chat system design               │                   │
-│   │                                                     │                   │
-│   └─────────────────────────────────────────────────────┘                   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘`,
+        architecture: 'See diagram above.',
         keyPoints: [
           'Custom graph database for connection queries',
           'Redis for fast connection set operations',
