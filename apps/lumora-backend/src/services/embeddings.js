@@ -17,7 +17,7 @@ const CACHE_MAX = 2000;
 
 let _client = null;
 function client() {
-  if (!_client) _client = OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  if (!_client) _client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   return _client;
 }
 
