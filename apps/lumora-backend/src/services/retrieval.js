@@ -13,13 +13,24 @@
 import { hybridSearchKb, hybridSearchUserDocs } from './hybridRetrieval.js';
 
 const DEFAULT_TIMEOUT_MS = 250;
-const KB_TOP_K = 6;
-const USER_TOP_K = 4;
+// When rerank is on, we cast a wider candidate net — Cohere will trim
+// down to FINAL_TOP_K. When rerank is off, we use the narrow LLM-ready
+// counts directly.
+const KB_TOP_K_NARROW = 6;
+const USER_TOP_K_NARROW = 4;
+const KB_TOP_K_WIDE = 30;
+const USER_TOP_K_WIDE = 20;
+const FINAL_TOP_K = 10;
 const MAX_CHUNK_CHARS = 1200; // hard cap injected into prompt per chunk
 
 function resolveUseHyde(optsValue) {
   if (typeof optsValue === 'boolean') return optsValue;
   return process.env.RAG_USE_HYDE === 'true';
+}
+
+function resolveUseRerank(optsValue) {
+  if (typeof optsValue === 'boolean') return optsValue;
+  return process.env.RAG_USE_RERANK === 'true' && !!process.env.COHERE_API_KEY;
 }
 
 /**
@@ -31,7 +42,7 @@ function resolveUseHyde(optsValue) {
  * @returns {Promise<{chunks, timedOut, latencyMs}>}
  */
 export async function retrieve(opts) {
-  const { question, userId, timeoutMs = DEFAULT_TIMEOUT_MS, useHyde } = opts;
+  const { question, userId, timeoutMs = DEFAULT_TIMEOUT_MS, useHyde, useRerank } = opts;
   const t0 = performance.now();
 
   let timer;
@@ -39,6 +50,7 @@ export async function retrieve(opts) {
     timer = setTimeout(() => resolve('__TIMEOUT__'), timeoutMs);
   });
 
+  const willRerank = resolveUseRerank(useRerank);
   const work = (async () => {
     const { embedQuery } = await import('./embeddings.js');
     let queryForEmbed = question;
@@ -48,11 +60,17 @@ export async function retrieve(opts) {
       if (rewritten) queryForEmbed = `${question}\n\n${rewritten}`;
     }
     const vec = await embedQuery(queryForEmbed);
-    const promises = [hybridSearchKb(question, KB_TOP_K, { vec })];
-    if (userId) promises.push(hybridSearchUserDocs(userId, question, USER_TOP_K, { vec }));
+    const kbTop = willRerank ? KB_TOP_K_WIDE : KB_TOP_K_NARROW;
+    const userTop = willRerank ? USER_TOP_K_WIDE : USER_TOP_K_NARROW;
+    const promises = [hybridSearchKb(question, kbTop, { vec })];
+    if (userId) promises.push(hybridSearchUserDocs(userId, question, userTop, { vec }));
     const results = await Promise.all(promises);
-    const flat = results.flat();
-    return flat.map((c) => ({ ...c, content: (c.content || '').slice(0, MAX_CHUNK_CHARS) }));
+    let merged = results.flat();
+    if (willRerank) {
+      const { rerank } = await import('./reranker.js');
+      merged = await rerank(question, merged, FINAL_TOP_K);
+    }
+    return merged.map((c) => ({ ...c, content: (c.content || '').slice(0, MAX_CHUNK_CHARS) }));
   })();
 
   try {
