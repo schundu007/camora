@@ -98,6 +98,19 @@ export const HEAVY_TOPIC_LOADERS = {
       sreTopics: mod.sreTopics,
     };
   },
+
+  // DevOps — interview prep grounded in primary sources (Phoenix Project, DevOps
+  // Handbook, Accelerate, Continuous Delivery, Team Topologies, IaC Morris,
+  // CNCF Platform Whitepaper, SLSA, Sigstore). 11 sub-categories, ~56 topics.
+  // Diagrams at /diagrams/devops/*.png from gen-devops-diagrams.py.
+  devops: async () => {
+    const mod = await import('./devopsTopics.js');
+    return {
+      devopsCategories: mod.devopsCategories,
+      devopsTopicCategoryMap: mod.devopsTopicCategoryMap,
+      devopsTopics: mod.devopsTopics,
+    };
+  },
 };
 
 /**
