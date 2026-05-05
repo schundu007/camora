@@ -22,6 +22,8 @@ const CATEGORY_HEX = {
   'roadmaps':       'navy-dk',
   'eng-blogs':      'navy-lt',
   'behavioral':     'gold',
+  'sre':            'navy-dk',
+  'devops':         'gold',
 };
 
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
