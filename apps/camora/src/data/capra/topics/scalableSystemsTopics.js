@@ -903,18 +903,14 @@ If ap-southeast-1 is UNHEALTHY:
 - DNS TTL of 60s is typical — failover takes at most 60s + health check interval
 
 **Combining routing policies** (Route 53 supports nested records):
-\`\`\`
-  api.example.com
-    ├── Latency routing → region selection
-    │     ├── us-east-1 → Weighted routing (canary)
-    │     │     ├── 90% → stable.us-east.example.com
-    │     │     └── 10% → canary.us-east.example.com
-    │     ├── eu-west-1 → Failover routing
-    │     │     ├── Primary: ireland-primary
-    │     │     └── Secondary: ireland-dr
-    │     └── ap-southeast-1 → Simple routing
-    └── Health checks at every level
-\`\`\``
+
+\`api.example.com\` is the apex name. Route 53 layers policies top-down:
+
+1. **Latency routing** picks the region.
+   - **us-east-1** → **Weighted routing** for canary: 90% to \`stable.us-east.example.com\`, 10% to \`canary.us-east.example.com\`.
+   - **eu-west-1** → **Failover routing**: primary is \`ireland-primary\`, secondary is \`ireland-dr\`.
+   - **ap-southeast-1** → **Simple routing** (single endpoint).
+2. **Health checks** run at every level — a record only resolves if its target is healthy.`
       },
       {
         question: 'Design a multi-region architecture for a global API using GSLB.',
@@ -1200,15 +1196,16 @@ Keyset:    GET /posts?last_id=80&size=20
 | Total count needed? | Typically yes | No | No |
 
 **Decision flowchart**:
-\`\`\`
-  Is the dataset small (<10K rows)?
-    └── Yes → Offset is fine
-    └── No  → Does the UI need "jump to page N"?
-                └── Yes → Offset with count cap (accept perf hit)
-                └── No  → Is the sort column unique and indexed?
-                            └── Yes → Keyset (simpler implementation)
-                            └── No  → Cursor (handles compound sorts)
-\`\`\`
+
+1. Is the dataset small (<10K rows)?
+   - **Yes** → Offset is fine.
+   - **No** → continue.
+2. Does the UI need "jump to page N"?
+   - **Yes** → Offset with a count cap (accept the perf hit).
+   - **No** → continue.
+3. Is the sort column unique and indexed?
+   - **Yes** → **Keyset** (simpler implementation).
+   - **No** → **Cursor** (handles compound sorts).
 
 **Industry examples**:
 - **Stripe**: Cursor (\`starting_after=ch_xxx\`) — financial data, must be consistent
@@ -1466,25 +1463,21 @@ The client supplies a single \`Idempotency-Key: req_abc123\` to the API Gateway.
 \`\`\`
 
 **Saga pattern with idempotent steps**:
-\`\`\`
-  Step 1: Create Order (idempotent via order_key)
-    ├── Success → Step 2
-    └── Already exists → Skip to Step 2
 
-  Step 2: Reserve Inventory (idempotent via inventory_key)
-    ├── Success → Step 3
-    └── Already reserved → Skip to Step 3
-    └── Failed → Compensate: Cancel Order
-
-  Step 3: Charge Payment (idempotent via payment_key)
-    ├── Success → Step 4
-    └── Already charged → Skip to Step 4
-    └── Failed → Compensate: Release Inventory, Cancel Order
-
-  Step 4: Send Confirmation (idempotent via notif_key)
-    ├── Success → Done
-    └── Already sent → Done
-\`\`\`
+1. **Create Order** (idempotent via \`order_key\`)
+   - Success → continue to step 2.
+   - Already exists → skip to step 2.
+2. **Reserve Inventory** (idempotent via \`inventory_key\`)
+   - Success → continue to step 3.
+   - Already reserved → skip to step 3.
+   - Failed → compensate: Cancel Order.
+3. **Charge Payment** (idempotent via \`payment_key\`)
+   - Success → continue to step 4.
+   - Already charged → skip to step 4.
+   - Failed → compensate: Release Inventory, Cancel Order.
+4. **Send Confirmation** (idempotent via \`notif_key\`)
+   - Success → done.
+   - Already sent → done.
 
 **Critical design rules**:
 1. **Derive downstream keys from upstream key**: Ensures deterministic deduplication across retries
@@ -2376,38 +2369,23 @@ In practice, most production systems use **at-least-once delivery** (the message
         question: 'How does Kafka achieve exactly-once semantics?',
         answer: `**Kafka exactly-once** is built on three pillars: idempotent producer, transactional writes, and consumer isolation.
 
-\`\`\`
-Pillar 1: Idempotent Producer
-  Producer assigns a sequence number to each message.
-  Broker deduplicates based on (ProducerID, SequenceNumber).
+**Pillar 1 — Idempotent Producer.** Producer assigns a sequence number to each message; broker deduplicates based on \`(ProducerID, SequenceNumber)\`.
 
-  Producer                    Broker
-  seq=1: {"order":42} ──────► Stored ✓
-  seq=2: {"order":43} ──────► Stored ✓
-  seq=2: {"order":43} ──────► Deduplicated! (seq 2 already seen)
-                               Returns ACK without storing again
+| Producer send | Broker action |
+|---|---|
+| \`seq=1: {"order":42}\` | Stored. |
+| \`seq=2: {"order":43}\` | Stored. |
+| \`seq=2: {"order":43}\` (retry) | Deduplicated — broker already saw seq 2. ACK returned without storing again. |
 
-  Config: enable.idempotence=true
+Config: \`enable.idempotence=true\`.
 
-Pillar 2: Transactional Writes
-  Multiple writes (to different partitions/topics) are atomic.
+**Pillar 2 — Transactional Writes.** Multiple writes to different partitions/topics are atomic. Inside \`BEGIN TRANSACTION ... COMMIT TRANSACTION\`, the producer stages writes to \`orders-topic\` partition 0, \`inventory-topic\` partition 2, and the consumer offset update. All three become visible atomically on commit, or all are rolled back on failure.
 
-  BEGIN TRANSACTION
-    Write to orders-topic partition 0  ──► Staged
-    Write to inventory-topic partition 2 ──► Staged
-    Write consumer offset update ──► Staged
-  COMMIT TRANSACTION
-    All three writes become visible atomically
-    OR all are rolled back on failure
+Config: \`transactional.id="order-processor-1"\`.
 
-  Config: transactional.id="order-processor-1"
+**Pillar 3 — Consumer \`read_committed\`.** Consumer only sees messages from committed transactions. Messages from aborted transactions are skipped.
 
-Pillar 3: Consumer read_committed
-  Consumer only sees messages from committed transactions.
-
-  Consumer config: isolation.level=read_committed
-  (Messages from aborted transactions are skipped)
-\`\`\`
+Config: \`isolation.level=read_committed\`.
 
 **End-to-end flow**: idempotent Producer (assigns seq numbers, retries safely) → Kafka Broker (deduplicates & stores atomically) → Consumer with read_committed (only sees committed messages). Each hop preserves exactly-once semantics.
 
@@ -3301,15 +3279,15 @@ Max throughput per worker: 4,096,000 IDs/second. Max throughput total: 4,096,000
         question: 'How do you choose an ID strategy for a new microservice?',
         answer: `**Decision framework**:
 
-\`\`\`
-  Do you need IDs to be sortable by creation time?
-    └── No  → UUID v4 (simplest, no coordination)
-    └── Yes → Is 64-bit (BIGINT) storage critical?
-                └── Yes → Snowflake (best performance, needs coordination)
-                └── No  → Do you need a standard format?
-                            └── Yes → UUID v7 (RFC 9562, native DB support)
-                            └── No  → ULID (string-sortable, URL-friendly)
-\`\`\`
+1. Do you need IDs to be sortable by creation time?
+   - **No** → **UUID v4** (simplest, no coordination needed).
+   - **Yes** → continue.
+2. Is 64-bit (BIGINT) storage critical?
+   - **Yes** → **Snowflake** (best performance, requires coordination).
+   - **No** → continue.
+3. Do you need a standard format?
+   - **Yes** → **UUID v7** (RFC 9562, native DB support).
+   - **No** → **ULID** (string-sortable, URL-friendly).
 
 **Practical recommendations by use case**:
 
@@ -3435,28 +3413,17 @@ The choice between these topologies is one of the most impactful architectural d
         question: 'When should you choose active-active vs active-passive?',
         answer: `**Decision framework**:
 
-\`\`\`
-  Do users in multiple regions need low-latency WRITES?
-    └── No  → Active-Passive (simpler, cheaper)
-    └── Yes → Can you tolerate eventual consistency?
-                └── No  → Active-Passive with cross-region sync writes
-                │         (high latency but strong consistency)
-                └── Yes → Active-Active with conflict resolution
-                           (low latency, eventual consistency)
-\`\`\`
+1. Do users in multiple regions need low-latency **writes**?
+   - **No** → **Active-Passive** (simpler, cheaper).
+   - **Yes** → continue.
+2. Can you tolerate eventual consistency?
+   - **No** → **Active-Passive with cross-region sync writes** (high latency but strong consistency).
+   - **Yes** → **Active-Active with conflict resolution** (low latency, eventual consistency).
 
 **Architecture comparison**:
-\`\`\`
-Active-Passive:
-**Active-Passive** — Primary in us-east-1 handles all R+W. Async replication ships data to a Standby in eu-west-1 (R only). Failover means promoting the standby.
-  All writes go to us-east-1 (200ms latency for EU users)
-  Failover: promote standby, ~30-60s downtime
 
-Active-Active:
-**Active-Active** — Site A in us-east-1 (R+W) and Site B in eu-west-1 (R+W) replicate bidirectionally. Both sites accept writes; conflicts must be resolved (LWW, CRDT, or app-level merge).
-  Writes served locally at both sites (<10ms)
-  No failover needed (traffic shifts automatically)
-\`\`\`
+- **Active-Passive** — Primary in us-east-1 handles all R+W. Async replication ships data to a Standby in eu-west-1 (R only). All writes pay the cross-region penalty (≈200ms for EU users). Failover means promoting the standby — typically 30-60s of downtime.
+- **Active-Active** — Site A in us-east-1 (R+W) and Site B in eu-west-1 (R+W) replicate bidirectionally. Writes are served locally at both sites (<10ms). No failover needed (traffic shifts automatically). Conflicts must be resolved (LWW, CRDT, or app-level merge).
 
 **Comparison matrix**:
 
@@ -3479,17 +3446,15 @@ Active-Active:
         question: 'How do you handle write conflicts in active-active systems?',
         answer: `**Write conflicts** occur when two sites modify the same data simultaneously, and the system must decide which version wins.
 
-\`\`\`
-Conflict scenario:
+**Conflict scenario**:
 
-  Site A (US):                    Site B (EU):
-  t=1: Read user.name = "Alice"   t=1: Read user.name = "Alice"
-  t=2: Update name = "Bob"        t=2: Update name = "Charlie"
-  t=3: Replicate to B ──────────► t=3: Replicate to A
-       name = "Bob"                    name = "Charlie"
+| Time | Site A (US) | Site B (EU) |
+|---|---|---|
+| t=1 | Read \`user.name = "Alice"\` | Read \`user.name = "Alice"\` |
+| t=2 | Update \`name = "Bob"\` | Update \`name = "Charlie"\` |
+| t=3 | Replicates "Bob" to B | Replicates "Charlie" to A |
 
-  Conflict! Which value should win?
-\`\`\`
+Both sites now hold conflicting values for the same key. Which value should win?
 
 **Conflict resolution strategies**:
 

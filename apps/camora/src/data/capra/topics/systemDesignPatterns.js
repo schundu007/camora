@@ -1110,17 +1110,15 @@ This structure enables **efficient difference detection**: two replicas can comp
     keyQuestions: [
       {
         question: 'How does a Merkle tree detect differences between replicas efficiently?',
-        answer: `**Structure**:
-\`\`\`
-            Root: H(H12 + H34)
-           /                  \\
-     H12: H(H1+H2)      H34: H(H3+H4)
-      /       \\           /       \\
-   H1:H(D1) H2:H(D2) H3:H(D3) H4:H(D4)
-     │         │         │         │
-    D1        D2        D3        D4
-   (data)   (data)    (data)    (data)
-\`\`\`
+        answer: `**Structure** (a binary Merkle tree over four data blocks D1-D4):
+
+| Level | Nodes |
+|---|---|
+| Leaves (level 0) | \`H1 = H(D1)\`, \`H2 = H(D2)\`, \`H3 = H(D3)\`, \`H4 = H(D4)\` |
+| Level 1 | \`H12 = H(H1 + H2)\`, \`H34 = H(H3 + H4)\` |
+| Root | \`Root = H(H12 + H34)\` |
+
+Each leaf hashes a data block; each internal node hashes the concatenation of its children's hashes.
 
 **Comparison protocol between Replica A and Replica B**:
 \`\`\`
@@ -1167,37 +1165,28 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
       {
         question: 'How are Merkle trees used in Git and blockchain?',
         answer: `**Git — Merkle DAG** (directed acyclic graph):
-\`\`\`
-  commit c3 ─► tree t3
-    │              ├── blob b1 (file1.txt) → SHA: a1b2c3
-    │              ├── blob b2 (file2.txt) → SHA: d4e5f6
-    │              └── tree t3a (subdir/)
-    │                    └── blob b3       → SHA: g7h8i9
-    │
-    ▼ parent
-  commit c2 ─► tree t2
-                   ├── blob b1 (same SHA → reused!)
-                   └── blob b4 (old file2.txt)
-\`\`\`
+
+\`commit c3\` points to \`tree t3\`, which contains:
+- \`blob b1\` (\`file1.txt\`) — SHA \`a1b2c3\`
+- \`blob b2\` (\`file2.txt\`) — SHA \`d4e5f6\`
+- \`tree t3a\` (\`subdir/\`) → \`blob b3\` — SHA \`g7h8i9\`
+
+\`commit c3.parent → commit c2\` points to \`tree t2\`, which contains:
+- \`blob b1\` — same SHA \`a1b2c3\`, reused via content addressing.
+- \`blob b4\` (old \`file2.txt\`).
 
 - Every object is **content-addressed**: SHA-1 of its contents
 - Identical files across commits share the same blob (deduplication)
 - Changing one file creates new blob → new tree → new commit, but unchanged files stay the same
 - \`git diff\` between commits: compare tree hashes recursively
 
-**Bitcoin — Merkle root in block header**:
-\`\`\`
-  Block Header
-  ┌──────────────────┐
-  │ prev_block_hash  │
-  │ merkle_root ─────┼──► Root hash of all transactions
-  │ timestamp        │
-  │ nonce            │       H(H12 + H34)
-  └──────────────────┘      /            \\
-                        H(Tx1+Tx2)    H(Tx3+Tx4)
-                        /      \\      /      \\
-                      Tx1    Tx2   Tx3    Tx4
-\`\`\`
+**Bitcoin — Merkle root in block header**: each Bitcoin block header contains four fields — \`prev_block_hash\`, \`merkle_root\`, \`timestamp\`, and \`nonce\`. The \`merkle_root\` field is the root of a Merkle tree built over the block's transactions.
+
+| Level | Nodes |
+|---|---|
+| Transactions | \`Tx1\`, \`Tx2\`, \`Tx3\`, \`Tx4\` |
+| Pair hashes | \`H(Tx1+Tx2)\`, \`H(Tx3+Tx4)\` |
+| Root (= block header's \`merkle_root\`) | \`H(H(Tx1+Tx2) + H(Tx3+Tx4))\` |
 
 **SPV (Simplified Payment Verification)**: A lightweight client can verify a transaction is in a block by requesting just the Merkle path (log N hashes) from a full node, instead of downloading the entire block.`
       },
@@ -1403,24 +1392,22 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
   Disadvantage: Expensive — a 1B-key Cassandra node takes hours for full repair
 \`\`\`
 
-**Incremental update** — recompute only the affected path:
-\`\`\`
-  Change leaf D4 → recompute:
-    1. H4 = hash(new D4)           ← leaf level
-    2. H34 = hash(H3 + H4)        ← parent
-    3. Root = hash(H12 + H34)     ← root
+**Incremental update** — recompute only the affected path. When leaf \`D4\` changes:
 
-  Cost: O(log N) hash computations
-  For N=1M: only 20 hashes instead of 1M
+1. \`H4 = hash(new D4)\` (leaf level).
+2. \`H34 = hash(H3 + H4)\` (parent).
+3. \`Root = hash(H12 + H34)\` (root).
 
-  ┌──────���──── Root* ──────────┐
-  │                             │
-  H12 (unchanged)          H34* (recomputed)
-  │          │             │           │
-  H1    H2 (unchanged)   H3      H4* (recomputed)
-  │      │               │        │
-  D1    D2              D3      D4* (changed)
-\`\`\`
+Cost: O(log N) hash computations. For N = 1M, that's only 20 hashes instead of 1M.
+
+After \`D4\` changes, only the path from \`D4\` to the root is recomputed (\`*\` marks recomputed nodes):
+
+| Level | Left subtree | Right subtree |
+|---|---|---|
+| Root | \`Root*\` (recomputed from \`H12\` + new \`H34*\`) |  |
+| Level 1 | \`H12\` (unchanged) | \`H34*\` (recomputed) |
+| Leaves | \`H1\`, \`H2\` (unchanged) | \`H3\` (unchanged), \`H4*\` (recomputed from new \`D4\`) |
+| Data | \`D1\`, \`D2\` | \`D3\`, \`D4*\` (changed) |
 
 **Dirty-flag optimization** for batched changes:
 \`\`\`
@@ -1899,17 +1886,11 @@ This pattern works in tandem with **sloppy quorums**. In a strict quorum, a writ
 **Sloppy quorum**: Node D temporarily counts toward the quorum for this write, even though it is not a designated replica for K. The write succeeds because 2 ACKs are received.
 
 **Recovery (Node C comes back)**:
-\`\`\`
-  Node D detects C is alive (via gossip)
-        │
-        ▼
-  Node D replays hint to C:
-    "Here is a write for key K that was meant for you"
-        │
-        ▼
-  Node C applies the write
-  Node D deletes the hint
-\`\`\`
+
+1. Node D detects C is alive (via gossip).
+2. Node D replays the hint to C: "here is a write for key K that was meant for you".
+3. Node C applies the write.
+4. Node D deletes the hint.
 
 **Important**: D holds this data temporarily. D is NOT a permanent replica for K.`
       },
@@ -2308,64 +2289,37 @@ This approach is a cornerstone of **eventually consistent** systems. Rather than
         question: 'How does read repair work step by step?',
         answer: `**Cassandra read repair with digest queries (CL=QUORUM, RF=3)**:
 
-\`\`\`
-Client READ key=K, CL=QUORUM
-        │
-        ▼
-   Coordinator
-    ├── Full data request ──► Node A
-    │                          Returns: {value: "v2", ts: 100}
-    ├── Digest request ──────► Node B
-    │                          Returns: {digest: hash("v2")}
-    └── Digest request ──────► Node C
-                               Returns: {digest: hash("v1")}  ← STALE!
+A client issues \`READ key=K\` at \`CL=QUORUM\`. The coordinator fans out three requests:
 
-Step 1: Compare digests
-  A.digest == B.digest ✓ (both have v2)
-  A.digest != C.digest ✗ (C has stale v1)
+| Replica | Request type | Response |
+|---|---|---|
+| Node A | Full data | \`{value: "v2", ts: 100}\` |
+| Node B | Digest | \`{digest: hash("v2")}\` |
+| Node C | Digest | \`{digest: hash("v1")}\` — stale! |
 
-Step 2: Fetch full data from C
-  C returns: {value: "v1", ts: 90}
+Steps:
 
-Step 3: Determine latest version
-  A.ts=100 > C.ts=90 → v2 is the latest
+1. **Compare digests**: \`A.digest == B.digest\` (both v2). \`A.digest != C.digest\` (C is stale).
+2. **Fetch full data from C**: \`{value: "v1", ts: 90}\`.
+3. **Determine the latest version**: \`A.ts = 100 > C.ts = 90\` → v2 wins.
+4. **Return v2 to the client immediately**.
+5. **(Async)** send v2 to Node C as a repair write. C updates key K to v2.
 
-Step 4: Return v2 to client immediately
-
-Step 5: (async) Send v2 to Node C as repair
-  C updates key K to v2
-
-Result: All three replicas now have v2
-\`\`\`
+Result: all three replicas now hold v2.
 
 **Key optimization**: Digest queries save bandwidth. Instead of transferring the full value from all replicas (which could be large), only a small hash is transferred. Full data is only fetched on mismatch.`
       },
       {
         question: 'What is the difference between foreground and background read repair?',
-        answer: `**Foreground (synchronous) read repair**:
-\`\`\`
-  Client read ──► Coordinator
-                    ├── Request from R replicas (quorum)
-                    ├── Detect mismatch
-                    ├── Repair stale replicas
-                    └── Return latest to client
+        answer: `**Foreground (synchronous) read repair**: client read goes to the coordinator, which (1) requests data from R replicas (quorum), (2) detects mismatches, (3) repairs stale replicas, (4) only then returns the latest value to the client.
+- Latency: higher (waits for repair before responding).
+- Consistency: strongest (repair completes before the response).
+- Used when: \`CL=ALL\` or strong consistency is required.
 
-  Latency: Higher (waits for repair before responding)
-  Consistency: Strongest (repaired before response)
-  Used when: CL=ALL or strong consistency needed
-\`\`\`
-
-**Background (asynchronous) read repair**:
-\`\`\`
-  Client read ──► Coordinator
-                    ├── Request from R replicas (quorum)
-                    ├── Return latest to client IMMEDIATELY
-                    └── (async) Detect mismatch, repair later
-
-  Latency: Lower (respond immediately, repair in background)
-  Consistency: Weaker (other readers may see stale data briefly)
-  Used when: CL=QUORUM or ONE (most common)
-\`\`\`
+**Background (asynchronous) read repair**: client read goes to the coordinator, which (1) requests data from R replicas, (2) returns the latest value to the client immediately, and (3) detects mismatches and repairs asynchronously.
+- Latency: lower (respond immediately, repair in background).
+- Consistency: weaker (other readers may briefly see stale data).
+- Used when: \`CL=QUORUM\` or \`ONE\` (most common).
 
 **Cassandra's approach**:
 \`\`\`
@@ -2747,24 +2701,13 @@ This design solves critical operational problems. A single infinite log file is 
 \`\`\`
 
 **Segment lifecycle**:
-\`\`\`
-  New messages ──append──► Active Segment
-                               │
-                  (reaches segment.bytes=1GB
-                   or segment.ms=7 days)
-                               │
-                               ▼
-                          Close segment
-                          (becomes immutable)
-                               │
-                          Create new active segment
-                               │
-       ┌───────────────────────┴──────────────────┐
-       ▼                                          ▼
-  retention.ms=7d                          cleanup.policy=compact
-  Delete segments older                    Remove old values,
-  than 7 days                              keep latest per key
-\`\`\`
+
+1. New messages are appended to the **active segment**.
+2. When the active segment reaches \`segment.bytes=1GB\` (or \`segment.ms=7 days\`), it is closed and becomes immutable.
+3. A new active segment is created and appends continue.
+4. Closed segments are then handled by one of two cleanup policies:
+   - **\`retention.ms=7d\`** — delete segments older than 7 days.
+   - **\`cleanup.policy=compact\`** — remove superseded values, keep the latest record per key.
 
 **Index file**: Sparse index mapping offset → byte position in the .log file. To find offset 10042:
 1. Binary search index → closest entry <= 10042 (e.g., 10040 → byte 48392)
@@ -2773,19 +2716,15 @@ This design solves critical operational problems. A single infinite log file is 
       },
       {
         question: 'What is the difference between log deletion and log compaction?',
-        answer: `**Deletion (cleanup.policy=delete)**:
-\`\`\`
-  Segment 1     Segment 2     Segment 3 (active)
-  [old data]    [recent data] [new data]
-  age > 7 days
+        answer: `**Deletion (\`cleanup.policy=delete\`)**:
 
-  After cleanup:
-  ×deleted×     Segment 2     Segment 3 (active)
+| Before | After |
+|---|---|
+| Segment 1 (old data, age > 7 days) | × deleted × |
+| Segment 2 (recent data) | Segment 2 (kept) |
+| Segment 3 (active, new data) | Segment 3 (active) |
 
-  Use case: Event streams, metrics, logs
-  - "I only care about the last 7 days of events"
-  - All data in old segments is lost
-\`\`\`
+Use case: event streams, metrics, logs — "I only care about the last 7 days of events." All data in old segments is lost.
 
 **Compaction (cleanup.policy=compact)**:
 \`\`\`
@@ -4043,30 +3982,18 @@ class PhiAccrualDetector:
 \`\`\`
 
 **How phi-accrual feeds into higher-level decisions**:
-\`\`\`
-  Cassandra example:
-    phi-accrual detects Node C is down (phi > 8)
-      │
-      ├──► Gossip propagates DOWN status to all nodes
-      │
-      ├──► Coordinator stops routing reads/writes to C
-      │
-      ├──► Hinted handoff begins for writes destined for C
-      │
-      ├──► Read repair skips C during consistency checks
-      │
-      └──► Operators alerted (monitoring integration)
 
-  Akka Cluster example:
-    phi-accrual detects member unreachable
-      │
-      ├──► Cluster singleton relocates to reachable node
-      │
-      ├──► Sharded entities on unreachable node rebalanced
-      │
-      └──► After confirmation timeout: member downed
-           (shard regions cleaned up)
-\`\`\`
+**Cassandra example** — phi-accrual detects Node C is down (\`phi > 8\`). The detection triggers, in parallel:
+- Gossip propagates the DOWN status to all nodes.
+- Coordinator stops routing reads/writes to C.
+- Hinted handoff begins for writes destined for C.
+- Read repair skips C during consistency checks.
+- Operators alerted (monitoring integration).
+
+**Akka Cluster example** — phi-accrual detects a member as unreachable. The detection triggers, in parallel:
+- Cluster singleton relocates to a reachable node.
+- Sharded entities on the unreachable node are rebalanced.
+- After the confirmation timeout the member is downed (shard regions cleaned up).
 
 **The quality of failure detection affects everything above it**:
 \`\`\`
@@ -4214,44 +4141,22 @@ Naive approach (BROKEN):
         question: 'How does the outbox pattern work with Change Data Capture?',
         answer: `**Architecture with Debezium CDC**:
 
-\`\`\`
-┌──────────────────────────────────────────────┐
-│              Order Service                    │
-│                                              │
-│  BEGIN TRANSACTION                           │
-│    INSERT INTO orders (id, user_id, total)   │
-│    INSERT INTO outbox (                      │
-│      aggregate_type='Order',                 │
-│      aggregate_id='order-123',               │
-│      event_type='OrderCreated',              │
-│      payload='{"orderId":"123","total":99}'  │
-│    )                                         │
-│  COMMIT                                      │
-└──────────────────┬───────────────────────────┘
-                   │ (database WAL)
-                   ▼
-┌──────────────────────────────────────────────┐
-│           Debezium CDC Connector             │
-│                                              │
-│  Tails PostgreSQL WAL (replication slot)     │
-│  Detects INSERT into outbox table            │
-│  Transforms to Kafka event                   │
-│  Routes to topic: "orders.events"            │
-└──────────────────┬───────────────────────────┘
-                   │
-                   ▼
-┌──────────────────────────────────────────────┐
-│            Apache Kafka                      │
-│                                              │
-│  Topic: orders.events                        │
-│    Partition 0: [OrderCreated:123]           │
-└──────────────────┬───────────────────────────┘
-                   │
-          ┌────────┴────────┐
-          ▼                 ▼
-  Inventory Service    Payment Service
-  (consumes event)     (consumes event)
-\`\`\`
+![Transactional outbox with Debezium CDC](/diagrams/systemdesign/outbox.png)
+
+End-to-end pipeline:
+
+1. **Order Service** runs a single ACID transaction that inserts into both \`orders\` and the \`outbox\` table:
+   \`\`\`sql
+   BEGIN TRANSACTION;
+     INSERT INTO orders (id, user_id, total) VALUES (...);
+     INSERT INTO outbox (aggregate_type, aggregate_id, event_type, payload)
+       VALUES ('Order', 'order-123', 'OrderCreated', '{"orderId":"123","total":99}');
+   COMMIT;
+   \`\`\`
+2. The commit is durably appended to the **PostgreSQL WAL**.
+3. The **Debezium CDC connector** tails the WAL via a replication slot, detects each \`INSERT\` into \`outbox\`, transforms it into a Kafka event, and routes it to the \`orders.events\` topic.
+4. **Apache Kafka** stores the event on partition 0 of \`orders.events\` (e.g. \`[OrderCreated:123]\`).
+5. Downstream consumers — **Inventory Service** and **Payment Service** — independently consume the event.
 
 **Why CDC is better than polling**:
 | Property | Polling | CDC (Debezium) |
@@ -5329,14 +5234,7 @@ Choosing the right mechanism depends on your requirements: **direction of data f
         question: 'How do you scale WebSocket servers horizontally?',
         answer: `The core challenge is that a WebSocket connection is **stateful** — it is bound to a specific server process. When you scale to multiple servers, a message published on Server A must reach clients connected to Server B.
 
-**Architecture for horizontal scaling**:
-\`\`\`
-  Clients      Load Balancer (sticky sessions)
-    │               │
-    ├──► WS Server 1 ──┐
-    ├──► WS Server 2 ──┤──► Redis Pub/Sub (or Kafka/NATS)
-    └──► WS Server 3 ──┘
-\`\`\`
+**Architecture for horizontal scaling**: clients connect through a Load Balancer with sticky sessions. The LB pins each connection to one of the WS Servers (WS Server 1, 2, 3). All WS servers attach to a shared Redis Pub/Sub channel (or Kafka / NATS) so any server can publish a message and all servers can deliver it to their connected clients.
 
 **Step 1 — Sticky sessions**: The load balancer must route a WebSocket connection to the same backend server for the lifetime of that connection. Options:
 - IP hash routing
@@ -5458,22 +5356,10 @@ This hybrid approach — streaming for real-time delivery, REST for gap filling 
         question: 'How do you design a notification system that supports real-time push and offline delivery?',
         answer: `A production notification system must handle two modes: **real-time push** for online users and **persistent storage** for offline users who will read notifications later.
 
-**Architecture**:
-\`\`\`
-  Event Source → Notification Service → Presence Check
-                                          │
-                                ┌─────────┴──────────┐
-                                ▼                    ▼
-                          Online Path          Offline Path
-                          (push via WS/SSE)    (store in DB)
-                                │                    │
-                                ▼                    ▼
-                          WS Gateway            Notification Store
-                                │                    │
-                                ▼                    ▼
-                          Client receives      Client fetches on
-                          in real-time          next login/open
-\`\`\`
+**Architecture**: an event source publishes to the **Notification Service**, which performs a **presence check** for the recipient and forks into two paths:
+
+- **Online path** — push via WebSocket / SSE through the **WS Gateway**, so the client receives the notification in real-time.
+- **Offline path** — store the notification in the **Notification Store** so the client can fetch it on the next login/open.
 
 **Presence tracking**: Maintain a set of online users with their connection endpoints.
 \`\`\`
@@ -5517,14 +5403,7 @@ This dual-path approach ensures no notifications are lost, while online users re
 - Not suitable for event streaming — browsers have removed support for push promises
 - Do not confuse with HTTP/2 multiplexed streams, which SSE benefits from
 
-**SSE over HTTP/2**:
-\`\`\`
-  Single TCP connection (HTTP/2 multiplexed)
-  ├── Stream 1: SSE /events/notifications
-  ├── Stream 3: SSE /events/prices
-  ├── Stream 5: Regular REST request
-  └── Stream 7: SSE /events/activity
-\`\`\`
+**SSE over HTTP/2**: a single TCP connection carries multiple multiplexed streams — Stream 1 for \`SSE /events/notifications\`, Stream 3 for \`SSE /events/prices\`, Stream 5 for a regular REST request, and Stream 7 for \`SSE /events/activity\`.
 - HTTP/2 eliminates the 6-connection-per-domain limit of HTTP/1.1
 - Multiple SSE streams share one TCP connection
 - Standard HTTP headers, cookies, and auth flow apply
@@ -5557,16 +5436,7 @@ This dual-path approach ensures no notifications are lost, while online users re
         question: 'How would you design real-time updates for a collaborative document editor?',
         answer: `Collaborative editing is one of the most demanding real-time use cases because multiple users modify the same document simultaneously, and conflicts must be resolved deterministically.
 
-**Architecture**:
-\`\`\`
-  User A (browser)                 User B (browser)
-       │                                │
-  Local edit ──► WebSocket ──► Collaboration Server ◄── WebSocket ◄── Local edit
-       │              │              │
-       ▼              ▼              ▼
-  Local state    Operation Log    Local state
-  (optimistic)   (source of truth) (optimistic)
-\`\`\`
+**Architecture**: User A and User B each edit in their browser. Each local edit goes through a WebSocket to a central **Collaboration Server** and is reflected back to peers. Each browser keeps **local state** (applied optimistically before server ACK). The Collaboration Server appends every edit to a shared **Operation Log** which is the source of truth and the basis for OT/CRDT convergence.
 
 **Conflict resolution strategies**:
 
@@ -5803,13 +5673,13 @@ There are several strategies for managing contention, each with different trade-
         question: 'How does ZooKeeper implement distributed locks and why is it considered safer?',
         answer: `ZooKeeper provides distributed locks through **ephemeral sequential znodes**, which offer stronger guarantees than Redis-based locks.
 
-**Lock acquisition protocol**:
-\`\`\`
-  /locks/resource-42/
-    ├── lock-0000000001 (ephemeral, Client A)  ← holder
-    ├── lock-0000000002 (ephemeral, Client B)  ← waiting
-    └── lock-0000000003 (ephemeral, Client C)  ← waiting
-\`\`\`
+**Lock acquisition protocol** — under the path \`/locks/resource-42/\`, znodes are created in sequence:
+
+| Znode | Owner | State |
+|---|---|---|
+| \`lock-0000000001\` (ephemeral) | Client A | holder (lowest sequence) |
+| \`lock-0000000002\` (ephemeral) | Client B | waiting |
+| \`lock-0000000003\` (ephemeral) | Client C | waiting |
 
 1. Client creates an ephemeral sequential znode under the lock path
 2. Client lists all children and checks if its znode has the lowest sequence number
@@ -5852,12 +5722,7 @@ The monotonically increasing sequence number serves as a natural fencing token, 
         question: 'What is queue-based serialization and when does it outperform locking?',
         answer: `**Queue-based serialization** eliminates contention entirely by routing all operations that affect a given resource through a single, ordered queue processed by one consumer at a time.
 
-**Architecture**:
-\`\`\`
-  Writer A ──┐
-  Writer B ──┤──► Queue (partitioned by resource_id) ──► Single Consumer
-  Writer C ──┘                                            (processes sequentially)
-\`\`\`
+**Architecture**: Multiple writers (A, B, C) push operations into a queue partitioned by \`resource_id\`. Each partition is drained by a single consumer that processes its operations sequentially.
 
 **How it works**:
 1. Instead of acquiring a lock and writing directly, clients enqueue their operations
@@ -6158,52 +6023,27 @@ There are two saga coordination approaches: **orchestration** and **choreography
       {
         question: 'Compare orchestration vs choreography for saga coordination.',
         answer: `**Orchestration** — centralized coordinator:
-\`\`\`
-                    ┌──────────────┐
-                    │    Saga      │
-                    │ Orchestrator │
-                    └──────┬───────┘
-                           │
-        ┌──────────┬───────┼───────┬──────────┐
-        ▼          ▼       ▼       ▼          ▼
-    ┌───────┐ ┌────────┐ ┌─────┐ ┌───────┐ ┌──────┐
-    │Order  │ │Inventory│ │Pay  │ │Confirm│ │Ship  │
-    │Service│ │Service  │ │Svc  │ │       │ │Svc   │
-    └───────┘ └────────┘ └─────┘ └───────┘ └──────┘
-\`\`\`
 
-- Orchestrator contains the saga definition (step sequence, compensation logic)
-- Each service exposes "execute" and "compensate" endpoints
-- Orchestrator tracks saga state in its database
-- Easy to add new steps, change order, or add branching logic
+![Saga orchestration](/diagrams/systemdesign/saga.png)
+
+A central **Saga Orchestrator** invokes each downstream service in turn — Order Service, Inventory Service, Payment Service, Confirmation, Ship Service. The orchestrator owns the saga definition (step sequence and compensation logic). Each service exposes "execute" and "compensate" endpoints. Orchestrator state lives in its own database, so it's easy to add new steps, change ordering, or add branching logic.
 
 **Choreography** — decentralized events:
-\`\`\`
-    ┌───────┐    order.created    ┌────────┐   inventory.reserved   ┌─────┐
-    │Order  │ ──────────────────► │Inventory│ ────────────────────► │Pay  │
-    │Service│                     │Service  │                       │Svc  │
-    └───────┘                     └────────┘                       └─────┘
-        ▲                                                              │
-        │                    payment.completed                         │
-        └──────────────────────────────────────────────────────────────┘
-\`\`\`
 
-- Each service listens for events and publishes its own
-- No central coordinator — logic is distributed
-- Adding a new step requires modifying multiple services
+![Saga choreography](/diagrams/systemdesign/saga-choreography.png)
+
+Each service listens for the event upstream and publishes the next event itself. \`Order Service\` emits \`order.created\` → \`Inventory Service\` reacts and emits \`inventory.reserved\` → \`Payment Service\` reacts and finally emits \`payment.completed\`, which closes the loop back to Order Service. There is no central coordinator — logic is distributed across services. Adding a new step requires modifying multiple services.
 
 **Comparison**:
-\`\`\`
-  | Aspect             | Orchestration                       | Choreography             |
-  | ------------------ | ----------------------------------- | ------------------------ |
-  | Complexity visible | One place                           | Spread across services   |
-  | Coupling           | Orchestrator knows all services     | Loose (events)           |
-  | Debugging          | Centralized log                     | Distributed trace        |
-  | Adding steps       | Modify coordinator                  | Modify multiple services |
-  | Single point of    | Orchestrator (mitigate with HA      | None                     |
-  |   failure          | / replicas)                         |                          |
-  | Best for           | 4+ step flows                       | 2–3 step flows           |
-\`\`\`
+
+| Aspect | Orchestration | Choreography |
+|---|---|---|
+| Complexity visible | One place | Spread across services |
+| Coupling | Orchestrator knows all services | Loose (events) |
+| Debugging | Centralized log | Distributed trace |
+| Adding steps | Modify coordinator | Modify multiple services |
+| Single point of failure | Orchestrator (mitigate with HA / replicas) | None |
+| Best for | 4+ step flows | 2-3 step flows |
 
 **Recommendation**: Use orchestration for the core business flow (order placement, account creation). Use choreography for auxiliary, loosely coupled concerns (analytics events, cache invalidation, notification triggers).`
       },
@@ -6724,17 +6564,9 @@ The challenge in all caching and replication strategies is **consistency** — h
         answer: `**CQRS (Command Query Responsibility Segregation)** separates the write model (commands) from the read model (queries) into different data stores, each optimized for its access pattern.
 
 **Architecture**:
-\`\`\`
-  Commands (writes)              Queries (reads)
-       │                              ▲
-       ▼                              │
-  ┌─────────┐                   ┌──────────┐
-  │ Write   │ ──── Events ────► │ Read     │
-  │ Model   │    (async sync)   │ Model    │
-  │ (RDBMS) │                   │ (Elastic/│
-  └─────────┘                   │  Redis)  │
-                                └──────────┘
-\`\`\`
+![CQRS — separate read and write models](/diagrams/systemdesign/cqrs-vs-traditional.png)
+
+Commands (writes) hit the **Write Model** (typically RDBMS, normalized for consistency). Each commit emits domain events that asynchronously update the **Read Model** (Elasticsearch, Redis, materialized views — denormalized for fast reads). Queries (reads) hit only the Read Model.
 
 **Write model**: Normalized, optimized for consistency and transactional integrity. Handles validations, business rules, and state transitions.
 
@@ -6834,16 +6666,7 @@ The event store is append-only (immutable log of state changes). Read models are
         question: 'How would you design a read-optimized system for a social media news feed?',
         answer: `The news feed is the canonical read-scaling problem. Users check their feed far more often than they post (100:1+ read-to-write ratio). The feed aggregates posts from all followed users, sorted by relevance or time.
 
-**Architecture — fanout-on-write with caching**:
-\`\`\`
-  User posts ──► Post Service ──► Fanout Service ──► Feed Cache (per user)
-                                                         │
-  User reads feed ──► Feed Service ──► Feed Cache ───────┘
-                                          │ (miss)
-                                          ▼
-                                    Feed Generator
-                                    (query + merge)
-\`\`\`
+**Architecture — fanout-on-write with caching**: a user's post flows \`User posts → Post Service → Fanout Service → Feed Cache\` (per follower). On read, the path is \`User reads feed → Feed Service → Feed Cache\`. On a feed-cache miss the Feed Service falls back to the **Feed Generator**, which queries posts from followed users and merges them on the fly.
 
 **Fanout-on-write**:
 \`\`\`
@@ -6992,16 +6815,7 @@ This is essentially CQRS — the materialized table is the read model, updated a
     /api/products/42 (ja-JP) → version B
 \`\`\`
 
-**Edge computing (Cloudflare Workers, Vercel Edge Functions)**:
-\`\`\`
-  Request → CDN Edge → Edge Function → Cache
-                           │ (miss)
-                           ▼
-                     Origin API Server
-                           │
-                           ▼
-                     Response cached at edge
-\`\`\`
+**Edge computing (Cloudflare Workers, Vercel Edge Functions)**: a request lands at the CDN Edge, which invokes an Edge Function. The function checks its local cache first; on a miss, it calls the origin API server, then caches the response back at the edge for subsequent requests.
 
 Edge functions can assemble personalized responses from cached fragments:
 \`\`\`
@@ -7197,16 +7011,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
         question: 'How does Kafka serve as a write buffer and what problems does it solve?',
         answer: `**Kafka as a write buffer** decouples fast producers from slow consumers, absorbing write spikes that would overwhelm a database.
 
-**Architecture**:
-\`\`\`
-  High-volume producers         Kafka             Slow consumers
-  (web servers, apps)           (buffer)          (databases, analytics)
-       │                          │                    │
-  10,000 writes/s ──► Topic ──► Consumer Group ──► Database
-                      (partitioned)               (1,000 writes/s)
-
-  Kafka absorbs the 10x difference, consumers drain at their own pace
-\`\`\`
+**Architecture**: high-volume producers (web servers, apps) push 10,000 writes/sec into a partitioned **Kafka topic**. A consumer group drains the topic into the downstream **database** (or analytics store) at its sustainable rate of ~1,000 writes/sec. Kafka absorbs the 10x mismatch — consumers drain at their own pace while producers stay un-blocked.
 
 **Problems Kafka solves as a write buffer**:
 
@@ -7388,24 +7193,14 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
         question: 'How would you design a system to ingest millions of events per second (IoT/telemetry)?',
         answer: `Telemetry ingestion is a pure write-scaling problem. Sensors, devices, and applications generate enormous volumes of small events that must be captured, stored, and made queryable.
 
-**Architecture for high-volume ingestion**:
-\`\`\`
-  IoT Devices / Apps (producers)
-       │ (millions of events/second)
-       ▼
-  Ingestion Layer (stateless, horizontally scalable)
-  ├── API Gateway / Load Balancer
-  └── Ingestion Workers (validate, enrich, route)
-       │
-       ▼
-  Kafka / Kinesis (durable buffer, partitioned)
-       │
-       ├──► Real-time Path: Stream Processor (Flink/Spark)
-       │    → Real-time dashboards, alerts
-       │
-       └──► Batch Path: Consumer → Time-Series DB / Data Lake
-            → Historical queries, analytics
-\`\`\`
+**Architecture for high-volume ingestion** (top-down):
+
+1. **IoT devices / apps** produce millions of events per second.
+2. **Ingestion layer** — stateless and horizontally scalable. Sits behind an API Gateway / Load Balancer; ingestion workers validate, enrich, and route events.
+3. **Kafka / Kinesis** — durable, partitioned buffer.
+4. The buffer fans out into two paths in parallel:
+   - **Real-time path** — stream processor (Flink, Spark) feeds real-time dashboards and alerts.
+   - **Batch path** — consumer drains into a time-series DB / data lake for historical queries and analytics.
 
 **Ingestion optimizations**:
 
@@ -7760,55 +7555,41 @@ Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine t
         question: 'How do you design a media processing pipeline for uploaded files?',
         answer: `After a file is uploaded, it typically needs processing: images need thumbnails, videos need transcoding, documents need text extraction, and all files need virus scanning. This processing must be asynchronous — the user should not wait for it.
 
-**Architecture**:
-\`\`\`
-  Upload Complete
-       │
-       ▼
-  Event: "file.uploaded" (Kafka/SQS)
-       │
-       ├──► Virus Scanner ──► quarantine or approve
-       ├──► Metadata Extractor ──► EXIF, duration, dimensions
-       ├──► Thumbnail Generator ──► multiple sizes
-       ├──► Video Transcoder ──► multiple formats/resolutions
-       └──► Text Extractor (OCR/PDF) ──► searchable text
+**Architecture**: when an upload completes, the upload service emits a \`file.uploaded\` event onto Kafka / SQS. That event fans out to multiple processors in parallel:
 
-  Each processor updates file status in database
-  Client polls or receives WebSocket notification when processing completes
-\`\`\`
+- **Virus scanner** → quarantine or approve.
+- **Metadata extractor** → EXIF, duration, dimensions.
+- **Thumbnail generator** → multiple sizes.
+- **Video transcoder** → multiple formats/resolutions.
+- **Text extractor (OCR/PDF)** → searchable text.
 
-**Image processing pipeline**:
-\`\`\`
-  Original upload (8MB, 4000x3000 JPEG)
-       │
-       ├──► Thumbnail: 150x150 (5KB)
-       ├──► Small: 640x480 (50KB)
-       ├──► Medium: 1280x960 (150KB)
-       ├──► Large: 1920x1440 (400KB)
-       ├──► WebP variants of each (30-50% smaller)
-       └──► AVIF variants (if supported, 50-70% smaller)
+Each processor updates file status in the database. The client polls or receives a WebSocket notification when processing completes.
 
-  Store all variants in S3:
-    images/abc123/original.jpg
-    images/abc123/thumb.jpg
-    images/abc123/small.webp
-    images/abc123/medium.webp
-    ...
-\`\`\`
+**Image processing pipeline** — original upload is an 8MB, 4000x3000 JPEG. The pipeline derives:
 
-**Video processing pipeline**:
-\`\`\`
-  Original upload (2GB, 4K MOV)
-       │
-       ├──► 4K H.265 (adaptive bitrate, 8 Mbps)
-       ├──► 1080p H.264 (adaptive bitrate, 5 Mbps)
-       ├──► 720p H.264 (adaptive bitrate, 2.5 Mbps)
-       ├──► 480p H.264 (adaptive bitrate, 1 Mbps)
-       ├──► Thumbnail sprites (for preview on hover)
-       └──► HLS/DASH manifest for adaptive streaming
+| Variant | Dimensions | Approx size |
+|---|---|---|
+| Thumbnail | 150x150 | 5KB |
+| Small | 640x480 | 50KB |
+| Medium | 1280x960 | 150KB |
+| Large | 1920x1440 | 400KB |
+| WebP variants of each | — | 30-50% smaller |
+| AVIF variants (if supported) | — | 50-70% smaller |
 
-  Processing time: minutes to hours (use spot instances)
-\`\`\`
+All variants are stored in S3 under a single prefix (e.g. \`images/abc123/original.jpg\`, \`images/abc123/thumb.jpg\`, \`images/abc123/small.webp\`, \`images/abc123/medium.webp\`, ...).
+
+**Video processing pipeline** — original upload is a 2GB 4K MOV. The pipeline derives:
+
+| Variant | Codec | Bitrate |
+|---|---|---|
+| 4K | H.265 (adaptive bitrate) | 8 Mbps |
+| 1080p | H.264 (adaptive bitrate) | 5 Mbps |
+| 720p | H.264 (adaptive bitrate) | 2.5 Mbps |
+| 480p | H.264 (adaptive bitrate) | 1 Mbps |
+| Thumbnail sprites | — | for hover preview |
+| HLS/DASH manifest | — | adaptive streaming |
+
+Processing time: minutes to hours (use spot instances).
 
 **Processing status tracking**:
 \`\`\`
@@ -7832,18 +7613,7 @@ Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine t
         question: 'How do you efficiently serve large files to millions of users via CDN?',
         answer: `Serving large files at scale requires minimizing origin load, reducing latency through edge caching, and handling partial content requests for streaming.
 
-**CDN architecture for file serving**:
-\`\`\`
-  User Request → CDN Edge (nearest PoP)
-                    │
-                 Cache HIT → Serve directly (2-20ms latency)
-                    │
-                 Cache MISS → Fetch from Origin (S3)
-                    │          → Cache at edge for subsequent requests
-                    │          → Serve to user
-                    │
-  Origin: S3 bucket (or equivalent object storage)
-\`\`\`
+**CDN architecture for file serving**: The user request lands at the nearest CDN Edge PoP. On a cache HIT the edge serves the file directly (2-20ms latency). On a cache MISS the edge fetches the file from the origin (S3), caches it locally for subsequent requests, and serves it to the user.
 
 **Range requests (essential for video streaming)**:
 \`\`\`
@@ -7979,19 +7749,11 @@ The player measures bandwidth and switches quality automatically. Each 10-second
         question: 'How would you design a system like Dropbox for file sync across devices?',
         answer: `File sync is one of the most complex distributed systems problems — it combines large blob handling with conflict resolution, offline support, and real-time notifications.
 
-**Architecture**:
-\`\`\`
-  Device A (laptop)                   Cloud                   Device B (phone)
-       │                                │                          │
-  Local filesystem                 Sync Service               Local filesystem
-  File watcher ──► Sync Client ──► Block Server ◄── Sync Client ◄── File watcher
-                        │              │                  │
-                        │         Metadata Service        │
-                        │         (file tree, versions)    │
-                        │              │                  │
-                        └──► Notification Service ◄───────┘
-                             (real-time push)
-\`\`\`
+**Architecture**: Device A (laptop) and Device B (phone) each run a local filesystem with a file watcher and a sync client. Both clients talk to the cloud sync service through three components:
+
+- **Block Server** — receives and serves content-addressed file chunks (deduplication boundary).
+- **Metadata Service** — stores the file tree, per-file version history, and per-device sync state.
+- **Notification Service** — real-time push (WebSocket / mobile push) so the other device wakes up when a peer uploads a change.
 
 **Key components**:
 
@@ -8116,15 +7878,15 @@ The challenge lies in **reliability**: workers crash, tasks get stuck, downstrea
     keyQuestions: [
       {
         question: 'How do you design an asynchronous task processing system?',
-        answer: `**Architecture**:
-\`\`\`
-  Client → API Server → Job Queue → Worker Pool → Result Store
-    │          │            │           │              │
-    │     Return job_id  Persistent   Scale          Notify
-    │     immediately    (durable)    independently  client
-    ▼                                                   │
-  Poll for status ◄─────────────────────────────────────┘
-\`\`\`
+        answer: `**Architecture** — left to right:
+
+1. **Client** issues the request.
+2. **API Server** validates and returns a \`job_id\` immediately.
+3. **Job Queue** (durable) holds queued work.
+4. **Worker Pool** drains the queue and scales independently of the API.
+5. **Result Store** persists outputs and notifies the client.
+
+The client polls (or subscribes) for status using the \`job_id\` until the result is available.
 
 **Request flow**:
 \`\`\`
@@ -8492,19 +8254,13 @@ Prevents starvation while still favoring high-priority tasks.
         question: 'How do you design a distributed task scheduler for recurring and scheduled jobs?',
         answer: `A distributed task scheduler handles cron-like recurring jobs and one-time scheduled tasks across a cluster of workers, ensuring each job executes exactly once even when multiple scheduler instances are running.
 
-**Architecture**:
-\`\`\`
-  Schedule Store (PostgreSQL)
-       │
-  Scheduler Service (2+ instances for HA)
-       │ (leader election for scheduling)
-       ▼
-  Job Queue (Redis/Kafka)
-       │
-  Worker Pool (N workers, auto-scaling)
-       │
-  Result Store + Notification
-\`\`\`
+**Architecture** (top-down):
+
+1. **Schedule Store** (PostgreSQL) — durable schedule definitions and \`next_run_at\` per job.
+2. **Scheduler Service** — 2+ instances for HA; leader election picks a single active scheduler at any moment.
+3. **Job Queue** (Redis / Kafka) — the active scheduler enqueues due jobs.
+4. **Worker Pool** — N workers (auto-scaling) drain the queue.
+5. **Result Store + Notification** — workers persist results and notify clients.
 
 **Schedule storage**:
 \`\`\`
@@ -8601,19 +8357,13 @@ Prevents starvation while still favoring high-priority tasks.
         answer: `Progress tracking transforms a frustrating "loading spinner" into an informative experience. Users who see concrete progress are significantly more patient and less likely to abandon or retry (which would create duplicate work).
 
 **Progress reporting architecture**:
-\`\`\`
-  Worker                   Progress Store (Redis)       Client
-    │                            │                        │
-    ├── Update progress ──────►  SET job:abc:progress     │
-    │   (after each chunk)       {percent: 35,            │
-    │                             stage: "Processing",    │
-    │                             message: "Page 7 of 20"}│
-    │                            │                        │
-    │                            │  ◄──── Poll / Subscribe │
-    │                            │  ──── Return progress──►│
-    │                            │                        │
-    ├── Complete ────────────►   SET status: completed    │
-\`\`\`
+
+| Step | Worker | Progress Store (Redis) | Client |
+|---|---|---|---|
+| 1 | After each chunk, update progress | \`SET job:abc:progress {percent: 35, stage: "Processing", message: "Page 7 of 20"}\` |  |
+| 2 |  | Holds latest snapshot | Polls or subscribes |
+| 3 |  | Returns the current progress payload | Renders the bar / stage / message |
+| 4 | When done, write final state | \`SET status: completed\` | Receives the completion signal |
 
 **Granular progress reporting**:
 \`\`\`

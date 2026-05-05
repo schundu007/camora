@@ -2397,18 +2397,16 @@ If a key exceeds a request threshold, activate a circuit breaker that serves a c
 - Posts can be edited/deleted and must reflect within 30 seconds
 - Trending posts may get 1M+ views per minute
 
-**Architecture**:
-\`\`\`
-User → CDN (images/video) → Load Balancer → App Server
-                                               │
-                              L1 Cache (local)──┤
-                                               │
-                              L2 Redis Cluster──┤
-                                               │
-                              Timeline Service──┤
-                                               │
-                              PostgreSQL/Cassandra
-\`\`\`
+**Architecture** (request flow, top to bottom):
+
+1. **User** → **CDN** (images and video).
+2. CDN miss or non-media request → **Load Balancer**.
+3. Load Balancer → **App Server**.
+4. The App Server consults its caching stack in order:
+   - **L1 cache** (local, in-process).
+   - **L2 Redis Cluster** (shared, hot data).
+   - **Timeline Service** (precomputed feeds).
+5. On full miss, falls through to **PostgreSQL / Cassandra** (source of truth).
 
 **Layer 1: CDN for Media**
 - All post images and video thumbnails cached at CDN edge (CloudFront/Cloudflare)
@@ -4345,14 +4343,13 @@ Content-Type: application/json
 \`\`\`
 
 **Server-side implementation**:
-\`\`\`
-1. Client generates unique key (UUID) per logical operation
-2. Server receives request + idempotency key
-3. Server checks: has this key been seen before?
-   ├─ YES → Return stored response (exact same as first time)
-   └─ NO → Process request, store (key → response) with TTL
-4. TTL: 24-48 hours (Stripe uses 24h)
-\`\`\`
+
+1. Client generates a unique key (UUID) per logical operation.
+2. Server receives the request along with the idempotency key.
+3. Server checks whether the key has been seen before:
+   - **Yes** → return the stored response (exact same as first time).
+   - **No** → process the request, store \`(key → response)\` with a TTL.
+4. TTL: 24-48 hours (Stripe uses 24h).
 
 **Storage pattern** (Redis or database):
 \`\`\`
@@ -4397,21 +4394,15 @@ Problem: 4 services x 5 concerns = 20 implementations to maintain
 \`\`\`
 
 **With a gateway** — centralized concerns:
-\`\`\`
-Client ──HTTPS──▶ API Gateway ──HTTP──▶ User Service
-                       │          ──gRPC──▶ Order Service
-                       │          ──gRPC──▶ Payment Service
-                       │          ──HTTP──▶ Search Service
-                       │
-              Handles: SSL termination
-                       Authentication / JWT validation
-                       Rate limiting (per user/key)
-                       Request/response transformation
-                       Load balancing
-                       Logging & metrics
-                       CORS headers
-                       API versioning routing
-\`\`\`
+
+The client speaks HTTPS to a single **API Gateway**, which fans out to internal services using whatever protocol each prefers:
+
+- \`User Service\` over HTTP.
+- \`Order Service\` over gRPC.
+- \`Payment Service\` over gRPC.
+- \`Search Service\` over HTTP.
+
+The gateway centralizes: SSL termination, authentication / JWT validation, rate limiting (per user / per key), request and response transformation, load balancing, logging and metrics, CORS headers, and API versioning routing.
 
 **Core gateway responsibilities**:
 1. **Authentication & Authorization**: Validate JWT/API keys once at the edge. Pass user identity to downstream services via headers (X-User-Id, X-User-Roles). Services trust the gateway.
@@ -4928,26 +4919,14 @@ Server Pool State:
           answer: `**Layer 4 (Transport Layer) — TCP/UDP awareness only:**
 L4 load balancers operate at the transport layer of the OSI model. They make routing decisions based solely on source/destination IP addresses, ports, and protocol type (TCP or UDP). They never inspect the application payload — they simply forward raw TCP connections or UDP datagrams. This makes them extremely fast: Google's Maglev processes ~12M packets/sec on a single 8-core server at line rate.
 
-\`\`\`
-Client ──TCP──▶ L4 LB ──TCP──▶ Server
-                │
-   Sees: IP, port, protocol
-   Cannot see: URL, headers, cookies, body
-\`\`\`
+A client opens a TCP connection to the L4 LB, which forwards TCP straight through to a backend server. The LB sees only IP, port, and protocol — it cannot see the URL, headers, cookies, or body.
 
 L4 maintains a single TCP connection from client to server (or does NAT), adding minimal latency (sub-millisecond). AWS NLB is L4 — it provides static IP addresses per AZ, handles millions of requests/sec, and absorbs sudden traffic spikes without pre-warming. Use L4 for non-HTTP protocols (database proxying, gaming, DNS, IoT MQTT), or when raw throughput matters more than routing intelligence.
 
 **Layer 7 (Application Layer) — full HTTP awareness:**
 L7 load balancers terminate the client's TCP connection, parse the full HTTP request (URL path, headers, cookies, query strings, even request body), then open a new connection to the chosen backend. This two-connection model adds 1-5ms latency but enables powerful routing: send /api/* to API servers, /static/* to CDN origin, route by Host header for multi-tenant apps, or inspect cookies for A/B testing.
 
-\`\`\`
-Client ──HTTPS──▶ L7 LB ──HTTP──▶ Server
-                   │
-   Sees: URL path, Host header, cookies, JWT,
-         Content-Type, query params, gRPC method
-   Can: terminate SSL, inject X-Forwarded-For,
-        rewrite URLs, cache responses, rate-limit
-\`\`\`
+A client opens an HTTPS connection to the L7 LB, which terminates TLS and opens a new HTTP connection to a backend server. The LB sees the full request — URL path, Host header, cookies, JWT, Content-Type, query params, gRPC method — and can terminate SSL, inject \`X-Forwarded-For\`, rewrite URLs, cache responses, and rate-limit per route.
 
 AWS ALB is L7 — it supports path-based routing, host-based routing, HTTP/2, WebSocket, and native authentication integration. NGINX and Envoy are popular software L7 load balancers. For most web applications, L7 is the right choice because the routing flexibility far outweighs the small latency cost.`
         },
@@ -5134,24 +5113,20 @@ L4 (NLB): Client ──TCP──▶ NLB ──TCP──▶ Server
           answer: `**Connection draining** (also called "deregistration delay") is the process of allowing in-flight requests to complete on a server before removing it from the load balancer pool. Without it, active requests are abruptly terminated when a server is pulled — users see 502 errors, file uploads fail, database transactions are interrupted.
 
 **How it works during a rolling deployment:**
-\`\`\`
-1. Mark server as "draining" in the LB
-   └─ LB stops sending NEW requests to this server
-   └─ Existing connections continue normally
 
-2. Wait for drain timeout (e.g., 30 seconds)
-   └─ In-flight requests complete
-   └─ Active TCP connections close naturally
-   └─ WebSocket clients receive close frame
-
-3. Server is fully drained (0 active connections)
-   └─ Safe to stop/replace the server
-   └─ Deploy new version, register with LB
-
-4. LB health-checks the new server
-   └─ After 2-3 healthy checks, start routing traffic
-   └─ Optional: slow-start ramp (10% → 50% → 100%)
-\`\`\`
+1. **Mark server as "draining" in the LB.**
+   - LB stops sending **new** requests to this server.
+   - Existing connections continue normally.
+2. **Wait for the drain timeout** (e.g., 30 seconds).
+   - In-flight requests complete.
+   - Active TCP connections close naturally.
+   - WebSocket clients receive a close frame.
+3. **Server is fully drained** (0 active connections).
+   - Safe to stop / replace the server.
+   - Deploy new version, register with the LB.
+4. **LB health-checks the new server.**
+   - After 2-3 healthy checks, start routing traffic.
+   - Optional: slow-start ramp (10% → 50% → 100%).
 
 **Configuring drain timeout:**
 - **Short-lived HTTP APIs**: 30 seconds is sufficient — most API calls complete in <1 second.
@@ -5171,23 +5146,17 @@ L4 (NLB): Client ──TCP──▶ NLB ──TCP──▶ Server
           answer: `**The core integration loop:** Auto-scaling dynamically adjusts the number of backend servers based on demand metrics (CPU, request count, custom metrics). The load balancer must automatically discover new servers and stop routing to terminated ones — without any manual intervention.
 
 **AWS architecture — the three components:**
-\`\`\`
-CloudWatch Alarm (CPU > 70%)
-     │
-     ▼
-Auto Scaling Group (ASG)
-  ├─ Launch Template (AMI, instance type, user data)
-  ├─ Min: 2, Desired: 4, Max: 20
-  └─ Target Group attachment ← key integration point
-     │
-     ▼
-Application Load Balancer (ALB)
-  └─ Target Group (registered instances)
-       ├─ Instance A (healthy, serving traffic)
-       ├─ Instance B (healthy, serving traffic)
-       ├─ Instance C (initializing, health check pending)
-       └─ Instance D (draining, being terminated)
-\`\`\`
+
+1. **CloudWatch Alarm** (e.g. \`CPU > 70%\`) fires.
+2. **Auto Scaling Group (ASG)** reacts. The ASG owns:
+   - A **Launch Template** (AMI, instance type, user data).
+   - Capacity bounds: \`Min: 2\`, \`Desired: 4\`, \`Max: 20\`.
+   - A **Target Group attachment** — the key integration point with the ALB.
+3. **Application Load Balancer (ALB)** routes traffic to the attached **Target Group**, which holds the registered instances. Example state:
+   - Instance A — healthy, serving traffic.
+   - Instance B — healthy, serving traffic.
+   - Instance C — initializing, health check pending.
+   - Instance D — draining, being terminated.
 
 **Automatic registration flow:**
 1. CloudWatch detects CPU > 70% across the ASG, triggers scale-out.
@@ -5218,34 +5187,9 @@ ASGs can use either EC2 health checks (is the VM running?) or ELB health checks 
           question: 'How do you achieve high availability for the load balancer itself?',
           answer: `**The problem:** A single load balancer is a single point of failure — if it goes down, your entire application is unreachable regardless of how many healthy backend servers you have.
 
-**Solution 1 — Active-Passive with VRRP (on-premise):**
-\`\`\`
-         Virtual IP: 10.0.0.100 (floating)
-              │
-  ┌───────────┴───────────┐
-  │                       │
-┌─▼─────┐           ┌────▼────┐
-│Active │ heartbeat │ Standby │
-│  LB   │◀─────────▶│   LB    │
-│ NGINX │  (VRRP)   │  NGINX  │
-└───────┘           └─────────┘
-\`\`\`
-Both LBs run keepalived, which uses VRRP (Virtual Router Redundancy Protocol) to share a floating virtual IP. The active LB holds the VIP and serves all traffic. If the standby detects missed heartbeats (typically 3 missed at 1s intervals), it claims the VIP via a gratuitous ARP broadcast. Failover completes in 1-5 seconds. Cons: the standby wastes resources sitting idle.
+**Solution 1 — Active-Passive with VRRP (on-premise):** A floating virtual IP \`10.0.0.100\` is shared by two NGINX load balancers via VRRP. The **Active LB** holds the VIP and serves all traffic; the **Standby LB** monitors via heartbeat. Both LBs run keepalived, which uses VRRP (Virtual Router Redundancy Protocol) to share the floating VIP. If the standby detects missed heartbeats (typically 3 missed at 1s intervals), it claims the VIP via a gratuitous ARP broadcast. Failover completes in 1-5 seconds. Cons: the standby wastes resources sitting idle.
 
-**Solution 2 — Active-Active with DNS:**
-\`\`\`
-          DNS: lb1.example.com → 10.0.0.1
-               lb2.example.com → 10.0.0.2
-              │                │
-         ┌────▼───┐      ┌────▼───┐
-         │  LB 1  │      │  LB 2  │
-         │ Active │      │ Active │
-         └───┬────┘      └───┬────┘
-             └────────┬──────┘
-                      ▼
-                  Servers
-\`\`\`
-Both LBs handle traffic simultaneously. DNS distributes across them. Better resource utilization than active-passive. Requires shared state for sticky sessions (or externalize to Redis). If one LB fails, DNS health checks stop returning its IP.
+**Solution 2 — Active-Active with DNS:** DNS resolves \`lb1.example.com → 10.0.0.1\` and \`lb2.example.com → 10.0.0.2\` so clients fan out across both LBs. **LB 1** and **LB 2** both run Active and forward to the same backend server pool. Both LBs handle traffic simultaneously, so resource utilization is better than active-passive. Requires shared state for sticky sessions (or externalize sessions to Redis). If one LB fails, DNS health checks stop returning its IP and traffic shifts to the survivor.
 
 **Solution 3 — Cloud-managed LBs (production standard):**
 AWS ALB/NLB are inherently highly available — AWS deploys LB nodes across multiple Availability Zones automatically. You never manage the LB instances yourself. Under the hood, ALB is a fleet of EC2 instances behind a DNS name that scales automatically. GCP and Azure load balancers work similarly. This is why most production systems use managed load balancers — the HA problem is solved by the cloud provider. The only consideration is cross-region HA, which requires GSLB (Route 53 failover, Cloudflare Load Balancing) on top of regional LBs.`
@@ -5275,18 +5219,16 @@ AWS ALB/NLB are inherently highly available — AWS deploys LB nodes across mult
 - Only reason to keep: legacy EC2-Classic instances (rare).
 
 **Decision framework:**
-\`\`\`
-Is traffic HTTP/HTTPS?
-  ├─ YES → Do you need content-based routing?
-  │    ├─ YES → ALB
-  │    └─ NO → ALB (still recommended for HTTP)
-  └─ NO → NLB
-Need static IPs?       → NLB
-Need extreme perf?     → NLB
-Need WAF integration?  → ALB
-Need gRPC?             → ALB
-Both L4 + L7?          → NLB → ALB (chain them)
-\`\`\`
+
+1. Is traffic HTTP/HTTPS?
+   - **Yes** → use **ALB**. Content-based routing is a strong yes; even when you don't need it, ALB is still recommended for HTTP/HTTPS.
+   - **No** → use **NLB**.
+2. Other tiebreakers:
+   - Need static IPs? → **NLB**.
+   - Need extreme performance? → **NLB**.
+   - Need WAF integration? → **ALB**.
+   - Need gRPC? → **ALB**.
+   - Need both L4 and L7? → chain them: **NLB → ALB**.
 
 AWS supports chaining NLB in front of ALB — giving you static IPs (NLB) with content-based routing (ALB). This is common for enterprise setups requiring IP allowlisting.`
         },
@@ -10011,17 +9953,17 @@ Legitimate: GET /user/42
 \`\`\`
 
 **Full cache penetration defense architecture**:
-\`\`\`
-Request -> Rate Limiter (per-IP, 100 req/min)
-       -> Bloom Filter (in-memory, < 1 microsecond)
-           ├── "Definitely not" -> Return 404 (zero DB load)
-           └── "Probably yes" -> Redis Cache
-                 ├── HIT -> Return cached data
-                 └── MISS -> Database Query
-                       ├── Found -> Cache in Redis + Return data
-                       └── Not found -> Cache NULL with short TTL (60s)
-                                        Return 404
-\`\`\`
+
+1. Request hits the **Rate Limiter** (per-IP, e.g. 100 req/min).
+2. Then the **Bloom Filter** (in-memory, < 1 microsecond):
+   - "Definitely not" → return 404 immediately (zero DB load).
+   - "Probably yes" → continue to step 3.
+3. **Redis Cache**:
+   - HIT → return cached data.
+   - MISS → continue to step 4.
+4. **Database query**:
+   - Found → cache the result in Redis and return it.
+   - Not found → cache a NULL sentinel with a short TTL (60s) and return 404.
 
 **The NULL cache pattern** (complements Bloom filter):
 - For keys that pass the Bloom filter but are not in the DB (false positives)
@@ -11222,17 +11164,15 @@ In system design interviews, indexing decisions arise when discussing database s
 
   CREATE INDEX idx_users_email ON users(email);
 
-  B-Tree Structure (simplified):
-            ┌─────────────────┐
-            │  [M]            │    <- Root
-            └───┬─────────┬───┘
-                │         │
-       ┌────────▼──┐  ┌───▼────────┐
-       │ [D, H]    │  │ [R, W]     │    <- Internal
-       └─┬──┬──┬───┘  └─┬──┬──┬───┘
-         │  │  │         │  │  │
-  Leaf: [A,B,C] [D,E,F,G] [H,I..L] [M,N..Q] [R,S..V] [W,X,Y,Z]
-         -> linked list between leaves for range scans ->
+  B-Tree structure (simplified):
+
+  | Level | Nodes |
+  |---|---|
+  | Root | \`[M]\` |
+  | Internal | \`[D, H]\`, \`[R, W]\` |
+  | Leaves | \`[A,B,C]\`, \`[D,E,F,G]\`, \`[H,I..L]\`, \`[M,N..Q]\`, \`[R,S..V]\`, \`[W,X,Y,Z]\` |
+
+  Leaves are connected by a doubly-linked list so range scans (e.g. \`WHERE email > 'M'\`) can walk leaf-to-leaf without going back up to the root.
 
 Hash Index:
   CREATE INDEX idx_users_id ON users USING HASH(id);
@@ -15249,11 +15189,7 @@ Failover States:
           question: 'What is the difference between active-passive and active-active redundancy, and how do companies like AWS and Google implement each?',
           answer: `**Active-Passive (Hot Standby)**:
 
-  Active (serves traffic) → continuous replication → Passive (standby, no traffic)
-    All traffic                     Idle (waiting)
-         │                               │
-         └───── Failover ────────────────┘
-               (if active dies, passive promotes)
+The **Active** node takes all traffic and runs continuous replication to the **Passive** node, which sits idle. If the active dies, the passive is promoted via failover.
 
   Production examples:
   - **AWS RDS Multi-AZ**: Primary in us-east-1a, synchronous standby in us-east-1b. On primary failure, DNS endpoint flips to standby in ~60-120 seconds. Application sees brief unavailability during failover.
@@ -15574,32 +15510,24 @@ Failover States:
           answer: `**The biggest risk with failover is untested failover**. Many organizations discover their failover does not work during an actual outage -- the worst possible time to find out.
 
 **Implementing automated failover (PostgreSQL + Patroni example)**:
-\`\`\`
-Architecture:
-  ┌──────────┐     ┌──────────┐     ┌──────────┐
-  │ Patroni  │     │ Patroni  │     │ Patroni  │
-  │ Node A   │     │ Node B   │     │ Node C   │
-  │ (Leader) │     │(Replica) │     │(Replica) │
-  └────┬─────┘     └────┬─────┘     └────┬─────┘
-       │                │                │
-  ┌────┴────────────────┴────────────────┴────┐
-  │              etcd Cluster (3 nodes)        │
-  │    Stores cluster state + leader lock      │
-  └────────────────────────────────────────────┘
 
-Failover sequence (Node A dies):
-  T+0s:   Node A stops sending heartbeat to etcd
-  T+10s:  etcd leader lock TTL expires (10s default)
-  T+11s:  Node B and C detect leader vacancy
-  T+12s:  Node with highest replication position starts election
-  T+13s:  Node B acquires etcd leader lock
-  T+14s:  Node B promotes itself to leader (pg_ctl promote)
-  T+15s:  Node C reconfigures to replicate from B
-  T+16s:  HAProxy/PgBouncer health check detects new leader
-  T+20s:  Applications route writes to Node B
+**Architecture**: three Patroni-managed PostgreSQL nodes — Node A (Leader), Node B (Replica), Node C (Replica) — all connect to a 3-node etcd cluster. etcd stores the cluster state and the leader lock.
 
-Total failover time: ~15-20 seconds
-\`\`\`
+**Failover sequence (Node A dies)**:
+
+| Time | Event |
+|---|---|
+| T+0s | Node A stops sending heartbeats to etcd |
+| T+10s | etcd leader lock TTL expires (10s default) |
+| T+11s | Nodes B and C detect leader vacancy |
+| T+12s | Node with highest replication position starts election |
+| T+13s | Node B acquires the etcd leader lock |
+| T+14s | Node B promotes itself to leader (\`pg_ctl promote\`) |
+| T+15s | Node C reconfigures to replicate from B |
+| T+16s | HAProxy / PgBouncer health check detects the new leader |
+| T+20s | Applications route writes to Node B |
+
+Total failover time: ~15-20 seconds.
 
 **Testing failover -- the five essential tests**:
 
@@ -16469,16 +16397,10 @@ TCP vs UDP vs QUIC:
   - Kubernetes + Istio: Automatically injects mTLS sidecar proxy (Envoy)
 
 **mTLS in service mesh (Istio/Envoy)**:
-  ┌───────────┐         ┌───────────┐
-  │ Service A │         │ Service B │
-  │ ┌───────┐ │ mTLS    │ ┌───────┐ │
-  │ │Envoy  │ │────────>│ │Envoy  │ │
-  │ │sidecar│ │         │ │sidecar│ │
-  │ └───────┘ │         │ └───────┘ │
-  └───────────┘         └───────────┘
 
-  Application code is unaware of encryption.
-  Sidecars handle mTLS automatically.
+![Service mesh — Envoy sidecars handling mTLS](/diagrams/systemdesign/microservices-mesh.png)
+
+Service A and Service B each run alongside an **Envoy sidecar**. All cross-service traffic flows sidecar-to-sidecar, encrypted with mTLS. Application code is unaware of the encryption — sidecars handle mTLS automatically.
   Certificate rotation: Istio issues 24-hour certificates, rotates automatically.
   No manual certificate management per service.
 
@@ -17940,19 +17862,9 @@ Solution: Socket.IO adapters (message broker for cross-server delivery)
 \`\`\`
 
 **Production deployment pattern**:
-\`\`\`
-                    ┌─── Socket.IO Server 1 (50K connections)
-CDN -> L7 LB ──────├─── Socket.IO Server 2 (50K connections)
-  (sticky sessions) ├─── Socket.IO Server 3 (50K connections)
-                    └─── Socket.IO Server 4 (50K connections)
-                              │
-                         Redis Pub/Sub
-                    (cross-server message routing)
+A CDN fronts an L7 load balancer with sticky sessions, which fans out across **Socket.IO Server 1, 2, 3, 4**, each holding ~50K WebSocket connections. All four Socket.IO servers attach to a shared **Redis Pub/Sub** for cross-server message routing.
 
-Sticky sessions required: WebSocket upgrade must go to same server
-HAProxy/NGINX: Use cookie-based or IP-hash sticky sessions
-AWS ALB: Native WebSocket support with sticky sessions
-\`\`\``
+Sticky sessions are required: the WebSocket upgrade must go to the same server. HAProxy / NGINX use cookie-based or IP-hash sticky sessions. AWS ALB has native WebSocket support with sticky sessions.\``
         },
         {
           question: 'How do you implement real-time features with SSE for AI response streaming, and what are the best practices?',
@@ -18094,19 +18006,16 @@ In practice: ChatGPT, Claude, and most AI apps use SSE via Fetch streams
           answer: `**Notification system architecture** must handle multiple delivery channels, millions of concurrent connections, and varying urgency levels.
 
 **Architecture overview**:
-\`\`\`
-Event Source                Notification Service              Delivery Channels
-┌──────────┐              ┌───────────────────┐             ┌─────────────┐
-│ Order    │──Kafka──────>│ Priority Router   │──SSE───────>│ Web Browser │
-│ Service  │              │                   │──Push──────>│ Mobile App  │
-│          │              │ Template Engine   │──Email─────>│ Email Inbox │
-│ Comment  │──Kafka──────>│                   │──SMS───────>│ Phone       │
-│ Service  │              │ User Preferences  │──Slack─────>│ Slack       │
-│          │              │                   │             └─────────────┘
-│ Payment  │──Kafka──────>│ Dedup + Rate Limit│
-│ Service  │              └───────────────────┘
-└──────────┘
-\`\`\`
+
+| Event sources (publish to Kafka) | Notification Service | Delivery channels |
+|---|---|---|
+| Order Service | **Priority Router** + Template Engine + User Preferences + Dedup & Rate Limit | SSE → Web Browser |
+| Comment Service |  | Push → Mobile App |
+| Payment Service |  | Email → Email Inbox |
+|  |  | SMS → Phone |
+|  |  | Slack → Slack |
+
+Order, Comment, and Payment services produce events to Kafka. The Notification Service consumes them, applies priority routing, deduplicates, applies per-user rate limits, renders the template, and dispatches to the right delivery channel.
 
 **Component 1: Event ingestion (Kafka)**:
 \`\`\`
@@ -18327,18 +18236,7 @@ Tools: mediasoup (Node.js SFU), Jitsi (open-source), LiveKit (Go SFU)
           question: 'How do you choose between webhooks and real-time push protocols for event delivery to external systems?',
           answer: `**Webhooks** are HTTP POST callbacks sent by a server to a pre-registered URL when an event occurs. They are the standard for server-to-server event delivery.
 
-**Webhook architecture**:
-\`\`\`
-Your system                        External system
-┌──────────┐                      ┌──────────────┐
-│ Event    │──HTTP POST───���──────>│ Webhook      │
-│ Source   │  /webhooks/events    │ Endpoint     │
-│          │  { event, data }     │ (their server)│
-└──────────┘                      └──────────────┘
-
-Your system does NOT maintain a connection to the external system.
-You send an HTTP request when an event occurs, then forget about it.
-\`\`\`
+**Webhook architecture**: when an event occurs, your **event source** issues an HTTP POST to the external system's pre-registered **webhook endpoint** (e.g. \`POST /webhooks/events\` with \`{ event, data }\` in the body). Your system does **not** maintain a persistent connection — it sends a one-shot HTTP request per event and moves on.
 
 **Webhooks vs real-time push comparison**:
 | Aspect              | Webhooks (HTTP POST)      | WebSocket/SSE             |
@@ -19429,30 +19327,20 @@ Wait duration: ~7ms (the uncertainty interval)
 \`\`\`
 
 **Spanner architecture overview**:
-\`\`\`
-┌─────────────────────────────────────────────────┐
-│                Spanner Universe                  │
-│                                                 │
-│  Zone US-East          Zone EU-West             │
-│  ┌─────────────┐      ┌─────────────┐          │
-│  │ Spanserver 1 │      │ Spanserver 3 │          │
-│  │ Paxos Leader │<────>│ Paxos Follower│         │
-│  │ for range A  │      │ for range A   │         │
-│  └─────────────┘      └─────────────┘          │
-│  ┌─────────────┐      ┌─────────────┐          │
-│  │ Spanserver 2 │      │ Spanserver 4 │          │
-│  │ Paxos Follower│     │ Paxos Leader  │         │
-│  │ for range B  │<────>│ for range B   │         │
-│  └─────────────┘      └─────────────┘          │
-│                                                 │
-│  TrueTime Masters: GPS + Atomic Clocks          │
-└─────────────────────────────────────────────────┘
 
-Data is split into ranges (like partitions)
-Each range has a Paxos group across zones
-Each Paxos group has a leader that handles writes
-Cross-range transactions use 2PC (two-phase commit)
-\`\`\`
+A **Spanner Universe** spans multiple zones — for example **Zone US-East** and **Zone EU-West**. Each zone runs multiple **Spanservers**, and each shard ("range") is replicated as a Paxos group across zones:
+
+| Range | Paxos Leader | Paxos Follower |
+|---|---|---|
+| Range A | Spanserver 1 (US-East) | Spanserver 3 (EU-West) |
+| Range B | Spanserver 4 (EU-West) | Spanserver 2 (US-East) |
+
+**TrueTime masters** (GPS + atomic clocks) provide bounded clock uncertainty across the universe.
+
+- Data is split into ranges (like partitions).
+- Each range has a Paxos group across zones.
+- Each Paxos group has a leader that handles writes.
+- Cross-range transactions use 2PC (two-phase commit).
 
 **Spanner performance characteristics**:
 \`\`\`
@@ -19679,30 +19567,18 @@ In system design interviews, distributed file systems appear whenever the proble
         description: 'GFS/HDFS architecture and data layout',
         schema: `GFS / HDFS Architecture:
 
-  Client
-    |
-    |  1. File metadata request
-    v
-  ┌──────────────┐
-  │  Master /    │   Stores:
-  │  NameNode    │   - File -> chunk mapping
-  │              │   - Chunk -> server mapping
-  └──────┬───────┘   - Namespace tree
-         │
-         │  2. Returns chunk locations
-         v
-  Client contacts chunk servers directly
-         │
-    ┌────┴────┬──────────┐
-    v         v          v
-┌────────┐ ┌────────┐ ┌────────┐
-│ Chunk  │ │ Chunk  │ │ Chunk  │
-│Server 1│ │Server 2│ │Server 3│
-│(DataNode)│(DataNode)│(DataNode)
-└────────┘ └────────┘ └────────┘
-  chunk A    chunk A    chunk B
-  chunk C    chunk B    chunk C
-  (replicas spread across servers)
+1. **Client** issues a file metadata request to the **Master / NameNode**, which stores the file → chunk mapping, chunk → server mapping, and the namespace tree.
+2. **Master / NameNode** returns the locations of the chunk servers holding the requested chunks.
+3. **Client** contacts the chunk servers (\`DataNode\`) directly to read/write data.
+
+Replica placement (replicas spread across servers):
+
+| Server | Chunks |
+|---|---|
+| Chunk Server 1 (DataNode) | chunk A, chunk C |
+| Chunk Server 2 (DataNode) | chunk A, chunk B |
+| Chunk Server 3 (DataNode) | chunk B, chunk C |
+
 
 File Layout:
   file.dat (1 GB) -> split into chunks:
@@ -19755,21 +19631,12 @@ Chunk metadata (at Master/NameNode):
      On crash: Load last fsimage, replay edit log entries since that checkpoint
      Recovery time: Seconds to minutes depending on edit log size
 
-  2. **HDFS High Availability architecture**:
+  2. **HDFS High Availability architecture**: An **Active NameNode** and a **Standby NameNode** share edit logs through a quorum of JournalNodes. The active NN writes edits to JournalNodes; the standby NN reads them and applies them to its in-memory state. DataNodes send block reports to both NameNodes so either one is ready to take over.
 
-     ┌──────────┐    shared edit    ┌──────────┐
-     │  Active  │───── logs ──────>│ Standby  │
-     │ NameNode │  (JournalNodes)  │ NameNode │
-     └────┬─────┘                  └────┬─────┘
-          │       DataNode reports        │
-     ┌────┴──────────────────────────────┴────┐
-     │    DataNodes report blocks to BOTH      │
-     └─────────────────────────────────────────┘
-
-     JournalNodes: 3+ nodes that store edit logs (quorum-based writes)
-     Active NN writes edits to JournalNodes
-     Standby NN reads edits from JournalNodes, applies to its in-memory state
-     DataNodes send block reports to BOTH NameNodes
+     - **JournalNodes**: 3+ nodes that store edit logs via quorum-based writes.
+     - **Active NN** writes edits to the JournalNodes.
+     - **Standby NN** reads edits from the JournalNodes and applies them to its in-memory state.
+     - **DataNodes** send block reports to both NameNodes.
 
   3. **ZooKeeper-based failover controller (ZKFC)**:
      Monitors active NameNode health (heartbeat + connectivity)
@@ -25324,22 +25191,9 @@ Each node randomly contacts a few peers to exchange state. Information spreads l
 
 **SWIM (Scalable Weakly-consistent Infection-style Membership)**:
 
-  Round 1: Node A pings random node B
-  ┌───┐  ping   ┌───┐
-  │ A │ ──────> │ B │ ── ACK ──> A knows B is alive
-  └───┘         └───┘
-
-  If B doesn't respond:
-  ┌───┐  ping-req(B)  ┌───┐  ping  ┌───┐
-  │ A │ ────────────> │ C │ ─────> │ B │
-  └───┘               └───┘        └───┘
-                        │
-                        └── ACK (or timeout) ──> A
-
-  If B still unreachable via C:
-  A marks B as "suspect"
-  A gossips "B is suspect" to others
-  After timeout, B moves from suspect to dead
+- **Round 1**: Node A pings a random Node B. B replies with an ACK; A now knows B is alive.
+- **If B does not respond**: A asks a third node C to indirectly probe B (\`ping-req(B)\`). C pings B and forwards either the ACK or a timeout back to A.
+- **If B is still unreachable via C**: A marks B as "suspect" and gossips "B is suspect" to other nodes. After the suspect timeout B moves from suspect to dead.
 
 **Convergence speed**:
 - N nodes, each gossips to k peers per round
@@ -25373,21 +25227,13 @@ Receiving node merges: keep highest heartbeat count per node
         },
         {
           question: 'How do you prevent cascading failures when heartbeats fail?',
-          answer: `**Cascading failure scenario**:
+          answer: `**Cascading failure scenario** (top-down):
 
-  Node A (overloaded)
-    │ heartbeat timeout
-    v
-  Load Balancer removes A
-    │ traffic redistributed to B, C, D
-    v
-  Nodes B, C, D now overloaded
-    │ their heartbeats slow down
-    v
-  Load Balancer removes B, C, D
-    │
-    v
-  COMPLETE OUTAGE (cascading failure)
+1. **Node A** is overloaded; its heartbeats time out.
+2. **Load Balancer** removes A from rotation; traffic redistributes to B, C, D.
+3. **Nodes B, C, D** are now overloaded; their heartbeats start slowing down.
+4. **Load Balancer** removes B, C, D as well.
+5. Result: **complete outage** (cascading failure).
 
 **Prevention strategies**:
 
@@ -26760,40 +26606,16 @@ In system design interviews, this topic arises whenever you choose a database, d
 
       dataModel: {
         description: 'The consistency spectrum from strongest to weakest',
-        schema: `Consistency Spectrum:
+        schema: `Consistency Spectrum (strongest to weakest):
 
-  STRONGEST
-    │
-    ├── Linearizability
-    │     Operations appear atomic and instantaneous
-    │     As if there is one copy of data
-    │     Examples: Spanner, CockroachDB, etcd
-    │
-    ├── Sequential Consistency
-    │     All processes see the same order of operations
-    │     But order may not match real-time
-    │     Example: ZooKeeper (writes are sequential)
-    │
-    ├── Causal Consistency
-    │     Causally related operations seen in order
-    │     Concurrent operations may be seen in any order
-    │     Example: MongoDB (causal sessions)
-    │
-    ├── Read-Your-Writes
-    │     A client always sees its own writes
-    │     Others may see stale data
-    │     Example: Facebook TAO
-    │
-    ├── Monotonic Reads
-    │     Once a client sees value v, never sees older value
-    │     Different clients may see different versions
-    │
-    ├── Eventual Consistency
-    │     Replicas converge if writes stop
-    │     May read stale data at any time
-    │     Examples: DynamoDB, Cassandra (with CL=ONE)
-    │
-  WEAKEST
+| Level | Guarantee | Examples |
+|---|---|---|
+| **Linearizability** | Operations appear atomic and instantaneous, as if there is one copy of data | Spanner, CockroachDB, etcd |
+| **Sequential consistency** | All processes see the same order of operations, but order may not match real-time | ZooKeeper (writes are sequential) |
+| **Causal consistency** | Causally related operations seen in order; concurrent operations may be seen in any order | MongoDB (causal sessions) |
+| **Read-your-writes** | A client always sees its own writes; others may see stale data | Facebook TAO |
+| **Monotonic reads** | Once a client sees value v, it never sees an older value; different clients may see different versions | (per-client property) |
+| **Eventual consistency** | Replicas converge if writes stop; may read stale data at any time | DynamoDB, Cassandra (with CL=ONE) |
 
   Real-time ordering (linearizability):
   Client A: write(x=1)──────────────────[ACK]
@@ -26998,18 +26820,13 @@ Causal consistency gives most of the UX benefits of strong consistency (no confu
   Search results         | Eventual          | Index lag is normal
   Notifications          | Causal            | Must be in order
 
-**Architecture pattern (polyglot consistency)**:
+**Architecture pattern (polyglot consistency)**: One **Application** writes to and reads from three different data stores, each chosen for its consistency model:
 
-  ┌──────────────────────────────────────────┐
-  │              Application                  │
-  └──────┬────────────┬────────────┬──────────┘
-         │            │            │
-  ┌──────▼──────┐ ┌───▼────┐ ┌────▼─────┐
-  │ PostgreSQL  │ │  Redis │ │ Cassandra│
-  │ (Strong)    │ │ (R-Y-W)│ │(Eventual)│
-  │ Payments,   │ │ Session│ │ Feeds,   │
-  │ Accounts    │ │ Cache  │ │ Analytics│
-  └─────────────┘ └────────┘ └──────────┘
+| Store | Consistency | Use cases |
+|---|---|---|
+| **PostgreSQL** | Strong (linearizable) | Payments, Accounts |
+| **Redis** | Read-your-writes | Session cache |
+| **Cassandra** | Eventual | Feeds, Analytics |
 
 **Tunable consistency (Cassandra/DynamoDB)**:
   Same database, different consistency per query:
@@ -27060,14 +26877,7 @@ Instead of a single timestamp, TrueTime returns an interval:
 
 **Spanner architecture**:
 
-  Zone 1 (US)          Zone 2 (EU)         Zone 3 (Asia)
-  ┌──────────┐        ┌──────────┐        ┌──────────┐
-  │ Spanner  │<──────>│ Spanner  │<──────>│ Spanner  │
-  │ Node     │ Paxos  │ Node     │ Paxos  │ Node     │
-  │ [GPS +   │        │ [GPS +   │        │ [GPS +   │
-  │  Atomic  │        │  Atomic  │        │  Atomic  │
-  │  Clock]  │        │  Clock]  │        │  Clock]  │
-  └──────────┘        └──────────┘        └──────────┘
+A Spanner deployment runs three Spanner Nodes — one per zone (US, EU, Asia). Each node is equipped with a TrueTime clock source (GPS + atomic clock), and they replicate data across zones via Paxos.
 
   - Data replicated across zones via Paxos
   - TrueTime provides global timestamp ordering
@@ -27842,13 +27652,13 @@ But for a page that makes 50 backend calls in parallel:
   SLO = 99.9% availability
   Error budget = 0.1% = 43.8 minutes/month of downtime
 
-  ┌──────────────────────────────────────┐
-  │ Month: March                          │
-  │ Budget: 43.8 minutes                  │
-  │ Used:   12 minutes (incident on 3/15) │
-  │ Remaining: 31.8 minutes               │
-  │ Status: GREEN                         │
-  └──────────────────────────────────────┘
+| Field | Value |
+|---|---|
+| Month | March |
+| Budget | 43.8 minutes |
+| Used | 12 minutes (incident on 3/15) |
+| Remaining | 31.8 minutes |
+| Status | GREEN |
 
   If budget exhausted:
   - Freeze feature releases
@@ -28259,12 +28069,12 @@ The choice between ACID and BASE is not about which is "better" -- it is about u
         schema: `ACID Properties:
 
   Atomicity: All operations in a transaction succeed or all are rolled back
-  ┌────────────────────────────────┐
-  │ BEGIN TRANSACTION              │
-  │   UPDATE accounts SET bal = bal - 100 WHERE id = 1;  │
-  │   UPDATE accounts SET bal = bal + 100 WHERE id = 2;  │
-  │ COMMIT;  <- both happen or neither    │
-  └────────────────────────────────┘
+  \`\`\`sql
+  BEGIN TRANSACTION;
+    UPDATE accounts SET bal = bal - 100 WHERE id = 1;
+    UPDATE accounts SET bal = bal + 100 WHERE id = 2;
+  COMMIT; -- both happen or neither
+  \`\`\`
 
   Consistency: Database moves from one valid state to another
   (Constraints: bal >= 0, foreign keys, unique constraints)

@@ -1362,20 +1362,11 @@ Problem: Local-only rate limiting
   Total: 1000 req passed! (should be 100)
 \`\`\`
 
-**Approach 1 — Centralized counter (Redis)**:
-\`\`\`
-  All servers check/increment a shared Redis counter
+**Approach 1 — Centralized counter (Redis)**: All servers check/increment a shared Redis counter. Each server issues \`INCR user:123:minute_42\` and Redis returns the current count; if it exceeds the limit, reject the request.
 
-  Server ──► Redis: INCR user:123:minute_42
-           ◄── returns current count
-           → if count > limit: REJECT
-
-  Pros: Accurate, simple
-  Cons: Redis latency (~1ms), SPOF
-
-  Mitigation: Redis Cluster for HA,
-    local fallback if Redis is down
-\`\`\`
+- **Pros**: Accurate, simple.
+- **Cons**: Adds Redis latency (~1ms), and Redis is a SPOF.
+- **Mitigation**: Run Redis Cluster for HA; fall back to local counters if Redis is unreachable.
 
 **Approach 2 — Local rate limiter with global budget**:
 \`\`\`
@@ -2025,19 +2016,13 @@ AP Systems (availability over consistency):
         answer: `**ACID** (SQL databases): Atomicity, Consistency, Isolation, Durability
 **BASE** (many NoSQL databases): Basically Available, Soft state, Eventually consistent
 
-\`\`\`
-ACID Transaction:                    BASE Transaction:
-
-BEGIN;                               Write to Node A (immediate ACK)
-  Debit account A: -$100                │
-  Credit account B: +$100               │ (async replication)
-COMMIT; (atomic — both or neither)       ▼
-                                     Node B, Node C get update
-All reads see consistent state       eventually (ms to seconds)
-immediately after commit
-                                     Reads from B may see stale
-                                     state briefly
-\`\`\`
+| Step | ACID transaction | BASE transaction |
+|---|---|---|
+| 1 | \`BEGIN;\` opens a transaction. | Write hits Node A and is ACKed immediately. |
+| 2 | Debit account A by $100. | Async replication starts to Nodes B and C. |
+| 3 | Credit account B by $100. | Nodes B and C catch up over ms-to-seconds. |
+| 4 | \`COMMIT;\` — both updates atomic, or neither. | Reads from B may briefly see stale state. |
+| Visibility | All readers see the new consistent state immediately after commit. | Readers converge eventually as replication completes. |
 
 **Detailed comparison**:
 
@@ -2428,29 +2413,42 @@ NoSQL Best Practices:
     dataModel: {
       description: 'SQL vs NoSQL decision matrix and architecture',
       schema: `Database Selection Decision Tree:
-  What are your access patterns?
-    ├── Complex queries, joins, ad-hoc? → SQL (PostgreSQL, MySQL)
-    ├── Simple key-value lookups? → Key-value (Redis, DynamoDB)
-    ├── Document/object storage? → Document (MongoDB)
-    ├── Wide-column/time-series? → Wide-column (Cassandra)
-    ├── Graph traversals? → Graph (Neo4j)
-    └── Full-text search? → Search engine (Elasticsearch)
 
-  What consistency do you need?
-    ├── Strong (ACID)? → SQL, CockroachDB, Spanner
-    └── Eventual (BASE)? → Cassandra, DynamoDB, CouchDB
+Access patterns:
 
-  What scale do you need?
-    ├── < 10TB? → Single SQL node is fine
-    ├── 10-100TB? → Sharded SQL or NewSQL
-    └── > 100TB? → Purpose-built NoSQL
+| Pattern | Pick |
+|---|---|
+| Complex queries, joins, ad-hoc | SQL (PostgreSQL, MySQL) |
+| Simple key-value lookups | Key-value (Redis, DynamoDB) |
+| Document / object storage | Document (MongoDB) |
+| Wide-column / time-series | Wide-column (Cassandra) |
+| Graph traversals | Graph (Neo4j) |
+| Full-text search | Search engine (Elasticsearch) |
+
+Consistency requirement:
+
+| Need | Pick |
+|---|---|
+| Strong (ACID) | SQL, CockroachDB, Spanner |
+| Eventual (BASE) | Cassandra, DynamoDB, CouchDB |
+
+Scale:
+
+| Data size | Pick |
+|---|---|
+| < 10TB | Single SQL node is fine |
+| 10-100TB | Sharded SQL or NewSQL |
+| > 100TB | Purpose-built NoSQL |
 
 Polyglot Persistence Example (E-Commerce):
-  PostgreSQL  ── orders, payments, users (ACID)
-  Redis       ── sessions, cache, rate limits (speed)
-  Elasticsearch ── product search (full-text)
-  Cassandra   ── click-stream, analytics (write throughput)
-  S3          ── images, static assets (blob storage)`
+
+| System | Use |
+|---|---|
+| PostgreSQL | Orders, payments, users (ACID) |
+| Redis | Sessions, cache, rate limits (speed) |
+| Elasticsearch | Product search (full-text) |
+| Cassandra | Click-stream, analytics (write throughput) |
+| S3 | Images, static assets (blob storage) |`
     },
   },
 
@@ -2566,33 +2564,21 @@ DENORMALIZED (1 table, no JOIN):
         question: 'How do materialized views help bridge normalization and denormalization?',
         answer: `**Materialized views** are pre-computed query results stored as a physical table. They give you denormalized read performance while the source tables remain normalized.
 
-\`\`\`
-Normalized Tables (source of truth):
-  orders    ──┐
-  users     ──├──► Materialized View ──► Fast reads
-  products  ──┘    (pre-joined, aggregated)
+Normalized tables (\`orders\`, \`users\`, \`products\`) remain the source of truth. A materialized view pre-joins and pre-aggregates them so reads hit one denormalized artifact instead of executing the join.
 
-Regular View:         Materialized View:
-  SELECT ... JOIN     SELECT * FROM mv_order_summary
-  (computed on read)  (pre-computed, stored on disk)
-
-  Latency: 50ms       Latency: 2ms
-  Always fresh         Stale until refresh
-\`\`\`
+| | Regular view | Materialized view |
+|---|---|---|
+| Implementation | \`SELECT ... JOIN\` computed on each read | \`SELECT * FROM mv_order_summary\` (pre-computed, stored on disk) |
+| Latency | ~50ms | ~2ms |
+| Freshness | Always fresh | Stale until refresh |
 
 **Refresh strategies**:
-\`\`\`
-Strategy          Freshness        Cost            Use Case
-──────────────────────────────────────────────────────────────
-Full refresh      Periodic         Expensive        Small MVs, hourly OK
-  (REFRESH MATERIALIZED VIEW)      (recomputes all)
 
-Incremental       Near-real-time   Cheaper          Large MVs, CDC-based
-  (only apply diffs from source)   (only changes)
-
-Eager (on write)  Immediate        Write overhead   Small, critical MVs
-  (trigger updates MV on INSERT)   (sync on write)
-\`\`\`
+| Strategy | Freshness | Cost | Use case |
+|---|---|---|---|
+| Full refresh (\`REFRESH MATERIALIZED VIEW\`) — recomputes all | Periodic | Expensive | Small MVs, hourly OK |
+| Incremental (only apply diffs from source) | Near-real-time | Cheaper (only changes) | Large MVs, CDC-based |
+| Eager (trigger updates MV on INSERT) | Immediate | Write overhead (sync on write) | Small, critical MVs |
 
 **PostgreSQL example**:
 \`\`\`sql
@@ -2642,19 +2628,12 @@ Timeline:
   T=50ms+: Reads see new data
 \`\`\`
 
-**CQRS + Event Sourcing** (advanced):
-\`\`\`
-  Commands ──► Event Store ──► events ──► Read Model
-                (append-only)            (projection)
+**CQRS + Event Sourcing** (advanced): Commands write to an append-only Event Store, which emits events to a projection that builds the Read Model. For example, the Event Store holds \`[OrderPlaced, ItemAdded, PaymentReceived]\` and the Read Model is an \`orders_summary\` table materialized from those events.
 
-  Event Store: [OrderPlaced, ItemAdded, PaymentReceived]
-  Read Model:  orders_summary table (materialized from events)
-
-  Benefits:
-  - Complete audit trail
-  - Rebuild read model from events anytime
-  - Multiple read models from same events
-\`\`\`
+Benefits:
+- Complete audit trail.
+- Rebuild any read model from events at any time.
+- Multiple read models can be projected from the same events.
 
 **When to use CQRS**:
 \`\`\`
@@ -2868,28 +2847,20 @@ A central fact table joins to several small dimension tables:
 \`\`\`
 
 **The ETL/ELT pipeline that creates denormalized analytics data**:
-\`\`\`
-OLTP Database (normalized)
-    │
-    ▼ (CDC or batch extract)
-Staging Area (raw data)
-    │
-    ▼ (transform: join, aggregate, clean)
-Data Warehouse (denormalized star schema)
-    │
-    ├──► BI Dashboard (Looker, Tableau)
-    ├──► ML Training Pipeline
-    └──► Ad-hoc Analysis (SQL notebooks)
+
+Classic ETL stages (top to bottom):
+
+1. **OLTP database** (normalized) is the source.
+2. CDC or batch extract loads a **staging area** (raw data).
+3. Transformation steps (join, aggregate, clean) write into a **data warehouse** (denormalized star schema).
+4. The warehouse fans out to BI dashboards (Looker, Tableau), ML training pipelines, and ad-hoc analysis (SQL notebooks).
 
 Modern ELT (load first, transform in warehouse):
-  OLTP ──► raw landing zone in BigQuery/Snowflake
-                │
-                ▼ (dbt models — SQL transformations)
-           Denormalized marts (star schemas)
-                │
-                ▼
-           BI tools + ML pipelines
-\`\`\`
+
+1. OLTP ships data to a raw landing zone in BigQuery/Snowflake.
+2. dbt models run SQL transformations on the raw data.
+3. The output is a set of denormalized marts (star schemas).
+4. BI tools and ML pipelines consume the marts directly.
 
 **When to choose A vs B**:
 - **Normalized OLTP + denormalized OLAP**: Standard pattern for most companies. Keep your application database normalized, replicate and denormalize into a warehouse for analytics.
@@ -3055,20 +3026,9 @@ Phase 4 — Monolith fully replaced (or kept for legacy).
 \`\`\`
 
 **Data migration challenge**:
-\`\`\`
-  Option A: Shared database (temporary)
-    Monolith ──► DB ◄── New Service
-    Risk: coupling, schema conflicts
-
-  Option B: Database per service (target)
-    Monolith ──► Old DB
-    New Service ──► New DB
-    Sync: CDC from old DB to new DB during migration
-
-  Option C: API calls back to monolith
-    New Service ──API──► Monolith
-    Temporary dependency, removed when fully migrated
-\`\`\`
+- **Option A — Shared database (temporary)**: monolith and new service both read/write the same DB. Risk: coupling and schema conflicts.
+- **Option B — Database per service (target)**: monolith keeps the old DB; new service has its own DB; CDC syncs from old DB to new DB during the migration window.
+- **Option C — API calls back to monolith**: new service calls the monolith's API for data it doesn't own yet. Temporary dependency, removed when migration completes.
 
 **Interview tip**: Emphasize that strangler fig is incremental and reversible. If the new service has issues, you route traffic back to the monolith. This reduces risk compared to a big-bang rewrite.`
       },
@@ -3193,49 +3153,29 @@ Distributed Monolith (anti-pattern):
         question: 'How did Amazon Prime Video cut costs 90% by moving from microservices back to a monolith?',
         answer: `**Amazon Prime Video's** video quality monitoring system migration is the most cited example of microservices being the wrong choice for a specific workload.
 
-**The original microservices architecture**:
-\`\`\`
-Video Quality Monitoring (microservices):
-  Video Stream ──► Media Converter (Lambda)
-                       │
-                       ▼
-                  S3 (temp storage)
-                       │
-                       ▼
-                  Defect Detector (Lambda) × N
-                       │
-                       ▼
-                  Orchestrator (Step Functions)
-                       │
-                       ▼
-                  Aggregator (Lambda)
-                       │
-                       ▼
-                  Results DB
+**The original microservices architecture**: Video Quality Monitoring as a Lambda pipeline.
+
+Stages, in order:
+1. Video stream feeds a **Media Converter** Lambda.
+2. Output written to **S3** (temp storage).
+3. **Defect Detector** Lambdas (×N) read from S3.
+4. **Step Functions Orchestrator** sequences detector outputs.
+5. **Aggregator** Lambda merges results.
+6. Final results land in the **Results DB**.
 
 Problems:
-  - Step Functions charged per state transition
-    (millions of transitions per video = massive cost)
-  - S3 put/get for inter-service data transfer
-    (high latency, high cost for temporary data)
-  - Each Lambda cold start added latency
-  - Orchestration overhead exceeded actual processing time
-\`\`\`
+- Step Functions charged per state transition — millions of transitions per video meant massive cost.
+- S3 put/get for inter-service data transfer added high latency and high cost for temporary data.
+- Every Lambda cold start added latency.
+- Orchestration overhead exceeded actual processing time.
 
-**The monolith solution**:
-\`\`\`
-Video Quality Monitoring (monolith):
-  Video Stream → Single ECS service running Media Converter + Defect Detectors + Aggregator (all in one process).
-                          │
-                          ▼
-                     Results DB
+**The monolith solution**: A single ECS service runs Media Converter + Defect Detectors + Aggregator in one process. The video stream feeds the monolithic service, which writes results directly to the results DB.
 
 Why it worked better:
-  - In-memory data passing (no S3 round-trips)
-  - No Step Functions overhead
-  - Single container, predictable performance
-  - Horizontal scaling by running N containers
-\`\`\`
+- In-memory data passing — no S3 round-trips between stages.
+- No Step Functions orchestration overhead.
+- Single container yields predictable performance.
+- Horizontally scales by running N containers.
 
 **Cost and performance impact**:
 | Metric | Microservices | Monolith |
@@ -3343,81 +3283,34 @@ Kept in monolith:
         answer: `**Inter-service communication** is the most critical design decision in microservices because it determines coupling, failure modes, and performance characteristics.
 
 **Synchronous vs asynchronous communication**:
-\`\`\`
-Synchronous (request-response):
-  Service A ──REST/gRPC──► Service B
-  A waits for B's response before continuing.
 
-  Pros: Simple, immediate response, easy to reason about
-  Cons: Tight coupling, cascading failures, latency chains
-
-Asynchronous (event-driven):
-  Service A ──event──► Message Broker ──► Service B
-  A continues immediately, B processes when ready.
-
-  Pros: Loose coupling, independent scaling, fault tolerant
-  Cons: Eventual consistency, harder to debug, no immediate response
-\`\`\`
+- **Synchronous (request-response)** — \`Service A → REST/gRPC → Service B\`; A waits for B's response before continuing.
+  - **Pros**: simple, immediate response, easy to reason about.
+  - **Cons**: tight coupling, cascading failures, latency chains.
+- **Asynchronous (event-driven)** — \`Service A → event → Message Broker → Service B\`; A continues immediately, B processes when ready.
+  - **Pros**: loose coupling, independent scaling, fault tolerant.
+  - **Cons**: eventual consistency, harder to debug, no immediate response.
 
 **Communication patterns in detail**:
-\`\`\`
-Pattern 1 — REST/HTTP (synchronous):
-  Order Service ──POST /payments──► Payment Service
-  Simplest, most common for request-response.
-  Use for: queries, commands needing immediate confirmation.
 
-Pattern 2 — gRPC (synchronous, high-performance):
-  Service A ──protobuf──► Service B (binary, typed, streaming)
-  Lower latency than REST, schema-enforced contracts.
-  Use for: internal service-to-service, high-throughput.
-
-Pattern 3 — Message Queue (async, point-to-point):
-  Order Service ──► SQS ──► Email Service
-  One producer, one consumer. Guaranteed delivery.
-  Use for: background tasks, one-to-one communication.
-
-Pattern 4 — Pub/Sub (async, fan-out):
-  Order Service ──event──► Kafka ──┬──► Inventory Service
-                                    ├──► Shipping Service
-                                    └──► Analytics Service
-  One producer, many consumers. Decoupled.
-  Use for: events that multiple services care about.
-
-Pattern 5 — Saga (distributed transaction):
-  Order ──► Payment ──► Inventory ──► Shipping
-  Each step publishes event for next step.
-  Compensating transactions on failure.
-  Use for: multi-service business processes.
-\`\`\`
+| # | Pattern | Shape | Use for |
+|---|---|---|---|
+| 1 | **REST/HTTP** (sync) | \`Order Service → POST /payments → Payment Service\` | Queries and commands that need an immediate response. Simplest and most common request-response style. |
+| 2 | **gRPC** (sync, high-perf) | \`Service A → protobuf → Service B\` (binary, typed, streaming) | Internal service-to-service, high-throughput, schema-enforced contracts. |
+| 3 | **Message Queue** (async, point-to-point) | \`Order Service → SQS → Email Service\` | Background tasks, one-to-one communication with guaranteed delivery. |
+| 4 | **Pub/Sub** (async, fan-out) | \`Order Service → Kafka → Inventory / Shipping / Analytics\` | Events that multiple services care about; decouples producer from consumers. |
+| 5 | **Saga** (distributed txn) | \`Order → Payment → Inventory → Shipping\` (each step publishes the next event; compensations on failure) | Multi-service business processes with no global transaction. |
 
 **Failure handling for synchronous calls**:
-\`\`\`
-Without resilience (cascading failure):
-  A ──► B ──► C (C is down)
-  C times out → B times out → A times out
-  All three services appear down to the user!
 
-With resilience patterns:
-  Circuit Breaker:
-    A ──► B ──► [OPEN] C (C is down)
-    Circuit breaker trips after N failures
-    Subsequent calls to C fail fast (no timeout)
-    Periodically tries C again (half-open state)
+Without resilience, calls cascade: \`A → B → C\` where C is down causes C to time out, then B, then A — all three services look down to the user.
 
-  Retry with backoff:
-    A ──► B ──► C (temporary error)
-    Retry after 100ms, 200ms, 400ms (exponential)
-    Max 3 retries, then circuit breaker
+Resilience patterns:
 
-  Bulkhead:
-    A has separate thread pools for B and C calls
-    C being slow does not consume all threads
-    B calls continue working normally
-
-  Timeout:
-    Every call has an explicit timeout (e.g., 500ms)
-    Never wait forever for a downstream response
-\`\`\`
+- **Circuit Breaker**: After N failures calling C, the breaker opens. Subsequent A→B→C calls fail fast (no waiting on timeout). Half-open state periodically tries C again.
+- **Retry with backoff**: On transient errors, retry C after 100ms, 200ms, 400ms (exponential), capped at ~3 retries before the breaker takes over.
+- **Bulkhead**: A keeps separate thread pools for B and C. A slow C cannot starve threads used by B.
+- **Timeout**: Every call has an explicit timeout (e.g., 500ms). Never wait forever for a downstream response.
 
 **Decision matrix**:
 | Requirement | Pattern | Example |
@@ -3729,30 +3622,23 @@ Above → Containers/VMs are cheaper
 | Image/video process | Serverless | Parallelizable, bursty |
 
 **Architecture by pattern**:
-\`\`\`
-Event-Driven Processing (serverless ideal):
-  S3 Upload ──► Lambda ──► Process ──► DynamoDB
-  SQS Queue ──► Lambda ──► Transform ──► S3
-  API GW ──► Lambda ──► Response
 
-Request-Serving (containers ideal):
-  ALB ──► ECS/K8s ──► Service A ──► Database
-                  ──► Service B ──► Cache
+**Event-Driven Processing (serverless ideal)**:
+- \`S3 Upload → Lambda → Process → DynamoDB\`
+- \`SQS Queue → Lambda → Transform → S3\`
+- \`API GW → Lambda → Response\`
 
-  Persistent connections, connection pooling,
-  in-memory caching, predictable latency
+**Request-Serving (containers ideal)**: \`ALB → ECS/K8s\` fans out to Service A (with a Database) and Service B (with a Cache). Containers give persistent connections, connection pooling, in-memory caching, and predictable latency.
 
-Hybrid (common in practice):
-  API Gateway
-    ├──► Lambda (auth, lightweight endpoints)
-    ├──► ECS (core business logic, heavy endpoints)
-    └──► Lambda (async: emails, notifications)
+**Hybrid (common in practice)**: API Gateway fronts three downstream paths:
+- Lambda for auth and lightweight endpoints.
+- ECS for core business logic and heavy endpoints.
+- Lambda for async work (emails, notifications).
 
-  Background:
-    EventBridge ──► Lambda (scheduled jobs)
-    SQS ──► Lambda (queue processing)
-    Kinesis ──► Lambda (stream processing)
-\`\`\`
+Background workloads:
+- EventBridge → Lambda for scheduled jobs.
+- SQS → Lambda for queue processing.
+- Kinesis → Lambda for stream processing.
 
 **Serverless limitations**:
 | Limitation | Impact | Workaround |
@@ -3771,16 +3657,12 @@ Hybrid (common in practice):
         question: 'How do you handle the vendor lock-in concern with serverless?',
         answer: `**Vendor lock-in spectrum** — not all serverless components are equally locked in:
 
-\`\`\`
-Lock-in Risk:  LOW ──────────────────────────── HIGH
-
-  Business logic   API format    Event wiring     Managed services
-  (your code)      (REST/gRPC)   (triggers,       (DynamoDB, SQS,
-                                  event sources)    Step Functions)
-
-  Portable         Mostly         Hard to          Very hard to
-                   portable       migrate          migrate
-\`\`\`
+| Layer | Examples | Lock-in risk | Portability |
+|---|---|---|---|
+| Business logic | Your code | Low | Portable |
+| API format | REST / gRPC | Low-Medium | Mostly portable |
+| Event wiring | Triggers, event sources | High | Hard to migrate |
+| Managed services | DynamoDB, SQS, Step Functions | Highest | Very hard to migrate |
 
 **What is actually locked in**:
 | Component | AWS | GCP | Portable? |
@@ -3847,22 +3729,12 @@ Strategy 4: Accept lock-in strategically
         answer: `**Cloudflare Workers** represent a fundamentally different serverless model — code runs at 300+ edge locations using V8 isolates instead of containers, eliminating cold starts and achieving sub-50ms global latency.
 
 **Architecture comparison**:
-\`\`\`
-AWS Lambda (container-based):
-  Request ──► API Gateway ──► Lambda (one region)
-  Cold start: 100ms-5s
-  Location: single region (or Lambda@Edge with limits)
 
-Cloudflare Workers (isolate-based):
-  Request ──► Nearest PoP (300+ locations) ──► Worker
-  Cold start: 0ms (pre-warmed V8 isolates)
-  Location: every edge location globally
-
-Google Cloud Run (container-based, scales to zero):
-  Request ──► Cloud Run (auto-scales, one region)
-  Cold start: ~100ms-2s (container startup)
-  Location: single region (multi-region requires setup)
-\`\`\`
+| Platform | Request path | Cold start | Location |
+|---|---|---|---|
+| **AWS Lambda** (container-based) | Request → API Gateway → Lambda (one region) | 100ms - 5s | Single region (or Lambda@Edge with limits) |
+| **Cloudflare Workers** (isolate-based) | Request → Nearest PoP (300+ locations) → Worker | 0ms (pre-warmed V8 isolates) | Every edge location globally |
+| **Google Cloud Run** (container, scales to zero) | Request → Cloud Run (auto-scales, one region) | ~100ms - 2s (container startup) | Single region (multi-region requires setup) |
 
 **Cloudflare Workers ecosystem**:
 | Component | Purpose | Comparison |
@@ -3908,63 +3780,24 @@ Workers limitations:
         answer: `**The database connection problem** is the most common operational issue when adopting serverless. Each Lambda invocation can open a new database connection, and under high concurrency, this overwhelms the database connection limit.
 
 **The problem illustrated**:
-\`\`\`
-Traditional server (connection pooling):
-  Server ──► Connection Pool (10 connections) ──► PostgreSQL
-  All requests share 10 connections.
-  PostgreSQL sees: 10 connections (fine)
 
-Serverless (no connection pooling):
-  Lambda 1 ──► new connection ──► PostgreSQL
-  Lambda 2 ──► new connection ──► PostgreSQL
-  ...
-  Lambda 1000 ──► new connection ──► PostgreSQL
-  PostgreSQL sees: 1000 connections (overwhelmed!)
-
-  PostgreSQL default max_connections: 100-200
-  Lambda concurrent executions: 1000+ (auto-scaled)
-  Result: "too many connections" errors
-\`\`\`
+- **Traditional server (connection pooling)** — \`Server → Connection Pool (10 connections) → PostgreSQL\`. All requests share the 10 pooled connections. Postgres sees 10 connections — fine.
+- **Serverless (no connection pooling)** — Lambda 1, Lambda 2, ..., Lambda 1000 each open a new connection to Postgres. Postgres now sees 1000 connections and gets overwhelmed.
+  - Postgres default \`max_connections\`: 100-200.
+  - Lambda concurrent executions: 1000+ (auto-scaled).
+  - Result: "too many connections" errors.
 
 **Solution 1 — Connection proxy (recommended)**:
-\`\`\`
-AWS RDS Proxy:
-  Lambda ──► RDS Proxy ──► PostgreSQL/MySQL
-  (up to 1000    (pools and      (sees only
-   connections)   multiplexes)    50 connections)
 
-  RDS Proxy handles:
-  - Connection pooling (multiplexes many Lambda → few DB conns)
-  - Connection reuse (warm connections for subsequent invocations)
-  - Failover (automatic during DB failover)
-
-  Trade-off: adds ~5ms latency, $0.015/vCPU-hour cost
-  But: eliminates connection storms completely
-
-PgBouncer (self-managed alternative):
-  Lambda ──► PgBouncer (on EC2/ECS) ──► PostgreSQL
-  Same concept, more operational overhead
-  Cheaper than RDS Proxy for high-volume workloads
-\`\`\`
+- **AWS RDS Proxy**: \`Lambda → RDS Proxy → PostgreSQL/MySQL\`. Up to 1000 Lambda connections are pooled and multiplexed down to ~50 DB connections. RDS Proxy handles connection pooling, warm-connection reuse for subsequent invocations, and automatic failover.
+  - Trade-off: adds ~5ms latency and $0.015/vCPU-hour, but eliminates connection storms completely.
+- **PgBouncer (self-managed alternative)**: \`Lambda → PgBouncer (on EC2/ECS) → PostgreSQL\`. Same concept with more operational overhead; cheaper than RDS Proxy at high volume.
 
 **Solution 2 — Serverless-native database**:
-\`\`\`
-DynamoDB:
-  Lambda ──HTTP──► DynamoDB (no connection concept)
-  Each request is an independent HTTP call.
-  No connection limits, infinite concurrency.
-  Trade-off: no SQL, no joins, different data model.
 
-Aurora Serverless v2:
-  Lambda ──► Aurora Serverless (managed connection proxy)
-  Built-in connection management, scales with Lambda.
-  Trade-off: higher cost than standard Aurora.
-
-PlanetScale (MySQL serverless):
-  Lambda ──HTTP──► PlanetScale (connection-safe by design)
-  Uses Vitess proxy layer for connection management.
-  Trade-off: MySQL only, hosted service cost.
-\`\`\`
+- **DynamoDB**: \`Lambda → HTTP → DynamoDB\` — no connection concept. Each request is an independent HTTP call, with no connection limits and effectively infinite concurrency. Trade-off: no SQL, no joins, different data model.
+- **Aurora Serverless v2**: \`Lambda → Aurora Serverless\` — managed connection proxy with built-in connection management that scales with Lambda. Trade-off: higher cost than standard Aurora.
+- **PlanetScale (MySQL serverless)**: \`Lambda → HTTP → PlanetScale\` — connection-safe by design via the Vitess proxy layer. Trade-off: MySQL only, hosted service cost.
 
 **Solution 3 — Connection reuse in Lambda**:
 \`\`\`
@@ -4020,23 +3853,18 @@ HTTP-based DB          ~10ms      Per-request Low          Edge functions
         question: 'How do you design a hybrid architecture that uses both serverless and containers for optimal cost and performance?',
         answer: `**The hybrid approach** is how most production systems actually deploy in 2025 — using serverless for bursty/event-driven workloads and containers for sustained/stateful workloads, optimizing each for its specific characteristics.
 
-**Hybrid architecture pattern**:
-\`\`\`
-Internet ──► API Gateway / Load Balancer
-                │
-        ┌───────┴────────┐
-        ▼                ▼
-  | Serverless Tier (Lambda / Workers) | Container Tier (ECS / Kubernetes) |
-  | ---------------------------------- | --------------------------------- |
-  | Auth / JWT                         | Core API (REST)                   |
-  | Webhooks                           | GraphQL Gateway                   |
-  | Image resize                       | WebSocket server                  |
-  | Cron jobs                          | ML inference                      |
-  | Queue workers                      | Background workers                |
-  | Edge routing                       | Admin dashboard                   |
+**Hybrid architecture pattern**: Internet traffic enters via API Gateway / Load Balancer, which fans out into two tiers running side-by-side:
 
-  Both tiers share the same data layer: RDS / Aurora (via Proxy) · Redis (cache) · S3 (files).
-\`\`\`
+| Serverless Tier (Lambda / Workers) | Container Tier (ECS / Kubernetes) |
+| --- | --- |
+| Auth / JWT | Core API (REST) |
+| Webhooks | GraphQL Gateway |
+| Image resize | WebSocket server |
+| Cron jobs | ML inference |
+| Queue workers | Background workers |
+| Edge routing | Admin dashboard |
+
+Both tiers share the same data layer: RDS / Aurora (via Proxy), Redis (cache), and S3 (files).
 
 **What goes where — decision matrix**:
 \`\`\`
@@ -4414,46 +4242,24 @@ HTTP/2: Multiplexed streams over single connection
         question: 'How does Discord scale WebSockets to handle hundreds of millions of concurrent users?',
         answer: `**Discord** is the gold-standard example of WebSocket scaling, processing billions of messages daily across hundreds of millions of users with sub-100ms message delivery.
 
-**Discord's WebSocket architecture**:
-\`\`\`
-Client ──► Cloudflare (DDoS + routing)
-               │
-               ▼
-          GCP Load Balancer (L4/TCP)
-               │
-               ▼
-          Gateway Servers (WebSocket tier)
-          Gateway Shards (Elixir) — each holds ~5K users:
-            Shard 0   |   Shard 1   |   …   |   Shard N
-               │            │            │
-               └────────────┼────────────┘
-                            ▼
-                    Internal Pub/Sub
-                    (message routing between shards)
-                            │
-                    ┌───────┴───────┐
-                    ▼               ▼
-              Guild Services    Presence Service
-              (Rust/Elixir)     (Rust)
-\`\`\`
+**Discord's WebSocket architecture** (top-down request path):
+
+1. Client connects through **Cloudflare** (DDoS + routing).
+2. Traffic lands on a **GCP L4/TCP Load Balancer**.
+3. The LB distributes WebSocket connections to **Gateway Servers** running Elixir on the BEAM VM.
+4. Each gateway is a **Gateway Shard** holding roughly 5K users. Shards (Shard 0, Shard 1, ..., Shard N) all publish to an **internal pub/sub bus**.
+5. The pub/sub layer routes messages across shards into downstream services: **Guild Services** (Rust/Elixir) and **Presence Service** (Rust).
 
 **Key scaling decisions**:
-\`\`\`
-Decision                  Choice             Why
-──────────────────────────────────────────────────────────────
-Runtime                   Elixir (BEAM VM)   Millions of lightweight processes,
-                                             built-in fault tolerance
-Sharding unit             ~5K users/shard    Balance between memory efficiency
-                                             and failure blast radius
-Cross-shard messaging     Internal pub/sub   Decouple connection handling
-                                             from message routing
-Message fan-out           Per-guild          Only deliver to users in the
-                                             relevant guild/channel
-Voice connections         Separate servers   WebRTC needs different
-                                             infrastructure than chat
-State management          In-memory + DB     Presence and typing in memory,
-                                             messages persisted to ScyllaDB
-\`\`\`
+
+| Decision | Choice | Why |
+|---|---|---|
+| Runtime | Elixir (BEAM VM) | Millions of lightweight processes; built-in fault tolerance |
+| Sharding unit | ~5K users / shard | Balance memory efficiency vs failure blast radius |
+| Cross-shard messaging | Internal pub/sub | Decouple connection handling from message routing |
+| Message fan-out | Per-guild | Only deliver to users in the relevant guild/channel |
+| Voice connections | Separate servers | WebRTC needs different infrastructure than chat |
+| State management | In-memory + DB | Presence and typing in memory; messages persisted to ScyllaDB |
 
 **Why Elixir/BEAM for WebSockets**:
 \`\`\`
@@ -4471,18 +4277,7 @@ Comparison:
   Java: threads (~1MB each, expensive)
 \`\`\`
 
-**Discord's voice architecture** (2.5M+ concurrent):
-\`\`\`
-Voice is separate from chat:
-  Client ──► Voice Gateway (signaling) ──► Voice Server (media)
-                                            │
-                                       WebRTC (UDP)
-                                       220 Gbps egress
-                                       120M packets/sec
-
-  Each voice server handles one voice channel
-  Separate scaling from text chat
-\`\`\`
+**Discord's voice architecture** (2.5M+ concurrent): Voice is separate from chat. The client opens a signaling connection to a **Voice Gateway**, which assigns a **Voice Server** for the media path. Media flows over WebRTC (UDP) — at peak roughly 220 Gbps egress and 120M packets/sec. Each voice server handles one voice channel, so voice scales independently from text chat.
 
 **When to choose A vs B — Discord's decisions applied to your system**:
 - **WebSockets (Discord's choice)**: Choose when you need true bidirectional communication, sub-second message delivery, and the user expects real-time interaction (chat, gaming, collaboration)
@@ -4496,23 +4291,20 @@ Voice is separate from chat:
         answer: `**Server-Sent Events (SSE)** is the standard pattern for streaming AI responses. OpenAI, Anthropic, and most LLM providers use SSE because AI responses are unidirectional (server-to-client) and benefit from incremental delivery.
 
 **SSE for AI streaming — basic architecture**:
-\`\`\`
-Client ──► POST /api/chat (initial request with prompt)
-       ◄── 200 OK, Content-Type: text/event-stream
-       ◄── data: {"token": "The"}
-       ◄── data: {"token": " answer"}
-       ◄── data: {"token": " is"}
-       ◄── data: {"token": " 42."}
-       ◄── data: [DONE]
 
-Backend:
-  Client request ──► Your API ──► LLM API (streaming)
-                                      │
-                              stream tokens back
-                                      │
-                         ◄── forward each token to client
-                              via SSE
-\`\`\`
+Wire-level exchange:
+
+| Direction | Frame |
+|---|---|
+| Client → Server | \`POST /api/chat\` with the initial prompt |
+| Server → Client | \`200 OK, Content-Type: text/event-stream\` |
+| Server → Client | \`data: {"token": "The"}\` |
+| Server → Client | \`data: {"token": " answer"}\` |
+| Server → Client | \`data: {"token": " is"}\` |
+| Server → Client | \`data: {"token": " 42."}\` |
+| Server → Client | \`data: [DONE]\` |
+
+Backend flow: the client request hits your API, which opens a streaming call to the LLM provider. Each token returned by the LLM is forwarded to the client over the open SSE channel.
 
 **Implementation pattern (Node.js)**:
 \`\`\`
@@ -4613,15 +4405,11 @@ SSE wins because AI chat is:
         question: 'How do you build a reliable webhook delivery system with guaranteed at-least-once delivery?',
         answer: `**Webhook reliability** is critical for payment processing (Stripe), CI/CD (GitHub), and any integration where missed events cause business impact. Building a production-grade webhook system requires persistent storage, retry logic, and idempotency.
 
-**Complete webhook delivery architecture**:
-\`\`\`
-Event Occurs (e.g., payment.completed)
-     │
-     ▼
-- **Webhook events table** — persistent storage, source of truth. Columns: \`id\`, \`event_type\`, \`payload\`, \`status\`, \`attempts\`, \`next_retry_at\`, \`created_at\`. Never lose an event.
-- **Delivery queue (SQS / BigQuery / Pub/Sub)** — decouples event creation from delivery. Message body = \`event_id\`.
-- **Webhook worker** — for each message: (1) fetch event by ID, (2) POST to endpoint URL, (3) record result, (4) on failure → retry with backoff.
-\`\`\`
+**Complete webhook delivery architecture** — when an event occurs (e.g. \`payment.completed\`) the pipeline is:
+
+1. **Webhook events table** — persistent source of truth. Columns: \`id\`, \`event_type\`, \`payload\`, \`status\`, \`attempts\`, \`next_retry_at\`, \`created_at\`. Never lose an event.
+2. **Delivery queue (SQS / BigQuery / Pub/Sub)** — decouples event creation from delivery. Message body is just the \`event_id\`.
+3. **Webhook worker** — for each message: (a) fetch the event by ID, (b) POST to the customer's endpoint URL, (c) record the result, (d) on failure, schedule a retry with backoff.
 
 **Retry strategy (Stripe's model)**:
 \`\`\`
@@ -4844,14 +4632,7 @@ Connection Lifecycle:
   WebSocket:   CONNECT → UPGRADE → MSG MSG MSG MSG ... → CLOSE
   Webhook:     SERVER EVENT → HTTP POST → RECEIVER ACK
 
-Scaling Architecture:
-  Clients ──► Load Balancer ──► WS/SSE Servers
-                                     │
-                              ┌──────┴──────┐
-                              │  Pub/Sub    │  (Redis, Kafka, NATS)
-                              │  (message   │
-                              │   routing)  │
-                              └─────────────┘`
+Scaling Architecture: Clients connect through a Load Balancer to a fleet of WS/SSE Servers. All servers attach to a shared Pub/Sub message bus (Redis, Kafka, or NATS) for cross-server message routing — any server can publish, any other server can deliver to its connected clients.`
     },
   },
 
@@ -4978,26 +4759,12 @@ Strategy 3: Append-Only Design — instead of UPDATE, append a new version row:
   Read: \`SELECT … WHERE version = MAX(version)\`. Write: just INSERT (fast).
 \`\`\`
 
-**Write-heavy architecture**:
-\`\`\`
-  Producers (millions of events)
-       │
-       ▼
-  ┌──────────────┐
-  │ Message Queue│ ◄── Buffer for burst absorption
-  │ (Kafka)      │     Retain for replay
-  └──────┬───────┘
-         │
-  ┌──────┴───────┐
-  │ Stream       │ ◄── Aggregate, deduplicate, transform
-  │ Processor    │
-  └──────┬───────┘
-         │
-  ┌──────┴───────┐
-  │ Write-       │ ◄── Cassandra, InfluxDB, TimescaleDB
-  │ Optimized DB │     (LSM trees, time-partitioned)
-  └──────────────┘
-\`\`\`
+**Write-heavy architecture** (top-down pipeline):
+
+1. **Producers** (millions of events).
+2. **Message queue** (Kafka) — absorbs bursts and retains messages for replay.
+3. **Stream processor** — aggregates, deduplicates, and transforms events.
+4. **Write-optimized DB** (Cassandra, InfluxDB, TimescaleDB) — LSM trees, time-partitioned.
 
 **Write scaling techniques**:
 \`\`\`
@@ -5017,18 +4784,7 @@ Time partitioning   Partition by time      Efficient writes + TTL
         question: 'How do read replicas work and what are the consistency implications?',
         answer: `**Read replicas** duplicate data from a primary node to one or more followers. Writes go to the primary; reads can go to any replica.
 
-\`\`\`
-Replication Flow:
-  Client Write ──► Primary DB ──► WAL / Binlog
-                                      │
-                          ┌───────────┼───────────┐
-                          ▼           ▼           ▼
-                      Replica 1   Replica 2   Replica 3
-                      (read)      (read)      (read)
-
-  Replication Lag: time between write to primary
-                   and visibility on replica (ms to seconds)
-\`\`\`
+**Replication Flow**: Client writes hit the **Primary DB**, which appends to its WAL / binlog. The WAL is shipped to multiple read replicas (Replica 1, Replica 2, Replica 3) which serve read traffic. **Replication lag** is the gap between commit on the primary and visibility on a replica (typically ms to seconds).
 
 **Replication modes**:
 \`\`\`
@@ -5104,25 +4860,12 @@ CQRS Architecture for High Read + High Write:
 \`\`\`
 
 **Concrete example — Twitter-like system**:
-\`\`\`
-Write Path (tweets, likes, follows):
-  Client ──► API ──► Kafka ──► Write Workers ──► Cassandra
-                                    │
-                                    ▼
-                              Event stream
-                                    │
-              ┌─────────────────────┼─────────────────┐
-              ▼                     ▼                  ▼
-         Timeline                Search            Analytics
-         Service                 Index             Pipeline
-         (Redis)                 (Elastic)         (Spark)
 
-Read Path (home feed):
-  Client ──► API ──► Redis (pre-built timeline)
+**Write path** (tweets, likes, follows): \`Client → API → Kafka → Write Workers → Cassandra\`. Cassandra emits an event stream that fans out into three downstream consumers — the **Timeline Service** (Redis, pre-built per-user timelines), the **Search Index** (Elasticsearch), and the **Analytics Pipeline** (Spark).
 
-  Cache miss:
-  Client ──► API ──► Fan-out-on-read from followed users
-\`\`\`
+**Read path** (home feed): \`Client → API → Redis\` returns the pre-built timeline directly.
+
+On cache miss the API falls back to **fan-out-on-read** — pull recent tweets from the user's followed accounts on the fly.
 
 **Strategy comparison**:
 \`\`\`
@@ -5251,25 +4994,20 @@ Event Sourcing (append events):
 \`\`\`
 
 **Event sourcing architecture**:
-\`\`\`
-Commands (writes):
-  Command ──► Command Handler ──► Event Store (append-only)
-                                      │
-                                   Event published
-                                      │
-                           ┌──────────┼──────────┐
-                           ▼          ▼          ▼
-                      Projection   Projection   Notification
-                      (read model) (analytics)  (email, webhook)
 
-Event Store rows (append-only — never update or delete):
-  | stream_id | version | event_type      | data        |
-  | --------- | ------- | --------------- | ----------- |
-  | acc-1     | 1       | AccountCreated  | {bal:100}   |
-  | acc-1     | 2       | MoneyWithdrawn  | {amt:20}    |
-  | acc-1     | 3       | MoneyDeposited  | {amt:50}    |
-  | acc-1     | 4       | MoneyWithdrawn  | {amt:30}    |
-\`\`\`
+**Commands (writes)**: \`Command → Command Handler → Event Store\` (append-only). The Event Store publishes each new event, which fans out to multiple downstream consumers:
+- A **read-model projection** (denormalized state for fast reads).
+- An **analytics projection** (warehouse / OLAP).
+- A **notification handler** (email, webhook).
+
+**Event Store rows** (append-only — never update or delete):
+
+| stream_id | version | event_type | data |
+| --- | --- | --- | --- |
+| acc-1 | 1 | AccountCreated | \`{bal:100}\` |
+| acc-1 | 2 | MoneyWithdrawn | \`{amt:20}\` |
+| acc-1 | 3 | MoneyDeposited | \`{amt:50}\` |
+| acc-1 | 4 | MoneyWithdrawn | \`{amt:30}\` |
 
 **Why event sourcing is write-optimized**:
 \`\`\`
@@ -5532,19 +5270,17 @@ Write-Heavy Architecture:
   Optimization: sequential writes, batch, buffer
   Goal: maximize write throughput
 
-Mixed (CQRS):
-  Write Path: Kafka → Write-Optimized Store (Cassandra)
-       │
-       ▼ (CDC / events)
-  Read Path: Read-Optimized Store (Redis, Elasticsearch)
+Mixed (CQRS): writes go to a write-optimized store (Kafka → Cassandra). CDC / event stream propagates changes to a read-optimized store (Redis, Elasticsearch). Reads only ever hit the read store.
 
 Workload Classification:
-  Read:Write Ratio    Category         Example
-  100:1+              Read-heavy       Product catalog, Wikipedia
-  10:1                Read-moderate    Social media (mixed)
-  1:1                 Balanced         E-commerce orders
-  1:10                Write-moderate   Chat messages
-  1:100+              Write-heavy      IoT telemetry, logging`
+
+| Read:Write ratio | Category | Example |
+|---|---|---|
+| 100:1+ | Read-heavy | Product catalog, Wikipedia |
+| 10:1 | Read-moderate | Social media (mixed) |
+| 1:1 | Balanced | E-commerce orders |
+| 1:10 | Write-moderate | Chat messages |
+| 1:100+ | Write-heavy | IoT telemetry, logging |`
     },
   },
 
@@ -5588,31 +5324,11 @@ For system design interviews, understanding these topologies is essential becaus
     keyQuestions: [
       {
         question: 'Compare single-leader, multi-leader, and leaderless replication. When would you use each?',
-        answer: `\`\`\`
-Single-Leader (Primary-Replica):
-  ┌─────────┐
-  │ Primary │ ◄── All writes
-  └────┬────┘
-       │ replication
-  ┌────┴────┐ ┌─────────┐
-  │Replica 1│ │Replica 2│ ◄── Reads only
-  └─────────┘ └─────────┘
+        answer: `**Three replication topologies**:
 
-Multi-Leader:
-  DC-1              DC-2
-  ┌─────────┐       ┌─────────┐
-  │ Leader  │◄─────►│ Leader  │ ◄── Both accept writes
-  └────┬────┘       └────┬────┘     Conflicts resolved async
-       │                 │
-  ┌────┴────┐       ┌────┴────┐
-  │Follower │       │Follower │
-  └─────────┘       └─────────┘
-
-Leaderless (Peer-to-Peer):
-  ┌───────┐  ┌───────┐  ┌───────┐
-  │Node A │◄►│Node B │◄►│Node C │ ◄── Any node accepts writes
-  └───────┘  └───────┘  └───────┘     Quorum for consistency
-\`\`\`
+- **Single-Leader (Primary-Replica)** — A single Primary accepts all writes and replicates to read-only Replicas (Replica 1, Replica 2). Reads can hit any node; writes are funneled through the Primary.
+- **Multi-Leader** — Two (or more) datacenters each run a Leader that accepts writes and replicates bidirectionally to the other Leader. Each DC also has Followers for local read scaling. Conflicts are resolved asynchronously.
+- **Leaderless (Peer-to-Peer)** — Every node (A, B, C) accepts writes and reads. There's no leader; consistency is achieved by quorum (R + W > N).
 
 **Comparison**:
 | Criteria | Single-Leader | Multi-Leader | Leaderless |
@@ -5730,18 +5446,15 @@ For strong consistency: use consensus (Raft/Paxos) instead.
         question: 'How do you handle write conflicts in multi-leader and leaderless systems?',
         answer: `**Conflicts occur when two writes to the same key happen on different nodes before replication syncs them.**
 
-\`\`\`
-Conflict scenario (multi-leader):
+**Conflict scenario (multi-leader)**:
 
-  DC-1 Leader:          DC-2 Leader:
-  T=0: X = "Alice"      T=0: X = "Alice"
-  T=1: X = "Bob"        T=1: X = "Carol"
-       │                      │
-       └──── replication ─────┘
+| Time | DC-1 Leader | DC-2 Leader |
+|---|---|---|
+| t=0 | \`X = "Alice"\` | \`X = "Alice"\` |
+| t=1 | \`X = "Bob"\` | \`X = "Carol"\` |
+| Replication | Both writes propagate to the other DC | Same — both Leaders now hold conflicting values for X |
 
-  Both nodes now have conflicting values for X.
-  Which one wins?
-\`\`\`
+Which one wins?
 
 **Conflict resolution strategies**:
 
@@ -6123,28 +5836,20 @@ Comparison:
       description: 'Replication topology comparison',
       schema: `Replication Topologies:
 
-Single-Leader:
-  Primary ──► Replica 1
-         ──► Replica 2
-         ──► Replica 3
-  Writes: Primary only | Reads: Any node
+Single-Leader: A Primary node accepts all writes and ships them to Replica 1, Replica 2, and Replica 3. Writes go to the Primary only; reads can hit any node.
 
-Multi-Leader:
-  Leader A (DC-1) ◄──► Leader B (DC-2)
-     │                    │
-  Follower A1          Follower B1
-  Writes: Any leader | Conflict resolution required
+Multi-Leader: Leader A (DC-1) and Leader B (DC-2) replicate bidirectionally; each has its own Follower (Follower A1, Follower B1) for local reads. Writes are accepted at any leader, and conflict resolution is required.
 
-Leaderless:
-  Node A ◄──► Node B ◄──► Node C
-  Writes: Any node (quorum W) | Reads: Quorum R
-  R + W > N for consistency overlap
+Leaderless: Nodes A, B, and C all replicate to one another. Writes go to any node (quorum W); reads use quorum R. The invariant R + W > N gives consistency overlap.
 
 Quorum Parameters (N=3):
-  Strong reads:  R=2, W=2 (overlap guaranteed)
-  Fast writes:   R=3, W=1 (read all, write any one)
-  Fast reads:    R=1, W=3 (read any one, write all)
-  No guarantee:  R=1, W=1 (no overlap, stale reads possible)`
+
+| Mode | R | W | Behavior |
+|---|---|---|---|
+| Strong reads | 2 | 2 | Overlap guaranteed |
+| Fast writes | 3 | 1 | Read all, write any one |
+| Fast reads | 1 | 3 | Read any one, write all |
+| No guarantee | 1 | 1 | No overlap, stale reads possible |`
     },
   },
 
@@ -6465,23 +6170,11 @@ Edge Computing:
 | DynamoDB Global | <10ms (local) | ~ms (local) | Eventual (global) |
 | Turso (LibSQL) | <5ms (replica) | ~ms (primary) | Eventual (global) |
 
-**The spectrum from CDN to edge to origin**:
-\`\`\`
-  CDN (cache only)
-    │ → Static assets, public API responses
-    │ → No computation, just cache/serve
-    ▼
-  Edge Functions (light compute)
-    │ → Auth, routing, A/B, personalization
-    │ → Read from edge KV stores
-    │ → Sub-10ms response times
-    ▼
-  Origin (full compute)
-    → Complex business logic
-    → Relational DB queries
-    → Write operations
-    → Full application runtime
-\`\`\`
+**The spectrum from CDN to edge to origin** (top tier serves first; cache miss falls through):
+
+1. **CDN (cache only)** — static assets and public API responses; no computation, just cache/serve.
+2. **Edge functions (light compute)** — auth, routing, A/B, personalization; read from edge KV stores; sub-10ms response times.
+3. **Origin (full compute)** — complex business logic, relational DB queries, write operations, full application runtime.
 
 **Interview tip**: Position edge computing as the evolution of CDNs. It allows you to push read-path logic closer to users while keeping write-path and complex logic at the origin. Mention specific platforms (Cloudflare Workers, Lambda@Edge) to show practical knowledge.`
       },
@@ -6510,27 +6203,17 @@ API: inventory check  CDN, very short TTL          public, max-age=2,
 (approximate count OK)        stale-while-revalidate=10
 Payment webhook       NO CDN (pass-through)        Not applicable
 
-**Architecture**:
-\`\`\`
-  User (Tokyo)
-       │
-       ▼
-  Cloudflare Edge (Tokyo PoP)
-  Edge Worker — route by content type:
-    /static/*        → serve from CDN cache
-    /api/products/*  → CDN with short TTL
-    /api/cart/*      → pass to origin
-    /api/checkout/*  → pass to origin
-  Plus: DDoS protection, WAF, bot detection.
-       │ (cache miss or pass-through)
-       ▼
-  Origin Shield (US-West PoP)
-  Shield (second cache layer): consolidates misses from all edge PoPs and reduces origin load by 80%+.
-       │ (cache miss)
-       ▼
-  Origin Server (US-West region)
-  Origin: Application + Redis + PostgreSQL.
-\`\`\`
+**Architecture** (top-down):
+
+1. **User (Tokyo)** issues a request.
+2. **Cloudflare Edge (Tokyo PoP)** runs an Edge Worker that routes by content type:
+   - \`/static/*\` → serve from CDN cache.
+   - \`/api/products/*\` → CDN with short TTL.
+   - \`/api/cart/*\` → pass through to origin.
+   - \`/api/checkout/*\` → pass through to origin.
+   The edge also handles DDoS protection, WAF, and bot detection.
+3. On a CDN miss or pass-through, traffic flows to the **Origin Shield (US-West PoP)** — a second cache layer that consolidates misses from all edge PoPs and reduces origin load by 80%+.
+4. On a Shield miss, traffic finally reaches the **Origin Server (US-West region)**: Application + Redis + PostgreSQL.
 
 **Handling flash sales / Black Friday**:
 \`\`\`
@@ -6875,19 +6558,12 @@ For APIs where response varies by a small set of values:
     dataModel: {
       description: 'CDN architecture and cache invalidation patterns',
       schema: `CDN Request Flow:
-  User ──► DNS (GeoDNS/Anycast) ──► Nearest Edge PoP
-                                         │
-                                    Cache HIT? → serve
-                                    Cache MISS? ↓
-                                         │
-                                    Shield PoP (optional)
-                                         │
-                                    Cache HIT? → serve
-                                    Cache MISS? ↓
-                                         │
-                                    Origin Server → response
-                                         │
-                                    Cache at shield + edge
+
+1. User → DNS (GeoDNS / Anycast) → Nearest Edge PoP.
+2. Edge Pop: cache HIT → serve. Cache MISS → forward to Shield PoP.
+3. Shield PoP (optional second tier): cache HIT → serve. Cache MISS → forward to Origin.
+4. Origin Server returns the response.
+5. Response is cached at the Shield and Edge tiers on the way back.
 
 Cache-Control Header Strategies:
   Static assets:  Cache-Control: public, max-age=31536000, immutable
