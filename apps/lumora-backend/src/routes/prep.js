@@ -18,6 +18,7 @@ import { Router } from 'express';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { refreshCompanyContext } from '../services/companyContext.js';
+import { indexUserPrepDocs } from '../services/userDocIndexer.js';
 
 const router = Router();
 
@@ -76,6 +77,11 @@ router.put('/state', async (req, res, next) => {
       if (detected) {
         refreshCompanyContext(detected).catch(() => {});
       }
+      // Index the Prep Kit blob into pgvector so retrieval has the
+      // current JD/resume to ground Sona's answers. Fire-and-forget;
+      // a failure here must not block the user's save.
+      indexUserPrepDocs({ userId: req.user.id, prepData: data })
+        .catch((err) => console.warn('[prep] user-doc index failed:', err.message));
     } catch {}
 
     res.json({ updated_at: r.rows[0].updated_at });
