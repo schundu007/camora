@@ -123,3 +123,42 @@ describe('retrieve with HyDE', () => {
     expect(hydeMock).not.toHaveBeenCalled();
   });
 });
+
+describe('retrieve with reranker', () => {
+  it('passes merged chunks through rerank when useRerank=true', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_RERANK = '';
+    process.env.COHERE_API_KEY = 'set';
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: vi.fn().mockResolvedValue([
+        { tier: 'kb', id: 'k1', content: 'A' },
+        { tier: 'kb', id: 'k2', content: 'B' },
+      ]),
+      hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
+    }));
+    const rerankMock = vi.fn().mockImplementation((q, chunks) => Promise.resolve(chunks.slice().reverse()));
+    vi.doMock('../src/services/reranker.js', () => ({ rerank: rerankMock }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    const r = await retrieve({ question: 'q', userId: null, useRerank: true });
+    expect(rerankMock).toHaveBeenCalledTimes(1);
+    expect(r.chunks[0].id).toBe('k2');
+    expect(r.chunks[1].id).toBe('k1');
+  });
+
+  it('skips rerank when useRerank is undefined and no env flag', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_RERANK = '';
+    delete process.env.COHERE_API_KEY;
+    const rerankMock = vi.fn();
+    vi.doMock('../src/services/reranker.js', () => ({ rerank: rerankMock }));
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: vi.fn().mockResolvedValue([{ tier: 'kb', id: 'k1', content: 'A' }]),
+      hybridSearchUserDocs: vi.fn(),
+    }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    await retrieve({ question: 'q', userId: null });
+    expect(rerankMock).not.toHaveBeenCalled();
+  });
+});
