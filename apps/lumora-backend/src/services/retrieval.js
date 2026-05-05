@@ -17,15 +17,21 @@ const KB_TOP_K = 6;
 const USER_TOP_K = 4;
 const MAX_CHUNK_CHARS = 1200; // hard cap injected into prompt per chunk
 
+function resolveUseHyde(optsValue) {
+  if (typeof optsValue === 'boolean') return optsValue;
+  return process.env.RAG_USE_HYDE === 'true';
+}
+
 /**
  * @param {object}  opts
  * @param {string}  opts.question
  * @param {number?} opts.userId
  * @param {number}  [opts.timeoutMs=250]
+ * @param {boolean} [opts.useHyde]
  * @returns {Promise<{chunks, timedOut, latencyMs}>}
  */
 export async function retrieve(opts) {
-  const { question, userId, timeoutMs = DEFAULT_TIMEOUT_MS } = opts;
+  const { question, userId, timeoutMs = DEFAULT_TIMEOUT_MS, useHyde } = opts;
   const t0 = performance.now();
 
   let timer;
@@ -35,7 +41,13 @@ export async function retrieve(opts) {
 
   const work = (async () => {
     const { embedQuery } = await import('./embeddings.js');
-    const vec = await embedQuery(question);
+    let queryForEmbed = question;
+    if (resolveUseHyde(useHyde)) {
+      const { hydeRewrite } = await import('./hyde.js');
+      const rewritten = await hydeRewrite(question);
+      if (rewritten) queryForEmbed = `${question}\n\n${rewritten}`;
+    }
+    const vec = await embedQuery(queryForEmbed);
     const promises = [hybridSearchKb(question, KB_TOP_K, { vec })];
     if (userId) promises.push(hybridSearchUserDocs(userId, question, USER_TOP_K, { vec }));
     const results = await Promise.all(promises);

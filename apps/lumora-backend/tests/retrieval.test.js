@@ -88,3 +88,38 @@ describe('formatRetrievedContext', () => {
     expect(formatRetrievedContext([])).toBe('');
   });
 });
+
+describe('retrieve with HyDE', () => {
+  it('augments embedding query with hypothetical answer when useHyde=true', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_HYDE = '';
+    const hydeMock = vi.fn().mockResolvedValue('SLOs are reliability targets; error budgets cap outages.');
+    vi.doMock('../src/services/hyde.js', () => ({ hydeRewrite: hydeMock }));
+    const embedMock = vi.fn().mockResolvedValue(new Array(1536).fill(0.01));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: embedMock }));
+    const hybridKbMock = vi.fn().mockResolvedValue([]);
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: hybridKbMock,
+      hybridSearchUserDocs: vi.fn(),
+    }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    await retrieve({ question: 'what is an SLO?', userId: null, useHyde: true });
+    expect(hydeMock).toHaveBeenCalledWith('what is an SLO?');
+    expect(embedMock).toHaveBeenCalledWith(expect.stringContaining('reliability targets'));
+  });
+
+  it('does not call hyde when useHyde is undefined and env flag is off', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_HYDE = '';
+    const hydeMock = vi.fn();
+    vi.doMock('../src/services/hyde.js', () => ({ hydeRewrite: hydeMock }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: vi.fn().mockResolvedValue([]),
+      hybridSearchUserDocs: vi.fn(),
+    }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    await retrieve({ question: 'q', userId: null });
+    expect(hydeMock).not.toHaveBeenCalled();
+  });
+});
