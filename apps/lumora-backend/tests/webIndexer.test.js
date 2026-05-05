@@ -112,3 +112,124 @@ describe('indexWatchlistUrl', () => {
     expect(selects.length).toBeGreaterThan(0);
   });
 });
+
+describe('indexWatchlistRoot', () => {
+  it('indexes the root page plus up to maxArticles articles', async () => {
+    let call = 0;
+    fetchAndExtractMock.mockImplementation((url) => {
+      call++;
+      if (call === 1) {
+        return Promise.resolve({
+          text: 'Index landing — recent articles below.',
+          articleUrls: [
+            'https://stripe.com/blog/idempotency',
+            'https://stripe.com/blog/exponential-backoff',
+            'https://stripe.com/blog/payments-scale',
+            'https://stripe.com/blog/migrations',
+          ],
+          fetchedAt: 1700000000000,
+        });
+      }
+      // Article fetches return their own short body
+      return Promise.resolve({
+        text: `Article body for ${url} ` + 'lorem ipsum '.repeat(50),
+        articleUrls: [],
+        fetchedAt: 1700000000000 + call,
+      });
+    });
+    embedBatchMock.mockImplementation((arr) => Promise.resolve(arr.map(() => new Array(1536).fill(0.1))));
+    queryMock.mockResolvedValue({ rows: [] });
+
+    const { indexWatchlistRoot } = await import('../src/services/webIndexer.js');
+    const r = await indexWatchlistRoot({
+      rootUrl: 'https://stripe.com/blog/',
+      label: 'Stripe Engineering',
+      source: 'Stripe',
+      maxArticles: 3,
+    });
+
+    // 1 root + 3 articles = 4 fetches total
+    expect(fetchAndExtractMock).toHaveBeenCalledTimes(4);
+    expect(r.urlCount).toBe(4);
+    expect(r.totalChunks).toBeGreaterThan(0);
+    // Per-URL breakdown
+    expect(r.perUrl).toHaveLength(4);
+    for (const u of r.perUrl) {
+      expect(u.url).toMatch(/^https:\/\/stripe\.com/);
+      expect(u.chunkCount).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it('continues when an article fetch fails (per-URL skipped)', async () => {
+    let call = 0;
+    fetchAndExtractMock.mockImplementation((url) => {
+      call++;
+      if (call === 1) {
+        return Promise.resolve({
+          text: 'Index page',
+          articleUrls: ['https://x.com/good', 'https://x.com/bad'],
+          fetchedAt: 100,
+        });
+      }
+      if (url.endsWith('/bad')) return Promise.reject(new Error('503 from x.com'));
+      return Promise.resolve({ text: 'good article body', articleUrls: [], fetchedAt: 101 });
+    });
+    embedBatchMock.mockResolvedValue([new Array(1536).fill(0.1)]);
+    queryMock.mockResolvedValue({ rows: [] });
+
+    const { indexWatchlistRoot } = await import('../src/services/webIndexer.js');
+    const r = await indexWatchlistRoot({
+      rootUrl: 'https://x.com/blog/',
+      label: 'X',
+      source: 'X',
+      maxArticles: 2,
+    });
+    expect(r.urlCount).toBe(3); // 1 root + 2 articles attempted
+    const failed = r.perUrl.filter((u) => u.skipped);
+    expect(failed.length).toBe(1);
+    expect(failed[0].error).toMatch(/503/);
+    const succeeded = r.perUrl.filter((u) => !u.skipped);
+    expect(succeeded.length).toBe(2);
+  });
+
+  it('does not follow articles when maxArticles=0', async () => {
+    fetchAndExtractMock.mockResolvedValue({
+      text: 'index only',
+      articleUrls: ['https://x.com/a', 'https://x.com/b'],
+      fetchedAt: 100,
+    });
+    embedBatchMock.mockResolvedValue([new Array(1536).fill(0.1)]);
+    queryMock.mockResolvedValue({ rows: [] });
+
+    const { indexWatchlistRoot } = await import('../src/services/webIndexer.js');
+    const r = await indexWatchlistRoot({
+      rootUrl: 'https://x.com/',
+      label: 'X',
+      source: 'X',
+      maxArticles: 0,
+    });
+    expect(fetchAndExtractMock).toHaveBeenCalledTimes(1);
+    expect(r.urlCount).toBe(1);
+  });
+
+  it('skips article URLs identical to the root', async () => {
+    fetchAndExtractMock.mockResolvedValue({
+      text: 'index',
+      articleUrls: ['https://x.com/blog/', 'https://x.com/blog/article-1'],
+      fetchedAt: 100,
+    });
+    embedBatchMock.mockResolvedValue([new Array(1536).fill(0.1)]);
+    queryMock.mockResolvedValue({ rows: [] });
+
+    const { indexWatchlistRoot } = await import('../src/services/webIndexer.js');
+    const r = await indexWatchlistRoot({
+      rootUrl: 'https://x.com/blog/',
+      label: 'X',
+      source: 'X',
+      maxArticles: 5,
+    });
+    // root + 1 article (the duplicate is filtered)
+    expect(fetchAndExtractMock).toHaveBeenCalledTimes(2);
+    expect(r.urlCount).toBe(2);
+  });
+});
