@@ -185,6 +185,21 @@ The SRE response is error budgets — convert the dev/SRE tension into a math pr
         description: 'How an observed event becomes an SLI (measurement), gets compared to an SLO (internal target), and only sometimes graduates to an SLA (external contract with consequences).',
         image: '/diagrams/sre/a2-sli-slo-sla.png',
       },
+      {
+        title: 'SLI formula — good events / valid events',
+        description: 'The canonical SLI shape with a worked example: 100,000 requests/30d → exclude 95 client errors → 99,985 valid → 99,970 succeeded → SLI = 99.985%. Note "valid" excludes things outside your responsibility.',
+        image: '/diagrams/sre/a2_1-sli-formula.png',
+      },
+      {
+        title: 'SLO tier decision matrix — pick the target that matches business cost',
+        description: '99% (3.65 days/yr) for internal tools — 99.9% (8h45m) for standard B2B SaaS — 99.95% (4h22m) for revenue-critical — 99.99% (52min) for enterprise SLAs — 99.999% (5min) for telecom/life-safety. Each step right is roughly 10× the engineering cost.',
+        image: '/diagrams/sre/a2_2-slo-tiers.png',
+      },
+      {
+        title: 'Worked example — HTTP checkout service: SLI → SLO → SLA',
+        description: 'Concrete walkthrough for a 10K RPS service: SLI definition ("% requests 2xx in <500ms"), SLO target (99.95%), error budget (21.6 min/month or ~50K requests), SLA contract (99.9% with 10% credit refund). The SLA is intentionally looser than the SLO.',
+        image: '/diagrams/sre/a2_3-sli-slo-sla-example.png',
+      },
     ],
     introduction: `These three are the most-tested SRE definitions in interviews. Get them precise; the differences are load-bearing.
 
@@ -204,12 +219,30 @@ The Workbook (Ch 2) refines the SLI into a canonical form: SLIs are ratios of go
       'Explaining to product why "always available" is not a measurable SLO',
     ],
     keyConcepts: [
-      { term: 'SLI', definition: '"A carefully defined quantitative measure of some aspect of the level of service that is provided." (SRE Book Ch 4)' },
-      { term: 'SLO', definition: '"A target value or range of values for a service level that is measured by an SLI." (SRE Book Ch 4)' },
-      { term: 'SLA', definition: '"An explicit or implicit contract with your users that includes consequences of meeting (or missing) the SLOs they contain." (SRE Book Ch 4)' },
-      { term: 'Good / total form', definition: 'Canonical SLI shape from Workbook Ch 2: ratio of successful events to all valid events over a window. e.g. successful_http_requests / total_http_requests, or completed_grpc_calls_under_100ms / total_grpc_requests.' },
-      { term: 'Differentiator test', definition: '"What happens if the SLOs aren\'t met?" — if there\'s no explicit consequence, it\'s an SLO, not an SLA. SLAs always have refunds, credits, or other defined penalties.' },
-      { term: 'SLI menu by service type', definition: 'Workbook Ch 2: request-driven services → availability + latency + quality; pipeline → freshness + correctness + coverage; storage → durability.' },
+      {
+        term: 'SLI — Service Level Indicator',
+        definition: 'The MEASUREMENT. "A carefully defined quantitative measure of some aspect of the level of service that is provided." (SRE Book Ch 4) — Always a number derived from observed events. Examples: % of HTTP requests returning 2xx; p99 latency in milliseconds; % of writes durable within 5 seconds. The SLI is what you actually measure on production traffic.',
+      },
+      {
+        term: 'SLO — Service Level Objective',
+        definition: 'The INTERNAL TARGET. "A target value or range of values for a service level that is measured by an SLI." (SRE Book Ch 4) — A threshold you set on the SLI. Examples: "99.95% of HTTP requests return 2xx," "p99 latency under 500ms," "99.9% of writes durable within 5s." Owned by SRE + Dev + Product (three-way sign-off). When missed, the team has a meeting and decides what to fix — no automatic external consequence.',
+      },
+      {
+        term: 'SLA — Service Level Agreement',
+        definition: 'The EXTERNAL CONTRACT with consequences. "An explicit or implicit contract with your users that includes consequences of meeting (or missing) the SLOs they contain." (SRE Book Ch 4) — Examples: "99.9% availability or customer gets 10% credit," "Tier-1 customers get $X penalty per minute beyond 4 hours of downtime." Owned by Legal + Sales + Product. Almost always LOOSER than the internal SLO (e.g., SLA = 99.9%, SLO = 99.95%) so engineering has headroom before refunds trigger.',
+      },
+      {
+        term: 'Good / total form (canonical SLI shape)',
+        definition: 'From Workbook Ch 2: SLI = good_events / valid_events over a window. The "valid" filter excludes things outside your responsibility (404s for nonexistent endpoints, requests rejected at the LB before reaching you). The "good" count is per the SLI definition (success+fast for latency SLI; just success for availability). Aggregates cleanly: SLI for last hour vs last day vs last 30 days are all the same shape. Yields a natural error budget (1 − SLO) measured in the same units.',
+      },
+      {
+        term: 'The Differentiator test',
+        definition: 'Verbatim from SRE Book Ch 4: "An easy way to tell the difference between an SLO and an SLA is to ask \'what happens if the SLOs aren\'t met?\': if there is no explicit consequence, then you are almost certainly looking at an SLO." — If the answer is "we have a meeting" → SLO. If the answer is "the customer gets refunded $X" or "we breach contract" → SLA. Most internal services have SLOs with no SLAs; SLAs are reserved for paid customer commitments.',
+      },
+      {
+        term: 'SLI menu by service type',
+        definition: 'Workbook Ch 2 maps service types to recommended SLI categories. Request-driven services (HTTP, gRPC) → availability + latency + quality. Pipeline (batch, streaming) → freshness + correctness + coverage. Storage → durability + availability + latency. Most services need 2-4 SLIs covering different failure modes; one SLI is rarely sufficient. Avoid "comprehensive lists" — Workbook explicitly says fewer SLOs with better coverage beats many.',
+      },
     ],
     approach: [
       'Identify the Critical User Journey (CUJ) — what end-to-end task actually matters to the user?',
@@ -301,9 +334,19 @@ The SRE runs the measurement; the SRE does not unilaterally set the target. If o
     description: 'How to derive the budget from the SLO, what an error-budget policy looks like, and when to actually halt launches.',
     visualizations: [
       {
+        title: 'Error budget calculation — minutes AND requests (worked example)',
+        description: 'Inputs: 99.9% SLO, 30-day window, 10K RPS. Time budget: 43.2 min/month. Request budget: 25.92M failed requests/month. Each must be allocated across planned outages, unplanned, latency violations, test traffic.',
+        image: '/diagrams/sre/a4_1-error-budget-calc.png',
+      },
+      {
         title: 'Error-budget burn rate — multi-window multi-burn-rate alerting',
-        description: 'How a steady-state burn rate of 1× would just exhaust the budget over the SLO window. Faster burn rates trigger alerts at multiple severities, paired with a short window to confirm "still burning" before paging.',
+        description: 'How a steady-state burn rate of 1× would just exhaust the budget over the SLO window. Faster burn rates trigger alerts at multiple severities, paired with a short window to confirm "still burning" before paging. 14.4× burn = 2% in 1 hour; 6× = 5% in 6 hours; 1× = 10% in 3 days.',
         image: '/diagrams/sre/a3-burn-rate.png',
+      },
+      {
+        title: 'Error-budget policy zones — 4 zones, 4 actions',
+        description: '> 50% (healthy → ship freely) → 25-50% (yellow → review risky deploys) → < 25% (red → freeze new features) → 0% exhausted (emergency → all-hands reliability). Recovery happens through fixes + time.',
+        image: '/diagrams/sre/a4_2-error-budget-policy.png',
       },
     ],
     introduction: `An error budget is the operational expression of an SLO. The math is one line: error_budget = 1 − SLO, applied over the SLO\'s measurement window.
@@ -324,12 +367,30 @@ Disagreements between dev and SRE on whether the budget is exhausted, or whether
       'Tuning alerting thresholds via burn rate (see C8 multi-window multi-burn-rate)',
     ],
     keyConcepts: [
-      { term: 'Error budget formula', definition: 'budget = 1 − SLO, applied over a rolling measurement window. For 99.9% over 30 days at 3M req: 3,000 errors allowed.' },
-      { term: 'Burn rate', definition: 'How fast you\'re consuming budget vs the steady-state rate that would exhaust it exactly over the window. 1× means you\'d use it all up over 30 days; 14.4× means you\'d use 2% in 1 hour.' },
-      { term: 'Error-Budget Policy (EBP)', definition: 'Org-level contract specifying what happens when the budget is exhausted. The Workbook template includes signatories, halt rules, exceptions, and escalation to CTO.' },
-      { term: '4-week halt rule', definition: '"If the service has exceeded its error budget for the preceding four-week window, we will halt all changes and releases other than P0 issues or security fixes until the service is back within its SLO." (Workbook Ch 3, verbatim)' },
-      { term: 'Postmortem trigger', definition: 'Any single incident that consumes >20% of the quarterly budget gets a postmortem. (Workbook Ch 3 template)' },
-      { term: 'Permission, not punishment', definition: 'The framing that prevents EBP from becoming an SRE-vs-dev weapon. A team using all of its budget is doing the right thing; a team consistently under-spending it is being too cautious.' },
+      {
+        term: 'Error budget formula',
+        definition: 'budget = 1 − SLO, applied over a rolling measurement window. Worked example for 99.9% SLO over 30 days: 0.1% × 30 days × 24 h × 60 min = 43.2 minutes/month of "allowed unreliability." At 10K RPS: 0.1% × 25.92 billion requests = 25.92 million failed requests allowed. The budget is denominated in BOTH time AND requests — pick whichever makes more sense for the context.',
+      },
+      {
+        term: 'Burn rate',
+        definition: 'How fast you\'re consuming the error budget vs the steady-state rate that would exhaust it exactly over the SLO window. 1× burn = budget will run out exactly at end of window (sustainable). 14.4× burn = budget gone in ~2 hours (emergency — page on-call). Burn rate × window = % of budget consumed. The multi-window multi-burn-rate alerting pattern (Workbook Ch 5) uses 14.4× / 6× / 1× thresholds at fast/medium/slow windows respectively.',
+      },
+      {
+        term: 'Error-Budget Policy (EBP)',
+        definition: 'The org-level WRITTEN CONTRACT that turns the math into binding action. Workbook Ch 3 provides a template with: metadata header, service overview, goals/non-goals, SLO miss policy, outage policy, escalation policy. Signed by SRE lead, dev lead, product lead. Without a signed EBP, the budget is just a number with no consequences — defeats the purpose. The signatures matter when freeze-time politics hit.',
+      },
+      {
+        term: '4-week halt rule (Workbook Ch 3 verbatim)',
+        definition: '"If the service has exceeded its error budget for the preceding four-week window, we will halt all changes and releases other than P0 issues or security fixes until the service is back within its SLO." Why 4 weeks: a single bad day is noise; 4 weeks is signal. Why halt: gives engineering time to focus on reliability without competing with feature pressure. Why P0/security exceptions: you can\'t halt safety fixes.',
+      },
+      {
+        term: 'Postmortem trigger (20% rule)',
+        definition: 'Workbook Ch 3 template: any SINGLE incident that consumes more than 20% of the quarterly error budget triggers a mandatory postmortem. This catches "one bad day" within an otherwise healthy quarter. Without this trigger, a 2-hour outage in a quarter where you were otherwise at 30% budget consumption would never be analyzed because the quarter still looks healthy.',
+      },
+      {
+        term: 'Permission, not punishment (cultural framing)',
+        definition: 'The Workbook is explicit: EBP "is not to serve as punishment for missing SLOs" but rather to "give teams permission to focus exclusively on reliability when data indicates that reliability is more important." A team using 100% of its budget is doing the right thing — they\'re shipping at the maximum velocity SLO compatibility allows. A team consistently under-spending budget (e.g., 30%) is being too cautious and leaving feature velocity on the table; should tighten the SLO or accelerate launches.',
+      },
     ],
     approach: [
       'Compute the budget at SLO definition time — every SLO must yield a budget you can hand to product',
@@ -3031,6 +3092,18 @@ Quote from SRE Book Ch 14: "The first priority is incident resolution... root-ca
     color: '#ef4444',
     questions: 3,
     description: 'The four canonical incident metrics, what each measures, and which actually matter for SRE.',
+    visualizations: [
+      {
+        title: 'Incident lifecycle — MTTD / MTT-Mitigate / MTT-Resolve / MTBF on a timeline',
+        description: 'Last good state → INCIDENT START → Detected (MTTD) → Acknowledged → MITIGATED (symptom gone) → RESOLVED (root cause fixed) → Next incident (MTBF gap). Each segment is a separate sub-component of MTTR worth measuring independently.',
+        image: '/diagrams/sre/d2_1-mttr-timeline.png',
+      },
+      {
+        title: 'Availability formula — Avail = MTBF / (MTBF + MTTR), with worked examples',
+        description: '99.86% (MTBF=30d, MTTR=1h) vs 99.93% (MTBF=30d, MTTR=30min, halved MTTR) vs 99.93% (MTBF=60d, MTTR=1h, doubled MTBF). Both improvements yield equivalent gain — but reducing MTTR is typically 5-10× cheaper than increasing MTBF.',
+        image: '/diagrams/sre/d2_2-availability.png',
+      },
+    ],
     introduction: `The incident lifecycle has four canonical time measurements. They\'re used inconsistently across the industry; getting them precise matters in interviews and postmortems.
 
 MTTD — Mean Time To Detect.
