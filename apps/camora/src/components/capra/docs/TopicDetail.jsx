@@ -2056,7 +2056,7 @@ export default function TopicDetail({
                             {topicDetails.createFlow.steps.map((step, i) => (
                               <li key={i} className="flex items-start gap-2 py-1">
                                 <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] landing-mono mt-0.5">{i + 1}</span>
-                                <span className="text-[var(--text-secondary)] text-sm landing-body">{step}</span>
+                                <span className="text-[var(--text-secondary)] text-sm landing-body"><FormattedContent content={step} inline /></span>
                               </li>
                             ))}
                           </ol>
@@ -2086,7 +2086,7 @@ export default function TopicDetail({
                             {topicDetails.redirectFlow.steps.map((step, i) => (
                               <li key={i} className="flex items-start gap-2 py-1">
                                 <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] landing-mono mt-0.5">{i + 1}</span>
-                                <span className="text-[var(--text-secondary)] text-sm landing-body">{step}</span>
+                                <span className="text-[var(--text-secondary)] text-sm landing-body"><FormattedContent content={step} inline /></span>
                               </li>
                             ))}
                           </ol>
@@ -2904,7 +2904,7 @@ export default function TopicDetail({
                     <span className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(239, 68, 68, 0.18)' }}>
                       <Icon name="alertTriangle" size={11} style={{ color: '#ef4444' }} />
                     </span>
-                    <span className="text-[14px] text-[var(--text-secondary)] leading-relaxed">{item}</span>
+                    <span className="text-[14px] text-[var(--text-secondary)] leading-relaxed"><FormattedContent content={item} inline /></span>
                   </div>
                 ))}
               </div>
@@ -3005,7 +3005,7 @@ export default function TopicDetail({
                     <p className="text-[var(--text-secondary)] text-[15px] leading-[1.75] landing-body">{fmtCloud(quoteMatch[2].trim())}</p>
                   </>
                 ) : (
-                  <p className="text-[var(--text-secondary)] text-[15px] leading-[1.75] landing-body">{topicDetails.introduction}</p>
+                  <div className="text-[var(--text-secondary)] text-[15px] leading-[1.75] landing-body"><FormattedContent content={topicDetails.introduction} /></div>
                 )}
               </section>
             );
@@ -3088,9 +3088,9 @@ export default function TopicDetail({
               <div className="pt-2">
                 <div className="pl-4 border-l-2 border-[var(--border)] space-y-3">
                   {topicDetails.exampleResponse.split('\n\n').map((paragraph, i) => (
-                    <p key={i} className="text-[var(--text-primary)] text-sm leading-relaxed landing-body">
-                      {stripQuotes(paragraph.trim())}
-                    </p>
+                    <div key={i} className="text-[var(--text-primary)] text-sm leading-relaxed landing-body">
+                      <FormattedContent content={stripQuotes(paragraph.trim())} inline />
+                    </div>
                   ))}
                 </div>
                 <div className="mt-5 pt-3 border-t border-[var(--border)] flex items-center gap-5 text-[10px] uppercase tracking-[0.12em] text-[var(--text-muted)] landing-mono">
