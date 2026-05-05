@@ -9615,4 +9615,964 @@ These are the answers a GitOps-fluent platform engineer should give without prep
     ],
   },
 
+  {
+    id: 'argocd-architecture',
+    title: 'Argo CD Architecture — Application, Project, ApplicationSet, RBAC',
+    icon: 'gitPullRequest',
+    color: '#0891b2',
+    questions: 5,
+    description: 'CNCF Graduated GitOps tool. Used at Intuit, IBM, Tesla, BMW, Adobe. Five microservices: server, application-controller, repo-server, redis, dex. CRDs: Application, AppProject, ApplicationSet. Multi-cluster, RBAC, SSO, PR previews.',
+    visualizations: [
+      {
+        title: 'Argo CD architecture — five microservices, three CRDs',
+        description: `Argo CD runs as five microservices in the argocd namespace:
+
+1. argocd-server — REST/gRPC API + Web UI. RBAC + SSO. Frontend for everything users do. Stateless; multiple replicas behind a Service.
+
+2. argocd-application-controller — the brain. Watches Application and ApplicationSet CRDs. Performs reconciliation: compares git (via repo-server) to cluster state, applies changes. Most CPU-intensive; sharded with --replicas + --shard for >500 Applications.
+
+3. argocd-repo-server — fetches and renders manifests. Clones git repos, runs Helm template / Kustomize build / Jsonnet / plugin renderers. Caches output keyed by (repoURL, sha, path). Separated from application-controller for security: only repo-server has git credentials.
+
+4. argocd-redis — cache layer. Stores rendered manifests, repo state, application status. Not durable storage (rebuilds from sources on cold start). Production: Redis with Sentinel for HA.
+
+5. argocd-dex-server (optional) — OIDC federation broker. Sits between Argo CD and external IdP (GitHub, Okta, LDAP, SAML, GitLab). Skip if your IdP is direct-OIDC compatible.
+
+Three primary CRDs:
+
+Application — represents one deployable unit. Specifies source (git URL + path + revision), destination (cluster + namespace), syncPolicy. Most common CRD; one per "thing you deploy."
+
+AppProject — security boundary. Restricts which source repos, destination clusters/namespaces, resource types Applications can use. Plus per-project RBAC roles. Used for tenant isolation.
+
+ApplicationSet — generates Applications dynamically. Like a for-loop over Applications. Generators: list, cluster, git-directory, git-files, matrix, merge, scm-provider, pull-request, plugin.
+
+Other components:
+- argocd-applicationset-controller (handles ApplicationSet generators)
+- argocd-notifications-controller (Slack/Teams/email on Application events)
+- argocd-image-updater (separate component; watches registries, auto-updates manifests)`,
+        image: '/diagrams/devops/g2-argocd.png',
+      },
+      {
+        title: 'Application reconciliation lifecycle — sync waves, hooks, health',
+        description: `Detailed sequence of what happens when application-controller reconciles.
+
+1. Trigger. Webhook from git host, polling cycle (default 3 min), or manual sync from UI/CLI.
+
+2. Fetch desired state. application-controller asks repo-server for rendered manifests at current targetRevision. repo-server clones (or uses cached repo) and renders: Helm template, Kustomize build, raw YAML, Jsonnet, or plugin.
+
+3. Fetch live state. application-controller queries the destination K8s cluster for resources owned by this Application (label argocd.argoproj.io/instance=<app-name>).
+
+4. Diff. Per-resource diff between desired and live.
+
+5. Health assessment. For each resource, determine health using built-in checks (Deployment Available, Pod Running) or custom Lua resource hooks. Application's overall health is worst child status.
+
+6. Decide whether to sync. If syncPolicy.automated set and Application is OutOfSync, proceed automatically. selfHeal: true also reverts drift.
+
+7. Sync waves. Resources can have annotation argocd.argoproj.io/sync-wave: -1. Lower waves apply first. Used for: namespaces before namespaced resources, CRDs before CR instances, PVCs before Pods.
+
+8. Sync hooks. Annotations argocd.argoproj.io/hook: PreSync | Sync | PostSync | SyncFail | PostDelete. PreSync hooks run before main sync (DB migration job). PostSync runs after (smoke tests). Typically Job resources.
+
+9. Apply. application-controller calls K8s API. Default: client-side apply; recommended: ServerSideApply=true (better conflict handling with field managers like HPA).
+
+10. Status update. Application status updated; argocd-notifications-controller fires events.
+
+11. Continuous re-reconciliation. Cycle repeats every ~3 min or on git webhook.
+
+Common failure modes:
+- Sync timeout: default 5 min per Application; configurable.
+- Resource hook timeout: Job hooks have own timeouts; PVCs can stall on storage class issues.
+- Diff infinite loop: another controller (HPA, Operator) keeps modifying a field; agent reverts; controller re-modifies. Fix: ignoreDifferences for that field.
+- Apply rejected: missing CRD, RBAC issue. Resource shows Missing or Failed; UI highlights the issue.`,
+        image: '/diagrams/devops/g2-argocd.png',
+      },
+    ],
+    introduction: `Argo CD is the dominant Kubernetes GitOps tool in 2026. Originated at Intuit; CNCF Graduated December 2022. Production-deployed at Intuit, IBM, Adobe, Tesla, BMW, JPMorgan, Red Hat (the engine behind OpenShift GitOps), and thousands of other organizations.
+
+Why Argo CD wins:
+
+Polished UI. The web UI is the best in any GitOps tool — Application list with health/sync state, per-resource tree visualization, diff view, log viewer, sync history. Operators and developers can both use it productively without CLI fluency.
+
+Application CRD model. One Application = one deployable unit. Familiar mental model. App-of-Apps + ApplicationSet handle multi-app management cleanly.
+
+Strong multi-cluster story. Centralized Argo CD installation managing many remote clusters via kubeconfig secrets. ApplicationSet's cluster generator creates one Application per cluster automatically.
+
+Rich RBAC + SSO. AppProjects scope what each tenant can do. SSO via Dex or direct OIDC. Roles map to AppProject permissions.
+
+Argo Rollouts companion. Replaces Deployment with Rollout CRD; canary, blue/green, with metric-based promotion. Tightly integrated.
+
+Notifications. argocd-notifications-controller posts Application events to Slack, Teams, email, webhook. Deeply customizable via templates.
+
+Where Argo CD has friction:
+
+Resource consumption. application-controller is CPU-hungry; large installs (1000+ Applications) require sharding the controller across replicas.
+
+Multi-tenant security model. Multi-tenancy bolted on via AppProjects; not as clean as Flux's namespace-native approach.
+
+Helm + Kustomize integration is functional but quirky. Some advanced patterns require argocd-cm config tweaks.
+
+When to pick Argo CD:
+
+Centralized GitOps control plane managing many clusters. Hub-and-spoke pattern is mature.
+
+Application teams need a polished UI for sync status, drift detection, troubleshooting.
+
+Strong RBAC + SSO requirements.
+
+Argo Rollouts for progressive delivery is desired.
+
+Three load-bearing concepts:
+
+1. Application is the unit of deployment. Application CRD references source (git) + destination (cluster/namespace) + syncPolicy.
+
+2. AppProject is the security boundary. Restricts which sources, destinations, resource types an Application can use.
+
+3. ApplicationSet generates Applications dynamically. Define an ApplicationSet with a generator; controller creates one Application per generated item.`,
+    whenToUse: [
+      'Centralized GitOps for many K8s clusters with rich RBAC',
+      'Application teams need polished UI for sync status, drift detection',
+      'Argo Rollouts for progressive delivery is desired',
+      'Strong SSO + audit + notification requirements',
+      'Multi-cluster patterns: hub-and-spoke, PR previews, branch-per-environment',
+    ],
+    keyConcepts: [
+      {
+        term: 'Application CRD — the unit of deployment',
+        definition: `One Application = one deployable unit. References git source and K8s destination.
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: payments-prod
+  namespace: argocd
+  finalizers: [resources-finalizer.argocd.argoproj.io]
+spec:
+  project: prod-tenants
+
+  source:
+    repoURL: https://github.com/myorg/gitops-prod.git
+    targetRevision: HEAD
+    path: services/payments
+    helm:
+      valueFiles: [values.yaml, values-prod.yaml]
+      parameters:
+        - { name: image.tag, value: v1.2.3 }
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: payments
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff: { duration: 5s, factor: 2, maxDuration: 3m }
+
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers: [/spec/replicas]
+\`\`\`
+
+source supports plain YAML, Kustomize, Helm, Jsonnet, and plugins.
+
+destination.server is K8s API URL. For multi-cluster, register external clusters via argocd cluster add (creates Secret in argocd namespace with kubeconfig); destination.name then references cluster by name.
+
+ignoreDifferences essential for any deployment with HPA, VPA, or Operators that mutate fields.`,
+      },
+      {
+        term: 'AppProject — security boundary',
+        definition: `AppProject restricts what an Application can do. Security primitive in Argo CD.
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata: { name: prod-tenants, namespace: argocd }
+spec:
+  description: Production tenant Applications
+
+  sourceRepos:
+    - https://github.com/myorg/gitops-prod.git
+    - https://github.com/myorg/helm-charts.git
+    - https://charts.bitnami.com/bitnami
+
+  destinations:
+    - { server: https://kubernetes.default.svc, namespace: 'payments-*' }
+    - { server: https://kubernetes.default.svc, namespace: 'search-*' }
+    - { name: prod-eu-west-1, namespace: '*' }
+
+  clusterResourceWhitelist:
+    - { group: '', kind: Namespace }
+    - { group: rbac.authorization.k8s.io, kind: ClusterRole }
+  namespaceResourceBlacklist:
+    - { group: '', kind: ResourceQuota }
+    - { group: '', kind: LimitRange }
+
+  roles:
+    - name: payments-team
+      policies:
+        - p, proj:prod-tenants:payments-team, applications, get, prod-tenants/payments-*, allow
+        - p, proj:prod-tenants:payments-team, applications, sync, prod-tenants/payments-*, allow
+        - p, proj:prod-tenants:payments-team, applications, override, prod-tenants/payments-*, deny
+      groups: [team-payments]
+
+  syncWindows:
+    - kind: deny
+      schedule: '0 0 * * 6,7'
+      duration: 48h
+      applications: ['*']
+
+  orphanedResources:
+    warn: true
+\`\`\`
+
+What AppProject restricts:
+- sourceRepos: which git URLs allowed.
+- destinations: which clusters/namespaces.
+- clusterResourceWhitelist / namespaceResourceBlacklist: which resource types.
+- roles: who can do what (sync, override, delete) on Applications.
+- syncWindows: when syncs are allowed (change-freeze periods).
+
+Multi-tenant pattern: one AppProject per tenant team / environment / business unit.`,
+      },
+      {
+        term: 'ApplicationSet — generate Applications dynamically',
+        definition: `Meta-CRD that generates Applications. Eliminates Application copy-paste.
+
+Generators:
+
+list — explicit list:
+\`\`\`yaml
+generators:
+  - list:
+      elements:
+        - { cluster: prod-us, url: https://us.k8s.example.com }
+        - { cluster: prod-eu, url: https://eu.k8s.example.com }
+\`\`\`
+
+cluster — iterate over registered Argo CD clusters:
+\`\`\`yaml
+generators:
+  - clusters: { selector: { matchLabels: { env: prod } } }
+\`\`\`
+
+git directory — iterate over directories in a repo:
+\`\`\`yaml
+generators:
+  - git:
+      repoURL: https://github.com/myorg/gitops-prod.git
+      revision: HEAD
+      directories: [{ path: services/* }]
+\`\`\`
+
+git files — iterate over JSON/YAML config files:
+\`\`\`yaml
+generators:
+  - git:
+      repoURL: https://github.com/myorg/gitops-prod.git
+      revision: HEAD
+      files: [{ path: services/*/config.json }]
+\`\`\`
+
+matrix — cross-product:
+\`\`\`yaml
+generators:
+  - matrix:
+      generators:
+        - clusters: { selector: { matchLabels: { env: prod } } }
+        - git: { directories: [{ path: services/* }] }
+\`\`\`
+
+pull-request — Application per open PR (PR previews):
+\`\`\`yaml
+generators:
+  - pullRequest:
+      github: { owner: myorg, repo: api, tokenRef: { secretName: github-token, key: token } }
+      requeueAfterSeconds: 60
+\`\`\`
+
+scm-provider — discover repos from GitHub org:
+\`\`\`yaml
+generators:
+  - scmProvider:
+      github: { organization: myorg, allBranches: true }
+\`\`\`
+
+Full example — one Application per (cluster × service):
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata: { name: services-fleet, namespace: argocd }
+spec:
+  goTemplate: true
+  generators:
+    - matrix:
+        generators:
+          - clusters:
+              selector: { matchLabels: { env: prod } }
+          - git:
+              repoURL: https://github.com/myorg/gitops-prod.git
+              revision: HEAD
+              directories: [{ path: services/* }]
+  template:
+    metadata: { name: '{{.cluster}}-{{.path.basename}}' }
+    spec:
+      project: prod-tenants
+      source:
+        repoURL: https://github.com/myorg/gitops-prod.git
+        targetRevision: HEAD
+        path: '{{.path}}'
+      destination:
+        name: '{{.cluster}}'
+        namespace: '{{.path.basename}}'
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+\`\`\`
+
+3 prod clusters × 20 services = 60 Applications generated automatically. Add a new service directory → new Applications appear.`,
+      },
+      {
+        term: 'Multi-cluster setup (hub-and-spoke)',
+        definition: `Centralized Argo CD managing many remote clusters.
+
+Step 1 — install Argo CD on hub cluster.
+
+Step 2 — register remote clusters:
+
+\`\`\`bash
+argocd cluster add prod-eu-west-1-context --name prod-eu-west-1
+\`\`\`
+
+For production: ServiceAccount tokens (long-lived) or AWS IAM Authenticator (rotates via STS). Avoid personal kubeconfig tokens that expire.
+
+Cluster Secret CRD format:
+
+\`\`\`yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: prod-eu-west-1
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+    env: prod
+    region: eu-west-1
+type: Opaque
+stringData:
+  name: prod-eu-west-1
+  server: https://eu.k8s.example.com
+  config: |
+    {
+      "tlsClientConfig": { "insecure": false, "caData": "<base64-CA>" },
+      "bearerToken": "<service-account-token>"
+    }
+\`\`\`
+
+Cluster labels enable selective targeting in ApplicationSet.
+
+Step 3 — Application targets remote cluster:
+
+\`\`\`yaml
+spec:
+  destination:
+    name: prod-eu-west-1
+    namespace: payments
+\`\`\`
+
+Step 4 — ApplicationSet generates per-cluster Applications:
+
+\`\`\`yaml
+generators:
+  - clusters: { selector: { matchLabels: { env: prod } } }
+\`\`\`
+
+Network requirements:
+- Hub needs egress to all spoke cluster API endpoints (VPC peering, Transit Gateway, PrivateLink).
+- Spokes don't need ingress from hub for periodic sync.
+
+Scaling:
+- application-controller sharded for >500 Applications via --replicas=N + --shard=N.
+- repo-server scales horizontally.
+- Redis with Sentinel for HA.
+
+For >5000 Applications, consider federated topology (multiple Argo CD installations).`,
+      },
+      {
+        term: 'RBAC and SSO',
+        definition: `Two RBAC layers: project-level (AppProject roles) and global (CSV in argocd-rbac-cm).
+
+Global RBAC:
+
+\`\`\`yaml
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: argocd-rbac-cm, namespace: argocd }
+data:
+  policy.default: role:readonly
+  policy.csv: |
+    p, role:platform-admin, *, *, */*, allow
+
+    p, role:dev, applications, get, *, allow
+    p, role:dev, applications, sync, dev-tenants/*, allow
+    p, role:dev, applications, sync, prod-tenants/*, deny
+    p, role:dev, applications, override, *, deny
+
+    g, team-platform, role:platform-admin
+    g, team-engineering, role:dev
+    g, alice@example.com, role:platform-admin
+\`\`\`
+
+SSO with Dex + GitHub:
+
+\`\`\`yaml
+data:
+  url: https://argocd.example.com
+  dex.config: |
+    connectors:
+      - type: github
+        id: github
+        name: GitHub
+        config:
+          clientID: <github-app-client-id>
+          clientSecret: $dex.github.clientSecret
+          orgs:
+            - name: myorg
+              teams: [platform, engineering, security]
+\`\`\`
+
+Direct OIDC (no Dex) — for Okta/Auth0/Azure AD:
+
+\`\`\`yaml
+data:
+  oidc.config: |
+    name: Okta
+    issuer: https://example.okta.com
+    clientID: <client-id>
+    clientSecret: $oidc.okta.clientSecret
+    requestedScopes: [openid, profile, email, groups]
+    requestedIDTokenClaims:
+      groups: { essential: true }
+\`\`\`
+
+Common patterns:
+- platform-team: global admin.
+- application teams: scoped to their AppProject. Can sync, can't create/delete Applications.
+- security/audit: read-only across all AppProjects.
+- on-call: time-bound elevated access (granted manually for incident response).`,
+      },
+      {
+        term: 'Recipe: Argo CD on EKS with HA + multi-cluster',
+        definition: `Production-grade installation:
+
+\`\`\`yaml
+# values.yaml for argo-cd Helm chart
+global:
+  domain: argocd.example.com
+
+configs:
+  cm:
+    url: https://argocd.example.com
+    timeout.reconciliation: 180s
+    server.rbac.log.enforce.enable: 'true'
+  rbac:
+    policy.default: role:readonly
+    policy.csv: |
+      p, role:platform-admin, *, *, */*, allow
+      g, team-platform, role:platform-admin
+
+server:
+  replicas: 3
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hostname: argocd.example.com
+    tls: true
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { cpu: 1, memory: 1Gi }
+
+controller:
+  replicas: 5
+  resources:
+    requests: { cpu: 500m, memory: 1Gi }
+    limits:   { cpu: 4, memory: 8Gi }
+
+repoServer:
+  replicas: 3
+  resources:
+    requests: { cpu: 200m, memory: 512Mi }
+    limits:   { cpu: 2, memory: 4Gi }
+  serviceAccount:
+    create: true
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::123:role/argocd-repo-server
+
+redis-ha:
+  enabled: true
+  haproxy: { enabled: true }
+
+dex:
+  enabled: true
+
+applicationSet:
+  enabled: true
+  replicas: 2
+
+notifications:
+  enabled: true
+  argocdUrl: https://argocd.example.com
+\`\`\`
+
+Bootstrap multi-cluster:
+
+\`\`\`bash
+argocd cluster add prod-us-east-1-context --name prod-us-east-1
+argocd cluster add prod-eu-west-1-context --name prod-eu-west-1
+\`\`\`
+
+Bootstrap apps via app-of-apps:
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata: { name: root, namespace: argocd }
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/myorg/gitops-bootstrap.git
+    targetRevision: main
+    path: apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+\`\`\`
+
+\`\`\`bash
+kubectl apply -f bootstrap/root-app.yaml
+\`\`\`
+
+Root Application points at apps/ directory containing more Application CRDs. They get created and managed by Argo CD itself (GitOps managing GitOps).
+
+Operational notes:
+- Backup via Velero (Argo CD state in K8s etcd + Redis); most state is recoverable from git anyway.
+- ServiceMonitor for kube-prometheus-stack scrapes argocd-* metrics.
+- Upgrade: Helm chart upgrade after staging validation; check release notes for CRD changes.`,
+      },
+    ],
+    approach: [
+      'Install Argo CD via Helm with HA (controller replicas, repo-server replicas, Redis Sentinel)',
+      'Shard application-controller for >500 Applications via --replicas + --shard',
+      'AppProject per tenant; global RBAC for platform admin only',
+      'SSO via Dex or direct OIDC',
+      'ApplicationSet for multi-cluster (cluster generator) and monorepo (git directory generator)',
+      'syncPolicy.automated with self-heal for stable production',
+      'ignoreDifferences for HPA-managed replicas, Operator-managed CRs',
+      'Notifications via argocd-notifications-controller to Slack',
+      'Multi-cluster: hub-and-spoke; per-cluster ServiceAccount tokens',
+    ],
+    pitfalls: [
+      'Single application-controller replica with >500 Applications — slow reconciliation, queue backups',
+      'No sharding configured even with multiple replicas — controllers do duplicate work',
+      'No ignoreDifferences for HPA-managed replicas — fight loop with HPA constantly',
+      'Auto-sync without prune: false on shared namespaces — accidentally deletes other Apps\' resources',
+      'targetRevision: HEAD on production — picks up unintended commits; pin to tag',
+      'Cluster registration via personal kubeconfig — token expires, breaks GitOps',
+      'No ApplicationSet — managing 50 Applications by hand; copy-paste errors',
+      'Single AppProject for everything — no security boundary',
+      'No notifications — sync failures sit silently',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk through Argo CD\'s five-microservice architecture.',
+        answer: `Argo CD runs as five microservices, each with a specific role.
+
+1. argocd-server. The user-facing component. REST/gRPC API + Web UI. Handles authentication (SSO via Dex or direct OIDC), session management, RBAC enforcement, audit logging. Stateless — multiple replicas behind a Service work fine.
+
+Most operations users perform — argocd app sync, web UI clicks, API calls — go through argocd-server.
+
+Resource profile: small. CPU usage scales with API request rate, not Application count. HPA on CPU is appropriate.
+
+2. argocd-application-controller. The brain. Watches Application and ApplicationSet CRDs. For each Application, runs the reconciliation loop: ask repo-server for current desired state, query the K8s cluster for live state, compute diff, apply changes if syncPolicy permits.
+
+Most CPU-intensive component. Each reconciliation cycle does work proportional to the Application's resource count and complexity. Large installs (500+ Applications, large per-app resource counts) require sharding the controller across multiple replicas.
+
+Sharding: --replicas=5 + --shard=N (where N is 0 through 4 across replicas). Each replica handles a hash-based subset of Applications.
+
+Resource profile: large. CPU + memory scale linearly with Application count and reconciliation frequency. Provision generously.
+
+3. argocd-repo-server. Fetches and renders manifests. Clones git repos (caching the working trees), runs Helm template / Kustomize build / etc. Caches rendered output keyed by (repoURL, sha, path).
+
+Separate from application-controller for two reasons:
+- Security: repo-server has access to git credentials; application-controller doesn't need them.
+- Caching: repo-server's cache is shared across all Applications using the same repo; rendering happens once per (sha, path).
+
+Resource profile: medium. CPU when rendering; memory for cache. Multiple replicas for HA.
+
+4. argocd-redis. Cache layer. Stores rendered manifests, repo state, application status, computed diff. Not durable storage — rebuilt from sources on cold start.
+
+In production: Redis with Sentinel for HA; persistent storage optional.
+
+5. argocd-dex-server. OIDC federation broker. Optional — only needed if you want SSO and your IdP isn't directly OIDC-compliant in the way Argo CD expects.
+
+Dex acts as identity broker: Argo CD uses Dex's OIDC interface; Dex talks to GitHub, Okta, LDAP, SAML, GitLab, etc.
+
+For orgs on standard OIDC (Okta, Auth0, Azure AD, Google Workspace), you can skip Dex.
+
+Other supporting components:
+
+argocd-applicationset-controller. Handles ApplicationSet CRDs. Watches generators; emits child Application CRDs.
+
+argocd-notifications-controller. Watches Application status; fires notifications on configured triggers.
+
+argocd-image-updater (separate, optional). Watches container registries. Auto-creates PRs or commits when new tags appear.
+
+Deployment shape. Production install via Helm chart argo-cd:
+- argocd-server: 2-3 replicas
+- argocd-application-controller: 5+ replicas with sharding for >500 Applications
+- argocd-repo-server: 3 replicas
+- argocd-redis: HA with Sentinel
+- argocd-dex-server: 1-2 replicas
+- argocd-applicationset-controller: 2 replicas
+
+Cluster resources: ~5-10 vCPU and ~10-20 GB memory baseline; scales with Application count.
+
+Monitoring: every component exposes Prometheus metrics. Grafana dashboards from argo-cd repo cover standard views. Alerts on: argocd_app_sync_total error rate, controller queue depth, repo-server fetch latency, Redis memory usage.`,
+      },
+      {
+        question: 'How do you do multi-cluster GitOps with Argo CD at scale?',
+        answer: `Hub-and-spoke is the canonical multi-cluster pattern. One Argo CD installation manages many target clusters via kubeconfig secrets and ApplicationSet generators.
+
+Architecture decision: hub-and-spoke vs federated.
+
+Hub-and-spoke: one Argo CD installation (the hub); many target clusters (spokes). Centralized control plane, centralized UI, single audit log, single RBAC. Spoke clusters don't run Argo CD; they just receive deployments.
+
+Federated: each cluster runs its own local Argo CD. Reduces blast radius (hub down doesn't affect spokes' last-known-good state) but multiplies operational surface.
+
+Most orgs choose hub-and-spoke. Federated for very large orgs (100+ clusters) or strict isolation.
+
+Hub-and-spoke setup:
+
+Step 1 — install Argo CD on hub cluster. Hub is typically a "platform" cluster running Argo CD, monitoring, secret management — not running production app workloads.
+
+Step 2 — register spoke clusters. argocd cluster add or apply Cluster Secret CRD directly. Production: use ServiceAccount tokens (long-lived) or AWS IAM Authenticator pattern (rotates automatically).
+
+Cluster labels matter: matchLabels: { env: prod, region: us-east-1 } in cluster Secret enable selective targeting in ApplicationSet.
+
+Step 3 — ApplicationSet with cluster generator:
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata: { name: payments-fleet, namespace: argocd }
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { env: prod }
+  template:
+    metadata: { name: 'payments-{{name}}' }
+    spec:
+      project: prod-tenants
+      source:
+        repoURL: https://github.com/myorg/gitops-prod.git
+        targetRevision: HEAD
+        path: services/payments
+        helm:
+          valueFiles:
+            - values.yaml
+            - 'values-{{metadata.labels.region}}.yaml'
+      destination:
+        name: '{{name}}'
+        namespace: payments
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+\`\`\`
+
+5 prod clusters labeled env=prod → 5 Applications generated automatically. Per-region values overrides via templating.
+
+Scaling considerations:
+
+application-controller is the bottleneck. For >500 Applications, shard the controller across replicas. Each replica handles ~Apps/N applications via consistent hashing.
+
+repo-server scaling: linear with rendering work. 3-5 replicas typical. Each has independent cache.
+
+For >5000 Applications across many clusters, federated topology may be required.
+
+Network considerations:
+
+Hub cluster needs egress to all spoke clusters' API endpoints. Typical: VPC peering, Transit Gateway, PrivateLink.
+
+Spoke clusters don't need ingress from hub for periodic sync. For webhook-triggered immediate sync, only the hub needs the webhook.
+
+Cluster API authentication options:
+- ServiceAccount + token: simple, long-lived.
+- AWS IAM Authenticator: ServiceAccount on spoke cluster, IAM role on AWS, automatic rotation via AWS STS.
+- Workload Identity (GCP) / Federated Identity (Azure): equivalent for GKE/AKS.
+
+Per-cluster RBAC: token's RBAC on the spoke cluster determines what Argo CD can do there. Typical: cluster-admin within specific namespaces (managed via RoleBinding); or true cluster-admin (less safe).
+
+Disaster recovery for the hub. Argo CD state in K8s etcd is recoverable; Redis cache is rebuilt from sources. Most state is recoverable from git anyway.
+
+Procedure: kubectl backup of argocd namespace + Helm values. New hub cluster: helm install with same values; kubectl apply backed-up resources. Within 30-60 minutes, hub is restored.
+
+Real-world scale: hub-and-spoke up to ~50 clusters and ~5000 Applications works fine with proper sharding. Beyond that, federated topology is typically needed.`,
+      },
+      {
+        question: 'Walk through ApplicationSet — when do you use which generator?',
+        answer: `ApplicationSet eliminates Application copy-paste. Choose generator based on what's iterating.
+
+list — explicit list of items. Use when small fixed list (3-10 items); items change rarely. Examples: deploy a tool to 3 specific clusters; per-environment configurations.
+
+cluster — iterate over registered Argo CD clusters. Use when many target clusters and you want one Application per cluster. Cluster labels in cluster Secret are the filter. Most common multi-cluster pattern.
+
+git directories — iterate over directories matching a pattern. Use when monorepo layout where each subdirectory is a service. Drop a new directory → ApplicationSet picks it up automatically.
+
+git files — iterate over JSON/YAML config files. Each file's contents become template variables. Use when per-service config beyond just directory (team, namespace, region, helm values).
+
+matrix — cross-product of two generators. Use when deploying each service to each cluster. Output: 5 clusters × 20 services = 100 Applications.
+
+merge — combine generators by key. Use when enriching one generator's output with values from another.
+
+scm-provider — discover repos from GitHub/GitLab. Use when auto-creating Application per repo in an organization. New repos appear automatically.
+
+pull-request — Application per open PR. Use for PR preview deployments. Each open PR gets its own Application; auto-cleanup on close.
+
+plugin — custom logic via external service. Use when built-in generators don't fit. Common for proprietary inventory systems.
+
+Decision matrix:
+
+Few hardcoded clusters/services → list.
+
+Many clusters with selective deploy → cluster.
+
+Monorepo with directory-per-service → git directories.
+
+Per-service config beyond directory → git files.
+
+Matrix of clusters × services → matrix.
+
+Auto-discover repos in GitHub org → scm-provider.
+
+PR previews → pull-request.
+
+Custom inventory source → plugin.
+
+goTemplate: true. Modern ApplicationSets use Go templates instead of legacy fasttemplate. More expressive; recommended for new ApplicationSets.
+
+Putting it all together — 5 prod clusters × 20 services with per-service config files = 100 Applications generated, each with team labels, namespace, helm values from config:
+
+\`\`\`yaml
+spec:
+  goTemplate: true
+  generators:
+    - matrix:
+        generators:
+          - clusters:
+              selector: { matchLabels: { env: prod } }
+          - git:
+              repoURL: https://github.com/myorg/gitops-prod.git
+              files:
+                - path: services/*/config.json
+  template:
+    metadata:
+      name: '{{.name}}-{{.service}}'
+      labels: { team: '{{.team}}' }
+    spec:
+      project: prod-tenants
+      source:
+        path: 'services/{{.service}}'
+      destination:
+        name: '{{.name}}'
+        namespace: '{{.namespace}}'
+\`\`\`
+
+Adding a new service → drop services/foo/config.json → 5 new Applications appear.
+
+This pattern scales 50+ services across 10+ clusters without copy-paste.`,
+      },
+      {
+        question: 'How do you handle Argo CD upgrades and version skew?',
+        answer: `Argo CD upgrades are routine — minor releases monthly, major every 6-12 months. Bad upgrades cause real outages. Mature operations handle them carefully.
+
+Pre-upgrade considerations:
+
+CRD compatibility. Some upgrades change Application or ApplicationSet CRD schema. Backward-compatible additions are common; renames or removals are rare but happen. Read the release notes.
+
+API compatibility. argocd CLI version should match server. Mismatch usually works but produces warnings.
+
+Cluster registration. Cluster Secrets occasionally change format. Re-add clusters after major upgrades if registration breaks.
+
+Plugin compatibility. Custom plugins (Helm plugins, repo-server plugins) may break. Test in staging first.
+
+Upgrade procedure:
+
+Step 1 — staging Argo CD. Always have a staging Argo CD that mirrors prod's config. Same Applications, smaller clusters, lower stakes. Upgrade staging first; soak for 1-2 weeks; verify core operations work.
+
+Step 2 — backup before prod upgrade:
+
+\`\`\`bash
+kubectl get applications,appprojects,applicationsets,clusters \\
+  -n argocd -o yaml > argocd-backup-$(date +%Y%m%d).yaml
+kubectl get configmap,secret -n argocd -o yaml > argocd-config-$(date +%Y%m%d).yaml
+\`\`\`
+
+Step 3 — version-pinned Helm upgrade:
+
+\`\`\`bash
+helm get values argocd -n argocd > current-values.yaml
+helm upgrade argocd argo/argo-cd \\
+  --version 7.5.0 \\
+  --namespace argocd \\
+  -f current-values.yaml
+\`\`\`
+
+Pin Helm chart version explicitly.
+
+Step 4 — verify pods come up:
+
+\`\`\`bash
+kubectl rollout status deployment/argocd-server -n argocd
+kubectl rollout status statefulset/argocd-application-controller -n argocd
+\`\`\`
+
+Step 5 — verify Applications. argocd app list — all should be Synced + Healthy after brief reconciliation.
+
+If Applications go OutOfSync after upgrade, examine: did sync logic change? Are there new mandatory fields? Check release notes.
+
+Step 6 — smoke test. Pick 3-5 representative Applications. Trigger manual sync; verify success. Make a small no-op change in git; verify auto-sync picks it up.
+
+Common upgrade pitfalls:
+
+Pitfall 1: Application CRD schema change. v2.5 → v2.6 added optional fields. v2.6 → v2.7 deprecated some fields. v3.0 will likely remove deprecated fields.
+
+Pitfall 2: RBAC policy format change. Argo CD v2.5 → v2.6 changed how policy.csv handles wildcards. Audit RBAC after upgrade.
+
+Pitfall 3: ApplicationSet template changes. Legacy fasttemplate → goTemplate is opt-in.
+
+Pitfall 4: notifications-controller config format. Changed in v2.5+. Old format still works but new features require new format.
+
+Pitfall 5: dex version compatibility. dex sub-chart updates can change OIDC behavior. Test SSO after upgrade.
+
+Pitfall 6: Redis upgrade can cause cache invalidation. Brief reconciliation slowdown after upgrade as caches rebuild.
+
+Pitfall 7: skipped versions. Don't skip more than 2 minor versions. v2.5 → v2.10 in one step is risky.
+
+Rollback procedure:
+
+\`\`\`bash
+helm rollback argocd <previous-revision> -n argocd
+\`\`\`
+
+If CRD migration was breaking, may need to manually patch resources back. Rare.
+
+Multi-cluster considerations:
+
+Hub upgrade affects all spoke deployments. Don't upgrade during a deploy window.
+
+CRD compatibility in spoke clusters: if you customize Application Resource Definition validation per cluster, upgrade those CRDs to match new Argo CD version.
+
+Cadence:
+
+Patch versions (v2.10.1 → v2.10.2): apply within a week. Usually security or bug fixes.
+
+Minor versions (v2.10 → v2.11): test in staging for 2 weeks; apply to prod within a month.
+
+Major versions (v2.x → v3.0): plan a quarter. Significant testing; possible CRD migrations; possible RBAC changes.
+
+Skipping: don't skip more than 2 minor versions.
+
+Real-world: 50-engineer org upgrading once a month from v2.10 to v2.11 takes ~1 hour total — 30min in staging, 30min in prod.`,
+      },
+      {
+        question: 'Quick-fire interview answers — Argo CD essentials.',
+        answer: `Rapid-fire facts.
+
+Q: What's Argo CD?
+A: CNCF Graduated K8s GitOps tool. Originated at Intuit. Watches Application CRDs; pulls manifests from git; reconciles with cluster state.
+
+Q: Five microservices?
+A: argocd-server (API+UI), argocd-application-controller (reconciler), argocd-repo-server (git fetch + render), argocd-redis (cache), argocd-dex-server (OIDC broker, optional).
+
+Q: Three primary CRDs?
+A: Application (deployable unit), AppProject (security boundary), ApplicationSet (generates Applications dynamically).
+
+Q: Application source types?
+A: plain YAML, Kustomize, Helm, Jsonnet, plugin.
+
+Q: AppProject restricts?
+A: sourceRepos, destinations, clusterResourceWhitelist/namespaceResourceBlacklist, roles, syncWindows.
+
+Q: ApplicationSet generators?
+A: list, clusters, git directory, git files, matrix, merge, scm-provider, pull-request, plugin.
+
+Q: When use cluster generator?
+A: Multi-cluster GitOps. One Application per Argo CD-registered cluster matching label selector.
+
+Q: When use git directory generator?
+A: Monorepo with directory-per-service. New service directory → new Application automatically.
+
+Q: When use pull-request generator?
+A: PR preview deployments. Each open PR gets own Application; auto-cleanup on close.
+
+Q: Multi-cluster setup?
+A: Hub-and-spoke: one Argo CD installation manages many spoke clusters via kubeconfig Secrets. ApplicationSet cluster generator creates one Application per cluster.
+
+Q: Sync policy options?
+A: automated.prune (delete resources removed from git), automated.selfHeal (revert manual changes), allowEmpty (empty-git safety), syncOptions (ServerSideApply, CreateNamespace, PruneLast).
+
+Q: ignoreDifferences?
+A: Tell Argo CD to ignore specific fields when computing diff. Essential for HPA-managed replicas, Operator-managed CRs.
+
+Q: Sync waves?
+A: argocd.argoproj.io/sync-wave: -1 annotation. Lower waves apply first. Used for namespaces before namespaced resources, CRDs before instances.
+
+Q: Sync hooks?
+A: PreSync (DB migration), Sync, PostSync (smoke test), SyncFail (rollback), PostDelete. Typically Job resources.
+
+Q: How scale?
+A: Shard application-controller across replicas: --replicas=N + --shard. Hash-based subset of Applications per replica. Required for >500 Applications.
+
+Q: SSO setup?
+A: dex-server federates with GitHub, Okta, LDAP, SAML. Or direct OIDC for Okta/Auth0/Azure AD.
+
+Q: Secrets handling?
+A: External Secrets Operator + cloud secret manager (dominant 2026). Sealed Secrets for simpler. SOPS + KMS for KMS-rooted.
+
+Q: Image updates?
+A: Argo CD Image Updater (auto-PR or auto-commit on new tags) or CI commits a PR.
+
+Q: app-of-apps?
+A: Root Application points at directory of child Application CRDs. GitOps the GitOps configuration.
+
+Q: Argo CD vs Flux?
+A: Argo CD: polished UI, Application CRD, App-of-Apps + ApplicationSet, strong RBAC. Flux: GitOps Toolkit, K8s-native, multi-tenancy via namespaces.
+
+Q: Sync window?
+A: Time-based restriction in AppProject. Allow/deny syncs during specific schedules.
+
+Q: Most common anti-pattern?
+A: targetRevision: HEAD on prod (unintended commits) + no ignoreDifferences for HPA (fight loop).
+
+These are answers an Argo CD-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://argo-cd.readthedocs.io/en/stable/',
+      'https://argo-cd.readthedocs.io/en/stable/operator-manual/architecture/',
+      'https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/',
+      'https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/',
+      'https://argo-cd.readthedocs.io/en/stable/operator-manual/security/',
+    ],
+  },
+
 ];
