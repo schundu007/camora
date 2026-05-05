@@ -2077,25 +2077,11 @@ immediately after commit
         question: 'How does horizontal scaling differ between SQL and NoSQL databases?',
         answer: `**SQL horizontal scaling** is possible but complex. **NoSQL** was designed for it from the ground up.
 
-\`\`\`
-SQL Vertical Scaling (traditional):
-  ┌──────────────┐
-  │  Single DB   │  ← Add CPU, RAM, faster disks
-  │  (bigger HW) │  ← Works until hardware limits
-  └──────────────┘  ← Typical limit: ~10TB, 100K QPS
+**SQL vertical scaling (traditional)**: a single DB box; you add CPU, RAM, and faster disks until you hit hardware limits (typically ~10 TB, ~100K QPS).
 
-SQL Horizontal Scaling:
-  ┌──────┐ ┌──────┐ ┌──────┐
-  │Shard1│ │Shard2│ │Shard3│  ← Split data by key
-  │(A-H) │ │(I-P) │ │(Q-Z) │  ← Cross-shard joins = pain
-  └──────┘ └──────┘ └──────┘  ← Cross-shard txns = 2PC
+**SQL horizontal scaling**: split data across Shard 1 (keys A–H), Shard 2 (I–P), Shard 3 (Q–Z). Cross-shard joins are painful, and cross-shard transactions need 2-phase commit.
 
-NoSQL Horizontal Scaling (native):
-  ┌──────┐ ┌──────┐ ┌──────┐
-  │Node 1│ │Node 2│ │Node 3│  ← Auto-sharding by partition key
-  │      │ │      │ │      │  ← No joins (by design)
-  └──────┘ └──────┘ └──────┘  ← Add nodes = automatic rebalance
-\`\`\`
+**NoSQL horizontal scaling (native)**: Node 1, Node 2, Node 3 with auto-sharding by partition key. No joins by design; adding nodes triggers automatic rebalance.
 
 **Challenges of SQL sharding**:
 
@@ -2549,20 +2535,14 @@ DENORMALIZED (1 table, no JOIN):
 \`\`\`
 
 **Risks of denormalization**:
-\`\`\`
-Risk                    Impact                    Mitigation
-──────────────────────────────────────────────────────────────
-Update anomalies        User renames → must update  CDC pipeline, async
-                        all orders with old name    update job
-Data inconsistency      Some copies updated, some   Eventual consistency
-                        not (race conditions)       with reconciliation
-Storage bloat           Redundant data uses more    Acceptable at scale
-                        disk and cache space        (storage is cheap)
-Write amplification     One logical update → many   Batch writes, async
-                        physical writes             propagation
-Schema rigidity         Adding fields requires      Versioned schemas,
-                        updating all copies         migration jobs
-\`\`\`
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| Update anomalies | User renames → must update all orders with old name | CDC pipeline, async update job |
+| Data inconsistency | Some copies updated, some not (race conditions) | Eventual consistency with reconciliation |
+| Storage bloat | Redundant data uses more disk and cache space | Acceptable at scale (storage is cheap) |
+| Write amplification | One logical update → many physical writes | Batch writes, async propagation |
+| Schema rigidity | Adding fields requires updating all copies | Versioned schemas, migration jobs |
 
 **Interview tip**: Always say "I would start normalized and denormalize based on profiling data." This shows you understand that denormalization is an optimization, not a default.`
       },
@@ -2572,55 +2552,22 @@ Schema rigidity         Adding fields requires      Versioned schemas,
 
 **Fan-out on read**: When a user opens their feed, query all followed users' posts and merge at read time (normalized).
 
-\`\`\`
-Fan-Out on Write (push model):
-  User A posts
-    │
-    ├──► Write to Follower B's feed cache
-    ├──► Write to Follower C's feed cache
-    ├──► Write to Follower D's feed cache
-    └──► ... (N followers = N writes)
+**Fan-out on write (push model)**: when User A posts, the system writes a copy of the post into Follower B's feed cache, Follower C's feed cache, Follower D's feed cache, and so on — N followers means N writes. When B later opens the feed, B's pre-built feed is read directly (fast).
 
-  When B opens feed: read B's pre-built feed (fast!)
-
-Fan-Out on Read (pull model):
-  User B opens feed
-    │
-    ├──► Query User A's posts (B follows A)
-    ├──► Query User C's posts (B follows C)
-    ├──► Query User D's posts (B follows D)
-    └──► Merge + sort + return (N follows = N reads)
-\`\`\`
+**Fan-out on read (pull model)**: when User B opens the feed, the system queries the most recent posts of every account B follows (User A's posts, User C's posts, User D's posts), then merges and sorts at read time — N follows means N queries.
 
 **Comparison**:
-\`\`\`
-Criteria              Fan-Out Write      Fan-Out Read
-──────────────────────────────────────────────────────────
-Write latency         High (N writes)    Low (1 write)
-Read latency          Low (pre-built)    High (N queries + merge)
-Storage               High (N copies)    Low (single copy)
-Celebrity problem     Terrible (1M+)     Handled naturally
-Consistency           Eventual           Real-time
-Best for              Normal users       Celebrity/popular users
-\`\`\`
 
-**The celebrity problem**:
-\`\`\`
-  Beyonce posts (80M followers):
+| Criteria | Fan-Out Write | Fan-Out Read |
+|---|---|---|
+| Write latency | High (N writes) | Low (1 write) |
+| Read latency | Low (pre-built) | High (N queries + merge) |
+| Storage | High (N copies) | Low (single copy) |
+| Celebrity problem | Terrible (1M+ followers) | Handled naturally |
+| Consistency | Eventual | Real-time |
+| Best for | Normal users | Celebrity / popular users |
 
-  Fan-out write: 80M writes per post!
-    → Minutes to propagate
-    → Massive write spike on infrastructure
-
-  Solution: HYBRID approach
-    ├── Normal users (<10K followers): fan-out on write
-    └── Celebrities (>10K followers): fan-out on read
-
-  When B opens feed:
-    1. Read B's pre-built feed (from normal users)  [fast]
-    2. Query celebrity posts B follows              [few queries]
-    3. Merge and return                             [balanced]
-\`\`\`
+**The celebrity problem**: Beyoncé has ~80M followers, so a pure fan-out-write would mean 80M writes per post — minutes to propagate and a massive write spike across the infrastructure. The fix is a **hybrid** approach: normal users (< 10K followers) use fan-out on write; celebrities (> 10K followers) use fan-out on read. When user B opens the feed, the system (1) reads B's pre-built feed (from normal users) — fast; (2) queries the small list of celebrity accounts B follows — a handful of queries; (3) merges and returns.
 
 **Twitter's actual approach**: Hybrid. Normal users' tweets are fanned out at write time into followers' timelines (Redis lists). Celebrity tweets are mixed in at read time. This keeps write costs bounded while maintaining fast reads for 99% of users.
 
@@ -3763,22 +3710,17 @@ In system design interviews, the decision should be workload-driven. **Event-dri
         question: 'What are cold starts and how do they affect serverless architectures?',
         answer: `**Cold start**: When a serverless function is invoked and no warm instance exists, the provider must provision a new execution environment. This adds latency before your code runs.
 
-\`\`\`
-Cold Start Breakdown:
-  ┌──────────────────────────────────────────────────┐
-  │ 1. Provision container    │ ~100-500ms           │
-  │ 2. Download code package  │ ~50-200ms            │
-  │ 3. Initialize runtime     │ ~50-300ms            │
-  │ 4. Run initialization code│ ~50-5000ms (your code)│
-  │ 5. Execute handler        │ (your actual function)│
-  └──────────────────────────────────────────────────┘
+**Cold start breakdown**:
 
-  Steps 1-4 = cold start overhead
-  Step 5 = same as warm invocation
+| Step | What happens | Typical time |
+|---|---|---|
+| 1 | Provision container | ~100–500 ms |
+| 2 | Download code package | ~50–200 ms |
+| 3 | Initialize runtime | ~50–300 ms |
+| 4 | Run initialization code (yours) | ~50–5000 ms |
+| 5 | Execute handler | the actual function |
 
-Warm Invocation (reuses existing container):
-  Only step 5 → millisecond latency
-\`\`\`
+Steps 1–4 are cold-start overhead. A **warm invocation** reuses an existing container, so only step 5 runs and you get millisecond latency.
 
 **Cold start latency by runtime**:
 | Runtime | Typical Cold Start | With VPC |
@@ -4426,23 +4368,7 @@ Per-connection cost:
   1M connections × 50KB = ~50GB RAM just for connections
 \`\`\`
 
-**Architecture for scale**:
-\`\`\`
-                    ┌─────────────────┐
-                    │   Load Balancer  │
-                    │  (L4/TCP, sticky)│
-                    └────┬────┬────┬──┘
-                         │    │    │
-                    ┌────┴┐ ┌┴──┐ ┌┴───┐
-                    │WS-1 │ │WS-2│ │WS-3│  WebSocket Servers
-                    │100K │ │100K│ │100K│  (each handles 100K conns)
-                    └──┬──┘ └─┬──┘ └─┬──┘
-                       │      │      │
-                    ┌──┴──────┴──────┴──┐
-                    │    Pub/Sub Layer   │  Redis Pub/Sub, Kafka,
-                    │    (message bus)   │  or NATS
-                    └───────────────────┘
-\`\`\`
+**Architecture for scale**: an L4/TCP sticky Load Balancer fans out to a fleet of WebSocket servers (WS-1, WS-2, WS-3), each handling roughly 100K connections. All WS servers connect to a shared Pub/Sub layer (Redis Pub/Sub, Kafka, or NATS) that acts as the message bus for cross-server delivery.
 
 **Key scaling strategies**:
 
@@ -4470,16 +4396,13 @@ Per-connection cost:
 \`\`\`
 
 **Technology choices at scale**:
-\`\`\`
-Connections       Approach                Example
-──────────────────────────────────────────────────────
-< 10K            Single server           Express + ws
-10K - 100K       Few servers + Redis     Socket.io cluster
-100K - 1M        Dedicated WS tier +     Custom + Redis/NATS
-                 pub/sub
-> 1M             Purpose-built infra     Discord (Elixir),
-                 + sharded pub/sub       Slack (Java + Flannel)
-\`\`\`
+
+| Connections | Approach | Example |
+|---|---|---|
+| < 10K | Single server | Express + ws |
+| 10K – 100K | Few servers + Redis | Socket.io cluster |
+| 100K – 1M | Dedicated WS tier + pub/sub | Custom + Redis / NATS |
+| > 1M | Purpose-built infra + sharded pub/sub | Discord (Elixir), Slack (Java + Flannel) |
 
 **Interview tip**: Mention that WebSocket connections are stateful, making them harder to scale than stateless HTTP. The pub/sub layer is the key architectural element that decouples connection handling from message routing.`
       },
