@@ -6334,4 +6334,967 @@ These are the answers a CircleCI-fluent engineer should give without preparation
     ],
   },
 
+  // ─────────────────────────────────────────────────────────────────────
+  // Tekton — Kubernetes-native CI as CRDs
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'tekton-pipelines',
+    title: 'Tekton — Kubernetes-Native CI/CD Pipelines as CRDs',
+    icon: 'tool',
+    color: '#16a34a',
+    questions: 5,
+    description: 'CI/CD as Kubernetes Custom Resources. Task, Pipeline, PipelineRun, TaskRun. Tekton Catalog for reusable Tasks. Powers OpenShift Pipelines, Jenkins X, Google Cloud Build (post-2023 rebuild). The K8s-native answer to "should pipelines be CRDs?"',
+    visualizations: [
+      {
+        title: 'Tekton primitives — Task, Pipeline, PipelineRun, TaskRun',
+        description: `Tekton models CI/CD as Kubernetes CRDs. Four primary kinds:
+
+Task — reusable unit of work. A YAML CRD describing one or more steps that run sequentially in containers. params (typed inputs), workspaces (mounted volumes), results (outputs). Task: git-clone, Task: kaniko-build, Task: kubectl-deploy.
+
+Pipeline — composes Tasks into a DAG. Declares which Tasks run, what params they receive, what their dependencies are. Like a workflow file in GHA — but as a Kubernetes resource you kubectl apply.
+
+PipelineRun — a runtime instance of a Pipeline. When you trigger a pipeline (via webhook, manual, etc.), Tekton creates a PipelineRun resource. The Tekton controller watches PipelineRuns and orchestrates execution.
+
+TaskRun — runtime instance of a Task within a PipelineRun. Each Task in the Pipeline becomes a TaskRun. The controller creates a Pod per TaskRun with one container per step.
+
+Other CRDs:
+- ClusterTask — Task at cluster scope (vs namespace-scoped Task)
+- StepAction (newer, 2024) — single-step reusable unit; Task composes StepActions
+- Workspace — abstract volume that Tasks mount; resolved at PipelineRun time to PVC, ConfigMap, Secret, or emptyDir
+
+Tekton Catalog at hub.tekton.dev hosts curated reusable Tasks: git-clone, kaniko, buildah, cosign, helm-upgrade, slack-notify. Equivalent of GHA marketplace or CircleCI orbs.
+
+How execution flows:
+1. Webhook (Tekton Triggers) or manual kubectl apply creates a PipelineRun.
+2. Tekton controller resolves the referenced Pipeline definition.
+3. For each Task in DAG order, controller creates a TaskRun.
+4. Each TaskRun creates a Pod (one container per Task step + sidecar containers).
+5. Step containers run sequentially; results emitted via /tekton/results files.
+6. PipelineRun completion status reflects child TaskRun outcomes.`,
+        image: '/diagrams/devops/ct5-tekton.png',
+      },
+      {
+        title: 'Tekton Triggers — webhook → EventListener → PipelineRun',
+        description: `Tekton Triggers extends Tekton to make pipelines event-driven.
+
+Components:
+- EventListener — Kubernetes Service exposing an HTTP endpoint. Webhooks point at it.
+- TriggerBinding — extracts data from event payload (e.g., GitHub push body) into named values.
+- TriggerTemplate — defines a PipelineRun template with placeholders that bindings fill.
+- Trigger — connects bindings + template + interceptors.
+- Interceptor — validates / transforms events. Built-ins: GitHub (HMAC signature validation), GitLab, Bitbucket, Cloud Events, CEL (custom logic).
+
+Flow:
+1. GitHub sends webhook on push → POST to EventListener URL.
+2. GitHub interceptor validates HMAC signature; rejects forgery.
+3. CEL interceptor evaluates conditions (e.g., body.ref == 'refs/heads/main').
+4. TriggerBinding extracts repo URL, commit SHA, branch from JSON body.
+5. TriggerTemplate fills a PipelineRun template with those values.
+6. Tekton creates the PipelineRun → controller orchestrates.
+
+This is the K8s-native equivalent of GitHub webhooks → GHA. It's more pieces but more flexible. EventListener pods scale; multiple TriggerTemplates handle different event types.
+
+Triggers v1beta1 GA'd in 2021; Triggers v1 still in alpha as of 2026. Most production deployments use v1beta1.`,
+        image: '/diagrams/devops/ct5-tekton.png',
+      },
+    ],
+    introduction: `Tekton is Kubernetes-native CI/CD: pipelines defined as CRDs (Custom Resource Definitions), executed by a Kubernetes controller. Originated at Google as part of the Knative project, donated to the CD Foundation (CDF) in 2019. Now powers Google Cloud Build (rebuilt on Tekton in 2023), OpenShift Pipelines (Red Hat's CI/CD), and Jenkins X.
+
+The pitch: if you're already running Kubernetes, treating pipelines as Kubernetes resources is operationally cohesive. kubectl apply / kubectl get / kubectl describe work on Pipelines and PipelineRuns. RBAC, NetworkPolicy, ResourceQuota apply uniformly. Argo CD or Flux can manage Tekton resources via GitOps. The same operational primitives that run your apps run your CI.
+
+Where Tekton wins:
+
+Kubernetes-native operationally. Logs in kubectl. Resources in kubectl. Audit in K8s API audit log. No separate CI control plane to operate.
+
+Reusable Task composition. Tekton Catalog Tasks are mature and well-documented. git-clone, kaniko, buildah, cosign, helm-upgrade — all install via Tekton Hub.
+
+Strong with GitOps. Pipelines are just YAML manifests; commit to git, ArgoCD/Flux applies them, controller runs them. Whole pipeline lifecycle in git.
+
+Multi-tenancy via namespaces. Each team's namespace has its own Tasks, Pipelines, PipelineRuns. K8s RBAC enforces isolation. Cleaner than Jenkins's project-scoped auth.
+
+Cloud-portable. Same Pipeline YAML runs on EKS, GKE, AKS, on-prem K8s, OpenShift. No vendor lock.
+
+Where Tekton loses:
+
+YAML-heavy and lower-level. A typical Tekton Pipeline is more verbose than the equivalent GHA workflow. params, workspaces, results require explicit declaration. Newcomers find it overwhelming.
+
+Smaller ecosystem. Tekton Hub has ~200 curated Tasks vs GHA's 25,000 actions. Coverage is good for major patterns; thinner for niche integrations.
+
+Operational complexity. Running Tekton means running Kubernetes (already required), plus the Tekton controllers (Pipelines, Triggers, Dashboard, Operator). For shops without K8s expertise, the entry cost is real.
+
+UX is functional but not polished. Tekton Dashboard exists; it's adequate. Compared to GHA's UI, GitLab's UI, or even Jenkins Blue Ocean, it's notably less refined.
+
+When to pick Tekton in 2026:
+
+Platform team building internal CI as a Kubernetes platform service. Multi-tenant CI on a shared cluster. Each team's namespace has Tasks + Pipelines; you operate Tekton like you operate any other K8s controller.
+
+Cloud-portable / multi-cloud requirement. Tekton on EKS, GKE, AKS gives you the same pipeline definitions across clouds. Useful for orgs that don't want CI lock-in.
+
+Already Kubernetes-deep. If your platform team operates Operators, CRDs, ArgoCD/Flux comfortably, Tekton fits naturally.
+
+Building a custom CI/CD product. If you're vending CI/CD to customers (Google Cloud Build, OpenShift Pipelines), Tekton is the engine you build on top of.
+
+When NOT:
+
+Small teams without K8s expertise. The entry cost for Tekton (controller install, RBAC, Triggers config, Dashboard, monitoring) exceeds the benefit at small scale.
+
+Want polished CI UX. GHA, GitLab CI, even Jenkins beat Tekton's Dashboard for daily-use ergonomics.
+
+OSS projects on GitHub. GHA is free and easier; no reason to add K8s.
+
+Three load-bearing Tekton concepts:
+
+1. Pipelines are CRDs. Every Pipeline, Task, PipelineRun is a Kubernetes resource manageable via kubectl + RBAC. This is the entire value proposition.
+
+2. Tekton Catalog provides reusable Tasks. Don't write your own git-clone or kaniko Task; install from hub.tekton.dev. The catalog is the equivalent of GHA marketplace; smaller but well-curated.
+
+3. Tekton Triggers makes pipelines event-driven. EventListener + TriggerBinding + TriggerTemplate = webhook → PipelineRun. More moving parts than GHA's on:; more flexible.`,
+    whenToUse: [
+      'Platform team building internal CI as a multi-tenant K8s platform service',
+      'Cloud-portable / multi-cloud CI without vendor lock-in',
+      'Already deep in Kubernetes operations (Operators, CRDs, GitOps)',
+      'Building a custom CI/CD product (Google Cloud Build pattern)',
+      'Heterogeneous workloads where K8s scheduling primitives matter (GPU, taints, node selectors)',
+    ],
+    keyConcepts: [
+      {
+        term: 'Task — reusable unit',
+        definition: `A Task is a CRD describing steps that run in a Pod. Each step is a container with its own image and command.
+
+\`\`\`yaml
+apiVersion: tekton.dev/v1
+kind: Task
+metadata: { name: build-image, namespace: ci }
+spec:
+  params:
+    - name: image-url
+      type: string
+      description: 'Image to push (e.g., ghcr.io/myorg/api)'
+    - name: image-tag
+      type: string
+      default: 'latest'
+  workspaces:
+    - name: source
+      description: 'Repo source code'
+  results:
+    - name: image-digest
+      description: 'Pushed image digest'
+  steps:
+    - name: build-and-push
+      image: gcr.io/kaniko-project/executor:debug
+      script: |
+        /kaniko/executor \\
+          --dockerfile $(workspaces.source.path)/Dockerfile \\
+          --context $(workspaces.source.path) \\
+          --destination $(params.image-url):$(params.image-tag) \\
+          --digest-file $(results.image-digest.path) \\
+          --cache=true
+\`\`\`
+
+params are typed inputs. workspaces are volumes mounted into all steps. results are values written to /tekton/results/<name> that downstream Tasks can consume.
+
+Steps run sequentially in the same Pod. Workspace data persists across steps within a Task; the next Task's TaskRun uses a different Pod (workspaces are how data flows across Task boundaries).
+
+ClusterTask is the same shape but at cluster scope (visible from any namespace). StepAction (Tekton Pipelines v0.55+, 2024) is a newer single-step reusable unit; Tasks compose StepActions. Many Catalog tasks are migrating to StepActions for finer-grained reuse.`,
+      },
+      {
+        term: 'Pipeline — DAG of Tasks',
+        definition: `A Pipeline composes Tasks. Like a workflow in GHA but as a CRD.
+
+\`\`\`yaml
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata: { name: build-test-deploy, namespace: ci }
+spec:
+  params:
+    - name: repo-url
+    - name: revision
+      default: main
+  workspaces:
+    - name: shared-data
+      description: 'Repo + build artifacts'
+  tasks:
+    - name: clone
+      taskRef: { name: git-clone, kind: ClusterTask }
+      params:
+        - { name: url,      value: $(params.repo-url) }
+        - { name: revision, value: $(params.revision) }
+      workspaces:
+        - { name: output, workspace: shared-data }
+
+    - name: test
+      runAfter: [clone]
+      taskRef: { name: npm-test }
+      workspaces:
+        - { name: source, workspace: shared-data }
+
+    - name: build
+      runAfter: [test]
+      taskRef: { name: build-image }
+      params:
+        - { name: image-url, value: ghcr.io/myorg/api }
+        - { name: image-tag, value: $(params.revision) }
+      workspaces:
+        - { name: source, workspace: shared-data }
+
+    - name: deploy
+      runAfter: [build]
+      when:
+        - input: $(params.revision)
+          operator: in
+          values: [main]
+      taskRef: { name: kubectl-deploy }
+      params:
+        - { name: image-digest, value: $(tasks.build.results.image-digest) }
+\`\`\`
+
+runAfter declares dependencies. when block is conditional execution (Tekton's equivalent of GHA's if:). $(tasks.build.results.image-digest) propagates results from one Task to another.
+
+finally tasks run after all main tasks regardless of outcome (cleanup, notifications):
+
+\`\`\`yaml
+finally:
+  - name: notify
+    taskRef: { name: slack-notify }
+    params:
+      - { name: status, value: $(tasks.deploy.status) }
+\`\`\``,
+      },
+      {
+        term: 'PipelineRun — runtime instance',
+        definition: `A PipelineRun is a runtime instance of a Pipeline. Created on every trigger. Tekton controller watches PipelineRuns and creates child TaskRuns / Pods.
+
+\`\`\`yaml
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: build-test-deploy-
+  namespace: ci
+spec:
+  pipelineRef: { name: build-test-deploy }
+  params:
+    - { name: repo-url, value: https://github.com/myorg/api.git }
+    - { name: revision, value: main }
+  workspaces:
+    - name: shared-data
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources: { requests: { storage: 5Gi } }
+          storageClassName: gp3
+  taskRunTemplate:
+    serviceAccountName: pipeline-builder
+    podTemplate:
+      securityContext: { runAsNonRoot: true, runAsUser: 1000, fsGroup: 1000 }
+      nodeSelector: { workload-type: ci }
+      tolerations: [{ key: dedicated, value: ci, effect: NoSchedule }]
+\`\`\`
+
+Key fields:
+- generateName auto-suffixes a unique ID; one PipelineRun per trigger.
+- volumeClaimTemplate creates a PVC for the workspace; auto-deleted after PipelineRun completion (configurable).
+- taskRunTemplate sets defaults for all child TaskRuns: ServiceAccount, security context, node selector, tolerations.
+
+Lifecycle: created → controller resolves Pipeline → spawns TaskRuns → TaskRuns spawn Pods → Pods run steps → PipelineRun status updates → completion (Succeeded / Failed).
+
+History: PipelineRuns persist as K8s resources. kubectl get pipelinerun -n ci shows recent runs. Default retention is forever; tekton-pipelines-resolvers handles auto-cleanup via PrunerConfig CRD.`,
+      },
+      {
+        term: 'Workspaces — volumes across Tasks',
+        definition: `Workspaces are the data-flow primitive. Tasks declare workspace requirements; PipelineRun resolves them to actual volumes.
+
+Volume sources for workspaces:
+- volumeClaimTemplate — PVC created per PipelineRun; data persists across Tasks; auto-deleted on cleanup.
+- persistentVolumeClaim — refer to existing PVC; useful for cross-PipelineRun caches.
+- emptyDir — ephemeral; only useful within a single Task (multiple steps).
+- configMap — read-only config files mounted as workspace.
+- secret — read-only secrets mounted as workspace.
+- projected — multiple sources combined.
+
+Common pattern — repo workspace + cache workspace:
+
+\`\`\`yaml
+spec:
+  workspaces:
+    - name: source-code
+      volumeClaimTemplate: { ... }       # ephemeral per-run
+    - name: maven-cache
+      persistentVolumeClaim:
+        claimName: maven-shared-cache    # shared across runs
+  taskRunTemplate: { ... }
+\`\`\`
+
+Tasks reference workspaces by name:
+
+\`\`\`yaml
+tasks:
+  - name: build
+    taskRef: { name: maven-build }
+    workspaces:
+      - { name: source, workspace: source-code }
+      - { name: cache,  workspace: maven-cache }
+\`\`\`
+
+The maven-build Task mounts /workspace/source and /workspace/cache. Source is per-run; cache is shared.
+
+Subpath access: workspaces.source.path is the mount root; you can use workspaces.source.subPath in volume mounts to scope a Task to a subdirectory of the workspace.
+
+Workspace declarations are how Tekton avoids the artifact upload/download dance that GHA requires for cross-job state. The cost: you need PVCs, which means a CSI driver and storage class on your cluster.`,
+      },
+      {
+        term: 'Tekton Triggers — event-driven',
+        definition: `Tekton Triggers makes pipelines run on webhooks/events. Five components:
+
+EventListener — K8s Service + Deployment that exposes HTTP endpoint:
+
+\`\`\`yaml
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata: { name: github-listener, namespace: ci }
+spec:
+  serviceAccountName: tekton-triggers-sa
+  triggers:
+    - name: github-push
+      interceptors:
+        - ref: { name: github }
+          params:
+            - name: secretRef
+              value: { secretName: github-webhook-secret, secretKey: hmac }
+            - name: eventTypes
+              value: [push]
+        - ref: { name: cel }
+          params:
+            - name: filter
+              value: 'body.ref == "refs/heads/main"'
+      bindings:
+        - ref: github-push-binding
+      template:
+        ref: build-test-deploy-template
+\`\`\`
+
+TriggerBinding extracts data from event payload:
+
+\`\`\`yaml
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata: { name: github-push-binding }
+spec:
+  params:
+    - { name: repo-url,  value: $(body.repository.clone_url) }
+    - { name: revision,  value: $(body.after) }
+    - { name: pusher,    value: $(body.pusher.name) }
+\`\`\`
+
+TriggerTemplate produces a PipelineRun:
+
+\`\`\`yaml
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata: { name: build-test-deploy-template }
+spec:
+  params:
+    - { name: repo-url }
+    - { name: revision }
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: build-test-deploy-
+        namespace: ci
+      spec:
+        pipelineRef: { name: build-test-deploy }
+        params:
+          - { name: repo-url, value: $(tt.params.repo-url) }
+          - { name: revision, value: $(tt.params.revision) }
+        workspaces:
+          - name: shared-data
+            volumeClaimTemplate: { ... }
+\`\`\`
+
+Setup: configure GitHub webhook to POST to the EventListener Service (typically exposed via Ingress). Webhook signing secret matches what the GitHub interceptor validates. Push events match the CEL filter. Binding extracts; template fires.
+
+Compared to GHA's on: triggers — Triggers is more verbose but more flexible. Custom interceptors can do anything (filter by file path, by author, by JIRA ticket reference).`,
+      },
+      {
+        term: 'Recipe: PipelineRun pruning + history',
+        definition: `Without pruning, PipelineRuns accumulate forever — a busy CI namespace can have 10,000+ resources after months. Etcd storage and API performance degrade.
+
+Three options:
+
+1. Tekton Pruner (built-in, Tekton Pipelines v0.50+):
+
+\`\`\`yaml
+apiVersion: operator.tekton.dev/v1alpha1
+kind: PrunerConfig
+metadata:
+  name: pruner-config
+  namespace: tekton-pipelines
+spec:
+  schedule: "0 */6 * * *"        # every 6 hours
+  resources:
+    - PipelineRun
+    - TaskRun
+  keep: 100                       # keep 100 most recent per namespace
+  keepSince: 168                  # keep anything from last 168h (7d) regardless of count
+\`\`\`
+
+2. CronJob with kubectl:
+
+\`\`\`yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata: { name: tekton-pruner, namespace: ci }
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: tekton-pruner
+          containers:
+            - name: pruner
+              image: bitnami/kubectl
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  kubectl get pipelinerun -n ci --sort-by=.metadata.creationTimestamp \\
+                    -o name | head -n -50 | xargs -r kubectl delete -n ci
+          restartPolicy: OnFailure
+\`\`\`
+
+3. Tekton Operator's TektonConfig has built-in pruner:
+
+\`\`\`yaml
+apiVersion: operator.tekton.dev/v1alpha1
+kind: TektonConfig
+metadata: { name: config }
+spec:
+  pruner:
+    keep: 100
+    schedule: "0 2 * * *"
+    resources: [PipelineRun, TaskRun]
+\`\`\`
+
+For long-term history, export PipelineRun YAML to S3 / object storage before pruning. Or use Tekton Results (separate component) for queryable durable history with API access.`,
+      },
+      {
+        term: 'Recipe: GitOps-managed Tekton with ArgoCD',
+        definition: `Pipelines as YAML in git, applied by ArgoCD. The full GitOps story:
+
+Repo layout:
+
+\`\`\`
+ci-pipelines/
+├── tekton/
+│   ├── tasks/
+│   │   ├── git-clone.yaml          # from Catalog
+│   │   ├── npm-test.yaml
+│   │   └── build-image.yaml
+│   ├── pipelines/
+│   │   └── build-test-deploy.yaml
+│   ├── triggers/
+│   │   ├── eventlistener.yaml
+│   │   ├── trigger-binding.yaml
+│   │   └── trigger-template.yaml
+│   └── kustomization.yaml
+└── argocd/
+    └── tekton-app.yaml
+\`\`\`
+
+argocd/tekton-app.yaml:
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tekton-pipelines
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ci
+  source:
+    repoURL: https://github.com/myorg/ci-pipelines.git
+    targetRevision: main
+    path: tekton
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+\`\`\`
+
+What this gives you:
+- Pipelines as code, reviewed via PR.
+- ArgoCD continuously reconciles — drift between cluster state and git fires alerts.
+- Pipeline changes deployed by merge to main; rollback by reverting the commit.
+- Audit trail in git log + ArgoCD UI.
+
+Note: PipelineRuns are NOT managed by ArgoCD (they're ephemeral; ArgoCD would constantly reconcile). Only the static definitions (Task, Pipeline, EventListener, etc.). PipelineRuns are created by Triggers or manual kubectl.
+
+This is the killer Tekton + GitOps pattern. Operationally cohesive: same kubectl, same GitOps, same RBAC for app deploys and CI definitions.`,
+      },
+    ],
+    approach: [
+      'Install via Tekton Operator on the cluster — managed lifecycle for Pipelines, Triggers, Dashboard',
+      'Use Tasks from Tekton Catalog (hub.tekton.dev) — don\'t reinvent git-clone, kaniko, cosign',
+      'Workspaces with volumeClaimTemplate for per-run state; PVC with shared cache for cross-run',
+      'PipelineRun pruning via Tekton Pruner or TektonConfig — etcd grows fast otherwise',
+      'GitOps via ArgoCD/Flux for Pipeline definitions; PipelineRuns created by Triggers, not GitOps',
+      'EventListener behind Ingress with HMAC-validated GitHub interceptor',
+      'Per-team namespaces with RBAC; Tasks can be Cluster-scoped if shared, namespace-scoped if private',
+      'taskRunTemplate sets ServiceAccount + securityContext; restricted PSS/PSA on the namespace',
+    ],
+    pitfalls: [
+      'No PipelineRun pruning — etcd grows, K8s API slows, cluster degrades',
+      'Workspaces as emptyDir across Tasks — data not shared between TaskRun pods; tests pass locally, fail in pipeline',
+      'EventListener exposed without HMAC validation — anyone can trigger pipelines with arbitrary params',
+      'PipelineRuns directly in git via ArgoCD — endless reconcile loop; only static definitions belong in GitOps',
+      'Privileged Tasks (Docker-in-Docker) — security risk; use kaniko/buildah rootless',
+      'Tasks installed from random Catalog versions — pin to specific versions; track upgrades',
+      'No resource requests/limits on TaskRun pods — overcommitted nodes, OOMkill, flaky pipelines',
+      'Triggers v1alpha1 in production — was alpha; v1beta1 is the GA path',
+    ],
+    keyQuestions: [
+      {
+        question: 'When is Tekton the right choice over GitHub Actions?',
+        answer: `Tekton wins in three concrete situations; outside these, GHA is usually the better default.
+
+Scenario 1: platform team building internal CI as a multi-tenant K8s service. The pitch: each team's namespace is their CI tenant. Tasks and Pipelines as CRDs they can manage with kubectl + RBAC. PipelineRuns scheduled on a shared K8s cluster with namespace-level resource quotas. The platform team operates one Tekton install for hundreds of teams.
+
+Compared to GHA: GHA can do this via shared runners and reusable workflows but the multi-tenancy model is repo-based, not cluster-based. For platform teams already operating K8s for app workloads, Tekton's native multi-tenancy via namespaces is operationally cohesive — same kubectl, same RBAC, same audit log.
+
+Scenario 2: cloud-portable / multi-cloud requirement. Tekton runs on EKS, GKE, AKS, on-prem K8s, OpenShift identically. Pipeline definitions are portable. Useful for orgs that want CI not locked to a vendor.
+
+Compared to GHA: GHA is GitHub-locked. Self-hosted runners can run anywhere, but the control plane (scheduling, UI, secret management) is GitHub's SaaS. For shops building their own cloud-portable platform, Tekton is the right primitive.
+
+Scenario 3: building a CI/CD product on top of Kubernetes. Google Cloud Build (rebuilt on Tekton in 2023). OpenShift Pipelines (Red Hat's CI/CD product). Jenkins X. If you're vending CI/CD to customers as a managed service, Tekton is the engine you build on top of — Kubernetes-native, well-documented CRD model, mature controller.
+
+When NOT Tekton:
+
+Most product companies. The cost of operating Tekton (controllers, RBAC, Triggers, monitoring) at small-to-medium scale exceeds the benefit. Just use GHA.
+
+OSS projects on GitHub. GHA is free, easier, and integrates with PRs natively.
+
+Teams without K8s expertise. Tekton's value proposition assumes you're already operating K8s comfortably. Without that, the entry cost is steep.
+
+Need polished CI UX. Tekton Dashboard is functional but not refined. GHA, GitLab, even Jenkins Blue Ocean beat it.
+
+Realistic 2026 stance: Tekton has ~3-5% market share — concentrated in enterprises building internal platforms and in vendors who use it under the hood (Cloud Build, OpenShift). It's a real and durable niche; not a mainstream choice.
+
+The question to ask: do you have a Kubernetes platform team that operates Operators and CRDs comfortably, AND do you want CI as part of that platform? If both yes, Tekton is a strong candidate. If either no, pick something else.`,
+      },
+      {
+        question: 'Walk through a production Tekton setup — install, Tasks, Triggers, monitoring.',
+        answer: `End-to-end deployment for a 50-engineer org running Tekton on EKS as their internal CI.
+
+Install via Tekton Operator. The Operator manages Pipelines, Triggers, Dashboard, Chains. Single CR (TektonConfig) controls the whole install:
+
+\`\`\`yaml
+apiVersion: operator.tekton.dev/v1alpha1
+kind: TektonConfig
+metadata: { name: config }
+spec:
+  profile: all                     # installs Pipelines + Triggers + Dashboard + Chains
+  targetNamespace: tekton-pipelines
+  pruner:
+    keep: 100
+    schedule: "0 2 * * *"
+    resources: [PipelineRun, TaskRun]
+  pipeline:
+    enable-tekton-oci-bundles: true
+    enable-step-actions: true
+    require-git-ssh-secret-known-hosts: true
+\`\`\`
+
+Tekton Chains (separate component) signs PipelineRun outputs (image digests) automatically — provenance for SLSA Level 2+.
+
+Per-team namespaces:
+
+\`\`\`yaml
+# namespace/team-payments/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ci-payments
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { namespace: ci-payments, name: payments-ci-admin }
+subjects:
+  - kind: Group
+    name: team-payments
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: tekton-pipelines-admin     # Tekton built-in
+  apiGroup: rbac.authorization.k8s.io
+\`\`\`
+
+ServiceAccount for PipelineRun execution with IRSA-bound IAM role:
+
+\`\`\`yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pipeline-builder
+  namespace: ci-payments
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123:role/payments-ci-builder
+\`\`\`
+
+The IAM role's trust policy validates the OIDC subject system:serviceaccount:ci-payments:pipeline-builder.
+
+Install Catalog Tasks:
+
+\`\`\`bash
+tkn hub install task git-clone --version 0.9
+tkn hub install task kaniko --version 0.6
+tkn hub install task cosign --version 0.4
+tkn hub install task helm-upgrade-from-source --version 0.4
+\`\`\`
+
+Pin specific versions; treat upgrades as PRs.
+
+EventListener exposed via Ingress with TLS:
+
+\`\`\`yaml
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata: { name: github-listener, namespace: ci-payments }
+spec:
+  serviceAccountName: tekton-triggers-sa
+  triggers:
+    - name: github-push
+      interceptors:
+        - ref: { name: github }
+          params:
+            - { name: secretRef, value: { secretName: github-hmac, secretKey: hmac } }
+            - { name: eventTypes, value: [push, pull_request] }
+        - ref: { name: cel }
+          params:
+            - { name: filter, value: 'body.ref == "refs/heads/main" || header["X-Github-Event"][0] == "pull_request"' }
+      bindings: [{ ref: github-binding }]
+      template: { ref: build-test-deploy-template }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tekton-listener
+  namespace: ci-payments
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls: [{ hosts: [tekton.example.com], secretName: tekton-tls }]
+  rules:
+    - host: tekton.example.com
+      http:
+        paths:
+          - path: /payments
+            pathType: Prefix
+            backend: { service: { name: el-github-listener, port: { number: 8080 } } }
+\`\`\`
+
+Configure GitHub webhook at github.com/myorg/payments → Settings → Webhooks pointing to https://tekton.example.com/payments with the matching HMAC secret.
+
+Pipelines and Triggers in git, managed by ArgoCD:
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata: { name: ci-payments, namespace: argocd }
+spec:
+  source:
+    repoURL: https://github.com/myorg/ci-pipelines.git
+    targetRevision: main
+    path: teams/payments
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ci-payments
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+\`\`\`
+
+Pipeline changes deploy via PR + merge → ArgoCD reconcile.
+
+Monitoring:
+
+Tekton Pipelines exposes Prometheus metrics on port 9090. ServiceMonitor for kube-prometheus-stack:
+
+\`\`\`yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata: { name: tekton-pipelines, namespace: tekton-pipelines }
+spec:
+  selector: { matchLabels: { app.kubernetes.io/name: controller } }
+  endpoints: [{ port: http-metrics, path: /metrics }]
+\`\`\`
+
+Key metrics:
+- tekton_pipelines_controller_running_pipelineruns_count: queue depth
+- tekton_pipelines_controller_pipelinerun_duration_seconds: histogram
+- tekton_pipelines_controller_pipelinerun_count by status: success/fail rate
+
+Grafana dashboards from Tekton's repo cover this. Alert on: failed PipelineRun rate >10%, queue depth >50 (stuck scheduling), controller pod restart rate >1/hour.
+
+Logs: each TaskRun pod's logs go to your standard K8s logging stack (Loki, OpenSearch, etc.). Filter by namespace and labels (tekton.dev/pipelineRun=...).
+
+Backup / DR. Pipeline/Task definitions in git (recoverable via re-apply). PipelineRun history in etcd (transient; rely on Tekton Results for durable history if needed). PVCs (workspace data) — usually ephemeral; nothing to back up.
+
+Operating cost. Controllers: minimal (~500MB RAM per controller). PipelineRun pods: workload-dependent; for 50 engineers' CI volume, ~$1-3k/month in EKS compute (mostly spot via Karpenter). Engineering: ~25% of one platform engineer for ongoing operations.
+
+This setup is what mature Tekton-on-K8s deployments look like in 2026. It's significant infrastructure investment that only pays off when Tekton's specific advantages match your needs.`,
+      },
+      {
+        question: 'Compare Tekton vs Argo Workflows — when do you pick each?',
+        answer: `Both are Kubernetes-native pipeline engines. Both are CNCF projects. Both run pipelines as CRDs. They overlap significantly but have different design centers.
+
+Tekton — purpose-built for CI/CD. Originated at Google as part of Knative; CDF project. Core abstractions match CI/CD vocabulary: Task (build step), Pipeline (DAG of build steps), TaskRun, PipelineRun. Tekton Catalog has CI-specific Tasks (git-clone, kaniko, helm-upgrade, cosign-sign).
+
+Argo Workflows — purpose-built for general workflow orchestration (data pipelines, ML training, batch processing, CI/CD as one of many use cases). Originated at Applatix → Intuit; CNCF Graduated. Core abstractions are more abstract: Workflow (DAG of templates), Template (a unit of execution — script, container, resource, dag, steps).
+
+Conceptual differences:
+
+Tekton: Task is the reusable primitive. Pipeline composes Tasks. Tasks are the substantive units; reusability is at the Task level.
+
+Argo: Template is the unit. Workflows can call templates from other Workflows (workflowTemplateRef) or include them inline. Argo's reuse is at the Workflow / WorkflowTemplate level — bigger units.
+
+Where Tekton wins:
+
+CI/CD-specific features. Pipeline-level params/results/workspaces, when conditions, finally tasks — purpose-built for build/test/deploy patterns.
+
+Tekton Catalog. Curated set of CI/CD Tasks (200+). Quality and consistency higher than Argo's equivalent (which is broader and less curated).
+
+Tekton Triggers. Webhook handling is mature and CI-specific (GitHub interceptor with HMAC validation, GitLab interceptor, etc.).
+
+Tekton Chains. Automatic SLSA provenance signing of PipelineRun outputs. Built-in.
+
+Tekton Dashboard. Functional CI/CD-shaped UI (PipelineRun list, log viewer, retry button).
+
+Where Argo Workflows wins:
+
+General-purpose orchestration. Data engineering, ML pipelines, batch jobs, scheduled cron — all natural in Argo. Tekton can do them but the abstractions feel forced.
+
+Stronger DAG features. Argo has more sophisticated retry policies, exit handlers, suspend/resume, recurrent workflows (CronWorkflow). DAG expressions can be more complex.
+
+Argo Events. The general-purpose event-source-and-sensor model is more flexible than Tekton Triggers — handles Kafka events, S3 events, calendar events, custom webhooks. Useful when CI/CD is one of many event-driven workflows.
+
+Better UI. Argo Workflows' UI is more polished than Tekton Dashboard. The DAG visualization is excellent.
+
+Memoization. Argo has built-in memoization (cache step outputs across runs). Tekton requires manual workspace caching.
+
+When to pick Tekton:
+- Pure CI/CD use case.
+- Want CI-specific primitives and Catalog.
+- Want SLSA provenance via Tekton Chains.
+- Already on Tekton via OpenShift Pipelines or Cloud Build.
+
+When to pick Argo Workflows:
+- General workflow orchestration (CI is one part).
+- ML training / data pipelines mixed with CI.
+- Want better UI and more sophisticated DAG features.
+- Already on Argo CD (operational coherence with Argo ecosystem).
+
+Hybrid use:
+Some shops run both — Tekton for CI/CD specifically (because of Catalog + Chains + Triggers maturity), Argo Workflows for ML pipelines and data. Both can coexist on the same cluster; different namespaces.
+
+Market share is similar — neither has overtaken the other in 2026. Argo Workflows has a slight edge in adoption due to broader applicability; Tekton has the edge in CI-specific features.
+
+Migration between them is non-trivial. Pipeline shape, params model, reuse model all differ. Pick one for a given workload and stick.
+
+Pragmatic 2026 stance: pick the one whose abstractions match your dominant workload. CI-only → Tekton. CI + data + ML → Argo Workflows. Both are real and durable; neither is going away.`,
+      },
+      {
+        question: 'Quick-fire interview answers — Tekton essentials.',
+        answer: `Rapid-fire facts.
+
+Q: What's Tekton's value proposition?
+A: CI/CD as Kubernetes Custom Resource Definitions. Same kubectl/RBAC/GitOps for CI as for app workloads. Cloud-portable, multi-tenant via namespaces.
+
+Q: Four core CRDs?
+A: Task (reusable unit of work), Pipeline (DAG of Tasks), TaskRun (runtime instance of a Task), PipelineRun (runtime instance of a Pipeline).
+
+Q: What's a Task?
+A: CRD describing one or more steps that run sequentially in a Pod. params (typed inputs), workspaces (mounted volumes), results (outputs).
+
+Q: What's a Pipeline?
+A: DAG of Tasks. runAfter declares dependencies, when blocks for conditional execution, finally for cleanup.
+
+Q: What's a workspace?
+A: Volume mounted into Tasks. PipelineRun resolves to PVC, configMap, secret, or emptyDir. The data-flow primitive between Tasks.
+
+Q: What's Tekton Triggers?
+A: Webhook → PipelineRun. Components: EventListener (Service exposing HTTP), TriggerBinding (extracts data from event), TriggerTemplate (PipelineRun template), Interceptor (validation/transform).
+
+Q: What's Tekton Catalog?
+A: hub.tekton.dev — curated reusable Tasks: git-clone, kaniko, cosign, helm-upgrade, slack-notify, etc.
+
+Q: What's Tekton Chains?
+A: Component that auto-signs PipelineRun outputs (image digests) for SLSA provenance. Runs as a controller alongside Tekton Pipelines.
+
+Q: When does Tekton beat GHA?
+A: Multi-tenant K8s platform; cloud-portable / multi-cloud; building a CI/CD product on top of K8s.
+
+Q: When does Tekton lose to GHA?
+A: Most product companies; OSS on GitHub; teams without K8s expertise; need polished CI UX.
+
+Q: Tekton vs Argo Workflows?
+A: Tekton purpose-built for CI/CD with CI-specific primitives. Argo Workflows general-purpose orchestration (CI + data + ML). Tekton wins on CI features; Argo on general workflows + UI.
+
+Q: How do you handle PipelineRun history?
+A: Pruner (built-in) deletes old PipelineRuns on schedule. For long-term history: export to S3 or use Tekton Results component.
+
+Q: GitOps with Tekton?
+A: Pipeline/Task/Trigger definitions in git, managed by ArgoCD/Flux. PipelineRuns NOT in git — they're ephemeral, created by Triggers.
+
+Q: Multi-tenancy model?
+A: Namespace per team. Tasks/Pipelines/PipelineRuns namespace-scoped. ClusterTask for shared. RBAC enforces isolation.
+
+Q: Auth to clouds?
+A: ServiceAccount with IRSA (AWS) / Workload Identity (GCP) / Federated Identity (Azure). PipelineRun's taskRunTemplate.serviceAccountName binds to the right SA.
+
+Q: Tekton Dashboard?
+A: Web UI for viewing PipelineRuns, TaskRuns, logs. Functional but less polished than GHA/GitLab UIs.
+
+Q: Major Tekton consumers?
+A: Google Cloud Build (rebuilt on Tekton in 2023), OpenShift Pipelines, Jenkins X.
+
+Q: Most common Tekton mistake?
+A: No PipelineRun pruning — etcd grows forever; cluster degrades.
+
+These are the answers a Tekton-fluent platform engineer should give without preparation.`,
+      },
+      {
+        question: 'How do you handle a Tekton PipelineRun that\'s stuck or running too long?',
+        answer: `Stuck or runaway PipelineRuns are a common operational issue. Triage flow:
+
+Step 1: identify the stuck PipelineRun.
+
+\`\`\`bash
+# List recent PipelineRuns sorted by age
+kubectl get pipelinerun -n ci-payments \\
+  --sort-by=.metadata.creationTimestamp \\
+  -o custom-columns='NAME:.metadata.name,STATUS:.status.conditions[0].reason,DURATION:.status.completionTime,AGE:.metadata.creationTimestamp'
+
+# Find ones still Running after >1h
+kubectl get pipelinerun -n ci-payments \\
+  -o jsonpath='{range .items[?(@.status.conditions[0].reason=="Running")]}{.metadata.name}{"\\t"}{.metadata.creationTimestamp}{"\\n"}{end}'
+\`\`\`
+
+Step 2: check which TaskRun is stuck.
+
+\`\`\`bash
+PR=build-test-deploy-abc12
+kubectl describe pipelinerun $PR -n ci-payments
+
+# Find child TaskRuns
+kubectl get taskrun -n ci-payments -l tekton.dev/pipelineRun=$PR
+\`\`\`
+
+Status conditions:
+- Running — actively executing.
+- PipelineRunPending — waiting for resources (PVC, scheduling).
+- Failed — terminated with error.
+- Succeeded — finished cleanly.
+
+Step 3: check the underlying Pod.
+
+\`\`\`bash
+TR=build-test-deploy-abc12-build-xyz
+kubectl describe pod -l tekton.dev/taskRun=$TR -n ci-payments
+
+# Common stuck states:
+# - Pending: scheduling failure (node taints, resource requests too high, no PVC)
+# - ContainerCreating: image pull, volume mount, init container
+# - Running for too long: actual long-running step or hung process
+# - CrashLoopBackOff: step exits non-zero; retried
+\`\`\`
+
+Common causes and fixes:
+
+Cause 1: PVC stuck in Pending. Storage class issue, insufficient quota, CSI driver problem. Fix: kubectl describe pvc shows the issue. Check ResourceQuota in namespace; check storage class default; check CSI driver pods.
+
+Cause 2: Pod stuck in ContainerCreating. Usually image pull failure (private registry without imagePullSecret) or volume mount failure. Fix: kubectl describe pod shows events. Add imagePullSecret to ServiceAccount; verify volume claim.
+
+Cause 3: Pod running normally but step hung. The step is doing something legitimately long, OR it's blocked on input. Fix: kubectl logs the pod's step container; identify what it's doing. If hung, kill the PipelineRun and add a timeout to the Pipeline.
+
+Cause 4: PipelineRun timeout. Tekton has built-in timeouts:
+
+\`\`\`yaml
+spec:
+  pipelineRef: { name: build-test-deploy }
+  timeouts:
+    pipeline: 1h        # whole PipelineRun
+    tasks: 45m          # all Tasks combined
+    finally: 15m        # finally block
+\`\`\`
+
+Without timeouts, stuck pipelines hold capacity forever. Always set them.
+
+Cause 5: too many PipelineRuns queued. Cluster autoscaler / Karpenter can't keep up; pods stuck in Pending. Fix: increase node provisioning limits; check Karpenter NodePool; cap concurrent PipelineRuns.
+
+Manual cancellation:
+
+\`\`\`bash
+# Cancel a single PipelineRun (graceful)
+kubectl patch pipelinerun $PR -n ci-payments \\
+  --type=merge -p '{"spec":{"status":"Cancelled"}}'
+
+# Force-delete all stuck PipelineRuns >2h old
+kubectl get pipelinerun -n ci-payments -o json | \\
+  jq -r '.items[] | select(.status.conditions[0].reason=="Running") | select((.metadata.creationTimestamp | fromdate) < (now - 7200)) | .metadata.name' | \\
+  xargs -I {} kubectl patch pipelinerun {} -n ci-payments --type=merge -p '{"spec":{"status":"Cancelled"}}'
+\`\`\`
+
+Cancelled status terminates child TaskRuns and pods. Cleanup happens via the Tekton controller.
+
+Prevention:
+
+Always set timeouts on every Pipeline (or default at TektonConfig level).
+
+Resource requests/limits on every Task to prevent overcommit.
+
+Pod-level activeDeadlineSeconds via taskRunTemplate as backstop:
+
+\`\`\`yaml
+taskRunTemplate:
+  podTemplate:
+    activeDeadlineSeconds: 3600    # K8s kills pod after 1h regardless
+\`\`\`
+
+Monitor PipelineRun duration distribution. Alert when p95 >2x normal — indicates a regression in Pipeline shape or external dependency.
+
+Cap concurrent PipelineRuns via ResourceQuota in the namespace:
+
+\`\`\`yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata: { name: ci-quota, namespace: ci-payments }
+spec:
+  hard:
+    count/pipelineruns.tekton.dev: "30"        # max 30 active
+    count/taskruns.tekton.dev: "100"
+    requests.cpu: "100"
+    requests.memory: 200Gi
+\`\`\`
+
+This caps damage from runaway pipeline triggers.
+
+Operational lesson: Tekton inherits all K8s operational concerns (PVCs, scheduling, quotas, image pulls). Production Tekton means production K8s operations. Without that maturity, Tekton stuck-pipeline incidents are frequent.`,
+      },
+    ],
+    references: [
+      'https://tekton.dev/docs/pipelines/',
+      'https://tekton.dev/docs/triggers/',
+      'https://hub.tekton.dev/',
+      'https://github.com/tektoncd/chains',
+      'https://cloud.google.com/build/docs',
+    ],
+  },
+
 ];
