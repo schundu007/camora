@@ -11,8 +11,16 @@ export default function FormattedContent({ content, inline = false }) {
   if (!translated) return null;
   // Bind the translated text into the existing parser without renaming
   // the variable — keeps the rest of the function unchanged.
-   
-  content = translated;
+
+  // Strip line-start emoji markers that leak literally into the DOM.
+  // ❌/✅ pairs convey "avoid this / do this" semantics in behavioral
+  // answers — preserve the contrast as a text prefix so the bold
+  // sub-heading still reads correctly. Plain check/bullet glyphs
+  // (✓ ● ○ ...) are list markers and just get stripped.
+  content = translated
+    .replace(/^[ \t]*❌\s+/gm, 'Avoid — ')
+    .replace(/^[ \t]*✅\s+/gm, 'Do — ')
+    .replace(/^[ \t]*[✓●○◉◈◆◇▪▫■□]\s+/gm, '');
 
   const isDiagramLine = (line) => {
     if (/[─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬▶▼◀▲→←↑↓►◄]/.test(line)) return true;
