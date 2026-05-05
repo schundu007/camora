@@ -132,6 +132,12 @@ export default function DocsPage({ onBack }) {
   const projectCategories = heavyData.projectCategories || [];
   const projectCategoryMap = heavyData.projectCategoryMap || {};
   const projectTopics = heavyData.projectTopics || [];
+  // SRE — primary-source-grounded interview prep, lazy-loaded via the
+  // `sre` chunk in loader.js. Topics live in sreTopics.js; diagrams at
+  // /diagrams/sre/*.png.
+  const sreCategories = heavyData.sreCategories || [];
+  const sreTopicCategoryMap = heavyData.sreTopicCategoryMap || {};
+  const sreTopics = heavyData.sreTopics || [];
 
   // Job context for role-filtered mode (passed from JobPrepPage or job URL analysis)
   const [jobContext, setJobContext] = useState(() => {
@@ -418,6 +424,7 @@ export default function DocsPage({ onBack }) {
       activePage === 'projects' ? projectTopics :
       activePage === 'roadmaps' ? roadmapTopics :
       activePage === 'eng-blogs' ? engBlogTopics :
+      activePage === 'sre' ? sreTopics :
       [...behavioralTopics, ...companyPrep];
     const total = topics.length;
     const completed = topics.filter(t => completedTopics[t.id]).length;
@@ -560,6 +567,7 @@ export default function DocsPage({ onBack }) {
     else if (activePage === 'projects') topics = projectTopics;
     else if (activePage === 'roadmaps') topics = roadmapTopics;
     else if (activePage === 'eng-blogs') topics = engBlogTopics;
+    else if (activePage === 'sre') topics = sreTopics;
     else return [];
 
     // Apply role-based filtering when navigating from a job prep page
@@ -600,6 +608,7 @@ export default function DocsPage({ onBack }) {
       case 'projects': return { title: 'Projects', color: 'var(--text-primary)' };
       case 'roadmaps': return { title: 'Roadmaps', color: 'var(--text-primary)' };
       case 'eng-blogs': return { title: 'Engineering Blogs', color: 'var(--text-primary)' };
+      case 'sre': return { title: 'Site Reliability Engineering', color: 'var(--text-primary)' };
       default: return { title: 'Documentation', color: 'var(--text-primary)' };
     }
   };
@@ -616,7 +625,7 @@ export default function DocsPage({ onBack }) {
       systemDesignTradeoffs, concurrencyTopics, scalableSystemsTopics,
       lldTopics, lldProblems, behavioralTopics, companyPrep,
       microservicesPatterns, databaseTopics, sqlTopics, projectTopics,
-      roadmapTopics, engBlogTopics,
+      roadmapTopics, engBlogTopics, sreTopics,
     ];
     for (const arr of allSources) {
       const found = arr?.find(t => t.id === selectedTopic);
@@ -686,6 +695,7 @@ export default function DocsPage({ onBack }) {
       { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: 'var(--text-primary)', topics: roadmapTopics },
       { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: 'var(--text-primary)', topics: engBlogTopics },
       { id: 'behavioral', href: 'behavioral', title: 'Behavioral', icon: 'users', color: 'var(--text-primary)', topics: [...behavioralTopics, ...companyPrep] },
+      { id: 'sre', href: 'sre', title: 'Site Reliability Engineering', icon: 'shield', color: 'var(--text-primary)', topics: sreTopics },
     ];
     return cats.map(c => {
       const count = c.topics.length;
