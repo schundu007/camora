@@ -277,6 +277,24 @@ def diag_cicd_pipeline():
     print('Generated: e3-cicd')
 
 
+# ── F3: Load testing methodology ────────────────────────────────────
+def diag_load_testing():
+    g = base_graph('f3_load_testing', 'Load testing methodology — baseline → ramp → soak → spike')
+    n(g, 'base',  'Baseline\n(steady-state load)\nestablish normal\nmetrics', 'green')
+    n(g, 'ramp',  'Ramp test\n(gradual increase)\nfind knee of curve\n(latency / errors)', 'navy')
+    n(g, 'soak',  'Soak test\n(sustained load,\nhours)\nfind memory leaks,\nresource exhaustion', 'gold')
+    n(g, 'spike', 'Spike test\n(sudden 5-10× burst)\ntest autoscaling,\ngraceful degradation', 'red')
+    n(g, 'stress','Stress test\n(beyond capacity)\nfind failure mode\n(graceful or cascade?)', 'purple')
+    n(g, 'tools', 'Tools:\nk6 / Locust / JMeter\n/ Vegeta / Gatling', 'gray')
+    e(g, 'base',  'ramp')
+    e(g, 'ramp',  'soak')
+    e(g, 'soak',  'spike')
+    e(g, 'spike', 'stress')
+    e(g, 'tools', 'base', 'execute', '#94a3b8', 'dotted')
+    g.render(os.path.join(OUT, 'f3-load-testing'), cleanup=True)
+    print('Generated: f3-load-testing')
+
+
 if __name__ == '__main__':
     diag_sli_slo_sla()
     diag_burn_rate()
@@ -291,4 +309,5 @@ if __name__ == '__main__':
     diag_incident_roles()
     diag_postmortem_flow()
     diag_cicd_pipeline()
-    print('SRE diagrams batches 1-5 complete.')
+    diag_load_testing()
+    print('SRE diagrams batches 1-6 complete.')

@@ -64,6 +64,13 @@ export const sreTopicCategoryMap = {
   'cicd-progressive-delivery': 'automation',
   'gitops':                    'automation',
   'self-healing-systems':      'automation',
+  // Capacity
+  'capacity-planning-method':  'capacity',
+  'forecasting-models':        'capacity',
+  'load-testing':              'capacity',
+  'autoscaling-strategies':    'capacity',
+  'cost-vs-reliability':       'capacity',
+  'database-capacity':         'capacity',
 };
 
 export const sreTopics = [
@@ -5040,6 +5047,1220 @@ The right framing: autoscaling is a TOOL, not a SUBSTITUTE for capacity planning
       'https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/',
       'https://keda.sh/',
       'https://karpenter.sh/',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // F. Capacity Planning & Performance
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'capacity-planning-method',
+    title: 'Capacity Planning Method — Forecast, Provision, Reconcile',
+    icon: 'trendingUp',
+    color: '#8b5cf6',
+    questions: 3,
+    description: 'The Google SRE Book\'s capacity planning model: predict demand, allocate resources, validate against reality.',
+    introduction: `**Capacity planning** is the SRE discipline of ensuring you have the right amount of resources for current and future load — not too much (waste money) and not too little (outages).
+
+The SRE Book Ch 18 framework: capacity planning is **predictive**, not reactive. By the time you\'re scaling under load, it\'s already too late for non-trivial provisioning (rack-scale, contract-scale, region-scale). Plan ahead.
+
+**The three-step loop:**
+
+**1. Forecast demand.**
+- Historical traffic data + business projections.
+- Per-resource, per-region, per-time-window. Peak-hour traffic differs from off-hour.
+- Account for events: marketing campaigns, holiday spikes, product launches, pre-emptive client onboarding.
+- Forecast horizon: 1 month for tactical, 1 quarter for normal planning, 1 year for hardware procurement.
+
+**2. Provision capacity.**
+- Translate forecast into resource requirements: instance count, CPU, memory, network bandwidth, storage IOPS.
+- Order or reserve. Cloud: reserved capacity, savings plans, or just-in-time. On-prem: hardware ordering with lead times of weeks-months.
+- Buffer for forecast error (typically 1.5×-2× the forecast for unbounded ranges; tighter for confident forecasts).
+
+**3. Reconcile actual vs forecast.**
+- Track actual usage vs forecast over time.
+- Adjust the model when reality differs.
+- Build forecast skill iteratively.
+
+**Two key concepts (from SRE Book Ch 18):**
+
+**Resource fungibility** — can you swap underutilized capacity from one workload to another? Cloud: easy (instances are fungible). Multi-tenant Kubernetes: easy (pods reschedule). Dedicated machines per service: hard. Higher fungibility = less buffer needed.
+
+**Critical resource** — the one resource that becomes the bottleneck first. CPU? Memory? Network? Disk IOPS? Database connections? Provision based on the critical resource; everything else is over-provisioned by the same ratio.
+
+**Demand drivers (what to forecast):**
+
+- **Organic growth** — your user base is growing X%/quarter. Project linearly or with growth model.
+- **Engagement** — existing users are using more. Project from per-user metrics.
+- **Product launches** — new feature opens new traffic patterns. Estimate from staging tests + pilot.
+- **External events** — sales, holidays, news cycles. Often have prior-year data.
+- **Migration / consolidation** — bringing a new service into the platform. Estimate from source.
+
+**Confidence intervals**: any forecast is a range, not a number. Provision for the upper bound; alert if you\'re tracking toward it; rebudget if you\'re consistently above.
+
+**The "buffer for the unknown":**
+- Tight forecast (well-understood traffic, daily granularity): 10-20% headroom.
+- Medium forecast (quarterly, mixed traffic types): 30-50% headroom.
+- Wide forecast (new product, unknown adoption): 100%+ headroom; commit only as needed.
+
+**Common failures:**
+- **No forecast at all** — "we\'ll buy more when we run out." Works at small scale; fails at scale because procurement / provisioning has lead time.
+- **Forecasting only on average** — peak hour matters more than average. Plan for peak.
+- **Ignoring failure-mode capacity** — N+1 redundancy means you need 1.5× peak-hour capacity (in 3-replica config) to survive a replica loss during peak.
+- **Forecasting too far out** — beyond 1 year is mostly noise. Re-plan quarterly.`,
+    whenToUse: [
+      'Quarterly capacity reviews — what does the next 3 months look like?',
+      'Pre-launch — does the new service have provisioned capacity?',
+      'Pre-event — black friday, product launch, marketing campaign',
+      'Cost optimization — am I over-provisioned?',
+    ],
+    keyConcepts: [
+      { term: 'Forecast / provision / reconcile', definition: 'Three-step loop. Forecast demand; provision resources; reconcile actual vs forecast; iterate.' },
+      { term: 'Resource fungibility', definition: 'Can spare capacity be swapped between workloads? Cloud: easy. Dedicated hosts: hard. Higher fungibility = lower buffer.' },
+      { term: 'Critical resource', definition: 'The first resource that becomes the bottleneck. Plan based on this; over-provision the rest.' },
+      { term: 'Headroom / buffer', definition: 'Capacity beyond peak forecast. 10-20% for tight forecasts; 100%+ for unknowns.' },
+      { term: 'Failure-mode capacity', definition: 'N+1 redundancy needs 1.5× peak (in 3-replica). Plan for peak DURING failure, not steady-state peak.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through capacity planning for a service.',
+        answer: `Three-step loop, applied iteratively:
+
+**Step 1: Forecast demand.**
+- Pull last 90 days of traffic. Identify peak hour, peak day, growth rate.
+- Layer business inputs: marketing campaigns, holiday seasonality, product launches, sales projections.
+- Build a model: \`peak_qps_at_T = current_peak * (1 + growth_rate)^(T - now) + event_lifts\`.
+- Output: per-month forecast for the next quarter.
+
+**Step 2: Translate to resources.**
+- Identify the **critical resource**: CPU, memory, DB connections, network egress.
+- Per the critical resource: \`required_instances = forecast_peak_qps / qps_per_instance + buffer\`.
+- Buffer: 1.2-2.0×, depending on forecast confidence.
+- Account for **failure-mode capacity**: if you need to survive losing 1 of N replicas, multiply by N/(N-1). For 3 replicas: 1.5×.
+
+**Step 3: Provision and reconcile.**
+- Provision the resources (cloud: scale up the autoscaler max, reserve instances; on-prem: order hardware).
+- Track actual usage vs forecast monthly.
+- When actual diverges from forecast >20%, revisit the model.
+
+**Example (worked):**
+- Service runs at 1000 QPS peak, on 5 instances of 200 QPS each.
+- Forecast: 50% growth over the next quarter → 1500 QPS peak.
+- Required instances: 1500 / 200 = 7.5 → 8.
+- Buffer (medium forecast confidence, 1.5×): 12 instances.
+- Failure mode (survive 1-of-3 AZ failure): each AZ needs to handle 12/2 = 6 instances; total 18 instances across 3 AZs.
+- Provisioned: 18-instance autoscaler max; current min 12; reserved capacity for 12.
+
+This is the math; the discipline is doing it BEFORE you need it. Reactive capacity planning is "scale up after the page fires" — too late for region-scale decisions.`,
+      },
+      {
+        question: 'What\'s the difference between average load and peak load capacity planning?',
+        answer: `**Plan for peak. Always.** Average is for cost forecasting; peak is for SLO survival.
+
+The math: most services have peak/average ratios of 2-10×. A service averaging 1000 QPS might peak at 5000 QPS during business hours. If you provision for 1000, you\'ll fall over at 1500.
+
+The peak that matters:
+- **Peak hour during peak day** — the busiest hour. For most consumer services, that\'s evening or lunch hour.
+- **Peak event** — Black Friday, product launch, news cycle. Can be 5-50× normal peak.
+- **Failure-mode peak** — peak hour during a partial outage. If 1 of 3 AZs is down during peak, the other 2 AZs see 1.5× their normal peak.
+
+The discipline: the SLO must hold during all of these. So capacity must support:
+- **Steady-state peak** (the regular peak hour): ~50% headroom typical.
+- **Event peak** (rare, planned events): pre-scaled for the event.
+- **Failure-mode peak** (what if we lose a region during peak): N+1 or N+2 redundancy with capacity to absorb.
+
+The cost trade-off: provisioning for peak means most of the time you\'re at 30-50% utilization. Cloud autoscaling helps — scale up at the start of peak, scale down at the end. But cloud has limits:
+- **Scale-up speed** — autoscaling reacts in minutes; sudden spikes (slashdot effect, viral content) outpace scaling.
+- **Reservation cost** — fully on-demand is expensive. Reserved instances or savings plans for the predictable baseline; on-demand for spikes.
+- **Dependency saturation** — you can scale your service, but if your DB has 100 connections max, scaling doesn\'t help past that.
+
+The pragmatic stack:
+- **Reserved capacity** for steady-state peak (predictable, cost-optimized).
+- **On-demand autoscaling** for daily peak hours (moderate cost).
+- **Pre-scaling** before known events (Black Friday, marketing pushes).
+- **Buffer** for the unknown.`,
+      },
+      {
+        question: 'How do you calculate "failure-mode capacity"?',
+        answer: `The principle: **plan capacity for the worst-case scenario where one replica / AZ / region is unavailable.**
+
+Concrete: I have 3 AZs, traffic split evenly. Each AZ has 4 instances. Total 12 instances serve peak load.
+
+If 1 AZ fails:
+- The remaining 2 AZs absorb all traffic.
+- Each must now handle 1.5× its normal load.
+- If each AZ\'s instances were at 60% utilization before, they\'re now at 90%. Tolerable.
+- If each AZ\'s instances were at 80% before, they\'re now at 120%. Outage.
+
+The math:
+- **N+1 redundancy** (3 replicas, lose 1): \`per_replica_load = total_load / (N - 1)\`. So peak-hour utilization must be ≤ \`(N-1)/N\` = 67% for N=3.
+- **N+2 redundancy** (3 replicas, lose 2): peak utilization must be ≤ \`(N-2)/N\` = 33% for N=3. Aggressive.
+- For N=2: lose 1 → remaining handles all → utilization must be ≤ 50%. (Common reason 3 replicas is the standard minimum, not 2.)
+
+**Practical capacity sizing for SLO targets:**
+
+Target 99.99% availability (52 min/year). Loss of 1 AZ during peak should not breach SLO.
+
+Recipe:
+1. Identify peak QPS.
+2. Pick replica topology: 3 replicas across 3 AZs (typical).
+3. Each replica must handle 1.5× steady-state peak (to absorb a single AZ failure).
+4. Each replica is provisioned at 60-67% utilization at steady-state peak (so 1.5× still fits).
+5. Failure of the AZ pages the on-call but doesn\'t breach SLO; re-balance happens automatically (autoscaling, traffic shifting).
+
+**For tighter SLO** (99.999%): plan for 2-AZ-loss simultaneously. 3 replicas isn\'t enough; need 5+ across more AZs/regions. Per-replica utilization ≤ 33%. Much more expensive — the cost of an extra 9.
+
+**Hidden trap**: dependencies. Your service has N+1; does your database? Cache? Message broker? The weakest link in the dependency chain is the actual capacity. Surveying every dependency for failure-mode capacity is part of the discipline.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/software-engineering-in-sre/',
+      'https://sre.google/workbook/managing-load/',
+    ],
+  },
+
+  {
+    id: 'forecasting-models',
+    title: 'Forecasting Models — Linear, Seasonal, ML-based',
+    icon: 'lineChart',
+    color: '#8b5cf6',
+    questions: 3,
+    description: 'How to forecast service load: simple growth, seasonal decomposition, Prophet / ARIMA, and when ML is overkill.',
+    introduction: `Capacity planning needs forecasts. Forecasting is its own discipline. The good news: most production services don\'t need fancy models — simple ones work.
+
+**The forecast hierarchy (lowest to highest sophistication):**
+
+**1. Linear extrapolation.**
+- "Last quarter we grew 20%. Forecast 20% next quarter."
+- Works for steady, organic-growth services.
+- Fails when growth is sub-linear (saturation), super-linear (viral), or seasonal.
+
+**2. Linear with seasonality.**
+- "Last quarter we grew 20%. But also: peak hour is 5× off-peak. Black Friday is 3× a normal day. Forecast: 20% growth applied to the same daily/weekly/yearly seasonality."
+- Works for most consumer services.
+- Standard in capacity planning sheets.
+
+**3. Exponential smoothing (Holt-Winters).**
+- Statistical model: trend + seasonality + level, weighted by recency.
+- Available in most spreadsheets and Python (statsmodels).
+- Better than naive linear when trends shift.
+
+**4. ARIMA / SARIMA.**
+- Auto-Regressive Integrated Moving Average. Statistical time-series modeling.
+- Captures correlations, seasonality, trends formally.
+- Requires care with stationarity and parameter selection.
+
+**5. Prophet (Facebook).**
+- Designed for business forecasting at scale. Handles holidays, multiple seasonalities, trend changes.
+- Good middle ground: more sophisticated than linear, less effort than custom ML.
+- Industry standard for "I want better than linear without learning ARIMA."
+
+**6. ML models (LSTM, Transformer, custom).**
+- Best for complex patterns, many input variables, large datasets.
+- Heavyweight: needs training data, infrastructure, validation.
+- Almost always overkill for capacity planning. Use for fraud detection, recommendation, demand forecasting in retail — not for "how many servers next month."
+
+**The 80/20 of forecasting for SRE:**
+- Linear-with-seasonality covers 80% of capacity-planning needs.
+- Prophet covers another 15% (irregular events, complex seasonality).
+- ML covers 5% (unusual patterns, business-critical accuracy needed).
+
+**Forecast accuracy metrics:**
+- **MAPE (Mean Absolute Percentage Error)**: average of \`|actual - forecast| / actual\`. Standard metric.
+- **MAE (Mean Absolute Error)**: average of \`|actual - forecast|\` in absolute units.
+- **Forecast bias**: \`mean(forecast - actual)\`. Persistent positive bias = consistently over-forecasting.
+
+For capacity planning: aim for MAPE < 20% on a quarterly horizon. Anything tighter is noise; anything looser is unhelpful.
+
+**Drivers vs naive trends:**
+
+A naive linear model predicts based on past traffic. A **driver-based model** predicts based on **leading indicators**:
+- "MAU forecast says 10% growth in users next month → projects to 10% growth in QPS."
+- "Marketing has $X campaign spend in Q3 → projects to Y conversion lift → Z QPS lift."
+
+Driver-based forecasts are more accurate when you have good leading indicators. Less accurate when business indicators are themselves uncertain.
+
+**Capacity-specific gotchas:**
+- **Forecasting averages misses peaks.** Forecast peak QPS, not average QPS.
+- **Compositional changes.** Adding a new feature changes the distribution of work; old QPS forecasts undercount the new feature\'s cost.
+- **Failure-mode shifts.** Peak shifted from 8pm to 6am because you onboarded an APAC customer. Region-level forecasts matter.
+- **Non-stationarity.** Past patterns may not hold. After a major product change, retrain.`,
+    whenToUse: [
+      'Quarterly capacity planning — model the next 90 days',
+      'Pre-event sizing — Black Friday, marketing campaign',
+      'Post-launch capacity tracking — actual vs forecast for new features',
+      'Cost forecasting — predict cloud spend',
+    ],
+    keyConcepts: [
+      { term: 'Linear with seasonality', definition: '80% of SRE capacity needs. Daily/weekly/yearly cycles + linear growth trend.' },
+      { term: 'Prophet (Facebook)', definition: 'Open-source forecasting for business time series. Handles holidays, multiple seasonalities. Industry standard middle-ground.' },
+      { term: 'MAPE', definition: 'Mean Absolute Percentage Error. Standard accuracy metric for forecasts. < 20% is good for quarterly capacity.' },
+      { term: 'Driver-based forecast', definition: 'Predict from leading indicators (MAU, marketing spend, business projections), not from past traffic alone.' },
+      { term: 'Forecast bias', definition: 'Persistent over- or under-forecasting. mean(forecast - actual) over a window. Should trend to 0.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'When should I use Prophet vs simple linear forecasting?',
+        answer: `**Use linear-with-seasonality first; reach for Prophet when it falls short.**
+
+Linear-with-seasonality works when:
+- Growth is steady (constant rate).
+- Seasonality is straightforward (daily peak, weekly cycle, annual holiday).
+- No major regime changes.
+- You can compute it in a spreadsheet in 10 minutes.
+
+Reach for Prophet when:
+- **Multiple, irregular events** (sales, marketing campaigns, product launches) need to be modeled. Prophet handles holiday-style events well.
+- **Complex seasonality** (multiple cycles overlapping, e.g., daily + weekly + yearly).
+- **Trend changes** (growth rate shifted at a specific date — Prophet has changepoint detection).
+- **Forecast accuracy matters** more than analyst time.
+
+Prophet costs:
+- Python install + ~30 min to learn.
+- Some art in tuning changepoints, holiday calendars, seasonality components.
+- Output is a dataframe; you have to integrate into your reporting.
+
+Don\'t reach for Prophet when:
+- You don\'t understand your data well enough to tune Prophet. Garbage in, garbage out.
+- The forecast quality matters less than the time saved by linear-with-seasonality.
+- Pattern is so complex it actually needs ML (rare).
+
+Other middle-ground: **statsmodels Holt-Winters** (exponential smoothing) — older, simpler than Prophet, often comparable accuracy. Good if Prophet feels heavyweight.
+
+ML models: **almost never the right tool for capacity planning**. They\'re overkill for the accuracy gain. Reserve for cases where prediction accuracy is directly revenue-driving (e.g., capacity for an ad-targeting service where over/under-provisioning has measurable cost).`,
+      },
+      {
+        question: 'How do you incorporate marketing campaigns or product launches into a forecast?',
+        answer: `**Two paths**: as **events** in a time-series model, or as **scenarios** layered on top.
+
+**Path 1: Events in a model.**
+- Prophet supports holidays / events natively. \`holidays = pd.DataFrame({"ds": dates, "holiday": names})\`.
+- Each event has a window (campaign runs 5 days; impact lasts 7 days).
+- The model learns the shape and magnitude of past similar events; projects forward.
+- Works well when you have history of similar events.
+
+**Path 2: Scenarios.**
+- Build a base forecast without events.
+- Layer on event-specific lift estimates: "Black Friday adds 5× peak for 1 day, and 1.5× residual the following week."
+- Sum: total = base_forecast + event_lifts.
+- Better when events are novel and you have to estimate from first principles.
+
+**Lift estimation for novel events:**
+
+If you have no prior event data:
+- **Pre-launch testing**: load test the affected service at the projected peak. Validate it can handle.
+- **Pilot estimation**: small-scale launch to a subset; measure conversion / engagement; project to full population.
+- **Industry benchmarks**: marketing teams have rough numbers for campaign lift; talk to them.
+- **Expert estimate**: a senior PM\'s gut feel. Used when nothing better is available; bounded by buffer.
+
+The discipline: for any non-trivial event, build a **scenario table**:
+- Base forecast (no event).
+- Pessimistic (event lift is 50% of estimate).
+- Expected (point estimate).
+- Optimistic (event lift is 150% of estimate).
+
+Provision for the optimistic scenario. Track actual against forecast post-event; update your model.
+
+**Common event multipliers (anecdotal industry numbers):**
+- Black Friday / Cyber Monday: 3-10× normal traffic for 24-48 hours.
+- Major product launch: 2-5× initial spike, settles to 1.5-2× over weeks.
+- News cycle / viral content: unbounded; can be 100×+. Plan for Slashdot effect on top services.
+- Marketing campaign (TV): depends on campaign size, often 1.2-2× for the duration.
+
+For "campaign-driven" services (e.g., e-commerce), capacity planning is mostly event planning. The base load is predictable; the events drive 80% of risk.`,
+      },
+      {
+        question: 'What\'s a good MAPE for capacity-planning forecasts?',
+        answer: `**Quarterly horizon: MAPE < 20% is good; < 10% is excellent.** Tighter than that is suspect (probably overfitting).
+
+By forecast horizon:
+- **Daily forecast**: MAPE < 5% is achievable for steady services. Daily traffic is highly predictable.
+- **Weekly forecast**: MAPE < 10% reasonable.
+- **Monthly forecast**: MAPE 10-20% reasonable for normal services.
+- **Quarterly forecast**: MAPE 15-30% is the realistic range. Some services are highly seasonal/event-driven; harder to forecast 3 months out.
+- **Annual forecast**: MAPE 30-50%+. Mostly useful for budgeting, not provisioning.
+
+What MAPE doesn\'t tell you:
+- **Direction matters**. Over-forecasting by 20% means you over-provisioned (waste $$, no outage). Under-forecasting by 20% means outage. Asymmetric cost.
+- **Tail matters**. A model with MAPE 10% but huge errors on rare events isn\'t useful for capacity (those events are when you fail).
+- **Bias matters**. A model with low MAPE but consistent bias (always over- or under-forecasting) needs adjustment.
+
+The capacity-specific framing: don\'t optimize for MAPE; optimize for **avoided incidents per dollar over-provisioned**. A forecast that\'s 80% accurate but always slightly under-forecasting is dangerous; one that\'s 80% accurate but always over-forecasting is just expensive.
+
+**Track quarterly:**
+- Forecast vs actual for the past 4 quarters.
+- Over- vs under-forecast distribution.
+- Largest miss and root cause (what event did we not anticipate?).
+
+The cultural finding: most teams\' forecasts are **systematically optimistic** about growth and **systematically pessimistic** about peaks. Result: under-provisioned at peak. Counter by forecasting peak QPS, not average QPS, and weighting peak with appropriate buffer.`,
+      },
+    ],
+    references: [
+      'https://facebook.github.io/prophet/',
+      'https://www.statsmodels.org/stable/tsa.html',
+      'https://otexts.com/fpp3/',
+    ],
+  },
+
+  {
+    id: 'load-testing',
+    title: 'Load Testing — Methodology, Tools, Production Mirror',
+    icon: 'activity',
+    color: '#8b5cf6',
+    questions: 3,
+    description: 'Baseline / ramp / soak / spike / stress test methodology, tools (k6, Locust, JMeter), and production traffic replay.',
+    visualizations: [
+      {
+        title: 'Load testing methodology — types of tests',
+        description: 'Baseline establishes normal. Ramp finds the knee. Soak finds leaks. Spike tests autoscaling. Stress finds the failure mode.',
+        image: '/diagrams/sre/f3-load-testing.png',
+      },
+    ],
+    introduction: `**Load testing** is how you validate that capacity planning is real, not aspirational. Without load testing, capacity numbers are guesses.
+
+**Five test types, each answering a different question:**
+
+**1. Baseline test.** Normal load for an extended period (15-30 min). Establishes:
+- What does p50 / p95 / p99 latency look like under normal conditions?
+- What\'s the CPU / memory / network / disk profile?
+- What\'s the error rate?
+This is the reference. All other tests compare against it.
+
+**2. Ramp / load test.** Gradually increase load from baseline to 5-10× over 30-60 min. Finds:
+- The "knee" of the curve where latency starts climbing.
+- The capacity ceiling where errors start appearing.
+- The bottleneck (CPU? Memory? DB connections? Network?).
+The output: "this service starts degrading at 5000 QPS; fails at 7000 QPS." Compare to forecast peak.
+
+**3. Soak test.** Sustained load (above baseline) for hours-to-days. Finds:
+- **Memory leaks** that are invisible in 30-min tests.
+- **Connection-pool exhaustion** that takes hours.
+- **Disk-fill** issues from slow-growing logs or temp files.
+- **Cache pollution** that changes performance over time.
+- **Long-running goroutine / thread accumulation** in concurrent code.
+Often run weekly or pre-major-release. Catches defects unit/integration tests miss.
+
+**4. Spike test.** Sudden jump from baseline to 5-10× in seconds, hold for 5-15 min, drop. Finds:
+- Autoscaling reaction time. Did the service degrade during the ramp-up window?
+- Cold-start performance. Did new instances handle traffic immediately?
+- Connection-pool resize speed. Did the DB connections scale?
+- Cache behavior. Did the cold cache cause a downstream surge?
+
+**5. Stress test.** Beyond capacity. 2-5× the projected limit. Finds the **failure mode**:
+- Graceful: 5xx errors with sane retry-after, autoscaling continues, no cascading damage.
+- Cascading: one failure triggers another; the system enters a death spiral.
+The point isn\'t to "pass" the stress test; it\'s to verify the failure mode is graceful.
+
+**Tools:**
+
+**k6 (Grafana Labs)** — modern, JavaScript-based, CLI + cloud. Industry favorite for HTTP/gRPC load testing. Easy CI integration.
+
+**Locust** — Python-based. Distributed via "swarm" workers. Good for dynamic / scripted load. Slower than k6 per-worker but easier for complex test logic.
+
+**JMeter** — Java GUI. Older. Heavyweight. Good for enterprise environments where Java is preferred.
+
+**Gatling** — Scala-based. Very high-performance. Best for hyperscale tests.
+
+**Vegeta** — Go-based, simple HTTP load tester. Fast for basic tests; less programmable than k6.
+
+**Wrk / wrk2** — minimal C-based HTTP tester. Highest performance per worker; least feature-rich.
+
+**Production mirror / shadow traffic.**
+
+The most realistic test: replay real production traffic at the staging service. Tools:
+- **AWS Application Mirroring (gray-launch)** for HTTP traffic.
+- **Kafka mirror-maker** for event streams.
+- **Custom shadow services** that subscribe to prod traffic and route to staging.
+
+Shadow traffic catches issues synthetic load misses:
+- **Real header / cookie patterns**.
+- **Real key distribution** (hot users, hot products, fat-tail patterns).
+- **Real time-of-day variability**.
+- **Real edge cases** (malformed requests, deprecated paths).
+
+Cost: significant infrastructure (shadow service must keep up with prod). Reserved for services where load-test fidelity matters most.
+
+**The discipline:**
+- **Test regularly**, not just pre-launch. Weekly soak tests; monthly ramp tests; pre-event stress tests.
+- **Test in a prod-like environment**. Same instance types, same data sizes, same dependencies. Staging-with-100-rows-of-data is not a load test.
+- **Test the failure mode**. Don\'t avoid stress tests. The system WILL hit them in production sooner or later; better to find the failure mode in a controlled setting.
+- **Automate**. Load tests in CI for every release; comparing against last release\'s baseline.`,
+    whenToUse: [
+      'Pre-launch — verify capacity claims',
+      'Pre-event — Black Friday, product launch',
+      'Post-architecture-change — did the new design hold up?',
+      'Quarterly — regression tests; new bottlenecks emerging',
+    ],
+    keyConcepts: [
+      { term: 'Baseline / ramp / soak / spike / stress', definition: 'Five test types. Each finds different bugs. Run all of them periodically.' },
+      { term: 'k6', definition: 'Modern JavaScript-based load tester. CLI + cloud. Industry favorite for HTTP/gRPC. Easy CI integration.' },
+      { term: 'Knee of the curve', definition: 'Load level where latency starts climbing nonlinearly. Capacity planning aims to keep peak below the knee.' },
+      { term: 'Soak test bugs', definition: 'Memory leaks, connection-pool exhaustion, disk-fill, slow accumulation issues. Invisible in 30-min tests.' },
+      { term: 'Production traffic replay', definition: 'Replay real prod traffic at staging. Highest-fidelity load test. Catches real-world distribution issues.' },
+      { term: 'Stress test goal', definition: 'NOT "pass" — verify failure mode is GRACEFUL. Cascade vs graceful is the distinction.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through the load test types and what each finds.',
+        answer: `Five tests, five different bug categories:
+
+**1. Baseline** (15-30 min at normal load): establishes the reference. p50/p95/p99 latency, CPU/memory profile, error rate. All other tests compare against this.
+
+**2. Ramp** (gradual increase from baseline to 5-10× over 30-60 min): finds the **knee of the curve** — where latency starts climbing nonlinearly. Tells you the capacity ceiling and the bottleneck (CPU? Memory? DB? Network?).
+
+**3. Soak** (sustained above-baseline load for hours/days): finds **slow-accumulation bugs**:
+- Memory leaks (0.1% growth/hour invisible at 30-min, lethal at 24h).
+- Connection-pool exhaustion (works initially; fails at hour 6).
+- Disk-fill (logs, temps, caches).
+- Cache pollution (performance drift over time).
+- Long-running goroutine/thread accumulation.
+
+**4. Spike** (sudden 5-10× jump for 5-15 min, then drop): finds **transient response bugs**:
+- Autoscaling reaction time (did the service degrade during ramp-up?).
+- Cold-start latency on newly-launched instances.
+- Connection-pool resize.
+- Cache cold-start surge.
+
+**5. Stress** (beyond capacity, 2-5× projected limit): finds the **failure mode**:
+- Graceful: 5xx with retry-after; autoscaling continues; no cascade.
+- Cascading: one failure causes another; death spiral.
+The goal is NOT to pass — it\'s to verify graceful failure.
+
+The cadence:
+- **Baseline**: every CI run.
+- **Ramp**: weekly or monthly.
+- **Soak**: weekly or before releases.
+- **Spike**: before launches and major events.
+- **Stress**: quarterly + before high-risk releases.
+
+The test that\'s most often skipped: **soak tests**. They take hours; engineers find them inconvenient. They also find the bugs that destroy production at hour 8 of a real incident. Run them anyway.`,
+      },
+      {
+        question: 'How do you set up production-realistic load tests?',
+        answer: `Three layers of fidelity:
+
+**Layer 1: Synthetic traffic at high volume.**
+- k6 / Locust scripts that simulate user paths.
+- Configured QPS and concurrency.
+- Same endpoints, same payloads as prod.
+- Easy to set up; misses real-world distribution.
+
+**Layer 2: Recorded traffic replay.**
+- Capture real prod traffic for a window (e.g., 1 hour at peak).
+- Replay against staging at variable speed (1×, 2×, 5×).
+- Captures real key distribution, real header patterns, real timing.
+- Tools: tcpcopy, GoReplay, custom AWS replay solutions.
+
+**Layer 3: Live shadow traffic.**
+- In production, every request is also routed to staging.
+- Staging serves it but discards the response.
+- Real-time, full-fidelity, continuous.
+- Catches anything the prior layers miss.
+- Cost: staging must scale with prod; complex to set up.
+
+**Production-mirror best practices:**
+
+- **Same data shape**. If prod\'s tables have 100M rows, staging\'s tables must too. Synthetic 100k-row staging doesn\'t exercise the slow-query paths.
+- **Same dependency versions**. If prod uses postgres 14.5, staging must too. Behavior changes across versions.
+- **Same instance types**. \`m5.large\` and \`c5.large\` have different perf characteristics; don\'t mix.
+- **Same network topology**. Cross-AZ latency matters; staging in one AZ misses cross-AZ slow paths.
+- **Real feature flag values**. Different flag mixes activate different code paths.
+
+**What you\'ll discover with each layer:**
+- Layer 1 (synthetic): basic capacity (QPS ceiling, latency curve).
+- Layer 2 (replay): hot-key issues, distribution-dependent latency, cache behavior.
+- Layer 3 (shadow): edge cases, deprecated paths, real-time SLI tracking.
+
+Most teams operate at Layer 1 + occasional Layer 2. Layer 3 is high-investment; worth it for high-stakes services (payments, search, content delivery).`,
+      },
+      {
+        question: 'I ran a stress test and the service crashed. Is that a failure?',
+        answer: `**Possibly not. It depends on HOW it crashed.**
+
+Stress tests are designed to find the failure mode, not to "pass." The scoring criterion isn\'t "did the service stay up at 5× capacity"; it\'s "when the service hit its limit, did it fail GRACEFULLY?"
+
+**Graceful failure** (acceptable):
+- Returns 5xx errors with appropriate retry-after headers.
+- Drops new connections cleanly; existing connections finish.
+- Autoscaling kicks in (even if too slow to fully save you, the direction is right).
+- Logs and alerts fire correctly so the team knows.
+- No data corruption.
+- Recovery: when load drops, service returns to normal without intervention.
+
+**Cascading failure** (real failure):
+- The service\'s symptoms cause downstream services to also fail.
+- Retries amplify load (a slow service triggers more retries, increasing load).
+- GC death spiral: out-of-memory triggers more GC, which uses more CPU, which slows requests.
+- Recovery requires manual intervention (restart, drain, scale-up).
+- Data corruption, unflushed writes, transaction abandonment.
+
+**The diagnostic:**
+- Plot latency, error rate, downstream latency, downstream error rate during the stress test.
+- Graceful: errors localized to your service; downstream unaffected; recovery < 1 min after load drops.
+- Cascading: errors propagate; downstream sees increased latency / errors; recovery takes 5+ min.
+
+**If cascading, fix:**
+- **Circuit breakers** between this service and downstream (stop calling on consecutive failures).
+- **Bulkheads** (fixed thread pool / connection pool — bounded resource consumption).
+- **Bounded retries** (no exponential backoff retry storms).
+- **Load shedding** (drop low-priority requests when overloaded; reject before service degrades fully).
+- **Graceful degradation** (return cached / partial / fallback responses).
+
+The stress test\'s value isn\'t in "passing" — it\'s in **identifying the cascade in a controlled environment** so you can fix it before it happens in production. A stress test that crashes the service AND reveals the failure mode is a successful stress test, IF you act on the findings.`,
+      },
+    ],
+    references: [
+      'https://k6.io/docs/test-types/',
+      'https://locust.io/',
+      'https://goreplay.org/',
+    ],
+  },
+
+  {
+    id: 'autoscaling-strategies',
+    title: 'Autoscaling Strategies — HPA, VPA, KEDA, Karpenter, Predictive',
+    icon: 'maximize',
+    color: '#8b5cf6',
+    questions: 3,
+    description: 'The Kubernetes autoscaling toolkit, when each fits, and predictive vs reactive scaling.',
+    introduction: `**Autoscaling** automates capacity decisions. It\'s never the whole story (you still need capacity planning) but it absorbs predictable variance and rare spikes.
+
+**The Kubernetes autoscaling toolkit:**
+
+**1. HPA (Horizontal Pod Autoscaler)** — scales pod count based on metric.
+- Default metrics: CPU, memory.
+- **Custom metrics**: any Prometheus-exposed metric (request rate, queue depth, latency).
+- **External metrics**: cloud-provider metrics (CloudWatch, Azure Monitor).
+- The most common autoscaler.
+
+**2. VPA (Vertical Pod Autoscaler)** — adjusts pod resource requests.
+- Watches actual usage; recommends or applies new requests/limits.
+- Useful for right-sizing services with unpredictable resource needs.
+- Less common than HPA; sometimes restricts autoscaling decisions (can\'t scale pod up while it\'s running without restart in some modes).
+
+**3. KEDA (Kubernetes Event-Driven Autoscaling)** — scales based on external event sources.
+- Kafka lag, SQS depth, Pub/Sub messages, RabbitMQ queue, PostgreSQL row count, custom HTTP triggers.
+- 60+ built-in scalers.
+- Standard for event-driven workloads (worker pools, batch processors).
+
+**4. Karpenter (AWS, now CNCF graduated)** — node-level autoscaler.
+- Replaces Cluster Autoscaler for AWS.
+- Can spin up specific instance types matched to pending pods\' resource requests.
+- Faster than CA (provisions in 30-60s vs 5-10 min).
+- Aggressive bin-packing reduces cost.
+
+**5. Cluster Autoscaler (CA)** — older node-level autoscaler.
+- Generic across clouds (AWS, GCP, Azure).
+- Slower than Karpenter on AWS; comparable on other clouds.
+
+**6. Predictive autoscaling** — uses ML to scale before load arrives.
+- AWS Predictive Scaling; GCP Compute predictive autoscaling; custom solutions.
+- Best for predictable patterns (daily peak, weekly cycle).
+- Combines with reactive scaling for unpredictable spikes.
+
+**Scaling strategies:**
+
+**Reactive scaling**: scale based on current metrics. Standard HPA.
+- Pros: responds to any load pattern.
+- Cons: lag time. Spike at T0; HPA reacts at T+30s; new pods ready at T+90s. During those 90s, users see degraded performance.
+
+**Predictive scaling**: scale based on forecasted load.
+- Pros: capacity in place before load arrives.
+- Cons: only works for predictable patterns; bad forecast = wrong capacity.
+
+**Scheduled scaling**: cron-based scale up/down at known times.
+- "Scale to 50 pods at 8am Monday-Friday."
+- Pros: simple, predictable.
+- Cons: doesn\'t adapt to actual load.
+
+**Step scaling**: scale by N pods when threshold crossed; cool down for X minutes.
+- Pros: smooth, low-thrash.
+- Cons: slow to react to large spikes.
+
+**Target tracking**: scale to maintain a target metric (e.g., 50% CPU).
+- Default in HPA, AWS, GCP.
+- Pros: stable, simple to reason about.
+- Cons: assumes target metric correlates with load.
+
+**Common autoscaling failures:**
+
+- **Slow scale-up vs spike**: spike in 30s, HPA reacts in 90s. Use predictive + faster scrape intervals.
+- **Thrashing**: scale up + down repeatedly. Tune cooldowns and hysteresis.
+- **Downstream saturation**: scaling app servers when DB is the bottleneck. Worse, not better.
+- **Cold start**: new pods take 30-180s to be ready. Plan for ramp-up.
+- **Scaling without dependencies**: scaling backend services but not the load balancer / message broker / DB.
+
+**The metric that scales matters:**
+
+- **CPU**: works for CPU-bound work. Default. Often misleading (a service can be 100% CPU on JIT compilation while idle on actual work).
+- **Memory**: tricky. Doesn\'t correlate with load for many services.
+- **Request rate**: better. Direct measurement of work coming in.
+- **Queue depth**: best for async work. KEDA-friendly.
+- **p95 latency**: scales when service is degrading, not when it\'s busy. Lagging indicator; better as a guard rail than primary signal.
+
+**The 2026 best practice**: predictive + reactive layered. Predictive handles the daily peak baseline; reactive handles the unpredictable spikes. Both layers active simultaneously.`,
+    whenToUse: [
+      'Designing autoscaling for a new service — pick metric, set bounds, test',
+      'Cost optimization — am I over-provisioned at off-peak?',
+      'Pre-event prep — can autoscaling react fast enough?',
+      'Postmortem — was scale-up too slow?',
+    ],
+    keyConcepts: [
+      { term: 'HPA', definition: 'Horizontal Pod Autoscaler. Scales pod count based on metric (CPU default; custom metrics common).' },
+      { term: 'KEDA', definition: 'Event-driven autoscaler. 60+ built-in scalers (Kafka, SQS, PubSub, etc.). Standard for event-driven workloads.' },
+      { term: 'Karpenter', definition: 'Faster, more aggressive node autoscaler for AWS. Provisions in 30-60s vs Cluster Autoscaler\'s 5-10 min.' },
+      { term: 'Predictive scaling', definition: 'ML-driven scaling ahead of forecasted load. Best for predictable patterns; combines with reactive.' },
+      { term: 'Target tracking', definition: 'Scale to maintain target metric (e.g., 50% CPU). Default for HPA, AWS, GCP.' },
+      { term: 'Cooldown / hysteresis', definition: 'Cooldown between scale events; asymmetric thresholds (scale up at 70%, down at 50%). Prevents thrashing.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'When do you use HPA, KEDA, and Karpenter together?',
+        answer: `These operate at different layers:
+
+**Karpenter** (or Cluster Autoscaler): **node level**. Adds nodes to the cluster when pods can\'t be scheduled.
+
+**HPA**: **pod count for request-driven services**. Scales pods based on CPU / memory / request rate.
+
+**KEDA**: **pod count for event-driven workloads**. Scales pods based on queue depth, message lag, custom external events.
+
+**Together** (typical workflow):
+
+1. Traffic spike causes HPA to detect high CPU on a Deployment.
+2. HPA increases replica count from 5 to 15.
+3. Kubernetes scheduler tries to place the new pods.
+4. Cluster doesn\'t have enough capacity → pods are pending.
+5. Karpenter sees pending pods; provisions new nodes (right-sized for the pending pods).
+6. New nodes join cluster (30-60 seconds with Karpenter).
+7. Pods schedule and start serving traffic.
+8. Load eventually drops; HPA scales pods back down; Karpenter consolidates and removes empty nodes.
+
+For event-driven backends: same pattern, but KEDA replaces HPA. KEDA watches Kafka lag; scales worker pods; Karpenter provisions nodes.
+
+**The discipline:**
+- HPA / KEDA configured per service.
+- Karpenter / CA configured at cluster level (one config drives everything).
+- Bounds set carefully: HPA min replicas (for redundancy + warm cache), HPA max (to avoid downstream saturation), Karpenter max nodes (to bound cost).
+
+**Real-world numbers:**
+- HPA reaction time: ~30s (default scrape interval) + ~30s (decision) = 60s before scale-up event.
+- Karpenter node provisioning: 30-60s.
+- Pod startup: 10-180s depending on app.
+- **Total time from spike to capacity ready**: 90-300 seconds.
+
+This is why you can\'t rely on autoscaling alone for sudden 10× spikes. Combine with predictive scaling (capacity already in place) or buffer (over-provision the baseline).`,
+      },
+      {
+        question: 'How do you avoid autoscaling thrashing?',
+        answer: `Five techniques:
+
+**1. Asymmetric thresholds (hysteresis).**
+- Scale UP when metric > 70%.
+- Scale DOWN when metric < 50%.
+- The gap between thresholds means the metric must move significantly to flip directions; prevents oscillation around a single threshold.
+
+**2. Cooldown periods.**
+- After any scale event, wait N minutes before allowing another.
+- Common: 3-5 min after scale-up, 5-15 min after scale-down.
+- Asymmetric: shorter cooldown after scale-up (you want to react if needed), longer after scale-down (you don\'t want to immediately re-scale-up).
+
+**3. Stabilization windows.**
+- Aggregate metric over a window before deciding. Kubernetes HPA has \`behavior.scaleDown.stabilizationWindowSeconds\` and \`scaleUp.stabilizationWindowSeconds\`.
+- Default: 0 for scale-up (react fast), 300s for scale-down (don\'t shrink prematurely).
+- Tune based on workload variance.
+
+**4. Larger step sizes.**
+- If scaling 1 pod at a time causes thrashing, scale 5 at a time. Less granular but smoother.
+- HPA \`behavior.scaleUp.policies\` and \`scaleDown.policies\` allow tuning.
+
+**5. Smoother metrics.**
+- A high-variance metric (request count per 30s) causes more thrashing than a smooth one (rolling average over 5 min).
+- Use percentiles or rolling windows in the autoscaling metric.
+
+**Diagnostic workflow:**
+- Plot HPA replica count over time.
+- Identify oscillation pattern (e.g., scale up to 15 → down to 8 → up to 15 → down to 8, repeating every 5 min).
+- The metric that\'s causing it: usually CPU on a service that has bursty work, or request rate that follows a fast oscillating pattern.
+- Apply the techniques above; iterate.
+
+**The cultural mistake**: tuning autoscaling to "react instantly to every change." This produces thrashing. Slightly delayed reaction with smooth scaling is far better than instant reaction with oscillation.`,
+      },
+      {
+        question: 'When does predictive scaling help vs reactive?',
+        answer: `**Predictive helps for predictable patterns; reactive handles the unpredictable.**
+
+**Predictive scaling shines when:**
+- **Daily traffic patterns are predictable**: peak at 9am every weekday, off-peak overnight.
+- **Weekly patterns**: heavy weekdays, light weekends.
+- **Seasonal patterns**: Black Friday, Cyber Monday, holiday season.
+- **Long ramp-up time**: cold-start of new pods is 60+ seconds; you want capacity in place before load arrives.
+
+**Reactive scaling handles:**
+- **Unexpected spikes**: news cycle, viral content, marketing surprise.
+- **Within-the-hour variance**: minor fluctuations around the predicted pattern.
+- **Backstop**: if predictive forecast is wrong, reactive saves you.
+
+**The combined approach:**
+- **Predictive** sets the baseline: at 8am Monday, ensure 50 pods are running.
+- **Reactive** layers on top: if metric exceeds 80%, scale up further.
+
+**AWS implementation**: Predictive Scaling is a built-in feature of AWS Auto Scaling Groups. Provide a CloudWatch metric history; AWS\'s ML model forecasts; ASG scales to the forecast.
+
+**Kubernetes implementation**: less standardized. Options:
+- **Custom HPA with forecast-based metric**: use Prophet or a simple seasonal model; output predicted load; HPA scales based on it.
+- **Scheduled scaling**: \`kubectl scale\` from a CronJob at known times.
+- **AWS-on-EKS**: use AWS Predictive Scaling at the ASG layer; HPA at pod layer.
+- **Cloud-native**: GKE Predictive Vertical Pod Autoscaling; AKS predictive scaling.
+
+**Cost-benefit:**
+- Predictive scaling **costs nothing extra** beyond the compute it provisions; the forecasting is free (cloud-managed).
+- The win: capacity ready when load arrives. No 90-second window of degradation during scale-up.
+- Risk: forecast is wrong → over- or under-provisioned briefly. Reactive backs you up.
+
+**When NOT to use predictive:**
+- Service has no clear pattern (e.g., bursty event-driven workload). Use KEDA.
+- Service is rarely active (e.g., batch jobs once a day). Scheduled scaling is simpler.
+- Forecast inputs are unreliable (e.g., new service with no history). Wait for 4-8 weeks of data.`,
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/',
+      'https://keda.sh/',
+      'https://karpenter.sh/',
+      'https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-predictive-scaling.html',
+    ],
+  },
+
+  {
+    id: 'cost-vs-reliability',
+    title: 'Cost vs Reliability — The Diminishing Returns Curve',
+    icon: 'dollarSign',
+    color: '#8b5cf6',
+    questions: 3,
+    description: 'Why each additional 9 costs 10×, FinOps for SRE, and the right cost-of-downtime conversation with finance.',
+    introduction: `**Reliability has a cost curve. Each additional 9 of availability roughly costs 10× the engineering investment of the previous.** Understanding the curve is essential to setting SLOs that match business reality.
+
+**The cost-of-9s reality** (from SRE Workbook Ch 4 + industry data):
+
+- **99% (3.65 days/year of downtime)**: basic redundancy, monitoring, response. Cheap. Most startups operate here for non-critical services.
+- **99.9% (8h 45min/year)**: serious redundancy (multi-AZ), dedicated SRE function, basic automation. Affordable for any company that takes uptime seriously.
+- **99.95% (4h 22min/year)**: tighter dependencies, faster detection, well-practiced response. ~3-5× the cost of 99.9%.
+- **99.99% (52 min/year)**: multi-region active/active or warm standby, deep automation, 24/7 NOC, formal incident command. ~10× the cost of 99.9%.
+- **99.999% (5 min/year)**: cell-level isolation, formal failover, no SPOFs anywhere, dedicated reliability engineering at scale. ~100× the cost of 99.9%. Reserved for systems where downtime is catastrophic (financial settlement, life-safety, telecom).
+- **Beyond five 9s**: bespoke engineering. Specialized hardware, formal verification, redundant control planes. Only worth it for systems like undersea cables, nuclear control, large-scale financial infrastructure.
+
+**The reliability vs cost trade-off conversation:**
+
+The right framing for product / finance:
+
+1. **What\'s the cost of downtime?** $/minute, $/hour. Per the SRE Workbook: revenue × (downtime/total time) for direct revenue; plus indirect cost (customer churn, brand damage, SLA penalties).
+
+2. **What\'s the cost of an additional 9?** 10× the previous engineering investment. Concrete numbers: going from 99.9% to 99.99% might cost $1M/year in additional infrastructure + 2-3 senior SRE FTEs.
+
+3. **What\'s the threshold where it\'s worth it?** When the saved downtime cost exceeds the engineering cost.
+
+Worked example:
+- Service revenue: $100M/year. Per-hour revenue: ~$11K.
+- 99.9% (8h 45min downtime/year): $96K downtime cost.
+- 99.99% (52 min downtime/year): $9.5K downtime cost.
+- Savings from 99.9% → 99.99%: $86K/year in saved downtime.
+- Engineering cost of the move: ~$1M/year + 2-3 FTEs ($600K).
+- **Conclusion: don\'t do it.** Stay at 99.9%; absorb the downtime cost.
+
+For services with much higher revenue:
+- $1B/year revenue: per-hour ~$114K.
+- 99.9% downtime cost: ~$1M/year.
+- 99.99% downtime cost: ~$98K/year.
+- Savings: ~$900K/year.
+- Engineering cost: same $1M-$1.5M.
+- **Marginal call.** Consider the indirect costs (customer trust, SLA penalties).
+
+**FinOps for SRE:**
+
+Beyond reliability cost, the cloud bill itself is an SRE concern. The 2024-2026 FinOps movement names common patterns:
+
+- **Right-sizing**: matching instance types to actual usage. Often 20-40% savings.
+- **Reserved capacity / Savings Plans**: 1-3 year commitments for 30-70% discounts on baseline.
+- **Spot / preemptible instances**: 60-80% discount for interruptible workloads (batch, dev/test).
+- **Storage tiering**: hot vs cool vs archive. Often 10× cost difference between tiers.
+- **Network egress**: surprising for new teams. Cross-region, cross-cloud, public-internet egress all priced differently.
+- **Idle resources**: forgotten dev clusters, orphan volumes, untagged resources. Auditing finds 5-15% savings.
+
+**The Bezos test**: if cost reduces customer pain, do it. If cost adds capability, only if the value > cost.
+
+**Cost monitoring discipline:**
+- Per-service cost attribution (tagging, namespace-based billing).
+- Monthly cost reviews per service.
+- Anomaly detection on cost (sudden 2× spike usually means runaway autoscaling or runaway logs).
+- Cost as a budget; SRE owns it like SLOs.`,
+    whenToUse: [
+      'Setting SLO targets — pick the SLO that matches business cost-of-downtime',
+      'Annual budgeting — plan reliability investments against revenue impact',
+      'Cost reviews — am I paying for reliability we don\'t need?',
+      'Finance conversations — translate reliability investments to dollar terms',
+    ],
+    keyConcepts: [
+      { term: 'Cost of 9s curve', definition: 'Each additional 9 costs ~10× the previous. From 99.9% to 99.99% is a 10× investment.' },
+      { term: 'Cost of downtime', definition: 'Direct revenue lost + indirect costs (churn, brand, SLA penalties). The metric that justifies reliability investment.' },
+      { term: 'FinOps', definition: 'Discipline of cloud-cost management. Right-sizing, reserved capacity, spot instances, tiered storage.' },
+      { term: 'Bezos test', definition: 'Cost that reduces customer pain: do it. Cost that adds capability: only if value > cost.' },
+      { term: 'Reserved capacity', definition: 'Commitment to specific instance types for 1-3 years. 30-70% discount vs on-demand. For predictable baseline.' },
+      { term: 'Spot / preemptible instances', definition: '60-80% discount; can be reclaimed at any time. For interruptible workloads (batch, dev/test, ML training).' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you decide whether to target 99.9% vs 99.99%?',
+        answer: `Three-step business case:
+
+**Step 1: Quantify cost of downtime.**
+- Direct: revenue × (downtime / total time) for revenue-generating services.
+- Indirect: customer churn risk, SLA credits, brand impact, support cost, internal productivity loss.
+- Per-hour or per-minute number.
+
+For a $100M/year revenue service: ~$11K/hour direct.
+For a $1B/year service: ~$114K/hour direct.
+Indirect: typically 1-3× the direct.
+
+**Step 2: Calculate annual downtime cost.**
+- 99% = 87.6h/year. At $11K/hour = $964K/year direct.
+- 99.9% = 8.76h/year. At $11K/hour = $96K/year direct.
+- 99.99% = 0.87h/year. At $11K/hour = $9.6K/year direct.
+- 99.999% = 0.087h/year. At $11K/hour = $1K/year direct.
+
+**Step 3: Compare to engineering cost of getting there.**
+
+Rough industry numbers:
+- 99% → 99.9%: basic SRE practices. ~1-2 FTEs (~$300K/year).
+- 99.9% → 99.99%: multi-AZ, automation, deeper observability. ~$500K-$1M/year (2-3 FTEs + infra).
+- 99.99% → 99.999%: multi-region active/active, formal verification, dedicated reliability engineering. ~$5M-$20M/year.
+
+**Decision**:
+- $100M revenue, 99.9% → 99.99%: save $86K/year, cost $700K-$1.5M/year. **Don\'t do it.**
+- $1B revenue, 99.9% → 99.99%: save $900K/year, cost $700K-$1.5M/year. **Maybe**, depends on indirect costs.
+- $10B revenue, 99.9% → 99.99%: save $9M/year, cost $1-$1.5M/year. **Yes.**
+
+**The framing for finance**:
+- "We\'re currently at 99.9% with $96K/year of downtime cost. To reach 99.99%, we\'d need $1M/year in additional engineering. The math says stay at 99.9% unless customer/brand impact changes the calculus."
+
+This is the kind of conversation product teams find clarifying — reliability becomes a quantifiable trade-off, not a vague aspiration.`,
+      },
+      {
+        question: 'What\'s the most common cloud-cost mistake SRE teams make?',
+        answer: `**Forgetting to retire unused resources.** Surveys consistently find 20-30% of cloud spend is on resources that aren\'t actively used.
+
+Common offenders:
+- **Dev / test clusters** that were created and forgotten.
+- **Orphan EBS volumes** from terminated instances (default: not deleted with instance).
+- **Old AMIs / snapshots** taking up storage.
+- **Legacy load balancers** that no service uses.
+- **Reserved capacity** for instance types no longer used.
+- **Idle databases** (RDS, Aurora) for projects that ended.
+- **NAT gateway-hour charges** in VPCs that don\'t need them.
+
+**Diagnostic workflow** (every quarter):
+1. Pull cost reports per resource type. Which is the largest line item?
+2. For top 5 line items: list resources; check usage in past 30 days; flag idle.
+3. Auto-tag policy: every resource must have an "owner" tag. Untagged resources to be deleted after 30-day notice.
+4. Periodic audit (monthly or quarterly): review the top spenders; question necessity.
+
+**Other major savings opportunities:**
+
+**Right-sizing**: instance types matched to actual usage.
+- Pull last-30-day CPU + memory utilization per instance. If utilization is < 30%, downsize.
+- For Kubernetes: VPA recommendations + tighter limits.
+- Typically 20-40% savings.
+
+**Reserved capacity / Savings Plans**:
+- Predictable baseline → 1-3 year commitment → 30-70% discount.
+- Most teams under-commit (leaves savings on the table).
+- Compute Savings Plans are most flexible (cover EC2, Lambda, Fargate).
+
+**Spot / preemptible instances**:
+- Interruptible workloads (batch, dev/test, ML training) → 60-80% discount.
+- Add interruption handling (graceful shutdown, work checkpointing).
+- Karpenter on AWS supports spot bin-packing well.
+
+**Storage tiering**:
+- S3 Intelligent-Tiering (auto-tier based on access).
+- Manual tiering for known patterns: hot in S3 Standard, warm in S3 IA, cold in Glacier.
+- 10× cost difference between tiers.
+
+**Network egress**:
+- Cross-region, cross-cloud, public internet — all expensive.
+- VPC peering, PrivateLink, CloudFront for CDN-able content.
+- Often 5-10% of total bill; reducible.
+
+**The $200K Datadog playbook** (from earlier topic): observability cost is its own category; can be 10-30% of total infra cost.
+
+The cultural pattern: most teams don\'t look at the cloud bill until it\'s an emergency. The right discipline: monthly cost reviews; per-service cost attribution; alerts on anomalies.`,
+      },
+      {
+        question: 'How do you set up cloud-cost attribution per team?',
+        answer: `Three-layer approach:
+
+**Layer 1: Mandatory tags.**
+- Every resource gets tags: \`team\`, \`service\`, \`environment\`, \`cost-center\`.
+- Enforced at creation: IaC (Terraform / Crossplane) requires tags; cloud SCPs / Azure Policy / GCP Org Policies reject untagged resources.
+- Compliance dashboard showing % of resources tagged.
+
+**Layer 2: Cost reports per tag.**
+- AWS Cost Explorer / GCP Billing / Azure Cost Management with tag-based filtering.
+- Daily/weekly/monthly reports per team or service.
+- Sent to team Slack channels automatically.
+
+**Layer 3: Showback / chargeback.**
+- **Showback**: visibility only. Teams see their cost; don\'t directly pay it.
+- **Chargeback**: actual budget allocation. Team\'s cost charged to their P&L.
+- Showback is easier to start; chargeback creates stronger incentives but requires more org buy-in.
+
+**Tools:**
+
+- **Native cloud tools**: AWS Cost Explorer, GCP Billing Reports, Azure Cost Management. Free, native to each cloud.
+- **CloudHealth / Apptio Cloudability / Flexera**: enterprise FinOps. Multi-cloud, more sophisticated reporting, anomaly detection.
+- **Kubecost**: Kubernetes-specific. Per-namespace, per-pod cost attribution. Good for multi-tenant clusters.
+- **OpenCost**: open-source alternative to Kubecost.
+
+**Common challenges:**
+
+- **Shared resources**: load balancers, NAT gateways, DNS — used by everyone. Allocation: usage-based (proportional to traffic) or flat-share.
+- **Untagged resources**: legacy infrastructure that pre-dates the tagging policy. Migration path: audit, tag, repeat. Often the longest-tail item.
+- **Inferred ownership**: when tagging is incomplete, infer ownership from naming conventions, IAM roles, deploy history. Tools like Cloud Custodian + Spacelift can automate this.
+
+**The win:**
+- Each team sees their cost in real time.
+- Anomalies (sudden spike) page the responsible team.
+- Cost optimization becomes a team-level KPI, not an SRE problem.
+
+**Cultural shift**: from "cloud cost is finance\'s problem" to "cloud cost is part of every team\'s P&L." Takes 6-18 months of ongoing tagging discipline + reporting + leadership endorsement.`,
+      },
+    ],
+    references: [
+      'https://www.finops.org/',
+      'https://sre.google/workbook/managing-load/',
+      'https://aws.amazon.com/aws-cost-management/',
+      'https://kubecost.com/',
+    ],
+  },
+
+  {
+    id: 'database-capacity',
+    title: 'Database Capacity — Connections, Replication, Sharding',
+    icon: 'database',
+    color: '#8b5cf6',
+    questions: 3,
+    description: 'The connection-pool ceiling, read replicas, write throughput, and sharding strategies.',
+    introduction: `Databases are usually the **first thing to break under load** and the **hardest thing to scale**. Database capacity planning is its own subspecialty.
+
+**The connection-pool ceiling.**
+
+Most databases have a hard limit on concurrent connections:
+- **PostgreSQL** default: 100. Production typically 200-500.
+- **MySQL** default: 151. Production typically 500-2000.
+- **Aurora**: scales somewhat with instance size; up to ~5000.
+- Each connection costs memory (5-15 MB for Postgres backend processes).
+
+Application-side:
+- Each app instance has a connection pool (5-50 connections per instance is typical).
+- 100 app instances × 20 connections each = 2000 connections to the DB.
+
+If your DB max is 500 and your apps want 2000, you have a problem. The fix:
+1. **Connection pooler in front of DB**: PgBouncer for Postgres, ProxySQL for MySQL, RDS Proxy. Pools many app connections into few DB connections.
+2. **Stricter app-side pooling**: smaller pools, more sharing.
+3. **DB scaling**: bigger instance class (more RAM, more allowed connections).
+
+**Replication for read scaling.**
+
+Most read-heavy workloads scale by adding **read replicas**:
+- Writes go to primary; replication propagates to replicas.
+- Reads can go to any replica → read capacity scales horizontally.
+- Replication lag: typically sub-second async, can spike under load.
+
+Trade-offs:
+- **Stale reads**: replicas may be behind primary by ms-to-seconds. Use cases tolerant of sub-second staleness work; "read your own write" requires routing back to primary or to a session-aware replica.
+- **Write amplification**: more replicas = more replication bandwidth.
+- **Failover complexity**: when primary fails, one replica gets promoted. Manage carefully (don\'t write to two primaries simultaneously).
+
+**Write capacity is the harder problem.**
+
+Adding replicas helps reads, not writes. To scale writes:
+
+**1. Vertical scaling**: bigger primary instance. Easy but capped (you eventually buy the biggest available; often $20K+/month at the top).
+
+**2. Sharding**: partition data across multiple primaries. Each shard is independent.
+- **Hash-based sharding**: partition by hash(key). Even distribution, but range queries cross shards.
+- **Range-based sharding**: partition by key ranges. Good for time-series; "hot shard" risk if recent data is the hot data.
+- **Directory-based sharding**: explicit mapping of key → shard. Flexible; routing layer overhead.
+
+**3. CQRS (Command Query Responsibility Segregation)**: separate write store and read store. Writes go to one DB optimized for writes; async pipeline projects to read store(s) optimized for queries. High flexibility; complex.
+
+**4. Distributed databases**: Spanner, Cockroach, YugabyteDB, Aurora. Built-in sharding + replication. Higher cost; eliminate ops complexity.
+
+**Sharding gotchas:**
+
+- **Cross-shard transactions**: hard. Often need 2PC or a saga pattern.
+- **Joins across shards**: also hard. Either denormalize, replicate dimension tables, or accept N+1 queries.
+- **Re-sharding**: painful. Plan for double-write + backfill + cut-over (months-long).
+- **Hot shards**: power-law distributions create skew. Consistent hashing + virtual nodes help.
+
+**The capacity-planning cycle for databases:**
+
+1. **Forecast write rate, read rate, query latency targets.**
+2. **Match to instance class, replica count, sharding strategy.**
+3. **Test under load** (load testing with realistic key distribution).
+4. **Plan failover scenarios** (single primary fail, AZ fail, region fail).
+5. **Reconcile actual vs forecast** (DB metrics: CPU, IOPS, connections, latency).
+
+**Modern alternatives:**
+
+- **Managed databases** (RDS, Aurora, Cloud SQL, Cloud Spanner, Cosmos DB): operational overhead reduced; capacity scaling more automatic.
+- **Serverless databases** (Aurora Serverless, Cloud SQL Auto-scaling, Cosmos DB): scale automatically based on load.
+- **Distributed SQL** (CockroachDB, Spanner, YugabyteDB): horizontal scaling with SQL semantics.
+
+The lesson: most teams scale apps horizontally easily but hit DB limits painfully. Plan DB capacity first; let app capacity follow.`,
+    whenToUse: [
+      'Pre-launch — DB capacity planning for new service',
+      'High-traffic events — does the DB hold up at peak forecast?',
+      'Scaling pain — when current architecture hits its DB ceiling',
+      'Cost optimization — am I right-sized? Reserved DB capacity?',
+    ],
+    keyConcepts: [
+      { term: 'Connection pool ceiling', definition: 'Hard cap on concurrent DB connections. Use a connection pooler (PgBouncer, ProxySQL, RDS Proxy) when app pools exceed it.' },
+      { term: 'Read replicas', definition: 'Async copies of primary. Scale reads horizontally; writes still go to primary. Sub-second replication lag typical.' },
+      { term: 'Sharding', definition: 'Partition data across primaries. Hash, range, or directory based. Re-sharding is expensive; plan carefully.' },
+      { term: 'CQRS', definition: 'Separate write store and read store. Writes optimized for ingestion; reads optimized for queries. High flexibility, complex.' },
+      { term: 'Distributed SQL', definition: 'Spanner, Cockroach, YugabyteDB. Built-in sharding + replication with SQL semantics. Higher cost; less ops.' },
+      { term: 'Hot shard', definition: 'Power-law distributions create skew. One shard at 95% load while others at 30%. Consistent hashing + virtual nodes mitigate.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'My Postgres is hitting connection limits. What do I do?',
+        answer: `Three options, in order of preference:
+
+**1. Add a connection pooler (preferred).**
+- **PgBouncer** for Postgres; **ProxySQL** for MySQL; **RDS Proxy** (managed) for AWS.
+- Sits between apps and DB. Pools many app-side connections into a few DB-side connections.
+- Modes:
+  - **Session pooling**: client gets a dedicated DB connection for its session (similar to direct connection).
+  - **Transaction pooling**: client gets a DB connection only for the duration of a transaction. After commit, connection returned to pool. Allows many more app connections per DB connection.
+  - **Statement pooling**: even tighter; rarely used (breaks many ORMs).
+
+Transaction pooling typically gets you 10× the effective connection capacity. 1000 app connections → ~50 active DB connections (because most clients are idle most of the time).
+
+**2. Tune app-side connection pools.**
+- Smaller pool per instance (e.g., 5 instead of 20).
+- Aggressive idle timeout (close connections sooner).
+- Auto-scaling-aware pool sizing (scale pool to active instance count).
+
+**3. Bigger DB instance.**
+- More RAM allows more connections (each Postgres backend is ~5-15 MB).
+- Doubling RAM might double allowed connections.
+- Cost scales linearly; eventually you hit max instance size.
+
+**4. Architectural fixes (longer term):**
+- **Separate read and write workloads**: writes to primary (small connection pool), reads to replica (separate pool).
+- **Stateless connection model**: serverless platforms (Aurora Serverless v2) auto-scale connections.
+
+**Common mistake**: ignoring idle connections. Apps that hold connections during long-running operations (slow query, file upload, external API call) waste DB connections. Move expensive operations off the DB connection or use shorter transaction boundaries.
+
+**Concrete example**: a service with 100 app instances × 20-connection pool = 2000 connections wanted. With PgBouncer in transaction mode + average txn duration of 10ms, ~200 active DB connections suffice. Postgres at 500-connection limit comfortably handles this with overhead.`,
+      },
+      {
+        question: 'When do you shard a database vs scale up?',
+        answer: `**Scale up first; shard when you must.**
+
+The order of operations:
+
+1. **Vertical scale**: bigger instance. Easy, low-risk. Effective up to the largest available instance class. Often gets you to single-digit-millions of QPS.
+
+2. **Read replicas**: async copies for read traffic. Scales reads. Writes still on primary.
+
+3. **Vertical scale of replicas + writes still on primary**: gets you further.
+
+4. **Eventually**: writes hit the primary\'s ceiling. Now you shard.
+
+The signs that you must shard:
+- **Write QPS exceeds primary capacity** even at biggest instance class.
+- **Single-table size** approaches DB limits (terabytes for Postgres; billions of rows).
+- **Index sizes** exceed available memory; query plans become slow due to disk reads.
+- **Row contention** (lock waits) becomes the latency bottleneck.
+
+**Sharding strategies:**
+
+**Hash-based**:
+- \`shard_id = hash(user_id) % num_shards\`.
+- Even distribution.
+- Range queries cross shards (slow).
+- Re-sharding is painful (every key moves).
+
+**Range-based**:
+- \`shard_id = lookup_in_range_table(user_id)\`.
+- Good for time-series (recent data on hot shard, older data on cold shards).
+- Hot-shard risk if recent data is the high-traffic data.
+- Re-sharding is easier (split the busy range).
+
+**Directory-based**:
+- Explicit mapping in a separate routing layer.
+- Most flexible; routing layer becomes critical infrastructure.
+- Used by very large systems (Vitess, Citus).
+
+**The sharding gotchas (worth saying explicitly in interviews):**
+
+- **Cross-shard transactions**: 2PC, sagas, or eventual consistency. None easy.
+- **Joins across shards**: denormalize, broadcast joins, or N+1 queries.
+- **Re-sharding**: months of double-write, backfill, cut-over per shard split.
+- **Operational complexity**: each shard is its own primary (and its own backups, monitoring, replication, failover).
+
+**The escape hatch: distributed SQL.**
+
+Tools like CockroachDB, Spanner, YugabyteDB do sharding for you while preserving SQL semantics. You write SQL; the database handles partitioning, replication, transactions across shards. Higher infrastructure cost but eliminates 90% of the sharding complexity.
+
+If your team isn\'t Vitess-experienced and your scale is plausibly served by Spanner, Spanner is usually the right answer.`,
+      },
+      {
+        question: 'How do you plan for database failover during peak load?',
+        answer: `Three layers of preparation:
+
+**Layer 1: Failover mechanism.**
+- Managed database services do automatic failover (RDS Multi-AZ, Aurora, Cloud SQL HA): primary fails → standby promoted in 30-90 seconds.
+- Self-managed: requires explicit setup (Postgres + Patroni, MySQL + Orchestrator, MongoDB ReplicaSet).
+- DNS / endpoint update: app reconnects to new primary.
+
+**Layer 2: Capacity at the new primary.**
+- The standby/replica that gets promoted must be **the same instance class as the primary**, or the failover is "successful" but undersized.
+- Standard pattern: standby is sized identically; promoted; resumes serving at full capacity.
+- If standbys are smaller (cost optimization), failover might succeed but with reduced capacity → degraded service.
+
+**Layer 3: Application resilience.**
+- **Connection-retry logic**: when DB connection breaks, retry with backoff.
+- **Idempotent writes**: if a write happens twice (during retry), no corruption.
+- **Read-fallback**: if primary is unavailable, can the app serve cached or replica reads?
+- **Graceful degradation**: some features go offline gracefully (e.g., write features) while others continue (read features).
+
+**The failover-during-peak scenario:**
+- Primary fails at 8pm (peak hour).
+- Standby promoted in 60 seconds.
+- During those 60 seconds, all writes fail (or are queued, depending on the architecture).
+- Apps need to retry; users see "try again" errors briefly.
+- New primary picks up; replication lag may make some recent writes unavailable for a minute.
+
+The validations:
+- **Test failover in staging at peak load**. Don\'t discover the problem in production.
+- **Game-day**: scheduled failover test in production during off-peak (read-only or write-buffer mode).
+- **Monitor failover time** as an SLI. If your stated RTO is 60s, your failovers should consistently complete in 30-45s; alert if any exceed 90s.
+
+**Common mistakes:**
+- **Standby in same AZ as primary**: AZ failure takes both out. Standby must be in different AZ.
+- **Asymmetric instance classes**: cost-optimized standby; failover succeeds but capacity halves.
+- **No connection retry in apps**: failover happens; apps stuck with broken connections; humans must manually restart.
+- **Replication lag at moment of failure**: standby is missing 10 seconds of writes when promoted. Document this RPO.
+
+The discipline: failover should be a **practiced, automated, tested procedure**, not a once-a-year emergency. Test quarterly.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/managing-critical-state/',
+      'https://www.pgbouncer.org/',
+      'https://www.cockroachlabs.com/docs/',
     ],
   },
 ];
