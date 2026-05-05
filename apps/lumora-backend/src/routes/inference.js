@@ -270,20 +270,6 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       }
     }
 
-    // Tier 1+2 grounding — retrieve top-k chunks from Capra KB +
-    // this user's Prep Kit. Hard 250ms timeout inside retrieve();
-    // if it loses, retrievedContext is empty and Sona answers
-    // ungrounded rather than blocking.
-    const retrieved = await retrieve({
-      question,
-      userId: user?.id || null,
-      timeoutMs: 250,
-    });
-    const retrievedContext = formatRetrievedContext(retrieved.chunks);
-    if (retrieved.timedOut) {
-      console.warn(`[inference] retrieval timed out after ${retrieved.latencyMs}ms`);
-    }
-
     // Clean title (strip internal prefixes)
     const cleanTitle = question.replace('[SYSTEM DESIGN] ', '').trim().slice(0, 100);
 
@@ -306,19 +292,6 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
     // headers for ~5s waiting for body, eating into the timeout budget
     // before any content streams.
     if (typeof res.flushHeaders === 'function') res.flushHeaders();
-
-    if (retrieved.chunks.length > 0) {
-      const citations = retrieved.chunks.map((c) => ({
-        tier: c.tier,
-        source: c.source || null,
-        topicId: c.topicId || null,
-        topicTitle: c.topicTitle || null,
-        section: c.section || null,
-        docKind: c.docKind || null,
-        distance: c.distance,
-      }));
-      sendSSE(res, 'citations', citations);
-    }
 
     let finalAnswer = null;
     let clientDisconnected = false;
@@ -351,6 +324,10 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
     // model every time. Now we hash the request + plan + model and
     // serve a cached structured answer when available, skipping the
     // entire LLM call. Usage still meters so the paywall stays correct.
+    // retrievedContext is declared here so it is in scope for the
+    // streamResponse call on a cache miss; it is populated only on a
+    // miss to avoid burning an OpenAI embedding + 250ms on hits.
+    let retrievedContext = '';
     const cacheKey = buildAnswerCacheKey({
       question,
       systemContext,
@@ -438,6 +415,33 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       return res.end();
     }
     logCacheEvent('MISS', cacheKey, { route: 'stream', plan: userPlan });
+
+    // Tier 1+2 grounding — retrieve top-k chunks from Capra KB +
+    // this user's Prep Kit. Hard 250ms timeout inside retrieve();
+    // if it loses, retrievedContext is empty and Sona answers
+    // ungrounded rather than blocking.
+    // Runs only on a cache MISS so cache hits pay zero retrieval cost.
+    const retrieved = await retrieve({
+      question,
+      userId: user?.id || null,
+      timeoutMs: 250,
+    });
+    retrievedContext = formatRetrievedContext(retrieved.chunks);
+    if (retrieved.timedOut) {
+      console.warn(`[inference] retrieval timed out after ${retrieved.latencyMs}ms`);
+    }
+    if (retrieved.chunks.length > 0) {
+      const citations = retrieved.chunks.map((c) => ({
+        tier: c.tier,
+        source: c.source || null,
+        topicId: c.topicId || null,
+        topicTitle: c.topicTitle || null,
+        section: c.section || null,
+        docKind: c.docKind || null,
+        distance: c.distance,
+      }));
+      sendSSE(res, 'citations', citations);
+    }
 
     // Stream tokens (empty history for new conversation).
     // Pass abortController.signal so the Anthropic call halts when the
