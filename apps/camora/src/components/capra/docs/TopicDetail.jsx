@@ -2681,74 +2681,169 @@ export default function TopicDetail({
       )}
 
       {/* ──────────────────────────────────────────────────────────────────
-          SRE Topic Detail
-          Schema: introduction + whenToUse + keyConcepts + approach +
-          pitfalls + keyQuestions + references + visualizations.
-          Uses FormattedContent for rich prose (handles ``` code blocks,
-          bullet lists, headings, callouts) — the behavioral block's
-          custom STAR parser leaks raw markdown through.
+          SRE Topic Detail — Microsoft PPT presentation principles
+          Each section is a "slide": numbered agenda eyebrow, slide title,
+          framed content card with comfortable max-width, generous gutters
+          between sections. Two-column layouts where applicable.
           ────────────────────────────────────────────────────────────── */}
-      {!isLocked && activePage === 'sre' && (topicDetails.introduction || topicDetails.keyQuestions) && (
-        <div className="space-y-3">
+      {!isLocked && activePage === 'sre' && (topicDetails.introduction || topicDetails.keyQuestions) && (() => {
+        // Build the agenda — one entry per section that's actually present.
+        const agenda = [];
+        if (topicDetails.introduction)                                          agenda.push({ id: 'overview',     label: 'Overview' });
+        if (topicDetails.visualizations?.length)                                agenda.push({ id: 'visual',       label: 'Visual Explanation' });
+        if (topicDetails.whenToUse?.length)                                     agenda.push({ id: 'when-to-use',  label: 'When to Use' });
+        if (topicDetails.keyConcepts?.length)                                   agenda.push({ id: 'key-concepts', label: 'Key Concepts' });
+        if (topicDetails.approach?.length)                                      agenda.push({ id: 'approach',     label: 'Approach' });
+        if (topicDetails.pitfalls?.length)                                      agenda.push({ id: 'pitfalls',     label: 'Common Pitfalls' });
+        if (topicDetails.keyQuestions?.length)                                  agenda.push({ id: 'key-questions',label: 'Questions & Answers' });
+        if (topicDetails.references?.length)                                    agenda.push({ id: 'references',   label: 'References' });
 
-          {/* 1. Overview */}
+        const slideNum = (id) => String(agenda.findIndex(a => a.id === id) + 1).padStart(2, '0');
+
+        // Slide eyebrow — agenda number + section name. Renders above the
+        // ContentHeading; mirrors PPT slide-numbering pattern.
+        const SlideEyebrow = ({ id }) => (
+          <div className="flex items-center gap-3 mb-2">
+            <span
+              className="text-[11px] font-bold landing-mono tabular-nums tracking-[0.18em] px-2 py-0.5 rounded"
+              style={{
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border)',
+                color: 'var(--cam-gold-leaf, var(--accent))',
+              }}
+            >
+              {slideNum(id)} / {String(agenda.length).padStart(2, '0')}
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.18em] landing-mono text-[var(--text-muted)]">
+              {agenda.find(a => a.id === id)?.label}
+            </span>
+          </div>
+        );
+
+        // Slide-card frame around section content — gives each conceptual
+        // unit a clear boundary instead of one long scroll.
+        const SlideCard = ({ children }) => (
+          <div
+            className="rounded-lg overflow-hidden"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
+              padding: '20px 24px',
+            }}
+          >
+            <div className="prep-content max-w-[72ch]">{children}</div>
+          </div>
+        );
+
+        return (
+        <div className="space-y-6">
+
+          {/* ── Topic stats banner — one-glance agenda + key counts ── */}
+          <div
+            className="rounded-lg overflow-hidden"
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderLeft: '3px solid var(--cam-gold-leaf, #c9a55d)' }}
+          >
+            <div className="px-5 py-4">
+              <div className="text-[10px] uppercase tracking-[0.18em] landing-mono text-[var(--text-muted)] mb-1.5">
+                Topic agenda
+              </div>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+                {agenda.map((a, i) => (
+                  <div key={a.id} className="flex items-center gap-1.5 text-[12px] landing-body text-[var(--text-secondary)]">
+                    <span className="text-[10px] font-bold landing-mono tabular-nums text-[var(--cam-gold-leaf,_#c9a55d)]">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span>{a.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="border-t border-[var(--border)] bg-[var(--bg-elevated)]/40 px-5 py-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px] landing-mono uppercase tracking-[0.12em] text-[var(--text-muted)]">
+              {topicDetails.keyQuestions?.length ? <span>{topicDetails.keyQuestions.length} questions</span> : null}
+              {topicDetails.visualizations?.length ? <span>{topicDetails.visualizations.length} diagram{topicDetails.visualizations.length > 1 ? 's' : ''}</span> : null}
+              {topicDetails.keyConcepts?.length ? <span>{topicDetails.keyConcepts.length} concepts</span> : null}
+              {topicDetails.references?.length ? <span>{topicDetails.references.length} sources</span> : null}
+            </div>
+          </div>
+
+          {/* ── 1 / Overview ── */}
           {topicDetails.introduction && (
-            <section id="overview" className="scroll-mt-24 mt-14 first:mt-0">
+            <section id="overview" className="scroll-mt-24">
+              <SlideEyebrow id="overview" />
               <ContentHeading title="Overview" />
-              <div className="pt-2">
-                <FormattedContent content={topicDetails.introduction} color="blue" />
+              <div className="pt-3">
+                <SlideCard>
+                  <FormattedContent content={topicDetails.introduction} color="blue" />
+                </SlideCard>
               </div>
             </section>
           )}
 
-          {/* 2. Visual Explanation — diagrams (PNG) */}
+          {/* ── 2 / Visual Explanation — PNG diagrams ── */}
           {topicDetails.visualizations && topicDetails.visualizations.length > 0 && (
-            <section id="visual" className="scroll-mt-24 mt-14 first:mt-0">
+            <section id="visual" className="scroll-mt-24">
+              <SlideEyebrow id="visual" />
               <ContentHeading title="Visual Explanation" actions={<GlassPill>{topicDetails.visualizations.length} diagram{topicDetails.visualizations.length > 1 ? 's' : ''}</GlassPill>} />
-              <div className={`p-4 grid gap-4 ${topicDetails.visualizations.length > 1 ? 'md:grid-cols-2' : ''}`}>
+              <div className={`pt-3 grid gap-4 ${topicDetails.visualizations.length > 1 ? 'lg:grid-cols-2' : ''}`}>
                 {topicDetails.visualizations.map((viz, vi) => (
-                  <div key={vi} className="rounded border border-[var(--border)] overflow-hidden">
-                    <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)]/50">
-                      <h4 className="text-xs font-semibold text-[var(--text-secondary)] landing-display">{viz.title}</h4>
-                      {viz.description && <p className="text-[11px] text-[var(--text-muted)] mt-0.5 landing-body">{viz.description}</p>}
-                    </div>
-                    <div className="p-3 flex justify-center items-center bg-[var(--bg-surface)]">
+                  <figure key={vi} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
+                    <figcaption className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-elevated)]/40">
+                      <h4 className="text-[13px] font-semibold text-[var(--text-primary)] landing-display">{viz.title}</h4>
+                      {viz.description && <p className="text-[11px] text-[var(--text-muted)] mt-1 landing-body leading-relaxed">{viz.description}</p>}
+                    </figcaption>
+                    <div className="p-4 flex justify-center items-center bg-[var(--bg-surface)]">
                       <img src={viz.image} alt={viz.title} className="max-w-full h-auto rounded" loading="lazy" />
                     </div>
-                  </div>
+                  </figure>
                 ))}
               </div>
             </section>
           )}
 
-          {/* 3. When to Use */}
+          {/* ── 3 / When to Use — checklist ── */}
           {topicDetails.whenToUse && topicDetails.whenToUse.length > 0 && (
-            <section id="when-to-use" className="scroll-mt-24 mt-14 first:mt-0">
+            <section id="when-to-use" className="scroll-mt-24">
+              <SlideEyebrow id="when-to-use" />
               <ContentHeading title="When to Use" actions={<GlassPill>{topicDetails.whenToUse.length}</GlassPill>} />
-              <div className="p-3 grid grid-cols-1 gap-1.5">
-                {topicDetails.whenToUse.map((item, i) => (
-                  <div key={i} className="flex items-start gap-2.5 p-2.5 rounded hover:bg-[var(--bg-elevated)] transition-colors landing-body">
-                    <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Icon name="check" size={10} className="text-[var(--accent)]" />
-                    </span>
-                    <span className="text-sm text-[var(--text-secondary)] leading-relaxed">{item}</span>
-                  </div>
-                ))}
+              <div className="pt-3">
+                <SlideCard>
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2.5">
+                    {topicDetails.whenToUse.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2.5 landing-body">
+                        <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <Icon name="check" size={10} className="text-[var(--accent)]" />
+                        </span>
+                        <span className="text-[14px] text-[var(--text-secondary)] leading-relaxed">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </SlideCard>
               </div>
             </section>
           )}
 
-          {/* 4. Key Concepts (term + definition) */}
+          {/* ── 4 / Key Concepts — two-column term + definition cards ── */}
           {topicDetails.keyConcepts && topicDetails.keyConcepts.length > 0 && (
-            <section id="key-concepts" className="scroll-mt-24 mt-14 first:mt-0">
+            <section id="key-concepts" className="scroll-mt-24">
+              <SlideEyebrow id="key-concepts" />
               <ContentHeading title="Key Concepts" actions={<GlassPill>{topicDetails.keyConcepts.length}</GlassPill>} />
-              <div className="space-y-2 pt-2">
+              <div className="pt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {topicDetails.keyConcepts.map((kc, i) => (
-                  <div key={i} className="rounded border border-[var(--border)] overflow-hidden">
-                    <div className="px-3 py-2 bg-[var(--bg-elevated)]/50 border-b border-[var(--border)]">
-                      <span className="text-sm font-semibold text-[var(--text-primary)] landing-display">{kc.term}</span>
+                  <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
+                    <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-elevated)]/40 flex items-center gap-2.5">
+                      <span
+                        className="text-[10px] font-bold landing-mono tabular-nums px-1.5 py-0.5 rounded"
+                        style={{
+                          color: 'var(--cam-gold-leaf, #c9a55d)',
+                          background: 'rgba(201, 165, 93, 0.08)',
+                          border: '1px solid rgba(201, 165, 93, 0.3)',
+                        }}
+                      >
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <span className="text-[14px] font-semibold text-[var(--text-primary)] landing-display">{kc.term}</span>
                     </div>
-                    <div className="px-3 py-2.5 text-sm text-[var(--text-secondary)] leading-relaxed landing-body">
+                    <div className="px-4 py-3 text-[14px] text-[var(--text-secondary)] leading-relaxed landing-body">
                       {kc.definition}
                     </div>
                   </div>
@@ -2757,64 +2852,82 @@ export default function TopicDetail({
             </section>
           )}
 
-          {/* 5. Step-by-Step Approach */}
+          {/* ── 5 / Approach — numbered timeline ── */}
           {topicDetails.approach && topicDetails.approach.length > 0 && (
-            <section id="approach" className="scroll-mt-24 mt-14 first:mt-0">
-              <ContentHeading title="Step-by-Step Approach" actions={<GlassPill>{topicDetails.approach.length}</GlassPill>} />
-              <div className="pt-2 relative">
-                {topicDetails.approach.map((step, i) => (
-                  <div key={i} className="flex items-start gap-3 relative">
-                    {i < topicDetails.approach.length - 1 && (
-                      <div className="absolute left-[11px] top-6 w-0.5 bg-[var(--accent)]/30" style={{ height: 'calc(100% - 4px)' }} />
-                    )}
-                    <div className="w-6 h-6 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-[11px] font-bold flex-shrink-0 z-10 landing-mono">{i + 1}</div>
-                    <div className="text-sm text-[var(--text-secondary)] leading-relaxed pb-4 landing-body">{step}</div>
-                  </div>
-                ))}
+            <section id="approach" className="scroll-mt-24">
+              <SlideEyebrow id="approach" />
+              <ContentHeading title="Step-by-Step Approach" actions={<GlassPill>{topicDetails.approach.length} steps</GlassPill>} />
+              <div className="pt-3">
+                <SlideCard>
+                  <ol className="relative space-y-4">
+                    {topicDetails.approach.map((step, i) => (
+                      <li key={i} className="flex items-start gap-3 relative">
+                        {i < topicDetails.approach.length - 1 && (
+                          <div className="absolute left-[13px] top-7 w-0.5" style={{ height: 'calc(100% - 6px)', background: 'var(--accent)', opacity: 0.25 }} />
+                        )}
+                        <div className="w-7 h-7 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-[12px] font-bold flex-shrink-0 z-10 landing-mono">{i + 1}</div>
+                        <div className="flex-1 pt-0.5 text-[14px] text-[var(--text-secondary)] leading-relaxed pb-4 landing-body">{step}</div>
+                      </li>
+                    ))}
+                  </ol>
+                </SlideCard>
               </div>
             </section>
           )}
 
-          {/* 6. Common Pitfalls */}
+          {/* ── 6 / Common Pitfalls — red callout cards ── */}
           {topicDetails.pitfalls && topicDetails.pitfalls.length > 0 && (
-            <section id="pitfalls" className="scroll-mt-24 mt-14 first:mt-0">
+            <section id="pitfalls" className="scroll-mt-24">
+              <SlideEyebrow id="pitfalls" />
               <ContentHeading title="Common Pitfalls" actions={<GlassPill>{topicDetails.pitfalls.length}</GlassPill>} />
-              <div className="p-3 grid grid-cols-1 gap-1.5">
+              <div className="pt-3 grid grid-cols-1 md:grid-cols-2 gap-2.5">
                 {topicDetails.pitfalls.map((item, i) => (
-                  <div key={i} className="flex items-start gap-2.5 p-2.5 rounded landing-body" style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.15)' }}>
-                    <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(239, 68, 68, 0.15)' }}>
-                      <Icon name="alertTriangle" size={10} style={{ color: '#ef4444' }} />
+                  <div key={i} className="flex items-start gap-2.5 p-3 rounded-lg landing-body" style={{ background: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                    <span className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(239, 68, 68, 0.18)' }}>
+                      <Icon name="alertTriangle" size={11} style={{ color: '#ef4444' }} />
                     </span>
-                    <span className="text-sm text-[var(--text-secondary)] leading-relaxed">{item}</span>
+                    <span className="text-[14px] text-[var(--text-secondary)] leading-relaxed">{item}</span>
                   </div>
                 ))}
               </div>
             </section>
           )}
 
-          {/* 7. Key Questions & Answers — FormattedContent for proper rendering */}
+          {/* ── 7 / Questions & Answers — collapsible deck-style cards ── */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
-            <section id="key-questions" className="scroll-mt-24 mt-14 first:mt-0">
+            <section id="key-questions" className="scroll-mt-24">
+              <SlideEyebrow id="key-questions" />
               <ContentHeading title="Questions & Answers" actions={<GlassPill>{topicDetails.keyQuestions.length} questions</GlassPill>} />
-              <div className="p-2.5 space-y-2">
+              <div className="pt-3 space-y-2.5">
                 {topicDetails.keyQuestions.map((item, index) => {
                   const questionKey = `sre-${index}`;
                   const isExpanded = expandedTheoryQuestions[questionKey] === undefined ? index < 2 : expandedTheoryQuestions[questionKey];
                   return (
-                    <div key={index} className="rounded border border-[var(--border)] overflow-hidden">
+                    <div key={index} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
                       <button
                         onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !isExpanded }))}
-                        className="w-full px-3 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] transition-colors text-left"
+                        className="w-full px-4 py-3 flex items-center gap-3 bg-[var(--bg-elevated)]/40 hover:bg-[var(--bg-elevated)] transition-colors text-left"
                       >
-                        <NumberChip n={index + 1} />
-                        <h4 className="text-[var(--text-primary)] font-semibold text-sm leading-snug landing-display flex-1">{item.question}</h4>
+                        <span
+                          className="text-[10px] font-bold landing-mono tabular-nums px-1.5 py-0.5 rounded flex-shrink-0"
+                          style={{
+                            color: 'var(--cam-gold-leaf, #c9a55d)',
+                            background: 'rgba(201, 165, 93, 0.08)',
+                            border: '1px solid rgba(201, 165, 93, 0.3)',
+                          }}
+                        >
+                          Q{String(index + 1).padStart(2, '0')}
+                        </span>
+                        <h4 className="text-[var(--text-primary)] font-semibold text-[14px] leading-snug landing-display flex-1">{item.question}</h4>
                         <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
                       {isExpanded && (
-                        <div className="px-4 py-4 border-t border-[var(--border)]">
-                          <FormattedContent content={item.answer} color="blue" />
+                        <div className="px-5 py-4 border-t border-[var(--border)]">
+                          <div className="prep-content max-w-[72ch]">
+                            <FormattedContent content={item.answer} color="blue" />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -2824,31 +2937,37 @@ export default function TopicDetail({
             </section>
           )}
 
-          {/* 8. References — primary sources */}
+          {/* ── 8 / References — citation footer ── */}
           {topicDetails.references && topicDetails.references.length > 0 && (
-            <section id="references" className="scroll-mt-24 mt-14 first:mt-0">
-              <ContentHeading title="References" actions={<GlassPill>{topicDetails.references.length}</GlassPill>} />
-              <div className="p-3 grid grid-cols-1 gap-1.5">
-                {topicDetails.references.map((url, i) => (
-                  <a
-                    key={i}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-start gap-2.5 p-2.5 rounded hover:bg-[var(--bg-elevated)] transition-colors landing-body group"
-                  >
-                    <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Icon name="externalLink" size={10} className="text-[var(--accent)]" />
-                    </span>
-                    <span className="text-sm text-[var(--accent)] group-hover:underline break-all">{url}</span>
-                  </a>
-                ))}
+            <section id="references" className="scroll-mt-24">
+              <SlideEyebrow id="references" />
+              <ContentHeading title="Primary Sources" actions={<GlassPill>{topicDetails.references.length}</GlassPill>} />
+              <div className="pt-3">
+                <SlideCard>
+                  <ul className="space-y-1.5">
+                    {topicDetails.references.map((url, i) => (
+                      <li key={i}>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-start gap-2.5 px-2 py-1.5 -mx-2 rounded hover:bg-[var(--bg-elevated)] transition-colors landing-body group"
+                        >
+                          <span className="text-[10px] font-bold landing-mono tabular-nums mt-1 flex-shrink-0 text-[var(--text-muted)]">[{String(i + 1).padStart(2, '0')}]</span>
+                          <Icon name="externalLink" size={11} className="text-[var(--text-muted)] mt-1 flex-shrink-0" />
+                          <span className="text-[13px] text-[var(--text-secondary)] group-hover:text-[var(--accent)] group-hover:underline break-all landing-mono">{url}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </SlideCard>
               </div>
             </section>
           )}
 
         </div>
-      )}
+        );
+      })()}
 
       {/* Behavioral Topic Detail */}
       {!isLocked && (activePage === 'behavioral' || (activePage === 'low-level' && !topicDetails.coreEntities && !topicDetails.implementation && !topicDetails.functionalRequirements)) && (topicDetails.sampleQuestions || topicDetails.starExample || topicDetails.introduction || topicDetails.keyQuestions) && (
