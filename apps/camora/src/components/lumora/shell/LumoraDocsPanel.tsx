@@ -2387,8 +2387,29 @@ export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void })
           // never fires (it keys on prepData changes, and hydration
           // completing isn't a prepData change), so cross-device sync
           // would silently never start.
-          const localHasData = prepData && (prepData.companies?.length > 0 || Object.keys(prepData.data || {}).length > 0);
-          if (localHasData) {
+          //
+          // Guard: only backfill when local has SUBSTANTIVE content
+          // (any company with a non-empty JD, resume, prepMaterials,
+          // coverLetter, or studyDocs). Without this guard, a
+          // transient backend hiccup that returned `{ data: null }`
+          // would let the auto-create effect's "My Interview" empty
+          // doc be PUT'd up, wiping the user's real prep on the
+          // server. Counting "any company key exists" wasn't enough
+          // because the auto-create runs after this hydrate's first
+          // paint with exactly one empty company.
+          const hasSubstantiveContent = (() => {
+            if (!prepData?.data) return false;
+            for (const c of Object.values(prepData.data)) {
+              if (!c) continue;
+              const anyText = [c.jd, c.resume, c.coverLetter, c.prepMaterials]
+                .some((s) => typeof s === 'string' && s.trim().length > 0);
+              const anyDocs = Array.isArray(c.studyDocs) && c.studyDocs.length > 0;
+              const anySections = c.sections && Object.keys(c.sections).some((k) => c.sections[k] != null);
+              if (anyText || anyDocs || anySections) return true;
+            }
+            return false;
+          })();
+          if (hasSubstantiveContent) {
             setSyncStatus('saving');
             try {
               await prepAPI.putState(token, prepData);
@@ -2397,6 +2418,8 @@ export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void })
               console.warn('[prep] initial backfill failed', err);
               if (!cancelled) { setSyncStatus('error'); setSyncError(formatSyncError(err)); }
             }
+          } else {
+            console.info('[prep] skipping backfill — local payload is empty / placeholder');
           }
         }
       } catch (err) {
