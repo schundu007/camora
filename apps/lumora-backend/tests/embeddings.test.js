@@ -3,9 +3,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mock the OpenAI SDK before importing the service.
 const createMock = vi.fn();
 vi.mock('openai', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    embeddings: { create: createMock },
-  })),
+  default: vi.fn(function () {
+    return { embeddings: { create: createMock } };
+  }),
 }));
 
 beforeEach(() => {
