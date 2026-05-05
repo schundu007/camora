@@ -70,30 +70,20 @@ The application manages the cache directly. On read: check cache, if miss, fetch
 **Read-Through**:
 The cache layer itself fetches from DB on a miss. The application only talks to the cache.
 
-\`\`\`
-Cache-Aside Flow:                    Read-Through Flow:
+**Cache-aside flow**: App → Cache (HIT returns immediately). On MISS the app calls the DB, then populates the cache and returns to the client — the application owns cache writes.
 
-App ──► Cache  (HIT? return)         App ──► Cache  (HIT? return)
- │                                            │
- │  (MISS)                                    │  (MISS)
- ▼                                            ▼
-App ──► DB ──► App ──► Cache         Cache ──► DB ──► Cache ──► App
- │         (app populates cache)              (cache populates itself)
- ▼
-Return to client
-\`\`\`
+**Read-through flow**: App → Cache (HIT returns immediately). On MISS the cache itself loads from the DB, populates itself, and returns to the app — the application never talks to the DB directly.
 
 **Comparison**:
-\`\`\`
-Criteria              Cache-Aside        Read-Through
-──────────────────────────────────────────────────────
-Code complexity       Higher (app owns)  Lower (cache owns)
-Cache library req.    Simple (GET/SET)   Must support read-through
-Flexibility           Full control       Limited to cache config
-Cache miss penalty    Same               Same
-Stale data risk       Same (TTL-based)   Same (TTL-based)
-Testability           Easier to mock     Harder to unit test
-\`\`\`
+
+| Criteria | Cache-Aside | Read-Through |
+|---|---|---|
+| Code complexity | Higher (app owns) | Lower (cache owns) |
+| Cache library req. | Simple (GET/SET) | Must support read-through |
+| Flexibility | Full control | Limited to cache config |
+| Cache miss penalty | Same | Same |
+| Stale data risk | Same (TTL-based) | Same (TTL-based) |
+| Testability | Easier to mock | Harder to unit test |
 
 **Choose cache-aside when**: You need fine-grained control over what gets cached, different TTLs per entity, or conditional caching logic.
 
@@ -107,33 +97,21 @@ Testability           Easier to mock     Harder to unit test
 
 **Write-Behind (Write-Back)**: Write updates the cache immediately and returns. The cache asynchronously flushes to the DB in the background.
 
-\`\`\`
-Write-Through:                       Write-Behind:
+**Write-through flow**: App → Cache → DB, all synchronous. The write returns only after both cache and DB succeed. Latency is higher (DB write is on the request path), consistency is strong, data-loss risk is zero.
 
-App ──► Cache ──► DB                 App ──► Cache ──► return immediately
-         │         │                          │
-         │  (both sync)                       │  (async, batched)
-         ▼         ▼                          ▼
-      return after BOTH              Background flush to DB
-      succeed                        (may batch multiple writes)
-
-Latency: Higher (DB write on path)   Latency: Lower (only cache write)
-Consistency: Strong                  Consistency: Eventual
-Data loss risk: None                 Data loss risk: Cache crash = lost writes
-\`\`\`
+**Write-behind flow**: App → Cache → return immediately. A background flusher batches dirty entries to the DB asynchronously. Latency is lower (only the cache write is on the path), consistency is eventual, and a cache-node crash before flush loses unflushed writes.
 
 **Detailed comparison**:
-\`\`\`
-Criteria              Write-Through      Write-Behind
-──────────────────────────────────────────────────────────
-Write latency         Higher (DB+cache)  Lower (cache only)
-Consistency           Strong             Eventual
-Data loss risk        None               Yes (unflushed writes)
-Write amplification   1:1                Batched (reduced)
-DB load               Every write        Batched, smoothed
-Complexity            Simple             Complex (queue, retry)
-Failure handling      Straightforward    Needs WAL or redo log
-\`\`\`
+
+| Criteria | Write-Through | Write-Behind |
+|---|---|---|
+| Write latency | Higher (DB + cache) | Lower (cache only) |
+| Consistency | Strong | Eventual |
+| Data loss risk | None | Yes (unflushed writes) |
+| Write amplification | 1:1 | Batched (reduced) |
+| DB load | Every write | Batched, smoothed |
+| Complexity | Simple | Complex (queue, retry) |
+| Failure handling | Straightforward | Needs WAL or redo log |
 
 **Choose write-through when**: Consistency matters more than latency (financial systems, user profiles, inventory counts).
 
@@ -145,18 +123,7 @@ Failure handling      Straightforward    Needs WAL or redo log
         question: 'How do you handle cache stampede (thundering herd) on a popular key expiration?',
         answer: `**The problem**: A heavily-accessed cache key expires. Hundreds of concurrent requests all see a cache miss simultaneously and all query the database, causing a spike that can overwhelm the DB.
 
-\`\`\`
-Timeline of cache stampede:
-
-T=0: Key "product:123" expires (TTL reached)
-T=0.001s: 500 concurrent requests arrive
-           All check cache → MISS
-           All query DB simultaneously
-           DB: 500 identical queries hit at once
-
-         Normal Load          Stampede
-DB QPS:  ████  (50 QPS)      ████████████████ (500 QPS spike)
-\`\`\`
+**Timeline of a cache stampede**: at T=0 the key \`product:123\` expires. By T=0.001s, 500 concurrent requests arrive, all see a MISS, and all query the DB simultaneously. Normal DB load of ~50 QPS spikes to ~500 QPS, often exceeding the connection pool and tipping the database into degradation.
 
 **Solution 1 — Mutex/Lock (most common)**:
 \`\`\`
@@ -199,44 +166,19 @@ Set no TTL. Use a background job or event-driven trigger to refresh cache entrie
       {
         question: 'How do you design a caching strategy for a system with a mixed read/write workload?',
         answer: `**Step 1 — Classify your data access patterns**:
-\`\`\`
-Data Category       Read:Write Ratio   Strategy
-──────────────────────────────────────────────────────
-User profiles       100:1              Cache-aside + long TTL
-Product catalog     1000:1             Read-through + event invalidation
-Shopping cart       1:1                Write-through (consistency)
-Analytics events    1:100              Write-behind (throughput)
-Session data        10:1               Cache-aside + short TTL
-Leaderboard         50:1               Write-through + sorted set
-\`\`\`
 
-**Step 2 — Choose a layered architecture**:
-\`\`\`
-                     Client
-                       │
-                       ▼
-              ┌─────────────────┐
-              │   CDN / Edge    │  ◄── Static assets, API responses
-              │   Cache (L1)    │      with Cache-Control headers
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │  Application    │  ◄── In-process cache (Caffeine,
-              │  Cache (L2)     │      node-cache) for hot data
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │  Distributed    │  ◄── Redis/Memcached for shared
-              │  Cache (L3)     │      state across instances
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │   Database      │  ◄── Source of truth
-              └─────────────────┘
-\`\`\`
+| Data Category | Read:Write Ratio | Strategy |
+|---|---|---|
+| User profiles | 100:1 | Cache-aside + long TTL |
+| Product catalog | 1000:1 | Read-through + event invalidation |
+| Shopping cart | 1:1 | Write-through (consistency) |
+| Analytics events | 1:100 | Write-behind (throughput) |
+| Session data | 10:1 | Cache-aside + short TTL |
+| Leaderboard | 50:1 | Write-through + sorted set |
+
+**Step 2 — Choose a layered architecture**: requests flow Client → CDN/Edge (L1, static assets and API responses with Cache-Control headers) → Application Cache (L2, in-process Caffeine or node-cache for hot data) → Distributed Cache (L3, Redis/Memcached for shared state across instances) → Database (source of truth). Each tier only consults the next on miss.
+
+![Layered cache architecture](/diagrams/systemdesign/cache-layers.png)
 
 **Step 3 — Invalidation strategy**:
 - **Event-driven**: DB writes publish events (Kafka, CDC) that invalidate/update cache entries. Best consistency.
@@ -255,35 +197,18 @@ Leaderboard         50:1               Write-through + sorted set
         question: 'How did Netflix build EVCache to handle 400M+ ops/second, and what caching patterns does it use?',
         answer: `**Netflix's EVCache** is a distributed, multi-tiered caching layer built on top of Memcached that powers everything from movie recommendations to homepage feeds. It processes over 400 million operations per second across 14.3 petabytes of cached data.
 
-**Architecture and caching patterns used**:
-\`\`\`
-EVCache Architecture:
-  Client App ──► EVCache Client Library
-                    │
-        ┌───────────┼───────────┐
-        ▼           ▼           ▼
-   Zone A Cache  Zone B Cache  Zone C Cache
-   (Memcached    (Memcached    (Memcached
-    cluster)      cluster)      cluster)
+**Architecture and caching patterns used**: the client app talks to the EVCache client library, which fans out to per-AZ Memcached clusters in Zone A, B, and C. Writes go write-through to all zones (consistency); reads go cache-aside against the local zone (latency); on local miss the client falls back to a peer zone (availability).
 
-Write path: write-through to ALL zones (consistency)
-Read path:  cache-aside from LOCAL zone (latency)
-Fallback:   cross-zone read on local miss (availability)
-\`\`\`
+![Netflix EVCache topology](/diagrams/systemdesign/evcache.png)
 
 **Key design decisions**:
-\`\`\`
-Decision                     Pattern Used         Why
-──────────────────────────────────────────────────────────────
-Catalog metadata             Cache-aside + TTL    Reads vastly outnumber writes,
-                                                  stale data OK for seconds
-Live streaming chunks        Write-through        Must be immediately available,
-                                                  zero cache misses during live events
-Recommendation signals       Write-behind         High write throughput needed,
-                                                  eventual consistency acceptable
-User session data            Cache-aside + short  Frequent access, must handle
-                             TTL (15-30 min)      session expiry naturally
-\`\`\`
+
+| Decision | Pattern Used | Why |
+|---|---|---|
+| Catalog metadata | Cache-aside + TTL | Reads vastly outnumber writes, stale data OK for seconds |
+| Live streaming chunks | Write-through | Must be immediately available, zero cache misses during live events |
+| Recommendation signals | Write-behind | High write throughput needed, eventual consistency acceptable |
+| User session data | Cache-aside + short TTL (15–30 min) | Frequent access, must handle session expiry naturally |
 
 **Resilience patterns** Netflix layers on top:
 - **Circuit breakers** (Hystrix): skip cache if latency spikes, go direct to DB
@@ -302,51 +227,21 @@ User session data            Cache-aside + short  Frequent access, must handle
         question: 'How did Facebook evolve from Memcached to TAO, and what does this teach about caching architecture?',
         answer: `**Facebook's caching journey** illustrates why generic cache-aside patterns break down at extreme scale and how purpose-built caching layers emerge.
 
-**Phase 1 — Memcached as look-aside cache**:
-\`\`\`
-Application ──► Memcached (cache-aside)
-    │               │
-    │ (miss)        │ (hit)
-    ▼               ▼
-  MySQL ──────► return to app
+**Phase 1 — Memcached as look-aside cache**: the application called Memcached cache-aside; on hit it returned, on miss it loaded from MySQL and populated the cache. At Facebook scale this broke down: the social graph has interconnected objects and edges, a small edge update (add friend) invalidated the entire friend-list key in cache and destroyed hit rate, transferring full lists wasted bandwidth and CPU, and application code had to manage complex graph-consistency invalidation logic.
 
-Problem at Facebook's scale:
-  - Social graph has interconnected objects and edges
-  - Small edge update (add friend) invalidated entire
-    friend list in cache → destroyed hit rate
-  - Transferring full lists wasted bandwidth and CPU
-  - Application code had to manage complex invalidation
-    logic for graph consistency
-\`\`\`
+**Phase 2 — TAO (The Associations and Objects store)**: applications now read from a regional Follower Cache; on miss the Follower Cache forwards to the Leader Cache, which talks to MySQL and pushes graph-aware invalidations back down. The key innovation is that the cache understands the graph data model — objects (user, post, photo) and associations (friend, like, comment) — so updates invalidate only the affected edges, not entire lists.
 
-**Phase 2 — TAO (The Associations and Objects store)**:
-\`\`\`
-TAO Architecture:
-  Application ──► Follower Cache (read)
-                      │
-                      │ (miss)
-                      ▼
-                  Leader Cache ──► MySQL
-                      │
-                  (graph-aware
-                   invalidation)
-
-Key innovation: cache understands the graph data model
-  - Objects: user, post, photo (node)
-  - Associations: friend, like, comment (edge)
-  - Updates invalidate ONLY affected edges, not entire lists
-\`\`\`
+![Facebook TAO architecture](/diagrams/systemdesign/tao.png)
 
 **Performance results**:
-\`\`\`
-Metric                    Memcached Era    TAO
-──────────────────────────────────────────────────
-Cache hit rate            ~90%             96.4%
-Read throughput           Limited          1B+ reads/sec
-Invalidation granularity  Entire key       Per-edge
-App code complexity       High             Low (API handles it)
-Cross-region consistency  Manual           Built-in
-\`\`\`
+
+| Metric | Memcached Era | TAO |
+|---|---|---|
+| Cache hit rate | ~90% | 96.4% |
+| Read throughput | Limited | 1B+ reads/sec |
+| Invalidation granularity | Entire key | Per-edge |
+| App code complexity | High | Low (API handles it) |
+| Cross-region consistency | Manual | Built-in |
 
 **When to choose A vs B — lessons from Facebook's evolution**:
 - **Cache-aside (Memcached)**: Great for simple key-value workloads where objects are independent. Choose when your data model is flat and invalidation is straightforward.
@@ -360,14 +255,13 @@ Cross-region consistency  Manual           Built-in
         answer: `**Cache warming** pre-loads data into the cache before it is requested, avoiding the cold-start problem where a fresh cache has zero hits and all traffic hits the database.
 
 **When cache warming is critical**:
-\`\`\`
-Scenario                         Impact of Cold Cache
-──────────────────────────────────────────────────────────────
-New deployment/restart           DB overwhelmed by cache misses
-New region/datacenter launch     All users experience slow first load
-After cache flush (bug, upgrade) Thundering herd on DB
-Seasonal traffic spike           Black Friday: cannot afford warm-up time
-\`\`\`
+
+| Scenario | Impact of Cold Cache |
+|---|---|
+| New deployment / restart | DB overwhelmed by cache misses |
+| New region / datacenter launch | All users experience slow first load |
+| After cache flush (bug, upgrade) | Thundering herd on DB |
+| Seasonal traffic spike | Black Friday: cannot afford warm-up time |
 
 **Strategy 1 — Pre-population from database on startup**:
 \`\`\`
@@ -383,30 +277,10 @@ Trade-off: slower startup, but no cold-start penalty
 \`\`\`
 
 **Strategy 2 — Shadow traffic / request replay**:
-\`\`\`
-Before cutover to new cache:
-  1. Record production read traffic (keys accessed)
-  2. Replay against new cache (populates it)
-  3. Switch traffic when hit rate > threshold (e.g., 90%)
-
-  Production ──► Old Cache (serving)
-       │
-       └──► New Cache (warming via replay)
-            Hit rate: 0% → 50% → 85% → 95%
-            At 95%: switch traffic to new cache
-\`\`\`
+Before cutover to a new cache: record production read traffic (keys accessed), replay it against the new cache to populate it, then switch traffic when hit rate exceeds a threshold (e.g. 90%). Production traffic continues hitting the Old Cache; in parallel, replayed traffic warms the New Cache (hit rate climbs 0% → 50% → 85% → 95%). At 95% hit rate, flip traffic to the new cache.
 
 **Strategy 3 — Event-driven pre-population**:
-\`\`\`
-On data change event:
-  DB write ──► CDC event ──► Cache updater
-                              │
-                              ▼
-                         Cache.SET(key, new_value)
-
-Cache is always warm for recently-changed data.
-Combine with TTL-based expiry for unchanged data.
-\`\`\`
+On every data change event, the DB write produces a CDC event that the cache updater consumes and applies as \`Cache.SET(key, new_value)\`. The cache is always warm for recently-changed data; combine with TTL-based expiry to bound staleness for entries that never change.
 
 **Strategy 4 — Tiered warming (Netflix approach)**:
 \`\`\`
@@ -433,61 +307,42 @@ Memory budget: allocate 70% to Tier 1, 20% to Tier 2
         answer: `**Redis and Memcached** are the two dominant distributed caching technologies, but they have fundamentally different capabilities that affect which caching strategies you can implement.
 
 **Feature comparison**:
-\`\`\`
-Feature               Redis                    Memcached
-──────────────────────────────────────────────────────────────
-Data structures       Strings, hashes, lists,  Strings only
-                      sets, sorted sets,
-                      streams, HyperLogLog
-Persistence           RDB snapshots + AOF      None (volatile only)
-Replication           Built-in primary-replica None (client-side)
-Clustering            Redis Cluster (auto)     Client-side consistent hash
-Pub/Sub               Built-in                 None
-Lua scripting         Yes                      None
-Memory efficiency     Less (overhead per key)  More (slab allocator)
-Max value size        512MB                    1MB
-Threading             Single-threaded*         Multi-threaded
-Eviction policies     8 policies (LRU, LFU,   LRU only
-                      random, TTL-based)
 
-* Redis 6+ uses I/O threads for network, but commands
-  are still single-threaded (simplifies atomicity).
-\`\`\`
+| Feature | Redis | Memcached |
+|---|---|---|
+| Data structures | Strings, hashes, lists, sets, sorted sets, streams, HyperLogLog | Strings only |
+| Persistence | RDB snapshots + AOF | None (volatile only) |
+| Replication | Built-in primary-replica | None (client-side) |
+| Clustering | Redis Cluster (auto) | Client-side consistent hash |
+| Pub/Sub | Built-in | None |
+| Lua scripting | Yes | None |
+| Memory efficiency | Less (overhead per key) | More (slab allocator) |
+| Max value size | 512 MB | 1 MB |
+| Threading | Single-threaded* | Multi-threaded |
+| Eviction policies | 8 policies (LRU, LFU, random, TTL-based) | LRU only |
+
+\\* Redis 6+ uses I/O threads for network, but commands are still single-threaded (simplifies atomicity).
 
 **Caching strategy implications**:
-\`\`\`
-Strategy              Redis Support            Memcached Support
-──────────────────────────────────────────────────────────────
-Cache-aside           Full                     Full
-Read-through          Via client library       Via client library
-Write-through         Full (with persistence)  Partial (no persistence)
-Write-behind          Redis Streams as buffer  Need external queue
-Cache stampede lock   SETNX (atomic)           ADD (atomic)
-Tag-based invalidation Sets to track keys      Manual tracking
-Sorted cache (top-N)  Sorted sets              Not possible
-Rate limiting         INCR + EXPIRE (atomic)   INCR + EXPIRE (less atomic)
-Session store         Hashes + TTL             Strings + TTL
-Pub/sub invalidation  Built-in                 Need external system
-\`\`\`
+
+| Strategy | Redis Support | Memcached Support |
+|---|---|---|
+| Cache-aside | Full | Full |
+| Read-through | Via client library | Via client library |
+| Write-through | Full (with persistence) | Partial (no persistence) |
+| Write-behind | Redis Streams as buffer | Need external queue |
+| Cache stampede lock | SETNX (atomic) | ADD (atomic) |
+| Tag-based invalidation | Sets to track keys | Manual tracking |
+| Sorted cache (top-N) | Sorted sets | Not possible |
+| Rate limiting | INCR + EXPIRE (atomic) | INCR + EXPIRE (less atomic) |
+| Session store | Hashes + TTL | Strings + TTL |
+| Pub/sub invalidation | Built-in | Need external system |
 
 **When to choose each — company case studies**:
-\`\`\`
-Choose Redis when:
-  - Need data structures beyond strings (leaderboards, queues, counters)
-  - Need persistence as safety net for write-behind patterns
-  - Need pub/sub for cache invalidation across services
-  - Need atomic operations (rate limiting, distributed locks)
-  Companies: GitHub (sessions + queues), Twitter (timeline cache),
-             Pinterest (sorted sets for feeds), Stripe (rate limiting)
 
-Choose Memcached when:
-  - Simple key-value caching with maximum memory efficiency
-  - Very high throughput on multi-core servers (multi-threaded)
-  - Cache data is fully reproducible from source (no persistence needed)
-  - Need maximum simplicity in operations
-  Companies: Netflix EVCache (Memcached-based), Facebook (Memcached
-             at massive scale before TAO), Wikipedia (page cache)
-\`\`\`
+**Choose Redis when** you need data structures beyond strings (leaderboards, queues, counters), persistence as a safety net for write-behind patterns, pub/sub for cross-service cache invalidation, or atomic ops for rate limiting and distributed locks. Companies: GitHub (sessions + queues), Twitter (timeline cache), Pinterest (sorted sets for feeds), Stripe (rate limiting).
+
+**Choose Memcached when** you want simple key-value caching with maximum memory efficiency, very high throughput on multi-core servers (multi-threaded), or your cache data is fully reproducible from source so you do not need persistence, with maximum operational simplicity. Companies: Netflix EVCache (Memcached-based), Facebook (Memcached at massive scale before TAO), Wikipedia (page cache).
 
 **When to choose A vs B — decision framework**:
 - **Default to Redis**: It covers more use cases and the operational overhead difference is minimal for most teams
@@ -500,50 +355,13 @@ Choose Memcached when:
         question: 'How do you handle cache consistency in a microservices architecture where multiple services read and write the same cached data?',
         answer: `**The challenge**: In a microservices architecture, Service A may update user data in the database while Service B has a cached copy. Without coordination, Service B serves stale data indefinitely.
 
-\`\`\`
-The consistency problem:
-  Service A ──► DB: UPDATE user SET name='Bob'
-                    (DB updated)
+**The consistency problem**: Service A writes \`UPDATE user SET name='Bob'\` to the DB. Service B reads \`user:123\` from its local cache and gets \`{name: 'Alice'}\` — the cache was populated before A's write and has no way to know it is stale.
 
-  Service B ──► Cache: GET user:123
-               ◄── returns {name: 'Alice'} (STALE!)
+**Solution 1 — Event-driven invalidation (recommended)**: Service A writes to DB → CDC (Debezium / WAL tail) emits a change event → Event Bus (Kafka) fans out → every subscribing service invalidates its local cache entry for that key.
 
-  Service B's cache was populated before A's write
-  and has no way to know it is stale.
-\`\`\`
+![Cross-service cache invalidation via CDC](/diagrams/systemdesign/cache-cdc.png)
 
-**Solution 1 — Event-driven invalidation (recommended)**:
-\`\`\`
-Service A writes to DB
-    │
-    ▼
-DB ──► CDC (Change Data Capture) ──► Event Bus (Kafka)
-                                          │
-                        ┌─────────────────┼──────────────┐
-                        ▼                 ▼              ▼
-                   Service A          Service B      Service C
-                   invalidate         invalidate     invalidate
-                   local cache        local cache    local cache
-
-Each service subscribes to data-change events
-and invalidates/refreshes its own cache entries.
-\`\`\`
-
-**Solution 2 — Shared cache with TTL safety net**:
-\`\`\`
-All services ──► Shared Redis ──► DB
-                 (single source of cached truth)
-
-Service A writes:
-  1. Update DB
-  2. Update Redis (or delete key to force refresh)
-
-Service B reads:
-  1. Check Redis → always sees latest from any service's write
-
-TTL safety net: even if invalidation fails, stale data
-expires within N seconds.
-\`\`\`
+**Solution 2 — Shared cache with TTL safety net**: all services read and write through one shared Redis (single source of cached truth) backed by the DB. Service A's write updates DB then updates Redis (or deletes the key); Service B always sees the latest. TTL is a backstop — even if explicit invalidation fails, stale data expires within N seconds.
 
 **Solution 3 — Cache-aside with version stamps**:
 \`\`\`
@@ -560,15 +378,13 @@ Service B receives event:
 \`\`\`
 
 **Comparison of approaches**:
-\`\`\`
-Approach              Consistency    Complexity     Best For
-──────────────────────────────────────────────────────────────
-Event-driven (CDC)    Near-real-time High           Large systems, many services
-Shared cache          Strong         Medium         Small teams, few services
-Version stamps        Near-real-time Medium         Medium systems
-TTL-only              Eventual       Low            When staleness is acceptable
-Write-through shared  Strong         Low            Simple architectures
-\`\`\`
+| Approach | Consistency | Complexity | Best For |
+|---|---|---|---|
+| Event-driven (CDC) | Near-real-time | High | Large systems, many services |
+| Shared cache | Strong | Medium | Small teams, few services |
+| Version stamps | Near-real-time | Medium | Medium systems |
+| TTL-only | Eventual | Low | When staleness is acceptable |
+| Write-through shared | Strong | Low | Simple architectures |
 
 **When to choose A vs B**:
 - **Shared Redis cache**: Choose when you have fewer than 10 services, all in the same region, and you want simplicity. The shared cache is the single source of cached truth.
@@ -581,15 +397,14 @@ Write-through shared  Strong         Low            Simple architectures
 
     dataModel: {
       description: 'Cache strategy decision flow and architecture',
-      schema: `Cache Strategy Decision Matrix:
-  ┌──────────────────────────────────────────────────────────────┐
-  │                     Decision Criteria                        │
-  ├──────────────┬──────────────┬────────────┬──────────────────┤
-  │ Read-heavy?  │ Write-heavy? │ Consistent?│ Simple code?     │
-  ├──────────────┼──────────────┼────────────┼──────────────────┤
-  │ Cache-aside  │ Write-behind │ Write-thru │ Read-through     │
-  │ Read-through │              │ Cache-aside│                  │
-  └──────────────┴──────────────┴────────────┴──────────────────┘
+      schema: `Cache strategy decision matrix:
+
+  | Criterion | Best fit |
+  |---|---|
+  | Read-heavy? | Cache-aside or Read-through |
+  | Write-heavy? | Write-behind |
+  | Strong consistency? | Write-through or Cache-aside |
+  | Simple application code? | Read-through |
 
 Common Combinations:
   1. Cache-aside reads + Write-through writes
@@ -648,71 +463,24 @@ For system design interviews, the key is understanding **when each approach is a
     keyQuestions: [
       {
         question: 'Compare Lambda vs Kappa architecture. When would you choose each?',
-        answer: `**Lambda Architecture** (Nathan Marz):
-Maintains two parallel pipelines — batch for accuracy, speed for freshness.
+        answer: `**Lambda Architecture** (Nathan Marz) maintains two parallel pipelines — batch for accuracy and speed for freshness. Incoming data tees into a Batch Layer (MapReduce / Spark, producing accurate batch views that are hours old) and a Speed Layer (Storm / Flink Streaming, producing fast, approximate real-time views). The serving layer merges both at query time.
 
-\`\`\`
-                    ┌───────────────────┐
-                    │   Incoming Data   │
-                    └─────────┬─────────┘
-                        ┌─────┴─────┐
-                        ▼           ▼
-              ┌──────────────┐ ┌──────────────┐
-              │ Batch Layer  │ │ Speed Layer  │
-              │ (MapReduce/  │ │ (Storm/Flink │
-              │  Spark)      │ │  Streaming)  │
-              └──────┬───────┘ └──────┬───────┘
-                     │                │
-              ┌──────┴───────┐ ┌──────┴───────┐
-              │ Batch Views  │ │ Real-time    │
-              │ (accurate,   │ │ Views (fast, │
-              │  hours old)  │ │  approximate)│
-              └──────┬───────┘ └──────┬───────┘
-                     └────────┬───────┘
-                              ▼
-                    ┌─────────────────┐
-                    │  Serving Layer  │
-                    │  (merge both)   │
-                    └─────────────────┘
-\`\`\`
+![Lambda architecture](/diagrams/systemdesign/lambda-arch.png)
 
-**Kappa Architecture** (Jay Kreps):
-Single stream processing pipeline. Reprocess by replaying the log.
+**Kappa Architecture** (Jay Kreps) uses a single stream processing pipeline. Incoming data lands in an immutable, append-only log (Kafka, retained long enough to replay), a single stream processor (Flink / Kafka Streams) consumes it, and the serving layer is fed from that one pipeline. Reprocessing means deploying a new job version, replaying the log from the beginning, and swapping the output table.
 
-\`\`\`
-                    ┌───────────────────┐
-                    │   Incoming Data   │
-                    └─────────┬─────────┘
-                              ▼
-                    ┌─────────────────┐
-                    │  Immutable Log  │  (Kafka, retain forever)
-                    │  (append-only)  │
-                    └─────────┬─────────┘
-                              ▼
-                    ┌─────────────────┐
-                    │ Stream Process  │  (single pipeline)
-                    │ (Flink/KStreams)│
-                    └─────────┬─────────┘
-                              ▼
-                    ┌─────────────────┐
-                    │ Serving Layer   │
-                    └─────────────────┘
-
-  Reprocessing: deploy new job version,
-  replay log from beginning, swap output
-\`\`\`
+![Kappa architecture](/diagrams/systemdesign/kappa-arch.png)
 
 **Comparison**:
-\`\`\`
-Criteria              Lambda             Kappa
-──────────────────────────────────────────────────────
-Codebase              Dual (batch+stream) Single (stream)
-Operational cost      High               Lower
-Historical reprocess  Native (batch)     Log replay
-Latency               Low (speed layer)  Low
-Correctness           High (batch layer) Depends on stream
-Complexity            High               Moderate
-\`\`\`
+
+| Criteria | Lambda | Kappa |
+|---|---|---|
+| Codebase | Dual (batch + stream) | Single (stream) |
+| Operational cost | High | Lower |
+| Historical reprocess | Native (batch) | Log replay |
+| Latency | Low (speed layer) | Low |
+| Correctness | High (batch layer) | Depends on stream |
+| Complexity | High | Moderate |
 
 **Choose Lambda when**: You have existing batch infrastructure, need guaranteed correctness for compliance/financial reporting, or your stream processing cannot handle the full historical dataset.
 
@@ -722,58 +490,22 @@ Complexity            High               Moderate
         question: 'Explain windowing strategies in stream processing and when to use each.',
         answer: `**Windowing** groups unbounded streams into finite chunks for aggregation. Three primary types:
 
-\`\`\`
-Tumbling Windows (fixed, non-overlapping):
-  ┌─────┐┌─────┐┌─────┐┌─────┐
-  │ W1  ││ W2  ││ W3  ││ W4  │
-  │0-5m ││5-10m││10-15││15-20│
-  └─────┘└─────┘└─────┘└─────┘
-  ──────────────────────────────► time
-  Use: Hourly/daily aggregations, billing periods
+| Window | Shape | Typical Use |
+|---|---|---|
+| Tumbling | Fixed-size, non-overlapping (e.g. 0–5m, 5–10m, 10–15m) | Hourly / daily aggregations, billing periods |
+| Sliding | Fixed-size, overlapping (e.g. 5m window sliding by 1m) | Moving averages, rate calculations |
+| Session | Gap-based, variable size (closes after N min of inactivity) | User sessions, click-stream analysis |
 
-Sliding Windows (fixed size, overlapping):
-  ┌──────────┐
-  │   W1     │
-  ┌──────────┐
-  │   W2     │ (slides by 1 min)
-  ┌──────────┐
-  │   W3     │
-  ──────────────────────────────► time
-  Use: Moving averages, rate calculations
-
-Session Windows (gap-based, variable size):
-  ┌──────┐  ┌────────────┐  ┌───┐
-  │ S1   │  │     S2     │  │S3 │
-  │(3 ev)│  │  (7 events)│  │(1)│
-  └──────┘  └────────────┘  └───┘
-       gap       gap         gap
-  ──────────────────────────────► time
-  Use: User sessions, click-stream analysis
-\`\`\`
-
-**Watermarks and late data**:
-\`\`\`
-Event Time:    1  2  3  [5]  4  6  7  [9]  8
-                         ▲             ▲
-                    Watermark=5    Watermark=9
-                    (window 0-5    (can close
-                     can close)     window 5-10)
-
-Late event "4" arrives after watermark=5:
-  Option 1: Drop it (simplest)
-  Option 2: Allowed lateness window (refire result)
-  Option 3: Side output for late data handling
-\`\`\`
+**Watermarks and late data**: a watermark of T asserts "no events with event-time ≤ T will arrive any more," so windows ending at or before T can close. If event-times arrive in the order 1, 2, 3, 5, 4, 6, 7, 9, 8 then watermark=5 closes window 0–5, and watermark=9 closes 5–10. The late event 4 can be dropped (simplest), accepted via an allowed-lateness window that refires the result, or routed to a side output for separate late-data handling.
 
 **Decision framework**:
-\`\`\`
-Question                          Window Type
-──────────────────────────────────────────────
-"How many orders per hour?"       Tumbling (1h)
-"Average response time last 5m?"  Sliding (5m / 1m)
-"Revenue per user session?"       Session (30m gap)
-"Peak QPS in any 1-minute span?"  Sliding (1m / 10s)
-\`\`\`
+
+| Question | Window Type |
+|---|---|
+| "How many orders per hour?" | Tumbling (1h) |
+| "Average response time last 5m?" | Sliding (5m / 1m) |
+| "Revenue per user session?" | Session (30m gap) |
+| "Peak QPS in any 1-minute span?" | Sliding (1m / 10s) |
 
 **Interview tip**: Always mention that windowing operates on **event time** (when the event happened) not **processing time** (when your system sees it). This distinction is critical for correctness with out-of-order data.`
       },
@@ -781,17 +513,7 @@ Question                          Window Type
         question: 'How do you handle exactly-once semantics in a streaming pipeline?',
         answer: `**The challenge**: In distributed systems, messages can be duplicated (producer retries, rebalances). Exactly-once means each message affects the output exactly once.
 
-\`\`\`
-Delivery Guarantees Spectrum:
-
-At-most-once:   Fire and forget. Fast but may lose data.
-At-least-once:  Retry on failure. No loss, but duplicates.
-Exactly-once:   Each message processed once. Hardest to achieve.
-
-Producer ──► Broker ──► Consumer ──► Sink
-   │            │           │          │
-   retry?    dedup?     checkpoint?  idempotent?
-\`\`\`
+**Delivery guarantees spectrum**: at-most-once is fire-and-forget — fast but may lose data; at-least-once retries on failure — no loss, but duplicates; exactly-once means each message affects output once — hardest to achieve. End-to-end the path is Producer → Broker → Consumer → Sink, and exactly-once needs producer retry-with-dedup, broker idempotency, consumer checkpointing, and an idempotent sink.
 
 **Achieving exactly-once end-to-end**:
 
@@ -799,8 +521,8 @@ Producer ──► Broker ──► Consumer ──► Sink
 \`\`\`
 Producer assigns sequence number per partition.
 Broker deduplicates: if seq already seen, ACK without storing.
-  Msg(seq=5) ──► Broker: stored
-  Msg(seq=5) ──► Broker: duplicate, ACK but discard
+  Msg(seq=5) -> Broker: stored
+  Msg(seq=5) -> Broker: duplicate, ACK but discard
 \`\`\`
 
 **2. Transactional processing** (Kafka Streams, Flink):
@@ -827,15 +549,12 @@ Broker deduplicates: if seq already seen, ACK without storing.
 \`\`\`
 
 **Comparison of approaches**:
-\`\`\`
-Approach           Complexity  Performance   Guarantee
-─────────────────────────────────────────────────────
-At-most-once       Low         Best          May lose data
-At-least-once +    Medium      Good          Effectively once
-  idempotent sink
-Transactional      High        Lower         True exactly-once
-  (Kafka EOS)                  (2-phase)
-\`\`\`
+
+| Approach | Complexity | Performance | Guarantee |
+|---|---|---|---|
+| At-most-once | Low | Best | May lose data |
+| At-least-once + idempotent sink | Medium | Good | Effectively once |
+| Transactional (Kafka EOS) | High | Lower (2-phase) | True exactly-once |
 
 **Interview recommendation**: State that true exactly-once is achieved through a combination of idempotent producers, transactional offset commits, and idempotent sinks. Most production systems use at-least-once + idempotent sinks because it is simpler and nearly as effective.`
       },
@@ -843,15 +562,13 @@ Transactional      High        Lower         True exactly-once
         question: 'When should you choose batch processing over stream processing and vice versa?',
         answer: `**Decision framework** — evaluate along five dimensions:
 
-\`\`\`
-Dimension          Batch                    Stream
-──────────────────────────────────────────────────────────
-Latency need       Hours/days OK            Seconds/minutes
-Data completeness  Need all data            Can handle partial
-Correctness        Must be exact            Approximate OK
-Cost               Cheaper (spot instances) More expensive (always on)
-Complexity         Simpler                  More complex
-\`\`\`
+| Dimension | Batch | Stream |
+|---|---|---|
+| Latency need | Hours / days OK | Seconds / minutes |
+| Data completeness | Need all data | Can handle partial |
+| Correctness | Must be exact | Approximate OK |
+| Cost | Cheaper (spot instances) | More expensive (always on) |
+| Complexity | Simpler | More complex |
 
 **Choose BATCH when**:
 \`\`\`
@@ -877,28 +594,17 @@ Complexity         Simpler                  More complex
   Tools: Kafka Streams, Flink, Spark Structured Streaming
 \`\`\`
 
-**Choose HYBRID when**:
-\`\`\`
-  ✓ Streaming for real-time view + batch for correction
-  ✓ Stream for ingest, batch for aggregation
-  ✓ Example: Real-time ad click counting (stream)
-    + daily reconciliation with billing (batch)
-
-Architecture:
-  Events ──► Kafka ──┬──► Flink (real-time dashboard)
-                     │
-                     └──► S3 ──► Spark (nightly rollup)
-\`\`\`
+**Choose HYBRID when** you want streaming for the real-time view + batch for correction, stream for ingest + batch for aggregation, or the canonical example — real-time ad click counting (stream) plus a daily reconciliation with billing (batch). Architecture: Events → Kafka, then a tee where one branch goes to Flink (real-time dashboard) and the other goes to S3 → Spark (nightly rollup).
 
 **Cost comparison**:
-\`\`\`
-               Batch                    Stream
-Compute:       Ephemeral (spot OK)      Always-on (reserved)
-Storage:       Object store (cheap)     Log retention (moderate)
-Operations:    Scheduled (cron/Airflow) 24/7 monitoring
-Scaling:       Vertical + horizontal    Horizontal (partitions)
-TCO for 1TB/day: ~$500-2K/month        ~$2K-10K/month
-\`\`\`
+
+| Aspect | Batch | Stream |
+|---|---|---|
+| Compute | Ephemeral (spot OK) | Always-on (reserved) |
+| Storage | Object store (cheap) | Log retention (moderate) |
+| Operations | Scheduled (cron / Airflow) | 24/7 monitoring |
+| Scaling | Vertical + horizontal | Horizontal (partitions) |
+| TCO for 1 TB/day | ~$500–2K / month | ~$2K–10K / month |
 
 **Key interview insight**: The trend is toward streaming-first with batch for correction ("Kappa with guardrails"). Modern stream processors (Flink) can handle both real-time and historical reprocessing, reducing the need for separate batch infrastructure.`
       },
@@ -906,54 +612,21 @@ TCO for 1TB/day: ~$500-2K/month        ~$2K-10K/month
         question: 'How did LinkedIn evolve from Lambda architecture to unified batch and stream processing?',
         answer: `**LinkedIn's journey** is one of the most well-documented evolutions from Lambda to a unified processing model, and it directly shaped the Kappa architecture concept.
 
-**Phase 1 — Lambda Architecture (2012-2018)**:
-\`\`\`
-LinkedIn's original data processing stack:
-  Events ──► Kafka (ingestion backbone)
-                │
-        ┌───────┴───────┐
-        ▼               ▼
-  Apache Samza       Apache Spark
-  (stream layer)     (batch layer)
-  - Real-time feed   - Nightly analytics
-  - Low latency      - Full correctness
-  - Approximate       - Historical reprocessing
-        │               │
-        └───────┬───────┘
-                ▼
-          Serving Layer (merge results)
+**Phase 1 — Lambda Architecture (2012–2018)**: LinkedIn's original stack ingested events via Kafka, then teed into Apache Samza (stream layer — real-time feed, low latency, approximate) and Apache Spark (batch layer — nightly analytics, full correctness, historical reprocessing). Both fed a serving layer that merged results. Problems: dual codebases for the same logic (Samza + Spark), results diverged between batch and stream, the operational cost of maintaining both pipelines, and debugging inconsistencies was extremely difficult.
 
-Problems encountered:
-  - Dual codebases for same logic (Samza + Spark)
-  - Results diverged between batch and stream
-  - Operational cost of maintaining both pipelines
-  - Debugging inconsistencies was extremely difficult
-\`\`\`
-
-**Phase 2 — Unified on Apache Beam (2019+)**:
-\`\`\`
-Apache Beam unified pipeline:
-  Events ──► Kafka ──► Beam Pipeline ──► Outputs
-                       (single codebase)
-                       │
-                       ├── Runs as streaming job (real-time)
-                       └── Runs as batch job (backfill/correction)
-
-  Same logic, same codebase, different execution modes.
-\`\`\`
+**Phase 2 — Unified on Apache Beam (2019+)**: events flow into Kafka, then a single Beam pipeline (one codebase) emits to outputs. The same Beam pipeline runs as a streaming job for real-time and as a batch job for backfill / correction — same logic, same code, different execution modes.
 
 **Results from the migration**:
-\`\`\`
-Metric                    Lambda Era      Unified (Beam)
-──────────────────────────────────────────────────────────
-Cost-to-serve             Baseline        2x reduction
-Processing performance    Baseline        2x improvement
-Memory/CPU efficiency     Baseline        2x improvement
-Anti-abuse detection      Days            Minutes
-Fake account detection    Baseline        21% improvement
-Scraping detection        Baseline        15% improvement
-Codebase maintenance      2 codebases     1 codebase
-\`\`\`
+
+| Metric | Lambda Era | Unified (Beam) |
+|---|---|---|
+| Cost-to-serve | Baseline | 2x reduction |
+| Processing performance | Baseline | 2x improvement |
+| Memory / CPU efficiency | Baseline | 2x improvement |
+| Anti-abuse detection | Days | Minutes |
+| Fake account detection | Baseline | 21% improvement |
+| Scraping detection | Baseline | 15% improvement |
+| Codebase maintenance | 2 codebases | 1 codebase |
 
 **When to choose A vs B — LinkedIn's decision framework**:
 - **Lambda architecture**: Choose if you have existing batch infrastructure you cannot replace, need guaranteed correctness for compliance, or your team has deep Spark expertise but not Flink/Beam
@@ -966,57 +639,27 @@ Codebase maintenance      2 codebases     1 codebase
         question: 'How does Spotify manage 20,000+ daily batch pipelines alongside real-time streaming at scale?',
         answer: `**Spotify's data platform** is one of the largest hybrid batch/stream architectures, processing data for 600M+ monthly active users across 20,000 daily batch pipelines.
 
-**Architecture overview**:
-\`\`\`
-Spotify's Hybrid Data Platform:
+**Architecture overview**: user events (plays, skips, searches) flow into Google Pub/Sub. From there a tee splits into a Dataflow streaming pipeline (real-time metrics, live A/B test results, instant recommendations) and a Dataflow batch pipeline reading from GCS (daily aggregations, ML training data, revenue reporting). Most pipelines are written in Scio (a Scala API for Apache Beam), so the same code can run batch or streaming.
 
-  User Events ──► Google Pub/Sub ──┬──► Dataflow (streaming)
-  (plays, skips,                    │    - Real-time metrics
-   searches)                        │    - Live A/B test results
-                                    │    - Instant recommendations
-                                    │
-                                    └──► GCS ──► Dataflow (batch)
-                                              - Daily aggregations
-                                              - ML training data
-                                              - Revenue reporting
-
-  Most pipelines written in Scio (Scala API for Apache Beam)
-  → Same code can run batch or streaming
-\`\`\`
-
-**Scale**:
-\`\`\`
-Daily pipeline volume:
-  - 20,000+ batch pipelines
-  - 1,000+ repositories
-  - 300+ owning teams
-  - Petabytes of data processed daily
-
-Pipeline ownership model:
-  Team A ──► owns pipelines for recommendation signals
-  Team B ──► owns pipelines for royalty calculation
-  Team C ──► owns pipelines for ad targeting
-  Each team owns their data endpoints end-to-end
-\`\`\`
+**Scale**: 20,000+ batch pipelines daily, 1,000+ repositories, 300+ owning teams, petabytes processed daily. Pipeline ownership is per-team — Team A owns recommendation-signal pipelines, Team B owns royalty calculation, Team C owns ad targeting. Each team owns its data endpoints end-to-end.
 
 **Key design decisions**:
-\`\`\`
-Decision                 Choice Made              Why
-──────────────────────────────────────────────────────────────
-Pipeline framework       Scio (Apache Beam)       Write-once, run batch or stream
-Execution engine         Google Dataflow           Managed, auto-scaling
-Data warehouse           BigQuery                  Analytics + ML training
-Scheduling               Internal (Styx)           Custom for Spotify's scale
-Storage                  GCS + BigQuery             Separation of compute/storage
-Real-time ingestion      Google Pub/Sub             Managed, low-latency
-\`\`\`
+
+| Decision | Choice Made | Why |
+|---|---|---|
+| Pipeline framework | Scio (Apache Beam) | Write-once, run batch or stream |
+| Execution engine | Google Dataflow | Managed, auto-scaling |
+| Data warehouse | BigQuery | Analytics + ML training |
+| Scheduling | Internal (Styx) | Custom for Spotify's scale |
+| Storage | GCS + BigQuery | Separation of compute / storage |
+| Real-time ingestion | Google Pub/Sub | Managed, low-latency |
 
 **Batch vs stream decision at Spotify**:
-\`\`\`
-Use Case                    Mode        Reason
-──────────────────────────────────────────────────────────────
-Royalty calculations        Batch       Must be 100% accurate, auditable
-ML model training           Batch       Need complete datasets, cost-efficient
+
+| Use Case | Mode | Reason |
+|---|---|---|
+| Royalty calculations | Batch | Must be 100% accurate, auditable |
+| ML model training | Batch | Need complete datasets, cost-efficient |
 Wrapped (year in review)    Batch       Annual aggregation, massive scale
 Real-time play counts       Stream      Users expect instant counter updates
 A/B test monitoring         Stream      Need to detect issues quickly
@@ -1035,55 +678,11 @@ Podcast episode popularity  Hybrid      Stream for trending, batch for totals
         question: 'How do you handle backpressure in a streaming pipeline, and what happens when consumers cannot keep up?',
         answer: `**Backpressure** occurs when a downstream component cannot process data as fast as the upstream component produces it. Without backpressure handling, the system either drops data, runs out of memory, or crashes.
 
-\`\`\`
-The backpressure problem:
-  Producer: 10,000 events/sec ──► Consumer: 5,000 events/sec
-                                   │
-                                   Buffer fills up
-                                   │
-                             ┌─────┴─────┐
-                             │  What now? │
-                             └─────┬─────┘
-                        ┌──────────┼──────────┐
-                        ▼          ▼          ▼
-                   Drop data   Buffer to    Slow down
-                   (lossy)     disk (lag)   producer
-\`\`\`
+**The backpressure problem**: a Producer at 10,000 events/sec feeds a Consumer that processes only 5,000 events/sec. The buffer between them fills up; the system has three choices — drop data (lossy), buffer to disk (which trades memory pressure for lag), or slow the producer down.
 
-**Strategy 1 — Buffering (Kafka model)**:
-\`\`\`
-Producer ──► Kafka (persistent buffer) ──► Consumer
+**Strategy 1 — Buffering (Kafka model)**: Producer → Kafka (persistent buffer) → Consumer. Kafka retains messages for a configurable duration (hours / days), and consumers read at their own pace; lag measures how far behind a consumer is. A producer burst might take partition lag from 0 → 50K (T=1h) → 20K (T=2h, consumer catching up) → 0 (T=3h, caught up). Kafka absorbs temporary bursts; alert when lag exceeds a threshold (e.g. > 1M messages).
 
-Kafka retains messages for configurable duration (hours/days).
-Consumer reads at its own pace.
-Lag = how far behind consumer is.
-
-  Partition lag over time:
-  T=0:  lag=0      (caught up)
-  T=1h: lag=50K    (producer burst, consumer steady)
-  T=2h: lag=20K    (consumer catching up)
-  T=3h: lag=0      (caught up again)
-
-Kafka as buffer absorbs temporary bursts.
-Alert when lag exceeds threshold (e.g., > 1M messages).
-\`\`\`
-
-**Strategy 2 — Rate-based backpressure (Flink/Reactive Streams)**:
-\`\`\`
-Flink's credit-based flow control:
-  Downstream operator has N buffer slots
-  Sends credits upstream: "I can accept N more records"
-  Upstream sends only N records, then waits for more credits
-
-  Operator A ──► Operator B ──► Operator C
-             credits=5     credits=3
-
-  If C is slow: C sends fewer credits to B
-  B sends fewer credits to A → entire pipeline slows down
-
-  No data loss, no unbounded buffering.
-  Trade-off: increased end-to-end latency during backpressure.
-\`\`\`
+**Strategy 2 — Rate-based backpressure (Flink / Reactive Streams)**: Flink uses credit-based flow control. Each downstream operator has N buffer slots and sends credits upstream that say "I can accept N more records." The upstream operator sends only that many, then waits for more credits. If Operator C is slow, C sends fewer credits to B, B sends fewer to A, and the entire pipeline slows together — no data loss, no unbounded buffering, with the trade-off of increased end-to-end latency during backpressure.
 
 **Strategy 3 — Sampling/dropping (lossy)**:
 \`\`\`
@@ -1112,16 +711,14 @@ Flink: rescale parallelism (with savepoint)
 \`\`\`
 
 **Comparison**:
-\`\`\`
-Strategy          Data Loss   Latency Impact   Complexity
-──────────────────────────────────────────────────────────
-Kafka buffering   None        Lag increases    Low
-Rate-based (Flink) None      Pipeline slows   Built-in
-Sampling/dropping  Yes        None             Low
-Autoscaling       None        Brief during     Medium
-                              rebalance
-Spill to disk     None        Higher           Medium
-\`\`\`
+
+| Strategy | Data Loss | Latency Impact | Complexity |
+|---|---|---|---|
+| Kafka buffering | None | Lag increases | Low |
+| Rate-based (Flink) | None | Pipeline slows | Built-in |
+| Sampling / dropping | Yes | None | Low |
+| Autoscaling | None | Brief during rebalance | Medium |
+| Spill to disk | None | Higher | Medium |
 
 **When to choose A vs B**:
 - **Kafka buffering**: Default choice — decouples producers and consumers, handles most burst scenarios naturally
@@ -1136,80 +733,33 @@ Spill to disk     None        Higher           Medium
         answer: `**These three are the dominant stream processing frameworks**, each with different deployment models, state management, and performance characteristics.
 
 **Architecture comparison**:
-\`\`\`
-Kafka Streams:
-  Embedded library (runs inside your app)
-  ┌─────────────────────┐
-  │  Your Application   │
-  │  ┌────────────────┐ │
-  │  │ Kafka Streams  │ │  ← Just a JAR dependency
-  │  │ (processing)   │ │  ← No separate cluster
-  │  └────────────────┘ │
-  └─────────────────────┘
-  Deploys with: standard app deployment (K8s, ECS)
 
-Apache Flink:
-  Dedicated cluster (JobManager + TaskManagers)
-  ┌──────────────┐  ┌──────────────┐
-  │ JobManager   │  │ TaskManager  │
-  │ (coordinator)│  │ (workers)    │
-  └──────────────┘  │ TaskManager  │
-                    └──────────────┘
-  Deploys with: YARN, Kubernetes, standalone
-
-Spark Structured Streaming:
-  Micro-batch on Spark cluster
-  ┌──────────────┐  ┌──────────────┐
-  │ Spark Driver │  │ Executors    │
-  │ (coordinator)│  │ (workers)    │
-  └──────────────┘  └──────────────┘
-  Deploys with: YARN, Kubernetes, Databricks
-\`\`\`
+- **Kafka Streams** is an embedded library — Kafka Streams runs as a JAR dependency inside your application, so processing happens in your own process and there is no separate cluster to manage. Deploys via standard app deployment (Kubernetes, ECS).
+- **Apache Flink** uses a dedicated cluster: a JobManager (coordinator) plus a fleet of TaskManagers (workers). Deploys via YARN, Kubernetes, or standalone.
+- **Spark Structured Streaming** runs micro-batches on a Spark cluster: a Spark Driver (coordinator) and Executors (workers). Deploys via YARN, Kubernetes, or Databricks.
 
 **Detailed comparison**:
-\`\`\`
-Feature              Kafka Streams     Flink              Spark SS
-──────────────────────────────────────────────────────────────────
-Deployment           Library (embed)   Cluster            Cluster
-Latency              Low (ms)          Very low (ms)      Higher (100ms+)*
-State management     RocksDB local     RocksDB + remote   Spark state store
-Exactly-once         Yes (Kafka)       Yes (end-to-end)   Yes (micro-batch)
-Windowing            Full support      Best support       Full support
-Source/Sink          Kafka only        Any (Kafka, S3,    Any (Kafka, S3,
-                                       JDBC, files)       JDBC, files)
-Batch processing     No                Yes (unified)      Yes (native)
-Cluster management   None (embedded)   Required           Required
-Scaling              Add app instances Scale operators    Scale executors
-Learning curve       Low               Medium             Low (if know Spark)
 
-* Spark SS uses micro-batches (100ms+ latency by default)
-  Continuous processing mode gets lower latency but is experimental
-\`\`\`
+| Feature | Kafka Streams | Flink | Spark SS |
+|---|---|---|---|
+| Deployment | Library (embed) | Cluster | Cluster |
+| Latency | Low (ms) | Very low (ms) | Higher (100 ms+)\\* |
+| State management | RocksDB local | RocksDB + remote | Spark state store |
+| Exactly-once | Yes (Kafka) | Yes (end-to-end) | Yes (micro-batch) |
+| Windowing | Full support | Best support | Full support |
+| Source / Sink | Kafka only | Any (Kafka, S3, JDBC, files) | Any (Kafka, S3, JDBC, files) |
+| Batch processing | No | Yes (unified) | Yes (native) |
+| Cluster management | None (embedded) | Required | Required |
+| Scaling | Add app instances | Scale operators | Scale executors |
+| Learning curve | Low | Medium | Low (if know Spark) |
+
+\\* Spark SS uses micro-batches (100 ms+ latency by default). Continuous processing mode gets lower latency but is experimental.
 
 **When to choose each — company case studies**:
-\`\`\`
-Kafka Streams:
-  ✓ Team already runs Kafka, wants to add light processing
-  ✓ Source and sink are both Kafka topics
-  ✓ No separate cluster management desired
-  ✓ Moderate state size (fits on local disk)
-  Companies: Walmart (inventory), New York Times (content pipeline)
 
-Flink:
-  ✓ Need lowest latency with complex event processing
-  ✓ Large stateful computations (TBs of state)
-  ✓ Need unified batch + stream in one engine
-  ✓ Sources beyond Kafka (S3, JDBC, custom)
-  Companies: Alibaba (Singles Day), Uber (surge pricing),
-             Netflix (data pipeline), Lyft (streaming platform)
-
-Spark Structured Streaming:
-  ✓ Team already has Spark expertise and infrastructure
-  ✓ Micro-batch latency (100ms+) is acceptable
-  ✓ Heavy batch workload + some streaming
-  ✓ Strong ML/analytics integration needed
-  Companies: Apple (analytics), Netflix (ETL), Databricks customers
-\`\`\`
+- **Kafka Streams** when the team already runs Kafka and wants to add light processing, when source and sink are both Kafka topics, when no separate cluster management is desired, and state size fits on local disk. Companies: Walmart (inventory), New York Times (content pipeline).
+- **Flink** when you need the lowest latency with complex event processing, large stateful computations (TBs of state), unified batch + stream in one engine, or sources beyond Kafka (S3, JDBC, custom). Companies: Alibaba (Singles Day), Uber (surge pricing), Netflix (data pipeline), Lyft (streaming platform).
+- **Spark Structured Streaming** when the team already has Spark expertise and infrastructure, micro-batch latency (100 ms+) is acceptable, you have a heavy batch workload plus some streaming, or you need strong ML / analytics integration. Companies: Apple (analytics), Netflix (ETL), Databricks customers.
 
 **When to choose A vs B — decision framework**:
 - **Default to Kafka Streams** if your data is already in Kafka and you want the simplest deployment model
@@ -1222,27 +772,11 @@ Spark Structured Streaming:
 
     dataModel: {
       description: 'Batch vs stream processing architecture comparison',
-      schema: `Batch Processing Pipeline:
-  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-  │  Source   │───►│  Store   │───►│ Process  │───►│  Output  │
-  │ (files,  │    │ (S3/HDFS)│    │ (Spark/  │    │ (DW/DB)  │
-  │  DB dump)│    │          │    │  MR)     │    │          │
-  └──────────┘    └──────────┘    └──────────┘    └──────────┘
-  Schedule: hourly/daily          Duration: minutes-hours
+      schema: `Batch processing pipeline: Source (files, DB dump) -> Store (S3 / HDFS) -> Process (Spark / MapReduce) -> Output (data warehouse / DB). Scheduled hourly or daily; duration measured in minutes to hours.
 
-Stream Processing Pipeline:
-  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-  │  Source   │───►│  Log     │───►│ Process  │───►│  Sink    │
-  │ (events, │    │ (Kafka)  │    │ (Flink/  │    │ (DB/API/ │
-  │  CDC)    │    │          │    │  KStream)│    │  Kafka)  │
-  └──────────┘    └──────────┘    └──────────┘    └──────────┘
-  Continuous: 24/7                 Latency: ms-seconds
+Stream processing pipeline: Source (events, CDC) -> Log (Kafka) -> Process (Flink / Kafka Streams) -> Sink (DB / API / Kafka). Continuous 24/7; latency measured in ms to seconds.
 
-Hybrid (Lambda):
-  Source ──► Kafka ──┬──► Flink ──► Real-time Views
-                     └──► S3 ──► Spark ──► Batch Views
-                                           │
-                     Serving Layer ◄────────┘`
+Hybrid (Lambda): Source -> Kafka tees into Flink (real-time views) and S3 -> Spark (batch views); both feed a serving layer that merges results.`
     },
   },
 
@@ -1289,44 +823,16 @@ The **12-Factor App** methodology recommends stateless processes as a default, a
         question: 'How do you scale stateful services horizontally?',
         answer: `**The challenge**: Unlike stateless services where any instance handles any request, stateful services must route requests to the instance holding the relevant state.
 
-\`\`\`
-Stateless Scaling (simple):          Stateful Scaling (complex):
+**Stateless scaling** is simple: a round-robin LB hands any request to S1, S2, or S3, all of which are interchangeable. Adding S4 is instant scaling; killing S2 has no impact.
 
-  LB (round-robin)                     LB (must route by state)
-  ┌──┬──┬──┐                           ┌──┬──┬──┐
-  │S1│S2│S3│  any can handle           │S1│S2│S3│  each holds different
-  └──┴──┴──┘  any request              └──┴──┴──┘  users' state
+**Stateful scaling** is harder: the LB must route each request to the specific instance that holds the relevant user's state, S1/S2/S3 each own different users, adding S4 requires state redistribution, and killing S2 loses (or must migrate) state.
 
-  Add S4 → instant scaling            Add S4 → must redistribute state
-  Kill S2 → no impact                 Kill S2 → state lost (or migrated)
-\`\`\`
-
-**Strategy 1 — Consistent hashing**:
-\`\`\`
-  Hash ring: user_id → hash → node
-
-  Node A (0-33)    Node B (34-66)    Node C (67-99)
-  ┌────────┐       ┌────────┐        ┌────────┐
-  │User 12 │       │User 45 │        │User 89 │
-  │User 28 │       │User 51 │        │User 73 │
-  └────────┘       └────────┘        └────────┘
-
-  Add Node D: only ~1/N keys redistribute
-  Remove Node B: B's keys go to next node on ring
-\`\`\`
+**Strategy 1 — Consistent hashing**: hash a user_id onto a ring and assign each user to the node responsible for that arc. Node A owns hash range 0–33 (e.g. User 12, User 28), Node B owns 34–66 (User 45, User 51), Node C owns 67–99 (User 89, User 73). Adding Node D redistributes only ~1/N keys; removing Node B sends B's keys to the next node on the ring.
 
 **Strategy 2 — State externalization (convert to stateless)**:
 Move state to Redis/DB. Service becomes stateless. This is the most common approach.
 
-**Strategy 3 — State partitioning with replication**:
-\`\`\`
-  Partition 0: Primary=S1, Replica=S2
-  Partition 1: Primary=S2, Replica=S3
-  Partition 2: Primary=S3, Replica=S1
-
-  If S1 dies: S2 promotes for Partition 0
-  State is preserved via replication
-\`\`\`
+**Strategy 3 — State partitioning with replication**: each partition has a primary and a replica on a different node. Partition 0 has primary S1 + replica S2, Partition 1 has primary S2 + replica S3, Partition 2 has primary S3 + replica S1. If S1 dies, S2 is promoted for Partition 0; state is preserved via replication.
 
 **Strategy 4 — StatefulSets (Kubernetes)**:
 Pods get stable network IDs (pod-0, pod-1) and persistent volumes. Useful for databases and message brokers, not typical application services.
@@ -1339,31 +845,20 @@ Pods get stable network IDs (pod-0, pod-1) and persistent volumes. Useful for da
 
 **Externalized state**: Session data is stored in Redis/Memcached/DB. Any instance can serve any request.
 
-\`\`\`
-Sticky Sessions:                     Externalized State:
-
-Client ──► LB ──► always Server A    Client ──► LB ──► any Server
-           (cookie: srv=A)                      (round-robin)
-                                                  │
-Server A has session in memory                    ▼
-                                          ┌──────────────┐
-                                          │  Redis/DB    │
-                                          │  (sessions)  │
-                                          └──────────────┘
-\`\`\`
+**Sticky sessions**: Client → LB → always Server A (using a cookie like \`srv=A\`); Server A holds the session in memory.
+**Externalized state**: Client → LB → any Server (round-robin); every server reads/writes the session in a shared Redis or DB.
 
 **Detailed comparison**:
-\`\`\`
-Criteria              Sticky Sessions     Externalized State
-────────────────────────────────────────────────────────────
-Latency               Lower (in-memory)   Higher (+network hop)
-Scaling               Uneven (hot spots)  Even distribution
-Server failure        Session lost        Session preserved
-Rolling deploy        Drain required      Instant swap
-Memory per server     Grows with sessions Fixed (stateless)
-Complexity            LB config           Redis/DB infra
-Cost                  Free (LB feature)   Redis/DB cost
-\`\`\`
+
+| Criteria | Sticky Sessions | Externalized State |
+|---|---|---|
+| Latency | Lower (in-memory) | Higher (+ network hop) |
+| Scaling | Uneven (hot spots) | Even distribution |
+| Server failure | Session lost | Session preserved |
+| Rolling deploy | Drain required | Instant swap |
+| Memory per server | Grows with sessions | Fixed (stateless) |
+| Complexity | LB config | Redis / DB infra |
+| Cost | Free (LB feature) | Redis / DB cost |
 
 **When sticky sessions are acceptable**:
 - WebSocket connections (inherently sticky)
@@ -1406,26 +901,18 @@ JWT-Based (Stateless):
   Every request: 0 external lookups (CPU only)
 \`\`\`
 
-**JWT structure**:
-\`\`\`
-Header.Payload.Signature
-  │       │        │
-  │       │        └─ HMAC-SHA256(header+payload, secret)
-  │       └── {"sub":"user123","role":"admin","exp":1234567890}
-  └────── {"alg":"HS256","typ":"JWT"}
-\`\`\`
+**JWT structure**: a JWT is three base64url segments joined by dots — \`Header.Payload.Signature\`. The Header is JSON like \`{"alg":"HS256","typ":"JWT"}\`. The Payload carries the claims, e.g. \`{"sub":"user123","role":"admin","exp":1234567890}\`. The Signature is \`HMAC-SHA256(header + "." + payload, secret)\` (or RSA / ECDSA for asymmetric algorithms).
 
 **Trade-offs**:
-\`\`\`
-Criteria              Session             JWT
-─────────────────────────────────────────────────────
-Stateless?            No                  Yes
-Revocation            Instant (delete)    Hard (wait for expiry)
-Size                  Small cookie (~32B) Large token (~1KB)
-Server storage        Required (Redis)    None
-Horizontal scaling    Need shared store   Any server works
-Token theft impact    Kill session        Cannot revoke easily
-\`\`\`
+
+| Criteria | Session | JWT |
+|---|---|---|
+| Stateless? | No | Yes |
+| Revocation | Instant (delete) | Hard (wait for expiry) |
+| Size | Small cookie (~32 B) | Large token (~1 KB) |
+| Server storage | Required (Redis) | None |
+| Horizontal scaling | Need shared store | Any server works |
+| Token theft impact | Kill session | Cannot revoke easily |
 
 **The revocation problem**: JWTs cannot be revoked before expiry without reintroducing state.
 
@@ -1440,29 +927,20 @@ Token theft impact    Kill session        Cannot revoke easily
         question: 'When is a stateful service architecture justified over stateless?',
         answer: `**Criteria for choosing stateful**:
 
-\`\`\`
-  Justify stateful when ALL of these are true:
-  ┌─────────────────────────────────────────────────┐
-  │ 1. State is HOT (accessed every request)        │
-  │ 2. External store adds UNACCEPTABLE latency     │
-  │ 3. State SIZE fits in memory per instance        │
-  │ 4. You CAN rebuild state on failure              │
-  └─────────────────────────────────────────────────┘
-\`\`\`
+Justify stateful when **all** of these are true: (1) state is hot — accessed every request, (2) an external store adds unacceptable latency, (3) state size fits in memory per instance, (4) you can rebuild state on failure.
 
 **Use case comparison**:
-\`\`\`
-Use Case               Stateful?  Reason
-──────────────────────────────────────────────────────
-REST API backend       No         Externalize to Redis
-WebSocket chat server  Yes        Connections are inherently stateful
-Real-time game server  Yes        Microsecond state access needed
-ML inference service   No         Model loaded once, requests independent
-Stream processing      Yes        Windowed aggregations in memory
-In-memory database     Yes        That IS the purpose
-Shopping cart          No         Externalize to Redis/DB
-Video transcoding      No         Stateless workers, job queue
-\`\`\`
+
+| Use Case | Stateful? | Reason |
+|---|---|---|
+| REST API backend | No | Externalize to Redis |
+| WebSocket chat server | Yes | Connections are inherently stateful |
+| Real-time game server | Yes | Microsecond state access needed |
+| ML inference service | No | Model loaded once, requests independent |
+| Stream processing | Yes | Windowed aggregations in memory |
+| In-memory database | Yes | That IS the purpose |
+| Shopping cart | No | Externalize to Redis / DB |
+| Video transcoding | No | Stateless workers, job queue |
 
 **Stateful service checklist**:
 \`\`\`
@@ -1496,56 +974,29 @@ Why not stateless?
         question: 'How does Discord handle stateful services at scale for real-time chat and voice?',
         answer: `**Discord** is one of the best case studies for stateful service architecture because their core product — real-time chat, presence, and voice — requires in-memory state that cannot be efficiently externalized.
 
-**Discord's stateful architecture**:
-\`\`\`
-Gateway (WebSocket) Layer — stateful:
-  ┌──────────────┐
-  │ Gateway Shard│ ◄── Each shard handles ~5,000 users
-  │ (Elixir/BEAM)│     Holds: WebSocket connections,
-  │              │     presence state, typing indicators
-  └──────────────┘
-
-Guild (Server) Assignment — stateful:
-  Guild 12345 ──► assigned to Process A on Node 7
-  Process A holds in memory:
-    - Member list + roles
-    - Channel state
-    - Voice connection metadata
-    - Recent message cache
-\`\`\`
+**Discord's stateful architecture**: the Gateway (WebSocket) layer is stateful — each Gateway Shard (Elixir/BEAM) handles ~5,000 users and holds the open WebSocket connections, presence state, and typing indicators in process memory. Guild (server) assignment is also stateful — Guild 12345 is assigned to Process A on Node 7, and Process A holds in memory the member list and roles, channel state, voice-connection metadata, and a recent-message cache.
 
 **Why stateful (not Redis)**:
-\`\`\`
-Operation           In-Memory (stateful)    Redis (stateless)
-──────────────────────────────────────────────────────────────
-Presence update     ~1 microsecond          ~1 millisecond
-Typing indicator    ~1 microsecond          ~1 millisecond
-Updates/sec/guild   Hundreds                Hundreds
-Cost per update     CPU only                CPU + network + Redis
-At 200M users       Feasible                Redis becomes bottleneck
 
-Key math: 200M users x presence pings every 30s
-  = 6.7M presence updates/sec
-  At 1ms each via Redis = 6,700 Redis seconds/sec
-  = need thousands of Redis instances just for presence
-  In-memory: trivially handled by the gateway processes
-\`\`\`
+| Operation | In-Memory (stateful) | Redis (stateless) |
+|---|---|---|
+| Presence update | ~1 microsecond | ~1 millisecond |
+| Typing indicator | ~1 microsecond | ~1 millisecond |
+| Updates/sec/guild | Hundreds | Hundreds |
+| Cost per update | CPU only | CPU + network + Redis |
+| At 200M users | Feasible | Redis becomes bottleneck |
+
+Key math: 200M users × presence pings every 30s = 6.7M presence updates/sec. At 1ms each via Redis that is 6,700 Redis-seconds/sec — i.e. thousands of Redis instances just for presence. In-memory is trivially handled by the gateway processes.
 
 **How Discord handles the operational complexity**:
-\`\`\`
-Challenge              Discord's Solution
-──────────────────────────────────────────────────────────────
-Scaling                Gateway sharding: each shard = ~5K users,
-                       add shards as users grow
-Failure recovery       On crash: new process loads guild state
-                       from DB, clients auto-reconnect via gateway
-State migration        Consistent hashing for guild→process mapping,
-                       only affected guilds re-route on rebalance
-Rolling deploys        Graceful drain: notify clients to reconnect,
-                       new connections go to updated instances
-Voice state            Separate voice servers (also stateful),
-                       WebRTC connections managed per-server
-\`\`\`
+
+| Challenge | Discord's Solution |
+|---|---|
+| Scaling | Gateway sharding — each shard handles ~5K users, add shards as users grow |
+| Failure recovery | On crash, a new process loads guild state from DB and clients auto-reconnect via the gateway |
+| State migration | Consistent hashing for guild → process mapping, so only affected guilds re-route on rebalance |
+| Rolling deploys | Graceful drain — notify clients to reconnect, new connections go to updated instances |
+| Voice state | Separate voice servers (also stateful), WebRTC connections managed per-server |
 
 **Technology choices for stateful workload**:
 - **Elixir/BEAM VM**: Designed for millions of lightweight concurrent processes, each holding independent state — perfect for per-guild state isolation
@@ -1582,10 +1033,8 @@ Strategy 1 — Rebuild from source of truth:
     Trade-off: brief degradation, no data loss for persistent state
 
 Strategy 2 — Replicated state (hot standby):
-  Primary ──► Replica (receives state updates)
-    │              │
-    ▼ (crash)      ▼ (promote)
-  Dead         New Primary (instant takeover)
+  Primary streams state updates to a Replica.
+  When Primary crashes, the Replica promotes and takes over instantly.
 
   Example (Kafka Streams):
     Standby tasks maintain a replica of the state store
@@ -1612,36 +1061,21 @@ Strategy 4 — Degrade to stateless mode:
 \`\`\`
 
 **Recovery time comparison**:
-\`\`\`
-Strategy              Recovery Time    Data Loss    Cost
-──────────────────────────────────────────────────────────────
-Rebuild from DB       Seconds-minutes  Ephemeral    1x memory
-Hot standby           Milliseconds     None         2x memory
-Checkpoint + replay   Seconds          None*        1x + storage
-Degrade to stateless  Instant          Ephemeral    1x
-\`\`\`
 
-**Designing for state loss from the start**:
-\`\`\`
-Classify your state:
-  ┌─────────────────────────────────────────────────┐
-  │ Ephemeral state (OK to lose):                    │
-  │   - Typing indicators, presence, cursor position │
-  │   - In-flight metrics/counters                   │
-  │   - Local cache entries                          │
-  │   → Accept loss, rebuild naturally               │
-  │                                                  │
-  │ Recoverable state (must recover):                │
-  │   - User session data, conversation history      │
-  │   - Accumulated computations (aggregations)      │
-  │   → Checkpoint periodically + rebuild from source│
-  │                                                  │
-  │ Critical state (must not lose):                  │
-  │   - Financial transactions, order state          │
-  │   - Must be in durable store BEFORE ack          │
-  │   → Write-ahead log, synchronous replication     │
-  └─────────────────────────────────────────────────┘
-\`\`\`
+| Strategy | Recovery Time | Data Loss | Cost |
+|---|---|---|---|
+| Rebuild from DB | Seconds–minutes | Ephemeral | 1× memory |
+| Hot standby | Milliseconds | None | 2× memory |
+| Checkpoint + replay | Seconds | None\\* | 1× + storage |
+| Degrade to stateless | Instant | Ephemeral | 1× |
+
+**Designing for state loss from the start** — classify your state:
+
+| Tier | Examples | Strategy |
+|---|---|---|
+| Ephemeral (OK to lose) | Typing indicators, presence, cursor position, in-flight metrics / counters, local cache entries | Accept loss, rebuild naturally |
+| Recoverable (must recover) | User session data, conversation history, accumulated computations (aggregations) | Checkpoint periodically + rebuild from source |
+| Critical (must not lose) | Financial transactions, order state | Must be in a durable store BEFORE ack — write-ahead log + synchronous replication |
 
 **When to choose A vs B**:
 - **Rebuild from DB**: Best for services where state is a performance optimization (cache), not the source of truth. Acceptable recovery time: seconds.
@@ -1684,21 +1118,18 @@ Approach 3 — Hybrid (short-lived JWT + refresh token in DB):
 \`\`\`
 
 **Detailed comparison for production use**:
-\`\`\`
-Criteria              Server Sessions   JWT         Hybrid
-──────────────────────────────────────────────────────────────
-Per-request DB/Redis  Yes (every req)   No          No (only refresh)
-Instant revocation    Yes               No          Partial (15 min)
-Token size            32B cookie        1-2 KB      1-2 KB + 32B
-Horizontal scaling    Needs shared      Any server  Any server
-                      session store
-Session data storage  Redis/DB          In token    Token + DB
-Security (token theft) Kill session     Wait expiry  15 min exposure
-GDPR right-to-delete Immediate         Wait expiry  15 min window
-Cross-service auth    Needs shared      Self-       Self-contained
-                      store or gateway  contained
-Mobile app support    Cookie mgmt tricky Easy (header) Easy (header)
-\`\`\`
+
+| Criteria | Server Sessions | JWT | Hybrid |
+|---|---|---|---|
+| Per-request DB / Redis | Yes (every req) | No | No (only on refresh) |
+| Instant revocation | Yes | No | Partial (15 min window) |
+| Token size | 32 B cookie | 1–2 KB | 1–2 KB + 32 B |
+| Horizontal scaling | Needs shared session store | Any server | Any server |
+| Session data storage | Redis / DB | In token | Token + DB |
+| Security on token theft | Kill session | Wait for expiry | 15 min exposure |
+| GDPR right-to-delete | Immediate | Wait for expiry | 15 min window |
+| Cross-service auth | Needs shared store or gateway | Self-contained | Self-contained |
+| Mobile app support | Cookie mgmt tricky | Easy (Authorization header) | Easy (Authorization header) |
 
 **Company case studies**:
 \`\`\`
@@ -1731,65 +1162,47 @@ Hybrid:
         answer: `**StatefulSets** give pods stable network identities, persistent storage, and ordered deployment/scaling — specifically designed for stateful workloads that Deployments cannot handle correctly.
 
 **Key differences**:
-\`\`\`
-Deployment (stateless):              StatefulSet (stateful):
-  pod-xyz123 (random name)           pod-0 (stable name)
-  pod-abc456 (random name)           pod-1 (stable name)
-  pod-def789 (random name)           pod-2 (stable name)
 
-  Any pod can be killed/replaced     Pods have persistent identity
-  Shared volume (if any)             Each pod gets its own PVC
-  Parallel startup                   Ordered startup (0, then 1, then 2)
-  Random DNS                         Stable DNS: pod-0.service.ns
-\`\`\`
+| Aspect | Deployment (stateless) | StatefulSet (stateful) |
+|---|---|---|
+| Pod names | Random (pod-xyz123, pod-abc456) | Stable, ordinal (pod-0, pod-1, pod-2) |
+| Pod identity | Any pod can be killed / replaced | Pods have persistent identity |
+| Storage | Shared volume (if any) | Each pod gets its own PVC |
+| Startup | Parallel | Ordered (0, then 1, then 2) |
+| DNS | Random | Stable: pod-0.service.ns |
 
 **StatefulSet guarantees**:
-\`\`\`
-Guarantee            What It Means               Why It Matters
-──────────────────────────────────────────────────────────────
-Stable network ID    pod-0 always resolves to     Other pods can reliably
-                     the same pod                 find specific instances
-Stable storage       PVC survives pod restart,    Database data persists
-                     same volume reattaches       across pod replacement
-Ordered deployment   pod-0 starts before pod-1    Primary must start
-                     before pod-2                 before replicas
-Ordered scaling      Scale down removes pod-N     Last replica removed first,
-                     first, not random            primary protected
-Ordered rolling      Update pod-0 last            Primary updated last
-  update             (reverse order)              to minimize disruption
-\`\`\`
+
+| Guarantee | What It Means | Why It Matters |
+|---|---|---|
+| Stable network ID | pod-0 always resolves to the same pod | Other pods can reliably find specific instances |
+| Stable storage | PVC survives pod restart, same volume reattaches | Database data persists across pod replacement |
+| Ordered deployment | pod-0 starts before pod-1 before pod-2 | Primary must start before replicas |
+| Ordered scaling | Scale-down removes pod-N first, not random | Last replica removed first, primary protected |
+| Ordered rolling update | Updates pod-0 last (reverse order) | Primary updated last to minimize disruption |
 
 **When to use StatefulSet vs Deployment**:
-\`\`\`
-Workload                    Use              Reason
-──────────────────────────────────────────────────────────────
-REST API servers            Deployment       Stateless, interchangeable
-PostgreSQL cluster          StatefulSet      Need stable IDs, persistent storage
-Kafka brokers               StatefulSet      Broker IDs must be stable for
-                                             partition assignment
-Redis Sentinel              StatefulSet      Sentinel needs stable addressing
-Elasticsearch nodes         StatefulSet      Each node has unique data shards
-Application workers         Deployment       Stateless task processing
-ZooKeeper ensemble          StatefulSet      Leader election needs stable IDs
-Web frontends               Deployment       Stateless, any pod serves any request
-Flink TaskManagers          StatefulSet      State checkpointing needs stable storage
-\`\`\`
+
+| Workload | Use | Reason |
+|---|---|---|
+| REST API servers | Deployment | Stateless, interchangeable |
+| PostgreSQL cluster | StatefulSet | Need stable IDs, persistent storage |
+| Kafka brokers | StatefulSet | Broker IDs must be stable for partition assignment |
+| Redis Sentinel | StatefulSet | Sentinel needs stable addressing |
+| Elasticsearch nodes | StatefulSet | Each node has unique data shards |
+| Application workers | Deployment | Stateless task processing |
+| ZooKeeper ensemble | StatefulSet | Leader election needs stable IDs |
+| Web frontends | Deployment | Stateless, any pod serves any request |
+| Flink TaskManagers | StatefulSet | State checkpointing needs stable storage |
 
 **Common misconception**: "My app is stateful, so I need StatefulSet."
-\`\`\`
-WRONG: My web app stores sessions → StatefulSet
-RIGHT: My web app stores sessions → Deployment + Redis
-       (externalize state, keep app stateless)
 
-WRONG: My app needs persistent data → StatefulSet
-RIGHT: My app needs persistent data → Deployment + managed DB
-       (use RDS/Cloud SQL, not a self-managed DB in K8s)
+| Symptom | Wrong answer | Right answer |
+|---|---|---|
+| Web app stores sessions | StatefulSet | Deployment + Redis (externalize state, keep app stateless) |
+| App needs persistent data | StatefulSet | Deployment + managed DB (RDS / Cloud SQL, not a self-managed DB in K8s) |
 
-CORRECT use of StatefulSet:
-  Running a DATABASE itself in Kubernetes
-  Running a MESSAGE BROKER in Kubernetes
-  Running a DISTRIBUTED CACHE cluster in Kubernetes
-\`\`\`
+A StatefulSet is the right tool when you are running a database, message broker, or distributed cache cluster *inside* Kubernetes — not for application services that happen to hold session data.
 
 **When to choose A vs B**:
 - **Deployment (default)**: For application services. Externalize state to managed databases and caches. Simpler operations, faster scaling, easier debugging.
@@ -1802,30 +1215,11 @@ CORRECT use of StatefulSet:
 
     dataModel: {
       description: 'Stateful vs stateless architecture comparison',
-      schema: `Stateless Architecture:
-  Client ──► Load Balancer (round-robin) ──► Any Server
-                                               │
-                                          ┌────┴────┐
-                                          │ Redis   │  (shared state)
-                                          │ / DB    │
-                                          └─────────┘
-  Scaling: add servers, LB distributes evenly
-  Deploy: replace any server, no impact
-  Failure: restart, no state lost
+      schema: `Stateless architecture: Client -> Load Balancer (round-robin) -> any Server -> shared Redis / DB for state. Scaling: add servers, LB distributes evenly. Deploy: replace any server with no impact. Failure: restart, no state lost.
 
-Stateful Architecture:
-  Client ──► Load Balancer (hash-based) ──► Specific Server
-                                            (holds client state)
-  Scaling: consistent hashing, state redistribution
-  Deploy: drain connections, migrate state, then replace
-  Failure: rebuild state from source of truth, reconnect
+Stateful architecture: Client -> Load Balancer (hash-based) -> a specific Server that holds the client's state in memory. Scaling: consistent hashing for state redistribution. Deploy: drain connections, migrate state, then replace. Failure: rebuild state from source of truth and reconnect.
 
-Decision Flow:
-  Is per-request external store latency acceptable?
-    YES → Stateless (default)
-    NO  → Is state rebuildable from a durable source?
-      YES → Stateful (with recovery plan)
-      NO  → Stateful + Replication (complex)`
+Decision flow: is per-request external-store latency acceptable? YES -> stateless (default). NO -> is state rebuildable from a durable source? YES -> stateful with a recovery plan. NO -> stateful with replication (most complex).`
     },
   },
 
@@ -1873,48 +1267,23 @@ In system design interviews, rate limiting appears in API gateway design, distri
 
 **Leaky Bucket**: Requests enter a queue (bucket). The queue drains at a fixed rate. If queue is full, new requests are dropped. Output is always at a constant rate.
 
-\`\`\`
-Token Bucket:                        Leaky Bucket:
+**Token bucket**: tokens are added at rate R into a bucket of capacity B. Each request consumes 1 token; if a token is available, the request passes immediately, so a burst up to B is allowed.
 
-Tokens added at rate R               Requests enter queue
-  │                                    │
-  ▼                                    ▼
-┌─────────┐                          ┌─────────┐
-│ ● ● ● ● │ capacity = B            │ ● ● ● ● │ capacity = B
-│ ● ● ●   │                         │ ● ● ●   │
-└────┬─────┘                         └────┬─────┘
-     │ consume 1 token per request        │ drain at constant rate R
-     ▼                                    ▼
-  Request passes                      Processed at rate R
-  (burst OK up to B)                  (smooth output)
-\`\`\`
+**Leaky bucket**: requests are placed into a queue of capacity B. The queue drains at a constant rate R; if the queue is full, new requests are dropped. Output is always smooth at rate R.
 
-**Behavior comparison with burst traffic**:
-\`\`\`
-Input:  ████████░░░░████████░░░░████████
-        (burst)    (quiet)   (burst)
-
-Token Bucket Output:
-        ████████░░░░████████░░░░████████
-        (allows burst up to bucket size)
-
-Leaky Bucket Output:
-        ████░░██░░░░████░░██░░░░████░░██
-        (smooths everything to constant rate)
-\`\`\`
+**Behavior with burst traffic**: given a bursty input pattern (full burst, then quiet, then full burst), a token bucket lets the bursts pass through unchanged (output mirrors the input shape), while a leaky bucket smooths everything to a constant per-second rate regardless of input shape.
 
 **Comparison**:
-\`\`\`
-Criteria              Token Bucket        Leaky Bucket
-──────────────────────────────────────────────────────────
-Burst handling        Allows (up to B)    Smooths out
-Output rate           Variable            Constant
-Implementation        Counter + timer     Queue + timer
-Memory                O(1) - just counter O(B) - queue
-Use case              API rate limiting   Traffic shaping
-Fairness              Can starve others   Even distribution
-Parameters            Rate R, Bucket B    Rate R, Queue B
-\`\`\`
+
+| Criteria | Token Bucket | Leaky Bucket |
+|---|---|---|
+| Burst handling | Allows bursts up to B | Smooths out |
+| Output rate | Variable | Constant |
+| Implementation | Counter + timer | Queue + timer |
+| Memory | O(1) — just a counter | O(B) — queue |
+| Use case | API rate limiting | Traffic shaping |
+| Fairness | Can starve others | Even distribution |
+| Parameters | Rate R, Bucket B | Rate R, Queue B |
 
 **Choose token bucket when**: You want to allow reasonable bursts (API rate limiting, user quotas). Most REST APIs use this (Stripe, GitHub, AWS).
 
@@ -1930,9 +1299,8 @@ Parameters            Rate R, Bucket B    Rate R, Queue B
 
 \`\`\`
 Fixed Window (boundary problem):
-  Window 1 [0:00-1:00]    Window 2 [1:00-2:00]
-  ░░░░░░░░░░█████         █████░░░░░░░░░░░░
-  (5 req at 0:59)         (5 req at 1:00)
+  Window 1 [0:00-1:00]: 5 req at 0:59
+  Window 2 [1:00-2:00]: 5 req at 1:00
 
   Limit: 5 req/min. But 10 requests pass in 2 seconds!
 
@@ -2050,14 +1418,13 @@ Problem: Local-only rate limiting
 \`\`\`
 
 **Comparison**:
-\`\`\`
-Approach          Accuracy  Latency   Complexity  Failure Mode
-─────────────────────────────────────────────────────────────
-Centralized Redis High      +1ms      Low         Redis down = no limiting
-Local budget      Low       None      Low         Wastes capacity
-Hybrid sync       Medium    ~None     Medium      Degrades gracefully
-Sticky routing    High      None      Low         User stuck on dead server
-\`\`\`
+
+| Approach | Accuracy | Latency | Complexity | Failure Mode |
+|---|---|---|---|---|
+| Centralized Redis | High | +1 ms | Low | Redis down = no limiting |
+| Local budget | Low | None | Low | Wastes capacity |
+| Hybrid sync | Medium | ~None | Medium | Degrades gracefully |
+| Sticky routing | High | None | Low | User stuck on a dead server |
 
 **Interview tip**: Recommend centralized Redis for most systems (simple, accurate). Mention the hybrid approach for ultra-high throughput systems where Redis round-trip per request is too costly.`
       },
@@ -2065,47 +1432,16 @@ Sticky routing    High      None      Low         User stuck on dead server
         question: 'Where should rate limiting be placed in a system architecture?',
         answer: `**Rate limiting can exist at multiple layers**, each catching different types of abuse:
 
-\`\`\`
-Layer              What it limits              Tool
-─────────────────────────────────────────────────────────
-Client SDK         Self-regulation             Local token bucket
-CDN/Edge           DDoS, geographic blocks     Cloudflare, AWS WAF
-API Gateway        Per-user API quotas         Kong, Envoy, nginx
-Service mesh       Inter-service calls         Istio, Linkerd
-Application        Business logic limits       Custom middleware
-Database           Query rate, connections     Connection pool, pg_bouncer
-\`\`\`
+| Layer | What it limits | Tool |
+|---|---|---|
+| Client SDK | Self-regulation | Local token bucket |
+| CDN / Edge | DDoS, geographic blocks | Cloudflare, AWS WAF |
+| API Gateway | Per-user API quotas | Kong, Envoy, nginx |
+| Service mesh | Inter-service calls | Istio, Linkerd |
+| Application | Business logic limits | Custom middleware |
+| Database | Query rate, connections | Connection pool, pg_bouncer |
 
-**Layered architecture**:
-\`\`\`
-  Internet
-     │
-     ▼
-  ┌─────────────┐
-  │   CDN/WAF   │ ◄── IP-based, geographic, DDoS (L3/L4)
-  │ (Cloudflare)│     Limit: 10K req/s per IP
-  └──────┬──────┘
-         │
-  ┌──────┴──────┐
-  │ API Gateway │ ◄── Per-user, per-API-key (L7)
-  │ (Kong/Envoy)│     Limit: 100 req/min per user
-  └──────┬──────┘
-         │
-  ┌──────┴──────┐
-  │  Service A  │ ◄── Business logic limits
-  │             │     Limit: 5 password attempts/hour
-  └──────┬──────┘
-         │
-  ┌──────┴──────┐
-  │  Service B  │ ◄── Inter-service rate limiting
-  │  (downstream│     Service mesh sidecar enforces
-  └──────┬──────┘
-         │
-  ┌──────┴──────┐
-  │  Database   │ ◄── Connection pool limits
-  │             │     Max 100 connections
-  └─────────────┘
-\`\`\`
+**Layered architecture** (from outermost in): Internet → CDN/WAF (Cloudflare) limits IP-based, geographic, and DDoS traffic at L3/L4 (e.g. 10K req/s per IP) → API Gateway (Kong/Envoy) limits per-user / per-API-key at L7 (e.g. 100 req/min per user) → Service A enforces business-logic limits (e.g. 5 password attempts/hour) → Service B receives inter-service rate-limited calls via the service-mesh sidecar → Database guards itself with connection-pool limits (e.g. max 100 connections).
 
 **Best practices**:
 \`\`\`
@@ -2290,29 +1626,7 @@ Library: netflix/concurrency-limits (Java)
   Integrations: gRPC, Servlet, Netty
 \`\`\`
 
-**Implementation architecture**:
-\`\`\`
-  Request arrives
-      │
-      ▼
-  ┌──────────────────────┐
-  │ Adaptive Rate Limiter │
-  │                       │
-  │ Current limit: 80     │ ◄── adjusted every 10 seconds
-  │ Current usage: 75     │     based on system metrics
-  │ System health: 0.8    │
-  │                       │
-  │ 75 < 80 → ALLOW      │
-  └──────────┬────────────┘
-             │
-        Health monitor
-             │
-    ┌────────┼────────┐
-    ▼        ▼        ▼
-  CPU: 65%  p99: 50ms  Error: 0.1%
-  → health = 0.8 (slightly stressed)
-  → next interval: limit = 76
-\`\`\`
+**Implementation architecture**: a request arrives at the adaptive rate limiter, which holds a current limit (e.g. 80), current usage (75), and a system-health score (0.8 — adjusted every 10 seconds based on system metrics). Because 75 < 80 the request is allowed. A separate health monitor samples CPU (65%), p99 latency (50 ms), and error rate (0.1%); these inputs feed the health score and the next interval's limit (e.g. 76).
 
 **When to choose A vs B**:
 - **Static rate limits**: Choose for external API quotas where limits are contractual (subscription tiers) and must be predictable for customers
@@ -2341,32 +1655,7 @@ Per-endpoint overrides:
     All tiers: 10x the base rate (not worth limiting tightly)
 \`\`\`
 
-**Architecture**:
-\`\`\`
-  API Request
-      │
-      ▼
-  ┌───────────────┐
-  │ API Gateway   │
-  │ (Kong/Envoy)  │
-  └───────┬───────┘
-          │
-  ┌───────┴───────┐
-  │ Rate Limit    │
-  │ Service       │
-  │ ┌───────────┐ │
-  │ │ Redis     │ │ Keys:
-  │ │           │ │   rate:{api_key}:{minute} → count
-  │ │           │ │   rate:{api_key}:{endpoint}:{minute} → count
-  │ │           │ │   concurrent:{api_key} → gauge
-  │ └───────────┘ │
-  │               │
-  │ Limits loaded │
-  │ from config:  │
-  │ {api_key} →   │
-  │ {tier, limits}│
-  └───────────────┘
-\`\`\`
+**Architecture**: the API request hits the API Gateway (Kong / Envoy), which calls the Rate Limit Service. That service uses Redis with these keys: \`rate:{api_key}:{minute}\` (a counter for per-minute volume), \`rate:{api_key}:{endpoint}:{minute}\` (a counter for per-endpoint volume), and \`concurrent:{api_key}\` (a gauge of in-flight requests). Limits are loaded from a config map of \`{api_key}\` → \`{tier, limits}\`.
 
 **Multiple dimensions of limiting**:
 \`\`\`
@@ -2751,17 +2040,16 @@ immediately after commit
 \`\`\`
 
 **Detailed comparison**:
-\`\`\`
-Property        ACID                    BASE
-─────────────────────────────────────────────────────
-Atomicity       All-or-nothing txn      No multi-record atomicity
-Consistency     Immediate               Eventual
-Isolation       Serializable possible   No isolation guarantees
-Durability      Guaranteed on commit    Usually guaranteed
-Availability    May block on conflicts  Always available
-Scalability     Harder to distribute    Designed for distribution
-Complexity      DB handles it           App handles conflicts
-\`\`\`
+
+| Property | ACID | BASE |
+|---|---|---|
+| Atomicity | All-or-nothing txn | No multi-record atomicity |
+| Consistency | Immediate | Eventual |
+| Isolation | Serializable possible | No isolation guarantees |
+| Durability | Guaranteed on commit | Usually guaranteed |
+| Availability | May block on conflicts | Always available |
+| Scalability | Harder to distribute | Designed for distribution |
+| Complexity | DB handles it | App handles conflicts |
 
 **When ACID is critical**:
 \`\`\`
@@ -2781,18 +2069,7 @@ Complexity      DB handles it           App handles conflicts
   ✓ Recommendation engines (slight staleness fine)
 \`\`\`
 
-**Hybrid approach** (common in practice):
-\`\`\`
-  Order Service:
-    PostgreSQL (ACID) ─── payment, inventory reservation
-    │
-    ▼ (event published)
-    │
-  Notification Service:
-    DynamoDB (BASE) ─── delivery tracking, email logs
-
-  Use ACID for the critical path, BASE for everything else.
-\`\`\`
+**Hybrid approach** (common in practice): the Order Service writes payment and inventory-reservation rows to PostgreSQL (ACID) and publishes an event; the Notification Service consumes that event and records delivery tracking and email logs in DynamoDB (BASE). Use ACID for the critical path, BASE for everything else.
 
 **Interview insight**: The question is never "ACID or BASE?" — it is "which operations in my system require ACID guarantees?" Often only 10-20% of operations truly need strong consistency. Design those with SQL and use NoSQL for the rest.`
       },
@@ -2821,40 +2098,36 @@ NoSQL Horizontal Scaling (native):
 \`\`\`
 
 **Challenges of SQL sharding**:
-\`\`\`
-Challenge              Impact                 Solution
-─────────────────────────────────────────────────────────
-Cross-shard joins      Slow, complex          Denormalize or app-level join
-Cross-shard txns       2PC overhead           Saga pattern
-Schema changes         Must run on all shards Rolling DDL migrations
-Auto-increment IDs     Conflicts across shards UUID or snowflake IDs
-Shard key selection    Wrong key = hot spots  Analyze access patterns first
-Rebalancing            Data movement          Consistent hashing + vNodes
-\`\`\`
+
+| Challenge | Impact | Solution |
+|---|---|---|
+| Cross-shard joins | Slow, complex | Denormalize or app-level join |
+| Cross-shard txns | 2PC overhead | Saga pattern |
+| Schema changes | Must run on all shards | Rolling DDL migrations |
+| Auto-increment IDs | Conflicts across shards | UUID or snowflake IDs |
+| Shard key selection | Wrong key = hot spots | Analyze access patterns first |
+| Rebalancing | Data movement | Consistent hashing + vNodes |
 
 **NewSQL — the middle ground**:
-\`\`\`
-Database         Approach
-──────────────────────────────────────────────────
-CockroachDB      Distributed SQL, auto-sharding, serializable
-Google Spanner   Global consistency with TrueTime
-TiDB             MySQL-compatible, distributed
-Vitess           MySQL sharding middleware (YouTube)
-Citus            PostgreSQL extension for sharding
 
-These give SQL semantics with NoSQL-like horizontal scaling,
-at the cost of higher latency per query.
-\`\`\`
+| Database | Approach |
+|---|---|
+| CockroachDB | Distributed SQL, auto-sharding, serializable |
+| Google Spanner | Global consistency with TrueTime |
+| TiDB | MySQL-compatible, distributed |
+| Vitess | MySQL sharding middleware (YouTube) |
+| Citus | PostgreSQL extension for sharding |
+
+These give SQL semantics with NoSQL-like horizontal scaling, at the cost of higher latency per query.
 
 **Scaling decision framework**:
-\`\`\`
-Current scale        Recommendation
-──────────────────────────────────────────────────
-< 1TB, < 10K QPS     Single PostgreSQL (just scale up)
-1-10TB, 10-100K QPS   Read replicas + connection pooling
-10-100TB, 100K+ QPS   Shard or migrate to NewSQL
-> 100TB, 1M+ QPS      NoSQL or specialized data store
-\`\`\`
+
+| Current scale | Recommendation |
+|---|---|
+| < 1 TB, < 10K QPS | Single PostgreSQL (just scale up) |
+| 1–10 TB, 10–100K QPS | Read replicas + connection pooling |
+| 10–100 TB, 100K+ QPS | Shard or migrate to NewSQL |
+| > 100 TB, 1M+ QPS | NoSQL or specialized data store |
 
 **Interview tip**: Most companies never outgrow a single PostgreSQL node. Do not over-engineer with NoSQL sharding for a system that will have <1TB of data. Start with SQL, add read replicas, and shard only when you have concrete evidence of need.`
       },
@@ -2948,17 +2221,7 @@ NewSQL:
   Horizontal scaling + ACID + SQL + automatic sharding
   The "best of both worlds" (with trade-offs)
 
-Architecture (CockroachDB example):
-  ┌──────────┐  ┌──────────┐  ┌──────────┐
-  │  Node 1  │  │  Node 2  │  │  Node 3  │
-  │ Ranges:  │  │ Ranges:  │  │ Ranges:  │
-  │ [A-F]    │  │ [G-M]    │  │ [N-Z]    │
-  └──────────┘  └──────────┘  └──────────┘
-       │              │              │
-       └──────────────┴──────────────┘
-              Raft consensus per range
-              Distributed transactions across ranges
-              Standard SQL interface
+Architecture (CockroachDB example): three nodes own non-overlapping key ranges — Node 1 owns ranges [A–F], Node 2 owns [G–M], Node 3 owns [N–Z]. Each range is replicated across the cluster and uses Raft consensus to commit writes. Distributed transactions span ranges via the cluster coordinator, and clients see a standard SQL interface.
 \`\`\`
 
 **Comparison of NewSQL options**:
@@ -3030,45 +2293,13 @@ Spotify           Google Spanner     PostgreSQL         Global consistency for
 
 **Phased scaling strategy**:
 \`\`\`
-Phase 1 — Single PostgreSQL (0-100K users, 0-50GB)
-  ┌──────────────────────────────────────┐
-  │  Application ──► PostgreSQL          │
-  │                  (single node)       │
-  │                  + Redis (cache)     │
-  └──────────────────────────────────────┘
-  Focus: get product-market fit, iterate fast
-  Cost: ~$50-200/month (managed DB)
-  Migration trigger: p99 query latency > 200ms
+Phase 1 — Single PostgreSQL (0–100K users, 0–50 GB): Application -> PostgreSQL (single node) + Redis (cache). Focus: get product-market fit and iterate fast. Cost ~$50–200/month (managed DB). Migration trigger: p99 query latency > 200 ms.
 
-Phase 2 — Read Replicas (100K-1M users, 50-500GB)
-  ┌──────────────────────────────────────┐
-  │  Application ──► Primary (writes)    │
-  │             ──► Replica 1 (reads)    │
-  │             ──► Replica 2 (reads)    │
-  │             ──► Redis (hot cache)    │
-  └──────────────────────────────────────┘
-  Focus: separate read/write paths
-  Add: connection pooling (PgBouncer), query optimization
-  Migration trigger: write throughput > single node capacity
+Phase 2 — Read replicas (100K–1M users, 50–500 GB): Application -> Primary (writes), Replica 1 (reads), Replica 2 (reads), Redis (hot cache). Focus: separate read/write paths; add connection pooling (PgBouncer) and query optimization. Migration trigger: write throughput exceeds single-node capacity.
 
-Phase 3 — Selective Denormalization (1-5M users)
-  ┌──────────────────────────────────────┐
-  │  PostgreSQL (source of truth)        │
-  │  + Elasticsearch (search/discovery)  │
-  │  + Redis (cache + sessions)          │
-  │  + CDC pipeline (sync stores)        │
-  └──────────────────────────────────────┘
-  Focus: purpose-built stores for specific workloads
-  Add: Elasticsearch for search, materialized views for dashboards
-  Migration trigger: need for specialized query patterns
+Phase 3 — Selective denormalization (1–5M users): PostgreSQL as source of truth, with Elasticsearch (search / discovery), Redis (cache + sessions), and a CDC pipeline syncing the stores. Focus: purpose-built stores for specific workloads — add materialized views for dashboards. Migration trigger: need for specialized query patterns.
 
-Phase 4 — Sharding or NewSQL (5M+ users, 1TB+)
-  ┌──────────────────────────────────────┐
-  │  Option A: CockroachDB/Vitess        │
-  │  (automatic sharding + SQL)          │
-  │                                      │
-  │  Option B: Application-level sharding│
-  │  (shard by tenant_id/region)         │
+Phase 4 — Sharding or NewSQL (5M+ users, 1 TB+): Option A — CockroachDB or Vitess (automatic sharding plus SQL); Option B — application-level sharding (shard by tenant_id or region).
   │                                      │
   │  + Cassandra (high-write workloads)  │
   │  + Elasticsearch (search)            │
@@ -3173,19 +2404,18 @@ DynamoDB — schema change:
 \`\`\`
 
 **Comparison of migration approaches**:
-\`\`\`
-Operation              SQL (PostgreSQL)      NoSQL (MongoDB)
-──────────────────────────────────────────────────────────────
-Add column/field       ALTER TABLE (fast*)    No-op (just write it)
-Remove column/field    ALTER TABLE DROP       Stop writing it (old data persists)
-Change type            Full table rewrite     Dual-read in app code
-Rename column/field    ALTER TABLE RENAME     Write new + read both
-Add index              CREATE INDEX (bg)      createIndex (bg)
-Change primary key     Rebuild table          Not possible (new collection)
-Cross-collection ref   Foreign key (enforced) Application-level (not enforced)
 
-* PostgreSQL ADD COLUMN with DEFAULT is instant since v11
-\`\`\`
+| Operation | SQL (PostgreSQL) | NoSQL (MongoDB) |
+|---|---|---|
+| Add column / field | ALTER TABLE (fast\\*) | No-op (just write it) |
+| Remove column / field | ALTER TABLE DROP | Stop writing it (old data persists) |
+| Change type | Full table rewrite | Dual-read in app code |
+| Rename column / field | ALTER TABLE RENAME | Write new + read both |
+| Add index | CREATE INDEX (background) | createIndex (background) |
+| Change primary key | Rebuild table | Not possible (new collection) |
+| Cross-collection ref | Foreign key (enforced) | Application-level (not enforced) |
+
+\\* PostgreSQL ADD COLUMN with DEFAULT is instant since v11.
 
 **Best practices for production migrations**:
 \`\`\`
@@ -3447,14 +2677,12 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY mv_order_summary;
 \`\`\`
 
 **When materialized views are not enough**:
-\`\`\`
-Limitation                           Alternative
-───────────────────────────────────────────────────
-Cross-database joins                 CDC + denormalized table
-Sub-second freshness needed          CQRS with event streaming
-Complex transformations              Stream processing (Flink)
-NoSQL source (no MV support)         Application-level MV
-\`\`\`
+| Limitation | Alternative |
+|---|---|
+| Cross-database joins | CDC + denormalized table |
+| Sub-second freshness needed | CQRS with event streaming |
+| Complex transformations | Stream processing (Flink) |
+| NoSQL source (no MV support) | Application-level MV |
 
 **Interview tip**: Materialized views are the first tool to reach for before manual denormalization. They keep the source of truth normalized while giving read performance. Only move to manual denormalization or CQRS when MVs cannot meet freshness or cross-system requirements.`
       },
@@ -3533,27 +2761,7 @@ Timeline:
         question: 'How do you use Change Data Capture (CDC) to keep denormalized views consistent with the source of truth?',
         answer: `**Change Data Capture (CDC)** monitors changes in the source database and propagates them to downstream stores. It is the production-grade solution for maintaining denormalized copies without coupling write logic to every downstream consumer.
 
-**CDC architecture**:
-\`\`\`
-Source of Truth (normalized):
-  PostgreSQL ──► WAL (Write-Ahead Log)
-                     │
-                     ▼
-              ┌──────────────┐
-              │  CDC Tool    │ (Debezium, Maxwell, DMS)
-              │  Reads WAL   │
-              └──────┬───────┘
-                     │ events
-                     ▼
-              ┌──────────────┐
-              │  Kafka       │ (event stream)
-              └──────┬───────┘
-          ┌──────────┼──────────┐
-          ▼          ▼          ▼
-    Elasticsearch   Redis     Analytics DW
-    (search index)  (cache)   (BigQuery)
-    denormalized    denormalized  aggregated
-\`\`\`
+**CDC architecture**: PostgreSQL is the normalized source of truth. Its Write-Ahead Log is read by a CDC tool (Debezium / Maxwell / AWS DMS), which emits change events to Kafka. From Kafka, multiple consumers fan out — Elasticsearch maintains a denormalized search index, Redis maintains a denormalized cache, and an analytics warehouse (BigQuery) maintains aggregated views.
 
 **How CDC works with PostgreSQL**:
 \`\`\`
@@ -3578,16 +2786,14 @@ Step 5: User renamed
 \`\`\`
 
 **CDC vs application-level sync**:
-\`\`\`
-Approach              CDC (Debezium)          App-Level Dual Write
-──────────────────────────────────────────────────────────────
-Coupling              None (reads WAL)        Tight (code in every write path)
-Consistency           Guaranteed (WAL=truth)  Race conditions possible
-Performance impact    None on source DB       Doubles write latency
-Missing updates       Impossible (WAL)        Easy to forget a path
-Ordering              Preserved (WAL order)   No ordering guarantee
-Complexity            Infra setup needed      Code changes in every service
-\`\`\`
+| Approach | CDC (Debezium) | App-Level Dual Write |
+|---|---|---|
+| Coupling | None (reads WAL) | Tight (code in every write path) |
+| Consistency | Guaranteed (WAL=truth) | Race conditions possible |
+| Performance impact | None on source DB | Doubles write latency |
+| Missing updates | Impossible (WAL) | Easy to forget a path |
+| Ordering | Preserved (WAL order) | No ordering guarantee |
+| Complexity | Infra setup needed | Code changes in every service |
 
 **When to choose A vs B**:
 - **CDC (Debezium + Kafka)**: Choose when you have multiple downstream consumers that need to stay in sync, when you cannot modify existing write paths, or when consistency of denormalized views is critical. The infrastructure investment pays off when you have 3+ downstream stores.
@@ -3617,27 +2823,25 @@ NoSQL design process:
 \`\`\`
 
 **DynamoDB single-table design example (e-commerce)**:
-\`\`\`
 Access patterns:
   1. Get user profile by user_id
   2. Get all orders for a user
   3. Get order details with items
   4. Get all items in a product category
-
 Single table:
-  PK              SK                  Data
-  ──────────────────────────────────────────────
-  USER#123        PROFILE             {name, email, address}
-  USER#123        ORDER#456           {total, status, date}
-  USER#123        ORDER#456#ITEM#1    {product, qty, price}
-  USER#123        ORDER#456#ITEM#2    {product, qty, price}
-  CATEGORY#elec   PRODUCT#789         {name, price, rating}
 
-  Pattern 1: PK=USER#123, SK=PROFILE → single item
-  Pattern 2: PK=USER#123, SK begins_with ORDER → all orders
-  Pattern 3: PK=USER#123, SK begins_with ORDER#456 → order + items
-  Pattern 4: PK=CATEGORY#elec → all electronics products
-\`\`\`
+| PK | SK | Data |
+|---|---|---|
+| USER#123 | PROFILE | {name, email, address} |
+| USER#123 | ORDER#456 | {total, status, date} |
+| USER#123 | ORDER#456#ITEM#1 | {product, qty, price} |
+| USER#123 | ORDER#456#ITEM#2 | {product, qty, price} |
+| CATEGORY#elec | PRODUCT#789 | {name, price, rating} |
+
+Pattern 1: PK=USER#123, SK=PROFILE → single item
+Pattern 2: PK=USER#123, SK begins_with ORDER → all orders
+Pattern 3: PK=USER#123, SK begins_with ORDER#456 → order + items
+Pattern 4: PK=CATEGORY#elec → all electronics products
 
 **MongoDB embedded document design**:
 \`\`\`
@@ -3876,18 +3080,16 @@ In system design interviews, the strongest answer acknowledges that microservice
         question: 'What criteria should you use to decide between monolith and microservices?',
         answer: `**Decision framework** — evaluate along organizational and technical dimensions:
 
-\`\`\`
-Criteria                 Monolith             Microservices
-──────────────────────────────────────────────────────────────
-Team size                < 50 engineers       > 50 engineers
-Deployment frequency     Weekly/monthly       Daily/hourly per service
-Domain complexity        Low-moderate         High (many bounded contexts)
-Scaling needs            Uniform              Services scale differently
-Technology diversity     Not needed           Different stacks per service
-Organizational structure Single team/few      Many autonomous teams
-Time to market           Critical (startup)   Can invest in infra
-Operational maturity     Low                  High (CI/CD, monitoring, etc.)
-\`\`\`
+| Criteria | Monolith | Microservices |
+|---|---|---|
+| Team size | < 50 engineers | > 50 engineers |
+| Deployment frequency | Weekly/monthly | Daily/hourly per service |
+| Domain complexity | Low-moderate | High (many bounded contexts) |
+| Scaling needs | Uniform | Services scale differently |
+| Technology diversity | Not needed | Different stacks per service |
+| Organizational structure | Single team/few | Many autonomous teams |
+| Time to market | Critical (startup) | Can invest in infra |
+| Operational maturity | Low | High (CI/CD, monitoring, etc.) |
 
 **The real decision tree**:
 \`\`\`
@@ -3906,20 +3108,18 @@ Operational maturity     Low                  High (CI/CD, monitoring, etc.)
 \`\`\`
 
 **What microservices ACTUALLY cost**:
-\`\`\`
-Hidden Cost              Description
-──────────────────────────────────────────────────────
-Service discovery        How do services find each other?
-Distributed tracing      How do you debug across services?
-Config management        How do 50 services get config?
-Secret management        How do services get credentials?
-CI/CD per service        50 services = 50 pipelines
-API versioning           Breaking changes across services
-Data consistency         No distributed transactions
-Network failures         Timeouts, retries, circuit breakers
-Monitoring/alerting      Per-service dashboards and alerts
-On-call complexity       Which service is the problem?
-\`\`\`
+| Hidden Cost | Description |
+|---|---|
+| Service discovery | How do services find each other? |
+| Distributed tracing | How do you debug across services? |
+| Config management | How do 50 services get config? |
+| Secret management | How do services get credentials? |
+| CI/CD per service | 50 services = 50 pipelines |
+| API versioning | Breaking changes across services |
+| Data consistency | No distributed transactions |
+| Network failures | Timeouts, retries, circuit breakers |
+| Monitoring/alerting | Per-service dashboards and alerts |
+| On-call complexity | Which service is the problem? |
 
 **Interview tip**: Lead with "it depends on team size and organizational needs" and walk through the decision tree. This shows mature architectural thinking, not dogmatic preference.`
       },
@@ -4034,21 +3234,19 @@ Modular Monolith:
 \`\`\`
 
 **Comparison**:
-\`\`\`
-Criteria              Monolith    Modular Mono  Microservices
-────────────────────────────────────────────────────────────
-Deployment            Simple      Simple        Complex
-Boundaries            None        Enforced      Physical
-Network overhead      None        None          Yes
-Data consistency      ACID        ACID*         Eventual
-Debugging             Easy        Easy          Hard
-Team independence     Low         Medium        High
-Tech diversity        None        None/limited  Full
-Future extraction     Hard        Easy          Already done
-Operational cost      Low         Low           High
+| Criteria | Monolith | Modular Mono | Microservices |
+|---|---|---|---|
+| Deployment | Simple | Simple | Complex |
+| Boundaries | None | Enforced | Physical |
+| Network overhead | None | None | Yes |
+| Data consistency | ACID | ACID* | Eventual |
+| Debugging | Easy | Easy | Hard |
+| Team independence | Low | Medium | High |
+| Tech diversity | None | None/limited | Full |
+| Future extraction | Hard | Easy | Already done |
+| Operational cost | Low | Low | High |
 
 * Can use DB transactions across modules (same DB)
-\`\`\`
 
 **When modular monolith is ideal**:
 \`\`\`
@@ -4091,17 +3289,15 @@ Distributed Monolith (anti-pattern):
 \`\`\`
 
 **Symptoms of a distributed monolith**:
-\`\`\`
-Symptom                          Root Cause
-──────────────────────────────────────────────────────────
-Must deploy services together    Tight API coupling
-One service change breaks others Shared data models
-Cascading failures              Synchronous call chains
-Shared database tables          No data ownership
-"Microservice" with 50 API deps  Wrong decomposition boundaries
-Every change needs cross-team    Services split by layer
-  coordination                    not by domain
-\`\`\`
+| Symptom | Root Cause |
+|---|---|
+| Must deploy services together | Tight API coupling |
+| One service change breaks others | Shared data models |
+| Cascading failures              S | ynchronous call chains |
+| Shared database tables          N | o data ownership |
+| "Microservice" with 50 API deps | Wrong decomposition boundaries |
+| Every change needs cross-team | Services split by layer |
+| coordination | not by domain |
 
 **How to avoid it**:
 
@@ -4135,15 +3331,13 @@ Every change needs cross-team    Services split by layer
 \`\`\`
 
 **The litmus test**:
-\`\`\`
-  Can you...                           Distributed Mono  True MS
-  ─────────────────────────────────────────────────────────────
-  Deploy one service independently?    No               Yes
-  Change one service's DB schema?      Breaks others    No impact
-  Take one service offline?            System crashes   Degrades gracefully
-  Add a new service without changing   No               Yes
-    existing ones?
-\`\`\`
+| Can you... | Distributed Mono | True MS |
+|---|---|---|
+| Deploy one service independently? | No               Y | es |
+| Change one service's DB schema? | Breaks others    N | o impact |
+| Take one service offline? | System crashes   D | egrades gracefully |
+| Add a new service without changing | No               Y | es |
+| existing ones? |  |  |
 
 **Interview tip**: Distributed monolith is the most common failure mode of microservices adoption. Mentioning it shows real-world experience and warns the interviewer that you will not blindly recommend microservices.`
       },
@@ -4201,15 +3395,13 @@ Why it worked better:
 \`\`\`
 
 **Cost and performance impact**:
-\`\`\`
-Metric                  Microservices       Monolith
-──────────────────────────────────────────────────────────────
-Infrastructure cost     $$$$$               $ (90% reduction)
-Processing latency      High (S3 hops)      Low (in-memory)
-Operational complexity  High (many services) Low (one service)
-Scaling model           Lambda auto-scale   ECS task count
-Debugging               Distributed traces  Single process logs
-\`\`\`
+| Metric | Microservices | Monolith |
+|---|---|---|
+| Infrastructure cost | $$$$$ | $ (90% reduction) |
+| Processing latency | High (S3 hops) | Low (in-memory) |
+| Operational complexity | High (many services) | Low (one service) |
+| Scaling model | Lambda auto-scale | ECS task count |
+| Debugging | Distributed traces | Single process logs |
 
 **Key lessons (not "monoliths are better")**:
 \`\`\`
@@ -4398,16 +3590,14 @@ With resilience patterns:
 \`\`\`
 
 **Decision matrix**:
-\`\`\`
-Requirement              Pattern           Example
-──────────────────────────────────────────────────────────────
-Need immediate response  REST/gRPC         Get user profile
-High throughput, typed   gRPC              Internal ML inference
-Fire-and-forget          Message queue     Send email notification
-Multiple consumers       Pub/sub (Kafka)   Order placed event
-Distributed transaction  Saga pattern      Order → pay → ship
-Streaming data           gRPC streaming    Real-time feed updates
-\`\`\`
+| Requirement | Pattern | Example |
+|---|---|---|
+| Need immediate response | REST/gRPC | Get user profile |
+| High throughput, typed | gRPC | Internal ML inference |
+| Fire-and-forget | Message queue | Send email notification |
+| Multiple consumers | Pub/sub (Kafka) | Order placed event |
+| Distributed transaction | Saga pattern | Order → pay → ship |
+| Streaming data | gRPC streaming | Real-time feed updates |
 
 **When to choose A vs B**:
 - **Synchronous (REST/gRPC)**: Choose when the caller needs an immediate response to continue its work. Add circuit breakers, retries, and timeouts.
@@ -4421,21 +3611,17 @@ Streaming data           gRPC streaming    Real-time feed updates
         answer: `**Conway's Law** states: "Organizations which design systems are constrained to produce designs which are copies of the communication structures of these organizations." In practice, this means your system architecture will mirror your team structure — whether you plan it that way or not.
 
 **Conway's Law in action**:
-\`\`\`
-Team Structure                    Resulting Architecture
-──────────────────────────────────────────────────────────────
-Single team (5-10 people)    →    Monolith
-  Everyone talks to everyone      (tight coupling is fine)
+| Team Structure | Resulting Architecture |
+|---|---|
+| Single team (5-10 people)    → | Monolith |
+| Everyone talks to everyone | (tight coupling is fine) |
 
 3 teams, shared codebase     →    Big ball of mud
-  Unclear ownership               (no one owns anything)
-
+Unclear ownership               (no one owns anything)
 3 teams, clear boundaries    →    Modular monolith
-  Teams own modules               (clean interfaces, one deploy)
-
+Teams own modules               (clean interfaces, one deploy)
 10 teams, autonomous         →    Microservices
-  Teams own services end-to-end   (independent deployment)
-\`\`\`
+Teams own services end-to-end   (independent deployment)
 
 **The Inverse Conway Maneuver**:
 \`\`\`
@@ -4595,31 +3781,26 @@ Warm Invocation (reuses existing container):
 \`\`\`
 
 **Cold start latency by runtime**:
-\`\`\`
-Runtime          Typical Cold Start    With VPC
-──────────────────────────────────────────────────
-Node.js          100-300ms             +200ms*
-Python           150-400ms             +200ms*
-Go               50-100ms              +200ms*
-Java             500-5000ms            +200ms*
-.NET             200-1000ms            +200ms*
+| Runtime | Typical Cold Start | With VPC |
+|---|---|---|
+| Node.js | 100-300ms | +200ms* |
+| Python | 150-400ms | +200ms* |
+| Go | 50-100ms | +200ms* |
+| Java | 500-5000ms | +200ms* |
+| .NET | 200-1000ms | +200ms* |
 
 * VPC cold starts improved dramatically with AWS
-  Hyperplane (2019) — was +10s, now ~200ms
-\`\`\`
+Hyperplane (2019) — was +10s, now ~200ms
 
 **Mitigation strategies**:
-\`\`\`
-Strategy              How                       Trade-off
-──────────────────────────────────────────────────────────
-Provisioned concur.   Pre-warm N instances       Costs $ (always-on)
-Keep-alive pings      CloudWatch timer every 5m  Reduces but doesn't
-                                                  eliminate
-Smaller packages      Fewer dependencies         Limits functionality
-Faster runtimes       Go > Node > Java           Language constraints
-Lazy initialization   Init DB conn on first use  First request slower
-SnapStart (Java)      Checkpoint warm JVM state   AWS-specific
-\`\`\`
+| Strategy | How | Trade-off |
+|---|---|---|
+| Provisioned concur. | Pre-warm N instances | Costs $ (always-on) |
+| Keep-alive pings | CloudWatch timer every 5m | Reduces but doesn't eliminate |
+| Smaller packages | Fewer dependencies | Limits functionality |
+| Faster runtimes | Go > Node > Java | Language constraints |
+| Lazy initialization | Init DB conn on first use | First request slower |
+| SnapStart (Java) | Checkpoint warm JVM state | AWS-specific |
 
 **When cold starts matter vs don't**:
 \`\`\`
@@ -4665,37 +3846,33 @@ VMs (EC2 reserved):
 \`\`\`
 
 **Cost crossover analysis**:
-\`\`\`
 Monthly cost comparison (128MB function, 200ms avg):
 
-Invocations/month   Lambda    Fargate(1 task)  EC2(t3.micro)
-─────────────────────────────────────────────────────────────
-10,000              $0.01     $35              $7.50
-100,000             $0.08     $35              $7.50
-1,000,000           $0.83     $35              $7.50
-10,000,000          $8.35     $35              $7.50
-50,000,000          $41.67    $35              $7.50  ← crossover
-100,000,000         $83.34    $35              $7.50
-500,000,000         $416.67   $35              $7.50
+| Invocations/month | Lambda | Fargate(1 task) | EC2(t3.micro) |
+|---|---|---|---|
+| 10,000 | $0.01 | $35 | $7.50 |
+| 100,000 | $0.08 | $35 | $7.50 |
+| 1,000,000 | $0.83 | $35 | $7.50 |
+| 10,000,000 | $8.35 | $35 | $7.50 |
+| 50,000,000 | $41.67 | $35 | $7.50  ← crossover |
+| 100,000,000 | $83.34 | $35 | $7.50 |
+| 500,000,000 | $416.67 | $35 | $7.50 |
 
 Crossover: ~30-50M invocations/month
-  Below → Lambda is cheaper
-  Above → Containers/VMs are cheaper
-\`\`\`
+Below → Lambda is cheaper
+Above → Containers/VMs are cheaper
 
 **Total Cost of Ownership** (beyond compute):
-\`\`\`
-Cost Factor          Serverless     Containers      VMs
-──────────────────────────────────────────────────────────
-Compute              Pay-per-use    Always-on       Always-on
-Scaling              Automatic      Manual/HPA      Manual
-Ops team             Minimal        Medium (DevOps) Large (SysAdmin)
-Monitoring           CloudWatch     Prometheus+     Nagios+
-Networking           Managed        VPC setup       VPC setup
-Idle cost            Zero           Full            Full
-Burst cost           Linear         Pre-provision   Pre-provision
-Dev productivity     High           Medium          Low
-\`\`\`
+| Cost Factor | Serverless | Containers | VMs |
+|---|---|---|---|
+| Compute | Pay-per-use | Always-on | Always-on |
+| Scaling | Automatic | Manual/HPA | Manual |
+| Ops team | Minimal | Medium (DevOps) | Large (SysAdmin) |
+| Monitoring | CloudWatch | Prometheus+ | Nagios+ |
+| Networking | Managed | VPC setup | VPC setup |
+| Idle cost | Zero | Full | Full |
+| Burst cost | Linear | Pre-provision | Pre-provision |
+| Dev productivity | High | Medium | Low |
 
 **Decision framework**:
 \`\`\`
@@ -4711,22 +3888,20 @@ Dev productivity     High           Medium          Low
         question: 'What workloads are ideal for serverless vs containers vs traditional servers?',
         answer: `**Workload-to-infrastructure matching**:
 
-\`\`\`
-Workload Type        Best Fit      Why
-──────────────────────────────────────────────────────────
-Webhook handlers     Serverless    Bursty, event-driven, idle between
-S3 file processing   Serverless    Event trigger, variable load
-API < 10K QPS        Serverless    Simple, auto-scale, low ops
-Scheduled jobs       Serverless    Pay only for execution time
-Chat/WebSocket       Containers    Long-lived connections
-API > 50K QPS        Containers    Cost-effective at sustained load
-ML inference         Containers    GPU support, model loading
-Stateful services    Containers    Persistent connections, memory
-Legacy apps          VMs           Cannot containerize easily
-Databases            VMs/Managed   Need persistent storage, tuning
-CI/CD runners        Serverless    Bursty, ephemeral
-Image/video process  Serverless    Parallelizable, bursty
-\`\`\`
+| Workload Type | Best Fit | Why |
+|---|---|---|
+| Webhook handlers | Serverless | Bursty, event-driven, idle between |
+| S3 file processing | Serverless | Event trigger, variable load |
+| API < 10K QPS | Serverless | Simple, auto-scale, low ops |
+| Scheduled jobs | Serverless | Pay only for execution time |
+| Chat/WebSocket | Containers | Long-lived connections |
+| API > 50K QPS | Containers | Cost-effective at sustained load |
+| ML inference | Containers | GPU support, model loading |
+| Stateful services | Containers | Persistent connections, memory |
+| Legacy apps | VMs | Cannot containerize easily |
+| Databases | VMs/Managed | Need persistent storage, tuning |
+| CI/CD runners | Serverless | Bursty, ephemeral |
+| Image/video process | Serverless | Parallelizable, bursty |
 
 **Architecture by pattern**:
 \`\`\`
@@ -4755,17 +3930,15 @@ Hybrid (common in practice):
 \`\`\`
 
 **Serverless limitations**:
-\`\`\`
-Limitation               Impact              Workaround
-──────────────────────────────────────────────────────────
-Timeout (15 min AWS)     No long-running      Step Functions
-Connection limits        DB overwhelmed       RDS Proxy, DynamoDB
-Package size (250MB)     Large dependencies   Layers, container Lambda
-Stateless               No in-memory cache   External cache (Redis)
-Cold starts             Latency spikes       Provisioned concurrency
-Vendor lock-in          Migration cost       Abstraction layers
-Local testing           Harder               SAM, Serverless Framework
-\`\`\`
+| Limitation | Impact | Workaround |
+|---|---|---|
+| Timeout (15 min AWS) | No long-running | Step Functions |
+| Connection limits | DB overwhelmed | RDS Proxy, DynamoDB |
+| Package size (250MB) | Large dependencies | Layers, container Lambda |
+| Stateless               N | o in-memory cache | External cache (Redis) |
+| Cold starts             L | atency spikes | Provisioned concurrency |
+| Vendor lock-in          M | igration cost | Abstraction layers |
+| Local testing           H | arder | SAM, Serverless Framework |
 
 **Interview tip**: Frame the decision as a spectrum, not binary. Most production architectures use a mix: containers for the core request path and serverless for event processing, cron jobs, and glue code. This hybrid approach optimizes both cost and performance.`
       },
@@ -4785,20 +3958,18 @@ Lock-in Risk:  LOW ────────────────────�
 \`\`\`
 
 **What is actually locked in**:
-\`\`\`
-Component            AWS                    GCP                  Portable?
-─────────────────────────────────────────────────────────────────────────
-Function runtime     Lambda                 Cloud Functions      YES*
-API routing          API Gateway            Cloud Endpoints      Moderate
-Event triggers       EventBridge            Eventarc             NO
-Queue integration    SQS → Lambda           Pub/Sub → CF         NO
-Database             DynamoDB               Firestore            NO
-Orchestration        Step Functions         Workflows            NO
-Auth                 Cognito                Firebase Auth        NO
+| Component | AWS | GCP | Portable? |
+|---|---|---|---|
+| Function runtime | Lambda | Cloud Functions | YES* |
+| API routing | API Gateway | Cloud Endpoints | Moderate |
+| Event triggers | EventBridge | Eventarc | NO |
+| Queue integration | SQS → Lambda | Pub/Sub → CF | NO |
+| Database | DynamoDB | Firestore | NO |
+| Orchestration | Step Functions | Workflows | NO |
+| Auth | Cognito | Firebase Auth | NO |
 
 * Code runs anywhere, but the handler signature and
-  event format differ between providers.
-\`\`\`
+event format differ between providers.
 
 **Mitigation strategies**:
 
@@ -4874,39 +4045,35 @@ Google Cloud Run (container-based, scales to zero):
 \`\`\`
 
 **Cloudflare Workers ecosystem**:
-\`\`\`
-Component           Purpose                  Comparison
-──────────────────────────────────────────────────────────────
-Workers             Compute at edge           Lambda equivalent
-KV                  Global key-value store    DynamoDB equivalent (eventual)
-D1                  SQLite at edge            Aurora Serverless equivalent
-Durable Objects     Stateful edge compute     No direct AWS equivalent
-R2                  Object storage            S3 equivalent (no egress fees)
-Queues              Message queues            SQS equivalent
-Workers AI          ML inference at edge      SageMaker equivalent
-Workers Containers  Container workloads       Fargate at edge (2025)
-\`\`\`
+| Component | Purpose | Comparison |
+|---|---|---|
+| Workers | Compute at edge | Lambda equivalent |
+| KV | Global key-value store | DynamoDB equivalent (eventual) |
+| D1 | SQLite at edge | Aurora Serverless equivalent |
+| Durable Objects | Stateful edge compute | No direct AWS equivalent |
+| R2 | Object storage | S3 equivalent (no egress fees) |
+| Queues | Message queues | SQS equivalent |
+| Workers AI | ML inference at edge | SageMaker equivalent |
+| Workers Containers | Container workloads | Fargate at edge (2025) |
 
 **When edge serverless beats traditional serverless**:
-\`\`\`
-Use Case                  Lambda          Workers         Winner
-──────────────────────────────────────────────────────────────
-Auth/JWT validation       ~200ms (cold)   <10ms           Workers
-A/B testing               ~200ms          <10ms           Workers
-API response caching      N/A             <10ms           Workers
-Geolocation routing       ~100ms          <5ms            Workers
-Image transformation      ~500ms          <50ms           Workers
-Complex business logic    Full runtime    Limited (10ms)  Lambda
-Heavy computation (>10s)  15 min max      10ms CPU max    Lambda
-VPC/DB access             Native          Via Hyperdrive  Lambda
-Large dependencies        250MB           Varies          Lambda
+| Use Case | Lambda | Workers | Winner |
+|---|---|---|---|
+| Auth/JWT validation | ~200ms (cold) | <10ms | Workers |
+| A/B testing | ~200ms | <10ms | Workers |
+| API response caching | N/A | <10ms | Workers |
+| Geolocation routing | ~100ms | <5ms | Workers |
+| Image transformation | ~500ms | <50ms | Workers |
+| Complex business logic | Full runtime | Limited (10ms) | Lambda |
+| Heavy computation (>10s) | 15 min max | 10ms CPU max | Lambda |
+| VPC/DB access | Native | Via Hyperdrive | Lambda |
+| Large dependencies | 250MB | Varies | Lambda |
 
 Workers limitations:
-  - 10ms CPU time per request (free) / 30s (paid)
-  - No native filesystem access
-  - V8 runtime only (JS/TS/Wasm)
-  - Memory limits (~128MB)
-\`\`\`
+- 10ms CPU time per request (free) / 30s (paid)
+- No native filesystem access
+- V8 runtime only (JS/TS/Wasm)
+- Memory limits (~128MB)
 
 **When to choose A vs B**:
 - **Cloudflare Workers**: Choose for latency-sensitive edge logic (auth, routing, A/B tests, caching), lightweight API endpoints, and workloads that benefit from global distribution. Best for read-heavy, stateless, low-compute tasks.
@@ -6763,20 +5930,18 @@ Leaderless (Peer-to-Peer):
 \`\`\`
 
 **Comparison**:
-\`\`\`
-Criteria              Single-Leader   Multi-Leader   Leaderless
-────────────────────────────────────────────────────────────────
-Write conflicts       None            Yes (async)    Yes (quorum)
-Write throughput      1 node limit    Multi-DC       Any node
-Read scaling          Replicas        Replicas       Any node
-Consistency           Strong*         Eventual       Tunable
-Failover              Promote replica Complex        No failover needed
-Complexity            Low             High           Medium
-Cross-DC latency      Write to 1 DC   Local writes   Local writes
-Data loss risk        Async lag       Conflict loss   Quorum-dependent
+| Criteria | Single-Leader | Multi-Leader | Leaderless |
+|---|---|---|---|
+| Write conflicts | None | Yes (async) | Yes (quorum) |
+| Write throughput | 1 node limit | Multi-DC | Any node |
+| Read scaling | Replicas | Replicas | Any node |
+| Consistency | Strong* | Eventual | Tunable |
+| Failover | Promote replica | Complex | No failover needed |
+| Complexity | Low | High | Medium |
+| Cross-DC latency | Write to 1 DC | Local writes | Local writes |
+| Data loss risk | Async lag | Conflict loss | Quorum-dependent |
 
 * Strong if reading from primary; eventual if reading from replicas
-\`\`\`
 
 **When to use each**:
 \`\`\`
@@ -6823,14 +5988,12 @@ Read X (query R=2 nodes):
 \`\`\`
 
 **Quorum configurations**:
-\`\`\`
-Config        R  W   Behavior
-──────────────────────────────────────────────
-R=N, W=1      3  1   Fast writes, slow reads (check all)
-R=1, W=N      1  3   Fast reads, slow writes (write all)
-R=2, W=2      2  2   Balanced (typical choice for N=3)
-R=1, W=1      1  1   No consistency guarantee! (R+W=2 ≤ N=3)
-\`\`\`
+| Config | R | W | Behavior |
+|---|---|---|---|
+| R=N, W=1 | 3 | 1 | Fast writes, slow reads (check all) |
+| R=1, W=N | 1 | 3 | Fast reads, slow writes (write all) |
+| R=2, W=2 | 2 | 2 | Balanced (typical choice for N=3) |
+| R=1, W=1 | 1 | 1 | No consistency guarantee! (R+W=2 ≤ N=3) |
 
 **How version resolution works**:
 \`\`\`
@@ -6944,16 +6107,14 @@ Strategy 4: Operational Transformation (OT)
 \`\`\`
 
 **Comparison**:
-\`\`\`
-Strategy        Data Loss  Complexity  Automatic  Use Case
-──────────────────────────────────────────────────────────────
-LWW             Yes        Low         Yes        Caches, logs
-App-level       No         High        No         Shopping carts
-CRDTs           No         Medium      Yes        Counters, sets
-OT              No         Very High   Yes        Text editing
-Vector clocks   Detection  Medium      No         General purpose
-  + merge                                          (manual merge)
-\`\`\`
+| Strategy | Data Loss | Complexity | Automatic | Use Case |
+|---|---|---|---|---|
+| LWW | Yes | Low | Yes | Caches, logs |
+| App-level | No | High | No | Shopping carts |
+| CRDTs | No | Medium | Yes | Counters, sets |
+| OT | No | Very High | Yes | Text editing |
+| Vector clocks | Detection | Medium | No | General purpose |
+| + merge |  |  |  | (manual merge) |
 
 **Interview tip**: Start with LWW (simplest, most common). Acknowledge its data loss issue. Then mention CRDTs for cases where all writes must be preserved. Mention OT only if specifically discussing collaborative editing.`
       },
@@ -7025,16 +6186,14 @@ Strategy 4: Lease-Based Leadership
 \`\`\`
 
 **Comparison**:
-\`\`\`
-Strategy          Reliability     Complexity    Latency Impact
-──────────────────────────────────────────────────────────────
-Fencing tokens    High            Medium        None
-Quorum election   Very High       Low (built-in) Election delay
-STONITH           Very High       High          Restart delay
-Lease-based       High            Medium        Lease duration
-Epoch numbers     High            Low           None
-  (Raft/Paxos)
-\`\`\`
+| Strategy | Reliability | Complexity | Latency Impact |
+|---|---|---|---|
+| Fencing tokens | High | Medium | None |
+| Quorum election | Very High | Low (built-in) | Election delay |
+| STONITH | Very High | High | Restart delay |
+| Lease-based | High | Medium | Lease duration |
+| Epoch numbers | High | Low | None |
+| (Raft/Paxos) |  |  |  |
 
 **How Raft prevents split-brain**:
 \`\`\`
@@ -7090,20 +6249,18 @@ Cassandra (leaderless):
 \`\`\`
 
 **Detailed comparison**:
-\`\`\`
-Feature              CockroachDB            Cassandra
-──────────────────────────────────────────────────────────────
-Consistency          Serializable           Tunable (ONE to ALL)
-SQL support          Full PostgreSQL wire   CQL (SQL-like, no joins)
-Distributed txns     Yes (2PC + Raft)       No (lightweight txns only)
-Write latency        Higher (consensus)     Lower (quorum, no consensus)
-Write throughput     Moderate               Very high
-Read latency         Low (leaseholder)      Low (any node)
-Conflict handling    Prevented (serializable) LWW or app-level
-Multi-region         Geo-partitioning       Multi-DC replication
-Scaling              Add nodes (auto-rebal) Add nodes (auto-rebal)
-Operational model    PostgreSQL-like        Unique (ring, gossip)
-\`\`\`
+| Feature | CockroachDB | Cassandra |
+|---|---|---|
+| Consistency | Serializable | Tunable (ONE to ALL) |
+| SQL support | Full PostgreSQL wire | CQL (SQL-like, no joins) |
+| Distributed txns | Yes (2PC + Raft) | No (lightweight txns only) |
+| Write latency | Higher (consensus) | Lower (quorum, no consensus) |
+| Write throughput | Moderate | Very high |
+| Read latency | Low (leaseholder) | Low (any node) |
+| Conflict handling | Prevented (serializable | ) LWW or app-level |
+| Multi-region | Geo-partitioning | Multi-DC replication |
+| Scaling | Add nodes (auto-rebal) | Add nodes (auto-rebal) |
+| Operational model | PostgreSQL-like | Unique (ring, gossip) |
 
 **When to choose each — real-world decision criteria**:
 \`\`\`
@@ -7182,19 +6339,17 @@ Strategy 3 — Geo-partitioned (CockroachDB / Spanner):
 \`\`\`
 
 **Decision matrix**:
-\`\`\`
-Strategy          Write Latency  Consistency    Complexity   Use Case
-──────────────────────────────────────────────────────────────────
-Single primary    High (remote)  Strong         Low          Read-heavy global
-Multi-primary     Low (local)    Eventual       High         Write-heavy global
-Geo-partitioned   Low (local)    Strong (local) Medium       User-local data
-Follow-the-sun    Varies         Strong         Medium       Time-zone aligned
+| Strategy | Write Latency | Consistency | Complexity | Use Case |
+|---|---|---|---|---|
+| Single primary | High (remote) | Strong | Low | Read-heavy global |
+| Multi-primary | Low (local) | Eventual | High | Write-heavy global |
+| Geo-partitioned | Low (local) | Strong (local) | Medium | User-local data |
+| Follow-the-sun | Varies | Strong | Medium | Time-zone aligned |
 
 Follow-the-sun: primary migrates to the active region
-  - 8AM-8PM US: US is primary
-  - 8AM-8PM EU: EU is primary
-  - Works for region-specific business hours
-\`\`\`
+- 8AM-8PM US: US is primary
+- 8AM-8PM EU: EU is primary
+- Works for region-specific business hours
 
 **GDPR and data residency implications**:
 \`\`\`
@@ -7250,48 +6405,39 @@ Leader election (when leader fails):
 \`\`\`
 
 **Why Raft over Paxos**:
-\`\`\`
 Paxos problems:
   - Described in stages (single-decree, multi-decree, ...)
   - Gap between description and implementation is huge
   - Many production implementations have bugs
   - No standard approach for leader election
   - Multi-Paxos is an extension, not clearly specified
-
 Raft advantages:
   - Single, complete algorithm (election + replication + safety)
   - Clear leader concept (all decisions flow through leader)
   - Log-structured (ordered sequence of entries)
   - Understandable (designed for education AND production)
   - Many correct implementations (etcd, CockroachDB, TiDB)
-
 Comparison:
-  Criteria              Paxos              Raft
-  ──────────────────────────────────────────────────
-  Understandability     Very hard          Moderate
-  Implementation        Error-prone        Straightforward
-  Leader election       Not specified      Built-in
-  Log compaction        Not specified      Built-in (snapshots)
-  Theoretical optimality Better (fewer msgs) Slightly more messages
-  Production use        ZooKeeper, Spanner etcd, CockroachDB, TiDB
-  Membership changes    Complex            Joint consensus
-\`\`\`
+
+| Criteria | Paxos | Raft |
+|---|---|---|
+| Understandability | Very hard | Moderate |
+| Implementation | Error-prone | Straightforward |
+| Leader election | Not specified | Built-in |
+| Log compaction | Not specified | Built-in (snapshots) |
+| Theoretical optimality | Better (fewer msgs | ) Slightly more messages |
+| Production use | ZooKeeper, Spanner | etcd, CockroachDB, TiDB |
+| Membership changes | Complex | Joint consensus |
 
 **Raft in production systems**:
-\`\`\`
-System              How Raft Is Used
-──────────────────────────────────────────────────────────────
-etcd                Entire database is one Raft group
-                    (Kubernetes control plane relies on this)
-CockroachDB         One Raft group per data range (~512MB)
-                    Thousands of Raft groups per cluster
-TiDB/TiKV           One Raft group per data region
-                    Multi-Raft for scalability
-Consul              Service discovery, leader election
-HashiCorp Vault     Secret storage, HA coordination
-Redis Sentinel      Leader election for Redis clusters
-                    (Raft-like protocol)
-\`\`\`
+| System | How Raft Is Used |
+|---|---|
+| etcd | Entire database is one Raft group (Kubernetes control plane relies on this) |
+| CockroachDB | One Raft group per data range (~512MB) Thousands of Raft groups per cluster |
+| TiDB/TiKV | One Raft group per data region Multi-Raft for scalability |
+| Consul | Service discovery, leader election |
+| HashiCorp Vault | Secret storage, HA coordination |
+| Redis Sentinel | Leader election for Redis clusters (Raft-like protocol) |
 
 **Key safety properties**:
 \`\`\`
@@ -7532,15 +6678,13 @@ Strategy 4: Tag-Based Invalidation (Surrogate Keys)
 \`\`\`
 
 **Comparison**:
-\`\`\`
-Strategy              Speed        Precision   Complexity  Best For
-──────────────────────────────────────────────────────────────────
-Cache-busting URL     Instant      Exact       Low         Static assets
-Purge API             Seconds-min  Per-URL     Medium      Dynamic content
-Short TTL + SWR       TTL delay    Time-based  Low         API responses
-Tag-based purge       Instant      Per-tag     Medium      CMS/catalog
-Event-driven purge    Seconds      Per-entity  High        E-commerce
-\`\`\`
+| Strategy | Speed | Precision | Complexity | Best For |
+|---|---|---|---|---|
+| Cache-busting URL | Instant | Exact | Low | Static assets |
+| Purge API | Seconds-min | Per-URL | Medium | Dynamic content |
+| Short TTL + SWR | TTL delay | Time-based | Low | API responses |
+| Tag-based purge | Instant | Per-tag | Medium | CMS/catalog |
+| Event-driven purge | Seconds | Per-entity | High | E-commerce |
 
 **Anti-pattern: Long TTL + purge-on-update**:
 \`\`\`
@@ -7561,19 +6705,17 @@ Event-driven purge    Seconds      Per-entity  High        E-commerce
         question: 'When should you NOT use a CDN?',
         answer: `**CDN is not appropriate for all content types.** Key scenarios where direct serving is better:
 
-\`\`\`
-Content Type              CDN Appropriate?    Reason
-──────────────────────────────────────────────────────────────
-Static assets (JS/CSS)    YES (always)        Immutable, cacheable
-Public images/video       YES                 Heavy bandwidth, global
-Public API (read-only)    YES (short TTL)     Reduces origin load
-Personalized content      USUALLY NO          Different per user
-Authenticated APIs        CAREFUL             Must vary by auth token
-Real-time data            NO                  Stale by definition
-WebSocket connections     NO                  Not cacheable
-Write endpoints (POST)    NO                  Must reach origin
-Small/single-region app   MAYBE NOT           Overhead > benefit
-\`\`\`
+| Content Type | CDN Appropriate? | Reason |
+|---|---|---|
+| Static assets (JS/CSS) | YES (always) | Immutable, cacheable |
+| Public images/video | YES | Heavy bandwidth, global |
+| Public API (read-only) | YES (short TTL) | Reduces origin load |
+| Personalized content | USUALLY NO | Different per user |
+| Authenticated APIs | CAREFUL | Must vary by auth token |
+| Real-time data | NO | Stale by definition |
+| WebSocket connections | NO | Not cacheable |
+| Write endpoints (POST) | NO | Must reach origin |
+| Small/single-region app | MAYBE NOT | Overhead > benefit |
 
 **Detailed scenarios where CDN hurts**:
 
@@ -7653,31 +6795,25 @@ Edge Computing:
 \`\`\`
 
 **Edge computing platforms**:
-\`\`\`
-Platform               Runtime           Cold Start    Limits
-──────────────────────────────────────────────────────────────
-Cloudflare Workers     V8 isolates       0ms           10ms CPU / 128MB
-AWS CloudFront Fn      JavaScript        <1ms          <1ms limit
-AWS Lambda@Edge        Node/Python       ~5-100ms      5s / 128MB
-Fastly Compute         Wasm              0ms           Variable
-Vercel Edge Functions  V8 (Node subset)  0ms           Variable
-Deno Deploy            V8 (Deno)         0ms           Variable
-\`\`\`
+| Platform | Runtime | Cold Start | Limits |
+|---|---|---|---|
+| Cloudflare Workers | V8 isolates | 0ms | 10ms CPU / 128MB |
+| AWS CloudFront Fn | JavaScript | <1ms | <1ms limit |
+| AWS Lambda@Edge | Node/Python | ~5-100ms | 5s / 128MB |
+| Fastly Compute | Wasm | 0ms | Variable |
+| Vercel Edge Functions | V8 (Node subset) | 0ms | Variable |
+| Deno Deploy | V8 (Deno) | 0ms | Variable |
 
 **Use cases for edge computing**:
-\`\`\`
-Use Case                  Why at Edge            Example
-──────────────────────────────────────────────────────────────
-A/B testing               No origin round-trip   Vary response at edge
-Auth token validation     Reject early           JWT verify at edge
-Geolocation routing       Know user location     Localized content
-Bot detection             Block before origin    Fingerprint + block
-Request transformation    Modify headers/body    Add user-agent header
-Personalization (light)   Combine cached +       Inject user name into
-                          user context            cached HTML template
-API response assembly     Aggregate cached        Merge 3 cached API
-                          fragments               responses at edge
-\`\`\`
+| Use Case | Why at Edge | Example |
+|---|---|---|
+| A/B testing | No origin round-trip | Vary response at edge |
+| Auth token validation | Reject early | JWT verify at edge |
+| Geolocation routing | Know user location | Localized content |
+| Bot detection | Block before origin | Fingerprint + block |
+| Request transformation | Modify headers/body | Add user-agent header |
+| Personalization (light) | Combine cached + user context | Inject user name into cached HTML template |
+| API response assembly | Aggregate cached fragments | Merge 3 cached API responses at edge |
 
 **Architecture comparison**:
 \`\`\`
@@ -7695,14 +6831,12 @@ Edge Computing:
 \`\`\`
 
 **Edge data stores**:
-\`\`\`
-Store              Read Latency    Write Latency    Consistency
-──────────────────────────────────────────────────────────────
-Cloudflare KV      <10ms (global)  ~60s propagation  Eventual
-Cloudflare D1      <10ms (SQLite)  ~ms (local)       Strong (local)
-DynamoDB Global    <10ms (local)   ~ms (local)       Eventual (global)
-Turso (LibSQL)     <5ms (replica)  ~ms (primary)     Eventual (global)
-\`\`\`
+| Store | Read Latency | Write Latency | Consistency |
+|---|---|---|---|
+| Cloudflare KV | <10ms (global) | ~60s propagation | Eventual |
+| Cloudflare D1 | <10ms (SQLite) | ~ms (local) | Strong (local) |
+| DynamoDB Global | <10ms (local) | ~ms (local) | Eventual (global) |
+| Turso (LibSQL) | <5ms (replica) | ~ms (primary) | Eventual (global) |
 
 **The spectrum from CDN to edge to origin**:
 \`\`\`
@@ -7729,35 +6863,25 @@ Turso (LibSQL)     <5ms (replica)  ~ms (primary)     Eventual (global)
         answer: `**E-commerce CDN design** is one of the most practical CDN scenarios because it combines static assets, semi-dynamic catalog pages, personalized recommendations, and transactional endpoints that must never be cached.
 
 **Content classification and CDN strategy per type**:
-\`\`\`
-Content Type          CDN Strategy                Cache-Control Header
-──────────────────────────────────────────────────────────────────────
-Product images        CDN, long TTL               public, max-age=31536000, immutable
-                      Cache-busting filenames      (1 year, versioned URLs)
+| Content Type | CDN Strategy | Cache-Control Header |
+|---|---|---|
+| Product images | CDN, long TTL Cache-busting filenames | public, max-age=31536000, immutable (1 year, versioned URLs) |
 
 CSS/JS bundles        CDN, long TTL               public, max-age=31536000, immutable
-                      Hash in filename             (Vite/webpack handles this)
-
+Hash in filename             (Vite/webpack handles this)
 Product listing page  CDN, short TTL + SWR        public, max-age=10,
-                      (price may change)           stale-while-revalidate=60
-
+(price may change)           stale-while-revalidate=60
 Search results        CDN, very short TTL          public, max-age=5,
-                      (dynamic but cacheable)      stale-while-revalidate=30
-
+(dynamic but cacheable)      stale-while-revalidate=30
 Cart/checkout         NO CDN                       private, no-store
-                      (personalized, transactional)
-
+(personalized, transactional)
 API: product details  CDN, short TTL               public, max-age=30,
-                      (common product, cacheable)   stale-while-revalidate=120
-
+(common product, cacheable)   stale-while-revalidate=120
 API: user profile     NO CDN                       private, no-cache
-                      (personalized)
-
+(personalized)
 API: inventory check  CDN, very short TTL          public, max-age=2,
-                      (approximate count OK)        stale-while-revalidate=10
-
+(approximate count OK)        stale-while-revalidate=10
 Payment webhook       NO CDN (pass-through)        Not applicable
-\`\`\`
 
 **Architecture**:
 \`\`\`
@@ -7822,26 +6946,23 @@ During spike:
         answer: `**CDN selection** depends on your specific requirements: global reach, purge speed, edge compute capabilities, cost model, and integration with your cloud provider.
 
 **Provider comparison**:
-\`\`\`
-Feature              Cloudflare        CloudFront         Fastly
-──────────────────────────────────────────────────────────────
-PoPs                 300+              600+               90+
-Purge speed          <1 second         Up to 15 minutes*  ~150ms (instant)
-Edge compute         Workers (V8)      Functions (JS)     Compute (Wasm)
-                     + Lambda@Edge     (limited)
-Pricing model        Flat rate + usage Bandwidth + req    Bandwidth + req
-Free tier            Generous          12 months free     None (paid only)
-DDoS protection      Built-in (all)    AWS Shield (extra) Basic included
-DNS                  Built-in          Route53 (extra)    Limited
-WAF                  Built-in          AWS WAF (extra)    Built-in
-Analytics            Built-in          CloudWatch         Real-time logs
-Best integration     Any provider      AWS ecosystem      Varnish/VCL experts
+| Feature | Cloudflare | CloudFront | Fastly |
+|---|---|---|---|
+| PoPs | 300+ | 600+ | 90+ |
+| Purge speed | <1 second | Up to 15 minutes* | ~150ms (instant) |
+| Edge compute | Workers (V8) + Lambda@Edge | Functions (JS) (limited) | Compute (Wasm) |
+| Pricing model | Flat rate + usage | Bandwidth + req | Bandwidth + req |
+| Free tier | Generous | 12 months free | None (paid only) |
+| DDoS protection | Built-in (all) | AWS Shield (extra) | Basic included |
+| DNS | Built-in | Route53 (extra) | Limited |
+| WAF | Built-in | AWS WAF (extra) | Built-in |
+| Analytics | Built-in | CloudWatch | Real-time logs |
+| Best integration | Any provider | AWS ecosystem | Varnish/VCL experts |
 
 * CloudFront purge: individual files ~seconds,
-  wildcard purge up to 15 minutes.
-  CloudFront Functions: ~1ms, but very limited (2MB, no network)
-  Lambda@Edge: 5-100ms cold start, more powerful
-\`\`\`
+wildcard purge up to 15 minutes.
+CloudFront Functions: ~1ms, but very limited (2MB, no network)
+Lambda@Edge: 5-100ms cold start, more powerful
 
 **When to choose each**:
 \`\`\`
@@ -7871,22 +6992,17 @@ Choose Fastly when:
 \`\`\`
 
 **Cost comparison (rough, for 10TB/month bandwidth)**:
-\`\`\`
-Provider          Monthly Cost      Notes
-──────────────────────────────────────────────────────
-Cloudflare Pro    $20/month + usage Generous free tier,
-                  (bandwidth free!) no bandwidth charges
-Cloudflare Biz    $200/month        WAF, custom rules
-CloudFront        ~$850/month       $0.085/GB (US/EU)
-                                    Volume discounts available
-Fastly            ~$750/month       $0.08/GB (US),
-                                    minimum $50/month
-Bunny CDN         ~$100/month       $0.01/GB, budget option
-KeyCDN            ~$40/month        $0.04/GB, pay-as-you-go
+| Provider | Monthly Cost | Notes |
+|---|---|---|
+| Cloudflare Pro | $20/month + usage (bandwidth free!) | Generous free tier, no bandwidth charges |
+| Cloudflare Biz | $200/month | WAF, custom rules |
+| CloudFront | ~$850/month | $0.085/GB (US/EU) Volume discounts available |
+| Fastly | ~$750/month | $0.08/GB (US), minimum $50/month |
+| Bunny CDN | ~$100/month | $0.01/GB, budget option |
+| KeyCDN | ~$40/month | $0.04/GB, pay-as-you-go |
 
 Note: Cloudflare does not charge for CDN bandwidth
 on paid plans, making it dramatically cheaper at scale.
-\`\`\`
 
 **When to choose A vs B — decision framework**:
 - **Cloudflare (default recommendation)**: Best overall value for most applications. Free tier is generous, paid plans include bandwidth, and Workers ecosystem is the most mature edge compute platform. Choose unless you have a specific reason not to.
@@ -7901,18 +7017,15 @@ on paid plans, making it dramatically cheaper at scale.
         answer: `**CDN effectiveness** is measured primarily by cache hit rate — the percentage of requests served from cache without reaching the origin. A low hit rate means you are paying for CDN infrastructure without getting the latency and origin-offload benefits.
 
 **Key metrics**:
-\`\`\`
-Metric                  Target          What It Tells You
-──────────────────────────────────────────────────────────────
-Cache hit rate          >85% (static)   % of requests served from edge
-                        >50% (API)      without origin round-trip
-Origin offload          >70%            % reduction in origin requests
-TTFB (Time to First     <100ms (edge)   How fast users get first byte
-  Byte)                 <500ms (miss)
-Cache fill rate         <30%            % of cache capacity in use
-Bandwidth savings       >60%            Egress cost reduction
-Purge latency           <5 seconds      How fast invalidation propagates
-\`\`\`
+| Metric | Target | What It Tells You |
+|---|---|---|
+| Cache hit rate | >85% (static) >50% (API) | % of requests served from edge without origin round-trip |
+| Origin offload | >70% | % reduction in origin requests |
+| TTFB (Time to First | <100ms (edge) | How fast users get first byte |
+| Byte) | <500ms (miss) |  |
+| Cache fill rate | <30% | % of cache capacity in use |
+| Bandwidth savings | >60% | Egress cost reduction |
+| Purge latency | <5 seconds | How fast invalidation propagates |
 
 **Diagnosing low cache hit rate**:
 \`\`\`

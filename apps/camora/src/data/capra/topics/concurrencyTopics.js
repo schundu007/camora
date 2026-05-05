@@ -267,40 +267,19 @@ Each fork starts "dirty." A philosopher requests forks from neighbors. If a neig
         title: 'Thread Pool Architecture',
         description: 'Managing worker threads efficiently with task queue and bounded concurrency',
         svgTemplate: 'threadPool',
-        architecture: `
-┌──────────────────────────────────────────────────────────────────────────┐
-│                           Thread Pool                                     │
-├──────────────────────────────────────────────────────────────────────────┤
-│                                                                           │
-│  ┌─────────────────┐    ┌──────────────────────────────────────────────┐ │
-│  │  Task Submitter │───►│              Task Queue                       │ │
-│  │  (Main Thread)  │    │  [Task1][Task2][Task3][Task4][Task5]...      │ │
-│  └─────────────────┘    └──────────────────────────────────────────────┘ │
-│                                         │                                 │
-│                                         ▼                                 │
-│         ┌───────────────────────────────────────────────────────┐        │
-│         │                   Worker Threads                       │        │
-│         │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐   │        │
-│         │  │Worker 1 │  │Worker 2 │  │Worker 3 │  │Worker 4 │   │        │
-│         │  │ [busy]  │  │ [idle]  │  │ [busy]  │  │ [idle]  │   │        │
-│         │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘   │        │
-│         │       │            │            │            │         │        │
-│         │       ▼            ▼            ▼            ▼         │        │
-│         │   Execute      Wait for      Execute     Wait for     │        │
-│         │   Task 1       next task     Task 3      next task    │        │
-│         └───────────────────────────────────────────────────────┘        │
-│                                         │                                 │
-│                                         ▼                                 │
-│  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │                        Completed Results                          │   │
-│  │                    Future1 ✓  Future2 ✓  Future3 ...              │   │
-│  └──────────────────────────────────────────────────────────────────┘   │
-│                                                                           │
-│  Benefits:                                                                │
-│  • Reuse threads (no creation overhead)                                  │
-│  • Bounded concurrency (prevent resource exhaustion)                     │
-│  • Task queue handles bursts gracefully                                  │
-└──────────────────────────────────────────────────────────────────────────┘`
+        architecture: `![Thread pool — submitter, queue, workers, results](/diagrams/systemdesign/thread-pool.png)
+
+The pool has three regions:
+
+1. A task submitter (the main thread) places work onto a bounded task queue.
+2. A fixed set of worker threads pulls tasks off the queue. Workers alternate between executing a task and waiting for the next one — the busy/idle mix shifts with load.
+3. Completed work is returned through Futures (or callbacks) to the original caller.
+
+Why this shape pays off:
+
+- Threads are reused, so per-task creation overhead disappears.
+- Concurrency is bounded by the worker count, which prevents resource exhaustion under bursts.
+- The queue absorbs short spikes; sustained overload is visible as queue depth and is the right place to apply backpressure.`
       },
 
       concepts: [

@@ -72,27 +72,7 @@ Beyond single-node crash recovery, the WAL pattern extends naturally to **replic
         answer: `**Core guarantee**: If the WAL entry has been fsynced to disk, the change is durable — even if the process crashes before the actual data file is updated.
 
 **Write path with WAL**:
-\`\`\`
-Client WRITE request
-        │
-        ▼
-┌─────────────────┐
-│ Append to WAL   │◄── Sequential I/O (fast)
-│ + fsync to disk │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Update in-memory │   (memtable / buffer pool)
-│ data structure   │
-└────────┬────────┘
-         │
-         ▼  (eventually)
-┌─────────────────┐
-│ Flush to data   │◄── Background checkpoint
-│ files on disk   │
-└─────────────────┘
-\`\`\`
+A client write follows three steps in order: (1) append the change to the WAL and fsync it to disk — sequential I/O, fast; (2) update the in-memory data structure (memtable or buffer pool); (3) eventually a background checkpoint flushes the in-memory state to the on-disk data files. Crashes between steps are recoverable because the WAL on disk is the durable record.
 
 **Crash recovery**:
 1. On startup the system reads the WAL from the last checkpoint
@@ -108,21 +88,7 @@ Client WRITE request
         question: 'What is the relationship between WAL, LSM trees, and SSTables?',
         answer: `**LSM-tree architecture** (used by LevelDB, RocksDB, Cassandra, HBase):
 
-\`\`\`
-  Write ──► WAL (on disk, sequential append)
-             │
-             ▼
-         Memtable (in-memory sorted structure)
-             │  (when full)
-             ▼
-      Flush to SSTable (Sorted String Table)
-             │
-      Level 0: SST SST SST  (unsorted between files)
-             │  compaction
-      Level 1: ┌──────────┐ (sorted, non-overlapping)
-      Level 2: ┌────────────────┐
-      Level 3: ┌──────────────────────┐
-\`\`\`
+An LSM-tree write goes WAL (sequential append on disk) → Memtable (in-memory sorted structure). When the memtable fills, it is flushed to a Sorted String Table (SSTable). Level 0 holds the freshly-flushed SSTables (unsorted relative to each other); compaction merges them into Level 1 (sorted, non-overlapping ranges), then Level 2, Level 3, and so on, with each level holding progressively more data.
 
 **Role of WAL in LSM trees**:
 - The memtable lives in RAM — a crash would lose it
@@ -138,17 +104,7 @@ Client WRITE request
         question: 'How is WAL used for replication in distributed databases?',
         answer: `**Log-based replication**: The leader's WAL becomes the replication stream.
 
-\`\`\`
-┌────────────┐     WAL Stream     ┌────────────┐
-│   Leader   │ ──────────────────►│  Follower  │
-│            │    (continuous)     │            │
-│ WAL ─► DB  │                    │ WAL ─► DB  │
-└────────────┘                    └────────────┘
-       │            WAL Stream     ┌────────────┐
-       └─────────────────────────►│  Follower  │
-                                   │ WAL ─► DB  │
-                                   └────────────┘
-\`\`\`
+The Leader's WAL is the replication stream: as Leader writes WAL → DB, a continuous WAL stream is sent to each Follower; each Follower writes its own WAL → DB. Multiple followers receive the same stream in parallel.
 
 **PostgreSQL streaming replication**:
 1. Leader writes to its WAL as normal
@@ -365,40 +321,9 @@ SQLite:
       },
       {
         question: 'How does Amazon Aurora rethink the WAL for cloud-native databases?',
-        answer: `**Traditional approach (PostgreSQL on EC2)**:
-\`\`\`
-  Primary ──── WAL records ────► Replica 1
-     │                             │
-     │         WAL records ────► Replica 2
-     │
-     └── Writes data pages to EBS (synchronous)
-         + Ships WAL for replication
+        answer: `**Traditional approach (PostgreSQL on EC2)**: the Primary ships WAL records to Replica 1 and Replica 2, while also writing data pages synchronously to EBS plus shipping WAL for replication. Total network I/O per write: WAL to disk (EBS) + WAL to replica 1 + WAL to replica 2 + data pages to EBS — roughly 4× amplification.
 
-  Total network I/O per write:
-    1. WAL to disk (EBS)
-    2. WAL to replica 1
-    3. WAL to replica 2
-    4. Data pages to EBS (eventually)
-    = 4x amplification
-\`\`\`
-
-**Aurora's insight — "the log IS the database"**:
-\`\`\`
-  Primary ──── WAL records only ────► Storage Layer
-                                        (6 copies across 3 AZs)
-                                        │
-                                        ▼
-                                   Storage nodes reconstruct
-                                   data pages from WAL locally
-                                        │
-                                        ▼
-                                   Replicas read from
-                                   shared storage (cached)
-
-  Total network I/O per write:
-    1. WAL to storage layer (quorum write: 4 of 6)
-    = 1x amplification (no data page shipping!)
-\`\`\`
+**Aurora's insight — "the log IS the database"**: the Primary sends only WAL records to a shared storage layer (6 copies across 3 AZs); storage nodes reconstruct data pages from the WAL locally; read replicas read directly from the same shared storage (cached). Total network I/O per write: a single quorum write of WAL to storage (4 of 6) — about 1× amplification, and no data-page shipping at all.
 
 **Key design decisions**:
 1. **Only ship redo log records** — never ship data pages over the network. Storage nodes materialize pages locally by applying WAL records. This reduces network traffic by ~7x.
@@ -510,16 +435,7 @@ Detection:
         question: 'How does Cassandra use gossip for cluster management?',
         answer: `**Cassandra's gossip layer** handles three responsibilities:
 
-\`\`\`
-┌─────────┐  gossip  ┌─────────┐  gossip  ┌─────────┐
-│ Node A  │◄────────►│ Node B  │◄────────►│ Node C  │
-│ Token:1 │          │ Token:50│          │Token:100│
-│ State:  │          │ State:  │          │ State:  │
-│ NORMAL  │          │ NORMAL  │          │ JOINING │
-└─────────┘          └─────────┘          └─────────┘
-     ▲                                         │
-     └──────────── gossip ─────────────────────┘
-\`\`\`
+Each Cassandra node carries its own metadata — token assignment and current state — and gossips bidirectionally with peers. Example three-node cluster: Node A (token 1, state NORMAL) gossips with Node B (token 50, NORMAL); B gossips with Node C (token 100, JOINING); C also gossips back to A, completing the mesh. There is no central coordinator; every node eventually learns every other node's token and state through these pairwise exchanges.
 
 **1. Membership and topology**:
 - Every node knows every other node's token range, data center, rack
@@ -574,27 +490,9 @@ Detection:
       },
       {
         question: 'What are the trade-offs of gossip vs centralized coordination (e.g., ZooKeeper)?',
-        answer: `**Gossip (decentralized)**:
-\`\`\`
-  ┌───┐    ┌───┐    ┌───┐
-  │ A │◄──►│ B │◄──►│ C │    Every node is equal
-  └─┬─┘    └─┬─┘    └─┬─┘    No coordinator
-    │        │        │
-    └──►┌───┐◄───────┘
-        │ D │
-        └───┘
-\`\`\`
+        answer: `**Gossip (decentralized)**: every node is equal and there is no coordinator. Each node exchanges state with random peers — A talks to B, B talks to C, both talk to D — and information propagates pairwise across the mesh.
 
-**Centralized (ZooKeeper/etcd)**:
-\`\`\`
-         ┌──────────┐
-    ┌───►│ ZooKeeper│◄───┐
-    │    │ (leader) │    │
-    │    └──────────┘    │
-  ┌─┴─┐   ┌───┐      ┌─┴─┐
-  │ A │   │ B │      │ C │
-  └───┘   └───┘      └───┘
-\`\`\`
+**Centralized (ZooKeeper / etcd)**: every node (A, B, C) reads from and writes to a single coordination service (a ZooKeeper / etcd quorum). The coordinator is the single source of truth; member nodes do not gossip with each other.
 
 | Property | Gossip | Centralized |
 |----------|--------|-------------|
@@ -661,17 +559,7 @@ Detection:
         question: 'How does Consul use SWIM gossip for service discovery and health checking?',
         answer: `**Consul's two gossip pools**:
 
-\`\`\`
-  Data Center 1 (LAN Pool)        Data Center 2 (LAN Pool)
-  ┌──────────────────────┐        ┌──────────────────────┐
-  │ Server A ◄──► Server B│       │ Server D ◄──► Server E│
-  │    ▲          ▲      │        │    ▲          ▲      │
-  │    ▼          ▼      │        │    ▼          ▼      │
-  │ Client 1   Client 2 │        │ Client 3   Client 4 │
-  └────────┬─────────────┘        └────────┬─────────────┘
-           │     WAN Pool (servers only)    │
-           └────────────◄──────────────────┘
-\`\`\`
+Each datacenter runs its own LAN gossip pool: in DC1, Server A and Server B exchange gossip and Client 1 / Client 2 join the same LAN pool; DC2 mirrors that with Server D / Server E and Client 3 / Client 4. A separate WAN gossip pool spans the two datacenters but only Consul servers (A, B, D, E) participate — clients never gossip across the WAN. Servers act as gateways between LAN and WAN pools.
 
 **LAN gossip pool** (based on Serf, which implements SWIM):
 - All nodes in a datacenter participate (servers + clients)
@@ -881,20 +769,7 @@ Systems like **Riak** (which switched from vector clocks to dotted version vecto
 - VC(a) < VC(b) if every entry in a <= corresponding entry in b, and at least one is strictly less → a **happened before** b
 - If neither a < b nor b < a → a and b are **concurrent**
 
-\`\`\`
-Node A       Node B       Node C
-[1,0,0]
-  │──msg──►
-             [1,1,0]
-                │──msg──►
-                           [1,1,1]
-[2,0,0]                      │
-  │          [1,2,0]◄──msg───┘
-  │            │
-  │──msg──►  merge:
-             max([2,0,0],[1,2,0]) = [2,2,0]
-             increment B: [2,3,0]
-\`\`\`
+Worked example with three nodes A, B, C. A starts at vector clock [1,0,0] and sends a message to B; on receive B becomes [1,1,0]. B sends to C; C becomes [1,1,1]. Meanwhile A's next local event makes it [2,0,0], and a message from C to B with VC [1,2,0] arrives. B merges by element-wise max: max([2,0,0],[1,2,0]) = [2,2,0], then increments its own component: [2,3,0]. The merge rule (element-wise max + increment local) is what propagates partial-order information.
 
 **Detecting conflicts**: Client writes to key K via Node A → VC = [2,0,0]. Another client writes via Node B → VC = [0,2,0]. Neither dominates the other → **concurrent writes detected**. The system stores both versions and lets the next reader resolve the conflict.`
       },
@@ -983,19 +858,15 @@ Concurrent Write 3: Another client reads stale {A:1},
 4. **No total order**: Cannot order concurrent events without additional mechanism
 
 **Alternatives**:
-\`\`\`
-┌────────────────────┬──────────────────────────────┐
-│ Mechanism          │ Used by                      │
-├────────────────────┼──────────────────────────────┤
-│ Vector clocks      │ Riak, Voldemort (original)   │
-│ Dotted VV          │ Riak 2.0+                    │
-│ Hybrid logical     │ CockroachDB, YugabyteDB      │
-│   clocks (HLC)     │                              │
-│ Last-writer-wins   │ Cassandra (wall clock + id)  │
-│ Raft/Paxos log     │ etcd, Consul (total order)   │
-│ Lamport timestamps │ Spanner (TrueTime + Lamport) │
-└────────────────────┴──────────────────────────────┘
-\`\`\`
+
+| Mechanism | Used by |
+|---|---|
+| Vector clocks | Riak, Voldemort (original) |
+| Dotted version vectors | Riak 2.0+ |
+| Hybrid logical clocks (HLC) | CockroachDB, YugabyteDB |
+| Last-writer-wins | Cassandra (wall clock + id) |
+| Raft / Paxos log | etcd, Consul (total order) |
+| Lamport timestamps | Spanner (TrueTime + Lamport) |
 
 **Hybrid Logical Clocks (HLC)**: Combine a physical timestamp with a logical counter. O(1) size, give causal ordering within a bounded clock-skew window, and enable snapshot reads. CockroachDB uses HLCs so that transactions can be globally ordered without vector overhead.
 
@@ -1005,28 +876,9 @@ Concurrent Write 3: Another client reads stale {A:1},
         question: 'What are dotted version vectors and how do they improve on vector clocks?',
         answer: `**Problem with standard vector clocks**: When a client reads a value, modifies it, and writes it back through a different coordinator node, the vector clock grows unnecessarily. The read-modify-write pattern creates "false siblings" — versions that appear concurrent but are actually causally related.
 
-**Example of false sibling with vector clocks**:
-\`\`\`
-  1. Client reads key K: value=v1, VC={A:1}
-  2. Client writes v2 via Node B: VC={A:1, B:1}
-  3. Another client reads K and gets both v1 and v2 as siblings
-     because {A:1} and {A:1, B:1} — A:1 dominates but B entry is new
-     Standard VC merging can create false concurrency here
-\`\`\`
+**Example of false sibling with vector clocks**: (1) a client reads key K and gets value v1 with VC \`{A:1}\`; (2) the client writes v2 via Node B, producing VC \`{A:1, B:1}\`; (3) another client reads K and is handed both v1 and v2 as siblings — \`{A:1}\` and \`{A:1, B:1}\` look concurrent because the B entry is new, even though v2 is in fact a descendant of v1. Standard vector-clock merging cannot tell the two cases apart and creates false concurrency.
 
-**Dotted version vectors (DVV)** solve this by tracking exactly which "dot" (node, counter pair) created each version:
-\`\`\`
-  Standard vector clock per VALUE:
-    v1 → {A:1}
-    v2 → {A:1, B:1}
-    Comparison: ambiguous — is v2 an update of v1?
-
-  Dotted version vector per KEY:
-    Key K has context: {A:1, B:1}   (causal history)
-    v2 was created by dot (B,1)
-    The context proves v2 descends from v1
-    → v1 can be safely discarded, no false sibling
-\`\`\`
+**Dotted version vectors (DVV)** solve this by tracking exactly which "dot" (node, counter pair) produced each version. With a standard per-value VC, v1=\`{A:1}\` and v2=\`{A:1, B:1}\` are ambiguous — is v2 an update of v1, or a sibling? With a dotted version vector kept per key, key K carries the context \`{A:1, B:1}\` (its causal history), and v2 is recorded as having been created by dot (B,1). The context proves v2 descends from v1, so v1 can be safely discarded — no false sibling.
 
 **Riak 2.0 switched from vector clocks to DVV** specifically to eliminate sibling explosion caused by the read-modify-write pattern. The result was dramatically fewer false conflicts in production workloads.
 
@@ -1302,29 +1154,7 @@ Result: Only D4 needs synchronization
         question: 'How does Cassandra use Merkle trees for anti-entropy repair?',
         answer: `**Cassandra's repair process**:
 
-\`\`\`
-  Node A (replica 1)          Node B (replica 2)
-  ┌──────────────────┐        ┌──────────────────┐
-  │ Token range:     │        │ Token range:     │
-  │  1-1000          │        │  1-1000          │
-  │                  │        │                  │
-  │ Build Merkle tree│        │ Build Merkle tree│
-  │ over all keys in │        │ over all keys in │
-  │ range            │        │ range            │
-  └────────┬─────────┘        └────────┬─────────┘
-           │     Exchange root hash     │
-           │◄──────────────────────────►│
-           │     Roots differ!          │
-           │     Walk tree level by     │
-           │     level                  │
-           │◄──────────────────────────►│
-           │     Identified: keys       │
-           │     501-750 differ         │
-           │                            │
-           │  Stream differing keys     │
-           │───────────────────────────►│
-           │◄───────────────────────────│
-\`\`\`
+Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–1000. Each builds a Merkle tree over all keys in that range. They exchange root hashes; if the roots differ, they walk the tree level by level, narrowing the divergence (e.g. "keys 501–750 differ"). Once the differing keys are identified, both nodes stream just those keys to each other to converge — only the differences cross the wire.
 
 **Implementation details**:
 1. **Tree depth**: Configurable; deeper trees = more precision but more memory
@@ -1696,31 +1526,15 @@ Preventing split-brain requires a mechanism to ensure that at most one leader ca
         question: 'Walk through a split-brain scenario step by step',
         answer: `**Setup**: Primary-Replica database with automatic failover.
 
-\`\`\`
-Normal operation:
-  Client ──► Primary (Node A) ──repl──► Replica (Node B)
+**Normal operation**: Client → Primary (Node A), with replication A → Replica (Node B).
 
-Step 1: Network partition between A and B
-  ┌─────────────┐     PARTITION     ┌─────────────┐
-  │  Partition 1 │  ──── X ────    │  Partition 2 │
-  │              │                  │              │
-  │  Node A      │                  │  Node B      │
-  │  (Primary)   │                  │  (Replica)   │
-  │  Client X    │                  │  Client Y    │
-  └─────────────┘                  └─────────────┘
+**Step 1 — network partition**: Node A (with Client X) ends up in Partition 1; Node B (with Client Y) ends up in Partition 2; the link between them is severed.
 
-Step 2: Node B cannot reach A, assumes A is dead
-  B promotes itself to Primary
+**Step 2**: Node B cannot reach A, assumes A is dead, and promotes itself to Primary.
 
-Step 3: SPLIT-BRAIN — two primaries
-  Client X writes to A:  UPDATE balance SET amount=100
-  Client Y writes to B:  UPDATE balance SET amount=50
+**Step 3 — split-brain**: there are now two primaries. Client X writes \`UPDATE balance SET amount=100\` to A; Client Y writes \`UPDATE balance SET amount=50\` to B. Both writes succeed independently.
 
-Step 4: Partition heals
-  A.balance = 100, B.balance = 50
-  Which is correct? NEITHER can be trusted.
-  Data has DIVERGED.
-\`\`\`
+**Step 4 — partition heals**: A.balance = 100, B.balance = 50. Neither can be trusted; the data has diverged.
 
 **Consequences**:
 - Conflicting writes on the same rows
@@ -1752,19 +1566,7 @@ Only ONE partition can have a leader!
 4. Old leader in minority partition: cannot commit (needs majority ACK)
    - Its uncommitted writes are rolled back when it rejoins
 
-\`\`\`
-  {A, B} partition:          {C, D, E} partition:
-  A (old leader):            C wins election (3 votes)
-  - Sends heartbeats to B   - Accepts writes
-  - Cannot get 3 ACKs       - Commits with 3-node quorum
-  - Writes CANNOT commit
-  - Steps down after timeout
-
-  Partition heals:
-  A discovers C's higher term
-  A reverts uncommitted entries
-  A becomes follower of C
-\`\`\`
+In the {A, B} partition the old leader A keeps sending heartbeats to B but cannot collect 3 ACKs (only 2 nodes are reachable), so its writes never commit and A eventually steps down after timeout. In the {C, D, E} partition, C wins the election with 3 votes, accepts writes, and commits them with the 3-node quorum. When the partition heals, A discovers C's higher term, reverts its uncommitted entries, and becomes a follower of C.
 
 **This is why consensus clusters use odd numbers**: 3, 5, 7 nodes. Even numbers (e.g., 4) can result in a 2-2 tie where neither side has a majority.`
       },
@@ -1772,24 +1574,9 @@ Only ONE partition can have a leader!
         question: 'What is STONITH and when is it used?',
         answer: `**STONITH**: "Shoot The Other Node In The Head" — forcibly power off or isolate the old primary before promoting a new one.
 
-\`\`\`
-Normal:
-  Client ──► Primary A ──repl──► Standby B
+**Normal**: Client → Primary A → (replication) → Standby B.
 
-Failure detected (A unreachable):
-  Step 1: STONITH — send power-off command to A
-    ┌─────────┐
-    │ Node A  │ ◄── IPMI/BMC power off, VM kill,
-    │ (old P) │     SAN fence (revoke disk access)
-    └─────────┘
-    CONFIRMED: A cannot write to storage
-
-  Step 2: Promote B to Primary
-    ┌─────────┐
-    │ Node B  │ ◄── Now the only writer
-    │ (new P) │
-    └─────────┘
-\`\`\`
+**Failure detected (A unreachable)** — Step 1: STONITH sends a power-off command to A via IPMI/BMC, kills the VM, or fences A from the SAN (revoking its disk access). Once confirmed, A cannot write to storage. Step 2: B is promoted to Primary and becomes the only writer.
 
 **STONITH mechanisms**:
 1. **IPMI/BMC**: Send hardware power-off command over management network
@@ -1838,17 +1625,14 @@ Strategy 4: Discard minority partition's writes
 \`\`\`
 
 **Prevention is better than cure**:
-\`\`\`
-  ┌──────────────────────────────────────────┐
-  │ Prevention Mechanism    │ Approach       │
-  ├──────────────────────────────────────────┤
-  │ Quorum election (Raft)  │ Majority wins  │
-  │ Fencing tokens          │ Storage rejects│
-  │ STONITH                 │ Kill old leader│
-  │ Lease-based leadership  │ Timed validity │
-  │ Witness/tiebreaker node │ Odd count      │
-  └──────────────────────────────────────────┘
-\`\`\`
+
+| Prevention Mechanism | Approach |
+|---|---|
+| Quorum election (Raft) | Majority wins |
+| Fencing tokens | Storage rejects stale writers |
+| STONITH | Kill the old leader |
+| Lease-based leadership | Timed validity |
+| Witness / tiebreaker node | Keep total node count odd |
 
 **Interview takeaway**: Always discuss split-brain prevention, not just resolution. Say: "I would use a consensus protocol with odd-numbered quorum so split-brain cannot happen, rather than trying to resolve it after the fact."`
       },
@@ -2014,26 +1798,12 @@ Strategy 4: Discard minority partition's writes
         question: 'What is the relationship between split-brain and the CAP theorem?',
         answer: `**CAP theorem refresher**: During a network partition (P), a distributed system must choose between **Consistency** (C) and **Availability** (A). You cannot have both simultaneously when the network is partitioned.
 
-\`\`\`
-  No partition (normal operation):
-    All systems can provide both C and A
-    CAP is not relevant — it only applies during partitions
+During normal operation (no partition), all systems can provide both consistency and availability — CAP is irrelevant. During a partition the choice is forced:
 
-  During partition:
-    ┌────────────────────────────────────────────┐
-    │ Choose Consistency (CP):                   │
-    │   Minority partition stops accepting writes│
-    │   No split-brain, no data divergence       │
-    │   But minority clients get errors          │
-    │   Examples: etcd, ZooKeeper, HBase         │
-    ├────────────────────────────────────────────┤
-    │ Choose Availability (AP):                  │
-    │   Both partitions accept writes            │
-    │   Split-brain IS the trade-off you accept  │
-    │   Data diverges, resolved eventually       │
-    │   Examples: Cassandra, DynamoDB, CouchDB   │
-    └────────────────────────────────────────────┘
-\`\`\`
+| Choice | Behavior | Examples |
+|---|---|---|
+| Consistency (CP) | The minority partition stops accepting writes; no split-brain and no data divergence, but minority clients get errors | etcd, ZooKeeper, HBase |
+| Availability (AP) | Both partitions accept writes; split-brain is the trade-off, data diverges and is resolved eventually | Cassandra, DynamoDB, CouchDB |
 
 **Split-brain IS the CP/AP trade-off in action**:
 \`\`\`
@@ -2125,22 +1895,9 @@ This pattern works in tandem with **sloppy quorums**. In a strict quorum, a writ
         question: 'How does hinted handoff work in a Dynamo-style system?',
         answer: `**Setup**: Key K has replica nodes [A, B, C] with replication factor 3, write quorum W=2.
 
-\`\`\`
-Normal write (all nodes up):
-  Client ──► Coordinator
-               ├──► Node A (replica) ✓ ACK
-               ├──► Node B (replica) ✓ ACK  ← W=2 met
-               └──► Node C (replica) ✓ ACK
+**Normal write (all nodes up)**: Client → Coordinator. The coordinator forwards to Node A (ACK), Node B (ACK — W=2 already met) and Node C (ACK). All three replicas store the value.
 
-Write when Node C is down:
-  Client ──► Coordinator
-               ├──► Node A (replica)  ✓ ACK
-               ├──► Node B (replica)  ✓ ACK  ← W=2 met
-               └──► Node C (replica)  ✗ UNREACHABLE
-               │
-               └──► Node D (not a replica for K)
-                    Stores: {hint: key=K, dest=C, value=..., timestamp=...}
-\`\`\`
+**Write when Node C is down**: the coordinator forwards to Node A (ACK) and Node B (ACK — W=2 met) but Node C is unreachable. The coordinator additionally hands the write to Node D, which is not a replica for K, with a hint record \`{hint: key=K, dest=C, value=..., timestamp=...}\`. When C recovers, D replays this hint to C.
 
 **Sloppy quorum**: Node D temporarily counts toward the quorum for this write, even though it is not a designated replica for K. The write succeeds because 2 ACKs are received.
 
@@ -2634,36 +2391,13 @@ in favor of transient replication and incremental repair.
         question: 'How does read repair complement hinted handoff and anti-entropy?',
         answer: `**Three-layer consistency system** (Dynamo-style databases):
 
-\`\`\`
-Layer 1: Hinted Handoff (Write-time)
-  ┌─────────────────────────────────────┐
-  │ When: During write, replica is down │
-  │ How:  Store hint on another node    │
-  │ Scope: Single write                 │
-  │ Speed: Immediate on recovery        │
-  │ Limit: Hint TTL, hinting node fail  │
-  └─────────────────────────────────────┘
-            │
-            ▼  (some writes still missed)
-Layer 2: Read Repair (Read-time)
-  ┌─────────────────────────────────────┐
-  │ When: During read, stale detected   │
-  │ How:  Compare replicas, fix stale   │
-  │ Scope: Data that is being read      │
-  │ Speed: On next read of the key      │
-  │ Limit: Cold data never repaired     │
-  └─────────────────────────────────────┘
-            │
-            ▼  (cold data still inconsistent)
-Layer 3: Anti-Entropy Repair (Background)
-  ┌─────────────────────────────────────┐
-  │ When: Periodic background process   │
-  │ How:  Merkle tree comparison + sync │
-  │ Scope: ALL data in token range      │
-  │ Speed: Hours to complete full scan  │
-  │ Limit: Expensive, resource-heavy    │
-  └─────────────────────────────────────┘
-\`\`\`
+| Layer | When | How | Scope | Speed | Limit |
+|---|---|---|---|---|---|
+| 1. Hinted Handoff (write-time) | During a write, a replica is down | Store a hint on another node | Single write | Immediate on recovery | Hint TTL; hinting node can also fail |
+| 2. Read Repair (read-time) | During a read, stale data is detected | Compare replicas, fix the stale one | Only the data being read | On the next read of the key | Cold data is never repaired |
+| 3. Anti-Entropy Repair (background) | Periodic background process | Merkle-tree comparison + sync | ALL data in the token range | Hours to complete a full scan | Expensive, resource-heavy |
+
+Each layer catches what the previous missed: hinted handoff covers transient failures, read repair covers the rest for frequently-accessed data, and anti-entropy ensures even rarely-read data eventually converges.
 
 **Each layer catches what the previous missed**:
 1. Hinted handoff handles most transient failures
@@ -3495,17 +3229,7 @@ In **Raft** consensus, the equivalent concept is the **commit index**. The leade
     keyQuestions: [
       {
         question: 'How does the high-water mark work in Kafka?',
-        answer: `**Kafka's two important offsets per partition**:
-\`\`\`
-  Leader's log:
-  [msg0][msg1][msg2][msg3][msg4][msg5][msg6]
-                              ▲            ▲
-                             HWM          LEO
-                     (high-water mark)  (log end offset)
-
-  Messages 0-4: Committed (replicated to all ISRs)
-  Messages 5-6: Uncommitted (only on leader, replication in progress)
-\`\`\`
+        answer: `**Kafka's two important offsets per partition**: in the leader's log of \`[msg0][msg1][msg2][msg3][msg4][msg5][msg6]\`, the HWM (high-water mark) sits at msg4 and the LEO (log end offset) sits at msg6. Messages 0–4 are committed — replicated to all in-sync replicas (ISRs). Messages 5–6 are uncommitted — only on the leader, replication in progress.
 
 **Consumer visibility**:
 \`\`\`
@@ -3579,37 +3303,9 @@ After F2 catches up:
         question: 'How does Raft use the commit index as a high-water mark?',
         answer: `**Raft's commit index** is the leader's high-water mark for the replicated log.
 
-\`\`\`
-Leader (term=3):
-  Log: [1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]
-                                   ▲          ▲
-                              commitIndex    lastLogIndex
+Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with commitIndex=3 and lastLogIndex=4. Entry 3 is replicated to a majority (2 of 3) and is committed; entry 4 is only on the leader and is uncommitted. Follower F1 has up to entry 3, F2 has up to entry 2. The leader computes commitIndex from \`matchIndex = {leader:4, F1:3, F2:2}\`: sort to \`[2, 3, 4]\`, take the majority position (median = 3), so commitIndex = 3 — provided entry 3 was written in the current term.
 
-  Entry 3: Replicated to majority (2 of 3) → COMMITTED
-  Entry 4: Only on leader so far → UNCOMMITTED
-
-Followers:
-  F1: [1:SET x=1][2:SET y=2][3:SET z=3]
-  F2: [1:SET x=1][2:SET y=2]
-
-Leader calculates commitIndex:
-  matchIndex = {leader:4, F1:3, F2:2}
-  Sort: [2, 3, 4]
-  Median (majority position): 3
-  commitIndex = 3 (if entry 3's term == current term)
-\`\`\`
-
-**State machine application**:
-\`\`\`
-  Only entries at or before commitIndex are applied
-  to the state machine (the actual database/KV store)
-
-  Applied:     [1:SET x=1][2:SET y=2][3:SET z=3]
-  Not applied: [4:SET w=4]
-
-  Client reads see x=1, y=2, z=3
-  Client does NOT see w=4 until it's committed
-\`\`\`
+**State machine application**: only entries at or before commitIndex are applied to the state machine (the actual database / KV store). Applied: \`[1:SET x=1][2:SET y=2][3:SET z=3]\`. Not applied: \`[4:SET w=4]\`. Client reads observe x=1, y=2, z=3; the client does not see w=4 until entry 4 is committed.
 
 **Safety property**: Once committed, an entry will be in every future leader's log. Raft guarantees this through its election restriction: a candidate cannot win an election unless its log is at least as up-to-date as the majority.
 
