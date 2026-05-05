@@ -19,7 +19,8 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { query } from '../src/lib/shared-db.js';
 import { embedBatch } from '../src/services/embeddings.js';
-import { chunkTopic } from '../src/services/chunker.js';
+import { chunkTopic, rehash } from '../src/services/chunker.js';
+import { addContextToChunks } from '../src/services/contextualChunker.js';
 import { TOPIC_MANIFEST } from './topic-manifest.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -33,13 +34,26 @@ const COST_PER_M_TOKENS_USD = 0.02;
 const DEFAULT_MAX_SPEND_USD = 1.00;
 
 function parseArgs(argv) {
-  const args = { source: null, dryRun: false, maxSpendUsd: DEFAULT_MAX_SPEND_USD };
+  const args = { source: null, dryRun: false, maxSpendUsd: DEFAULT_MAX_SPEND_USD, withContext: false };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--source') args.source = argv[++i];
     else if (argv[i] === '--dry-run') args.dryRun = true;
     else if (argv[i] === '--max-spend-usd') args.maxSpendUsd = Number(argv[++i]);
+    else if (argv[i] === '--with-context') args.withContext = true;
   }
   return args;
+}
+
+function topicAsDocText(topic) {
+  const parts = [
+    topic.title,
+    topic.description,
+    topic.introduction,
+    Array.isArray(topic.whenToUse) ? topic.whenToUse.join('\n') : null,
+    Array.isArray(topic.keyConcepts) ? topic.keyConcepts.map((kc) => `${kc.term}: ${kc.definition}`).join('\n') : null,
+    Array.isArray(topic.questions) ? topic.questions.map((q) => `Q: ${q.question}\nA: ${q.answer || ''}`).join('\n\n') : null,
+  ].filter(Boolean);
+  return parts.join('\n\n');
 }
 
 async function loadTopicsForEntry(entry) {
@@ -94,14 +108,18 @@ function projectCostUsd(chunks) {
   return (totalTokens / 1_000_000) * COST_PER_M_TOKENS_USD;
 }
 
-async function indexEntry(entry, { dryRun }) {
+async function indexEntry(entry, { dryRun, withContext }) {
   const topics = await loadTopicsForEntry(entry);
   const existing = await getExistingHashes(entry.source);
   const allChunks = [];
   for (const t of topics) {
-    for (const c of chunkTopic(t, { source: entry.source })) {
-      allChunks.push(c);
+    let topicChunks = chunkTopic(t, { source: entry.source });
+    if (withContext && !dryRun) {
+      const docText = topicAsDocText(t);
+      topicChunks = await addContextToChunks(topicChunks, docText);
+      topicChunks = topicChunks.map(rehash);
     }
+    for (const c of topicChunks) allChunks.push(c);
   }
 
   const newOrChanged = allChunks.filter((c) => {
@@ -134,7 +152,7 @@ async function indexEntry(entry, { dryRun }) {
 }
 
 async function main() {
-  const { source, dryRun, maxSpendUsd } = parseArgs(process.argv);
+  const { source, dryRun, maxSpendUsd, withContext } = parseArgs(process.argv);
   const entries = source
     ? TOPIC_MANIFEST.filter((e) => e.source === source)
     : TOPIC_MANIFEST;
@@ -173,7 +191,7 @@ async function main() {
   let total = 0;
   let totalCost = 0;
   for (const entry of entries) {
-    const r = await indexEntry(entry, { dryRun });
+    const r = await indexEntry(entry, { dryRun, withContext });
     total += r.written;
     totalCost += r.costUsd;
   }
