@@ -7,7 +7,11 @@ const router = Router();
 
 const MAX_CODE_SIZE = 100_000;
 
-const SUPPORTED_LANGUAGES = ['python', 'javascript', 'typescript', 'java', 'cpp', 'c', 'go', 'rust', 'bash'];
+const SUPPORTED_LANGUAGES = [
+  'python', 'javascript', 'typescript', 'java', 'cpp', 'c', 'go', 'rust', 'bash',
+  'sql', 'mysql', 'postgresql',
+  'ruby', 'php', 'kotlin', 'swift', 'csharp', 'scala', 'perl', 'lua', 'r',
+];
 
 /**
  * Run a command with optional stdin support.
@@ -159,6 +163,145 @@ async function executeFallback(code, language, input) {
       await writeFile(filePath, code);
       try {
         const { stdout, stderr } = await runProcess('bash', [filePath], input, execOpts);
+        return formatResult(stdout, stderr);
+      } finally {
+        await unlink(filePath).catch(() => {});
+      }
+    } else if (language === 'sql' || language === 'mysql' || language === 'postgresql') {
+      // Run SQL against an in-memory SQLite database via Python's stdlib.
+      // Splits by semicolons and prints each result set as ASCII tables.
+      // Works for any standard SQL the user pastes — CREATE/INSERT/SELECT/etc.
+      const harnessPath = join(tmpDir, `run-${id}-sql.py`);
+      const sqlPath = join(tmpDir, `run-${id}.sql`);
+      const harness = `import sqlite3, sys, re
+sql = open(${JSON.stringify(sqlPath)}).read()
+con = sqlite3.connect(':memory:'); con.isolation_level = None
+cur = con.cursor()
+# Naive split on ';' boundaries (good enough for interview-style snippets).
+stmts = [s.strip() for s in re.split(r';\\s*(?:\\n|$)', sql) if s.strip()]
+out_blocks = []
+for stmt in stmts:
+    try:
+        cur.execute(stmt)
+        if cur.description:
+            cols = [d[0] for d in cur.description]
+            rows = cur.fetchall()
+            widths = [max(len(str(c)), *(len(str(r[i])) for r in rows)) if rows else len(str(c)) for i, c in enumerate(cols)]
+            line = ' | '.join(c.ljust(widths[i]) for i, c in enumerate(cols))
+            sep = '-+-'.join('-' * w for w in widths)
+            block = [line, sep]
+            for r in rows:
+                block.append(' | '.join(str(r[i]).ljust(widths[i]) for i in range(len(cols))))
+            block.append(f'({len(rows)} row{"s" if len(rows) != 1 else ""})')
+            out_blocks.append('\\n'.join(block))
+    except sqlite3.Error as e:
+        print(f'SQL error: {e}', file=sys.stderr)
+        sys.exit(1)
+print('\\n\\n'.join(out_blocks))
+`;
+      await writeFile(sqlPath, code);
+      await writeFile(harnessPath, harness);
+      try {
+        const { stdout, stderr } = await runPython(harnessPath, input);
+        return formatResult(stdout, stderr);
+      } finally {
+        await unlink(sqlPath).catch(() => {});
+        await unlink(harnessPath).catch(() => {});
+      }
+    } else if (language === 'ruby') {
+      const filePath = join(tmpDir, `run-${id}.rb`);
+      await writeFile(filePath, code);
+      try {
+        const { stdout, stderr } = await runProcess('ruby', [filePath], input, execOpts);
+        return formatResult(stdout, stderr);
+      } finally {
+        await unlink(filePath).catch(() => {});
+      }
+    } else if (language === 'php') {
+      const filePath = join(tmpDir, `run-${id}.php`);
+      await writeFile(filePath, code);
+      try {
+        const { stdout, stderr } = await runProcess('php', [filePath], input, execOpts);
+        return formatResult(stdout, stderr);
+      } finally {
+        await unlink(filePath).catch(() => {});
+      }
+    } else if (language === 'perl') {
+      const filePath = join(tmpDir, `run-${id}.pl`);
+      await writeFile(filePath, code);
+      try {
+        const { stdout, stderr } = await runProcess('perl', [filePath], input, execOpts);
+        return formatResult(stdout, stderr);
+      } finally {
+        await unlink(filePath).catch(() => {});
+      }
+    } else if (language === 'lua') {
+      const filePath = join(tmpDir, `run-${id}.lua`);
+      await writeFile(filePath, code);
+      try {
+        const { stdout, stderr } = await runProcess('lua', [filePath], input, execOpts);
+        return formatResult(stdout, stderr);
+      } finally {
+        await unlink(filePath).catch(() => {});
+      }
+    } else if (language === 'r') {
+      const filePath = join(tmpDir, `run-${id}.R`);
+      await writeFile(filePath, code);
+      try {
+        const { stdout, stderr } = await runProcess('Rscript', [filePath], input, execOpts);
+        return formatResult(stdout, stderr);
+      } finally {
+        await unlink(filePath).catch(() => {});
+      }
+    } else if (language === 'kotlin') {
+      const filePath = join(tmpDir, `run-${id}.kts`);
+      await writeFile(filePath, code);
+      try {
+        const { stdout, stderr } = await runProcess('kotlinc', ['-script', filePath], input, { ...execOpts, timeout: 30000 });
+        return formatResult(stdout, stderr);
+      } finally {
+        await unlink(filePath).catch(() => {});
+      }
+    } else if (language === 'swift') {
+      const filePath = join(tmpDir, `run-${id}.swift`);
+      await writeFile(filePath, code);
+      try {
+        const { stdout, stderr } = await runProcess('swift', [filePath], input, { ...execOpts, timeout: 20000 });
+        return formatResult(stdout, stderr);
+      } finally {
+        await unlink(filePath).catch(() => {});
+      }
+    } else if (language === 'csharp') {
+      // dotnet-script if available; fall back to mcs+mono.
+      const filePath = join(tmpDir, `run-${id}.csx`);
+      await writeFile(filePath, code);
+      try {
+        try {
+          const { stdout, stderr } = await runProcess('dotnet-script', [filePath], input, { ...execOpts, timeout: 30000 });
+          return formatResult(stdout, stderr);
+        } catch (e) {
+          if (e.code !== 'ENOENT') throw e;
+          // Fallback: compile with mcs as Main.cs
+          const csPath = join(tmpDir, `run-${id}.cs`);
+          const exePath = join(tmpDir, `run-${id}.exe`);
+          await writeFile(csPath, code);
+          try {
+            await runProcess('mcs', [csPath, '-out:' + exePath], null, { timeout: 20000 });
+            const { stdout, stderr } = await runProcess('mono', [exePath], input, execOpts);
+            return formatResult(stdout, stderr);
+          } finally {
+            await unlink(csPath).catch(() => {});
+            await unlink(exePath).catch(() => {});
+          }
+        }
+      } finally {
+        await unlink(filePath).catch(() => {});
+      }
+    } else if (language === 'scala') {
+      const filePath = join(tmpDir, `run-${id}.scala`);
+      await writeFile(filePath, code);
+      try {
+        const { stdout, stderr } = await runProcess('scala', [filePath], input, { ...execOpts, timeout: 30000 });
         return formatResult(stdout, stderr);
       } finally {
         await unlink(filePath).catch(() => {});
