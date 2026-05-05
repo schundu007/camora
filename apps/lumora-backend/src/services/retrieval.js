@@ -59,6 +59,7 @@ export async function retrieve(opts) {
 
   const willRerank = resolveUseRerank(useRerank);
   const willUseKit = resolveUseWarmKit(useWarmKit);
+  const willUseHyde = resolveUseHyde(useHyde);
   const work = (async () => {
     // Phase 5: prefer warm kit when available — skips embed + ANN.
     if (userId && willUseKit) {
@@ -72,13 +73,16 @@ export async function retrieve(opts) {
         } else {
           kitChunks = kitChunks.slice(0, KB_TOP_K_NARROW + USER_TOP_K_NARROW);
         }
-        return kitChunks.map((c) => ({ ...c, content: (c.content || '').slice(0, MAX_CHUNK_CHARS) }));
+        return {
+          chunks: kitChunks.map((c) => ({ ...c, content: (c.content || '').slice(0, MAX_CHUNK_CHARS) })),
+          usedKit: true,
+        };
       }
     }
     // ... existing live-retrieval code path follows ...
     const { embedQuery } = await import('./embeddings.js');
     let queryForEmbed = question;
-    if (resolveUseHyde(useHyde)) {
+    if (willUseHyde) {
       const { hydeRewrite } = await import('./hyde.js');
       const rewritten = await hydeRewrite(question);
       if (rewritten) queryForEmbed = `${question}\n\n${rewritten}`;
@@ -94,15 +98,44 @@ export async function retrieve(opts) {
       const { rerank } = await import('./reranker.js');
       merged = await rerank(question, merged, FINAL_TOP_K);
     }
-    return merged.map((c) => ({ ...c, content: (c.content || '').slice(0, MAX_CHUNK_CHARS) }));
+    return {
+      chunks: merged.map((c) => ({ ...c, content: (c.content || '').slice(0, MAX_CHUNK_CHARS) })),
+      usedKit: false,
+    };
   })();
 
   try {
     const winner = await Promise.race([work, timeout]);
+    const latencyMs = Math.round(performance.now() - t0);
     if (winner === '__TIMEOUT__') {
-      return { chunks: [], timedOut: true, latencyMs: Math.round(performance.now() - t0) };
+      import('./retrievalLogger.js').then(({ logRetrieval }) =>
+        logRetrieval({
+          userId,
+          question,
+          chunks: [],
+          latencyMs,
+          timedOut: true,
+          usedWarmKit: false,
+          usedHyde: willUseHyde,
+          usedRerank: willRerank,
+        }).catch(() => {}),
+      );
+      return { chunks: [], timedOut: true, latencyMs };
     }
-    return { chunks: winner, timedOut: false, latencyMs: Math.round(performance.now() - t0) };
+    const { chunks, usedKit } = winner;
+    import('./retrievalLogger.js').then(({ logRetrieval }) =>
+      logRetrieval({
+        userId,
+        question,
+        chunks,
+        latencyMs,
+        timedOut: false,
+        usedWarmKit: usedKit,
+        usedHyde: willUseHyde,
+        usedRerank: willRerank,
+      }).catch(() => {}),
+    );
+    return { chunks, timedOut: false, latencyMs };
   } finally {
     clearTimeout(timer);
   }
