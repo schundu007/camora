@@ -157,11 +157,23 @@ export default function FormattedContent({ content }) {
 
   if (currentBlock.lines.length > 0) blocks.push(currentBlock);
 
-  const elements = [];
+  // PPT-style hierarchy: each header opens a new "section" whose body is
+  // indented under a gold-leaf left rail until the next header. Without
+  // this grouping, bullets and paragraphs sat at the same column as the
+  // section title — no parent → child cue.
+  const sections = [{ header: null, body: [] }];
+  let currentSection = sections[0];
+  const openSection = (headerEl) => {
+    currentSection = { header: headerEl, body: [] };
+    sections.push(currentSection);
+  };
+  const pushBody = (el) => {
+    currentSection.body.push(el);
+  };
 
   blocks.forEach((block, blockIdx) => {
     if (block.type === 'code') {
-      elements.push(
+      pushBody(
         <div
           key={`code-${blockIdx}`}
           className="my-2 rounded border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]"
@@ -180,7 +192,7 @@ export default function FormattedContent({ content }) {
         </div>,
       );
     } else if (block.type === 'diagram') {
-      elements.push(
+      pushBody(
         <div
           key={`diagram-${blockIdx}`}
           className="my-2 rounded border border-[var(--border)] overflow-x-auto bg-[var(--bg-elevated)]"
@@ -195,12 +207,14 @@ export default function FormattedContent({ content }) {
       );
     } else {
       let currentList = [];
+      let listKeyCounter = 0;
 
       const flushList = () => {
         if (currentList.length > 0) {
-          elements.push(
-            <ul key={`list-${elements.length}`} className="grid grid-cols-1 gap-1.5 my-2 ml-1">
-              {currentList.map((item, i) => (
+          const items = currentList;
+          currentSection.body.push(
+            <ul key={`list-${blockIdx}-${listKeyCounter++}`} className="grid grid-cols-1 gap-1.5 my-2">
+              {items.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0" />
                   <span className="text-[var(--text-secondary)] text-sm leading-relaxed landing-body">
@@ -235,7 +249,7 @@ export default function FormattedContent({ content }) {
             tag === 'WARNING' ? 'warning' :
             tag === 'CAUTION' || tag === 'IMPORTANT' ? 'caution' :
             'note';
-          elements.push(
+          pushBody(
             <div key={`cb-${blockIdx}-${lineIdx}`} className="my-3">
               <DocsCallout variant={variant}>{formatInlineText(body)}</DocsCallout>
             </div>,
@@ -252,7 +266,9 @@ export default function FormattedContent({ content }) {
           if (isStarKey(headerText)) {
             const keyword =
               headerText.charAt(0).toUpperCase() + headerText.slice(1).toLowerCase();
-            elements.push(
+            // STAR keys stay inline; they're sub-labels, not section
+            // breaks, so they don't open a new indented group.
+            pushBody(
               <div
                 key={`star-${blockIdx}-${lineIdx}`}
                 className="mt-6 mb-2 first:mt-0 text-[10px] uppercase tracking-[0.16em] font-bold text-[var(--text-muted)] landing-mono"
@@ -261,10 +277,7 @@ export default function FormattedContent({ content }) {
               </div>,
             );
           } else {
-            // NVIDIA-style section heading: bold display sans, ~20px,
-            // generous top margin so it visually separates from the
-            // paragraph above. Was font-semibold text-sm — too quiet.
-            elements.push(
+            openSection(
               <h3
                 key={`h-${blockIdx}-${lineIdx}`}
                 className="text-[var(--text-primary)] font-bold text-[20px] mt-8 mb-2 first:mt-0 landing-display tracking-tight leading-tight"
@@ -281,7 +294,7 @@ export default function FormattedContent({ content }) {
           flushList();
           const keyword =
             starHeaderMatch[1].charAt(0).toUpperCase() + starHeaderMatch[1].slice(1).toLowerCase();
-          elements.push(
+          pushBody(
             <div
               key={`star-${blockIdx}-${lineIdx}`}
               className="mt-4 mb-1 first:mt-0 text-[10px] uppercase tracking-[0.16em] font-bold text-[var(--text-muted)] landing-mono"
@@ -294,9 +307,7 @@ export default function FormattedContent({ content }) {
 
         if (trimmed.endsWith(':') && trimmed.length < 50 && !trimmed.includes('.')) {
           flushList();
-          // h4-rank inline subhead — slightly smaller than the bold-marker
-          // headers above so the hierarchy reads two levels.
-          elements.push(
+          openSection(
             <h4
               key={`h-${blockIdx}-${lineIdx}`}
               className="text-[var(--text-primary)] font-bold text-[16px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
@@ -313,10 +324,7 @@ export default function FormattedContent({ content }) {
         }
 
         flushList();
-        // Body copy: 15px / 1.6 line-height — closer to NVIDIA / Stripe docs
-        // body rhythm than the previous text-sm (13px). text-primary instead
-        // of text-secondary so the body is genuinely readable, not a caption.
-        elements.push(
+        pushBody(
           <p
             key={`p-${blockIdx}-${lineIdx}`}
             className="text-[var(--text-primary)] text-[15px] leading-[1.6] my-3 landing-body"
@@ -329,6 +337,24 @@ export default function FormattedContent({ content }) {
       flushList();
     }
   });
+
+  // Render the section tree: header flush left, body indented under a
+  // gold-leaf rail (PPT parent → child grammar). A leading section with
+  // no header skips the rail so intro paragraphs aren't pushed in.
+  const elements = sections.map((sec, i) => (
+    <div key={`sec-${i}`}>
+      {sec.header}
+      {sec.body.length > 0 && (
+        sec.header
+          ? (
+            <div className="pl-4 ml-1" style={{ borderLeft: '2px solid var(--cam-gold-leaf)' }}>
+              {sec.body}
+            </div>
+          )
+          : sec.body
+      )}
+    </div>
+  ));
 
   // `prep-content` opts this surface into the docs design system (navy
   // strip headings, gold-leaf code, glassy chrome) without inheriting
