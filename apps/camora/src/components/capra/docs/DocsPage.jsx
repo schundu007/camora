@@ -141,6 +141,15 @@ export default function DocsPage({ onBack }) {
   const sreTopicCategoryMap = heavyData.sreTopicCategoryMap || {};
   const sreTopics = heavyData.sreTopics || [];
 
+  // DevOps — companion to SRE. 11 sub-categories: foundations + culture,
+  // CI/CD, continuous delivery, IaC, configuration mgmt, containers,
+  // K8s, platform engineering, DevSecOps, cloud-native, data DevOps.
+  // Lazy-loaded via the `devops` chunk in loader.js. Diagrams at
+  // /diagrams/devops/*.png from gen-devops-diagrams.py.
+  const devopsCategories = heavyData.devopsCategories || [];
+  const devopsTopicCategoryMap = heavyData.devopsTopicCategoryMap || {};
+  const devopsTopics = heavyData.devopsTopics || [];
+
   // Job context for role-filtered mode (passed from JobPrepPage or job URL analysis)
   const [jobContext, setJobContext] = useState(() => {
     if (initialState.role) {
@@ -427,6 +436,7 @@ export default function DocsPage({ onBack }) {
       activePage === 'roadmaps' ? roadmapTopics :
       activePage === 'eng-blogs' ? engBlogTopics :
       activePage === 'sre' ? sreTopics :
+      activePage === 'devops' ? devopsTopics :
       [...behavioralTopics, ...companyPrep];
     const total = topics.length;
     const completed = topics.filter(t => completedTopics[t.id]).length;
@@ -570,6 +580,7 @@ export default function DocsPage({ onBack }) {
     else if (activePage === 'roadmaps') topics = roadmapTopics;
     else if (activePage === 'eng-blogs') topics = engBlogTopics;
     else if (activePage === 'sre') topics = sreTopics;
+    else if (activePage === 'devops') topics = devopsTopics;
     else return [];
 
     // Apply role-based filtering when navigating from a job prep page
@@ -611,6 +622,7 @@ export default function DocsPage({ onBack }) {
       case 'roadmaps': return { title: 'Roadmaps', color: 'var(--text-primary)' };
       case 'eng-blogs': return { title: 'Engineering Blogs', color: 'var(--text-primary)' };
       case 'sre': return { title: 'Site Reliability Engineering', color: 'var(--text-primary)' };
+      case 'devops': return { title: 'DevOps', color: 'var(--text-primary)' };
       default: return { title: 'Documentation', color: 'var(--text-primary)' };
     }
   };
@@ -627,7 +639,7 @@ export default function DocsPage({ onBack }) {
       systemDesignTradeoffs, concurrencyTopics, scalableSystemsTopics,
       lldTopics, lldProblems, behavioralTopics, companyPrep,
       microservicesPatterns, databaseTopics, sqlTopics, projectTopics,
-      roadmapTopics, engBlogTopics, sreTopics,
+      roadmapTopics, engBlogTopics, sreTopics, devopsTopics,
     ];
     for (const arr of allSources) {
       const found = arr?.find(t => t.id === selectedTopic);
@@ -698,6 +710,7 @@ export default function DocsPage({ onBack }) {
       { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: 'var(--text-primary)', topics: engBlogTopics },
       { id: 'behavioral', href: 'behavioral', title: 'Behavioral', icon: 'users', color: 'var(--text-primary)', topics: [...behavioralTopics, ...companyPrep] },
       { id: 'sre', href: 'sre', title: 'Site Reliability Engineering', icon: 'shield', color: 'var(--text-primary)', topics: sreTopics },
+      { id: 'devops', href: 'devops', title: 'DevOps', icon: 'gitMerge', color: 'var(--text-primary)', topics: devopsTopics },
     ];
     return cats.map(c => {
       const count = c.topics.length;
@@ -2939,6 +2952,84 @@ export default function DocsPage({ onBack }) {
                                       }}
                                     >
                                       <Icon name={topic.icon || 'shield'} size={18} />
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
+                                        {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
+                                        {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-1.5">
+                                        <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ color: 'var(--accent)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                                          {topic.questions} questions
+                                        </span>
+                                        {topic.visualizations?.length > 0 && (
+                                          <span className="text-[10px] landing-mono text-[var(--text-muted)]">
+                                            {topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0 mt-1">
+                                      {isStarred && <Icon name="star" size={12} className="text-[var(--accent)]" />}
+                                      <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* DevOps Content — mirrors the SRE topic-card render block */}
+              {activePage === 'devops' && (
+                <>
+                  <div className="mb-6">
+                    <SectionHero
+                      eyebrow="Build, Ship, Run"
+                      title="DevOps"
+                      subtitle="56 topics across 11 sub-categories — foundations, CI/CD, continuous delivery, IaC, configuration, containers, Kubernetes, platform engineering, DevSecOps, cloud-native, data DevOps."
+                      className="mb-4"
+                    />
+                    <div className="space-y-3">
+                    {devopsCategories.map((category) => {
+                      const categoryTopics = filteredTopics.filter(t => devopsTopicCategoryMap[t.id] === category.id);
+                      if (categoryTopics.length === 0) return null;
+                      return (
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                          />
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3">
+                            {categoryTopics.map((topic) => {
+                              const isCompleted = completedTopics[topic.id];
+                              const isStarred = starredTopics[topic.id];
+                              const isLocked = contentAccess.isTopicLocked('devops', topic.id);
+                              return (
+                                <div
+                                  key={topic.id}
+                                  onClick={() => !isLocked && setSelectedTopic(topic.id)}
+                                  className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
+                                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                >
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    <span
+                                      className="w-9 h-9 rounded-md flex items-center justify-center shrink-0"
+                                      style={{
+                                        background: `${topic.color}1A`,
+                                        border: `1px solid ${topic.color}40`,
+                                        color: topic.color,
+                                      }}
+                                    >
+                                      <Icon name={topic.icon || 'gitMerge'} size={18} />
                                     </span>
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-2 mb-1">
