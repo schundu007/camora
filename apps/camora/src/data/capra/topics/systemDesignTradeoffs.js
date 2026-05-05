@@ -4410,31 +4410,7 @@ Per-connection cost:
         question: 'How do you design a reliable webhook system?',
         answer: `**Webhook reliability challenges**: The receiving server may be down, slow, or return errors. You need retry logic, idempotency, and delivery guarantees.
 
-\`\`\`
-Reliable Webhook Architecture:
-
-  Event occurs
-     │
-     ▼
-  ┌──────────────┐
-  │ Event Queue  │ ◄── Persistent (not in-memory)
-  │ (SQS/Kafka)  │
-  └──────┬───────┘
-         │
-  ┌──────┴───────┐
-  │ Webhook      │
-  │ Dispatcher   │
-  └──────┬───────┘
-         │
-    ┌────┴────┐
-    ▼         ▼
-  POST to    POST to
-  Endpoint A  Endpoint B
-    │         │
-    ▼         ▼
-  200 OK?   Timeout?
-  ✓ done    → retry queue
-\`\`\`
+**Reliable webhook architecture**: an event lands in a persistent Event Queue (SQS / Kafka — never an in-memory queue). A Webhook Dispatcher reads from the queue and POSTs the payload to each subscriber's endpoint (e.g. Endpoint A and Endpoint B). If the response is 200 OK, the delivery is marked done; if the request times out or returns an error, the message is moved to a retry queue with exponential backoff.
 
 **Retry strategy** (exponential backoff):
 \`\`\`
