@@ -33,6 +33,13 @@ function resolveUseRerank(optsValue) {
   return process.env.RAG_USE_RERANK === 'true' && !!process.env.COHERE_API_KEY;
 }
 
+function resolveUseWarmKit(optsValue) {
+  if (typeof optsValue === 'boolean') return optsValue;
+  // Default ON for any non-test environment when userId is present.
+  // Test code can pass useWarmKit: false to opt out.
+  return process.env.RAG_USE_WARM_KIT !== 'false';
+}
+
 /**
  * @param {object}  opts
  * @param {string}  opts.question
@@ -42,7 +49,7 @@ function resolveUseRerank(optsValue) {
  * @returns {Promise<{chunks, timedOut, latencyMs}>}
  */
 export async function retrieve(opts) {
-  const { question, userId, timeoutMs = DEFAULT_TIMEOUT_MS, useHyde, useRerank } = opts;
+  const { question, userId, timeoutMs = DEFAULT_TIMEOUT_MS, useHyde, useRerank, useWarmKit } = opts;
   const t0 = performance.now();
 
   let timer;
@@ -51,7 +58,24 @@ export async function retrieve(opts) {
   });
 
   const willRerank = resolveUseRerank(useRerank);
+  const willUseKit = resolveUseWarmKit(useWarmKit);
   const work = (async () => {
+    // Phase 5: prefer warm kit when available — skips embed + ANN.
+    if (userId && willUseKit) {
+      const { readSessionKit } = await import('./sessionKit.js');
+      const kit = await readSessionKit(userId).catch(() => null);
+      if (kit && Array.isArray(kit.chunks) && kit.chunks.length > 0) {
+        let kitChunks = kit.chunks;
+        if (willRerank) {
+          const { rerank } = await import('./reranker.js');
+          kitChunks = await rerank(question, kitChunks, FINAL_TOP_K);
+        } else {
+          kitChunks = kitChunks.slice(0, KB_TOP_K_NARROW + USER_TOP_K_NARROW);
+        }
+        return kitChunks.map((c) => ({ ...c, content: (c.content || '').slice(0, MAX_CHUNK_CHARS) }));
+      }
+    }
+    // ... existing live-retrieval code path follows ...
     const { embedQuery } = await import('./embeddings.js');
     let queryForEmbed = question;
     if (resolveUseHyde(useHyde)) {
