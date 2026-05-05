@@ -26,6 +26,29 @@ import {
 import TopicComments from './TopicComments';
 import { ContentHeading, GlassPill } from '../ui';
 
+/**
+ * NumberChip — gold-leaf numbered capsule used for ordered lists across
+ * every prepare topic surface. Replaces the tiny `text-[10px]` raw mono
+ * labels that were previously scattered through Key Principles, Common
+ * Mistakes, Practice Questions, numbered list items inside answer
+ * bodies, etc. Single source so they all read with the same chrome.
+ */
+function NumberChip({ n, mt = '' }) {
+  return (
+    <span
+      className={`inline-flex items-center justify-center min-w-[28px] h-[22px] px-1.5 text-[11px] font-bold landing-mono tabular-nums flex-shrink-0 ${mt}`}
+      style={{
+        background: 'var(--cam-gold-leaf-50)',
+        color: 'var(--cam-gold-leaf-text)',
+        border: '1px solid var(--cam-gold-leaf)',
+        borderRadius: '6px',
+      }}
+    >
+      {String(n).padStart(2, '0')}
+    </span>
+  );
+}
+
 // Strip wrapping straight/curly quotes from a value so prose like
 // `"Our recommendation engine..."` reads as plain text. Only removes a
 // matched outer pair — embedded quotes inside the string survive.
@@ -1510,9 +1533,7 @@ export default function TopicDetail({
               <div className="p-3 grid grid-cols-1 gap-1.5">
                 {topicDetails.commonMistakes.map((mistake, i) => (
                   <div key={i} className="flex items-start gap-3 py-2 border-b border-[var(--border)] last:border-b-0">
-                    <span className="text-[10px] landing-mono text-[var(--text-muted)] tabular-nums flex-shrink-0 mt-1">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
+                    <NumberChip n={i + 1} mt="mt-0.5" />
                     <span className="text-sm text-[var(--text-secondary)] leading-relaxed landing-body">{mistake}</span>
                   </div>
                 ))}
@@ -2690,12 +2711,10 @@ export default function TopicDetail({
                 title="Key Principles"
                 actions={<GlassPill>{topicDetails.principles.length} principles</GlassPill>}
               />
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                 {topicDetails.principles.map((principle, i) => (
-                  <li key={i} className="flex items-baseline gap-3 text-sm landing-body text-[var(--text-secondary)]">
-                    <span className="text-[10px] landing-mono text-[var(--text-muted)] tabular-nums flex-shrink-0">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
+                  <li key={i} className="flex items-start gap-3 text-[14px] leading-relaxed landing-body text-[var(--text-secondary)]">
+                    <NumberChip n={i + 1} mt="mt-0.5" />
                     <span>{principle}</span>
                   </li>
                 ))}
@@ -2799,9 +2818,7 @@ export default function TopicDetail({
                         onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !isExpanded }))}
                         className="w-full px-3 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] transition-colors text-left"
                       >
-                        <span className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold flex-shrink-0 landing-mono bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] tabular-nums">
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
+                        <NumberChip n={index + 1} />
                         <h4 className="text-[var(--text-primary)] font-semibold text-sm leading-snug landing-display flex-1">{item.question}</h4>
                         <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -2850,9 +2867,9 @@ export default function TopicDetail({
                               }
                               if (/^\d+\./.test(t)) {
                                 const num = t.match(/^(\d+)\./)[1];
-                                return <div key={i} className="flex items-start gap-3 mb-1">
-                                  <span className="text-[10px] landing-mono text-[var(--text-muted)] tabular-nums mt-1 flex-shrink-0">{num.padStart(2, '0')}</span>
-                                  <span className="text-sm landing-body">{stripQuotes(t.replace(/^\d+\.\s*/, ''))}</span>
+                                return <div key={i} className="flex items-start gap-3 mb-1.5">
+                                  <NumberChip n={parseInt(num, 10)} mt="mt-0.5" />
+                                  <span className="text-sm landing-body leading-relaxed">{stripQuotes(t.replace(/^\d+\.\s*/, ''))}</span>
                                 </div>;
                               }
                               if (t.includes('**')) {
@@ -2900,8 +2917,8 @@ export default function TopicDetail({
                               const numMatch = h.replace(/\*\*/g, '').match(/^(\d+)\.\s*(.*)/);
                               const sectionTitle = h.replace(/\*\*/g, '').replace(/:$/, '');
                               return <div key={bi} className="mt-4 first:mt-0">
-                                <div className="flex items-baseline gap-3 pb-1 border-b border-[var(--border)]">
-                                  {numMatch && <span className="text-[10px] landing-mono text-[var(--text-muted)] tabular-nums">{numMatch[1].padStart(2, '0')}</span>}
+                                <div className="flex items-center gap-2 pb-1.5 border-b border-[var(--border)]">
+                                  {numMatch && <NumberChip n={parseInt(numMatch[1], 10)} />}
                                   <span className="text-sm font-semibold text-[var(--text-primary)] landing-display">
                                     {numMatch ? numMatch[2].replace(/:$/, '') : sectionTitle}
                                   </span>
@@ -2930,8 +2947,8 @@ export default function TopicDetail({
               />
               <div className="p-2.5 space-y-1.5">
                 {topicDetails.sampleQuestions.map((q, i) => (
-                  <div key={i} className="flex items-start gap-2.5 px-3 py-2.5 rounded border border-transparent hover:bg-[var(--bg-elevated)] hover:border-[var(--border)] transition-colors group cursor-default">
-                    <span className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5 landing-mono bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)]">{i + 1}</span>
+                  <div key={i} className="flex items-start gap-3 px-3 py-2.5 rounded border border-transparent hover:bg-[var(--bg-elevated)] hover:border-[var(--border)] transition-colors group cursor-default">
+                    <NumberChip n={i + 1} mt="mt-0.5" />
                     <span className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed group-hover:text-[var(--text-primary)] transition-colors">{q}</span>
                   </div>
                 ))}
