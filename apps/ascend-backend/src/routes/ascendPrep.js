@@ -140,6 +140,25 @@ async function generateDiagramsForQuestions(result) {
     return result;
   }
 
+  // Generation sometimes returns questions as a JSON-string or wrapper object
+  // (e.g. `"[{...}]"` or `{ items: [...] }`). Normalize before mapping so we
+  // don't blow up with `.map is not a function` and bubble that error into
+  // the summary field.
+  let questions = result.questions;
+  if (typeof questions === 'string') {
+    try {
+      const parsed = JSON.parse(questions.trim());
+      questions = Array.isArray(parsed) ? parsed : (parsed?.items || parsed?.list || parsed?.questions);
+    } catch { /* leave as-is, guard below will skip */ }
+  } else if (questions && !Array.isArray(questions) && typeof questions === 'object') {
+    questions = questions.items || questions.list || questions.questions;
+  }
+  if (!Array.isArray(questions)) {
+    console.log('[InterviewPrep] Skipping diagram generation - questions is not an array (type:', typeof result.questions, ')');
+    return result;
+  }
+  result.questions = questions;
+
   console.log('[InterviewPrep] Generating diagrams for system design questions...');
 
   // Generate diagrams for each question in parallel
