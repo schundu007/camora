@@ -295,6 +295,38 @@ def diag_load_testing():
     print('Generated: f3-load-testing')
 
 
+# ── G1: Circuit breaker state machine ───────────────────────────────
+def diag_circuit_breaker():
+    g = base_graph('g1_circuit_breaker', 'Circuit breaker — three-state machine (Hystrix / resilience4j)')
+    n(g, 'closed', 'CLOSED\n(normal)\nrequests pass\nthrough', 'green')
+    n(g, 'open',   'OPEN\n(failing)\nfast-fail\nor fallback', 'red')
+    n(g, 'half',   'HALF-OPEN\n(probing)\nlimited requests\nallowed', 'gold')
+    e(g, 'closed', 'open',   'failure rate\n> threshold\n(e.g., 50% in 1m)', '#dc2626')
+    e(g, 'open',   'half',   'after timeout\n(e.g., 30s)', '#0066cc')
+    e(g, 'half',   'closed', 'probes succeed\n→ resume', '#16a34a')
+    e(g, 'half',   'open',   'probes fail\n→ keep open', '#dc2626', 'dashed')
+    g.render(os.path.join(OUT, 'g1-circuit-breaker'), cleanup=True)
+    print('Generated: g1-circuit-breaker')
+
+
+# ── G2: Cascading failure ───────────────────────────────────────────
+def diag_cascading_failure():
+    g = base_graph('g2_cascade', 'Cascading failure — one slow dependency takes down the system')
+    n(g, 'user', 'Users\n(retry on slow)', 'navy')
+    n(g, 'lb',   'Load Balancer', 'navy')
+    n(g, 'svc',  'Service\n(thread pool\nexhausted)', 'red')
+    n(g, 'dep',  'Slow Dependency\n(p99 from\n50ms → 5s)', 'gold')
+    n(g, 'gc',   'GC death spiral\n(memory pressure\n→ more GC →\nmore CPU →\nmore queueing)', 'purple')
+    e(g, 'user', 'lb',  'request')
+    e(g, 'lb',   'svc')
+    e(g, 'svc',  'dep', 'blocking call')
+    e(g, 'user', 'lb',  'retry storm\n(2× load)', '#dc2626', 'dashed')
+    e(g, 'svc',  'gc',  'amplifies', '#9333ea', 'dotted')
+    e(g, 'gc',   'svc', 'feedback', '#9333ea', 'dotted')
+    g.render(os.path.join(OUT, 'g2-cascade'), cleanup=True)
+    print('Generated: g2-cascade')
+
+
 if __name__ == '__main__':
     diag_sli_slo_sla()
     diag_burn_rate()
@@ -310,4 +342,6 @@ if __name__ == '__main__':
     diag_postmortem_flow()
     diag_cicd_pipeline()
     diag_load_testing()
-    print('SRE diagrams batches 1-6 complete.')
+    diag_circuit_breaker()
+    diag_cascading_failure()
+    print('SRE diagrams batches 1-7 complete.')
