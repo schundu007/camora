@@ -5377,4 +5377,961 @@ These are the answers a GitLab-fluent senior engineer should give without prepar
     ],
   },
 
+  // ─────────────────────────────────────────────────────────────────────
+  // CircleCI — performance-first SaaS CI; orbs ecosystem
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'circleci-deep-dive',
+    title: 'CircleCI — Workflows, Orbs, Executors, Test Splitting',
+    icon: 'tool',
+    color: '#16a34a',
+    questions: 5,
+    description: 'Performance-first SaaS CI. Per-second billing, fast hosted runners, Orbs registry for reusable config, automatic test splitting by timing, contexts for shared secrets, runners for self-hosted hardware.',
+    visualizations: [
+      {
+        title: 'CircleCI architecture — config.yml, executors, orbs, parallelism',
+        description: `Walking the diagram: .circleci/config.yml at the repo root defines workflows, jobs, and steps. CircleCI's hosted runners or self-hosted runners pick up jobs based on the executor type.
+
+Five executor types:
+- docker — primary container, optional service containers (Postgres, Redis sidecars). Fastest cold-start; the default.
+- machine — full Linux VM with Docker available. Use when you need privileged Docker or kernel-level features.
+- macos — Apple Silicon or Intel Macs for iOS/macOS builds. Significantly more expensive.
+- windows — Windows VMs.
+- gpu — NVIDIA GPU machines for ML.
+
+Orbs are versioned reusable config packages. Published to circleci.com/orbs registry. Used like uses: in GHA but with a richer model — orbs can export commands, jobs, and executors. circleci/aws-cli@4.1 imports the AWS CLI orb at version 4.1.
+
+Parallelism splits a job into N parallel runs; CircleCI's Test Splitting auto-distributes tests by timing across parallel containers. The cited differentiator: a 30-min test suite split into 8 parallel runs by timing finishes in ~4 minutes.
+
+Caching layers: dependency cache (per-key, like actions/cache), Docker layer cache (DLC, paid feature), and CDN-backed cache for cross-job reuse.
+
+Workflows orchestrate jobs with DAG dependencies (requires:), filters (only on certain branches/tags), approval gates, scheduled triggers.`,
+        image: '/diagrams/devops/ct4-circleci.png',
+      },
+      {
+        title: 'Workflow with parallel test splitting + approval gate',
+        description: `Typical CircleCI workflow lifecycle for a high-traffic SaaS:
+
+1. Push to main → Webhook triggers CircleCI → workflow build-test-deploy starts.
+
+2. install job: docker executor with cimg/node:20.18; restore_cache by lockfile hash; npm ci; save_cache. Cold install ~3min; warm cache ~15s.
+
+3. lint and typecheck jobs run in parallel (require: install). Each ~30s.
+
+4. test job runs with parallelism: 8 — 8 parallel containers. Each container runs:
+   - circleci tests glob 'src/**/*.test.ts' to enumerate test files
+   - circleci tests split --split-by=timing < testfiles.txt produces this container's slice
+   - Run only the slice. Timing data uploaded back; next run uses it for better splits.
+
+5. build job (require: lint + typecheck + test): docker buildx + push to ECR via OIDC.
+
+6. approve-prod approval gate — workflow pauses until a designated user clicks Approve in the CircleCI UI.
+
+7. deploy-prod job runs after approval; uses contexts: aws-prod for environment-scoped secrets.
+
+Per-second billing means the workflow cost is exactly proportional to wall time, not rounded up to nearest minute (GHA bills minutes). For short jobs this matters; for hour-long jobs it's identical.`,
+        image: '/diagrams/devops/ct4-circleci.png',
+      },
+    ],
+    introduction: `CircleCI launched 2011, public cloud-native CI before that was common. Long-time leader in build performance: fast hosted runners, generous parallelism, automatic test splitting by timing, per-second billing. Market share in 2026: ~7-10% per JetBrains DevEcosystem; smaller than the big three (GHA, Jenkins, GitLab CI) but a real player especially in the JS/Node and Rails ecosystems.
+
+Where CircleCI wins:
+
+Build speed. Hosted runners are consistently fast in benchmarks. Cold-start ~10-20s vs GHA's ~30s. Resource classes scale linearly: 2-vCPU is the default; 4/8/16/32-vCPU available with linear cost scaling.
+
+Automatic test splitting by timing. The killer feature for slow test suites. CircleCI uploads timing data per test; on subsequent runs, splits tests across parallel containers to balance wall time. A 30-min suite on 8 parallels finishes in ~4-5min. GHA matrix sharding is manual; CircleCI's is built-in.
+
+Per-second billing. For short jobs (lint, typecheck), this materially saves money vs per-minute platforms.
+
+Mature parallelism. parallelism: 8 + circleci tests split is a single-line idiom. GHA equivalent requires matrix + manual shard logic.
+
+Orbs ecosystem. Comparable to GHA marketplace; well-curated; smaller in absolute count but high quality.
+
+Where CircleCI loses:
+
+Smaller marketplace than GHA. ~600 orbs vs GHA's ~25,000 actions. Not always a deal-breaker — quality often beats quantity — but coverage is thinner for niche integrations.
+
+No native git integration. CircleCI is webhook-driven from GitHub/GitLab/Bitbucket; the integration is one-step removed vs GHA's native model. PR comments, status checks, etc. work but are less seamless.
+
+Cost at scale. Free tier is generous for small teams; mid-tier ($30/user) and enterprise ($59/user+) get expensive. Comparable to GitLab Premium pricing for a less integrated stack.
+
+Smaller community. Stack Overflow / blog post density for "how do I X in CircleCI?" is meaningfully lower than GHA. For non-standard problems, you're more on your own.
+
+When to pick CircleCI in 2026:
+
+Build-time-sensitive teams. JS / Ruby / Python shops with 10+ minute test suites where the auto-split is the difference between productive PR review and frustrating waits.
+
+Existing CircleCI investment. Migration to GHA is a multi-quarter project; if CircleCI is working, stay.
+
+Multi-SCM (GitHub + GitLab + Bitbucket). CircleCI is SCM-agnostic; useful for orgs with mixed SCM (rare but real).
+
+When NOT:
+
+On GitHub with GHA available. Integration tax of separate CI is real; GHA's marketplace is broader; cost is meaningfully lower for most workloads.
+
+Cost-conscious. CircleCI's premium pricing rarely beats GHA Pro per-engineer for equivalent capability.
+
+Three load-bearing CircleCI concepts:
+
+1. Orbs are versioned reusable config. circleci/node@5.2 imports the Node orb at semver 5.2. Define your own private orbs for org-internal reuse. Equivalent of GHA composite actions + reusable workflows in one model.
+
+2. Test splitting by timing is the differentiator. parallelism: N + circleci tests split --split-by=timing balances wall time across N containers. Configure once; CircleCI improves over time as it gathers timing data.
+
+3. Contexts are environment-scoped secret stores. context: aws-prod gives this job access to the AWS_* keys in that context. Contexts are project-or-org-scoped; protected with role-based access. Equivalent of GHA Environments + secrets.`,
+    whenToUse: [
+      'JS/Node/Ruby/Python repos with slow test suites where auto-test-splitting matters',
+      'Existing CircleCI investment; migration cost not justified',
+      'Multi-SCM environments where SCM-agnostic CI is required',
+      'Build-time-sensitive teams that can\'t tolerate GHA\'s 30s cold start',
+    ],
+    keyConcepts: [
+      {
+        term: '.circleci/config.yml structure',
+        definition: `Lives at .circleci/config.yml. Single root, version 2.1+ (current standard):
+
+\`\`\`yaml
+version: 2.1
+
+orbs:
+  node: circleci/node@5.2.0
+  aws-cli: circleci/aws-cli@4.1.0
+
+executors:
+  default-node:
+    docker:
+      - image: cimg/node:20.18
+    resource_class: medium
+    working_directory: ~/repo
+
+commands:
+  install-deps:
+    description: 'Install Node deps with cache'
+    steps:
+      - restore_cache:
+          keys:
+            - v1-deps-{{ checksum "package-lock.json" }}
+            - v1-deps-
+      - run: npm ci
+      - save_cache:
+          key: v1-deps-{{ checksum "package-lock.json" }}
+          paths: [node_modules]
+
+jobs:
+  install:
+    executor: default-node
+    steps:
+      - checkout
+      - install-deps
+      - persist_to_workspace:
+          root: .
+          paths: [node_modules]
+
+  test:
+    executor: default-node
+    parallelism: 8
+    steps:
+      - checkout
+      - attach_workspace: { at: . }
+      - run:
+          name: Run sharded tests
+          command: |
+            TESTFILES=$(circleci tests glob "src/**/*.test.ts" | circleci tests split --split-by=timing)
+            npm test -- $TESTFILES
+      - store_test_results:
+          path: junit.xml
+
+workflows:
+  version: 2
+  build-test-deploy:
+    jobs:
+      - install
+      - test:
+          requires: [install]
+      - deploy:
+          requires: [test]
+          context: aws-prod
+          filters:
+            branches: { only: [main] }
+\`\`\`
+
+Note executors: section defines reusable executor blocks (avoid copy-paste). commands: define reusable step sequences. orbs: import third-party reusable config.`,
+      },
+      {
+        term: 'Orbs — versioned reusable config',
+        definition: `Orbs are CircleCI's reuse primitive — packages exporting commands, jobs, and/or executors. Imported via orbs: in config.yml. Versioned by semver.
+
+Using a public orb:
+
+\`\`\`yaml
+orbs:
+  aws-cli: circleci/aws-cli@4.1.0     # public orb at v4.1.0
+  slack: circleci/slack@4.13.3
+
+jobs:
+  deploy:
+    docker: [{ image: cimg/base:current }]
+    steps:
+      - checkout
+      - aws-cli/setup:                 # command from the orb
+          profile_name: prod
+          role_arn: arn:aws:iam::123:role/deploy
+      - run: aws s3 sync ./dist s3://my-bucket/
+      - slack/notify:                  # command from another orb
+          channel: '#deploys'
+          event: pass
+\`\`\`
+
+Authoring a private orb (org-internal):
+
+Orb source lives in a separate repo with structure:
+
+\`\`\`
+my-orb/
+├── @orb.yml                          # orb-level config
+├── commands/
+│   └── setup-stack.yml
+├── jobs/
+│   └── deploy.yml
+└── executors/
+    └── default.yml
+\`\`\`
+
+Each commands/setup-stack.yml:
+
+\`\`\`yaml
+description: 'Setup our stack — Node + pnpm + AWS CLI'
+parameters:
+  node-version:
+    type: string
+    default: '20'
+steps:
+  - run: corepack enable
+  - run: pnpm install --frozen-lockfile
+\`\`\`
+
+Publish via:
+
+\`\`\`bash
+circleci orb pack my-orb > orb.yml
+circleci orb publish orb.yml my-org/my-orb@dev:1.0.0
+circleci orb publish promote my-org/my-orb@dev:1.0.0 minor   # → 1.1.0
+\`\`\`
+
+Consumed by other repos:
+
+\`\`\`yaml
+orbs: { stack: my-org/my-orb@1.1.0 }
+jobs:
+  deploy:
+    steps:
+      - stack/setup-stack:
+          node-version: '20'
+\`\`\`
+
+Equivalent of GHA composite actions + reusable workflows in one model. The 25k vs 600 marketplace size difference is real but the quality of well-maintained orbs (circleci/* and major-vendor orbs) is high.`,
+      },
+      {
+        term: 'Test splitting by timing',
+        definition: `CircleCI's killer feature for parallelizing slow test suites.
+
+\`\`\`yaml
+test:
+  docker: [{ image: cimg/node:20.18 }]
+  parallelism: 8
+  steps:
+    - checkout
+    - run:
+        name: Run sharded tests
+        command: |
+          TESTFILES=$(circleci tests glob "src/**/*.test.ts" \\
+                       | circleci tests split --split-by=timing)
+          npm test -- $TESTFILES
+    - store_test_results:
+        path: junit.xml
+\`\`\`
+
+How it works:
+1. parallelism: 8 spawns 8 containers running this job.
+2. circleci tests glob enumerates all test files matching the pattern.
+3. circleci tests split --split-by=timing reads timing data from previous runs (uploaded via store_test_results) and outputs this container's slice. The split balances total runtime per container, not file count.
+4. First run (no timing data): falls back to filename-based split.
+5. Subsequent runs: uses timing data; gradually balances wall time perfectly.
+
+Equivalent in GHA: matrix: { shard: [1,2,3,4,5,6,7,8] } with custom shard logic per test runner. Functional but more code; no automatic timing balance.
+
+split-by options: timing (default; balances by historical timing), filesize (balances by file size), name (alphabetical). Timing is the right answer for any non-trivial suite.
+
+Notes:
+- store_test_results must run on every job for timing data to accumulate. Don't skip it.
+- A flaky test that randomly takes 30s vs 5s pollutes timing data. Quarantine flake.
+- For very large parallelism (>16), per-container overhead can dominate. Sweet spot: 4-12 parallel.`,
+      },
+      {
+        term: 'Workflows — DAG, filters, approval gates',
+        definition: `Orchestration layer. Workflows define which jobs run, in what order, with what filters.
+
+\`\`\`yaml
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - lint
+      - typecheck
+      - test:
+          requires: [lint, typecheck]
+      - build:
+          requires: [test]
+      - deploy-staging:
+          requires: [build]
+          filters:
+            branches: { only: main }
+          context: aws-staging
+      - approve-prod:
+          type: approval         # blocks until a user clicks Approve
+          requires: [deploy-staging]
+          filters: { branches: { only: main } }
+      - deploy-prod:
+          requires: [approve-prod]
+          context: aws-prod
+\`\`\`
+
+Filters control which branches/tags trigger which jobs. approval type pauses until a designated user clicks; equivalent of GHA Environments + required reviewers.
+
+Scheduled workflows:
+
+\`\`\`yaml
+workflows:
+  nightly-canary:
+    triggers:
+      - schedule:
+          cron: '0 7 * * *'     # 7 AM UTC daily
+          filters: { branches: { only: main } }
+    jobs:
+      - run-e2e-canary
+\`\`\`
+
+Note: scheduled workflows have been deprecated in v2.1; new pattern is scheduled pipelines via the API. Old syntax still works in 2026.
+
+Multiple workflows in one config.yml: useful for separating PR-validation from nightly-batch from on-demand deploys. Each can have its own jobs/filters.`,
+      },
+      {
+        term: 'Contexts and OIDC',
+        definition: `Contexts are CircleCI's environment-scoped secret store.
+
+Create at org or project level:
+
+\`\`\`bash
+# CircleCI UI: Org Settings → Contexts → Create Context "aws-prod"
+# Add env vars: AWS_ROLE_ARN, AWS_DEFAULT_REGION
+\`\`\`
+
+Use in a job:
+
+\`\`\`yaml
+deploy-prod:
+  docker: [{ image: cimg/aws:2024.06 }]
+  steps:
+    - checkout
+    - aws-cli/setup:
+        role_arn: $AWS_ROLE_ARN     # from context
+    - run: aws s3 sync ./dist s3://prod-bucket/
+\`\`\`
+
+Reference contexts in workflow:
+
+\`\`\`yaml
+workflows:
+  build-deploy:
+    jobs:
+      - deploy-prod:
+          context: aws-prod         # scope this job to aws-prod context
+\`\`\`
+
+Contexts have role-based access control: which projects can use them, which users can edit.
+
+OIDC to AWS works similarly to GHA. CircleCI mints a JWT per job; AWS IAM trust policy validates:
+
+\`\`\`json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": { "Federated": "arn:aws:iam::123:oidc-provider/oidc.circleci.com/org/<org-id>" },
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+      "StringEquals": {
+        "oidc.circleci.com/org/<org-id>:aud": "<org-id>"
+      },
+      "StringLike": {
+        "oidc.circleci.com/org/<org-id>:sub": "org/<org-id>/project/<project-id>/user/*"
+      }
+    }
+  }]
+}
+\`\`\`
+
+The aws-cli orb's setup-and-assume-role command handles the JWT exchange:
+
+\`\`\`yaml
+- aws-cli/setup-and-assume-role:
+    profile_name: deploy
+    role_arn: $AWS_ROLE_ARN
+    role_session_name: circleci-$CIRCLE_BUILD_NUM
+\`\`\`
+
+By 2026 OIDC is the default; long-lived AWS keys in contexts are deprecated practice.`,
+      },
+      {
+        term: 'Recipe: monorepo with path-based filters',
+        definition: `CircleCI's path-filtering orb runs jobs only when specific paths changed:
+
+\`\`\`yaml
+version: 2.1
+
+orbs:
+  path-filtering: circleci/path-filtering@1.0.0
+
+workflows:
+  detect-and-run:
+    jobs:
+      - path-filtering/filter:
+          base-revision: main
+          mapping: |
+            services/payments/.* run-payments true
+            services/search/.* run-search true
+            packages/shared/.* run-payments true
+            packages/shared/.* run-search true
+          config-path: .circleci/continue-config.yml
+\`\`\`
+
+The filter job:
+1. Diffs against base-revision.
+2. Matches changed paths against the mapping.
+3. Sets pipeline parameters (run-payments, run-search) to true if any matching path changed.
+4. Triggers a continue-pipeline using continue-config.yml with those parameters set.
+
+continue-config.yml:
+
+\`\`\`yaml
+version: 2.1
+
+parameters:
+  run-payments: { type: boolean, default: false }
+  run-search:   { type: boolean, default: false }
+
+workflows:
+  build-services:
+    jobs:
+      - test-payments:
+          filters: { branches: { only: main } }
+          when: << pipeline.parameters.run-payments >>
+      - test-search:
+          when: << pipeline.parameters.run-search >>
+\`\`\`
+
+Behavior: PR touches services/payments/* → only test-payments runs. PR touches packages/shared/* → both test-payments and test-search run (because shared is mapped to both).
+
+Equivalent of GitLab CI dynamic child pipelines or GHA paths-filter + jobs-conditional. Slightly more verbose than GHA's dorny/paths-filter; slightly less powerful than GitLab's dynamic generation.`,
+      },
+      {
+        term: 'Recipe: Docker layer cache + remote Docker',
+        definition: `Building Docker images in CircleCI requires care. Two approaches:
+
+Setup remote Docker (paid, faster):
+
+\`\`\`yaml
+build-image:
+  docker: [{ image: cimg/base:current }]
+  steps:
+    - checkout
+    - setup_remote_docker:
+        docker_layer_caching: true     # paid feature ($1500/yr typically)
+    - run: docker build -t myapp:$CIRCLE_SHA1 .
+    - run: docker push myapp:$CIRCLE_SHA1
+\`\`\`
+
+setup_remote_docker provisions a separate VM for Docker. docker_layer_caching: true caches layers across builds — comparable speed to GHA + buildx + type=gha.
+
+Use machine executor (free, slower cold-start):
+
+\`\`\`yaml
+build-image:
+  machine:
+    image: ubuntu-2404:current
+    docker_layer_caching: true        # works on machine executor
+  steps:
+    - checkout
+    - run: docker buildx build -t myapp:$CIRCLE_SHA1 --push .
+\`\`\`
+
+machine executor cold-starts in ~30s vs docker executor's ~10s, but supports Docker natively without needing setup_remote_docker.
+
+Modern alternative: kaniko (rootless, no Docker daemon needed):
+
+\`\`\`yaml
+build-image:
+  docker: [{ image: gcr.io/kaniko-project/executor:debug }]
+  steps:
+    - checkout
+    - run:
+        command: |
+          /kaniko/executor \\
+            --dockerfile Dockerfile \\
+            --context . \\
+            --destination myapp:$CIRCLE_SHA1 \\
+            --cache=true \\
+            --cache-repo gcr.io/myorg/cache
+\`\`\`
+
+kaniko caches layers in a separate registry repo (not local disk). Works with any executor. Slower than DLC but cheaper.`,
+      },
+      {
+        term: 'Recipe: dynamic resource class for variable workloads',
+        definition: `Different jobs need different compute. CircleCI's resource classes scale linearly:
+- small: 1 vCPU, 2GB
+- medium: 2 vCPU, 4GB (default)
+- large: 4 vCPU, 8GB
+- xlarge: 8 vCPU, 16GB
+- 2xlarge: 16 vCPU, 32GB
+
+Pick per job:
+
+\`\`\`yaml
+jobs:
+  lint:
+    docker: [{ image: cimg/node:20.18 }]
+    resource_class: small         # cheap; 30s job
+    steps: [...]
+
+  test:
+    docker: [{ image: cimg/node:20.18 }]
+    resource_class: medium        # 4-min job
+    parallelism: 6
+    steps: [...]
+
+  build-image:
+    docker: [{ image: cimg/base:current }]
+    resource_class: large         # build is CPU-bound
+    steps: [...]
+
+  e2e:
+    machine: { image: ubuntu-2404:current }
+    resource_class: 2xlarge       # browser-heavy
+    steps: [...]
+\`\`\`
+
+Pricing scales linearly: large = 4x small. The 60% time savings on a CPU-bound build often justifies 4x cost for that single job.
+
+Equivalent in GHA: larger runners (4-vCPU, 8-vCPU, 16-vCPU) priced 2x/4x/8x respectively. Comparable.`,
+      },
+    ],
+    approach: [
+      'Use orbs for everything reusable: third-party (circleci/*) for vendor integrations; private orbs for org-internal patterns',
+      'parallelism + circleci tests split for any test suite >5 minutes',
+      'Always store_test_results — required for timing-based test split to learn',
+      'Contexts for environment-scoped secrets; OIDC to clouds; never long-lived keys in env vars',
+      'Resource class per job — small for lint, medium for tests, large for builds',
+      'Use approval workflow type for prod deploy gates; equivalent of GHA Environments',
+      'path-filtering orb for monorepo; pipeline parameters drive continue-config.yml',
+      'Setup remote Docker with DLC for paid plans; kaniko for OSS / cost-conscious',
+    ],
+    pitfalls: [
+      'parallelism without circleci tests split — splits by file name (alphabetical), not balanced wall time',
+      'No store_test_results — timing-split has no data to use; defaults to filename order',
+      'Long-lived AWS keys in contexts — same risk as anywhere; OIDC is mature in CircleCI',
+      'docker executor when you need privileged Docker — silently fails or behaves weirdly; use machine',
+      'Contexts shared across all projects with no RBAC — single project compromise leaks org-wide secrets',
+      'Manual approval blocks with no timeout — workflow holds capacity indefinitely',
+      'Custom orbs at @dev:* (development) channel in production — breaking changes; use semver-published orbs',
+    ],
+    keyQuestions: [
+      {
+        question: 'When do you pick CircleCI over GitHub Actions in 2026?',
+        answer: `Three concrete scenarios. Outside these, GHA is usually the better default for new projects.
+
+Scenario 1: build-time-sensitive teams with slow test suites. CircleCI's automatic test splitting by timing is genuinely the best in the category. A 30-min Jest/RSpec/PyTest suite split across 8 parallel containers finishes in 4-5 minutes consistently. GHA's matrix sharding can match this but requires per-test-runner configuration; CircleCI gives it to you in two YAML lines. For shops where PR feedback latency directly drives developer productivity, this matters.
+
+Scenario 2: existing CircleCI investment. If your team has 200 jobs, custom orbs, deeply integrated workflows, and it's working — migration to GHA is a multi-quarter project. The marginal benefit of GHA over working CircleCI rarely justifies the migration cost. Stay; modernize incrementally (OIDC, larger resource classes, latest orb versions) but don't migrate.
+
+Scenario 3: multi-SCM. CircleCI supports GitHub, GitLab, Bitbucket equally. Useful for orgs with mixed SCM (typically post-acquisition). Rare but real.
+
+When CircleCI loses to GHA:
+
+You're on GitHub. Integration tax is real — separate auth, separate UI, separate webhook config, less seamless PR comments. GHA's marketplace (~25k actions vs CircleCI's ~600 orbs) covers more niche integrations.
+
+Cost at scale. CircleCI's $30/user (Performance) and $59/user+ (Scale) are competitive but rarely cheaper than GHA Pro at $4/user. The gap widens at larger headcount.
+
+Greenfield without CircleCI experience on the team. Onboarding cost — engineers know GHA from open source; CircleCI requires team-specific learning.
+
+When CircleCI loses to GitLab CI:
+
+You're on GitLab. Same integration argument.
+
+You want integrated DevSecOps. GitLab Ultimate's SAST/DAST/SCA + Vulnerability dashboard is more cohesive than CircleCI + bolt-on scanners.
+
+Pragmatic 2026 stance: if you already have CircleCI and it's working, stay. If you're starting fresh on GitHub, pick GHA. If you're starting fresh on GitLab, pick GitLab CI. CircleCI's ~7-10% market share is concentrated in JS/Ruby/Python shops with specific performance needs and existing investments — durable but not growing rapidly.`,
+      },
+      {
+        question: 'Walk through a high-quality CircleCI config for a Node monorepo.',
+        answer: `Production-grade pattern combining orbs, path-filtering, parallelism, OIDC, contexts, and approval gates:
+
+\`\`\`yaml
+version: 2.1
+
+orbs:
+  node: circleci/node@5.2.0
+  aws-cli: circleci/aws-cli@4.1.0
+  path-filtering: circleci/path-filtering@1.0.0
+
+executors:
+  node-runner:
+    docker:
+      - image: cimg/node:20.18
+    resource_class: medium
+    working_directory: ~/repo
+
+commands:
+  install-pnpm:
+    description: 'Install with pnpm + cache'
+    steps:
+      - run: corepack enable
+      - restore_cache:
+          keys:
+            - v1-pnpm-{{ checksum "pnpm-lock.yaml" }}
+            - v1-pnpm-
+      - run: pnpm install --frozen-lockfile
+      - save_cache:
+          key: v1-pnpm-{{ checksum "pnpm-lock.yaml" }}
+          paths: [~/.local/share/pnpm/store]
+
+parameters:
+  run-payments: { type: boolean, default: false }
+  run-search:   { type: boolean, default: false }
+  run-shared:   { type: boolean, default: false }
+
+jobs:
+  setup:
+    executor: node-runner
+    steps:
+      - checkout
+      - install-pnpm
+      - persist_to_workspace:
+          root: .
+          paths: [node_modules, packages/*/node_modules]
+
+  lint:
+    executor: node-runner
+    resource_class: small
+    steps:
+      - checkout
+      - attach_workspace: { at: . }
+      - run: pnpm lint
+
+  typecheck:
+    executor: node-runner
+    steps:
+      - checkout
+      - attach_workspace: { at: . }
+      - run: pnpm typecheck
+
+  test-payments:
+    executor: node-runner
+    resource_class: large
+    parallelism: 4
+    steps:
+      - checkout
+      - attach_workspace: { at: . }
+      - run:
+          name: Sharded tests for payments
+          command: |
+            TESTFILES=$(circleci tests glob "services/payments/**/*.test.ts" \\
+                         | circleci tests split --split-by=timing)
+            cd services/payments && pnpm vitest run $TESTFILES \\
+              --reporter=junit --reporter=default
+      - store_test_results: { path: services/payments/junit.xml }
+
+  build-deploy-payments:
+    docker: [{ image: gcr.io/kaniko-project/executor:debug }]
+    resource_class: large
+    steps:
+      - checkout
+      - run:
+          name: Build + push image with kaniko
+          command: |
+            /kaniko/executor \\
+              --dockerfile services/payments/Dockerfile \\
+              --context services/payments \\
+              --destination $REGISTRY/payments:$CIRCLE_SHA1 \\
+              --cache=true \\
+              --cache-repo $REGISTRY/cache
+  deploy-payments-staging:
+    executor: node-runner
+    steps:
+      - checkout
+      - aws-cli/setup-and-assume-role:
+          role_arn: $AWS_DEPLOY_ROLE_STAGING
+          role_session_name: circleci-$CIRCLE_BUILD_NUM
+      - run: kubectl set image deployment/payments payments=$REGISTRY/payments:$CIRCLE_SHA1 -n staging
+
+workflows:
+  always:
+    jobs:
+      - path-filtering/filter:
+          base-revision: main
+          mapping: |
+            services/payments/.* run-payments true
+            services/search/.*   run-search true
+            packages/shared/.*   run-shared true
+          config-path: .circleci/continue-config.yml
+
+# .circleci/continue-config.yml
+version: 2.1
+parameters:
+  run-payments: { type: boolean, default: false }
+  run-search:   { type: boolean, default: false }
+  run-shared:   { type: boolean, default: false }
+
+workflows:
+  build-test-deploy:
+    jobs:
+      - setup
+      - lint:
+          requires: [setup]
+      - typecheck:
+          requires: [setup]
+      - test-payments:
+          requires: [lint, typecheck]
+          when: << pipeline.parameters.run-payments >>
+      - build-deploy-payments:
+          requires: [test-payments]
+          context: aws-prod
+          filters: { branches: { only: main } }
+          when: << pipeline.parameters.run-payments >>
+      - approve-prod:
+          type: approval
+          requires: [build-deploy-payments]
+          filters: { branches: { only: main } }
+\`\`\`
+
+What this demonstrates: orb usage (circleci/node, circleci/aws-cli, circleci/path-filtering); reusable command (install-pnpm); path-based pipeline parameter setting; conditional job execution via when:; resource_class per job; parallelism + test split for tests; kaniko for image build; OIDC role assumption; approval gate before prod.
+
+Wall time for a payments-only PR: ~6-8 minutes (setup ~2min, lint+typecheck parallel ~1min, sharded tests ~2-3min, build+deploy staging ~2min). Comparable to a tuned GHA setup.
+
+Cost: per-second billing on a medium runner is roughly $0.005/min; an 8-min PR is ~$0.04. At 50 PRs/day, ~$60/month for CI compute alone. Plus seat licenses.`,
+      },
+      {
+        question: 'Test splitting by timing — how does it work and when does it fail?',
+        answer: `CircleCI's test splitting is the differentiating feature. Mechanics, failure modes, and tuning.
+
+How it works:
+
+1. parallelism: N spawns N containers running the same job spec. Each gets a unique CIRCLE_NODE_INDEX (0..N-1) and CIRCLE_NODE_TOTAL (N).
+
+2. circleci tests glob 'pattern/**/*.test.ts' enumerates matching files. Output is a newline-separated list.
+
+3. circleci tests split --split-by=timing reads timing data uploaded from previous runs (via store_test_results) and splits files. Each container outputs its assigned slice.
+
+4. Run the slice. Each container's tests are independent.
+
+5. store_test_results uploads junit.xml at end. CircleCI parses it; per-test timing accumulates.
+
+6. Next run: split-by=timing reads accumulated data; balances wall-time more accurately.
+
+Convergence: first run defaults to file-name split (alphabetical) since no timing data exists. By run 3-5, the splits balance well. Mature suites achieve 95%+ wall-time balance.
+
+Failure modes:
+
+Mode 1: no store_test_results. Timing data never accumulates. split-by=timing falls back to filename. Splits never improve. Fix: add store_test_results to every test job.
+
+Mode 2: flaky tests. A test that randomly takes 30s vs 5s pollutes timing data. Splits oscillate. Fix: quarantine flake (skip in parallel run, run separately on main only). Use --history-period=10 to ignore old data.
+
+Mode 3: test setup dominates. If global setup (DB seed, app boot) takes 60s and tests take 5s each, parallelism doesn't help — every container pays setup cost. Fix: optimize setup, or use --history-period and ensure tests dominate timing.
+
+Mode 4: very small parallelism (2-3). Setup overhead per container becomes large fraction of total time. Sweet spot: 4-12 parallel. Beyond 16, marginal returns are negative for most workloads.
+
+Mode 5: test framework doesn't emit JUnit. Default Jest doesn't; needs jest-junit reporter. Default Mocha doesn't; needs mocha-junit-reporter. Verify your reporter actually writes junit.xml.
+
+Mode 6: split-by=timing without --split-by-junit-class. Some test runners group multiple tests per file; split should consider class-level timing not file-level. Use --split-by=timing with appropriate flags.
+
+Mode 7: glob pattern misses tests. circleci tests glob 'src/**/*.test.ts' matches src/foo.test.ts but not src/foo/__tests__/bar.test.ts. Use multiple globs combined.
+
+Tuning:
+
+\`\`\`yaml
+test:
+  parallelism: 8
+  steps:
+    - checkout
+    - attach_workspace: { at: . }
+    - run:
+        name: Sharded tests
+        command: |
+          # Multiple globs
+          TESTFILES=$(circleci tests glob "src/**/*.test.ts" "tests/**/*.test.ts" \\
+                       | circleci tests split --split-by=timing --history-period=10)
+          npm test -- --reporter=jest-junit --testPathPattern="$TESTFILES"
+    - store_test_results: { path: junit.xml }
+\`\`\`
+
+Comparison with GHA matrix sharding:
+
+\`\`\`yaml
+# GHA equivalent
+strategy:
+  matrix:
+    shard: [1, 2, 3, 4, 5, 6, 7, 8]
+steps:
+  - run: npm test -- --shard=\${{ matrix.shard }}/8
+\`\`\`
+
+Native test runner sharding (Jest --shard, Vitest --shard, pytest-shard, Go's -shard) splits tests by hash, not timing. Splits are deterministic but not balanced — a fast container finishes in 30s while a slow one takes 4min. CircleCI's timing-based split balances by historical data.
+
+Workaround in GHA: action-test-splitting third-party action wraps Jest/Vitest with timing-based logic. Functional but extra dep.
+
+Reality: CircleCI's auto-split is convenient; GHA's manual hash-split is sufficient for most teams. The performance gap isn't huge once you tune.
+
+Real-world: 35-min Jest suite with 1200 tests. parallelism: 8. First few runs: 5-7min per container imbalanced. After ~10 runs: 4.2-4.5min consistently. ~85% time savings vs serial; ~15% improvement vs naive shard.`,
+      },
+      {
+        question: 'Migration from CircleCI to GitHub Actions — what changes?',
+        answer: `Migrations are typically 4-12 weeks for moderate-complexity setups. The patterns translate well but details require attention.
+
+Mapping concepts:
+
+CircleCI → GHA equivalents:
+- workflows: → on: + jobs:
+- jobs: with requires: → jobs: with needs:
+- orbs → composite actions / reusable workflows
+- executors → runs-on:
+- resource_class → larger runner types (4-vcpu / 8-vcpu / etc.)
+- parallelism + circleci tests split → matrix: { shard: [...] } + native test sharding
+- contexts → repository secrets / environment secrets
+- approval workflow type → environment with required reviewers
+- circleci/aws-cli orb → aws-actions/configure-aws-credentials
+- circleci/slack orb → slackapi/slack-github-action
+- workflows: with filters: → on: with branches:/tags: filters
+- caching (save_cache/restore_cache) → actions/cache
+
+What's straightforward:
+
+Most jobs translate directly. A typical install/lint/typecheck/test/build/deploy workflow becomes a GHA workflow with the same shape, ~80% of YAML lines maintained.
+
+OIDC patterns are nearly identical. CircleCI's id_tokens become GHA's permissions: id-token: write. Trust policy on AWS side needs the GHA OIDC provider (token.actions.githubusercontent.com) added; existing CircleCI provider stays for any remaining CircleCI workflows during the migration.
+
+Custom orbs translate to composite actions or reusable workflows. A command in an orb becomes a composite action in a path; jobs in an orb become reusable workflows.
+
+What requires rework:
+
+Test splitting. CircleCI's automatic timing-split doesn't have a native GHA equivalent. Three options:
+1. Use native test runner sharding (jest --shard, vitest --shard) with matrix: hash-based, not timing-balanced.
+2. Use a third-party action like split-tests-action that wraps timing data.
+3. Use Knapsack Pro / Buildkite Test Engine third-party services that add timing-based split as a service.
+
+Most teams accept the slight performance regression for migration simplicity.
+
+Path filtering. CircleCI's path-filtering orb → GHA's dorny/paths-filter@v3. Equivalent functionality; different syntax.
+
+Dynamic config (CircleCI's continue-pipeline pattern) → GHA's reusable workflows with workflow_call inputs. The GHA pattern is more rigid (you can't generate the workflow YAML at runtime); for monorepos, paths-filter + conditional jobs covers most cases.
+
+Approval gates → GHA Environments with required reviewers. Identical concept; configured via repo settings → Environments.
+
+Resource class → larger GHA runners. medium → ubuntu-latest (2-vCPU); large → ubuntu-latest-4-cores; xlarge → ubuntu-latest-8-cores. Pricing roughly comparable.
+
+Migration playbook:
+
+Phase 1 (week 1-2): inventory. Catalog jobs, custom orbs, contexts, approval gates. Identify the patterns that need careful translation.
+
+Phase 2 (week 2-3): pilot one repo. Translate side-by-side: write GHA workflow that mirrors CircleCI. Run both in parallel for a sprint. Compare outputs, debug differences.
+
+Phase 3 (week 3-8): translate orbs to composite actions / reusable workflows. Publish to a central .github repo. Service repos consume via uses: org/.github/.github/workflows/*.yml@v1.
+
+Phase 4 (week 4-10): migrate repo-by-repo. Run both systems in parallel for 1-2 weeks per repo. Cut over by removing .circleci/config.yml.
+
+Phase 5 (week 10-12): decommission. Disable CircleCI org. Archive .circleci/ in git tag for reference.
+
+Common gotchas:
+
+CircleCI's job-context filesystem is /home/circleci/repo by default. GHA uses $GITHUB_WORKSPACE (typically /home/runner/work/repo/repo). Hard-coded paths in scripts need updating.
+
+CircleCI environment variables: $CIRCLE_SHA1, $CIRCLE_BRANCH, $CIRCLE_BUILD_NUM. GHA: $GITHUB_SHA, $GITHUB_REF_NAME, $GITHUB_RUN_NUMBER. Search-and-replace.
+
+Workspace persistence (persist_to_workspace + attach_workspace) → upload-artifact / download-artifact in GHA. Slightly different model — GHA artifacts are blob storage, not local filesystem.
+
+Test result reporting: store_test_results → upload-artifact + a reporter action like dorny/test-reporter for the UI integration.
+
+Realistic timeline for a 50-engineer org with ~100 CircleCI jobs: 2-4 months end-to-end. Cost in engineering time: 2-4 engineer-weeks. Worth it if you're consolidating onto GitHub anyway; not worth it if CircleCI is working and you're not migrating SCM.`,
+      },
+      {
+        question: 'Quick-fire interview answers — CircleCI essentials.',
+        answer: `Rapid-fire facts for the CircleCI portion of an interview.
+
+Q: What's CircleCI's market position?
+A: ~7-10% market share. Performance-first SaaS CI. Strongest in JS/Ruby/Python ecosystems.
+
+Q: Five executor types?
+A: docker (default), machine (full Linux VM), macos (Apple Silicon/Intel), windows, gpu (NVIDIA).
+
+Q: What's an orb?
+A: Versioned reusable config package. Exports commands, jobs, executors. Imported via orbs: in config.yml. Equivalent of GHA composite actions + reusable workflows.
+
+Q: parallelism + tests split?
+A: parallelism: N spawns N containers. circleci tests split --split-by=timing balances tests across containers by historical timing. Killer feature for slow suites.
+
+Q: Resource classes?
+A: small (1 vCPU/2GB), medium (default 2/4), large (4/8), xlarge (8/16), 2xlarge (16/32). Linear pricing.
+
+Q: Workflows vs jobs?
+A: Workflows orchestrate jobs with DAG (requires:), filters (branches/tags), approval gates. Jobs are atomic units of execution.
+
+Q: Approval gates?
+A: type: approval job in workflow blocks until a designated user clicks Approve. Equivalent of GHA Environments + required reviewers.
+
+Q: Contexts?
+A: Environment-scoped secret store. Org or project level, RBAC-protected. context: aws-prod scopes a job to that context's secrets.
+
+Q: OIDC to AWS?
+A: Same pattern as GHA. CircleCI mints JWT per job; AWS IAM trust policy validates. aws-cli orb's setup-and-assume-role command handles the exchange.
+
+Q: Per-second billing?
+A: Yes, vs GHA's per-minute. Materially saves money on short jobs (lint, typecheck).
+
+Q: Test splitting failure modes?
+A: No store_test_results (no timing data); flaky tests (polluted timing); test setup dominates; very small parallelism (2-3 not worth it); wrong glob pattern; missing JUnit reporter.
+
+Q: Docker layer caching?
+A: setup_remote_docker with docker_layer_caching: true (paid feature). Or use machine executor (free, supports DLC). Or kaniko (rootless, no Docker daemon).
+
+Q: path-filtering orb?
+A: Diffs against base-revision; matches changed paths against mapping; sets pipeline parameters; triggers continue-pipeline with those params. Used for monorepo conditional execution.
+
+Q: Custom orb publishing?
+A: circleci orb pack → orb.yml. circleci orb publish my-org/my-orb@dev:1.0.0. circleci orb publish promote ... minor for semver.
+
+Q: Workspace vs artifact?
+A: persist_to_workspace + attach_workspace shares filesystem state between jobs in the same workflow (transient). store_artifacts uploads files visible in the UI for download (persistent).
+
+Q: When does CircleCI win over GHA?
+A: Build-time-sensitive teams with slow test suites where auto-test-splitting matters; existing CircleCI investment; multi-SCM orgs.
+
+Q: When does GHA win over CircleCI?
+A: On GitHub (integration); cost at scale; GHA marketplace breadth; new project without CircleCI experience.
+
+Q: Migration cost CircleCI → GHA?
+A: 4-12 weeks for moderate setups. Most patterns translate well; test splitting and dynamic config require rework.
+
+Q: Most common CircleCI mistake?
+A: parallelism without store_test_results — splits never balance because timing data doesn't accumulate.
+
+These are the answers a CircleCI-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://circleci.com/docs/configuration-reference/',
+      'https://circleci.com/docs/parallelism-faster-jobs/',
+      'https://circleci.com/docs/openid-connect-tokens/',
+      'https://circleci.com/developer/orbs',
+      'https://www.jetbrains.com/lp/devecosystem-2024/',
+    ],
+  },
+
 ];
