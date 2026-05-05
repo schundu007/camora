@@ -218,6 +218,21 @@ async function runMigrations() {
       `ALTER TABLE lumora_kb_chunks ALTER COLUMN topic_id TYPE TEXT`,
       `ALTER TABLE lumora_kb_chunks ALTER COLUMN section TYPE TEXT`,
       `ALTER TABLE lumora_user_doc_chunks ALTER COLUMN section TYPE TEXT`,
+
+      // ── RAG Phase 1: BM25 (Postgres tsvector) ──────────────────────
+      // Generated columns + GIN indexes give us full-text search
+      // coexisting with the HNSW vector index. Hybrid retrieval merges
+      // both via Reciprocal Rank Fusion.
+      `ALTER TABLE lumora_kb_chunks
+         ADD COLUMN IF NOT EXISTS content_tsv tsvector
+         GENERATED ALWAYS AS (to_tsvector('english', coalesce(content, ''))) STORED`,
+      `CREATE INDEX IF NOT EXISTS lumora_kb_chunks_tsv_gin
+         ON lumora_kb_chunks USING GIN (content_tsv)`,
+      `ALTER TABLE lumora_user_doc_chunks
+         ADD COLUMN IF NOT EXISTS content_tsv tsvector
+         GENERATED ALWAYS AS (to_tsvector('english', coalesce(content, ''))) STORED`,
+      `CREATE INDEX IF NOT EXISTS lumora_user_doc_chunks_tsv_gin
+         ON lumora_user_doc_chunks USING GIN (content_tsv)`,
     ];
 
     // Postgres error codes for "already exists" — the legitimate swallow
