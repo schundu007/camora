@@ -9714,4 +9714,1580 @@ Each step adds: more code, more ownership of reliability, more product influence
       'https://martinfowler.com/articles/microservices.html#ProductsNotProjects',
     ],
   },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // I. Reliability + Security
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'reliability-security-overlap',
+    title: 'Where Reliability Meets Security — The BSRS Book',
+    icon: 'lock',
+    color: '#6366f1',
+    questions: 3,
+    description: 'Google\'s Building Secure & Reliable Systems framework, why security IS reliability, and the cross-discipline overlap.',
+    introduction: `**Reliability and security are deeply linked.** A system that\'s "available" but compromised is failed; a system that\'s "secure" but unavailable is failed. Google\'s Building Secure & Reliable Systems (BSRS, 2020) is the canonical SRE-meets-security text.
+
+**The thesis**: many security and reliability practices are **the same practices applied to different threat models**.
+
+- **Defense in depth**: layered security AND layered reliability.
+- **Least privilege**: security AND reliability principle.
+- **Blast radius reduction**: confines security incidents AND reliability incidents.
+- **Audit logging**: enables security investigations AND incident postmortems.
+- **Automated remediation**: same tooling for security and reliability events.
+- **Game days / chaos**: simulate security incidents AND reliability incidents.
+
+**The CIA triad meets reliability:**
+
+Security\'s classic CIA: **Confidentiality, Integrity, Availability**.
+
+- **Confidentiality**: secrets, encryption, access control. Pure security.
+- **Integrity**: data not tampered with. Security AND reliability.
+- **Availability**: system is up and serving. Security (DoS) AND reliability (capacity, dependencies).
+
+The "A" in CIA is exactly SRE\'s domain. A security incident that takes down the service is also a reliability incident.
+
+**Examples of the overlap:**
+
+**1. DDoS mitigation.**
+- Reliability problem: traffic exceeds capacity.
+- Security problem: attacker is the source.
+- Same mitigations: rate limiting, load shedding, autoscaling, edge caching, CDN, WAF.
+
+**2. Secret rotation.**
+- Security: prevent stolen credentials from being usable indefinitely.
+- Reliability: tooling to rotate without downtime.
+- Same automation: cert-manager, Vault, AWS Secrets Manager.
+
+**3. Compromised credentials.**
+- Security: detect and revoke.
+- Reliability: detect impact (anomalous traffic patterns) and respond.
+- Same observability stack.
+
+**4. Supply chain attacks.**
+- Security: malicious dependency injected upstream.
+- Reliability: dependency change broke the build.
+- Same controls: dependency review, SBOM, signed artifacts.
+
+**The shared vocabulary:**
+
+- **Threat model**: explicit list of attackers, capabilities, targets. SRE applies to "what can fail."
+- **Trust boundary**: where you stop trusting input. SRE: where you stop trusting upstream.
+- **Defense in depth**: layered defenses. SRE: layered prevention.
+- **Blast radius**: what one compromise affects. SRE: what one failure affects.
+- **Recovery**: from compromise. SRE: from incident.
+
+**The BSRS chapters that matter most for SRE:**
+
+- **Ch 4: Design for Understandability** — both security and reliability benefit from systems engineers can reason about.
+- **Ch 6: Design for a Changing Landscape** — assume threats and dependencies evolve.
+- **Ch 8: Design for Resilience** — the reliability chapter, but framed for security too.
+- **Ch 14: Deploying Code** — secure deployment is reliable deployment.
+- **Ch 17: Crisis Management** — security incident response is incident response.
+
+**The differences:**
+
+- Security has **adversaries**; reliability has **noise / failure**.
+- Security failures often have **legal / regulatory consequences**.
+- Security investigations require **chain-of-custody discipline** (forensics).
+- Security has **public disclosure obligations** (CVE, breach notification).
+
+**The org pattern:**
+
+Smaller companies: SRE and security are separate small teams; collaborate on incidents.
+Larger companies: dedicated security engineering team; SRE collaborates on the reliability+security overlap (DDoS, supply chain, secret management).
+Largest: hybrid teams (Google\'s "production security"); reliability and security treated as one engineering function.
+
+**The 2026 trend**: as supply chain and AI-related threats escalate, the overlap is widening. SREs increasingly own security primitives (IaC scanning, dependency hygiene, secret management, runtime hardening). The line between "SRE" and "security engineer" blurs.`,
+    whenToUse: [
+      'Designing reliability for high-security systems — the patterns overlap',
+      'Reviewing org structure — should SRE and security be more integrated?',
+      'Postmortem on a security incident — apply reliability postmortem rigor',
+      'Pre-launch reviews — reliability AND security checklist',
+    ],
+    keyConcepts: [
+      { term: 'BSRS Book', definition: 'Building Secure & Reliable Systems (Google, 2020). Canonical text on the overlap.' },
+      { term: 'CIA + reliability', definition: 'Confidentiality + Integrity + Availability. The "A" is SRE\'s domain. Integrity straddles both.' },
+      { term: 'Same patterns, different threat models', definition: 'Defense in depth, least privilege, blast radius, audit logging — work for security AND reliability.' },
+      { term: 'Supply chain', definition: 'Both a security concern (malicious deps) and reliability (broken deps). Same controls.' },
+      { term: 'Threat model', definition: 'Explicit list of attackers / capabilities / targets. SRE analog: "what can fail."' },
+      { term: 'Adversaries vs noise', definition: 'Security has intentional attackers; reliability has random failure. Different threat models, similar defenses.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How are reliability and security related?',
+        answer: `Three concrete connections:
+
+**1. Availability is part of security.**
+The CIA triad: Confidentiality, Integrity, Availability. The "A" is exactly SRE\'s domain. A successful DDoS is a security incident AND a reliability incident.
+
+**2. Many practices are shared.**
+- Defense in depth → layered defenses (security) AND layered prevention (reliability).
+- Least privilege → security access control AND blast radius reduction.
+- Audit logging → security investigation AND postmortem.
+- Game days → security exercises AND reliability exercises.
+- Postmortems → security incidents AND reliability incidents.
+
+**3. Many threats are dual-purpose.**
+- Compromised credentials: security breach + reliability incident.
+- Bad deploy: reliability incident; if injected via supply chain attack, also security.
+- DDoS: security attack + capacity / reliability problem.
+- Bug exploitable for DoS: both.
+
+**The BSRS book quote** (from Ch 1): *"In the past, building reliable and secure systems were considered separate problems. They aren\'t. The two domains are deeply intertwined."*
+
+**The org implication**:
+- Smaller orgs: security and SRE are separate small teams that collaborate.
+- Larger orgs: dedicated security engineering team; SRE owns reliability primitives that have security implications.
+- Largest orgs: hybrid teams ("production security") that own both.
+
+**Concrete example of overlap:**
+
+A service that handles money. The team needs to address:
+- **Availability** (SRE): canary deploys, autoscaling, circuit breakers, runbooks.
+- **Confidentiality** (Security): secrets management, encryption at rest/transit.
+- **Integrity** (Both): idempotency, audit trails, dual-write reconciliation.
+
+The same engineer might write:
+- Auto-rollback logic (reliability).
+- Idempotency-key dedup (reliability + security).
+- Secret rotation automation (security + reliability).
+- Audit log emission (security + reliability).
+
+Each artifact is dual-purpose; the work is the same.
+
+**The takeaway**: in modern engineering, separating "reliability" and "security" is increasingly artificial. They\'re both engineering disciplines for "make the system actually work safely." The BSRS book is the canonical text; worth reading.`,
+      },
+      {
+        question: 'How is a security incident different from a reliability incident?',
+        answer: `**Same response framework; different specifics.**
+
+**The shared pattern (incident command applies to both):**
+- Detection → triage → mitigation → recovery → postmortem.
+- IC + Ops Lead + Comms Lead structure.
+- Severity levels.
+- Status page updates.
+- Runbooks per incident type.
+
+**Where security adds requirements:**
+
+**1. Adversary management.**
+- Reliability: the system failed; we mitigate.
+- Security: an adversary is actively in the system; we eject them, then mitigate.
+- Special handling: don\'t alert the attacker that you\'ve detected them. The investigation phase is delicate.
+
+**2. Forensics / chain of custody.**
+- Reliability: capture metrics, logs, traces.
+- Security: capture forensic data with chain-of-custody discipline. Can be evidence in legal proceedings.
+- Implication: don\'t restart the host (loses memory state); image disks before any cleanup; preserve logs.
+
+**3. Legal / regulatory obligations.**
+- Reliability: customer comms based on impact.
+- Security: depending on jurisdiction and data type, mandatory breach notification (GDPR within 72 hours; many US states require notification within 30-60 days).
+- Implication: legal team involved early.
+
+**4. Public disclosure.**
+- Reliability: status page, postmortem within days.
+- Security: may require coordinated disclosure (CVE process, vendor coordination), embargo periods, PR management.
+- Implication: communications team central; postmortem may have public + internal versions.
+
+**5. Adversary intelligence.**
+- Reliability: postmortem captures what happened.
+- Security: postmortem captures what happened AND attempts to identify the attacker, vector, intent.
+- Implication: security analysts may continue investigation for weeks after mitigation.
+
+**6. Containment vs eradication vs recovery.**
+- Reliability: usually mitigation = recovery (symptom gone, system stable).
+- Security: three phases:
+  - **Contain**: stop the attack from spreading.
+  - **Eradicate**: remove the attacker\'s presence (backdoors, accounts, persistent threats).
+  - **Recover**: restore normal operations after eradication.
+- Each phase has its own work; can\'t skip eradication.
+
+**The overlap roles:**
+
+In a well-functioning org:
+- IC for security incidents may be a security engineer or SRE depending on incident type.
+- Comms Lead works with PR / legal for security incidents.
+- SRE often executes the technical mitigation; security defines the response strategy.
+
+**Common mistake**: treating security incidents as "just bigger reliability incidents." They have legal, regulatory, and PR dimensions reliability doesn\'t have.`,
+      },
+      {
+        question: 'What security skills should every SRE have?',
+        answer: `**Five baseline skills**:
+
+**1. Secret management.**
+- Never commit secrets to code or config.
+- Use a secret manager: Vault, AWS Secrets Manager, GCP Secret Manager.
+- Rotate secrets automatically.
+- Detect leaked secrets (gitleaks, GitHub secret scanning).
+
+**2. Least privilege.**
+- IAM policies are scoped to the minimum needed.
+- Service accounts, not user credentials, for automation.
+- Time-bound credentials when possible.
+- Review and audit access regularly.
+
+**3. Network security basics.**
+- Private subnets vs public subnets.
+- Security groups / firewall rules.
+- TLS everywhere; cert management.
+- VPN / Bastion / Jump hosts for production access.
+
+**4. Audit logging.**
+- Every privileged action logged with: who, what, when, why.
+- Immutable logs (separate from prod that can\'t be tampered).
+- Searchable; tied to identity.
+
+**5. Supply chain hygiene.**
+- SBOM (Software Bill of Materials) for every deploy.
+- Dependency scanning (Dependabot, Snyk, Trivy).
+- Signed container images and artifacts (Sigstore, cosign).
+- Pinned versions; no \`latest\` tags.
+
+**Six bonus skills for staff/senior SRE**:
+
+**6. Threat modeling.**
+- For new services: STRIDE, attack trees.
+- Identify attack vectors; design mitigations.
+
+**7. Incident forensics basics.**
+- Disk imaging, memory capture preservation.
+- Log analysis from a forensic perspective.
+
+**8. Cryptography fundamentals.**
+- Symmetric vs asymmetric encryption.
+- TLS handshake.
+- Key derivation (HKDF, PBKDF2).
+- Don\'t implement crypto; use libraries; understand them.
+
+**9. Web security basics.**
+- OWASP Top 10.
+- CSRF, XSS, SQLi understanding.
+- API security (rate limiting, auth, input validation).
+
+**10. Cloud security postures.**
+- AWS Config / GCP Security Command Center / Azure Defender.
+- CIS benchmarks.
+- IAM policy analysis tools.
+
+**11. Runtime security.**
+- Container image scanning.
+- Runtime threat detection (Falco, Tetragon).
+- eBPF-based observability for security.
+
+**The 2026 reality**:
+- AI-related threats: prompt injection, model theft, training data poisoning. Emerging area.
+- Supply chain attacks: SolarWinds, log4shell, xz-utils. Increasingly sophisticated.
+- Secret leakage: GitHub leaks, npm typosquatting. Daily incidents at scale.
+
+SREs at the intersection of "I write code" and "I operate production" are positioned to handle most of these. The skill set is increasingly required, not optional.
+
+The reading list:
+- BSRS book (Google, 2020).
+- The Web Application Hacker\'s Handbook.
+- The Phoenix Project + The Unicorn Project.
+- OWASP Top 10.
+- AWS / GCP / Azure security best practices docs.
+
+The 80/20: secret management + least privilege + audit logging covers most of what you need. The deeper skills come with experience.`,
+      },
+    ],
+    references: [
+      'https://sre.google/static/pdf/building_secure_and_reliable_systems.pdf',
+      'https://owasp.org/www-project-top-ten/',
+    ],
+  },
+
+  {
+    id: 'secret-management',
+    title: 'Secret Management — Vault, Secrets Manager, Sealed Secrets',
+    icon: 'key',
+    color: '#6366f1',
+    questions: 3,
+    description: 'Where secrets should live, the GitOps challenge, and modern secret-rotation patterns.',
+    introduction: `**Secrets** are credentials that grant access: API keys, database passwords, TLS private keys, OAuth tokens, encryption keys. **Improper secret management** is one of the most common security incident causes.
+
+**Where secrets should NEVER live:**
+- In source code.
+- In config files committed to repo.
+- In environment variables baked into container images.
+- In Slack / email / chat history.
+- In CI/CD logs.
+
+**Where secrets should live:**
+
+**1. Cloud-managed secret store.**
+- AWS Secrets Manager, GCP Secret Manager, Azure Key Vault.
+- IAM-controlled access; encrypted at rest; audit-logged.
+- Rotation built-in for some secret types (RDS passwords).
+
+**2. HashiCorp Vault.**
+- Self-hosted or HCP Vault (managed).
+- Most flexible; supports dynamic secrets (just-in-time DB credentials).
+- Steeper operational overhead.
+
+**3. Kubernetes secrets + sealed secrets / external secrets.**
+- Kubernetes native Secrets are base64-encoded (not encrypted by default; encryption-at-rest must be explicitly enabled).
+- **Sealed Secrets**: encrypted by a controller that lives in-cluster; can be safely committed to Git.
+- **External Secrets Operator**: pulls from cloud secret manager into Kubernetes secrets dynamically.
+
+**4. Cloud-provider parameter store with KMS encryption.**
+- AWS SSM Parameter Store with KMS-encrypted values.
+- Cheap; tightly integrated with AWS.
+- Less feature-rich than Secrets Manager.
+
+**The GitOps challenge:**
+
+GitOps wants everything in Git. Secrets in Git would be a security disaster. Solutions:
+
+**1. Sealed Secrets**: encrypt secrets with a public key; only the in-cluster controller can decrypt with its private key. Encrypted blob committed to Git.
+
+**2. External Secrets Operator**: Git contains references (\`SecretStore\` + \`ExternalSecret\` resources); ESO pulls actual values from Vault / cloud at sync time.
+
+**3. SOPS + age/PGP**: encrypt YAML files with age or PGP keys; decryption keys stored in cloud KMS or local keychains. Mozilla SOPS is the dominant tool.
+
+Each approach trades complexity for security; pick based on your team\'s tooling.
+
+**Secret rotation:**
+
+The principle: **secrets have a lifetime; assume they\'ll leak**. Rotate regularly so leaked credentials become useless quickly.
+
+Rotation patterns:
+- **Manual rotation**: human runs a script. Old; error-prone.
+- **Scheduled rotation**: cron job triggers automatic rotation.
+- **Dynamic secrets**: secrets generated just-in-time per request. Vault\'s DB plugin example: short-lived DB credentials (1 hour) issued per service.
+
+The latter is the gold standard but requires Vault or similar; cloud-managed alternatives are progressing.
+
+**Detecting leaked secrets:**
+
+- **GitHub secret scanning**: detects 200+ secret types in commits and alerts the owner.
+- **gitleaks / trufflehog**: pre-commit / CI scanning.
+- **Cloud-side detection**: AWS GuardDuty detects compromised access keys via behavior.
+- **Honey credentials**: deliberately fake secrets that, when used, alert on detection.
+
+The first response to a leaked secret: **rotate immediately**, then assess scope (where was it used, what could the attacker have accessed).
+
+**The 12-factor app pattern:**
+
+Heroku\'s 12-factor manifesto (2011) made "config in environment variables" canonical. The original intent was good (decouple code from config), but ENV vars baked into container images are NOT secrets-safe.
+
+Modern interpretation: env vars at **runtime injection** from secret store. The container starts; reads secrets via SDK or sidecar; uses them. Secrets never live in the image.
+
+**Common mistakes:**
+
+- **Long-lived service-account credentials** stored as env vars in deployments. Rotation requires redeploy.
+- **Same credential across environments**: a leak in dev compromises prod.
+- **Secrets in logs**: services accidentally log credentials. Hard to remove from log retention.
+- **Manual rotation that nobody actually runs**: secrets technically should rotate; nobody\'s done it in 18 months.
+
+**The 2026 best practice:**
+- Cloud-managed secret store as the SOURCE of truth.
+- Runtime injection (no secrets in images).
+- Automated rotation per secret type.
+- Detection / scanning at every layer (commit, CI, runtime).
+- Dynamic secrets (Vault) for highest-stakes credentials.`,
+    whenToUse: [
+      'Greenfield service — set up secret management from day 1',
+      'Audit existing systems — find secrets in code or config; migrate to secret store',
+      'Postmortem with credential leak — what was the secret-management gap?',
+      'Compliance / audit prep — secret rotation and audit logs are common asks',
+    ],
+    keyConcepts: [
+      { term: 'Cloud secret stores', definition: 'AWS Secrets Manager, GCP Secret Manager, Azure Key Vault. Default for cloud-native apps.' },
+      { term: 'HashiCorp Vault', definition: 'Self-hosted or HCP. Most flexible; supports dynamic secrets. Higher operational overhead.' },
+      { term: 'Sealed Secrets', definition: 'Encrypt secrets with public key; commit to Git; in-cluster controller decrypts. GitOps-friendly.' },
+      { term: 'External Secrets Operator', definition: 'Git references; ESO pulls real values from cloud / Vault at sync time. Modern GitOps pattern.' },
+      { term: 'Dynamic secrets', definition: 'Just-in-time credentials per request. Short-lived; eliminate leak risk. Vault DB plugin canonical example.' },
+      { term: 'Secret scanning', definition: 'GitHub native + gitleaks / trufflehog at commit / CI / runtime. Multi-layer detection.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you handle secrets in a Kubernetes + GitOps deployment?',
+        answer: `**Option 1: Sealed Secrets (simplest).**
+
+- A controller in the cluster generates a public/private keypair.
+- Engineers encrypt secrets with the public key (using \`kubeseal\` CLI).
+- The encrypted blob is committed to Git.
+- The controller decrypts at deploy time and creates a regular Kubernetes Secret.
+
+Pros: minimal external dependencies; works fully offline.
+Cons: manual encrypt/decrypt; less integration with cloud secret stores.
+
+**Option 2: External Secrets Operator (ESO) (most flexible).**
+
+- Define \`SecretStore\` (e.g., points to AWS Secrets Manager).
+- Define \`ExternalSecret\` (says: "create K8s secret 'X' from AWS secret 'Y'").
+- ESO pulls from the cloud store on a schedule; creates / updates K8s secrets.
+
+Pros: integrates with existing cloud secret management; auto-rotation.
+Cons: requires the cloud secret store; ESO is another component to operate.
+
+**Option 3: SOPS + cloud KMS.**
+
+- Encrypt YAML files with SOPS using a KMS key.
+- Commit encrypted YAML to Git.
+- Argo CD plugin (sops-secrets) decrypts at deploy.
+
+Pros: any tool can use SOPS; portable.
+Cons: file-level encryption; less granular than per-secret.
+
+**Comparison:**
+| | Sealed Secrets | ESO | SOPS |
+|---|---|---|---|
+| Cloud integration | No | Yes | Via KMS |
+| Rotation | Manual | Auto | Manual |
+| Operational | Low | Medium | Low |
+| GitOps-friendly | High | High | High |
+
+**My recommendation for 2026 production:**
+
+For most teams: **External Secrets Operator + cloud secret store (AWS / GCP)**.
+- Cloud handles encryption at rest, audit, rotation.
+- ESO bridges to Kubernetes.
+- Engineers manage secrets via cloud console / CLI; ESO syncs.
+
+For highly regulated / multi-cloud: **HashiCorp Vault + ESO** for dynamic secrets and centralized policy.
+
+For minimal-stack teams without cloud secret management: **Sealed Secrets**.
+
+**The one thing to NEVER do**: commit unencrypted secrets to Git. Even private repos. Even temporarily. Once committed, assume the secret is compromised; rotate.`,
+      },
+      {
+        question: 'What is "dynamic secrets" and why is it powerful?',
+        answer: `**Dynamic secrets**: credentials generated on-demand per request, with short lifetime (minutes to hours).
+
+Compare to static secrets:
+- **Static secret**: long-lived (days to years). One credential per service. Stored in secret manager. Used until rotated.
+- **Dynamic secret**: created when service starts; valid for 1 hour; expires automatically; new one generated for next request.
+
+**Vault DB plugin example:**
+
+\`\`\`
+Service: "I need DB credentials."
+Vault: "Here\'s username 'svc-abc-1748234' and password 'xyz789'. Valid for 1 hour."
+Vault → DB: "Create user 'svc-abc-1748234' with these privileges."
+Service uses credentials for 1 hour.
+After 1 hour, Vault automatically deletes the user.
+Service: "I need DB credentials."
+Vault: "Here\'s a NEW username..."
+\`\`\`
+
+**Why it\'s powerful:**
+
+1. **Leak window is bounded.** If credentials leak, they\'re useful for at most 1 hour. Compared to a static credential rotated annually: 365× shorter exposure window.
+
+2. **Audit per service instance.** Each set of credentials is unique per service start; audit logs show "user 'svc-abc-1748234' did X" — direct attribution to that exact service instance.
+
+3. **Compromise detection.** If you see usage of a dynamic credential AFTER its expiration, that\'s a compromise indicator.
+
+4. **No rotation needed.** "Rotation" is automatic; happens every credential lifetime.
+
+5. **Easier incident response.** A compromised service can be isolated by Vault revoking its credentials; no need for redeploys.
+
+**Limitations:**
+
+- **Database-side overhead**: creating users for each request requires DB-side support. Some DBs (Postgres, MySQL) handle this fine; others struggle at high rates.
+- **Caching credentials**: services typically cache for the credential\'s lifetime to avoid Vault round-trip per request. Adds complexity.
+- **Vault availability**: Vault becomes critical infrastructure. Vault outage = service can\'t get fresh credentials.
+
+**Tools and supports:**
+
+- **HashiCorp Vault**: the canonical implementation. Plugins for Postgres, MySQL, MongoDB, Cassandra, MSSQL, Oracle, AWS, GCP, Azure.
+- **AWS RDS IAM auth**: similar pattern via IAM tokens (15-min expiry); native, no Vault needed.
+- **GCP Cloud SQL IAM auth**: equivalent on GCP.
+- **Cert-based auth**: short-lived certs from internal PKI; similar dynamics.
+
+**When to use:**
+
+- High-stakes credentials (production DBs, root-level access).
+- Compliance environments (PCI, HIPAA) where rotation is required.
+- Microservices fleets where individual service compromise is the threat model.
+
+**When not to use:**
+
+- Low-stakes credentials (analytics, internal tools).
+- Services with very high credential request rates (overhead outweighs benefit).
+- Teams without operational maturity to run Vault reliably.`,
+      },
+      {
+        question: 'A secret was committed to a public repo. Walk me through the response.',
+        answer: `**Treat as a P0 incident. Speed matters; bots scan public repos in seconds.**
+
+**Minute 0-5: Containment.**
+1. **Rotate the secret immediately.** New API key / password / cert. Make the leaked one invalid.
+2. **Verify rotation succeeded** in the upstream system (e.g., AWS IAM, GitHub, etc.).
+3. **Revoke the leaked credential explicitly** (delete the IAM access key, revoke the OAuth token).
+
+Don\'t skip step 3. Some systems retain credentials in their cache; explicit revocation eliminates that risk.
+
+**Minute 5-15: Scope.**
+1. **What service used this secret?** What did the secret have access to?
+2. **What\'s the blast radius?** Database? Cloud account? Customer data?
+3. **Was the secret the same as in other environments?** (Common mistake: dev = prod credentials.)
+
+**Minute 15-30: Detection.**
+1. **Check audit logs** for usage of the secret since the commit.
+2. **Look for anomalous patterns**: unusual IPs, unusual operations, unusual data accessed.
+3. **GitHub leak time**: when was the commit pushed? Public repos are scanned by bots within seconds; assume the secret was harvested.
+
+**Hour 0-2: Investigation.**
+1. **What was the commit?** Why was the secret added?
+2. **Why did it not get caught**: was secret scanning enabled? Was pre-commit hook bypassed?
+3. **Is there evidence of compromise?** Logs, alerts, anomalous behavior.
+
+**If evidence of compromise:**
+- Treat as a security incident. Assemble incident response.
+- Forensics: what did the attacker do with the credentials?
+- Determine: data accessed, modified, exfiltrated?
+- Legal / compliance: notification obligations?
+
+**If no evidence of compromise:**
+- Still treat as a near-miss. The secret is in the commit history forever (rewriting history is hard for public repos with collaborators).
+- Postmortem on why it leaked.
+
+**Hour 2-24: Remediation.**
+
+1. **Strip the secret from Git history** if possible.
+   - For your own forks: \`git filter-repo\` or BFG Repo Cleaner.
+   - For public repos with forks: assume permanent; cannot reliably remove.
+   - Force-push removes from main branch but mirrors / forks may retain.
+
+2. **Update secret-management process** to prevent recurrence.
+   - Pre-commit hook: gitleaks / trufflehog.
+   - Server-side: GitHub Secret Scanning (auto-enabled for public repos).
+   - CI step: secret scanning in pipeline.
+   - Cultural: review process catches obvious leaks.
+
+3. **Postmortem.**
+   - How did the secret get into the code in the first place?
+   - Why didn\'t scanning catch it before commit?
+   - What process change prevents recurrence?
+
+**The hard truth:**
+
+For public repo leaks: assume the secret has been compromised. Rotate; don\'t debate. The cost of "unnecessary" rotation is small; the cost of "we thought it wasn\'t leaked but it was" is large.
+
+For private repo leaks: still rotate. Internal compromise is also a threat; secret could leak via compromised laptop, social engineering, or insider.
+
+**Prevention is much cheaper than response:**
+- Pre-commit hooks (gitleaks, trufflehog).
+- IDE plugins that flag secrets.
+- Server-side scanning (GitHub secret scanning is free).
+- Cultural: code review catches obvious commits.
+- Architectural: secrets via secret manager, not in code; less to leak.`,
+      },
+    ],
+    references: [
+      'https://www.vaultproject.io/docs',
+      'https://external-secrets.io/',
+      'https://github.com/bitnami-labs/sealed-secrets',
+      'https://docs.aws.amazon.com/secretsmanager/',
+    ],
+  },
+
+  {
+    id: 'zero-trust-defense',
+    title: 'Zero Trust and Defense in Depth',
+    icon: 'shield',
+    color: '#6366f1',
+    questions: 3,
+    description: 'BeyondCorp, the death of the perimeter, and how SREs implement defense in depth.',
+    introduction: `**Zero Trust** is the security model that replaced "trust the network." Originated as Google\'s **BeyondCorp** (2014); now the mainstream approach.
+
+**The old model (perimeter security):**
+- "Inside the corporate network" = trusted.
+- "Outside" = untrusted.
+- Firewall at the perimeter; everything inside has implicit trust.
+- VPN to "get inside."
+
+**Why it failed:**
+- **Network compromise = full access.** Once an attacker is inside (phishing, compromised laptop), they have implicit trust.
+- **Cloud doesn\'t have perimeters.** Multi-cloud, SaaS, BYOD makes "inside" meaningless.
+- **Insider threats.** Trusted insiders abuse privileges.
+- **Lateral movement** is the dominant attack pattern; perimeter doesn\'t stop it.
+
+**Zero Trust principles** (NIST SP 800-207):
+1. **Verify explicitly**: every request authenticated and authorized.
+2. **Use least-privilege access**: just-in-time, just-enough access.
+3. **Assume breach**: design for adversaries already in the system.
+
+**The shift in practice:**
+
+**Old**: VPN to internal network → access internal services.
+**New**: each service is independently authenticated; identity-aware proxy enforces policy at the application layer.
+
+**BeyondCorp\'s implementation** (Google\'s):
+- **Device identity**: every laptop / phone has a hardware-rooted certificate.
+- **User identity**: SSO with strong MFA.
+- **Tier of access**: services are tagged by sensitivity; only matching device + user tier can access.
+- **No VPN**: anyone can hit the proxy from anywhere; proxy denies based on policy.
+
+**The components of Zero Trust:**
+
+**1. Strong identity for users and devices.**
+- Multi-factor auth (MFA) — phishing-resistant (FIDO2 / hardware keys preferred).
+- Device certificates issued at provisioning; renewed regularly.
+
+**2. Identity-aware proxy.**
+- Sits in front of every service.
+- Authenticates user + device on every request.
+- Examples: Google Cloud IAP, AWS Verified Access, Cloudflare Access.
+
+**3. Microsegmentation.**
+- Each service trusts only its specific callers; not "all internal."
+- Service mesh (Istio, Linkerd) enforces with mTLS + policy.
+
+**4. Continuous verification.**
+- Trust decisions re-evaluated per request, not just at session start.
+- Behavioral anomalies trigger re-auth.
+
+**Defense in depth:**
+
+Zero Trust is one layer. Defense in depth is the broader principle: **multiple independent layers of defense, each catching different attacks**.
+
+The classic layers:
+- **Network**: firewalls, segmentation.
+- **Application**: input validation, output encoding, auth, rate limiting.
+- **Data**: encryption at rest, encryption in transit, access controls.
+- **Identity**: MFA, RBAC, audit.
+- **Endpoint**: device posture, antivirus, MDM.
+- **Detection**: SIEM, behavioral monitoring, alerts.
+
+Each layer assumes the previous might fail. An attacker getting through the firewall faces application-layer auth; through that, faces data encryption; even with data, faces audit and detection.
+
+**The SRE\'s role:**
+
+SREs implement many of the layers:
+- **Service mesh** (mTLS, policy) — SRE\'s domain.
+- **Identity-aware proxies** (IAP, AWS Verified Access) — SRE configures.
+- **Audit logging** — SRE designs.
+- **Rate limiting** — SRE implements.
+- **Network policies** (Kubernetes NetworkPolicy, security groups) — SRE manages.
+
+The pragmatic rules:
+- **Default deny**: services don\'t accept traffic unless explicitly allowed.
+- **Encrypt by default**: TLS everywhere; mTLS for service-to-service.
+- **Audit everything**: privileged actions logged immutably.
+- **Rate-limit aggressively**: per-user, per-IP, per-endpoint.
+- **Multi-factor for human access**: humans always MFA; service accounts can use cert-based auth.
+
+**Common mistakes:**
+
+- **VPN-only auth**: "user is on VPN" doesn\'t mean trusted; VPN credentials get compromised.
+- **Long-lived service credentials**: equivalent to perimeter trust for service-to-service.
+- **Audit logs in the system being audited**: attackers can delete them.
+- **Network segmentation as the only layer**: cloud workloads cross networks easily.
+- **No device verification**: user identity alone insufficient; device must also be verified.
+
+**The BSRS angle:**
+
+The BSRS book\'s framing: Zero Trust + defense in depth + least privilege + blast radius reduction = the design pattern for any production system. SREs internalize these even if "security" isn\'t their job title.`,
+    whenToUse: [
+      'Designing access for new services — Zero Trust by default',
+      'Migrating from VPN-based access — BeyondCorp pattern',
+      'Cross-cloud / SaaS environments — perimeter doesn\'t exist; Zero Trust is mandatory',
+      'Reviewing existing systems — where are perimeter assumptions still in place?',
+    ],
+    keyConcepts: [
+      { term: 'Zero Trust', definition: 'Verify explicitly; least privilege; assume breach. NIST SP 800-207. Replaces perimeter security.' },
+      { term: 'BeyondCorp', definition: 'Google\'s 2014 implementation. Device certs + SSO + identity-aware proxy + no VPN.' },
+      { term: 'Identity-aware proxy', definition: 'Sits in front of every service; authenticates user + device per request. IAP, Verified Access, Cloudflare Access.' },
+      { term: 'Microsegmentation', definition: 'Each service trusts only specific callers, not "internal." mTLS + service mesh policy.' },
+      { term: 'Defense in depth', definition: 'Multiple independent layers; each catches different attacks. Network + app + data + identity + detection.' },
+      { term: 'Default deny', definition: 'Services reject traffic unless explicitly allowed. Inverts the "default allow within network" of perimeter.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through implementing Zero Trust for an internal service.',
+        answer: `Standard Zero Trust deployment for an internal admin tool:
+
+**Step 1: Identity-aware proxy in front.**
+
+Replace VPN-only access with an identity-aware proxy:
+- Google Cloud IAP, AWS Verified Access, Cloudflare Access, Pomerium — all options.
+- Proxy authenticates user via SSO + MFA on every request.
+- Proxy verifies device posture (cert / EDR / MDM enrollment).
+- Decision is per-request, not per-session.
+
+**Step 2: Service-to-service auth via mTLS.**
+
+The admin tool calls backend services. Each service-to-service call:
+- mTLS: each service has a cert; verify peer cert on connect.
+- Service mesh (Istio, Linkerd) enforces this transparently.
+- Authorization policy: "only the admin tool can call backend X" — enforced at the mesh.
+
+**Step 3: Per-request authorization at the service.**
+
+The backend service receives the request:
+- Verify the JWT / token from the upstream proxy.
+- Check authorization: does this user have admin role? Does the role allow this specific action?
+- Audit log the request: user + action + timestamp + outcome.
+
+**Step 4: Least-privilege roles.**
+
+Don\'t grant admin to "everyone in engineering."
+- Specific admin roles: read-only, billing-admin, deployment-admin, etc.
+- Time-bound elevation: "I need 30 minutes of admin to fix a customer issue."
+- All elevation logged; reviewed monthly.
+
+**Step 5: Continuous monitoring.**
+
+- All requests audit-logged.
+- Anomalies trigger alerts: unusual time, unusual IP, unusual access pattern.
+- SIEM correlation across services.
+
+**Step 6: Test the model.**
+
+Simulate compromise:
+- "Attacker has user\'s password but not device cert" — should fail.
+- "Attacker has user\'s password and one MFA factor but not the other" — should fail.
+- "Attacker has compromised device but not user credentials" — should fail.
+
+The pattern: each layer independently must pass for access. Compromising one isn\'t enough.
+
+**Compared to old VPN-only:**
+- Old: VPN credentials → access. Single factor. Compromise the VPN account = full access to all internal services.
+- New: device + user + MFA + per-service authorization. Multiple independent factors; compromising one = not enough.
+
+**Common implementation gotchas:**
+
+- **Shared service accounts**: long-lived service credentials are the perimeter trust pattern in disguise. Replace with cert-based service auth or workload identity.
+- **Health checks bypass**: "the LB needs to talk to me" is a common exception that becomes the attack vector. Use IAM-based health checks or signed health checks.
+- **Logs in the system being audited**: separate audit logging infrastructure; immutable.
+- **No phishing-resistant MFA**: SMS / TOTP MFA is bypass-able. FIDO2 / hardware keys are stronger.`,
+      },
+      {
+        question: 'How does service mesh fit into Zero Trust?',
+        answer: `**Service mesh implements many Zero Trust primitives "for free" at the infrastructure layer.**
+
+What service mesh provides:
+
+**1. mTLS by default.**
+- Every service-to-service call uses mutual TLS.
+- Each service has a cert from the mesh\'s CA.
+- mTLS verifies both peers.
+- Encryption + identity at the network layer; no application code changes.
+
+**2. Service identity.**
+- Each service has a stable cryptographic identity.
+- Workload identity: "this is the checkout service in production namespace."
+- Identity used for authorization decisions.
+
+**3. Authorization policies.**
+- "Only frontend can call user-service."
+- "Only admin tools can call billing-service."
+- Enforced at the proxy; rejected before reaching the application.
+
+**4. Observability of all calls.**
+- Every cross-service call logged.
+- Service-to-service traffic patterns visible.
+- Anomalies (new caller pairs) detectable.
+
+**5. Microsegmentation.**
+- Network policies prevent lateral movement.
+- Even if attacker compromises one service, they can\'t freely call others.
+
+**Tools:**
+
+- **Istio**: most popular; full feature set; heavyweight.
+- **Linkerd**: simpler; lighter; less feature-rich than Istio.
+- **Cilium Service Mesh**: eBPF-based; uses kernel for performance.
+- **Consul Connect**: HashiCorp\'s offering.
+
+**The Zero Trust contribution:**
+
+Service mesh delivers:
+- **Verify explicitly**: mTLS verifies every connection.
+- **Least privilege**: authorization policies enforce per-service access.
+- **Assume breach**: lateral movement contained by microsegmentation.
+
+What service mesh DOESN\'T do:
+- **User identity**: mesh handles service identity, not user. User auth is at the application layer (or identity-aware proxy in front of the cluster).
+- **Device verification**: not in scope; needed at the user-facing proxy.
+- **Application-level vulnerabilities**: SQL injection, XSS — mesh doesn\'t help.
+
+**The pragmatic stack:**
+
+For a Kubernetes-based production system:
+- **Identity-aware proxy** at the edge (Cloudflare Access, IAP, Verified Access) — user + device verification.
+- **Service mesh** inside the cluster (Istio, Linkerd) — service identity, mTLS, microsegmentation.
+- **Application-layer auth** (JWT validation, RBAC) — fine-grained authorization within services.
+- **Audit logging** — comprehensive trail.
+
+This gives you Zero Trust end-to-end without writing custom auth code. The mesh handles the heavy lifting at the infrastructure layer; applications focus on business logic.
+
+**The 2026 trend**: ambient mesh (Istio Ambient Mode) reduces mesh overhead by removing per-pod sidecars; mesh becomes more invisible.`,
+      },
+      {
+        question: 'What\'s "least privilege" in practice for cloud IAM?',
+        answer: `**Least privilege**: each principal (user / service / role) has the minimum permissions needed for their task. Implemented as IAM policies.
+
+**The naive approach**: "give the role broad permissions; it\'s easier."
+- \`AdministratorAccess\` for everything.
+- \`*\`-glob permissions across services.
+- Result: compromise of one credential = access to everything.
+
+**Least privilege approach:**
+
+**1. Roles per task / service.**
+- \`checkout-service-role\`: can read from \`orders\` table; write to \`charges\` table; nothing else.
+- \`backup-service-role\`: can read from all tables; can write to S3 backup bucket; can\'t modify production data.
+
+**2. Conditional permissions.**
+- \`Effect: Allow\`, \`Resource: arn:aws:s3:::prod-bucket/*\`, \`Condition: aws:SourceVpc = vpc-prod-123\`.
+- The role works only from the prod VPC; even leaked, useless from elsewhere.
+
+**3. Time-bound elevation.**
+- Daily work uses minimal role.
+- Specific tasks require explicit elevation: "I need admin for 30 minutes to fix X."
+- AWS IAM "Permission Boundaries" + "Service Control Policies" + AssumeRole patterns.
+
+**4. Read-only by default.**
+- Most engineers should have read-only access to production.
+- Write access for specific services is gated through deploys, not direct.
+- Break-glass accounts for true emergencies (logged extensively).
+
+**5. Just-in-time access.**
+- Access is granted for a specific task, then revoked.
+- Tools: AWS IAM Identity Center, Okta, custom tooling (PAM systems).
+
+**Tools that help:**
+
+- **AWS IAM Access Analyzer**: identifies overly broad permissions.
+- **GCP Recommender**: suggests least-privilege policy reductions.
+- **Azure Privileged Identity Management**: time-bound role assignment.
+- **HashiCorp Boundary**: dynamic least-privilege access.
+
+**The audit pattern:**
+
+Quarterly:
+- For each role: actually used permissions vs declared permissions. Drop unused.
+- For each user: actually used roles vs assigned roles. Drop unused.
+- For privileged operations: who\'s doing them? Could a less-privileged role suffice?
+
+**The practical truth:**
+
+**Achieving perfect least privilege is hard.**
+- Roles drift over time as new tasks emerge.
+- "Add this permission for one-off thing" sticks around.
+- IAM policies become cryptic; no one wants to refactor them.
+
+**The pragmatic target:**
+- 80% of roles have minimal permissions.
+- 20% are over-granted but not catastrophic.
+- Audit and review are the discipline that prevents drift.
+
+**The high-value moves**:
+- **Eliminate \`Administrator\` for service roles.** Services should never need admin.
+- **Time-bound human admin access.** Daily-work admin is a smell.
+- **MFA for any role that has write access to production.**
+- **Audit logs reviewed.** Especially high-privilege operations.
+- **Break-glass accounts with extreme audit.** They exist; minimize use; review every use.`,
+      },
+    ],
+    references: [
+      'https://csrc.nist.gov/publications/detail/sp/800-207/final',
+      'https://cloud.google.com/beyondcorp',
+      'https://www.cloudflare.com/learning/access-management/what-is-zero-trust/',
+    ],
+  },
+
+  {
+    id: 'supply-chain-security',
+    title: 'Supply Chain Security — SBOM, Sigstore, and the Post-SolarWinds World',
+    icon: 'package',
+    color: '#6366f1',
+    questions: 3,
+    description: 'How dependencies became the leading attack vector, and the post-SolarWinds defenses (SBOM, signed artifacts, SLSA).',
+    introduction: `**Supply chain attacks** target the dependencies a system relies on, not the system itself. The attacker compromises a library, a package, a CI tool, an infrastructure provider — anything upstream of your code — and your build inherits the compromise.
+
+**The notable incidents:**
+
+- **SolarWinds (2020)**: nation-state attackers compromised the build server; injected malicious code into a routine SolarWinds Orion update. 18,000 customers received compromised software including major US government agencies. The attack went undetected for months.
+
+- **Log4Shell (Dec 2021)**: a critical remote-code-execution bug in log4j (a ubiquitous Java logging library). Estimated 35% of Java applications affected. The fix was simple; the discovery and patch rollout was a global emergency.
+
+- **xz-utils (March 2024)**: discovered backdoor in the xz compression library. The attacker spent **3 years** building trust as a maintainer before injecting the backdoor. Caught by chance via performance regression. Could have compromised most Linux distributions globally.
+
+- **Codecov (2021)**: bash uploader script was compromised; exfiltrated environment variables (including secrets) from CI pipelines for ~2 months before detection.
+
+**The defenses:**
+
+**1. Software Bill of Materials (SBOM).**
+- Manifest of every dependency in your build.
+- Format: SPDX or CycloneDX (industry standards).
+- Tools: \`syft\` (generates), \`grype\` (scans).
+- Required for: knowing what you have when a CVE drops.
+
+**2. Dependency scanning.**
+- Detect known-vulnerable dependencies.
+- Tools: Snyk, Dependabot, Trivy, Anchore, Renovate.
+- CI integration: scan on every PR; block on critical vulnerabilities.
+
+**3. Signed artifacts.**
+- Container images and binaries signed cryptographically.
+- Verify signatures before deploy.
+- Tools: **Sigstore** (open standard), \`cosign\`, **Notary**.
+- Detection: unsigned or unknown-key artifacts won\'t deploy.
+
+**4. SLSA (Supply chain Levels for Software Artifacts).**
+- Framework defining 4 levels of supply chain security.
+- L1: documented build process. L4: hermetic, reproducible, two-party reviewed.
+- Goal: any artifact can be traced to its source code.
+
+**5. Reproducible builds.**
+- Same source → same binary, byte-for-byte.
+- Detect if the build was tampered (binaries don\'t match expected hash).
+- Hard to achieve in practice (timestamps, paths, etc.); progress over years.
+
+**6. Build server hardening.**
+- The build server is a critical attack surface. SolarWinds compromised here.
+- Treat as production infrastructure: minimal access, full audit, isolated, ephemeral runners.
+- Hosted CI (GitHub Actions, GitLab) provides some isolation; still requires care.
+
+**7. Pinned versions.**
+- No floating tags (\`latest\`, \`stable\`).
+- Specific versions or hash-pinned (\`:sha256:abcd...\`).
+- Update via PR review, not auto-update.
+
+**8. Vendor due diligence.**
+- For critical dependencies: who maintains it? How responsive to security issues? What\'s their security posture?
+- For cloud providers: SOC 2, ISO 27001, FedRAMP audits.
+
+**The SRE responsibility:**
+
+SREs increasingly own supply chain hygiene because:
+- It\'s an infrastructure / pipeline concern (CI/CD, deploys).
+- It\'s adjacent to reliability (a compromised dep can break the system).
+- Security teams alone can\'t do it; engineering must implement.
+
+**The minimum viable supply chain hygiene (2026):**
+
+1. **SBOM generated for every build.** Stored alongside the artifact.
+2. **Dependency scanning in CI.** Critical vulnerabilities fail the build.
+3. **Container images signed and verified.** \`cosign\` + admission controller.
+4. **Pinned versions in production.** No \`latest\` tags.
+5. **CI runners ephemeral and minimal.** Each build runs fresh.
+6. **Audit logs for the build pipeline.** Immutable; reviewed.
+
+The investment: ~1-2 weeks of SRE time to set up; ongoing low maintenance. Outsized return on a class of attack that\'s rapidly growing.
+
+**The 2026+ direction:**
+- AI-assisted dependency vulnerability discovery.
+- Hardware-rooted attestation for builds.
+- Confidential computing for sensitive build steps.
+- Standardized SBOM consumption (e.g., regulators requiring SBOM disclosure).`,
+    whenToUse: [
+      'Setting up CI/CD — supply chain hygiene from day 1',
+      'Compliance prep — SBOM and signed artifacts increasingly required',
+      'Post-incident with dependency root cause — what controls were missing?',
+      'Vendor evaluation — supply chain security as criterion',
+    ],
+    keyConcepts: [
+      { term: 'SBOM', definition: 'Software Bill of Materials. Manifest of every dependency. SPDX or CycloneDX format. syft + grype tools.' },
+      { term: 'Sigstore', definition: 'Open standard for signing artifacts. cosign tool. Verifies authenticity at deploy.' },
+      { term: 'SLSA', definition: 'Supply chain Levels for Software Artifacts. 4 levels of supply chain security. Industry framework.' },
+      { term: 'Reproducible builds', definition: 'Same source → same binary, byte-for-byte. Detects build tampering. Progress over years.' },
+      { term: 'Pinned versions', definition: 'No floating tags. Specific versions or hash-pinned. Updates via PR review.' },
+      { term: 'Build server as attack surface', definition: 'Compromised CI = compromised builds. Treat as production. Ephemeral runners.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'What is SLSA and why does it matter?',
+        answer: `**SLSA (Supply chain Levels for Software Artifacts)** is a framework for evaluating the supply chain security of software. Pronounced "salsa." Created by Google + open source community in 2021.
+
+**Four levels:**
+
+**SLSA L1: Documented build process.**
+- Build is automated and produces provenance (record of the build).
+- Provenance can be inspected.
+- Minimum bar; modern CI/CD systems satisfy this.
+
+**SLSA L2: Tamper resistance of provenance.**
+- Provenance is digitally signed by the build service.
+- Service-to-service authenticated.
+- Build runs on a managed service (GitHub Actions, GitLab, etc.).
+
+**SLSA L3: Extra resistance to specific threats.**
+- Source and build platforms meet specific requirements.
+- Build runs in isolated environment.
+- Provenance is non-falsifiable and includes detailed metadata.
+
+**SLSA L4: Highest assurance.**
+- Two-party review for all changes.
+- Hermetic, reproducible builds.
+- Detailed provenance linking to source review.
+
+**Why it matters:**
+
+**1. Common framework.** Before SLSA, "supply chain security" was vague. Now there\'s a graduated specification.
+
+**2. Auditable claims.** "Our software is SLSA L3" means specific properties verifiable.
+
+**3. Regulatory adoption.** US Executive Order 14028 (2021) requires federal software vendors to meet specific SLSA-aligned criteria.
+
+**4. Vendor selection.** "What\'s your SLSA level?" is a procurement question.
+
+**The practical path:**
+
+For most production teams: **target SLSA L2 or L3**.
+- L2: feasible with modern CI/CD + Sigstore. Most companies should be here.
+- L3: harder; requires hermetic builds, attested CI runners, full provenance. Achievable for security-conscious teams.
+- L4: heavyweight; reproducible builds + two-party review. Reserved for the highest-stakes software (cryptocurrency, defense, critical infrastructure).
+
+**Implementation steps for SLSA L2:**
+
+1. **Use a managed CI/CD** (GitHub Actions, GitLab CI, Cloud Build).
+2. **Sign artifacts** with Sigstore / cosign.
+3. **Generate SBOM** with syft.
+4. **Generate provenance** (in-toto attestations).
+5. **Verify on deploy**: admission controller checks signatures and provenance.
+
+The tooling exists; integration is the work.
+
+**The 2026 status:**
+
+- Major OSS projects (Kubernetes, etc.) targeting L3.
+- Cloud providers offering "L3-attested" builds.
+- npm, PyPI, etc. offering signing infrastructure.
+- Increasing requirement for any vendor selling to federal / regulated customers.
+
+For an SRE building infrastructure: SLSA awareness is increasingly required. You may not implement it directly, but you\'ll integrate with it.`,
+      },
+      {
+        question: 'How do you respond to a major OSS dependency vulnerability (e.g., Log4Shell)?',
+        answer: `**Triage immediately; assume your services are affected; act before complete information.**
+
+**Hour 0: Assessment.**
+
+1. **Read the advisory.** What\'s the CVE? What\'s the impact? Is there a public PoC? Is it actively exploited?
+2. **Check your inventory.** Do you use the affected dependency? Across all repos / services / languages.
+3. **SBOM saves you here.** If you have SBOMs for every service, you can grep across them. Without SBOM: hours of dependency-tree spelunking.
+4. **Severity assessment.** CVSS score; exploitability; available patch.
+
+**Hour 0-2: Containment.**
+
+1. **For Log4Shell-level severity (RCE, no auth required, widely-used)**:
+   - **Block at WAF / network**: drop incoming requests with the attack pattern.
+   - **Disable affected feature** if possible (e.g., for Log4Shell: disable JNDI lookups via JVM flag).
+   - **Reduce blast radius**: limit what compromised services can access.
+
+2. **For lower-severity** (auth required, scoped impact): less aggressive; plan the patch rollout.
+
+**Hour 2-24: Patching.**
+
+1. **Identify affected services.** Per language:
+   - Java: \`mvn dependency:tree | grep log4j\`
+   - Python: \`pip list | grep ...\`
+   - Node: \`npm ls package-name\`
+   - Or: query SBOMs.
+
+2. **Test the patch in staging** if time allows. For critical urgency: skip and monitor.
+
+3. **Roll out via normal CI/CD.** Canary if possible; full rollout aggressively.
+
+4. **Verify**: confirm new version is running; test for vulnerability via probe.
+
+**Hour 24-72: Verify and monitor.**
+
+1. **All services patched and verified?**
+2. **Logs reviewed for compromise** during the exposure window?
+3. **External exposure (customers, contractors)** notified?
+
+**Day 3+: Postmortem.**
+
+1. **How did we discover?** Were our own alerts effective, or did we learn from the public advisory?
+2. **How long to fully patch?** Was MTTR for security patches acceptable?
+3. **What was missing?** SBOMs? Runtime detection? Patch automation?
+4. **Action items.** Tracked, owned, dated.
+
+**The Log4Shell-specific lessons (industry-wide, late 2021):**
+
+- **Many companies didn\'t know they used log4j.** Hidden in transitive dependencies. SBOM gap.
+- **Patching was distributed across hundreds of services.** Centralized rollout would have been faster.
+- **Vendor patches weren\'t aligned.** Different downstream products had different vulnerable versions; coordination was hard.
+- **Initial mitigations (JVM flag) didn\'t fully work** for some configurations. Multiple rounds of "this is the fix" before the actual fix.
+
+**Preparation for the next Log4Shell:**
+
+- **SBOMs generated and indexed.** Find affected services in seconds, not days.
+- **Patch automation.** PR auto-generated for known-vulnerable versions.
+- **Centralized deps.** Use a small set of well-maintained core libs; don\'t fragment across versions.
+- **Game days.** Practice "critical CVE drops" exercises.
+
+**The 2026 reality:**
+
+Critical CVEs drop multiple times per year. SREs / security need to be ready to respond in hours, not days. The infrastructure (SBOMs, scanning, automation, runbooks) is the difference between "we\'re patched in 4 hours" and "we\'re patched in 4 weeks."`,
+      },
+      {
+        question: 'How do you sign and verify container images?',
+        answer: `**Standard tooling: Sigstore (cosign).**
+
+**Signing (in CI):**
+
+After building the container image:
+
+\`\`\`
+# Push the image
+docker push my-registry/checkout:v3.2.1
+
+# Sign with cosign (using GitHub OIDC for keyless signing)
+cosign sign --yes my-registry/checkout:v3.2.1
+\`\`\`
+
+The signature is stored alongside the image in the registry (as a tagged manifest). Sigstore\'s "keyless" mode uses your CI\'s OIDC token (e.g., GitHub Actions) to issue an ephemeral signing certificate; no long-lived keys to manage.
+
+**Verifying (at deploy):**
+
+\`\`\`
+cosign verify --certificate-identity-regexp ".*" \\
+              --certificate-oidc-issuer-regexp ".*" \\
+              my-registry/checkout:v3.2.1
+\`\`\`
+
+This verifies:
+- The signature is valid.
+- The image was signed by the expected identity (e.g., your GitHub repo).
+- The certificate was issued by the expected OIDC issuer.
+
+**Enforcing in Kubernetes:**
+
+Use an admission controller to reject unsigned images:
+- **Kyverno**: policy engine.
+- **Connaisseur**: admission webhook for image verification.
+- **Gatekeeper / OPA**: more general policy.
+
+Example Kyverno policy:
+\`\`\`yaml
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-signatures
+spec:
+  rules:
+    - name: verify-signature
+      match:
+        any:
+        - resources:
+            kinds: [Pod]
+      verifyImages:
+      - imageReferences: ["my-registry/*"]
+        attestors:
+        - keyless:
+            subject: ".*@my-org.example.com"
+            issuer: "https://accounts.google.com"
+\`\`\`
+
+This rejects pods whose images don\'t have a valid signature from the expected identity.
+
+**The deployment gate:**
+
+Production deploys must pass:
+1. Image is signed.
+2. Signed by an authorized identity (CI service account).
+3. Signature verified against expected provenance.
+
+Without this gate: an attacker who compromises the image registry can push malicious images that get deployed automatically. With the gate: the image must also be signed; signing requires CI identity; CI runs only on legitimate commits.
+
+**The chain of trust:**
+
+- Source code → GitHub.
+- CI runs from GitHub commits → builds image → signs with CI identity.
+- Image + signature pushed to registry.
+- K8s admission controller verifies signature.
+- Pod runs.
+
+Compromise any single step: caught by other steps.
+- Compromised registry: signature won\'t verify (key not match).
+- Compromised CI: signing identity may differ from expected.
+- Compromised source: caught by code review (defensive layer).
+
+**The 2026 reality:**
+
+- Most major orgs adopting cosign + Kyverno/equivalent.
+- US Executive Order 14028 mandates this for federal vendors.
+- npm, PyPI implementing similar for package signing.
+- Cloud-managed registries (ECR, GCR, ACR) integrating native signing.
+
+For a new system in 2026: cosign + Kyverno is the table-stakes setup. Cost: a day to configure; benefit: eliminated entire class of attack.`,
+      },
+    ],
+    references: [
+      'https://slsa.dev/',
+      'https://www.sigstore.dev/',
+      'https://www.cisa.gov/known-exploited-vulnerabilities-catalog',
+    ],
+  },
+
+  {
+    id: 'security-incident-response',
+    title: 'Security Incident Response — Containment, Eradication, Recovery',
+    icon: 'alertTriangle',
+    color: '#6366f1',
+    questions: 3,
+    description: 'How security incidents differ from reliability incidents. The NIST framework, forensics, legal obligations.',
+    introduction: `**Security incident response** shares the incident-command structure with reliability incidents but has critical differences: an active adversary, legal/regulatory obligations, and the need for forensics.
+
+**The NIST framework (SP 800-61):**
+
+Four phases:
+1. **Preparation**: tooling, training, runbooks before incidents.
+2. **Detection & Analysis**: identifying that an incident is occurring.
+3. **Containment, Eradication, Recovery**: stopping the attack, removing the attacker, restoring operations.
+4. **Post-Incident Activity**: lessons learned, improvements.
+
+**Phase 1: Preparation.**
+
+Before any incident:
+- Incident response plan documented.
+- Team roles defined (Security Lead, Comms, Legal liaison, IT).
+- Contact list (legal, PR, executive, vendor support, law enforcement liaison).
+- Forensic tooling staged (disk imaging, memory capture, log retention).
+- Game days simulating common incidents.
+- Runbooks per incident type (data breach, malware, account compromise, DDoS).
+
+**Phase 2: Detection & Analysis.**
+
+Sources of detection:
+- **Security tools**: SIEM alerts, EDR, IDS/IPS.
+- **External notification**: customer reports, security researcher disclosure, law enforcement contact, public news.
+- **Internal anomalies**: unusual access patterns, unexpected resource creation, audit log discrepancies.
+- **Threat intelligence**: industry alerts, vendor advisories.
+
+Analysis steps:
+- Confirm the incident is real.
+- Scope: what systems are affected? When did it start?
+- Severity: data sensitivity, business impact.
+- Adversary: known threat actor? Insider?
+
+**Phase 3a: Containment.**
+
+Stop the attack from spreading. Examples:
+- **Network**: block source IPs at the firewall; isolate compromised hosts.
+- **Account**: disable compromised accounts; force password reset for affected users.
+- **Service**: take vulnerable service offline temporarily.
+- **Network segmentation**: prevent lateral movement.
+
+**Critical**: don\'t alert the attacker. If they know they\'re detected, they may:
+- Cover tracks (delete logs, evidence).
+- Escalate (deploy ransomware before being kicked out).
+- Pivot (move to harder-to-detect persistence).
+
+The investigation phase often runs **silent** for hours or days while gathering evidence and planning eradication.
+
+**Phase 3b: Eradication.**
+
+Remove the attacker\'s presence:
+- Identify all backdoors, persistence mechanisms (scheduled tasks, services, accounts created).
+- Remove compromised binaries.
+- Patch the vulnerability that enabled access.
+- Reset all credentials that may have been compromised.
+- Reimage compromised hosts when possible.
+
+This phase is rigorous: missing one persistence mechanism means the attacker returns. Often takes days to weeks.
+
+**Phase 3c: Recovery.**
+
+Restore normal operations:
+- Bring services back online.
+- Monitor heavily for re-compromise.
+- Validate data integrity (was data tampered with?).
+- Communicate with affected users.
+
+**Phase 4: Post-Incident.**
+
+- Detailed timeline.
+- Root cause analysis.
+- Action items: patches, controls, detection improvements.
+- Public disclosure (CVE, customer notification, regulatory filing).
+- Forensic report (often legal-privilege protected).
+
+**Key differences from reliability incidents:**
+
+**1. Adversary considerations.**
+- Attacker is actively responding to your detection.
+- May escalate when discovered.
+- Investigation must consider adversary intelligence (don\'t reveal capabilities).
+
+**2. Legal/regulatory.**
+- Breach notification laws: GDPR (72 hours), HIPAA (varies), state laws (typically 30-60 days).
+- Law enforcement: when to involve FBI / equivalent? Sometimes mandatory.
+- Customer / partner / regulator notifications.
+
+**3. Forensics.**
+- Chain of custody for evidence.
+- Disk imaging before any cleanup.
+- Memory capture (volatile; lost on restart).
+- Log preservation (in case of legal proceedings).
+
+**4. Public disclosure.**
+- Coordinated disclosure timing (give patches time to deploy).
+- CVE assignment.
+- Press / PR management.
+
+**5. Insurance / legal counsel.**
+- Cyber insurance often requires specific incident response procedures.
+- Legal counsel involved early to preserve attorney-client privilege.
+
+**The SRE\'s role:**
+
+In a security incident:
+- **Execute technical mitigations** (isolate hosts, patch vulnerabilities, restore services).
+- **Provide observability** (logs, metrics, traces relevant to investigation).
+- **Coordinate with security team** (they direct strategy; SRE executes).
+- **Don\'t lead the response** unless you\'re also the security lead. Strategy needs security expertise.
+
+**The 2026 trends:**
+- AI-assisted incident response (anomaly correlation, log analysis).
+- Threat intel-driven detection (known TTPs from MITRE ATT&CK).
+- Cloud-native forensics (preserved snapshots, immutable logs).
+- Increased regulatory scrutiny (SEC disclosure rules, EU NIS2 directive).`,
+    whenToUse: [
+      'Security incident detected — apply NIST framework',
+      'Designing incident-response capabilities — what runbooks needed?',
+      'Security tooling investment — SIEM, EDR, forensics tooling',
+      'Compliance prep — incident-response plan often required',
+    ],
+    keyConcepts: [
+      { term: 'NIST SP 800-61 framework', definition: 'Four phases: Preparation, Detection & Analysis, Containment/Eradication/Recovery, Post-Incident.' },
+      { term: 'Containment', definition: 'Stop the attack from spreading. Don\'t alert the attacker if possible. Network isolation, account disabling.' },
+      { term: 'Eradication', definition: 'Remove all attacker presence. All backdoors, all credentials, all persistence mechanisms.' },
+      { term: 'Forensics + chain of custody', definition: 'Preserve evidence. Disk imaging, memory capture, log retention. May be legal evidence.' },
+      { term: 'Breach notification', definition: 'GDPR 72h, HIPAA varies, state laws 30-60d. Mandatory; missing them = legal exposure.' },
+      { term: 'Don\'t alert the attacker', definition: 'Premature disclosure may cause attacker to escalate (ransomware) or cover tracks. Silent investigation often required.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you respond to a credential compromise alert?',
+        answer: `Standard playbook:
+
+**Minute 0-5: Containment.**
+
+1. **Disable the credential immediately.**
+   - User account: disable in IDP / Active Directory; revoke active sessions.
+   - Service account: revoke API keys, certificates, tokens.
+   - OAuth token: revoke at the issuer.
+
+2. **Force re-authentication for related sessions.** Even sessions that look legitimate may be using stolen tokens.
+
+3. **Log everything.** Every action taken; timestamp; who.
+
+**Minute 5-30: Scope assessment.**
+
+1. **What did the credential have access to?**
+   - User: their permissions, MFA status, recent access patterns.
+   - Service account: all services it can call, data it can read/write.
+   - API key: which APIs, which resources.
+
+2. **What evidence of misuse?**
+   - Audit logs: what did the credential access in the past 24 hours?
+   - Anomalies: unusual times, unusual IPs, unusual operations.
+   - Volume: was data exfiltrated?
+
+3. **Was the credential actively used during exposure?**
+   - If yes: full incident response (data breach, etc.).
+   - If no: rotate; update process; postmortem.
+
+**Hour 0-2: Investigation.**
+
+1. **How did the credential leak?**
+   - Phishing? Insider? Supply chain? GitHub leak?
+   - Determines the broader scope: are other credentials at risk?
+
+2. **What systems should be checked for tampering?**
+   - Audit logs of every system the credential touched.
+   - Look for: new accounts created, permissions modified, data exfiltration.
+
+3. **Forensics if needed.**
+   - If sophisticated attacker: preserve evidence; don\'t modify systems further.
+   - Image disks of compromised hosts before remediation.
+
+**Hour 2-24: Eradication.**
+
+1. **Rotate ALL credentials potentially exposed.**
+   - User: their passwords + MFA reset.
+   - Service: all credentials of the same type / pattern.
+   - Don\'t skip dependents: API keys generated using the compromised credential.
+
+2. **Patch the vulnerability that enabled compromise.**
+   - Phishing: training, MFA enforcement.
+   - Supply chain: dependency review, signed artifacts.
+   - GitHub leak: secret scanning, pre-commit hooks.
+
+3. **Verify clean state.**
+   - All compromised credentials revoked.
+   - All persistence mechanisms removed.
+   - Monitoring intensified for re-compromise.
+
+**Day 1-7: Recovery.**
+
+1. **Affected systems back to normal.**
+2. **Heightened monitoring** for 30+ days.
+3. **Communicate with affected users / customers** (legal review of disclosures).
+
+**Post-incident:**
+
+1. **Detailed timeline of the incident.**
+2. **Root cause analysis.**
+3. **Action items: detection improvements, control enforcement, training.**
+4. **Disclosure obligations met (legal review).**
+5. **Postmortem published internally; public version if customer-facing.**
+
+**The NIST mapping:**
+- Containment = disable credential.
+- Eradication = rotate all related, patch vulnerability.
+- Recovery = systems back to normal + monitoring.
+- Post-incident = lessons learned.
+
+**Key discipline**: speed is critical for credential compromise; the attacker\'s window of usefulness is bounded by your response time. 5-minute revocation beats 30-minute revocation by orders of magnitude in terms of damage prevented.`,
+      },
+      {
+        question: 'What\'s the difference between a security incident and a breach?',
+        answer: `**Incident**: any security event of concern. May or may not involve data compromise.
+
+**Breach**: a security incident where data was accessed, exfiltrated, modified, or destroyed in an unauthorized way.
+
+The distinction matters because **breaches trigger legal / regulatory notification obligations**; incidents don\'t.
+
+**Examples of incidents (not breaches):**
+- Detected phishing attempt that was blocked.
+- Compromised credential that was revoked before any access.
+- DDoS attack mitigated.
+- Vulnerability discovered and patched before exploitation.
+- Suspicious access pattern that turned out to be legitimate.
+
+**Examples of breaches:**
+- Customer data exfiltrated.
+- Database modified by attacker (integrity breach).
+- PII / PHI accessed by unauthorized personnel.
+- Source code stolen.
+
+**The classification question matters:**
+
+Each region's definition varies:
+
+- **GDPR**: a breach is "a breach of security leading to the accidental or unlawful destruction, loss, alteration, unauthorised disclosure of, or access to, personal data." 72-hour notification window.
+- **HIPAA (US)**: defines breach for PHI specifically. Notification timeline based on number affected.
+- **California (CCPA)**: state law for personal information. Specific notification rules.
+- **EU NIS2 (2024+)**: covers more than just data; significant cybersecurity incidents.
+
+**The decision tree:**
+
+After an incident:
+1. **Was data accessed/exfiltrated/modified?** If no, it\'s an incident.
+2. **Was the data classified as protected (PII, PHI, etc.)?** If yes, breach notification rules apply.
+3. **Was the access unauthorized?** If yes, breach.
+4. **Did the breach affect protected data of more than the threshold?** Specific thresholds per regulation.
+
+**The "we don\'t know" scenario:**
+
+Often, immediately after detection, you don\'t know if data was accessed. Investigation takes time; notification clock is ticking.
+
+The 72-hour GDPR clock: starts when you "become aware" of the breach. You may not be sure of exact scope, but if you have reason to believe a breach occurred, the clock starts.
+
+**The right response:**
+- **Engage legal counsel immediately.** They understand obligations; they can preserve attorney-client privilege over investigation.
+- **Conservative classification.** When in doubt, classify as breach; over-disclosure is safer than under-disclosure.
+- **Document extensively.** Decisions, timeline, what was known when.
+- **Notification preparation.** Draft notifications even if not yet certain; ready to fire when scope confirmed.
+
+**The cultural framing:**
+
+Reliability incidents: "we had an outage; postmortem coming."
+Security breaches: "we had a breach; legal involvement; regulatory filings; press; customer notification."
+
+The differences in handling are significant. SREs need to recognize when a reliability-looking issue might actually be a breach (e.g., "the database was down" turns out to be "the database was modified by an attacker").
+
+**Real-world examples:**
+- Equifax 2017: 147M customers\' data exfiltrated. Classified as breach; massive regulatory and class-action consequences.
+- Capital One 2019: 100M customer records accessed via SSRF + S3 misconfiguration. Classified as breach.
+- LastPass 2022: customer encrypted data exfiltrated. Classified as breach despite encryption (because data was accessed).
+
+The pattern: any data-access-related incident must be evaluated for breach status, with legal counsel.`,
+      },
+      {
+        question: 'How do you prepare for a major security incident before one happens?',
+        answer: `**Six-layer preparation:**
+
+**1. Documented incident response plan.**
+- Roles: Security Lead, Comms Lead, Legal Liaison, IT, Engineering Lead.
+- Severity definitions tied to response level.
+- Contact lists: legal, PR, executive, vendor support, law enforcement liaison, cyber insurance.
+- Decision authorities: who can approve breach notification? Public disclosure?
+- Annual review and updates.
+
+**2. Tooling staged.**
+- **SIEM** (Security Information and Event Management): Splunk, Sentinel, Datadog Security, Elastic SIEM.
+- **EDR** (Endpoint Detection and Response): CrowdStrike, SentinelOne, Defender for Endpoint.
+- **Forensic tools**: ability to image disks (or take EBS snapshots), capture memory, preserve logs.
+- **Communication channels**: incident-only Slack channel template; bridge bridge dial-in numbers.
+- **Documentation**: incident timeline doc template; postmortem template.
+
+**3. Detection capabilities.**
+- Logs from every important system, centralized in SIEM.
+- Alerts for: privilege escalation, unusual data access, anomalous logins, suspicious processes.
+- Threat intel feeds: known-bad IPs, IOCs (indicators of compromise) from CISA, vendors.
+- Audit logs immutable; not modifiable by attackers in the system being audited.
+
+**4. Runbooks per common incident type.**
+- Compromised credential.
+- Data breach.
+- Ransomware.
+- DDoS.
+- Insider threat.
+- Supply chain compromise.
+- Public disclosure (someone tweeted about your vulnerability).
+
+Each runbook: specific steps, decision points, escalation paths, forensic considerations.
+
+**5. Game days.**
+- Quarterly tabletop exercises: simulate an incident; team responds.
+- Annual full simulation: one runbook end-to-end with realistic complexity.
+- After-action reviews.
+- New team members shadow established team.
+
+**6. External relationships.**
+- **Cyber insurance**: contracts in place; understand what\'s covered.
+- **Legal counsel**: relationship established; they understand your business.
+- **Forensic firm**: contract for "if needed, we can engage." Firms like Mandiant, CrowdStrike Services.
+- **PR firm**: for handling public disclosure.
+- **Law enforcement contacts**: FBI / equivalent local agency. Knowing the right person before you need them is much faster than starting cold.
+
+**The cultural element:**
+
+**Incident response is a practiced skill, not an emergency improvisation.** Teams that haven\'t simulated incidents make mistakes when real ones happen — wrong decisions, missed notification windows, poor evidence handling.
+
+Companies that take it seriously: quarterly drills, dedicated security engineering, executive endorsement of "we will spend resources on this even when nothing is happening."
+
+**The 2026 reality:**
+
+Most companies have insufficient preparation:
+- IR plan exists but is outdated.
+- No game days.
+- Tooling deployed but not exercised.
+- Legal counsel relationship vague.
+
+When an incident hits: the team is improvising. Mistakes are made. Notification windows are missed. Forensic evidence is lost.
+
+The companies that handle major incidents well — Equifax post-2017, Target post-2013, Sony post-2014 — are the ones that learned the hard way and invested in preparation thereafter. The lesson is available; few internalize it before being burned.
+
+**The minimum viable preparation:**
+- Written IR plan.
+- Annual game day.
+- SIEM + EDR deployed.
+- Legal counsel relationship.
+- Key runbooks documented.
+- Quarterly review.
+
+This is achievable in 3-6 months with executive endorsement. Worth orders of magnitude more than the cost.`,
+      },
+    ],
+    references: [
+      'https://csrc.nist.gov/publications/detail/sp/800-61/rev-2/final',
+      'https://attack.mitre.org/',
+      'https://www.cisa.gov/cyber-incident-response',
+    ],
+  },
 ];
