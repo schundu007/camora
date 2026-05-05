@@ -3185,4 +3185,1051 @@ The cumulative effect is: PRs run in 4-8 minutes; main pushes deploy to staging 
     ],
   },
 
+  // ─────────────────────────────────────────────────────────────────────
+  // Jenkins — the legacy giant; still ~28% market share
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'jenkins-deep-dive',
+    title: 'Jenkins — Controller, Agents, Jenkinsfile, Shared Libraries',
+    icon: 'tool',
+    color: '#16a34a',
+    questions: 6,
+    description: 'The CI/CD incumbent for ~20 years. Master/agent architecture, Declarative vs Scripted Pipeline, Configuration-as-Code (JCasC), shared libraries, Kubernetes plugin for ephemeral agents, security hardening after CVE-2024-23897.',
+    visualizations: [
+      {
+        title: 'Jenkins controller / agent / Jenkinsfile architecture',
+        description: `Walking the diagram: SCM (git, GHE, GitLab) is the source of truth. The Jenkins controller — the central orchestrator — clones the repo, parses the Jenkinsfile, dispatches stages to agents.
+
+Configuration-as-Code (JCasC) seeds the controller from a YAML file at startup: tool installations, credentials, system config, security realm, agent templates. Without JCasC, controller config is click-ops — drift between environments, no audit, painful disaster recovery. With JCasC, jenkins.yaml lives in git like any other code; rebuild the controller from scratch in minutes.
+
+Jenkinsfile (Declarative or Scripted Groovy) lives in the repo. Two flavors:
+- Declarative — opinionated YAML-shaped Groovy with pipeline { agent { } stages { } } structure. Easier to read, easier to lint with Jenkins's pipeline linter. Default for new projects.
+- Scripted — full Groovy with arbitrary control flow. Powerful for complex generation; harder to constrain.
+
+Shared Libraries (@Library) are versioned Groovy code reused across many Jenkinsfiles. Library lives in a separate repo; Jenkinsfiles import it by version tag. The canonical pattern for org-wide reuse — one library exports buildJavaService(), runE2ETests(), deployToK8s() steps; 80 service repos consume them.
+
+Agents (executor pods/VMs) come in two shapes:
+- Static agents — long-lived VMs (Windows, macOS, GPU boxes). Reusable; persistent. Use only when ephemeral isn't viable.
+- Ephemeral agents via Kubernetes plugin — one pod per build, destroyed at end. Cheap, isolated, no supply-chain footgun. The modern default for Jenkins on K8s.`,
+        image: '/diagrams/devops/ct2-jenkins.png',
+      },
+      {
+        title: 'Declarative Pipeline lifecycle — stages, post, parallel',
+        description: `A typical Declarative Pipeline executes left-to-right through stages, with post {} blocks running on success/failure/always. Parallel {} blocks run concurrent stages on different agents.
+
+Lifecycle of a build:
+1. Webhook from SCM → Jenkins controller queues a build.
+2. Controller assigns the build to an executor based on the agent { } directive (any/label/kubernetes/docker).
+3. For ephemeral K8s agent: kubernetes plugin creates a pod with sidecar containers per language toolchain (jnlp + maven + node + sonar). Pod is short-lived.
+4. Stages execute in order. Each stage's steps {} block runs on the assigned agent. Workspace is shared between stages within the same pod.
+5. parallel {} block can split work across multiple pods — typical pattern: parallel { unit-tests { } | integration-tests { } | sonar-scan { } } cuts wall time roughly to the longest branch.
+6. post {} blocks run regardless of stage outcome:
+   - always — cleanup, notifications.
+   - success — Slack on green.
+   - failure — Slack on red, Jira ticket creation, archive failed artifacts.
+   - unstable — flaky tests detected, distinct from outright failure.
+7. Pod is destroyed; controller writes the final build status (SUCCESS/FAILURE/UNSTABLE) to its database.
+
+Compared to GitHub Actions: Jenkins's parallel and post blocks are more expressive than GHA's job-level if: success() / failure() conditions; Groovy lets you do arbitrary logic between stages. The trade-off is the Jenkinsfile becomes effectively Groovy code that's harder to reason about than YAML.`,
+        image: '/diagrams/devops/ct2-jenkins.png',
+      },
+      {
+        title: 'Jenkins on Kubernetes — kubernetes plugin pod templates',
+        description: `Modern Jenkins deployments run the controller in Kubernetes (Helm chart jenkinsci/jenkins) with the kubernetes plugin spawning ephemeral agent pods per build.
+
+Sequence per build:
+1. Controller receives a build trigger.
+2. Jenkinsfile declares pod template: agent { kubernetes { yaml '...' } } — defines containers (jnlp + maven + docker-dind + kaniko), resources, node selectors, tolerations.
+3. kubernetes-plugin posts a Pod CRD to the K8s API. Pod schedules on a node.
+4. Pod starts; jnlp container connects back to the controller via JNLP/WebSocket.
+5. Controller dispatches each step to the appropriate container in the pod (sh inside maven, sh inside docker-dind, etc.).
+6. Workspace volume is mounted across containers; build artifacts produced in maven container are visible to docker container for image build.
+7. Stages complete; pod terminates.
+
+Why this beats static agents:
+- Each build runs in a fresh, isolated environment. No state leakage from previous build.
+- Resource allocation matches workload. Big build → big pod; small build → small pod.
+- Cluster-autoscaler / Karpenter scales nodes up during CI bursts, down to zero overnight.
+- No supply-chain footgun — even a malicious build can't backdoor the next one.
+
+Operational notes:
+- Controller still needs persistent storage (PVC) for build history, plugin state, JCasC config.
+- Use restricted PSS/PSA on the agent pods; jnlp container should be non-root.
+- Cap concurrent pod count via cloud > pod template > containerCap to avoid runaway scheduling.`,
+        image: '/diagrams/devops/ct2-jenkins.png',
+      },
+    ],
+    introduction: `Jenkins is the CI/CD incumbent — Hudson started in 2004 (Kohsuke Kawaguchi at Sun); the Hudson/Jenkins fork happened 2011 over Oracle's stewardship; Jenkins 2.0 (2016) introduced Jenkinsfile and Pipeline as the canonical model. As of JetBrains 2024 DevEcosystem: ~28% market share, second only to GitHub Actions (~33%) and ahead of GitLab CI (~21%).
+
+Why Jenkins is still chosen in 2026 despite GHA's momentum:
+
+On-prem and air-gapped environments. Jenkins runs anywhere — your data center, your VPC, your air-gapped lab. Regulated industries (finance, defence, pharma) often forbid SaaS CI by policy. Self-managed Jenkins is the most mature on-prem option; the alternative is self-managed GitLab CI.
+
+Massive existing investment. Many enterprises have 10+ years of Jenkinsfiles, shared libraries, and deeply integrated plugins. Migrating off Jenkins is years of work and rarely cost-justified.
+
+Maximum flexibility via Groovy. Jenkinsfiles can do anything — read external systems, generate dynamic stages, integrate with arbitrary tools via plugins. YAML CI tools (GHA, GitLab) have a logic ceiling; Jenkins doesn't.
+
+~1,800 plugins. There's a Jenkins plugin for every CI/CD task ever attempted. The breadth is unmatched. The trade-off: plugin maintenance varies wildly; security CVEs are frequent (CVE-2024-23897 was a major one — arbitrary file read via the Jenkins CLI).
+
+Why teams migrate off Jenkins:
+
+Operational overhead. Jenkins controllers need ongoing care — Java tuning, plugin upgrades, JCasC maintenance, security patching. A poorly-maintained Jenkins is a constant source of incidents.
+
+UX feels dated. The web UI in 2026 still has 2010-era ergonomics in many places. Blue Ocean (the modern UI plugin) helps but isn't universal.
+
+Plugin security. The plugin ecosystem's variable maintenance is a real risk. CVE-2024-23897 (January 2024) — anonymous arbitrary file read via Jenkins CLI's expansion of @-prefixed args — was a critical 9.8 CVSS. Caused weeks of incident response across the industry.
+
+Cost of skill. Groovy expertise is rarer than YAML. Jenkinsfile maintenance becomes a specialist activity at large orgs.
+
+Three load-bearing concepts every Jenkins interview answer needs:
+
+1. Configuration-as-Code (JCasC) is non-negotiable. Click-ops Jenkins is a dead end — drift, no audit, no disaster recovery. JCasC reads jenkins.yaml at controller startup; the controller becomes ephemeral and reproducible.
+
+2. Ephemeral agents via Kubernetes plugin are how modern Jenkins runs. Static agents are the supply-chain footgun (compromised build → backdoor in agent → next build inherits). Ephemeral pod-per-build is the right pattern.
+
+3. Shared Libraries are the reuse mechanism. Without them, every Jenkinsfile reimplements deploy steps. With them, one library defines deploy(env), runQualityGate(), buildContainer() and 80 service repos consume the same versioned definitions.`,
+    whenToUse: [
+      'On-prem or air-gapped CI/CD requirements that rule out SaaS',
+      'Existing Jenkins investment that\'s working — migration cost rarely justified',
+      'Complex pipelines beyond YAML\'s reasonable reach (dynamic stage generation, plugin integrations)',
+      'Regulated industries (finance, defence, pharma) where SaaS CI is forbidden by policy',
+      'Multi-tenant CI hosting where you need fine-grained RBAC and tenant isolation',
+    ],
+    keyConcepts: [
+      {
+        term: 'Jenkinsfile (Declarative)',
+        definition: `Lives at repository root. Declarative is the default flavor in 2026 — opinionated structure, easier to lint:
+
+\`\`\`groovy
+pipeline {
+  agent {
+    kubernetes {
+      yaml '''
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+            - name: maven
+              image: maven:3.9-eclipse-temurin-21
+              command: [cat]
+              tty: true
+            - name: docker
+              image: docker:24-cli
+              command: [cat]
+              tty: true
+              volumeMounts:
+                - name: docker-sock
+                  mountPath: /var/run/docker.sock
+          volumes:
+            - name: docker-sock
+              hostPath: { path: /var/run/docker.sock }
+      '''
+    }
+  }
+  options {
+    timeout(time: 30, unit: 'MINUTES')
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+  }
+  stages {
+    stage('Build')   { steps { container('maven')  { sh 'mvn -B clean package' } } }
+    stage('Test')    { steps { container('maven')  { sh 'mvn -B test' } } }
+    stage('Image')   { steps { container('docker') { sh 'docker build -t app:$BUILD_NUMBER .' } } }
+  }
+  post {
+    always  { junit 'target/surefire-reports/*.xml' }
+    failure { slackSend channel: '#ci-failures', message: "FAILED: \${env.BUILD_URL}" }
+  }
+}
+\`\`\`
+
+Two flavors exist. Declarative (above) — opinionated, lintable. Scripted — \`node { … }\` with arbitrary Groovy; powerful but harder to constrain.`,
+      },
+      {
+        term: 'Configuration-as-Code (JCasC)',
+        definition: `Single jenkins.yaml that seeds the controller at startup. Replaces click-ops with version-controlled config:
+
+\`\`\`yaml
+jenkins:
+  systemMessage: "Managed by JCasC — do not edit via UI"
+  numExecutors: 0                    # no executors on controller; agents only
+  mode: EXCLUSIVE
+  authorizationStrategy:
+    roleBased:
+      roles:
+        global:
+          - name: admin
+            permissions: [Overall/Administer]
+            assignments: [platform-team]
+          - name: developer
+            permissions: [Overall/Read, Job/Build, Job/Cancel]
+            assignments: [authenticated]
+  securityRealm:
+    oic:
+      clientId: \${OIDC_CLIENT_ID}
+      clientSecret: \${OIDC_CLIENT_SECRET}
+      wellKnownOpenIDConfigurationUrl: https://accounts.example.com/.well-known/openid-configuration
+  clouds:
+    - kubernetes:
+        name: prod-k8s
+        serverUrl: https://kubernetes.default.svc
+        namespace: jenkins-agents
+        containerCap: 50
+unclassified:
+  globalLibraries:
+    libraries:
+      - name: shared-pipeline-lib
+        defaultVersion: v3
+        retriever:
+          modernSCM:
+            scm:
+              git:
+                remote: https://github.com/myorg/jenkins-shared-lib.git
+\`\`\`
+
+Mounted into the controller pod via ConfigMap. Controller is now ephemeral — destroy and rebuild from scratch in minutes; config comes from git. Without JCasC, controller config is unreproducible click-ops drift.`,
+      },
+      {
+        term: 'Shared Libraries (@Library)',
+        definition: `Versioned Groovy code shared across all Jenkinsfiles in an org. Lives in a separate repo with this layout:
+
+\`\`\`
+jenkins-shared-lib/
+├── vars/
+│   ├── deployToK8s.groovy        # callable as deployToK8s(env: 'prod')
+│   └── runQualityGate.groovy
+├── src/
+│   └── com/myorg/utils/
+│       └── SemverUtils.groovy
+└── resources/
+    └── templates/deploy-pod.yaml
+\`\`\`
+
+A var file looks like:
+
+\`\`\`groovy
+// vars/deployToK8s.groovy
+def call(Map config) {
+  def env = config.env ?: error('env is required')
+  def image = config.image ?: error('image is required')
+
+  withCredentials([file(credentialsId: "kubeconfig-\${env}", variable: 'KUBECONFIG')]) {
+    sh """
+      kubectl set image deployment/api api=\${image}
+      kubectl rollout status deployment/api --timeout=5m
+    """
+  }
+}
+\`\`\`
+
+Consumed in any Jenkinsfile by a one-liner:
+
+\`\`\`groovy
+@Library('shared-pipeline-lib@v3') _
+
+pipeline {
+  agent any
+  stages {
+    stage('Deploy') {
+      steps { deployToK8s(env: 'prod', image: 'ghcr.io/myorg/api:v1.2.3') }
+    }
+  }
+}
+\`\`\`
+
+The \`@v3\` pins the library version. Version bumps are explicit per-Jenkinsfile, just like dependency upgrades. Without shared libraries, every team copy-pastes deploy steps; with them, one well-tested library serves the whole org.`,
+      },
+      {
+        term: 'Kubernetes plugin (ephemeral agents)',
+        definition: `Spawns one pod per build. Pod is destroyed at build end. Replaces static agent VMs.
+
+Pod template can be defined globally (in JCasC) or per-Jenkinsfile (inline yaml '''…'''). The inline form is more common in 2026 — pipeline declares its own runtime:
+
+\`\`\`groovy
+pipeline {
+  agent {
+    kubernetes {
+      yaml '''
+        spec:
+          containers:
+            - { name: jnlp,    image: jenkins/inbound-agent:latest-jdk21 }
+            - { name: kaniko,  image: gcr.io/kaniko-project/executor:debug, command: [/busybox/cat], tty: true }
+            - { name: helm,    image: alpine/helm:3.16, command: [cat], tty: true }
+          serviceAccountName: jenkins-agent-builder
+          securityContext:
+            runAsUser: 1000
+            runAsNonRoot: true
+      '''
+    }
+  }
+  // ... stages reference container('kaniko') { ... }
+}
+\`\`\`
+
+Operational notes:
+- Use distinct ServiceAccounts per pod template — one for build pods (no cluster perms), one for deploy pods (k8s deploy perms in target namespaces).
+- Set securityContext.runAsNonRoot: true on every container; PSS/PSA enforces.
+- Cap concurrent pods via cloud's containerCap — runaway pipelines can otherwise overwhelm node capacity.
+- Pod-level resource requests/limits are essential; without them, K8s schedules with default 0/0 and pods get OOMkilled randomly.`,
+      },
+      {
+        term: 'Pipeline triggers',
+        definition: `Common patterns:
+
+\`\`\`groovy
+pipeline {
+  triggers {
+    cron('H */4 * * 1-5')                              // every 4 hours, weekdays
+    pollSCM('H/5 * * * *')                             // poll git every 5 min (avoid; use webhooks)
+    upstream(upstreamProjects: 'shared-lib/main', threshold: hudson.model.Result.SUCCESS)
+  }
+  // ...
+}
+\`\`\`
+
+For SCM-driven triggers (the modern default), configure webhooks in GitHub/GitLab pointing at /github-webhook/ on the controller, then the Jenkinsfile uses:
+
+\`\`\`groovy
+pipeline {
+  agent any
+  options { skipDefaultCheckout(true) }
+  triggers { GenericTrigger(...) }    // for richer payload-based triggers
+  // ...
+}
+\`\`\`
+
+Multi-branch pipelines auto-discover branches and PRs from the SCM and create a Jenkinsfile build per branch. Combined with branch protection in the SCM, this is the canonical pattern for PR-driven CI on Jenkins.`,
+      },
+      {
+        term: 'Credentials and secrets',
+        definition: `Jenkins's credential management is mature; the gotcha is the wrong way to use it.
+
+Right way — withCredentials block scopes secrets to a specific stage and never logs them:
+
+\`\`\`groovy
+stage('Deploy') {
+  steps {
+    withCredentials([
+      usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'U', passwordVariable: 'P'),
+      string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+      file(credentialsId: 'kubeconfig-prod', variable: 'KUBECONFIG'),
+    ]) {
+      sh 'docker login -u $U -p $P'
+      sh 'kubectl apply -f deploy.yaml'
+    }
+  }
+}
+\`\`\`
+
+Wrong way — assigning credentials to global env or pipeline-level environment:
+
+\`\`\`groovy
+environment {
+  AWS_SECRET = credentials('aws-secret-key')   // visible in build env, may leak to logs
+}
+\`\`\`
+
+Modern pattern: federated identity via Vault Agent / IAM Roles for ServiceAccounts (IRSA) when on AWS EKS. Pod assumes a role via OIDC; no secret ever lives in Jenkins credential store. Same pattern as GHA OIDC — short-lived tokens, rotation implicit, audit per-build.
+
+Secrets in build logs is the most common Jenkins security incident. The credentials binding plugin masks values in logs — but only the literal string, not derived values. \`echo "key is \${AWS_SECRET_ACCESS_KEY}"\` masks; \`echo "first 4: \${AWS_SECRET_ACCESS_KEY[0..3]}"\` does not. Train accordingly.`,
+      },
+      {
+        term: 'Recipe: Jenkinsfile for Java microservice on K8s',
+        definition: `Production-grade pattern combining JCasC-mounted shared library, ephemeral K8s agent, parallel stages, post-block notifications:
+
+\`\`\`groovy
+@Library('shared-pipeline-lib@v3') _
+
+pipeline {
+  agent {
+    kubernetes {
+      yaml libraryResource('templates/java-build-pod.yaml')   // from shared lib
+    }
+  }
+  options {
+    timeout(time: 30, unit: 'MINUTES')
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+    timestamps()
+    ansiColor('xterm')
+  }
+  environment {
+    REGISTRY = 'ghcr.io/myorg'
+    IMAGE    = "\${REGISTRY}/payments-svc:\${env.GIT_COMMIT}"
+  }
+  stages {
+    stage('Test + Quality') {
+      parallel {
+        stage('Unit')        { steps { container('maven')  { sh 'mvn -B test' } } }
+        stage('Integration') { steps { container('maven')  { sh 'mvn -B verify -Pit' } } }
+        stage('SonarQube')   { steps { container('maven')  { runSonarScan(project: 'payments-svc') } } }
+        stage('OWASP DC')    { steps { container('maven')  { sh 'mvn -B dependency-check:check' } } }
+      }
+    }
+    stage('Build image') {
+      steps { container('kaniko') {
+        sh "/kaniko/executor --dockerfile Dockerfile --context . --destination \${IMAGE} --cache=true"
+      } }
+    }
+    stage('Cosign sign') {
+      steps { container('cosign') { sh "cosign sign --yes \${IMAGE}" } }
+    }
+    stage('Deploy staging') {
+      when { branch 'main' }
+      steps { deployToK8s(env: 'staging', image: env.IMAGE) }
+    }
+    stage('Promote to prod') {
+      when { branch 'main' }
+      input { message 'Promote to production?'; ok 'Deploy' }
+      steps { deployToK8s(env: 'prod', image: env.IMAGE) }
+    }
+  }
+  post {
+    always  { junit 'target/surefire-reports/*.xml'; archiveArtifacts artifacts: 'target/*.jar', fingerprint: true }
+    success { slackSend channel: '#deploys', color: 'good',   message: "Shipped \${env.IMAGE}" }
+    failure { slackSend channel: '#ci-fails', color: 'danger', message: "FAILED: \${env.BUILD_URL}" }
+  }
+}
+\`\`\`
+
+Notes: parallel test/quality stage cuts wall time by ~60% over serial. \`input\` block pauses for human approval before prod deploy — Jenkins's equivalent of GHA Environments + required reviewers. Cosign signing is keyless via OIDC (cosign container has the OIDC token from pod service account).`,
+      },
+      {
+        term: 'Recipe: hardening after CVE-2024-23897',
+        definition: `CVE-2024-23897 (January 2024, CVSS 9.8) — anonymous arbitrary file read via Jenkins CLI's expansion of @-prefixed args. Patched in 2.442 / LTS 2.426.3. The aftermath drove a global Jenkins hardening exercise.
+
+Hardening checklist:
+
+\`\`\`yaml
+# In jenkins.yaml — disable the dangerous CLI surface
+jenkins:
+  remotingSecurity:
+    enabled: true             # require JNLP-over-WebSocket auth
+  agentProtocols:
+    - "JNLP4-connect"         # remove legacy JNLP1/2/3 (insecure)
+  authorizationStrategy:
+    roleBased: { ... }        # never use 'unsecured' or 'logged-in users can do anything'
+
+unclassified:
+  jenkins-cli:
+    enabled: false            # if you don't use Jenkins CLI, disable entirely
+\`\`\`
+
+Beyond the CVE-specific patch:
+- Disable anonymous read access. Default Jenkins lets anonymous users see job names and console logs — anyone with network access learns about your build infrastructure.
+- Run controller behind a reverse proxy (nginx / Caddy) with rate limiting; never expose port 8080 directly to the internet.
+- Enable CSRF crumb requirement (default in modern Jenkins; verify it's on).
+- Sandbox Groovy execution via Script Security plugin. Pipeline scripts run in a sandbox; @NonCPS escape requires admin approval. Without sandboxing, any Jenkinsfile can execute arbitrary Groovy on the controller.
+- Patch cadence — subscribe to jenkins-advisories@googlegroups.com. Patch within 1 week of advisory; LTS line is the supported channel.
+- Plugin hygiene — uninstall plugins you don't use. Each plugin is attack surface. Run jenkins-plugin-cli list-plugins quarterly to inventory.
+- Audit log to SIEM via Audit Trail plugin. Forward to Splunk/Datadog/ELK for retention beyond local rotation.`,
+      },
+      {
+        term: 'Recipe: dynamic parallel stages from a list',
+        definition: `Common need: run the same stage across N services from a config file. Scripted Groovy makes this easy:
+
+\`\`\`groovy
+@Library('shared-pipeline-lib@v3') _
+
+def services = readYaml(file: 'services.yaml').services   // ['api', 'web', 'worker', 'cron']
+
+pipeline {
+  agent { kubernetes { yaml libraryResource('templates/build-pod.yaml') } }
+  stages {
+    stage('Test all services') {
+      steps {
+        script {
+          parallel services.collectEntries { svc ->
+            ["test-\${svc}".toString(): {
+              container('node') {
+                sh "cd services/\${svc} && pnpm install && pnpm test"
+              }
+            }]
+          }
+        }
+      }
+    }
+  }
+}
+\`\`\`
+
+\`parallel\` accepts a Map<String, Closure>. \`collectEntries\` builds the map dynamically. The same pattern works for matrix builds (multiple JDK versions × multiple OS), per-region deploys, fan-out E2E test shards.
+
+Declarative Pipeline has a built-in \`matrix\` directive for the simple case:
+
+\`\`\`groovy
+matrix {
+  axes {
+    axis { name 'JDK';      values '17', '21' }
+    axis { name 'PROFILE';  values 'unit', 'it' }
+  }
+  stages {
+    stage('Test') {
+      steps { sh "mvn -B test -Pjava-\${JDK} -P\${PROFILE}" }
+    }
+  }
+}
+\`\`\`
+
+Use Declarative matrix for static cross-products; Scripted dynamic parallel for runtime-discovered lists.`,
+      },
+      {
+        term: 'Recipe: blue-green deploy with rollback',
+        definition: `Jenkins's \`input\` step + parallel stages enables a true blue-green with manual gate:
+
+\`\`\`groovy
+stage('Deploy green') {
+  steps {
+    deployToK8s(env: 'prod-green', image: env.IMAGE)
+    runSmokeTests(target: 'green.api.example.com')
+  }
+}
+stage('Cut traffic to green') {
+  input { message 'Switch traffic from blue to green?'; ok 'Cutover' }
+  steps {
+    sh """
+      kubectl patch svc api-prod -p '{"spec":{"selector":{"deployment":"green"}}}'
+      sleep 30
+    """
+    runSmokeTests(target: 'api.example.com')
+  }
+}
+stage('Rollback?') {
+  input { message 'Keep green or rollback to blue?'; ok 'Keep green' }
+  // If timeout or rejected, post block triggers rollback
+}
+post {
+  failure {
+    sh "kubectl patch svc api-prod -p '{\\"spec\\":{\\"selector\\":{\\"deployment\\":\\"blue\\"}}}'"
+    slackSend channel: '#incidents', color: 'danger', message: "Rolled back to blue"
+  }
+}
+\`\`\`
+
+The \`input\` step pauses indefinitely until a human clicks. \`options { timeout(time: 1, unit: 'HOURS') }\` at pipeline level auto-rejects after the timeout, triggering the post failure block which rolls back. This is the Jenkins-native equivalent of GHA Environments + required reviewers + automated rollback. Pre-K8s ingress control planes, this was THE blue-green pattern.`,
+      },
+    ],
+    approach: [
+      'Run controller in K8s via Helm chart with persistent storage; never on a single VM',
+      'Use JCasC for all controller config — jenkins.yaml in git, mounted via ConfigMap',
+      'Ephemeral K8s agents only — static agents are the supply-chain footgun',
+      'Multi-branch pipelines + SCM webhooks (not pollSCM) for PR-driven CI',
+      'Shared Library pinned by version tag in every Jenkinsfile (@Library(\'lib@v3\'))',
+      'Patch within 1 week of advisory; subscribe to jenkins-advisories mailing list',
+      'Sandbox Groovy execution; deny @NonCPS in user pipelines unless admin-approved',
+      'Audit log forwarded to SIEM; uninstall unused plugins; rotate credentials regularly',
+      'Use withCredentials blocks scoped per stage; never put secrets in pipeline-level env',
+      'Federated cloud auth (IRSA, Vault Agent) over long-lived credentials in Jenkins store',
+    ],
+    pitfalls: [
+      'Click-ops controller config (no JCasC) — drift, no audit, painful disaster recovery',
+      'Static long-lived agents — compromised build plants backdoor, next build inherits',
+      'Plugins installed but unused — each is attack surface; CVE-2024-23897 was Jenkins CLI no-one used',
+      'Anonymous read access enabled — exposes job names, console logs, build infrastructure',
+      'pollSCM on every minute (default suggestion!) — hammers SCM, scales badly, breaks beyond ~50 jobs',
+      'Pipeline-level \`environment { credentials(...) }\` instead of \`withCredentials\` — secrets in build env, may leak to logs',
+      'No timeout block on pipelines — hung input step holds executor forever',
+      'Controller storage on emptyDir — build history lost on pod restart',
+      'Shared Library at @main not @vN — silent breaking changes propagate to every Jenkinsfile',
+      'Groovy sandbox disabled — any Jenkinsfile can execute arbitrary code on the controller',
+    ],
+    keyQuestions: [
+      {
+        question: 'When does Jenkins still beat GitHub Actions / GitLab CI in 2026?',
+        answer: `Three concrete scenarios where Jenkins is the right answer; outside these, GHA or GitLab CI is usually better.
+
+Scenario 1: on-prem and air-gapped requirements. Regulated industries (banking, defence, classified-research, certain pharma) have policies forbidding SaaS CI. The choice narrows to self-managed: Jenkins, GitLab CI Self-Managed, or rolling your own with Tekton/Argo Workflows. Jenkins remains the most mature on-prem option — 20 years of plugin ecosystem, well-understood operational model, deep RBAC. GitLab CI Self-Managed is a real competitor (and often a better UX), but moving an established Jenkins shop to GitLab is multi-year work.
+
+Scenario 2: extreme pipeline complexity. Some pipelines are intrinsically complex — dynamic stage generation from external configs, runtime decisions about which agents to spawn, deep integration with proprietary tools, multi-system orchestration spanning weeks. Jenkins's Groovy gives you a real programming language; YAML CI hits a logic ceiling. Examples: enterprise release trains coordinating 30+ services with cross-dependencies; embedded software pipelines that span hardware-in-the-loop test rigs; ML training pipelines with conditional GPU allocation. Could you do these in GHA? With composite actions, reusable workflows, and shell scripts — sometimes. Jenkins makes it natural; GHA makes it painful.
+
+Scenario 3: deeply integrated existing investment. A bank with 10 years of Jenkinsfiles, 50+ shared libraries, custom plugins, and JCasC managing 200 services has effectively standardized on Jenkins as a platform. The migration cost to GHA is years of engineering time; the marginal benefit doesn't usually justify it. Stay on Jenkins, modernize what's there (K8s plugin, JCasC, ephemeral agents), invest in the parts that hurt.
+
+When NOT to pick Jenkins:
+
+Greenfield in 2026 with no constraints. GHA wins on integration; GitLab CI wins on platform; CircleCI wins on speed. Jenkins's value proposition — flexibility, on-prem, mature plugin ecosystem — costs operational overhead that's hard to justify for a new project.
+
+Small teams. Jenkins's TCO scales linearly with operational maturity required; small teams can't afford the dedicated platform engineer Jenkins really wants.
+
+Modern cloud-native shops with no on-prem story. The whole point of GHA is that your CI lives where your code lives. Adding Jenkins as a separate hop costs context-switching forever.
+
+The realistic 2026 decision tree: Jenkins for on-prem, regulated, extreme-flexibility, or large-existing-investment shops. Otherwise GHA (if on GitHub) or GitLab CI (if on GitLab). The 28% market share Jenkins still holds is overwhelmingly driven by the first three categories — the legacy tail will exist for 10+ more years, but new adoption is rare.
+
+A note on Jenkins X / cloud-native Jenkins. Jenkins X (started 2018, K8s-native fork) and the broader "cloud-native Jenkins" movement aim to address the operational overhead by replacing the controller with stateless K8s controllers. Adoption has been modest; the original Jenkins (with K8s plugin and ephemeral agents) is more common. Tekton/Argo Workflows are the K8s-native answers most teams pick instead.`,
+      },
+      {
+        question: 'Walk through a production Jenkins setup on Kubernetes — controller, agents, storage, security.',
+        answer: `Reference deployment for a 50-engineer org running Jenkins on K8s. Built around: stateful controller, ephemeral pod agents, JCasC-driven config, federated identity, observability.
+
+Controller deployment — Helm chart jenkinsci/jenkins.
+
+\`\`\`yaml
+# values.yaml
+controller:
+  image: jenkins/jenkins
+  tag: 2.452.3-lts-jdk21
+  resources:
+    requests: { cpu: 2, memory: 4Gi }
+    limits:   { cpu: 4, memory: 8Gi }
+  javaOpts: "-XX:MaxRAMPercentage=70 -XX:+UseG1GC"
+  numExecutors: 0                              # all builds on agents, never on controller
+  csrf: { defaultCrumbIssuer: { enabled: true } }
+  agentProtocols: ["JNLP4-connect"]            # disable legacy JNLP1/2/3
+  servicePort: 8080
+  ingress:
+    enabled: true
+    hostName: jenkins.internal.example.com
+    tls: [{ secretName: jenkins-tls }]
+  JCasC:
+    defaultConfig: false
+    configScripts:
+      jenkins-config: |-
+        # ... full jenkins.yaml inline, or via secret/configmap mount
+persistence:
+  enabled: true
+  size: 100Gi
+  storageClass: gp3
+agent:
+  enabled: false                               # we use Pod-template-per-Jenkinsfile, not the chart's default agent
+serviceAccount:
+  create: true
+  name: jenkins-controller
+\`\`\`
+
+Storage. PVC (100Gi gp3 EBS) holds JENKINS_HOME — build history, plugin state, user accounts. Snapshot weekly via Velero or AWS Backup. Without this, controller restart loses everything.
+
+Identity. OIDC via securityRealm.oic in JCasC, federated to corporate IdP (Okta, Auth0, Azure AD, Google Workspace). RBAC via roleBased.roles in JCasC — global admin role for platform team, project-scoped roles per service team.
+
+Agent execution. Every Jenkinsfile declares its own pod template inline. Common pattern: shared library defines templates as YAML resources; Jenkinsfile references them.
+
+\`\`\`groovy
+agent {
+  kubernetes {
+    yaml libraryResource('templates/java-build-pod.yaml')
+  }
+}
+\`\`\`
+
+Pod templates differentiate by workload. java-build-pod has maven + kaniko + cosign; node-build-pod has node + pnpm + kaniko; gpu-train-pod has cuda + python + nvidia-smi. ServiceAccounts vary — build pods have read-only access; deploy pods assume IAM roles via IRSA scoped to specific environments.
+
+Network. Controller in its own namespace (jenkins). Agents in jenkins-agents namespace with NetworkPolicy: deny all egress except to jenkins-controller.jenkins.svc:50000 (JNLP) and to specific external endpoints (registry, package mirrors). Prevents lateral movement on compromise.
+
+Security hardening — beyond what's in the recipe keyConcept above:
+- PSS/PSA: namespace-level "restricted" profile on jenkins-agents.
+- Pod runs as non-root (runAsUser: 1000) with read-only root filesystem.
+- Resource quotas on jenkins-agents namespace cap concurrent pods.
+- AppArmor/seccomp profiles via SecurityContext.
+- imagePullPolicy: Always; pin agent images by digest, not tag.
+
+Federated cloud auth. IRSA for AWS:
+- Each pod template's ServiceAccount has annotation eks.amazonaws.com/role-arn: arn:aws:iam::123:role/jenkins-deploy-staging.
+- IAM role trust policy validates OIDC token from EKS, conditional on system:serviceaccount:jenkins-agents:deploy-staging.
+- No long-lived AWS keys in Jenkins credential store. Audit log per-build via CloudTrail.
+
+Observability:
+- Prometheus plugin scrapes controller for build metrics, queue depth, agent capacity.
+- Loki / OpenSearch ingests controller logs.
+- Build logs to S3 via S3-compatible artifact storage.
+- Metrics to Grafana dashboard: pipeline duration p50/p95/p99, queue wait time, agent failure rate.
+
+Backup and DR. JENKINS_HOME PVC snapshotted nightly to S3 cross-region. JCasC config in git is the source of truth — controller can be rebuilt from scratch in 15 minutes by reapplying the Helm release pointed at the same PVC snapshot.
+
+Patching. Subscribe to jenkins-advisories@googlegroups.com. LTS line (2.426.x → 2.452.x as of 2026) on a 2-week patch cadence. Plugin updates batched monthly via Jenkins's plugin update center, tested in a staging Jenkins that mirrors prod, then rolled to prod.
+
+Operating cost. Controller: ~$200/month in compute + storage. Agent compute: variable, dominated by build volume; for 50 engineers ~$2-5k/month in EC2/EKS. Engineering: a fractional platform engineer (~25% of one person's time) for ongoing operations. Cheaper than per-seat SaaS at this scale; more expensive at small scale.
+
+Common day-2 issues:
+- Plugin update breaks pipelines. Test plugin upgrades in staging Jenkins first.
+- Controller PVC fills up from old build history. logRotator(numToKeepStr: '20') in pipeline options.
+- Agent pods stuck pending. Resource requests too high vs node capacity, or quota exceeded. Investigate with kubectl describe and Karpenter logs.
+- Webhook delivery flaking. Multi-branch pipeline missing builds. Check controller's GitHub webhook URL in repo settings; check for SSL cert issues.
+
+This setup is what a mature Jenkins-on-K8s deployment looks like in 2026. It's not glamorous; it's reliable.`,
+      },
+      {
+        question: 'Compare Declarative vs Scripted Pipeline — when do you use each?',
+        answer: `Two flavors of Jenkinsfile, both Groovy under the hood, very different ergonomics.
+
+Declarative Pipeline. Default for new Jenkinsfiles since Pipeline 2.5 (~2017). Opinionated structure — pipeline { agent { } stages { steps { } } } — that the Jenkins linter can validate. YAML-shaped Groovy: limited control flow, no arbitrary class definitions, must follow the prescribed sections.
+
+\`\`\`groovy
+pipeline {
+  agent { label 'linux' }
+  options { timeout(time: 30, unit: 'MINUTES') }
+  parameters { booleanParam(name: 'DEPLOY', defaultValue: false) }
+  triggers { cron('H 2 * * *') }
+  environment { JAVA_HOME = '/opt/jdk21' }
+  stages {
+    stage('Build') { steps { sh 'mvn package' } }
+  }
+  post { always { junit '**/*.xml' } }
+}
+\`\`\`
+
+Strengths:
+- Lintable: jenkins-cli declarative-linter or the Jenkinsfile Replay UI catches structural errors.
+- Restartable: when a stage fails, resume from that stage instead of replaying the whole pipeline.
+- Predictable: every Declarative pipeline has the same shape. New engineers can read it without Groovy expertise.
+- Built-in matrix, parallel, post — covers 90% of CI patterns without script blocks.
+
+Weaknesses:
+- No real control flow at the pipeline level. Can't loop over a list to generate stages dynamically (without dropping into a script {} block).
+- No top-level def methods or imports. Reuse requires shared libraries.
+- Some advanced patterns (e.g., conditional stage definition based on runtime data) require breaking out of pure Declarative into nested script {} blocks, which loses the linting benefit.
+
+Scripted Pipeline. The original (pre-Declarative) shape. Pure Groovy with a node {} or stage {} entry point. Anything Groovy can do, Scripted can do.
+
+\`\`\`groovy
+node('linux') {
+  def services = readYaml(file: 'services.yaml').services
+  def builds = [:]
+
+  services.each { svc ->
+    builds["build-\${svc}"] = {
+      stage("Build \${svc}") {
+        sh "cd services/\${svc} && make build"
+      }
+    }
+  }
+
+  parallel builds
+
+  if (env.BRANCH_NAME == 'main') {
+    stage('Deploy') {
+      def deployer = new com.myorg.Deployer(this)
+      deployer.deploy(env: 'prod', services: services)
+    }
+  }
+}
+\`\`\`
+
+Strengths:
+- Full Groovy. Loops, classes, imports, full closures.
+- Dynamic stage generation. Build the stage list at runtime from external config.
+- Power users can build complex orchestration that Declarative can't express.
+
+Weaknesses:
+- No restartable-from-stage. A failure means full re-run.
+- Not lintable beyond syntax. Linter doesn't understand the structure.
+- Easy to write code that's hard to maintain. Groovy expertise required.
+- Sandbox concerns more often. Scripted often hits @NonCPS issues that Declarative avoids.
+
+When to use Declarative:
+- Default for any new Jenkinsfile.
+- Standard CI patterns: build → test → quality → deploy.
+- When you want lintable, predictable structure for the team.
+- When you want stage-restart on failure.
+- 90% of cases.
+
+When to use Scripted:
+- Dynamic stage generation from config files at runtime (the pattern in the dynamic parallel recipe).
+- Programmatic logic that doesn't fit Declarative's shape (recursive deploys, complex retries with backoff, multi-pipeline coordination).
+- Power-user shared libraries that need full Groovy semantics.
+- 10% of cases.
+
+Hybrid pattern (most common). Declarative outer pipeline, with script {} blocks where logic is needed:
+
+\`\`\`groovy
+pipeline {
+  agent { label 'linux' }
+  stages {
+    stage('Discover services') {
+      steps {
+        script {
+          def services = readYaml(file: 'services.yaml').services
+          env.SERVICES_JSON = groovy.json.JsonOutput.toJson(services)
+        }
+      }
+    }
+    stage('Build all') {
+      steps {
+        script {
+          def services = readJSON(text: env.SERVICES_JSON)
+          parallel services.collectEntries { svc ->
+            ["build-\${svc}".toString(): { sh "make build-\${svc}" }]
+          }
+        }
+      }
+    }
+  }
+}
+\`\`\`
+
+This gets you Declarative's structure and lintability for the routine 80%, with script {} escape hatches for the dynamic 20%.
+
+Migration story. Old Scripted Jenkinsfiles often work fine; don't migrate for migration's sake. When refactoring an old Scripted pipeline, the typical pattern is to rewrite as Declarative + script-block hybrid. Pure Declarative rewrites only work if your pipeline doesn't actually need the dynamic logic.
+
+In 2026 interview answer: "Default Declarative; reach for Scripted only when Declarative's logic ceiling bites; hybrid is fine and common."`,
+      },
+      {
+        question: 'How do you handle plugin security and CVE response in Jenkins?',
+        answer: `Jenkins's plugin ecosystem is its biggest strength and biggest risk. ~1,800 plugins, varying maintenance, frequent CVEs. The mature operational answer is: minimize installed plugins, patch within tight SLA, monitor advisories.
+
+The CVE landscape in numbers. Jenkins releases security advisories roughly weekly via jenkins-advisories@googlegroups.com. Most are plugin CVEs, not core. Severity ranges from CVSS 3 (low — auth bypass for an obscure feature) to 9.8 (critical — pre-auth RCE). Several high-impact incidents in recent years:
+- CVE-2024-23897 (Jan 2024, CVSS 9.8) — Jenkins CLI arbitrary file read; pre-auth.
+- CVE-2024-43044 (Aug 2024, CVSS 9.0) — Agent → controller arbitrary file read.
+- CVE-2023-27898 (Mar 2023, CVSS 9.8) — Pipeline plugin RCE via crafted XStream payload.
+
+Each required emergency patching across the Jenkins user base. The teams that handled them gracefully had this in place.
+
+Hardening strategy:
+
+Step 1 — minimize installed plugins. List installed: jenkins-plugin-cli list-plugins. Quarterly: review each plugin, ask "do we use this?" If not, uninstall. Each plugin is attack surface and patch burden. Many Jenkins controllers have 100+ plugins from years of accreted experiments; trim to the 30-50 you actually use.
+
+Step 2 — patch within SLA. Subscribe to jenkins-advisories. Define SLAs:
+- CVSS 9+: patch within 24-48 hours, possibly with emergency change.
+- CVSS 7-8.9: patch within 1 week.
+- CVSS 4-6.9: patch within 1 month.
+- CVSS <4: batched into monthly maintenance window.
+
+Test patches in a staging Jenkins (mirror of prod, ideally JCasC-rebuilt fresh) before rolling to prod. The "patches break pipelines" risk is real — some plugin updates change behavior subtly.
+
+Step 3 — disable unused features at the core level.
+
+\`\`\`yaml
+jenkins:
+  agentProtocols: ["JNLP4-connect"]            # remove legacy
+  remotingSecurity: { enabled: true }
+unclassified:
+  jenkins-cli: { enabled: false }              # if you don't use it
+  resourceRoot: { enabled: true, secureCookie: true }
+\`\`\`
+
+Step 4 — sandbox Groovy execution. Pipeline scripts run in Groovy sandbox by default. @NonCPS escape requires admin approval per script. Without sandboxing, any Jenkinsfile can execute arbitrary Groovy on the controller — full RCE for any developer who can push to a connected repo.
+
+Step 5 — least-privilege RBAC. Default Jenkins config gives all logged-in users broad permissions. Tighten via roleBased authorization in JCasC:
+- platform-team: Overall/Administer.
+- service-team-foo: project-scoped Job/Build, Job/Cancel only on jobs prefixed foo-*.
+- read-only-auditors: Overall/Read.
+- anonymous: nothing — disable anonymous read.
+
+Step 6 — network segmentation. Controller behind reverse proxy with rate limiting. Agents on a separate network segment with NetworkPolicy denying egress except to required endpoints. Even a fully compromised agent can't pivot to other systems.
+
+Step 7 — audit log to SIEM. Audit Trail plugin forwards all admin actions, build triggers, credential use to Splunk/Datadog/ELK. Retention beyond local rotation. Correlate with security events from other systems.
+
+Step 8 — JCasC + GitOps for config. Jenkins config in git. Reviewed via PR. Rebuildable. When a CVE drops requiring config changes, the change is a git commit, not click-ops.
+
+CVE response runbook (when an advisory drops):
+
+1. Triage — read the advisory. Is the CVE in a plugin we have installed? If not, no action. If yes, is it exploitable in our config? (Some CVEs require specific features enabled.) Is it auth-required or pre-auth?
+
+2. Decide patch urgency based on CVSS + exploitability.
+
+3. Plan rollout: staging Jenkins first, soak for 2-24 hours depending on urgency, then prod.
+
+4. Rollback plan: have the prior plugin version's .hpi file ready; document the rollback steps.
+
+5. Communicate: Slack #platform-engineering with planned patch window.
+
+6. Patch staging. Run smoke pipeline. Verify build success on a few representative repos.
+
+7. Patch prod during maintenance window. Monitor for pipeline failures in the first hour.
+
+8. Document the response in a runbook for next time.
+
+Tooling that helps:
+- jenkins-plugin-cli: CLI for plugin management; integrates with JCasC for declarative plugin lists.
+- Jenkins Configuration as Code plugin: the JCasC plugin itself; required for config-as-code.
+- Plugin Update Center: built-in UI for upgrade availability; can be automated via API.
+- StepSecurity Harden-Runner / equivalent: monitors network egress from agent pods.
+- Trivy / Grype: scan agent container images for CVEs.
+- Renovate Bot: can automate JCasC plugin version bumps via PR.
+
+Anti-patterns:
+- "Patch everything monthly" — critical CVEs require faster response than monthly.
+- "Patch only when forced" — debt accumulates; the next critical CVE finds you 8 plugins behind.
+- Anonymous read enabled with public DNS exposure — global reconnaissance for free.
+- Plugins from "experimental" or unmaintained authors — security review is inconsistent.
+
+The pragmatic 2026 stance: Jenkins is patchable and operable, but it requires real investment. A team that won't budget 25%+ of a platform engineer's time is probably better off with a managed alternative. The teams that run Jenkins well have a clear ownership model, monitoring, runbooks, and patch cadence — the teams that struggle have none of these.`,
+      },
+      {
+        question: 'How do you migrate from Jenkins to GitHub Actions or another modern CI?',
+        answer: `Jenkins migrations are multi-quarter projects, not weekend rewrites. The right strategy is incremental and outcome-driven.
+
+Decide whether to migrate at all. The honest answer for many shops: "don't migrate; modernize what you have." A Jenkins-on-K8s setup with JCasC + ephemeral agents + shared libraries can be very productive. Migration costs (engineering time, training, parallel-running both systems) often exceed the marginal benefit.
+
+Migration is justified when:
+- You're already on GitHub or GitLab, and the integration tax of separate Jenkins is high.
+- Your Jenkins is unmaintained — old version, no JCasC, dozens of click-configured jobs, frequent breakage.
+- Your team can't keep up with patching cadence.
+- You're going through a broader platform replatforming anyway.
+
+Migration is NOT justified when:
+- Jenkins is working and well-operated.
+- You have heavy investment in custom plugins or specific Jenkins features.
+- Air-gapped or regulatory constraints forbid SaaS CI.
+- Team doesn't have bandwidth for migration plus normal work.
+
+Migration approach (when justified):
+
+Phase 1 — inventory and triage. Catalogue every Jenkins job:
+- Type: multibranch pipeline, freestyle, classic, etc.
+- Trigger: SCM webhook, cron, manual, upstream.
+- Complexity: 50-line Jenkinsfile vs 500-line shared-library-heavy.
+- Frequency: how often does it run? Production criticality?
+- Dependencies: shared libraries used, plugins required, credentials needed, agent labels.
+
+Categorize jobs into:
+- "Simple" — translates straightforwardly to GHA workflows.
+- "Complex" — needs significant rework; deeper dependencies on Groovy or specific plugins.
+- "Stay on Jenkins" — uses plugins or features GHA can't reasonably replicate (BMC Remedy integration, mainframe builds).
+
+Phase 2 — pilot. Pick one team and 2-3 representative simple jobs. Translate to GHA workflows. Run both Jenkins and GHA in parallel for 2-4 weeks. Compare:
+- Time-to-green (PR open → green check)
+- Failure modes and resolution time
+- Developer experience (do engineers actually like the new flow?)
+- Cost (GHA minutes vs Jenkins infra)
+
+Iterate on the patterns: reusable workflows, composite actions, OIDC config.
+
+Phase 3 — incremental migration by team or service. Once patterns are proven:
+- Translate jobs in batches, ~5-10 per week per migrating team.
+- Run both systems in parallel for a service for 1-2 weeks.
+- Cut over by removing the Jenkins config; archive Jenkinsfiles in a git tag.
+
+Translating Jenkinsfile → GHA workflow patterns:
+
+Declarative agent → runs-on:
+\`\`\`groovy
+pipeline { agent { label 'linux-large' } stages { ... } }
+\`\`\`
+becomes:
+\`\`\`yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest    # or self-hosted with appropriate label
+\`\`\`
+
+Kubernetes plugin pod templates → ARC (Actions Runner Controller). Define a runner scale set with the same container set; jobs target it via runs-on labels.
+
+Shared Library → reusable workflow + composite actions. The deployToK8s shared lib step becomes a reusable workflow:
+\`\`\`yaml
+# in central .github repo
+on: { workflow_call: { inputs: { env: { type: string }, image: { type: string } } } }
+jobs: { deploy: { runs-on: ubuntu-latest, steps: [...] } }
+\`\`\`
+Service repos consume:
+\`\`\`yaml
+deploy:
+  uses: myorg/.github/.github/workflows/deploy-k8s.yml@v1
+  with: { env: 'prod', image: \${{ needs.build.outputs.image }} }
+\`\`\`
+
+Credentials with withCredentials → environment-scoped secrets + OIDC. AWS keys in Jenkins credential store become an IAM role assumed via OIDC. Slack tokens, NPM tokens become repo or environment secrets.
+
+Multi-branch pipelines → automatic. GHA's on: pull_request: + on: push: branches: [main] handles this natively.
+
+input (manual approval) → Environments with required reviewers. The block-and-wait-for-human pattern.
+
+Post blocks (post { failure { ... } }) → if: failure() on a notification job:
+\`\`\`yaml
+notify-failure:
+  needs: build
+  if: failure()
+  runs-on: ubuntu-latest
+  steps: [...]
+\`\`\`
+
+Things that don't translate well:
+
+Plugins with no GHA equivalent. Some Jenkins plugins integrate with niche enterprise systems (BMC, ServiceNow, Polarion, etc.). GHA might require building a custom action — non-trivial.
+
+@Library reuse with complex Groovy classes. Composite actions can't replicate Groovy's full class hierarchy. Sometimes you simplify the design; sometimes you accept that the GHA version is more verbose.
+
+Shared global state across many jobs. Jenkins has shared workspace, persistent agents, global env. GHA jobs are isolated. Refactor to pass state via job outputs and artifacts.
+
+Phase 4 — decommission. Once all jobs migrated, kill the old Jenkins. Snapshot JENKINS_HOME for retention; archive Jenkinsfiles in a git tag. Decommission the K8s namespace. Reclaim resources.
+
+Realistic timeline. For a 50-engineer org with ~100 Jenkinsfiles:
+- Phase 1 (inventory): 2-4 weeks.
+- Phase 2 (pilot): 4-8 weeks.
+- Phase 3 (rollout): 6-12 months.
+- Phase 4 (decommission): 4 weeks.
+
+Total: 9-18 months. Plan accordingly.
+
+Common pitfalls:
+- Trying to migrate everything in a quarter. Always takes 3x longer.
+- Not running parallel during cutover. Lose visibility into translation issues.
+- Translating Jenkinsfiles literally, including their idiosyncrasies. Take the migration as an opportunity to simplify.
+- Underinvesting in reusable workflows. Without them, every service-team rewrites the same patterns; net result is more code than before.
+- Skipping the "stay on Jenkins" decision for some jobs. Some workloads don't fit modern CI; force-fitting them costs more than keeping a small Jenkins for them.
+
+A realistic outcome: 80-90% of jobs migrate cleanly; 10-20% stay on a residual Jenkins or get rewritten significantly. That's success — full purity is rarely worth the marginal cost.`,
+      },
+      {
+        question: 'Quick-fire interview answers — Jenkins essentials in one-liners.',
+        answer: `Rapid-fire facts and one-liner answers for the Jenkins portion of an interview.
+
+Q: What's the Jenkins controller-agent model?
+A: Controller orchestrates; agents execute. Modern setups: K8s plugin spawns ephemeral pod-per-build agents.
+
+Q: Declarative vs Scripted Pipeline?
+A: Declarative is the YAML-shaped Groovy default — opinionated, lintable, restartable. Scripted is full Groovy — power-user dynamic logic. Use Declarative + script {} hybrid for 80/20.
+
+Q: What is JCasC?
+A: Configuration-as-Code. jenkins.yaml in git seeds the controller at startup. Replaces click-ops; makes controller ephemeral and reproducible.
+
+Q: What is a Shared Library?
+A: Versioned Groovy code shared across all Jenkinsfiles in an org. @Library('lib@v3') imports it. Defines reusable steps like deployToK8s(), runQualityGate().
+
+Q: How do you run agents in Kubernetes?
+A: kubernetes plugin. Each Jenkinsfile declares a pod template inline (or references one from shared library). Pod is destroyed at build end. ServiceAccount + securityContext per template.
+
+Q: Static vs ephemeral agents?
+A: Static = long-lived VMs; supply-chain footgun (compromised build → backdoor → next build). Ephemeral = pod-per-build; no state persists; the modern default.
+
+Q: How do you handle credentials safely?
+A: withCredentials block scoped per stage. Never put secrets in pipeline-level environment {}. Modern: federated identity via IRSA / Vault Agent — no long-lived creds in Jenkins store.
+
+Q: What was CVE-2024-23897?
+A: Jan 2024, CVSS 9.8. Anonymous arbitrary file read via Jenkins CLI's @-prefix arg expansion. Patched in 2.442 / LTS 2.426.3. Triggered industry-wide hardening.
+
+Q: How do you handle multi-branch builds?
+A: Multi-branch Pipeline auto-discovers branches and PRs from SCM, creates a Jenkinsfile build per branch. Webhooks (not pollSCM) trigger builds.
+
+Q: What is parallel { }?
+A: Run multiple stages concurrently. Wall-time savings; cap at agent capacity. Used for unit/integration/sonar parallelism, multi-target builds, fan-out E2E shards.
+
+Q: post { } block?
+A: Runs after stages regardless of outcome. Branches: always (cleanup), success (Slack green), failure (Slack red, Jira ticket), unstable (flaky tests). Equivalent of GHA if: success() / if: failure() job conditions.
+
+Q: How do you migrate to GitHub Actions?
+A: Multi-quarter project. Inventory → pilot 2-3 jobs → translate patterns (agent → runs-on, shared lib → reusable workflow, withCredentials → OIDC) → incremental rollout → decommission.
+
+Q: Why is Jenkins still ~28% market share in 2026?
+A: On-prem and air-gapped requirements (regulated industries); deep existing investment; extreme pipeline flexibility. New greenfield adoption is rare.
+
+Q: When do you NOT pick Jenkins?
+A: Greenfield with no constraints; small team without platform engineer bandwidth; cloud-native shop already on GitHub/GitLab.
+
+Q: What is Jenkins X?
+A: K8s-native fork (started 2018) aimed at addressing Jenkins's operational overhead. Modest adoption; most teams pick Tekton/Argo Workflows for K8s-native CI instead.
+
+Q: What is the biggest Jenkins anti-pattern?
+A: Click-ops controller config (no JCasC). Everything else (drift, no audit, painful disaster recovery) flows from this.
+
+Q: How do you observe Jenkins?
+A: Prometheus plugin scrapes controller metrics (queue depth, agent capacity, build duration). Logs to Loki/OpenSearch. Audit Trail plugin to SIEM.
+
+Q: Plugin security?
+A: Subscribe to jenkins-advisories. Patch within 24-48h for CVSS 9+. Quarterly: uninstall unused plugins (each is attack surface).
+
+Q: What's the canonical Jenkinsfile structure for a Java microservice?
+A: Declarative pipeline; K8s agent with maven + kaniko + cosign containers; parallel stages for unit/integration/sonar/owasp; image build via kaniko; cosign sign; deploy via shared library deployToK8s(env, image); post { failure { slack } }.
+
+These are the answers a Jenkins-fluent senior engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://www.jenkins.io/doc/book/pipeline/syntax/',
+      'https://www.jenkins.io/doc/book/managing/casc/',
+      'https://www.jenkins.io/doc/book/pipeline/shared-libraries/',
+      'https://plugins.jenkins.io/kubernetes/',
+      'https://www.jenkins.io/security/advisories/',
+      'https://www.cve.org/CVERecord?id=CVE-2024-23897',
+      'https://www.jetbrains.com/lp/devecosystem-2024/',
+    ],
+  },
+
 ];
