@@ -2737,15 +2737,12 @@ export default function TopicDetail({
               padding: '32px 40px',
             }}
           >
-            <div className="prep-content max-w-[72ch] mx-auto">{children}</div>
+            <div className="prep-content w-full">{children}</div>
           </div>
         );
 
         return (
-        // Centered slide-deck container — caps width at max-w-5xl (~1024px)
-        // and auto-centers, so SRE topics read like a PPT deck instead of
-        // edge-to-edge browser-width wall of text.
-        <div className="space-y-6 max-w-7xl mx-auto">
+        <div className="space-y-6 w-full">
 
           {/* ── Topic stats banner — one-glance agenda + key counts ── */}
           <div
@@ -2943,7 +2940,7 @@ export default function TopicDetail({
                       </button>
                       {isExpanded && (
                         <div className="px-5 py-4 border-t border-[var(--border)]">
-                          <div className="prep-content max-w-[72ch] mx-auto">
+                          <div className="prep-content w-full">
                             <FormattedContent content={item.answer} color="blue" />
                           </div>
                         </div>
