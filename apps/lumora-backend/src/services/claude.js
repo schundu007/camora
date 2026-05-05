@@ -373,6 +373,7 @@ async function runSearch(question, history, plan) {
  * @param {string}   [options.userId]
  * @param {string}   [options.resumeContext]
  * @param {string}   [options.technicalContext]
+ * @param {string}   [options.retrievedContext] Pre-formatted grounding string from retrieval.js
  */
 export async function* streamResponse(question, history, options = {}) {
   const {
@@ -380,6 +381,7 @@ export async function* streamResponse(question, history, options = {}) {
     resumeContext = null,
     technicalContext = null,
     systemContext = null,
+    retrievedContext = null,
     detailLevel = null,
     plan = 'free',
     // Cloud platform the candidate is interviewing for — drives service-name
@@ -402,7 +404,14 @@ export async function* streamResponse(question, history, options = {}) {
   const isCoding = !isDesign && isCodingQuestion(cleanQuestion);
 
   // Resolve context — custom assistant context takes priority over defaults
-  const resume = systemContext || resumeContext || getDefaultResumeContext();
+  // Retrieved grounding (Capra KB + user Prep Kit chunks) is prepended
+  // to the system context so the existing prompt assembly treats it
+  // as part of the JD/resume context bundle. Empty string when retrieval
+  // returned nothing or timed out.
+  const groundedContext = retrievedContext
+    ? `${retrievedContext}\n\n${systemContext || ''}`.trim()
+    : systemContext;
+  const resume = groundedContext || resumeContext || getDefaultResumeContext();
   const technical = systemContext ? '' : (technicalContext || getDefaultTechnicalContext());
 
   // Company culture frame — pulled from the systemContext (JD + company fields)

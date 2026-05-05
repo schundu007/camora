@@ -16,6 +16,7 @@ import { checkDailyFreeLimit } from '../services/quota.js';
 import { streamResponse, MODEL } from '../services/claude.js';
 import { recordUsage as recordAiHours } from '../services/aiHoursMeter.js';
 import { buildAnswerCacheKey, cacheGet, cacheSet, logCacheEvent } from '../services/answerCache.js';
+import { retrieve, formatRetrievedContext } from '../services/retrieval.js';
 
 const router = Router();
 
@@ -91,6 +92,20 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
     const allMessages = historyResult.rows;
     const history = allMessages.slice(-12).map((m) => ({ role: m.role, content: m.content }));
 
+    // Tier 1+2 grounding — retrieve top-k chunks from Capra KB +
+    // this user's Prep Kit. Hard 250ms timeout inside retrieve();
+    // if it loses, retrievedContext is empty and Sona answers
+    // ungrounded rather than blocking.
+    const retrieved = await retrieve({
+      question,
+      userId: user?.id || null,
+      timeoutMs: 250,
+    });
+    const retrievedContext = formatRetrievedContext(retrieved.chunks);
+    if (retrieved.timedOut) {
+      console.warn(`[inference] retrieval timed out after ${retrieved.latencyMs}ms`);
+    }
+
     // Start SSE
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
@@ -98,6 +113,19 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
     });
+
+    if (retrieved.chunks.length > 0) {
+      const citations = retrieved.chunks.map((c) => ({
+        tier: c.tier,
+        source: c.source || null,
+        topicId: c.topicId || null,
+        topicTitle: c.topicTitle || null,
+        section: c.section || null,
+        docKind: c.docKind || null,
+        distance: c.distance,
+      }));
+      sendSSE(res, 'citations', citations);
+    }
 
     let finalAnswer = null;
     let clientDisconnected = false;
@@ -116,6 +144,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       resumeContext: user.resume_text || null,
       technicalContext: user.technical_context || null,
       systemContext: systemContext || null,
+      retrievedContext,
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
       cloudProvider,
       plan: userPlan,
@@ -295,6 +324,10 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
     // model every time. Now we hash the request + plan + model and
     // serve a cached structured answer when available, skipping the
     // entire LLM call. Usage still meters so the paywall stays correct.
+    // retrievedContext is declared here so it is in scope for the
+    // streamResponse call on a cache miss; it is populated only on a
+    // miss to avoid burning an OpenAI embedding + 250ms on hits.
+    let retrievedContext = '';
     const cacheKey = buildAnswerCacheKey({
       question,
       systemContext,
@@ -383,6 +416,33 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
     }
     logCacheEvent('MISS', cacheKey, { route: 'stream', plan: userPlan });
 
+    // Tier 1+2 grounding — retrieve top-k chunks from Capra KB +
+    // this user's Prep Kit. Hard 250ms timeout inside retrieve();
+    // if it loses, retrievedContext is empty and Sona answers
+    // ungrounded rather than blocking.
+    // Runs only on a cache MISS so cache hits pay zero retrieval cost.
+    const retrieved = await retrieve({
+      question,
+      userId: user?.id || null,
+      timeoutMs: 250,
+    });
+    retrievedContext = formatRetrievedContext(retrieved.chunks);
+    if (retrieved.timedOut) {
+      console.warn(`[inference] retrieval timed out after ${retrieved.latencyMs}ms`);
+    }
+    if (retrieved.chunks.length > 0) {
+      const citations = retrieved.chunks.map((c) => ({
+        tier: c.tier,
+        source: c.source || null,
+        topicId: c.topicId || null,
+        topicTitle: c.topicTitle || null,
+        section: c.section || null,
+        docKind: c.docKind || null,
+        distance: c.distance,
+      }));
+      sendSSE(res, 'citations', citations);
+    }
+
     // Stream tokens (empty history for new conversation).
     // Pass abortController.signal so the Anthropic call halts when the
     // client disconnects — without this, navigating away mid-answer
@@ -392,6 +452,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       resumeContext: user.resume_text || null,
       technicalContext: user.technical_context || null,
       systemContext: systemContext || null,
+      retrievedContext,
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
       cloudProvider,
       plan: userPlan,
