@@ -2934,8 +2934,7 @@ export default function DocsPage({ onBack }) {
                                         {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
                                         {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
                                       </div>
-                                      <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{topic.description}</p>
-                                      <div className="flex items-center gap-2">
+                                      <div className="flex items-center gap-2 mt-1.5">
                                         <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ color: 'var(--accent)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                                           {topic.questions} questions
                                         </span>
