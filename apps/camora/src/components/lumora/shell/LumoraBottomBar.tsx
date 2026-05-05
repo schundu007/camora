@@ -16,7 +16,7 @@
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { useInterviewStore } from '@/stores/interview-store';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface LumoraBottomBarProps {
   /** Forwarded to AudioCapture — receives `(text, { manual })`. The
@@ -32,13 +32,31 @@ export function LumoraBottomBar({ onTranscription }: LumoraBottomBarProps) {
   const voiceFilterEnabled = useInterviewStore(s => s.voiceFilterEnabled);
   const voiceEnrolledAt = useInterviewStore(s => s.voiceEnrolledAt);
   // Shared dismissal key with AICompanionPanel — same banner copy in
-  // both places, so dismissing once should hide everywhere.
+  // both places, so dismissing once should hide everywhere. Wired up
+  // via a custom event so dismissing on one surface updates the other
+  // sibling's React state immediately without a remount; storage
+  // events also pick up cross-tab changes.
   const [dismissed, setDismissedState] = useState<boolean>(() => {
     try { return localStorage.getItem('lumora_voice_banner_dismissed') === '1'; } catch { return false; }
   });
+  useEffect(() => {
+    const sync = () => {
+      try { setDismissedState(localStorage.getItem('lumora_voice_banner_dismissed') === '1'); } catch {}
+    };
+    window.addEventListener('lumora:voice-banner-dismissed', sync);
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'lumora_voice_banner_dismissed') sync();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('lumora:voice-banner-dismissed', sync);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
   const dismiss = () => {
     setDismissedState(true);
     try { localStorage.setItem('lumora_voice_banner_dismissed', '1'); } catch {}
+    try { window.dispatchEvent(new Event('lumora:voice-banner-dismissed')); } catch {}
   };
 
   // Stale enrollment — Resemblyzer embeddings drift with mic / room

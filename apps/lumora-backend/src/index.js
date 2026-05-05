@@ -306,6 +306,17 @@ const shutdown = async (signal) => {
   const forceTimer = setTimeout(() => { logger.error('Forced shutdown after timeout'); process.exit(1); }, 15_000);
   server.close(async () => {
     logger.info('HTTP server closed');
+    // Drain in-flight ai_hours_usage inserts before tearing down the
+    // pool — fire-and-forget recordUsage() writes ~50-500ms after the
+    // SSE answer event resolves and Railway's redeploy can otherwise
+    // hit the gap between answer and insert. Capped at 5s so a stuck
+    // insert can't block shutdown past the 15s force timer.
+    try {
+      const { drainPendingUsage } = await import('./services/aiHoursMeter.js');
+      await drainPendingUsage(5000);
+    } catch (err) {
+      logger.warn({ err: err?.message }, 'drainPendingUsage failed');
+    }
     try { await closePool(); logger.info('DB pool closed'); }
     catch (err) { logger.error({ err: err?.message }, 'closePool failed'); }
     clearTimeout(forceTimer);

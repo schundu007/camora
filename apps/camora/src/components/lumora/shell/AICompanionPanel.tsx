@@ -207,9 +207,28 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   const [voiceBannerDismissed, setVoiceBannerDismissedState] = useState<boolean>(() => {
     try { return localStorage.getItem('lumora_voice_banner_dismissed') === '1'; } catch { return false; }
   });
+  // Cross-surface sync — both the BottomBar and this panel dismiss the
+  // same banner. Without an event subscription each surface kept stale
+  // local React state until remount, so dismissing on Coding then
+  // switching to Behavioral re-showed the banner.
+  useEffect(() => {
+    const sync = () => {
+      try { setVoiceBannerDismissedState(localStorage.getItem('lumora_voice_banner_dismissed') === '1'); } catch {}
+    };
+    window.addEventListener('lumora:voice-banner-dismissed', sync);
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'lumora_voice_banner_dismissed') sync();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('lumora:voice-banner-dismissed', sync);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
   const dismissVoiceBanner = () => {
     setVoiceBannerDismissedState(true);
     try { localStorage.setItem('lumora_voice_banner_dismissed', '1'); } catch {}
+    try { window.dispatchEvent(new Event('lumora:voice-banner-dismissed')); } catch {}
   };
 
   // Backfill the enrollment timestamp for users who enrolled before
