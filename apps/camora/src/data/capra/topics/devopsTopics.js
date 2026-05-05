@@ -1230,7 +1230,931 @@ VSM tells you WHERE the time is going. DORA gives you a single number to track o
     ],
   },
 
-  // Additional sub-categories will be appended in subsequent batches as
-  // research agents (CI/CD, Containers, Platform Engineering, DevSecOps,
-  // Cloud Native, Database DevOps) complete and feed primary-source content.
+  // ─────────────────────────────────────────────────────────────────────
+  // B. CI/CD Fundamentals (6 topics)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'continuous-integration',
+    title: 'Continuous Integration — Commit to Mainline, Many Times a Day',
+    icon: 'gitMerge',
+    color: '#22c55e',
+    questions: 4,
+    description: 'Fowler\'s CI definition, the ten practices, and why daily mainline commits with a fast self-testing build is the whole game.',
+    visualizations: [
+      {
+        title: 'CI loop — commit → build → test → fail-fast → fix-or-revert',
+        description: 'The canonical Fowler/XP feedback loop: every push to mainline triggers an automated self-testing build; a red main is the team\'s top priority and either gets fixed within ~10 minutes or the change is reverted.',
+        image: '/diagrams/devops/b1-ci.png',
+      },
+    ],
+    introduction: `Continuous Integration is the practice of merging every developer\'s work to a shared mainline at least once a day, with each merge verified by an automated build that includes the test suite. Martin Fowler\'s canonical 2006 article (martinfowler.com/articles/continuousIntegration.html) defines it: "a software development practice where members of a team integrate their work frequently, usually each person integrates at least daily — leading to multiple integrations per day. Each integration is verified by an automated build (including test) to detect integration errors as quickly as possible."
+
+The phrase "as quickly as possible" is load-bearing. CI exists because integration in long-lived branches is expensive and unpredictable: the longer two branches diverge, the more painful the eventual merge, and the higher the probability that a defect introduced weeks ago surfaces only at integration time. CI inverts that — by integrating constantly, every conflict is small, every regression is attributed to a tiny change set, and the team always has a working trunk to ship from.
+
+Origins:
+
+The term traces to Kent Beck and the Extreme Programming community in the late 1990s. The first dedicated CI server was CruiseControl (ThoughtWorks, 2001). Jenkins (originally Hudson, Kohsuke Kawaguchi, 2004-2011) became the dominant implementation through the 2010s. Per the JetBrains 2024 State of Developer Ecosystem survey, GitHub Actions has now overtaken Jenkins with about 33% adoption, Jenkins around 28%, GitLab CI around 21%.
+
+Fowler\'s ten practices:
+
+1. Maintain a single source repository
+2. Automate the build
+3. Make the build self-testing
+4. Everyone commits to mainline every day
+5. Every commit should build mainline on an integration machine
+6. Fix broken builds immediately
+7. Keep the build fast
+8. Test in a clone of production
+9. Make it easy for anyone to get the latest executable
+10. Everyone can see what\'s happening
+
+Three carry most of the load: self-testing build (without it, "passing CI" means "it linked," roughly worthless), daily commits to mainline (not to a feature branch — the mainline integration is what makes batches small), and fast feedback (Fowler\'s rule of thumb is a ten-minute build; past that, developers context-switch and the practice degrades).`,
+    whenToUse: [
+      'Designing the build/test loop for any new service or repo',
+      'Justifying a freeze on long-lived feature branches to leadership',
+      'Diagnosing "merge hell" — the symptom is always insufficient integration frequency',
+      'Setting realistic targets for build duration and broken-build response time',
+    ],
+    keyConcepts: [
+      {
+        term: 'Continuous Integration (Fowler verbatim)',
+        definition: 'From martinfowler.com/articles/continuousIntegration.html: members of a team integrate their work frequently, usually each person integrates at least daily, leading to multiple integrations per day. Each integration is verified by an automated build (including test) to detect integration errors as quickly as possible. The "as quickly as possible" is what makes the practice work.',
+      },
+      {
+        term: 'Mainline / trunk',
+        definition: 'The single integration branch the team commits to. Usually `main`. Feature branches are tolerated only if they live hours, not days. PRs that live longer than a day are not "trunk-based development with code review" — they are continuous building of isolated branches, which is the failure mode CI was invented to eliminate.',
+      },
+      {
+        term: 'Self-testing build',
+        definition: 'A build pipeline that compiles, links, and runs the unit/integration test suite — and fails the build on any test regression. Compilation alone does not count. The test suite must be substantive enough that a green build implies "the system works for the cases the team cares about." Without that implication, "CI passes" carries no information.',
+      },
+      {
+        term: 'Ten-minute build rule',
+        definition: 'Fowler\'s heuristic for build duration. Past ten minutes, developers stop waiting on results, start something else, and CI feedback decays toward useless. DORA elite performers report full pipeline lead time under one hour, which is incompatible with hour-long CI builds. Use parallel runners, test sharding, monorepo build systems with remote caches if you have to.',
+      },
+      {
+        term: 'Stop-the-line',
+        definition: 'Toyota-derived rule (also XP): a red mainline build is the team\'s top priority. Either it is fixed within ~10 minutes or the offending commit is reverted. Other developers stop pushing until trunk is green. The cultural commitment is what makes CI work — without it, broken-main becomes normalized and signal decays.',
+      },
+      {
+        term: 'Integration machine',
+        definition: 'A dedicated, reproducible environment that builds every commit. "It works on my machine" is not CI — the integration machine is the source of truth. Hosted runners (GitHub Actions, GitLab CI) are typically used; self-hosted runners are needed for GPU jobs, on-prem dependencies, or scale beyond minute caps.',
+      },
+    ],
+    pitfalls: [
+      'Calling per-branch CI runs "continuous integration" — if branches live for days, you are continuously building isolated branches, not integrating',
+      'Letting the main build stay red overnight — the longer it\'s red, the more new failures pile on top and root cause becomes impossible',
+      'A build that takes 30+ minutes — developers stop waiting; PRs queue; the entire feedback loop degrades',
+      'Skipping flaky tests rather than fixing them — a flaky suite teaches the team to ignore failures, which destroys the signal',
+      'Treating the build server as someone else\'s job — every developer should be able to debug and fix a broken pipeline',
+    ],
+    keyQuestions: [
+      {
+        question: 'What is Continuous Integration, and what makes a CI setup actually CI vs theatre?',
+        answer: `Three concrete tests separate real CI from CI-theatre.
+
+First, integration frequency. CI requires daily merges to mainline by every contributor. If your team uses GitHub Flow with PRs that live three days, you do not have continuous integration — you have continuous building of isolated branches. The whole point is that the merge happens often enough to be small. A two-week feature branch with a green CI badge is exactly the failure mode CI was invented to eliminate.
+
+Second, the self-testing build. Fowler is explicit: "make the build self-testing." The build pipeline must run the unit test suite (and ideally a fast-integration tier) and must fail on any regression. A pipeline that lints and compiles is not CI; it is a linter that calls itself CI.
+
+Third, speed. Fowler proposes a ten-minute build as the target. Why ten minutes? Because past ten minutes developers stop waiting and start something else. Cost: lost flow, queued PRs, gradually expanding batch size as people defer integration to avoid waiting. DORA finds elite teams\' full lead-time-for-changes (commit to production) under one day; that is incompatible with hour-long CI builds.
+
+The CI-theatre symptoms: long-lived feature branches with green badges; "passing CI" defined as a green compile with skipped tests; broken-main tolerated for hours or days; build durations creeping up because the response is "add another runner" instead of "split the suite or delete the slow tests."
+
+The fix is structural, not tooling. Move to trunk-based development with branches measured in hours. Mandate a self-testing build. Set an SLO on build duration (e.g., p95 under 12 minutes) and treat regressions on it as production incidents. The tool — Jenkins, GitHub Actions, GitLab CI, CircleCI — barely matters; the discipline is what matters.`,
+      },
+      {
+        question: 'Why is a fast build (≤10 minutes) such a hard requirement, not a nice-to-have?',
+        answer: `Because build duration directly drives integration frequency, which is the actual primary practice CI is trying to produce.
+
+If your build takes 30 minutes, every developer has a thirty-minute decision after each push: wait, or context-switch. They will context-switch. Once they context-switch, the next commit comes later, the batch is larger, the next build is more likely to break, and the next debug is harder. The slow build creates a positive feedback loop toward larger batches and worse signal.
+
+DORA\'s research (Accelerate, 2018) measures four delivery metrics: deployment frequency, lead time for changes, change failure rate, MTTR. Elite performers ship multiple times a day with lead time under a day. None of those metrics are achievable with hour-long CI builds.
+
+There is also a queue-theory effect. CI runners are a finite shared resource. As build duration grows, queue depth grows non-linearly under load (Little\'s Law). A team of 30 engineers with 12-minute builds and one runner can roughly keep up; the same team with 30-minute builds and one runner sees PRs sit in queue for hours.
+
+How elite teams hit ten minutes:
+
+Test pyramid: heavy unit, lighter integration, sparse E2E in the first stage. Slow E2E and full-suite regression run in a second-stage pipeline that gates merge but doesn\'t gate per-push feedback.
+
+Caching aggressively: dependency caches (npm, Maven, Go modules), Docker layer caches, compiler caches (sccache, ccache). Bazel/Nx/Turborepo remote caches in monorepos.
+
+Parallel test execution across runners — split a 40-minute suite into 8 shards of 5 minutes.
+
+Test selection: Bazel-style "only run tests whose transitive inputs changed." Routinely converts a 30-minute "all tests" run into a 4-minute "tests for the changed package" run.
+
+Killing flake. A flaky test that\'s retried adds latency proportional to the retry count.
+
+Treating CI duration as an SLO is the operational shift: set a target (p95 ≤ 12 minutes), measure it weekly, treat sustained breach as a real incident.`,
+      },
+      {
+        question: 'How should the team respond when mainline goes red?',
+        answer: `Stop-the-line: fix it within minutes, or revert.
+
+The argument: a red mainline build means the trunk is not shippable. Every additional commit pushed onto a red trunk compounds the failure. The longer trunk stays red, the harder root cause becomes — possibly several real failures get mashed together into one debugging session.
+
+The mechanics:
+
+The CI system pages or Slack-pings whoever pushed the breaking commit (or the on-call deploy buddy in larger teams).
+
+Default action is revert, not debug. The standard rule: "if you cannot identify and ship a fix within ten minutes, revert your change. You can re-roll it later when you have fixed the test on a branch." This is counter-intuitive — engineers want to debug "their" change in place — but the trunk is shared infrastructure and individual debugging belongs on a branch.
+
+Other developers stop pushing until trunk is green. In small teams this is informal; in larger ones it is enforced by branch protection that requires a green build to merge.
+
+Once green, the original author re-rolls the change with the test fix included.
+
+The cultural commitment is what makes this work. The Toyota-Production-System inspiration is not accidental — Andon-cord, stop-the-line, fix-the-root-cause — they are explicit DevOps lineage (Phoenix Project, DevOps Handbook).
+
+Related practices: fast builds (so revert + re-push is cheap), pre-merge CI on PRs that runs the same suite as post-merge CI, branch protection rules requiring green status before merge, visible build status (broadcast in Slack or a wall display).
+
+What it looks like when this is broken: morning standup includes "main has been red since Tuesday; we will get to it after the demo." That team does not have CI; they have a CI server.`,
+      },
+      {
+        question: 'Walk through Fowler\'s ten CI practices and which ones do most of the work.',
+        answer: `Three practices carry most of the load.
+
+Self-testing build (#3). This converts CI from "did it compile" into "does the system still work." Without a meaningful test suite that fails the build on regression, every other practice is decorative. The test suite must be fast enough that the ten-minute rule still holds — usually a unit-heavy test pyramid with smaller integration and even smaller E2E tiers.
+
+Daily commits to mainline (#4). This is the practice that produces small batches. Small batches mean small merge conflicts, small blast radius on regression, and small attribution windows when something breaks. The single biggest CI anti-pattern is "we have CI, but our feature branches live a week" — at that point you are not integrating continuously; you are integrating fortnightly with a green badge in between.
+
+Fix broken builds immediately (#6). The cultural commitment. A red mainline build means the next person to push will compound the breakage. Stop-the-line — fix forward or revert within minutes — is what keeps the trunk shippable.
+
+The other seven matter, but they are mostly enablers for those three. Single repo (#1) and automate-the-build (#2) are entry-stake. Build mainline on an integration machine (#5) prevents "works on my laptop." Keep the build fast (#7) is necessary to make daily commits painless. Production-clone testing (#8) extends the signal of "passes CI" toward "will run in prod." Easy access to the latest executable (#9) lets QA, sales, and product self-serve recent builds. Visibility (#10) — broadcast the build state — is how the team enforces stop-the-line socially.
+
+The ranking is useful when consulting on a struggling team: do not start with "we need GitHub Actions" or "let us adopt monorepo builds." Start with "your branches are six days old, your test suite is decorative, and your last red build sat unfixed for two days." Fix those three and most other problems become tractable.`,
+      },
+    ],
+    references: [
+      'https://martinfowler.com/articles/continuousIntegration.html',
+      'https://martinfowler.com/articles/originalContinuousIntegration.html',
+      'https://dora.dev/research/',
+      'https://www.thoughtworks.com/insights/articles/continuous-integration',
+    ],
+  },
+
+  {
+    id: 'continuous-delivery-vs-deploy',
+    title: 'Continuous Delivery vs Continuous Deployment — Capability vs Policy',
+    icon: 'send',
+    color: '#22c55e',
+    questions: 4,
+    description: 'Continuous Delivery is the capability to release any commit; Continuous Deployment automates the act. Same pipeline, different gate.',
+    visualizations: [
+      {
+        title: 'Deployment pipeline — commit to production with explicit gate',
+        description: 'Humble & Farley\'s pipeline: commit stage → automated acceptance tests → capacity/UAT stages → manual or automated production gate. Continuous Delivery makes every green build a release candidate; Continuous Deployment automates the final push.',
+        image: '/diagrams/devops/b2-cd-vs-deploy.png',
+      },
+    ],
+    introduction: `Continuous Delivery (CD) and Continuous Deployment (CDeploy) are different things, and the distinction shows up in interviews because most candidates conflate them.
+
+Jez Humble and Dave Farley defined Continuous Delivery in their 2010 book of the same name. Humble\'s verbatim distinction (continuousdelivery.com): "Continuous Delivery is the ability to get changes of all types — including new features, configuration changes, bug fixes and experiments — into production, or into the hands of users, safely and quickly in a sustainable way." The capability is the product. Whether you exercise it on every commit is a separate, business-driven decision.
+
+Continuous Deployment is the automated exercise of that capability. Humble: "Continuous Deployment means that every change goes through the pipeline and automatically gets put into production, resulting in many production deployments every day. Continuous Delivery just means that you are able to do frequent deployments but may choose not to do it, usually due to businesses preferring a slower rate of deployment."
+
+The unifying construct underneath both is the deployment pipeline (Humble & Farley, Continuous Delivery, Ch 5): an automated implementation of an application\'s build-test-deploy process, where every change is verified at increasing levels of fidelity until it is either rejected or declared releasable. The pipeline structure is identical for CD and CDeploy; only the production gate differs.
+
+Stages, in the canonical pipeline:
+
+1. Commit stage: compile, unit tests, static analysis. Target ~5 minutes. Failure here means the commit cannot progress.
+
+2. Automated acceptance test stage: deploy to a test environment, run business-readable acceptance tests. Target ~1 hour.
+
+3. Capacity / non-functional stage: load tests, soak tests, security scans against a production-like environment.
+
+4. Manual test / UAT stage: optional human sign-off. For mature teams this stage is increasingly empty.
+
+5. Release: production deployment. Manual gate (CD) or automated (CDeploy).
+
+Why both exist as distinct practices: regulatory environments (pharma, banking, defence) often forbid automatic prod pushes — every release must be human-approved. They can still practice Continuous Delivery (every commit is releasable, every build produces an audit-ready artifact) without practicing Continuous Deployment.`,
+    whenToUse: [
+      'Distinguishing your team\'s capability from your team\'s policy in the same conversation',
+      'Justifying investment in pipeline automation when leadership wants "faster releases" but not "automatic releases"',
+      'Designing pipelines for regulated environments where auto-deploy is forbidden but releasability per commit is required',
+      'Explaining why a team that ships weekly with a green pipeline still has Continuous Delivery',
+    ],
+    keyConcepts: [
+      {
+        term: 'Continuous Delivery (Humble verbatim)',
+        definition: 'continuousdelivery.com: "the ability to get changes of all types into production, or into the hands of users, safely and quickly in a sustainable way." The capability — every commit is releasable, every build produces an audit-ready artifact — is the product. Whether you actually push it is policy.',
+      },
+      {
+        term: 'Continuous Deployment',
+        definition: 'Every change that passes the pipeline is automatically deployed to production. Continuous Delivery without the human gate at the end. Most teams that say they do CDeploy are actually doing CD with a low-friction Approve button.',
+      },
+      {
+        term: 'Deployment pipeline',
+        definition: 'Humble & Farley Ch 5: an automated implementation of build → test → deploy where each stage rejects unfit candidates and promotes the rest. Single source of truth for "is this releasable." The same pipeline works for CD and CDeploy; only the final gate differs.',
+      },
+      {
+        term: 'Build once, promote many (Factor V of 12-factor)',
+        definition: 'Pipeline rule: build the deployable artifact exactly once at the commit stage and promote that same artifact through every subsequent stage. Never rebuild between stages — it invalidates earlier test signal. The byte-identical artifact tested in staging must be the artifact running in prod.',
+      },
+      {
+        term: 'Release candidate',
+        definition: 'In CD, every commit that passes the commit stage is a release candidate. The pipeline\'s job is to falsify each candidate; survivors are deployable by definition. This inverts the traditional model where releases are explicit, gated events; under CD, releases are normal pipeline output.',
+      },
+      {
+        term: 'DORA elite tier',
+        definition: 'State of DevOps reports: deploy on-demand multiple times/day; lead time < 1 day; change failure rate < 15%; restore time < 1 hour. Achievable with Continuous Delivery; common with Continuous Deployment. The bands are achievable when the pipeline shape matches the layered model.',
+      },
+    ],
+    pitfalls: [
+      'Calling weekly Friday-afternoon releases "continuous delivery" — the capability is per-commit releasability, not a regular cadence',
+      'Rebuilding the artifact at each pipeline stage — different binaries means earlier tests verified a different thing than what reaches prod',
+      'Treating manual UAT as a permanent stage — each stage that requires humans is friction; aggressively shrink it',
+      'Auto-deploying without the safety net (feature flags, progressive rollout, automated rollback) — CDeploy without those is a faster path to production incidents',
+      'Using "we are a regulated industry" as a reason to skip the pipeline — regulated industries benefit most from auditable, automated pipelines; they just stop short of auto-prod',
+      'Skipping the capacity / non-functional stage — the most expensive prod incidents are usually performance/scale, not functional bugs',
+    ],
+    keyQuestions: [
+      {
+        question: 'What is the difference between Continuous Delivery and Continuous Deployment?',
+        answer: `Continuous Delivery is the capability; Continuous Deployment is the policy of exercising that capability automatically.
+
+Humble\'s verbatim definition: "Continuous Delivery is the ability to get changes of all types — including new features, configuration changes, bug fixes and experiments — into production, or into the hands of users, safely and quickly in a sustainable way." The keyword is ability. Every commit that passes the pipeline is a deployable release candidate; whether you actually push it to production is a separate decision.
+
+Continuous Deployment removes the separate decision. Humble: "Continuous Deployment means that every change goes through the pipeline and automatically gets put into production, resulting in many production deployments every day." The pipeline is the same; the production gate is automated rather than human-approved.
+
+Worked example: two teams have identical pipelines: commit-stage (lint, unit), acceptance stage (deploy to staging, run business-acceptance tests), capacity stage (load tests against perf env), and a release stage that pushes to production. Team A\'s release stage requires a human to click Approve — they push every Wednesday during business hours. Team B\'s release stage runs automatically — they push 40 times a day. Team A practices Continuous Delivery; Team B practices Continuous Deployment.
+
+Why distinguish them at all? Regulatory and risk realities. A bank, a hospital EMR, a defence contractor often cannot auto-deploy — auditors require human sign-off per release. Those teams still benefit enormously from Continuous Delivery: every commit is auditable, the artifact is built-once, the path to production is documented, and emergency releases take minutes not days.
+
+Maturity. Continuous Deployment requires a stronger safety net — feature flags, progressive rollouts, automated rollback, fast MTTR. Teams build Continuous Delivery first; many never need to take the next step.
+
+The interview test. If a candidate says "we do CI/CD" and you ask "delivery or deployment?" they should answer cleanly. "We have a deployment pipeline that produces a release candidate per commit; humans click Approve for production releases" = Continuous Delivery. "Every green commit goes to prod within 20 minutes, no human in the path" = Continuous Deployment.`,
+      },
+      {
+        question: 'Why does "build once, promote" matter so much?',
+        answer: `Build-once-promote is the single most-violated principle in junior CI/CD setups, and the failure modes it causes are subtle and expensive.
+
+The principle: produce the deployable artifact exactly once, in the commit stage. Tag it with the commit hash. Store it in an artifact repository. Every subsequent stage — acceptance, capacity, UAT, production — pulls that exact artifact and deploys it. No rebuilding. The bytes that get tested in stage 2 are the same bytes that ship in stage 5.
+
+What goes wrong if you rebuild between stages:
+
+Compiler nondeterminism. Most build tools have at least some non-determinism — timestamps, dependency resolution against a moving registry, code generation order, race conditions in parallel builds. Rebuild on Tuesday afternoon vs Wednesday morning and you get a different binary, even from the same git SHA. Your acceptance tests pass on the Tuesday binary; production runs the Wednesday binary; the integration test signal does not transfer.
+
+Floating dependencies. If your build pulls "latest" of any dependency (npm without a lockfile, pip without pinning, a Docker base image with no SHA pin), each rebuild can resolve to a different transitive set. A patch release of a transitive dep introduces a regression between your acceptance run and your prod run. The acceptance suite verified a system you no longer have.
+
+Environment drift. Different runners, different OS patch levels, different toolchain versions. The Jenkins agent that built the staging artifact has gcc 11.2; the agent that builds the prod artifact has gcc 11.3. Same source, different binary, different latent behaviour.
+
+Audit and forensics. When an incident hits production and you are trying to bisect, "the artifact tested in staging" must be byte-identical to "the artifact running in prod." Otherwise the bisect range expands enormously.
+
+How to enforce build-once-promote in practice. Single-step build. The commit stage produces the artifact and pushes to a registry. Every subsequent stage references the artifact by digest. The pipeline never has a second build step. Immutable tags by commit SHA — never use mutable tags like \`latest\` or \`main\` in pipeline references. Build attestation / provenance: SLSA Level 2+ signed provenance attaches a verifiable record to the artifact itself.
+
+The team that gets this right sees: clean bisects on incidents, byte-identical artifacts across environments, audit-ready release records.`,
+      },
+      {
+        question: 'When should your team practice Continuous Deployment vs Continuous Delivery?',
+        answer: `Continuous Deployment is appropriate when three conditions hold; absent any of them, stop at Continuous Delivery.
+
+Condition 1: the safety net is real. CDeploy ships every green commit to production within minutes. The change failure rate has to stay low (DORA elite is under 15%) and MTTR has to stay short (under an hour). That requires:
+
+- A self-testing build that catches >90% of regressions before merge
+- Feature flags so risky changes ship dark and are toggled on outside the deployment path
+- Progressive rollout (canary, percentage, ring-based) so a bad change is observed on 1% of traffic before reaching 100%
+- Automated rollback or auto-progressive-halt — your deployment system itself watches error/latency SLIs after rollout and halts or rolls back without human intervention if they regress
+- Production observability — RED/USE metrics, logs, traces — sufficient to detect regression within minutes
+
+Without all five, CDeploy is just "automated outages."
+
+Condition 2: regulatory and contractual reality permits it. Some industries (regulated finance, pharma, defence, sometimes healthcare) have audit requirements that mandate human approval per production release. CDeploy is incompatible with those requirements as written. The right move is Continuous Delivery — every commit releasable, audit log attached, human clicks Approve.
+
+Condition 3: organisational alignment. CDeploy assumes the dev team owns production behaviour, not "throws over the wall to ops." Teams without that ownership model should fix the ownership before they fix the deploy automation.
+
+When CDeploy is the right call: SaaS products with strong observability and feature-flag platforms; internal services where blast radius is bounded and rollback is cheap; teams that have already practiced Continuous Delivery for 6+ months without significant production incidents.
+
+When Continuous Delivery is the right call: regulated industries with mandatory release approval; mobile apps (App Store / Play Store have their own approval gates regardless); products with large customer-side change-management impact; teams without mature observability or feature-flag platforms — build those first.
+
+DORA\'s data: high and elite performers have similar deploy frequency whether they call it Delivery or Deployment, because the underlying capability — pipeline that produces release candidates per commit — is what generates the velocity. The final auto-bit is icing.`,
+      },
+      {
+        question: 'Walk through Humble & Farley\'s deployment pipeline stages.',
+        answer: `Humble & Farley\'s deployment pipeline (Continuous Delivery, Ch 5) is the canonical structure. The stages, in order:
+
+Commit stage. Triggered on every push to mainline. Compiles, runs unit tests, runs fast static analysis (linters, basic security scans, code style). Builds the deployable artifact exactly once — a JAR, a container image, a binary — tagged with the commit hash. Target duration: ~5 minutes. Failure here rejects the commit immediately; the developer fixes or reverts. The artifact, if produced, is uploaded to an artifact repository and that exact artifact is what every subsequent stage promotes.
+
+Automated acceptance test stage. Pulls the same artifact from the commit stage, deploys it to a test environment, and runs business-readable acceptance tests against the running system. These tests verify the application meets functional and quality requirements end-to-end — typically Cucumber/Gherkin scenarios, integration tests calling real APIs, sometimes UI tests for the most critical journeys. Target duration: under an hour. Failures here block promotion.
+
+Capacity / non-functional stage. Same artifact, deployed to a production-like environment with realistic data volumes and traffic. Runs load tests (k6, Gatling, JMeter), soak tests for slow leaks, security scans (DAST), and any performance-regression checks. Often runs against a smaller subset of changes (nightly, or on PRs that touch performance-sensitive paths).
+
+Manual test / UAT stage (optional). Exploratory testing, product review, regulatory sign-off. For mature teams this stage shrinks toward zero — the automated stages provide enough confidence.
+
+Release stage. Production deployment. In Continuous Delivery, this is human-triggered (clicked button, pull request approval, change-management ticket). In Continuous Deployment, it is automatic on green pipeline. Modern releases use progressive techniques — blue/green, canary, percentage rollout — so the "release" is not all-or-nothing.
+
+Three principles run through every stage:
+
+Build once, promote many. The artifact built in the commit stage is the artifact that goes to production. No rebuilding between stages.
+
+Each stage gates promotion. A failure in any stage halts the candidate; you do not "promote anyway, we will fix it later."
+
+Pipeline-as-code. The pipeline definition lives in the repo, versioned alongside the application. Pipeline changes go through PR review just like code changes.`,
+      },
+    ],
+    references: [
+      'https://continuousdelivery.com/',
+      'https://martinfowler.com/bliki/ContinuousDelivery.html',
+      'https://martinfowler.com/bliki/DeploymentPipeline.html',
+      'https://dora.dev/research/',
+    ],
+  },
+
+  {
+    id: 'pipeline-as-code',
+    title: 'Pipeline-as-Code — YAML, Jenkinsfile, Reusable Workflows',
+    icon: 'codepen',
+    color: '#22c55e',
+    questions: 3,
+    description: 'Pipeline definitions versioned in the repo. GitHub Actions, GitLab CI, Jenkinsfile — and how to keep them DRY at scale.',
+    visualizations: [
+      {
+        title: 'Pipeline-as-code lifecycle',
+        description: 'Pipeline definition lives in the same repo as the code it builds, reviewed via PR, versioned with the application. The CI server reads the definition on each push; the pipeline is a build artifact, not a server-side configuration.',
+        image: '/diagrams/devops/b3-pipeline-as-code.png',
+      },
+    ],
+    introduction: `Pipeline-as-code means the build/test/deploy pipeline is defined as version-controlled source code in the same repository as the application, not as a click-configured job in a CI server\'s UI. The shift was popularized by Jenkins 2.0 (2016) introducing the Jenkinsfile, paralleled by Travis CI\'s \`.travis.yml\` (2011), CircleCI\'s \`.circleci/config.yml\`, GitLab CI\'s \`.gitlab-ci.yml\` (2015), and GitHub Actions\' \`.github/workflows/*.yml\` (2019).
+
+Why it matters. Before pipeline-as-code, CI configuration was a server-side artefact — Jenkins jobs configured through a web UI, drift between environments, no review process for pipeline changes, no audit trail beyond "Steve modified the build step on Tuesday." The pipeline was outside the code\'s lifecycle. A revert of the application could not revert the pipeline that built the previous version. Pipeline-as-code closes the loop: the pipeline ships with the code, evolves with the code, and is reviewed like the code.
+
+Two stylistic camps. Declarative — GitHub Actions, GitLab CI, CircleCI, Bitbucket Pipelines, Tekton, Argo Workflows. The pipeline is a YAML document describing stages, jobs, steps, and triggers. The CI server interprets it. Strengths: easy to read, easy to lint, easy to validate. Limitations: complex logic (loops, conditionals, computed matrices) becomes awkward.
+
+Scripted — Jenkins\'s Groovy-based Jenkinsfile (and Jenkins\'s "declarative pipeline" subset which is YAML-shaped Groovy). The pipeline is code, with full programming-language semantics. Strengths: arbitrary logic, library imports, reuse via shared libraries. Limitations: harder to read, harder to lint.
+
+Modern adoption. JetBrains 2024 State of Developer Ecosystem survey: GitHub Actions ~33% (most popular), Jenkins ~28%, GitLab CI ~21%. GitHub Actions overtook Jenkins around 2022-2023.
+
+Reusability mechanisms. GitHub Actions reusable workflows (\`workflow_call\`) and composite actions. A central repo (\`.github/workflows/build-node.yml\`) is referenced by every service repo via \`uses: org/.github/.github/workflows/build-node.yml@v1\`. Versioned by tag. GitLab CI \`include:\` directive — pull a fragment from another repo. Jenkins Shared Libraries — Groovy libraries imported into every Jenkinsfile. CircleCI Orbs — versioned reusable config packages.`,
+    whenToUse: [
+      'Migrating off click-configured Jenkins jobs to a versioned, reviewable pipeline definition',
+      'Building a platform team that ships pipelines as a product to dozens of service teams',
+      'Standardising language- or framework-specific build patterns across an org via reusable workflows',
+      'Auditing pipeline changes — every modification is a PR with a reviewer',
+    ],
+    keyConcepts: [
+      {
+        term: 'Pipeline-as-code',
+        definition: 'Pipeline definition lives in the application repo as source-controlled config. Reviewed, versioned, branched alongside code. CI server reads the file; CI server has no separate state. The pipeline is a build artifact, not a server-side configuration.',
+      },
+      {
+        term: 'Declarative pipeline',
+        definition: 'YAML-style pipeline definitions (GitHub Actions, GitLab CI, Tekton). Easy to read; awkward for complex logic. Best for the common case of "build → test → deploy." Most teams should default here.',
+      },
+      {
+        term: 'Scripted pipeline',
+        definition: 'Code-style pipeline definitions (Jenkinsfile in Groovy). Powerful and flexible; harder to constrain and review. Reach for it only when YAML\'s logic ceiling actually bites.',
+      },
+      {
+        term: 'Reusable workflow / composite action',
+        definition: 'GitHub Actions: a workflow file callable from other workflows via `workflow_call`. Versioned by ref. Equivalent: GitLab `include:`, CircleCI Orbs, Jenkins Shared Libraries. Lets a platform team ship one canonical "build a Node service" workflow consumed by 30 service repos.',
+      },
+      {
+        term: 'Self-hosted runner',
+        definition: 'A runner agent owned by the team rather than the CI provider. Required for on-prem dependencies, GPU, or scale beyond hosted limits. Introduces supply-chain attack surface — use ephemeral or per-job runners; never run on long-lived persistent VMs.',
+      },
+      {
+        term: 'SHA pinning for actions',
+        definition: 'Reference actions by SHA, not tag: `uses: actions/checkout@b4ffde65...` not `@v4`. The SHA is content-addressed; if the upstream rewrites the v4 tag to point at malicious code (supply chain attack), your pipeline still uses the original. Comment the version next to the SHA. Dependabot updates SHAs automatically.',
+      },
+    ],
+    pitfalls: [
+      'Hand-edited Jenkins jobs with no Jenkinsfile equivalent — pipeline drift is invisible; review is impossible',
+      'Pipeline files referencing `actions/checkout@main` instead of a pinned SHA — a hostile actor compromising the action repo silently compromises every consumer',
+      'YAML pipelines with 600-line job matrices and embedded shell heredocs — move logic into scripts in the repo and reference them from the YAML',
+      'Reusable workflows referenced by `@main` instead of `@v1.4.2` — breaking changes in the reusable workflow break every downstream pipeline silently',
+      'Self-hosted runners on long-lived VMs — once compromised, every subsequent job inherits the compromise. Use ephemeral runners (one job per VM)',
+      'Inlining secrets or API keys in the pipeline file — even private repos leak; pipeline logs frequently print env',
+    ],
+    keyQuestions: [
+      {
+        question: 'Why is pipeline-as-code strictly better than UI-configured jobs?',
+        answer: `Five concrete reasons it dominates UI-configured jobs.
+
+Reviewability. Pipeline changes go through pull request, the same reviewer culture as code changes. A junior dev cannot silently disable the security scan stage; the change shows up in a diff. UI-configured Jenkins permits any user with edit rights to modify the build untracked, with no review and no reverse-engineerable history beyond "Steve changed the build step Tuesday afternoon."
+
+Versioning. The pipeline is tagged with the same git SHA as the code it builds. If you check out v2.3.1 of the application, you get the pipeline that built v2.3.1. UI-configured jobs are mutated forward; reproducing a six-month-old build is often impossible because the job has been edited a dozen times since.
+
+Branching. Feature branches can iterate the pipeline alongside the code — add a new test stage, restructure the matrix, change the deployment target — without affecting main\'s pipeline. Merge happens once the change is proven.
+
+Bootstrap and recovery. If the CI server explodes and you restore from backup, pipeline-as-code is recreated automatically because it lives in the repo. UI-configured Jenkins requires you to also have backed up Jenkins\'s config XML — an additional, easy-to-forget operational concern.
+
+Onboarding and discoverability. New team members read the pipeline file alongside the code in their IDE.
+
+A subtler benefit: pipeline-as-code makes the pipeline itself an engineering artifact. You can lint it (\`actionlint\`, \`gitlab-ci-lint\`), test it (run pipeline-validation steps), and refactor it. Refactoring a UI-configured job means clicking through forty fields hoping nothing was missed.
+
+The argument that gets made against pipeline-as-code: "engineers can break the build with a bad pipeline change." This is a feature, not a bug. The pipeline change goes through PR review; the reviewer\'s job includes catching pipeline mistakes.`,
+      },
+      {
+        question: 'GitHub Actions vs Jenkins vs GitLab CI — when do you pick which?',
+        answer: `GitHub Actions. Strengths: deep GitHub integration, the largest action marketplace, generous hosted-runner free tier, declarative YAML with reusable workflows. Best for: teams already on GitHub, OSS projects, anything where the social weight of GitHub matters. Weaknesses: GitHub-locked; hosted runners are not bottomless and large monorepos hit minute caps; YAML logic gets gnarly past a certain complexity.
+
+Jenkins. Strengths: maximum flexibility (Groovy is a real language; you can do anything), self-hosted by default so on-prem and air-gapped use cases are first-class, mature plugin ecosystem (~1,800 plugins). Best for: regulated environments, on-prem deployments, complex pipelines beyond YAML\'s reasonable reach. Weaknesses: operational overhead (Jenkins masters need ongoing care), plugin ecosystem is variably maintained (security CVEs frequent), Groovy is a meaningful learning curve.
+
+GitLab CI. Strengths: integrated with GitLab\'s full DevSecOps platform, declarative YAML with \`include:\` and rule-based logic, strong free tier including built-in container registry. Best for: teams that want a single-vendor DevOps platform; teams that need built-in SAST/DAST/dependency scanning without bolt-ons.
+
+CircleCI. Strengths: fastest hosted runners in benchmarks, mature parallelism and caching, Orbs are well-designed. Best for: build-time-sensitive teams, mid-size SaaS.
+
+Tekton / Argo Workflows. Strengths: Kubernetes-native (pipelines are CRDs), good fit for cloud-native platforms. Best for: platform teams building internal CI as a Kubernetes platform service.
+
+The pragmatic decision tree:
+
+If you are on GitHub and have no specific reason to be elsewhere → GitHub Actions. The marketplace + reusable workflows model is the path of least resistance.
+
+If you are on GitLab → GitLab CI. The platform integration is the value.
+
+If you have on-prem or regulated requirements that GitHub-hosted runners cannot satisfy → Jenkins.
+
+If you are already running heavy Kubernetes and want CI to be Kubernetes-native → Tekton or Argo Workflows.
+
+The realistic answer for new builds in 2026: GitHub Actions for most teams, GitLab CI for GitLab shops, Jenkins for legacy and on-prem.`,
+      },
+      {
+        question: 'How do you keep pipelines DRY across 30 microservices without creating a single point of failure?',
+        answer: `The problem is real: copy-pasted pipelines drift. Service A\'s pipeline gets a new security scan; service B\'s does not. The countermeasure is reusable pipeline definitions, but naive centralisation creates a different failure mode — one bad change breaks every downstream pipeline.
+
+Three patterns:
+
+Pattern 1: composite actions or templated steps for small reusable units. GitHub Actions composite actions, GitLab CI templates, Jenkins shared library steps. These are "function-call" sized — set up Java, install Node deps with cache, configure AWS credentials. Each service references them but composes its own pipeline. Strengths: low blast radius; easy to version and pin; clear contract between caller and callee.
+
+Pattern 2: reusable workflows for full pipeline shells. GitHub Actions \`workflow_call\`, GitLab CI \`include:\` of a full template, Jenkins shared library that exports a complete pipeline closure. The service repo\'s workflow file is three lines: "use the standard-node-build workflow with these inputs." All the heavy lifting lives in the central repo. Strengths: maximum DRY; one place to update for org-wide changes. Weaknesses: blast radius is the whole org; a buggy change in the central repo breaks 30 pipelines simultaneously.
+
+Pattern 3: code generators / scaffolds. The platform team ships a generator (cookiecutter, copier, custom CLI) that emits a fresh pipeline file into a service repo. Services own the resulting file; updates require running the generator again and accepting the diff. Strengths: services have full control. Weaknesses: less DRY.
+
+Most healthy orgs use a hybrid: pattern 2 for the standard shell with pattern 1 for the variable steps.
+
+Operating the central repo without creating a single point of failure:
+
+Versioning by tag, never by \`main\`. Downstream pipelines reference \`@v3\` (or \`@v3.2.1\`). The central repo can ship \`main\` updates daily without touching \`v3\`; downstream upgrades are explicit PRs.
+
+Backwards-compatible changes by default. New optional inputs, never renamed inputs. Major version bump for breaking changes.
+
+Test the central repo\'s workflows on a representative downstream consumer in a test repo.
+
+Run a canary. The platform team upgrades their own one or two pipelines to the new major version first; if smoke is fine, broaden the rollout.`,
+      },
+    ],
+    references: [
+      'https://docs.github.com/en/actions/using-workflows/reusing-workflows',
+      'https://www.jenkins.io/doc/book/pipeline/jenkinsfile/',
+      'https://docs.gitlab.com/ee/ci/yaml/',
+      'https://www.jetbrains.com/lp/devecosystem-2024/',
+    ],
+  },
+
+  {
+    id: 'test-pyramid',
+    title: 'Test Pyramid — Unit-Heavy, Integration-Mid, E2E-Sparse',
+    icon: 'layers',
+    color: '#22c55e',
+    questions: 3,
+    description: 'Mike Cohn\'s pyramid: many fast unit tests at the base, fewer integration, very few E2E. Avoid the ice-cream-cone anti-pattern.',
+    visualizations: [
+      {
+        title: 'The test pyramid + ice-cream cone anti-pattern',
+        description: 'Cohn\'s pyramid: ~70% unit, ~20% integration, ~10% E2E. The ice-cream cone is the inverted shape — heavy E2E, thin unit base — slow, brittle, expensive to maintain.',
+        image: '/diagrams/devops/b4-test-pyramid.png',
+      },
+    ],
+    introduction: `The test pyramid is Mike Cohn\'s mental model from Succeeding with Agile (2009) for distributing automated tests across levels of granularity. The shape is a triangle, widest at the base and narrowest at the top.
+
+Base: unit tests. Many, fast (milliseconds), isolated from external dependencies. Test individual classes, functions, modules.
+
+Middle: integration / service tests. Fewer, slower (seconds), test boundaries — database access, HTTP clients, message queues — usually with the system under test running in a controlled environment.
+
+Top: end-to-end / UI tests. Few, slowest (tens of seconds to minutes), test the full system as a user would.
+
+Rough proportions, frequently quoted: ~70% unit, ~20% integration, ~10% E2E. These are heuristics, not laws.
+
+Why the shape matters. Tests at different levels have different cost and signal characteristics:
+
+Speed: unit tests run in milliseconds; E2E tests run in tens of seconds to minutes. A 10,000-test unit suite finishes in under a minute; a 10,000-test E2E suite finishes never.
+
+Determinism: unit tests, written well, are deterministic. E2E tests fight asynchrony, network flakiness, environment drift, and shared-state contamination. Flake rates of 1-5% are normal for E2E and considered very low.
+
+Isolation of failure: when a unit test fails, the failing component is identified by the test. When an E2E test fails, the failing component could be any of a dozen, plus the environment, plus the test itself.
+
+Maintenance: every test is a maintenance liability. Unit tests are stable against refactors that preserve behaviour at the function level. E2E tests are stable against nothing — UI changes, latency tweaks, new feature flags — they break.
+
+The ice-cream cone anti-pattern (Alister Scott, 2012) is the inverted distribution: many manual / E2E tests, some service tests, few unit tests. It typically arises because: QA teams own testing and gravitate to user-facing tests; record-and-playback E2E tools are easy to start with; and there is a superficial argument that E2E tests "test what users see, so they are more real." The ice-cream cone produces hour-long suites with 10-30% flake rates.
+
+Modern refinements: Honeycomb / trophy (Kent C. Dodds) for frontend — static analysis at the bottom, integration in the middle, unit at the sides, E2E at the top. Diamond — contract tests in the middle replace some integration. Pact-driven contract tests of consumer/provider boundaries let you verify integration without standing up the other service.`,
+    whenToUse: [
+      'Designing the test strategy for any new service or feature — start with the pyramid as the default',
+      'Auditing an existing test suite that takes 90 minutes and produces 8% flake — almost always an ice-cream cone',
+      'Justifying investment in unit-test coverage to a team that "has E2E for everything"',
+      'Picking what to test at which layer when adding a new feature spanning UI, API, DB, and integrations',
+    ],
+    keyConcepts: [
+      {
+        term: 'Test pyramid (Cohn 2009)',
+        definition: 'Many fast unit tests at the base, fewer integration in the middle, very few E2E at the top. Heuristic ~70/20/10. The shape is essential; the exact percentages move per service. A pure data-transformation library is appropriately ~95% unit; a thin orchestrator is heavier on integration.',
+      },
+      {
+        term: 'Unit test',
+        definition: 'Tests a single function, method, or class in isolation from external dependencies. Runs in milliseconds. Deterministic. Failure points to the offending unit. The base of the pyramid by volume.',
+      },
+      {
+        term: 'Integration test',
+        definition: 'Tests a component plus one or more real dependencies (DB, message queue, HTTP client → mock server). Slower (seconds), still mostly deterministic. Catches failures unit tests cannot — schema mismatches, contract drift, transaction semantics.',
+      },
+      {
+        term: 'Contract test (Pact)',
+        definition: 'Verifies the interface between two services without standing up both. Pact is the canonical tool. Sits between unit and integration; cheap and decoupled. Reinstates a healthy middle layer between unit and full E2E in microservice architectures.',
+      },
+      {
+        term: 'End-to-end (E2E) test',
+        definition: 'Tests the full system as a user would, through real UI or API entry points, with real backing services. Slow, flaky, expensive — but verifies the whole stack. Use sparingly: only for critical user journeys that drive your SLOs.',
+      },
+      {
+        term: 'Ice-cream cone anti-pattern',
+        definition: '(Scott, 2012) Inverted distribution: heavy E2E, thin unit base. Slow suites, high flake, low signal. The most common test-strategy failure. Symptoms: 90-minute suites, 8% flake, "we retry failing tests three times," the team learns to ignore CI failures.',
+      },
+    ],
+    pitfalls: [
+      'Treating "test coverage %" as the goal — 100% line coverage with all-mocked dependencies tests nothing useful',
+      'Building heavy E2E first because it "feels real" — produces ice-cream cone suites that gradually destroy CI signal',
+      'Mocking everything in unit tests — tests pass; integrations break in prod. Mocks must be verified with at least one integration test per boundary',
+      'Using sleep() in tests — the right primitive is await/poll; sleep is the source of most flake',
+      'Sharing state across E2E tests — "test 47 leaves the system in a state that breaks test 48" is a recipe for nondeterminism',
+      'Running E2E in the commit stage — they are too slow; they belong in a later stage where their signal can be invested in without blocking commit feedback',
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain the test pyramid and why the proportions matter.',
+        answer: `The test pyramid distributes automated tests across three levels of granularity: many fast unit tests at the base, fewer integration tests in the middle, very few end-to-end tests at the top. Common heuristic: ~70% unit, ~20% integration, ~10% E2E.
+
+The proportions matter because tests at different levels have radically different cost and signal characteristics.
+
+Speed. A unit test runs in single-digit milliseconds. A 10,000-test unit suite finishes in under a minute. An E2E test runs in 5-60 seconds depending on what it touches; a 10,000-test E2E suite would finish in days. Cohn\'s pyramid is fundamentally about packing the most signal into the smallest amount of time, which is what makes a 10-minute commit stage feasible.
+
+Determinism. Unit tests, written well, are deterministic — same input, same output, no flake. Integration tests are mostly deterministic; the failure modes are real and worth catching. E2E tests are nondeterministic in practice — UI rendering races, async backend operations, environment drift, browser version changes. Industry baseline flake rate for serious E2E suites is 1-5%; "very low" by E2E standards is "intolerable" by unit standards.
+
+Failure isolation. When a unit test fails, it tells you which function broke. When an integration test fails, it narrows to which boundary. When an E2E test fails, it could be the UI, any of the backend services, the database, the network, the test itself, or the test environment. Mean-time-to-diagnosis grows with test scope.
+
+Maintenance. Tests are liabilities, not assets — every test costs you maintenance attention forever. Unit tests are stable against refactors that preserve function-level behaviour. E2E tests are unstable against any visible change — a new modal, a new field, a feature flag — they break. The maintenance multiplier between unit and E2E is roughly 5-10x in practice.
+
+The shape says: invest in cheap, fast, deterministic tests at the level of granularity where bugs originate, and use higher-level tests sparingly to verify the integrations that unit tests cannot see. A perfectly inverted pyramid (heavy E2E, thin unit) — the ice-cream cone — has the same total test count but the wrong shape.
+
+How the pyramid maps to CI: commit stage runs unit + fast integration (target 5 minutes). Acceptance stage runs slower integration + a small number of critical-path E2E (target 30-60 minutes). Capacity stage runs load tests, soak tests.`,
+      },
+      {
+        question: 'What is the ice-cream cone anti-pattern and why does it happen?',
+        answer: `The ice-cream cone (Alister Scott, 2012) is the inverted test pyramid: many manual / E2E tests at the top, some service tests in the middle, few unit tests at the bottom — sometimes with a "scoop of ice cream" of manual exploratory testing on top. It is the most common test-strategy failure mode in real teams.
+
+How it happens. Several pressures push teams toward it.
+
+QA-led testing organisations naturally gravitate to user-facing tests. If the QA team owns "test coverage" and they think about the product through the UI, they will write UI tests.
+
+Record-and-playback tools make E2E look easy. Selenium IDE, Cypress recorders, Playwright codegen — they show a path where you click through the app once and get a test "for free." It feels like a shortcut. The first 50 tests are fast to write; the 500th is unmanageable.
+
+The "real users" argument. There is a superficially compelling case that E2E tests are more real because they test what users actually see. The argument ignores that real-ness has cost: realness comes with flake, slowness, and brittle coupling to UI.
+
+Coverage metrics measured at the wrong level. If leadership asks "are we testing the product?" the easiest demonstration is a Cypress dashboard with 200 green tests. Unit-test coverage is invisible to non-engineers; UI test coverage is a slick demo.
+
+Lack of testable architecture. Code that was not designed for unit testing — God-class controllers, untestable static dependencies, no dependency injection — pushes the team toward higher-level tests because lower-level ones are physically hard to write.
+
+Consequences. Suite duration: E2E suites of 200-500 tests routinely take 30-90 minutes. They cannot fit in a commit stage. Flake rate: 5-15% flake is normal in E2E-heavy suites. Failure attribution: when test 47 fails, was it the new code, the test, or the environment? Diagnosis takes hours per failure.
+
+Inverting back to the pyramid: stop adding new E2E tests except for the most critical user journeys; add unit tests for every bug fix; refactor for testability; quarantine flaky E2E; measure shape (count tests per level, track the ratio over time).`,
+      },
+      {
+        question: 'Where do contract tests fit, and why are they increasingly popular?',
+        answer: `Contract tests verify the interface between two services without standing up both at the same time. Pact (pact.io, originated at Realestate.com.au, ~2013) is the canonical tool.
+
+The problem they solve. Microservice architectures break the integration test promise. With one service and a few unit tests, integration coverage from real database+real HTTP works fine. With 30 services, end-to-end integration testing — standing up all 30 to test one interaction — is impractical and slow. The pyramid\'s middle layer hollows out.
+
+Contract tests fill that hollow. They test the contract between consumer and provider — what each side promises about what the other will send and receive — without requiring both to be running.
+
+How Pact-style consumer-driven contracts work. The consumer service writes a test that makes a request to a Pact mock server and asserts the response. The mock server records what the consumer sent and the response shape it expected. The recording is the pact (a JSON document). The pact is published to a Pact Broker. The provider service\'s pipeline reads the pacts and verifies its own behaviour matches: for every request the consumer is recorded as sending, does the provider produce the response the consumer expected? If yes, the integration is verified. If no, the integration is broken.
+
+Properties. Each side\'s test runs in isolation. The consumer does not need the provider running; the provider does not need the consumer running. Failures are attributed: it is clear which side\'s test failed and what the mismatch was. Tests run in seconds. Coverage is by usage — the consumer drives what is tested.
+
+Why they are increasingly popular. Microservice scale: anything past 10 services starts feeling integration-test pain. Independent deployability: the promise of microservices is independent deploys; without contract tests, "independent" is a polite fiction because every deploy risks breaking some consumer. Pyramid restoration: they reinstate a healthy middle layer between unit and full E2E.
+
+Where contract tests fit in the pyramid. Between unit and integration. They are broader than unit (test the interface contract) but narrower than integration (do not run real services). Run them in the commit stage. They are fast enough that a few hundred contract tests still fit in <5 minutes.
+
+Limits. Contract tests verify the contract, not the implementation. The provider can satisfy the contract and still have an internal bug. You still need real integration / E2E for behaviour verification.
+
+When to adopt: ≥5 services owned by ≥3 teams; independent deployability is a real goal. When to skip: monolith or 2-3 service deployment; single team owns all services.`,
+      },
+    ],
+    references: [
+      'https://martinfowler.com/articles/practical-test-pyramid.html',
+      'https://martinfowler.com/bliki/TestPyramid.html',
+      'https://docs.pact.io/',
+      'https://watirmelon.blog/2012/01/31/introducing-the-software-testing-ice-cream-cone/',
+    ],
+  },
+
+  {
+    id: 'monorepo-build-systems',
+    title: 'Monorepo Build Systems — Bazel, Nx, Turborepo, Pants',
+    icon: 'package',
+    color: '#22c55e',
+    questions: 3,
+    description: 'Hermetic builds, dependency graphs, remote caching, incremental rebuilds. How Google, Meta, Microsoft, Vercel keep monorepos fast.',
+    visualizations: [
+      {
+        title: 'Monorepo build graph + remote cache',
+        description: 'Build systems compute a target dependency graph, hash inputs per target, and consult a remote cache for hits. Cache hit → skip. Cache miss → build + write back. Incremental builds skip everything not affected by the change.',
+        image: '/diagrams/devops/b5-monorepo-build.png',
+      },
+    ],
+    introduction: `A monorepo is a single repository containing multiple projects (services, libraries, frontends). The pattern is mainstream — Google\'s monorepo is the canonical extreme (~2 billion lines, multi-thousand engineers; Potvin & Levenberg, "Why Google Stores Billions of Lines of Code in a Single Repository," CACM 2016). Meta (Mercurial-based), Microsoft (Windows on Git, with VFS for Git), and many product companies use the model.
+
+The problem build systems solve. Naive monorepo CI runs every test on every change. With 500 packages, even ten-second test suites per package mean 80 minutes per CI run. Worse, each developer\'s local builds also re-run everything, killing iteration speed. The job of a monorepo build system is incremental, hermetic, cacheable builds: only build/test what actually changed, share the work across runs and machines.
+
+Three core capabilities:
+
+Dependency graph. The build system parses build files (BUILD, project.json, turbo.json, BUILD.pants) and computes a directed acyclic graph of targets and their dependencies. A change to package A invalidates A and everything that depends on A — but nothing else.
+
+Hermetic builds. Build inputs are fully declared. The build system knows every source file, every dependency, every toolchain version that influences a target\'s output. Hermeticity is what makes caching trustworthy: same inputs → same outputs, byte-identical, every time.
+
+Remote caching. Built artifacts are keyed by a hash of all declared inputs and stored in a shared cache. The first developer builds; everyone after — local or CI — gets a cache hit and skips the work.
+
+Tools, comparing on language scope and design philosophy:
+
+Bazel (Google, 2015 open-source release of internal Blaze). Multi-language. Strict hermeticity. Strong remote-execution support. Steep learning curve. Used by Google, Pinterest, Stripe, Dropbox.
+
+Pants (Twitter, Foursquare; v2 rewrite ~2020). Python-and-friends focus, then expanded. Engine in Rust. Easier on-ramp than Bazel for Python-heavy stacks.
+
+Buck2 (Meta, 2023 open source). Rust rewrite of Meta\'s Buck. Designed for Meta scale.
+
+Nx (Nrwl, formerly an Angular tooling shop). JavaScript / TypeScript focus, with growing multi-language support. Project-graph based, less strict than Bazel. Hosted Nx Cloud for remote cache.
+
+Turborepo (Vercel, acquired ~2021). JavaScript / TypeScript only. Lighter than Nx — less feature surface, simpler config. Hosted Vercel Remote Cache.
+
+Pnpm workspaces / Yarn workspaces / Lerna. Package-management tier; not real build systems. Often combined with Turborepo or Nx for build-system features.`,
+    whenToUse: [
+      'Designing the build/test strategy for a monorepo with >20 packages and >5 contributors',
+      'Diagnosing slow CI in a monorepo where every change rebuilds everything',
+      'Choosing between Turborepo, Nx, and Bazel for a new monorepo',
+      'Justifying the migration cost from polyglot polyrepo to monorepo with a build system',
+    ],
+    keyConcepts: [
+      {
+        term: 'Monorepo',
+        definition: 'Single repository containing multiple projects (services, libraries, frontends). Counter-pattern: polyrepo (one repo per project). Trade-offs: monorepo gives atomic cross-cutting changes and shared tooling at the cost of build-system investment; polyrepo is simpler to start but fragments tooling.',
+      },
+      {
+        term: 'Hermetic build',
+        definition: 'Build whose inputs are fully declared. Same inputs produce byte-identical outputs across machines and time. Foundation for trustworthy caching. Bazel enforces; Nx and Turborepo trust the developer to declare correctly.',
+      },
+      {
+        term: 'Build graph / target graph',
+        definition: 'DAG of build targets and their dependencies. Tools traverse the graph to compute the minimum work for a given change. The graph is what enables "affected projects" — only build/test what actually changed.',
+      },
+      {
+        term: 'Remote cache',
+        definition: 'Shared content-addressed store of built artifacts keyed by input hashes. First builder pays; everyone else gets cache hits. With strong hermeticity, cache hits compose: if A is cached and B depends only on A and unchanged sources, B is cached too.',
+      },
+      {
+        term: 'Remote execution',
+        definition: 'Beyond caching: dispatching build/test actions to a remote compute pool. Bazel\'s most powerful feature for Google-scale repos. Buildbarn, BuildBuddy, EngFlow are the prominent backends. Overkill below several hundred packages.',
+      },
+      {
+        term: 'Affected projects',
+        definition: 'In looser tools (Nx, Turborepo): the subset of the monorepo whose tests should run for a given change set. Computed by walking the dependency graph from changed files. The basis for efficient CI in monorepos.',
+      },
+    ],
+    pitfalls: [
+      'Adopting Bazel for a 5-package JS monorepo — complexity dwarfs benefit',
+      'Trusting cache hits without verifying hermeticity — a non-hermetic build with caching produces stale artifacts that pass tests they should not',
+      'Letting projects import each other freely — the dependency graph becomes a complete graph; "affected projects" is always "everything"',
+      'No remote cache — each developer\'s local build pays full cost; CI pays full cost; the build-system value collapses',
+      'Floating dependencies — cache misses every build because npm pulls a different transitive set; lockfile + frozen-installs are mandatory',
+      'Treating monorepo as a deployment unit — the repo is a development unit; deployments are still per-service',
+    ],
+    keyQuestions: [
+      {
+        question: 'What problem does a monorepo build system solve that pnpm workspaces does not?',
+        answer: `pnpm workspaces (and yarn/npm workspaces, Lerna) solve dependency management within a monorepo: deduplicated installation of node_modules, internal packages referenced by name with auto-linking, run-script-across-packages helpers. They do not solve the build problem.
+
+The build problem in a monorepo: naive CI runs every test on every change. With 50 packages averaging a 30-second test suite, every commit costs 25 minutes of wall-clock time. Naive local development rebuilds everything to verify a change. Build outputs are not shared — the first developer building feature X pays the cost; the second pays it again.
+
+Real build systems (Turborepo, Nx, Bazel, Pants) add four capabilities pnpm does not:
+
+Dependency graph computation. The build system parses package configurations and computes a target DAG: which packages depend on which, transitively. A change to packages/utils invalidates utils plus every package that depends on it — directly or transitively. Other packages are not invalidated. CI for that change runs tests only on the affected subset.
+
+Per-target input hashing. Every build target has a hash computed from all declared inputs: source files, dependency hashes, toolchain version, environment variables. Same hash → same output.
+
+Remote caching. The hash is a key into a content-addressed cache. If a target\'s hash matches a cached entry, the build system fetches the cached output instead of rebuilding. The cache is shared across machines: developer A\'s build populates the cache; developer B and CI hit.
+
+Pipeline orchestration. The build system sequences targets respecting the DAG: build dependencies before dependents, parallelise independent paths.
+
+A worked comparison. 80-package JS monorepo, 10-minute total test suite. With pnpm alone, every CI run executes \`pnpm -r test\` and takes 10 minutes per PR. With Turborepo + remote cache, change one package; 6 packages affected; tests on those 6 (~45 seconds); the other 74 packages\' tests are cache hits (~5 seconds total). Total CI: under a minute.
+
+When pnpm workspaces alone is enough: 3-10 packages, ≤2 contributors, total test suite under 5 minutes. When you need a real build system: >15 packages or test suite >5 minutes.`,
+      },
+      {
+        question: 'How does remote caching work, and what does hermeticity have to do with it?',
+        answer: `Remote caching transforms a per-machine build cache into a shared one. Built artifacts (compiled binaries, test results, generated code) are stored in a content-addressed remote store, keyed by a hash of all the build inputs. The first builder pays; everyone afterwards — other developers, CI runners, even the same developer on a fresh checkout — gets a cache hit and skips the work entirely.
+
+Mechanically: for each build target T, the build system computes a hash. The hash includes every source file\'s content, every transitive dependency\'s hash, the toolchain version, declared environment variables, build flags. The hash is stable: same inputs → same hash, byte-for-byte. The build system queries the remote cache for that hash. Cache hit: fetch the artifact, skip running the build action. Cache miss: run the build action, capture outputs, write them to the cache keyed by the hash.
+
+Hermeticity is the precondition that makes caching trustworthy. A hermetic build is one whose declared inputs fully determine its outputs. If you have declared every source file, every dependency, every toolchain version that affects the output, then "same hash → same output" is true. You can cache safely.
+
+A non-hermetic build has hidden inputs: the system clock at build time, the user\'s $HOME, an environment variable nobody declared, a network request to a moving target. The hash computed from declared inputs is the same on machine A and machine B, but the actual outputs differ. Cache the artifact from machine A; serve it on machine B; the served artifact is wrong.
+
+Wrong cached artifacts manifest as: tests pass on CI but fail locally; tests pass locally but fail on CI; mysterious test flake that disappears when you bust the cache.
+
+How tools enforce hermeticity. Bazel sandbox: build actions run in a sandbox with only declared inputs visible. Strong enforcement; high adoption cost. Nx and Turborepo trust the developer to declare inputs correctly; the default behavior reads source files based on configuration.
+
+Operational considerations. Cache hit rate is the metric. A healthy hit rate is 80-95% for an active monorepo. Below 70%: hermeticity issues. Cache size grows; set retention policies. Cache poisoning is a supply-chain risk — signed artifacts (Sigstore, SLSA), separate write paths from read paths, cache invalidation on toolchain bumps.
+
+The DORA elite-tier impact: full pipelines under 30 minutes for a real-shape monorepo are essentially impossible without remote caching. With it, change-after-change in non-overlapping packages have 95%+ cache hits and finish in a couple of minutes.`,
+      },
+      {
+        question: 'When should you choose Bazel over Nx or Turborepo?',
+        answer: `Bazel pays off when its strict hermeticity, multi-language scope, and remote-execution capability solve real problems you have. For most teams, Nx or Turborepo is the better default; Bazel\'s cost (learning curve, configuration burden, BUILD-file maintenance) is high and only justified at certain scales and shapes.
+
+Choose Bazel when:
+
+Multi-language monorepo. Java + Go + Python + TypeScript + C++ in the same repo. Bazel handles all of them with a single, consistent build model. Nx\'s multi-language support is improving but still strongest in JS/TS; Turborepo is JS/TS only.
+
+Hermeticity is a hard requirement. You are producing artifacts that go to regulated environments (medical, finance, defence) and need byte-identical reproducibility from a given commit. Bazel\'s sandboxed builds are the strongest commercial-tooling guarantee available.
+
+Build / test workload exceeds what local + remote cache can absorb. With remote execution (Buildbarn, BuildBuddy, EngFlow), Bazel dispatches build actions to a build cluster, parallelising across hundreds of cores.
+
+You are at a scale where the build-system overhead is amortised — typically multi-hundred-package monorepos with dedicated build-systems engineers.
+
+Stick with Nx when: JavaScript / TypeScript monorepo with mixed needs (frontend + backend Node services, sometimes with a sprinkle of Python or Go). Nx\'s \`executors\` model handles the polyglot case well enough. You want a structured framework with strong opinions: code generators, plugin ecosystem, project-graph-based affected-only commands, hosted Nx Cloud.
+
+Stick with Turborepo when: JS / TS only, often Next.js + Vercel deployment. You want minimum config, minimum tooling, minimum learning curve. You want hosted Vercel Remote Cache out of the box.
+
+Comparing the day-to-day experience.
+
+Bazel: BUILD files in every package, every target explicitly declared, every dependency listed. A simple Node service has 30+ lines of BUILD config plus rules_nodejs setup. Powerful but verbose.
+
+Nx: project.json or implicit project detection. New package: \`nx generate library\`. Targets defined per project; common patterns (build, test, lint) are conventions. Less verbose; more magic.
+
+Turborepo: turbo.json at the root with task definitions; per-package package.json is the source of truth. Almost no config; almost no magic.
+
+Migration cost. Bazel: 2-6 months for a real codebase to migrate properly. Nx: weeks. Turborepo: hours to days.
+
+A pragmatic decision tree. JS-only, Vercel-deployed, low complexity: Turborepo. JS-only, mid complexity, want frameworks: Nx. Multi-language + JS heavy, mid complexity: Nx (improving multi-lang) or carefully evaluate Bazel. Multi-language, high complexity, regulated, or extreme scale: Bazel. Anything below 15 packages: pnpm workspaces alone is fine.
+
+The trap to avoid. Many teams choose Bazel because Google uses it, then spend a year fighting BUILD files and ship slower than they would have with Turborepo.`,
+      },
+    ],
+    references: [
+      'https://bazel.build/concepts/build-graph',
+      'https://nx.dev/concepts/mental-model',
+      'https://turbo.build/repo/docs/core-concepts/caching',
+      'https://www.pantsbuild.org/docs/welcome-to-pants',
+      'https://cacm.acm.org/magazines/2016/7/204032-why-google-stores-billions-of-lines-of-code-in-a-single-repository/',
+    ],
+  },
+
+  {
+    id: 'trunk-based-development',
+    title: 'Trunk-Based Development — Short-Lived Branches, Feature Flags',
+    icon: 'gitBranch',
+    color: '#22c55e',
+    questions: 3,
+    description: 'Paul Hammant\'s definition: everyone integrates to trunk daily, branches live hours not weeks, feature flags hide incomplete work.',
+    visualizations: [
+      {
+        title: 'Trunk-based vs Git Flow vs GitHub Flow',
+        description: 'Trunk-based: short-lived (hours-day) branches off main, merged back constantly, feature flags for incomplete work. Git Flow: long-lived develop + release branches, weekly+ integration. GitHub Flow: feature branches off main, merged via PR; close to trunk-based but typically with longer-lived branches.',
+        image: '/diagrams/devops/b6-trunk.png',
+      },
+    ],
+    introduction: `Trunk-based development (TBD) is the source-control branching model where all developers commit to a single shared branch (trunk / main) at least once a day, with branches — when used at all — living hours, not weeks. The canonical reference is trunkbaseddevelopment.com (Paul Hammant, 2017+).
+
+Hammant\'s verbatim definition: "Trunk-Based Development is a source-control branching model, where developers collaborate on code in a single branch called \'trunk\' (in Git, this is the \'main\' branch), resist any pressure to create other long-lived development branches by employing documented techniques."
+
+Two flavours:
+
+Pure trunk-based. Every developer commits directly to trunk. No PRs. Pre-commit local CI, post-commit team CI. Used at Google (with extensive code review tooling), Facebook/Meta (Phabricator). Requires high test maturity and culture discipline; rare outside FAANG.
+
+Branch-based trunk-based ("scaled" TBD). Developers create a short-lived branch (hours to a day), open a PR, get review, merge to trunk same day. The branch is a pre-merge mechanism; the integration discipline is identical to pure TBD. This is the form most product teams adopt.
+
+Why it matters. DORA\'s research (Accelerate, 2018) consistently identifies trunk-based development as one of the strongest predictors of high software-delivery performance. Teams with fewer than 3 active branches and branch lifetimes under a day are correlated with elite delivery performance. Teams with long-lived feature branches and infrequent integration correlate with low performance.
+
+The mechanism: small batches of integration produce small merge conflicts, fast feedback, easy attribution of regressions, and a continuously-shippable trunk. The opposite — long-lived branches — produces big merges, big conflicts, big debug sessions, and a trunk that is never confidently shippable.
+
+Comparison to Git Flow (Vincent Driessen, 2010). Git Flow has long-lived \`develop\` and \`release\` branches plus feature branches, hotfix branches, and tagged releases on \`main\`. The model was designed for software with explicit release cadences (downloadable products, versioned libraries) and works well for those. It is a poor fit for SaaS / continuous-delivery contexts. Driessen himself (2020 update) noted the model was meant for versioned software, not web apps.
+
+Comparison to GitHub Flow (GitHub, 2011). Simpler model: feature branches off main, PR for review, merge to main, deploy. In practice, GitHub Flow ranges from "TBD with PR review" (short-lived branches, daily integration) to "TBD\'s enemy" (week-long feature branches with PRs nobody reviews). The branch lifetime is what matters.
+
+Feature flags are the engineering technique that makes TBD viable for incomplete work. Instead of working on a long-lived branch until the feature is done, you merge incomplete code to trunk behind a flag — \`if (featureFlag.isEnabled(\'new-checkout\', user)) { ... }\`. Pete Hodgson\'s 2017 Martin Fowler article on feature toggles is the canonical reference.`,
+    whenToUse: [
+      'Designing the branching strategy for a new product team — start at TBD, not Git Flow',
+      'Diagnosing slow delivery in a team with week-long feature branches and "merge week" pain',
+      'Justifying feature-flag platform investment to leadership — it is the engineering enabler for TBD',
+      'Migrating off Git Flow for a SaaS product where versioned releases are not the constraint',
+    ],
+    keyConcepts: [
+      {
+        term: 'Trunk-based development (Hammant)',
+        definition: 'Branching model where developers integrate to a shared trunk (main) at least daily, with branches living hours-to-a-day. Verbatim from trunkbaseddevelopment.com: "developers collaborate on code in a single branch called trunk."',
+      },
+      {
+        term: 'Feature flag (Hodgson 2017)',
+        definition: 'Boolean (or richer) gate around new code. Lets incomplete work merge to trunk behind a default-off flag. Categories: release toggles (release control), experiment toggles (A/B), ops toggles (kill switches), permission toggles (entitlements). Required for TBD on non-trivial features.',
+      },
+      {
+        term: 'Branch by abstraction',
+        definition: 'Pattern for large refactors without long-lived branches: introduce an abstraction layer, migrate consumers behind the layer one-by-one, swap the implementation, remove the old code. All changes land on trunk. Avoids the "refactor branch" trap.',
+      },
+      {
+        term: 'Git Flow (Driessen 2010)',
+        definition: 'Branching model with long-lived develop, release, feature, hotfix branches. Designed for versioned software (libraries, downloadable products); poor fit for SaaS / continuous delivery. Driessen himself qualified the model in a 2020 update.',
+      },
+      {
+        term: 'GitHub Flow',
+        definition: 'Simpler model: branches off main, PR review, merge, deploy. Compatible with TBD if branches stay short-lived; becomes anti-TBD when branches live for days. Branch lifetime is what matters.',
+      },
+      {
+        term: 'DORA empirical evidence',
+        definition: 'Accelerate (Forsgren, Humble, Kim, 2018): teams with fewer than 3 active branches and branch lifetimes under a day correlate with elite delivery performance. Long-lived feature branches correlate with low/medium performance.',
+      },
+    ],
+    pitfalls: [
+      'Calling GitHub Flow with week-long branches "trunk-based development" — it is the branch lifetime that matters, not the model name',
+      'Adopting TBD without a self-testing build — without test coverage to catch regressions, frequent integration just spreads bugs faster',
+      'Long-lived feature branches "because the feature is too big" — that is the failure mode; break the feature down or use feature flags',
+      'Feature flags that live forever — each unretired flag is a compounding combinatorial test burden',
+      'Skipping code review entirely under "pure TBD" without compensating tooling — most teams are not Google; pre-merge review is appropriate',
+      'Using feature flags as the only safety net while skipping progressive rollout — flags + canary together; flags alone allow a buggy flagged-on path to hit 100% on day one',
+    ],
+    keyQuestions: [
+      {
+        question: 'Define trunk-based development and contrast it with Git Flow.',
+        answer: `Trunk-based development is the source-control model where all developers commit to a single shared branch at least once a day, with branches — when used at all — living hours, not weeks.
+
+Git Flow (Vincent Driessen, 2010) is the opposite shape. It defines a long-lived \`develop\` branch as the integration branch, a long-lived \`main\` branch reflecting the latest production release, feature branches off \`develop\`, release branches off \`develop\` for stabilisation, hotfix branches off \`main\`, and tagged releases on \`main\`.
+
+The key structural difference: Git Flow has multiple long-lived branches; trunk-based has one. Git Flow\'s \`develop\` is meant to be a continuously-integrating branch, but the model also encourages feature branches that may live for the duration of a feature — days to weeks — before merging back. The merge-back-to-develop step is exactly the long-lived integration cost TBD is designed to eliminate.
+
+When Git Flow makes sense. Driessen himself, in a 2020 update on his original post, qualified the model: "If your team is doing continuous delivery of software, I would suggest to adopt a much simpler workflow (like GitHub Flow) instead of trying to shoehorn Git Flow into your team. If, however, you are building software that is explicitly versioned, or if you need to support multiple versions of your software in the wild, then Git Flow may still be as good of a fit to your team as it has been to people in the last 10 years."
+
+That is the right test. Versioned downloadable software (a database, a programming language, a packaged on-prem product) genuinely needs the release-branch model — multiple versions in support, hotfixes to old releases, structured deprecation. Git Flow handles that well.
+
+When TBD makes sense. SaaS, web apps, internal tools, microservices — anything where there is one production version at a time and continuous delivery is the operating mode. DORA\'s State of DevOps reports show elite performers overwhelmingly use trunk-based development.
+
+The mechanism is empirical: short-lived branches mean small merges, small conflicts, small attribution windows when things break, and a continuously shippable trunk. Long-lived branches mean big merges, painful conflicts, multi-feature regressions, and a trunk that is never quite ready.
+
+The interview test. If a candidate says "we use Git Flow for our SaaS product," follow up with "how long do feature branches live?" The honest answer is usually "feature branches live a week and we merge when QA approves" — at which point you have identified a delivery bottleneck.`,
+      },
+      {
+        question: 'How do feature flags enable trunk-based development for large features?',
+        answer: `Feature flags are the engineering technique that makes TBD viable for work that does not fit in a single day. The principle: instead of developing a feature on a long-lived branch until it is done, you merge incomplete code to trunk continuously, gated behind a flag that defaults to off in production.
+
+Pete Hodgson\'s canonical 2017 Martin Fowler article ("Feature Toggles (aka Feature Flags)") is the foundational reference. Hodgson categorises four flavors:
+
+Release toggles. Hide incomplete features in production until the feature is ready for release. Default off; flipped on by deployment-time config or platform when ready. Short-lived (days to weeks); retire after release.
+
+Experiment toggles. A/B test variants. Flag value depends on user-cohort assignment; back-end logs which variant served. Lifetime: weeks to months. Retire after experiment concludes.
+
+Ops toggles. Operational kill-switches. Disable a problematic code path in production without redeploying. Lifetime: long, possibly permanent.
+
+Permission toggles. Premium features for paying users, beta access for selected accounts. Lifetime: long, possibly permanent.
+
+The TBD-enabling pattern uses release toggles primarily. Worked example for a large feature.
+
+Day 1: dev creates a short-lived branch, adds the new feature flag (default off), and the bare scaffolding for the feature behind the flag. Merges to trunk same day.
+
+Day 2-N: dev continues adding code behind the flag in additional small branches. Each branch is reviewed and merged daily. The feature is incomplete; production users see no change because the flag is off.
+
+Mid-development: dev enables the flag in dev/staging environments to verify behaviour. CI runs both flag-on and flag-off paths.
+
+Day "ready": flag is enabled for internal users. Then 1% of production. Then 10%. Then 100%. Each step is observed for SLO regression.
+
+Day "complete": feature is at 100%. Flag is removed in a follow-up PR.
+
+Why this is better than a long-lived branch. Continuous integration: the feature\'s code is integrated against trunk on day 1 and every day thereafter. Conflicts are tiny. Decoupled deploy from release: the feature can deploy weeks before it is released to users. Instant rollback: if the feature misbehaves at 10% rollout, flip the flag off. Gradual rollout: same flag mechanism enables percentage rollout, cohort targeting, geo targeting.
+
+Operational considerations. Default off in production. Always. Test both paths — the CI suite must run with the flag on and with the flag off for any flag in production. Retire flags promptly — a release toggle that lives forever is technical debt. Dynamic vs static flags — dynamic flags (LaunchDarkly, Split, Statsig, Unleash, ConfigCat) flip in real time, support targeting, integrate with observability. Most teams need dynamic flags past 5-10 active flags.`,
+      },
+      {
+        question: 'How do you migrate a team off Git Flow to trunk-based development?',
+        answer: `Migration is incremental, not a flip-the-switch operation. The end state — short-lived branches, daily integration, feature flags for incomplete work — depends on prerequisite practices that take weeks to months to build.
+
+A staged migration over typical 3-6 months:
+
+Stage 1: shorten branch lifetimes (weeks 1-4). The biggest single win is reducing branch lifetime from days to ≤1 day. Do not change the branching model yet; change the discipline. Set a branch-lifetime target (e.g., ≤24 hours from creation to merge). Make active-branch count visible. Push back on PRs that span days. The default reaction to "this is taking too long to review" is "split the PR," not "wait." Encourage smaller, more incremental PRs.
+
+Stage 2: invest in self-testing build (weeks 4-8, often parallel with stage 1). TBD without a self-testing build is roulette. Audit unit-test coverage and quality. Add integration tests at boundaries. Get the commit-stage build under 10 minutes. Quarantine flake.
+
+Stage 3: introduce feature flags (weeks 6-12). Without flags, large features force long branches. Pick a flag platform (LaunchDarkly, Split, Unleash). Establish flag conventions: default off in production, retire within N weeks of 100% rollout. Pilot on one feature: take a feature currently planned for a long-lived branch, restructure it as a flagged trunk-based feature.
+
+Stage 4: simplify the branching model (weeks 8-16). Once branches are short and flags are available, the Git Flow scaffolding becomes unnecessary. Stop creating long-lived \`develop\` and \`release\` branches. Adopt GitHub-Flow-style: branch off main, PR, merge same day, deploy from main. Update CI to run pipelines off main.
+
+Stage 5: automate progressive rollout (weeks 12-24). This is the Continuous-Delivery polish. Wire your deploy system to support canary, percentage, or ring-based rollout. Automate rollback on SLO regression. Track DORA metrics — deploy frequency, lead time, change failure rate, MTTR — as outcome measures.
+
+Common migration failures. Skipping stage 2: team adopts TBD culturally without test investment; defects rise; team retreats. The fix is sequence: tests first. Skipping stage 3: big features cannot fit in a day without flags; team carves "exception" long branches; pattern erodes. Big-bang migration: "next sprint we adopt TBD" without prep, everything breaks at once. The staged approach is slower but actually works.
+
+What success looks like. Median branch lifetime under 24 hours, p95 under 48 hours. Fewer than 5 active branches per team at any time. Deployment frequency at least daily. Lead time from commit to production under a day. Change failure rate below 15%. Engineers describe the workflow as "fast" rather than "scary."`,
+      },
+    ],
+    references: [
+      'https://trunkbaseddevelopment.com/',
+      'https://martinfowler.com/articles/feature-toggles.html',
+      'https://nvie.com/posts/a-successful-git-branching-model/',
+      'https://dora.dev/research/',
+      'https://docs.github.com/en/get-started/quickstart/github-flow',
+    ],
+  },
+
 ];
