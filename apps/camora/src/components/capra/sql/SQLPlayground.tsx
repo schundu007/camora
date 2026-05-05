@@ -204,10 +204,20 @@ function SchemaTable({ table }: { table: SqlProblem['tables'][0] }) {
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
+  // Honor ?sqlProblem=<title> from the URL — Prepare's "Solve" buttons in SQL
+  // topics deep-link to a specific problem (matched case-insensitively by title).
+  const initialFromUrl = (() => {
+    if (typeof window === 'undefined') return null;
+    const requested = new URLSearchParams(window.location.search).get('sqlProblem');
+    if (!requested) return null;
+    const want = requested.trim().toLowerCase();
+    return SQL_PROBLEMS.find((p) => p.title.toLowerCase() === want) ?? null;
+  })();
+
   // ── State ───────────────────────────────────────────────────────────────
   const [db, setDb] = useState<SqlJsDatabase | null>(null);
   const [dbReady, setDbReady] = useState(false);
-  const [selectedProblemId, setSelectedProblemId] = useState<number>(SQL_PROBLEMS[0]?.id ?? 1);
+  const [selectedProblemId, setSelectedProblemId] = useState<number>(initialFromUrl?.id ?? SQL_PROBLEMS[0]?.id ?? 1);
   const [code, setCode] = useState('');
   const [output, setOutput] = useState<QueryResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -221,7 +231,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
     }
   });
   const [submitResult, setSubmitResult] = useState<'correct' | 'wrong' | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState(SQL_CATEGORIES[0]?.id ?? 'basic-joins');
+  const [selectedCategory, setSelectedCategory] = useState(initialFromUrl?.category ?? SQL_CATEGORIES[0]?.id ?? 'basic-joins');
   const [, setShowHints] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
