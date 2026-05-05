@@ -151,6 +151,79 @@ def diag_multi_cloud():
     print('Generated: b4-multi-cloud')
 
 
+# ── C1: Three pillars of observability ──────────────────────────────
+def diag_three_pillars():
+    g = base_graph('c1_three_pillars', 'Observability — three pillars (metrics, logs, traces)')
+    n(g, 'sys', 'Production system\n(services, infra,\nuser requests)', 'gray')
+    n(g, 'm', 'Metrics\n(numerical, time-series)\nPrometheus, Mimir\n→ aggregates, alerts', 'navy')
+    n(g, 'l', 'Logs\n(structured events)\nLoki, Elastic\n→ debug, audit', 'green')
+    n(g, 't', 'Traces\n(distributed spans)\nTempo, Jaeger\n→ causality, latency', 'purple')
+    n(g, 'otel', 'OpenTelemetry\n(unified collector +\nstandard wire format)', 'gold')
+    e(g, 'sys', 'otel', 'instrument')
+    e(g, 'otel', 'm', 'metrics')
+    e(g, 'otel', 'l', 'logs')
+    e(g, 'otel', 't', 'traces')
+    g.render(os.path.join(OUT, 'c1-three-pillars'), cleanup=True)
+    print('Generated: c1-three-pillars')
+
+
+# ── C2: RED vs USE methods ──────────────────────────────────────────
+def diag_red_use():
+    g = base_graph('c2_red_use', 'RED (services) vs USE (resources) vs Four Golden Signals')
+    n(g, 'svc', 'Service-level\n(request-driven)', 'navy')
+    n(g, 'red', 'RED\n• Rate (req/sec)\n• Errors (% failed)\n• Duration (latency p50/p99)', 'green')
+    n(g, 'gold', 'Four Golden Signals\n• Latency\n• Traffic\n• Errors\n• Saturation', 'gold')
+    n(g, 'res', 'Resource-level\n(host / disk / network)', 'gray')
+    n(g, 'use', 'USE\n• Utilization (% busy)\n• Saturation (queue depth)\n• Errors (counter)', 'red')
+    e(g, 'svc', 'red', 'measure with')
+    e(g, 'svc', 'gold', 'or measure with')
+    e(g, 'res', 'use', 'measure with')
+    g.render(os.path.join(OUT, 'c2-red-use'), cleanup=True)
+    print('Generated: c2-red-use')
+
+
+# ── C4: Prometheus + Grafana stack ──────────────────────────────────
+def diag_prom_stack():
+    g = base_graph('c4_prom_stack', 'Modern observability stack (Prometheus, OTel, Grafana LGTM)')
+    n(g, 'app', 'Application\n(instrumented)', 'gray')
+    n(g, 'otel', 'OpenTelemetry\nCollector', 'gold')
+    n(g, 'prom', 'Prometheus /\nMimir\n(metrics)', 'navy')
+    n(g, 'loki', 'Loki\n(logs)', 'green')
+    n(g, 'tempo', 'Tempo / Jaeger\n(traces)', 'purple')
+    n(g, 'graf', 'Grafana\n(dashboards +\nalerts + correlation)', 'red')
+    n(g, 'am', 'Alertmanager\n(routing,\nde-dup, silence)', 'teal')
+    e(g, 'app', 'otel')
+    e(g, 'otel', 'prom')
+    e(g, 'otel', 'loki')
+    e(g, 'otel', 'tempo')
+    e(g, 'prom', 'graf')
+    e(g, 'loki', 'graf')
+    e(g, 'tempo', 'graf')
+    e(g, 'prom', 'am', 'alert rules')
+    e(g, 'am', 'graf', '', '#94a3b8', 'dotted')
+    g.render(os.path.join(OUT, 'c4-prom-stack'), cleanup=True)
+    print('Generated: c4-prom-stack')
+
+
+# ── C6: Distributed trace waterfall ─────────────────────────────────
+def diag_trace_waterfall():
+    g = base_graph('c6_trace', 'Distributed trace — span tree across services')
+    g.attr(rankdir='TB')
+    n(g, 'gw',  'Gateway\n[span 1] 200ms', 'navy')
+    n(g, 'auth','Auth service\n[span 2] 30ms', 'green')
+    n(g, 'api', 'API service\n[span 3] 150ms', 'gold')
+    n(g, 'db',  'Database\n[span 4] 80ms', 'red')
+    n(g, 'cache','Cache\n[span 5] 5ms', 'purple')
+    n(g, 'ext', 'External API\n[span 6] 50ms', 'teal')
+    e(g, 'gw',  'auth', 'parent → child')
+    e(g, 'gw',  'api',  'parent → child')
+    e(g, 'api', 'db',   'parent → child')
+    e(g, 'api', 'cache','parent → child')
+    e(g, 'api', 'ext',  'parent → child')
+    g.render(os.path.join(OUT, 'c6-trace'), cleanup=True)
+    print('Generated: c6-trace')
+
+
 if __name__ == '__main__':
     diag_sli_slo_sla()
     diag_burn_rate()
@@ -158,4 +231,8 @@ if __name__ == '__main__':
     diag_dr_strategies()
     diag_rto_rpo()
     diag_multi_cloud()
-    print('SRE diagrams batches 1-2 complete.')
+    diag_three_pillars()
+    diag_red_use()
+    diag_prom_stack()
+    diag_trace_waterfall()
+    print('SRE diagrams batches 1-3 complete.')
