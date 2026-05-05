@@ -34,8 +34,10 @@ export async function retrieve(opts) {
   });
 
   const work = (async () => {
-    const promises = [hybridSearchKb(question, KB_TOP_K)];
-    if (userId) promises.push(hybridSearchUserDocs(userId, question, USER_TOP_K));
+    const { embedQuery } = await import('./embeddings.js');
+    const vec = await embedQuery(question);
+    const promises = [hybridSearchKb(question, KB_TOP_K, { vec })];
+    if (userId) promises.push(hybridSearchUserDocs(userId, question, USER_TOP_K, { vec }));
     const results = await Promise.all(promises);
     const flat = results.flat();
     return flat.map((c) => ({ ...c, content: (c.content || '').slice(0, MAX_CHUNK_CHARS) }));

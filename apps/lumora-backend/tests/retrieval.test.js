@@ -7,9 +7,14 @@ vi.mock('../src/services/hybridRetrieval.js', () => ({
   hybridSearchUserDocs: hybridUserMock,
 }));
 
+const embedQueryMock = vi.fn();
+vi.mock('../src/services/embeddings.js', () => ({ embedQuery: embedQueryMock }));
+
 beforeEach(() => {
   hybridKbMock.mockReset();
   hybridUserMock.mockReset();
+  embedQueryMock.mockReset();
+  embedQueryMock.mockResolvedValue(new Array(1536).fill(0.01));
 });
 
 describe('retrieve', () => {
@@ -50,7 +55,7 @@ describe('retrieve', () => {
     hybridUserMock.mockResolvedValue([]);
     const { retrieve } = await import('../src/services/retrieval.js');
     await retrieve({ question: 'q', userId: 7 });
-    expect(hybridUserMock).toHaveBeenCalledWith(7, 'q', expect.any(Number));
+    expect(hybridUserMock).toHaveBeenCalledWith(7, 'q', expect.any(Number), expect.any(Object));
   });
 
   it('truncates chunk content to MAX_CHUNK_CHARS', async () => {
