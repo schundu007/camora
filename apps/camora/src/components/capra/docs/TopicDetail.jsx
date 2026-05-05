@@ -688,12 +688,11 @@ export default function TopicDetail({
           to opt a specific heading into the navy-strip + hex-glyph
           treatment. */}
       <div className="prep-content flex-1 min-w-0">
-      {/* Topic Header — flush left, no card */}
-      <div className="pb-3 mb-4 border-b border-[var(--border)]">
-        <div className="flex items-center justify-between mb-1.5 gap-2">
-          {/* Breadcrumb: Prepare › <category> › <topic>. The category crumb
-              clears selectedTopic to scroll back to the topic list (preserves
-              filter state); the leaf is non-clickable. */}
+      {/* Topic Header — navy-strip + gold-leaf-border + glassy-pill capsules,
+          matching the docs design system across every topic surface. */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2 gap-2">
+          {/* Breadcrumb sits above the navy strip in neutral text. */}
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs min-w-0 flex-1">
             <Link to="/capra/prepare" className="text-[var(--text-muted)] hover:text-[var(--accent)] font-medium whitespace-nowrap transition-colors">Prepare</Link>
             <span className="text-[var(--text-dimmed)]" aria-hidden="true">›</span>
@@ -707,89 +706,103 @@ export default function TopicDetail({
             <button onClick={() => nextTopic && setSelectedTopic(nextTopic.id)} disabled={!nextTopic} className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] disabled:opacity-30 transition-colors"><Icon name="chevronRight" size={16} /></button>
           </div>
         </div>
-        <div className="flex items-start gap-2">
-          {getCompanyLogoSrc(selectedTopic) ? (
-            <CompanyLogo topicId={selectedTopic} size={36} />
-          ) : (
-            <div
-              className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0"
-              style={{ background: 'var(--bg-elevated)' }}
-            >
-              <Icon name={topicDetails.icon} size={20} style={{ color: 'var(--text-primary)' }} />
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <h1 className="text-[24px] font-bold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.title}</h1>
-              {topicDetails.isNew && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] font-bold">NEW</span>}
-              {topicDetails.difficulty && (
-                <span className={`text-[10px] uppercase tracking-[0.12em] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-surface)] ${
-                  topicDetails.difficulty === 'Easy' ? 'font-medium text-[var(--text-muted)]' :
-                  topicDetails.difficulty === 'Medium' ? 'font-semibold text-[var(--text-primary)]' :
-                  'font-bold text-[var(--accent)]'
-                }`}>
-                  {topicDetails.difficulty}
-                </span>
-              )}
-              {topicDetails.questions && (
-                <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)]">
-                  {topicDetails.questions} problems
-                </span>
-              )}
-              {/* Cloud platform selector — visible on system-design topics
-                  so the user can switch AWS/Azure/GCP and have the prose,
-                  diagrams, and code examples adapt. Persists via
-                  useCloudProvider so the choice carries to every other
-                  diagram surface. */}
-              {isSDStyle && (
-                <CloudProviderSelector variant="compact" className="ml-1" />
-              )}
-              {/* Design in App button for system design topics */}
-              {isSDStyle && (
-                <Link
-                  to={`/capra/design?problem=${encodeURIComponent(`Design ${topicDetails.title}. ${topicDetails.description || topicDetails.subtitle || ''}`)}&autosolve=true`}
-                  className="ml-auto px-3 py-1.5 rounded text-sm font-medium bg-[var(--accent)]/100 text-white hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-2 flex-shrink-0 landing-body"
-                >
-                  <Icon name="zap" size={14} />
-                  Design
-                </Link>
-              )}
-            </div>
-            <p className="text-[var(--text-secondary)] text-sm leading-relaxed landing-body">{fmtCloud(topicDetails.description)}</p>
-            {topicDetails.subtitle && !topicDetails.difficulty && (
-              <p className="text-[var(--text-muted)] text-sm mt-1 landing-body">{fmtCloud(topicDetails.subtitle)}</p>
+        <div
+          className="rounded-md overflow-hidden"
+          style={{
+            background: 'var(--cam-hero-strip)',
+            borderBottom: '1px solid var(--cam-gold-leaf)',
+          }}
+        >
+          <div className="px-4 py-3 flex items-start gap-3">
+            {getCompanyLogoSrc(selectedTopic) ? (
+              <CompanyLogo topicId={selectedTopic} size={36} />
+            ) : (
+              <div
+                className="w-9 h-9 rounded flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.16)' }}
+              >
+                <Icon name={topicDetails.icon} size={18} style={{ color: '#FFFFFF' }} />
+              </div>
             )}
-            {/* Single meta strip — category + topic id + (behavioral) read
-                time, question/tip counts. Compact, all on one row. */}
-            <div className="flex items-center gap-x-3 gap-y-1 mt-2 flex-wrap text-[10px] uppercase tracking-[0.12em] landing-mono text-[var(--text-muted)]">
-              {pageConfig?.title && <span>{pageConfig.title}</span>}
-              <span>ID · {selectedTopic}</span>
-              {(activePage === 'behavioral' || activePage === 'low-level' || isSDStyle) && (
-                <>
-                  {topicDetails.keyQuestions && (
-                    <span className="flex items-center gap-1">
-                      <Icon name="messageSquare" size={10} />
-                      {topicDetails.keyQuestions.length} questions
-                    </span>
-                  )}
-                  {topicDetails.tips && (
-                    <span className="flex items-center gap-1">
-                      <Icon name="lightbulb" size={10} />
-                      {topicDetails.tips.length} tips
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1">
-                    <Icon name="clock" size={10} />
-                    ~{Math.max(3, Math.ceil(((topicDetails.introduction || '').length + (topicDetails.keyQuestions || []).reduce((a, q) => a + (q.answer || '').length, 0)) / 1200))} min read
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-[20px] font-bold text-white landing-display tracking-tight">{topicDetails.title}</h1>
+                {topicDetails.isNew && (
+                  <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 landing-mono"
+                    style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 999, color: 'rgba(255,255,255,0.9)' }}>
+                    NEW
                   </span>
-                  {topicDetails.starExample && (
-                    <span className="flex items-center gap-1 text-[var(--accent)]">
-                      <Icon name="star" size={10} />
-                      STAR example
+                )}
+                {topicDetails.difficulty && (
+                  <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 landing-mono"
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, color: 'rgba(255,255,255,0.85)' }}>
+                    {topicDetails.difficulty}
+                  </span>
+                )}
+                {(() => {
+                  // Derive the count from the content actually rendered so
+                  // the pill never lies. Static `questions: 6` fields lag
+                  // behind real keyQuestions/sampleQuestions arrays as
+                  // content gets added or removed.
+                  const actual = (Array.isArray(topicDetails.keyQuestions) ? topicDetails.keyQuestions.length : 0)
+                    + (Array.isArray(topicDetails.sampleQuestions) ? topicDetails.sampleQuestions.length : 0)
+                    + (Array.isArray(topicDetails.problems) ? topicDetails.problems.length : 0);
+                  const count = actual || (typeof topicDetails.questions === 'number' ? topicDetails.questions : 0);
+                  if (!count) return null;
+                  return (
+                    <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 landing-mono"
+                      style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, color: 'rgba(255,255,255,0.85)' }}>
+                      {count} {count === 1 ? 'problem' : 'problems'}
                     </span>
-                  )}
-                </>
+                  );
+                })()}
+                {isSDStyle && <CloudProviderSelector variant="compact" className="ml-1" />}
+                {isSDStyle && (
+                  <Link
+                    to={`/capra/design?problem=${encodeURIComponent(`Design ${topicDetails.title}. ${topicDetails.description || topicDetails.subtitle || ''}`)}&autosolve=true`}
+                    className="ml-auto px-3 py-1.5 rounded text-sm font-medium bg-[var(--cam-gold-leaf)] text-[var(--cam-gold-leaf-text)] hover:opacity-90 transition-opacity flex items-center gap-2 flex-shrink-0 landing-body"
+                  >
+                    <Icon name="zap" size={14} />
+                    Design
+                  </Link>
+                )}
+              </div>
+              {topicDetails.description && (
+                <p className="text-[13px] mt-1 landing-body leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)' }}>{fmtCloud(topicDetails.description)}</p>
               )}
+              {topicDetails.subtitle && !topicDetails.difficulty && (
+                <p className="text-[12px] mt-1 landing-body" style={{ color: 'rgba(255,255,255,0.65)' }}>{fmtCloud(topicDetails.subtitle)}</p>
+              )}
+              <div className="flex items-center gap-x-3 gap-y-1 mt-2 flex-wrap text-[10px] uppercase tracking-[0.12em] landing-mono" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                {pageConfig?.title && <span>{pageConfig.title}</span>}
+                <span>ID · {selectedTopic}</span>
+                {(activePage === 'behavioral' || activePage === 'low-level' || isSDStyle) && (
+                  <>
+                    {topicDetails.keyQuestions && (
+                      <span className="flex items-center gap-1">
+                        <Icon name="messageSquare" size={10} />
+                        {topicDetails.keyQuestions.length} questions
+                      </span>
+                    )}
+                    {topicDetails.tips && (
+                      <span className="flex items-center gap-1">
+                        <Icon name="lightbulb" size={10} />
+                        {topicDetails.tips.length} tips
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1">
+                      <Icon name="clock" size={10} />
+                      ~{Math.max(3, Math.ceil(((topicDetails.introduction || '').length + (topicDetails.keyQuestions || []).reduce((a, q) => a + (q.answer || '').length, 0)) / 1200))} min read
+                    </span>
+                    {topicDetails.starExample && (
+                      <span className="flex items-center gap-1" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
+                        <Icon name="star" size={10} />
+                        STAR example
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -2697,42 +2710,39 @@ export default function TopicDetail({
                 title="STAR Framework Example"
                 actions={<GlassPill>{Object.keys(topicDetails.starExample).length} steps</GlassPill>}
               />
-              <ol className="space-y-4">
+              {/* Tree structure: parent heading above, children nested under
+                  a single vertical guide so the four steps read as siblings
+                  of one example — not five disconnected cards. */}
+              <ol className="relative pl-6 space-y-4" style={{ borderLeft: '2px solid var(--cam-gold-leaf)' }}>
                 {Object.entries(topicDetails.starExample).map(([key, value], idx) => {
                   const label = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
                   const stepNum = String(idx + 1).padStart(2, '0');
                   return (
-                    <li
-                      key={key}
-                      className="rounded-md overflow-hidden"
-                      style={{
-                        background: 'var(--bg-surface)',
-                        border: '1px solid var(--border)',
-                      }}
-                    >
-                      <div
-                        className="flex items-center gap-2.5 px-4 py-2"
-                        style={{
-                          background: 'var(--cam-hero-strip)',
-                          borderBottom: '1px solid var(--cam-gold-leaf)',
-                        }}
-                      >
+                    <li key={key} className="relative">
+                      {/* Tree connector — short horizontal stub from the
+                          guide line to the row */}
+                      <span
+                        aria-hidden="true"
+                        className="absolute top-3 -left-6 w-5 h-px"
+                        style={{ background: 'var(--cam-gold-leaf)' }}
+                      />
+                      <div className="flex items-center gap-2 mb-1">
                         <span
                           className="text-[10px] font-semibold tracking-wider px-2 py-0.5 landing-mono tabular-nums"
                           style={{
-                            background: 'rgba(255,255,255,0.08)',
-                            border: '1px solid rgba(255,255,255,0.16)',
+                            background: 'var(--bg-elevated)',
+                            border: '1px solid var(--border)',
                             borderRadius: 999,
-                            color: 'rgba(255,255,255,0.85)',
+                            color: 'var(--text-muted)',
                           }}
                         >
                           Step {stepNum}
                         </span>
-                        <span className="text-[14px] font-bold text-white landing-display tracking-tight">
+                        <span className="text-[14px] font-bold text-[var(--text-primary)] landing-display tracking-tight">
                           {label}
                         </span>
                       </div>
-                      <p className="px-5 py-4 text-[15px] leading-[1.75] text-[var(--text-primary)] landing-body">
+                      <p className="text-[15px] leading-[1.75] text-[var(--text-secondary)] landing-body">
                         {stripQuotes(value)}
                       </p>
                     </li>
@@ -2826,7 +2836,7 @@ export default function TopicDetail({
                                 const ok = t.startsWith('✅');
                                 return <div key={i} className="flex items-start gap-2 mb-1">
                                   <span className="text-[var(--text-muted)] landing-mono text-[11px] mt-0.5 flex-shrink-0">{ok ? '✓' : '✕'}</span>
-                                  <span className="text-sm landing-body">{t.substring(2).trim()}</span>
+                                  <span className="text-sm landing-body">{stripQuotes(t.substring(2).trim())}</span>
                                 </div>;
                               }
                               if (t.startsWith('"') && t.endsWith('"')) {
@@ -2835,14 +2845,14 @@ export default function TopicDetail({
                               if (t.startsWith('- ') || t.startsWith('• ')) {
                                 return <div key={i} className="flex items-start gap-2.5 mb-1">
                                   <span className="w-1 h-1 rounded-full bg-[var(--text-muted)] mt-2 flex-shrink-0 opacity-60" />
-                                  <span className="text-sm landing-body">{t.substring(2)}</span>
+                                  <span className="text-sm landing-body">{stripQuotes(t.substring(2))}</span>
                                 </div>;
                               }
                               if (/^\d+\./.test(t)) {
                                 const num = t.match(/^(\d+)\./)[1];
                                 return <div key={i} className="flex items-start gap-3 mb-1">
                                   <span className="text-[10px] landing-mono text-[var(--text-muted)] tabular-nums mt-1 flex-shrink-0">{num.padStart(2, '0')}</span>
-                                  <span className="text-sm landing-body">{t.replace(/^\d+\.\s*/, '')}</span>
+                                  <span className="text-sm landing-body">{stripQuotes(t.replace(/^\d+\.\s*/, ''))}</span>
                                 </div>;
                               }
                               if (t.includes('**')) {
