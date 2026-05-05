@@ -2745,7 +2745,7 @@ export default function TopicDetail({
         // Centered slide-deck container — caps width at max-w-5xl (~1024px)
         // and auto-centers, so SRE topics read like a PPT deck instead of
         // edge-to-edge browser-width wall of text.
-        <div className="space-y-6 max-w-5xl mx-auto">
+        <div className="space-y-6 max-w-7xl mx-auto">
 
           {/* ── Topic stats banner — one-glance agenda + key counts ── */}
           <div
@@ -2793,15 +2793,24 @@ export default function TopicDetail({
             <section id="visual" className="scroll-mt-24">
               <SlideEyebrow id="visual" />
               <ContentHeading title="Visual Explanation" actions={<GlassPill>{topicDetails.visualizations.length} diagram{topicDetails.visualizations.length > 1 ? 's' : ''}</GlassPill>} />
-              <div className={`pt-3 grid gap-4 ${topicDetails.visualizations.length > 1 ? 'lg:grid-cols-2' : ''}`}>
+              <div className="pt-3 space-y-4">
                 {topicDetails.visualizations.map((viz, vi) => (
                   <figure key={vi} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
-                    <figcaption className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-elevated)]/40">
-                      <h4 className="text-[13px] font-semibold text-[var(--text-primary)] landing-display">{viz.title}</h4>
-                      {viz.description && <p className="text-[11px] text-[var(--text-muted)] mt-1 landing-body leading-relaxed">{viz.description}</p>}
+                    <figcaption className="px-5 py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)]/40">
+                      <h4 className="text-[14px] font-semibold text-[var(--text-primary)] landing-display">{viz.title}</h4>
+                      {viz.description && (
+                        <div className="mt-2 text-[13px] text-[var(--text-secondary)] landing-body leading-relaxed">
+                          <FormattedContent content={viz.description} />
+                        </div>
+                      )}
                     </figcaption>
-                    <div className="p-4 flex justify-center items-center bg-[var(--bg-surface)]">
-                      <img src={viz.image} alt={viz.title} className="max-w-full h-auto rounded" loading="lazy" />
+                    <div className="p-4 bg-white">
+                      <ZoomableImage
+                        src={viz.image}
+                        alt={viz.title}
+                        maxHeight={640}
+                        frameStyle={{ background: 'white' }}
+                      />
                     </div>
                   </figure>
                 ))}
