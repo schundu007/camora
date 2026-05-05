@@ -2901,10 +2901,20 @@ export default function TopicDetail({
                                 if (sm) {
                                   const kw = sm[1].charAt(0).toUpperCase() + sm[1].slice(1).toLowerCase();
                                   const headerRest = (sm[2] || '').replace(/^["“\s—–-]+|["”\s]+$/g, '').trim();
+                                  // Per-step color rail: green / blue / amber
+                                  // / teal so SITUATION → TASK → ACTION →
+                                  // RESULT reads at a glance, with body
+                                  // text and bullets indented under the
+                                  // rail (PPT-style) instead of every line
+                                  // starting at the same column.
+                                  const accentMap = { Situation: '#16A34A', Task: '#2563EB', Action: '#D97706', Result: '#059669' };
+                                  const accent = accentMap[kw] || 'var(--cam-gold-leaf)';
                                   return <div key={bi} className="mt-4 first:mt-0">
-                                    <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] landing-mono mb-1">{kw}</div>
-                                    {headerRest && <p className="text-sm text-[var(--text-secondary)] landing-body leading-relaxed">{headerRest}</p>}
-                                    {block.children.length > 0 && <div className="mt-1 space-y-1">{block.children.map((c, ci) => renderLine(c, ci))}</div>}
+                                    <div className="text-[10px] font-bold uppercase tracking-[0.16em] landing-mono mb-1.5" style={{ color: accent }}>{kw}</div>
+                                    <div className="pl-4 ml-1" style={{ borderLeft: `3px solid ${accent}` }}>
+                                      {headerRest && <p className="text-sm text-[var(--text-secondary)] landing-body leading-relaxed">{headerRest}</p>}
+                                      {block.children.length > 0 && <div className={`${headerRest ? 'mt-2' : ''} space-y-1`}>{block.children.map((c, ci) => renderLine(c, ci))}</div>}
+                                    </div>
                                   </div>;
                                 }
                               }
@@ -2923,7 +2933,11 @@ export default function TopicDetail({
                                     {numMatch ? numMatch[2].replace(/:$/, '') : sectionTitle}
                                   </span>
                                 </div>
-                                {block.children.length > 0 && <div className="mt-2 space-y-1">{block.children.map((c, ci) => renderLine(c, ci))}</div>}
+                                {block.children.length > 0 && (
+                                  <div className="mt-2 pl-4 ml-1 space-y-1" style={{ borderLeft: '2px solid var(--border)' }}>
+                                    {block.children.map((c, ci) => renderLine(c, ci))}
+                                  </div>
+                                )}
                               </div>;
                             };
 
