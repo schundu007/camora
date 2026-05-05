@@ -556,10 +556,14 @@ export default function TopicDetail({
     }
   }, [selectedTopic, activePage, isLocked, contentAccess]);
 
+  // The Databases page merges databaseTopics (SD-shaped) with sqlTopics
+  // (coding-shaped). Detect each topic's shape so the right render branch
+  // fires for each one — otherwise SQL topics show only a hero and no body.
+  const topicIsCodingShaped = !!topicDetails?.keyPatterns;
   // Pages that use system-design-style rendering (concepts, keyQuestions, dataModel, etc.)
-  const isSDStyle = ['system-design', 'microservices', 'databases'].includes(activePage);
+  const isSDStyle = ['system-design', 'microservices', 'databases'].includes(activePage) && !topicIsCodingShaped;
   // SQL uses coding/DSA-style rendering (whenToUse, approach, commonProblems, etc.)
-  const isCodingStyle = activePage === 'coding' || activePage === 'sql';
+  const isCodingStyle = activePage === 'coding' || activePage === 'sql' || (activePage === 'databases' && topicIsCodingShaped);
 
   // SD section accordion states
   const [sdExpandedQs, setSdExpandedQs] = useState({});
