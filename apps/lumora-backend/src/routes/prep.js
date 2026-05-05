@@ -19,6 +19,7 @@ import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { refreshCompanyContext } from '../services/companyContext.js';
 import { indexUserPrepDocs } from '../services/userDocIndexer.js';
+import { buildSessionKit } from '../services/sessionKit.js';
 
 const router = Router();
 
@@ -80,8 +81,12 @@ router.put('/state', async (req, res, next) => {
       // Index the Prep Kit blob into pgvector so retrieval has the
       // current JD/resume to ground Sona's answers. Fire-and-forget;
       // a failure here must not block the user's save.
+      // Sequence: index user docs → build session kit. The kit reads
+      // from the user-doc rows we just wrote, so we chain rather than
+      // run them in parallel.
       indexUserPrepDocs({ userId: req.user.id, prepData: data })
-        .catch((err) => console.warn('[prep] user-doc index failed:', err.message));
+        .then(() => buildSessionKit({ userId: req.user.id, prepData: data }))
+        .catch((err) => console.warn('[prep] index/kit pipeline failed:', err.message));
     } catch {}
 
     res.json({ updated_at: r.rows[0].updated_at });

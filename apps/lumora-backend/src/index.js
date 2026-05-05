@@ -233,6 +233,17 @@ async function runMigrations() {
          GENERATED ALWAYS AS (to_tsvector('english', coalesce(content, ''))) STORED`,
       `CREATE INDEX IF NOT EXISTS lumora_user_doc_chunks_tsv_gin
          ON lumora_user_doc_chunks USING GIN (content_tsv)`,
+
+      // ── RAG Phase 5: session warm kit ──────────────────────────────
+      // Per-user prefetched chunks, refreshed on Prep save. Inference
+      // reads this and skips live retrieval when the kit is fresh.
+      `CREATE TABLE IF NOT EXISTS lumora_session_kit (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        kit JSONB NOT NULL,
+        prep_state_version BIGINT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
     ];
 
     // Postgres error codes for "already exists" — the legitimate swallow
