@@ -31,7 +31,8 @@ const MANIFEST = manifestJson as Record<string, ManifestEntry>;
 
 export type IllustrationName =
   | 'coding' | 'system-design' | 'microservices' | 'databases'
-  | 'low-level' | 'projects' | 'roadmaps' | 'eng-blogs' | 'behavioral';
+  | 'low-level' | 'projects' | 'roadmaps' | 'eng-blogs' | 'behavioral'
+  | 'sre' | 'devops';
 
 interface TopicIllustrationProps {
   name: IllustrationName;

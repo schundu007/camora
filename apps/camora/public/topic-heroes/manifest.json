@@ -70,5 +70,13 @@
     "unsplashUrl": "https://unsplash.com/photos/a-person-standing-in-front-of-a-glass-wall-DbsmXpEkffI?utm_source=camora&utm_medium=referral",
     "query": "people silhouette abstract",
     "bytes": 134986
+  },
+  "sre": {
+    "file": "/topic-heroes/sre.jpg",
+    "photographer": "",
+    "photographerUrl": null,
+    "unsplashUrl": null,
+    "query": "gears reliability automation cyan",
+    "bytes": 920645
   }
 }
