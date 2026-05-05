@@ -2680,8 +2680,8 @@ export default function TopicDetail({
         </div>
       )}
 
-      {/* Behavioral Topic Detail */}
-      {!isLocked && (activePage === 'behavioral' || (activePage === 'low-level' && !topicDetails.coreEntities && !topicDetails.implementation && !topicDetails.functionalRequirements)) && (topicDetails.sampleQuestions || topicDetails.starExample || topicDetails.introduction || topicDetails.keyQuestions) && (
+      {/* Behavioral / SRE Topic Detail (shared schema: introduction + keyConcepts + keyQuestions) */}
+      {!isLocked && (activePage === 'behavioral' || activePage === 'sre' || (activePage === 'low-level' && !topicDetails.coreEntities && !topicDetails.implementation && !topicDetails.functionalRequirements)) && (topicDetails.sampleQuestions || topicDetails.starExample || topicDetails.introduction || topicDetails.keyQuestions) && (
         <div className="space-y-3">
 
           {/* 1. Introduction — full width */}
