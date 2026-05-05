@@ -8,7 +8,7 @@
  * add the github org or product docs.
  */
 import { COMPANY_SOURCES } from './companyContext.js';
-import { indexWatchlistUrl } from './webIndexer.js';
+import { indexWatchlistRoot } from './webIndexer.js';
 
 export function resolveWatchlist(prepData) {
   if (!prepData || typeof prepData !== 'object') return [];
@@ -35,10 +35,17 @@ export async function buildWebWatchlist({ userId, prepData }) {
   const failures = [];
   for (const entry of entries) {
     try {
-      const r = await indexWatchlistUrl(entry);
-      totalChunks += r.chunkCount || 0;
-      totalWritten += r.written || 0;
-      if (r.skipped) failures.push({ url: entry.url, error: r.error });
+      const r = await indexWatchlistRoot({
+        rootUrl: entry.url,
+        label: entry.label,
+        source: entry.source,
+        maxArticles: 5,
+      });
+      totalChunks += r.totalChunks || 0;
+      totalWritten += r.totalWritten || 0;
+      for (const u of r.perUrl) {
+        if (u.skipped) failures.push({ url: u.url, error: u.error });
+      }
     } catch (err) {
       failures.push({ url: entry.url, error: err.message });
     }
