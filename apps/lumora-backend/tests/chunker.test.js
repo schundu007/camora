@@ -62,7 +62,7 @@ describe('chunkTopic', () => {
     const summaries = chunks.filter((c) => c.section.startsWith('summary'));
     expect(summaries.length).toBeGreaterThan(1);
     for (const c of summaries) {
-      expect(c.tokenCount).toBeLessThanOrEqual(750);
+      expect(c.tokenCount).toBeLessThanOrEqual(740);
     }
   });
 });

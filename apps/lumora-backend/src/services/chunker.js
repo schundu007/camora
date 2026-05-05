@@ -102,7 +102,7 @@ export function chunkTopic(topic, { source }) {
       parts.forEach((p, i) => {
         chunks.push(makeChunk({
           source, topic, section: `keyConcepts:${i}`,
-          content: `Key concepts (${i + 1}/${parts.length}) for ${topic.title}:\n${p}`,
+          content: `Key concepts (${i + 1}/${parts.length}) for ${topic.title || topic.id}:\n${p}`,
         }));
       });
     }
@@ -112,8 +112,8 @@ export function chunkTopic(topic, { source }) {
   // grounding for an interview AI, so we keep them addressable.
   if (Array.isArray(topic.questions)) {
     topic.questions.forEach((q, i) => {
-      const qText = typeof q === 'string' ? q : q.question;
-      const aText = typeof q === 'string' ? '' : (q.answer || '');
+      const qText = q.question;
+      const aText = q.answer || '';
       if (!qText) return;
       const body = aText ? `Q: ${qText}\nA: ${aText}` : `Q: ${qText}`;
       chunks.push(makeChunk({
