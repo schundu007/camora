@@ -1356,7 +1356,7 @@ export default function TopicDetail({
                     <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <Icon name="check" size={10} className="text-[var(--accent)]" />
                     </span>
-                    <span className="text-sm text-[var(--text-secondary)] leading-relaxed">{item}</span>
+                    <span className="text-sm text-[var(--text-secondary)] leading-relaxed"><FormattedContent content={item} inline /></span>
                   </div>
                 ))}
               </div>
@@ -1393,7 +1393,7 @@ export default function TopicDetail({
                         <div className="absolute left-[11px] top-6 w-0.5 bg-[var(--accent)]/30" style={{ height: 'calc(100% - 4px)' }} />
                       )}
                       <div className="w-6 h-6 rounded-full bg-[var(--accent)]/100 text-white flex items-center justify-center text-[11px] font-bold flex-shrink-0 z-10 landing-mono">{i + 1}</div>
-                      <div className="text-sm text-[var(--text-secondary)] leading-relaxed pb-4 landing-body">{step}</div>
+                      <div className="text-sm text-[var(--text-secondary)] leading-relaxed pb-4 landing-body"><FormattedContent content={step} inline /></div>
                     </div>
                   ))}
                 </div>
@@ -1538,7 +1538,7 @@ export default function TopicDetail({
                 {topicDetails.commonMistakes.map((mistake, i) => (
                   <div key={i} className="flex items-start gap-3 py-2 border-b border-[var(--border)] last:border-b-0">
                     <NumberChip n={i + 1} mt="mt-0.5" />
-                    <span className="text-sm text-[var(--text-secondary)] leading-relaxed landing-body">{mistake}</span>
+                    <span className="text-sm text-[var(--text-secondary)] leading-relaxed landing-body"><FormattedContent content={mistake} inline /></span>
                   </div>
                 ))}
               </div>
@@ -1643,7 +1643,7 @@ export default function TopicDetail({
                         {isExpanded && q.answer && (
                           <div className="px-3 pb-3 pt-1 border-t border-[var(--border)]">
                             <div className="pl-8 text-[var(--text-secondary)] text-sm leading-relaxed p-3 landing-body">
-                              {q.answer}
+                              <FormattedContent content={q.answer} />
                             </div>
                           </div>
                         )}
@@ -1665,13 +1665,13 @@ export default function TopicDetail({
                     <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <Icon name="check" size={10} className="text-[var(--accent)]" />
                     </span>
-                    <span className="text-sm text-[var(--text-secondary)] leading-relaxed landing-body">{tip}</span>
+                    <span className="text-sm text-[var(--text-secondary)] leading-relaxed landing-body"><FormattedContent content={tip} inline /></span>
                   </div>
                 ))}
                 {topicDetails.interviewTips && topicDetails.interviewTips.map((tip, i) => (
                   <div key={`itip-${i}`} className="flex items-start gap-3 p-2 rounded transition-colors hover:bg-[var(--bg-elevated)]/60">
                     <Icon name="lightbulb" size={12} className="text-[var(--text-muted)] flex-shrink-0 mt-1" />
-                    <span className="text-sm text-[var(--text-secondary)] leading-relaxed landing-body">{tip}</span>
+                    <span className="text-sm text-[var(--text-secondary)] leading-relaxed landing-body"><FormattedContent content={tip} inline /></span>
                   </div>
                 ))}
               </div>
@@ -2550,7 +2550,7 @@ export default function TopicDetail({
                     {topicDetails.tips.map((tip, i) => (
                       <div key={i} className="px-3 py-2 flex items-center gap-2 hover:bg-[var(--bg-elevated)] transition-colors rounded">
                         <span className="w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)]">★</span>
-                        <span className="text-[var(--text-muted)] text-sm landing-body">{tip}</span>
+                        <span className="text-[var(--text-muted)] text-sm landing-body"><FormattedContent content={tip} inline /></span>
                       </div>
                     ))}
                   </div>
@@ -2822,7 +2822,7 @@ export default function TopicDetail({
                         <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
                           <Icon name="check" size={10} className="text-[var(--accent)]" />
                         </span>
-                        <span className="text-[14px] text-[var(--text-secondary)] leading-relaxed">{item}</span>
+                        <span className="text-[14px] text-[var(--text-secondary)] leading-relaxed"><FormattedContent content={item} inline /></span>
                       </li>
                     ))}
                   </ul>
@@ -2875,7 +2875,7 @@ export default function TopicDetail({
                           <div className="absolute left-[13px] top-7 w-0.5" style={{ height: 'calc(100% - 6px)', background: 'var(--accent)', opacity: 0.25 }} />
                         )}
                         <div className="w-7 h-7 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-[12px] font-bold flex-shrink-0 z-10 landing-mono">{i + 1}</div>
-                        <div className="flex-1 pt-0.5 text-[14px] text-[var(--text-secondary)] leading-relaxed pb-4 landing-body">{step}</div>
+                        <div className="flex-1 pt-0.5 text-[14px] text-[var(--text-secondary)] leading-relaxed pb-4 landing-body"><FormattedContent content={step} inline /></div>
                       </li>
                     ))}
                   </ol>
@@ -3013,7 +3013,7 @@ export default function TopicDetail({
                 {topicDetails.principles.map((principle, i) => (
                   <li key={i} className="flex items-start gap-3 text-[14px] leading-relaxed landing-body text-[var(--text-secondary)]">
                     <NumberChip n={i + 1} mt="mt-0.5" />
-                    <span>{principle}</span>
+                    <span><FormattedContent content={typeof principle === 'string' ? principle : (principle?.name || principle?.title || '')} inline /></span>
                   </li>
                 ))}
               </ul>
@@ -3281,7 +3281,7 @@ export default function TopicDetail({
                     <span className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-[var(--accent)]/100 text-white mt-0.5">
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                     </span>
-                    <span className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed group-hover:text-[var(--text-primary)] transition-colors">{tip}</span>
+                    <span className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed group-hover:text-[var(--text-primary)] transition-colors"><FormattedContent content={tip} inline /></span>
                   </div>
                 ))}
               </div>
