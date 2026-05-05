@@ -10492,28 +10492,8 @@ device_tokens {
 - **BATCH** (marketing, digests): Low-priority queue, aggregate and send in batches
 
 **Implementation**:
-\`\`\`
-┌──────────────┐
-│  Incoming    │
-│  Requests    │
-└──────┬───────┘
-       │
-       ▼
-┌──────────────────────────────────────┐
-│         Priority Router               │
-└──────┬───────────┬───────────┬───────┘
-       │           │           │
-       ▼           ▼           ▼
-  ┌────────┐  ┌────────┐  ┌────────┐
-  │ URGENT │  │ NORMAL │  │ BATCH  │
-  │ Queue  │  │ Queue  │  │ Queue  │
-  │ (Kafka)│  │ (Kafka)│  │ (Kafka)│
-  └────────┘  └────────┘  └────────┘
-       │           │           │
-       ▼           ▼           ▼
-  Workers     Workers     Scheduled
-  (10x more)  (normal)    Job (hourly)
-\`\`\`
+
+![Priority queue routing](/diagrams/systemdesign/priority-queue-routing.png)
 
 **SLA by Priority**:
 - Urgent: p99 < 1 second
@@ -12518,13 +12498,8 @@ if trending_score > 3: boost significantly
         {
           question: 'How do we handle 100K requests/second?',
           answer: `**Caching Strategy**:
-\`\`\`
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Browser   │────▶│   CDN Edge  │────▶│  Typeahead  │
-│    Cache    │     │    Cache    │     │   Service   │
-│  (1 min)    │     │  (5 min)    │     │             │
-└─────────────┘     └─────────────┘     └─────────────┘
-\`\`\`
+
+![Typeahead cache hierarchy](/diagrams/systemdesign/typeahead-cache.png)
 
 **Cache Hit Rates**:
 - Single character prefixes ("a", "b"): 99%+ CDN hit
@@ -14919,12 +14894,8 @@ listening_history {
 - HTTP byte-range requests for seeking
 
 **Streaming Flow**:
-\`\`\`
-┌────────┐     ┌───────┐     ┌───────────┐     ┌──────────┐
-│ Client │────▶│  CDN  │────▶│  Origin   │────▶│    S3    │
-│        │     │ (Edge)│     │  (if miss)│     │ (Audio)  │
-└────────┘     └───────┘     └───────────┘     └──────────┘
-\`\`\`
+
+![Audio streaming path](/diagrams/systemdesign/audio-streaming-path.png)
 
 **Gapless Playback**:
 - Pre-buffer next track while current plays
@@ -15014,18 +14985,8 @@ Returns decryption key (valid for 30 days)
 - Real-time sync of play state across devices
 
 **Architecture**:
-\`\`\`
-┌──────────┐     ┌──────────────┐     ┌──────────┐
-│  Phone   │────▶│   Connect    │────▶│  Speaker │
-│(Control) │     │   Service    │     │ (Playback)│
-└──────────┘     └──────────────┘     └──────────┘
-                       │
-               ┌───────┴───────┐
-               │  Player State │
-               │ { track, pos, │
-               │   device_id } │
-               └───────────────┘
-\`\`\`
+
+![Spotify Connect](/diagrams/systemdesign/spotify-connect.png)
 
 **Protocol**:
 1. Devices register with Connect service via WebSocket
@@ -17233,18 +17194,16 @@ Query(item):
 - Error: ε = e/w, probability δ = e^(-d)
 - Typical: w=10K, d=7 → <0.1% error
 
-**Windowed Counting**:
-\`\`\`
-┌─────────────────────────────────────────┐
-│ Time Windows (sliding every 5 minutes) │
-├─────────────────────────────────────────┤
-│ [T-15, T-10] │ [T-10, T-5] │ [T-5, T]  │
-│  CM Sketch   │  CM Sketch  │ CM Sketch │
-└─────────────────────────────────────────┘
+**Windowed Counting** — slide every 5 minutes; each window is its own Count-Min sketch:
 
-Total count = sum of window counts
-Trend = compare recent window vs older windows
-\`\`\`
+| Window         | Sketch           |
+| -------------- | ---------------- |
+| [T-15, T-10]   | CM Sketch (old)  |
+| [T-10, T-5]    | CM Sketch (mid)  |
+| [T-5, T]       | CM Sketch (new)  |
+
+- Total count = sum of window counts
+- Trend = compare recent window vs older windows
 
 **Memory Usage**:
 - Single sketch: 10K × 7 × 4 bytes = 280KB
@@ -17818,31 +17777,27 @@ Cons: Need collision handling, DB lookup on write
 \`\`\`
 
 **Option 3: Pre-generated Key Pool (Recommended)**
-\`\`\`
-┌─────────────────────────────────────────────┐
-│            Key Generation Service           │
-├─────────────────────────────────────────────┤
-│                                             │
-│   Background job generates keys in batches: │
-│   ┌──────────────────────────────────────┐  │
-│   │ unused_keys table:                   │  │
-│   │   key: varchar(8) PK                 │  │
-│   │   created_at: timestamp              │  │
-│   │   claimed: boolean default false     │  │
-│   └──────────────────────────────────────┘  │
-│                                             │
-│   API server claims key:                    │
-│   UPDATE unused_keys                        │
-│   SET claimed = true                        │
-│   WHERE claimed = false                     │
-│   LIMIT 1                                   │
-│   RETURNING key                             │
-│                                             │
-└─────────────────────────────────────────────┘
 
-Pros: No collision at write time, fast
-Cons: Need background job, key inventory management
+A background job generates keys in batches into an \`unused_keys\` table:
+
+| Column      | Type             | Notes                  |
+| ----------- | ---------------- | ---------------------- |
+| key         | varchar(8) PK    | the short URL slug     |
+| created_at  | timestamp        | when generated         |
+| claimed     | boolean          | default false          |
+
+API server claims a key atomically:
+
+\`\`\`sql
+UPDATE unused_keys
+   SET claimed = true
+ WHERE claimed = false
+ LIMIT 1
+RETURNING key;
 \`\`\`
+
+Pros: No collision at write time, fast.
+Cons: Need background job, key inventory management.
 
 **URL Length Analysis**:
 \`\`\`
@@ -17862,25 +17817,16 @@ For pastes < 1KB:
 \`\`\`
 
 **Option 2: Object Storage (Recommended)**
-\`\`\`
-┌────────────────────────────────────────────┐
-│                Write Path                  │
-├────────────────────────────────────────────┤
-│                                            │
-│   1. Upload content to S3:                 │
-│      bucket: pastebin-content              │
-│      key: {hash-prefix}/{short_key}        │
-│                                            │
-│   2. Store metadata in DB:                 │
-│      short_key, content_url, metadata      │
-│                                            │
-│   S3 features we use:                      │
-│   - Object lifecycle rules (auto-delete)   │
-│   - Cross-region replication               │
-│   - Pre-signed URLs for direct access      │
-│                                            │
-└────────────────────────────────────────────┘
-\`\`\`
+
+Write path:
+
+1. Upload content to S3 — bucket: \`pastebin-content\`, key: \`{hash-prefix}/{short_key}\`.
+2. Store metadata in DB — \`short_key\`, \`content_url\`, metadata.
+
+S3 features we use:
+- Object lifecycle rules (auto-delete on expiry)
+- Cross-region replication
+- Pre-signed URLs for direct access
 
 **Content Deduplication**:
 \`\`\`
@@ -18756,23 +18702,8 @@ feed_cache {
 - Pull model: Each of 10M users queries at read time (hot spot)
 
 **Solution: Hybrid Fan-out**
-\`\`\`
-                    User Posts
-                        │
-                        ▼
-              ┌─────────────────┐
-              │ Check followers │
-              └────────┬────────┘
-                       │
-          ┌────────────┴────────────┐
-          ▼                         ▼
-    < 10K followers          > 10K followers
-    (Normal users)           (Celebrities)
-          │                         │
-          ▼                         ▼
-    PUSH to feeds             PULL at read time
-    (async fan-out)           (merge on query)
-\`\`\`
+
+![Hybrid fan-out — push for normal users, pull for celebrities](/diagrams/systemdesign/hybrid-fanout.png)
 
 **Push for Normal Users**:
 \`\`\`
@@ -18834,33 +18765,23 @@ Context Features:
 \`\`\`
 
 **Ranking Pipeline**:
-\`\`\`
-┌────────────────────────────────────────────────────────────┐
-│                    Ranking Pipeline                        │
-├────────────────────────────────────────────────────────────┤
-│                                                            │
-│  1. CANDIDATE GENERATION (from 1000+ posts)                │
-│     - Pre-filtered by eligibility (privacy, blocked)       │
-│     - Recent posts from followed accounts                  │
-│     - Suggested posts (explore)                            │
-│                                                            │
-│  2. LIGHT RANKER (score all 1000 candidates)               │
-│     - Simple logistic regression                           │
-│     - Fast: ~0.1ms per post                                │
-│     - Output: top 200 candidates                           │
-│                                                            │
-│  3. HEAVY RANKER (score top 200)                           │
-│     - Deep neural network (GBDT + embeddings)              │
-│     - Expensive: ~1ms per post                             │
-│     - Output: final ranked list                            │
-│                                                            │
-│  4. BUSINESS RULES                                         │
-│     - Diversity: max 2 posts from same creator             │
-│     - Recency: boost very new posts                        │
-│     - Quality: demote clickbait                            │
-│                                                            │
-└────────────────────────────────────────────────────────────┘
-\`\`\`
+
+1. **Candidate generation** (from 1000+ posts)
+   - Pre-filtered by eligibility (privacy, blocked)
+   - Recent posts from followed accounts
+   - Suggested posts (explore)
+2. **Light ranker** (score all 1000 candidates)
+   - Simple logistic regression
+   - Fast: ~0.1 ms per post
+   - Output: top 200 candidates
+3. **Heavy ranker** (score top 200)
+   - Deep neural network (GBDT + embeddings)
+   - Expensive: ~1 ms per post
+   - Output: final ranked list
+4. **Business rules**
+   - Diversity: max 2 posts from same creator
+   - Recency: boost very new posts
+   - Quality: demote clickbait
 
 **Optimization Target**:
 \`\`\`
@@ -18886,32 +18807,8 @@ Every 30 seconds:
 \`\`\`
 
 **Option 2: WebSocket (Better)**
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│                Real-time Update Flow                   │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│  Friend posts → Post Service → Kafka                   │
-│                                    │                   │
-│                                    ▼                   │
-│                            ┌──────────────┐            │
-│                            │ Fan-out      │            │
-│                            │ Service      │            │
-│                            └──────┬───────┘            │
-│                                   │                    │
-│                   ┌───────────────┼───────────────┐    │
-│                   ▼               ▼               ▼    │
-│            ┌───────────┐   ┌───────────┐   ┌──────────┐│
-│            │WebSocket  │   │WebSocket  │   │WebSocket ││
-│            │Server 1   │   │Server 2   │   │Server 3  ││
-│            │(users A-M)│   │(users N-S)│   │(users T-Z││
-│            └─────┬─────┘   └─────┬─────┘   └─────┬────┘│
-│                  │               │               │     │
-│                  ▼               ▼               ▼     │
-│            Connected Users (receive push)              │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-\`\`\`
+
+![Real-time feed update via Kafka and WS fleet](/diagrams/systemdesign/realtime-feed-update.png)
 
 **Scaling WebSockets**:
 - Partition users across WS servers
@@ -19532,27 +19429,10 @@ When node count changes:
 \`\`\`
 
 **Consistent Hash Ring**:
-\`\`\`
-┌─────────────────────────────────────────────────────────┐
-│                    Hash Ring (0 to 2^64)                │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│                         Node A                          │
-│                           │                             │
-│                     ┌─────┴─────┐                       │
-│                0 ───┤           ├──────────── 2^64      │
-│                     │           │                       │
-│              Node C─┤   Ring    ├─Node B                │
-│                     │           │                       │
-│                     └───────────┘                       │
-│                                                         │
-│   key → hash(key) → walk clockwise → first node         │
-│                                                         │
-│   Adding/removing a node only moves keys between        │
-│   adjacent nodes! (K/N keys move, not K keys)           │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-\`\`\`
+
+![Consistent hash ring — keys walk clockwise to nearest node](/diagrams/systemdesign/consistent-hash-ring.png)
+
+Each key maps to a position on a ring (0..2^64); to find its node, hash the key and walk clockwise to the first node. Adding or removing a node only moves keys between adjacent nodes (K/N keys move, not K).
 
 **Virtual Nodes**:
 \`\`\`
@@ -19584,27 +19464,8 @@ Examples:
 \`\`\`
 
 **Write Path**:
-\`\`\`
-┌─────────────────────────────────────────────────────────┐
-│                     Write (N=3, W=2)                    │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│   Client → Coordinator → Find 3 replicas using ring     │
-│                                │                        │
-│                    ┌───────────┴───────────┐            │
-│                    ▼           ▼           ▼            │
-│              ┌──────────┐┌──────────┐┌──────────┐       │
-│              │ Replica1 ││ Replica2 ││ Replica3 │       │
-│              │  (ACK)   ││  (ACK)   ││  (async) │       │
-│              └──────────┘└──────────┘└──────────┘       │
-│                    │           │                        │
-│                    └─────┬─────┘                        │
-│                          ▼                              │
-│              W=2 acks received → Return success         │
-│              Third replica gets eventual update         │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-\`\`\`
+
+![Write quorum (N=3, W=2)](/diagrams/systemdesign/write-quorum.png)
 
 **Hinted Handoff**:
 \`\`\`
@@ -19679,25 +19540,12 @@ Node status: ALIVE → SUSPECT → DEAD
   - Multiple nodes agree → DEAD
 \`\`\`
 
-**Failure Detection Flow**:
-\`\`\`
-┌─────────────────────────────────────────────────────────┐
-│                   Gossip Protocol                       │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│   Node A ──gossip──► Node B                             │
-│     │                  │                                │
-│     │   "I see: A=1,   │   "I see: A=1, B=1, C=0"       │
-│     │    B=1, C=1"     │   (C missed heartbeat!)        │
-│     │                  │                                │
-│     └────────┬─────────┘                                │
-│              │                                          │
-│              ▼                                          │
-│   Both now know: C might be dead                        │
-│   After multiple gossip rounds → C confirmed dead       │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-\`\`\`
+**Failure Detection Flow** (gossip protocol):
+
+- Node A gossips to Node B: "I see A=1, B=1, C=1".
+- Node B replies: "I see A=1, B=1, C=0" — C missed its heartbeat.
+- Both now know C might be dead.
+- After multiple gossip rounds across the cluster, C is confirmed dead.
 
 **Recovery**:
 \`\`\`
@@ -20106,16 +19954,17 @@ Twitter's Snowflake solves this elegantly: each machine generates IDs independen
 
       dataModel: {
         description: 'Snowflake 64-bit ID structure',
-        schema: `64-bit Snowflake ID:
-┌────────────────────────────────────────────────────────────────┐
-│ Sign │     Timestamp (41 bits)     │Machine│   Sequence        │
-│  0   │  milliseconds since epoch   │ (10)  │   (12 bits)       │
-└────────────────────────────────────────────────────────────────┘
-  1 bit      41 bits = 69 years       1024     4096 per ms
-                                    machines   per machine
+        schema: `64-bit Snowflake ID layout:
 
-Example: 1288834974657 + 1023 + 4095
-Binary: 0_10010110001101011010101110010000001_1111111111_111111111111
+| Field      | Bits | Range / capacity                |
+| ---------- | ---- | ------------------------------- |
+| Sign       | 1    | always 0                        |
+| Timestamp  | 41   | ms since epoch — ~69 years      |
+| Machine    | 10   | up to 1024 machines             |
+| Sequence   | 12   | 4096 ids/ms per machine         |
+
+Example (timestamp 1288834974657 + machine 1023 + seq 4095):
+Binary:  0_10010110001101011010101110010000001_1111111111_111111111111
 Decimal: 1234567890123456789`,
         examples: [
           {
@@ -20210,19 +20059,14 @@ Cons:
         },
         {
           question: 'How does the Snowflake algorithm work?',
-          answer: `**ID Structure**:
-\`\`\`
-┌─────────────────────────────────────────────────────────────┐
-│                    64-bit Snowflake ID                      │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   Bit 63     │  Bits 62-22    │ Bits 21-12  │  Bits 11-0   │
-│   (sign=0)   │  (timestamp)   │ (machine)   │  (sequence)  │
-│              │   41 bits      │   10 bits   │   12 bits    │
-│              │   69 years     │   1024 max  │   4096/ms    │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-\`\`\`
+          answer: `**ID Structure** (64 bits total):
+
+| Bits     | Field      | Width   | Capacity        |
+| -------- | ---------- | ------- | --------------- |
+| 63       | sign = 0   | 1 bit   | —               |
+| 62–22    | timestamp  | 41 bits | ~69 years       |
+| 21–12    | machine    | 10 bits | 1024 machines   |
+| 11–0     | sequence   | 12 bits | 4096 ids/ms     |
 
 **Generation Algorithm**:
 \`\`\`python
@@ -20328,26 +20172,11 @@ Simple, but:
 \`\`\`
 
 **Option 2: ZooKeeper/etcd**
-\`\`\`
-┌───────────────────────────────────────────────────────┐
-│                Machine ID Assignment                  │
-├───────────────────────────────────────────────────────┤
-│                                                       │
-│   Server starts → Connect to ZooKeeper                │
-│                         │                             │
-│                         ▼                             │
-│   Create sequential ephemeral node:                   │
-│   /snowflake/machines/machine-0000000042              │
-│                         │                             │
-│                         ▼                             │
-│   Extract sequence number as machine_id = 42          │
-│                         │                             │
-│                         ▼                             │
-│   If server dies, ephemeral node deleted              │
-│   ID can be reused (after lease expires)              │
-│                                                       │
-└───────────────────────────────────────────────────────┘
-\`\`\`
+
+1. Server starts and connects to ZooKeeper.
+2. Server creates a sequential ephemeral node, e.g. \`/snowflake/machines/machine-0000000042\`.
+3. The sequence number from the path becomes the \`machine_id\` (= 42).
+4. If the server dies, the ephemeral node is deleted automatically and the ID can be reused after the lease expires.
 
 **Option 3: Database Counter**
 \`\`\`sql
@@ -20858,39 +20687,8 @@ For sources without RSS:
 \`\`\`
 
 **Ingestion Pipeline**:
-\`\`\`
-┌────────────────────────────────────────────────────────────┐
-│                    Article Ingestion                       │
-├────────────────────────────────────────────────────────────┤
-│                                                            │
-│   ┌──────────────┐                                         │
-│   │ Feed Poller  │ ──► Check each source's RSS             │
-│   │ (scheduled)  │     Extract new article URLs            │
-│   └──────┬───────┘                                         │
-│          │                                                 │
-│          ▼                                                 │
-│   ┌──────────────┐                                         │
-│   │ URL Dedup    │ ──► Check if URL already crawled        │
-│   │ (Bloom)      │     Skip duplicates                     │
-│   └──────┬───────┘                                         │
-│          │                                                 │
-│          ▼                                                 │
-│   ┌──────────────┐                                         │
-│   │ Content      │ ──► Fetch full article                  │
-│   │ Fetcher      │     Extract text, images, metadata      │
-│   └──────┬───────┘                                         │
-│          │                                                 │
-│          ▼                                                 │
-│   ┌──────────────┐                                         │
-│   │ NLP Pipeline │ ──► Extract entities, categorize        │
-│   │              │     Generate embedding, summarize       │
-│   └──────┬───────┘                                         │
-│          │                                                 │
-│          ▼                                                 │
-│   Store in Elasticsearch (search) + PostgreSQL (metadata)  │
-│                                                            │
-└────────────────────────────────────────────────────────────┘
-\`\`\`
+
+![News article ingestion pipeline](/diagrams/systemdesign/news-ingestion.png)
 
 **Handling Volume**:
 - Kafka queue for async processing
@@ -21831,22 +21629,14 @@ def get_approximate_rank(score, total_players):
 \`\`\`
 
 **Solution 2: Sharded Leaderboards**
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│                 Sharded Leaderboard                    │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│   Score ranges:                                        │
-│   ┌──────────────┐ ┌──────────────┐ ┌──────────────┐   │
-│   │ 0-999 points │ │1000-1999 pts │ │ 2000+ pts    │   │
-│   │   Shard 1    │ │   Shard 2    │ │   Shard 3    │   │
-│   │   (10M)      │ │   (50M)      │ │   (40M)      │   │
-│   └──────────────┘ └──────────────┘ └──────────────┘   │
-│                                                        │
-│   Global rank = offset[shard] + rank_within_shard      │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-\`\`\`
+
+| Shard | Score range  | Players |
+| ----- | ------------ | ------- |
+| 1     | 0–999        | 10 M    |
+| 2     | 1000–1999    | 50 M    |
+| 3     | 2000+        | 40 M    |
+
+Global rank = offset[shard] + rank_within_shard.
 
 **Solution 3: Top-K Only**
 \`\`\`
@@ -21877,19 +21667,10 @@ pipeline.execute()  # Single round trip
 \`\`\`
 
 **Solution 2: Local Aggregation**
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│                  Write Aggregation                     │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│   Game Server 1 ──┐                                    │
-│   Game Server 2 ──┼──► Local Buffer ──► Flush to Redis │
-│   Game Server 3 ──┘    (per server)     (every 1 sec)  │
-│                                                        │
-│   Multiple updates for same player? Keep only highest  │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-\`\`\`
+
+![Write aggregation — per-server local buffer flushes to Redis every 1s](/diagrams/systemdesign/write-aggregation.png)
+
+When multiple updates land for the same player within a flush window, keep only the highest score.
 
 **Solution 3: Write-Behind Cache**
 \`\`\`
@@ -22742,20 +22523,13 @@ WHERE room_type_id = 123
 \`\`\`
 
 **Solution 3: Reservation Hold**
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│              Reservation Hold Pattern                  │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│   1. User starts checkout → Create HOLD (10 min TTL)   │
-│   2. Inventory decremented for HOLD                    │
-│   3. User completes payment → HOLD → CONFIRMED         │
-│   4. User abandons → HOLD expires → inventory restored │
-│                                                        │
-│   Prevents: "Someone else booked while you paid"       │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-\`\`\``
+
+1. User starts checkout → create HOLD (10 min TTL).
+2. Inventory decremented for the HOLD.
+3. User completes payment → HOLD → CONFIRMED.
+4. User abandons → HOLD expires → inventory restored.
+
+This prevents the "someone else booked while you paid" race.`
         },
         {
           question: 'How do we handle search at scale?',
@@ -22771,38 +22545,8 @@ Need to:
 \`\`\`
 
 **Two-Phase Search**:
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│                 Search Architecture                    │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│   Phase 1: Elasticsearch (fast, approximate)           │
-│   ┌──────────────────────────────────────────────────┐ │
-│   │  Filter: geo_distance, star_rating, amenities    │ │
-│   │  Pre-computed: has_availability, min_price       │ │
-│   │  Result: 500 candidate hotels                    │ │
-│   └──────────────────────────────────────────────────┘ │
-│                        │                               │
-│                        ▼                               │
-│   Phase 2: Database (exact availability)               │
-│   ┌──────────────────────────────────────────────────┐ │
-│   │  For each candidate:                             │ │
-│   │    Check room_inventory for exact dates          │ │
-│   │    Get exact prices                              │ │
-│   │    Filter guests capacity                        │ │
-│   │  Result: 100 available hotels with prices        │ │
-│   └──────────────────────────────────────────────────┘ │
-│                        │                               │
-│                        ▼                               │
-│   Phase 3: Ranking                                     │
-│   ┌──────────────────────────────────────────────────┐ │
-│   │  Score = relevance x review_score x price_value   │ │
-│   │  + Personalization (user's past preferences)     │ │
-│   │  + Business rules (promoted properties)          │ │
-│   └──────────────────────────────────────────────────┘ │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-\`\`\`
+
+![Hotel search — Elasticsearch filter, DB exact availability, ranking](/diagrams/systemdesign/hotel-search-pipeline.png)
 
 **Caching Strategy**:
 \`\`\`
@@ -22820,17 +22564,8 @@ Search results: Cache by query hash
         {
           question: 'How does the reservation state machine work?',
           answer: `**Booking States**:
-\`\`\`
-┌──────────┐     ┌───────────┐     ┌───────────┐
-│  HOLD    │────►│ CONFIRMED │────►│ COMPLETED │
-│ (10 min) │     │           │     │           │
-└────┬─────┘     └─────┬─────┘     └───────────┘
-     │                 │
-     ▼                 ▼
-┌──────────┐     ┌───────────┐
-│ EXPIRED  │     │ CANCELLED │
-└──────────┘     └───────────┘
-\`\`\`
+
+![Booking state machine — HOLD, CONFIRMED, COMPLETED, with EXPIRED and CANCELLED branches](/diagrams/systemdesign/booking-state-machine.png)
 
 **State Transitions**:
 \`\`\`
@@ -22998,28 +22733,10 @@ Server checks: if idempotency_key exists in cache,
           answer: `**The Problem**: Same hotel room listed on Booking.com, Expedia, Hotels.com, and the hotel's own website — prices must be consistent.
 
 **Channel Manager Architecture**:
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│               Channel Manager                          │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│   Hotel PMS (Property Management System)               │
-│        │                                               │
-│        ▼                                               │
-│   Channel Manager Hub                                  │
-│        │                                               │
-│   ┌────┼────┬─────────┬──────────┐                     │
-│   ▼    ▼    ▼         ▼          ▼                     │
-│  Booking Expedia  Hotels.com  Direct   Airbnb          │
-│  .com                        Website                   │
-│                                                        │
-│   All channels get same:                               │
-│   - Availability count                                 │
-│   - Base price (may differ by commission)              │
-│   - Restrictions (min stay, closed dates)              │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-\`\`\`
+
+![Hotel channel manager fanout to OTAs](/diagrams/systemdesign/channel-manager.png)
+
+All channels get the same availability count, base price (may differ by commission), and restrictions (min stay, closed dates).
 
 **Inventory Sync Protocol**:
 \`\`\`
@@ -23668,23 +23385,16 @@ tiles {
       keyQuestions: [
         {
           question: 'How do map tiles work?',
-          answer: `**Tile Pyramid**:
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│                    Zoom Levels                         │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│   Zoom 0: 1 tile (entire world)                        │
-│   Zoom 1: 4 tiles (2x2)                                │
-│   Zoom 2: 16 tiles (4x4)                               │
-│   ...                                                  │
-│   Zoom 18: 68 billion tiles                            │
-│   Zoom 22: 17 trillion tiles (not all exist)           │
-│                                                        │
-│   Total tiles at zoom z = 4^z                          │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-\`\`\`
+          answer: `**Tile Pyramid** — total tiles at zoom \`z\` = 4^z:
+
+| Zoom | Tile count                |
+| ---- | ------------------------- |
+| 0    | 1 (entire world)          |
+| 1    | 4 (2×2)                   |
+| 2    | 16 (4×4)                  |
+| …    | …                         |
+| 18   | 68 billion                |
+| 22   | 17 trillion (not all exist) |
 
 **Tile Coordinates**:
 \`\`\`
@@ -23756,27 +23466,18 @@ A* Algorithm: O(E + V log V) but faster in practice
 \`\`\`
 
 **Contraction Hierarchies (used at scale)**:
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│              Contraction Hierarchies                   │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│   Preprocessing (hours, done offline):                 │
-│   1. Rank nodes by importance                          │
-│   2. Contract unimportant nodes, add shortcuts         │
-│   3. Create hierarchy of importance levels             │
-│                                                        │
-│   Query (milliseconds):                                │
-│   1. Bidirectional search (from origin AND dest)       │
-│   2. Only traverse "up" the hierarchy                  │
-│   3. Meet in the middle at high-importance node        │
-│                                                        │
-│   Result: ~100x faster than Dijkstra                   │
-│                                                        │
-└────────────────────────────────────────────────────────┘
 
-Cross-country route: < 1ms query time!
-\`\`\`
+Preprocessing (hours, done offline):
+1. Rank nodes by importance.
+2. Contract unimportant nodes and add shortcut edges.
+3. Create a hierarchy of importance levels.
+
+Query (milliseconds):
+1. Bidirectional search (from origin AND destination).
+2. Only traverse "up" the hierarchy.
+3. Meet in the middle at a high-importance node.
+
+Result: ~100× faster than Dijkstra. Cross-country route: <1 ms query time.
 
 **Real-time Traffic Integration**:
 \`\`\`
@@ -23800,38 +23501,8 @@ Millions of phones with Google Maps open:
 \`\`\`
 
 **Traffic Processing Pipeline**:
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│                  Traffic Pipeline                      │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│   Phone → Location Update → Kafka                      │
-│                               │                        │
-│                               ▼                        │
-│   ┌─────────────────────────────────────────────────┐  │
-│   │          Stream Processor (Flink)               │  │
-│   │                                                 │  │
-│   │  1. Map-match: Which road segment?              │  │
-│   │  2. Filter noise (GPS jitter, stops)            │  │
-│   │  3. Aggregate: Avg speed per segment            │  │
-│   │  4. Smooth: Moving average over 5 min           │  │
-│   │                                                 │  │
-│   └─────────────────────────────────────────────────┘  │
-│                               │                        │
-│                               ▼                        │
-│   Traffic DB: segment_id → current_speed_ratio         │
-│                               │                        │
-│                               ▼                        │
-│   ┌─────────────────────────────────────────────────┐  │
-│   │              Traffic Tile Service               │  │
-│   │                                                 │  │
-│   │  Generate color-coded traffic overlay tiles     │  │
-│   │  Green = flowing, Yellow = slow, Red = stopped  │  │
-│   │                                                 │  │
-│   └─────────────────────────────────────────────────┘  │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-\`\`\`
+
+![Real-time traffic pipeline — phone GPS to Flink to traffic DB to tile service](/diagrams/systemdesign/traffic-pipeline.png)
 
 **ETA Calculation**:
 \`\`\`
@@ -24705,22 +24376,10 @@ Peer-to-Peer (P2P):
 \`\`\`
 
 **SFU (Selective Forwarding Unit)**:
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│                         SFU                            │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│   Participant A ──upload─► SFU ──download──► B, C, D   │
-│   Participant B ──upload─► SFU ──download──► A, C, D   │
-│   Participant C ──upload─► SFU ──download──► A, B, D   │
-│   Participant D ──upload─► SFU ──download──► A, B, C   │
-│                                                        │
-│   Each participant uploads 1 stream                    │
-│   SFU forwards to N-1 recipients                       │
-│   Upload bandwidth: 1 stream (not N-1)                 │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-\`\`\`
+
+![SFU topology — each peer uploads 1 stream, SFU forwards to N-1](/diagrams/systemdesign/sfu-topology.png)
+
+Each participant uploads exactly 1 stream; the SFU forwards it to the other N-1 recipients. Upload bandwidth stays constant at 1 stream regardless of meeting size.
 
 **SFU vs MCU**:
 \`\`\`
@@ -24760,27 +24419,11 @@ WebRTC = Web Real-Time Communication
 \`\`\`
 
 **Signaling Flow**:
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│                  Signaling Exchange                    │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│   1. Alice creates "offer" (SDP describing her media)  │
-│      → Send to signaling server                        │
-│      → Server forwards to SFU                          │
-│                                                        │
-│   2. SFU creates "answer" (SDP describing its media)   │
-│      → Send back via signaling                         │
-│                                                        │
-│   3. ICE candidate exchange (network paths)            │
-│      Alice: "I can be reached at IP:port"              │
-│      SFU: "I can be reached at IP:port"                │
-│                                                        │
-│   4. Direct media connection established               │
-│      (using best available path)                       │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-\`\`\`
+
+1. Alice creates an SDP "offer" describing her media; sends it to the signaling server, which forwards to the SFU.
+2. The SFU creates an SDP "answer" describing its media and sends it back via signaling.
+3. ICE candidate exchange — both sides advertise reachable IP:port pairs ("I can be reached at IP:port").
+4. Direct media connection established using the best available path.
 
 **SDP (Session Description Protocol)**:
 \`\`\`
@@ -24830,24 +24473,10 @@ Only render visible tiles:
 \`\`\`
 
 **Optimization 2: Active speaker detection**
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│              Active Speaker Layout                     │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│   ┌────────────────────────────┐ ┌───┐ ┌───┐ ┌───┐    │
-│   │                            │ │   │ │   │ │   │    │
-│   │    Active Speaker (HD)     │ │   │ │   │ │   │    │
-│   │                            │ │ ▣ │ │ ▣ │ │ ▣ │    │
-│   │                            │ │   │ │   │ │   │    │
-│   └────────────────────────────┘ └───┘ └───┘ └───┘    │
-│                                  (Low quality thumbs)  │
-│                                                        │
-│   SFU detects speaker via audio levels                 │
-│   Automatically switches main view                     │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-\`\`\`
+
+![Active speaker layout — HD main feed plus LD thumbnails](/diagrams/systemdesign/active-speaker-layout.png)
+
+The SFU detects the active speaker via audio levels and automatically promotes that participant's stream to HD while keeping all others at low-quality thumbnail bitrate.
 
 **Optimization 3: Cascaded SFUs**
 \`\`\`
@@ -25546,32 +25175,11 @@ Why different?
 \`\`\`
 
 **Ranking Signals**:
-\`\`\`
-┌────────────────────────────────────────────────────────┐
-│               Feed Ranking Factors                     │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│   Content Quality:                                     │
-│     - Engagement (likes, comments, shares)             │
-│     - Dwell time on similar content                    │
-│     - Author credibility                               │
-│                                                        │
-│   Relevance:                                           │
-│     - Shared skills/industry with author               │
-│     - Connection strength (frequent interactions)      │
-│     - Topic relevance to your interests                │
-│                                                        │
-│   Freshness:                                           │
-│     - Time decay (newer = better)                      │
-│     - But don't show same content repeatedly           │
-│                                                        │
-│   Business Goals:                                      │
-│     - Mix in sponsored content                         │
-│     - Show job recommendations                         │
-│     - Promote engagement (comments > likes)            │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-\`\`\`
+
+- **Content quality** — engagement (likes, comments, shares), dwell time on similar content, author credibility.
+- **Relevance** — shared skills/industry with author, connection strength (frequent interactions), topic relevance to your interests.
+- **Freshness** — time decay (newer = better), but suppress repeated content.
+- **Business goals** — mix in sponsored content, surface job recommendations, promote engagement (comments > likes).
 
 **"Who Viewed Your Profile"**:
 \`\`\`

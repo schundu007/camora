@@ -6748,39 +6748,11 @@ Request: GET /api/checkout
         description: 'API Gateway with service mesh providing mTLS, circuit breakers, and observability across services.',
         svgTemplate: 'apiGateway',
         architecture: `
-        ┌───────────────────────────┼───────────────────────────┐
-        │                           │                           │
-        ▼                           ▼                           ▼
-┌───────────────┐           ┌───────────────┐           ┌───────────────┐
-│     User      │           │     Order     │           │    Payment    │
-│   Service     │           │   Service     │           │   Service     │
-│   ┌───────┐   │           │   ┌───────┐   │           │   ┌───────┐   │
-│   │Sidecar│   │           │   │Sidecar│   │           │   │Sidecar│   │
-│   └───────┘   │           │   └───────┘   │           │   └───────┘   │
-└───────┬───────┘           └───────┬───────┘           └───────┬───────┘
-        │                           │                           │
-        ▼                           │                           ▼
-┌───────────────┐                   │                   ┌───────────────┐
-│   Users DB    │                   │                   │  Payments DB  │
-└───────────────┘                   │                   └───────────────┘
-                                    │
-                    ┌───────────────▼───────────────┐
-                    │        Message Queue          │
-                    │         (Kafka/SQS)           │
-                    └───────────────────────────────┘
-                                    │
-                ┌───────────────────┼───────────────────┐
-                ▼                   ▼                   ▼
-        ┌───────────┐       ┌───────────┐       ┌───────────┐
-        │ Analytics │       │  Email    │       │ Inventory │
-        │  Service  │       │  Service  │       │  Service  │
-        └───────────┘       └───────────┘       └───────────┘
+![Production microservices architecture](/diagrams/systemdesign/microservices-mesh.png)
 
-Supporting Infrastructure:
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  Service Registry │ Config Server │ Distributed Tracing │ Log Aggregation  │
-│    (Consul)       │   (Vault)     │     (Jaeger)        │    (ELK)         │
-└─────────────────────────────────────────────────────────────────────────────┘`,
+API Gateway routes to User, Order, and Payment services (each with a sidecar). User and Payment services own their own databases. Order publishes events to a message queue (Kafka / SQS); Analytics, Email, and Inventory consume independently.
+
+Supporting infrastructure: Service Registry (Consul) · Config Server (Vault) · Distributed Tracing (Jaeger) · Log Aggregation (ELK).`,
         keyPoints: [
           'Service mesh handles cross-cutting concerns',
           'Sidecar proxies for each service',
@@ -7528,23 +7500,9 @@ Key features:
         description: 'WAF → API Gateway → Identity Provider (JWT) → Service Mesh with mTLS',
         svgTemplate: 'serviceMesh',
         oldArchitecture: `
-        ┌───────────────────────────┼───────────────────────────┐
-        │                           │                           │
-        ▼                           ▼                           ▼
-┌───────────────┐           ┌───────────────┐           ┌───────────────┐
-│   Service A   │           │   Service B   │           │   Service C   │
-│               │           │               │           │               │
-│ Validate JWT  │           │ Validate JWT  │           │ Validate JWT  │
-│ Check scopes  │           │ Check scopes  │           │ Check scopes  │
-│ RBAC checks   │           │ RBAC checks   │           │ RBAC checks   │
-└───────┬───────┘           └───────┬───────┘           └───────┬───────┘
-        │                           │                           │
-        ▼                           ▼                           ▼
-┌───────────────────────────────────────────────────────────────────────────┐
-│                         Encrypted Data Store                               │
-│                    Encryption at rest (AES-256)                            │
-│              Secrets in Vault │ Key rotation │ Audit logs                  │
-└───────────────────────────────────────────────────────────────────────────┘`,
+![Zero-trust services and encrypted store](/diagrams/systemdesign/zero-trust-services.png)
+
+Each service (A, B, C) independently validates the JWT, checks scopes, and runs RBAC checks before reading or writing. All three converge on a single encrypted data store: AES-256 at rest, secrets pinned in Vault, automatic key rotation, and full audit logs.`,
         keyPoints: [
           'Defense in depth: Multiple security layers',
           'Zero trust: Verify every request',
@@ -8448,56 +8406,15 @@ Cold (S3):   30+ days -- archive, very cheap, slow retrieval
         title: 'Enterprise Observability Platform',
         svgTemplate: 'observabilityAdvanced',
         architecture: `
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            Services                                          │
-│   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐                     │
-│   │  Service A  │    │  Service B  │    │  Service C  │                     │
-│   │ ┌─────────┐ │    │ ┌─────────┐ │    │ ┌─────────┐ │                     │
-│   │ │OTel SDK │ │    │ │OTel SDK │ │    │ │OTel SDK │ │                     │
-│   │ │Logs/Met/│ │    │ │Logs/Met/│ │    │ │Logs/Met/│ │                     │
-│   │ │Traces   │ │    │ │Traces   │ │    │ │Traces   │ │                     │
-│   │ └────┬────┘ │    │ └────┬────┘ │    │ └────┬────┘ │                     │
-│   └──────┼──────┘    └──────┼──────┘    └──────┼──────┘                     │
-└──────────┼──────────────────┼──────────────────┼────────────────────────────┘
-           │                  │                  │
-           └──────────────────┼──────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      OpenTelemetry Collector                                │
-│              (Receive, Process, Export)                                     │
-│   Sampling │ Batching │ Enrichment │ Routing                               │
-└────────────────────────────┬────────────────────────────────────────────────┘
-                             │
-         ┌───────────────────┼───────────────────┐
-         │                   │                   │
-         ▼                   ▼                   ▼
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│     Metrics     │  │      Logs       │  │     Traces      │
-│   Prometheus /  │  │    Loki /       │  │    Jaeger /     │
-│    Mimir        │  │  Elasticsearch  │  │     Tempo       │
-└────────┬────────┘  └────────┬────────┘  └────────┬────────┘
-         │                    │                    │
-         └────────────────────┼────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           Grafana                                            │
-│   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                      │
-│   │  Dashboards  │  │    Alerts    │  │   Explore    │                      │
-│   │              │  │              │  │ (Ad-hoc      │                      │
-│   │ - SLO burn  │  │ - PagerDuty  │  │  queries)    │                      │
-│   │ - Service   │  │ - Slack      │  │              │                      │
-│   │   health    │  │ - On-call    │  │              │                      │
-│   └──────────────┘  └──────────────┘  └──────────────┘                      │
-└─────────────────────────────────────────────────────────────────────────────┘
+![Enterprise observability — OTel pipeline to dedicated backends](/diagrams/systemdesign/otel-pipeline.png)
 
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    Incident Management                                       │
-│     PagerDuty │ Opsgenie │ Runbooks │ Postmortems                          │
-└─────────────────────────────────────────────────────────────────────────────┘`,
+Each service ships logs, metrics, and traces through the OpenTelemetry SDK. Collectors handle sampling, batching, enrichment, and routing, then fan out to dedicated backends:
+
+- Metrics → Prometheus / Mimir
+- Logs → Loki / Elasticsearch
+- Traces → Jaeger / Tempo
+
+Grafana sits on top for unified dashboards, alerts (PagerDuty, Slack, on-call), and ad-hoc Explore queries. Incident management (PagerDuty / Opsgenie) handles runbooks and postmortems.`,
         keyPoints: [
           'OpenTelemetry for unified instrumentation',
           'Collector for processing and routing',
@@ -10618,32 +10535,27 @@ In system design interviews, data partitioning is relevant whenever the dataset 
   Same schema on every shard, different rows
 
   Shard 1 (users A-M)     Shard 2 (users N-Z)
-  ┌──────────────────┐    ┌──────────────────┐
-  │ id  name  email  │    │ id  name  email  │
-  │ 1   Alice  a@..  │    │ 3   Nancy  n@..  │
-  │ 2   Bob    b@..  │    │ 4   Oscar  o@..  │
-  └──────────────────┘    └──────────────────┘
+  Shard 1                Shard 2
+  | id | name  | email |  | id | name  | email |
+  | 1  | Alice | a@..  |  | 3  | Nancy | n@..  |
+  | 2  | Bob   | b@..  |  | 4  | Oscar | o@..  |
 
 Vertical Partitioning:
   Different columns on different services
 
   User Service           Activity Service
-  ┌───────────────┐     ┌──────────────────────┐
-  │ id name email │     │ user_id action  ts    │
-  │ 1  Alice a@.. │     │ 1      login  12:00  │
-  │ 2  Bob   b@.. │     │ 2      view   12:05  │
-  └───────────────┘     └──────────────────────┘
+  Users table              Activity log
+  | id | name  | email |  | user_id | action | ts    |
+  | 1  | Alice | a@..  |  | 1       | login  | 12:00 |
+  | 2  | Bob   | b@..  |  | 2       | view   | 12:05 |
 
 Directory-Based Partitioning:
   Lookup service maps keys to shards
 
-  ┌───────────────────┐
-  │  Directory Service │
-  │  key_range -> shard│
-  │  A-F -> Shard 1    │
-  │  G-M -> Shard 2    │
-  │  N-Z -> Shard 3    │
-  └───────────────────┘`
+  Directory Service: maps key range → shard.
+    A–F → Shard 1
+    G–M → Shard 2
+    N–Z → Shard 3`
       },
 
       apiDesign: {
@@ -12622,18 +12534,10 @@ With NGINX caching (60s TTL):
 **Sidecar proxy deployment model**:
 \`\`\`
 Pod / Container Group:
-┌──────────────────────────────┐
-│  ┌──────────┐  ┌──────────┐ │
-│  │ Your     │  │ Envoy    │ │
-│  │ Service  │──│ Sidecar  │──── outbound traffic (mTLS, retries, LB)
-│  │ (Go/Java)│  │ Proxy    │ │
-│  │ :8080    │  │ :15001   │ │
-│  └──────────┘  └──────────┘ │
-│                              │
-│  Inbound traffic ────────>  │
-│  iptables redirects all     │
-│  traffic through Envoy      │
-└──────────────────────────────┘
+Pod with Envoy sidecar:
+  - Your service (Go / Java) on :8080
+  - Envoy sidecar proxy on :15001 — handles outbound mTLS, retries, load balancing
+  - iptables redirects all inbound and outbound pod traffic through Envoy
 
 Your service sends HTTP to localhost:8080/api/orders
 iptables intercepts and redirects to Envoy (:15001)
@@ -14798,22 +14702,15 @@ Personalized (0% cache at CDN):
 
 **Strategy: Split pages into cacheable shell + dynamic fragments**:
 \`\`\`
-HTML page structure:
-  ┌──────────────────────────────────┐
-  │  Header (static, cached at CDN)  │
-  │  Navigation (static)             │
-  ├──────────────────────────────────┤
-  │  Product Info (semi-dynamic,     │
-  │    cached 60s at CDN)            │
-  ├──────────────────────────────────┤
-  │  Price (dynamic, fetched client- │
-  │    side via JS from API)         │
-  ├──────────────────────────────────┤
-  │  Recommendations (personalized,  │
-  │    fetched client-side)          │
-  ├──────────────────────────────────┤
-  │  Footer (static, cached at CDN)  │
-  └──────────────────────────────────┘
+HTML page structure (top → bottom):
+  | Section          | Caching                                          |
+  | ---------------- | ------------------------------------------------ |
+  | Header           | Static, cached at CDN                            |
+  | Navigation       | Static                                           |
+  | Product Info     | Semi-dynamic, cached 60s at CDN                  |
+  | Price            | Dynamic, fetched client-side via JS from API     |
+  | Recommendations  | Personalized, fetched client-side                |
+  | Footer           | Static, cached at CDN                            |
 
 CDN caches the page shell (90% of the HTML)
 Client-side JavaScript fetches personalized fragments from API
@@ -15352,12 +15249,7 @@ Failover States:
           question: 'What is the difference between active-passive and active-active redundancy, and how do companies like AWS and Google implement each?',
           answer: `**Active-Passive (Hot Standby)**:
 
-  ┌─────────────┐   continuous   ┌─────────────┐
-  │   Active    │ ──replication─> │   Passive   │
-  │   (serves   │                 │  (standby,  │
-  │   traffic)  │                 │  no traffic)│
-  └──────┬──────┘                 └──────┬──────┘
-         │                               │
+  Active (serves traffic) → continuous replication → Passive (standby, no traffic)
     All traffic                     Idle (waiting)
          │                               │
          └───── Failover ────────────────┘
@@ -15373,12 +15265,7 @@ Failover States:
 
 **Active-Active**:
 
-  ┌─────────────┐                 ┌─────────────┐
-  │   Active 1  │ <──bi-dir───>  │   Active 2  │
-  │  (US-East)  │   replication   │  (EU-West)  │
-  │  serves US  │                 │  serves EU  │
-  └──────┬──────┘                 └──────┬──────┘
-         │                               │
+  Active 1 (US-East, serves US) ↔ bi-directional replication ↔ Active 2 (EU-West, serves EU)
     US traffic                       EU traffic
 
   Production examples:
@@ -17644,10 +17531,9 @@ Server-Sent Events (SSE):
     Base64 encoded. This prevents caching proxies from confusing WS with HTTP.
 
 **Frame format** (binary, minimal overhead):
-  ┌──────────┬─────────┬───────────────────┬──────────┐
-  │ FIN+OP   │ Length  │ Masking Key       │ Payload  │
-  │ 1 byte   │ 1-9 B  │ 4 bytes (client)  │ N bytes  │
-  └──────────┴─────────┴───────────────────┴──────────┘
+  | Field        | FIN+OP | Length  | Masking Key (client) | Payload |
+  | ------------ | ------ | ------- | -------------------- | ------- |
+  | Width        | 1 byte | 1–9 B   | 4 bytes              | N bytes |
 
   Opcodes: 0x1 (text), 0x2 (binary), 0x8 (close), 0x9 (ping), 0xA (pong)
   Client-to-server frames MUST be masked (XOR with 4-byte key)
@@ -17920,16 +17806,12 @@ Server-Sent Events (SSE):
 **Message replay on reconnection** (critical for reliability):
 
   Architecture:
-  ┌─────────────────────────┐
-  │  Message Store           │
-  │  (Redis Sorted Set or    │
-  │   Kafka topic)           │
-  │  msg_1 (seq=100)         │
-  │  msg_2 (seq=101)         │
-  │  msg_3 (seq=102) <- client disconnected here
-  │  msg_4 (seq=103) <- missed
-  │  msg_5 (seq=104) <- missed
-  └─────────────────────────┘
+  Message Store (Redis Sorted Set or Kafka topic):
+    msg_1 (seq=100)
+    msg_2 (seq=101)
+    msg_3 (seq=102)   ← client disconnected here
+    msg_4 (seq=103)   ← missed
+    msg_5 (seq=104)   ← missed
 
   Client reconnects: "Last seen: seq=102"
   Server: Replay msg_4, msg_5 from store
@@ -19974,13 +19856,7 @@ Chunk metadata (at Master/NameNode):
 **Rack-aware block placement strategy** (HDFS default):
 
   Rack 1               Rack 2
-  ┌──────────┐        ┌──────────┐
-  │ DN1      │        │ DN3      │
-  │ [copy 1] │        │ [copy 3] │
-  │          │        │          │
-  │ DN2      │        │ DN4      │
-  │ [copy 2] │        │          │
-  └──────────┘        └──────────┘
+  Rack A: DN1 [copy 1], DN2 [copy 2]   |   Rack B: DN3 [copy 3], DN4
 
   Placement rules:
   - Copy 1: On the DataNode where the writer is (or random if external client)
@@ -20201,19 +20077,9 @@ Problem with co-located storage + compute:
   4. Hardware lifecycle: Storage and compute refresh at different rates
 
 Modern separation architecture:
-  ┌─────────────────────────────┐
-  │ Compute Layer (ephemeral)   │
-  │ Spark, Presto, Trino, Flink │
-  │ Scale: 10 -> 1000 -> 10     │
-  │ Cost: Pay only while running │
-  └──────────┬──────────────────┘
-             │ (25-100 Gbps network)
-  ┌──────────┴──────────────────┐
-  │ Storage Layer (persistent)   │
-  │ S3, GCS, Azure Blob, MinIO  │
-  │ Scale: Unlimited             │
-  │ Cost: $0.023/GB/month (S3)  │
-  └─────────────────────────────┘
+  - **Compute layer (ephemeral)** — Spark, Presto, Trino, Flink. Scale: 10 → 1000 → 10. Cost: pay only while running.
+  - **Storage layer (persistent)** — S3, GCS, Azure Blob, MinIO. Scale: unlimited. Cost: ~$0.023/GB/month on S3.
+  - 25–100 Gbps network connects compute to storage.
 \`\`\`
 
 **Why this works now (but did not in 2010)**:
@@ -20369,10 +20235,7 @@ Formats: Each video stored in 10-20 quality variants (240p to 8K)
 
 **Architecture for video storage and delivery**:
 \`\`\`
-┌─────────┐    ┌──────────────┐    ┌───────────┐    ┌─────────┐
-│ Upload  │───>│ Transcoding  │───>│ Object    │───>│   CDN   │
-│ Service │    │ Pipeline     │    │ Storage   │    │  Edge   │
-└─────────┘    └──────────────┘    └───────────┘    └─────────┘
+  Upload Service → Transcoding Pipeline → Object Storage → CDN Edge
      │                │                   │               │
    Upload          Encode to           Store all        Serve to
    single file     multiple            variants         viewers
@@ -21790,11 +21653,7 @@ Kafka architecture (coupled):
   └──────────────────┘
 
 Pulsar architecture (separated):
-  ┌────────��─────────┐     ┌──────────────────┐
-  │ Broker 1         │     │ BookKeeper 1     │
-  │ (stateless)      │────>│ (storage only)   │
-  │ serves requests  │     │ [data on disk]   │
-  └──────────────────┘     └──────────────────┘
+  Broker 1 (stateless, serves requests) → BookKeeper 1 (storage only, [data on disk])
 
   Brokers: Handle topic ownership, client connections, and protocol
   BookKeeper (bookies): Store the actual message data
@@ -22243,14 +22102,12 @@ Wire format comparison (same user object):
   - Concurrent streams without blocking
 
   Benchmark (1000 requests, same data):
-  ┌──────────────┬──────────┬──────────┐
-  │ Metric       │ REST/JSON│ gRPC     │
-  ├──────────────┼──────────┼──────────┤
-  │ Total bytes  │ 580 KB   │ 175 KB   │
-  │ Avg latency  │ 12 ms    │ 3 ms     │
-  │ Throughput   │ 8K RPS   │ 35K RPS  │
-  │ CPU usage    │ Higher   │ Lower    │
-  └──────────────┴──────────┴──────────┘
+  | Metric        | REST/JSON | gRPC     |
+  | ------------- | --------- | -------- |
+  | Total bytes   | 580 KB    | 175 KB   |
+  | Avg latency   | 12 ms     | 3 ms     |
+  | Throughput    | 8K RPS    | 35K RPS  |
+  | CPU usage     | Higher    | Lower    |
 
 **When REST is actually faster**:
 - Cached responses (304 Not Modified, CDN hits)
@@ -22911,10 +22768,7 @@ Common Async Patterns:
 
 **Orchestration-based Saga** (central coordinator):
 
-  ┌─────────────────────────────────┐
-  │        Saga Orchestrator        │
-  │  (Order Saga State Machine)     │
-  └──────────┬──────────────────────┘
+  Saga Orchestrator (Order Saga State Machine)
              │
    Step 1: Create Order ──> Order Service
    Step 2: Charge Payment ──> Payment Service
@@ -23016,11 +22870,9 @@ Common Async Patterns:
 
 5. **Load shedding with priority**:
    Priority Queue:
-   ┌────────────────────────────────┐
-   │ High: Payment events     -> Process always │
-   │ Medium: Order updates    -> Process if capacity │
-   │ Low: Analytics events    -> Drop under pressure │
-   └────────────────────────────────┘
+   - High: payment events → process always.
+   - Medium: order updates → process if capacity available.
+   - Low: analytics events → drop under pressure.
 
 **Reactive streams** (built-in backpressure):
 - Consumer signals how many items it can handle
@@ -23667,15 +23519,8 @@ Background process compares all replicas and fixes divergence.
 
   Uses Merkle trees for efficient comparison:
 
-  Replica A                Replica B
-  ┌───────────┐           ┌───────────┐
-  │  Root: h1  │ ≠ ≠ ≠ ≠ │  Root: h2  │  <- roots differ!
-  ├─────┬─────┤           ├─────┬─────┤
-  │ L:a │ R:b │           │ L:a │ R:c │  <- right subtree differs
-  ├──┬──┤     │           ├──┬──┤     │
-  │k1│k2│ k3  │           │k1│k2│ k3' │  <- k3 is stale on B
-  └──┴──┘     │           └──┴──┘     │
-              └───────────────────────┘
+  Replica A — Root h1, left subtree hashes to a (k1, k2), right subtree hashes to b (k3).
+  Replica B — Root h2 (≠ h1!), left subtree matches (a), right subtree differs (c) because k3' is stale on B.
 
   Only exchange data for differing subtrees (k3)
   Not the entire dataset -> O(log N) comparison
@@ -23998,13 +23843,11 @@ Two clients write different values to the same key concurrently:
 **Hint storage structure (Cassandra)**:
 
   system.hints table:
-  ┌──────────┬──────────┬───────────┬──────────┐
-  │ target   │ hint_id  │ mutation  │ created  │
-  ├──────────┼──────────┼───────────┼──────────┤
-  │ node-C   │ uuid-1   │ {binary}  │ 14:30:01 │
-  │ node-C   │ uuid-2   │ {binary}  │ 14:30:02 │
-  │ node-E   │ uuid-3   │ {binary}  │ 14:35:10 │
-  └──────────┴──────────┴───────────┴──────────┘
+  | target  | hint_id | mutation  | created  |
+  | ------- | ------- | --------- | -------- |
+  | node-C  | uuid-1  | {binary}  | 14:30:01 |
+  | node-C  | uuid-2  | {binary}  | 14:30:02 |
+  | node-E  | uuid-3  | {binary}  | 14:35:10 |
 
 **Limitations and failure modes**:
 
@@ -24427,10 +24270,7 @@ In system design interviews, leader-follower replication appears in every databa
                            └──────────┘
 
   Replication Log (WAL / Binlog):
-  ┌─────┬─────┬─────┬─────┬─────┐
-  │ LSN │ LSN │ LSN │ LSN │ LSN │
-  │  1  │  2  │  3  │  4  │  5  │
-  └─────┴─────┴─────┴─────┴─────┘
+  Replication log: LSN 1 → 2 → 3 → 4 → 5 (monotonic sequence numbers)
     ▲                         ▲
     │                         │
   Follower 2              Leader
@@ -24511,11 +24351,8 @@ In system design interviews, leader-follower replication appears in every databa
 **How it happens**:
 
   Network partition:
-  ┌─────────────────┐  PARTITION  ┌─────────────────┐
-  │ Leader (original)│ ////////// │ Follower -> NEW  │
-  │ accepts writes!  │            │ Leader (elected) │
-  │                  │            │ accepts writes!  │
-  └─────────────────┘            └─────────────────┘
+  During a network partition, two leaders coexist:
+    Leader (original) — still accepts writes!  ⟸ partition ⟹  Follower → NEW Leader (elected) — also accepts writes!
   Client A writes here            Client B writes here
   -> DATA DIVERGENCE (catastrophic)
 
@@ -24585,11 +24422,10 @@ In system design interviews, leader-follower replication appears in every databa
 **Log replication**:
 
   Leader           Follower 1       Follower 2
-  ┌─────────┐     ┌─────────┐     ┌─────────┐
-  │ set x=1 │ --> │ set x=1 │     │ set x=1 │
-  │ set y=2 │ --> │ set y=2 │ --> │ set y=2 │
-  │ set z=3 │     │         │     │         │
-  └─────────┘     └─────────┘     └─────────┘
+  Replica states diverge during partition:
+    Replica A: set x=1; set y=2; set z=3
+    Replica B: set x=1; set y=2 (missed z)
+    Replica C: set x=1; set y=2 (missed z)
   committed       replicated      replicated
   (majority)      (not yet z=3)
 

@@ -541,6 +541,369 @@ def diag_consumer_groups():
     print('Generated: consumer-groups')
 
 
+# ── Wave 5: residual ASCII cleanup diagrams ───────────────────────
+
+def diag_priority_queue_routing():
+    g = base_graph('priority_queue_routing',
+                   'Priority queue routing — urgent / normal / batch fanout', rankdir='TB')
+    n(g, 'req', 'Incoming Requests', 'gray')
+    n(g, 'router', 'Priority Router', 'navy')
+    n(g, 'urgent', 'URGENT Queue\n(Kafka)', 'red')
+    n(g, 'normal', 'NORMAL Queue\n(Kafka)', 'gold')
+    n(g, 'batch',  'BATCH Queue\n(Kafka)', 'green')
+    n(g, 'wu', 'Workers (10x)\np99 < 1s', 'red')
+    n(g, 'wn', 'Workers (normal)\np99 < 5s', 'gold')
+    n(g, 'wb', 'Scheduled Job\nhourly', 'green')
+    e(g, 'req', 'router')
+    e(g, 'router', 'urgent', 'OTP, alerts')
+    e(g, 'router', 'normal', 'order updates')
+    e(g, 'router', 'batch', 'marketing')
+    e(g, 'urgent', 'wu')
+    e(g, 'normal', 'wn')
+    e(g, 'batch',  'wb')
+    g.render(os.path.join(OUT, 'priority-queue-routing'), cleanup=True)
+    print('Generated: priority-queue-routing')
+
+
+def diag_typeahead_cache():
+    g = base_graph('typeahead_cache',
+                   'Typeahead cache hierarchy — browser → CDN edge → service')
+    n(g, 'browser', 'Browser Cache\n(1 min)', 'gray')
+    n(g, 'cdn', 'CDN Edge Cache\n(5 min)', 'navy')
+    n(g, 'svc', 'Typeahead Service', 'green')
+    e(g, 'browser', 'cdn')
+    e(g, 'cdn', 'svc', 'on miss')
+    g.render(os.path.join(OUT, 'typeahead-cache'), cleanup=True)
+    print('Generated: typeahead-cache')
+
+
+def diag_audio_streaming_path():
+    g = base_graph('audio_streaming_path',
+                   'Audio streaming path — client → CDN → origin → S3')
+    n(g, 'client', 'Client', 'gray')
+    n(g, 'cdn', 'CDN (Edge)', 'navy')
+    n(g, 'origin', 'Origin\n(if miss)', 'green')
+    n(g, 's3', 'S3\n(Audio)', 'gold')
+    e(g, 'client', 'cdn')
+    e(g, 'cdn', 'origin', 'miss')
+    e(g, 'origin', 's3')
+    g.render(os.path.join(OUT, 'audio-streaming-path'), cleanup=True)
+    print('Generated: audio-streaming-path')
+
+
+def diag_spotify_connect():
+    g = base_graph('spotify_connect',
+                   'Spotify Connect — control device → service → playback device', rankdir='TB')
+    n(g, 'phone', 'Phone\n(Control)', 'gray')
+    n(g, 'svc',   'Connect Service', 'navy')
+    n(g, 'spk',   'Speaker\n(Playback)', 'green')
+    n(g, 'state', 'Player State\n{ track, pos, device_id }', 'gold')
+    e(g, 'phone', 'svc')
+    e(g, 'svc', 'spk')
+    e(g, 'svc', 'state', 'persist')
+    g.render(os.path.join(OUT, 'spotify-connect'), cleanup=True)
+    print('Generated: spotify-connect')
+
+
+def diag_hybrid_fanout():
+    g = base_graph('hybrid_fanout',
+                   'Hybrid fan-out — push for normal users, pull for celebrities', rankdir='TB')
+    n(g, 'post', 'User Posts', 'gray')
+    n(g, 'check', 'Check followers', 'navy')
+    n(g, 'normal', '< 10K followers\n(Normal users)', 'green')
+    n(g, 'celeb',  '> 10K followers\n(Celebrities)', 'gold')
+    n(g, 'push', 'PUSH to feeds\n(async fan-out)', 'green')
+    n(g, 'pull', 'PULL at read time\n(merge on query)', 'gold')
+    e(g, 'post', 'check')
+    e(g, 'check', 'normal')
+    e(g, 'check', 'celeb')
+    e(g, 'normal', 'push')
+    e(g, 'celeb', 'pull')
+    g.render(os.path.join(OUT, 'hybrid-fanout'), cleanup=True)
+    print('Generated: hybrid-fanout')
+
+
+def diag_realtime_feed_update():
+    g = base_graph('realtime_feed_update',
+                   'Real-time feed update — Kafka → fan-out → WebSocket fleet', rankdir='TB')
+    n(g, 'src', 'Friend posts\n(Post Service)', 'gray')
+    n(g, 'kafka', 'Kafka', 'navy')
+    n(g, 'fanout', 'Fan-out Service', 'navy')
+    n(g, 'ws1', 'WebSocket Server 1\n(users A-M)', 'green')
+    n(g, 'ws2', 'WebSocket Server 2\n(users N-S)', 'green')
+    n(g, 'ws3', 'WebSocket Server 3\n(users T-Z)', 'green')
+    n(g, 'users', 'Connected Users', 'gold')
+    e(g, 'src', 'kafka')
+    e(g, 'kafka', 'fanout')
+    e(g, 'fanout', 'ws1')
+    e(g, 'fanout', 'ws2')
+    e(g, 'fanout', 'ws3')
+    e(g, 'ws1', 'users')
+    e(g, 'ws2', 'users')
+    e(g, 'ws3', 'users')
+    g.render(os.path.join(OUT, 'realtime-feed-update'), cleanup=True)
+    print('Generated: realtime-feed-update')
+
+
+def diag_consistent_hash_ring():
+    g = base_graph('consistent_hash_ring',
+                   'Consistent hash ring — keys walk clockwise to nearest node', rankdir='TB')
+    g.attr(layout='circo')
+    n(g, 'a', 'Node A', 'navy')
+    n(g, 'b', 'Node B', 'green')
+    n(g, 'c', 'Node C', 'gold')
+    n(g, 'k1', 'key1', 'gray')
+    n(g, 'k2', 'key2', 'gray')
+    n(g, 'k3', 'key3', 'gray')
+    e(g, 'k1', 'a', 'walk CW')
+    e(g, 'k2', 'b', 'walk CW')
+    e(g, 'k3', 'c', 'walk CW')
+    e(g, 'a', 'b', '', '#94a3b8', 'dashed')
+    e(g, 'b', 'c', '', '#94a3b8', 'dashed')
+    e(g, 'c', 'a', '', '#94a3b8', 'dashed')
+    g.render(os.path.join(OUT, 'consistent-hash-ring'), cleanup=True)
+    print('Generated: consistent-hash-ring')
+
+
+def diag_write_quorum():
+    g = base_graph('write_quorum',
+                   'Write path with quorum (N=3, W=2) — coordinator fanout to replicas', rankdir='TB')
+    n(g, 'client', 'Client', 'gray')
+    n(g, 'coord',  'Coordinator', 'navy')
+    n(g, 'r1', 'Replica 1\n(ACK)', 'green')
+    n(g, 'r2', 'Replica 2\n(ACK)', 'green')
+    n(g, 'r3', 'Replica 3\n(async)', 'gold')
+    n(g, 'ok', 'W=2 acks → success\n(R3 eventual)', 'navy')
+    e(g, 'client', 'coord')
+    e(g, 'coord', 'r1')
+    e(g, 'coord', 'r2')
+    e(g, 'coord', 'r3', 'async')
+    e(g, 'r1', 'ok')
+    e(g, 'r2', 'ok')
+    g.render(os.path.join(OUT, 'write-quorum'), cleanup=True)
+    print('Generated: write-quorum')
+
+
+def diag_news_ingestion():
+    g = base_graph('news_ingestion',
+                   'News article ingestion pipeline', rankdir='TB')
+    n(g, 'feed', 'Feed Poller\n(scheduled)', 'gray')
+    n(g, 'dedup', 'URL Dedup\n(Bloom filter)', 'navy')
+    n(g, 'fetch', 'Content Fetcher\n(text, images, meta)', 'green')
+    n(g, 'nlp',   'NLP Pipeline\n(entities, embeddings,\nsummarize)', 'purple')
+    n(g, 'es',    'Elasticsearch\n(search)', 'gold')
+    n(g, 'pg',    'PostgreSQL\n(metadata)', 'gold')
+    e(g, 'feed', 'dedup', 'check seen')
+    e(g, 'dedup', 'fetch', 'new URLs')
+    e(g, 'fetch', 'nlp')
+    e(g, 'nlp', 'es')
+    e(g, 'nlp', 'pg')
+    g.render(os.path.join(OUT, 'news-ingestion'), cleanup=True)
+    print('Generated: news-ingestion')
+
+
+def diag_write_aggregation():
+    g = base_graph('write_aggregation',
+                   'Leaderboard write aggregation — local buffer per server, flush 1s')
+    n(g, 'g1', 'Game Server 1', 'gray')
+    n(g, 'g2', 'Game Server 2', 'gray')
+    n(g, 'g3', 'Game Server 3', 'gray')
+    n(g, 'buf', 'Local Buffer\n(per server,\nkeep highest)', 'navy')
+    n(g, 'redis', 'Redis ZADD\n(every 1s)', 'green')
+    e(g, 'g1', 'buf')
+    e(g, 'g2', 'buf')
+    e(g, 'g3', 'buf')
+    e(g, 'buf', 'redis', 'flush')
+    g.render(os.path.join(OUT, 'write-aggregation'), cleanup=True)
+    print('Generated: write-aggregation')
+
+
+def diag_hotel_search_pipeline():
+    g = base_graph('hotel_search_pipeline',
+                   'Hotel search — Elasticsearch filter → DB exact availability → ranking', rankdir='TB')
+    n(g, 'q', 'User query\n(NYC, dates, guests, price)', 'gray')
+    n(g, 'es', 'Phase 1 — Elasticsearch\n(geo, rating, amenities;\n500 candidates)', 'navy')
+    n(g, 'db', 'Phase 2 — Database\n(exact room_inventory,\nprices, capacity;\n100 hotels)', 'green')
+    n(g, 'rank', 'Phase 3 — Ranking\n(relevance × reviews ×\nprice + personalization +\nbusiness rules)', 'gold')
+    e(g, 'q', 'es')
+    e(g, 'es', 'db')
+    e(g, 'db', 'rank')
+    g.render(os.path.join(OUT, 'hotel-search-pipeline'), cleanup=True)
+    print('Generated: hotel-search-pipeline')
+
+
+def diag_booking_state_machine():
+    g = base_graph('booking_state_machine',
+                   'Booking state machine — HOLD → CONFIRMED → COMPLETED with failure paths')
+    n(g, 'hold', 'HOLD\n(10 min TTL)', 'gold')
+    n(g, 'conf', 'CONFIRMED', 'navy')
+    n(g, 'comp', 'COMPLETED', 'green')
+    n(g, 'exp', 'EXPIRED', 'gray')
+    n(g, 'canc', 'CANCELLED', 'red')
+    e(g, 'hold', 'conf', 'payment ok')
+    e(g, 'conf', 'comp', 'stay ends')
+    e(g, 'hold', 'exp', 'TTL', '#94a3b8', 'dashed')
+    e(g, 'conf', 'canc', 'user cancels', '#94a3b8', 'dashed')
+    g.render(os.path.join(OUT, 'booking-state-machine'), cleanup=True)
+    print('Generated: booking-state-machine')
+
+
+def diag_channel_manager():
+    g = base_graph('channel_manager',
+                   'Hotel channel manager — central inventory hub fans out to OTAs', rankdir='TB')
+    n(g, 'pms', 'Hotel PMS', 'gray')
+    n(g, 'hub', 'Channel Manager Hub', 'navy')
+    n(g, 'b', 'Booking.com', 'green')
+    n(g, 'e', 'Expedia', 'green')
+    n(g, 'h', 'Hotels.com', 'green')
+    n(g, 'd', 'Direct Website', 'green')
+    n(g, 'a', 'Airbnb', 'green')
+    e(g, 'pms', 'hub')
+    e(g, 'hub', 'b')
+    e(g, 'hub', 'e')
+    e(g, 'hub', 'h')
+    e(g, 'hub', 'd')
+    e(g, 'hub', 'a')
+    g.render(os.path.join(OUT, 'channel-manager'), cleanup=True)
+    print('Generated: channel-manager')
+
+
+def diag_traffic_pipeline():
+    g = base_graph('traffic_pipeline',
+                   'Real-time traffic pipeline — phone GPS → Flink → traffic DB → tile service', rankdir='TB')
+    n(g, 'phone', 'Phone\n(location update)', 'gray')
+    n(g, 'kafka', 'Kafka', 'navy')
+    n(g, 'flink', 'Stream Processor (Flink)\nmap-match · denoise ·\nagg speed · smooth', 'purple')
+    n(g, 'tdb',   'Traffic DB\nsegment_id → speed_ratio', 'gold')
+    n(g, 'tiles', 'Traffic Tile Service\ngreen / yellow / red overlay', 'green')
+    e(g, 'phone', 'kafka')
+    e(g, 'kafka', 'flink')
+    e(g, 'flink', 'tdb')
+    e(g, 'tdb', 'tiles')
+    g.render(os.path.join(OUT, 'traffic-pipeline'), cleanup=True)
+    print('Generated: traffic-pipeline')
+
+
+def diag_sfu_topology():
+    g = base_graph('sfu_topology',
+                   'SFU topology — each peer uploads 1 stream, SFU forwards to N-1', rankdir='TB')
+    n(g, 'sfu', 'SFU\n(Selective Forwarding Unit)', 'navy')
+    n(g, 'a', 'Participant A', 'green')
+    n(g, 'b', 'Participant B', 'green')
+    n(g, 'c', 'Participant C', 'green')
+    n(g, 'd', 'Participant D', 'green')
+    e(g, 'a', 'sfu', 'upload')
+    e(g, 'b', 'sfu', 'upload')
+    e(g, 'c', 'sfu', 'upload')
+    e(g, 'd', 'sfu', 'upload')
+    e(g, 'sfu', 'a', 'B,C,D', '#94a3b8', 'dashed')
+    e(g, 'sfu', 'b', 'A,C,D', '#94a3b8', 'dashed')
+    e(g, 'sfu', 'c', 'A,B,D', '#94a3b8', 'dashed')
+    e(g, 'sfu', 'd', 'A,B,C', '#94a3b8', 'dashed')
+    g.render(os.path.join(OUT, 'sfu-topology'), cleanup=True)
+    print('Generated: sfu-topology')
+
+
+def diag_active_speaker_layout():
+    g = base_graph('active_speaker_layout',
+                   'Active speaker layout — SFU upgrades main feed to HD, others stay LD')
+    n(g, 'sfu', 'SFU\n(audio level detection)', 'navy')
+    n(g, 'main', 'Active Speaker\n(HD, ~2 Mbps)', 'green')
+    n(g, 't1', 'Thumbnail 1\n(LD, ~100 Kbps)', 'gold')
+    n(g, 't2', 'Thumbnail 2\n(LD)', 'gold')
+    n(g, 't3', 'Thumbnail 3\n(LD)', 'gold')
+    e(g, 'sfu', 'main', 'HD')
+    e(g, 'sfu', 't1')
+    e(g, 'sfu', 't2')
+    e(g, 'sfu', 't3')
+    g.render(os.path.join(OUT, 'active-speaker-layout'), cleanup=True)
+    print('Generated: active-speaker-layout')
+
+
+def diag_cqrs_vs_traditional():
+    g = base_graph('cqrs_vs_traditional',
+                   'Single-model vs CQRS — separate read and write models', rankdir='TB')
+    with g.subgraph(name='cluster_trad') as s:
+        s.attr(label='  Traditional (single model)  ', style='rounded',
+               color='#cbd5e1', fontname='Helvetica Neue', fontsize='11')
+        n(s, 'app1', 'Application', 'gray')
+        n(s, 'db1',  'Single DB\n(reads + writes,\nJOINs on read)', 'navy')
+        e(s, 'app1', 'db1', 'read + write')
+    with g.subgraph(name='cluster_cqrs') as s:
+        s.attr(label='  CQRS (separated models)  ', style='rounded',
+               color='#cbd5e1', fontname='Helvetica Neue', fontsize='11')
+        n(s, 'app2', 'Application', 'gray')
+        n(s, 'wdb',  'Write DB\n(normalized, ACID)', 'green')
+        n(s, 'rdb',  'Read Store\n(denormalized,\npre-joined)', 'gold')
+        e(s, 'app2', 'wdb', 'commands')
+        e(s, 'app2', 'rdb', 'queries')
+        e(s, 'wdb', 'rdb', 'event stream', '#6366f1', 'dashed')
+    g.render(os.path.join(OUT, 'cqrs-vs-traditional'), cleanup=True)
+    print('Generated: cqrs-vs-traditional')
+
+
+def diag_microservices_mesh():
+    g = base_graph('microservices_mesh',
+                   'Production microservices — API Gateway, sidecar mesh, message queue', rankdir='TB')
+    n(g, 'gw', 'API Gateway', 'navy')
+    n(g, 'user', 'User Service\n[sidecar]', 'green')
+    n(g, 'order', 'Order Service\n[sidecar]', 'green')
+    n(g, 'pay', 'Payment Service\n[sidecar]', 'green')
+    n(g, 'udb', 'Users DB', 'gold')
+    n(g, 'pdb', 'Payments DB', 'gold')
+    n(g, 'mq',  'Message Queue\n(Kafka / SQS)', 'purple')
+    n(g, 'an',  'Analytics', 'green')
+    n(g, 'em',  'Email', 'green')
+    n(g, 'inv', 'Inventory', 'green')
+    n(g, 'infra', 'Service Registry (Consul) ·\nConfig (Vault) ·\nTracing (Jaeger) ·\nLogs (ELK)', 'gray')
+    e(g, 'gw', 'user')
+    e(g, 'gw', 'order')
+    e(g, 'gw', 'pay')
+    e(g, 'user', 'udb')
+    e(g, 'pay', 'pdb')
+    e(g, 'order', 'mq', 'events')
+    e(g, 'mq', 'an')
+    e(g, 'mq', 'em')
+    e(g, 'mq', 'inv')
+    e(g, 'gw', 'infra', '', '#94a3b8', 'dashed')
+    g.render(os.path.join(OUT, 'microservices-mesh'), cleanup=True)
+    print('Generated: microservices-mesh')
+
+
+def diag_zero_trust_services():
+    g = base_graph('zero_trust_services',
+                   'Zero-trust services — JWT validated at every hop, encrypted store')
+    n(g, 'a', 'Service A\nValidate JWT\nCheck scopes\nRBAC checks', 'navy')
+    n(g, 'b', 'Service B\nValidate JWT\nCheck scopes\nRBAC checks', 'navy')
+    n(g, 'c', 'Service C\nValidate JWT\nCheck scopes\nRBAC checks', 'navy')
+    n(g, 'store', 'Encrypted Data Store\nAES-256 at rest · Vault secrets ·\nKey rotation · Audit logs', 'gold')
+    e(g, 'a', 'store')
+    e(g, 'b', 'store')
+    e(g, 'c', 'store')
+    g.render(os.path.join(OUT, 'zero-trust-services'), cleanup=True)
+    print('Generated: zero-trust-services')
+
+
+def diag_otel_pipeline():
+    g = base_graph('otel_pipeline',
+                   'OpenTelemetry pipeline — services emit logs/metrics/traces via Collectors', rankdir='TB')
+    n(g, 'a', 'Service A\nOTel SDK\nlogs / metrics / traces', 'gray')
+    n(g, 'b', 'Service B\nOTel SDK', 'gray')
+    n(g, 'c', 'Service C\nOTel SDK', 'gray')
+    n(g, 'col', 'OTel Collectors\n(receive · process · export)', 'navy')
+    n(g, 'logs', 'Logs backend\n(Loki / ELK)', 'green')
+    n(g, 'metrics', 'Metrics backend\n(Prometheus)', 'gold')
+    n(g, 'traces', 'Traces backend\n(Jaeger / Tempo)', 'purple')
+    e(g, 'a', 'col')
+    e(g, 'b', 'col')
+    e(g, 'c', 'col')
+    e(g, 'col', 'logs')
+    e(g, 'col', 'metrics')
+    e(g, 'col', 'traces')
+    g.render(os.path.join(OUT, 'otel-pipeline'), cleanup=True)
+    print('Generated: otel-pipeline')
+
+
 if __name__ == '__main__':
     diag_layered_cache()
     diag_evcache()
@@ -569,4 +932,25 @@ if __name__ == '__main__':
     diag_pubsub_queue()
     diag_pubsub_topic()
     diag_consumer_groups()
+    # Wave 5 additions
+    diag_priority_queue_routing()
+    diag_typeahead_cache()
+    diag_audio_streaming_path()
+    diag_spotify_connect()
+    diag_hybrid_fanout()
+    diag_realtime_feed_update()
+    diag_consistent_hash_ring()
+    diag_write_quorum()
+    diag_news_ingestion()
+    diag_write_aggregation()
+    diag_hotel_search_pipeline()
+    diag_booking_state_machine()
+    diag_channel_manager()
+    diag_traffic_pipeline()
+    diag_sfu_topology()
+    diag_active_speaker_layout()
+    diag_cqrs_vs_traditional()
+    diag_microservices_mesh()
+    diag_zero_trust_services()
+    diag_otel_pipeline()
     print('\nAll system-design diagrams generated.')

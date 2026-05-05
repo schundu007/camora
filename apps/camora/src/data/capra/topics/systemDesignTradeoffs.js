@@ -2285,14 +2285,7 @@ Phase 2 — Read replicas (100K–1M users, 50–500 GB): Application -> Primary
 
 Phase 3 — Selective denormalization (1–5M users): PostgreSQL as source of truth, with Elasticsearch (search / discovery), Redis (cache + sessions), and a CDC pipeline syncing the stores. Focus: purpose-built stores for specific workloads — add materialized views for dashboards. Migration trigger: need for specialized query patterns.
 
-Phase 4 — Sharding or NewSQL (5M+ users, 1 TB+): Option A — CockroachDB or Vitess (automatic sharding plus SQL); Option B — application-level sharding (shard by tenant_id or region).
-  │                                      │
-  │  + Cassandra (high-write workloads)  │
-  │  + Elasticsearch (search)            │
-  │  + Redis cluster (distributed cache) │
-  └──────────────────────────────────────┘
-  Focus: horizontal write scaling
-  Add: distributed tracing, cross-shard query layer
+Phase 4 — Sharding or NewSQL (5M+ users, 1 TB+): Option A — CockroachDB or Vitess (automatic sharding plus SQL); Option B — application-level sharding (shard by tenant_id or region). Pair with Cassandra for high-write workloads, Elasticsearch for search, and a Redis cluster as the distributed cache. Focus is horizontal write scaling; add distributed tracing and a cross-shard query layer.
 \`\`\`
 
 **What to build for in Phase 1 (future-proofing without over-engineering)**:
@@ -2504,14 +2497,10 @@ For system design interviews, the key insight is that this trade-off is not bina
         question: 'When should you denormalize, and what are the risks?',
         answer: `**Denormalize when ALL of these conditions are met**:
 
-\`\`\`
-  ┌──────────────────────────────────────────────────┐
-  │ 1. Read performance is a MEASURED bottleneck      │
-  │ 2. Read-to-write ratio is high (>10:1)           │
-  │ 3. The data being denormalized changes rarely     │
-  │ 4. You have a plan for keeping copies in sync    │
-  └──────────────────────────────────────────────────┘
-\`\`\`
+1. Read performance is a MEASURED bottleneck.
+2. Read-to-write ratio is high (>10:1).
+3. The data being denormalized changes rarely.
+4. You have a plan for keeping copies in sync.
 
 **Normalized vs Denormalized example**:
 \`\`\`
@@ -2637,30 +2626,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY mv_order_summary;
         question: 'How does CQRS relate to normalization vs denormalization?',
         answer: `**CQRS** (Command Query Responsibility Segregation) formalizes the idea of having different data models for reads and writes — the write model is normalized for integrity, and the read model is denormalized for performance.
 
-\`\`\`
-Traditional (single model):
-  ┌──────────────────┐
-  │   Application    │
-  │  ┌────────────┐  │
-  │  │ Single DB  │  │  ← Same schema for reads AND writes
-  │  │ (normalized│  │  ← Reads need JOINs
-  │  │  or not)   │  │  ← Writes need to update denormalized copies
-  │  └────────────┘  │
-  └──────────────────┘
-
-CQRS (separated models):
-  ┌──────────────────────────────────────────────┐
-  │                Application                    │
-  │                                               │
-  │  Command Side         Query Side              │
-  │  (writes)             (reads)                 │
-  │  ┌──────────┐         ┌──────────────┐        │
-  │  │ Write DB │──event──│ Read Store   │        │
-  │  │(normal-  │  stream │(denormalized,│        │
-  │  │ ized)    │         │ pre-joined)  │        │
-  │  └──────────┘         └──────────────┘        │
-  └──────────────────────────────────────────────┘
-\`\`\`
+![Single-model vs CQRS — separate read and write models](/diagrams/systemdesign/cqrs-vs-traditional.png)
 
 **How CQRS maintains consistency**:
 \`\`\`
@@ -2879,33 +2845,16 @@ OLAP (denormalized — your analytics warehouse):
 \`\`\`
 
 **Star schema (most common warehouse pattern)**:
-\`\`\`
-         ┌───────────────┐
-         │  dim_product   │
-         │  product_id    │
-         │  name, category│
-         │  brand, price  │
-         └───────┬────────┘
-                 │
-  ┌──────────┐  │  ┌──────────────┐
-  │ dim_user │  │  │  dim_date    │
-  │ user_id  │  │  │  date_id     │
-  │ name,    │──┼──│  year, month │
-  │ region   │  │  │  day, quarter│
-  └──────────┘  │  └──────────────┘
-                │
-         ┌──────┴────────┐
-         │  fact_orders   │
-         │  order_id      │
-         │  user_id (FK)  │
-         │  product_id(FK)│
-         │  date_id (FK)  │
-         │  quantity       │
-         │  revenue        │
-         │  discount       │
-         └────────────────┘
 
-  Query: "Revenue by region and product category, Q4 2024"
+A central fact table joins to several small dimension tables:
+
+- **fact_orders**: \`order_id\`, \`user_id\` (FK), \`product_id\` (FK), \`date_id\` (FK), \`quantity\`, \`revenue\`, \`discount\`.
+- **dim_product**: \`product_id\`, \`name\`, \`category\`, \`brand\`, \`price\`.
+- **dim_user**: \`user_id\`, \`name\`, \`region\`.
+- **dim_date**: \`date_id\`, \`year\`, \`month\`, \`day\`, \`quarter\`.
+
+\`\`\`sql
+  -- Query: "Revenue by region and product category, Q4 2024"
   SELECT d.region, p.category, SUM(f.revenue)
   FROM fact_orders f
   JOIN dim_user d ON f.user_id = d.user_id
@@ -2954,14 +2903,13 @@ Modern ELT (load first, transform in warehouse):
     dataModel: {
       description: 'Normalization vs denormalization spectrum',
       schema: `Normalization Spectrum:
-  ┌──────────────────────────────────────────────────────────┐
-  │  Fully Normalized (3NF)  ←──────────────→  Fully Denorm │
-  │  - No redundancy          - Max redundancy               │
-  │  - Slow reads (joins)     - Fast reads (no joins)        │
-  │  - Fast writes (1 place)  - Slow writes (N places)       │
-  │  - Strong consistency     - Eventual consistency          │
-  │  - Flexible queries       - Fixed access patterns         │
-  └──────────────────────────────────────────────────────────┘
+| Aspect            | Fully Normalized (3NF) | Fully Denormalized   |
+| ----------------- | ---------------------- | -------------------- |
+| Redundancy        | None                   | Max                  |
+| Reads             | Slow (joins)           | Fast (no joins)      |
+| Writes            | Fast (1 place)         | Slow (N places)      |
+| Consistency       | Strong                 | Eventual             |
+| Query flexibility | Flexible               | Fixed access patterns |
 
 Practical Sweet Spots:
   1. Normalized + Indexes + Materialized Views
@@ -3075,39 +3023,13 @@ In system design interviews, the strongest answer acknowledges that microservice
         answer: `**Strangler Fig Pattern**: Incrementally replace monolith functionality with new services, routing traffic to the new service as each piece is ready. Named after strangler fig trees that grow around a host tree and eventually replace it.
 
 \`\`\`
-Phase 1: Monolith handles everything
-  ┌─────────────────────────────┐
-  │        Monolith             │
-  │  [Auth][Orders][Payments]   │
-  │  [Users][Search][Notify]    │
-  └─────────────────────────────┘
+Phase 1 — Monolith handles everything: Auth, Orders, Payments, Users, Search, Notify all live in one deploy.
 
-Phase 2: Extract first service, proxy routes
-  ┌──────────────┐
-  │   Proxy/     │
-  │   Gateway    │
-  └──┬───────┬───┘
-     │       │
-     ▼       ▼
-  ┌──────┐ ┌──────────────────────┐
-  │Orders│ │      Monolith        │
-  │ Svc  │ │ [Auth][Payments]     │
-  │(new) │ │ [Users][Search]      │
-  └──────┘ └──────────────────────┘
+Phase 2 — Extract first service: a proxy / gateway sits in front; new Orders service handles its routes, the monolith keeps the rest (Auth, Payments, Users, Search).
 
-Phase 3: Continue extracting
-  ┌──────────────┐
-  │   Gateway    │
-  └─┬──┬──┬──┬──┘
-    │  │  │  │
-    ▼  ▼  ▼  ▼
-  Orders Payments Search  ┌──────────┐
-  Svc    Svc      Svc     │ Monolith │
-                          │ [Auth]   │
-                          │ [Users]  │
-                          └──────────┘
+Phase 3 — Continue extracting: gateway routes to Orders, Payments, and Search services; the monolith shrinks to just Auth and Users.
 
-Phase 4: Monolith fully replaced (or kept for legacy)
+Phase 4 — Monolith fully replaced (or kept for legacy).
 \`\`\`
 
 **Implementation steps**:
@@ -3156,22 +3078,15 @@ Phase 4: Monolith fully replaced (or kept for legacy)
 
 \`\`\`
 Traditional Monolith (big ball of mud):
-  ┌──────────────────────────────────┐
-  │  Everything calls everything     │
-  │  Shared database tables          │
-  │  No clear boundaries             │
-  │  Spaghetti dependencies          │
-  └──────────────────────────────────┘
+- Everything calls everything
+- Shared database tables
+- No clear boundaries
+- Spaghetti dependencies
 
 Modular Monolith:
-  ┌──────────────────────────────────┐
-  │ ┌────────┐ ┌────────┐ ┌───────┐ │
-  │ │ Orders │ │ Users  │ │Payments│ │
-  │ │  API ──┼─┼─► API ─┼─┼─► API │ │
-  │ │  Data  │ │  Data  │ │  Data  │ │
-  │ └────────┘ └────────┘ └───────┘ │
-  │      Single deployment unit      │
-  └──────────────────────────────────┘
+- Modules: Orders, Users, Payments — each with API + data
+- Modules talk via well-defined APIs (not raw table access)
+- Still a single deployment unit
 
   Rules:
   - Modules communicate via public APIs only
@@ -3219,20 +3134,12 @@ Modular Monolith:
 
 \`\`\`
 Microservices (correct):
-  ┌──────┐    ┌──────┐    ┌──────┐
-  │Svc A │    │Svc B │    │Svc C │
-  │ DB-A │    │ DB-B │    │ DB-C │
-  └──────┘    └──────┘    └──────┘
-  Deploy independently, own data, async communication
+  Service A (DB-A)   |   Service B (DB-B)   |   Service C (DB-C)
+  Deploy independently, own data, async communication.
 
 Distributed Monolith (anti-pattern):
-  ┌──────┐    ┌──────┐    ┌──────┐
-  │Svc A │◄──►│Svc B │◄──►│Svc C │
-  └──┬───┘    └──┬───┘    └──┬───┘
-     │           │           │
-     └───────────┴───────────┘
-              Shared DB
-  Must deploy together, shared data, sync calls everywhere
+  Services A, B, and C call each other synchronously and share one database.
+  Must deploy together, share data, and rely on sync calls everywhere — all the operational pain of microservices with none of the benefits.
 \`\`\`
 
 **Symptoms of a distributed monolith**:
@@ -3251,14 +3158,8 @@ Distributed Monolith (anti-pattern):
 \`\`\`
 1. DECOMPOSE BY DOMAIN, not by layer
 
-   WRONG (layer split):          RIGHT (domain split):
-   ┌──────────┐                  ┌──────────┐
-   │ UI Layer │                  │ Orders   │ (UI+API+DB)
-   ├──────────┤                  ├──────────┤
-   │ API Layer│                  │ Payments │ (UI+API+DB)
-   ├──────────┤                  ├──────────┤
-   │ DB Layer │                  │ Users    │ (UI+API+DB)
-   └──────────┘                  └──────────┘
+   WRONG (layer split): UI Layer / API Layer / DB Layer — three "services" that must change together for any feature.
+   RIGHT (domain split): Orders / Payments / Users — each owns its own UI + API + DB end-to-end.
 
 2. OWN YOUR DATA
    Each service has its own database/schema
@@ -3324,12 +3225,7 @@ Problems:
 **The monolith solution**:
 \`\`\`
 Video Quality Monitoring (monolith):
-  Video Stream ──► Single ECS Service
-                   ┌──────────────────┐
-                   │ Media Converter  │
-                   │ Defect Detectors │ (all in one process)
-                   │ Aggregator       │
-                   └──────────────────┘
+  Video Stream → Single ECS service running Media Converter + Defect Detectors + Aggregator (all in one process).
                           │
                           ▼
                      Results DB
@@ -3393,22 +3289,12 @@ Instead of microservices, Shopify uses:
 **How they enforce module boundaries**:
 \`\`\`
 Packwerk (open-source Ruby tool by Shopify):
-  ┌──────────────────────────────────────────┐
-  │ Shopify Monolith                          │
-  │ ┌──────────┐ ┌──────────┐ ┌────────────┐│
-  │ │ Orders   │ │ Products │ │ Shipping   ││
-  │ │ package  │ │ package  │ │ package    ││
-  │ │          │ │          │ │            ││
-  │ │ Public   │ │ Public   │ │ Public     ││
-  │ │ API only │ │ API only │ │ API only   ││
-  │ └──────────┘ └──────────┘ └────────────┘│
-  │                                          │
-  │ Packwerk enforces:                       │
-  │ - No direct cross-package class access   │
-  │ - Only public APIs at package boundaries │
-  │ - Dependency graph must be acyclic       │
-  │ - CI fails on boundary violations        │
-  └──────────────────────────────────────────┘
+Shopify monolith: packages for Orders, Products, Shipping — each exposes a public API only, with Packwerk enforcing the boundaries:
+
+- No direct cross-package class access
+- Only public APIs at package boundaries
+- Dependency graph must be acyclic
+- CI fails on boundary violations
 \`\`\`
 
 **Podded architecture (horizontal scaling without microservices)**:
@@ -3416,10 +3302,7 @@ Packwerk (open-source Ruby tool by Shopify):
 Instead of splitting services, Shopify shards merchants across pods:
 
   Pod 1: merchants A-F     Pod 2: merchants G-M
-  ┌─────────────────┐      ┌─────────────────┐
-  │ Full monolith   │      │ Full monolith   │
-  │ App + DB shard  │      │ App + DB shard  │
-  └─────────────────┘      └─────────────────┘
+  Pod A: full monolith (App + DB shard)   |   Pod B: full monolith (App + DB shard)
 
   Each pod runs the complete monolith
   with its own database shard.
@@ -3917,16 +3800,11 @@ event format differ between providers.
 
 \`\`\`
 Strategy 1: Hexagonal Architecture (Ports & Adapters)
-  ┌──────────────────────────────────────┐
-  │          Business Logic              │
-  │    (pure functions, no AWS imports)  │
-  ├──────────────────────────────────────┤
-  │  Adapters (thin wrappers)            │
-  │  ├── AWS Lambda handler             │
-  │  ├── Express.js handler (container) │
-  │  └── GCP Cloud Function handler     │
-  └──────────────────────────────────────┘
-
+  Core: business logic — pure functions, no AWS imports.
+  Adapters (thin wrappers):
+    - AWS Lambda handler
+    - Express.js handler (container)
+    - GCP Cloud Function handler
   Only the adapter layer changes when migrating.
 
 Strategy 2: Abstraction layers
@@ -4148,24 +4026,16 @@ Internet ──► API Gateway / Load Balancer
                 │
         ┌───────┴────────┐
         ▼                ▼
-  Serverless Tier      Container Tier
-  (Lambda/Workers)     (ECS/Kubernetes)
-  ┌──────────────┐     ���──────────────────┐
-  │ Auth/JWT     │     │ Core API (REST)  │
-  │ Webhooks     │     │ GraphQL Gateway  │
-  │ Image resize │     │ WebSocket server │
-  │ Cron jobs    │     │ ML inference     │
-  │ Queue workers│     │ Background workers│
-  │ Edge routing │     │ Admin dashboard  │
-  └──────────────┘     └──────────────────┘
-        │                      │
-        └──────────┬───────────┘
-                   ▼
-            Shared Data Layer
-  ┌──────────────────────────────────┐
-  │ RDS/Aurora  │  Redis  │  S3     │
-  │ (via Proxy) │ (cache) │ (files) │
-  └──────────────────────────────────┘
+  | Serverless Tier (Lambda / Workers) | Container Tier (ECS / Kubernetes) |
+  | ---------------------------------- | --------------------------------- |
+  | Auth / JWT                         | Core API (REST)                   |
+  | Webhooks                           | GraphQL Gateway                   |
+  | Image resize                       | WebSocket server                  |
+  | Cron jobs                          | ML inference                      |
+  | Queue workers                      | Background workers                |
+  | Edge routing                       | Admin dashboard                   |
+
+  Both tiers share the same data layer: RDS / Aurora (via Proxy) · Redis (cache) · S3 (files).
 \`\`\`
 
 **What goes where — decision matrix**:
@@ -4232,18 +4102,16 @@ Vercel          Build infrastructure,     Edge middleware,
     dataModel: {
       description: 'Serverless vs traditional infrastructure decision framework',
       schema: `Infrastructure Decision Matrix:
-  ┌───────────────┬──────────────┬──────────────┬──────────────┐
-  │ Criteria      │  Serverless  │  Containers  │  VMs         │
-  ├───────────────┼──────────────┼──────────────┼──────────────┤
-  │ Scaling       │ Automatic    │ HPA/manual   │ Manual       │
-  │ Cold start    │ Yes (100ms+) │ No           │ No           │
-  │ Max duration  │ 15 min       │ Unlimited    │ Unlimited    │
-  │ State         │ Stateless    │ Can be both  │ Can be both  │
-  │ Cost model    │ Per-invoke   │ Per-hour     │ Per-hour     │
-  │ Idle cost     │ Zero         │ Full         │ Full         │
-  │ Ops overhead  │ Minimal      │ Medium       │ High         │
-  │ Vendor lock-in│ High         │ Low-Medium   │ Low          │
-  └───────────────┴──────────────┴──────────────┴──────────────┘
+  | Criteria       | Serverless   | Containers   | VMs          |
+  | -------------- | ------------ | ------------ | ------------ |
+  | Scaling        | Automatic    | HPA/manual   | Manual       |
+  | Cold start     | Yes (100ms+) | No           | No           |
+  | Max duration   | 15 min       | Unlimited    | Unlimited    |
+  | State          | Stateless    | Can be both  | Can be both  |
+  | Cost model     | Per-invoke   | Per-hour     | Per-hour     |
+  | Idle cost      | Zero         | Full         | Full         |
+  | Ops overhead   | Minimal      | Medium       | High         |
+  | Vendor lock-in | High         | Low-Medium   | Low          |
 
 Workload Routing:
   Incoming request/event
@@ -4555,12 +4423,8 @@ Client ──► Cloudflare (DDoS + routing)
                │
                ▼
           Gateway Servers (WebSocket tier)
-          ┌──────────┐ ┌──────────┐ ┌──────────┐
-          │ Gateway  │ │ Gateway  │ │ Gateway  │
-          │ Shard 0  │ │ Shard 1  │ │ Shard N  │
-          │ ~5K users│ │ ~5K users│ │ ~5K users│
-          │ (Elixir) │ │ (Elixir) │ │ (Elixir) │
-          └────┬─────┘ └────┬─────┘ └────┬─────┘
+          Gateway Shards (Elixir) — each holds ~5K users:
+            Shard 0   |   Shard 1   |   …   |   Shard N
                │            │            │
                └────────────┼────────────┘
                             ▼
@@ -4754,27 +4618,9 @@ SSE wins because AI chat is:
 Event Occurs (e.g., payment.completed)
      │
      ▼
-┌──────────────────────────┐
-│ Webhook Events Table     │ ◄── Persistent storage (source of truth)
-│ id, event_type, payload, │     Never lose an event
-│ status, attempts, next_  │
-│ retry_at, created_at     │
-└──────────┬───────────────┘
-           │
-           ▼
-┌──────────────────────────┐
-│ Delivery Queue (SQS/BQ)  │ ◄── Decouples event creation from delivery
-│ Message = event_id       │
-└──────────┬───────────────┘
-           │
-           ▼
-┌──────────────────────────┐
-│ Webhook Worker           │
-│ 1. Fetch event by ID     │
-│ 2. POST to endpoint URL  │
-│ 3. Record result         │
-│ 4. If failed → retry     │
-└──────────────────────────┘
+- **Webhook events table** — persistent storage, source of truth. Columns: \`id\`, \`event_type\`, \`payload\`, \`status\`, \`attempts\`, \`next_retry_at\`, \`created_at\`. Never lose an event.
+- **Delivery queue (SQS / BigQuery / Pub/Sub)** — decouples event creation from delivery. Message body = \`event_id\`.
+- **Webhook worker** — for each message: (1) fetch event by ID, (2) POST to endpoint URL, (3) record result, (4) on failure → retry with backoff.
 \`\`\`
 
 **Retry strategy (Stripe's model)**:
@@ -4985,15 +4831,11 @@ For full bidirectional: use WebSocket directly.
     dataModel: {
       description: 'Real-time communication pattern comparison',
       schema: `Communication Pattern Selection:
-  ┌────────────────────────────────────────────────────────┐
-  │              Direction of Data Flow                     │
-  ├────────────┬───────────────┬───────────────────────────┤
-  │ Client→Srv │ Srv→Client    │ Bidirectional             │
-  ├────────────┼───────────────┼───────────────────────────┤
-  │ REST API   │ SSE           │ WebSocket                 │
-  │ Short Poll │ Long Polling  │                           │
-  │            │ Webhook(S2S)  │                           │
-  └────────────┴───────────────┴───────────────────────────┘
+  | Direction       | Pattern                              |
+  | --------------- | ------------------------------------ |
+  | Client → Server | REST API · Short polling             |
+  | Server → Client | SSE · Long polling · Webhook (S2S)   |
+  | Bidirectional   | WebSocket                            |
 
 Connection Lifecycle:
   Short Poll:  CONNECT → REQUEST → RESPONSE → DISCONNECT (repeat)
@@ -5080,24 +4922,10 @@ Layer 5: Database Optimization
 
 **Architecture diagram**:
 \`\`\`
-  Client ──► CDN (cache HIT → return)
-              │ (cache MISS)
-              ▼
-          API Gateway
-              │
-              ▼
-          App Server ──► Redis Cache (HIT → return)
-              │              │ (MISS)
-              ▼              ▼
-          ┌───────────────────────────┐
-          │      Database Cluster     │
-          │  ┌────────┐  ┌────────┐  │
-          │  │Primary │  │Replica │  │ ◄── Writes to primary
-          │  │(writes)│  │(reads) │  │ ◄── Reads from replica
-          │  └────────┘  ├────────┤  │
-          │              │Replica │  │
-          │              └────────┘  │
-          └───────────────────────────┘
+  Client → CDN (cache HIT → return; on MISS fall through)
+        → API Gateway
+        → App Server → Redis cache (HIT → return; MISS falls through)
+        → Database cluster: Primary handles writes; Replicas handle reads.
 \`\`\`
 
 **Read scaling math**:
@@ -5132,20 +4960,8 @@ Layer 5: Database Optimization
 
 \`\`\`
 Strategy 1: Write-Optimized Storage (LSM Trees)
-  ┌───────────────────────────────────────┐
-  │ B-Tree (read-optimized):              │
-  │   Write: random I/O → find page → update│
-  │   Read: follow tree → O(log N)        │
-  │                                        │
-  │ LSM Tree (write-optimized):           │
-  │   Write: sequential append to WAL +   │
-  │          in-memory insert to memtable  │
-  │   Read: check memtable + SSTables     │
-  │          (read amplification)          │
-  └───────────────────────────────────────┘
-
-  B-Tree: PostgreSQL, MySQL/InnoDB
-  LSM:    Cassandra, RocksDB, LevelDB, HBase
+  - **B-Tree (read-optimized).** Write: random I/O → find page → update. Read: follow tree → O(log N). Used by PostgreSQL, MySQL/InnoDB.
+  - **LSM Tree (write-optimized).** Write: sequential append to WAL + in-memory insert to memtable. Read: check memtable + SSTables (read amplification). Used by Cassandra, RocksDB, LevelDB, HBase.
 
 Strategy 2: Write Batching / Buffering
   Individual writes:  ████████████ (1000 IOPS)
@@ -5154,15 +4970,12 @@ Strategy 2: Write Batching / Buffering
   Buffer in memory → flush periodically or at threshold
   Risk: data loss on crash → mitigate with WAL
 
-Strategy 3: Append-Only Design
-  Instead of UPDATE: append new version
-  ┌──────────────────────────────────────┐
-  │ user_id │ name    │ version │ time   │
-  │ 1       │ Alice   │ 1       │ T1     │
-  │ 1       │ Alicia  │ 2       │ T2     │ ← new row
-  └──────────────────────────────────────┘
-  Read: SELECT WHERE version = max(version)
-  Write: Just INSERT (fast!)
+Strategy 3: Append-Only Design — instead of UPDATE, append a new version row:
+  | user_id | name   | version | time |
+  | ------- | ------ | ------- | ---- |
+  | 1       | Alice  | 1       | T1   |
+  | 1       | Alicia | 2       | T2   | ← new row
+  Read: \`SELECT … WHERE version = MAX(version)\`. Write: just INSERT (fast).
 \`\`\`
 
 **Write-heavy architecture**:
@@ -5285,19 +5098,9 @@ Lag-aware routing     Check replica lag, skip if    General purpose
 \`\`\`
 CQRS Architecture for High Read + High Write:
 
-  Writes (high throughput)          Reads (high throughput)
-       │                                 ▲
-       ▼                                 │
-  ┌──────────┐                    ┌──────────────┐
-  │ Write    │   CDC / Events     │ Read Store   │
-  │ Store    │──────────────────►│ (denormalized,│
-  │ (LSM,   │                    │  cached,      │
-  │  append) │                    │  replicated)  │
-  └──────────┘                    └──────────────┘
-
-  Write Store: optimized for ingestion (Kafka → Cassandra)
-  Read Store: optimized for queries (Elasticsearch, Redis, read replicas)
-  CDC: Change Data Capture keeps them in sync
+  Writes go to a Write Store (LSM, append-optimized — e.g. Kafka → Cassandra).
+  CDC / event stream propagates changes to a Read Store (denormalized, cached, replicated — e.g. Elasticsearch, Redis, read replicas).
+  Reads always hit the Read Store; CDC (Change Data Capture) keeps the two in sync.
 \`\`\`
 
 **Concrete example — Twitter-like system**:
@@ -5459,15 +5262,13 @@ Commands (writes):
                       Projection   Projection   Notification
                       (read model) (analytics)  (email, webhook)
 
-Event Store:
-  ┌────────────────────────────────────────────────────┐
-  │ stream_id │ version │ event_type      │ data       │
-  │ acc-1     │ 1       │ AccountCreated  │ {bal:100}  │
-  │ acc-1     │ 2       │ MoneyWithdrawn  │ {amt:20}   │
-  │ acc-1     │ 3       │ MoneyDeposited  │ {amt:50}   │
-  │ acc-1     │ 4       │ MoneyWithdrawn  │ {amt:30}   │
-  └────────────────────────────────────────────────────┘
-  Append-only! Never update or delete events.
+Event Store rows (append-only — never update or delete):
+  | stream_id | version | event_type      | data        |
+  | --------- | ------- | --------------- | ----------- |
+  | acc-1     | 1       | AccountCreated  | {bal:100}   |
+  | acc-1     | 2       | MoneyWithdrawn  | {amt:20}    |
+  | acc-1     | 3       | MoneyDeposited  | {amt:50}    |
+  | acc-1     | 4       | MoneyWithdrawn  | {amt:30}    |
 \`\`\`
 
 **Why event sourcing is write-optimized**:
@@ -5544,27 +5345,12 @@ Access pattern:
 **Time-series optimized architecture**:
 \`\`\`
   Sensors/Services (millions of data points/sec)
-       │
-       ▼
-  ┌──────────────┐
-  │ Kafka        │ ◄── Write buffer, absorb bursts
-  │ (partitioned │     Retain 7 days for replay
-  │  by source)  │
-  └──────┬───────┘
-         │
-  ┌──────┴───────┐
-  │ Stream       │ ◄── Pre-aggregate: 1-sec → 1-min → 5-min
-  │ Processor    │     Reduce data volume by 60x
-  └──────┬───────┘
-         │
-  ┌──────┴───────┐
-  │ Time-Series  │ ◄── TimescaleDB, InfluxDB, or ClickHouse
-  │ Database     │     Time-partitioned, columnar storage
-  └──────┬───────┘
-         │
-         ├──► Hot tier: last 24h (SSD, in-memory)
-         ├──► Warm tier: last 30 days (SSD)
-         └──► Cold tier: > 30 days (S3/glacier)
+    → Kafka (partitioned by source) — write buffer, absorbs bursts, retains 7 days for replay
+    → Stream Processor — pre-aggregates 1-sec → 1-min → 5-min, reducing data volume ~60×
+    → Time-Series Database (TimescaleDB / InfluxDB / ClickHouse) — time-partitioned, columnar storage
+       - Hot tier: last 24h (SSD, in-memory)
+       - Warm tier: last 30 days (SSD)
+       - Cold tier: >30 days (S3 / glacier)
 \`\`\`
 
 **Key optimization techniques**:
@@ -6027,17 +5813,8 @@ Normal Operation:
                      ──► Replica B
 
 Split-Brain:
-  ┌─────────────────────────────────┐
-  │ Partition 1:                     │
-  │   Client ──► OLD Primary         │
-  │              (thinks it's leader)│
-  │                                  │
-  │ Partition 2:                     │
-  │   Client ──► Replica A          │
-  │              (promoted to NEW    │
-  │               Primary)           │
-  │   Replica B (follows new leader) │
-  └─────────────────────────────────┘
+- Partition 1: client → OLD primary (still thinks it's leader)
+- Partition 2: client → Replica A (promoted to NEW primary); Replica B follows the new leader
 
   TWO primaries accepting writes!
   Conflicting data accumulates until partition heals.
@@ -6047,14 +5824,10 @@ Split-Brain:
 
 \`\`\`
 Strategy 1: Fencing Tokens
-  ┌──────────────────────────────────────┐
-  │ New leader gets fencing token = 34   │
-  │ Old leader had token = 33            │
-  │                                      │
-  │ Storage layer rejects writes with    │
-  │ token < current highest seen (34)    │
-  │ → Old leader's writes are blocked!   │
-  └──────────────────────────────────────┘
+- New leader gets fencing token = 34
+- Old leader had token = 33
+- Storage layer rejects writes with token < current highest seen (34)
+- Old leader's writes are blocked
 
 Strategy 2: Quorum-Based Leader Election
   Majority (N/2 + 1) nodes must agree on leader.
@@ -6193,44 +5966,20 @@ Choose PostgreSQL (single node) when:
 **Three primary multi-region strategies**:
 \`\`\`
 Strategy 1 — Single primary, global read replicas:
-  ┌──────────────────────────────────────────────┐
-  │ US-East (primary)                             │
-  │ ┌──────────┐                                  │
-  │ │ Primary  │ ──► All writes go here           │
-  │ └──────────┘                                  │
-  └──────────────────────────────────────────────┘
-       │ async replication
-  ┌────┴───────────────────────────────────────┐
-  │ EU-West (read replica)   Asia (read replica)│
-  │ ┌──────────┐             ┌──────────┐       │
-  │ │ Replica  │             │ Replica  │       │
-  │ └──────────┘             └──────────┘       │
-  └────────────────────────────────────────────┘
+  US-East holds the only primary; EU-West and Asia run async read replicas.
   Write latency: high for EU/Asia users (cross-ocean)
   Read latency: low everywhere (local replica)
   Consistency: strong for US, eventual for EU/Asia
 
 Strategy 2 — Multi-primary with conflict resolution:
-  US-East ◄──────► EU-West ◄──────► Asia
-  ┌──────┐         ┌──────┐         ┌──────┐
-  │Leader│         │Leader│         │Leader│
-  └──────┘         └──────┘         └──────┘
-  Each region accepts writes locally.
+  US-East, EU-West, and Asia each run leaders that accept writes locally.
   Conflicts resolved async (LWW, CRDTs, or app-level)
   Write latency: low everywhere
   Consistency: eventual (conflict resolution needed)
 
 Strategy 3 — Geo-partitioned (CockroachDB / Spanner):
-  US data pinned to US nodes
-  EU data pinned to EU nodes
-  Asia data pinned to Asia nodes
-
-  ┌─────────────────┐ ┌─────────────────┐
-  │ US-East          │ │ EU-West          │
-  │ US users' data   │ │ EU users' data   │
-  │ (primary + replicas)│ (primary + replicas)│
-  └─────────────────┘ └─────────────────┘
-
+  US data pinned to US nodes; EU data pinned to EU nodes; Asia data pinned to Asia nodes.
+  Each region runs a primary plus replicas for the data it owns.
   Write latency: low (writes go to local region)
   Read latency: low (reads from local region)
   Consistency: strong (Raft consensus within region)
@@ -6444,31 +6193,10 @@ The core trade-off is **freshness vs performance**. A CDN serves cached content 
 \`\`\`
 User Request Flow:
 
-User (Tokyo) ──► DNS Resolution
-                      │
-                      ▼
-               Anycast/GeoDNS routes to
-               nearest PoP (Point of Presence)
-                      │
-                      ▼
-          ┌──────────────────────┐
-          │   Edge PoP (Tokyo)   │
-          │  Cache HIT? → return │ ◄── L1 Cache
-          │  Cache MISS? ↓       │
-          └──────────┬───────────┘
-                     │
-                     ▼
-          ┌──────────────────────┐
-          │  Shield PoP (US-West)│
-          │  Cache HIT? → return │ ◄── L2 Cache (origin shield)
-          │  Cache MISS? ↓       │
-          └──────────┬───────────┘
-                     │
-                     ▼
-          ┌──────────────────────┐
-          │  Origin Server       │
-          │  (your application)  │ ◄── Source of truth
-          └──────────────────────┘
+User (Tokyo) → DNS resolution → Anycast / GeoDNS routes to nearest PoP (Point of Presence).
+  L1: Edge PoP (Tokyo). Cache HIT returns; MISS falls through.
+  L2: Shield PoP (US-West) — origin shield. Cache HIT returns; MISS falls through.
+  L3: Origin server (your application) — source of truth.
 \`\`\`
 
 **Why origin shielding matters**:
@@ -6788,29 +6516,20 @@ Payment webhook       NO CDN (pass-through)        Not applicable
        │
        ▼
   Cloudflare Edge (Tokyo PoP)
-  ┌──────────────────────────────────────────┐
-  │ Worker: route by content type            │
-  │   /static/* → serve from CDN cache       │
-  │   /api/products/* → CDN with short TTL   │
-  │   /api/cart/* → pass to origin           │
-  │   /api/checkout/* → pass to origin       │
-  │                                          │
-  │ DDoS protection, WAF, bot detection      │
-  └──────────────────────────────────────────┘
+  Edge Worker — route by content type:
+    /static/*        → serve from CDN cache
+    /api/products/*  → CDN with short TTL
+    /api/cart/*      → pass to origin
+    /api/checkout/*  → pass to origin
+  Plus: DDoS protection, WAF, bot detection.
        │ (cache miss or pass-through)
        ▼
   Origin Shield (US-West PoP)
-  ┌──────────────────────────────────────────┐
-  │ Second cache layer                        │
-  │ Consolidates misses from all edge PoPs   │
-  │ Reduces origin load by 80%+              │
-  └──────────────────────────────────────────┘
+  Shield (second cache layer): consolidates misses from all edge PoPs and reduces origin load by 80%+.
        │ (cache miss)
        ▼
   Origin Server (US-West region)
-  ┌──────────────────────────────────────────┐
-  │ Application + Redis + PostgreSQL          │
-  └──────────────────────────────────────────┘
+  Origin: Application + Redis + PostgreSQL.
 \`\`\`
 
 **Handling flash sales / Black Friday**:

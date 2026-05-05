@@ -340,10 +340,7 @@ SQLite:
     dataModel: {
       description: 'WAL entry structure and write flow',
       schema: `WAL Entry Format:
-  ┌──────────┬─────────┬───────────┬──────────┬──────────┐
-  │   LSN    │  TxnID  │  TableID  │ OldValue │ NewValue │
-  │ (seq #)  │         │ + RowID   │ (undo)   │ (redo)   │
-  └──────────┴─────────┴───────────┴──────────┴──────────┘
+  | LSN (seq #) | TxnID | TableID + RowID | OldValue (undo) | NewValue (redo) |
 
 Write Flow:
   1. BEGIN TxN → assign TxnID
@@ -3162,28 +3159,19 @@ Disadvantages:
 
     dataModel: {
       description: 'Segment file structure and index format',
-      schema: `Segment File (.log):
-  ┌────────────────────────────────────────────┐
-  │ Record 0: [offset|timestamp|key|value|crc] │
-  │ Record 1: [offset|timestamp|key|value|crc] │
-  │ ...                                        │
-  │ Record N: [offset|timestamp|key|value|crc] │
-  └────────────────────────────────────────────┘
+      schema: `Segment File (.log) — append-only, fixed format per record:
+  Record 0..N: [offset | timestamp | key | value | crc]
 
-Offset Index (.index):
-  ┌──────────────────────────┐
-  │ relative_offset → position│   (sparse, every ~4KB)
-  │ 0 → 0                    │
-  │ 100 → 41280              │
-  │ 200 → 82644              │
-  └──────────────────────────┘
+Offset Index (.index) — sparse, one entry every ~4KB:
+  | relative_offset | position |
+  | 0               | 0        |
+  | 100             | 41280    |
+  | 200             | 82644    |
 
-Time Index (.timeindex):
-  ┌──────────────────────────┐
-  │ timestamp → offset       │   (sparse)
-  │ 1709000000 → 0           │
-  │ 1709000060 → 100         │
-  └──────────────────────────┘
+Time Index (.timeindex) — sparse:
+  | timestamp   | offset |
+  | 1709000000  | 0      |
+  | 1709000060  | 100    |
 
 Segment Lifecycle:
   ACTIVE → append writes here
@@ -3762,46 +3750,14 @@ Node C (variable): μ changes from 10ms to 200ms
         question: 'How does Cassandra integrate phi-accrual with gossip for failure detection?',
         answer: `**Integration architecture**:
 
-\`\`\`
-┌──────────────────────────────────────────────┐
-│                 Gossip Layer                  │
-│                                              │
-│  Every 1s: pick random peer, exchange state  │
-│  State includes: heartbeat generation,       │
-│    heartbeat version (incremented each tick) │
-│                                              │
-│  Gossip message received from Node B:        │
-│    → update B's heartbeat timestamp          │
-│    → feed inter-arrival time to phi detector │
-└──────────────┬───────────────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────────────┐
-│          Phi-Accrual Failure Detector        │
-│                                              │
-│  Per-node tracking:                          │
-│    Node B: samples=[980,1020,1050,990,...]   │
-│            μ=1010ms, σ=28ms                  │
-│            last_heartbeat=now-1500ms          │
-│            phi=2.1 → ALIVE                   │
-│                                              │
-│    Node C: samples=[1000,5000,1200,...]      │
-│            μ=1200ms, σ=400ms                 │
-│            last_heartbeat=now-15000ms         │
-│            phi=9.2 → CONVICTED (>8) → DOWN   │
-│                                              │
-└──────────────┬───────────────────────────────┘
-               │ phi > threshold
-               ▼
-┌──────────────────────────────────────────────┐
-│            Node State Change                 │
-│                                              │
-│  Mark Node C as DOWN in local state          │
-│  Gossip the DOWN status to other nodes       │
-│  Routing layer stops sending requests to C   │
-│  If C was a replica → hinted handoff starts  │
-└──────────────────────────────────────────────┘
-\`\`\`
+**Gossip layer.** Every 1 s each node picks a random peer and exchanges state. The state includes a heartbeat generation and a heartbeat version (incremented each tick). When a gossip message arrives from Node B: update B's heartbeat timestamp and feed the inter-arrival time into the phi detector.
+
+**Phi-Accrual failure detector** — per-node tracking, e.g.:
+
+- Node B: samples = [980, 1020, 1050, 990, …]; μ = 1010 ms, σ = 28 ms; last_heartbeat = now − 1500 ms; phi = 2.1 → ALIVE.
+- Node C: samples = [1000, 5000, 1200, …]; μ = 1200 ms, σ = 400 ms; last_heartbeat = now − 15000 ms; phi = 9.2 → CONVICTED (>8) → DOWN.
+
+**Node state change.** When phi exceeds the threshold: mark Node C as DOWN in local state; gossip the DOWN status to other nodes; routing layer stops sending requests to C; if C was a replica, hinted handoff begins.
 
 **Configuration knobs**:
 - \`phi_convict_threshold\`: Default 8 (increase to 12 for cross-DC with unstable links)
@@ -4959,16 +4915,13 @@ WHERE id = $resource_id
 
 **Comparison**:
 \`\`\`
-  ┌───────────────────┬────────────┬──────────────┐
-  │ Mechanism         │ Guarantees │ Requirements │
-  ├───────────────────┼────────────┼──────────────┤
-  │ Fencing token     │ Logical    │ Storage      │
-  │                   │            │ cooperation  │
-  │ Lease expiry      │ Time-based │ Clock sync   │
-  │ STONITH           │ Physical   │ OOB access   │
-  │ I/O fencing       │ Storage    │ SAN support  │
-  │ Network fencing   │ Network    │ SDN control  │
-  └───────────────────┴────────────┴──────────────┘
+  | Mechanism         | Guarantees  | Requirements              |
+  | ----------------- | ----------- | ------------------------- |
+  | Fencing token     | Logical     | Storage cooperation       |
+  | Lease expiry      | Time-based  | Clock sync                |
+  | STONITH           | Physical    | OOB access                |
+  | I/O fencing       | Storage     | SAN support               |
+  | Network fencing   | Network     | SDN control               |
 \`\`\`
 
 **Best practice**: Use fencing tokens as the primary mechanism (logical, no special hardware). Add STONITH or I/O fencing as defense-in-depth for critical systems where token-based fencing cannot be implemented (e.g., legacy storage that does not check tokens).`
@@ -5585,21 +5538,17 @@ This dual-path approach ensures no notifications are lost, while online users re
 
 **Operational comparison**:
 \`\`\`
-  ┌──────────────────┬─────────────┬────────────────┐
-  │ Concern          │ SSE         │ WebSocket      │
-  ├──────────────────┼─────────────┼────────────────┤
-  │ Protocol         │ HTTP        │ Custom (TCP)   │
-  │ Direction        │ Server→Client│ Bidirectional │
-  │ Proxy support    │ Excellent   │ Moderate       │
-  │ Auth             │ HTTP headers│ Query params   │
-  │                  │ + cookies   │ or first msg   │
-  │ Compression      │ HTTP gzip   │ Per-message    │
-  │                  │             │ deflate ext    │
-  │ Load balancer    │ Standard    │ Sticky session │
-  │ Monitoring       │ HTTP tools  │ Custom tooling │
-  │ Connection cost  │ Lower       │ Higher         │
-  │ Max connections  │ HTTP/2 mux  │ 1 TCP per conn │
-  └──────────────────┴─────────────┴────────────────┘
+  | Concern         | SSE                       | WebSocket                |
+  | --------------- | ------------------------- | ------------------------ |
+  | Protocol        | HTTP                      | Custom (TCP)             |
+  | Direction       | Server→Client             | Bidirectional            |
+  | Proxy support   | Excellent                 | Moderate                 |
+  | Auth            | HTTP headers + cookies    | Query params or first msg|
+  | Compression     | HTTP gzip                 | Per-message deflate ext  |
+  | Load balancer   | Standard                  | Sticky session           |
+  | Monitoring      | HTTP tools                | Custom tooling           |
+  | Connection cost | Lower                     | Higher                   |
+  | Max connections | HTTP/2 mux                | 1 TCP per conn           |
 \`\`\`
 
 **Recommendation**: Start with SSE unless bidirectional communication is a hard requirement. SSE is operationally simpler, works with existing HTTP infrastructure, and HTTP/2 makes it highly efficient for multiple concurrent streams.`
@@ -5886,17 +5835,15 @@ The monotonically increasing sequence number serves as a natural fencing token, 
 
 **Trade-offs vs Redis**:
 \`\`\`
-  ┌─────────────────┬──────────────┬──────────────┐
-  │ Property        │ ZooKeeper    │ Redis        │
-  ├─────────────────┼──────────────┼──────────────┤
-  │ Safety          │ Strong       │ Best-effort  │
-  │ Fencing tokens  │ Built-in     │ Manual       │
-  │ Crash handling  │ Auto-release │ TTL-based    │
-  │ Latency         │ Higher       │ Lower        │
-  │ Throughput      │ Lower        │ Higher       │
-  │ Ops complexity  │ Higher       │ Lower        │
-  │ Best for        │ Correctness  │ Efficiency   │
-  └─────────────────┴──────────────┴──────────────┘
+  | Property        | ZooKeeper    | Redis        |
+  | --------------- | ------------ | ------------ |
+  | Safety          | Strong       | Best-effort  |
+  | Fencing tokens  | Built-in     | Manual       |
+  | Crash handling  | Auto-release | TTL-based    |
+  | Latency         | Higher       | Lower        |
+  | Throughput      | Lower        | Higher       |
+  | Ops complexity  | Higher       | Lower        |
+  | Best for        | Correctness  | Efficiency   |
 \`\`\`
 
 **Recommendation**: Use ZooKeeper (or etcd) when a lock violation would cause data corruption or financial loss. Use Redis when a lock violation would cause duplicate work that is wasteful but not dangerous.`
@@ -6044,16 +5991,12 @@ The monotonically increasing sequence number serves as a natural fencing token, 
 
 **Decision framework**:
 \`\`\`
-  ┌──────────────────────────────────────────────────┐
-  │            Contention Level                       │
-  │  Low (<5% conflicts)  │  High (>20% conflicts)   │
-  ├───────────────────────┼──────────────────────────┤
-  │  Optimistic           │  Pessimistic             │
-  │  (version/CAS)        │  (locks/leases)          │
-  │  - High throughput    │  - No retry waste        │
-  │  - No lock overhead   │  - Guaranteed progress   │
-  │  - Occasional retry   │  - Lock overhead always  │
-  └───────────────────────┴──────────────────────────┘
+  | Contention                | Strategy        | Trade-offs                                       |
+  | ------------------------- | --------------- | ------------------------------------------------ |
+  | Low (<5% conflicts)       | Optimistic      | High throughput, no lock overhead, occasional    |
+  |                           | (version / CAS) | retry on conflict.                               |
+  | High (>20% conflicts)     | Pessimistic     | No retry waste, guaranteed progress, lock        |
+  |                           | (locks/leases)  | overhead even when uncontended.                  |
 \`\`\`
 
 **Choose optimistic when**:
@@ -6251,19 +6194,15 @@ There are two saga coordination approaches: **orchestration** and **choreography
 
 **Comparison**:
 \`\`\`
-  ┌────────────────────┬─────────────────┬──────────────────┐
-  │ Aspect             │ Orchestration   │ Choreography     │
-  ├────────────────────┼─────────────────┼──────────────────┤
-  │ Complexity visible │ One place       │ Spread across    │
-  │ Coupling           │ Orchestrator    │ Loose (events)   │
-  │                    │ knows all svcs  │                  │
-  │ Debugging          │ Centralized log │ Distributed trace│
-  │ Adding steps       │ Modify coord.   │ Modify multiple  │
-  │ Single point of    │ Orchestrator    │ None             │
-  │ failure            │ (mitigate with  │                  │
-  │                    │  HA/replicas)   │                  │
-  │ Best for           │ 4+ step flows   │ 2-3 step flows   │
-  └────────────────────┴─────────────────┴──────────────────┘
+  | Aspect             | Orchestration                       | Choreography             |
+  | ------------------ | ----------------------------------- | ------------------------ |
+  | Complexity visible | One place                           | Spread across services   |
+  | Coupling           | Orchestrator knows all services     | Loose (events)           |
+  | Debugging          | Centralized log                     | Distributed trace        |
+  | Adding steps       | Modify coordinator                  | Modify multiple services |
+  | Single point of    | Orchestrator (mitigate with HA      | None                     |
+  |   failure          | / replicas)                         |                          |
+  | Best for           | 4+ step flows                       | 2–3 step flows           |
 \`\`\`
 
 **Recommendation**: Use orchestration for the core business flow (order placement, account creation). Use choreography for auxiliary, loosely coupled concerns (analytics events, cache invalidation, notification triggers).`
@@ -6360,17 +6299,15 @@ There are two saga coordination approaches: **orchestration** and **choreography
 
 **Why sagas are preferred**:
 \`\`\`
-  ┌─────────────────┬──────────────┬──────────────┐
-  │ Property        │ 2PC          │ Saga         │
-  ├─────────────────┼──────────────┼──────────────┤
-  │ Consistency     │ Strong       │ Eventual     │
-  │ Availability    │ Low          │ High         │
-  │ Lock duration   │ Entire TX    │ Per step     │
-  │ Partial failure │ Blocks       │ Compensates  │
-  │ Coordinator     │ SPOF         │ Recoverable  │
-  │ Heterogeneous   │ Needs XA     │ Any service  │
-  │ Isolation       │ Full         │ Semantic     │
-  └─────────────────┴──────────────┴──────────────┘
+  | Property        | 2PC          | Saga         |
+  | --------------- | ------------ | ------------ |
+  | Consistency     | Strong       | Eventual     |
+  | Availability    | Low          | High         |
+  | Lock duration   | Entire TX    | Per step     |
+  | Partial failure | Blocks       | Compensates  |
+  | Coordinator     | SPOF         | Recoverable  |
+  | Heterogeneous   | Needs XA     | Any service  |
+  | Isolation       | Full         | Semantic     |
 \`\`\`
 
 **Where 2PC still makes sense**: Within a single database (PostgreSQL uses 2PC internally for multi-statement transactions). Across a small number of tightly coupled, co-located services where strong consistency is non-negotiable.`
@@ -6725,14 +6662,12 @@ The challenge in all caching and replication strategies is **consistency** — h
 
 **Comparison**:
 \`\`\`
-  ┌────────────────┬───────────┬──────────────┬─────────────┐
-  │ Pattern        │ Read perf │ Write perf   │ Consistency │
-  ├────────────────┼───────────┼──────────────┼─────────────┤
-  │ Cache-aside    │ Good      │ Good         │ Eventual    │
-  │ Read-through   │ Good      │ Good         │ Eventual    │
-  │ Write-through  │ Excellent │ Slower       │ Strong      │
-  │ Write-behind   │ Excellent │ Excellent    │ Weak        │
-  └────────────────┴───────────┴──────────────┴─────────────┘
+  | Pattern        | Read perf | Write perf   | Consistency |
+  | -------------- | --------- | ------------ | ----------- |
+  | Cache-aside    | Good      | Good         | Eventual    |
+  | Read-through   | Good      | Good         | Eventual    |
+  | Write-through  | Excellent | Slower       | Strong      |
+  | Write-behind   | Excellent | Excellent    | Weak        |
 \`\`\``
       },
       {
@@ -6989,15 +6924,13 @@ The event store is append-only (immutable log of state changes). Read models are
 
 **Where materialized views are used**:
 \`\`\`
-  ┌────────────────────────┬──────────────────────────────┐
-  │ Use Case               │ Materialized View            │
-  ├────────────────────────┼──────────────────────────────┤
-  │ Analytics dashboards   │ Pre-aggregated metrics       │
-  │ Search / facets        │ Denormalized product catalog │
-  │ Leaderboards           │ Pre-ranked scores            │
-  │ Reporting              │ Pre-joined cross-table data  │
-  │ Feed generation        │ Pre-computed user feeds      │
-  └────────────────────────┴──────────────────────────────┘
+  | Use Case               | Materialized View            |
+  | ---------------------- | ---------------------------- |
+  | Analytics dashboards   | Pre-aggregated metrics       |
+  | Search / facets        | Denormalized product catalog |
+  | Leaderboards           | Pre-ranked scores            |
+  | Reporting              | Pre-joined cross-table data  |
+  | Feed generation        | Pre-computed user feeds      |
 \`\`\`
 
 **Custom materialized views (application-level)**:
@@ -7250,16 +7183,12 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
 
 **Trade-offs**:
 \`\`\`
-  ┌────────────────────┬────────────────────────────────┐
-  │ Benefit            │ Cost                           │
-  ├────────────────────┼────────────────────────────────┤
-  │ Higher throughput   │ Higher latency (wait for batch)│
-  │ Less I/O overhead   │ Memory usage for buffer       │
-  │ Better compression  │ Data loss risk if crash before │
-  │                    │ flush                          │
-  │ Fewer connections   │ Retry complexity (partial batch│
-  │                    │ failure)                       │
-  └────────────────────┴────────────────────────────────┘
+  | Benefit             | Cost                                                |
+  | ------------------- | --------------------------------------------------- |
+  | Higher throughput   | Higher latency (wait for batch)                     |
+  | Less I/O overhead   | Memory usage for buffer                             |
+  | Better compression  | Data loss risk if crash before flush                |
+  | Fewer connections   | Retry complexity on partial batch failure           |
 \`\`\`
 
 **Tuning**: The batch size and flush interval form a latency-throughput trade-off. Larger batches = higher throughput but more latency. For real-time systems, use small batches with short timeouts (5-10ms). For analytics/logging, use large batches with longer timeouts (1-5 seconds).`
@@ -7374,17 +7303,15 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
 
 **LSM trees in practice**:
 \`\`\`
-  ┌─────────────────┬──────────────────────┐
-  │ System          │ LSM Engine           │
-  ├─────────────────┼──────────────────────┤
-  │ Cassandra       │ Custom LSM           │
-  │ RocksDB         │ LevelDB-derived      │
-  │ LevelDB         │ Original Google impl │
-  │ HBase           │ Custom LSM on HDFS   │
-  │ CockroachDB     │ Pebble (Go RocksDB)  │
-  │ TiKV (TiDB)    │ RocksDB              │
-  │ InfluxDB        │ Custom TSM (time-series)│
-  └─────────────────┴──────────────────────┘
+  | System          | LSM Engine                |
+  | --------------- | ------------------------- |
+  | Cassandra       | Custom LSM                |
+  | RocksDB         | LevelDB-derived           |
+  | LevelDB         | Original Google impl      |
+  | HBase           | Custom LSM on HDFS        |
+  | CockroachDB     | Pebble (Go RocksDB)       |
+  | TiKV (TiDB)     | RocksDB                   |
+  | InfluxDB        | Custom TSM (time-series)  |
 \`\`\`
 
 **Trade-off**: LSM trees optimize writes at the cost of reads. Reading a key may require checking the memtable, then each SSTable level. Bloom filters mitigate this — they quickly determine if a key is NOT in an SSTable, avoiding unnecessary disk reads.`
@@ -7502,15 +7429,13 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
 
 **Storage layer choices**:
 \`\`\`
-  ┌──────────────────┬──────────────┬────────────────────┐
-  │ System           │ Write Speed  │ Best For           │
-  ├──────────────────┼──────────────┼────────────────────┤
-  │ InfluxDB         │ ~1M pts/s    │ Time-series metrics│
-  │ TimescaleDB      │ ~500K pts/s  │ SQL + time-series  │
-  │ ClickHouse       │ ~2M rows/s   │ Analytics queries  │
-  │ Cassandra        │ ~1M writes/s │ High write, flexible│
-  │ S3 + Parquet     │ Unlimited    │ Cold storage, batch│
-  └──────────────────┴──────────────┴────────────────────┘
+  | System          | Write Speed   | Best For             |
+  | --------------- | ------------- | -------------------- |
+  | InfluxDB        | ~1M pts/s     | Time-series metrics  |
+  | TimescaleDB     | ~500K pts/s   | SQL + time-series    |
+  | ClickHouse      | ~2M rows/s    | Analytics queries    |
+  | Cassandra       | ~1M writes/s  | High write, flexible |
+  | S3 + Parquet    | Unlimited     | Cold storage, batch  |
 \`\`\`
 
 **Key design decisions**:
@@ -7763,18 +7688,11 @@ Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine t
 
 **Chunk size selection**:
 \`\`\`
-  ┌──────────┬─────────────────┬──────────────────┐
-  │ Chunk    │ Pros            │ Cons             │
-  ├──────────┼─────────────────┼──────────────────┤
-  │ Small    │ Fine-grained    │ More HTTP        │
-  │ (1MB)    │ resume, less    │ overhead, slower  │
-  │          │ data lost       │ overall          │
-  │ Large    │ Fewer requests, │ More data lost on│
-  │ (50MB)   │ faster overall  │ interruption     │
-  │ Adaptive │ Best of both    │ More complex     │
-  │          │ (adjust to      │ implementation   │
-  │          │ network speed)  │                  │
-  └──────────┴─────────────────┴──────────────────┘
+  | Chunk size       | Pros                                      | Cons                                |
+  | ---------------- | ----------------------------------------- | ----------------------------------- |
+  | Small (1 MB)     | Fine-grained resume, less data lost       | More HTTP overhead, slower overall  |
+  | Large (50 MB)    | Fewer requests, faster overall            | More data lost on interruption      |
+  | Adaptive         | Best of both (adjusts to network speed)   | More complex implementation         |
 \`\`\`
 
 **Best practice**: Use 5-10MB chunks as a default. Implement client-side progress tracking and server-side chunk verification (checksum per chunk). Set a timeout on incomplete uploads (clean up after 24 hours).`
@@ -8227,16 +8145,14 @@ The challenge lies in **reliability**: workers crash, tasks get stuck, downstrea
 
 **Job queue options**:
 \`\`\`
-  ┌─────────────────┬──────────────────────────────────┐
-  │ Queue            │ Best For                        │
-  ├─────────────────┼──────────────────────────────────┤
-  │ Redis (Bull/BullMQ)│ Low latency, Node.js ecosystem│
-  │ SQS             │ AWS-native, serverless           │
-  │ RabbitMQ        │ Routing, priorities, AMQP        │
-  │ Kafka           │ High throughput, log-based       │
-  │ Celery          │ Python ecosystem                 │
-  │ PostgreSQL (SKIP LOCKED)│ No additional infra     │
-  └─────────────────┴──────────────────────────────────┘
+  | Queue                    | Best For                         |
+  | ------------------------ | -------------------------------- |
+  | Redis (Bull/BullMQ)      | Low latency, Node.js ecosystem   |
+  | SQS                      | AWS-native, serverless           |
+  | RabbitMQ                 | Routing, priorities, AMQP        |
+  | Kafka                    | High throughput, log-based       |
+  | Celery                   | Python ecosystem                 |
+  | PostgreSQL (SKIP LOCKED) | No additional infra              |
 \`\`\`
 
 **PostgreSQL as a job queue** (simple, no extra infrastructure):
@@ -8305,15 +8221,13 @@ The challenge lies in **reliability**: workers crash, tasks get stuck, downstrea
 
 **Timeout strategies per task type**:
 \`\`\`
-  ┌────────────────────────┬──────────┬────────────┐
-  │ Task Type              │ Timeout  │ Heartbeat  │
-  ├────────────────────────┼──────────┼────────────┤
-  │ Thumbnail generation   │ 30s      │ Not needed │
-  │ PDF report generation  │ 5min     │ Every 30s  │
-  │ Video transcoding      │ 2 hours  │ Every 60s  │
-  │ Data export            │ 30min    │ Every 60s  │
-  │ ML training job        │ 24 hours │ Every 5min │
-  └────────────────────────┴──────────┴────────────┘
+  | Task Type              | Timeout   | Heartbeat   |
+  | ---------------------- | --------- | ----------- |
+  | Thumbnail generation   | 30 s      | Not needed  |
+  | PDF report generation  | 5 min     | Every 30 s  |
+  | Video transcoding      | 2 hours   | Every 60 s  |
+  | Data export            | 30 min    | Every 60 s  |
+  | ML training job        | 24 hours  | Every 5 min |
 \`\`\`
 
 **Circuit breaker for downstream services**:
@@ -8410,17 +8324,13 @@ Cons:
 
 **Recommendation by use case**:
 \`\`\`
-  ┌──────────────────────────┬────────────────────┐
-  │ Use Case                 │ Best Mechanism      │
-  ├──────────────────────────┼────────────────────┤
-  │ Browser UI, short tasks  │ Polling (simplest)  │
-  │ Browser UI, long tasks   │ WebSocket + polling │
-  │                          │ fallback            │
-  │ Server-to-server         │ Webhooks            │
-  │ Mobile (background)      │ Push notification   │
-  │ Dashboard with many jobs │ SSE (server-sent    │
-  │                          │ events)             │
-  └──────────────────────────┴────────────────────┘
+  | Use Case                 | Best Mechanism                       |
+  | ------------------------ | ------------------------------------ |
+  | Browser UI, short tasks  | Polling (simplest)                   |
+  | Browser UI, long tasks   | WebSocket + polling fallback         |
+  | Server-to-server         | Webhooks                             |
+  | Mobile (background)      | Push notification                    |
+  | Dashboard with many jobs | SSE (server-sent events)             |
 \`\`\`
 
 **Hybrid approach** (most robust): Return a poll URL in the initial response. Optionally accept a webhook URL. If the client connects via WebSocket, push updates. This covers all client types.`
@@ -8479,15 +8389,13 @@ Prevents starvation while still favoring high-priority tasks.
 
 **Priority assignment guidelines**:
 \`\`\`
-  ┌──────────┬───────────────────────────────────┐
-  │ Priority │ Examples                          │
-  ├──────────┼───────────────────────────────────┤
-  │ Critical │ Payment processing, password reset│
-  │ High     │ User-facing exports, notifications│
-  │ Normal   │ Email sending, webhook delivery   │
-  │ Low      │ Analytics, report generation      │
-  │ Background│ Data cleanup, cache warming      │
-  └──────────┴───────────────────────────────────┘
+  | Priority   | Examples                              |
+  | ---------- | ------------------------------------- |
+  | Critical   | Payment processing, password reset    |
+  | High       | User-facing exports, notifications    |
+  | Normal     | Email sending, webhook delivery       |
+  | Low        | Analytics, report generation          |
+  | Background | Data cleanup, cache warming           |
 \`\`\`
 
 **Dynamic priority adjustment**:
