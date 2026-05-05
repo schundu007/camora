@@ -224,6 +224,40 @@ def diag_trace_waterfall():
     print('Generated: c6-trace')
 
 
+# ── D1: Incident Command roles ──────────────────────────────────────
+def diag_incident_roles():
+    g = base_graph('d1_incident_roles', 'Incident Command roles (IMAG / Google IRT structure)')
+    n(g, 'ic',  'Incident Commander (IC)\n• decides priorities\n• delegates work\n• runs the call', 'red')
+    n(g, 'ops', 'Ops Lead\n• executes mitigations\n• reads dashboards\n• drives investigation', 'navy')
+    n(g, 'comm','Communications Lead\n• status page + Slack\n• exec updates\n• customer comms', 'gold')
+    n(g, 'plan','Planning Lead\n(long incidents only)\n• shift handoffs\n• timeline owner', 'green')
+    n(g, 'sme', 'Subject Matter Experts\n• deep technical knowledge\n• called in by Ops Lead', 'purple')
+    e(g, 'ic', 'ops',  'directs')
+    e(g, 'ic', 'comm', 'directs')
+    e(g, 'ic', 'plan', 'directs (>4h)')
+    e(g, 'ops', 'sme', 'pulls in')
+    g.render(os.path.join(OUT, 'd1-incident-roles'), cleanup=True)
+    print('Generated: d1-incident-roles')
+
+
+# ── D5: Postmortem flow ─────────────────────────────────────────────
+def diag_postmortem_flow():
+    g = base_graph('d5_postmortem', 'Blameless Postmortem flow — incident to action items')
+    n(g, 'inc',   'INCIDENT\n(detected, mitigated)', 'red')
+    n(g, 'draft', 'Draft postmortem\n(within 5 business days)\n• timeline\n• impact\n• root causes', 'gold')
+    n(g, 'review','Review meeting\n(blameless, cross-team)\n• Five Whys\n• contributing factors', 'navy')
+    n(g, 'final', 'Final postmortem\n• published\n• searchable\n• linked from runbooks', 'green')
+    n(g, 'ai',    'Action items\n(owners + due dates)\n• prevent recurrence\n• detect faster\n• mitigate faster', 'purple')
+    n(g, 'track', 'Tracker / sprint planning\n(close the loop)', 'teal')
+    e(g, 'inc',    'draft',  'within 5d')
+    e(g, 'draft',  'review', 'cross-team\nattendance')
+    e(g, 'review', 'final',  'incorporate\ndiscussion')
+    e(g, 'final',  'ai',     'extract')
+    e(g, 'ai',     'track',  'commit to\nbacklog')
+    g.render(os.path.join(OUT, 'd5-postmortem'), cleanup=True)
+    print('Generated: d5-postmortem')
+
+
 if __name__ == '__main__':
     diag_sli_slo_sla()
     diag_burn_rate()
@@ -235,4 +269,6 @@ if __name__ == '__main__':
     diag_red_use()
     diag_prom_stack()
     diag_trace_waterfall()
-    print('SRE diagrams batches 1-3 complete.')
+    diag_incident_roles()
+    diag_postmortem_flow()
+    print('SRE diagrams batches 1-4 complete.')
