@@ -129,6 +129,10 @@ cd apps/camora && npx eslint .
 - `AI_SERVICES_API_KEY` — shared secret. Required on both ai-services AND every backend that calls it (lumora-backend, ascend-backend). The Python service rejects all non-`/health` requests without a matching `X-API-Key` header. Generate with `openssl rand -hex 32`.
 - `OWNER_EMAILS` / `ADMIN_EMAILS` (csv) — bypass quotas + admin gates. No hardcoded fallback in source; if unset, no one is admin.
 - `REDIS_URL` — Redis (ascend-backend only)
+- `COHERE_API_KEY` — optional. Enables cross-encoder reranking via Cohere `rerank-v3.5`. When absent, retrieval uses RRF order alone.
+- `RAG_USE_HYDE` — optional `'true'`/`'false'`. Enables HyDE query rewriting (Haiku-generated hypothetical answer embedded for retrieval). Default off.
+- `RAG_USE_RERANK` — optional `'true'`/`'false'`. Enables Cohere reranker (also requires `COHERE_API_KEY`). Default off.
+- `RAG_USE_WARM_KIT` — optional `'true'`/`'false'`. Enables session-warm prefetch read in retrieve(). **Default ON** (set to `'false'` to disable). The kit is built on Prep save and skips live retrieval at question time.
 
 ## Conventions
 
