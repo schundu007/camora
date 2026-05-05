@@ -9115,4 +9115,504 @@ These are the answers a Buildkite-fluent platform engineer should give without p
     ],
   },
 
+  // ─────────────────────────────────────────────────────────────────────
+  // E. GitOps — declarative, git-as-source-of-truth, agent-pulled
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'gitops-principles',
+    title: 'GitOps Principles — OpenGitOps Spec, Declarative, Pulled, Reconciled',
+    icon: 'gitPullRequest',
+    color: '#0891b2',
+    questions: 5,
+    description: 'Weaveworks coined the term in 2017; OpenGitOps (CNCF, 2021) formalized it. Four principles: declarative, versioned + immutable, pulled automatically, continuously reconciled. The operational model that makes Kubernetes deployments auditable, recoverable, and rollback-trivial.',
+    visualizations: [
+      {
+        title: 'Four GitOps principles — OpenGitOps v1.0 spec',
+        description: `OpenGitOps (CNCF Sandbox, joined 2021; v1.0 published 2022) is the canonical specification. Four principles every GitOps system must satisfy:
+
+1. Declarative. The desired state of the entire system is described declaratively. Not imperatively — you don't say "run kubectl apply"; you say "this is the state we want." Tools that satisfy: Kubernetes manifests (YAML), Terraform HCL, Crossplane CRDs, Helm charts, Kustomize overlays.
+
+2. Versioned and immutable. Desired state stored in a versioned, immutable system — git is the canonical answer. Every change is a commit; every commit has a SHA; every SHA is content-addressed and unforgeable. The git history IS the audit log.
+
+3. Pulled automatically. Software agents in the target environment automatically pull the desired state from the repository. The deployment direction is reversed from traditional CI/CD: instead of CI pushing to production, an agent in production pulls from git. The agent is the deploy actor.
+
+4. Continuously reconciled. Software agents continuously observe actual system state and attempt to apply the desired state. If actual ≠ desired (drift), the agent acts: re-applies, alerts, or both. Drift is detected and remediated as a normal operating mode, not as a special case.
+
+What follows from these four principles:
+- Audit: git log shows every change, who made it, when, why.
+- Rollback: git revert produces a new commit with old state; agent reconciles back to it. No special rollback machinery needed.
+- Disaster recovery: git is the source of truth. Lose the cluster? Spin up a new one; agent reconciles from git; cluster matches.
+- Visibility: git is human-readable. Anyone can read the desired state of production by reading the repo.
+- Security: deployment credentials live in the cluster (the agent's credentials), not in CI. CI compromise doesn't compromise prod.
+
+Counter-examples (what's NOT GitOps):
+- Imperative kubectl apply from CI: not declarative-pulled.
+- Hand-edited cluster state: not versioned-immutable.
+- Push-based CI deploy without reconciliation: not continuously reconciled.
+
+The four principles are jointly load-bearing — drop any one and you don't have GitOps; you have something else.`,
+        image: '/diagrams/devops/g1-gitops-principles.png',
+      },
+      {
+        title: 'GitOps reconciliation loop — desired → actual → drift remediation',
+        description: `The core mechanism. Diagrammed left to right:
+
+1. Engineer writes a manifest change, commits to git, pushes.
+2. PR review approves the change. Merge to main happens.
+3. The GitOps agent (Argo CD, Flux, etc.) running in the target cluster polls the git repo on a schedule (typically every 3 minutes). It detects the new commit.
+4. The agent fetches the manifests at the new SHA. For Kustomize overlays / Helm charts, it renders them to flat YAML.
+5. The agent compares desired state (from git) with actual state (queried from the cluster's K8s API). Diff is computed at the K8s resource level.
+6. If diff is non-empty, the agent reconciles. Cluster's actual state moves toward desired.
+7. The agent reports status: Synced (actual = desired) or OutOfSync (drift exists).
+8. Continuous re-reconciliation. The same loop runs every N minutes regardless of git changes. If someone manually changes the cluster, the next reconciliation cycle detects the drift.
+
+Drift response options (configurable):
+- Self-heal: revert manual change automatically.
+- Alert-only: detect drift, send notification, don't act.
+- Manual sync: user clicks "Sync" in the UI.
+
+Push vs pull deployment direction is the key architectural inversion. Traditional CI/CD: build → CI runs kubectl apply with cluster credentials. GitOps: agent in cluster polls git; cluster credentials never leave the cluster. Significant security improvement.`,
+        image: '/diagrams/devops/g6-gitops-drift.png',
+      },
+    ],
+    introduction: `GitOps is the operating model where git is the source of truth for declarative infrastructure and applications, and software agents continuously reconcile actual system state to match what's in git. The term was coined by Alexis Richardson at Weaveworks in 2017. The OpenGitOps project (CNCF Sandbox since 2021) formalized the principles in v1.0 of the spec.
+
+Why GitOps wins for Kubernetes:
+
+Auditability. Every change to production is a git commit with author, timestamp, message, diff. git log is the audit log. PR reviews provide change control. SOC 2 / ISO 27001 / FedRAMP audits become significantly easier.
+
+Rollback simplicity. git revert <commit> creates a new commit reversing the change. The agent reconciles to that. No special rollback machinery, no out-of-band scripts. Same mechanism for forward and reverse.
+
+Disaster recovery. The cluster is replaceable. Lose your EKS cluster? Spin up a new one, install Argo CD, point it at the git repo; the cluster's complete state restores from git.
+
+Multi-environment consistency. dev, staging, prod are subdirectories or branches in git. Promoting a change is a PR. Drift between environments is visible as a git diff.
+
+Security. Cluster deployment credentials never leave the cluster. CI/CD pipelines that previously needed kubectl access to prod no longer need it. CI compromise doesn't compromise prod.
+
+Where GitOps doesn't fit cleanly:
+
+Non-Kubernetes infrastructure. Tools like Argo CD primarily target K8s resources. For Terraform-managed AWS, Atlantis or Spacelift are the equivalent.
+
+Imperative operations. Database migrations, secret rotations, one-time data fixes. GitOps has weak primitives for these; teams use jobs or hooks but the model strains.
+
+Per-deploy variables. CI generates artifacts (image SHAs) that need to land in deployment manifests. Requires writing back to git via image-update controllers — adds operational complexity.
+
+Three load-bearing concepts every GitOps interview answer needs:
+
+1. The four OpenGitOps principles. Declarative, versioned + immutable, pulled, continuously reconciled. All four must hold.
+
+2. Pull, not push. The cluster agent pulls from git; CI never pushes to the cluster. This inverts the deployment direction and is the fundamental security and operational improvement.
+
+3. Continuous reconciliation. Drift is detected and remediated as normal operation, not as an exception.`,
+    whenToUse: [
+      'Kubernetes deployments at any non-trivial scale (>5 services or >2 environments)',
+      'Multi-cluster K8s where consistent state across clusters matters',
+      'Compliance-driven environments needing audit trail of every prod change',
+      'Disaster-recovery scenarios where cluster rebuild from git is essential',
+      'Replacing fragile CI-driven kubectl apply pipelines',
+    ],
+    keyConcepts: [
+      {
+        term: 'Declarative state',
+        definition: `Systems describe what the desired state is, not how to achieve it.
+
+Imperative (not GitOps):
+\`\`\`bash
+kubectl scale deployment api --replicas=5
+kubectl set image deployment/api api=ghcr.io/myorg/api:v1.2.3
+\`\`\`
+
+Declarative (GitOps):
+\`\`\`yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: api }
+spec:
+  replicas: 5
+  template:
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/myorg/api:v1.2.3
+\`\`\`
+
+Why declarative matters:
+- Idempotent: re-applying the same manifest produces the same outcome.
+- Observable: you can compare two manifests and see what's different.
+- Reversible: revert the file → agent reconciles back. No reverse command list to maintain.
+
+This is why GitOps needs Kubernetes (or another declarative API). You can't easily GitOps "ssh to box, apt install nginx" — the imperative shape doesn't fit.`,
+      },
+      {
+        term: 'Pull-based reconciliation',
+        definition: `Architectural inversion: instead of CI pushing to the cluster, an agent in the cluster pulls from git.
+
+\`\`\`
+Traditional CI/CD push:
+  CI runner → kubectl apply → Cluster API
+  (CI needs cluster credentials; CI compromise = cluster compromise)
+
+GitOps pull:
+  Cluster agent ← git fetch ← Git repo
+  (Cluster needs git credentials; CI never has cluster credentials)
+\`\`\`
+
+The agent runs as a Kubernetes controller (Argo CD's argocd-application-controller, Flux's source-controller + kustomize-controller). Watches Application/Kustomization CRDs that reference git URLs.
+
+Polling vs webhook:
+- Default: poll git every 3 minutes.
+- Optimization: configure git webhooks to notify the agent immediately. Reduces lag from ~3min to seconds.
+
+Authentication:
+- Read-only Deploy Key per repo (SSH).
+- HTTP token with read-only scope.
+- GitHub App with restricted permissions.
+
+The pull model is GitOps's biggest security improvement over push-based CI/CD.`,
+      },
+      {
+        term: 'Continuous reconciliation + drift remediation',
+        definition: `Reconciliation loop runs every ~3 minutes regardless of whether git changed.
+
+Drift sources:
+- Manual cluster changes (kubectl edit, kubectl scale).
+- Other controllers mutating resources (HPA scaling deployment.replicas).
+- Cloud provider mutations (AWS adding tags).
+- Time-based changes (certificates expiring).
+
+Three response modes per Application:
+
+Mode 1: self-heal: true. Agent automatically reverts manual changes. For stable production where any non-git change is wrong.
+
+Mode 2: self-heal: false. Agent detects drift, marks Application as OutOfSync, sends notification. User clicks Sync to remediate.
+
+Mode 3: prune: false. Agent doesn't delete resources that exist in cluster but not in git.
+
+ignoreDifferences for HPA-managed replicas:
+
+\`\`\`yaml
+spec:
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers: [/spec/replicas]
+\`\`\`
+
+Without this, agent fights HPA constantly. Always set for HPA-managed deployments.`,
+      },
+      {
+        term: 'GitOps tools comparison',
+        definition: `Two dominant CNCF Graduated tools:
+
+Argo CD (graduated Dec 2022). Originated at Intuit. UI-rich; Application CRD model; Helm/Kustomize/Jsonnet/plain YAML; App-of-Apps + ApplicationSet for multi-app; strong RBAC + SSO.
+
+Flux v2 (graduated Nov 2022). Originated at Weaveworks (the GitOps coiners). GOTK (GitOps Toolkit) — multiple controllers. More composable; thinner UI; multi-tenancy via K8s native primitives.
+
+Use Argo CD when: polished UI matters; centralized control plane managing many clusters; rich app catalog UX.
+
+Use Flux when: K8s-native composability matters; multi-tenancy via namespaces; smaller surface.
+
+Many large orgs run both: Argo CD for application teams (UI), Flux for platform teams (composability).
+
+Other GitOps-adjacent tools:
+- Anthos Config Sync (Google) — GKE GitOps.
+- Rancher Fleet — multi-cluster for SUSE Rancher.
+- Atlantis — PR-driven Terraform (not strictly GitOps but adjacent).
+- Spacelift / env0 — hosted Terraform with GitOps mode.`,
+      },
+      {
+        term: 'Recipe: secrets in GitOps',
+        definition: `Plain-text secrets in git is a non-starter. Three working patterns:
+
+External Secrets Operator (ESO) — dominant 2026 pattern:
+
+\`\`\`yaml
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata: { name: payments-db, namespace: payments }
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target: { name: payments-db }
+  data:
+    - secretKey: password
+      remoteRef:
+        key: prod/payments/db
+        property: password
+\`\`\`
+
+ESO fetches from AWS Secrets Manager / Vault / GCP Secret Manager and creates a K8s Secret. Rotation in cloud → propagates automatically.
+
+Sealed Secrets (Bitnami) — simpler:
+
+\`\`\`bash
+echo -n 'my-db-password' | kubectl create secret generic db-creds \\
+  --dry-run=client --from-file=password=/dev/stdin -o yaml | \\
+  kubeseal --format=yaml > sealed-secret.yaml
+\`\`\`
+
+Encrypted SealedSecret CRD committable to git. Controller decrypts using cluster's private key. Simple but tied to one cluster.
+
+SOPS + KMS — encrypted YAML in git, decrypted at apply time using cloud KMS. Argo CD plugin handles decryption. Strong audit trail in CloudTrail.
+
+Pick ESO + AWS Secrets Manager for production at scale. Sealed Secrets for OSS / single-cluster.`,
+      },
+    ],
+    approach: [
+      'Adopt OpenGitOps four principles as non-negotiable; tool choice secondary',
+      'Single repo per cluster (or app-of-apps for shared) with overlays per environment',
+      'Pull-based agent (Argo CD or Flux) — never push from CI to cluster',
+      'Reconciliation interval 3 min default; webhook-triggered for instant sync',
+      'self-heal: true for production; alert-only for shared/manual environments',
+      'ignoreDifferences for HPA-managed replicas, Operator-managed CRs',
+      'Secrets via External Secrets Operator + cloud secret manager',
+      'Branch protection on main; PR review required',
+    ],
+    pitfalls: [
+      'Push-based CI deploy that\'s called "GitOps" — missing pull principle; not GitOps',
+      'No continuous reconciliation (only on PR merge) — drift goes undetected',
+      'self-heal: true without ignoreDifferences for HPA — agent fights HPA',
+      'Plain-text secrets in git — single read-permission compromise leaks production',
+      'targetRevision: HEAD on production — picks up unintended changes; pin to tag',
+      'No prune: true — old resources accumulate as git rotates them out',
+      'Single GitOps repo with hundreds of teams — PR contention, blast radius',
+    ],
+    keyQuestions: [
+      {
+        question: 'What are the four GitOps principles, and what does each rule out?',
+        answer: `OpenGitOps v1.0 (CNCF, 2022) defines four principles. Each rules out a common anti-pattern.
+
+Principle 1: Declarative. The desired state is described declaratively, not imperatively.
+
+Rules out: kubectl apply scripts, ansible playbooks calling kubectl commands, helm install in CI scripts, anything where deployment is a sequence of operations rather than a description of end state.
+
+Why it matters: declarative state is idempotent, comparable, reversible. Imperative scripts have none of these properties cleanly.
+
+Principle 2: Versioned and immutable.
+
+Rules out: hand-edited cluster state (kubectl edit deployment to fix something live), config databases that mutate without version history, spreadsheet-driven configuration.
+
+Why it matters: git provides audit trail (who/when/why), rollback (git revert), branching (test changes safely), content-addressing (commits are immutable). The git history IS the audit log.
+
+Principle 3: Pulled automatically.
+
+Rules out: CI/CD that pushes to the cluster (jenkins → kubectl apply, GitHub Actions → kubectl apply). These are git-driven, but not GitOps — the deployment direction is wrong.
+
+Why it matters: pull inverts the security model. The cluster has read-only access to git; CI never has write access to the cluster. CI compromise no longer means production compromise.
+
+Principle 4: Continuously reconciled.
+
+Rules out: deploy-once-and-forget patterns. PR merges → CI runs once → done. If someone changes the cluster manually after, no one notices.
+
+Why it matters: production state drifts. Manual changes during incidents, controller mutations (HPA, Operators), cloud-side changes. Continuous reconciliation makes drift a normal operating mode.
+
+The most common confusion: people see "git → CI → kubectl apply" and call it GitOps. It's not. It's git-driven CI/CD. GitOps is git → pull → reconcile.
+
+The interview test: ask "is it GitOps if my GitHub Actions workflow runs kubectl apply on every merge?" Correct answer: no. It's git-driven, but missing principles 3 (pull) and 4 (continuous reconciliation).`,
+      },
+      {
+        question: 'Walk through what happens when you push a commit to a GitOps cluster.',
+        answer: `End-to-end sequence for Argo CD with webhook-triggered sync.
+
+Step 1: Engineer pushes a commit, opens PR, gets review, merges to main.
+
+Step 2: GitHub fires push webhook to Argo CD's webhook endpoint. Argo CD validates HMAC signature, identifies which Applications are watching the repo+path, marks them for immediate reconciliation.
+
+Step 3: argocd-application-controller wakes the reconciliation loop. argocd-repo-server fetches the new commit, runs Helm template / Kustomize build to render manifests.
+
+Step 4: application-controller queries the cluster's K8s API for current state of resources owned by this Application.
+
+Step 5: diff. Per-resource diff between desired (rendered manifests) and live (cluster API response). Result: deployment.yaml's image differs (v1.2.3 → v1.2.4).
+
+Step 6: sync. Because syncPolicy.automated is configured, controller proceeds. Calls K8s API with server-side-apply.
+
+Step 7: K8s API accepts. Deployment controller picks up the change. Initiates rolling update — creates new ReplicaSet with v1.2.4 image, scales up; scales down old ReplicaSet.
+
+Step 8: Argo CD observes. Health checks track Pod Ready, Deployment Available conditions. While pods cycling: status Progressing. After all Ready: status Healthy.
+
+Step 9: Notifications. argocd-notifications-controller sends webhook to Slack — "payments synced to v1.2.4 successfully".
+
+Total time: 1-2 minutes typical (push to v1.2.4 running in production).
+
+Failure modes:
+- K8s API rejects: Application Sync Failed; configurable retry with exponential backoff.
+- Rolling update fails: Deployment status shows unavailableReplicas > 0; status Degraded; notification fires. No auto-rollback by default (revert in git).
+- Manual edit during sync: with self-heal: true, next reconciliation reverts; without, drift surfaces.
+- Git unreachable: agent fails to fetch; reconciliation pauses; existing cluster state continues running. Recovers when git is back.
+
+Significant operational value over CI-pushes-to-cluster: audit trail in git log, rollback simplicity, no cluster credentials in CI.`,
+      },
+      {
+        question: 'When does GitOps NOT fit, and what do you use instead?',
+        answer: `GitOps is the right answer for most Kubernetes deployments in 2026, but several scenarios fit awkwardly.
+
+Scenario 1: Non-Kubernetes infrastructure. The pattern was designed for K8s.
+
+Alternatives:
+- Atlantis: PR-driven Terraform automation for AWS resources.
+- Crossplane: K8s-native IaC for cloud resources via CRDs. Lets you GitOps cloud infrastructure using K8s GitOps pattern.
+- Spacelift / env0: hosted Terraform with GitOps mode (auto-apply on merge).
+
+Scenario 2: Imperative one-time operations. Database migrations, secret rotations, data backfills.
+
+Alternatives:
+- Argo CD PreSync/PostSync hooks: run a Job before/after sync. Works for migrations as part of deploy.
+- Argo Workflows: explicit imperative pipelines. Use for migrations, batch jobs, scheduled tasks.
+
+The pragmatic approach: GitOps for declarative state; Argo Workflows / Tekton / GHA for imperative procedures. Hybrid.
+
+Scenario 3: Per-deploy variables. CI generates an artifact (image SHA) that needs to land in the deployment manifest.
+
+GitOps requires writing the value back to git:
+- Pattern A: CI generates a PR that updates the manifest. Auditable.
+- Pattern B: Argo CD Image Updater watches the registry, auto-creates PRs. Reduces friction.
+
+Scenario 4: Heavy stateful services. Databases, message queues with leader election.
+
+Compromise: GitOps the CR (declarative); operator handles imperative orchestration. Most modern stateful workloads use this pattern.
+
+Scenario 5: Production hotfix during incident.
+
+Pragmatic answer: break-glass procedure documented:
+1. Set self-heal: false on the affected Application.
+2. Apply hotfix directly via kubectl.
+3. Within 24 hours, codify in git.
+4. Re-enable self-heal once codified.
+
+Don't pretend GitOps handles incidents perfectly. Build the break-glass into the runbook.
+
+Pragmatic 2026 stance: GitOps for declarative K8s state; non-GitOps tools for imperative procedures, non-K8s infrastructure, and emergency hotfixes. The hybrid is normal.`,
+      },
+      {
+        question: 'How do you handle secrets in a GitOps repo?',
+        answer: `Plain-text secrets in git are unacceptable. Three working patterns.
+
+Pattern 1: External Secrets Operator (ESO). Dominant 2026 pattern.
+
+ESO is a K8s Operator. Watches ExternalSecret CRDs (committable to git, no secret values). Each references a secret store (AWS Secrets Manager, GCP Secret Manager, HashiCorp Vault, Azure Key Vault). ESO fetches from the store, creates a real K8s Secret, refreshes on schedule.
+
+\`\`\`yaml
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata: { name: payments-creds, namespace: payments }
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target: { name: payments-creds, creationPolicy: Owner }
+  data:
+    - secretKey: db-password
+      remoteRef:
+        key: prod/payments/db
+        property: password
+\`\`\`
+
+Pros: Real secret store integration; rotation in cloud auto-propagates; audit in CloudTrail; per-environment secret stores; secrets never in git; mature ecosystem.
+
+Cons: Operator to maintain; cloud SM costs scale with secret count + reads.
+
+Pattern 2: Sealed Secrets (Bitnami). Simpler.
+
+sealed-secrets controller in cluster has a private key. SealedSecret CRD contains encrypted blob. Controller decrypts → creates K8s Secret. kubeseal CLI encrypts secrets locally:
+
+\`\`\`bash
+echo -n 'my-db-password' | kubectl create secret generic db-creds \\
+  --dry-run=client --from-file=password=/dev/stdin -o yaml | \\
+  kubeseal --format=yaml > sealed-secret.yaml
+\`\`\`
+
+Pros: Simple, K8s-native, OSS, no external dependencies.
+
+Cons: Tied to cluster's controller key. Lose cluster, lose ability to decrypt. Rotation manual; one key per cluster.
+
+Pattern 3: SOPS + KMS. Encrypted YAML in git, decrypted at apply time.
+
+SOPS encrypts files using KMS-backed keys (AWS KMS, GCP KMS, age, gpg). Argo CD plugin decrypts during sync using cluster's IRSA-bound IAM role.
+
+Pros: KMS handles key management; rotation handled by KMS; per-file encryption; strong CloudTrail audit.
+
+Cons: Plugin install on Argo CD; sync slightly slower; requires KMS access from cluster.
+
+Recommendation: ESO + AWS Secrets Manager / Vault for production at scale. Sealed Secrets for small / OSS / single-cluster shops. SOPS for orgs with strong KMS investment.
+
+Anti-patterns:
+- Plain secrets in git, even private repos.
+- base64-encoded secrets in plain YAML (encoding is not encryption).
+- SealedSecrets without backing up the controller key.
+- Mixing patterns inconsistently across the cluster.`,
+      },
+      {
+        question: 'Quick-fire interview answers — GitOps essentials.',
+        answer: `Rapid-fire facts.
+
+Q: What's GitOps?
+A: Operating model where git is source of truth for declarative infrastructure/apps, and software agents in target environments continuously reconcile actual state to match git.
+
+Q: Who coined the term?
+A: Alexis Richardson at Weaveworks, 2017.
+
+Q: Formal spec?
+A: OpenGitOps (CNCF Sandbox, 2021); v1.0 published 2022.
+
+Q: Four principles?
+A: Declarative, versioned + immutable, pulled automatically, continuously reconciled.
+
+Q: Why pulled not pushed?
+A: Inverts deployment direction. Cluster has read-only access to git; CI never has write access to cluster. CI compromise no longer means production compromise.
+
+Q: Two dominant tools?
+A: Argo CD (CNCF Graduated Dec 2022, originated Intuit) and Flux v2 (graduated Nov 2022, originated Weaveworks).
+
+Q: Argo CD vs Flux?
+A: Argo CD: polished UI, Application CRD, App-of-Apps + ApplicationSet, strong RBAC. Flux: GitOps Toolkit (multiple controllers), more K8s-native, multi-tenancy via namespaces.
+
+Q: Continuous reconciliation?
+A: Agent runs every ~3 min comparing desired (git) to actual (cluster). Drift triggers reconcile, alert, or both. Distinguishes GitOps from "git-driven CI/CD".
+
+Q: How do you handle drift?
+A: self-heal: true auto-reverts. self-heal: false alerts. Plus ignoreDifferences for legitimately mutable fields (HPA-managed replicas).
+
+Q: Secrets in git?
+A: External Secrets Operator + cloud secret manager (dominant 2026). Sealed Secrets for simpler cases. SOPS + KMS for KMS-rooted encryption. Never plain secrets in git.
+
+Q: Image tag updates?
+A: Argo CD Image Updater (auto-PR or auto-commit on new tags) or CI commits PR updating deployment YAML.
+
+Q: app-of-apps?
+A: Pattern where root Application points at directory of child Application CRDs. Lets you GitOps the GitOps configuration. ApplicationSet is the modern evolution.
+
+Q: Multi-cluster scaling?
+A: ApplicationSet with cluster generator; hub-and-spoke with central Argo CD managing many clusters; Flux multi-cluster fleet.
+
+Q: Stateful workloads?
+A: GitOps the CR (declarative); operator handles imperative steps (failover, migration, rolling restart with quorum).
+
+Q: Non-K8s infrastructure?
+A: GitOps was designed for K8s. Adjacent: Atlantis for Terraform PRs; Crossplane for cloud resources as K8s CRDs; Spacelift for hosted Terraform GitOps.
+
+Q: ignoreDifferences for HPA?
+A: Essential. Without it, agent reverts HPA-set replicas every reconcile cycle. Add jsonPointers: [/spec/replicas] for any deployment with HPA.
+
+Q: When does GitOps NOT fit?
+A: Non-K8s infrastructure; imperative one-time ops; per-deploy variables; heavy stateful with imperative orchestration.
+
+Q: Most common GitOps anti-pattern?
+A: Calling git-driven CI/CD "GitOps" when it's missing the pull principle and continuous reconciliation.
+
+These are the answers a GitOps-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://opengitops.dev/',
+      'https://www.weave.works/blog/what-is-gitops-really',
+      'https://argo-cd.readthedocs.io/en/stable/',
+      'https://fluxcd.io/flux/',
+      'https://external-secrets.io/',
+      'https://github.com/bitnami-labs/sealed-secrets',
+    ],
+  },
+
 ];
