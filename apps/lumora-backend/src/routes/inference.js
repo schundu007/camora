@@ -16,6 +16,7 @@ import { checkDailyFreeLimit } from '../services/quota.js';
 import { streamResponse, MODEL } from '../services/claude.js';
 import { recordUsage as recordAiHours } from '../services/aiHoursMeter.js';
 import { buildAnswerCacheKey, cacheGet, cacheSet, logCacheEvent } from '../services/answerCache.js';
+import { retrieve, formatRetrievedContext } from '../services/retrieval.js';
 
 const router = Router();
 
@@ -91,6 +92,20 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
     const allMessages = historyResult.rows;
     const history = allMessages.slice(-12).map((m) => ({ role: m.role, content: m.content }));
 
+    // Tier 1+2 grounding — retrieve top-k chunks from Capra KB +
+    // this user's Prep Kit. Hard 250ms timeout inside retrieve();
+    // if it loses, retrievedContext is empty and Sona answers
+    // ungrounded rather than blocking.
+    const retrieved = await retrieve({
+      question,
+      userId: user?.id || null,
+      timeoutMs: 250,
+    });
+    const retrievedContext = formatRetrievedContext(retrieved.chunks);
+    if (retrieved.timedOut) {
+      console.warn(`[inference] retrieval timed out after ${retrieved.latencyMs}ms`);
+    }
+
     // Start SSE
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
@@ -98,6 +113,19 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
     });
+
+    if (retrieved.chunks.length > 0) {
+      const citations = retrieved.chunks.map((c) => ({
+        tier: c.tier,
+        source: c.source || null,
+        topicId: c.topicId || null,
+        topicTitle: c.topicTitle || null,
+        section: c.section || null,
+        docKind: c.docKind || null,
+        distance: c.distance,
+      }));
+      sendSSE(res, 'citations', citations);
+    }
 
     let finalAnswer = null;
     let clientDisconnected = false;
@@ -116,6 +144,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       resumeContext: user.resume_text || null,
       technicalContext: user.technical_context || null,
       systemContext: systemContext || null,
+      retrievedContext,
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
       cloudProvider,
       plan: userPlan,
@@ -241,6 +270,20 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       }
     }
 
+    // Tier 1+2 grounding — retrieve top-k chunks from Capra KB +
+    // this user's Prep Kit. Hard 250ms timeout inside retrieve();
+    // if it loses, retrievedContext is empty and Sona answers
+    // ungrounded rather than blocking.
+    const retrieved = await retrieve({
+      question,
+      userId: user?.id || null,
+      timeoutMs: 250,
+    });
+    const retrievedContext = formatRetrievedContext(retrieved.chunks);
+    if (retrieved.timedOut) {
+      console.warn(`[inference] retrieval timed out after ${retrieved.latencyMs}ms`);
+    }
+
     // Clean title (strip internal prefixes)
     const cleanTitle = question.replace('[SYSTEM DESIGN] ', '').trim().slice(0, 100);
 
@@ -263,6 +306,19 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
     // headers for ~5s waiting for body, eating into the timeout budget
     // before any content streams.
     if (typeof res.flushHeaders === 'function') res.flushHeaders();
+
+    if (retrieved.chunks.length > 0) {
+      const citations = retrieved.chunks.map((c) => ({
+        tier: c.tier,
+        source: c.source || null,
+        topicId: c.topicId || null,
+        topicTitle: c.topicTitle || null,
+        section: c.section || null,
+        docKind: c.docKind || null,
+        distance: c.distance,
+      }));
+      sendSSE(res, 'citations', citations);
+    }
 
     let finalAnswer = null;
     let clientDisconnected = false;
@@ -392,6 +448,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       resumeContext: user.resume_text || null,
       technicalContext: user.technical_context || null,
       systemContext: systemContext || null,
+      retrievedContext,
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
       cloudProvider,
       plan: userPlan,
