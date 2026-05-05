@@ -10,8 +10,10 @@ import { dialogConfirm } from '@/components/shared/Dialog';
 import { isQuestion } from '@/lib/questionDetector';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
+import { Citations } from '@/components/lumora/Citations';
 import { useInterviewStore } from '@/stores/interview-store';
 import { sonaRegistry } from '@/lib/sona-registry';
+import type { Citation } from '@/types';
 
 /* Theme-aware copilot palette — flips with [data-theme="dark"] via CSS vars */
 const C = {
@@ -21,7 +23,13 @@ const C = {
 };
 
 /* ── Types ── */
-interface CopilotMessage { role: 'user' | 'ai'; text: string; time: Date; }
+interface CopilotMessage {
+  role: 'user' | 'ai';
+  text: string;
+  time: Date;
+  /** RAG citations attached to this AI message (empty = no sources). */
+  citations?: Citation[];
+}
 
 interface AICompanionPanelProps {
   isOpen: boolean;
@@ -350,6 +358,11 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
 
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState('');
+  // Citations accumulator for the in-flight stream. Populated by the
+  // `citations` SSE event and attached to the AI message on `onAnswer`.
+  // Using a ref (not state) so it doesn't trigger a re-render — the
+  // citations only surface once the final message is committed.
+  const pendingCitationsRef = useRef<Citation[]>([]);
   const [input, setInput] = useState('');
   const [minimized, setMinimized] = useState(true);
   const [maximized, setMaximized] = useState(false);
@@ -557,6 +570,8 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     setMessages(prev => [...prev, { role: 'user', text: question.trim(), time: new Date() }]);
     setStreaming(true);
     setStreamText('');
+    // Reset the pending citations for this new question's stream.
+    pendingCitationsRef.current = [];
 
     try {
       await streamResponse({
@@ -564,12 +579,22 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
         token,
         useSearch: false,
         systemContext,
+        onCitations: (citations) => {
+          pendingCitationsRef.current = citations;
+        },
         onToken: (data) => {
           if (data.t) setStreamText(prev => prev + data.t);
         },
         onAnswer: (data: any) => {
           const answerText = extractAnswer(data.parsed) || data.raw || '';
-          setMessages(prev => [...prev, { role: 'ai', text: cleanTags(answerText), time: new Date() }]);
+          const citations = pendingCitationsRef.current;
+          pendingCitationsRef.current = [];
+          setMessages(prev => [...prev, {
+            role: 'ai',
+            text: cleanTags(answerText),
+            time: new Date(),
+            citations: citations.length > 0 ? citations : undefined,
+          }]);
           setStreamText('');
           setStreaming(false);
           // Persist this Q&A to the Lumora session history so it shows
@@ -1163,6 +1188,9 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                     </div>
                     <div className="p-4 sm:p-5 answer-flow">
                       <AnswerView text={msg.text} />
+                      {msg.citations && msg.citations.length > 0 && (
+                        <Citations citations={msg.citations} />
+                      )}
                     </div>
                   </div>
                 ))}
@@ -1252,7 +1280,12 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                     <SonaAvatar size={14} />
                     <span className="font-display text-[9px] font-bold tracking-[0.12em] uppercase text-white">Sona</span>
                   </div>
-                  <div className="p-3 min-w-0"><AnswerView text={msg.text} /></div>
+                  <div className="p-3 min-w-0">
+                    <AnswerView text={msg.text} />
+                    {msg.citations && msg.citations.length > 0 && (
+                      <Citations citations={msg.citations} />
+                    )}
+                  </div>
                 </div>
               ))}
               {streaming && (

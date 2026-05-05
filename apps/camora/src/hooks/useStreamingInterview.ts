@@ -39,6 +39,7 @@ export function useStreamingInterview() {
     startAnswerTimer,
     stopAnswerTimer,
     isStreaming,
+    setActiveCitations,
     setLastFromCache,
   } = useInterviewStore();
 
@@ -57,9 +58,10 @@ export function useStreamingInterview() {
     abortControllerRef.current?.abort();
     clearStreamChunks();
     setParsedBlocks([]);
+    setActiveCitations([]);
     setLastFromCache(null);
     setError(null);
-  }, [clearStreamChunks, setParsedBlocks, setError]);
+  }, [clearStreamChunks, setParsedBlocks, setActiveCitations, setError]);
 
   const handleSubmit = useCallback(async (question: string, forceDesign?: boolean) => {
     const validation = validateInput(question);
@@ -106,6 +108,9 @@ export function useStreamingInterview() {
           const convId = data.conversationId ?? data.conversation_id;
           if (convId) setConversationId(convId);
         },
+        onCitations: (citations) => {
+          setActiveCitations(citations);
+        },
         onToken: (data) => {
           if (data.t) appendStreamChunk(data.t);
         },
@@ -146,7 +151,7 @@ export function useStreamingInterview() {
   }, [token, useSearch, resetForNewQuestion, setQuestion, setIsStreaming,
       setStatus, startAnswerTimer, setIsDesignQuestion, setIsCodingQuestion,
       setConversationId, appendStreamChunk, setParsedBlocks, addHistoryEntry,
-      stopAnswerTimer, setError]);
+      stopAnswerTimer, setError, setActiveCitations]);
 
   const handleCodingSubmit = useCallback(async (problem: string, language: string, options?: { bypassCache?: boolean }) => {
     const validation = validateInput(problem);
@@ -263,11 +268,12 @@ export function useStreamingInterview() {
     abortControllerRef.current?.abort();
     clearStreamChunks();
     setParsedBlocks([]);
+    setActiveCitations([]);
     setQuestion(null);
     setError(null);
     setIsStreaming(false);
     setStatus('ready', 'Ready');
-  }, [clearStreamChunks, setParsedBlocks, setQuestion, setError, setIsStreaming, setStatus]);
+  }, [clearStreamChunks, setParsedBlocks, setActiveCitations, setQuestion, setError, setIsStreaming, setStatus]);
 
   return {
     handleSubmit,

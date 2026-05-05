@@ -23,12 +23,15 @@ import { getSystemContext } from '@/lib/lumora-assistant';
 import { useInterviewStore } from '@/stores/interview-store';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView } from './companion/answer-view';
+import { Citations } from '@/components/lumora/Citations';
+import type { Citation } from '@/types';
 
 interface ChatMessage {
   role: 'user' | 'ai';
   text: string;
   time: number;
   fromCache?: boolean;
+  citations?: Citation[];
 }
 
 interface CodingSonaSidebarProps {
@@ -67,6 +70,8 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // Citations accumulator for the in-flight stream.
+  const pendingCitationsRef = useRef<Citation[]>([]);
 
   // Auto-scroll to bottom on new messages / streaming tokens
   useEffect(() => {
@@ -123,6 +128,7 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
     setStreaming(true);
     setStreamText('');
     setInput('');
+    pendingCitationsRef.current = [];
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -134,14 +140,20 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
         useSearch: false,
         systemContext: buildContext(),
         signal: controller.signal,
+        onCitations: (citations) => {
+          pendingCitationsRef.current = citations;
+        },
         onToken: (data) => { if (data.t) setStreamText(prev => prev + data.t); },
         onAnswer: (data: any) => {
           const answerText = extractAnswer(data?.parsed) || data?.raw || '';
+          const citations = pendingCitationsRef.current;
+          pendingCitationsRef.current = [];
           setMessages(prev => [...prev, {
             role: 'ai',
             text: cleanTags(answerText),
             time: Date.now(),
             fromCache: Boolean(data?.fromCache),
+            citations: citations.length > 0 ? citations : undefined,
           }]);
           setStreamText('');
           setStreaming(false);
@@ -296,6 +308,9 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
                     </div>
                     <div className="p-3">
                       <AnswerView text={m.text} />
+                      {m.citations && m.citations.length > 0 && (
+                        <Citations citations={m.citations} />
+                      )}
                     </div>
                   </div>
                 )}
