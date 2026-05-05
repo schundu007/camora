@@ -13805,4 +13805,1262 @@ These are answers a tracing-fluent platform engineer should give without prepara
     ],
   },
 
+  {
+    id: 'prometheus-grafana-stack',
+    title: 'Prometheus + Grafana — Pull-Based Metrics, PromQL, Long-Term Storage',
+    icon: 'activity',
+    color: '#f97316',
+    questions: 5,
+    description: 'CNCF Graduated metrics stack. Prometheus pulls metrics on intervals, stores TSDB locally. Grafana queries via PromQL. Mimir / Thanos / VictoriaMetrics for HA + long-term storage. Replaced Graphite, Nagios, Sensu in modern stacks.',
+    visualizations: [
+      {
+        title: 'Prometheus + Grafana stack architecture',
+        description: `Walking the stack left to right:
+
+1. Apps expose /metrics endpoint. Standard format: text-based, one metric per line. Example: http_requests_total{method="GET",route="/api/users",status="200"} 12345.
+
+2. Service discovery (kubernetes_sd_config, consul_sd, file_sd) tells Prometheus which targets to scrape. In K8s: ServiceMonitor / PodMonitor CRDs (kube-prometheus-stack) declare scrape targets.
+
+3. Prometheus scrapes /metrics on scrape_interval (default 15s). HTTP GET to each target. Stores in local TSDB (time-series database, 15 days retention default).
+
+4. Recording rules pre-compute expensive aggregations on schedule. e.g., sum(rate(http_requests_total[5m])) by (service) computed every minute, stored as service:http_requests_per_second:rate5m. Subsequent queries use the pre-computed value.
+
+5. Alerting rules evaluate expressions. When true, fire to Alertmanager. Example: up{job="api"} == 0 → "API down".
+
+6. Alertmanager dedupes, groups, routes alerts. Per-route receivers: PagerDuty for critical, Slack for warning, email for info. Maintenance windows via silences.
+
+7. Remote write forwards metrics to long-term storage (Mimir, Thanos, VictoriaMetrics, Cortex). Local Prometheus has 15-day retention; long-term has years.
+
+8. Grafana queries Prometheus or long-term storage via PromQL. Dashboards render time-series. Grafana Alerting (newer; v10+) replaces Alertmanager for some workflows.
+
+9. PromQL examples:
+   - Instant query: up{job="api"} → current value.
+   - Range query: rate(http_requests_total[5m]) → per-second rate over last 5min.
+   - Aggregation: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) → p99 latency.
+
+The pull model is distinctive. Push-based alternatives (StatsD, InfluxDB push) require apps to push metrics; if push fails, metrics lost. Pull means Prometheus is the source of truth — if it can't reach the app, the metric series shows up=0 (which itself is a useful signal).`,
+        image: '/diagrams/devops/o3-prom-grafana.png',
+      },
+      {
+        title: 'Long-term storage — Mimir / Thanos / VictoriaMetrics',
+        description: `Prometheus's local TSDB has fundamental limitations:
+- Single-node: no HA. Restart loses recent data not yet flushed.
+- Limited retention: 15 days default; longer retention slows queries.
+- No global query: querying multiple Prometheus instances requires federation (limited).
+
+Long-term storage solves these.
+
+Mimir (Grafana Labs, OSS Apache 2.0). Mimir is a distributed Prometheus-compatible store. Architecture:
+- distributor: receives metrics via Prometheus remote_write, distributes to ingesters.
+- ingester: writes to local memory + WAL; flushes blocks to object storage.
+- querier: queries blocks (in-memory + object storage).
+- object storage: S3, GCS, Azure Blob, MinIO. Cheap, durable.
+- query-frontend: caches query results, splits long queries.
+- ruler: evaluates recording rules + alerting rules at scale.
+
+Pros: cheapest at scale (object storage). Multi-tenant via x-scope-orgid header. Active development; grafana/mimir is the modern choice.
+
+Cons: more components; operationally heavier than single Prometheus.
+
+Thanos (CNCF Incubating, OSS Apache 2.0). Predates Mimir; similar architecture. Mimir was forked from Cortex (Thanos cousin). Architecture:
+- sidecar (alongside each Prometheus): uploads blocks to object storage; serves recent data.
+- store gateway: serves data from object storage.
+- querier: federates sidecars + store gateways.
+- compactor: deduplicates and downsamples old data.
+- ruler: rule evaluation at scale.
+
+Pros: flexible (works alongside existing Prometheus instances; doesn't replace them). CNCF Incubating; broad adoption.
+
+Cons: harder to operate than Mimir; query performance trails Mimir at scale.
+
+VictoriaMetrics (Apache 2.0; commercial Pro tier). Single-binary or distributed (vm-cluster). Custom TSDB; not based on Prometheus internals.
+
+Pros: best raw query performance; lowest resource usage. Single binary deploys easily.
+
+Cons: smaller ecosystem; configuration differs from Prometheus.
+
+Cortex (CNCF Incubating, OSS). Predecessor to Mimir; less actively maintained since Mimir fork (2022). New deployments should use Mimir, not Cortex.
+
+How they integrate with Prometheus:
+
+\`\`\`yaml
+# prometheus.yml
+remote_write:
+  - url: https://mimir.example.com/api/v1/push
+    headers:
+      X-Scope-OrgID: tenant-1
+    queue_config:
+      capacity: 10000
+      max_samples_per_send: 5000
+      batch_send_deadline: 5s
+\`\`\`
+
+Prometheus continues local 15-day retention; remote_write streams to Mimir for long-term + global query.
+
+Grafana datasource points at Mimir/Thanos/VictoriaMetrics; PromQL queries work identically.
+
+Cost comparison (100k samples/sec ingest, 1 year retention):
+- Self-hosted Prometheus only: 1 large box, ~1-2TB local SSD. ~$500/month. Limited to 1-2 weeks data.
+- Mimir on EKS + S3: 5-10 vCPU, ~50TB S3. ~$1000-2000/month. Years of data.
+- VictoriaMetrics: 5-10 vCPU, ~50TB S3. ~$800-1500/month.
+- Datadog metrics at this volume: $30k-100k/month.
+
+OSS long-term storage is 10-50x cheaper than Datadog/New Relic for metrics at scale.`,
+        image: '/diagrams/devops/o3-prom-grafana.png',
+      },
+    ],
+    introduction: `Prometheus is the dominant metrics monitoring system in cloud-native. CNCF Graduated 2018 (second project after Kubernetes). Originated at SoundCloud (2012); inspired by Google's Borgmon. Pull-based model, time-series database, PromQL query language.
+
+Grafana is the dominant visualization layer. CNCF Sandbox 2021. Founded 2014. Open source (Apache 2.0); cloud-managed Grafana Cloud as paid tier. Visualizes Prometheus, Loki, Tempo, InfluxDB, Datadog, dozens of other data sources.
+
+The Prometheus + Grafana stack replaced Graphite, Nagios, Sensu, Zabbix in most cloud-native deployments. By 2026 it's the default metrics stack on Kubernetes.
+
+Why Prometheus wins:
+
+Pull-based simplicity. Prometheus scrapes /metrics endpoints. Apps just expose the endpoint; no client SDK push complexity. If Prometheus can't reach the app, that itself is a metric (up=0) — useful signal.
+
+Service discovery. Native K8s integration (kubernetes_sd_config) auto-discovers pods/services with prometheus.io/scrape annotation. New deployment? Auto-monitored.
+
+PromQL. Powerful query language. Aggregations (sum, avg, max), rate calculations, histogram quantiles, predictions. The de facto standard for metrics querying; Mimir, Thanos, VictoriaMetrics all support PromQL.
+
+Local TSDB. Embedded time-series database — no external DB to operate for small deployments. Compressed columnar storage; tens of millions of series per node.
+
+Standard format. Prometheus exposition format is text-based, simple. OpenMetrics (CNCF) standardizes it. Hundreds of language client libraries; thousands of exporters for third-party systems (mysqld_exporter, postgres_exporter, redis_exporter, blackbox_exporter for HTTP probes).
+
+Where Prometheus has friction:
+
+Single-node by default. HA requires running two Prometheus instances scraping the same targets; deduplicated by Mimir/Thanos. Operational overhead.
+
+Limited retention. 15-day default. Longer retention slows queries; need long-term storage (Mimir, Thanos).
+
+High-cardinality kills. A label with millions of unique values (user.id) explodes the index. Each unique label combination = one time series; storage cost is per series.
+
+Pull model has limits. Pulling from short-lived jobs (batch, Lambda) requires Pushgateway (proxy that receives pushes, serves pulls). Adds operational complexity.
+
+When to pick Prometheus + Grafana:
+
+Greenfield K8s monitoring. Default in 2026.
+
+Cost-conscious at scale. OSS Prometheus + Mimir + Grafana is 10-50x cheaper than Datadog/New Relic for high-volume metrics.
+
+OpenMetrics-friendly app ecosystem. Most cloud-native apps expose /metrics natively (Kubernetes, Argo CD, Flux, Istio, Envoy, etcd, all major DBs).
+
+When NOT (or partial alternative):
+
+Tiny apps with no K8s. Use a hosted service (Datadog, Grafana Cloud) for zero-ops.
+
+Push-only metrics (Lambda, batch jobs). Pushgateway works but is awkward; managed services handle better.
+
+Need polished commercial UX. Datadog/New Relic dashboards beat hand-rolled Grafana.
+
+Three load-bearing concepts every Prometheus interview answer needs:
+
+1. Pull-based via /metrics scraping. Apps expose; Prometheus scrapes. No client SDK push.
+
+2. PromQL aggregations. rate() for counters, histogram_quantile() for percentiles, sum() by () for grouped aggregation.
+
+3. Long-term storage tier. Mimir / Thanos / VictoriaMetrics for HA + retention beyond local Prometheus's limits.`,
+    whenToUse: [
+      'K8s metrics monitoring — default 2026 stack',
+      'Cost-conscious at scale (OSS vs Datadog/New Relic)',
+      'OpenMetrics-friendly cloud-native apps',
+      'Multi-tenant clusters (Mimir x-scope-orgid)',
+      'Long retention required (years of metrics; archive analysis)',
+    ],
+    keyConcepts: [
+      {
+        term: 'Metric types — counter, gauge, histogram, summary',
+        definition: `Four metric types in Prometheus. Choose based on what you measure.
+
+Counter: monotonically increasing. Reset only on process restart. Use for: request count, error count, bytes received.
+
+\`\`\`python
+from prometheus_client import Counter
+
+http_requests_total = Counter(
+    'http_requests_total',
+    'Count of HTTP requests',
+    ['method', 'route', 'status']
+)
+
+# In handler:
+http_requests_total.labels(method='GET', route='/api/users', status='200').inc()
+\`\`\`
+
+Query: rate() converts counter to per-second rate.
+- rate(http_requests_total[5m]) → req/sec averaged over last 5 minutes.
+- increase(http_requests_total[1h]) → total over last hour.
+
+Never sum counters across instances directly without rate(); accumulating raw counter values is meaningless.
+
+Gauge: arbitrary up-down value. Use for: current memory usage, queue depth, in-flight requests.
+
+\`\`\`python
+from prometheus_client import Gauge
+
+queue_depth = Gauge('queue_depth', 'Items in queue', ['queue_name'])
+queue_depth.labels(queue_name='orders').set(42)
+queue_depth.labels(queue_name='orders').inc()
+queue_depth.labels(queue_name='orders').dec()
+\`\`\`
+
+Query: directly. avg(queue_depth) by (queue_name) gives current depth per queue.
+
+Histogram: distribution of values via cumulative buckets. Use for: latency, response size, batch size.
+
+\`\`\`python
+from prometheus_client import Histogram
+
+http_request_duration = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request latency',
+    ['method', 'route'],
+    buckets=[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+)
+
+with http_request_duration.labels(method='GET', route='/api/users').time():
+    handle_request()
+\`\`\`
+
+Histogram emits multiple time series:
+- *_bucket (cumulative count per bucket).
+- *_sum (sum of all values).
+- *_count (count of all observations).
+
+Query: histogram_quantile() computes percentiles.
+- histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) → p99 latency.
+- histogram_quantile(0.5, ...) → median (p50).
+
+Bucket selection matters: too few buckets → coarse percentiles; too many → high cardinality.
+
+Summary: similar to histogram but pre-computes quantiles client-side.
+
+\`\`\`python
+from prometheus_client import Summary
+
+http_request_duration = Summary(
+    'http_request_duration_seconds',
+    'HTTP request latency',
+    ['method', 'route'],
+)
+\`\`\`
+
+Emits: *_sum, *_count, *_count{quantile="0.5"}, *_count{quantile="0.99"}.
+
+Trade-off vs histogram:
+- Summary: client computes quantiles. Accurate per-instance percentiles. CAN'T aggregate quantiles across instances (taking p99 of p99 is mathematically wrong).
+- Histogram: server computes quantiles from buckets. Slightly approximate but CAN aggregate across instances correctly.
+
+Best practice: use histogram unless you have specific reason for summary. Aggregation matters more than per-instance accuracy.
+
+Common label sets:
+- HTTP: method, route, status_code.
+- DB: db_system, operation.
+- Queue: queue_name, status.
+
+Avoid high-cardinality labels (user_id, full URL, error message) — each unique value = new time series.`,
+      },
+      {
+        term: 'PromQL essentials',
+        definition: `PromQL is the query language. Two query types: instant (single point in time) and range (over a time range).
+
+Selectors:
+
+\`\`\`promql
+http_requests_total                              # all series with this name
+http_requests_total{method="GET"}                # filter by label
+http_requests_total{method="GET", status=~"4.."}  # regex match (4xx)
+http_requests_total{method!="GET"}               # negation
+http_requests_total{job=~".+", method="GET"}     # at least one job
+\`\`\`
+
+Range vector selectors: append [duration]:
+
+\`\`\`promql
+http_requests_total[5m]    # all values from last 5 minutes per series
+\`\`\`
+
+Functions on counters:
+
+\`\`\`promql
+rate(http_requests_total[5m])                    # per-second rate over 5m
+irate(http_requests_total[5m])                   # instantaneous rate (last 2 samples)
+increase(http_requests_total[1h])                # total over 1 hour
+\`\`\`
+
+rate() for graphs (smooth); irate() for alerts (responsive); increase() for "how many in window".
+
+Aggregations:
+
+\`\`\`promql
+sum(rate(http_requests_total[5m]))                      # total req/sec
+sum(rate(http_requests_total[5m])) by (service)         # per-service
+sum(rate(http_requests_total[5m])) by (service, status) # per-service, per-status
+avg(memory_usage_bytes) by (pod)                        # avg memory per pod
+max(memory_usage_bytes) by (pod)                        # peak per pod
+count(up == 1) by (job)                                 # healthy instances per job
+\`\`\`
+
+Label manipulation:
+
+\`\`\`promql
+sum(rate(http_requests_total[5m])) without (instance)   # sum over all instances
+\`\`\`
+
+Histogram quantiles:
+
+\`\`\`promql
+histogram_quantile(0.99,
+  sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route)
+)
+\`\`\`
+
+Critical: include le (less-than-or-equal-to bucket boundary) in by clause. Otherwise quantile calculation breaks.
+
+Recording rules pre-compute:
+
+\`\`\`yaml
+# rules.yml
+groups:
+  - name: api-rates
+    interval: 30s
+    rules:
+      - record: api:http_requests:rate5m
+        expr: sum(rate(http_requests_total[5m])) by (service, route, status)
+      - record: api:http_request_duration:p99:rate5m
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service, route))
+\`\`\`
+
+Subsequent queries:
+
+\`\`\`promql
+api:http_requests:rate5m
+api:http_request_duration:p99:rate5m{service="payments"}
+\`\`\`
+
+Pre-computed; queries are fast. Use for dashboards and alerts that hit expensive aggregations.
+
+Alert rules:
+
+\`\`\`yaml
+groups:
+  - name: api-alerts
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m])) by (service)
+          / sum(rate(http_requests_total[5m])) by (service)
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Error rate above 5% for {{ $labels.service }}"
+          description: "Current error rate: {{ $value | humanizePercentage }}"
+\`\`\`
+
+for: 5m means: alert fires only after the condition has been true for 5 minutes. Avoids flapping.
+
+Common patterns:
+
+CPU saturation:
+\`\`\`promql
+1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) by (instance)
+\`\`\`
+
+Memory pressure:
+\`\`\`promql
+node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes
+\`\`\`
+
+Pod restarts:
+\`\`\`promql
+rate(kube_pod_container_status_restarts_total[15m]) > 0
+\`\`\`
+
+Disk space prediction (4 hours forward):
+\`\`\`promql
+predict_linear(node_filesystem_avail_bytes[1h], 4*3600) < 0
+\`\`\``,
+      },
+      {
+        term: 'Service discovery and exporters',
+        definition: `Prometheus discovers targets dynamically. Six common discovery types:
+
+kubernetes_sd_config (most common in K8s):
+
+\`\`\`yaml
+scrape_configs:
+  - job_name: kubernetes-pods
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      # Only scrape pods with annotation
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: 'true'
+      # Use annotation port, default to 9090
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        target_label: __address__
+        regex: ([^:]+)(?::\\d+)?;(\\d+)
+        replacement: \${1}:\${2}
+      # Add namespace label
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: namespace
+\`\`\`
+
+Pod with annotation prometheus.io/scrape: 'true' is auto-discovered. relabel_configs filter and transform discovered targets.
+
+ServiceMonitor / PodMonitor (kube-prometheus-stack CRDs):
+
+\`\`\`yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: payments
+  namespace: payments
+spec:
+  selector:
+    matchLabels: { app: payments }
+  endpoints:
+    - port: metrics
+      interval: 15s
+      path: /metrics
+\`\`\`
+
+Higher-level abstraction. ServiceMonitor in tenant namespace; Prometheus Operator picks it up.
+
+Other discovery: consul_sd, ec2_sd_config, gce_sd_config, azure_sd_config, file_sd (refresh from JSON file).
+
+Static config (non-K8s):
+
+\`\`\`yaml
+scrape_configs:
+  - job_name: my-service
+    static_configs:
+      - targets: ['10.0.0.1:9090', '10.0.0.2:9090']
+        labels: { env: prod }
+\`\`\`
+
+Exporters expose metrics for systems that don't natively speak Prometheus:
+
+Common exporters:
+- node_exporter — Linux host metrics (CPU, memory, disk, network).
+- kube-state-metrics — K8s object state (pods, deployments, replicasets).
+- cadvisor — container resource usage (built into kubelet).
+- mysqld_exporter, postgres_exporter, redis_exporter, mongodb_exporter — DB metrics.
+- blackbox_exporter — HTTP/HTTPS/TCP/ICMP probes for synthetic monitoring.
+- snmp_exporter — SNMP-based network device monitoring.
+- jmx_exporter — JVM metrics.
+- statsd_exporter — bridge from StatsD push to Prometheus pull.
+
+Exporters run as sidecars or DaemonSets, expose /metrics, Prometheus scrapes them.
+
+Recording rules at exporter time vs Prometheus time:
+
+Exporter metrics are raw counters. Recording rules in Prometheus pre-aggregate (rate, sum). Heavy aggregation = recording rule; light query = on-demand PromQL.
+
+Production pattern: raw counter exporters → recording rules → dashboard PromQL queries. Three layers; performant.`,
+      },
+      {
+        term: 'Alertmanager — routing, grouping, silencing',
+        definition: `Alertmanager handles alerts post-Prometheus. Prometheus's evaluator decides "this is an alert"; Alertmanager decides "what to do with it".
+
+Routing tree:
+
+\`\`\`yaml
+route:
+  receiver: default                          # default route
+  group_by: [alertname, cluster, service]    # group these alerts
+  group_wait: 30s                             # wait 30s for related alerts
+  group_interval: 5m                          # send updates at most every 5m
+  repeat_interval: 12h                        # re-send every 12h until resolved
+
+  routes:
+    - matchers:
+        - severity =~ "critical|emergency"
+      receiver: pagerduty-oncall
+      continue: true                          # also process subsequent routes
+
+    - matchers:
+        - team = "payments"
+      receiver: slack-payments
+
+    - matchers:
+        - severity = "warning"
+      receiver: slack-warnings
+
+    - matchers:
+        - severity = "info"
+        - environment = "prod"
+      receiver: email-info
+
+receivers:
+  - name: pagerduty-oncall
+    pagerduty_configs:
+      - service_key: \${PAGERDUTY_KEY}
+        severity: '{{ .CommonLabels.severity }}'
+
+  - name: slack-payments
+    slack_configs:
+      - api_url: \${SLACK_WEBHOOK_PAYMENTS}
+        channel: '#payments-alerts'
+        text: |
+          {{ range .Alerts }}
+          *{{ .Labels.alertname }}*: {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          {{ end }}
+
+  - name: slack-warnings
+    slack_configs:
+      - api_url: \${SLACK_WEBHOOK_WARNINGS}
+        channel: '#alerts'
+\`\`\`
+
+Grouping: alertname + cluster + service grouped together. Many similar alerts → one notification batch.
+
+Inhibition: suppress lower-severity alerts when higher-severity is firing:
+
+\`\`\`yaml
+inhibit_rules:
+  - source_matchers:
+      - severity = "critical"
+    target_matchers:
+      - severity = "warning"
+    equal: [alertname, cluster, service]
+\`\`\`
+
+If "API down" critical alert fires, suppresses "API slow" warning for the same service.
+
+Silences: temporary suppress alerts during planned maintenance:
+
+\`\`\`bash
+amtool silence add cluster=prod-us-east-1 --duration=4h --comment "deploy in progress"
+\`\`\`
+
+Or via UI. Silenced alerts don't fire to receivers but remain visible in Alertmanager.
+
+Modern alternative: Grafana Alerting (Grafana 10+). Replaces Alertmanager for many users:
+- Unified UI in Grafana for alert management.
+- Multi-data-source alerts (combine PromQL + LogQL + TraceQL).
+- Better visualization.
+
+Prometheus → Grafana Alerting → notification channels. Some teams keep Alertmanager for routing; others go fully on Grafana Alerting.
+
+Alert hygiene best practices:
+- Every alert: clear runbook URL in annotations.
+- for: duration to avoid flapping (5m for slow conditions, 30s for hard failures).
+- severity labels: page only critical; chat for warnings; email/no-page for info.
+- SLO-based alerts (multi-burn-rate) over threshold-based where possible.
+- Alert on symptoms (errors, latency), not causes (CPU, memory) where possible.`,
+      },
+      {
+        term: 'Recipe: kube-prometheus-stack on EKS',
+        definition: `Production-grade Prometheus deployment via Helm.
+
+Step 1 — install via Helm:
+
+\`\`\`bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack \\
+  --namespace monitoring \\
+  --create-namespace \\
+  -f values.yaml
+\`\`\`
+
+values.yaml:
+
+\`\`\`yaml
+prometheus:
+  prometheusSpec:
+    replicas: 2                                   # HA pair
+    retention: 15d
+    retentionSize: 100GB
+    resources:
+      requests: { cpu: 1, memory: 8Gi }
+      limits: { cpu: 4, memory: 16Gi }
+
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources: { requests: { storage: 200Gi } }
+          storageClassName: gp3
+
+    # Auto-discover all ServiceMonitors / PodMonitors in cluster
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+    podMonitorSelector: {}
+    podMonitorNamespaceSelector: {}
+
+    # Remote write to Mimir for long-term storage
+    remoteWrite:
+      - url: https://mimir.example.com/api/v1/push
+        headers:
+          X-Scope-OrgID: prod-cluster
+        queueConfig:
+          capacity: 10000
+          maxSamplesPerSend: 5000
+          batchSendDeadline: 5s
+
+    additionalScrapeConfigs:
+      - job_name: blackbox-targets
+        metrics_path: /probe
+        params: { module: [http_2xx] }
+        static_configs:
+          - targets:
+              - https://api.example.com/health
+              - https://app.example.com
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: __param_target
+          - source_labels: [__param_target]
+            target_label: instance
+          - target_label: __address__
+            replacement: blackbox-exporter.monitoring:9115
+
+alertmanager:
+  alertmanagerSpec:
+    replicas: 3
+    resources:
+      requests: { cpu: 100m, memory: 256Mi }
+      limits: { cpu: 500m, memory: 1Gi }
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources: { requests: { storage: 10Gi } }
+
+  config:
+    global:
+      slack_api_url: '\${SLACK_WEBHOOK}'
+    route:
+      receiver: slack-default
+      group_by: [alertname, cluster, service]
+      routes:
+        - matchers: [severity = "critical"]
+          receiver: pagerduty
+    receivers:
+      - name: slack-default
+        slack_configs:
+          - channel: '#alerts'
+      - name: pagerduty
+        pagerduty_configs:
+          - service_key: '\${PAGERDUTY_KEY}'
+
+grafana:
+  enabled: true
+  replicas: 2
+  adminPassword: '\${GRAFANA_PASSWORD}'
+  ingress:
+    enabled: true
+    hosts: [grafana.example.com]
+    tls: [{ secretName: grafana-tls, hosts: [grafana.example.com] }]
+  persistence:
+    enabled: true
+    size: 10Gi
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: http://kube-prometheus-stack-prometheus.monitoring:9090
+          isDefault: true
+        - name: Mimir
+          type: prometheus
+          url: https://mimir.example.com/prometheus
+        - name: Loki
+          type: loki
+          url: http://loki.observability:3100
+        - name: Tempo
+          type: tempo
+          url: http://tempo-query-frontend.observability:3100
+
+# Built-in components
+nodeExporter: { enabled: true }
+kubeStateMetrics: { enabled: true }
+prometheus-operator-admission-webhook: { enabled: true }
+\`\`\`
+
+Step 2 — verify pods come up:
+
+\`\`\`bash
+kubectl get pods -n monitoring
+# Expect: prometheus-2 replicas, alertmanager-3 replicas, grafana-2 replicas, node-exporter (DaemonSet), kube-state-metrics
+\`\`\`
+
+Step 3 — apps expose ServiceMonitor:
+
+\`\`\`yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: payments
+  namespace: payments
+  labels:
+    release: kube-prometheus-stack       # match Prometheus selector
+spec:
+  selector:
+    matchLabels: { app: payments }
+  endpoints:
+    - port: metrics
+      interval: 15s
+      path: /metrics
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_label_team]
+          targetLabel: team
+\`\`\`
+
+Step 4 — recording rules + alert rules via PrometheusRule CRD:
+
+\`\`\`yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: payments-rules
+  namespace: payments
+spec:
+  groups:
+    - name: payments-recording
+      interval: 30s
+      rules:
+        - record: payments:http_requests:rate5m
+          expr: sum(rate(http_requests_total{service="payments"}[5m])) by (route, status)
+        - record: payments:http_request_duration:p99:rate5m
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(http_request_duration_seconds_bucket{service="payments"}[5m])) by (le, route)
+            )
+    - name: payments-alerts
+      rules:
+        - alert: PaymentsHighErrorRate
+          expr: |
+            sum(rate(http_requests_total{service="payments", status=~"5.."}[5m]))
+            / sum(rate(http_requests_total{service="payments"}[5m]))
+            > 0.05
+          for: 5m
+          labels:
+            severity: critical
+            team: payments
+          annotations:
+            summary: "Payments service error rate >5%"
+            runbook_url: https://runbooks.example.com/payments-errors
+\`\`\`
+
+Step 5 — Grafana dashboards. Pre-built dashboards from grafana.com/dashboards (Kubernetes Cluster Monitoring, Node Exporter, etc.). Import via dashboard ID.
+
+Custom dashboards: build in Grafana UI; export JSON; commit to git; provision via grafana-dashboard ConfigMap.
+
+Operational notes:
+
+HA: Prometheus replicas = 2; both scrape same targets independently; Mimir/Thanos deduplicate. Lose one Prometheus → other continues.
+
+Cost: ~5-10 vCPU + 30-50Gi memory + 200-500Gi disk for moderate cluster (50 services). ~$300-700/month EKS compute + storage.
+
+Backup: Prometheus's local TSDB is mostly disposable (rebuilt from scrapes). Long-term data in Mimir's S3 is the durable layer. No additional backup needed for Prometheus.
+
+Upgrade: Helm chart upgrade. CRD changes occasionally; test in staging first.`,
+      },
+    ],
+    approach: [
+      'kube-prometheus-stack Helm chart for K8s deployment',
+      'HA: 2 Prometheus replicas + 3 Alertmanager replicas',
+      'remote_write to Mimir / Thanos / VictoriaMetrics for long-term storage',
+      'ServiceMonitor / PodMonitor CRDs for app discovery',
+      'PrometheusRule CRDs for recording rules + alert rules',
+      'Histogram type for latency/distribution metrics; counter for events; gauge for current values',
+      'Recording rules for expensive aggregations (pre-compute)',
+      'Alertmanager routing tree: severity-based (critical → PagerDuty, warning → Slack, info → email)',
+      'Grafana datasources: Prometheus + Mimir + Loki + Tempo for unified observability',
+    ],
+    pitfalls: [
+      'High-cardinality labels (user_id, full URL) — explodes time series count, blows storage',
+      'Single Prometheus instance — no HA; restart loses recent data',
+      'No long-term storage — limited to 15-day retention',
+      'rate() on gauge instead of counter — meaningless',
+      'Missing le label in histogram_quantile by clause — incorrect percentiles',
+      'Alert without for: duration — flapping alerts on transient conditions',
+      'Threshold-based alerts on causes (CPU>80%) instead of symptoms (error rate, latency) — alert fatigue',
+      'Recording rule that re-aggregates already-aggregated metric — accuracy loss',
+      'Pushgateway abuse for non-batch workloads — pushgateway is for short-lived jobs only',
+    ],
+    keyQuestions: [
+      {
+        question: 'Why pull-based instead of push-based metrics?',
+        answer: `Prometheus's pull model differs from StatsD/InfluxDB push and from many vendor agents (Datadog Agent push). Trade-offs:
+
+Pull advantages:
+
+Source of truth at Prometheus. Prometheus maintains the canonical view. If app dies, up=0 (Prometheus can't reach it) — itself a useful alert. Push-based: app crashes silently; metrics just stop arriving.
+
+Service discovery driven. Prometheus's service discovery (kubernetes_sd, consul_sd) determines targets. New deployment with prometheus.io/scrape annotation? Auto-monitored. Push-based: app needs to know where to push; service-discovery doesn't help.
+
+Easier debugging. curl http://app:9090/metrics from anywhere reveals the metrics. Push-based: hard to inspect what's being pushed without intercepting in transit.
+
+No client SDK push state. Apps just expose /metrics. Lib-side push agents have buffer state, retry logic, async errors. Pull is simpler.
+
+Easier to mock in tests. Pull from a fake target (file_sd_config) for testing alerting rules.
+
+Pull disadvantages:
+
+Short-lived jobs. Batch jobs that exit before Prometheus scrapes lose their metrics. Workaround: Pushgateway. Job pushes metrics to Pushgateway; Prometheus pulls from Pushgateway. Adds operational layer.
+
+Firewall complexity. Prometheus must reach app's :9090. Network policies, security groups, firewalls need configuration. Push-based: app reaches central collector (one direction).
+
+NAT / dynamic IPs. Apps behind NAT or with frequent IP changes are hard to scrape. Service discovery helps but isn't always sufficient.
+
+Cardinality fan-out. Each instance is scraped independently → many time series per metric. Push-based with aggregation upstream can reduce cardinality at source.
+
+When pull wins:
+- Long-running services (web servers, databases). Most cloud-native workloads.
+- K8s deployments with stable Service/Pod IPs.
+- Apps where /metrics endpoint is acceptable.
+
+When push wins:
+- Short-lived batch jobs (CI builds, ETL, Lambda).
+- Mobile / IoT clients (push from edge to central).
+- Cases where firewall makes pull impractical.
+
+Hybrid in practice:
+
+Prometheus + Pushgateway: short-lived jobs push to Pushgateway; Prometheus pulls from Pushgateway. Standard pattern.
+
+OpenMetrics / OTLP push: newer push-based options (OTLP from OTel Collector). Some Prometheus-compatible storage (Mimir, VictoriaMetrics) accepts both pull and remote_write push. Reduces firewall problem.
+
+Decision tree 2026:
+- New cloud-native deployment: pull-based Prometheus + pushgateway-for-batch.
+- Mostly batch / serverless: push-based (OTel + Mimir remote_write, or Datadog Agent).
+- Hybrid: both. Prometheus for services; Mimir remote_write for OTLP push from Lambda/Cloud Run.
+
+Prometheus's pull-first design has aged well. Where push is essential (batch, mobile), it's an extension via Pushgateway or OTLP. The default for cloud-native long-running services remains pull.`,
+      },
+      {
+        question: 'How do you handle high cardinality and storage cost?',
+        answer: `High cardinality is Prometheus's primary failure mode at scale. Each unique label combination = one time series. user_id with millions of unique values = millions of series; storage explodes.
+
+The math:
+
+Each time series in Prometheus consumes ~1-3KB on disk per day (compressed). 1M series = 1-3GB/day; 1B series = 1-3TB/day. At billion-scale, you're operating a storage system, not a metrics tool.
+
+What blows cardinality:
+
+1. user_id, customer_id, session_id labels. Per-user metrics break Prometheus immediately.
+
+2. Full URL as label (http_url=https://api.example.com/users/123/orders/abc). Use http_route=/users/{id}/orders/{order_id} normalized.
+
+3. Free-form error messages as labels. Use error_code (enum) instead.
+
+4. Highly variable label values (timestamps in label, request IDs, traceIDs). Never as labels.
+
+5. Auto-generated labels (Kubernetes pod name with random suffix). pod_name has hundreds of values per Deployment over time as pods cycle.
+
+Mitigation strategies:
+
+Strategy 1: don't include high-cardinality data as labels. Move to spans (traces) or logs.
+
+A Prometheus metric for "user_42 made 47 requests" is a bad fit. Better:
+- Metric: per-route request rate (cardinality bounded by route count).
+- Trace: each request a span with user.id as attribute.
+
+Strategy 2: aggregate at collection time.
+
+Instead of per-pod metrics, sum across pods:
+
+\`\`\`yaml
+# Before: kube-state-metrics emits per-pod (cardinality = pods)
+# After: recording rule aggregates at deployment level
+- record: deployment:kube_pod_status_ready:count
+  expr: sum(kube_pod_status_ready) by (namespace, deployment)
+\`\`\`
+
+Original metric retained briefly; recording rule output is what dashboards query. Storage retention can drop original after recording rule computes (but most teams keep both).
+
+Strategy 3: use exemplars for high-cardinality detail.
+
+Histograms attach trace exemplars without inflating metric cardinality:
+
+\`\`\`promql
+histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) by (le)
+# Exemplars: traceID samples at each bucket
+\`\`\`
+
+Click p99 bucket in Grafana → exemplar traceID → trace in Tempo with full user_id, request_id detail.
+
+Cardinality budget per metric: N labels × M values = total series. Stay <100k per metric. Most metrics: <10k.
+
+Strategy 4: cardinality limits in Prometheus.
+
+\`\`\`yaml
+scrape_configs:
+  - job_name: my-job
+    sample_limit: 100000             # max samples per scrape
+    target_limit: 1000               # max targets discovered
+    label_limit: 30                  # max labels per series
+    label_name_length_limit: 200
+    label_value_length_limit: 200
+\`\`\`
+
+Limits prevent runaway cardinality from configuration error. Hits limit → drop excess; alert.
+
+Strategy 5: drop labels at scrape time.
+
+\`\`\`yaml
+relabel_configs:
+  - source_labels: [pod_name]
+    action: drop
+    regex: '.*'
+\`\`\`
+
+Drops the pod_name label from incoming metrics. Useful if you don't need per-pod resolution.
+
+Strategy 6: TSDB block analysis.
+
+\`\`\`bash
+# In Prometheus container:
+promtool tsdb analyze /prometheus 01HABCD12345...
+\`\`\`
+
+Shows top series count by metric name, top label pairs, churn rate. Identify offenders.
+
+Long-term storage cost optimization:
+
+Mimir / VictoriaMetrics on S3: storage cost ~$0.023/GB/month. Compressed metrics: ~10MB per million-sample-day. Cost ~$0.23/M samples/year. Very cheap relative to vendor pricing.
+
+Downsampling: Mimir / Thanos compactor downsamples old data. 5min → 1h → 1d resolution. Year-old data uses 1/300th the storage.
+
+Per-tenant retention: enterprise tenant 1 year; free tenant 7 days. Mimir per-tenant retention overrides.
+
+Real cost benchmark:
+
+100 services × 50 metrics each × 100 instances = 500k baseline series.
+Plus K8s state metrics (~50k series).
+Plus exporters (~20k series).
+Total: ~600k active series.
+
+At 1-3KB per series-day: 600k × 2KB = 1.2GB/day raw. Compressed ~10:1 in long-term storage = 120MB/day. 1 year = ~45GB. ~$1/month S3 storage.
+
+Compute: Mimir cluster 5-10 vCPU, ~$200-500/month.
+
+Total: ~$500/month for 600k-series metrics with year-long retention. Compare Datadog metrics at this volume: $5k-30k/month.
+
+Cardinality discipline saves orders of magnitude. Every label addition needs cardinality estimation. The discipline pays off at scale.`,
+      },
+      {
+        question: 'Walk through migrating from Datadog to Prometheus + Grafana.',
+        answer: `Migrating from a SaaS metrics platform to OSS is a multi-quarter project. Cost savings substantial; operational shift real.
+
+Phase 1: parallel ingest. Run both systems simultaneously for 1-3 months.
+
+Apps emit OTLP metrics (or Prometheus /metrics, or both). OTel Collector exports to Datadog AND Prometheus / Mimir simultaneously. No app changes; only Collector config:
+
+\`\`\`yaml
+exporters:
+  datadog:
+    api: { key: \${DD_API_KEY} }
+  prometheusremotewrite:
+    endpoint: https://mimir.example.com/api/v1/push
+
+service:
+  pipelines:
+    metrics:
+      exporters: [datadog, prometheusremotewrite]
+\`\`\`
+
+Both systems receive identical metrics. Verify dashboards in both render same numbers.
+
+Phase 2: replicate critical dashboards in Grafana.
+
+Datadog uses its own query language; PromQL is different. Manual rewrite:
+- avg by host of system.cpu.user → avg(rate(node_cpu_seconds_total{mode="user"}[5m])) by (instance) * 100.
+- sum:trace.http.request.errors{*} by {service}.as_rate() → sum(rate(traces_spanmetrics_calls_total{status_code="STATUS_CODE_ERROR"}[5m])) by (service).
+
+Grafana has datasource auto-import for Datadog dashboards (community plugin). Limited; many dashboards need manual rewrite.
+
+Estimate: 30-100 critical dashboards × ~30 min each = 15-50 engineering hours.
+
+Phase 3: replicate alerts.
+
+Datadog monitors → Prometheus alert rules. Each monitor reviewed for:
+- PromQL equivalent.
+- Threshold tuning (Datadog and Prometheus aggregate slightly differently).
+- Alertmanager routing config.
+
+Estimate: 50-200 alerts × ~15 min each = 12-50 hours.
+
+Critical: run new alerts in audit mode (notification to alert-test channel, not page) during parallel phase. Tune thresholds before cutover.
+
+Phase 4: replicate APM (if applicable).
+
+Datadog APM → Tempo / Honeycomb / Jaeger. App OTel SDK exports to OTLP; Collector routes to Datadog APM AND Tempo. Verify trace coverage matches.
+
+Datadog Service Map → Tempo's metricsGenerator service-graph + Grafana node-graph plugin. Different UX but functional equivalent.
+
+Phase 5: replicate logs.
+
+Datadog Logs → Loki / OpenSearch. Log forwarding config change (from Datadog Agent to Promtail / Vector / Fluent Bit).
+
+Datadog Logs query → Loki's LogQL. Different syntax; rewrite needed.
+
+Phase 6: cutover.
+
+Once dashboards and alerts verified equivalent, disable Datadog ingestion in OTel Collector. Datadog account in read-only mode for 30-60 days for fallback. Then cancel Datadog subscription.
+
+Cost analysis (typical mid-size org):
+
+Datadog: $30-80/host/month + APM + Logs + RUM. For 200-host fleet with full stack: $20-50k/month.
+
+Replacement OSS:
+- Prometheus + Mimir: $500-2000/month.
+- Tempo: $300-1000/month.
+- Loki: $300-1500/month.
+- Grafana (self-hosted): $0 + compute.
+- Engineering time to operate: 0.5-1 full-time engineer (~$150-300k/year).
+
+Total OSS: $2-5k/month + ~$200k engineering. Net annual: ~$240-260k.
+
+Datadog at scale: $250-600k/year.
+
+Crossover: at moderate-large scale, OSS wins. Below ~50 hosts, Datadog operationally simpler. Above 200 hosts, OSS savings dominate.
+
+Operational shift:
+
+Datadog: operate dashboards + alerts. Vendor handles ingestion, storage, query.
+
+OSS: operate dashboards + alerts + Prometheus + Mimir + Tempo + Loki + Grafana. More moving parts; SRE responsibility expanded.
+
+Skill set required: PromQL, LogQL, TraceQL fluency. K8s operations for Prometheus Operator, Mimir, Tempo, Loki Helm charts. AWS S3 / object storage management.
+
+When to do the migration:
+- Cost has reached ~$200k+/year at Datadog.
+- Engineering team has K8s + observability operational expertise.
+- Multi-cloud or air-gapped requirements (Datadog egress is harder).
+
+When NOT:
+- Small scale where ops cost > vendor cost.
+- Team lacks observability ops capacity.
+- Polished UX critical (Datadog UI is better than Grafana for many workflows).
+
+Real-world: many large orgs (Shopify, Cloudflare) run hybrid — Prometheus + Grafana + Loki for service-level; Datadog for specific paid features (continuous profiling, RUM, network monitoring).`,
+      },
+      {
+        question: 'How do you build effective alerts in Prometheus?',
+        answer: `Effective alerts wake the right person at the right time with actionable information. Bad alerts cause alert fatigue, ignored pages, missed real outages.
+
+Principle 1: alert on symptoms, not causes.
+
+Symptoms are user-visible: error rate, latency, success rate, throughput drop. Causes are internal: CPU, memory, disk space, GC pauses.
+
+Bad: alert on CPU>80%. CPU alone doesn't mean users care. CPU goes high during legitimate load; alerts fire; nobody acts.
+
+Good: alert on error rate. "Error rate >5%" means users are seeing 500s. Always actionable.
+
+Bad: alert on memory>90%. Memory usage varies; high doesn't always mean problems.
+
+Good: alert on OOMKilled rate. Pod actually dying; users impacted.
+
+Cause-based alerts are useful for diagnostic dashboards (during incident, see CPU climbing); not as paging alerts.
+
+Principle 2: SLO-based multi-burn-rate alerts.
+
+Naive threshold: alert if error rate >1% for 5 minutes.
+
+Issue: 1% error sustained means you've already burned significant SLO budget by the time you alert.
+
+SLO-based: define error budget (1% of requests can fail). Burn-rate alerts:
+
+\`\`\`yaml
+- alert: ErrorBudgetBurnRateFast
+  expr: |
+    (
+      sum(rate(http_requests_total{status=~"5.."}[5m]))
+      / sum(rate(http_requests_total[5m]))
+    ) > (14 * 0.01)  # 14× normal error rate
+    AND
+    (
+      sum(rate(http_requests_total{status=~"5.."}[1h]))
+      / sum(rate(http_requests_total[1h]))
+    ) > (14 * 0.01)
+  for: 2m
+  labels: { severity: critical }
+\`\`\`
+
+14× normal in 5min AND 1h windows = burning 1 month of error budget in 1 hour. Fast burn.
+
+Slower burn:
+
+\`\`\`yaml
+- alert: ErrorBudgetBurnRateSlow
+  expr: |
+    (sum(rate(http_requests_total{status=~"5.."}[1h])) / sum(rate(http_requests_total[1h]))) > (1 * 0.01)
+    AND
+    (sum(rate(http_requests_total{status=~"5.."}[6h])) / sum(rate(http_requests_total[6h]))) > (1 * 0.01)
+  for: 15m
+  labels: { severity: warning }
+\`\`\`
+
+1× normal in 1h AND 6h = burning at faster-than-budget pace; will exceed in 30 days. Worth investigating.
+
+Multi-burn-rate (Google SRE Workbook chapter 5): multiple burn rates mapped to multiple severity levels. Reduces both false positives and missed incidents.
+
+Principle 3: alert hygiene.
+
+Every alert needs:
+- Clear name describing the symptom (HighErrorRate, not "Alert#4239").
+- Severity label (critical, warning, info).
+- Team label for routing.
+- Runbook URL in annotations.
+- Description with current value and threshold.
+
+\`\`\`yaml
+- alert: PaymentsHighErrorRate
+  expr: ...
+  for: 5m
+  labels:
+    severity: critical
+    team: payments
+    service: payments-api
+  annotations:
+    summary: "Payments error rate above 5% (current: {{ $value | humanizePercentage }})"
+    description: "{{ $labels.service }} has been throwing errors for >5min. Check Stripe API status, deploy log."
+    runbook_url: "https://runbooks.example.com/payments-errors"
+    dashboard_url: "https://grafana.example.com/d/payments"
+\`\`\`
+
+Runbook URL is non-negotiable. Page at 3am with no runbook = engineer fumbling for context.
+
+Principle 4: for: duration prevents flapping.
+
+Without for:, alerts fire on transient conditions (one bad scrape, one flaky request). With for: 5m, condition must sustain to fire. Tune per condition:
+- Hard failures (up == 0): for: 1m. If down for 1 min, that's real.
+- Slow degradation (latency, error rate): for: 5-10m. Avoid one-off spikes.
+- Slow trends (disk filling): for: 30m+. Trends, not noise.
+
+Principle 5: minimize alert volume.
+
+Daily alert count target: <1 per on-call shift on average. More than that = alert fatigue.
+
+Strategies:
+- Inhibition: API down inhibits API slow alerts.
+- Grouping: multiple instance failures group into one alert.
+- Recording rules: aggregate before alert (alert on service-level error rate, not per-instance).
+- Audit alerts: review monthly. Disable alerts that fired but didn't lead to action.
+
+Principle 6: alert routing matches severity.
+
+\`\`\`yaml
+route:
+  routes:
+    - matchers: [severity = "critical"]
+      receiver: pagerduty
+    - matchers: [severity = "warning"]
+      receiver: slack-team
+    - matchers: [severity = "info"]
+      receiver: email
+\`\`\`
+
+Critical → page (24/7). Warning → Slack (during business hours). Info → email (FYI; no immediate response).
+
+Don't page for warnings. Don't email-only for criticals. Severity must match action expectation.
+
+Principle 7: golden signals.
+
+For every service, alert on:
+1. Latency (p99 > X for Y min).
+2. Errors (error rate > X% for Y min).
+3. Traffic (throughput dropped >X% for Y min — catches "service hung").
+4. Saturation (CPU/memory/queue depth thresholds — secondary, supports diagnosis).
+
+USE method (utilization, saturation, errors) for resources; RED method (rate, errors, duration) for services. Combined coverage of symptoms.
+
+Real-world alert breakdown for a healthy service:
+- 4-6 SLO-based alerts (latency p99, error rate, success rate burn).
+- 2-3 saturation alerts (CPU >80% sustained, memory pressure, disk space prediction).
+- 1-2 health alerts (up == 0, ready replicas == 0).
+- 0-1 dependency alerts (external API down, DB unreachable).
+
+Total: 7-12 alerts per service. Tested and tuned. Pages occur but are actionable.
+
+Anti-pattern: "alert on everything that might be bad". Result: alert fatigue, ignored pages. Better: alert on what users notice; diagnostic dashboards for context.`,
+      },
+      {
+        question: 'Quick-fire interview answers — Prometheus + Grafana essentials.',
+        answer: `Rapid-fire facts.
+
+Q: What's Prometheus?
+A: CNCF Graduated metrics monitoring system. Pull-based; PromQL query language; embedded TSDB. Default for K8s metrics in 2026.
+
+Q: Four metric types?
+A: Counter (monotonic), Gauge (up-down), Histogram (cumulative buckets for distributions), Summary (client-side quantiles).
+
+Q: When use histogram vs summary?
+A: Histogram: aggregable across instances (server-computed quantiles). Summary: per-instance accurate but can't aggregate. Default: histogram.
+
+Q: Pull vs push?
+A: Prometheus pulls /metrics from targets. Service discovery (kubernetes_sd) drives target list. up=0 means scrape failed — itself useful signal. Push (Pushgateway) for short-lived batch jobs.
+
+Q: Long-term storage?
+A: Prometheus local TSDB: 15-day default. For longer + HA: Mimir (Grafana, S3-backed), Thanos (CNCF Incubating), VictoriaMetrics. remote_write streams metrics to long-term store.
+
+Q: Mimir vs Thanos?
+A: Mimir: actively developed, native S3, multi-tenant. Thanos: works alongside existing Prometheus, broader CNCF adoption. New deployments: Mimir.
+
+Q: Service discovery?
+A: kubernetes_sd_config (K8s native), ServiceMonitor / PodMonitor CRDs (Prometheus Operator). Auto-discover targets from K8s API.
+
+Q: rate() vs irate() vs increase()?
+A: rate(): per-second rate over window (smooth, for graphs). irate(): instantaneous rate (last 2 samples; for alerts). increase(): total over window.
+
+Q: PromQL histogram quantile?
+A: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)). MUST include le label in by clause.
+
+Q: Recording rules?
+A: Pre-compute expensive aggregations on schedule. Stored as new time series. Subsequent dashboards/alerts query pre-computed values.
+
+Q: Alertmanager?
+A: Routes alerts post-Prometheus evaluation. Grouping (combine related alerts), routing tree (severity → receiver), inhibition (suppress lower when higher fires), silences (planned maintenance).
+
+Q: Multi-burn-rate alerts?
+A: SRE Workbook ch5 pattern. Multiple burn rates map to multiple severities. Fast burn (14× normal in 5min) → critical page. Slow burn (1× normal in 6h) → warning ticket. Reduces false positives and missed incidents vs threshold-based.
+
+Q: Cardinality?
+A: Each unique label combination = one time series. High-cardinality labels (user_id, full URL) explode storage. Stay <100k series per metric.
+
+Q: kube-prometheus-stack?
+A: Helm chart bundling Prometheus + Alertmanager + Grafana + node-exporter + kube-state-metrics + Operator. Standard K8s install.
+
+Q: ServiceMonitor vs PodMonitor?
+A: ServiceMonitor scrapes targets matching K8s Service. PodMonitor scrapes Pods directly. Use ServiceMonitor for service-fronted apps; PodMonitor for headless / sidecar metrics.
+
+Q: Exporters?
+A: Sidecars / DaemonSets that expose /metrics for systems without native Prometheus. node_exporter (Linux), kube-state-metrics (K8s), DB exporters, blackbox_exporter (synthetic), jmx_exporter (JVM).
+
+Q: Pushgateway?
+A: For short-lived batch jobs. Job pushes metrics to Pushgateway; Prometheus pulls from Pushgateway. Don't abuse — only for jobs that exit too fast to scrape.
+
+Q: When migrate from Datadog?
+A: At ~$200k+/year Datadog spend AND team has observability ops capacity. OSS savings substantial; operational shift real.
+
+Q: Most common Prometheus mistake?
+A: High-cardinality labels (user_id, request_id) blowing up time-series count.
+
+Q: Best practice alert?
+A: SLO-based multi-burn-rate, alerts on symptoms (errors, latency) not causes (CPU), every alert has runbook URL, for: duration prevents flapping, severity matches action expectation.
+
+These are answers a Prometheus-fluent SRE should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://prometheus.io/docs/',
+      'https://grafana.com/docs/grafana/latest/',
+      'https://grafana.com/docs/mimir/latest/',
+      'https://thanos.io/',
+      'https://victoriametrics.com/',
+      'https://sre.google/workbook/alerting-on-slos/',
+    ],
+  },
+
 ];
