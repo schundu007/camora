@@ -325,16 +325,47 @@ export default function PracticePage() {
     return () => { document.title = 'Camora'; };
   }, []);
 
-  // Top-level tab: practice | code-solver | design-solver — persist in URL
+  // Top-level tab: practice | code-solver | design-solver | sql-editor — persist in URL.
+  // SQL problems are auto-routed to sql-editor: the backend code runner doesn't
+  // support SQL, but SQLPlayground runs queries in-browser via sql.js.
+  const detectSqlFromStorage = () => {
+    try {
+      const raw = localStorage.getItem('chundu_current_solution');
+      if (raw) {
+        const sol = JSON.parse(raw);
+        if (typeof sol?.language === 'string' && /^sql$|^mysql$|^postgres/i.test(sol.language)) return true;
+      }
+      const code = JSON.parse(localStorage.getItem('chundu_current_solution') || '{}')?.code || '';
+      const problem = localStorage.getItem('chundu_current_problem') || localStorage.getItem('chundu_loaded_problem') || '';
+      if (/^\s*(--|SELECT |INSERT |UPDATE |DELETE |CREATE |WITH |ALTER )/im.test(code)) return true;
+      if (/\b(SQL|query|table|JOIN|GROUP BY|ORDER BY)\b/i.test(problem) && /SELECT|INSERT|UPDATE|DELETE|FROM/i.test(problem)) return true;
+    } catch { /* ignore parse errors */ }
+    return false;
+  };
   const urlView = new URLSearchParams(window.location.search).get('view');
-  const [activeView, setActiveViewState] = useState(urlView || 'practice');
+  const initialView = urlView || (detectSqlFromStorage() ? 'sql-editor' : 'practice');
+  const [activeView, setActiveViewState] = useState(initialView);
   const setActiveView = (view) => {
-    setActiveViewState(view);
+    // If the user picks Code Solver but the loaded problem is SQL, route to SQL Editor.
+    const targetView = (view === 'code-solver' && detectSqlFromStorage()) ? 'sql-editor' : view;
+    setActiveViewState(targetView);
     const url = new URL(window.location);
-    if (view === 'practice') url.searchParams.delete('view');
-    else url.searchParams.set('view', view);
+    if (targetView === 'practice') url.searchParams.delete('view');
+    else url.searchParams.set('view', targetView);
     window.history.replaceState({}, '', url);
   };
+
+  // If a SQL problem gets loaded into localStorage while the user is in Code
+  // Solver, redirect to SQL Editor on the next storage event (e.g. another tab
+  // pushed a new problem) or when the storage poll detects it.
+  useEffect(() => {
+    if (activeView !== 'code-solver') return;
+    const tick = () => { if (detectSqlFromStorage()) setActiveView('sql-editor'); };
+    tick();
+    const id = setInterval(tick, 500);
+    window.addEventListener('storage', tick);
+    return () => { clearInterval(id); window.removeEventListener('storage', tick); };
+  }, [activeView]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Stats
   const [stats, setStats] = useState(getStats);
