@@ -1,7 +1,7 @@
 import DocsCallout from '../../shared/docs/DocsCallout';
 import { useCloudFormatter } from '../../../hooks/useCloudFormatter';
 
-export default function FormattedContent({ content }) {
+export default function FormattedContent({ content, inline = false }) {
   // Translate AWS service names to Azure/GCP equivalents for the chosen
   // cloud BEFORE parsing into blocks. The formatter skips fenced code so
   // SDK calls (`s3.putObject(...)`) stay intact; only prose ("use S3 for
@@ -110,6 +110,14 @@ export default function FormattedContent({ content }) {
 
     return parts.length > 0 ? parts : text;
   };
+
+  // Inline-only mode: skip block parsing entirely. Use this for short
+  // list-item strings (tips, steps, mistakes, principles) that would
+  // otherwise leak `**bold**` / `` `code` `` literals when rendered raw.
+  if (inline) {
+    const out = formatInlineText(content);
+    return <>{Array.isArray(out) ? out : out}</>;
+  }
 
   const blocks = [];
   let currentBlock = { type: 'text', lines: [], lang: null };
