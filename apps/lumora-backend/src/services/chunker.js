@@ -60,6 +60,17 @@ function splitParagraphs(text, max = MAX_TOKENS) {
   return out;
 }
 
+/**
+ * Recompute contentHash after content has been mutated (e.g. by contextual chunking).
+ * Returns a new chunk object with an updated contentHash.
+ */
+export function rehash(chunk) {
+  return {
+    ...chunk,
+    contentHash: sha(`${chunk.source}|${chunk.topicId}|${chunk.section}|${chunk.content}`),
+  };
+}
+
 export function chunkTopic(topic, { source }) {
   const chunks = [];
 
