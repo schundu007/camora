@@ -131,7 +131,7 @@ The eight SRE principles you should be able to recite: (1) operations is a softw
     keyQuestions: [
       {
         question: 'Define SRE in one sentence and contrast it with DevOps.',
-        answer: `SRE is "what happens when you ask a software engineer to design an operations team" — Ben Treynor's verbatim definition. DevOps is a *philosophy* (no silos, accidents are normal, measurement is crucial); SRE is one *prescriptive implementation* of that philosophy with opinionated artifacts: SLOs with consequences, the 50% toil cap, blameless postmortems, error budgets that gate launches.
+        answer: `SRE is "what happens when you ask a software engineer to design an operations team" — Ben Treynor's verbatim definition. DevOps is a philosophy (no silos, accidents are normal, measurement is crucial); SRE is one prescriptive implementation of that philosophy with opinionated artifacts: SLOs with consequences, the 50% toil cap, blameless postmortems, error budgets that gate launches.
 
 The Workbook formalises the relationship as \`class SRE implements interface DevOps\` — DevOps is the interface, SRE is one concrete class. You can do DevOps without SRE; you cannot do SRE without DevOps.`,
       },
@@ -141,7 +141,7 @@ The Workbook formalises the relationship as \`class SRE implements interface Dev
 
 1. Prevents devolution to traditional ops — without the cap, the easiest path is to absorb every page and ticket, which scales linearly with service growth. Engineering investment is the only way to break that linear curve.
 2. Career development — SREs with software-engineering backgrounds will leave a team that becomes 90% ticket-shoveling. The cap is a retention mechanism.
-3. Forces automation — when on-call burns through the cap, leadership *temporarily hands paging duties back to dev teams* until the SRE team recovers. That\'s the relief valve, and it\'s by design.`,
+3. Forces automation — when on-call burns through the cap, leadership temporarily hands paging duties back to dev teams until the SRE team recovers. That\'s the relief valve, and it\'s by design.`,
       },
       {
         question: 'Why does SRE care so much about reliability vs feature velocity, instead of just maximising uptime?',
@@ -190,11 +190,11 @@ The SRE response is error budgets — convert the dev/SRE tension into a math pr
 
 From the Google SRE Book Ch 4, verbatim:
 
-- SLI (Service Level Indicator) — *"a carefully defined quantitative measure of some aspect of the level of service that is provided."*
-- SLO (Service Level Objective) — *"a target value or range of values for a service level that is measured by an SLI."*
-- SLA (Service Level Agreement) — *"an explicit or implicit contract with your users that includes consequences of meeting (or missing) the SLOs they contain."*
+- SLI (Service Level Indicator) — "a carefully defined quantitative measure of some aspect of the level of service that is provided."
+- SLO (Service Level Objective) — "a target value or range of values for a service level that is measured by an SLI."
+- SLA (Service Level Agreement) — "an explicit or implicit contract with your users that includes consequences of meeting (or missing) the SLOs they contain."
 
-The differentiator test (also verbatim from Ch 4): *"An easy way to tell the difference between an SLO and an SLA is to ask 'what happens if the SLOs aren't met?': if there is no explicit consequence, then you are almost certainly looking at an SLO."*
+The differentiator test (also verbatim from Ch 4): "An easy way to tell the difference between an SLO and an SLA is to ask 'what happens if the SLOs aren't met?': if there is no explicit consequence, then you are almost certainly looking at an SLO."
 
 The Workbook (Ch 2) refines the SLI into a canonical form: SLIs are ratios of good events to total events — \`good_requests / total_valid_requests\` over a window. This shape has a natural error budget (\`1 − SLO\`), aggregates cleanly, and resists the "fix the average, ignore the tail" failure mode.`,
     whenToUse: [
@@ -213,14 +213,14 @@ The Workbook (Ch 2) refines the SLI into a canonical form: SLIs are ratios of go
     ],
     approach: [
       'Identify the Critical User Journey (CUJ) — what end-to-end task actually matters to the user?',
-      'Write the SLI specification first, in good/total form, before deciding *how* to measure it',
+      'Write the SLI specification first, in good/total form, before deciding how to measure it',
       'Pick a threshold with stakeholder sign-off: Product (users satisfied here?), Dev (accept the velocity tradeoff?), SRE (defensible without excessive toil?)',
       'Use a 4-week rolling window (Workbook recommendation) for steady tracking + weekly summaries',
       'Use percentiles (p50/p95/p99), never means — averages hide the tail; "1% of requests might easily take 5 seconds" even when the mean is 100ms (SRE Book Ch 6)',
       'SLA target should be looser than internal SLO — gives engineering headroom before contractual penalties trigger',
     ],
     pitfalls: [
-      'Setting an SLO at *current* observed performance — locks in pre-existing slop, gives no headroom for risk.',
+      'Setting an SLO at current observed performance — locks in pre-existing slop, gives no headroom for risk.',
       'Using mean latency in your SLI — hides the tail; switch to percentile histograms with exponentially-bucketed boundaries.',
       'Confusing SLI (the measurement) with SLO (the target on it) — interviewers specifically test this.',
       'Picking too many SLOs — the Workbook explicitly says fewer SLOs with better coverage beats a comprehensive list.',
@@ -229,11 +229,11 @@ The Workbook (Ch 2) refines the SLI into a canonical form: SLIs are ratios of go
     keyQuestions: [
       {
         question: 'What\'s the difference between SLI, SLO and SLA — and what\'s the test that separates SLO from SLA?',
-        answer: `SLI = the *measurement* (a ratio: good events / total events).
-SLO = the *target* on that measurement (e.g. 99.9% over 30 days).
-SLA = the *contract* with consequences if the SLO is missed (refunds, credits, penalty clauses).
+        answer: `SLI = the measurement (a ratio: good events / total events).
+SLO = the target on that measurement (e.g. 99.9% over 30 days).
+SLA = the contract with consequences if the SLO is missed (refunds, credits, penalty clauses).
 
-The canonical test from Google SRE Book Ch 4: *"What happens if the SLOs aren\'t met?"* If the answer is "we have a meeting and decide what to fix," it\'s an SLO. If the answer is "the customer gets 10% of their monthly bill back," it\'s an SLA.
+The canonical test from Google SRE Book Ch 4: "What happens if the SLOs aren\'t met?" If the answer is "we have a meeting and decide what to fix," it\'s an SLO. If the answer is "the customer gets 10% of their monthly bill back," it\'s an SLA.
 
 Most internal services have SLOs but no SLAs — SLAs are explicit, expensive contracts and you don\'t hand one out unless the user is paying for it. SLAs are also almost always looser than the internal SLO — your internal target is 99.95% so you have headroom before the 99.9% SLA triggers refunds.`,
       },
@@ -257,21 +257,21 @@ Get those six steps right and the rest of the reliability conversation has a fou
         question: 'Why measure with percentiles instead of averages?',
         answer: `Because averages hide the tail, and the tail is what users feel.
 
-Direct quote from SRE Book Ch 6: *"if mean latency averages 100ms at 1,000 requests/second, 1% of requests might easily take 5 seconds."* The mean looks fine. The 99th percentile is catastrophic.
+Direct quote from SRE Book Ch 6: "if mean latency averages 100ms at 1,000 requests/second, 1% of requests might easily take 5 seconds." The mean looks fine. The 99th percentile is catastrophic.
 
 Standard practice (Workbook Ch 4): always look at p50 (typical case), p95 (most users feel this on a bad day), p99 (the actual tail), p99.9 (the customers who are about to leave). For SLI implementation, use histograms with exponentially-bucketed boundaries (factors of ~3) so the bucket layout preserves precision through the tail.
 
-Tom Wilkie\'s pithy version (RED method post): *"the RED Method is about caring about your users and how happy they are."* Caring requires looking at the slowest users, not the average user.`,
+Tom Wilkie\'s pithy version (RED method post): "the RED Method is about caring about your users and how happy they are." Caring requires looking at the slowest users, not the average user.`,
       },
       {
         question: 'I\'m told to set the SLO at "100%" — what do I say?',
         answer: `The SRE Book is unambiguous: "100% reliability is the wrong target for basically everything." Three reasons to push back:
 
 1. Cost grows non-linearly with each additional 9. The marginal engineering investment to go from 99.99% → 99.999% is enormous.
-2. The user\'s side is the bottleneck. The Book\'s example: *"a user on a 99% reliable smartphone cannot tell the difference between 99.99% and 99.999% service reliability."* You can\'t ship past the chain\'s weakest link.
-3. Without an error budget you can\'t ship safely. Every change has *some* probability of incident; if your target is 100%, you have zero headroom for change. You\'re forced to choose: cap the rate of change to near-zero (kills feature velocity) or break the SLO (loses credibility).
+2. The user\'s side is the bottleneck. The Book\'s example: "a user on a 99% reliable smartphone cannot tell the difference between 99.99% and 99.999% service reliability." You can\'t ship past the chain\'s weakest link.
+3. Without an error budget you can\'t ship safely. Every change has some probability of incident; if your target is 100%, you have zero headroom for change. You\'re forced to choose: cap the rate of change to near-zero (kills feature velocity) or break the SLO (loses credibility).
 
-The pragmatic answer: pick the lowest 9-count that satisfies the user, then use the resulting error budget as permission to ship. Quote Workbook Ch 2: *"100% reliability is the wrong target."* Then have the conversation about what the right target actually is.`,
+The pragmatic answer: pick the lowest 9-count that satisfies the user, then use the resulting error budget as permission to ship. Quote Workbook Ch 2: "100% reliability is the wrong target." Then have the conversation about what the right target actually is.`,
       },
       {
         question: 'Who owns the SLO — SRE, dev, or product?',
@@ -281,7 +281,7 @@ The pragmatic answer: pick the lowest 9-count that satisfies the user, then use 
 - Dev owns the velocity question: "do we accept the launch-freeze policy that comes with this SLO?"
 - SRE/Ops owns the operability question: "can we defend this threshold without excessive toil?"
 
-The SRE *runs* the measurement; the SRE does *not* unilaterally set the target. If only SRE owns it, dev resents the freezes; if only dev owns it, the SLO drifts toward "whatever we already do." Three-way ownership is the structural reason error-budget policy survives organisational pressure.`,
+The SRE runs the measurement; the SRE does not unilaterally set the target. If only SRE owns it, dev resents the freezes; if only dev owns it, the SLO drifts toward "whatever we already do." Three-way ownership is the structural reason error-budget policy survives organisational pressure.`,
       },
     ],
     references: [
@@ -312,9 +312,9 @@ For a 99.9% SLO measured over a 30-day window with 3 million requests (Workbook 
 
 The error-budget policy (EBP) is the org-level contract that turns the budget into binding action — quoted verbatim from Workbook Ch 3:
 
-> *"If the service has exceeded its error budget for the preceding four-week window, we will halt all changes and releases other than P0 issues or security fixes until the service is back within its SLO."*
+> "If the service has exceeded its error budget for the preceding four-week window, we will halt all changes and releases other than P0 issues or security fixes until the service is back within its SLO."
 
-The policy is permission, not punishment. The Workbook is explicit: it exists *"not to serve as punishment for missing SLOs"* but rather to *"give teams permission to focus exclusively on reliability when data indicates that reliability is more important."*
+The policy is permission, not punishment. The Workbook is explicit: it exists "not to serve as punishment for missing SLOs" but rather to "give teams permission to focus exclusively on reliability when data indicates that reliability is more important."
 
 Disagreements between dev and SRE on whether the budget is exhausted, or whether a particular incident counts, escalate to the CTO. That\'s a deliberate choice — it forces the org to take the policy seriously.`,
     whenToUse: [
@@ -329,7 +329,7 @@ Disagreements between dev and SRE on whether the budget is exhausted, or whether
       { term: 'Error-Budget Policy (EBP)', definition: 'Org-level contract specifying what happens when the budget is exhausted. The Workbook template includes signatories, halt rules, exceptions, and escalation to CTO.' },
       { term: '4-week halt rule', definition: '"If the service has exceeded its error budget for the preceding four-week window, we will halt all changes and releases other than P0 issues or security fixes until the service is back within its SLO." (Workbook Ch 3, verbatim)' },
       { term: 'Postmortem trigger', definition: 'Any single incident that consumes >20% of the quarterly budget gets a postmortem. (Workbook Ch 3 template)' },
-      { term: 'Permission, not punishment', definition: 'The framing that prevents EBP from becoming an SRE-vs-dev weapon. A team using all of its budget is doing the right thing; a team consistently *under*-spending it is being too cautious.' },
+      { term: 'Permission, not punishment', definition: 'The framing that prevents EBP from becoming an SRE-vs-dev weapon. A team using all of its budget is doing the right thing; a team consistently under-spending it is being too cautious.' },
     ],
     approach: [
       'Compute the budget at SLO definition time — every SLO must yield a budget you can hand to product',
@@ -342,9 +342,9 @@ Disagreements between dev and SRE on whether the budget is exhausted, or whether
     pitfalls: [
       'Treating EBP as a weapon dev wields against SRE (or vice versa) — the framing must be permission, not punishment.',
       'No escalation path — when dev and SRE disagree on whether the budget is exhausted, you need a tie-breaker (Workbook says CTO).',
-      'Halting the *wrong* changes — security fixes and P0s are explicitly carved out for a reason. A halt that blocks security pages is its own outage.',
+      'Halting the wrong changes — security fixes and P0s are explicitly carved out for a reason. A halt that blocks security pages is its own outage.',
       'Setting the policy without product sign-off — when the freeze costs revenue, product needs to have already agreed.',
-      'Conflating budget *consumption* with success or failure. A team that consistently under-spends its budget is being too cautious.',
+      'Conflating budget consumption with success or failure. A team that consistently under-spends its budget is being too cautious.',
     ],
     keyQuestions: [
       {
@@ -354,9 +354,9 @@ Disagreements between dev and SRE on whether the budget is exhausted, or whether
 1. Metadata header — Status, Author, Date, Reviewers, Approvers, Approval Date, Revisit Date.
 2. Service Overview — what the service does and who relies on it.
 3. Goals & Non-Goals — what the policy will and won\'t enforce.
-4. SLO Miss Policy — the verbatim halt rule: *"If the service has exceeded its error budget for the preceding four-week window, we will halt all changes and releases other than P0 issues or security fixes until the service is back within its SLO."*
+4. SLO Miss Policy — the verbatim halt rule: "If the service has exceeded its error budget for the preceding four-week window, we will halt all changes and releases other than P0 issues or security fixes until the service is back within its SLO."
 5. Outage Policy — handling for incidents that consume >20% of the quarterly budget (mandatory postmortem).
-6. Escalation Policy — *"In the event of a disagreement between parties regarding the calculation of the error budget or the specific actions it defines, the issue should be escalated to the CTO to make a decision."*
+6. Escalation Policy — "In the event of a disagreement between parties regarding the calculation of the error budget or the specific actions it defines, the issue should be escalated to the CTO to make a decision."
 
 Plus exceptions: outages from company-wide infra, external teams, out-of-scope users, miscategorised errors with no actual user impact.
 
@@ -364,7 +364,7 @@ The policy is signed by SRE lead, dev lead, and product lead — that\'s the str
       },
       {
         question: 'A team is at 110% of budget consumed. What should happen?',
-        answer: `The 4-week halt rule fires: *"halt all changes and releases other than P0 issues or security fixes until the service is back within its SLO."*
+        answer: `The 4-week halt rule fires: "halt all changes and releases other than P0 issues or security fixes until the service is back within its SLO."
 
 Concretely:
 - All non-P0 / non-security launches stop. CI/CD pipelines may still merge but deploys are gated.
@@ -388,7 +388,7 @@ The Workbook is explicit on this: a healthy budget is one that gets spent. A con
       },
       {
         question: 'Why is the halt rule based on a 4-week rolling window specifically?',
-        answer: `The Workbook (Ch 2) recommends *"a four-week rolling window to be a good general-purpose interval."* The reasoning:
+        answer: `The Workbook (Ch 2) recommends "a four-week rolling window to be a good general-purpose interval." The reasoning:
 
 - Long enough to absorb noise — a single bad day shouldn\'t trigger a freeze if the rest of the month was fine.
 - Short enough to be actionable — a quarterly window would lag too far behind real reliability problems.
@@ -400,7 +400,7 @@ Critically, the window is rolling, not calendar-based. A team that spent its Jan
       },
       {
         question: 'How does an error budget interact with burn-rate alerting?',
-        answer: `Burn rate is *how fast you\'re consuming the budget*, expressed as a multiple of the rate that would exhaust it exactly over the window. The Workbook Ch 5 multi-window multi-burn-rate table:
+        answer: `Burn rate is how fast you\'re consuming the budget, expressed as a multiple of the rate that would exhaust it exactly over the window. The Workbook Ch 5 multi-window multi-burn-rate table:
 
 | Severity | Long window | Short window | Burn rate | Budget consumed if sustained |
 |---|---|---|---|---|
@@ -430,13 +430,13 @@ Ties to budget: a 14.4× sustained burn would eat the whole 30-day budget in jus
     color: '#3b82f6',
     questions: 3,
     description: 'The economic + UX argument for setting reliability targets below 100%, and how to make the tradeoff legible to product.',
-    introduction: `Maximising reliability and maximising feature velocity are in tension. The SRE response is not to pick a winner — it\'s to make the tradeoff *quantitative* via SLOs and error budgets so both sides can negotiate against the same number.
+    introduction: `Maximising reliability and maximising feature velocity are in tension. The SRE response is not to pick a winner — it\'s to make the tradeoff quantitative via SLOs and error budgets so both sides can negotiate against the same number.
 
-The headline argument from SRE Book Ch 3, verbatim: *"Extreme reliability comes at a cost: maximizing stability limits how fast new features can be developed and dramatically increases costs."* And Ch 1\'s epigraph: "Hope is not a strategy."
+The headline argument from SRE Book Ch 3, verbatim: "Extreme reliability comes at a cost: maximizing stability limits how fast new features can be developed and dramatically increases costs." And Ch 1\'s epigraph: "Hope is not a strategy."
 
 The economic shape of the curve: each additional 9 of reliability costs roughly 10× the engineering investment of the previous one (this is industry rule-of-thumb, not a Google quote). Past the user\'s perceptible threshold, that investment produces no business value.
 
-The user-side limit (Ch 3, verbatim): *"a user on a 99% reliable smartphone cannot tell the difference between 99.99% and 99.999% service reliability."* The chain of reliability cannot exceed its weakest link. Investing in five 9s on a service whose users are on flaky mobile networks just spends money to no effect.
+The user-side limit (Ch 3, verbatim): "a user on a 99% reliable smartphone cannot tell the difference between 99.99% and 99.999% service reliability." The chain of reliability cannot exceed its weakest link. Investing in five 9s on a service whose users are on flaky mobile networks just spends money to no effect.
 
 The risk-tolerance decision is product\'s, with SRE input — not SRE\'s alone. Risk tolerance is a business question (how much downtime can we afford? what\'s the cost of a 30-min outage?) and SRE provides the operational reality (what\'s achievable without burning out the team?).`,
     whenToUse: [
@@ -472,7 +472,7 @@ The risk-tolerance decision is product\'s, with SRE input — not SRE\'s alone. 
 
 1. Cost grows non-linearly. Each additional 9 costs roughly an order of magnitude more than the previous. Going from 99% → 99.9% might cost weeks; 99.99% → 99.999% costs years and squad-equivalents. Past the user\'s perceptibility threshold, that investment produces zero business value.
 
-2. Users can\'t tell the difference. Ch 3\'s example: *"a user on a 99% reliable smartphone cannot tell the difference between 99.99% and 99.999% service reliability."* The chain of reliability is bounded by its weakest link, and for most consumer products that link is the user\'s device + network, not your service.
+2. Users can\'t tell the difference. Ch 3\'s example: "a user on a 99% reliable smartphone cannot tell the difference between 99.99% and 99.999% service reliability." The chain of reliability is bounded by its weakest link, and for most consumer products that link is the user\'s device + network, not your service.
 
 3. Without a budget, you can\'t ship. Every change carries some failure probability. Targeting 100% means accepting zero change — which kills feature velocity AND, paradoxically, kills reliability (your codebase rots, dependencies go unpatched, security CVEs accumulate).
 
@@ -480,7 +480,7 @@ The pragmatic answer: pick the lowest 9-count that satisfies the user\'s percept
       },
       {
         question: 'Product wants 99.999% on a service that has dependencies running at 99.9%. What do you say?',
-        answer: `It\'s physically impossible. The chain of reliability multiplies through dependencies — quoting the SRE Book\'s framing: *"the reliability of a service can never exceed the reliability of its critical dependencies."*
+        answer: `It\'s physically impossible. The chain of reliability multiplies through dependencies — quoting the SRE Book\'s framing: "the reliability of a service can never exceed the reliability of its critical dependencies."
 
 Concretely: if your service makes a critical call to a 99.9% dependency, your effective availability is bounded at 99.9% no matter what you do. Adding 99.999% inside your own service is wasted engineering — every fifth nine you build is invisible to the user because the dependency takes it back.
 
@@ -488,7 +488,7 @@ The conversation with product:
 
 1. Identify the critical-path dependencies and their advertised reliability.
 2. Compute the achievable upper bound (multiply the availabilities together).
-3. Set the SLO below that bound to leave error budget for *your own* failures.
+3. Set the SLO below that bound to leave error budget for your own failures.
 4. If product genuinely needs five 9s, the work is upstream: redundancy in the dependencies, fallback paths that don\'t hit them, caching that hides their availability. Make that scope explicit.
 
 Don\'t accept an SLO you can\'t physically meet — you\'ll spend the next year explaining why you missed it.`,
@@ -522,13 +522,13 @@ The goal: product sees that SRE is not arbitrarily blocking launches — SRE is 
     description: 'The six characteristics of toil, the 50% cap as floor-on-engineering, and the four-step legacy lifecycle.',
     introduction: `Toil is the SRE\'s anti-feature. Quoting SRE Book Ch 5 verbatim:
 
-> *"Toil is the kind of work tied to running a production service that tends to be manual, repetitive, automatable, tactical, devoid of enduring value, and that scales linearly as a service grows."*
+> "Toil is the kind of work tied to running a production service that tends to be manual, repetitive, automatable, tactical, devoid of enduring value, and that scales linearly as a service grows."
 
 The six characteristics — manual, repetitive, automatable, tactical/interrupt-driven, devoid of enduring value, scales linearly with growth — form a checklist for classifying any piece of work.
 
 Critically, toil is not the same as overhead. Overhead (meetings, training, HR paperwork, goal-setting) is necessary work that doesn\'t produce production value but isn\'t toil. Grungy long-term-value work like cleaning up alert configs or migrating to a new database is also not toil — it has enduring value.
 
-The 50% cap is the structural mechanism that prevents an SRE team from devolving into traditional ops: aggregate operational work — *all* of it: tickets, on-call, manual tasks — must stay ≤ 50% of an SRE\'s time. The other 50% must be engineering. The Workbook treats this as "a guarantee, not just a cap" — a floor on engineering time, not a ceiling on ops.
+The 50% cap is the structural mechanism that prevents an SRE team from devolving into traditional ops: aggregate operational work — all of it: tickets, on-call, manual tasks — must stay ≤ 50% of an SRE\'s time. The other 50% must be engineering. The Workbook treats this as "a guarantee, not just a cap" — a floor on engineering time, not a ceiling on ops.
 
 When a team breaches the cap, leadership\'s response is temporarily handing paging duties back to the dev team until the SRE team recovers. That\'s the explicit relief valve, and it\'s a feature, not a punishment.`,
     whenToUse: [
@@ -553,7 +553,7 @@ When a team breaches the cap, leadership\'s response is temporarily handing pagi
       'Apply the legacy lifecycle: Avoidance (don\'t do it) > Encapsulation (script around it) > Replacement (build the right thing) > Retirement (turn off the manual path)',
     ],
     pitfalls: [
-      'Treating boring engineering work as toil — alert-config cleanup or migration tooling is *engineering*, not toil. The "enduring value" check is what separates them.',
+      'Treating boring engineering work as toil — alert-config cleanup or migration tooling is engineering, not toil. The "enduring value" check is what separates them.',
       'Automating the workaround instead of fixing the cause. The Workbook is explicit: engineer at source.',
       'Letting the 50% cap drift quietly — without leadership enforcement (handing pages back to dev when breached), the cap is a wish.',
       'Conflating on-call with toil. On-call IS toil only when it\'s reactive firefighting without engineering follow-up. Pages that drive the next sprint\'s engineering are not toil.',
@@ -564,9 +564,9 @@ When a team breaches the cap, leadership\'s response is temporarily handing pagi
         question: 'What\'s the difference between toil, overhead, and engineering?',
         answer: `From SRE Book Ch 5 + Workbook Ch 6:
 
-- Toil: manual, repetitive, automatable, interrupt-driven, no enduring value, scales linearly. *Bad — eliminate.* Examples: running a script manually every Monday, handling non-urgent service emails, urgent-but-non-novel on-call response.
-- Overhead: necessary work that doesn\'t produce production value but isn\'t toil. *Necessary — manage.* Examples: meetings, HR paperwork, training, goal-setting.
-- Engineering: produces enduring value. *Good — invest.* Examples: writing automation tooling, configuring monitoring, designing for robustness, even cleaning alert configs (looks grungy but produces enduring value because the cleaner config keeps paying off).
+- Toil: manual, repetitive, automatable, interrupt-driven, no enduring value, scales linearly. Bad — eliminate. Examples: running a script manually every Monday, handling non-urgent service emails, urgent-but-non-novel on-call response.
+- Overhead: necessary work that doesn\'t produce production value but isn\'t toil. Necessary — manage. Examples: meetings, HR paperwork, training, goal-setting.
+- Engineering: produces enduring value. Good — invest. Examples: writing automation tooling, configuring monitoring, designing for robustness, even cleaning alert configs (looks grungy but produces enduring value because the cleaner config keeps paying off).
 
 The differentiator is enduring value + linear scaling. Cleaning alert configs is grungy but pays off forever. Restarting a service every Monday is also grungy but the value vanishes the next Monday.`,
       },
@@ -574,7 +574,7 @@ The differentiator is enduring value + linear scaling. Cleaning alert configs is
         question: 'My SRE team is at 70% operational work. What does the Workbook say?',
         answer: `The 50% cap has been breached and leadership has to act. The Workbook\'s explicit response is to temporarily hand paging duties back to the dev team until the SRE team recovers.
 
-That\'s not a punishment — it\'s a structural feature. Without the relief valve, the SRE team has no way to invest in the engineering that would *reduce* the operational load. They get stuck at 70%, then 80%, then 100% ops, and the team collapses.
+That\'s not a punishment — it\'s a structural feature. Without the relief valve, the SRE team has no way to invest in the engineering that would reduce the operational load. They get stuck at 70%, then 80%, then 100% ops, and the team collapses.
 
 Concretely:
 1. Acknowledge the breach in a retrospective. Don\'t hide it; surface it.
@@ -582,7 +582,7 @@ Concretely:
 3. SRE uses that quarter to engineer the toil out — automate the runbooks, fix the alert noise, kill the source bugs.
 4. Post-quarter retrospective: did toil drop? If yes, take the pager back with new safeguards. If no, escalate or shrink the SRE team\'s scope.
 
-The Workbook is explicit that this is the *correct* response, not a sign of failure. Failure is letting the cap silently rot.`,
+The Workbook is explicit that this is the correct response, not a sign of failure. Failure is letting the cap silently rot.`,
       },
       {
         question: 'Walk me through the legacy-replacement pattern.',
@@ -593,7 +593,7 @@ The Workbook is explicit that this is the *correct* response, not a sign of fail
 3. Replacement — design and build a system that replaces the manual process entirely. This is engineering investment that pays off over the lifetime of the service.
 4. Retirement — turn off the manual / encapsulated path so nobody can fall back to it. Without this step, the old process zombies along forever.
 
-The interview-relevant point: "engineer at source" — fix the cause that *makes* the toil necessary, don\'t just script around the symptom. If you\'re manually restarting a service every Monday, the answer isn\'t a cron-runner that restarts it for you; it\'s fixing the leak that makes the restart necessary in the first place.`,
+The interview-relevant point: "engineer at source" — fix the cause that makes the toil necessary, don\'t just script around the symptom. If you\'re manually restarting a service every Monday, the answer isn\'t a cron-runner that restarts it for you; it\'s fixing the leak that makes the restart necessary in the first place.`,
       },
       {
         question: 'How do you measure toil?',
@@ -622,9 +622,9 @@ The cost-benefit rule for automation: time saved over the automation\'s lifetime
     color: '#3b82f6',
     questions: 3,
     description: 'How to find what to actually measure — the multi-step user task whose end-to-end success defines the service.',
-    introduction: `An SLO measured at the wrong layer is worse than no SLO. A service can hit 99.99% on individual API calls while 30% of *user checkouts* fail because the calls compose into a path that breaks somewhere in the middle. The thing that matters is the end-to-end user task, not the per-call success rate.
+    introduction: `An SLO measured at the wrong layer is worse than no SLO. A service can hit 99.99% on individual API calls while 30% of user checkouts fail because the calls compose into a path that breaks somewhere in the middle. The thing that matters is the end-to-end user task, not the per-call success rate.
 
-The Workbook (Ch 2) names this the Critical User Journey (CUJ) — *"a multi-step user task whose end-to-end success is what really matters."* For an e-commerce site, the CUJ is "complete a checkout," not "API responds 200 on individual route." For a streaming service, it\'s "start watching this title within 5 seconds of clicking play," not "metadata service responds."
+The Workbook (Ch 2) names this the Critical User Journey (CUJ) — "a multi-step user task whose end-to-end success is what really matters." For an e-commerce site, the CUJ is "complete a checkout," not "API responds 200 on individual route." For a streaming service, it\'s "start watching this title within 5 seconds of clicking play," not "metadata service responds."
 
 Once you have the CUJ, the SLI takes the canonical good/total form: \`successful CUJ completions / valid CUJ attempts\` over a window. That ratio is the actual user-visible reliability.
 
@@ -653,7 +653,7 @@ Pick the dimension that maps to your CUJ\'s success criterion. A 200 OK with the
       'Pick the success criterion — what makes the journey "good" in the user\'s view? (Successful return? Under N seconds? Correct content?)',
       'Write the SLI specification: \`good_journey_completions / valid_journey_attempts\`',
       'Pick the implementation — log-based, metric-based, RUM-based, synthetic — closest to where the user actually feels success/failure',
-      'Validate the SLI catches the *known* user-pain incidents — if a past outage burnt the budget at the same rate users felt it, the SLI is well-calibrated',
+      'Validate the SLI catches the known user-pain incidents — if a past outage burnt the budget at the same rate users felt it, the SLI is well-calibrated',
     ],
     pitfalls: [
       'SLO\'ing individual API calls instead of the CUJ. APIs at 99.99% can compose into a 99% user experience.',
@@ -667,7 +667,7 @@ Pick the dimension that maps to your CUJ\'s success criterion. A 200 OK with the
         question: 'What\'s a Critical User Journey and why does it matter for SLO design?',
         answer: `A CUJ is the multi-step user task whose end-to-end success defines the service\'s value. For an e-commerce site: "complete a checkout." For a video service: "start watching within 5 seconds." For a search service: "return a relevant result for a query in under 200ms."
 
-It matters because per-API SLOs lie. A checkout might call: cart-service (99.95%), inventory-service (99.95%), payment-service (99.99%), confirmation-service (99.95%). Each looks great. Multiplied: 99.95 × 99.95 × 99.99 × 99.95 = ~99.84%. About 1.6% of *checkouts* fail even though every individual service is fine.
+It matters because per-API SLOs lie. A checkout might call: cart-service (99.95%), inventory-service (99.95%), payment-service (99.99%), confirmation-service (99.95%). Each looks great. Multiplied: 99.95 × 99.95 × 99.99 × 99.95 = ~99.84%. About 1.6% of checkouts fail even though every individual service is fine.
 
 CUJ-level SLOs catch this. They directly measure what the user feels — \`completed_checkouts / valid_checkout_attempts\`. When that drops, the budget burns even if every component is in the green.
 
@@ -675,9 +675,9 @@ This is why the Workbook insists you start SLO design from the CUJ, not the API 
       },
       {
         question: 'Walk me through SLI specification vs implementation.',
-        answer: `Specification = what users care about, in plain English, *measurement-independent*.
+        answer: `Specification = what users care about, in plain English, measurement-independent.
 
-Example spec: *"99.5% of valid checkout attempts complete successfully within 5 seconds end-to-end, measured over a 4-week rolling window."*
+Example spec: "99.5% of valid checkout attempts complete successfully within 5 seconds end-to-end, measured over a 4-week rolling window."
 
 Implementation = the spec + how you actually collect the data.
 
@@ -702,7 +702,7 @@ Always write the spec first. Inverting the order — picking the implementation 
 
 Examples:
 - A search service returns 200 OK with empty results when the index is corrupt.
-- A recommendation service returns 200 OK with the *previous* user\'s recommendations because of a cache-key bug.
+- A recommendation service returns 200 OK with the previous user\'s recommendations because of a cache-key bug.
 - A pricing service returns 200 OK with stale prices because the freshness pipeline is broken.
 
 In each case, availability and latency look fine; the user is unhappy. A quality SLI (correctness, freshness, coverage) catches this.
@@ -824,7 +824,7 @@ Concretely: announce in the next reliability review that the SLO is going aspira
         image: '/diagrams/sre/b1-redundancy.png',
       },
     ],
-    introduction: `High availability is *not* "buy a more reliable box." A single 99.9% server is a 99.9% server. The only way to push availability past the per-component reliability is redundancy + automated failover, and the math is unforgiving.
+    introduction: `High availability is not "buy a more reliable box." A single 99.9% server is a 99.9% server. The only way to push availability past the per-component reliability is redundancy + automated failover, and the math is unforgiving.
 
 The formula from the AWS Well-Architected Reliability Pillar:
 
@@ -835,7 +835,7 @@ The canonical patterns:
 
 - N: minimum replicas needed to serve normal load. No redundancy — one replica failure = capacity loss.
 - N+1: one spare. Tolerates one replica failure with no capacity loss. Industry baseline.
-- N+2: two spares. Tolerates a failure *during a maintenance window* (one replica out for upgrade, another fails) without capacity loss. Required for tight SLOs.
+- N+2: two spares. Tolerates a failure during a maintenance window (one replica out for upgrade, another fails) without capacity loss. Required for tight SLOs.
 
 What makes redundancy actually work (the SRE Book\'s Ch 23 caution): the components must have independent failure domains. Two replicas in the same rack share power, network, cooling, and noisy neighbours. They\'re not really independent. Redundancy across availability zones, regions, and providers is what produces the math you actually want.`,
     whenToUse: [
@@ -866,13 +866,13 @@ The hard-dependency math: when components are in series — every request needs 
 
 This is why "we depend on three reliable services" is not the same as being reliable. Each dependency taxes you. To hit 99.99% effective on a service that calls three deps, the deps each need to be ≥ 99.997% — or you need to break the hard dependency (cache, fallback path, async write-behind, graceful degradation).
 
-The framing on whiteboards: if your downstream is the bottleneck, no amount of work *inside* your service moves the number. The fix is upstream.`,
+The framing on whiteboards: if your downstream is the bottleneck, no amount of work inside your service moves the number. The fix is upstream.`,
       },
       {
         question: 'Why does N+1 redundancy not always give you "two 9s more"?',
         answer: `Because the math assumes independent failure domains, and most real-world redundancy doesn\'t actually have them.
 
-The formula: \`Avail = 1 − failure_rate^N\`. Two 99.9% replicas should give 1 − 0.001² = 99.9999% — *if* the replicas fail independently.
+The formula: \`Avail = 1 − failure_rate^N\`. Two 99.9% replicas should give 1 − 0.001² = 99.9999% — if the replicas fail independently.
 
 In reality:
 - Same rack → shared power supply, top-of-rack switch, cooling. Single rack-level failure takes both out.
@@ -885,7 +885,7 @@ For the redundancy math to actually deliver:
 - Spread across regions for regional disaster recovery.
 - Stagger software rollouts (canary first, then a cohort, then the rest) so a bad version doesn\'t take down all replicas in one push.
 
-The SRE Book Ch 23 quote is the warning: *"two instances of your app will have common dependencies, common failure domains, shared fate, and global control planes—all of which can cause an outage in both systems, no matter how carefully it is designed."*`,
+The SRE Book Ch 23 quote is the warning: "two instances of your app will have common dependencies, common failure domains, shared fate, and global control planes—all of which can cause an outage in both systems, no matter how carefully it is designed."`,
       },
       {
         question: 'When do you actually need N+2 instead of N+1?',
@@ -939,30 +939,30 @@ Also useful: the rough rule that each additional 9 costs ~10× the engineering i
         image: '/diagrams/sre/b2-dr-strategies.png',
       },
     ],
-    introduction: `Disaster recovery is the discipline of *getting back to a working state* after a region, AZ, or whole-cloud failure. Every workload needs a DR strategy; the question is *which one*, and the answer is driven by the cost of downtime, not by engineering preference.
+    introduction: `Disaster recovery is the discipline of getting back to a working state after a region, AZ, or whole-cloud failure. Every workload needs a DR strategy; the question is which one, and the answer is driven by the cost of downtime, not by engineering preference.
 
 The AWS Well-Architected Reliability Pillar names four strategies, in increasing order of cost and decreasing order of RTO/RPO. Each is roughly 10× the cost of the previous and gives roughly 10× faster recovery.
 
 1. Backup and Restore (cheapest, slowest)
-Replicate data to another Region. At failover, redeploy infra/code into that Region. Verbatim AWS framing: *"replicate your data from one Region to another and provision a copy of your core workload infrastructure"* — only at the moment of disaster.
+Replicate data to another Region. At failover, redeploy infra/code into that Region. Verbatim AWS framing: "replicate your data from one Region to another and provision a copy of your core workload infrastructure" — only at the moment of disaster.
 - RTO: hours to days. RPO: hours.
 - Cost: $ — only data egress + storage.
 - Right when: downtime tolerance is hours+ AND the workload is tolerant to data lag.
 
 2. Pilot Light
-Replicate data continuously. Provision and keep on the *core* infrastructure (databases, object storage). Application servers are loaded with code + config but switched off. AWS verbatim: *"Other elements, such as application servers, are loaded with application code and configurations, but are 'switched off.'"*
+Replicate data continuously. Provision and keep on the core infrastructure (databases, object storage). Application servers are loaded with code + config but switched off. AWS verbatim: "Other elements, such as application servers, are loaded with application code and configurations, but are 'switched off.'"
 - RTO: 10s of minutes. RPO: minutes.
 - Cost: $$ — pay for storage, minimal compute.
 - Right when: downtime tolerance is minutes-to-an-hour AND data must survive.
 
 3. Warm Standby
-A scaled-down but fully functional copy of production in another Region. Verbatim: *"can handle traffic (at reduced capacity levels) immediately."*
+A scaled-down but fully functional copy of production in another Region. Verbatim: "can handle traffic (at reduced capacity levels) immediately."
 - RTO: minutes. RPO: seconds.
 - Cost: $$$ — running compute at reduced scale.
 - Right when: downtime budget is minutes AND you can tolerate degraded capacity briefly.
 
 4. Multi-site Active/Active (most expensive, fastest)
-Both regions serve traffic continuously. Verbatim: *"run your workload simultaneously in multiple Regions."*
+Both regions serve traffic continuously. Verbatim: "run your workload simultaneously in multiple Regions."
 - RTO: ~0. RPO: 0 or near-0.
 - Cost: $$$$ — full duplicate infrastructure.
 - Right when: every minute of downtime costs more than running two copies forever.
@@ -986,7 +986,7 @@ Note: even multi-site active/active has non-zero RTO/RPO for data corruption dis
       'Compute the RTO budget that matches that cost — if downtime costs $100k/hour and we tolerate $200k of pain, RTO = 2 hours',
       'Pick the cheapest DR strategy that meets the RTO/RPO target',
       'Test the strategy at least twice a year via game-days. An untested DR plan is a non-existent DR plan.',
-      'For active/active, *also* maintain a backup-restore path — handles data corruption that active/active cannot',
+      'For active/active, also maintain a backup-restore path — handles data corruption that active/active cannot',
     ],
     pitfalls: [
       'Choosing multi-site active/active because it sounds best — pay 10× for capability the SLO doesn\'t justify.',
@@ -1002,9 +1002,9 @@ Note: even multi-site active/active has non-zero RTO/RPO for data corruption dis
 
 1. Backup & Restore — replicate data to another Region; redeploy infra/code at failover. RTO: hours-days. RPO: hours. Cost: $. Use when: downtime tolerance is hours+, workload tolerates data lag, infra is reproducible from IaC.
 
-2. Pilot Light — *data* and *core infra* always on (databases, object storage). Application servers loaded but switched off. RTO: 10s of minutes. RPO: minutes. Cost: $$. Use when: downtime budget is "less than an hour" and data must survive.
+2. Pilot Light — data and core infra always on (databases, object storage). Application servers loaded but switched off. RTO: 10s of minutes. RPO: minutes. Cost: $$. Use when: downtime budget is "less than an hour" and data must survive.
 
-3. Warm Standby — *scaled-down but fully functional* copy in another Region. Can serve at reduced capacity immediately. RTO: minutes. RPO: seconds. Cost: $$$. Use when: downtime budget is minutes and degraded capacity briefly is acceptable.
+3. Warm Standby — scaled-down but fully functional copy in another Region. Can serve at reduced capacity immediately. RTO: minutes. RPO: seconds. Cost: $$$. Use when: downtime budget is minutes and degraded capacity briefly is acceptable.
 
 4. Multi-site Active/Active — both regions serve traffic; full duplicate. RTO: ~0. RPO: 0 or near-0. Cost: $$$$. Use when: every minute of downtime costs more than the duplicate infrastructure.
 
@@ -1021,7 +1021,7 @@ The math: 52 minutes is your annual downtime budget. A single regional incident 
 - Warm Standby fits — RTO of 5 min eats 10% of annual budget per event. Multiple events tolerable.
 - Multi-site Active/Active is the safe answer — RTO ~0 means region failure consumes effectively zero budget.
 
-The follow-up question: how often do regions fail? AWS region failures happen, but they\'re rare (a few per year industry-wide). If your service has *other* sources of downtime (deploys, dependency outages, capacity issues), those eat the budget faster than regional disasters do. Sometimes the right answer is warm standby + better deploys rather than active/active + bad deploys.`,
+The follow-up question: how often do regions fail? AWS region failures happen, but they\'re rare (a few per year industry-wide). If your service has other sources of downtime (deploys, dependency outages, capacity issues), those eat the budget faster than regional disasters do. Sometimes the right answer is warm standby + better deploys rather than active/active + bad deploys.`,
       },
       {
         question: 'Active-active sounds best. Why isn\'t it always the answer?',
@@ -1075,8 +1075,8 @@ Also consider: warm-standby costs roughly 30-50% of full production (you\'re sca
     ],
     introduction: `RTO and RPO are the two numbers every DR conversation orbits. Verbatim from Google Cloud\'s DR documentation:
 
-- RTO (Recovery Time Objective): *"How long after a disaster before I\'m up and running."*
-- RPO (Recovery Point Objective): *"How much data can I afford to lose in the event of a disaster."*
+- RTO (Recovery Time Objective): "How long after a disaster before I\'m up and running."
+- RPO (Recovery Point Objective): "How much data can I afford to lose in the event of a disaster."
 
 Different things. Easy to confuse. Get them precise.
 
@@ -1111,8 +1111,8 @@ Neither RTO nor RPO can be 0 without spending real money. Both can be 0 only wit
         question: 'Define RTO and RPO and give an example.',
         answer: `From GCP\'s DR documentation, verbatim:
 
-- RTO (Recovery Time Objective): *"How long after a disaster before I\'m up and running."*
-- RPO (Recovery Point Objective): *"How much data can I afford to lose in the event of a disaster."*
+- RTO (Recovery Time Objective): "How long after a disaster before I\'m up and running."
+- RPO (Recovery Point Objective): "How much data can I afford to lose in the event of a disaster."
 
 Example. Your DB has hourly backups. At 09:30 the database is destroyed.
 - The last good backup is 09:00. Writes between 09:00 and 09:30 (30 min) are lost. RPO = 30 minutes.
@@ -1130,7 +1130,7 @@ Two distinct measurements: how long users were down (60 min) and how much data t
 
 3. Synchronous replication. Every write is durable on the primary AND the standby before the client gets ACK. RPO = 0. Cost: every write pays the network RTT to the standby, which limits write throughput and increases tail latency. Spanner, Aurora Global Database (with sync mode), CockroachDB use this.
 
-The cost curve: option 1 is nearly free (just storage). Option 2 adds standby compute. Option 3 adds latency on every write — the user\'s critical path now includes a cross-DC or cross-region hop. RPO=0 is *expensive*; quote it carefully.
+The cost curve: option 1 is nearly free (just storage). Option 2 adds standby compute. Option 3 adds latency on every write — the user\'s critical path now includes a cross-DC or cross-region hop. RPO=0 is expensive; quote it carefully.
 
 For most services, the right answer is option 2 (async replication, RPO of seconds) — the latency cost of RPO=0 is harder to swallow than the rare event of losing a few seconds of writes.`,
       },
@@ -1206,7 +1206,7 @@ For the cross-region traffic management itself, three primitives:
       'Picking write-local without auditing whether your data model tolerates LWW. A counter or balance silently goes wrong; ledger entries get lost.',
       'Picking write-global without quantifying cross-region write RTT. Writers in the non-primary region see 100-200ms added latency on every write.',
       'Forgetting cross-partition transactions in write-partitioned. Two keys in different home regions can\'t be updated atomically.',
-      'Relying on automatic regional failover. The AWS guidance: *"Automatically initiated failover based on health checks or alarms should be used with caution... If you fail over when you don\'t need to (false alarm), then you incur those losses."*',
+      'Relying on automatic regional failover. The AWS guidance: "Automatically initiated failover based on health checks or alarms should be used with caution... If you fail over when you don\'t need to (false alarm), then you incur those losses."',
       'Treating multi-region as if it solves data corruption. It doesn\'t. Bad code propagates instantly to every region.',
     ],
     keyQuestions: [
@@ -1227,7 +1227,7 @@ The decision tree:
       },
       {
         question: 'Why is automatic regional failover dangerous?',
-        answer: `Quote from AWS DR guidance: *"Automatically initiated failover based on health checks or alarms should be used with caution... If you fail over when you don\'t need to (false alarm), then you incur those losses."*
+        answer: `Quote from AWS DR guidance: "Automatically initiated failover based on health checks or alarms should be used with caution... If you fail over when you don\'t need to (false alarm), then you incur those losses."
 
 The problem: failovers are not free. A regional failover incurs:
 - Cache cold-start in the new region.
@@ -1246,13 +1246,13 @@ Critical exception: services with extremely tight RTO (sub-minute) need automati
         question: 'How do you handle the regional control plane being the thing that\'s failing?',
         answer: `Use data-plane failover services that don\'t depend on the regional control plane.
 
-The problem: AWS\'s automated services — Route 53 health checks, CloudWatch alarms, Auto Scaling — depend on the regional control plane. When us-east-1\'s control plane is having a bad day, those services fail or lag. Your "automated failover" stops working *exactly when you most need it*.
+The problem: AWS\'s automated services — Route 53 health checks, CloudWatch alarms, Auto Scaling — depend on the regional control plane. When us-east-1\'s control plane is having a bad day, those services fail or lag. Your "automated failover" stops working exactly when you most need it.
 
 The fix: AWS Application Recovery Controller (ARC) is purpose-built for this. ARC routing controls operate via a separate data plane that doesn\'t share fate with the regional control plane. You can flip ARC controls during a regional incident even when the rest of the region is non-functional.
 
 The pattern:
-1. Build the failover *mechanism* via ARC (data-plane controlled).
-2. Build the failover *trigger* via Route 53 / CloudWatch (control-plane services) — these can fail without breaking the mechanism.
+1. Build the failover mechanism via ARC (data-plane controlled).
+2. Build the failover trigger via Route 53 / CloudWatch (control-plane services) — these can fail without breaking the mechanism.
 3. Have an out-of-band emergency path (a manually-runnable runbook with explicit AWS API calls or CLI commands) that operates against ARC directly.
 
 Multi-cloud is a related answer: if your DR strategy depends on AWS being up to fail over to GCP, you\'re fine. If it depends on AWS\'s control plane being up to fail away from AWS, you have a circular dependency.`,
@@ -1274,7 +1274,7 @@ Multi-cloud is a related answer: if your DR strategy depends on AWS being up to 
     description: 'Amdahl\'s Law, the NALSD method, and how Google does back-of-envelope on a whiteboard.',
     introduction: `Scaling problems usually don\'t look like "we need bigger machines." They look like "this design works at 10K QPS but breaks at 100K." The bottleneck is some component whose growth pattern the original design didn\'t anticipate.
 
-Google\'s framework for this — from SRE Workbook Ch 12 — is Non-Abstract Large System Design (NALSD): *"the ability to assess, design, and evaluate large systems."* The thesis: *"all systems will eventually have to run on real computers in real datacenters using real networks."* You can\'t hand-wave the math.
+Google\'s framework for this — from SRE Workbook Ch 12 — is Non-Abstract Large System Design (NALSD): "the ability to assess, design, and evaluate large systems." The thesis: "all systems will eventually have to run on real computers in real datacenters using real networks." You can\'t hand-wave the math.
 
 The four-question loop:
 1. Is it possible? (basic design)
@@ -1286,7 +1286,7 @@ The Workbook\'s worked example (Ch 12) is the AdWords CTR dashboard at 500K sear
 
 The general method: separate components by their growth pattern. Storage grows differently from compute, which grows differently from join-state, which grows differently from replication bandwidth. Each component scales independently if you let it; merged together, the slowest component caps the whole system.
 
-Amdahl\'s Law is the framing for one specific bottleneck: serial fraction. If 5% of your work is serial, you can\'t parallelize past 20× speedup *no matter how many cores you throw at it*. Find the serial fraction; eliminate it; repeat.`,
+Amdahl\'s Law is the framing for one specific bottleneck: serial fraction. If 5% of your work is serial, you can\'t parallelize past 20× speedup no matter how many cores you throw at it. Find the serial fraction; eliminate it; repeat.`,
     whenToUse: [
       'System-design interviews — NALSD\'s four-question loop is the canonical interview answer scaffold',
       'Capacity planning — when does the current architecture stop working?',
@@ -1302,14 +1302,14 @@ Amdahl\'s Law is the framing for one specific bottleneck: serial fraction. If 5%
     ],
     approach: [
       'Quantify the load — exact numbers, not "many." 500K QPS, 2KB/event, 86.4 TB/day.',
-      'Sketch the simplest design that *might* work; immediately apply NALSD\'s feasibility math',
+      'Sketch the simplest design that might work; immediately apply NALSD\'s feasibility math',
       'Find the bottleneck component — usually I/O or memory, occasionally CPU',
       'Separate that component into its own scalable subsystem (e.g. extract storage into a sharded service)',
       'Apply Amdahl: what\'s the residual serial fraction? Can it be eliminated or moved off the critical path?',
       'Test under realistic peak load AND under a failure of one of your dependencies',
     ],
     pitfalls: [
-      'Whiteboard adequacy ≠ real-world adequacy. Quote NALSD: *"All systems will eventually have to run on real computers in real datacenters using real networks."* Numbers always.',
+      'Whiteboard adequacy ≠ real-world adequacy. Quote NALSD: "All systems will eventually have to run on real computers in real datacenters using real networks." Numbers always.',
       'Adding more machines without checking what bottleneck you\'re actually hitting. CPU vs memory vs network vs disk — each has a different fix.',
       'Assuming uniform key distribution. Power laws are the rule; hot shards eat your cluster.',
       'Forgetting tail latency. Mean QPS at 500K can hide that p99 latency exceeds the SLO at 50K.',
@@ -1361,7 +1361,7 @@ Real-world key distributions are rarely uniform:
 - 80% of feed reads are for 20% of authors.
 - 80% of cache misses are for 20% of trending items.
 
-Naive hash partitioning gives you uniform shard *count* but not uniform shard *load*. Hot shards collapse first.
+Naive hash partitioning gives you uniform shard count but not uniform shard load. Hot shards collapse first.
 
 Fixes:
 1. Consistent hashing + virtual nodes — each physical node owns N "virtual" positions on the ring. Hot keys spread across many virtual nodes, statistically smoothing load.
@@ -1388,13 +1388,13 @@ The diagnostic: if your monitoring shows uniform CPU across most shards but one 
     color: '#22c55e',
     questions: 3,
     description: 'Where the latency goes, where to put cache, how deadlines propagate, and the SRE Book\'s rules for not making it worse.',
-    introduction: `Performance optimization is the discipline of making something faster *without* breaking it. The non-discipline is what most engineering teams do — making changes that are faster *most of the time* and creating subtle correctness or reliability issues at the tail.
+    introduction: `Performance optimization is the discipline of making something faster without breaking it. The non-discipline is what most engineering teams do — making changes that are faster most of the time and creating subtle correctness or reliability issues at the tail.
 
 The SRE Book\'s framing (Ch 21 + 22): performance isn\'t a single number. The interesting question is the tail — p99 and p99.9 — because that\'s what users feel. A change that improves the median by 20% but adds 5× to the p99 is usually a regression.
 
 The canonical optimization toolkit:
 
-Latency budgets. Every request has a budget — say 500ms — apportioned across components. *"DB lookup: 100ms. Cache check: 5ms. RPC fan-out: 50ms each parallel. Render: 30ms."* If you exceed any budget, you fail fast — better to return a degraded result than the right result too late. Latency budgets are how you keep a 95th-percentile-good system from becoming a 99th-percentile-bad one.
+Latency budgets. Every request has a budget — say 500ms — apportioned across components. "DB lookup: 100ms. Cache check: 5ms. RPC fan-out: 50ms each parallel. Render: 30ms." If you exceed any budget, you fail fast — better to return a degraded result than the right result too late. Latency budgets are how you keep a 95th-percentile-good system from becoming a 99th-percentile-bad one.
 
 Deadline propagation. RPCs inherit and decrease deadlines as they descend the stack. From SRE Book Ch 22: a server doesn\'t waste cycles on a request whose caller already gave up. A typical pattern: client sets 500ms deadline, sends to A (100ms used) → A sends to B with 400ms deadline (B is now bounded). When B exceeds its budget, it fails immediately rather than completing work that\'ll be discarded.
 
@@ -1441,13 +1441,13 @@ GC death spiral (Java case from SRE Book Ch 22): insufficient CPU → more GC �
     keyQuestions: [
       {
         question: 'What\'s deadline propagation and why does it matter?',
-        answer: `Quote from SRE Book Ch 22: *"RPCs inherit and decrease deadlines as they descend the stack so a server doesn\'t waste cycles on a request whose caller already gave up."*
+        answer: `Quote from SRE Book Ch 22: "RPCs inherit and decrease deadlines as they descend the stack so a server doesn\'t waste cycles on a request whose caller already gave up."
 
 Concretely: client sets a 500ms deadline. Service A receives the request, uses 100ms. A calls service B — passes a deadline of 400ms (the remainder). B uses 200ms. B calls C with a 200ms deadline. C realises after 100ms that it\'s going to take 300ms — C should fail fast because the deadline is going to expire before the work completes. The user is going to see a timeout regardless.
 
 Why it matters:
 - Without propagation, downstream services keep working after the client has given up. CPU is wasted on responses no one will read. Under load, this snowballs into capacity exhaustion.
-- With propagation, services proactively fail when they can\'t meet the deadline. The capacity goes to requests that *can* still succeed.
+- With propagation, services proactively fail when they can\'t meet the deadline. The capacity goes to requests that can still succeed.
 - Plus: deadlines are observable. You can monitor "% of requests that exceeded their deadline" as a leading indicator of capacity problems before they become user-visible.
 
 Implementation: every RPC framework worth using supports it (gRPC, Thrift, custom HTTP). The discipline: set deadlines at the edge, propagate religiously, instrument deadline-exceeded as a separate error class.`,
@@ -1519,7 +1519,7 @@ The named algorithms (in roughly chronological order):
 
 The FLP impossibility result (Fischer, Lynch, Paterson, 1985) is the theoretical floor: in an asynchronous network with even a single faulty process, no deterministic consensus algorithm can guarantee both safety AND liveness. Real systems navigate around it via timeouts and randomized backoffs — accepting that consensus may sometimes block briefly.
 
-CAP theorem framing (Ch 23 framing): in a partition, you choose between consistency and availability. The naive read is "pick C or A"; the SRE-correct read is "partitions are inevitable, so the real choice is between C and A *during* a partition." Chubby and Spanner choose C (refuse to serve when can\'t reach quorum). DynamoDB defaults to A (eventual consistency, last-writer-wins).
+CAP theorem framing (Ch 23 framing): in a partition, you choose between consistency and availability. The naive read is "pick C or A"; the SRE-correct read is "partitions are inevitable, so the real choice is between C and A during a partition." Chubby and Spanner choose C (refuse to serve when can\'t reach quorum). DynamoDB defaults to A (eventual consistency, last-writer-wins).
 
 When NOT to use consensus: read-heavy services that can tolerate stale reads (cache, content delivery), eventually-consistent stores where users tolerate "you saw your write a few seconds later," append-only logs that don\'t need ordering. Consensus is expensive — every operation pays multiple round trips. Don\'t pay if you don\'t need to.`,
     whenToUse: [
@@ -1534,7 +1534,7 @@ When NOT to use consensus: read-heavy services that can tolerate stale reads (ca
       { term: 'Raft', definition: 'Designed for understandability (2014). Same guarantees as Paxos. Default choice for new systems. Used by etcd, Consul, CockroachDB.' },
       { term: 'FLP impossibility', definition: 'Async network + 1 faulty process → no deterministic algorithm guarantees safety AND liveness. Real systems navigate via timeouts.' },
       { term: 'Quorum', definition: 'Majority of replicas (⌊N/2⌋ + 1). 3 replicas tolerate 1 failure; 5 tolerate 2; 7 tolerate 3. Latency vs fault-tolerance trade-off.' },
-      { term: 'CAP — partitions are inevitable', definition: 'The real choice is C vs A *during* a partition. Spanner / Chubby choose C. DynamoDB / Cassandra choose A.' },
+      { term: 'CAP — partitions are inevitable', definition: 'The real choice is C vs A during a partition. Spanner / Chubby choose C. DynamoDB / Cassandra choose A.' },
     ],
     pitfalls: [
       'Heartbeat-based leader election (without consensus). Network blips cause split-brain — two replicas both think they\'re leader. Use formal consensus instead.',
@@ -1574,7 +1574,7 @@ Formal consensus prevents it by requiring quorum agreement before promotion. B c
 
 The pragmatic implication: for any system where leader election matters (databases, queues, locks), use a battle-tested consensus implementation (etcd, Consul, ZooKeeper, raw Raft). Heartbeats are a leader-detection signal, not a leader-election protocol.
 
-SRE Book Ch 23 quote: *"Whenever you see leader election, critical shared state, or distributed locking, we recommend using distributed consensus systems that have been formally proven and tested thoroughly."*`,
+SRE Book Ch 23 quote: "Whenever you see leader election, critical shared state, or distributed locking, we recommend using distributed consensus systems that have been formally proven and tested thoroughly."`,
       },
       {
         question: 'How do you decide between 3-replica and 5-replica consensus?',
@@ -1625,15 +1625,15 @@ Practical pattern: 5-replica clusters spread across 3 AZs (e.g. 2-2-1). Loss of 
 
 Each pillar has a specific job:
 
-Metrics — numerical, time-series, aggregated. Cheap to store at scale. *"How many requests per second? What\'s the p99 latency? How full is the disk?"* Drives alerts and dashboards. Tools: Prometheus, Mimir, Cortex, Datadog, CloudWatch.
+Metrics — numerical, time-series, aggregated. Cheap to store at scale. "How many requests per second? What\'s the p99 latency? How full is the disk?" Drives alerts and dashboards. Tools: Prometheus, Mimir, Cortex, Datadog, CloudWatch.
 
-Logs — structured (or semi-structured) events, one per occurrence. Expensive to store at scale (volume × retention). *"What did this specific request do? What was the exception stack trace?"* Drives debugging and audit. Tools: Loki, Elasticsearch/OpenSearch, Splunk, Datadog Logs.
+Logs — structured (or semi-structured) events, one per occurrence. Expensive to store at scale (volume × retention). "What did this specific request do? What was the exception stack trace?" Drives debugging and audit. Tools: Loki, Elasticsearch/OpenSearch, Splunk, Datadog Logs.
 
-Traces — causality across services. A trace is a tree of spans, each span representing one unit of work. *"This 5-second user request — where did the time go?"* Drives latency investigations and dependency discovery. Tools: Jaeger, Tempo, Honeycomb, X-Ray.
+Traces — causality across services. A trace is a tree of spans, each span representing one unit of work. "This 5-second user request — where did the time go?" Drives latency investigations and dependency discovery. Tools: Jaeger, Tempo, Honeycomb, X-Ray.
 
 The 2020s shift: OpenTelemetry (OTel) unified the instrumentation. Before OTel, each pillar had its own SDK, its own wire format, its own collector. Now: instrument once with OTel SDK; the OTel Collector routes metrics to Prometheus, logs to Loki, traces to Tempo (or your vendor of choice). OTel is now CNCF\'s second-most-active project after Kubernetes.
 
-Charity Majors\' challenge to the three-pillar framing (founder of Honeycomb): the pillars view treats observability as three siloed datasets. Real debugging needs to *correlate* across them — a metric spike → click into the logs from that time range → see a slow trace. Modern stacks (Honeycomb, Datadog, Grafana LGTM) build the correlation in. The three-pillars view is correct as a mental model but limited as an architecture.
+Charity Majors\' challenge to the three-pillar framing (founder of Honeycomb): the pillars view treats observability as three siloed datasets. Real debugging needs to correlate across them — a metric spike → click into the logs from that time range → see a slow trace. Modern stacks (Honeycomb, Datadog, Grafana LGTM) build the correlation in. The three-pillars view is correct as a mental model but limited as an architecture.
 
 Beyond the pillars, two newer signals:
 - Profiles (continuous profiling — Pyroscope, Parca) — CPU/memory profiles aggregated over time. Find which function is consuming resources, not just which service.
@@ -1664,11 +1664,11 @@ Beyond the pillars, two newer signals:
         question: 'When do you reach for metrics vs logs vs traces?',
         answer: `Each answers a different question:
 
-Metrics: *"Is the service healthy right now? What\'s the trend?"* Use when you need numbers — request rate, error rate, latency percentiles, resource utilisation. Pre-aggregated, cheap, queryable in milliseconds. Drives alerts because they\'re fast and stable.
+Metrics: "Is the service healthy right now? What\'s the trend?" Use when you need numbers — request rate, error rate, latency percentiles, resource utilisation. Pre-aggregated, cheap, queryable in milliseconds. Drives alerts because they\'re fast and stable.
 
-Logs: *"What did this specific request do? Why did it fail?"* Use when you need the *event* — the exception, the parameter values, the audit trail. Stored per-event, expensive at volume, queryable in seconds-to-minutes. Drives root-cause investigation and audit/compliance.
+Logs: "What did this specific request do? Why did it fail?" Use when you need the event — the exception, the parameter values, the audit trail. Stored per-event, expensive at volume, queryable in seconds-to-minutes. Drives root-cause investigation and audit/compliance.
 
-Traces: *"This request was slow — where did the time go?"* Use when you need the *latency breakdown across services*. Stored per-span, expensive at full sample rate (so most teams sample 1-10%). Drives latency investigations and dependency mapping.
+Traces: "This request was slow — where did the time go?" Use when you need the latency breakdown across services. Stored per-span, expensive at full sample rate (so most teams sample 1-10%). Drives latency investigations and dependency mapping.
 
 The typical workflow:
 1. Alert fires from a metric (error rate spiked).
@@ -1701,13 +1701,13 @@ Adoption: as of 2026 OTel is the de-facto standard for new services. Datadog, Ne
         question: 'What\'s wrong with the "three pillars" mental model?',
         answer: `Charity Majors (Honeycomb co-founder) has been the loudest critic. The argument:
 
-The pillars treat observability as three separate datasets, each with its own tooling, its own query language, its own retention policy, its own UI. Engineers context-switch between them, struggling to correlate. *"Looking at the metrics dashboard, then opening Splunk to find the logs, then Jaeger to find the trace — and the timestamps are off by seconds, the trace IDs aren\'t in the logs."*
+The pillars treat observability as three separate datasets, each with its own tooling, its own query language, its own retention policy, its own UI. Engineers context-switch between them, struggling to correlate. "Looking at the metrics dashboard, then opening Splunk to find the logs, then Jaeger to find the trace — and the timestamps are off by seconds, the trace IDs aren\'t in the logs."
 
-Real debugging needs correlation across pillars, instantly. The unit of debugging isn\'t a metric or a log; it\'s a *failed user request*, which has a metric impact, multiple log lines, and a trace. The three-pillar architecture makes that hard.
+Real debugging needs correlation across pillars, instantly. The unit of debugging isn\'t a metric or a log; it\'s a failed user request, which has a metric impact, multiple log lines, and a trace. The three-pillar architecture makes that hard.
 
 The Honeycomb / structured-events alternative: wide structured events as the primitive. Every "thing that happens" is a single event with rich attributes (200+ columns common). You query the events directly. Metrics are derived (count of events grouped by status). Logs are events. Traces are events linked by trace_id. Correlation is just SQL.
 
-The pragmatic stack today (most teams): use the three-pillar tools but invest in *correlation infrastructure* — exemplars in Prometheus that link to traces, trace IDs in log entries, unified UI (Grafana, Datadog, Honeycomb). The pillars survive as data shapes; the user experience is unified.
+The pragmatic stack today (most teams): use the three-pillar tools but invest in correlation infrastructure — exemplars in Prometheus that link to traces, trace IDs in log entries, unified UI (Grafana, Datadog, Honeycomb). The pillars survive as data shapes; the user experience is unified.
 
 Worth knowing: the pillars view is fine as a starting mental model. The "wide events" view is more sophisticated and starts to matter at scale (>100 services, >100 engineers). Be prepared to discuss both.`,
       },
@@ -1755,7 +1755,7 @@ Four Golden Signals (Google SRE Book Ch 6) — Google\'s superset:
 - Errors — explicit failures, plus implicit failures (slow successes that miss SLO)
 - Saturation — how full the service is (queue depth, memory headroom)
 
-Quote (verbatim, Ch 6): *"If you can only measure four metrics of your user-facing system, focus on these four."*
+Quote (verbatim, Ch 6): "If you can only measure four metrics of your user-facing system, focus on these four."
 
 How to choose:
 - User-facing service → Four Golden Signals (or RED + saturation).
@@ -1807,7 +1807,7 @@ Four Golden Signals (Google) — superset:
 - Errors
 - Saturation
 
-Quote: *"If you can only measure four metrics of your user-facing system, focus on these four."* Generalizes RED + adds saturation, which RED leaves implicit.
+Quote: "If you can only measure four metrics of your user-facing system, focus on these four." Generalizes RED + adds saturation, which RED leaves implicit.
 
 Decision rule:
 - Service-level monitoring → Four Golden Signals (or RED if your culture uses it).
@@ -1815,7 +1815,7 @@ Decision rule:
 - Microservice fleet → RED on each service + USE on each host.
 - Mixed system → Four Golden Signals (most flexible).
 
-The methods aren\'t about specific metrics; they\'re about *completeness categories*. The check: for any service, can you answer all four signals? If no, you\'re flying blind on that signal.`,
+The methods aren\'t about specific metrics; they\'re about completeness categories. The check: for any service, can you answer all four signals? If no, you\'re flying blind on that signal.`,
       },
       {
         question: 'Why is saturation so often missed?',
@@ -1827,14 +1827,14 @@ Saturation = "what work is queued or delayed beyond what the resource can serve"
 
 Engineers look at the easy one and miss the leading indicator:
 - A CPU at 80% util with run-queue depth 0 is fine.
-- A CPU at 80% util with run-queue depth 30 is *very* not fine — there\'s 30 threads waiting, latency spikes are imminent.
+- A CPU at 80% util with run-queue depth 30 is very not fine — there\'s 30 threads waiting, latency spikes are imminent.
 
 The fix:
 - Linux: \`load average\` is your CPU saturation; \`vmstat\` for memory; \`iostat -x\` for disk \`%util\` AND \`avgqu-sz\` (queue size).
 - node_exporter: exposes node_load1, node_load5, node_load15, plus pressure metrics (node_pressure_*) for newer kernels. Pressure metrics are the modern saturation signal.
 - Application-level: thread pool queue depth, semaphore wait counts, connection pool saturation.
 
-Why it matters: saturation often *plateaus utilization at 100% but the queue keeps growing*. By the time utilization "looks bad," the queue is already so deep that latency has been awful for minutes. Saturation gives you 5-30 minutes of warning that utilization doesn\'t.`,
+Why it matters: saturation often plateaus utilization at 100% but the queue keeps growing. By the time utilization "looks bad," the queue is already so deep that latency has been awful for minutes. Saturation gives you 5-30 minutes of warning that utilization doesn\'t.`,
       },
       {
         question: 'Why must success and error latency be tracked separately?',
@@ -1851,13 +1851,13 @@ But the user-experience reality:
 
 Now imagine the failure mode flips: errors start taking 30 seconds (timeout). Same 5% fail. Average becomes \`(0.95 × 200ms) + (0.05 × 30000ms) = 1690ms\`. Looks terrible, fires alerts.
 
-But the user reality is mostly unchanged — successful users still see 200ms. The 5% that fail now wait 30s to fail, which is bad, but the *successful* user experience didn\'t degrade.
+But the user reality is mostly unchanged — successful users still see 200ms. The 5% that fail now wait 30s to fail, which is bad, but the successful user experience didn\'t degrade.
 
 If you alert on "p99 latency exceeded 500ms," you alert in the second case but not the first — even though the percentage of failures is the same.
 
 The fix: emit two histograms. \`http_request_duration_seconds{status="success"}\` and \`{status="error"}\`. Alert on each separately. SLOs are usually success-only ("99.9% of successful requests under 500ms"); errors get their own SLO ("error rate under 0.1%").
 
-Google SRE Book Ch 6 quote: *"It\'s important to distinguish between the latency of successful requests and the latency of failed requests."*`,
+Google SRE Book Ch 6 quote: "It\'s important to distinguish between the latency of successful requests and the latency of failed requests."`,
       },
     ],
     references: [
@@ -1878,10 +1878,10 @@ Google SRE Book Ch 6 quote: *"It\'s important to distinguish between the latency
 
 The SRE Workbook (Ch 2) names six SLI types, each appropriate for a different kind of work:
 
-1. Availability — *"% of valid requests served successfully."*
+1. Availability — "% of valid requests served successfully."
 For request/response services. \`good = HTTP 2xx (or 5xx attributable to client). bad = HTTP 5xx.\` Computed as \`good_events / valid_events\`. Example: 99.9% of HTTP requests return success.
 
-2. Latency — *"% of valid requests served faster than threshold."*
+2. Latency — "% of valid requests served faster than threshold."
 For request/response services where speed matters. \`good = duration < 500ms.\` Critical: pick the threshold from user expectations, not engineering convenience. Often two SLIs: 90% under 100ms (typical) and 99% under 1s (acceptable).
 
 3. Quality — for graceful degradation.
@@ -2093,13 +2093,13 @@ Common pattern at mid-to-large companies: Honeycomb for traces and request-level
 What this unlocks:
 - Continuous profiling without overhead — Parca and Pyroscope use eBPF to sample stack traces of every running process, building a rolling CPU profile of production. Find which function is consuming CPU without re-deploying.
 - Network observability without service mesh — Cilium Hubble watches every packet at the kernel level. See which services talk to which, with latencies and error counts, without adding sidecars.
-- Auto-instrumentation without SDK — Pixie and similar tools instrument HTTP, gRPC, MySQL, Postgres, Redis, Kafka calls *automatically* by intercepting at the kernel. Zero code change to get golden-signals on any service running on the host.
+- Auto-instrumentation without SDK — Pixie and similar tools instrument HTTP, gRPC, MySQL, Postgres, Redis, Kafka calls automatically by intercepting at the kernel. Zero code change to get golden-signals on any service running on the host.
 - Security observability — Falco, Tetragon use eBPF to monitor syscalls for security policy violations (e.g., a process executing /bin/sh is suspicious in production).
 
 Why it\'s shifting the landscape:
 - No-instrumentation observability for legacy / third-party code where you can\'t add OTel SDK.
 - Lower overhead than userspace agents — eBPF programs run inside the kernel\'s sandbox.
-- Kernel-level visibility — see what *actually* happens (syscalls, packets), not just what the application reports.
+- Kernel-level visibility — see what actually happens (syscalls, packets), not just what the application reports.
 
 State in 2026:
 - Pyroscope (continuous profiling) is mainstream — Grafana acquired it; many teams run it as default.
@@ -2266,7 +2266,7 @@ Final guardrail: budget alerts per service. If service X\'s logs spike 2× overn
         image: '/diagrams/sre/c6-trace.png',
       },
     ],
-    introduction: `Distributed tracing answers a question metrics and logs can\'t: *"this user request took 5 seconds — where did the time go across our 12 services?"*
+    introduction: `Distributed tracing answers a question metrics and logs can\'t: "this user request took 5 seconds — where did the time go across our 12 services?"
 
 The mechanics:
 - A trace represents one user request crossing service boundaries.
@@ -2348,7 +2348,7 @@ The biggest mistake is naive 1-10% head sample at high traffic — you\'ll consi
         question: 'What\'s the difference between a span attribute and a baggage item?',
         answer: `Span attribute: key-value attached to a single span. Lives in that span only. Available when querying the trace store. Example: \`http.method=GET, http.status_code=500, db.statement="SELECT * FROM users WHERE id=?"\`.
 
-Baggage: key-value attached to the *trace context* and propagated automatically across service boundaries. Every service downstream sees the same baggage. Example: \`user.id=12345\`, \`tenant.id=acme\`, \`feature_flag.experiment_a=on\`.
+Baggage: key-value attached to the trace context and propagated automatically across service boundaries. Every service downstream sees the same baggage. Example: \`user.id=12345\`, \`tenant.id=acme\`, \`feature_flag.experiment_a=on\`.
 
 Why both:
 - Attributes describe what THIS span did. Specific to one service\'s work.
@@ -2399,7 +2399,7 @@ What I\'d tell a team setting up tracing: aim for <5% CPU overhead, <2% addition
     description: 'The SRE Book\'s alerting principles, multi-window multi-burn-rate, and avoiding alert fatigue.',
     introduction: `Alerting is where observability meets human attention. Bad alerting is the leading cause of SRE burnout. Good alerting is rare and load-bearing.
 
-The SRE Book\'s core principle (Ch 6, paraphrased): alert on symptoms, not on causes. *"Did something break?" is a better question than "Is the database CPU above 90%?"*
+The SRE Book\'s core principle (Ch 6, paraphrased): alert on symptoms, not on causes. "Did something break?" is a better question than "Is the database CPU above 90%?"
 
 Why: most causes don\'t matter. The DB at 90% CPU might be perfectly serving traffic. Pager you for a cause-based threshold and you wake up an SRE for nothing. Pager you only when users are actually affected (latency spike, error rate spike) and the page reflects a real problem.
 
@@ -2483,11 +2483,11 @@ Concrete failure modes:
 - DB at 90% CPU + user latency = fine: query optimizer is well-tuned, server has spare resources, p99 latency is unchanged. Pager fires; SRE looks at dashboards; nothing wrong; SRE goes back to bed. Noise.
 - DB at 30% CPU + user latency = catastrophic: a pathological query is taking 30 seconds; only one query is running but it\'s blocking everyone. Cause-based monitor doesn\'t fire because CPU is fine. Users complain. SRE didn\'t get paged.
 
-The pattern: causes are weakly correlated with effects. A given cause might be fine (90% CPU with optimized queries) or might be catastrophic (90% CPU with lock contention saturating worker threads). Without seeing the *user effect*, the page tells you nothing actionable.
+The pattern: causes are weakly correlated with effects. A given cause might be fine (90% CPU with optimized queries) or might be catastrophic (90% CPU with lock contention saturating worker threads). Without seeing the user effect, the page tells you nothing actionable.
 
 The fix: alert on the symptom ("p99 latency on the database > 500ms") which captures the user effect regardless of root cause. Then, as a debugging aid, dashboards show the causes — when a symptom alert fires, the SRE looks at CPU, memory, lock waits, query plans, etc. to figure out the cause.
 
-Cause-based alerts have *one valid use*: predictive paging on leading indicators that cannot be detected via symptoms. Disk-full at 95% is a cause but you want to page before disk-full at 100% causes write failures (the symptom). For these, cause-based alerts are right.
+Cause-based alerts have one valid use: predictive paging on leading indicators that cannot be detected via symptoms. Disk-full at 95% is a cause but you want to page before disk-full at 100% causes write failures (the symptom). For these, cause-based alerts are right.
 
 The rule of thumb: only page on a cause if the symptom hasn\'t shown up yet but is imminent. Otherwise: page on the symptom; debug the cause.`,
       },
@@ -2867,7 +2867,7 @@ Three roles, always:
 
 1. Incident Commander (IC) — coordinates the response.
 - Decides priorities ("we mitigate first, investigate later").
-- Delegates work; *does not type commands themselves.*
+- Delegates work; does not type commands themselves.
 - Runs the bridge / call.
 - Decides escalation.
 - Ends the incident when it's mitigated.
@@ -3014,7 +3014,7 @@ What does NOT happen:
 
 The cultural risk: declaring resolved too early. The symptom blip back, customers complain, and now we're re-fired with an embarrassed team. The fix is to wait long enough to be confident. After mitigation, watch the relevant dashboard for ~15 minutes. If the metric is stable, declare resolved. If it twitches, keep the incident open.
 
-Quote from SRE Book Ch 14: *"The first priority is incident resolution... root-cause analysis should not block incident resolution."* Mitigate first, understand later.`,
+Quote from SRE Book Ch 14: "The first priority is incident resolution... root-cause analysis should not block incident resolution." Mitigate first, understand later.`,
       },
     ],
     references: [
@@ -3043,10 +3043,10 @@ From "the issue starts" (or "is detected" — definitions vary) to "the issue is
 Be explicit about which you mean.
 
 MTBF — Mean Time Between Failures.
-Average time between consecutive failures of a *repairable* system. \`uptime + downtime / number_of_failures\`. Useful for planning maintenance windows and reliability budgets. Not actionable on a per-service basis.
+Average time between consecutive failures of a repairable system. \`uptime + downtime / number_of_failures\`. Useful for planning maintenance windows and reliability budgets. Not actionable on a per-service basis.
 
 MTTF — Mean Time To Failure.
-Average time to failure for a *non-repairable* component (e.g., disk drives). Used for hardware reliability calculations. Less common in software contexts.
+Average time to failure for a non-repairable component (e.g., disk drives). Used for hardware reliability calculations. Less common in software contexts.
 
 Reliability formula:
 \`Availability = MTTF / (MTTF + MTTR)\` — for non-repairable.
@@ -3269,7 +3269,7 @@ The discipline is in demoting. Many incidents start as SEV-1 because we don\'t k
 - SEV-1: most or all users affected.
 - SEV-2: many users affected, but a substantial fraction unaffected.
 
-If 100% of users see errors, it's SEV-1. If 30% see errors and 70% are fine, it's SEV-2. The dividing line varies by service; rule of thumb: if the *majority* of users are blocked, SEV-1.
+If 100% of users see errors, it's SEV-1. If 30% see errors and 70% are fine, it's SEV-2. The dividing line varies by service; rule of thumb: if the majority of users are blocked, SEV-1.
 
 2. Severity of user impact.
 - SEV-1: blocked or experiencing data loss / corruption / billing errors.
@@ -3344,11 +3344,11 @@ The cultural fix that works: leadership publicly demotes incidents that were ove
     ],
     introduction: `Blameless postmortems are the SRE Book's most-quoted contribution to industry practice. The thesis: if humans fear blame, they\'ll hide failures, mitigate without disclosure, and the organization can\'t learn. Blameless culture is a prerequisite for honest incident analysis.
 
-"Blameless" doesn\'t mean "no consequences." It means: focus on *systems*, not *individuals*. The framing: *"how did our system, our processes, and our tools make this failure possible?"* — not *"who pushed the bad code?"*. The action items are systemic fixes (better testing, better monitoring, better deploy gates), not "Bob will be more careful."
+"Blameless" doesn\'t mean "no consequences." It means: focus on systems, not individuals. The framing: "how did our system, our processes, and our tools make this failure possible?" — not "who pushed the bad code?". The action items are systemic fixes (better testing, better monitoring, better deploy gates), not "Bob will be more careful."
 
 The Google SRE Book postmortem template (Ch 15) has stable structure:
 
-1. Title — concise, descriptive. *"Checkout 50% error rate for 23 minutes due to deploy v3.2.1"*. Searchable.
+1. Title — concise, descriptive. "Checkout 50% error rate for 23 minutes due to deploy v3.2.1". Searchable.
 
 2. Authors — typically the IC + Ops Lead.
 
@@ -3360,7 +3360,7 @@ The Google SRE Book postmortem template (Ch 15) has stable structure:
 
 6. Detection — how the incident was detected. Who noticed first (monitoring? customer report? engineer?). Time gap between issue start and detection.
 
-7. Root Causes — *what specifically caused the failure*. Often multiple contributing factors. Use Five Whys (next topic). Avoid "user error" as a root cause; ask why the system permitted the user error.
+7. Root Causes — what specifically caused the failure. Often multiple contributing factors. Use Five Whys (next topic). Avoid "user error" as a root cause; ask why the system permitted the user error.
 
 8. Resolution — what stopped the bleeding. The mitigation step.
 
@@ -3413,7 +3413,7 @@ The SRE Book\'s postmortem inflation point: Google publishes postmortems interna
     keyQuestions: [
       {
         question: 'What does "blameless" really mean in a postmortem?',
-        answer: `Focus on systems, not individuals. The framing shift: from *"who pushed the bad code?"* to *"how did our processes allow a bad change to reach production?"*
+        answer: `Focus on systems, not individuals. The framing shift: from "who pushed the bad code?" to "how did our processes allow a bad change to reach production?"
 
 What blameless does NOT mean:
 - No accountability — there\'s still ownership. Action items have owners.
@@ -3426,7 +3426,7 @@ What blameless DOES mean:
 - Multiple contributing factors are acknowledged. Almost no incident has a single cause. "Bob pushed bad code" is one factor; the missing CI check, the lack of canary, the alerting gap are others.
 - Hindsight bias is called out. The reviewer asks: "given what Bob knew at the time, was the action reasonable?" Often yes. The system failure is what we fix.
 
-The SRE Book quote: *"Postmortems with finger-pointing and reproachful tone... drive the engineers involved to obscure their actions."* If engineers fear postmortems, they\'ll hide failures, mitigate quietly, and the organization can\'t learn.
+The SRE Book quote: "Postmortems with finger-pointing and reproachful tone... drive the engineers involved to obscure their actions." If engineers fear postmortems, they\'ll hide failures, mitigate quietly, and the organization can\'t learn.
 
 Cultural enforcement: senior engineers and leaders model the behavior. When the writeup names them in a failure, they accept it without defensiveness. When juniors reach for blameful language, they correct gently.`,
       },
@@ -3442,7 +3442,7 @@ Cultural enforcement: senior engineers and leaders model the behavior. When the 
 
 4. Detection — how was the incident detected? Time from issue-start to detection. Alert that fired; who got paged.
 
-5. Root Causes — what *specifically* caused the failure. Often multiple. Use Five Whys to peel back layers. Avoid "user error."
+5. Root Causes — what specifically caused the failure. Often multiple. Use Five Whys to peel back layers. Avoid "user error."
 
 6. Resolution — what stopped the bleeding. Specific mitigation step (rollback, traffic shift, capacity scale-up).
 
@@ -3575,12 +3575,12 @@ Instead of one root-cause chain, list all the factors that needed to be true for
 
 Each factor is independently fixable. Cause is plural; the postmortem reflects that.
 
-The Sidney Dekker school (human factors): every incident has *multiple* contributing factors that aligned. Pulling on the one labeled "root cause" misses the systemic vulnerability that allowed many factors to align simultaneously.
+The Sidney Dekker school (human factors): every incident has multiple contributing factors that aligned. Pulling on the one labeled "root cause" misses the systemic vulnerability that allowed many factors to align simultaneously.
 
 Pragmatic guidance:
-- Use Five Whys as a *brainstorming technique* during the postmortem. It\'s good for surfacing layers.
+- Use Five Whys as a brainstorming technique during the postmortem. It\'s good for surfacing layers.
 - Document the result as multiple contributing factors, not as "the root cause." This more honest framing prevents narrow fixes.
-- Action items target *several* factors, not just the deepest one. The library bug needs fixing AND the missing CI check AND the runbook gap.
+- Action items target several factors, not just the deepest one. The library bug needs fixing AND the missing CI check AND the runbook gap.
 
 Honest postmortems use both:
 - Five Whys for exploration: "let's keep asking why until we run out."
@@ -3637,7 +3637,7 @@ Five Whys gave us one chain; the real picture has 5-7 chains.`,
 
 2. False precision. "5" is a convention from manufacturing, not a scientific stopping point. Sometimes the right answer is at Why 2; sometimes at Why 10.
 
-3. Linear-causation assumption. Most incidents are *networks* of causes, not chains. Five Whys forces the network into one chain, picking arbitrarily which thread to follow.
+3. Linear-causation assumption. Most incidents are networks of causes, not chains. Five Whys forces the network into one chain, picking arbitrarily which thread to follow.
 
 The modern alternative: contributing factors. List ALL the conditions that had to be true for the incident to happen.
 
@@ -3684,11 +3684,11 @@ Each factor is a system or process gap. Each has a fix:
 6. Color-code terminals by environment (prod = red).
 7. Update runbook.
 
-The user "error" was a single act; the system\'s vulnerability was 7 different things. Fixing them lowers the probability of *any* future user from making this kind of mistake.
+The user "error" was a single act; the system\'s vulnerability was 7 different things. Fixing them lowers the probability of any future user from making this kind of mistake.
 
 The framing principle: humans will make errors; systems are designed to absorb them. Aviation, medicine, and nuclear power figured this out decades ago. Software is catching up. The postmortem question is: "how did our system not absorb this human error?"
 
-Quote from the SRE Book Ch 15: *"User error" is too convenient an explanation. It\'s a symptom of insufficient analysis.*`,
+Quote from the SRE Book Ch 15: "User error" is too convenient an explanation. It\'s a symptom of insufficient analysis.`,
       },
     ],
     references: [
@@ -3732,7 +3732,7 @@ Executives — want to know:
 4. When will it be over?
 
 Format: tight, factual, 5-10 lines. Updated every 15-30 minutes during a SEV-1.
-> *Update 14:30 UTC: Checkout outage now at 23 min. Estimated 15K affected users. Mitigation in progress (rollback v3.2.1). ETA resolution: 14:45. No known customer-data impact. IC: Alice. Comms: Bob.*
+> Update 14:30 UTC: Checkout outage now at 23 min. Estimated 15K affected users. Mitigation in progress (rollback v3.2.1). ETA resolution: 14:45. No known customer-data impact. IC: Alice. Comms: Bob.
 
 Internal teams — want to know:
 1. Should I drop what I\'m doing?
@@ -3750,7 +3750,7 @@ Status page best practices:
 
 Status page providers: Statuspage (Atlassian), Statusgator, Instatus, BetterStack. Most offer multi-channel notifications (email, SMS, RSS, webhook). A self-hosted page in your prod region is dangerous — if your prod is down, your status page is down too. Status page MUST be hosted independently from the systems it\'s reporting on.
 
-The 15-minute rule. Even if there\'s no progress, post an update every 15 minutes during a SEV-1. *"No new information; investigation continues; next update at HH:MM."* Silence breeds anxiety; updates de-escalate.
+The 15-minute rule. Even if there\'s no progress, post an update every 15 minutes during a SEV-1. "No new information; investigation continues; next update at HH:MM." Silence breeds anxiety; updates de-escalate.
 
 Comms Lead is full-time. During a SEV-1, the Comms Lead doesn\'t debug; they communicate. Engineers asking the IC "what should I tell the customer" is a smell — that\'s the Comms Lead\'s job.`,
     whenToUse: [
@@ -3872,7 +3872,7 @@ Self-hosted is acceptable IF:
 
 Most teams aren\'t set up for this; that\'s why third-party status page providers dominate. The $50-$500/month cost is trivial vs the cost of customers seeing "this site is unreachable" during your outage.
 
-The bonus: a third-party status page also lets you communicate during incidents that affect *your* infrastructure but not the third-party (e.g., if your auth provider is down, your engineers can still update the status page).`,
+The bonus: a third-party status page also lets you communicate during incidents that affect your infrastructure but not the third-party (e.g., if your auth provider is down, your engineers can still update the status page).`,
       },
     ],
     references: [
@@ -4034,8 +4034,8 @@ Chaos Engineering:
 - Bug-finding output: when chaos finds a real bug, fix it.
 
 The complementary use:
-- Game days find the *people-and-process* gaps: missing runbooks, unclear roles, slow comms, untested escalations.
-- Chaos engineering finds the *technical* gaps: services that don\'t handle their own dependency failures, single-points-of-failure, missing retries, broken auto-scaling.
+- Game days find the people-and-process gaps: missing runbooks, unclear roles, slow comms, untested escalations.
+- Chaos engineering finds the technical gaps: services that don\'t handle their own dependency failures, single-points-of-failure, missing retries, broken auto-scaling.
 
 A mature SRE program runs both:
 - Chaos Monkey-style continuous experiments — verifies basic resilience.
@@ -4067,7 +4067,7 @@ Practical staging: most companies start with chaos engineering (technical, autom
     description: 'The SRE Book\'s definition of toil, why measuring it is hard, and how the 50% cap actually works.',
     introduction: `Toil is one of the SRE Book\'s most precise terms. Verbatim definition (Ch 5):
 
-*"Toil is the kind of work tied to running a production service that tends to be manual, repetitive, automatable, tactical, devoid of enduring value, and that scales linearly as a service grows."*
+"Toil is the kind of work tied to running a production service that tends to be manual, repetitive, automatable, tactical, devoid of enduring value, and that scales linearly as a service grows."
 
 Each adjective matters; mis-applying any of them includes work that isn\'t toil:
 
@@ -4103,7 +4103,7 @@ Measuring toil:
 - Ticket-based: every interrupt-driven request is a ticket; count tickets and average resolution time. Misses untracked work.
 - Surveys: quarterly survey asking "what % of last week was toil?" Directional.
 
-The 50% cap is a *team-wide rolling average*, not a per-person, per-week target. Some weeks are heavy on toil (incidents); others are heavy on projects. The trend over a quarter is what matters.
+The 50% cap is a team-wide rolling average, not a per-person, per-week target. Some weeks are heavy on toil (incidents); others are heavy on projects. The trend over a quarter is what matters.
 
 When the cap is exceeded:
 - Reduce toil: identify the largest sources, automate them.
@@ -4127,7 +4127,7 @@ The 2026 evolution. Original SRE Book had toil as a manual measurement. Modern t
     keyQuestions: [
       {
         question: 'Define toil and walk me through the six properties.',
-        answer: `From SRE Book Ch 5 verbatim: *"Toil is the kind of work tied to running a production service that tends to be manual, repetitive, automatable, tactical, devoid of enduring value, and that scales linearly as a service grows."*
+        answer: `From SRE Book Ch 5 verbatim: "Toil is the kind of work tied to running a production service that tends to be manual, repetitive, automatable, tactical, devoid of enduring value, and that scales linearly as a service grows."
 
 The six properties:
 
@@ -4353,7 +4353,7 @@ Most large companies end up with Terraform for the foundation + Crossplane for K
         question: 'Why is state management the hardest IaC problem?',
         answer: `Because state is the truth, and the truth drifts.
 
-The state file tracks what the IaC tool *thinks* is deployed. Every \`plan\` and \`apply\` reads the state, compares it to your code, and computes the diff. When state and reality disagree, the diff is wrong → applies do unexpected things.
+The state file tracks what the IaC tool thinks is deployed. Every \`plan\` and \`apply\` reads the state, compares it to your code, and computes the diff. When state and reality disagree, the diff is wrong → applies do unexpected things.
 
 Common drift sources:
 - Click-ops: someone modifies a resource in the AWS console. State unchanged. Next plan thinks the resource is still as-coded; doesn\'t see the manual change.
@@ -4445,7 +4445,7 @@ The discipline: "everything via code review, modules versioned, state isolated b
         image: '/diagrams/sre/e3-cicd.png',
       },
     ],
-    introduction: `Deployment is where most production incidents are born. ~60-80% of incidents trace to recent deploys (across multiple industry surveys). The discipline of *how* you deploy is more impactful than what code you ship.
+    introduction: `Deployment is where most production incidents are born. ~60-80% of incidents trace to recent deploys (across multiple industry surveys). The discipline of how you deploy is more impactful than what code you ship.
 
 The deployment-strategy spectrum (lowest risk to highest):
 
@@ -4630,7 +4630,7 @@ Why frequent small deploys are MORE reliable:
 4. Practiced muscle memory. Teams that deploy daily have battle-tested pipelines; teams that deploy monthly have unrehearsed pipelines that break unexpectedly.
 5. Smaller blast radius. Smaller changes typically have smaller user impact even when they fail.
 
-The implication for SRE: invest in pipeline reliability (canary, SLO-gated rollback, fast CI) to *enable* high deploy frequency. Don\'t suppress deploy frequency to "manage risk."
+The implication for SRE: invest in pipeline reliability (canary, SLO-gated rollback, fast CI) to enable high deploy frequency. Don\'t suppress deploy frequency to "manage risk."
 
 The mistake low-performing teams make: "we\'ll deploy carefully, once a month, with extensive testing." This produces the opposite of what they want — large-batch high-risk deploys with rusty pipelines. Industry data is unambiguous on this.`,
       },
@@ -6302,7 +6302,7 @@ The discipline: failover should be a practiced, automated, tested procedure, not
         image: '/diagrams/sre/g1-circuit-breaker.png',
       },
     ],
-    introduction: `Circuit breaker is a software pattern from Michael Nygard\'s *Release It!* (2007) that became canonical via Netflix Hystrix and now ships in service meshes (Istio, Linkerd) by default.
+    introduction: `Circuit breaker is a software pattern from Michael Nygard\'s Release It! (2007) that became canonical via Netflix Hystrix and now ships in service meshes (Istio, Linkerd) by default.
 
 The principle: when a downstream dependency is failing, stop calling it for a while. Counterintuitive but powerful — the failing dependency gets a chance to recover, and your service stops wasting threads/CPU on doomed calls.
 
@@ -6593,7 +6593,7 @@ Recovery: usually requires a restart (the GC spiral is too far in to recover fro
 
 The retry storm (verbatim from SRE Book Ch 22):
 
-Quote: *"Retries can amplify load, particularly during cascading failures."* When a service is degraded, automatic retries from clients double or triple the load — exactly when the service can least handle it.
+Quote: "Retries can amplify load, particularly during cascading failures." When a service is degraded, automatic retries from clients double or triple the load — exactly when the service can least handle it.
 
 The fix:
 - Bounded retries (max 2-3 attempts).
@@ -6709,7 +6709,7 @@ The recovery template: load shed → trip breakers → restart cascaded services
       },
       {
         question: 'What\'s the GC death spiral and how do you prevent it?',
-        answer: `Quote from SRE Book Ch 22: *"Insufficient CPU triggers more GC, which uses more CPU, which leaves less for actual work."*
+        answer: `Quote from SRE Book Ch 22: "Insufficient CPU triggers more GC, which uses more CPU, which leaves less for actual work."
 
 The spiral mechanics (Java specifically, also applies to other GC\'d languages):
 
@@ -7245,7 +7245,7 @@ The cultural framing: retries help individual requests; retry budget protects th
     description: 'How and when to deliberately reject requests so the rest succeed. Priority-based shedding, queue management, the AWS framing.',
     introduction: `Load shedding is the discipline of rejecting some requests so that others succeed. Counterintuitive — engineers want to serve every request. The right reframe: serving 70% of requests successfully is much better than failing 100% of requests because the system collapsed.
 
-The SRE Book Ch 21 (Handling Overload) is the canonical treatment. Quote: *"Avoid serving requests that you can\'t serve gracefully. The point of load shedding is to reduce the load on the server such that it can return to a healthy state and serve the rest of its load."*
+The SRE Book Ch 21 (Handling Overload) is the canonical treatment. Quote: "Avoid serving requests that you can\'t serve gracefully. The point of load shedding is to reduce the load on the server such that it can return to a healthy state and serve the rest of its load."
 
 The three load-shedding patterns:
 
@@ -7357,7 +7357,7 @@ vs:
 
 The math: serving 80% of requests successfully gives 80% successful UX. Trying to serve 100% and degrading gives 0% successful UX (everyone times out).
 
-SRE Book Ch 21 quote: *"It is better to provide a degraded experience to a fraction of users than to deliver a poor experience to all users."*
+SRE Book Ch 21 quote: "It is better to provide a degraded experience to a fraction of users than to deliver a poor experience to all users."
 
 The "rejected 503" is fast; the user can retry. With idempotency keys, the retry succeeds. Some users see brief errors; the alternative is everyone seeing extended outages.
 
@@ -7562,7 +7562,7 @@ Payment processing requires strict idempotency. The pattern:
 3. Processor stores ID + result; retries return same result.
 4. Client confirms: "did the transaction succeed?" by looking up the ID.
 
-Stripe\'s docs: *"Stripe\'s API has built-in support for idempotency for safely retrying API requests without accidentally performing the same operation twice."*
+Stripe\'s docs: "Stripe\'s API has built-in support for idempotency for safely retrying API requests without accidentally performing the same operation twice."
 
 The exception: distributed sagas.
 
@@ -7778,7 +7778,7 @@ Stripe\'s opinion (from their docs): "Idempotency is fundamental to building rel
     color: '#ec4899',
     questions: 3,
     description: 'Per-dependency thread pools, the ship-bulkhead analogy, and how Hystrix popularized the pattern.',
-    introduction: `Bulkheads are an isolation pattern from Michael Nygard\'s *Release It!* (2007). The analogy: ship hulls are divided into watertight compartments (bulkheads); a hole in one compartment doesn\'t flood the entire ship.
+    introduction: `Bulkheads are an isolation pattern from Michael Nygard\'s Release It! (2007). The analogy: ship hulls are divided into watertight compartments (bulkheads); a hole in one compartment doesn\'t flood the entire ship.
 
 In software: isolate resource pools so a failure in one can\'t exhaust the whole service\'s capacity.
 
@@ -8051,7 +8051,7 @@ In 2026 with Java 21 virtual threads being mainstream, the bulkhead pattern is s
     description: 'Why every external call needs a timeout, deadline propagation across services, and choosing the right values.',
     introduction: `Every external call must have a timeout. This is non-negotiable. A call without a timeout is a call that can hang forever; under load, hung calls are how services collapse.
 
-The SRE Book Ch 22 quote: *"RPCs inherit and decrease deadlines as they descend the stack so a server doesn\'t waste cycles on a request whose caller already gave up."*
+The SRE Book Ch 22 quote: "RPCs inherit and decrease deadlines as they descend the stack so a server doesn\'t waste cycles on a request whose caller already gave up."
 
 The default-no-timeout problem:
 
@@ -8600,7 +8600,7 @@ The data: the cost of replacing a senior SRE is 6-12 months of lost productivity
 
 The SRE Workbook Ch 11 sustainable-on-call framework:
 
-The Workbook quote: *"The on-call rotation should be sustainable, allowing for time outside of work to recover and recharge."*
+The Workbook quote: "The on-call rotation should be sustainable, allowing for time outside of work to recover and recharge."
 
 Concrete targets:
 - < 25% of work time on incident response (rough Google guideline).
@@ -9833,7 +9833,7 @@ The CIA triad: Confidentiality, Integrity, Availability. The "A" is exactly SRE\
 - DDoS: security attack + capacity / reliability problem.
 - Bug exploitable for DoS: both.
 
-The BSRS book quote (from Ch 1): *"In the past, building reliable and secure systems were considered separate problems. They aren\'t. The two domains are deeply intertwined."*
+The BSRS book quote (from Ch 1): "In the past, building reliable and secure systems were considered separate problems. They aren\'t. The two domains are deeply intertwined."
 
 The org implication:
 - Smaller orgs: security and SRE are separate small teams that collaborate.

@@ -2680,8 +2680,178 @@ export default function TopicDetail({
         </div>
       )}
 
-      {/* Behavioral / SRE Topic Detail (shared schema: introduction + keyConcepts + keyQuestions) */}
-      {!isLocked && (activePage === 'behavioral' || activePage === 'sre' || (activePage === 'low-level' && !topicDetails.coreEntities && !topicDetails.implementation && !topicDetails.functionalRequirements)) && (topicDetails.sampleQuestions || topicDetails.starExample || topicDetails.introduction || topicDetails.keyQuestions) && (
+      {/* ──────────────────────────────────────────────────────────────────
+          SRE Topic Detail
+          Schema: introduction + whenToUse + keyConcepts + approach +
+          pitfalls + keyQuestions + references + visualizations.
+          Uses FormattedContent for rich prose (handles ``` code blocks,
+          bullet lists, headings, callouts) — the behavioral block's
+          custom STAR parser leaks raw markdown through.
+          ────────────────────────────────────────────────────────────── */}
+      {!isLocked && activePage === 'sre' && (topicDetails.introduction || topicDetails.keyQuestions) && (
+        <div className="space-y-3">
+
+          {/* 1. Overview */}
+          {topicDetails.introduction && (
+            <section id="overview" className="scroll-mt-24 mt-14 first:mt-0">
+              <ContentHeading title="Overview" />
+              <div className="pt-2">
+                <FormattedContent content={topicDetails.introduction} color="blue" />
+              </div>
+            </section>
+          )}
+
+          {/* 2. Visual Explanation — diagrams (PNG) */}
+          {topicDetails.visualizations && topicDetails.visualizations.length > 0 && (
+            <section id="visual" className="scroll-mt-24 mt-14 first:mt-0">
+              <ContentHeading title="Visual Explanation" actions={<GlassPill>{topicDetails.visualizations.length} diagram{topicDetails.visualizations.length > 1 ? 's' : ''}</GlassPill>} />
+              <div className={`p-4 grid gap-4 ${topicDetails.visualizations.length > 1 ? 'md:grid-cols-2' : ''}`}>
+                {topicDetails.visualizations.map((viz, vi) => (
+                  <div key={vi} className="rounded border border-[var(--border)] overflow-hidden">
+                    <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)]/50">
+                      <h4 className="text-xs font-semibold text-[var(--text-secondary)] landing-display">{viz.title}</h4>
+                      {viz.description && <p className="text-[11px] text-[var(--text-muted)] mt-0.5 landing-body">{viz.description}</p>}
+                    </div>
+                    <div className="p-3 flex justify-center items-center bg-[var(--bg-surface)]">
+                      <img src={viz.image} alt={viz.title} className="max-w-full h-auto rounded" loading="lazy" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 3. When to Use */}
+          {topicDetails.whenToUse && topicDetails.whenToUse.length > 0 && (
+            <section id="when-to-use" className="scroll-mt-24 mt-14 first:mt-0">
+              <ContentHeading title="When to Use" actions={<GlassPill>{topicDetails.whenToUse.length}</GlassPill>} />
+              <div className="p-3 grid grid-cols-1 gap-1.5">
+                {topicDetails.whenToUse.map((item, i) => (
+                  <div key={i} className="flex items-start gap-2.5 p-2.5 rounded hover:bg-[var(--bg-elevated)] transition-colors landing-body">
+                    <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Icon name="check" size={10} className="text-[var(--accent)]" />
+                    </span>
+                    <span className="text-sm text-[var(--text-secondary)] leading-relaxed">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 4. Key Concepts (term + definition) */}
+          {topicDetails.keyConcepts && topicDetails.keyConcepts.length > 0 && (
+            <section id="key-concepts" className="scroll-mt-24 mt-14 first:mt-0">
+              <ContentHeading title="Key Concepts" actions={<GlassPill>{topicDetails.keyConcepts.length}</GlassPill>} />
+              <div className="space-y-2 pt-2">
+                {topicDetails.keyConcepts.map((kc, i) => (
+                  <div key={i} className="rounded border border-[var(--border)] overflow-hidden">
+                    <div className="px-3 py-2 bg-[var(--bg-elevated)]/50 border-b border-[var(--border)]">
+                      <span className="text-sm font-semibold text-[var(--text-primary)] landing-display">{kc.term}</span>
+                    </div>
+                    <div className="px-3 py-2.5 text-sm text-[var(--text-secondary)] leading-relaxed landing-body">
+                      {kc.definition}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 5. Step-by-Step Approach */}
+          {topicDetails.approach && topicDetails.approach.length > 0 && (
+            <section id="approach" className="scroll-mt-24 mt-14 first:mt-0">
+              <ContentHeading title="Step-by-Step Approach" actions={<GlassPill>{topicDetails.approach.length}</GlassPill>} />
+              <div className="pt-2 relative">
+                {topicDetails.approach.map((step, i) => (
+                  <div key={i} className="flex items-start gap-3 relative">
+                    {i < topicDetails.approach.length - 1 && (
+                      <div className="absolute left-[11px] top-6 w-0.5 bg-[var(--accent)]/30" style={{ height: 'calc(100% - 4px)' }} />
+                    )}
+                    <div className="w-6 h-6 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-[11px] font-bold flex-shrink-0 z-10 landing-mono">{i + 1}</div>
+                    <div className="text-sm text-[var(--text-secondary)] leading-relaxed pb-4 landing-body">{step}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 6. Common Pitfalls */}
+          {topicDetails.pitfalls && topicDetails.pitfalls.length > 0 && (
+            <section id="pitfalls" className="scroll-mt-24 mt-14 first:mt-0">
+              <ContentHeading title="Common Pitfalls" actions={<GlassPill>{topicDetails.pitfalls.length}</GlassPill>} />
+              <div className="p-3 grid grid-cols-1 gap-1.5">
+                {topicDetails.pitfalls.map((item, i) => (
+                  <div key={i} className="flex items-start gap-2.5 p-2.5 rounded landing-body" style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.15)' }}>
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(239, 68, 68, 0.15)' }}>
+                      <Icon name="alertTriangle" size={10} style={{ color: '#ef4444' }} />
+                    </span>
+                    <span className="text-sm text-[var(--text-secondary)] leading-relaxed">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 7. Key Questions & Answers — FormattedContent for proper rendering */}
+          {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
+            <section id="key-questions" className="scroll-mt-24 mt-14 first:mt-0">
+              <ContentHeading title="Questions & Answers" actions={<GlassPill>{topicDetails.keyQuestions.length} questions</GlassPill>} />
+              <div className="p-2.5 space-y-2">
+                {topicDetails.keyQuestions.map((item, index) => {
+                  const questionKey = `sre-${index}`;
+                  const isExpanded = expandedTheoryQuestions[questionKey] === undefined ? index < 2 : expandedTheoryQuestions[questionKey];
+                  return (
+                    <div key={index} className="rounded border border-[var(--border)] overflow-hidden">
+                      <button
+                        onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !isExpanded }))}
+                        className="w-full px-3 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] transition-colors text-left"
+                      >
+                        <NumberChip n={index + 1} />
+                        <h4 className="text-[var(--text-primary)] font-semibold text-sm leading-snug landing-display flex-1">{item.question}</h4>
+                        <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {isExpanded && (
+                        <div className="px-4 py-4 border-t border-[var(--border)]">
+                          <FormattedContent content={item.answer} color="blue" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* 8. References — primary sources */}
+          {topicDetails.references && topicDetails.references.length > 0 && (
+            <section id="references" className="scroll-mt-24 mt-14 first:mt-0">
+              <ContentHeading title="References" actions={<GlassPill>{topicDetails.references.length}</GlassPill>} />
+              <div className="p-3 grid grid-cols-1 gap-1.5">
+                {topicDetails.references.map((url, i) => (
+                  <a
+                    key={i}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-2.5 p-2.5 rounded hover:bg-[var(--bg-elevated)] transition-colors landing-body group"
+                  >
+                    <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Icon name="externalLink" size={10} className="text-[var(--accent)]" />
+                    </span>
+                    <span className="text-sm text-[var(--accent)] group-hover:underline break-all">{url}</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+
+        </div>
+      )}
+
+      {/* Behavioral Topic Detail */}
+      {!isLocked && (activePage === 'behavioral' || (activePage === 'low-level' && !topicDetails.coreEntities && !topicDetails.implementation && !topicDetails.functionalRequirements)) && (topicDetails.sampleQuestions || topicDetails.starExample || topicDetails.introduction || topicDetails.keyQuestions) && (
         <div className="space-y-3">
 
           {/* 1. Introduction — full width */}
