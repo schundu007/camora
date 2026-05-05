@@ -244,6 +244,27 @@ async function runMigrations() {
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )`,
+
+      // ── RAG Phase 7 (Plan D): retrieval observability ──────────────
+      // Records every retrieve() call for offline eval (recall@k, MRR)
+      // and latency dashboards. Fire-and-forget from the service layer.
+      `CREATE TABLE IF NOT EXISTS lumora_retrieval_logs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        question TEXT NOT NULL,
+        top_chunk_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+        scores JSONB NOT NULL DEFAULT '[]'::jsonb,
+        latency_ms INTEGER,
+        used_warm_kit BOOLEAN DEFAULT false,
+        used_hyde BOOLEAN DEFAULT false,
+        used_rerank BOOLEAN DEFAULT false,
+        timed_out BOOLEAN DEFAULT false,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
+      `CREATE INDEX IF NOT EXISTS lumora_retrieval_logs_created
+         ON lumora_retrieval_logs (created_at DESC)`,
+      `CREATE INDEX IF NOT EXISTS lumora_retrieval_logs_user_created
+         ON lumora_retrieval_logs (user_id, created_at DESC)`,
     ];
 
     // Postgres error codes for "already exists" — the legitimate swallow
