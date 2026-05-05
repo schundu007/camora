@@ -8652,7 +8652,7 @@ For mega-monorepos with 100k+ tests, Test Engine is often the only practical ans
   plugins:
     - aws-assume-role-with-web-identity#v1.0.0:
         role-arn: arn:aws:iam::123456789012:role/buildkite-deploy
-        session-name: buildkite-job-${BUILDKITE_BUILD_NUMBER}
+        session-name: buildkite-job-\${BUILDKITE_BUILD_NUMBER}
 \`\`\`
 
 The plugin requests an OIDC token from Buildkite and calls aws sts assume-role-with-web-identity. AWS IAM trust policy validates:
