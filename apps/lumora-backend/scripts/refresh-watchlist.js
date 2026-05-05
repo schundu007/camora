@@ -15,7 +15,7 @@
  */
 import 'dotenv/config';
 import { resolveWatchlist } from '../src/services/webWatchlist.js';
-import { indexWatchlistUrl } from '../src/services/webIndexer.js';
+import { indexWatchlistRoot } from '../src/services/webIndexer.js';
 
 function parseArgs(argv) {
   const args = { company: null, dryRun: false };
@@ -52,16 +52,27 @@ async function main() {
   let totalWritten = 0;
   const failures = [];
   for (const entry of entries) {
-    process.stdout.write(`Fetching ${entry.url} ... `);
+    process.stdout.write(`Crawling ${entry.url} ... `);
     try {
-      const r = await indexWatchlistUrl(entry);
-      if (r.skipped) {
-        console.log(`skipped (${r.error || 'no content'})`);
-        failures.push({ url: entry.url, error: r.error });
-      } else {
-        console.log(`${r.chunkCount} chunks, ${r.written || 0} written`);
-        totalChunks += r.chunkCount || 0;
-        totalWritten += r.written || 0;
+      const r = await indexWatchlistRoot({
+        rootUrl: entry.url,
+        label: entry.label,
+        source: entry.source,
+        maxArticles: 5,
+      });
+      console.log(`${r.totalChunks} chunks total, ${r.totalWritten || 0} written (${r.urlCount} URL(s))`);
+      totalChunks += r.totalChunks || 0;
+      totalWritten += r.totalWritten || 0;
+      if (r.perUrl) {
+        for (const u of r.perUrl) {
+          const status = u.skipped
+            ? `skipped (${u.error || 'no content'})`
+            : `${u.chunkCount || 0} chunks, ${u.written || 0} written`;
+          console.log(`    - ${u.url}: ${status}`);
+        }
+      }
+      for (const u of (r.perUrl || [])) {
+        if (u.skipped) failures.push({ url: u.url, error: u.error });
       }
     } catch (err) {
       console.log(`FAILED — ${err.message}`);

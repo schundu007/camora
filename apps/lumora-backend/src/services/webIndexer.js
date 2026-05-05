@@ -80,20 +80,25 @@ async function upsertChunk(c, embedding) {
   );
 }
 
+const DEFAULT_MAX_ARTICLES = 5;
+
+function normalizeUrl(u) {
+  try {
+    const parsed = new URL(u);
+    return parsed.origin + parsed.pathname.replace(/\/+$/, '/');
+  } catch {
+    return u;
+  }
+}
+
 /**
- * @param {object} opts
- * @param {string} opts.url      page to index
- * @param {string} opts.label    human-readable label (e.g., "Stripe Eng Blog")
- * @param {string} opts.source   stable group key (typically a company name)
+ * Core indexing logic: chunk, embed, and upsert an already-fetched extract.
+ * Shared by indexWatchlistUrl and indexWatchlistRoot to avoid double-fetching.
+ *
+ * @param {{url: string, label: string, source: string, extracted: {text: string, fetchedAt: number}}} opts
  * @returns {Promise<{chunkCount: number, written?: number, skipped?: boolean, error?: string}>}
  */
-export async function indexWatchlistUrl({ url, label, source }) {
-  let extracted;
-  try {
-    extracted = await fetchAndExtract(url);
-  } catch (err) {
-    return { skipped: true, error: err.message, chunkCount: 0 };
-  }
+async function indexExtracted({ url, label, source, extracted }) {
   if (!extracted.text || !extracted.text.trim()) {
     return { skipped: true, error: 'empty extracted text', chunkCount: 0 };
   }
@@ -125,4 +130,82 @@ export async function indexWatchlistUrl({ url, label, source }) {
     await upsertChunk(newOrChanged[i], vecs[i]);
   }
   return { chunkCount: chunks.length, written: newOrChanged.length };
+}
+
+/**
+ * @param {object} opts
+ * @param {string} opts.url      page to index
+ * @param {string} opts.label    human-readable label (e.g., "Stripe Eng Blog")
+ * @param {string} opts.source   stable group key (typically a company name)
+ * @returns {Promise<{chunkCount: number, written?: number, skipped?: boolean, error?: string}>}
+ */
+export async function indexWatchlistUrl({ url, label, source }) {
+  let extracted;
+  try {
+    extracted = await fetchAndExtract(url);
+  } catch (err) {
+    return { skipped: true, error: err.message, chunkCount: 0 };
+  }
+  return indexExtracted({ url, label, source, extracted });
+}
+
+/**
+ * Crawl an index page + up to `maxArticles` of its same-domain article links.
+ *
+ * Each article gets its own topic_id (sha of URL), so they're separately
+ * addressable in retrieval citations. Failures are per-URL and don't
+ * abort the batch — the caller gets a perUrl summary with skip reasons.
+ *
+ * @param {object} opts
+ * @param {string} opts.rootUrl
+ * @param {string} opts.label
+ * @param {string} opts.source
+ * @param {number} [opts.maxArticles=5]
+ */
+export async function indexWatchlistRoot({ rootUrl, label, source, maxArticles = DEFAULT_MAX_ARTICLES }) {
+  const perUrl = [];
+  let totalChunks = 0;
+  let totalWritten = 0;
+
+  // Fetch the root once — reuse both to get articleUrls and to index the root itself.
+  let rootArticleUrls = [];
+  try {
+    const ext = await fetchAndExtract(rootUrl);
+    rootArticleUrls = ext.articleUrls || [];
+    const rootRes = await indexExtracted({ url: rootUrl, label, source, extracted: ext });
+    perUrl.push({ url: rootUrl, ...rootRes });
+    if (!rootRes.skipped) {
+      totalChunks += rootRes.chunkCount || 0;
+      totalWritten += rootRes.written || 0;
+    }
+  } catch (err) {
+    perUrl.push({ url: rootUrl, skipped: true, error: err.message, chunkCount: 0 });
+  }
+
+  if (maxArticles <= 0) {
+    return { urlCount: perUrl.length, totalChunks, totalWritten, perUrl };
+  }
+
+  const rootNorm = normalizeUrl(rootUrl);
+  const candidates = rootArticleUrls
+    .filter((u) => normalizeUrl(u) !== rootNorm)
+    .slice(0, maxArticles);
+
+  for (const articleUrl of candidates) {
+    try {
+      const r = await indexWatchlistUrl({
+        url: articleUrl,
+        label: `${label} — article`,
+        source,
+      });
+      perUrl.push({ url: articleUrl, ...r });
+      if (!r.skipped) {
+        totalChunks += r.chunkCount || 0;
+        totalWritten += r.written || 0;
+      }
+    } catch (err) {
+      perUrl.push({ url: articleUrl, skipped: true, error: err.message, chunkCount: 0 });
+    }
+  }
+  return { urlCount: perUrl.length, totalChunks, totalWritten, perUrl };
 }
