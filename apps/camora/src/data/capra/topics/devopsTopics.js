@@ -11486,4 +11486,1152 @@ These are answers a Flux-fluent platform engineer should give without preparatio
     ],
   },
 
+  // ─────────────────────────────────────────────────────────────────────
+  // K. Observability & Telemetry
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'opentelemetry-fundamentals',
+    title: 'OpenTelemetry — Vendor-Neutral Traces, Metrics, Logs',
+    icon: 'activity',
+    color: '#f97316',
+    questions: 5,
+    description: 'CNCF Incubating project; second-most-active CNCF project after Kubernetes. Vendor-neutral spec for traces, metrics, logs. SDKs in 11+ languages, Collector for processing/routing, OTLP wire protocol. Replaces vendor-specific agents (Datadog, New Relic, Jaeger client libs).',
+    visualizations: [
+      {
+        title: 'OpenTelemetry architecture — SDK, Collector, backends',
+        description: `OpenTelemetry (OTel) standardizes telemetry collection. Three signals: traces, metrics, logs. Three layers:
+
+Layer 1: Instrumentation. Application emits telemetry via OTel SDK. Two flavors:
+- Manual instrumentation: explicit tracer.startSpan(), counter.add(), logger.info() calls in app code.
+- Auto-instrumentation: byte-code agents (Java, .NET) or library wrappers (Python, Node, Go) that hook into common frameworks (HTTP servers, DB drivers, gRPC clients) without code changes. Recommended for getting started fast.
+
+Layer 2: Collector. Optional but recommended. Stateless service receiving OTLP from apps. Pipeline: receivers → processors → exporters.
+- Receivers: OTLP gRPC/HTTP, Prometheus scrape, Jaeger, Zipkin, Filelog, syslog.
+- Processors: batch (efficiency), tail-sampling (keep slow + errors only), attribute manipulation (PII redaction, label normalization), memory-limiter (back-pressure).
+- Exporters: OTLP to vendor backends, Prometheus remote-write, Loki, Jaeger, Datadog, New Relic, Honeycomb, custom.
+
+Two Collector deployment patterns:
+- Agent (DaemonSet on each node): collects from local pods; minimal latency.
+- Gateway (centralized Deployment): aggregation point; tail sampling; routing logic.
+
+Production: agent + gateway is common. Agents collect locally, batch, forward to gateway. Gateway does heavy processing.
+
+Layer 3: Backends.
+- Traces: Jaeger, Tempo, Honeycomb, Datadog APM, New Relic.
+- Metrics: Prometheus, Mimir, VictoriaMetrics, Datadog metrics.
+- Logs: Loki, OpenSearch, Elasticsearch, Datadog logs.
+
+The killer property: pluggable backends. App emits OTel; Collector exports to whatever backend you want. Switch backends by changing Collector config — no app changes.
+
+OTLP wire protocol. OpenTelemetry Protocol — gRPC + HTTP variants. Default transport between SDK → Collector and Collector → backend. Vendor-neutral; replaces Jaeger Thrift, Zipkin JSON, Prometheus exposition format gradually.`,
+        image: '/diagrams/devops/o1-otel.png',
+      },
+      {
+        title: 'OTel Collector pipeline — receivers, processors, exporters',
+        description: `Walking through a typical Collector config processing all three signals.
+
+Receivers ingest data:
+- otlp/grpc on :4317 — apps push spans/metrics/logs via OTLP gRPC.
+- otlp/http on :4318 — same but HTTP for browser clients.
+- prometheus — scrapes /metrics endpoints (acts as a Prometheus server pull-mode).
+- jaeger — receives Jaeger Thrift / gRPC for legacy clients.
+- filelog — tails log files on the node.
+- hostmetrics — collects host CPU/memory/disk from the node OS.
+
+Processors transform:
+- memory_limiter — back-pressure; drops data when memory pressure high. First in pipeline.
+- batch — accumulates batches before export; reduces network overhead.
+- attributes/redact — drop PII attributes, hash user IDs.
+- resource — add static labels (cluster, region, env).
+- tail_sampling — keep traces matching policies (error responses, slow latency, specific routes); drop the rest. Critical for cost control on high-cardinality services.
+- transform — OTTL-based transforms (newer, more flexible than attributes processor).
+- filter — drop spans/metrics/logs matching patterns.
+
+Exporters send to backends:
+- otlp/tempo — push traces to Tempo via OTLP.
+- otlp/honeycomb — push to Honeycomb (proprietary backend that speaks OTLP).
+- prometheusremotewrite — push metrics to Prometheus-compatible (Mimir, VictoriaMetrics, Cortex).
+- loki — push logs to Grafana Loki.
+- datadog — push to Datadog (uses Datadog API; speaks OTLP from 2024+).
+- file — write to disk for debugging.
+
+Pipelines tie them together — one pipeline per signal:
+
+\`\`\`yaml
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, tail_sampling, batch]
+      exporters: [otlp/tempo]
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [memory_limiter, batch]
+      exporters: [prometheusremotewrite]
+    logs:
+      receivers: [otlp, filelog]
+      processors: [memory_limiter, attributes/redact, batch]
+      exporters: [loki]
+\`\`\`
+
+Production patterns:
+- Agent collectors (DaemonSet) handle initial ingestion + light processing; forward to gateway via OTLP.
+- Gateway collectors (Deployment, 3-10 replicas) handle tail sampling + routing.
+- Tail sampling requires gateway because spans of a trace must arrive at the same Collector instance — gateway uses load_balancing_exporter on agents to keep traces co-located.`,
+        image: '/diagrams/devops/o1-otel.png',
+      },
+    ],
+    introduction: `OpenTelemetry is the CNCF Incubating standard for application telemetry — traces, metrics, logs — vendor-neutral. Started as the merger of OpenTracing and OpenCensus (2019); CNCF Incubating since 2021. Second-most-active CNCF project after Kubernetes itself by 2024 (commits, contributors, releases).
+
+What changed with OTel:
+
+Pre-OTel (2010s observability): every vendor had its own SDK. Datadog tracing client, New Relic agent, Jaeger client libraries, AppDynamics agent, Dynatrace OneAgent. Switching backends meant rewriting instrumentation. Multi-vendor was painful — re-instrument the app for each vendor.
+
+Post-OTel (2020+): app instruments once with OTel SDK. Telemetry flows to OTel Collector. Collector exports to whatever backend you choose — switch backends by changing Collector config; no app changes. Multi-backend (send same data to two backends simultaneously) is one config line.
+
+Industry adoption:
+
+CNCF: Kubernetes itself emits OTel. Most CNCF projects (Argo CD, Flux, Istio, Envoy) have native OTel support.
+
+Vendors: Datadog, New Relic, Honeycomb, Splunk, Dynatrace, AppDynamics all accept OTLP natively. Most are migrating off proprietary agents toward OTel-based instrumentation.
+
+OSS backends: Jaeger, Tempo, Prometheus, Loki, OpenSearch, ClickHouse, all support OTLP ingestion.
+
+Status of signals (as of 2026):
+- Traces: GA (stable spec, mature SDKs).
+- Metrics: GA (stable spec, mature SDKs).
+- Logs: GA (stable as of 2024). Catching up; some semantic conventions still evolving.
+- Profiling: experimental (continuous profiling signal, similar to Pyroscope/Parca; spec stabilizing 2025-2026).
+
+Why OTel wins:
+
+Vendor neutrality. Multi-backend, switch-backend, multi-vendor strategies are trivial. Ends vendor lock-in for instrumentation.
+
+Auto-instrumentation. Java/.NET byte-code agents instrument hundreds of libraries automatically. Python/Node/Go library wrappers instrument common frameworks. Often you get useful traces with zero code changes.
+
+Semantic conventions. Standardized attribute names: http.method, db.system, messaging.destination.name. Backends can build dashboards without per-vendor schema knowledge.
+
+Active community. Hundreds of contributors; corporate backing from Google, Microsoft, AWS, Datadog, Honeycomb, Splunk, etc.
+
+Where OTel has friction:
+
+Configuration complexity. Collector config can be hundreds of lines. Pipeline composition requires understanding receivers/processors/exporters interaction. Steep learning curve.
+
+Logs signal less mature than traces/metrics. Stable but semantic conventions still solidifying. Some patterns (structured logging conventions) inconsistent across SDKs.
+
+Performance overhead. Auto-instrumentation adds 5-15% CPU overhead in measured benchmarks. Tunable but real.
+
+Deployment complexity. Production OTel involves SDK + agent collectors + gateway collectors + backends. More moving parts than legacy "drop in vendor agent".
+
+When to pick OTel:
+
+Greenfield observability — no existing investment. Default in 2026.
+
+Multi-backend strategy. OTel makes "Datadog for production, Tempo for dev/staging" trivial.
+
+Vendor migration. Legacy DataDog → modern stack? Instrument with OTel; route via Collector; migrate gradually.
+
+Multi-cloud. Same instrumentation across AWS/GCP/Azure; Collector handles backend differences.
+
+When NOT (or when it's overkill):
+
+Tiny apps. Drop-in vendor agent is faster to start. Adopt OTel later if you outgrow.
+
+Single-vendor commitment. If you're locked to Datadog forever, their proprietary agent has more features than OTel as of 2026 (continuous profiling, network monitoring, etc.). Vendor agents are evolving toward OTel-compatible but still ahead in some areas.
+
+Three load-bearing OTel concepts every interview answer needs:
+
+1. Three signals: traces, metrics, logs. Plus emerging profiling. Each has its own SDK API but shares the OTel Collector pipeline.
+
+2. Collector pipeline: receivers → processors → exporters. Pipeline-as-code; configurable per signal; agent + gateway deployment pattern.
+
+3. OTLP wire protocol replaces vendor-specific protocols. App → Collector via OTLP; Collector → backend via OTLP (when backend supports it) or vendor-specific exporter.`,
+    whenToUse: [
+      'Greenfield observability — no existing investment in vendor agents',
+      'Multi-backend strategy (production vendor + OSS dev/staging)',
+      'Vendor migration (legacy Datadog → modern stack, Splunk → Honeycomb)',
+      'Multi-cloud / vendor-neutral instrumentation',
+      'Replacing legacy Jaeger/Zipkin clients (still works but OTel SDK is the future)',
+    ],
+    keyConcepts: [
+      {
+        term: 'Three signals: traces, metrics, logs',
+        definition: `OTel standardizes three observability signal types.
+
+Traces: distributed traces span service boundaries. A trace = collection of spans; each span represents one unit of work.
+
+\`\`\`python
+from opentelemetry import trace
+
+tracer = trace.get_tracer('payments-service')
+
+with tracer.start_as_current_span('charge') as span:
+    span.set_attribute('user.id', user_id)
+    span.set_attribute('amount', amount)
+    span.set_attribute('currency', 'USD')
+
+    with tracer.start_as_current_span('stripe_call'):
+        result = stripe.charges.create(...)
+
+    span.set_attribute('charge.id', result.id)
+\`\`\`
+
+Each span has: name, start/end time, status (OK/Error), attributes (key-value), events (timestamped logs within span), links (to other traces).
+
+Trace context propagation: W3C Trace Context standard (traceparent, tracestate HTTP headers). All major HTTP/gRPC clients propagate by default in instrumented code.
+
+Metrics: time-series numeric data. Three primary types:
+- Counter: monotonically increasing (request count, error count).
+- UpDownCounter: can decrease (in-flight requests, queue depth).
+- Histogram: distribution of values (request latency, payload size).
+
+\`\`\`python
+from opentelemetry import metrics
+
+meter = metrics.get_meter('payments-service')
+
+request_counter = meter.create_counter(
+    'http.server.requests',
+    description='Count of HTTP requests'
+)
+latency_histogram = meter.create_histogram(
+    'http.server.request.duration',
+    unit='s',
+    description='HTTP request duration'
+)
+
+def handle_request():
+    request_counter.add(1, {'method': 'POST', 'route': '/charge'})
+    start = time.time()
+    # ... handle ...
+    latency_histogram.record(time.time() - start, {'method': 'POST', 'route': '/charge'})
+\`\`\`
+
+Metrics are aggregated in-process before export (delta or cumulative aggregation; configurable).
+
+Logs: structured log records. Less mature than traces/metrics but stable as of 2024.
+
+\`\`\`python
+import logging
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+
+logging.getLogger().addHandler(LoggingHandler())
+
+log = logging.getLogger('payments-service')
+log.info('charge succeeded', extra={'user.id': user_id, 'charge.id': result.id})
+\`\`\`
+
+OTel logs preserve the trace context — log records emitted during a span's scope link to that span. In Honeycomb / Datadog UI: click a span, see related logs.
+
+Three signals correlate via trace context: traces have IDs; metrics tagged with exemplars (linkable spans); logs reference trace IDs. Powerful debugging when you can pivot from "high error rate" metric to "the failing span" trace to "the error log line" log.`,
+      },
+      {
+        term: 'Auto-instrumentation',
+        definition: `Most app teams don't want to hand-write tracer.startSpan() everywhere. Auto-instrumentation hooks common frameworks transparently.
+
+Java — javaagent JAR:
+\`\`\`bash
+java -javaagent:opentelemetry-javaagent.jar \\
+     -Dotel.service.name=payments \\
+     -Dotel.exporter.otlp.endpoint=http://otel-collector:4317 \\
+     -jar app.jar
+\`\`\`
+Auto-instruments 100+ libraries: HTTP servers (Tomcat, Jetty, Spring), HTTP clients, JDBC, Kafka, Redis, gRPC, Hibernate, Cassandra, etc. Zero code changes.
+
+.NET — .NET Auto-Instrumentation similar:
+\`\`\`bash
+export OTEL_DOTNET_AUTO_HOME=/path
+. ./instrument.sh
+dotnet myapp.dll
+\`\`\`
+
+Python — opentelemetry-instrument wrapper:
+\`\`\`bash
+opentelemetry-instrument \\
+  --service_name payments \\
+  --exporter_otlp_endpoint http://otel-collector:4317 \\
+  python app.py
+\`\`\`
+Wraps Flask, Django, FastAPI, requests, psycopg2, redis-py, kafka-python, etc.
+
+Node.js — opentelemetry-auto-instrumentations-node:
+\`\`\`javascript
+require('@opentelemetry/auto-instrumentations-node');
+// app code unchanged
+\`\`\`
+
+Go — manual or via build tool. Go doesn't have JIT/byte-code rewriting; auto-instrumentation requires explicit imports per library:
+\`\`\`go
+import (
+  "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+)
+http.Handle("/charge", otelhttp.NewHandler(handler, "POST /charge"))
+\`\`\`
+
+Rust — manual; ecosystem younger.
+
+Auto-instrumentation overhead: 5-15% CPU for typical web apps. Tunable via sampling, attribute filtering, span limits.
+
+Combine auto + manual: auto-instrumentation for HTTP/DB/external calls; manual for business-domain-specific spans (auth_check, fraud_detection, etc.).
+
+What's exposed by auto-instrumentation per HTTP request:
+- Server span: http.method, http.route, http.status_code, http.user_agent, network.peer.address, http.request.body.size.
+- DB span: db.system (postgresql), db.statement (full SQL — beware PII!), db.operation, db.connection_string (sanitized).
+- Outbound HTTP span: http.method, http.url, http.status_code, http.response_content_length.
+
+This is the killer feature — most observability value comes from auto-instrumentation; manual is for filling gaps.`,
+      },
+      {
+        term: 'OTel Collector — pipeline-as-code',
+        definition: `Stateless service that receives OTel data, transforms it, exports to backends. Configured via YAML.
+
+Production Collector config:
+
+\`\`\`yaml
+receivers:
+  otlp:
+    protocols:
+      grpc: { endpoint: 0.0.0.0:4317 }
+      http: { endpoint: 0.0.0.0:4318 }
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: kubernetes-pods
+          kubernetes_sd_configs: [{ role: pod }]
+          relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+              action: keep
+              regex: 'true'
+  filelog:
+    include: [/var/log/pods/*/*/*.log]
+    operators:
+      - type: regex_parser
+        regex: '^(?<time>[^\\s]+)\\s+(?<level>\\w+)\\s+(?<body>.*)$'
+
+processors:
+  memory_limiter:
+    limit_percentage: 80
+    spike_limit_percentage: 25
+    check_interval: 1s
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+  resource:
+    attributes:
+      - { key: cluster, value: prod-us-east-1, action: insert }
+      - { key: env, value: prod, action: insert }
+  attributes/redact:
+    actions:
+      - { key: http.request.body, action: delete }
+      - { key: db.statement, action: hash }
+      - { key: user.email, action: delete }
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 100000
+    expected_new_traces_per_sec: 1000
+    policies:
+      - { name: errors, type: status_code, status_code: { status_codes: [ERROR] } }
+      - { name: slow, type: latency, latency: { threshold_ms: 1000 } }
+      - { name: probabilistic, type: probabilistic, probabilistic: { sampling_percentage: 1 } }
+
+exporters:
+  otlphttp/tempo:
+    endpoint: https://tempo.example.com
+    headers:
+      x-scope-orgid: tenant-1
+  prometheusremotewrite/mimir:
+    endpoint: https://mimir.example.com/api/v1/push
+    headers:
+      x-scope-orgid: tenant-1
+  loki:
+    endpoint: https://loki.example.com/loki/api/v1/push
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, attributes/redact, resource, tail_sampling, batch]
+      exporters: [otlphttp/tempo]
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [memory_limiter, resource, batch]
+      exporters: [prometheusremotewrite/mimir]
+    logs:
+      receivers: [otlp, filelog]
+      processors: [memory_limiter, attributes/redact, resource, batch]
+      exporters: [loki]
+  telemetry:
+    metrics: { level: detailed, address: 0.0.0.0:8888 }
+\`\`\`
+
+Pipeline order matters:
+- memory_limiter first (back-pressure before processing).
+- attributes/redact early (fewer attributes flow through).
+- batch last (efficient export).
+
+tail_sampling needs all spans of a trace at one Collector instance. Use load_balancing_exporter on agent collectors to send all spans of a trace to the same gateway instance.`,
+      },
+      {
+        term: 'Sampling — head vs tail',
+        definition: `Sampling controls how much trace data you keep. Without sampling, high-traffic services produce billions of spans daily — storage cost prohibitive.
+
+Head sampling: decision made at trace start. Cheap; doesn't require all spans of a trace.
+
+Probabilistic head sampling — keep N% of traces:
+
+\`\`\`python
+from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
+provider = TracerProvider(sampler=TraceIdRatioBased(0.01))   # 1% sampling
+\`\`\`
+
+Pro: zero cost for dropped traces (no spans created).
+
+Con: random — no guarantee of catching slow traces or errors. A 1% sample misses 99% of error traces.
+
+Tail sampling: decision made after all spans of a trace arrive. Can sample based on trace properties (slow, error, specific route).
+
+\`\`\`yaml
+processors:
+  tail_sampling:
+    decision_wait: 10s
+    policies:
+      - name: errors
+        type: status_code
+        status_code: { status_codes: [ERROR] }
+      - name: slow
+        type: latency
+        latency: { threshold_ms: 1000 }
+      - name: probabilistic-baseline
+        type: probabilistic
+        probabilistic: { sampling_percentage: 1 }
+\`\`\`
+
+Behavior: keep 100% of error traces, 100% of slow traces, 1% of normal traces. Storage ~1-5% of total; signal ~100%.
+
+Tradeoffs:
+- Head: cheap, simple, random.
+- Tail: expensive (Collector buffers all spans for decision_wait), informed (keeps interesting traces).
+
+Tail sampling requires:
+- Gateway Collector pattern (all spans of a trace go to same Collector).
+- Sufficient memory to buffer spans during decision_wait window.
+- load_balancing_exporter on agent Collectors to colocate spans by traceID.
+
+Head + tail combination: head sampling at SDK (drop 50% of bot traffic via attribute matching), tail sampling at Collector (keep error/slow + 1% baseline).
+
+Adaptive sampling (newer): adjust sampling rate based on traffic volume. Honeycomb's Refinery, Datadog's adaptive sampling. Less mature in OSS OTel as of 2026.
+
+Sampling decisions affect cost dramatically. 100k RPS service, 100% sampling = ~100M spans/hour. Tail sampling at 1% baseline + errors + slow = ~1-5M spans/hour. Storage cost differential is 10-100x.`,
+      },
+      {
+        term: 'Recipe: Kubernetes-native OTel deployment',
+        definition: `Production deployment on EKS with agent + gateway pattern.
+
+Step 1 — install OpenTelemetry Operator. Manages Collector deployments via CRD.
+
+\`\`\`bash
+kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
+\`\`\`
+
+Step 2 — agent Collector as DaemonSet. One per node; collects from local pods.
+
+\`\`\`yaml
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata: { name: agent, namespace: observability }
+spec:
+  mode: daemonset
+  image: otel/opentelemetry-collector-contrib:0.115.0
+  serviceAccount: otel-collector-agent
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: 1, memory: 1Gi }
+  env:
+    - { name: NODE_NAME, valueFrom: { fieldRef: { fieldPath: spec.nodeName } } }
+  config: |
+    receivers:
+      otlp: { protocols: { grpc: { endpoint: 0.0.0.0:4317 } } }
+      filelog:
+        include: [/var/log/pods/*/*/*.log]
+        include_file_path: true
+      hostmetrics:
+        collection_interval: 30s
+        scrapers: [cpu, memory, disk, network, filesystem]
+    processors:
+      batch: { timeout: 10s, send_batch_size: 1024 }
+      resource:
+        attributes:
+          - { key: k8s.node.name, value: \${NODE_NAME}, action: insert }
+    exporters:
+      otlp/gateway:
+        endpoint: otel-gateway.observability:4317
+        tls: { insecure: true }
+        sending_queue: { num_consumers: 4, queue_size: 5000 }
+        retry_on_failure: { enabled: true, initial_interval: 5s, max_interval: 30s }
+    service:
+      pipelines:
+        traces: { receivers: [otlp], processors: [batch, resource], exporters: [otlp/gateway] }
+        metrics: { receivers: [otlp, hostmetrics], processors: [batch, resource], exporters: [otlp/gateway] }
+        logs: { receivers: [otlp, filelog], processors: [batch, resource], exporters: [otlp/gateway] }
+\`\`\`
+
+Step 3 — gateway Collector as Deployment. Centralized; does heavy processing.
+
+\`\`\`yaml
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata: { name: gateway, namespace: observability }
+spec:
+  mode: deployment
+  replicas: 5
+  image: otel/opentelemetry-collector-contrib:0.115.0
+  resources:
+    requests: { cpu: 1, memory: 2Gi }
+    limits: { cpu: 4, memory: 8Gi }
+  config: |
+    receivers:
+      otlp: { protocols: { grpc: { endpoint: 0.0.0.0:4317 } } }
+    processors:
+      memory_limiter: { limit_percentage: 80 }
+      tail_sampling:
+        decision_wait: 10s
+        policies:
+          - { name: errors, type: status_code, status_code: { status_codes: [ERROR] } }
+          - { name: slow, type: latency, latency: { threshold_ms: 1000 } }
+          - { name: baseline, type: probabilistic, probabilistic: { sampling_percentage: 1 } }
+      batch: { timeout: 10s }
+    exporters:
+      otlphttp/tempo: { endpoint: https://tempo.example.com }
+      prometheusremotewrite/mimir: { endpoint: https://mimir.example.com/api/v1/push }
+      loki: { endpoint: https://loki.example.com/loki/api/v1/push }
+    service:
+      pipelines:
+        traces: { receivers: [otlp], processors: [memory_limiter, tail_sampling, batch], exporters: [otlphttp/tempo] }
+        metrics: { receivers: [otlp], processors: [memory_limiter, batch], exporters: [prometheusremotewrite/mimir] }
+        logs: { receivers: [otlp], processors: [memory_limiter, batch], exporters: [loki] }
+\`\`\`
+
+Step 4 — application instrumentation via Operator's Instrumentation CRD:
+
+\`\`\`yaml
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata: { name: java-instrumentation, namespace: payments }
+spec:
+  exporter: { endpoint: http://agent.observability:4317 }
+  propagators: [tracecontext, baggage, b3]
+  sampler:
+    type: parentbased_traceidratio
+    argument: '1.0'                      # all sampling at gateway, not SDK
+  java:
+    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:latest
+\`\`\`
+
+Step 5 — annotate pods for auto-instrumentation:
+
+\`\`\`yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: payments, namespace: payments }
+spec:
+  template:
+    metadata:
+      annotations:
+        instrumentation.opentelemetry.io/inject-java: 'true'
+        instrumentation.opentelemetry.io/container-names: 'payments'
+\`\`\`
+
+Operator injects javaagent via init container. Pod restart picks up instrumentation.
+
+Result: zero-code-change instrumentation across all annotated pods. Collector pipeline routes to backends.`,
+      },
+      {
+        term: 'Recipe: tail sampling for cost control',
+        definition: `Tail sampling is the difference between $1k/month and $50k/month observability bills at high RPS.
+
+Without sampling: 100k RPS service × 10 spans/request × 30 days × 24h × 3600s = 26B spans/month. At Datadog APM pricing (~$0.10/spans/M), that's $260k/month. Untenable.
+
+With tail sampling: keep 100% of errors, 100% of slow (>1s), 1% baseline. Typically 2-5% of spans retained. Bill drops to $5-13k/month — same insight, fraction of cost.
+
+Tail sampling Collector config:
+
+\`\`\`yaml
+processors:
+  tail_sampling:
+    decision_wait: 10s        # buffer spans for 10s before deciding
+    num_traces: 100000        # max in-memory traces
+    expected_new_traces_per_sec: 1000
+    policies:
+      # Keep all error traces
+      - name: errors
+        type: status_code
+        status_code: { status_codes: [ERROR] }
+
+      # Keep all slow traces (>1s)
+      - name: slow
+        type: latency
+        latency: { threshold_ms: 1000 }
+
+      # Keep all traces touching specific routes
+      - name: critical-routes
+        type: string_attribute
+        string_attribute:
+          key: http.route
+          values: [/checkout, /payment, /refund]
+
+      # Keep all traces for specific tenants
+      - name: vip-tenants
+        type: string_attribute
+        string_attribute:
+          key: tenant.tier
+          values: [enterprise]
+
+      # Probabilistic baseline (1%) for the rest
+      - name: baseline
+        type: probabilistic
+        probabilistic: { sampling_percentage: 1 }
+\`\`\`
+
+Critical: tail sampling requires all spans of a trace at one Collector instance. Otherwise the Collector decides on partial trace and drops spans wrongly.
+
+Solution — load_balancing_exporter on agents:
+
+\`\`\`yaml
+exporters:
+  loadbalancing:
+    routing_key: traceID            # route spans of a trace to same gateway
+    protocol:
+      otlp:
+        tls: { insecure: true }
+    resolver:
+      static:
+        hostnames:
+          - otel-gateway-0.observability:4317
+          - otel-gateway-1.observability:4317
+          - otel-gateway-2.observability:4317
+\`\`\`
+
+Agent computes hash(traceID) → picks gateway. All spans of a trace land at the same gateway instance. Tail sampling can decide correctly.
+
+Memory budgeting: gateway buffers spans for decision_wait. At 100k RPS / 5 gateway instances / 10s buffer / 100KB/trace = ~20GB memory per gateway. Provision generously.
+
+decision_wait tradeoff: short (1-5s) = lower memory + miss late spans. Long (30-60s) = higher memory + catch all spans. 10s typical for most architectures.
+
+When tail sampling fails:
+- Late-arriving spans (slow services that haven't responded by decision_wait) are dropped. Tune decision_wait per service architecture.
+- High cardinality of traceIDs (true uniqueness) means hash collisions are rare; if you see related traces split across gateways, check load_balancing_exporter is using traceID as routing_key.
+
+Cost monitoring: Collector itself emits metrics — otelcol_processor_tail_sampling_count_traces_sampled vs total. Track sampling rate; alert if it drifts.`,
+      },
+    ],
+    approach: [
+      'Deploy via OpenTelemetry Operator on K8s',
+      'Agent Collector (DaemonSet) for ingestion + light processing',
+      'Gateway Collector (Deployment, 3+ replicas) for tail sampling + routing',
+      'Auto-instrumentation via Operator\'s Instrumentation CRD + pod annotations',
+      'Tail sampling at gateway: errors + slow + critical-route + 1% baseline',
+      'load_balancing_exporter on agent → gateway to colocate spans by traceID',
+      'memory_limiter as first processor in every pipeline',
+      'attributes/redact processor for PII (db.statement, http.request.body, user.email)',
+      'OTel SDK with W3C Trace Context for cross-service propagation',
+    ],
+    pitfalls: [
+      '100% sampling at SDK + tail sampling at Collector — tail sampling does the work; SDK 100% wastes cycles',
+      'Tail sampling without load_balancing_exporter — partial traces; sampling decisions wrong',
+      'No memory_limiter in Collector pipeline — OOMkill under traffic spike',
+      'decision_wait too short — late-arriving spans dropped',
+      'PII attributes (user.email, db.statement) sent to backend without redaction — privacy violation',
+      'Auto-instrumentation without resource limits — OOM, latency regressions',
+      'Mixed Collector versions (agent 0.110 + gateway 0.115) — config schema incompatibility',
+      'Vendor SDK (Datadog tracer) + OTel SDK in same app — double instrumentation, conflicts',
+    ],
+    keyQuestions: [
+      {
+        question: 'What is OpenTelemetry and what problem does it solve?',
+        answer: `OpenTelemetry is the CNCF Incubating standard for application telemetry — traces, metrics, logs (and emerging profiling). Vendor-neutral SDK + wire protocol + Collector. Solves the vendor lock-in problem in observability.
+
+The pre-OTel landscape (2010s):
+
+Each observability vendor had its own SDK and protocol:
+- Datadog: dd-trace SDK, Datadog Agent, proprietary trace format.
+- New Relic: agent JAR, proprietary protocol.
+- Jaeger: jaeger-client SDK, Jaeger Thrift.
+- Zipkin: zipkin SDK, Zipkin JSON.
+- AppDynamics: AppDynamics agent.
+- Dynatrace: OneAgent (auto-instrumenting agent).
+
+Switching backends meant rewriting instrumentation. Multi-backend (production Datadog + dev Jaeger) required dual instrumentation. Multi-vendor strategies were operationally painful.
+
+Even worse: shared libraries had no common instrumentation. The HTTP middleware library had to support N vendor SDKs, or no instrumentation. Most chose no instrumentation; teams instrumented at their app code, missing library-level detail.
+
+OpenTracing (2016) and OpenCensus (2018) were two competing standards trying to solve this. Both gained adoption but bifurcated the community.
+
+OpenTelemetry (2019): merger of OpenTracing + OpenCensus. CNCF Sandbox 2019; Incubating 2021. By 2024, second-most-active CNCF project after Kubernetes.
+
+What OTel provides:
+
+OTel SDK in 11+ languages (Java, .NET, Python, Node.js, Go, Ruby, PHP, Rust, C++, Swift, Erlang). Same API surface; consistent semantic conventions. Library authors instrument once; works across vendors.
+
+OTLP (OpenTelemetry Protocol). gRPC + HTTP variants. Replaces vendor-specific wire formats. Vendor backends now accept OTLP natively (Datadog 2024, New Relic, Honeycomb, Splunk, Dynatrace).
+
+OTel Collector. Stateless service that receives OTel data, transforms, exports to backends. Decouples instrumentation from backend choice. Pipeline-as-code: receivers → processors → exporters.
+
+Semantic conventions. Standardized attribute names: http.method, http.route, http.status_code, db.system, messaging.destination.name. Backends can build dashboards without per-vendor schemas.
+
+Auto-instrumentation. Java/.NET byte-code agents instrument hundreds of libraries automatically. Python/Node/Go library wrappers instrument common frameworks. Often you get useful traces with zero code changes.
+
+What OTel doesn't provide:
+
+Backend storage. OTel produces telemetry; you still need backends (Tempo, Jaeger, Honeycomb, Datadog, etc.). OTel makes backend choice flexible; doesn't replace backends.
+
+Dashboards or alerting UI. Those live in backends (Grafana, Datadog UI, Honeycomb UI).
+
+Profiling (as of 2026). Continuous profiling signal is experimental; spec stabilizing. Use Pyroscope/Parca alongside OTel for profiling.
+
+The killer property:
+
+Multi-backend: app emits OTel; Collector exports to both Datadog (production) AND Tempo (dev/staging). Same instrumentation; multiple backends. One config line.
+
+Vendor migration: legacy Datadog → modern stack? Re-instrument with OTel; route via Collector to Datadog AND Tempo simultaneously; cut over backends gradually.
+
+Library instrumentation: HTTP frameworks, DB drivers, message queues are instrumented once at the library level. Application code unchanged.
+
+Industry adoption (2026):
+
+CNCF: Kubernetes itself emits OTel.
+Cloud providers: AWS X-Ray, GCP Cloud Trace, Azure Monitor all accept OTLP.
+Vendors: Datadog, New Relic, Honeycomb, Splunk, Dynatrace, AppDynamics — all accept OTLP. Some still recommend their proprietary agents for advanced features (Datadog continuous profiling, etc.) but OTel-compatible by default.
+OSS backends: Jaeger, Tempo, Prometheus, Mimir, Loki, OpenSearch — all support OTLP.
+
+Pragmatic 2026 stance: OTel is the default for new instrumentation. Existing vendor SDKs are deprecated paths. Multi-vendor / multi-backend is now operationally simple. Vendor lock-in for instrumentation is largely solved.
+
+Where vendor SDKs still beat OTel: continuous profiling (Datadog, Pyroscope), real user monitoring (Datadog RUM, New Relic Browser), session replay (Datadog Session Replay), synthetic monitoring (proprietary). These signals aren't yet standardized in OTel.`,
+      },
+      {
+        question: 'Walk through a production OTel deployment on Kubernetes.',
+        answer: `Reference architecture for a 50-engineer org running OTel on EKS with traces → Tempo, metrics → Mimir, logs → Loki.
+
+Architecture:
+
+App pods (instrumented via OTel SDK) → Agent Collector (DaemonSet, one per node) → Gateway Collector (Deployment, 5+ replicas) → backends.
+
+Why agent + gateway pattern:
+- Agent local to pods; minimal latency for OTLP ingestion.
+- Agent does light processing (resource attributes, batching).
+- Agent forwards to gateway for heavy processing (tail sampling, redaction, routing).
+- Gateway handles complex pipeline; can be sharded.
+
+Step 1 — install OpenTelemetry Operator. Manages Collector deployments via CRD.
+
+\`\`\`bash
+helm install opentelemetry-operator open-telemetry/opentelemetry-operator \\
+  --namespace opentelemetry-operator-system \\
+  --create-namespace
+\`\`\`
+
+Step 2 — agent Collector as DaemonSet (config in keyConcept above).
+
+Resource profile: 100m-1 CPU, 256Mi-1Gi memory per node. Scales linearly with pod count + log volume on the node.
+
+Receives:
+- OTLP from local pods (apps push spans/metrics/logs).
+- filelog reads /var/log/pods/*/*/*.log for K8s container logs.
+- hostmetrics scrapes node CPU/memory/disk/network.
+
+Forwards to gateway via OTLP gRPC.
+
+Step 3 — gateway Collector as Deployment (config in keyConcept above).
+
+Resource profile: 1-4 CPU, 2-8Gi memory per replica. 5+ replicas typical.
+
+Does:
+- Memory-limited pipelines.
+- Tail sampling for traces (errors + slow + critical routes + 1% baseline).
+- PII redaction (attributes/redact processor).
+- Resource attribute injection (cluster, region, env).
+- Routing to backends (Tempo for traces, Mimir for metrics, Loki for logs).
+
+Step 4 — Service for gateway with load balancing:
+
+\`\`\`yaml
+apiVersion: v1
+kind: Service
+metadata: { name: otel-gateway, namespace: observability }
+spec:
+  type: ClusterIP
+  selector: { app.kubernetes.io/name: otel-gateway }
+  ports:
+    - { name: otlp-grpc, port: 4317, targetPort: 4317 }
+    - { name: otlp-http, port: 4318, targetPort: 4318 }
+\`\`\`
+
+Agent's OTLP exporter targets otel-gateway.observability:4317.
+
+Step 5 — load_balancing_exporter on agents for tail sampling:
+
+\`\`\`yaml
+exporters:
+  loadbalancing:
+    routing_key: traceID
+    protocol:
+      otlp:
+        tls: { insecure: true }
+    resolver:
+      k8s:
+        service: otel-gateway.observability
+\`\`\`
+
+Agents resolve gateway pods, hash by traceID, send all spans of a trace to same gateway pod. Required for tail sampling correctness.
+
+Step 6 — application instrumentation. Operator's Instrumentation CRD + pod annotations (config in keyConcept above). Auto-instruments Java/.NET/Python/Node apps via init containers.
+
+Step 7 — backends.
+
+Tempo (traces) — Helm chart grafana/tempo-distributed:
+
+\`\`\`yaml
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc: {}
+ingester: { replicas: 3 }
+queryFrontend: { replicas: 2 }
+\`\`\`
+
+Receives OTLP from gateway; writes to S3.
+
+Mimir (metrics) — Helm chart grafana/mimir-distributed:
+
+\`\`\`yaml
+distributor:
+  service:
+    annotations:
+      prometheus.io/scrape: 'true'
+ingester: { replicas: 3 }
+\`\`\`
+
+Receives Prometheus remote_write from gateway; writes to S3.
+
+Loki (logs) — Helm chart grafana/loki-distributed:
+
+\`\`\`yaml
+distributor: { replicas: 2 }
+ingester: { replicas: 3 }
+\`\`\`
+
+Receives Loki push from gateway; writes to S3.
+
+Grafana — UI for all three. Single Grafana instance with Tempo + Mimir + Loki datasources. Trace-to-logs correlation, metric-to-trace via exemplars.
+
+Step 8 — observability for OTel itself. Agent + gateway collectors emit Prometheus metrics on :8888 (otelcol_*). ServiceMonitor for kube-prometheus-stack. Alerts on:
+- otelcol_exporter_send_failed_spans_total
+- otelcol_processor_dropped_spans (memory_limiter dropping)
+- otelcol_receiver_refused_spans (traffic > capacity)
+- otelcol_processor_tail_sampling_global_count (sampled rate trends)
+
+Cost considerations:
+- Tempo/Loki/Mimir on S3: cheap storage. ~$50-200/month for moderate volume.
+- Compute for collectors + backends: $1-5k/month at moderate scale.
+- Egress: Collector → backend. Cross-region S3 writes can spike.
+
+Real-world scale: 50-engineer org running ~50 services, 100k RPS aggregate. ~50 nodes (DaemonSet agents). 5-10 gateway replicas. Total OTel infra: ~5-15k/month including backends and compute.
+
+Compared to Datadog: same workload on Datadog ~$30-100k/month for full APM + logs + metrics. OTel + OSS backends ~3-5x cheaper at this scale; trade-off is operational responsibility.
+
+Common pitfalls:
+- Skipping memory_limiter — OOMkill under traffic spike.
+- No PII redaction — sensitive attributes leak to backends.
+- Mixed Collector versions across agents and gateways — config schema mismatch.
+- 100% sampling at SDK without tail sampling — collector overwhelmed.
+- No k8sattributes processor — missing K8s metadata (pod name, namespace, node) on spans.`,
+      },
+      {
+        question: 'Compare head sampling vs tail sampling — when to use each.',
+        answer: `Sampling is the cost-control mechanism for traces. Without it, high-RPS services produce tens of billions of spans daily — storage cost prohibitive.
+
+Head sampling: decision made at trace start (when first span created). Random or rule-based.
+
+Probabilistic head sampling — keep N% of traces:
+
+\`\`\`python
+from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
+provider = TracerProvider(sampler=TraceIdRatioBased(0.01))   # 1%
+\`\`\`
+
+The traceID is hashed; bottom N% of hash space → keep. Same trace always sampled or always dropped consistently across services (because all services see the same traceID).
+
+Pros:
+- Cheap. Dropped traces cost nothing — no spans created in the SDK.
+- Simple. One config; deterministic.
+- Predictable storage. 1% sampling = 1% of spans.
+
+Cons:
+- Random. No guarantee of catching error traces or slow traces. A 1% sample misses 99% of error traces.
+- All-or-nothing per trace. Either every span of a trace is kept or none.
+- Decision before behavior known. Can't sample based on what the trace did (latency, error, route).
+
+Use head sampling when:
+- Cost is the dominant constraint and you accept random sampling.
+- Workloads where every trace is roughly equally interesting.
+- You don't have OTel Collector in your architecture.
+- Edge / mobile clients where Collector isn't available.
+
+Tail sampling: decision made after all spans of a trace arrive. Can sample based on trace properties.
+
+Tail sampling Collector config example shown in the recipe keyConcept above.
+
+Behavior:
+- Buffer all incoming spans for decision_wait (default 10s).
+- After decision_wait, evaluate policies on the complete trace.
+- Keep traces matching policies; drop the rest.
+
+Common policy combinations:
+1. Errors: keep all traces with status_code=ERROR.
+2. Slow: keep all traces with latency >1s.
+3. Critical routes: keep all traces touching /checkout, /payment.
+4. VIP customers: keep all traces with tenant.tier=enterprise.
+5. Probabilistic baseline: keep 1% of everything else.
+
+Result: ~2-5% of total spans retained; 100% of interesting traces.
+
+Pros:
+- Informed. Keeps interesting traces.
+- Flexible. Policy combinations can be complex.
+- Cost-efficient. 95% reduction with 100% signal preservation.
+
+Cons:
+- Expensive at the Collector level. Buffers all spans for decision_wait.
+- Requires Collector. Can't tail sample at the SDK.
+- Requires gateway pattern. All spans of a trace must arrive at one Collector instance — load_balancing_exporter on agents.
+- decision_wait latency. Late-arriving spans dropped if past window.
+
+Use tail sampling when:
+- You want to keep all error/slow traces.
+- You have OTel Collector + can deploy gateway pattern.
+- Workload has clear "interesting" traces (vs random sampling).
+
+Combination strategy (production recommended):
+
+Head sampling at SDK: drop obvious noise (health checks, bot traffic). Cheap; reduces Collector load.
+
+Tail sampling at gateway: keep errors + slow + critical-routes + 1% baseline.
+
+Result:
+- SDK: 50% of spans created (drop bot traffic, /health endpoint).
+- Gateway tail: 5% of those retained (errors + slow + 1% baseline).
+- Net: 2.5% of original spans stored. ~99.5% of interesting traces preserved.
+
+Sampling rate observability:
+
+Track these metrics in Grafana:
+- Total spans received vs sampled.
+- Per-policy sampling rate (which policy is firing most).
+- Late-arriving span rate (decision_wait too short).
+
+Alert on:
+- Sampling rate drops to 0% (Collector misconfigured).
+- Sampling rate spikes to 100% (sudden error storm — backends about to drown).
+- Late-arriving span rate >1% (decision_wait too short for service architecture).
+
+Cost analysis at scale:
+
+100k RPS service, 10 spans/request, 30 days = 26B spans.
+- No sampling: 26B spans stored. At $0.10/M (Datadog APM): $2.6M/month.
+- 1% head sampling: 260M spans. $26k/month.
+- Tail sampling (5% effective): 1.3B spans. $130k/month. But: 100% of error traces kept.
+- Combined head + tail (2.5% effective): 650M spans. $65k/month. 100% error traces + 100% slow traces + 1% baseline.
+
+Tail sampling gets you Datadog-scale insight at 25% of Datadog-scale cost. The complexity of tail sampling is justified at scale.
+
+Pragmatic 2026: any service producing >100M spans/month should use tail sampling. Below that, head sampling is fine.`,
+      },
+      {
+        question: 'How does OTel handle correlation between traces, metrics, and logs?',
+        answer: `Correlation across the three signals is OTel's killer feature. The flow: metrics alert → pivot to specific trace → drill into logs from that trace. Reduces MTTR from hours to minutes.
+
+The mechanism: trace context propagates across signals. Each span has traceID + spanID. Metrics can attach exemplars (sample traceIDs). Logs include traceID/spanID in their attributes.
+
+Trace context (W3C Trace Context standard):
+
+\`\`\`
+traceparent: 00-{32-char-traceID}-{16-char-spanID}-{flags}
+tracestate: vendor1=value1,vendor2=value2
+\`\`\`
+
+HTTP/gRPC clients/servers in instrumented apps propagate these headers automatically. baggage is the optional W3C standard for cross-service custom attributes.
+
+Metrics → traces via exemplars:
+
+Exemplars are sample traceIDs attached to metrics. Backend receives metrics aggregate + exemplar traces.
+
+\`\`\`python
+from opentelemetry.metrics import get_meter
+meter = get_meter('payments')
+latency = meter.create_histogram('http.server.duration')
+
+with tracer.start_as_current_span('handle_request'):
+    start = time.time()
+    # ... handle ...
+    latency.record(time.time() - start)   # SDK auto-attaches current traceID as exemplar
+\`\`\`
+
+Backends supporting exemplars: Prometheus 2.27+ (with --enable-feature=exemplar-storage), Mimir, Datadog, New Relic, Honeycomb.
+
+In Grafana: latency dashboard shows histogram bucket; click a high-latency bucket → exemplar traceID; click → opens trace in Tempo.
+
+Logs → traces via traceID injection:
+
+OTel SDK's logging integration adds traceID + spanID to log records:
+
+\`\`\`python
+import logging
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+
+logging.getLogger().addHandler(LoggingHandler())
+
+with tracer.start_as_current_span('charge'):
+    logging.info('processing charge', extra={'user_id': user_id})
+    # Log record automatically includes:
+    # - trace_id: <current span's traceID>
+    # - span_id: <current span's spanID>
+    # - trace_flags: <01 for sampled>
+\`\`\`
+
+In Loki/OpenSearch/Datadog UI: filter logs by trace_id=abc123 → all logs from a specific trace. Click span in Tempo → open logs filtered by traceID.
+
+Backend correlation features:
+
+Grafana: Tempo + Loki + Mimir share a single Grafana instance. Trace-to-logs link configured per Tempo datasource:
+
+\`\`\`yaml
+datasources:
+  - name: Tempo
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: '-30s'
+        spanEndTimeShift: '30s'
+        filterByTraceID: true
+\`\`\`
+
+Click a span → Grafana queries Loki for logs in time range with trace_id=<span.traceID>. Shows all logs related to that trace span.
+
+Datadog: APM (traces) + Logs + Metrics correlated by traceID natively. Click span → side panel shows logs + metrics. Out of the box.
+
+Honeycomb: traces are the primary data model; logs become "events on spans"; metrics derived from span attributes. Native correlation.
+
+Real-world debugging flow:
+
+1. Alert fires: payment-success-rate dropped from 99.5% to 95% in last 10 min.
+
+2. Open Grafana metrics dashboard. Identify: which deployment? Which region? Region us-east-1 affected; us-west-2 not.
+
+3. Pivot to traces. Filter Tempo for service=payments, http.status_code=ERROR, region=us-east-1, time=last 10min. List of error traces appears.
+
+4. Click a representative error trace. Tempo shows span tree:
+   - charge span: Error.
+   - stripe_call span: Error, latency 30s.
+   - aws.dynamodb.GetItem span: Error, latency 25s.
+
+5. Click DynamoDB span → "View related logs". Grafana queries Loki for trace_id=abc123. Logs show: ProvisionedThroughputExceededException.
+
+6. Hypothesis: DynamoDB throttling in us-east-1. Verify via DynamoDB metrics dashboard.
+
+7. Confirmed. Increase WCU, alert resolved.
+
+Total time to root cause: <5 min. Without correlation: hours of grep + jumping between dashboards.
+
+Common correlation gotchas:
+
+Logs not in span scope. The current span context is thread-local; if you log outside an active span, no traceID attached. Use auto-instrumentation to ensure HTTP request handler creates a span around log calls.
+
+Async / queue boundaries break propagation. Producer creates trace, message queued; consumer is a different process. Use OTel's messaging instrumentation (Kafka, RabbitMQ wrappers) to inject traceID into messages and resume span on consumer side.
+
+Different timestamp clocks across services. If span end time and log time differ by hours due to clock skew, correlation breaks. NTP-synced clocks are essential.
+
+Sampling mismatch. Trace is dropped (1% baseline sampling) but logs from that trace are kept. Logs reference a non-existent traceID. Either sample logs same way or accept partial correlation.
+
+OTel gives you the primitives; backend choice determines UX. Grafana stack + Tempo/Loki/Mimir is OSS-friendly; Datadog/New Relic/Honeycomb are vendor-friendly with more polish.`,
+      },
+      {
+        question: 'Quick-fire interview answers — OpenTelemetry essentials.',
+        answer: `Rapid-fire facts.
+
+Q: What's OpenTelemetry?
+A: CNCF Incubating standard for vendor-neutral telemetry. Three signals: traces, metrics, logs (plus emerging profiling). SDKs in 11+ languages, OTLP wire protocol, Collector for processing.
+
+Q: What problem does it solve?
+A: Vendor lock-in for instrumentation. Pre-OTel: each vendor (Datadog, New Relic, Jaeger) had its own SDK. OTel: instrument once, swap backends via Collector config.
+
+Q: Three signals?
+A: Traces (distributed spans), metrics (counter/histogram), logs (structured records). Plus profiling (experimental as of 2026).
+
+Q: OTLP?
+A: OpenTelemetry Protocol. gRPC + HTTP variants. Default transport between SDK → Collector and Collector → backend. Replaces Jaeger Thrift, Zipkin JSON, etc.
+
+Q: OTel Collector?
+A: Stateless service: receivers → processors → exporters. Pipeline-as-code per signal. Two deployment patterns: agent (DaemonSet) + gateway (Deployment).
+
+Q: Why agent + gateway?
+A: Agent local to pods (low latency). Agent does light processing + forwards to gateway. Gateway does heavy work (tail sampling, redaction, routing). Cleaner separation.
+
+Q: Auto-instrumentation?
+A: Byte-code agent (Java, .NET) or library wrappers (Python, Node) that hook common frameworks (HTTP, DB, queue) without code changes. Recommended for getting started.
+
+Q: Head vs tail sampling?
+A: Head — decision at trace start, random/probabilistic. Cheap; misses errors. Tail — decision after all spans arrive, can keep errors/slow/critical routes. Expensive; informed.
+
+Q: load_balancing_exporter?
+A: Routes spans by traceID hash to specific gateway. Required for tail sampling — all spans of a trace need to land at same gateway.
+
+Q: PII redaction?
+A: attributes/redact processor in Collector. Drop user.email, hash db.statement, delete http.request.body before export.
+
+Q: Trace correlation with logs?
+A: OTel SDK's logging integration adds trace_id + span_id to log records. Backends (Loki, Datadog) support pivoting span → related logs.
+
+Q: Trace correlation with metrics?
+A: Exemplars — metrics attach sample traceIDs. Click metric histogram bucket in Grafana → trace in Tempo.
+
+Q: W3C Trace Context?
+A: Standard for trace propagation. traceparent + tracestate HTTP headers. All major instrumented HTTP/gRPC clients use this.
+
+Q: When NOT use OTel?
+A: Tiny apps where vendor agent is faster setup. Single-vendor commitment with proprietary advanced features (Datadog continuous profiling, RUM).
+
+Q: Production deployment shape?
+A: Agent DaemonSet + Gateway Deployment + backends (Tempo/Mimir/Loki or vendor). Operator's Instrumentation CRD for app instrumentation.
+
+Q: Resource attributes?
+A: Static labels (cluster, region, env) added to all signals. resource processor in Collector pipeline.
+
+Q: K8s metadata enrichment?
+A: k8sattributes processor in Collector — looks up Pod info from K8s API, adds k8s.pod.name, k8s.namespace, k8s.node.name, k8s.deployment.name to every span/metric/log.
+
+Q: Memory limiter?
+A: First processor in every Collector pipeline. Drops data when memory pressure high. Prevents OOMkill under traffic spikes.
+
+Q: Operator Instrumentation CRD?
+A: Defines auto-instrumentation config (which language, which exporter, sampler). Pod annotations (instrumentation.opentelemetry.io/inject-java: 'true') trigger init container injection.
+
+Q: OTel + vendor SDK in same app?
+A: Don't. Double instrumentation, conflicting context. Either OTel SDK with vendor exporter, or vendor SDK alone.
+
+Q: Most common OTel pitfall?
+A: Tail sampling without load_balancing_exporter — partial traces, sampling decisions wrong.
+
+These are answers an OTel-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://opentelemetry.io/docs/',
+      'https://opentelemetry.io/docs/collector/',
+      'https://opentelemetry.io/docs/specs/otel/',
+      'https://github.com/open-telemetry/opentelemetry-operator',
+      'https://www.w3.org/TR/trace-context/',
+    ],
+  },
+
 ];
