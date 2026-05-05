@@ -169,10 +169,10 @@ async function runMigrations() {
       `CREATE TABLE IF NOT EXISTS lumora_kb_chunks (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         source_kind VARCHAR(40) NOT NULL,
-        source VARCHAR(80) NOT NULL,
-        topic_id VARCHAR(120) NOT NULL,
+        source TEXT NOT NULL,
+        topic_id TEXT NOT NULL,
         topic_title TEXT NOT NULL,
-        section VARCHAR(60) NOT NULL,
+        section TEXT NOT NULL,
         content TEXT NOT NULL,
         token_count INTEGER NOT NULL,
         embedding vector(1536) NOT NULL,
@@ -196,7 +196,7 @@ async function runMigrations() {
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         company_key VARCHAR(120),
         doc_kind VARCHAR(40) NOT NULL,
-        section VARCHAR(60),
+        section TEXT,
         content TEXT NOT NULL,
         token_count INTEGER NOT NULL,
         embedding vector(1536) NOT NULL,
@@ -209,6 +209,15 @@ async function runMigrations() {
       `CREATE INDEX IF NOT EXISTS lumora_user_doc_chunks_hnsw
          ON lumora_user_doc_chunks USING hnsw (embedding vector_cosine_ops)
          WITH (m = 16, ef_construction = 64)`,
+
+      // ── RAG: column-width upgrades ─────────────────────────────────
+      // The first cut shipped these as VARCHAR. Widening to TEXT before
+      // the tables are populated avoids a full-table rewrite later.
+      // ALTER ... TYPE TEXT on a TEXT column is a fast no-op.
+      `ALTER TABLE lumora_kb_chunks ALTER COLUMN source TYPE TEXT`,
+      `ALTER TABLE lumora_kb_chunks ALTER COLUMN topic_id TYPE TEXT`,
+      `ALTER TABLE lumora_kb_chunks ALTER COLUMN section TYPE TEXT`,
+      `ALTER TABLE lumora_user_doc_chunks ALTER COLUMN section TYPE TEXT`,
     ];
 
     // Postgres error codes for "already exists" — the legitimate swallow
