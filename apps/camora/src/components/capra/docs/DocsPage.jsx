@@ -2926,10 +2926,20 @@ export default function DocsPage({ onBack }) {
                                   className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
                                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                                 >
-                                  <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    {/* Custom topic icon — colored chip badge per topic icon name */}
+                                    <span
+                                      className="w-9 h-9 rounded-md flex items-center justify-center shrink-0"
+                                      style={{
+                                        background: `${topic.color}1A`,
+                                        border: `1px solid ${topic.color}40`,
+                                        color: topic.color,
+                                      }}
+                                    >
+                                      <Icon name={topic.icon || 'shield'} size={18} />
+                                    </span>
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: topic.color }} />
                                         <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
                                         {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
                                         {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
