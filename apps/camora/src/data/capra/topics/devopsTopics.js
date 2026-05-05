@@ -12634,4 +12634,1175 @@ These are answers an OTel-fluent platform engineer should give without preparati
     ],
   },
 
+  {
+    id: 'distributed-tracing',
+    title: 'Distributed Tracing — Spans, Context Propagation, Jaeger, Tempo, Honeycomb',
+    icon: 'activity',
+    color: '#f97316',
+    questions: 5,
+    description: 'Trace requests across service boundaries. Spans, parent/child relationships, baggage, sampling. Tools: Jaeger (CNCF Graduated), Tempo (Grafana), Honeycomb (BubbleUp queries), Datadog APM. Solves the microservices "where is the latency?" problem.',
+    visualizations: [
+      {
+        title: 'Anatomy of a distributed trace',
+        description: `A trace is a tree of spans. Each span = one unit of work in one service.
+
+Walking the diagram (left to right):
+
+1. Edge gateway (Cloudflare/ALB) receives client request POST /checkout. Creates root span: traceID=abc123, spanID=001, parent=null.
+
+2. Forwards to api-gateway service. HTTP request includes traceparent: 00-abc123-001-01 header. api-gateway's instrumented HTTP server creates child span: traceID=abc123, spanID=002, parent=001.
+
+3. api-gateway calls auth-service for JWT validation. New span: traceID=abc123, spanID=003, parent=002. Latency 5ms.
+
+4. api-gateway calls cart-service to fetch cart. Span 004 parent=002. Latency 25ms; cart-service has nested DB query span 005 parent=004 (PostgreSQL SELECT, 8ms).
+
+5. api-gateway calls payment-service to charge. Span 006 parent=002. Latency 1500ms (slow!). Nested spans:
+   - 007 (parent=006): stripe-API-call. Latency 1200ms (root cause).
+   - 008 (parent=006): db-write. Latency 50ms.
+
+6. api-gateway returns 200 OK. Root span ends.
+
+Each span carries:
+- traceID: 32-char hex (consistent across all spans of one trace).
+- spanID: 16-char hex (unique per span).
+- parentSpanID: links to parent.
+- name: 'POST /checkout', 'stripe.charges.create', etc.
+- start/end timestamps.
+- status: OK / Error / Unset.
+- attributes: key-value (http.method, db.system, payment.amount).
+- events: timestamped logs within the span.
+- links: references to other traces (cross-trace causality).
+
+In a UI like Jaeger or Tempo, this trace renders as a flame graph: time on x-axis, services on y-axis, span boxes showing duration. Engineer sees instantly: stripe-API-call is the slow span; everything else is fast. Root cause identified in seconds vs hours.`,
+        image: '/diagrams/devops/o2-tracing.png',
+      },
+      {
+        title: 'Context propagation — W3C Trace Context across services',
+        description: `Trace context propagates via HTTP headers (W3C Trace Context standard, ratified 2020).
+
+Headers:
+- traceparent: 00-{32-char-traceID}-{16-char-spanID}-{flags}. Format version 00; flags: 00 (not sampled) or 01 (sampled).
+- tracestate: vendor1=value1,vendor2=value2. Optional; for vendor-specific data.
+
+Example:
+
+\`\`\`
+traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+tracestate: dd=s:1,jaeger=ab12
+\`\`\`
+
+Propagation flow per HTTP call:
+
+1. Server receives request with traceparent header. SDK parses; current span context is established.
+
+2. Application code creates child spans. Each new span inherits traceID; gets its own spanID.
+
+3. Application makes outbound HTTP call. SDK injects current spanID as new traceparent on the outbound request.
+
+4. Receiving service parses traceparent. Continues the trace tree.
+
+For gRPC: similar mechanism, headers in gRPC metadata.
+
+For message queues (Kafka, RabbitMQ, SQS): headers injected on message publish; consumed on message receive. SDK auto-instrumentation handles this for popular brokers.
+
+For async / scheduled jobs: explicit context propagation. Pass traceID via DB row, message body, etc. Resume span on consumer.
+
+baggage (W3C standard, less common): carries arbitrary key-value across service boundaries beyond trace context. Useful for: passing tenant ID, user ID, feature flag values across all spans. baggage header travels with traceparent.
+
+Critical: every middleware in the request path must propagate. A non-instrumented service in the middle of the chain breaks the trace — child spans appear orphaned.
+
+Auto-instrumentation handles propagation in 95% of cases:
+- HTTP servers/clients (Express, FastAPI, Spring, ASP.NET, Go net/http) inject + extract traceparent.
+- gRPC clients/servers inject + extract.
+- DB clients (psycopg2, mysql, redis-py) create child spans.
+- Message brokers (kafka-python, pika) inject on publish, extract on consume.
+
+Manual propagation needed when:
+- Custom protocols.
+- Async jobs not auto-instrumented.
+- Cross-region replicated calls.
+
+OTel SDK provides explicit Context API for manual cases:
+
+\`\`\`python
+from opentelemetry import context, propagators
+carrier = {}
+propagators.get_global_textmap().inject(carrier)   # serialize current context
+# carrier = {'traceparent': '00-abc-001-01'}
+# Pass carrier across boundary
+
+# On receiver side:
+ctx = propagators.get_global_textmap().extract(carrier)
+context.attach(ctx)
+\`\`\``,
+        image: '/diagrams/devops/o2-tracing.png',
+      },
+    ],
+    introduction: `Distributed tracing solves the microservices "where's the latency?" problem. A user sees 3-second checkout latency. Without tracing, you have N services each with their own logs and metrics — you grep through logs hoping to correlate timestamps. With tracing, you see the full request path as a flame graph; the slow span jumps out immediately.
+
+The concept dates to Google's Dapper (2010 paper) — Google's internal tracing system. Open implementations followed: Zipkin (Twitter, 2012), Jaeger (Uber, 2015 → CNCF Graduated 2019), AWS X-Ray (2016), Datadog APM, New Relic Distributed Tracing.
+
+The 2020s consolidation: OpenTelemetry standardized the SDK + protocol layer (covered in OpenTelemetry Fundamentals topic). Distributed tracing in 2026 means OTel-instrumented apps + your choice of backend.
+
+Backends compared:
+
+Jaeger. CNCF Graduated 2019. Originated at Uber. Pure tracing backend; storage in Cassandra, OpenSearch, or its own Badger embedded DB. UI is functional but dated. Self-host friendly. Free tier of vendor offerings (Honeycomb, Datadog) often beat Jaeger on UX.
+
+Tempo. Grafana Labs. Object-storage-backed (S3/GCS) for cheap storage. Doesn't index spans by default — query by traceID is fast; full-text search across attributes is limited (TraceQL released 2023 partially solves this). Excellent at scale because storage cost scales with object storage, not memory/disk.
+
+Honeycomb. Vendor (paid). Killer feature: BubbleUp — analyze a trace's outlier attributes against the rest of the population. "Why is this trace slow?" → "p99 traces in last hour have user.tier=enterprise; rest don't". Best-in-class for high-cardinality debugging.
+
+Datadog APM. Vendor (paid). Polished UI, deep AWS/GCP integration, RUM + APM correlation. Most-used commercial tracing backend.
+
+New Relic. Vendor (paid). Comparable to Datadog. Strong on Java/.NET ecosystem.
+
+OSS backends underperform commercial backends on UX, especially for cardinality-heavy queries. The trade-off is cost: at high RPS, commercial backends bill aggressively (per-million-spans).
+
+Why distributed tracing matters more than ever:
+
+Microservices proliferation. A 2026 e-commerce checkout typically traverses 15-30 services. Without tracing, debugging "checkout is slow" is hours of grep across N service logs. With tracing, the slow span is visible in seconds.
+
+LLM workloads. AI applications make sequential LLM calls (RAG retrieval → embedding → re-ranking → generation). Each call is 100ms-30s. Tracing shows the entire chain; latency hot-spots obvious.
+
+SaaS multi-tenancy. Production traces tagged with tenant.id show "this trace from acme-corp is slow"; bypasses average-of-averages metrics that hide per-tenant problems.
+
+Contract changes. Service A's response shape changes; Service B breaks subtly. Tracing shows the failing inter-service call directly.
+
+Three load-bearing concepts every tracing interview answer needs:
+
+1. Spans, traceIDs, parent/child relationships. The data model. Each span has traceID + spanID + parentSpanID; spans of one trace share traceID.
+
+2. Context propagation via W3C traceparent. How tracing crosses service boundaries. Auto-instrumentation handles HTTP/gRPC/Kafka; manual for custom protocols.
+
+3. Sampling and storage cost. Production traces produce billions of spans; sampling is essential. Head sampling at SDK; tail sampling at OTel Collector.`,
+    whenToUse: [
+      'Microservices architectures with >5 services in any request path',
+      'Debugging cross-service latency / errors',
+      'LLM applications with multi-step pipelines',
+      'High-cardinality multi-tenant workloads',
+      'Replacing legacy log-only debugging — find slow spans in seconds vs hours',
+    ],
+    keyConcepts: [
+      {
+        term: 'Span anatomy — the tracing data model',
+        definition: `A span represents one unit of work. Multiple spans form a trace via parent-child links.
+
+Span fields:
+
+\`\`\`json
+{
+  "traceID": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "spanID": "00f067aa0ba902b7",
+  "parentSpanID": "8e3a4d6e9f2c1b3a",
+  "operationName": "POST /api/checkout",
+  "startTime": 1712345678123456789,
+  "endTime":   1712345678234567890,
+  "duration":  111111101,
+  "status":    "OK",
+  "kind":      "SERVER",
+  "attributes": {
+    "http.method": "POST",
+    "http.route": "/api/checkout",
+    "http.status_code": 200,
+    "user.id": "user_42",
+    "service.name": "api-gateway",
+    "deployment.environment": "prod"
+  },
+  "events": [
+    { "timestamp": 1712345678150000000, "name": "stripe.start" },
+    { "timestamp": 1712345678220000000, "name": "stripe.complete", "attributes": { "stripe.charge_id": "ch_123" } }
+  ],
+  "links": [
+    { "traceID": "other-trace", "spanID": "other-span", "attributes": { "rel": "parent_workflow" } }
+  ]
+}
+\`\`\`
+
+Span kinds:
+- INTERNAL: in-process work.
+- SERVER: server-side request handling (HTTP server, gRPC server).
+- CLIENT: outbound call (HTTP client, DB query).
+- PRODUCER: message published to queue.
+- CONSUMER: message received from queue.
+
+Status:
+- UNSET (default): no explicit status.
+- OK: explicitly successful.
+- ERROR: failed; error attribute typically set.
+
+Trace tree relationships:
+- Parent/child: parentSpanID links to one parent span. Tree structure.
+- Links: one span can reference multiple other traces. Used for: batch processor span linking to upstream-individual-request traces; saga/workflow spans linking to step traces.
+
+Why this model:
+- Time-ordered: timestamps allow reconstruction of execution order.
+- Hierarchical: parent/child shows causality within a request.
+- Attributes: high-cardinality querying (find traces where user.id=X).
+- Events: discrete moments within a span (more lightweight than child spans).
+
+Span vs log line: a span has structure (kind, status, parent, duration). A log line is a single timestamp + message. Spans are richer; logs can attach to spans as events.`,
+      },
+      {
+        term: 'W3C Trace Context propagation',
+        definition: `Standardized HTTP/gRPC headers for trace context. Ratified by W3C in 2020; supersedes vendor-specific formats (Datadog dd-trace-id, Jaeger uber-trace-id, B3 zipkin).
+
+Two headers:
+
+\`\`\`
+traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+\`\`\`
+
+Format: {version}-{traceID}-{spanID}-{flags}.
+- version: 00 (current).
+- traceID: 32 hex chars (16 bytes; 128-bit ID).
+- spanID: 16 hex chars (8 bytes; 64-bit ID).
+- flags: 8 bits, currently only sampled (01 = sampled, 00 = not sampled).
+
+\`\`\`
+tracestate: dd=s:1,honeycomb=trace_id:abc
+\`\`\`
+
+Vendor-specific extensions. Each vendor adds its key=value. Limited to 32 vendors.
+
+Propagation in practice (auto-instrumented HTTP server):
+
+\`\`\`python
+# Inbound — Express, FastAPI, Spring, etc. all do this automatically:
+from opentelemetry import propagators, trace
+
+def handle_request(request):
+    ctx = propagators.get_global_textmap().extract(request.headers)
+    with trace.get_tracer(__name__).start_as_current_span('handle', context=ctx) as span:
+        span.set_attribute('http.route', request.path)
+        # ... handler logic ...
+\`\`\`
+
+Outbound (auto-instrumented HTTP client):
+
+\`\`\`python
+import requests
+# requests library wrapped by opentelemetry-instrumentation-requests
+# automatically injects traceparent header on outbound calls
+response = requests.post('https://stripe.com/v1/charges', json=...)
+# Outgoing request includes traceparent: 00-{currentTraceID}-{newSpanID}-{flags}
+\`\`\`
+
+Manual propagation for non-HTTP boundaries (async jobs, custom RPC):
+
+\`\`\`python
+from opentelemetry import propagators
+
+# Producer side: inject context into a carrier (dict/headers)
+carrier = {}
+propagators.get_global_textmap().inject(carrier)
+# carrier = {'traceparent': '00-abc-001-01'}
+queue.put({'task': '...', 'context': carrier})
+
+# Consumer side: extract and resume
+msg = queue.get()
+ctx = propagators.get_global_textmap().extract(msg['context'])
+with tracer.start_as_current_span('process_task', context=ctx) as span:
+    # ...
+\`\`\`
+
+baggage (separate W3C spec): carries arbitrary key-value across service boundaries. Use case: pass tenant.id, user.id, feature flag values to every service in the chain without re-extracting from each request body.
+
+\`\`\`
+baggage: tenant.id=acme,user.tier=enterprise,feature.new_checkout=true
+\`\`\`
+
+baggage values can be referenced in any span as attributes via SDK API.
+
+Common propagation gotchas:
+
+Non-instrumented middleware. nginx, envoy, AWS ALB don't propagate traceparent by default — incoming traceparent dropped at the proxy. Solutions: nginx propagation module, envoy native OTel filter, AWS X-Ray Daemon for ALB.
+
+Async boundaries. Producer creates trace; consumer is a different process. Manual context propagation required if message broker isn't auto-instrumented.
+
+Cross-region replication. Async replication breaks trace causality. Use links to reference the original trace; don't claim parent.
+
+Lambda / serverless cold starts. The init phase is hard to attribute. AWS Lambda's OTel integration creates a synthetic root span; subsequent invocations attach to it.`,
+      },
+      {
+        term: 'Sampling strategies in detail',
+        definition: `Sampling is the cost-control mechanism for traces. Without it, billions of spans/day overwhelm storage. With it, you keep what matters.
+
+Strategy 1: Probabilistic head sampling at SDK.
+
+\`\`\`python
+from opentelemetry.sdk.trace.sampling import TraceIdRatioBased, ParentBased
+
+# Keep 1% of root traces; respect parent decision for child spans
+sampler = ParentBased(root=TraceIdRatioBased(0.01))
+provider = TracerProvider(sampler=sampler)
+\`\`\`
+
+Behavior: at trace start, hash traceID → determine sample decision. Decision propagates via traceparent flags (01 sampled, 00 not). All services in trace agree.
+
+Pros: cheap. Spans dropped at SDK never hit Collector.
+Cons: random. Misses 99% of error traces if 1% sampling.
+
+Strategy 2: Tail sampling at OTel Collector.
+
+\`\`\`yaml
+processors:
+  tail_sampling:
+    decision_wait: 10s
+    policies:
+      - { name: errors, type: status_code, status_code: { status_codes: [ERROR] } }
+      - { name: slow, type: latency, latency: { threshold_ms: 1000 } }
+      - { name: baseline, type: probabilistic, probabilistic: { sampling_percentage: 1 } }
+\`\`\`
+
+Decision after all spans of a trace arrive. Keep based on properties.
+
+Pros: informed. 100% of errors + slow + 1% baseline = ~5% retention with full signal.
+Cons: requires gateway pattern (load_balancing_exporter on agents to colocate spans). Memory-intensive.
+
+Strategy 3: Adaptive sampling.
+
+Honeycomb's Refinery: dynamic per-route sampling rates. High-traffic /health endpoint sampled at 0.1%; low-traffic /admin sampled at 100%. Maintains useful sample count per route regardless of traffic distribution.
+
+Datadog's adaptive sampling: similar behavior built into Datadog Agent.
+
+Refinery example config:
+
+\`\`\`yaml
+[Sampling]
+SampleRate = 1
+DryRun = false
+SamplerType = "EMADynamicSampler"
+GoalSampleRate = 100        # target 100 traces/sec/service
+FieldList = ["request.path", "service.name"]
+\`\`\`
+
+Pros: high-cardinality services get appropriate sample rates.
+Cons: more configuration; less mature in OSS OTel.
+
+Strategy 4: Force-sample on rules.
+
+Override sampling for specific traces:
+
+\`\`\`python
+# Always sample if this user is in support-debug mode
+if current_user.in_debug_mode:
+    span.set_attribute('sampling.priority', 'force')
+\`\`\`
+
+Tail sampling policy:
+
+\`\`\`yaml
+- name: force-sample
+  type: string_attribute
+  string_attribute:
+    key: sampling.priority
+    values: [force]
+\`\`\`
+
+Used for: customer support reproducing user issues; debugging specific tenants.
+
+Sampling cost analysis:
+
+100k RPS service, 10 spans/request, 30 days = 26B spans/month.
+
+- 100% retention: $2.6M/month at $0.10/M (Datadog APM).
+- 1% head: 260M spans, $26k/month. Random; misses 99% of errors.
+- Tail (5% effective): 1.3B spans, $130k/month. 100% errors + slow + 1% baseline.
+- Combined head (50% drop bots) + tail (5%): 650M spans, $65k/month. 100% errors + slow + 1% baseline.
+
+The combined approach gets you Datadog-scale insight at 25% of Datadog-scale cost.
+
+Production recommendations:
+
+Default: head sampling at 100% + tail sampling at gateway (errors + slow + 1% baseline). SDK overhead minimal at 100%; Collector does heavy lifting.
+
+High-traffic services: add SDK-level filtering for noise (health checks, bot UAs).
+
+Hot-path services: lower tail sampling baseline (0.1% instead of 1%).
+
+Multi-tenant: keep 100% of enterprise tier; sample lower tiers more aggressively.
+
+Critical: tail sampling decisions must be deterministic per traceID. Otherwise different services see different sampling decisions; trace fragments are missing.`,
+      },
+      {
+        term: 'Backend choice: Jaeger vs Tempo vs Honeycomb vs Datadog',
+        definition: `Backends differ on storage cost, query capability, UX, vendor lock.
+
+Jaeger (CNCF Graduated, OSS).
+
+Architecture: collector + query + UI. Storage backends: Cassandra (production), OpenSearch (production), Badger (dev/single-node).
+
+Query model: by traceID (fast), by service+operation+tag (indexed). Full-text on attributes is expensive.
+
+UI: functional, dated. Flame graph view, service map, dependency analysis.
+
+Cost: self-host on K8s. Storage cost dominates: Cassandra cluster + ingestion infrastructure.
+
+Use when: OSS-only mandate; existing Cassandra investment; single-vendor-lock concern.
+
+Tempo (Grafana Labs, OSS).
+
+Architecture: distributor + ingester + querier. Storage: object storage (S3, GCS, Azure Blob, MinIO). Indexed by traceID; not by attributes (until TraceQL improvements).
+
+Query model: by traceID (fast). TraceQL (released 2023) adds attribute search but is slower than indexed alternatives.
+
+UI: via Grafana datasource. Trace flame graph; click span → related logs (Loki) and metrics (Mimir/Prometheus).
+
+Cost: object storage is cheap. Storage cost ~10x lower than Cassandra-backed Jaeger at scale.
+
+Use when: Grafana stack; cost-conscious at scale; query patterns dominated by traceID lookup (from logs/metrics correlation).
+
+Honeycomb (vendor, paid).
+
+Architecture: proprietary columnar store optimized for high-cardinality.
+
+Query model: BubbleUp — for any anomaly (slow trace, error trace), automatically compares anomalous trace's attributes against the rest of the population. Surfaces attributes that differ. "Why is this slow? p99 traces have user.region=eu-west-1; p50 don't."
+
+UI: best-in-class for high-cardinality debugging. Heatmaps, BubbleUp, custom queries.
+
+Cost: per-event pricing. ~$0.10-0.50 per million events depending on tier.
+
+Use when: high-cardinality apps (multi-tenant SaaS, ML inference); team values BubbleUp UX; budget allows vendor cost.
+
+Datadog APM (vendor, paid).
+
+Architecture: proprietary; tightly integrated with Datadog Logs + Metrics + Profiling + RUM.
+
+Query model: powerful trace search, service map, dependency graph. Distributed tracing tier integrates with metrics (Watchdog auto-anomaly detection).
+
+UI: polished. Single pane of glass for traces + logs + metrics + profiling.
+
+Cost: per-host + per-trace pricing. Aggressive at scale ($30-100k/month for moderate orgs).
+
+Use when: integrated DevOps stack; cost-tolerant; want polished UX.
+
+New Relic.
+
+Comparable to Datadog. Strong on Java/.NET. Per-data-ingest pricing model differs from per-host.
+
+Honeycomb vs Datadog (the two main commercial choices):
+
+Honeycomb: BubbleUp + high-cardinality. Better for multi-tenant SaaS, ML, debugging-heavy workflows.
+
+Datadog: integrated stack + polished UI. Better for general-purpose APM where cardinality is moderate.
+
+Pragmatic 2026 choice:
+
+OSS budget-conscious: Tempo + Grafana stack. Cheap; mature; Grafana ecosystem strong.
+
+OSS with rich querying: Jaeger if your team already runs it. New deployments: prefer Tempo.
+
+Multi-tenant SaaS / high cardinality: Honeycomb.
+
+Vendor-friendly, polished UX: Datadog or New Relic.
+
+All four accept OTLP from OTel-instrumented apps. Migration between backends is OTel Collector config change, not app re-instrumentation.`,
+      },
+      {
+        term: 'Recipe: Tempo + Grafana on EKS',
+        definition: `Production deployment for an org running OTel + Tempo + Grafana.
+
+Step 1 — install Tempo via Helm:
+
+\`\`\`bash
+helm repo add grafana https://grafana.github.io/helm-charts
+
+helm install tempo grafana/tempo-distributed \\
+  --namespace observability \\
+  --create-namespace \\
+  -f tempo-values.yaml
+\`\`\`
+
+tempo-values.yaml:
+
+\`\`\`yaml
+distributor:
+  replicas: 3
+  receivers:
+    otlp:
+      protocols:
+        grpc: { endpoint: 0.0.0.0:4317 }
+        http: { endpoint: 0.0.0.0:4318 }
+
+ingester:
+  replicas: 3
+  persistence:
+    enabled: true
+    size: 50Gi
+    storageClass: gp3
+
+queryFrontend:
+  replicas: 2
+
+querier:
+  replicas: 3
+
+compactor:
+  replicas: 1
+
+storage:
+  trace:
+    backend: s3
+    s3:
+      bucket: my-org-tempo-traces
+      endpoint: s3.amazonaws.com
+      region: us-east-1
+      access_key: \${AWS_ACCESS_KEY_ID}      # or use IRSA
+      secret_key: \${AWS_SECRET_ACCESS_KEY}
+    block:
+      bloom_filter_false_positive: 0.05
+    pool:
+      max_workers: 100
+      queue_depth: 10000
+
+global_overrides:
+  per_tenant_override_config: /runtime-config/overrides.yaml
+  metrics_generator_processors: [service-graphs, span-metrics]
+
+metricsGenerator:
+  enabled: true
+  replicas: 2
+\`\`\`
+
+Step 2 — service exposed for OTel Collector:
+
+\`\`\`yaml
+apiVersion: v1
+kind: Service
+metadata: { name: tempo-distributor, namespace: observability }
+spec:
+  type: ClusterIP
+  selector: { app.kubernetes.io/component: distributor }
+  ports:
+    - { name: otlp-grpc, port: 4317, targetPort: 4317 }
+    - { name: otlp-http, port: 4318, targetPort: 4318 }
+\`\`\`
+
+Step 3 — OTel Collector exports to Tempo:
+
+\`\`\`yaml
+exporters:
+  otlphttp/tempo:
+    endpoint: http://tempo-distributor.observability:4318
+    headers: {}                                 # multi-tenant: x-scope-orgid: tenant-1
+    sending_queue: { num_consumers: 4, queue_size: 5000 }
+    retry_on_failure: { enabled: true, initial_interval: 5s, max_interval: 30s, max_elapsed_time: 5m }
+\`\`\`
+
+Step 4 — Grafana datasource:
+
+\`\`\`yaml
+apiVersion: 1
+datasources:
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo-query-frontend.observability:3100
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: '-30s'
+        spanEndTimeShift: '30s'
+        filterByTraceID: true
+        filterBySpanID: false
+        tags: [{ key: 'service.name', value: 'service' }]
+      tracesToMetrics:
+        datasourceUid: prometheus
+        tags: [{ key: 'service.name', value: 'service' }, { key: 'span.kind', value: 'kind' }]
+        queries:
+          - name: 'Sample query'
+            query: 'sum(rate(traces_spanmetrics_latency_count{$$__tags}[5m]))'
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph: { enabled: true }
+\`\`\`
+
+Step 5 — verify trace ingestion:
+
+\`\`\`bash
+# Check distributor metrics
+kubectl port-forward svc/tempo-distributor 3100:3100 -n observability
+curl http://localhost:3100/metrics | grep tempo_distributor_spans_received_total
+\`\`\`
+
+Step 6 — query traces:
+
+In Grafana, Explore → Tempo → Search. Filter by service.name=payments, status=error. Click trace → flame graph. Click span → "View related logs" → Loki query for trace_id.
+
+Step 7 — TraceQL queries (Tempo 2.0+):
+
+\`\`\`
+{ resource.service.name = "payments" && status = error && duration > 1s }
+\`\`\`
+
+More expressive than legacy tag filters. Released 2023; ongoing improvements through 2024-2026.
+
+Step 8 — service graph (auto-generated):
+
+Tempo's metricsGenerator auto-generates service-graph metrics from spans. Grafana renders the service dependency graph. Shows traffic between services, request rates, error rates.
+
+Cost considerations:
+
+S3 storage: ~$0.023/GB/month. 100GB/day of traces = ~$70/month for 90-day retention.
+
+Compute: distributors + ingesters + queriers ~5-15 vCPU + 10-30GB RAM total at moderate scale. ~$200-500/month EKS compute.
+
+Total: ~$300-1000/month for moderate-scale Tempo deployment. Compare to Datadog APM at same volume: $10-50k/month. ~30-100x cost difference.
+
+Operational considerations:
+
+Ingestion bursts: ingester replicas + retry_on_failure on Collector exporter handle.
+
+Tempo doesn't index spans by default. Search by attribute is slower than Jaeger/Honeycomb. TraceQL improving but still trails in 2026.
+
+For high-cardinality search (find all traces where user.id=X): Tempo can do it but Honeycomb's columnar store is faster.
+
+Backup: S3 lifecycle handles retention. No additional backup needed for traces (operational data; lose 30 days, no business impact).`,
+      },
+    ],
+    approach: [
+      'OTel SDK auto-instrumentation in apps; W3C Trace Context propagation enabled by default',
+      'OTel Collector with tail sampling for production cost control',
+      'Backend choice: Tempo (OSS, S3) for cost-conscious, Honeycomb for high-cardinality, Datadog for polished UX',
+      'Trace-to-logs correlation via traceID in log records; trace-to-metrics via exemplars',
+      'Service map auto-generated from trace data (Tempo metricsGenerator, Datadog Service Map)',
+      'Force-sample policies for support-debug mode + enterprise tenants',
+      'Manual context propagation for async / custom protocols',
+      'Resource attributes (service.name, service.version, deployment.environment) on every span',
+    ],
+    pitfalls: [
+      'Non-instrumented service in middle of chain — breaks trace; child spans orphaned',
+      'baggage too large — propagates as HTTP header on every call; size matters',
+      'Sampling decision inconsistent across services — partial traces; missing spans',
+      'High-cardinality attributes on every span (user.id with millions of unique values) — backend storage explosion',
+      'Adding PII to span attributes — leaks user.email, payment.card_number to backend; redact in Collector',
+      'Span name explosion (per-URL spans like GET /users/123, /users/456) — high cardinality, low value; aggregate by route',
+      'Deep span trees (>50 levels) — auto-instrumentation gone wild; UI struggles to render',
+      'Cross-service clock skew — span timestamps don\'t align; trace timeline broken; NTP-sync clocks',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk through how a distributed trace gets created across 5 services.',
+        answer: `End-to-end trace creation for a typical e-commerce checkout request through 5 services. Services: edge-gateway (Cloudflare), api-gateway, auth-service, cart-service, payment-service. All instrumented with OTel.
+
+Step 1 — request arrives at edge-gateway. User clicks "Place order" in browser; HTTPS POST /checkout sent to api.example.com. Cloudflare receives. If Cloudflare is OTel-aware (custom worker), it creates root span; otherwise root span starts at api-gateway.
+
+Assume root span starts at api-gateway:
+
+api-gateway's OTel-instrumented HTTP server (e.g., FastAPI + opentelemetry-instrumentation-fastapi) receives the request. SDK does:
+- Extract traceparent from headers (none present from Cloudflare → start new trace).
+- Generate new traceID = abc123def456... (32 hex chars).
+- Generate new spanID = 001 (16 hex chars).
+- Create span: name='POST /api/checkout', kind=SERVER, traceID=abc123, spanID=001, parentSpanID=null.
+- Attributes: http.method=POST, http.route=/api/checkout, http.user_agent=Chrome/.., user.ip=1.2.3.4.
+- Status: span starts; current span context set on the request handler thread/coroutine.
+
+Step 2 — api-gateway calls auth-service to validate JWT.
+
+api-gateway's OTel-instrumented HTTP client (opentelemetry-instrumentation-requests) makes the call. SDK does:
+- Reads current span context (traceID=abc123, spanID=001).
+- Creates child span: name='GET /auth/validate', kind=CLIENT, traceID=abc123, spanID=002, parentSpanID=001.
+- Injects traceparent header into outbound HTTPS request:
+  traceparent: 00-abc123def456...-002-01
+
+auth-service receives request. SDK extracts traceparent. Creates server span: traceID=abc123, spanID=003, parentSpanID=002. Span kind=SERVER. Validates JWT (5ms). Returns 200 OK. Span ends.
+
+Back in api-gateway: client span 002 ends with status=OK. Latency 8ms.
+
+Step 3 — api-gateway calls cart-service to fetch cart.
+
+Similar pattern. api-gateway creates client span 004 (parent=001), injects traceparent into request.
+
+cart-service receives, creates server span 005 (parent=004). Internally, cart-service queries PostgreSQL via psycopg2 (auto-instrumented). DB span 006 (parent=005, kind=CLIENT) with attributes: db.system=postgresql, db.statement="SELECT * FROM carts WHERE user_id=$1" (sanitized), db.operation=SELECT, latency 12ms.
+
+cart-service returns cart data. Span 005 ends. Response goes back to api-gateway. Client span 004 ends.
+
+Step 4 — api-gateway calls payment-service to charge.
+
+Client span 007 (parent=001). payment-service server span 008 (parent=007).
+
+Within payment-service:
+- Stripe API call: client span 009 (parent=008, kind=CLIENT), attributes http.url=https://api.stripe.com/v1/charges, http.method=POST. Latency 1500ms.
+  Stripe API isn't OTel-instrumented; outbound traceparent header sent but Stripe ignores it. Span ends without server-side counterpart.
+- Database write: client span 010 (parent=008, db.statement="INSERT INTO charges..."). Latency 50ms.
+- payment-service returns 200 OK. Span 008 ends.
+
+Step 5 — api-gateway returns 200 OK to client.
+
+Root span 001 ends. Total trace duration: 1600ms.
+
+Where the data goes:
+
+Each service has OTel SDK exporter → OTel Collector (DaemonSet agent on the same K8s node).
+
+Agent buffers spans (batch processor, 10s timeout). Forwards to gateway Collector via OTLP gRPC.
+
+Gateway Collector:
+- Tail sampling: trace 1600ms duration → matches "slow" policy (>1s) → keep 100% of spans.
+- Redaction: db.statement attribute hashed via attributes/redact processor.
+- Exporter: OTLP HTTP to Tempo (or Datadog/Honeycomb).
+
+In Tempo, all 10 spans of trace abc123 are stored. Block stored in S3.
+
+Step 6 — query in Grafana.
+
+Engineer notices checkout latency alert. Opens Grafana → Tempo Search → service.name=api-gateway, status=error OR duration>1s. Clicks the trace.
+
+Flame graph renders:
+- Root span 001: 1600ms.
+- Span 002 (auth): 8ms. ✓
+- Span 004 (cart): ~30ms. ✓
+- Span 007 (payment): 1550ms. ⚠ slow.
+  - Span 008 (payment-service handler): 1550ms.
+    - Span 009 (Stripe call): 1500ms. ⚠ root cause!
+    - Span 010 (DB write): 50ms.
+
+Engineer immediately sees: the Stripe API call is the culprit, not our code. Pivot to Stripe status page or contact Stripe support.
+
+Total time from alert to root cause: <2 minutes.
+
+Without distributed tracing: grep through 5 services' logs, correlate timestamps, hours of investigation.
+
+Critical insights:
+
+Trace context propagation is automatic via auto-instrumentation. App code doesn't manage traceID/spanID directly.
+
+Each service has its own SDK; they don't share a tracing process. The shared element is OTLP wire format + W3C Trace Context.
+
+Stripe's non-instrumented API is fine — span 009 records the outbound call from our side; we just don't see Stripe's internal spans.
+
+Failures (auth-service down): span 003 has status=ERROR, attribute exception.message=Connection refused. api-gateway sees 503; creates error event in span 002. Trace shows the exact failure point.`,
+      },
+      {
+        question: 'How do you control distributed tracing costs at high RPS?',
+        answer: `At 100k+ RPS, naive tracing produces tens of billions of spans/month. Storage costs become prohibitive without sampling. Multi-layered cost control:
+
+Layer 1: Drop noise at the SDK.
+
+Health checks, metrics scrapes, robots.txt — high-volume, low-value endpoints. Drop at SDK level, never reach Collector:
+
+\`\`\`python
+from opentelemetry.sdk.trace.sampling import Sampler, SamplingResult, Decision
+
+class NoiseFilter(Sampler):
+    def should_sample(self, parent_context, trace_id, name, kind, attributes, links):
+        path = attributes.get('http.target', '')
+        if path in ['/health', '/metrics', '/healthz', '/ready']:
+            return SamplingResult(decision=Decision.DROP)
+        return SamplingResult(decision=Decision.RECORD_AND_SAMPLE)
+
+provider = TracerProvider(sampler=NoiseFilter())
+\`\`\`
+
+Reduces span volume 30-70% depending on health-check frequency.
+
+Layer 2: Probabilistic head sampling for normal traffic.
+
+\`\`\`python
+sampler = ParentBased(root=TraceIdRatioBased(0.1))   # 10% baseline
+provider = TracerProvider(sampler=NoiseFilter() + sampler)
+\`\`\`
+
+Reduces remaining 30-70% to 3-7% of total volume.
+
+Layer 3: Tail sampling at OTel Collector.
+
+After head sampling, 10-30% of traces reach Collector. Tail sampling drops to ~5% of those:
+
+\`\`\`yaml
+processors:
+  tail_sampling:
+    decision_wait: 10s
+    policies:
+      - { name: errors, type: status_code, status_code: { status_codes: [ERROR] } }
+      - { name: slow, type: latency, latency: { threshold_ms: 1000 } }
+      - { name: vip-tenants, type: string_attribute, string_attribute: { key: tenant.tier, values: [enterprise] } }
+      - { name: critical-routes, type: string_attribute, string_attribute: { key: http.route, values: [/checkout, /payment, /refund] } }
+      - { name: baseline, type: probabilistic, probabilistic: { sampling_percentage: 5 } }
+\`\`\`
+
+Net effect after all three layers: ~0.5-2% of original spans stored. 100% of error traces. 100% of slow traces. 100% of enterprise tenant traces.
+
+Layer 4: Adaptive sampling per route.
+
+Honeycomb's Refinery dynamically adjusts sampling rate per service+route. High-traffic /api/list_users gets 0.1% rate; low-traffic /api/admin/audit gets 100%. Goal: ~100 traces/sec/route regardless of traffic distribution.
+
+\`\`\`yaml
+[Sampling]
+SamplerType = "EMADynamicSampler"
+GoalSampleRate = 100
+FieldList = ["request.path", "service.name", "status_code"]
+\`\`\`
+
+Trade-off: more configuration; less mature in OSS OTel as of 2026 (Refinery is Honeycomb-specific but compatible with OTel).
+
+Layer 5: Reduce span attribute cardinality.
+
+Each span carries attributes. High-cardinality attributes (user.id with millions of unique values) explode storage:
+
+\`\`\`yaml
+processors:
+  attributes:
+    actions:
+      - { key: user.id, action: hash }                # hash high-cardinality
+      - { key: http.url, action: extract, pattern: '^.*/(?P<path>.*)$' }   # strip query string
+      - { key: db.statement, action: hash }
+      - { key: http.request.body, action: delete }   # never send full bodies
+\`\`\`
+
+Layer 6: Span name normalization.
+
+Auto-instrumentation sometimes creates spans named GET /users/123 and GET /users/456 separately. High cardinality. Use http.route attribute (auto-instrumentation captures this) and span name like GET /users/{id}.
+
+For libraries that don't normalize, custom processor:
+
+\`\`\`yaml
+processors:
+  transform:
+    trace_statements:
+      - context: span
+        statements:
+          - replace_pattern(name, "/users/[0-9]+", "/users/{id}")
+          - replace_pattern(name, "/orders/[a-z0-9-]{36}", "/orders/{uuid}")
+\`\`\`
+
+Layer 7: Per-tenant retention.
+
+Enterprise tenants: 90-day retention. Free tier: 7-day retention. Configure backend storage lifecycle policies.
+
+Tempo: per-tenant overrides:
+
+\`\`\`yaml
+overrides:
+  enterprise-tenant:
+    block_retention: 90d
+  free-tenant:
+    block_retention: 7d
+\`\`\`
+
+S3 lifecycle for object storage:
+
+\`\`\`json
+{
+  "Rules": [{
+    "ID": "tempo-tenant-7d",
+    "Status": "Enabled",
+    "Filter": { "Tag": { "Key": "tenant", "Value": "free" } },
+    "Expiration": { "Days": 7 }
+  }]
+}
+\`\`\`
+
+Cost monitoring:
+
+Track in Grafana:
+- Spans received per service per minute (Collector metrics).
+- Spans sampled vs dropped (tail sampling stats).
+- Backend storage size growth rate (S3 bucket size, Cassandra disk).
+- Per-service cost (sum of stored spans × cost-per-span).
+
+Alert on:
+- Cost per service exceeding budget threshold.
+- Sudden spike in span volume (configuration regression, instrumentation gone wild).
+
+Real-world cost progression:
+
+100k RPS service, naive 100% sampling: 26B spans/month, $2.6M/month at $0.10/M.
+
+After noise filter (drop /health 60%): 10B spans/month, $1M/month.
+
+After head sampling 10%: 1B spans/month, $100k/month.
+
+After tail sampling (5% of head-sampled, plus errors/slow): 50M baseline + 100M error/slow = 150M spans/month, $15k/month.
+
+After cardinality reduction + per-tenant retention: ~$8-12k/month.
+
+Total reduction: ~99.5%. From $2.6M unmanageable to $10k manageable.
+
+The cost-control work is 1-2 engineer-weeks setup, ongoing tuning. ROI obvious at any scale where per-month spend matters.`,
+      },
+      {
+        question: 'When is distributed tracing the wrong tool?',
+        answer: `Tracing solves cross-service latency/error debugging. It's not the right answer for everything in observability.
+
+Wrong fit 1: Single-service monoliths.
+
+A monolith handling 100k RPS doesn't have cross-service traces — there's only one service. Internal function-call tracing (every function call as a span) creates massive overhead and span volume for marginal benefit.
+
+Better tools: profiling (Pyroscope, Parca, Datadog Profiling), APM with method-level timing (Datadog's automatic method timing), structured logs.
+
+Tracing for monoliths: keep top-level request spans + DB query spans. Skip internal function-call spans.
+
+Wrong fit 2: High-volume metrics-shaped questions.
+
+"What's our p99 checkout latency this week?" doesn't need traces — it needs metrics. Aggregating spans into latency percentiles is expensive; metrics are cheap.
+
+Best practice: emit RED metrics (Rate, Errors, Duration) per service and per route as histograms. Use traces to drill INTO specific slow requests; use metrics to detect that something is slow.
+
+Tempo's metricsGenerator automates this — generates span-derived metrics for service-level dashboards.
+
+Wrong fit 3: Long-running batch jobs.
+
+A 6-hour ETL job has spans that span 6 hours. Backends struggle: trace stays "open" for 6 hours, accumulating span data in memory; UI flame graph for 6-hour traces is unusable.
+
+Better: structured logs + custom batch metrics (rows processed, errors, duration). Trace only the orchestration layer (job started, partitions launched), not every row processed.
+
+For ML training: emit metrics per epoch + structured logs. Trace the training framework setup, not gradient updates.
+
+Wrong fit 4: Real-time streaming pipelines.
+
+A Kafka stream processing 1M messages/sec produces 1M traces/sec. Even with sampling, the volume overwhelms backends.
+
+Better: aggregate metrics (messages processed, lag, errors). Trace only sampled messages or specific outlier conditions (high latency, errors). Combine with eBPF-based observability for kernel-level visibility.
+
+Wrong fit 5: Synchronous client-side debugging.
+
+Browser performance issues: a page took 3s to load. Distributed tracing can show server-side latency but client-side rendering, JS execution, image loading — these are RUM (Real User Monitoring), not traditional APM.
+
+Better: RUM (Datadog RUM, New Relic Browser, Sentry Performance, or browser-native instrumentation via OTel Browser SDK).
+
+Wrong fit 6: Debugging a single deployment's behavior.
+
+"Why did this specific deploy at 14:23 break?" Tracing helps if the trace shows error conditions, but the deployment itself isn't traceable. You need:
+- Deploy logs.
+- Configuration diffs.
+- Time-correlated metrics.
+
+Tracing is downstream — shows symptoms, not causes when the cause is configuration/deploy.
+
+Wrong fit 7: Cost-aware aggregations.
+
+"How much did each tenant cost us this month in DB reads?" requires accounting-grade summation. Sampling makes this approximate. Use metrics counters (per-tenant counter, increment on every read) for accounting-shaped questions.
+
+When tracing is the right tool:
+
+Cross-service latency: where is the 3s delay? Tracing.
+
+Error correlation: which service failed first? Tracing.
+
+User-specific debugging: trace ID for support to reproduce. Tracing.
+
+Architectural understanding: service map, dependency graph. Tracing-derived.
+
+Long-tail debugging: p99 traces for a route. Tracing.
+
+When tracing supplements other tools:
+
+Tracing + metrics: drill from "p99 latency spiked" metric → exemplar trace → root cause span.
+
+Tracing + logs: span context links log records to specific traces.
+
+Tracing + profiling: span shows "method X took 500ms"; profiling shows "method X CPU profile".
+
+Pragmatic 2026 stance: tracing is the third leg of observability (with metrics and logs). Each leg covers different question types. Mature observability uses all three; primitive setups use only one or two.
+
+Cost-aware: don't trace what you don't query. If you have terabytes of trace data nobody looks at, sampling is too high or query patterns mismatch.`,
+      },
+      {
+        question: 'How do you handle async / queue-based tracing?',
+        answer: `Async boundaries break traditional HTTP traceparent propagation. Producer creates trace; consumer is a separate process that runs later. Solutions vary by message broker.
+
+Message broker auto-instrumentation:
+
+Kafka: opentelemetry-instrumentation-kafka-python (Python), kafka-clients-instrumentation (Java) auto-instrument. Traceparent injected as Kafka message header on send; extracted on receive.
+
+\`\`\`python
+from kafka import KafkaProducer
+producer = KafkaProducer(bootstrap_servers='kafka:9092')
+
+with tracer.start_as_current_span('publish_order'):
+    producer.send('orders', value=json.dumps(order).encode())
+    # SDK auto-injects traceparent into Kafka message headers
+\`\`\`
+
+Consumer side:
+
+\`\`\`python
+from kafka import KafkaConsumer
+consumer = KafkaConsumer('orders', bootstrap_servers='kafka:9092', group_id='order-processor')
+
+for msg in consumer:
+    # SDK auto-extracts traceparent from message headers
+    # Creates a span with parent = producer's span
+    with tracer.start_as_current_span('process_order'):
+        order = json.loads(msg.value)
+        # ... process ...
+\`\`\`
+
+The trace shows: producer span → message in queue → consumer span. Parent/child relationship across the broker.
+
+RabbitMQ: opentelemetry-instrumentation-pika (Python) similar.
+
+AWS SQS: opentelemetry-instrumentation-boto3 instruments. Traceparent in SQS message attributes.
+
+Google Pub/Sub: opentelemetry-instrumentation-google-cloud-pubsub.
+
+For message brokers without auto-instrumentation, manual:
+
+\`\`\`python
+from opentelemetry import propagators
+
+# Producer
+with tracer.start_as_current_span('publish') as span:
+    carrier = {}
+    propagators.get_global_textmap().inject(carrier)
+    message = {
+        'data': payload,
+        'context': carrier,    # explicit context propagation
+    }
+    queue.put(json.dumps(message))
+
+# Consumer
+msg = json.loads(queue.get())
+ctx = propagators.get_global_textmap().extract(msg['context'])
+with tracer.start_as_current_span('process', context=ctx) as span:
+    # ... process msg['data'] ...
+\`\`\`
+
+Time-shifted async:
+
+Long-delay queues (scheduled tasks, retry queues) have producer and consumer spans separated by hours/days. Backends struggle:
+- Tail sampling decision_wait can't wait for hours.
+- Backend may have evicted producer span by time consumer span arrives.
+
+Pragmatic approach: producer span ends quickly (records "message published"). Consumer span is its own independent trace, with a link to producer's traceID for correlation.
+
+\`\`\`python
+# Producer — records the publish but trace ends immediately
+with tracer.start_as_current_span('publish') as span:
+    publish_id = str(uuid.uuid4())
+    producer.send(topic, message_with_metadata(publish_id))
+    span.set_attribute('publish.id', publish_id)
+    # Span ends; trace is complete from producer's perspective.
+
+# Consumer — independent trace; references producer via link
+def process(msg):
+    publish_id = msg.headers['publish_id']
+    with tracer.start_as_current_span('process_async_task',
+        links=[Link(SpanContext(trace_id=lookup_trace_for_publish(publish_id)))]
+    ) as span:
+        span.set_attribute('publish.id', publish_id)
+        # ... process ...
+\`\`\`
+
+This approach: two independent traces (producer, consumer), explicitly linked. Backends like Datadog and Honeycomb handle links well; Tempo's link support is improving.
+
+Fan-out / batch processing:
+
+Producer publishes 10k messages from a single batch span. Consumer creates 10k independent processing spans, each linked to producer via SpanContext.
+
+For batch consumer (process N messages in one consumer span): create one span with N links to producer messages. Useful for batch SQL inserts after Kafka batch consume.
+
+Stream processing (Flink, Spark Streaming):
+
+Streaming jobs have continuous record processing. Tracing every record creates billions of spans. Sampling at the record level:
+
+- Trace 0.1% of records as full spans. Use links to associate with stream-level work spans.
+- Stream-level metrics (records/sec, lag, errors) on the streaming job's main span (covering a checkpoint interval).
+
+Lambda / serverless async:
+
+AWS Lambda invocations from SQS / SNS / EventBridge:
+- AWS X-Ray native integration extracts trace from message attributes; Lambda runtime creates child span.
+- For OTel instead of X-Ray: configure AWS Distro for OpenTelemetry (ADOT) Lambda layer; same auto-extraction.
+
+Workflow orchestration (Temporal, Argo Workflows, Step Functions):
+
+Workflow engines often have native tracing:
+- Temporal: emits OTel spans for activities, workflow events.
+- Argo Workflows: WorkflowTaskResult includes tracing context (Argo + OTel integration as of v3.5+).
+- Step Functions: AWS X-Ray native; OTel via ADOT.
+
+Each workflow execution becomes a trace; activities/tasks are child spans.
+
+Common async pitfalls:
+
+Span duration too long: producer span stays open until consumer finishes. If consumer is delayed by hours, span never closes; backends time out. Solution: producer span ends at publish; consumer is independent + linked.
+
+Trace context lost in retries: retry logic re-sends message; original traceparent lost. Solution: explicit propagation via message metadata.
+
+Cross-region replication: producer in us-east-1, consumer in eu-west-1. Trace data needs to flow back to a common backend. Solution: per-region Collector → central Tempo/Honeycomb/Datadog.
+
+Async tracing is harder than sync HTTP tracing. Auto-instrumentation handles common brokers; custom protocols require explicit propagation.`,
+      },
+      {
+        question: 'Quick-fire interview answers — distributed tracing essentials.',
+        answer: `Rapid-fire facts.
+
+Q: What's a distributed trace?
+A: Tree of spans showing a request's path across services. Each span = one unit of work in one service. Linked via parent/child relationships.
+
+Q: What's in a span?
+A: traceID (32 hex), spanID (16 hex), parentSpanID, name, start/end times, status (OK/Error), kind (SERVER/CLIENT/INTERNAL/PRODUCER/CONSUMER), attributes (key-value), events (timestamped), links (cross-trace references).
+
+Q: How does context propagate?
+A: W3C Trace Context standard. traceparent + tracestate HTTP/gRPC headers. Auto-instrumentation handles 95% of cases (HTTP, gRPC, DB drivers, Kafka).
+
+Q: Span kinds?
+A: INTERNAL (in-process), SERVER (handle inbound request), CLIENT (outbound call), PRODUCER (queue publish), CONSUMER (queue receive).
+
+Q: Sampling strategies?
+A: Head — random/probabilistic at SDK; cheap but misses errors. Tail — at OTel Collector after all spans arrive; can keep errors/slow/critical-routes. Adaptive — per-route dynamic rates.
+
+Q: Backend choice?
+A: Jaeger (CNCF, OSS, Cassandra-backed). Tempo (Grafana, S3-backed, cheap). Honeycomb (vendor, BubbleUp UX). Datadog APM (vendor, integrated stack). New Relic (vendor, Java/.NET-strong).
+
+Q: Tempo cost advantage?
+A: Object storage (S3/GCS) backed; ~10x cheaper than Cassandra-backed Jaeger at scale.
+
+Q: Honeycomb's BubbleUp?
+A: For an outlier trace, automatically compares its attributes against the population. Surfaces what makes the outlier different. Best-in-class for high-cardinality debugging.
+
+Q: Datadog APM strengths?
+A: Polished UI, integrated stack (APM + Logs + Metrics + Profiling + RUM), service map auto-generation. Aggressive pricing at scale.
+
+Q: Async/queue tracing?
+A: Auto-instrumentation for Kafka, RabbitMQ, SQS injects traceparent into message headers. Consumer extracts to continue trace. For long-delay async: producer span ends at publish; consumer is independent trace linked via SpanContext.
+
+Q: baggage?
+A: W3C standard for carrying arbitrary key-value across service boundaries. Use case: tenant.id, user.tier, feature flags propagated to every service in chain.
+
+Q: Trace-to-logs correlation?
+A: OTel SDK's logging integration adds trace_id + span_id to log records. Backends pivot span → related logs.
+
+Q: Trace-to-metrics correlation?
+A: Exemplars — metrics attach sample traceIDs. Click metric histogram in Grafana → trace in Tempo.
+
+Q: When is tracing wrong tool?
+A: Single-service monoliths (use profiling); high-volume aggregation queries (use metrics); long batch jobs (6h+ traces unusable); real-time streaming (volume overwhelms); single-deploy debugging (traces show symptoms, not causes).
+
+Q: Most common tracing pitfall?
+A: Non-instrumented service in middle of chain — orphans children. Or high-cardinality attributes (user.id with millions unique) blow up storage.
+
+Q: Force-sample for support?
+A: Custom sampler keyword + tail sampling policy on attribute. Customer support reproduces user issue with sampling.priority=force on that user's session.
+
+Q: How handle PII in traces?
+A: attributes/redact processor in Collector. Drop user.email, hash db.statement, delete http.request.body before export.
+
+Q: Service map auto-generation?
+A: Tempo metricsGenerator (span-derived metrics → service graph in Grafana). Datadog Service Map (auto-built from traces).
+
+Q: Production sampling rate?
+A: Combined head (50% drop noise) + tail (5% baseline + 100% errors/slow). Net ~2-5% retention with full signal preservation.
+
+Q: TraceQL?
+A: Tempo 2.0+ query language. { resource.service.name = "payments" && status = error && duration > 1s }. More expressive than legacy tag filters.
+
+Q: Cross-region tracing?
+A: Per-region OTel Collector → central backend (Tempo, Honeycomb, Datadog). Trace data flows back to single query plane.
+
+These are answers a tracing-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://opentelemetry.io/docs/concepts/signals/traces/',
+      'https://www.w3.org/TR/trace-context/',
+      'https://research.google/pubs/dapper-a-large-scale-distributed-systems-tracing-infrastructure/',
+      'https://grafana.com/docs/tempo/latest/',
+      'https://www.honeycomb.io/blog/bubbleup-quick-pivots-anomaly-detection',
+      'https://www.jaegertracing.io/docs/',
+    ],
+  },
+
 ];
