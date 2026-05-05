@@ -26,6 +26,20 @@ import {
 import TopicComments from './TopicComments';
 import { ContentHeading, GlassPill } from '../ui';
 
+// Strip wrapping straight/curly quotes from a value so prose like
+// `"Our recommendation engine..."` reads as plain text. Only removes a
+// matched outer pair — embedded quotes inside the string survive.
+function stripQuotes(s) {
+  if (typeof s !== 'string') return s;
+  const t = s.trim();
+  if (t.length < 2) return s;
+  const first = t[0], last = t[t.length - 1];
+  if ((first === '"' && last === '"') || (first === '“' && last === '”') || (first === "'" && last === "'") || (first === '‘' && last === '’')) {
+    return t.slice(1, -1);
+  }
+  return s;
+}
+
 /**
  * Simple regex-based syntax highlighter for Python code.
  * Returns an HTML string with colored spans for comments, keywords, strings, and numbers.
@@ -675,8 +689,8 @@ export default function TopicDetail({
           treatment. */}
       <div className="prep-content flex-1 min-w-0">
       {/* Topic Header — flush left, no card */}
-      <div className="pb-4 mb-6 border-b border-[var(--border)]">
-        <div className="flex items-center justify-between mb-2 gap-2">
+      <div className="pb-3 mb-4 border-b border-[var(--border)]">
+        <div className="flex items-center justify-between mb-1.5 gap-2">
           {/* Breadcrumb: Prepare › <category> › <topic>. The category crumb
               clears selectedTopic to scroll back to the topic list (preserves
               filter state); the leaf is non-clickable. */}
@@ -695,18 +709,18 @@ export default function TopicDetail({
         </div>
         <div className="flex items-start gap-2">
           {getCompanyLogoSrc(selectedTopic) ? (
-            <CompanyLogo topicId={selectedTopic} size={48} />
+            <CompanyLogo topicId={selectedTopic} size={36} />
           ) : (
             <div
-              className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0"
+              className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0"
               style={{ background: 'var(--bg-elevated)' }}
             >
-              <Icon name={topicDetails.icon} size={28} style={{ color: 'var(--text-primary)' }} />
+              <Icon name={topicDetails.icon} size={20} style={{ color: 'var(--text-primary)' }} />
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <h1 className="text-[28px] font-bold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.title}</h1>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h1 className="text-[24px] font-bold text-[var(--text-primary)] landing-display tracking-tight">{topicDetails.title}</h1>
               {topicDetails.isNew && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] font-bold">NEW</span>}
               {topicDetails.difficulty && (
                 <span className={`text-[10px] uppercase tracking-[0.12em] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-surface)] ${
@@ -745,60 +759,44 @@ export default function TopicDetail({
             {topicDetails.subtitle && !topicDetails.difficulty && (
               <p className="text-[var(--text-muted)] text-sm mt-1 landing-body">{fmtCloud(topicDetails.subtitle)}</p>
             )}
-            {/* Authority strip — Databricks-style "Reviewed by · Last
-                reviewed · Source" line under the title. Truthful only:
-                'Reviewed by Camora team' (always), category context,
-                approximate reading time, topic id pill. */}
-            <div className="flex items-center gap-3 mt-3 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M9 12l2 2 4-4" />
-                  <circle cx="12" cy="12" r="10" />
-                </svg>
-                Reviewed by Camora team
-              </span>
-              {pageConfig?.title && (
-                <span className="text-[10px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                  {pageConfig.title}
-                </span>
+            {/* Single meta strip — category + topic id + (behavioral) read
+                time, question/tip counts. Compact, all on one row. */}
+            <div className="flex items-center gap-x-3 gap-y-1 mt-2 flex-wrap text-[10px] uppercase tracking-[0.12em] landing-mono text-[var(--text-muted)]">
+              {pageConfig?.title && <span>{pageConfig.title}</span>}
+              <span>ID · {selectedTopic}</span>
+              {(activePage === 'behavioral' || activePage === 'low-level' || isSDStyle) && (
+                <>
+                  {topicDetails.keyQuestions && (
+                    <span className="flex items-center gap-1">
+                      <Icon name="messageSquare" size={10} />
+                      {topicDetails.keyQuestions.length} questions
+                    </span>
+                  )}
+                  {topicDetails.tips && (
+                    <span className="flex items-center gap-1">
+                      <Icon name="lightbulb" size={10} />
+                      {topicDetails.tips.length} tips
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    <Icon name="clock" size={10} />
+                    ~{Math.max(3, Math.ceil(((topicDetails.introduction || '').length + (topicDetails.keyQuestions || []).reduce((a, q) => a + (q.answer || '').length, 0)) / 1200))} min read
+                  </span>
+                  {topicDetails.starExample && (
+                    <span className="flex items-center gap-1 text-[var(--accent)]">
+                      <Icon name="star" size={10} />
+                      STAR example
+                    </span>
+                  )}
+                </>
               )}
-              <span className="text-[10px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                ID · {selectedTopic}
-              </span>
             </div>
-            {/* Behavioral meta badges — reading time, question count, tips count */}
-            {(activePage === 'behavioral' || activePage === 'low-level' || isSDStyle) && (
-              <div className="flex items-center gap-3 mt-2.5">
-                {topicDetails.keyQuestions && (
-                  <span className="flex items-center gap-1 text-[10px] landing-mono text-[var(--text-muted)]">
-                    <Icon name="messageSquare" size={10} />
-                    {topicDetails.keyQuestions.length} questions
-                  </span>
-                )}
-                {topicDetails.tips && (
-                  <span className="flex items-center gap-1 text-[10px] landing-mono text-[var(--text-muted)]">
-                    <Icon name="lightbulb" size={10} />
-                    {topicDetails.tips.length} tips
-                  </span>
-                )}
-                <span className="flex items-center gap-1 text-[10px] landing-mono text-[var(--text-muted)]">
-                  <Icon name="clock" size={10} />
-                  ~{Math.max(3, Math.ceil(((topicDetails.introduction || '').length + (topicDetails.keyQuestions || []).reduce((a, q) => a + (q.answer || '').length, 0)) / 1200))} min read
-                </span>
-                {topicDetails.starExample && (
-                  <span className="flex items-center gap-1 text-[10px] landing-mono text-[var(--accent)]">
-                    <Icon name="star" size={10} />
-                    STAR example
-                  </span>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
 
       {/* ── Interactive Toolbar with Progress ── */}
-      <div className="flex flex-wrap items-center justify-between gap-2 py-3 mb-6 border-b border-[var(--border)]">
+      <div className="flex flex-wrap items-center justify-between gap-2 py-2 mb-4 border-b border-[var(--border)]">
         <div className="flex items-center gap-2">
           {/* Progress */}
           {progressInfo && (
@@ -2661,7 +2659,7 @@ export default function TopicDetail({
                 {quoteMatch ? (
                   <>
                     <div className="pl-4 border-l-2 border-[var(--accent)] mb-4">
-                      <p className="text-[16px] font-medium text-[var(--text-primary)] italic landing-body leading-relaxed">"{fmtCloud(quoteMatch[1])}"</p>
+                      <p className="text-[16px] font-medium text-[var(--text-primary)] landing-body leading-relaxed">{fmtCloud(quoteMatch[1])}</p>
                     </div>
                     <p className="text-[var(--text-secondary)] text-[15px] leading-[1.75] landing-body">{fmtCloud(quoteMatch[2].trim())}</p>
                   </>
@@ -2697,26 +2695,45 @@ export default function TopicDetail({
             <section id="star-example" className="scroll-mt-24 mt-14 first:mt-0">
               <ContentHeading
                 title="STAR Framework Example"
-                actions={<GlassPill>4 steps</GlassPill>}
+                actions={<GlassPill>{Object.keys(topicDetails.starExample).length} steps</GlassPill>}
               />
-              <ol className="relative">
-                <div className="absolute left-[11px] top-2 bottom-2 w-px bg-[var(--border)]" aria-hidden="true" />
+              <ol className="space-y-4">
                 {Object.entries(topicDetails.starExample).map(([key, value], idx) => {
                   const label = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
                   const stepNum = String(idx + 1).padStart(2, '0');
                   return (
-                    <li key={key} className="relative pl-9 pb-5 last:pb-0">
-                      <span
-                        className="absolute left-0 top-0 w-[23px] h-[23px] rounded-full flex items-center justify-center text-[10px] font-bold text-[var(--text-muted)] landing-mono bg-[var(--bg-surface)] border border-[var(--border)]"
-                        aria-hidden="true"
+                    <li
+                      key={key}
+                      className="rounded-md overflow-hidden"
+                      style={{
+                        background: 'var(--bg-surface)',
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      <div
+                        className="flex items-center gap-2.5 px-4 py-2"
+                        style={{
+                          background: 'var(--cam-hero-strip)',
+                          borderBottom: '1px solid var(--cam-gold-leaf)',
+                        }}
                       >
-                        {stepNum}
-                      </span>
-                      <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] landing-mono">
-                        {label}
+                        <span
+                          className="text-[10px] font-semibold tracking-wider px-2 py-0.5 landing-mono tabular-nums"
+                          style={{
+                            background: 'rgba(255,255,255,0.08)',
+                            border: '1px solid rgba(255,255,255,0.16)',
+                            borderRadius: 999,
+                            color: 'rgba(255,255,255,0.85)',
+                          }}
+                        >
+                          Step {stepNum}
+                        </span>
+                        <span className="text-[14px] font-bold text-white landing-display tracking-tight">
+                          {label}
+                        </span>
                       </div>
-                      <p className="mt-1.5 text-sm leading-relaxed text-[var(--text-secondary)] landing-body">
-                        {value}
+                      <p className="px-5 py-4 text-[15px] leading-[1.75] text-[var(--text-primary)] landing-body">
+                        {stripQuotes(value)}
                       </p>
                     </li>
                   );
@@ -2736,7 +2753,7 @@ export default function TopicDetail({
                 <div className="pl-4 border-l-2 border-[var(--border)] space-y-3">
                   {topicDetails.exampleResponse.split('\n\n').map((paragraph, i) => (
                     <p key={i} className="text-[var(--text-primary)] text-sm leading-relaxed landing-body">
-                      {paragraph.trim()}
+                      {stripQuotes(paragraph.trim())}
                     </p>
                   ))}
                 </div>
@@ -2813,7 +2830,7 @@ export default function TopicDetail({
                                 </div>;
                               }
                               if (t.startsWith('"') && t.endsWith('"')) {
-                                return <div key={i} className="pl-3 py-1 text-sm italic text-[var(--text-muted)] border-l-2 border-[var(--border)] landing-body">{t.slice(1, -1)}</div>;
+                                return <div key={i} className="pl-3 py-1 text-sm text-[var(--text-secondary)] border-l-2 border-[var(--border)] landing-body">{t.slice(1, -1)}</div>;
                               }
                               if (t.startsWith('- ') || t.startsWith('• ')) {
                                 return <div key={i} className="flex items-start gap-2.5 mb-1">
