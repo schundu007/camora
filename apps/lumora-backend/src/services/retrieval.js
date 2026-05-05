@@ -10,58 +10,12 @@
  * Per-user namespace is enforced at the SQL layer — every user-doc
  * query has WHERE user_id = $1. Namespace bugs are tested.
  */
-import { query } from '../lib/shared-db.js';
-import { embedQuery } from './embeddings.js';
+import { hybridSearchKb, hybridSearchUserDocs } from './hybridRetrieval.js';
 
 const DEFAULT_TIMEOUT_MS = 250;
 const KB_TOP_K = 6;
 const USER_TOP_K = 4;
 const MAX_CHUNK_CHARS = 1200; // hard cap injected into prompt per chunk
-
-function asVecLiteral(v) {
-  return `[${v.join(',')}]`;
-}
-
-async function searchKb(vec, k) {
-  const r = await query(
-    `SELECT id, source, topic_id, topic_title, section, content,
-            embedding <=> $1::vector AS distance
-       FROM lumora_kb_chunks
-       ORDER BY embedding <=> $1::vector
-       LIMIT $2`,
-    [asVecLiteral(vec), k],
-  );
-  return r.rows.map((row) => ({
-    tier: 'kb',
-    id: row.id,
-    source: row.source,
-    topicId: row.topic_id,
-    topicTitle: row.topic_title,
-    section: row.section,
-    content: row.content.slice(0, MAX_CHUNK_CHARS),
-    distance: Number(row.distance),
-  }));
-}
-
-async function searchUserDocs(userId, vec, k) {
-  const r = await query(
-    `SELECT id, doc_kind, section, content,
-            embedding <=> $2::vector AS distance
-       FROM lumora_user_doc_chunks
-       WHERE user_id = $1
-       ORDER BY embedding <=> $2::vector
-       LIMIT $3`,
-    [userId, asVecLiteral(vec), k],
-  );
-  return r.rows.map((row) => ({
-    tier: 'user',
-    id: row.id,
-    docKind: row.doc_kind,
-    section: row.section,
-    content: row.content.slice(0, MAX_CHUNK_CHARS),
-    distance: Number(row.distance),
-  }));
-}
 
 /**
  * @param {object}  opts
@@ -80,11 +34,11 @@ export async function retrieve(opts) {
   });
 
   const work = (async () => {
-    const vec = await embedQuery(question);
-    const promises = [searchKb(vec, KB_TOP_K)];
-    if (userId) promises.push(searchUserDocs(userId, vec, USER_TOP_K));
+    const promises = [hybridSearchKb(question, KB_TOP_K)];
+    if (userId) promises.push(hybridSearchUserDocs(userId, question, USER_TOP_K));
     const results = await Promise.all(promises);
-    return results.flat();
+    const flat = results.flat();
+    return flat.map((c) => ({ ...c, content: (c.content || '').slice(0, MAX_CHUNK_CHARS) }));
   })();
 
   try {
