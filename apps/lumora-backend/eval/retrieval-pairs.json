@@ -1,0 +1,198 @@
+{
+  "schema": "retrieval-eval-v1",
+  "description": "Hand-curated (question, expected_source, expected_topic_id) pairs for recall@k + MRR measurement. Each pair lists one OR MORE acceptable expected sources/topics — retrieval is a hit if ANY are present in the top-K.",
+  "pairs": [
+    {
+      "id": "sre-slo-1",
+      "question": "What is an SLO and how do error budgets work?",
+      "expectedSources": ["capra-sre"],
+      "expectedTopicIds": ["sli-slo-sla", "error-budgets"]
+    },
+    {
+      "id": "sre-slo-2",
+      "question": "tell me about reliability targets and acceptable failure rates",
+      "expectedSources": ["capra-sre", "capra-scalable"],
+      "expectedTopicIds": ["sli-slo-sla", "error-budgets"]
+    },
+    {
+      "id": "sre-observability-1",
+      "question": "What are the three pillars of observability and how do metrics, logs, and traces differ?",
+      "expectedSources": ["capra-sre"],
+      "expectedTopicIds": ["three-pillars", "red-use-golden-signals", "distributed-tracing"]
+    },
+    {
+      "id": "sre-oncall-1",
+      "question": "How do you prevent on-call burnout and manage pager load?",
+      "expectedSources": ["capra-sre"],
+      "expectedTopicIds": ["oncall-sustainability", "toil-50-percent-cap", "toil-quantified"]
+    },
+    {
+      "id": "sre-incident-1",
+      "question": "walk me through how you run a blameless postmortem",
+      "expectedSources": ["capra-sre"],
+      "expectedTopicIds": ["blameless-postmortems", "five-whys", "incident-command"]
+    },
+    {
+      "id": "sre-circuit-1",
+      "question": "explain how a circuit breaker pattern prevents cascading failures",
+      "expectedSources": ["capra-sre", "capra-microservices"],
+      "expectedTopicIds": ["circuit-breakers", "cascading-failure", "circuit-breaker"]
+    },
+    {
+      "id": "sysdesign-hashing-1",
+      "question": "how does consistent hashing help distribute load when nodes join or leave a cluster?",
+      "expectedSources": ["capra-system-design"],
+      "expectedTopicIds": ["consistent-hashing", "data-partitioning"]
+    },
+    {
+      "id": "sysdesign-hashing-2",
+      "question": "scale a database with consistent hashing",
+      "expectedSources": ["capra-system-design", "capra-database"],
+      "expectedTopicIds": ["consistent-hashing", "database-partitioning-sharding", "data-partitioning"]
+    },
+    {
+      "id": "sysdesign-cap-1",
+      "question": "What does the CAP theorem actually say and what are the real tradeoffs?",
+      "expectedSources": ["capra-system-design"],
+      "expectedTopicIds": ["cap-pacelc-deep-dive", "strong-vs-eventual-consistency"]
+    },
+    {
+      "id": "sysdesign-chat-1",
+      "question": "how do I implement a real-time chat system at scale using WebSockets?",
+      "expectedSources": ["capra-system-design", "capra-projects"],
+      "expectedTopicIds": ["long-polling-websockets-sse", "real-time-updates", "realtime-chat-app"]
+    },
+    {
+      "id": "sysdesign-ratelimit-1",
+      "question": "explain token bucket vs leaky bucket for rate limiting",
+      "expectedSources": ["capra-system-design"],
+      "expectedTopicIds": ["token-bucket-vs-leaky-bucket", "rate-limiting"]
+    },
+    {
+      "id": "behavioral-conflict-1",
+      "question": "tell me about a time you had to handle conflict on a team",
+      "expectedSources": ["capra-behavioral"],
+      "expectedTopicIds": ["conflict-resolution", "disagree-and-commit"]
+    },
+    {
+      "id": "behavioral-conflict-2",
+      "question": "describe a situation where you disagreed with a senior engineer and what happened",
+      "expectedSources": ["capra-behavioral"],
+      "expectedTopicIds": ["disagree-senior-engineer", "disagree-and-commit", "disagreement-with-manager"]
+    },
+    {
+      "id": "behavioral-failure-1",
+      "question": "tell me about a project or decision that failed and what you learned",
+      "expectedSources": ["capra-behavioral"],
+      "expectedTopicIds": ["failure-mistakes", "receiving-feedback"]
+    },
+    {
+      "id": "coding-dp-1",
+      "question": "how do I solve 0/1 knapsack with dynamic programming?",
+      "expectedSources": ["capra-coding"],
+      "expectedTopicIds": ["knapsack-dp", "dynamic-programming"]
+    },
+    {
+      "id": "coding-graph-1",
+      "question": "explain topological sort and when to use it in graph problems",
+      "expectedSources": ["capra-coding"],
+      "expectedTopicIds": ["topological-sort", "graphs"]
+    },
+    {
+      "id": "coding-sliding-1",
+      "question": "what is the sliding window technique and when should I apply it?",
+      "expectedSources": ["capra-coding"],
+      "expectedTopicIds": ["sliding-window"]
+    },
+    {
+      "id": "lld-solid-1",
+      "question": "explain the SOLID principles with examples",
+      "expectedSources": ["capra-lld"],
+      "expectedTopicIds": ["solid-summary", "srp", "ocp", "dip"]
+    },
+    {
+      "id": "lld-singleton-1",
+      "question": "when should I use the singleton pattern and what are its pitfalls?",
+      "expectedSources": ["capra-lld"],
+      "expectedTopicIds": ["singleton", "factory-method"]
+    },
+    {
+      "id": "database-isolation-1",
+      "question": "what are SQL isolation levels and how do they prevent dirty reads and phantom reads?",
+      "expectedSources": ["capra-database", "capra-scalable"],
+      "expectedTopicIds": ["sql-isolation-levels", "sql-isolation-levels-deep-dive", "transaction-management"]
+    },
+    {
+      "id": "database-sharding-1",
+      "question": "how does database sharding work and what are the tradeoffs?",
+      "expectedSources": ["capra-database", "capra-system-design"],
+      "expectedTopicIds": ["database-partitioning-sharding", "data-partitioning"]
+    },
+    {
+      "id": "concurrency-gil-1",
+      "question": "explain the GIL and how it limits Python thread-level parallelism",
+      "expectedSources": ["capra-concurrency"],
+      "expectedTopicIds": ["concurrency-fundamentals", "thread-lifecycle"]
+    },
+    {
+      "id": "concurrency-sync-1",
+      "question": "what is the difference between a mutex, semaphore, and condition variable?",
+      "expectedSources": ["capra-concurrency"],
+      "expectedTopicIds": ["synchronization-primitives", "condition-variables", "concurrency-fundamentals"]
+    },
+    {
+      "id": "microservices-saga-1",
+      "question": "how does the saga pattern manage distributed transactions across microservices?",
+      "expectedSources": ["capra-microservices"],
+      "expectedTopicIds": ["saga-pattern", "event-driven-architecture"]
+    },
+    {
+      "id": "microservices-discovery-1",
+      "question": "explain service discovery in a microservices architecture",
+      "expectedSources": ["capra-microservices"],
+      "expectedTopicIds": ["service-discovery", "api-gateway-pattern"]
+    },
+    {
+      "id": "devops-dora-1",
+      "question": "what are DORA metrics and how do elite teams measure deployment frequency and MTTR?",
+      "expectedSources": ["capra-devops"],
+      "expectedTopicIds": ["dora-metrics", "three-ways"]
+    },
+    {
+      "id": "devops-vsm-1",
+      "question": "how do you use value stream mapping to find bottlenecks in a delivery pipeline?",
+      "expectedSources": ["capra-devops"],
+      "expectedTopicIds": ["value-stream-mapping", "dora-metrics"]
+    },
+    {
+      "id": "sql-window-1",
+      "question": "how do SQL window functions like ROW_NUMBER and RANK work?",
+      "expectedSources": ["capra-sql"],
+      "expectedTopicIds": ["sql-window-functions", "sql-fundamentals"]
+    },
+    {
+      "id": "scalable-idempotency-1",
+      "question": "what does idempotency mean and why does it matter for distributed systems?",
+      "expectedSources": ["capra-scalable", "capra-sre"],
+      "expectedTopicIds": ["idempotency"]
+    },
+    {
+      "id": "scalable-rpo-rto-1",
+      "question": "what is the difference between RPO and RTO and how do you pick a recovery strategy?",
+      "expectedSources": ["capra-scalable", "capra-sre"],
+      "expectedTopicIds": ["rpo-rto", "rto-rpo", "disaster-recovery"]
+    },
+    {
+      "id": "projects-urlshortener-1",
+      "question": "design a URL shortener — what are the core components and how does it scale?",
+      "expectedSources": ["capra-projects", "capra-system-design"],
+      "expectedTopicIds": ["url-shortener", "consistent-hashing"]
+    },
+    {
+      "id": "engblogs-netflix-1",
+      "question": "what engineering lessons has Netflix published about reliability and chaos engineering?",
+      "expectedSources": ["capra-eng-blogs"],
+      "expectedTopicIds": ["netflix-eng-blog"]
+    }
+  ]
+}
