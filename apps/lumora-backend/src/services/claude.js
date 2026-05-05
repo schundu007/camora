@@ -528,7 +528,14 @@ Think: What would fit on a sticky note that helps someone ace this question?`;
     // Result with metric + Follow-up) mid-sentence during live interviews.
     maxTokens = 1200;
   } else if (isCoding) {
-    systemPrompt = CODING_SYSTEM_PROMPT + `
+    // CODING_SYSTEM_PROMPT is opinionated and doesn't read `resume`, so the
+    // groundedContext woven into `resume` for general/design paths never
+    // reaches coding answers. Prepend retrievedContext directly so coding
+    // answers also benefit from Capra coding-topic chunks + user-doc grounding.
+    const codingGrounding = retrievedContext
+      ? `${retrievedContext}\n\n---\n\n`
+      : '';
+    systemPrompt = codingGrounding + CODING_SYSTEM_PROMPT + `
 
 IMPORTANT CODE FORMATTING RULE:
 - ALL code MUST be wrapped in triple backtick code blocks with language identifier.
