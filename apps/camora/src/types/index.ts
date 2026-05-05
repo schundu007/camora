@@ -83,6 +83,20 @@ export interface ParsedBlock {
   lang?: string;
 }
 
+// Citation returned by the RAG retrieval step.
+// Emitted as a `citations` SSE event BEFORE the first `delta` / `token` of
+// the answer. `tier` distinguishes Capra knowledge-base chunks ('kb') from
+// the user's own uploaded documents ('user').
+export interface Citation {
+  tier: 'kb' | 'user';
+  source: string | null;
+  topicId: string | null;
+  topicTitle: string | null;
+  section: string | null;
+  docKind: string | null;
+  distance: number;
+}
+
 // SSE event types
 export interface StreamStartEvent {
   question: string;
@@ -116,6 +130,7 @@ export interface ErrorEvent {
 
 export type SSEEvent =
   | { event: 'stream_start'; data: StreamStartEvent }
+  | { event: 'citations'; data: Citation[] }
   | { event: 'token'; data: TokenEvent }
   | { event: 'answer'; data: AnswerEvent }
   | { event: 'status'; data: StatusEvent }
