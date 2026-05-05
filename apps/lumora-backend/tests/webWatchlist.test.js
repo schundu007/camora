@@ -1,10 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const indexWatchlistUrlMock = vi.fn();
-vi.mock('../src/services/webIndexer.js', () => ({ indexWatchlistUrl: indexWatchlistUrlMock }));
+const indexWatchlistRootMock = vi.fn();
+vi.mock('../src/services/webIndexer.js', () => ({
+  indexWatchlistRoot: indexWatchlistRootMock,
+  // Keep indexWatchlistUrl exported in case any other test imports use it
+  indexWatchlistUrl: vi.fn(),
+}));
 
 beforeEach(() => {
-  indexWatchlistUrlMock.mockReset();
+  indexWatchlistRootMock.mockReset();
   vi.resetModules();
 });
 
@@ -42,23 +46,41 @@ describe('buildWebWatchlist', () => {
     const { buildWebWatchlist } = await import('../src/services/webWatchlist.js');
     const r = await buildWebWatchlist({ userId: 1, prepData: null });
     expect(r.skipped).toBe(true);
-    expect(indexWatchlistUrlMock).not.toHaveBeenCalled();
+    expect(indexWatchlistRootMock).not.toHaveBeenCalled();
   });
 
-  it('runs indexWatchlistUrl for each resolved entry', async () => {
-    indexWatchlistUrlMock.mockResolvedValue({ chunkCount: 5, written: 5 });
+  it('runs indexWatchlistRoot for each resolved entry', async () => {
+    indexWatchlistRootMock.mockResolvedValue({
+      totalChunks: 5,
+      totalWritten: 5,
+      urlCount: 3,
+      perUrl: [
+        { url: 'https://stripe.com/blog/', chunkCount: 2 },
+        { url: 'https://stripe.com/blog/a', chunkCount: 2 },
+        { url: 'https://stripe.com/blog/b', chunkCount: 1 },
+      ],
+    });
     const { buildWebWatchlist } = await import('../src/services/webWatchlist.js');
     const r = await buildWebWatchlist({ userId: 42, prepData: { activeCompany: 'Stripe' } });
     expect(r.skipped).toBeFalsy();
-    expect(indexWatchlistUrlMock).toHaveBeenCalled();
-    const args = indexWatchlistUrlMock.mock.calls[0][0];
+    expect(indexWatchlistRootMock).toHaveBeenCalled();
+    const args = indexWatchlistRootMock.mock.calls[0][0];
     expect(args.source).toBe('Stripe');
-    expect(args.url).toMatch(/^https:\/\//);
+    expect(args.rootUrl).toMatch(/^https:\/\//);
+    expect(args.maxArticles).toBe(5);
   });
 
   it('aggregates chunk counts across entries', async () => {
     let n = 0;
-    indexWatchlistUrlMock.mockImplementation(() => Promise.resolve({ chunkCount: ++n, written: n }));
+    indexWatchlistRootMock.mockImplementation(() => {
+      n++;
+      return Promise.resolve({
+        totalChunks: n,
+        totalWritten: n,
+        urlCount: 1,
+        perUrl: [{ url: 'https://stripe.com/blog/', chunkCount: n }],
+      });
+    });
     const { buildWebWatchlist } = await import('../src/services/webWatchlist.js');
     const r = await buildWebWatchlist({ userId: 7, prepData: { activeCompany: 'Stripe' } });
     expect(r.totalChunks).toBe(n);
