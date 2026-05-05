@@ -107,3 +107,19 @@ describe('streamResponse with retrievedContext', () => {
     expect(sys).toContain('JD only.');
   });
 });
+
+describe('streamResponse coding path with retrievedContext', () => {
+  it('prepends retrievedContext to the coding system prompt', async () => {
+    const { streamResponse } = await import('../src/services/claude.js');
+    const gen = streamResponse('reverse a linked list in O(1) space', [], {
+      systemContext: 'JD: Senior Backend Eng.',
+      retrievedContext: '[KB capra-coding / Linked List Reversal / question:0]\nUse three pointers: prev, curr, next.',
+    });
+    for await (const _ of gen) { /* drain */ }
+    const sys = findCapturedSystem();
+    expect(sys).toContain('[KB capra-coding / Linked List Reversal / question:0]');
+    expect(sys).toContain('Use three pointers');
+    // CODING_SYSTEM_PROMPT body must also be present (confirms this was the coding branch).
+    expect(sys).toContain('LIVE coding interview');
+  });
+});
