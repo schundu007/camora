@@ -258,6 +258,25 @@ def diag_postmortem_flow():
     print('Generated: d5-postmortem')
 
 
+# ── E3: CI/CD pipeline with progressive delivery ────────────────────
+def diag_cicd_pipeline():
+    g = base_graph('e3_cicd', 'Progressive delivery CI/CD pipeline (canary → blue-green → rolling)')
+    n(g, 'pr',     'Pull Request\n• tests\n• lint\n• security scan', 'gray')
+    n(g, 'main',   'Merge to main\n• build\n• image tag', 'navy')
+    n(g, 'stg',    'Staging\n• smoke tests\n• integration', 'green')
+    n(g, 'canary', 'Canary (1-5%)\n• 10-30 min bake\n• SLO-gated', 'gold')
+    n(g, 'rollout','Progressive rollout\n10% → 50% → 100%\nor blue/green flip', 'purple')
+    n(g, 'rollback','Auto-rollback\nif SLI breaches', 'red')
+    e(g, 'pr', 'main', 'CI green')
+    e(g, 'main', 'stg')
+    e(g, 'stg', 'canary')
+    e(g, 'canary', 'rollout', 'SLI healthy')
+    e(g, 'canary', 'rollback', 'SLI breach', '#dc2626', 'dashed')
+    e(g, 'rollout', 'rollback', 'SLI breach\nat any %', '#dc2626', 'dashed')
+    g.render(os.path.join(OUT, 'e3-cicd'), cleanup=True)
+    print('Generated: e3-cicd')
+
+
 if __name__ == '__main__':
     diag_sli_slo_sla()
     diag_burn_rate()
@@ -271,4 +290,5 @@ if __name__ == '__main__':
     diag_trace_waterfall()
     diag_incident_roles()
     diag_postmortem_flow()
-    print('SRE diagrams batches 1-4 complete.')
+    diag_cicd_pipeline()
+    print('SRE diagrams batches 1-5 complete.')
