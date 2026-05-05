@@ -4,7 +4,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { ParsedBlock } from '@/types';
+import type { ParsedBlock, Citation } from '@/types';
 
 interface HistoryEntry {
   question: string;
@@ -91,6 +91,12 @@ interface InterviewState {
   // Behavioral and Interview tabs ignore this — Sona owns audio there.
   voiceRoute: 'problem' | 'followup';
 
+  // Citations from the RAG retrieval step for the active streaming answer.
+  // Populated by the `citations` SSE event (emitted before the first token)
+  // and cleared when a new question starts. Empty array = no citations for
+  // this answer (retrieval returned nothing or RAG is disabled).
+  activeCitations: Citation[];
+
   // Whether the most recent answer event arrived as a cache hit. Surfaces
   // a "Loaded from cache" badge in Coding / Design / Sona answer
   // headers, paired with a "Regenerate" button that re-runs the
@@ -147,6 +153,7 @@ interface InterviewState {
   setAutoEnrollPending: (pending: boolean) => void;
   setInterviewerAudio: (patch: Partial<InterviewState['interviewerAudio']>) => void;
   setVoiceRoute: (route: 'problem' | 'followup') => void;
+  setActiveCitations: (citations: Citation[]) => void;
   setLastFromCache: (fromCache: boolean | null) => void;
   setLiveSolveContext: (ctx: InterviewState['liveSolveContext']) => void;
   reset: () => void;
@@ -193,6 +200,7 @@ const initialState = {
     everConnected: false,
   },
   voiceRoute: 'problem' as const,
+  activeCitations: [] as Citation[],
   lastFromCache: null as boolean | null,
   liveSolveContext: null as InterviewState['liveSolveContext'],
 };
@@ -309,6 +317,7 @@ export const useInterviewStore = create<InterviewState>()(
     set((state) => ({ interviewerAudio: { ...state.interviewerAudio, ...patch } })),
 
   setVoiceRoute: (route) => set({ voiceRoute: route }),
+  setActiveCitations: (citations) => set({ activeCitations: citations }),
   setLastFromCache: (fromCache) => set({ lastFromCache: fromCache }),
   setLiveSolveContext: (ctx) => set({ liveSolveContext: ctx }),
 

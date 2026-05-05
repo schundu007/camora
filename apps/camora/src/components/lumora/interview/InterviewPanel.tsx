@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { StreamingAnswer } from './StreamingAnswer';
+import { Citations } from '@/components/lumora/Citations';
 import { DatabricksThumb, type DatabricksColor } from '@/components/shared/DatabricksThumb';
 
 // LeetCode-style row classification — purely structural (numbered
@@ -66,6 +67,7 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
     isCodingQuestion,
     streamChunks,
     parsedBlocks,
+    activeCitations,
     error,
     setError,
     history,
@@ -159,6 +161,10 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
                 isDesign={isDesignQuestion}
                 isCoding={isCodingQuestion}
               />
+              {/* Citations strip — shown below the live answer as soon as
+                  the `citations` SSE event lands (before first token).
+                  Collapsed by default; click "Sources N" to expand. */}
+              <Citations citations={activeCitations} />
             </div>
           )}
 

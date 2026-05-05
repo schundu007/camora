@@ -2,7 +2,7 @@
  * SSE (Server-Sent Events) client for streaming Claude responses.
  */
 
-import type { StreamStartEvent, TokenEvent, AnswerEvent, StatusEvent, ErrorEvent } from '@/types';
+import type { Citation, StreamStartEvent, TokenEvent, AnswerEvent, StatusEvent, ErrorEvent } from '@/types';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -66,6 +66,9 @@ export interface StreamOptions {
   token: string;
   signal?: AbortSignal;
   onStreamStart?: (data: StreamStartEvent) => void;
+  /** Called when the backend emits a `citations` SSE event (before the
+   *  first token). The array may be empty if retrieval returned nothing. */
+  onCitations?: (citations: Citation[]) => void;
   onToken?: (data: TokenEvent) => void;
   onAnswer?: (data: AnswerEvent) => void;
   onStatus?: (data: StatusEvent) => void;
@@ -90,6 +93,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     token,
     signal: externalSignal,
     onStreamStart,
+    onCitations,
     onToken,
     onAnswer,
     onStatus,
@@ -170,7 +174,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
         if (currentEvent && currentData) {
           try {
             const data = JSON.parse(currentData);
-            handleEvent(currentEvent, data, { onStreamStart, onToken, onAnswer, onStatus, onError });
+            handleEvent(currentEvent, data, { onStreamStart, onCitations, onToken, onAnswer, onStatus, onError });
           } catch { /* incomplete */ }
         }
         onComplete?.();
@@ -191,7 +195,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
           if (currentEvent && currentData) {
             try {
               const data = JSON.parse(currentData);
-              handleEvent(currentEvent, data, { onStreamStart, onToken, onAnswer, onStatus, onError });
+              handleEvent(currentEvent, data, { onStreamStart, onCitations, onToken, onAnswer, onStatus, onError });
             } catch (e) {
               console.error('SSE parse error:', currentEvent, (e as Error).message);
             }
@@ -220,6 +224,7 @@ function handleEvent(
   data: any,
   callbacks: {
     onStreamStart?: (data: StreamStartEvent) => void;
+    onCitations?: (citations: Citation[]) => void;
     onToken?: (data: TokenEvent) => void;
     onAnswer?: (data: AnswerEvent) => void;
     onStatus?: (data: StatusEvent) => void;
@@ -229,6 +234,12 @@ function handleEvent(
   switch (event) {
     case 'stream_start':
       callbacks.onStreamStart?.(data);
+      break;
+    case 'citations':
+      // data is Citation[] — the RAG chunks that grounded this answer.
+      // Guard: only fire if the payload is actually an array so a
+      // malformed backend frame doesn't crash the whole stream.
+      if (Array.isArray(data)) callbacks.onCitations?.(data);
       break;
     case 'token':
       callbacks.onToken?.(data);
@@ -267,6 +278,7 @@ export interface CodingStreamOptions {
   bypassCache?: boolean;
   signal?: AbortSignal;
   onStreamStart?: (data: StreamStartEvent) => void;
+  onCitations?: (citations: Citation[]) => void;
   onToken?: (data: TokenEvent) => void;
   onAnswer?: (data: AnswerEvent) => void;
   onStatus?: (data: StatusEvent) => void;
@@ -288,6 +300,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
     bypassCache,
     signal: externalSignal,
     onStreamStart,
+    onCitations,
     onToken,
     onAnswer,
     onStatus,
@@ -356,7 +369,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
         if (currentEvent && currentData) {
           try {
             const data = JSON.parse(currentData);
-            handleEvent(currentEvent, data, { onStreamStart, onToken, onAnswer, onStatus, onError });
+            handleEvent(currentEvent, data, { onStreamStart, onCitations, onToken, onAnswer, onStatus, onError });
           } catch { /* incomplete */ }
         }
         onComplete?.();
@@ -377,7 +390,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
           if (currentEvent && currentData) {
             try {
               const data = JSON.parse(currentData);
-              handleEvent(currentEvent, data, { onStreamStart, onToken, onAnswer, onStatus, onError });
+              handleEvent(currentEvent, data, { onStreamStart, onCitations, onToken, onAnswer, onStatus, onError });
             } catch (e) {
               console.error('SSE parse error:', currentEvent, (e as Error).message);
             }
