@@ -58,6 +58,12 @@ export const sreTopicCategoryMap = {
   'five-whys':                 'incidents',
   'incident-comms':            'incidents',
   'gamedays-chaos':            'incidents',
+  // Automation
+  'toil-quantified':           'automation',
+  'iac-terraform-pulumi':      'automation',
+  'cicd-progressive-delivery': 'automation',
+  'gitops':                    'automation',
+  'self-healing-systems':      'automation',
 };
 
 export const sreTopics = [
@@ -4018,6 +4024,1022 @@ Practical staging: most companies start with chaos engineering (technical, autom
       'https://principlesofchaos.org/',
       'https://netflix.github.io/chaosmonkey/',
       'https://aws.amazon.com/fis/',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // E. Automation & Toil Reduction
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'toil-quantified',
+    title: 'Toil — Definition, Measurement, the 50% Cap',
+    icon: 'zap',
+    color: '#f59e0b',
+    questions: 3,
+    description: 'The SRE Book\'s definition of toil, why measuring it is hard, and how the 50% cap actually works.',
+    introduction: `**Toil** is one of the SRE Book\'s most precise terms. Verbatim definition (Ch 5):
+
+*"Toil is the kind of work tied to running a production service that tends to be manual, repetitive, automatable, tactical, devoid of enduring value, and that scales linearly as a service grows."*
+
+Each adjective matters; mis-applying any of them includes work that isn\'t toil:
+
+1. **Manual** — done by hand. (Not toil: tasks already automated.)
+2. **Repetitive** — same task multiple times. (Not toil: novel design or one-off projects.)
+3. **Automatable** — could be automated. (Not toil: irreducibly human work — design, judgment calls, customer interactions.)
+4. **Tactical** — interrupt-driven, not strategic. (Not toil: planned engineering projects.)
+5. **Devoid of enduring value** — service is unchanged after you do it. (Not toil: code changes that improve the system.)
+6. **Linear scaling with service growth** — as the service grows, the toil grows. (Not toil: bounded work.)
+
+**Examples of toil:**
+- Manually restarting flaky services.
+- Manually granting database access on Slack request.
+- Manually rotating expired certificates.
+- Manually scaling instances before traffic spikes.
+- Manually resolving false-positive alerts.
+- Manually onboarding new services to monitoring.
+
+**Examples that are NOT toil:**
+- **Overhead** (administrative, not service-related): meetings, planning, training.
+- **Engineering work**: writing code, designing systems.
+- **Investigation**: debugging novel problems (one-off, not repetitive).
+- **Customer interactions**: handling support escalations.
+
+**The 50% cap (SRE Book Ch 5).** Google\'s rule: SRE teams cap their toil at 50% of total time. The other 50% is engineering work: automation, monitoring improvements, capacity planning, postmortem follow-ups. Why:
+
+- **Engineering work compounds.** Hours spent on automation save hours forever.
+- **Toil grows linearly with service scale.** Without the cap, growth eats SRE capacity until 100% is toil — a death spiral.
+- **Toil burns out engineers.** SREs who do nothing but toil leave or disengage.
+
+**Measuring toil:**
+- **Self-report time tracking**: SREs categorize their time weekly. Honest but imprecise.
+- **Ticket-based**: every interrupt-driven request is a ticket; count tickets and average resolution time. Misses untracked work.
+- **Surveys**: quarterly survey asking "what % of last week was toil?" Directional.
+
+The 50% cap is a *team-wide rolling average*, not a per-person, per-week target. Some weeks are heavy on toil (incidents); others are heavy on projects. The trend over a quarter is what matters.
+
+**When the cap is exceeded:**
+- **Reduce toil**: identify the largest sources, automate them.
+- **Shift toil**: hand back to the dev team that owns the underlying problem (this is leverage; SRE\'s threat power is "if you keep producing toil for us, we hand the pager back to you").
+- **Reduce service ownership**: if toil can\'t be reduced, drop the service.
+
+**The 2026 evolution.** Original SRE Book had toil as a manual measurement. Modern teams instrument toil sources directly: count of "manual restart" actions, count of "manual cert rotation" actions, count of "false-positive alerts dismissed." Time-spent-on-toil derived from these counters. More objective.`,
+    whenToUse: [
+      'Quarterly SRE team review — what % of capacity went to toil?',
+      'Capacity planning — which services produce the most toil? Engineer those down first',
+      'Hand-back conversations — when toil is unfixable, the SRE team hands the service back to dev',
+      'Hiring justification — toil at 70% means we need automation investment, not more SREs',
+    ],
+    keyConcepts: [
+      { term: 'Toil definition (verbatim)', definition: '"Manual, repetitive, automatable, tactical, devoid of enduring value, and scales linearly as a service grows." — SRE Book Ch 5.' },
+      { term: '50% toil cap', definition: 'SRE team-wide rolling average. Other 50% is engineering. Without the cap, growth eats SRE capacity — death spiral.' },
+      { term: 'Linear scaling', definition: 'Toil grows with the service. 10× the service = 10× the toil. The signature property — bounded work isn\'t toil.' },
+      { term: 'Engineering work', definition: 'The 50% that isn\'t toil. Automation, monitoring, capacity planning, design. Compounds over time.' },
+      { term: 'Hand-back', definition: 'When toil is unfixable, SRE returns ownership to dev. SRE\'s leverage: "produce more toil for us → take the pager back."' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Define toil and walk me through the six properties.',
+        answer: `From SRE Book Ch 5 verbatim: *"Toil is the kind of work tied to running a production service that tends to be manual, repetitive, automatable, tactical, devoid of enduring value, and that scales linearly as a service grows."*
+
+The six properties:
+
+**1. Manual** — done by hand. Already-automated tasks aren\'t toil.
+
+**2. Repetitive** — same task done many times. Novel one-offs aren\'t toil; repetitive 100× is.
+
+**3. Automatable** — could be automated. If a task irreducibly requires human judgment (design decision, customer call), it\'s not toil.
+
+**4. Tactical** — interrupt-driven, reactive. Pages, urgent requests, "fix this now." Not strategic / planned work.
+
+**5. Devoid of enduring value** — when you finish, the service is in the same state it was before (just temporarily working). Code changes that improve the system aren\'t toil.
+
+**6. Scales linearly with the service** — as the service grows, the toil grows. The signature property. If a task is bounded (e.g., "configure the new region once"), it\'s not toil even if the other five apply.
+
+The classification: a task is toil only if it\'s ALL six. Some tasks look like toil but fail one of the criteria:
+- Customer escalations: manual + tactical, but irreducibly judgment-based, so not automatable → not toil.
+- One-time setup: manual + tactical, but not repetitive or scaling-linearly → not toil.
+- Complex debugging: manual + tactical, but novel each time → not repetitive → not toil.
+
+Why precision matters: the 50% toil cap depends on this definition. Misclassifying engineering work as toil (or vice versa) breaks the metric.`,
+      },
+      {
+        question: 'How does the 50% toil cap actually work in practice?',
+        answer: `**Team-wide rolling average over a quarter.** Not per-engineer, not per-week.
+
+Mechanics:
+- Each SRE estimates % of weekly time spent on toil. Self-report or ticket-derived.
+- Aggregate across the team; average over the rolling quarter.
+- If the team-quarter average exceeds 50%, action is required.
+
+What it\'s NOT:
+- Not a hard per-week limit. Pager-heavy weeks may be 80% toil; that\'s fine if other weeks are lower.
+- Not a per-person limit. The on-call rotation has spikier toil; balance across team.
+- Not a precise number. It\'s a guideline; 55% one quarter is a yellow flag, 70% is a red flag.
+
+What happens when the cap is exceeded:
+
+**Step 1: Identify largest toil sources.**
+- Common: false-positive alerts (kill the alert), manual cert rotation (automate), manual onboarding (self-service), manual access grants (RBAC + policy).
+- Pareto: usually the top 3 sources are 70-80% of toil.
+
+**Step 2: Engineer them away.**
+- Build the automation. The 50% engineering time pays for this.
+- The win is exponential: removing a source of toil saves the time forever.
+
+**Step 3: Hand back if unfixable.**
+- If a service\'s toil is structural (bad design, tech debt the dev team won\'t fix), SRE has leverage: "you produce this toil; you can have the pager back if you keep producing it." This is the contract.
+
+**Step 4: Renegotiate scope.**
+- If toil grew because services grew, maybe drop a service from SRE ownership. "Tier 2" services with lower SLOs and dev-team primary on-call.
+
+The cultural enforcement: leadership endorses the cap as a non-negotiable team-health metric. SRE managers track it. If exceeded, action is required, not optional.
+
+The failure mode without enforcement: toil creeps to 80%+. Engineers leave. Hiring more SREs only delays the death spiral because new SREs absorb the existing toil.`,
+      },
+      {
+        question: 'Give me a concrete example of identifying and eliminating toil.',
+        answer: `**Concrete example: certificate rotation.**
+
+The toil:
+- Each service has TLS certs that expire annually.
+- Renewal is manual: SRE files a request, certs come back, SRE deploys them.
+- 50 services × 1 rotation/year × 2 hours per rotation = 100 hours/year of toil.
+- Plus: occasionally a cert expires unnoticed → SEV-1 outage. ~2 incidents/year × 4 hours each = 8 hours of crisis work.
+- Total: ~108 hours/year, growing linearly with service count.
+
+The classification:
+- Manual ✓
+- Repetitive ✓
+- Automatable ✓
+- Tactical ✓ (often interrupt-driven by impending expiry)
+- Devoid of enduring value ✓ (service is the same after as before)
+- Scales linearly ✓ (more services = more rotations)
+
+Six-of-six → toil.
+
+The fix:
+1. **Adopt cert-manager** (Kubernetes) or **AWS Certificate Manager** (managed). Automatically renew via ACME (Let\'s Encrypt) or AWS API.
+2. **Set up alerts on impending expiry** as a backstop (auto-renewal failure → page).
+3. **One-time effort**: ~1 SRE-week to set up cert-manager, migrate the first 5 services, document the migration.
+4. **Migration cost per service**: ~30 min (vs 2 hours/year for the rotation).
+5. **Annual cost after**: ~0 for renewals + occasional cert-manager debug.
+
+ROI:
+- One-time investment: 40 hours (set up) + 50 × 30 min (migrate) = 65 hours.
+- Annual savings: 108 hours/year forever.
+- Payback: < 1 year.
+
+The pattern: identify the toil, classify it, build the automation, migrate, retire the manual process. The math is always lopsided — automation pays back fast.
+
+**The other classic toil targets:**
+- **Manual access grants** → RBAC + policy-as-code (OPA, Cedar).
+- **Manual scaling** → autoscaling (HPA, Karpenter, predictive scaling).
+- **Manual deploys** → CI/CD with canary + auto-promote.
+- **Manual log queries** → dashboards + alerts.
+- **Manual incident comms** → status page automation, exec brief templates.
+
+Each is a 1-3 month project that returns hundreds of hours/year. The 50% engineering time exists to fund these.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/eliminating-toil/',
+    ],
+  },
+
+  {
+    id: 'iac-terraform-pulumi',
+    title: 'Infrastructure as Code — Terraform, OpenTofu, Pulumi, Crossplane',
+    icon: 'codepen',
+    color: '#f59e0b',
+    questions: 3,
+    description: 'The IaC landscape, declarative vs imperative, and why state management is the hard part.',
+    introduction: `**Infrastructure as Code (IaC)** treats infrastructure provisioning as software: version-controlled, code-reviewed, deployed via automation. Has been the SRE standard since ~2015; the question now is which tool, not whether.
+
+**The major players:**
+
+**Terraform / OpenTofu**
+- HashiCorp Terraform (commercial open-source); OpenTofu is the community fork (2023) after Terraform\'s license change.
+- Declarative HCL configuration. State file tracks what\'s deployed.
+- Universal: supports AWS, GCP, Azure, plus 1000+ provider integrations.
+- The de-facto standard for multi-cloud IaC.
+
+**Pulumi**
+- Same model (declarative, state-driven), but uses real programming languages (Python, Go, TypeScript, C#).
+- Better for teams that prefer code abstractions over HCL.
+- Smaller ecosystem than Terraform but rapidly growing.
+
+**AWS CDK**
+- AWS-native. Define infrastructure in TypeScript / Python / Java. Synthesizes to CloudFormation.
+- Best for AWS-only teams; tight AWS integration.
+
+**Crossplane**
+- Kubernetes-native. Define infrastructure as Kubernetes Custom Resources.
+- "Everything as Kubernetes objects." Useful in K8s-heavy organizations.
+- Less universal than Terraform but cleaner GitOps integration.
+
+**The fundamental architecture (shared by all of these):**
+
+1. **Declarative configuration.** "I want a VPC with these subnets, an RDS instance with these specs, an EKS cluster with these node groups." Not: "create a VPC, then a subnet, then..."
+
+2. **State file.** The tool tracks what\'s deployed. Diff between code and state determines changes.
+
+3. **Plan / apply cycle.** \`terraform plan\` shows what would change; \`terraform apply\` makes it so. Always plan before apply in production.
+
+4. **Provider abstraction.** AWS provider, GCP provider, Cloudflare provider. Each provider exposes resources; your config references them.
+
+**Why state management is the hardest problem:**
+
+The state file is the source of truth for "what does the tool think is deployed." Misalignment between state and reality breaks everything:
+- **Drift**: someone clicks in the AWS console; the state thinks resource is unchanged. Next \`apply\` may try to re-create or modify unexpectedly.
+- **State corruption**: state file gets damaged or out of sync; recovering requires manual reconciliation.
+- **Concurrent modification**: two engineers running apply simultaneously; one\'s changes overwrite the other\'s.
+
+**State management best practices:**
+- **Remote state backend** (S3, GCS, Azure Blob, Terraform Cloud). Never local-only state.
+- **State locking** (DynamoDB for AWS S3 backend, Cloud Storage for GCS). Prevents concurrent applies.
+- **State backups** (S3 versioning + lifecycle, Terraform Cloud automatic).
+- **Workspace-per-environment** (dev / staging / prod) to avoid accidental cross-env applies.
+- **No manual cloud-console changes** (or detect drift via continuous \`terraform plan\`).
+
+**Module design:**
+- **Reusable modules** for common patterns (VPC, RDS, EKS) — invoked by environment-specific configs.
+- **Composition over inheritance** — modules call other modules.
+- **Versioned modules** — tag releases so prod uses different module versions than dev.
+
+**The OpenTofu split (2023).** HashiCorp changed Terraform\'s license to BUSL (non-OSI). The community forked OpenTofu under MPL. Most public Terraform usage is moving to OpenTofu; commercial users may stay on Terraform for support contracts. Compatibility maintained for now; divergence likely over 2-3 years.
+
+**Crossplane vs Terraform:**
+- Terraform: imperative-feeling apply cycle. Engineer runs commands.
+- Crossplane: continuous reconciliation in Kubernetes. Submit a YAML; Crossplane works toward it indefinitely.
+- Crossplane fits GitOps models well; Terraform usually wraps with Atlantis or Terraform Cloud for GitOps.`,
+    whenToUse: [
+      'Greenfield infrastructure project — IaC from day 1, never click-ops',
+      'Migration from manual to IaC — incremental import; \`terraform import\` for existing resources',
+      'Multi-cloud or vendor-portable infrastructure — Terraform / OpenTofu (Pulumi second)',
+      'Kubernetes-heavy, GitOps-driven shop — Crossplane is a natural fit',
+    ],
+    keyConcepts: [
+      { term: 'Declarative IaC', definition: 'Describe desired state; tool figures out how to reach it. Standard pattern across Terraform, Pulumi, CDK.' },
+      { term: 'State file', definition: 'Tool\'s record of what\'s deployed. Drift between state and reality is the leading source of IaC bugs.' },
+      { term: 'Plan / apply', definition: 'Plan shows proposed changes; apply executes them. Production-grade discipline: always plan first.' },
+      { term: 'Remote state + locking', definition: 'State stored in S3/GCS with DynamoDB/equivalent for concurrent-apply prevention. Never local-only state.' },
+      { term: 'OpenTofu fork', definition: 'Community fork (2023) after HashiCorp BUSL license change. Compatibility maintained; gradual divergence expected.' },
+      { term: 'Crossplane', definition: 'Kubernetes-native IaC. Resources are CRDs; controller reconciles continuously. Fits GitOps cleanly.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Compare Terraform, Pulumi, and Crossplane.',
+        answer: `Three different shapes of the same problem.
+
+**Terraform / OpenTofu**:
+- HCL declarative configuration.
+- State-driven; plan/apply cycle.
+- Multi-cloud universal — 1000+ providers.
+- The de-facto standard. Pick this if you want maximum hireability and ecosystem.
+- OpenTofu is the open fork; pick it if license matters.
+
+**Pulumi**:
+- Same architecture as Terraform (declarative, state-driven), but uses **real programming languages** (Python, Go, TypeScript, C#).
+- Better for teams that want loops, conditionals, abstractions, type checking — things HCL handles awkwardly.
+- Smaller ecosystem than Terraform; learning curve for cloud engineers more comfortable in HCL.
+- Pick this if your team is software-engineering-heavy and writes a lot of complex infra.
+
+**Crossplane**:
+- Kubernetes-native. Resources defined as Custom Resources (CRDs).
+- Continuous reconciliation, not plan/apply. Submit YAML; Crossplane works toward it.
+- Fits GitOps perfectly — Argo CD / Flux can manage infrastructure exactly like apps.
+- Less universal than Terraform; provider ecosystem smaller.
+- Pick this if you\'re Kubernetes-heavy and want infrastructure managed in the same way as apps.
+
+**AWS CDK** (and similar): real-language IaC for one cloud (AWS / Azure Bicep / GCP Cloud Foundation Toolkit). Tighter integration with that cloud than Terraform; vendor-locks you in.
+
+**Decision:**
+- **Multi-cloud OR you want maximum portability**: Terraform / OpenTofu.
+- **AWS-only OR you trust AWS\'s long-term direction**: AWS CDK.
+- **Heavy programmability needed**: Pulumi.
+- **Kubernetes-first, GitOps-first**: Crossplane.
+
+Most large companies end up with **Terraform for the foundation + Crossplane for K8s-managed runtime services**. Different layers, different tools.`,
+      },
+      {
+        question: 'Why is state management the hardest IaC problem?',
+        answer: `Because **state is the truth, and the truth drifts**.
+
+The state file tracks what the IaC tool *thinks* is deployed. Every \`plan\` and \`apply\` reads the state, compares it to your code, and computes the diff. When state and reality disagree, the diff is wrong → applies do unexpected things.
+
+Common drift sources:
+- **Click-ops**: someone modifies a resource in the AWS console. State unchanged. Next plan thinks the resource is still as-coded; doesn\'t see the manual change.
+- **Out-of-band tools**: another automation (a custom Lambda, a deploy script) modifies a resource. State unchanged.
+- **Manual recovery**: during an incident, someone modifies infrastructure to mitigate. State unchanged.
+- **Provider bugs**: occasionally Terraform providers fail to update state correctly after an apply.
+
+Failure modes:
+- **"This resource already exists"**: state says doesn\'t exist; cloud says exists; apply tries to create and fails.
+- **"Plan shows changes to a resource I didn\'t modify"**: state vs. reality drift; plan tries to "fix" the manual change.
+- **State corruption**: state file gets damaged or partially written; recovery requires manual reconciliation via \`terraform import\` and \`terraform state rm\`.
+- **Concurrent applies overwriting state**: without locking, two engineers running apply simultaneously corrupt state.
+
+Best practices to avoid:
+1. **Remote state with locking** (S3 + DynamoDB; GCS native locking; Terraform Cloud).
+2. **Workspaces per environment** to avoid accidental cross-env applies.
+3. **State backups** (S3 versioning, automated daily snapshots).
+4. **Continuous drift detection**: scheduled \`terraform plan\` (Atlantis, Terraform Cloud, custom CI). Reports drift before next apply hits it.
+5. **Forbid click-ops**: IAM policies that prevent humans from modifying production resources directly. All changes via IaC.
+6. **\`terraform import\` discipline**: when a resource is created out-of-band, import to state immediately rather than letting drift accumulate.
+
+The cultural fix: "infrastructure changes only via code review." Even small fixes go through PR. Slower but eliminates the drift category.`,
+      },
+      {
+        question: 'How do you organize Terraform code at scale?',
+        answer: `Three-layer structure:
+
+**1. Modules (reusable building blocks)**
+- Each module encapsulates a pattern: VPC, EKS cluster, RDS database, monitoring stack.
+- Versioned: \`modules/vpc/v1.2.0\`. Allows independent module upgrades.
+- Inputs (variables) and outputs documented.
+- Private module registry (S3, Terraform Cloud) for distribution.
+
+**2. Configurations (environment-specific)**
+- \`environments/dev/\`, \`environments/staging/\`, \`environments/prod/\` — each its own state.
+- Configurations import modules; provide environment-specific inputs.
+- Workspaces sometimes used for variations within an env (us-east-1 vs us-west-2 within prod).
+
+**3. Stacks / Layers**
+- Within each environment, separate concerns into stacks: \`network\`, \`data\`, \`platform\`, \`apps\`.
+- Each stack has its own state file. Smaller blast radius; faster planning.
+- Stacks reference each other\'s outputs via \`terraform_remote_state\` data source.
+- Order: network applied first (VPC, subnets), then data (RDS, S3), then platform (EKS), then apps (services).
+
+**State organization:**
+- One state file per stack per environment. So: \`prod-network.tfstate\`, \`prod-data.tfstate\`, etc.
+- Smaller state = faster plans, smaller blast radius if state corrupted.
+- Avoid the monolithic state file with 5000 resources — plan time becomes 30+ minutes.
+
+**CI/CD:**
+- PR opens → CI runs \`terraform plan\` and posts the diff as a comment.
+- Reviewer reads the diff; approves or requests changes.
+- Merge → CI runs \`terraform apply\` automatically (or with manual approval for prod).
+- Atlantis or Terraform Cloud is the standard tool for this workflow.
+
+**Drift detection:**
+- Scheduled job runs \`terraform plan\` in all environments daily.
+- Reports drift to a Slack channel or as a Jira ticket.
+- Forces team to investigate when reality diverges from code.
+
+**Anti-patterns:**
+- One giant state file for everything.
+- Modules with too many inputs (becomes its own configuration language).
+- Configs that don\'t use modules (copy-paste of patterns).
+- Click-ops "just this one time" that breaks the pattern.
+
+The discipline: "everything via code review, modules versioned, state isolated by environment and stack." Slower than ad-hoc but scales to thousands of resources without falling over.`,
+      },
+    ],
+    references: [
+      'https://developer.hashicorp.com/terraform/language',
+      'https://opentofu.org/docs/',
+      'https://www.pulumi.com/docs/',
+      'https://docs.crossplane.io/',
+    ],
+  },
+
+  {
+    id: 'cicd-progressive-delivery',
+    title: 'CI/CD and Progressive Delivery — Canary, Blue/Green, Feature Flags',
+    icon: 'gitMerge',
+    color: '#f59e0b',
+    questions: 3,
+    description: 'The deployment-strategy spectrum, when to use each, and SLO-gated automated rollback.',
+    visualizations: [
+      {
+        title: 'Progressive delivery CI/CD pipeline',
+        description: 'PR → main → staging → canary (1-5%, SLO-gated) → progressive rollout (10%, 50%, 100%) → auto-rollback on SLI breach.',
+        image: '/diagrams/sre/e3-cicd.png',
+      },
+    ],
+    introduction: `Deployment is where most production incidents are born. ~60-80% of incidents trace to recent deploys (across multiple industry surveys). The discipline of *how* you deploy is more impactful than what code you ship.
+
+**The deployment-strategy spectrum (lowest risk to highest):**
+
+**1. Feature Flags (lowest risk)**
+- Code is deployed but inactive. Flag controls who sees it.
+- Roll out by user cohort: internal users → 1% of users → 10% → 100%.
+- Rollback = flip the flag. Instant.
+- Tools: LaunchDarkly, Unleash, Flagsmith, Statsig.
+
+**2. Canary Deployment**
+- New version deployed to a small fraction of traffic (1-5%).
+- Monitored against SLOs for a "bake period" (10-30 min).
+- If SLOs healthy: progressively promote (10% → 50% → 100%).
+- If SLOs degrade: auto-rollback.
+- Tools: Argo Rollouts, Flagger (Flux), service-mesh primitives (Istio).
+
+**3. Blue/Green Deployment**
+- Two production environments (Blue running v1; Green is a replacement v2).
+- Traffic flips from Blue to Green at a single moment.
+- Rollback: flip back to Blue.
+- Faster than canary but requires duplicate capacity during the cutover.
+
+**4. Rolling Update**
+- Gradually replace instances; new version slowly takes over (e.g., Kubernetes default).
+- Cheaper than blue/green (no duplicate capacity).
+- Slower rollback than blue/green; can\'t instantly revert.
+
+**5. Big-Bang / Recreate**
+- Stop everything; deploy new version; start everything.
+- Mandatory downtime. Used for breaking changes that can\'t coexist.
+- Avoid for any service that should stay up.
+
+**Choosing strategy:**
+- **Stateless service with good observability**: Canary + feature flags. Standard 2026.
+- **Stateful service or shared schema**: Feature flags + careful migration.
+- **Old monolith**: Blue/green if you can afford the capacity; rolling otherwise.
+- **Database schema changes**: Always feature-flagged at the application layer; expand-and-contract migration pattern.
+
+**SLO-gated automated rollback:**
+- During the canary bake, monitor the new version\'s SLI vs the baseline (old version).
+- If new version\'s error rate / latency exceeds the old by some threshold (often 1.5×), auto-rollback.
+- This is the modern standard. Tools (Argo Rollouts, Flagger) implement directly.
+- Removes "engineer notices something\'s wrong" from the critical path.
+
+**The expand-and-contract pattern (DB migrations):**
+1. **Expand**: add new column / table. Old code unaffected.
+2. **Migrate**: backfill new column from old.
+3. **Dual-write**: both old code and new code write to both columns.
+4. **Switch reads**: new code reads from new column. Old code still works.
+5. **Switch writes**: only new code writes; new column is source of truth.
+6. **Contract**: drop old column.
+Each step is independently deployable; rollback at any step is safe.
+
+**Deploy frequency vs reliability** (Accelerate / DORA research findings):
+- High-performing teams deploy **multiple times per day**, MTTR is **< 1 hour**, change-failure rate is **< 15%**.
+- Low-performing teams deploy **monthly to weekly**, MTTR is **> 1 day**, change-failure rate is **> 45%**.
+
+The non-obvious finding: **frequent small deploys are MORE reliable** than infrequent large ones. Smaller surface area, easier rollback, less cumulative risk.`,
+    whenToUse: [
+      'Designing the deployment pipeline for a new service — start with canary + feature flags',
+      'Reviewing existing pipeline — does it have SLO-gated auto-rollback?',
+      'Database schema changes — expand-and-contract is required, not optional',
+      'Post-incident — was the deploy strategy a contributing factor? Often yes',
+    ],
+    keyConcepts: [
+      { term: 'Feature flags', definition: 'Runtime toggles for new code paths. Decouple deploy from release. Instant rollback (flip flag).' },
+      { term: 'Canary deployment', definition: 'Small fraction of traffic to new version; bake period; SLO-gated promotion. Standard for stateless services.' },
+      { term: 'Blue/Green', definition: 'Two complete environments; instant cutover. Fast rollback; needs duplicate capacity.' },
+      { term: 'SLO-gated rollback', definition: 'Auto-rollback if canary\'s SLI exceeds baseline by threshold. Removes human-in-loop from rollback decision.' },
+      { term: 'Expand-and-contract', definition: 'DB migration pattern: add column → backfill → dual-write → switch reads → switch writes → drop. Each step independently rollbackable.' },
+      { term: 'DORA metrics', definition: 'Deploy frequency, lead time, MTTR, change-failure rate. Industry benchmark for delivery performance.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through canary deployment with SLO-gated rollback.',
+        answer: `Standard pipeline:
+
+**1. Pre-canary**: deploy to staging; smoke tests pass.
+
+**2. Canary phase**: deploy v_new to 1-5% of production traffic. The remaining 95-99% still hits v_old.
+
+**3. Bake period**: 10-30 minutes (longer for low-traffic services). During this:
+   - Monitor canary\'s SLI metrics: error rate, latency p95/p99, business KPIs.
+   - Compare canary vs baseline (the v_old population).
+   - If canary\'s error rate is, say, 1.5× baseline, that\'s a regression.
+
+**4. Decision point**:
+   - **SLI healthy**: promote canary to next percentage (10%, 50%, 100%).
+   - **SLI degraded**: auto-rollback. Drop canary to 0%; v_old serves all traffic.
+
+**5. Progressive promotion**: 1% → 10% → 50% → 100%, with bake period at each step.
+
+**The SLO gate**:
+- Defined ratios: \`canary_error_rate / baseline_error_rate < 1.5\`.
+- Defined absolute thresholds: \`canary_p99_latency < 1000ms\` regardless of baseline.
+- Defined time windows: must hold for full bake period; transient blips don\'t fail.
+
+**Tooling**:
+- **Argo Rollouts** (Kubernetes): integrates with Prometheus / Datadog for SLI checks; auto-rollback on threshold breach.
+- **Flagger** (Flux / service mesh): similar; checks Prometheus or Honeycomb metrics.
+- **Spinnaker**: older, widely-deployed. Same model.
+- **Cloud-native**: AWS CodeDeploy + CloudWatch alarms, GCP Deploy + Cloud Monitoring.
+
+**The win**:
+- Bad deploys caught in 10-30 min instead of hours.
+- Customer impact bounded to ~5% of traffic for ~10 min, not 100% for 1 hour.
+- Engineer doesn\'t need to manually monitor; automation handles the rollback decision.
+
+**Pitfalls**:
+- Bake period too short: a canary that "looks fine" for 5 min may have issues that surface at 15 min (slow leaks, batch jobs, GC pauses).
+- Wrong SLI: alerting on infrastructure metrics (CPU) instead of user-facing metrics (errors, latency).
+- No baseline comparison: just absolute thresholds miss "this version is 2× slower than the last but still under target."
+- Sticky cohort: routing 5% of users (consistent across requests) is more representative than 5% of requests; use cookies or user-IDs for canary cohort.`,
+      },
+      {
+        question: 'How do you handle a database schema change safely?',
+        answer: `**Expand-and-contract** (also called "parallel change"). Every step is independently deployable and rollbackable.
+
+Worked example: renaming column \`old_name\` to \`new_name\`.
+
+**Step 1: Expand schema** (deploy SQL migration only)
+- \`ALTER TABLE users ADD COLUMN new_name TEXT;\`
+- Old code unaffected. Reads from old_name; writes to old_name.
+- Rollback: drop the new column.
+
+**Step 2: Backfill** (run a migration job)
+- Copy old_name to new_name for all existing rows. Often done in batches over hours/days for large tables.
+- Old code unaffected.
+- Rollback: ignore new_name (still empty for rows after the backfill stops).
+
+**Step 3: Dual-write** (deploy app v2 behind feature flag)
+- App writes to BOTH old_name and new_name on every update.
+- App reads from old_name (still source of truth).
+- Rollback: flip flag → back to single-write.
+
+**Step 4: Switch reads** (deploy app v3 / flip another flag)
+- App reads from new_name; writes to BOTH (still dual-write).
+- Verify reads work correctly via canary.
+- Rollback: flip flag → reads from old_name.
+
+**Step 5: Switch writes** (deploy app v4 / flip another flag)
+- App writes only to new_name. Reads from new_name. New_name is source of truth.
+- Old_name no longer maintained.
+- Rollback: flip flag → re-enable dual-write. Old_name re-syncs over time.
+
+**Step 6: Contract** (deploy SQL migration)
+- \`ALTER TABLE users DROP COLUMN old_name;\`
+- Only after weeks of confidence at step 5.
+- Rollback: now expensive — re-add column, re-backfill from new_name.
+
+**The principle**: at every step, the system can run with a mix of old and new code, and rollback to the previous step is a flag flip or a small migration. No "big bang" cutover.
+
+**Time investment**: a "rename column" change might span 2-4 weeks. For non-critical services, this feels overengineered. For revenue-critical services, it\'s the only safe path.
+
+**Shortcuts** (when acceptable):
+- Tiny tables (<10K rows): can sometimes do online cutover with brief lock.
+- Tables not in critical path: shorter dual-write window.
+- Read-only changes: just add the column; no migration needed.
+
+The pattern is widely covered in books (Refactoring Databases, Database Reliability Engineering) and is the default for high-availability services at scale.`,
+      },
+      {
+        question: 'What does the DORA research say about deploy frequency vs reliability?',
+        answer: `The Accelerate / DORA research (Forsgren, Humble, Kim, 2018-2024 annual reports) identifies four key metrics — **deploy frequency, lead time, MTTR, change-failure rate** — and finds **high-performing teams excel on all four simultaneously**.
+
+The non-obvious finding: high-performing teams deploy **MORE frequently** AND have **LOWER failure rates** AND have **SHORTER MTTR**. The intuition that "more deploys = more risk" is wrong.
+
+The 2024 numbers (rough, from the State of DevOps report):
+
+| Metric | Low | Medium | High | Elite |
+|---|---|---|---|---|
+| Deploy frequency | < monthly | weekly-monthly | weekly-daily | multiple/day |
+| Lead time | months | weeks-months | days-weeks | < 1 day |
+| MTTR | > 1 week | < 1 week | < 1 day | < 1 hour |
+| Change-failure rate | > 45% | 15-45% | < 15% | < 15% |
+
+Why frequent small deploys are MORE reliable:
+
+1. **Smaller change set per deploy.** A deploy with 5 commits has bounded risk; a deploy with 500 commits is a wildcard.
+2. **Faster rollback.** Small changes are easier to revert. Big changes have entanglements.
+3. **Better SLI signal.** If the canary degrades, you know which deploy caused it. With monthly deploys, "which of the 200 changes is to blame?" is hard.
+4. **Practiced muscle memory.** Teams that deploy daily have battle-tested pipelines; teams that deploy monthly have unrehearsed pipelines that break unexpectedly.
+5. **Smaller blast radius.** Smaller changes typically have smaller user impact even when they fail.
+
+The implication for SRE: **invest in pipeline reliability** (canary, SLO-gated rollback, fast CI) to *enable* high deploy frequency. Don\'t suppress deploy frequency to "manage risk."
+
+The mistake low-performing teams make: "we\'ll deploy carefully, once a month, with extensive testing." This produces the opposite of what they want — large-batch high-risk deploys with rusty pipelines. Industry data is unambiguous on this.`,
+      },
+    ],
+    references: [
+      'https://argoproj.github.io/argo-rollouts/',
+      'https://flagger.app/',
+      'https://cloud.google.com/devops/state-of-devops',
+      'https://martinfowler.com/bliki/ParallelChange.html',
+    ],
+  },
+
+  {
+    id: 'gitops',
+    title: 'GitOps — Argo CD, Flux, and the Pull Model',
+    icon: 'gitBranch',
+    color: '#f59e0b',
+    questions: 3,
+    description: 'Git as the source of truth for infrastructure and applications, the pull model, and reconciliation loops.',
+    introduction: `**GitOps** is a deployment philosophy: **Git is the source of truth for desired state; agents continuously reconcile actual state to match Git.** Coined by Weaveworks (2017); widely adopted in Kubernetes shops.
+
+**The four GitOps principles** (from gitops.tech):
+
+1. **Declarative** — system state described declaratively (YAML, HCL, etc.). Not imperative scripts.
+2. **Versioned and immutable** — desired state stored in Git; full audit trail; rollback via revert.
+3. **Pulled automatically** — agents in the cluster pull from Git; no external CD pushes.
+4. **Continuously reconciled** — agents constantly compare actual to desired; correct drift.
+
+**Pull vs push:**
+
+The traditional CI/CD model is **push**: CI/CD service has cluster credentials, runs \`kubectl apply\` from outside the cluster.
+- Risk: CI/CD service holds production credentials. Compromise = production compromise.
+- Risk: failed pushes can leave inconsistent state. CI/CD has no view of "what\'s actually deployed now."
+
+The GitOps **pull** model: an agent INSIDE the cluster watches Git and applies changes.
+- Cluster credentials never leave the cluster.
+- Agent has continuous view of actual state; corrects drift.
+- Audit trail: every change is a Git commit; \`git log\` is the deploy history.
+
+**Tools:**
+
+**Argo CD** (CNCF): the most popular. Web UI showing sync status, diffs, history. Multi-cluster support. Extensive RBAC.
+
+**Flux** (CNCF): pioneered GitOps. Lightweight; integrates with Helm and Kustomize natively. v2 added multi-tenancy improvements.
+
+Both:
+- Watch Git repos.
+- Pull state on a schedule (typically every 1-5 min).
+- Apply via Kubernetes API.
+- Detect and report drift.
+- Auto-correct (if configured) or alert.
+
+**The repository structure (canonical):**
+
+\`\`\`
+gitops-repo/
+├── apps/
+│   ├── checkout/
+│   │   ├── base/         # base manifests
+│   │   └── overlays/     # per-env Kustomize overlays
+│   │       ├── dev/
+│   │       ├── staging/
+│   │       └── prod/
+│   └── ...
+├── infrastructure/
+│   ├── monitoring/
+│   ├── ingress/
+│   └── ...
+└── clusters/
+    ├── dev/              # cluster-level config
+    ├── staging/
+    └── prod/
+\`\`\`
+
+Each cluster has an Argo CD / Flux installation that watches the corresponding path. Promotion (dev → staging → prod) is a Git operation: bump the image tag in the env\'s overlay.
+
+**Integration with progressive delivery:**
+
+GitOps + Argo Rollouts (or Flagger) is the standard 2026 stack.
+- Git holds the desired image version.
+- Argo CD pulls; deploys to the cluster.
+- Argo Rollouts (or Flagger) handles the canary / progressive rollout / SLO-gated rollback.
+- Successful rollout → no Git change needed; rollback via Argo Rollouts auto-reverts (Argo CD won\'t re-apply unless Git changes).
+
+**Where GitOps shines:**
+- Multi-cluster, multi-environment deployments — central Git, per-cluster agents.
+- Auditability — every change is a commit.
+- Rollback — revert the commit.
+- Drift detection / correction — agents constantly verify actual = desired.
+
+**Where it struggles:**
+- Stateful operations (database migrations, one-time jobs) — GitOps is for declarative state; imperative ops awkwardly fit.
+- Secrets — Git isn\'t a secrets store. Use Sealed Secrets, External Secrets, Vault integration.
+- Large monorepo size — Argo CD struggles with very large repos; sometimes split into multiple.
+
+**The Crossplane intersection.** Crossplane + GitOps is "everything is a Kubernetes resource managed by Git." Even cloud infrastructure (RDS, S3) becomes K8s objects that Argo CD reconciles. Powerful but more complex than Terraform-for-infra-and-K8s-for-apps.`,
+    whenToUse: [
+      'Multi-cluster Kubernetes deployments',
+      'Auditability / compliance requirements — Git log as deploy log',
+      'Drift-prone environments — continuous reconciliation prevents surprise',
+      'Teams transitioning from manual deploys to automation — GitOps + PR-based reviews',
+    ],
+    keyConcepts: [
+      { term: 'GitOps four principles', definition: 'Declarative + Versioned & Immutable + Pulled Automatically + Continuously Reconciled. Coined by Weaveworks.' },
+      { term: 'Pull model', definition: 'Agent inside cluster watches Git; applies changes. Opposite of push (external CI/CD does kubectl apply).' },
+      { term: 'Argo CD', definition: 'CNCF GitOps tool with Web UI. Multi-cluster, RBAC, sync status, diff view. Most popular GitOps in 2026.' },
+      { term: 'Flux', definition: 'CNCF GitOps tool. Lightweight; native Helm + Kustomize. v2 has multi-tenancy.' },
+      { term: 'Drift correction', definition: 'Agents continuously compare actual vs desired; either auto-correct or alert. Eliminates "someone clicked in the cluster" problem.' },
+      { term: 'Promotion via Git', definition: 'dev → staging → prod is a Git operation: change the image tag. PRs review the change.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'What is GitOps and why does it matter?',
+        answer: `GitOps treats **Git as the source of truth for desired infrastructure / application state**, with **agents in the cluster continuously reconciling actual state to match**.
+
+Four principles (Weaveworks):
+1. **Declarative**: state in YAML / HCL, not imperative scripts.
+2. **Versioned & immutable**: state in Git; revert = rollback.
+3. **Pulled automatically**: agent in the cluster watches Git.
+4. **Continuously reconciled**: agent corrects drift in real-time.
+
+Why it matters:
+
+**1. Security**: cluster credentials never leave the cluster. CI/CD doesn\'t have prod kubeconfig. A compromised CI runner can\'t push to prod.
+
+**2. Auditability**: every change is a Git commit. Who, what, when, why (PR description). \`git log\` is your deploy log. Compliance teams love it.
+
+**3. Rollback**: \`git revert\` and the agent applies the previous state. Faster than chasing kubectl history.
+
+**4. Drift correction**: someone runs \`kubectl edit\` on a resource; the agent re-applies the Git state on the next sync (1-5 min later). Eliminates the "someone modified it manually six months ago and we forgot" problem.
+
+**5. Multi-cluster scale**: each cluster has its own agent. One Git repo can drive 50 clusters; you don\'t have to maintain 50 CD pipelines.
+
+**6. Disaster recovery**: cluster destroyed? Bootstrap a new one; install agent; point at Git. Cluster auto-rebuilds itself.
+
+The shift from "I deploy by running kubectl" to "I deploy by merging a PR" is the cultural change. PRs review infrastructure the same way they review code; deploys are auditable and reversible.
+
+The trade-off: imperative operations (one-time migrations, ad-hoc fixes) become awkward. They want imperative scripts; GitOps wants declarative state. Most teams handle these via Argo CD\'s "sync hooks" or out-of-band tooling.`,
+      },
+      {
+        question: 'Argo CD vs Flux — how do you choose?',
+        answer: `Both are CNCF-graduated, both implement GitOps well. The differences:
+
+**Argo CD**:
+- **Web UI** is excellent. Visualize app health, sync status, diffs, rollback history. Engineers can see what\'s deployed without kubectl.
+- **Multi-tenancy** via Projects. Built-in RBAC. Multi-cluster from one Argo CD installation.
+- **App-of-apps** pattern: one app deploys other apps. Hierarchical org structure.
+- **Larger community**, more enterprise adopters. Easier to hire for.
+- Heavier (UI + controller + multiple components).
+
+**Flux**:
+- **No built-in UI** (Web UI exists via "Weave GitOps" addon, less polished than Argo).
+- **Lighter** (just controllers).
+- **Native Helm and Kustomize support** out of the box.
+- **Notification controller** built-in (alerts to Slack, Teams, etc.).
+- **Image automation**: Flux can scan Docker registries and bump versions automatically (Argo can with separate Argo Image Updater).
+- v2 has multi-tenancy improvements but still less polished than Argo.
+
+**Decision criteria**:
+
+Choose **Argo CD** if:
+- You want a polished UI for app status / sync.
+- You have multiple teams sharing GitOps; need RBAC.
+- You\'re running at scale (50+ apps, 10+ clusters).
+- Hireability matters (Argo skills are more common).
+
+Choose **Flux** if:
+- You want minimal moving parts.
+- Helm-heavy stacks (Flux has very clean Helm support).
+- You want image-automation built-in.
+- You\'re already CNCF / cloud-native culture and don\'t need a UI.
+
+In 2026, Argo CD is more popular (~70/30 split in surveys); Flux is the "principled minimalist" choice. Both are excellent.
+
+Hybrid: some teams run both. Argo CD for app teams (UI valuable); Flux for platform team\'s low-level configurations.`,
+      },
+      {
+        question: 'How do GitOps and progressive delivery fit together?',
+        answer: `They\'re complementary layers. **GitOps drives the desired state; progressive delivery handles HOW the state change is rolled out.**
+
+Worked example:
+
+**1. Engineer pushes a code change.**
+- CI builds new container image: \`checkout:v3.2.1\`.
+- CI updates the GitOps repo: bumps image tag in \`apps/checkout/overlays/prod/kustomization.yaml\` from \`v3.2.0\` to \`v3.2.1\`.
+- Bot opens PR; engineer reviews and merges.
+
+**2. Argo CD detects the Git change.**
+- Within 1-5 min, syncs the cluster to the new state.
+- Tells the cluster: "the desired Deployment image is \`checkout:v3.2.1\`."
+
+**3. Argo Rollouts takes over** (instead of plain Deployment).
+- Sees the new image; starts a canary rollout instead of rolling update.
+- Routes 5% of traffic to v3.2.1; bake for 10 min.
+- Monitors SLI metrics from Prometheus.
+
+**4. SLI healthy → progressive promotion.**
+- Argo Rollouts moves to 25%, 50%, 100% with bake periods.
+
+**5. SLI degrades → auto-rollback.**
+- Argo Rollouts pauses or reverses the rollout.
+- The old version (v3.2.0) keeps serving.
+- Argo CD will see "actual ≠ desired" but Argo Rollouts owns the rollout state, so it doesn\'t fight.
+- Engineer is alerted; investigates; either fixes forward (new commit) or accepts rollback (Git revert).
+
+The win: **safety + auditability**. Every change is a Git commit (audit trail); but the actual rollout is gradual and SLO-gated (safety).
+
+The same pattern works with Flagger (canaries via service mesh), Linkerd Traffic Split, or KEDA-driven rollouts.
+
+What this replaces: the old model of "engineer SSHs to a host and runs deploy.sh." That had no audit, no canary, no auto-rollback. GitOps + progressive delivery has all three with full automation.
+
+In 2026, this stack (GitOps + canary + SLO-gated rollback) is the modern standard. Greenfield Kubernetes services should default to it.`,
+      },
+    ],
+    references: [
+      'https://opengitops.dev/',
+      'https://argo-cd.readthedocs.io/',
+      'https://fluxcd.io/',
+      'https://www.weave.works/blog/what-is-gitops-really',
+    ],
+  },
+
+  {
+    id: 'self-healing-systems',
+    title: 'Self-healing — Auto-restart, Auto-scale, Auto-remediate',
+    icon: 'refreshCw',
+    color: '#f59e0b',
+    questions: 3,
+    description: 'Kubernetes liveness probes, autoscaling, automated runbooks, and the limits of self-healing.',
+    introduction: `**Self-healing** is the discipline of building systems that recover from failures without human intervention. The fewer pages, the fewer mistakes; the higher the availability per engineer-hour invested.
+
+**Layers of self-healing:**
+
+**Layer 1: Process-level (auto-restart)**
+- Process crashes → supervisor restarts it.
+- systemd, Docker restart policies, Kubernetes liveness probes.
+- Catches: memory leaks, deadlocks, panics, transient bugs.
+- Limits: doesn\'t fix the underlying cause; if crash-loop, supervisor enters back-off.
+
+**Layer 2: Instance-level (auto-replace)**
+- Instance fails health check → load balancer removes it; orchestrator launches replacement.
+- Kubernetes Deployment + readiness probe; AWS ASG with health checks.
+- Catches: bad host, network issue, instance hardware failure.
+- Limits: doesn\'t fix capacity issues if the underlying problem is "all instances overloaded."
+
+**Layer 3: Capacity-level (autoscaling)**
+- Load increases → autoscaler adds instances; load decreases → removes.
+- Kubernetes HPA (CPU/memory), VPA, Karpenter (cluster), KEDA (event-driven), AWS ASG with target tracking.
+- Catches: traffic spikes, slow ramp.
+- Limits: doesn\'t fix bugs; doesn\'t fix the dependency that\'s overloaded.
+
+**Layer 4: Topology-level (auto-failover)**
+- Region / AZ fails → traffic routes to healthy region.
+- Route 53 health checks, AWS Global Accelerator, Cloudflare Load Balancer, Cilium.
+- Catches: AZ outages, network partitions, regional failures.
+- Limits: doesn\'t fix data corruption; doesn\'t fix application bugs.
+
+**Layer 5: Application-level (graceful degradation)**
+- Dependency fails → service serves cached / partial / fallback response.
+- Circuit breakers, fallback methods, feature flags.
+- Catches: slow / failing downstream dependencies.
+- Limits: needs application-level work; not a free win.
+
+**Layer 6: Runbook automation (auto-remediate)**
+- Alert fires → automated runbook runs mitigation.
+- Tools: PagerDuty Rundeck, StackStorm, custom Lambda + alert webhooks.
+- Catches: known patterns ("disk full → expand volume"; "queue backed up → scale workers"; "stuck process → restart").
+- Limits: only handles patterns you\'ve seen before.
+
+**Kubernetes self-healing primitives:**
+
+- **Liveness probe**: "is the process alive?" Failure → kill and restart.
+- **Readiness probe**: "is the process ready to serve?" Failure → remove from service endpoints.
+- **Startup probe**: "has the process finished initializing?" Used for slow-starting apps.
+- **PodDisruptionBudget**: "minimum healthy pods during voluntary disruption." Prevents auto-scaling from breaking the service.
+- **HPA**: scales pods based on metric (CPU, custom).
+- **Karpenter / Cluster Autoscaler**: scales nodes when pod requests exceed cluster capacity.
+
+**Key insight: probes are critical AND dangerous.**
+
+A liveness probe that\'s too aggressive kills healthy pods (false-positive crash-loop). A liveness probe that\'s too lenient lets dead pods linger. Tune carefully:
+
+- **Liveness should test "the process is functional," not "the request can be served."** A liveness probe that hits a database and fails when the DB is slow will kill all your pods → cascading outage.
+- **Readiness can be more aggressive.** Removing from service endpoints is reversible; killing is not.
+- **Startup probes for slow-starting apps.** Don\'t kill a Java app that takes 3 minutes to warm up because the liveness probe fails at second 30.
+
+**Limits of self-healing:**
+
+- **Doesn\'t fix design errors.** A service that crashes on every 1000th request gets restarted forever; nobody fixes the bug because the symptom is mitigated.
+- **Hides failure modes.** Auto-remediation can mask developing problems until they\'re catastrophic.
+- **Adds debugging complexity.** "The pod restarted twice; the metric spiked; what was the cause?" — automation has erased the evidence.
+
+**The discipline**: every auto-remediation should **alert the humans** even if it succeeds, so the underlying pattern is reviewed. "Auto-restart succeeded" is information; investigate the cause.`,
+    whenToUse: [
+      'Designing a new service — set up probes, autoscaling, replication from day 1',
+      'Reviewing pages — which pages could be auto-remediated? Likely 50%+',
+      'Capacity planning — autoscaling parameters for traffic patterns',
+      'Postmortems — was a self-healing layer not in place that should have been?',
+    ],
+    keyConcepts: [
+      { term: 'Liveness vs readiness probe', definition: 'Liveness = "kill if failing"; readiness = "remove from endpoints if failing." Liveness more dangerous; tune carefully.' },
+      { term: 'Autoscaler', definition: 'Adjust capacity based on signal. HPA (pod-level), VPA (resource-tuning), Karpenter (node-level), KEDA (event-driven).' },
+      { term: 'Circuit breaker', definition: 'Stop calling a failing dependency for X minutes; serve fallback. Prevents cascading failure.' },
+      { term: 'Auto-remediation', definition: 'Automated runbook fires on alert. "Disk full → expand"; "queue backed up → scale." Saves pages.' },
+      { term: 'Probes can amplify outages', definition: 'A probe that hits a database fails when DB is slow → kills all pods → outage. Probes should test process health, not full system.' },
+      { term: 'Auto-remediation alerts', definition: 'Even when auto-remediation succeeds, log/alert that it fired. Otherwise patterns are invisible until catastrophic.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you design Kubernetes probes correctly?',
+        answer: `Three rules learned from production failures:
+
+**1. Liveness probes must test PROCESS health, not SYSTEM health.**
+- ✅ Good: liveness hits an in-process \`/healthz\` endpoint that returns 200 if the goroutine pool is alive, the request handler can answer.
+- ❌ Bad: liveness hits the database. When the DB is slow, every pod\'s liveness fails. Kubernetes kills every pod. Now you have an outage AND no service.
+
+The pattern: liveness should be testing "is this Go process / Java process alive and able to serve requests in principle?" Not "is the entire path through database working?"
+
+**2. Readiness probes can be more aggressive than liveness.**
+- Readiness failures remove from service endpoints (reversible).
+- Liveness failures kill the pod (irreversible during the kill).
+- Readiness can include "is my downstream dependency healthy?" — pulling out of rotation when downstream is broken is fine.
+- Liveness should NOT include downstream — the pod is healthy in itself, even if the downstream is broken.
+
+**3. Tune timing carefully.**
+- **initialDelaySeconds**: how long to wait before starting probes. Set to "longer than your typical startup time." For a Java app: 60-180s.
+- **periodSeconds**: how often to probe. Default 10s is usually fine.
+- **failureThreshold**: how many failures before declaring failed. Default 3 is fine.
+- **timeoutSeconds**: how long each probe waits. Default 1s is often too short for cold paths; 5-10s is safer.
+
+**Use a startup probe for slow-starting apps.**
+- Newer Kubernetes feature. Before the startup probe succeeds, liveness/readiness aren\'t checked.
+- Solves the "Java takes 3 min to warm up; liveness kills it at 30s" problem.
+
+**Worked example for a Java service:**
+\`\`\`yaml
+startupProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+  failureThreshold: 30      # 30 × 10s = 5 min total
+  periodSeconds: 10
+livenessProbe:
+  httpGet:
+    path: /healthz          # in-process check
+    port: 8080
+  periodSeconds: 30
+  timeoutSeconds: 5
+readinessProbe:
+  httpGet:
+    path: /ready            # includes downstream dep checks
+    port: 8080
+  periodSeconds: 10
+  timeoutSeconds: 5
+\`\`\`
+
+The takeaway: **probes are load-bearing AND dangerous**. A misconfigured probe doesn\'t protect — it can take you down.`,
+      },
+      {
+        question: 'When does auto-remediation HELP and when does it HURT?',
+        answer: `**Helps** when:
+- The pattern is well-understood and the fix is reliable.
+- The fix is reversible if applied incorrectly.
+- The alert is high-frequency (auto-remediation eliminates pages).
+- Failure of the auto-remediation is detectable (will alert humans).
+
+Examples that work:
+- **Disk full** → expand volume (cloud-native, fully automated, reversible).
+- **Queue backed up** → scale up consumers (autoscaling on queue depth).
+- **Stuck process** → restart (Kubernetes liveness probe).
+- **Failed deploy** → auto-rollback (Argo Rollouts SLO-gated).
+- **Cert expiry** → auto-renew (cert-manager).
+
+**Hurts** when:
+- The pattern is masked by the remediation; underlying bug never gets fixed.
+- The remediation has side effects you don\'t notice.
+- The remediation can make things worse if applied incorrectly.
+- The remediation hides developing problems.
+
+Examples that have hurt:
+- **Auto-restart on crash** without alerting → the bug that causes crashes once an hour stays in production for years; users just see brief outages.
+- **Auto-scale on CPU** without circuit breakers → if downstream is the bottleneck, scaling up just hammers the downstream more, making it worse.
+- **Auto-clear stuck tasks** → an underlying bug in task processing is masked; data inconsistency develops silently.
+- **Auto-recover databases** without verification → silent corruption propagates because the "recovered" replica was actually bad.
+
+**The discipline:**
+1. **Auto-remediate the symptom; alert on the cause.** When auto-restart fires, log it. When the count crosses a threshold, page someone. Pattern visible.
+2. **Don\'t auto-remediate things you don\'t understand.** A new alert pattern shouldn\'t get auto-remediation in the first week; observe it first, build the runbook, automate after.
+3. **Make remediation idempotent and bounded.** Auto-restart with exponential back-off (Kubernetes does this); doesn\'t infinite-loop.
+4. **Test the auto-remediation in staging.** A broken auto-remediation can do real damage; test like any other code.
+5. **Track auto-remediation rate as a metric.** If "disk-expand" fires 5× in a week, the underlying disk-fill pattern needs investigation, not silence.
+
+The right framing: **auto-remediation buys you time; it doesn\'t fix the problem**. Use the time to fix the underlying pattern.`,
+      },
+      {
+        question: 'How do you design autoscaling policies?',
+        answer: `Four-step process:
+
+**1. Pick the right signal.**
+- **CPU**: works for CPU-bound services. Default Kubernetes HPA.
+- **Memory**: tricky — memory usage doesn\'t always correlate with load.
+- **Custom metric**: usually better. Examples: queue depth (scale by backlog), request rate, p95 latency.
+- **External event**: Kafka lag, SQS depth, Pub/Sub messages → KEDA (Kubernetes Event-Driven Autoscaling).
+- **Predictive**: time-of-day, day-of-week patterns → AWS predictive scaling, scheduled HPA.
+
+The pattern: **scale on the metric that\'s closest to user impact**. For request-driven services: request rate. For background workers: queue depth. CPU is a fallback when nothing better is available.
+
+**2. Set thresholds with hysteresis.**
+- **Scale-up threshold**: e.g., scale up when CPU > 70% for 1 min.
+- **Scale-down threshold**: e.g., scale down when CPU < 50% for 5 min.
+- **Cooldown**: 5-10 min after each action; prevents thrash.
+
+The asymmetry is intentional: scale up fast (users wait), scale down slow (avoid premature shrinking → re-scaling cycle).
+
+**3. Set sensible bounds.**
+- **min replicas**: enough to handle baseline load with N+1 redundancy. 2-3 minimum for any production service.
+- **max replicas**: bounded by what your dependency can handle. If your DB has 100 connections and each pod uses 5, max replicas is 20 (with safety margin).
+
+**4. Test under load and during scale events.**
+- Synthetic load test that ramps from baseline to 5× baseline. Watch: did autoscaling react in time? Did the system stay within SLO?
+- Watch what happens at the autoscaling LIMIT. Does the service degrade gracefully or fall over?
+- Watch what happens during scale-down. Are draining-aware shutdowns working? Are sticky sessions broken?
+
+**Common failures:**
+- **Thrash**: scale up + scale down cycling rapidly. Fix: longer cooldowns, more hysteresis.
+- **Slow scale**: CPU spike to 100%, autoscaler reacts, pods take 5 min to start. By the time they\'re ready, traffic spike is over. Fix: predictive scaling, faster pod startup, lower scale-up threshold.
+- **Downstream saturation**: scaling up the service pushes more traffic to a DB that\'s already at limits → DB collapses → service collapses. Fix: bounds on max replicas.
+- **No min replicas during low-traffic**: scaled to 0; first request hits cold-start. Fix: min replicas of 2-3.
+
+The right framing: autoscaling is a TOOL, not a SUBSTITUTE for capacity planning. Reserve capacity for baseline; autoscale for spikes; alert when you\'re at the bounds repeatedly.`,
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/concepts/workloads/pods/disruptions/',
+      'https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/',
+      'https://keda.sh/',
+      'https://karpenter.sh/',
     ],
   },
 ];
