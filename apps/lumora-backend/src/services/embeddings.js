@@ -42,17 +42,25 @@ function hash(s) {
   return createHash('sha256').update(s).digest('hex');
 }
 
+const inflight = new Map();
+
 export async function embedQuery(text) {
   const key = hash(text);
   const cached = cacheGet(key);
   if (cached) return cached;
-  const r = await client().embeddings.create({ model: MODEL, input: text });
-  const v = r.data[0].embedding;
-  if (v.length !== DIM) {
-    throw new Error(`embedding dim mismatch: got ${v.length}, expected ${DIM}`);
-  }
-  cacheSet(key, v);
-  return v;
+  if (inflight.has(key)) return inflight.get(key);
+  const promise = client().embeddings.create({ model: MODEL, input: text })
+    .then((r) => {
+      const v = r.data[0].embedding;
+      if (v.length !== DIM) {
+        throw new Error(`embedding dim mismatch: got ${v.length}, expected ${DIM}`);
+      }
+      cacheSet(key, v);
+      return v;
+    })
+    .finally(() => inflight.delete(key));
+  inflight.set(key, promise);
+  return promise;
 }
 
 export async function embedBatch(texts) {
@@ -78,4 +86,3 @@ export async function embedBatch(texts) {
   return out;
 }
 
-export const _internals = { MODEL, DIM, BATCH_SIZE };
