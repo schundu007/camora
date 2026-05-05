@@ -50,6 +50,14 @@ export const sreTopicCategoryMap = {
   'alerting-philosophy':       'observability',
   'dashboards-design':         'observability',
   'cardinality-cost':          'observability',
+  // Incidents
+  'incident-command':          'incidents',
+  'mttr-mttd-mttf':            'incidents',
+  'incident-severity':         'incidents',
+  'blameless-postmortems':     'incidents',
+  'five-whys':                 'incidents',
+  'incident-comms':            'incidents',
+  'gamedays-chaos':            'incidents',
 };
 
 export const sreTopics = [
@@ -2799,6 +2807,1217 @@ The hardest part is engineering buy-in: people are attached to the tools they kn
       'https://prometheus.io/docs/practices/naming/',
       'https://opentelemetry.io/docs/concepts/sampling/',
       'https://www.honeycomb.io/blog/cost-of-observability',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // D. Incident Management & Response
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'incident-command',
+    title: 'Incident Command — IC, Ops Lead, Comms Lead',
+    icon: 'alertTriangle',
+    color: '#ef4444',
+    questions: 4,
+    description: 'The Google IRT structure (modeled on FEMA ICS): three roles, why "IC does not type," and when to escalate.',
+    visualizations: [
+      {
+        title: 'Incident Command roles',
+        description: 'IC delegates to Ops Lead (mitigation), Comms Lead (status updates). Planning Lead joins for incidents > 4h. SMEs are pulled in by Ops Lead, not the IC directly.',
+        image: '/diagrams/sre/d1-incident-roles.png',
+      },
+    ],
+    introduction: `Google's incident response framework (SRE Book Ch 14) is **modeled on FEMA's Incident Command System (ICS)** — the same structure US wildland firefighters and emergency responders use. The core idea: **separate command from execution.**
+
+Three roles, always:
+
+**1. Incident Commander (IC)** — coordinates the response.
+- Decides priorities ("we mitigate first, investigate later").
+- Delegates work; *does not type commands themselves.*
+- Runs the bridge / call.
+- Decides escalation.
+- Ends the incident when it's mitigated.
+
+The "IC does not type" rule is load-bearing. If the IC is also fixing the issue, they can't see the bigger picture, can't coordinate other people, and can't communicate. Famous war story: an IC trying to debug while running the call missed a parallel issue that compounded the outage. The role is full-time during an incident.
+
+**2. Operations Lead (Ops Lead / Incident Response Lead)** — executes the technical mitigation.
+- Reads dashboards, runs commands, makes changes.
+- Pulls in SMEs (database expert, network expert, the team that owns the broken service).
+- Reports findings to the IC.
+
+**3. Communications Lead (Comms Lead)** — updates everyone outside the response.
+- Posts on the status page (if customer-impacting).
+- Updates internal Slack channel every 15-30 minutes.
+- Briefs executives.
+- Drafts the customer comms.
+
+For incidents that go past 4 hours, a **fourth role**: **Planning Lead** — manages handoffs between shifts, owns the timeline document, makes sure context isn't lost when the IC changes.
+
+**The handoff structure (verbatim from SRE Book Ch 14):**
+- **Always declare an incident** when more than one engineer is involved, or when the issue impacts users.
+- **The first responder becomes IC by default** — until handed off.
+- **Hand off explicitly**: "John, you are now IC. I am no longer IC." Acknowledged. Otherwise two people think they're IC and decisions don't get made.
+
+**Communication channels.** Every incident has its own:
+- **Bridge / video call** for active discussion.
+- **Slack / chat channel** for written status, links, error messages, runbook references.
+- **Document / Google Doc** for the running timeline (who did what, when).
+
+Don't mix them. Voice is for discussion; chat is for the durable record; doc is for the timeline. Engineers asking "what's the latest?" should be able to read chat or the doc and catch up without joining the bridge.
+
+**Escalation.** Page-the-IC is itself an escalation. The IC's escalation toolkit:
+- Page another IC (peer support; rare).
+- Page a senior engineer (deep technical knowledge).
+- Page leadership (financial-impact incidents).
+- Activate vendor support (cloud incidents — AWS, GCP, Datadog).
+
+**End of incident.** The IC declares "incident resolved" when the symptom is mitigated. **This is not the same as "root cause identified."** Mitigation first; root cause later in the postmortem.`,
+    whenToUse: [
+      'Active incident — assigning IC + Ops Lead + Comms Lead is the first 60 seconds',
+      'On-call training — every new SRE should have shadowed an IC and run an exercise',
+      'Postmortem — was the incident command structure correct? Were roles confused?',
+      'Designing the on-call rotation — who can be IC? It is a learned skill, not all SREs are ready.',
+    ],
+    keyConcepts: [
+      { term: 'Incident Commander (IC)', definition: 'Coordinates the response; does not execute mitigations themselves. The "does not type" role.' },
+      { term: 'Ops Lead', definition: 'Executes the mitigation. Reads dashboards, runs commands, pulls in SMEs.' },
+      { term: 'Comms Lead', definition: 'Updates status page, Slack, executives, customers. Owns the external narrative during the incident.' },
+      { term: 'Explicit handoff', definition: '"John, you are now IC. I am no longer IC." Acknowledged. Otherwise two ICs and unclear decisions.' },
+      { term: 'Mitigation before root cause', definition: 'IC declares "resolved" when symptom is mitigated, not when root cause is found. Root cause goes into the postmortem.' },
+      { term: 'FEMA ICS lineage', definition: 'Google\'s IRT framework is modeled on the US wildland firefighting Incident Command System — same structure, same separation of roles.' },
+    ],
+    pitfalls: [
+      'IC also fixing the issue. They miss the bigger picture; communication suffers; parallel issues compound.',
+      'No explicit handoff. Two people both think they\'re IC; conflicting decisions; nobody making decisions.',
+      'Mixing voice / chat / doc. Engineers join late and can\'t catch up because the durable record is in voice.',
+      'Comms Lead missing during a customer-impacting incident. Status page doesn\'t update; customers explode on Twitter.',
+      'IC declaring "resolved" because the team thinks it\'s under control, before symptom is actually mitigated. Embarrassing if it re-fires.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through the incident roles and why each exists.',
+        answer: `Three roles in any meaningful incident:
+
+**Incident Commander (IC)**: coordinates. Decides priorities ("mitigate first, investigate later"). Delegates work to Ops Lead and Comms Lead. **Does not type commands themselves.** Runs the bridge. Decides escalation. Ends the incident.
+
+**Operations Lead (Ops Lead)**: executes the technical mitigation. Reads dashboards, runs commands, pulls in subject-matter experts. Reports findings up to IC. The "hands on the keyboard" role.
+
+**Communications Lead (Comms Lead)**: updates everyone outside the response. Posts to status page, updates internal Slack every 15-30 min, briefs executives. Drafts customer comms. The external face of the incident.
+
+For incidents > 4 hours: add a **Planning Lead** to manage shift handoffs and the timeline document.
+
+The why:
+- **IC does not type** because if they do, they lose situational awareness. They can't see the parallel issue brewing, they can't coordinate other responders, they can't decide priorities. The first lesson new ICs learn the hard way.
+- **Comms Lead is separate** because comms is high-leverage and full-time. Every minute the status page is wrong is a minute customers are confused. An engineer juggling fixing AND updating the status page does both badly.
+- **Ops Lead pulls in SMEs**, not the IC, because SMEs are interruptions to coordination. The Ops Lead absorbs the interruption; the IC stays focused.
+
+Modeled on FEMA's ICS — the same structure US firefighters use. Battle-tested across decades and disciplines.`,
+      },
+      {
+        question: 'When should you escalate vs handle it yourself?',
+        answer: `Three triggers for escalation:
+
+**1. Severity beyond your authority.** If the incident has high financial impact (e.g., > $X/min revenue loss) or affects a major customer/contract, page leadership. They need to know in real-time, not after the fact.
+
+**2. Technical complexity beyond your knowledge.** If you've been at it 30 minutes and you don't know what's happening, page someone deeper. New on-call engineers especially: "I don't know how to fix this" is a valid trigger; trying to figure it out solo while the impact grows is not.
+
+**3. Time exceeded.** Most teams have a "soft escalation" rule: if a P1 incident has been ongoing for X minutes (often 30-60), the on-call leader / manager is paged. Not because they take over, but because they know it's happening and can decide whether to call in more help.
+
+Plus: vendor escalation. If the issue is cloud-side (AWS API errors, Datadog ingestion outage), file the support case immediately. Don't wait. Cloud vendors prioritize tickets by severity, and "we have an active incident" gets faster response than "we noticed something."
+
+The discipline: **escalating early is rarely punished; escalating late is.** If you escalate and it turns out to be minor, the leader says "thanks for keeping me informed." If you don't escalate and it turns out to be major, the question is "why didn't you tell me?" — much worse.
+
+The IC's escalation tools (above the standard on-call):
+- Page another IC for peer support during a complex incident.
+- Page a senior engineer / staff engineer for technical escalation.
+- Page the SVP / CTO for high-financial-impact incidents.
+- Activate vendor support (premium support contracts often have a 15-min response SLA for sev-1).`,
+      },
+      {
+        question: 'You\'re paged at 3am as IC. Walk me through the first 5 minutes.',
+        answer: `Standard playbook:
+
+**0:00-0:30**: Acknowledge the page. Open laptop, join the bridge or open the incident Slack channel. Read the page text. Confirm I'm IC: "I have the IC role; if anyone disagrees, speak now."
+
+**0:30-1:00**: Verify the incident exists. Check the dashboard the alert points to. Is the symptom real? Is it customer-facing? If yes, this is a real incident; continue. If the alert is bogus, mark it as such and go back to bed.
+
+**1:00-2:00**: Assign roles.
+- "Bob, you're Ops Lead. Drive the investigation. Pull in SMEs as needed."
+- "Alice, you're Comms Lead. Post a status page incident now. Update Slack every 15 minutes."
+- "I'm IC. Decisions go through me."
+
+**2:00-3:00**: Set the cadence.
+- "We'll hold a status check every 15 minutes."
+- "Comms Lead: update the status page now with 'investigating, customer impact unknown'."
+- "Ops Lead: what's our hypothesis? What are you trying first?"
+- Open the incident timeline doc; pin the link in Slack.
+
+**3:00-5:00**: Decide priorities and constraints.
+- "Mitigation first. We can do a partial rollback even if we don't know why yet."
+- "If this hits 30 minutes without progress, I'm escalating to the staff engineer."
+- "Ops Lead: what's the blast radius if we roll back?"
+
+The mindset: **I am not fixing this. I am making sure the right people are fixing it correctly.** The first 5 minutes is about establishing structure so the next hour goes smoothly.`,
+      },
+      {
+        question: 'When does IC declare an incident resolved?',
+        answer: `**When the symptom is mitigated** — not when the root cause is identified, not when everyone is happy with the explanation.
+
+The criteria:
+- The user-visible problem is gone (latency back to normal, error rate back to baseline).
+- The mitigation is stable (the underlying condition isn't going to re-fire in 5 minutes).
+- The fix is documented well enough that the next on-call shift can pick it up.
+
+What happens after "resolved":
+- Comms Lead posts final update on status page ("Resolved: at 03:42 UTC, the incident was mitigated by rolling back deploy v3.2.1...").
+- IC initiates the postmortem. Often: assigns the postmortem owner (usually Ops Lead).
+- IC asks: "anything to monitor in the next 24h?" Usually a few specific dashboards or alerts.
+
+What does NOT happen:
+- Root cause isn't required for resolution. We mitigated. Root cause analysis can take days.
+- Postmortem isn't required for resolution. The postmortem is async; resolution is now.
+- "Definitely understanding what happened" isn't required. We can mitigate without understanding. Investigate later.
+
+The cultural risk: declaring resolved too early. The symptom blip back, customers complain, and now we're re-fired with an embarrassed team. The fix is to **wait long enough to be confident**. After mitigation, watch the relevant dashboard for ~15 minutes. If the metric is stable, declare resolved. If it twitches, keep the incident open.
+
+Quote from SRE Book Ch 14: *"The first priority is incident resolution... root-cause analysis should not block incident resolution."* Mitigate first, understand later.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/managing-incidents/',
+      'https://response.pagerduty.com/training/incident_commander/',
+      'https://www.fema.gov/emergency-managers/nims/components',
+    ],
+  },
+
+  {
+    id: 'mttr-mttd-mttf',
+    title: 'Incident Metrics — MTTD, MTTR, MTBF, MTTF',
+    icon: 'clock',
+    color: '#ef4444',
+    questions: 3,
+    description: 'The four canonical incident metrics, what each measures, and which actually matter for SRE.',
+    introduction: `The incident lifecycle has four canonical time measurements. They\'re used inconsistently across the industry; getting them precise matters in interviews and postmortems.
+
+**MTTD — Mean Time To Detect.**
+From "the issue starts" to "monitoring detects it." A measure of **observability quality**. If MTTD is 30 minutes, your monitoring is detecting issues 30 minutes after they begin — users are seeing them long before you know.
+
+**MTTR — Mean Time To Resolve (or Recovery, or Repair, depending on source).**
+From "the issue starts" (or "is detected" — definitions vary) to "the issue is resolved." A measure of **incident response quality**. The most-cited metric. Definitions vary:
+- **TTR from incident start**: includes detection time. The "real" user-experienced duration.
+- **TTR from detection**: excludes the undetected period. The response-time-only metric.
+Be explicit about which you mean.
+
+**MTBF — Mean Time Between Failures.**
+Average time between consecutive failures of a *repairable* system. \`uptime + downtime / number_of_failures\`. Useful for planning maintenance windows and reliability budgets. Not actionable on a per-service basis.
+
+**MTTF — Mean Time To Failure.**
+Average time to failure for a *non-repairable* component (e.g., disk drives). Used for hardware reliability calculations. Less common in software contexts.
+
+**Reliability formula:**
+\`Availability = MTTF / (MTTF + MTTR)\` — for non-repairable.
+\`Availability = MTBF / (MTBF + MTTR)\` — for repairable.
+
+So: to improve availability, you can either **make failures less frequent** (raise MTBF) or **recover faster** (lower MTTR). For most modern services, lowering MTTR is the higher-leverage lever — failures are inevitable, but minutes-to-recover beats hours-to-recover dramatically on the availability number.
+
+**Which metrics matter for SRE?**
+
+The SRE-correct framing: **MTTR is the primary metric**, broken into MTTD + MTT-Mitigate + MTT-Resolve.
+
+- **MTTD** drives observability investment (better alerts, more sensitive thresholds, synthetic monitoring).
+- **MTT-Mitigate** (detection → mitigation) drives runbook quality, automation, on-call training.
+- **MTT-Resolve** (detection → full resolution) drives root-cause-fix speed.
+
+The SRE Book\'s Ch 14 argument: optimize for MTT-Mitigate over MTT-Resolve. Users care about whether the symptom is gone; they don\'t care that you found the root cause. Mitigation first; root cause in the postmortem.
+
+**The metrics that DON\'T matter (or matter less):**
+- **MTBF as a target** is misleading. Targeting "longer time between failures" without context can incentivize hiding small failures.
+- **Hours-of-uptime** can be gamed by classifying outages narrowly.
+- **Single-incident MTTR** is noise; only the trend over many incidents matters.
+
+**Healthy benchmarks (from industry surveys):**
+- MTTD: < 5 minutes for symptom-driven alerts; < 15 minutes for slow burns.
+- MTT-Mitigate: < 30 minutes for P1 incidents; < 1 hour for P2.
+- MTT-Resolve: 4-24 hours common; depends on root-cause complexity.
+- MTBF: highly service-dependent; tracked for trends, not absolute targets.`,
+    whenToUse: [
+      'Postmortem analysis — break down each incident\'s MTTD / MTT-Mitigate / MTT-Resolve',
+      'On-call program review — track MTTR trend over months; investigate regressions',
+      'Observability investment — slow MTTD is the metric that justifies more monitoring',
+      'Setting SLOs — availability math from MTBF / MTTR informs the SLO target',
+    ],
+    keyConcepts: [
+      { term: 'MTTD', definition: 'Mean Time To Detect. Issue start → monitoring fires. Drives observability investment.' },
+      { term: 'MTTR', definition: 'Mean Time To Resolve / Recovery. Definition varies; specify "from issue start" or "from detection." The most-cited metric.' },
+      { term: 'MTT-Mitigate', definition: 'Sub-component of MTTR: detection → symptom mitigated (regardless of root cause). The user-experienced duration. SRE-correct optimization target.' },
+      { term: 'MTBF', definition: 'Mean Time Between Failures. For repairable systems. Tracked for trend; rarely a useful target.' },
+      { term: 'MTTF', definition: 'Mean Time To Failure. For non-repairable hardware (disks, etc.). Less common in software.' },
+      { term: 'Availability formula', definition: 'Availability = MTBF / (MTBF + MTTR). Improving MTTR is usually the higher-leverage lever.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Define MTTD, MTTR, MTBF — and which matters most for SRE?',
+        answer: `**MTTD (Mean Time To Detect)**: from issue start to monitoring detection. Measures observability.
+
+**MTTR (Mean Time To Resolve / Recovery)**: from issue start (or from detection — be specific) to full resolution. Most-cited but ambiguous.
+
+**MTBF (Mean Time Between Failures)**: average time between consecutive failures of a repairable system. \`uptime / failure_count\`.
+
+The SRE-correct framing: **MTTR matters most**, broken into:
+- **MTTD** — how long before we knew?
+- **MTT-Mitigate** — how long from detection until symptom mitigated?
+- **MTT-Resolve** — how long until fully resolved?
+
+User-facing: **MTT-Mitigate** is what users feel. They don't care about your root cause — they care that the symptom is gone.
+
+Why MTTR > MTBF as an optimization target:
+- Modern services have unavoidable failure sources (deploys, dependencies, autoscaling events).
+- Reducing MTBF requires reducing change velocity — usually unaffordable.
+- Reducing MTTR is a win regardless of failure rate.
+
+The math: availability = MTBF / (MTBF + MTTR). If MTBF is 30 days and MTTR is 1 hour, availability is 99.86%. Halve MTTR to 30 minutes → 99.93%. Same change to MTBF (60 days) → 99.93%. Equivalent gain, but halving MTTR is usually 10× cheaper than doubling MTBF.
+
+The actionable program: invest in alerting (MTTD), runbooks + automation (MTT-Mitigate), and only tackle MTBF for the chronic-failure services where the failure mode itself is fixable.`,
+      },
+      {
+        question: 'My MTTR is 4 hours. How do I diagnose it?',
+        answer: `Decompose by stage and find the bottleneck.
+
+For each recent incident, measure:
+1. **Issue start to detection (MTTD)** — when did the symptom begin? When did the alert fire?
+2. **Detection to acknowledgment** — alert fired → human on-call pages, opens laptop.
+3. **Acknowledgment to investigation start** — laptop open → first useful dashboard / log query.
+4. **Investigation to mitigation** — first useful query → symptom is gone.
+5. **Mitigation to full resolution** — symptom gone → root cause fixed.
+
+Plot the breakdown across, say, 20 incidents. The mode is usually obvious:
+- **MTTD-heavy** (e.g., 90 of 240 minutes is just detection): observability gap. Symptom monitoring isn't sensitive enough; deploy markers missing; cause-based alerts firing late.
+- **Acknowledgment-heavy** (e.g., 30 of 240 in ack): on-call pager isn't set up well; engineers asleep through pages; flaky pager apps.
+- **Investigation-heavy** (e.g., 120 of 240 in investigation): runbooks missing or bad; dashboards not designed for incident triage; logs hard to query.
+- **Mitigation-heavy** (e.g., 60 of 240 in mitigate): rollback is slow; mitigations aren\'t scripted; fear of running mitigation without IC permission.
+- **Resolution-heavy**: the symptom is mitigated but the root-cause fix takes hours. This is fine — declare incident resolved at mitigation; root cause goes to postmortem follow-up.
+
+The fix per category:
+- MTTD-heavy → invest in alerting; symptom-based monitors; faster scrape intervals on critical metrics.
+- Investigation-heavy → invest in runbooks and dashboards. The "5-minute orient" test.
+- Mitigation-heavy → automate common mitigations (one-click rollback, one-click traffic-shift, one-click feature-flag-flip).
+
+Healthy targets: MTTD < 5min, ack < 5min, investigation start < 5min, mitigation 5-30min for known-pattern incidents.`,
+      },
+      {
+        question: 'What\'s the relationship between availability targets and MTTR?',
+        answer: `\`Availability = MTBF / (MTBF + MTTR)\`
+
+Worked example: target 99.99% availability (52 min/year of allowed downtime).
+- If MTBF is 1 month (1 incident/month, 12/year), each incident must average **52 min / 12 = 4.33 min** to fit in the budget. Aggressive.
+- If MTBF is 1 week (52 incidents/year), each must average **52 / 52 = 1 min**. Practically requires automated mitigation.
+- If MTBF is 1 quarter (4/year), each can average **13 min**. Achievable with good response.
+
+The implication: **availability targets imply MTTR targets**. If you target 99.99% but every incident takes 30 minutes to mitigate, you can only afford 1.7 incidents per year. Most services have more than that.
+
+The two levers:
+1. **Reduce incident frequency** (raise MTBF) — better testing, gradual deploys, dependency hardening, capacity buffers.
+2. **Reduce time-to-mitigate** (lower MTTR) — automation, runbooks, on-call training, observability.
+
+For most teams, lever 2 is cheaper. You can\'t prevent every incident; you CAN make every incident shorter.
+
+Practical setting:
+- Target 99.9% (8h 45min/year): MTTR can be 30-60 min, ~12-20 incidents/year. Comfortable.
+- Target 99.95% (4h 22min/year): MTTR ~15-30 min, ~10 incidents/year. Tight.
+- Target 99.99% (52 min/year): MTTR ~5-15 min, ~5-10 incidents/year. Hard. Requires automation.
+- Target 99.999% (5 min/year): MTTR < 1 min. Practically requires automated failover and zero human-in-the-loop. Reserve for systems with truly catastrophic downtime cost.
+
+The interview-quality framing: every "we want N nines" claim should come with an MTTR commitment. Otherwise it\'s aspirational, not engineered.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/managing-incidents/',
+      'https://www.atlassian.com/incident-management/kpis/common-metrics',
+    ],
+  },
+
+  {
+    id: 'incident-severity',
+    title: 'Severity Levels — SEV1/2/3/4 Definitions',
+    icon: 'alertCircle',
+    color: '#ef4444',
+    questions: 3,
+    description: 'Industry-standard SEV definitions, who responds at each level, and how to avoid sev-creep.',
+    introduction: `Severity levels triage incident response. Get them wrong and you either page the on-call SRE for cosmetic UI bugs (alert fatigue) or wait business hours to fix a billing outage (career-limiting).
+
+**Industry-standard four-tier model** (used by Google, Meta, Atlassian, PagerDuty, most major tech companies):
+
+**SEV-1 (Critical) — major customer impact, all hands.**
+- Service unavailable for many users; data loss occurring; revenue impact > $X/min.
+- Response: page IC immediately, full incident command structure activated, status page updated within minutes, leadership informed.
+- Example: full outage of the checkout flow; customer-data breach in progress; major region down.
+
+**SEV-2 (Major) — significant customer impact, urgent.**
+- Service degraded for many users; key feature unavailable; revenue impact present but not catastrophic.
+- Response: page on-call immediately, IC may or may not be needed, status page updated, internal Slack-channel updates.
+- Example: search latency spiked across the fleet; a major feature is returning errors; one of three regions is degraded.
+
+**SEV-3 (Minor) — limited customer impact, business hours.**
+- Affects some users or some features; workarounds available; not user-blocking for most.
+- Response: ticket the on-call team; investigate during business hours; status page may not be needed.
+- Example: a non-critical feature is slow; small subset of users hitting an edge-case error; degraded performance on a secondary feature.
+
+**SEV-4 (Cosmetic / minor) — no real customer impact.**
+- Visual bugs, internal tooling issues, things that look bad but don't block anyone.
+- Response: open a ticket; standard backlog priority.
+- Example: dashboard widget displays wrong tooltip; internal admin tool has a typo.
+
+**The classification framework:**
+
+For each incident, the IC asks:
+1. **How many users affected?** Few / many / most / all.
+2. **What's the user impact?** Cosmetic / degraded / blocked / data-loss.
+3. **Is there a workaround?** Yes / no.
+4. **What's the revenue / SLA impact?** None / minor / major / catastrophic.
+
+The combination maps to a SEV level. The SRE Book\'s framing: be **conservative when escalating** (page even if unsure) but **aggressive when declassifying** (drop SEV when impact is contained).
+
+**Sev-creep** is the failure mode where every issue gets classified as SEV-2 because nobody wants to be wrong. Result: pager fires on cosmetic bugs; SREs burn out; real SEV-1s get lost in the noise. Combat with:
+- **Quarterly SEV-distribution review.** A healthy team has 1-2 SEV-1s/year, 5-15 SEV-2s/year, more SEV-3+. If you have 30 SEV-1s/year, you\'re sev-creeping.
+- **Promote/demote during the incident.** If it starts as SEV-2 and turns out to be only one customer affected, demote to SEV-3. If it starts as SEV-3 and you discover data loss, promote to SEV-1.
+- **SEV definitions reviewed annually.** Customer base, revenue, contract obligations change; SEV thresholds need updating.
+
+**Rate-of-fire framing.** A 5-minute SEV-1 once a quarter is fine. A 5-minute SEV-1 once a week is a SEV-1 in disguise — the underlying brittleness IS the SEV-1.`,
+    whenToUse: [
+      'Active incident — assigning SEV in the first 60 seconds dictates response',
+      'On-call training — every new SRE needs to know the SEV ladder',
+      'Quarterly review — SEV distribution is a team-health metric',
+      'Customer SLA negotiations — what a SEV-1 means is partly contractual',
+    ],
+    keyConcepts: [
+      { term: 'SEV-1', definition: 'Critical. Many users blocked, data loss, or major revenue impact. Page immediately, full IC structure, status page.' },
+      { term: 'SEV-2', definition: 'Major. Many users degraded, key feature unavailable. Page on-call, partial IC structure.' },
+      { term: 'SEV-3', definition: 'Minor. Some users affected, workarounds available. Ticket; investigate during business hours.' },
+      { term: 'SEV-4', definition: 'Cosmetic. No real user impact. Standard backlog ticket.' },
+      { term: 'Sev-creep', definition: 'Tendency to classify incidents at higher SEV than warranted. Causes alert fatigue. Combat with regular distribution reviews.' },
+      { term: 'Promote/demote during incident', definition: 'SEV is not fixed. If impact narrows, demote. If impact widens or data loss is discovered, promote.' },
+    ],
+    pitfalls: [
+      'Static SEV definitions that don\'t evolve with the business. A revenue-cap that made sense 2 years ago is wrong now.',
+      'Sev-creep: every incident is SEV-2 because nobody wants to be the person who under-called it.',
+      'Mismatched on-call response. A SEV-1 paged to the engineer who can\'t mitigate is just delayed escalation.',
+      'No demotion path. Incident starts as SEV-1 (correctly), impact narrows to one user, but stays SEV-1 → wastes responder energy.',
+      'Conflating SEV with incident management complexity. A SEV-3 can be a 4-hour debug; a SEV-1 can be a 5-minute rollback.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through SEV-1 to SEV-4 and how you classify.',
+        answer: `Standard four-tier model:
+
+**SEV-1**: critical user impact. Many users completely blocked, data loss in progress, or major revenue/contractual impact. Page IC, full incident command, status page, leadership informed. Example: checkout flow down, region-wide outage, customer-data breach.
+
+**SEV-2**: significant impact. Many users degraded, a key feature unavailable, but workarounds may exist. Page on-call, status page often updated. Example: search latency spike, one feature returning errors, one of three regions degraded.
+
+**SEV-3**: limited impact. Some users or features affected; workarounds available. Ticket and investigate during business hours. Example: non-critical feature slow, small subset of users with an edge case.
+
+**SEV-4**: cosmetic. No real user impact. Standard backlog. Example: visual bug, internal tooling issue.
+
+Classification framework:
+1. How many users? (few → SEV-3/4; many → SEV-2; most/all → SEV-1)
+2. What\'s the user impact? (cosmetic → SEV-4; degraded → SEV-3; blocked → SEV-2; data-loss → SEV-1)
+3. Is there a workaround? (yes → drop one SEV; no → keep)
+4. Revenue / SLA impact? (high → bump SEV up)
+
+When in doubt: **err on the high side initially**. You can demote later. But don\'t under-call when paging.
+
+The discipline is in **demoting**. Many incidents start as SEV-1 because we don\'t know the scope yet. As we learn it\'s narrower than feared, demote. A team that never demotes has sev-creep.`,
+      },
+      {
+        question: 'How do you decide whether an incident is SEV-1 vs SEV-2?',
+        answer: `Three discriminators:
+
+**1. Blast radius.**
+- SEV-1: most or all users affected.
+- SEV-2: many users affected, but a substantial fraction unaffected.
+
+If 100% of users see errors, it's SEV-1. If 30% see errors and 70% are fine, it's SEV-2. The dividing line varies by service; rule of thumb: if the *majority* of users are blocked, SEV-1.
+
+**2. Severity of user impact.**
+- SEV-1: blocked or experiencing data loss / corruption / billing errors.
+- SEV-2: degraded but functional.
+
+Even with smaller blast radius, if the impact is data-loss or financial (e.g., one customer is being billed wrong amounts), promote to SEV-1.
+
+**3. Revenue / contract impact.**
+- SEV-1: revenue loss is significant ($X/min, configurable per company), or a contractually-obligated customer is impacted.
+- SEV-2: revenue impact present but small.
+
+If the customer is a major enterprise account with a 99.99% SLA they\'re actively burning, that's a SEV-1 even if blast radius is small (one customer).
+
+The rule: **if any one of the three is at SEV-1 level, the incident is SEV-1**. They're independent triggers.
+
+Edge cases to watch:
+- "Slow but working" — usually SEV-2; promotes to SEV-1 if latency is so bad that it's effectively blocking (e.g., 30-second response times during a checkout flow).
+- "Errors but workaround available" — usually SEV-3; promotes to SEV-2 if the workaround isn't obvious or requires support contact.
+- "Critical feature down for one customer" — depends on contract. Free-tier customer: SEV-3. Enterprise contract: SEV-2 or SEV-1 based on contract.`,
+      },
+      {
+        question: 'How do you prevent sev-creep?',
+        answer: `Three controls:
+
+**1. Quarterly SEV-distribution review.**
+- Pull all incidents from the quarter. Plot by SEV.
+- Healthy distribution: ~5% SEV-1, ~25% SEV-2, ~50% SEV-3, ~20% SEV-4.
+- If 40% are SEV-1, you have sev-creep. Audit the SEV-1s; demote retroactively if they shouldn\'t have been; track patterns.
+
+**2. SEV-definition document with concrete thresholds.**
+- "SEV-1 = >50% of active users see errors OR revenue loss > $5K/min OR data loss/corruption."
+- Concrete numbers prevent "feels like a SEV-1" subjective calls.
+- Reviewed annually; updated as business changes.
+
+**3. Promote/demote culture.**
+- Train on-call to demote during the incident if scope narrows. "Update: only 3 customers actually affected, this is now SEV-2."
+- Cultural normalization: demoting isn\'t weakness; it\'s correct sev management.
+- Make SEV change visible in the incident channel: "/sev demote SEV-2" with reason.
+
+**4. Cost analysis of false-SEV-1.**
+- Calculate "what does a SEV-1 page cost?" — engineer time, leadership distraction, status page update, customer comms, postmortem effort.
+- For most companies: $5K-$20K of opportunity cost per SEV-1 page. False SEV-1s cost real money.
+- Tracking and surfacing this number changes behavior.
+
+**5. Lessons from postmortems.**
+- Every SEV-1 postmortem includes "was this correctly classified?"
+- A pattern of "in retrospect, this should have been a SEV-2" is the signal of sev-creep.
+
+The cultural fix that works: leadership publicly demotes incidents that were over-classified. "Last week's SEV-1 was actually a SEV-2; here\'s what we learned about classification." Removes the political risk of correct classification.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/managing-incidents/',
+      'https://response.pagerduty.com/before/severity_levels/',
+      'https://www.atlassian.com/incident-management/kpis/severity-levels',
+    ],
+  },
+
+  {
+    id: 'blameless-postmortems',
+    title: 'Blameless Postmortems — Format and Discipline',
+    icon: 'fileText',
+    color: '#ef4444',
+    questions: 4,
+    description: 'The Google SRE Book postmortem template, what "blameless" really means, and how to extract action items that ship.',
+    visualizations: [
+      {
+        title: 'Postmortem flow — incident to action items',
+        description: 'Incident resolved → draft within 5 days → cross-team blameless review → final published → action items with owners → tracked to completion.',
+        image: '/diagrams/sre/d5-postmortem.png',
+      },
+    ],
+    introduction: `**Blameless postmortems** are the SRE Book's most-quoted contribution to industry practice. The thesis: if humans fear blame, they\'ll hide failures, mitigate without disclosure, and the organization can\'t learn. Blameless culture is a prerequisite for honest incident analysis.
+
+**"Blameless" doesn\'t mean "no consequences."** It means: focus on *systems*, not *individuals*. The framing: *"how did our system, our processes, and our tools make this failure possible?"* — not *"who pushed the bad code?"*. The action items are systemic fixes (better testing, better monitoring, better deploy gates), not "Bob will be more careful."
+
+**The Google SRE Book postmortem template** (Ch 15) has stable structure:
+
+**1. Title** — concise, descriptive. *"Checkout 50% error rate for 23 minutes due to deploy v3.2.1"*. Searchable.
+
+**2. Authors** — typically the IC + Ops Lead.
+
+**3. Status** — Draft / In Review / Final.
+
+**4. Summary** — 1-3 sentences. What broke, when, who was affected, how we fixed it.
+
+**5. Impact** — quantified. Number of users affected, revenue impact, SLO budget consumed, customer SLA implications.
+
+**6. Detection** — how the incident was detected. Who noticed first (monitoring? customer report? engineer?). Time gap between issue start and detection.
+
+**7. Root Causes** — *what specifically caused the failure*. Often multiple contributing factors. Use Five Whys (next topic). Avoid "user error" as a root cause; ask why the system permitted the user error.
+
+**8. Resolution** — what stopped the bleeding. The mitigation step.
+
+**9. Lessons Learned**:
+- **What went well** — celebrate the good. Maybe detection was fast; maybe rollback was scripted; maybe comms were excellent.
+- **What went poorly** — the painful list. Each item links to an action item.
+- **Where we got lucky** — the underrated section. "If the on-call had been at lunch, we'd have been down for an hour." These are systemic vulnerabilities masked by good fortune.
+
+**10. Timeline** — minute-by-minute, with timestamps. T-zero is incident detection (or, sometimes, incident start). Pulled from chat logs, alert history, dashboard screenshots. Disciplined timelines are the backbone of the postmortem.
+
+**11. Action Items** — specific, owned, dated. Each is one of three categories:
+- **Prevention** — make this failure mode impossible / harder.
+- **Detection** — find this failure faster next time.
+- **Mitigation** — recover faster next time.
+
+Each action item: ticket number, owner, target date, priority.
+
+**12. Supporting Information** — links to dashboards, logs, charts, screenshots, related postmortems.
+
+**The publishing discipline:**
+- **Time-bound**: draft within 5 business days; final within 10. Postmortem decay: people forget the details quickly.
+- **Cross-team review**: stakeholders read the draft. Add missed perspectives.
+- **Searchable**: postmortems live in a wiki, queryable by service, date, root cause. Ten years later, the next on-call should find it.
+- **Linked from runbooks**: when a runbook covers a known failure pattern, link the seminal postmortem.
+
+**The 1:1 ratio rule:** every incident → one postmortem. Even small ones. The discipline of writing teaches you more than the act of fixing.
+
+**The SRE Book\'s postmortem inflation point:** Google publishes postmortems internally for any incident over a threshold (typically: customer impact > X minutes, revenue impact > $X, security event, novel failure mode). Below the threshold: lightweight "incident note" sufficient. Above: full postmortem.`,
+    whenToUse: [
+      'After every meaningful incident — within 5 business days, draft published',
+      'Onboarding new SREs — read 5-10 postmortems from the team\'s history',
+      'Before major migrations — review postmortems from similar past migrations',
+      'Quarterly retrospectives — pattern-match across postmortems for systemic issues',
+    ],
+    keyConcepts: [
+      { term: 'Blameless', definition: 'Focus on systems and processes, not on the person who pushed the change. Action items are systemic fixes.' },
+      { term: 'Five Whys', definition: 'Iterative why-chain to find root cause. Each "why" peels back another layer; usually 5 is enough to reach systemic factors.' },
+      { term: 'Where we got lucky', definition: 'Underrated postmortem section. The vulnerabilities that didn\'t bite this time but could have. Often the most learning.' },
+      { term: 'Action item categorization', definition: 'Prevention / Detection / Mitigation. Categorizes investments and prevents over-prevention bias.' },
+      { term: 'Time-bound publication', definition: 'Draft within 5 business days; final within 10. Detail decay is fast.' },
+      { term: 'Postmortem index', definition: 'Searchable repository of past postmortems. Ten years later, the next on-call should find it.' },
+    ],
+    pitfalls: [
+      '"Root cause: human error." The postmortem failed if the root cause is a person. Ask why the system permitted the error.',
+      'Action items without owners or due dates. Become wishful thinking; never ship.',
+      'Postmortem published 6 weeks after the incident. Memory has decayed; lessons less precise.',
+      'No "where we got lucky" section. The cheap learning is left on the table.',
+      'Postmortems read only by the team. The whole org needs to learn; cross-team distribution is part of the process.',
+    ],
+    keyQuestions: [
+      {
+        question: 'What does "blameless" really mean in a postmortem?',
+        answer: `**Focus on systems, not individuals.** The framing shift: from *"who pushed the bad code?"* to *"how did our processes allow a bad change to reach production?"*
+
+What blameless does NOT mean:
+- **No accountability** — there\'s still ownership. Action items have owners.
+- **No consequences** — repeated patterns of poor judgment can have HR consequences. Postmortems are the wrong forum for that, but the issue is real.
+- **Hiding what happened** — postmortems are direct about what went wrong.
+
+What blameless DOES mean:
+- **Action items are systemic fixes**, not "Bob will be more careful." The system permitted the bad change; fix the system.
+- **Names appear factually** ("Alice deployed v3.2.1 at 14:30") but not judgmentally ("Alice carelessly deployed v3.2.1"). The verb describes the action, not the human.
+- **Multiple contributing factors are acknowledged.** Almost no incident has a single cause. "Bob pushed bad code" is one factor; the missing CI check, the lack of canary, the alerting gap are others.
+- **Hindsight bias is called out.** The reviewer asks: "given what Bob knew at the time, was the action reasonable?" Often yes. The system failure is what we fix.
+
+The SRE Book quote: *"Postmortems with finger-pointing and reproachful tone... drive the engineers involved to obscure their actions."* If engineers fear postmortems, they\'ll hide failures, mitigate quietly, and the organization can\'t learn.
+
+Cultural enforcement: senior engineers and leaders model the behavior. When the writeup names them in a failure, they accept it without defensiveness. When juniors reach for blameful language, they correct gently.`,
+      },
+      {
+        question: 'Walk me through the structure of a good postmortem.',
+        answer: `Standard Google SRE Book structure:
+
+**1. Title** — concise, searchable. "Checkout 50% error rate for 23 min from deploy v3.2.1."
+
+**2. Summary** — 1-3 sentences: what broke, when, who was affected, how we fixed it.
+
+**3. Impact** — quantified. Users affected (count and %), revenue, SLO budget consumed, customer SLA exposure.
+
+**4. Detection** — how was the incident detected? Time from issue-start to detection. Alert that fired; who got paged.
+
+**5. Root Causes** — what *specifically* caused the failure. Often multiple. Use Five Whys to peel back layers. Avoid "user error."
+
+**6. Resolution** — what stopped the bleeding. Specific mitigation step (rollback, traffic shift, capacity scale-up).
+
+**7. Lessons Learned** — three sub-sections:
+- **What went well**: detection speed, rollback automation, comms, etc.
+- **What went poorly**: each item maps to an action item.
+- **Where we got lucky**: the masked vulnerabilities. Most learning is here.
+
+**8. Timeline** — minute-by-minute, timestamped. From issue start (or detection) to resolution. Pulled from chat history, alerts, dashboard screenshots. The backbone of the postmortem.
+
+**9. Action Items** — specific, owned, dated. Each categorized:
+- **Prevention** (make this impossible / harder)
+- **Detection** (find faster next time)
+- **Mitigation** (recover faster next time)
+
+Each: ticket number, owner, target date, priority.
+
+**10. Supporting Information** — dashboard links, log queries, charts, related postmortems.
+
+The discipline:
+- Draft within 5 business days; final within 10.
+- Cross-team review before final.
+- Published in a searchable wiki.
+- Linked from relevant runbooks.
+- Reviewed in a meeting with the broader org so learning spreads.`,
+      },
+      {
+        question: 'How do you make sure action items actually ship?',
+        answer: `Five mechanisms:
+
+**1. Specific, owned, dated.**
+- Bad: "improve monitoring."
+- Good: "Add an alert for checkout p99 latency > 500ms in 5-min window. Owner: Bob. Due: 2026-05-20. Ticket: SRE-1234."
+- Specificity is action-forcing. Vague items languish.
+
+**2. Categorize and prioritize.**
+- Each action item is **Prevention**, **Detection**, or **Mitigation**.
+- Each has priority: P0 (must ship before another similar incident is acceptable), P1 (next sprint), P2 (this quarter).
+- P0s get tracked aggressively; P1s and P2s get sprint-planned.
+
+**3. Tracker integration.**
+- Action items become tickets in the team's normal tracking system (Jira, Linear, GitHub Issues).
+- They're not separate from regular work; they compete for sprint capacity.
+- The postmortem links to the tickets; the tickets link back to the postmortem.
+
+**4. Monthly action-item review.**
+- A standing meeting reviews all open postmortem action items.
+- Stale items (>30 days past due) escalated.
+- Items consistently slipping → re-evaluate priority and owner.
+- Cancelled items: explicitly closed with a reason.
+
+**5. Recurrence accountability.**
+- If a similar incident re-fires before the action items shipped, the postmortem cites the un-shipped action items by reference.
+- This creates the right incentive: ship the work or face it again.
+
+The cultural reinforcement: leadership uses the action-item-completion rate as a team-health metric. Teams that ship < 50% of P0/P1 items get attention; teams that ship > 80% get praised.
+
+The opposite anti-pattern: "we wrote great postmortems, no one shipped any of them." Symptom: the next on-call shift has the same incident with the same surprises.`,
+      },
+      {
+        question: 'When is a postmortem NOT needed?',
+        answer: `Two cases:
+
+**1. Below the impact threshold.**
+- Most teams have a threshold: customer-visible impact for > X minutes, revenue > $X, security event, novel failure mode.
+- Below: a lightweight "incident note" — 1 paragraph, what happened, what we did, links — suffices.
+- Above: full postmortem.
+
+The threshold prevents postmortem burnout. If every 5-minute alert fires triggers a 4-hour postmortem write-up, engineers stop responding to alerts.
+
+Typical threshold: customer impact > 5 min OR SLO budget consumed > 10% OR security event OR novel failure mode (no prior postmortem matches).
+
+**2. Trivially-known cause with no novel learning.**
+- A duplicate of an incident you postmortem'd 3 times in the last year. The action items from the prior postmortems are still un-shipped. There's nothing new to learn.
+- The right move: re-cite the prior postmortem; escalate the un-shipped action items; don\'t write a new one.
+- Caveat: do this rarely. If you find yourself "duplicating" a lot, the underlying problem is "we know what to do but we\'re not shipping it" — a process problem worth its own postmortem.
+
+When postmortems ARE needed even though they feel unnecessary:
+- **Near-misses with no actual customer impact.** A bug shipped to canary, was caught, rolled back. No customer impact. Postmortem still valuable: how was the bug introduced? Why did normal review miss it? The "we got lucky" section is the whole postmortem.
+- **Self-inflicted incidents.** A planned maintenance went wrong. People want to brush past these. Postmortem: what was wrong with the plan? With the rehearsal? With the execution?
+- **Root-cause-unknown incidents.** Symptom went away; we don\'t know why. Tempting to skip. Postmortem the unknown cause — it'll likely re-fire eventually.
+
+The general rule: when in doubt, do the postmortem. The cost of writing one for a non-event is small; the cost of NOT writing one for a real learning is large.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/postmortem-culture/',
+      'https://response.pagerduty.com/after/post_mortem_process/',
+      'https://github.com/dastergon/postmortem-templates',
+    ],
+  },
+
+  {
+    id: 'five-whys',
+    title: 'Five Whys — Root Cause vs Contributing Factors',
+    icon: 'helpCircle',
+    color: '#ef4444',
+    questions: 3,
+    description: 'The Toyota technique adapted for SRE: where it works, where it lies, and "contributing factors" as the modern alternative.',
+    introduction: `**Five Whys** is a root-cause analysis technique from Toyota's manufacturing process, adapted into SRE postmortem practice. The mechanic: ask "why?" five times, each time peeling back a layer.
+
+Worked example (a checkout outage):
+1. **Why did checkout go down?** Service returned 500 errors.
+2. **Why?** Connection-pool exhaustion to the order DB.
+3. **Why?** A new query path opened too many connections without releasing them.
+4. **Why?** The retry loop didn\'t close connections on each retry.
+5. **Why?** The retry library doesn\'t implement context cancellation correctly.
+
+By "why" 5, you\'ve moved from "the symptom" (500 errors) to a "systemic cause" (a library bug). Action items at the systemic level are higher-leverage than action items at the symptom level.
+
+**Where Five Whys works:**
+- **Linear causal chains** — each effect has one obvious cause.
+- **Manufacturing defects** — Toyota's domain. Physical components have well-defined failure modes.
+- **Single-component failures** — a bad disk, a bad config push, a bad query.
+
+**Where Five Whys breaks:**
+- **Multiple contributing factors** — most software incidents have 3-5 independent factors that combined to cause the failure. Five Whys forces a tree into a list.
+- **Hindsight bias** — the "why" you ask in retrospect is shaped by what you already know. You ask the question that fits the answer.
+- **False precision** — five layers feels rigorous but the choice of which "why" to follow at each step is subjective.
+- **Stop conditions are arbitrary** — sometimes the right answer is at "why 2"; sometimes at "why 8". The "five" is convention, not science.
+
+**The modern alternative: contributing factors.**
+Instead of one root-cause chain, list **all the factors that needed to be true for the incident to happen.** Most incidents are 3-7 factors:
+1. The bad code was introduced in commit X.
+2. The CI test for connection-leak was disabled (legacy).
+3. Canary deployment didn\'t cover the slow-path code.
+4. The connection-pool alert was at 90% but the pool was 95%-saturated for hours before page firing.
+5. The on-call runbook didn\'t list "check connection pool" as a debug step.
+6. The retry library has known bugs (since 2024) but we\'re still on the old version.
+
+Each factor is independently fixable. **Cause is plural; the postmortem reflects that.**
+
+The Sidney Dekker school (human factors): every incident has *multiple* contributing factors that aligned. Pulling on the one labeled "root cause" misses the systemic vulnerability that allowed many factors to align simultaneously.
+
+**Pragmatic guidance:**
+- Use Five Whys as a *brainstorming technique* during the postmortem. It\'s good for surfacing layers.
+- Document the result as **multiple contributing factors**, not as "the root cause." This more honest framing prevents narrow fixes.
+- Action items target *several* factors, not just the deepest one. The library bug needs fixing AND the missing CI check AND the runbook gap.
+
+**Honest postmortems use both:**
+- Five Whys for exploration: "let's keep asking why until we run out."
+- Contributing-factor list for documentation: "here are the seven things that all had to be true."`,
+    whenToUse: [
+      'During the postmortem review meeting — Five Whys as a brainstorming technique',
+      'When documenting root cause — favor "contributing factors" over a single "root cause"',
+      'Action item generation — each factor is its own action item',
+      'Recurring incidents — the contributing-factor list is more useful than a single root cause for finding patterns',
+    ],
+    keyConcepts: [
+      { term: 'Five Whys', definition: 'Iterative why-chain. Toyota origin. Useful for brainstorming; lying as a sole technique.' },
+      { term: 'Contributing factors', definition: 'Multiple things that combined to cause the incident. Modern human-factors approach. More accurate.' },
+      { term: 'Hindsight bias', definition: 'In retrospect, the cause is "obvious." Ask "given what was known at the time, was the decision reasonable?" to combat.' },
+      { term: 'Linear vs systemic causation', definition: 'Five Whys assumes linear chain; reality is usually networked — multiple causes aligned.' },
+      { term: 'Sidney Dekker school', definition: 'Human factors approach to incidents: multiple factors must align for failure. Eliminating one factor breaks the chain.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through Five Whys for this scenario: a deploy caused a 30-minute outage.',
+        answer: `Worked example:
+
+**1. Why did the deploy cause an outage?**
+Because v3.2.1 introduced a bug in the cache-invalidation path that caused 50% of requests to return stale data, which broke checkout.
+
+**2. Why didn't the bug get caught before deploy?**
+Because the integration tests covered the happy path but not the cache-invalidation path. The unit test for the changed function passed; integration coverage was thin.
+
+**3. Why was integration coverage thin?**
+Because the cache-invalidation logic was added 2 years ago by a different team, and they wrote unit tests but didn't add integration tests. Subsequent changes to the function didn\'t add coverage either.
+
+**4. Why didn't the canary catch it?**
+Because the canary ran for 5 minutes; the cache-invalidation path is hit at most once per 30 minutes per user; no canary user hit the broken path.
+
+**5. Why is the canary window so short?**
+Because we time-box deploys to 1 hour total to ship 5x/day, and a longer canary would slow shipping. The trade-off was made 18 months ago when the cache-invalidation path was less critical.
+
+The output: the systemic cause is "the canary policy is mismatched to the actual code paths' invocation rates." The fix isn't "tell engineers to write better tests"; it's "make the canary policy adaptive to the path being changed" or "instrument cache-invalidation telemetry so the canary can detect path-specific health."
+
+This is good Five-Whys output: by Why 5, we've moved from a single bug to a class of vulnerability.
+
+The honest follow-up: **list the other contributing factors** that Five Whys missed:
+- The cache-invalidation path didn't have a feature flag (could have been gated).
+- The on-call playbook didn't include "check cache hit rate" as a step.
+- The alert that fired (high error rate) didn't link to the deploy event automatically.
+
+Five Whys gave us one chain; the real picture has 5-7 chains.`,
+      },
+      {
+        question: `What's wrong with Five Whys, and what's the alternative?`,
+        answer: `Three problems:
+
+**1. Hindsight bias.** Each "why" you ask in retrospect is shaped by knowing the outcome. You\'re finding paths that fit the answer, not exploring the space.
+
+**2. False precision.** "5" is a convention from manufacturing, not a scientific stopping point. Sometimes the right answer is at Why 2; sometimes at Why 10.
+
+**3. Linear-causation assumption.** Most incidents are *networks* of causes, not chains. Five Whys forces the network into one chain, picking arbitrarily which thread to follow.
+
+The modern alternative: **contributing factors**. List ALL the conditions that had to be true for the incident to happen.
+
+Example: instead of "root cause: bad library version," list:
+1. The library has a known bug since 2024.
+2. We\'re on a version with the bug because the upgrade was deferred.
+3. The upgrade was deferred because of a low-priority dependency conflict.
+4. The dependency conflict is unresolved because the team that owned it moved.
+5. The team moved without documenting the conflict.
+6. The conflict was caught in an audit but the audit ticket was never re-prioritized.
+
+Each factor is independently fixable. Fixing any one breaks the chain. The postmortem now has 6 action items, each targeting a real systemic gap, vs Five Whys' single "fix the library bug."
+
+The pragmatic synthesis I'd advocate:
+- Use **Five Whys as brainstorming** in the postmortem review meeting. It's good for prompting "what else?"
+- Document as **contributing factors** in the final postmortem.
+- Action items target multiple factors, not just the deepest one.
+
+This is what Google's recent postmortems and the Atlassian / Etsy / Honeycomb practice look like. Pure Five Whys is largely seen as a 1990s technique that's been refined by modern human-factors work.`,
+      },
+      {
+        question: 'Why is "user error" rarely a valid root cause?',
+        answer: `Because **the system permitted the user error**. Stopping at "user error" misses the systemic vulnerability.
+
+Concrete example: an SRE typed the wrong command and deleted a production database.
+
+Bad postmortem: "Root cause: user error. Action item: be more careful."
+
+Good postmortem: "Contributing factors:
+1. The deletion command had no confirmation prompt.
+2. The shell history showed similar safe commands; muscle memory triggered.
+3. The user was on prod credentials; staging credentials would have been safer for the planned task.
+4. The deletion didn\'t require multi-party approval despite being a destructive operation.
+5. There was no immediate restore path; backups existed but restore took 4 hours.
+6. The terminal didn't visually distinguish prod from staging.
+7. The runbook for the planned task didn't include the safe alternative command."
+
+Each factor is a system or process gap. Each has a fix:
+1. Add confirmation prompt to destructive commands.
+2. (Inherent to muscle memory; not directly fixable, but #6 helps.)
+3. Default credentials to staging; require explicit prod opt-in.
+4. Add multi-party approval for destructive prod operations.
+5. Faster restore path (warm standby, point-in-time recovery).
+6. Color-code terminals by environment (prod = red).
+7. Update runbook.
+
+The user "error" was a single act; the system\'s vulnerability was 7 different things. Fixing them lowers the probability of *any* future user from making this kind of mistake.
+
+The framing principle: **humans will make errors; systems are designed to absorb them**. Aviation, medicine, and nuclear power figured this out decades ago. Software is catching up. The postmortem question is: "how did our system not absorb this human error?"
+
+Quote from the SRE Book Ch 15: *"User error" is too convenient an explanation. It\'s a symptom of insufficient analysis.*`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/postmortem-culture/',
+      'https://www.adaptivecapacitylabs.com/STELLA-Report.pdf',
+      'https://sidneydekker.com/the-field-guide-to-understanding-human-error/',
+    ],
+  },
+
+  {
+    id: 'incident-comms',
+    title: 'Incident Communications — Status Pages and Stakeholder Updates',
+    icon: 'megaphone',
+    color: '#ef4444',
+    questions: 3,
+    description: 'Status page discipline, the 15-minute update cadence, and the structure of executive briefs.',
+    introduction: `Communications during an incident is high-leverage and underinvested. Customers, executives, and internal teams all need updates; the cost of doing it badly is reputational. The good news: it\'s a learnable skill with clear patterns.
+
+**The audiences and their needs:**
+
+**Customers** — want to know:
+1. Are we aware of the issue?
+2. What\'s the impact?
+3. When will it be fixed?
+
+They DON\'T want:
+- Technical jargon ("the etcd cluster is partitioned").
+- Speculative root cause ("we believe a deploy may have...").
+- Status updates that say "investigating" for 2 hours.
+
+The status page is the customer-facing channel. Update it within 5-10 minutes of incident detection; cadence every 15-30 minutes during the incident. Use a fixed structure:
+- **Identifier**: "We are investigating reports of degraded checkout performance."
+- **Impact**: "Some customers may experience slow checkouts."
+- **Mitigation**: "We have identified the cause and are deploying a fix. ETA: 30 minutes."
+- **Resolution**: "Resolved at 14:23 UTC. No data was lost. Postmortem will be published within 5 business days."
+
+**Executives** — want to know:
+1. How bad is it?
+2. What\'s the financial / customer / brand impact?
+3. What\'s being done?
+4. When will it be over?
+
+Format: tight, factual, 5-10 lines. Updated every 15-30 minutes during a SEV-1.
+> *Update 14:30 UTC: Checkout outage now at 23 min. Estimated 15K affected users. Mitigation in progress (rollback v3.2.1). ETA resolution: 14:45. No known customer-data impact. IC: Alice. Comms: Bob.*
+
+**Internal teams** — want to know:
+1. Should I drop what I\'m doing?
+2. Is there a way I can help?
+3. What\'s the latest status?
+
+Channel: incident-specific Slack channel. Cadence: pinned status update at the top, updated every 15 minutes. Free-form discussion in-thread.
+
+**Status page best practices:**
+- **Prefer "investigating" over silence**. Customers panic at silence; "investigating" buys time.
+- **Don\'t speculate.** "We believe X" can be wrong; "we are investigating Y" can\'t. If you must hypothesize, label it ("Initial hypothesis: ...").
+- **Update on a fixed cadence.** Even "no new information" is information.
+- **Post-resolution: detailed final update.** Customers want to know what happened, not just "resolved."
+- **Postmortem published within 5 business days for major incidents.** Public-facing version often shorter than the internal one.
+
+**Status page providers:** Statuspage (Atlassian), Statusgator, Instatus, BetterStack. Most offer multi-channel notifications (email, SMS, RSS, webhook). A self-hosted page in your prod region is dangerous — if your prod is down, your status page is down too. **Status page MUST be hosted independently from the systems it\'s reporting on.**
+
+**The 15-minute rule.** Even if there\'s no progress, post an update every 15 minutes during a SEV-1. *"No new information; investigation continues; next update at HH:MM."* Silence breeds anxiety; updates de-escalate.
+
+**Comms Lead is full-time.** During a SEV-1, the Comms Lead doesn\'t debug; they communicate. Engineers asking the IC "what should I tell the customer" is a smell — that\'s the Comms Lead\'s job.`,
+    whenToUse: [
+      'Active SEV-1 / SEV-2 — Comms Lead is named and has a runbook',
+      'Onboarding the Comms Lead role — there\'s a real skill ladder here',
+      'Designing the status page — independent hosting, structured updates, customer-friendly language',
+      'Postmortem — comms is part of the timeline; what could be improved',
+    ],
+    keyConcepts: [
+      { term: 'Comms Lead', definition: 'Dedicated role during a SEV-1. Owns customer + executive + internal communications. Full-time during the incident.' },
+      { term: 'Status page', definition: 'Customer-facing single source of truth during an incident. Independently hosted from production.' },
+      { term: '15-minute update cadence', definition: 'Even with no new information, update every 15 minutes during a SEV-1. Silence breeds anxiety.' },
+      { term: 'Identifier / Impact / Mitigation / Resolution', definition: 'Standard structure for status page updates. Predictable for customers.' },
+      { term: 'Don\'t speculate', definition: 'Public statements should be facts ("we are investigating") not hypotheses ("we believe X caused..."). Hypotheses can be wrong.' },
+      { term: 'Independent hosting', definition: 'Status page MUST NOT depend on the production it\'s reporting. Statuspage / Instatus / similar third-party.' },
+    ],
+    pitfalls: [
+      'Status page hosted on the same infrastructure that\'s down. Customers see "this site can\'t be reached" instead of an outage notice.',
+      'Speculation in customer-facing comms. "We believe a network issue may be causing..." that turns out to be wrong erodes trust.',
+      'Long silences. Updating every 2 hours during an active incident sends "we don\'t care" signal.',
+      'Comms Lead also fixing the issue. Both jobs done badly. Separate roles always.',
+      'No post-resolution comms. Customers don\'t know it\'s over; some keep complaining for hours.',
+    ],
+    keyQuestions: [
+      {
+        question: 'What goes on a status page during an incident?',
+        answer: `Standard structure, kept simple for customers:
+
+**Identifier (required)**: "We are investigating reports of [observable symptom]."
+- Examples: "elevated error rates on checkout," "slow page loads," "intermittent 500 errors."
+- Use customer language, not technical jargon.
+
+**Impact (required)**: "[Who is affected, what they\'re seeing.]"
+- "Some customers may experience slow page loads."
+- "Customers attempting to check out may see errors and need to retry."
+
+**Mitigation (when in progress)**: "[What we\'re doing.]"
+- "Engineers are deploying a fix."
+- "Traffic is being failed over to a backup region."
+
+**ETA (when known, otherwise "investigating")**:
+- "Estimated resolution: 14:45 UTC."
+- If unknown: "Investigation continues; next update at 14:30."
+
+**Resolution (after fix)**: "Resolved at HH:MM UTC. [Brief description of what happened.]"
+- Mention any data implications (none, or specific): "No customer data was lost."
+- Reference upcoming postmortem: "A detailed postmortem will be published within 5 business days."
+
+What NOT to put:
+- Internal service names ("etcd," "kafka," "postgresql"). Use customer-facing language.
+- Hypothetical root causes that may turn out wrong.
+- Complete technical detail. Save for the postmortem.
+- Apologies that sound formal/PR-ish ("We sincerely regret..."). Be human and matter-of-fact.
+
+The cadence: post initial update within 5-10 min of detection. Update every 15-30 min during the incident. Final resolution update with summary. Postmortem follow-up within 5 business days for major incidents.
+
+Status page providers: Statuspage (Atlassian), Statusgator, Instatus, BetterStack. Cost: $50-$500/month. Cheaper than the alternative (customers angry at silent outages).`,
+      },
+      {
+        question: 'How do you write an executive update during a SEV-1?',
+        answer: `Format: tight, factual, 5-8 lines. Send every 15-30 minutes. Include:
+
+1. **Service / outage name** — one line.
+2. **Duration so far** — "23 min ongoing" or "resolved at 14:45, 32 min total."
+3. **Customer impact** — quantified. Number of affected users, affected features, geographic / segment breakdown.
+4. **Revenue / SLA exposure** — quantified. "$X/min revenue impact" or "burning customer SLA budget."
+5. **Mitigation status** — "in progress: rolling back deploy" or "complete: deploy reverted at 14:42."
+6. **ETA** — when known.
+7. **IC + Comms Lead names** — so executives know who to contact.
+
+Example:
+
+> **SEV-1 Update — Checkout Outage — 14:30 UTC**
+> Duration: 23 min ongoing.
+> Impact: 50% error rate on /checkout. Estimated 15K affected users. Mostly US-East customers.
+> Revenue: ~$12K/min lost based on average run-rate.
+> Mitigation: rolling back deploy v3.2.1; in progress, ETA 14:45.
+> No known customer-data impact.
+> IC: Alice (alice@). Comms: Bob (bob@).
+> Next update: 14:45 or on resolution, whichever first.
+
+What executives need:
+- **Quick orientation** — first line tells them what\'s happening.
+- **Quantified impact** — they\'re thinking about brand and money.
+- **Confidence in handling** — naming IC + Comms reassures them it\'s being handled.
+- **Predictable cadence** — they know when the next update comes.
+
+What executives don\'t need:
+- Technical detail (saved for postmortem).
+- Speculation about root cause.
+- Justification ("we are sorry").
+- Uncertainty ("we hope to resolve soon").
+
+Format consistency matters. If every SEV-1 has the same structure, executives know exactly where to look for the impact number, the ETA, the names. Reduces their cognitive load during a stressful event.`,
+      },
+      {
+        question: 'Why is independent hosting of the status page non-negotiable?',
+        answer: `Because **if your prod is down, anything sharing fate with prod is also down** — including the status page. Customers reach for the status page exactly when prod is broken; if it\'s broken too, they get nothing.
+
+Real failure modes I\'ve seen:
+- Status page hosted in the same AWS region as prod. Region-wide AWS outage takes both down.
+- Status page using the same DNS provider. DNS provider outage (e.g., the 2021 Akamai issue) takes both down.
+- Status page authentication via the same SSO that\'s down. Engineers can\'t even update the status page.
+- Status page on the same Kubernetes cluster as prod. Cluster control-plane issue: both down.
+
+The pattern: **the status page is exactly the system you most need when prod is down**. Coupling fate is a category error.
+
+The right architecture:
+- **Third-party hosted** (Statuspage, Statusgator, Instatus, BetterStack). Separate vendor, separate infrastructure, separate region.
+- **DNS via separate provider** from prod. If prod\'s DNS goes down, status page DNS still resolves.
+- **Authentication separate from prod\'s SSO.** Statuspage has its own login. Use it.
+- **Multi-channel notifications** (email, SMS, webhook, RSS). If status page is up but customers don\'t know to look at it, you\'ve still failed at comms.
+
+Self-hosted is acceptable IF:
+- Hosted in a different cloud / region from prod.
+- Has its own domain / DNS.
+- Has its own deploys (not blocked by your prod CI/CD when prod is broken).
+- Tested under "prod is fully down" scenarios.
+
+Most teams aren\'t set up for this; that\'s why third-party status page providers dominate. The $50-$500/month cost is trivial vs the cost of customers seeing "this site is unreachable" during your outage.
+
+The bonus: a third-party status page also lets you communicate during incidents that affect *your* infrastructure but not the third-party (e.g., if your auth provider is down, your engineers can still update the status page).`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/managing-incidents/',
+      'https://www.atlassian.com/incident-management/incident-communication',
+      'https://response.pagerduty.com/training/incident_commander/',
+    ],
+  },
+
+  {
+    id: 'gamedays-chaos',
+    title: 'Game Days, Chaos Engineering, and DiRT',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 3,
+    description: 'Practicing failure deliberately. Google\'s DiRT, Netflix Chaos Monkey, modern chaos engineering tools.',
+    introduction: `**Practicing failure** is the SRE discipline that separates "we hope it works" from "we know it works." Three related practices:
+
+**1. Game Days** — scheduled, full-team incident simulations.
+The team picks a date; runs a realistic incident scenario; treats it like a real incident (page on-call, run command structure, mitigate, postmortem). Originated at Amazon ~2003; Google formalized it as DiRT (Disaster Recovery Testing) week.
+
+**2. Chaos Engineering** — continuous, targeted failure injection in production (or production-like) environments.
+Originated at Netflix with Chaos Monkey (2010). Random instance termination on weekday business hours. Forces engineers to build for "instances die at any time." Now extends to network failures, latency injection, region outages, dependency failures.
+
+**3. DiRT (Google\'s Disaster Recovery Testing)** — annual, company-wide week of failure exercises.
+Documented in the SRE Book and Workbook. Engineers across teams plan and execute realistic failure scenarios: power outages, network partitions, regional failures, leadership-loss scenarios. Discovers the gaps that monthly game days miss.
+
+**Why practice failure deliberately:**
+
+- **Untested failover doesn\'t work.** Even with detailed runbooks, the first time you fail over to the DR region, something will be misconfigured (IAM, secrets, DNS). Game days find these in a controlled setting.
+- **Knowledge transfer.** New on-call engineers need to feel a real incident response without real customer impact. Simulated incidents are how.
+- **Process gaps surface.** "Where\'s the contact list?" "Who can approve a rollback?" "How do I update the status page?" — these gaps are uncovered in simulated incidents.
+- **Hidden dependencies discovered.** Chaos engineering finds "we depend on service X but didn\'t know it" — usually because someone\'s legacy code calls it directly.
+
+**Chaos engineering principles (from the Principles of Chaos Engineering manifesto, 2017):**
+
+1. **Build a hypothesis around steady-state behavior.** "Under normal load, p99 latency is < 500ms."
+2. **Vary real-world events.** Inject failure: kill instances, slow networks, partition regions.
+3. **Run experiments in production.** Or as close to production as possible. Staging is a different system.
+4. **Automate experiments to run continuously.** Chaos Monkey runs every weekday.
+5. **Minimize blast radius.** Limit the experiment\'s scope; have a kill switch.
+
+**Modern chaos engineering tools:**
+
+- **Chaos Monkey / Simian Army (Netflix)** — open-source. Random instance kill, region drain, etc.
+- **AWS Fault Injection Simulator (FIS)** — managed; integrates with AWS resources.
+- **Gremlin** — commercial; broad failure-injection capabilities.
+- **Chaos Mesh** — open-source for Kubernetes.
+- **LitmusChaos** — open-source for Kubernetes; CNCF project.
+- **Istio fault injection** — service-mesh-level latency / error injection.
+
+**Game Day structure:**
+
+- **Plan** (1-2 weeks ahead): pick scenario, define success criteria, choose participants.
+- **Brief** (day-of): walk through the scenario without revealing the trigger; assign roles.
+- **Execute**: trigger the failure; let the team respond as if real.
+- **Observe**: a "white-team" observer takes notes; doesn\'t interfere.
+- **Debrief**: postmortem-style review of what went well / poorly.
+- **Action items**: process gaps, missing runbooks, broken automation.
+
+**The hardest cultural step**: getting buy-in to inject failure into production. Engineers fear breaking things; leadership fears customer impact. The argument: **untested failure paths break worse, with worse customer impact**. Inject controlled failure now to avoid uncontrolled failure later.
+
+Successful programs start with **non-prod chaos** (staging-only), graduate to **prod chaos with limited blast radius** (single instance, single AZ), then extend to **larger experiments** (region drains).`,
+    whenToUse: [
+      'Pre-launch — game day for the new service before it carries real traffic',
+      'After major architectural changes — verify failure modes still work',
+      'Quarterly cadence — game days as a recurring practice',
+      'Team training — new on-call engineers run a game day before going on rotation',
+    ],
+    keyConcepts: [
+      { term: 'Game Day', definition: 'Scheduled team-wide incident simulation. Realistic failure scenario; respond as if real; postmortem.' },
+      { term: 'Chaos Engineering', definition: 'Continuous, automated failure injection in production. Netflix Chaos Monkey origin (2010).' },
+      { term: 'DiRT', definition: 'Google\'s annual Disaster Recovery Testing week. Company-wide simulated disasters.' },
+      { term: 'Steady-state hypothesis', definition: 'Define normal behavior before chaos experiment. "p99 < 500ms under normal load."' },
+      { term: 'Minimize blast radius', definition: 'Chaos experiments scope tight initially; expand only after success. Kill switch always available.' },
+      { term: 'White team', definition: 'Game day observers who watch the response without interfering. Take notes for the debrief.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How would you run a game day for a new service?',
+        answer: `Six-stage process, ~2 weeks total:
+
+**Week 1: Plan.**
+- Pick the scenario. Realistic and high-impact: "the primary database fails over to standby." Or: "the payment processor returns 503 for 30 minutes." Aim for failures the team should be able to handle but hasn\'t practiced.
+- Define success criteria. "Mitigation within 15 minutes; status page updated within 10 minutes; no actual customer impact."
+- Choose participants. The team that owns the service; ideally an external observer (an SRE from another team).
+- Pre-write the runbook IF it doesn\'t exist. Game day reveals runbook gaps; pre-writing what you can helps focus.
+
+**Day before: Brief.**
+- Walk through the scenario without revealing the trigger. Assign on-call IC, Comms Lead, Ops Lead.
+- Confirm: when the page fires, treat it as real. No "wait, is this the test?" allowed.
+
+**Day of: Execute.**
+- Trigger the failure. Could be: SSH into a host and \`systemctl stop service\`, or use AWS FIS to terminate an instance, or update a DNS record to a bad target.
+- The team responds: page fires, IC is assigned, debug, mitigate.
+- White-team observer takes notes: timeline, what was searched, what wasn\'t obvious, where the team got stuck.
+
+**Day of: Observe.**
+- Don\'t interfere. Don\'t answer questions ("how would you debug this?"). Let the team work.
+- Note process gaps, missing runbooks, broken automation, slow paths.
+
+**Day of: Debrief.**
+- Postmortem-style review. What went well? What went poorly? What would have happened in production?
+- Document action items.
+
+**Week 2: Action items.**
+- Treat as you would real-incident action items: own them, prioritize them, ship them.
+- Common outputs: missing runbook, alert too slow, automation script broken, on-call list out of date.
+
+The cultural setup: leadership endorses game days as productive use of time. Without that, engineers feel game days are theater.
+
+Frequency: monthly per team is the gold standard. Quarterly is a good floor.`,
+      },
+      {
+        question: 'How do you run chaos engineering safely in production?',
+        answer: `Five-step graduated approach:
+
+**1. Start in staging.** First chaos experiments in a non-prod environment. Find your tooling gaps, your kill switches, your blast radius limits without risk.
+
+**2. Single-instance prod chaos.** Pick one instance; kill it. The system should recover (autoscaling spins up replacement, traffic drains automatically). If anything goes wrong, the impact is bounded to that one instance.
+
+**3. AZ-level chaos.** Drain one AZ. The system should fail traffic to other AZs. If it doesn\'t, you found a critical bug in your multi-AZ design before a real AZ failure exposes it.
+
+**4. Region-level chaos.** Drain one region. The system should fail over to another region. This is where "we have multi-region active/active" gets validated. Many teams discover their multi-region story doesn\'t actually work at this stage.
+
+**5. Compound failures.** Multiple things at once: AZ failure + dependency latency spike + traffic spike. Real incidents are usually compound; chaos should match.
+
+**Safety mechanisms throughout:**
+- **Kill switch.** Every experiment has an immediate stop. \`kubectl delete chaos-experiment\` style.
+- **Blast radius limits.** Experiment touches < X% of traffic / instances. Auto-stop if SLO is being burned.
+- **Steady-state guardrails.** Watch the SLI in real-time. If error rate > threshold, auto-stop the experiment.
+- **Time-bounded.** Experiments have a max duration (e.g., 30 minutes). Auto-stop at the limit.
+- **On-call awareness.** The on-call team knows when experiments are running and can pause them.
+
+**Communication:**
+- Pre-experiment: announce in #incidents Slack. "Running chaos experiment: kill 1 instance of checkout service at 14:00 UTC. ETA 30 min. Kill switch: [link]."
+- Post-experiment: results posted. What was the steady-state hypothesis? Did it hold? Anything broken?
+
+The cultural setup: chaos engineering must be **visibly endorsed by leadership** and **rewarded when it finds bugs**. If teams are blamed for "you broke prod with your chaos," the practice dies. The framing: every chaos finding is a real-incident bug we caught early.
+
+Tooling: AWS FIS (managed, AWS-only), Chaos Mesh (Kubernetes), LitmusChaos (Kubernetes / CNCF), Gremlin (commercial, multi-cloud), Istio fault injection (service mesh).`,
+      },
+      {
+        question: 'What\'s the difference between game days and chaos engineering?',
+        answer: `Both practice failure; the differences are in **frequency, automation, and audience**.
+
+**Game Days**:
+- **Scheduled**, manual events. "We\'re running a game day next Tuesday at 10am."
+- **Whole-team participation**. The team responds as if it\'s a real incident; everyone has a role.
+- **Realistic, complex scenarios**. "Database failover" or "payment provider outage."
+- **Educational**. New on-calls learn; veterans test process.
+- **Postmortem-grade output**: detailed action items, runbook updates.
+
+**Chaos Engineering**:
+- **Continuous, automated**. Chaos Monkey kills instances every weekday business hours.
+- **Single-injection**. One failure at a time, limited blast radius.
+- **Simple failures**. Kill instance, slow network, return errors.
+- **Verification-grade**. The system should handle this without humans; chaos engineering verifies.
+- **Bug-finding output**: when chaos finds a real bug, fix it.
+
+The complementary use:
+- **Game days** find the *people-and-process* gaps: missing runbooks, unclear roles, slow comms, untested escalations.
+- **Chaos engineering** finds the *technical* gaps: services that don\'t handle their own dependency failures, single-points-of-failure, missing retries, broken auto-scaling.
+
+A mature SRE program runs both:
+- Chaos Monkey-style continuous experiments — verifies basic resilience.
+- Quarterly game days — verifies the team-and-process layer.
+- Annual DiRT-style company-wide week — verifies cross-team and tail scenarios.
+
+Each layer catches different categories of failure. Skipping any leaves you exposed in that category.
+
+Practical staging: most companies start with chaos engineering (technical, automatable). Game days come later (cultural shift required, more leadership investment). DiRT comes last (only worth it at scale, > 50 services).`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/managing-incidents/',
+      'https://principlesofchaos.org/',
+      'https://netflix.github.io/chaosmonkey/',
+      'https://aws.amazon.com/fis/',
     ],
   },
 ];
