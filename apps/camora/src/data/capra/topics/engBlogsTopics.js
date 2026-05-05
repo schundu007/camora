@@ -142,6 +142,7 @@ export const engBlogTopics = [
     keyQuestions: [
       { question: 'What makes Google Research blog valuable for interview prep?', answer: 'Google Research shows how academic CS concepts translate to production at unprecedented scale. Their load balancing article covers algorithms beyond simple round-robin — stochastic models for job assignment that appear in system design interviews. The reporting queries post demonstrates how to answer "design an analytics system processing billions of queries daily." The Google Maps RL article shows how ML can optimize routing problems — relevant to Uber/Lyft-style system design questions. These posts teach you to think in terms of scale, trade-offs, and real-world constraints.' },
       { question: 'Which Google blog posts map to common interview topics?', answer: '"Load balancing with random job arrivals" — directly relevant to load balancer design. "Answering billions of reporting queries" — maps to analytics/dashboard system design. "Grammar checking at scale" — NLP pipeline design. "Google Maps IRL" — route optimization and geospatial algorithms. Read these to understand how Google approaches problems you will be asked to design.' },
+      { question: 'What can I learn from Google Research about ML-powered systems?', answer: 'Google Research consistently shows how to take ML beyond a model and into a production system. "Transformers in music recommendation" demonstrates sequence-modeling for ranking, directly relevant to recommender-system interviews. "Scaling multimodal understanding to long videos" maps to video search and content moderation design. "Resolving code review comments with ML" shows how to integrate LLMs into developer workflows — the kind of LLM application design question increasingly asked in senior interviews.' },
     ],
   },
   {
@@ -166,6 +167,7 @@ export const engBlogTopics = [
     keyQuestions: [
       { question: 'What can I learn from Amazon\'s engineering blog?', answer: 'Amazon Science covers three critical interview-relevant areas: (1) Search ranking evolution — how Amazon moved from structured keyword search to ML-based learning-to-rank, directly relevant to designing search systems. (2) Real-time fraud detection — their ad fraud system processes billions of events with sub-second latency, a great reference for stream processing design questions. (3) GenAI application architecture — the Rufus shopping assistant post shows how to design an LLM-powered product with retrieval augmentation. Each article pairs a business problem with a concrete technical solution.' },
       { question: 'Why is the DynamoDB 10-year lessons article a must-read?', answer: 'This is arguably the most important NoSQL article published. It distills a decade of operating DynamoDB at Amazon\'s scale into concrete lessons: how to achieve 99.999% availability with deterministic request routing, why performance isolation matters (noisy neighbor problem), how they handle table migration without downtime, and why they moved from eventual to strong consistency support. These exact topics — availability vs consistency trade-offs, partition strategies, hot key handling — appear in nearly every system design interview involving database choice.' },
+      { question: 'Which Amazon Science posts map to recommendation and ranking interviews?', answer: 'Three articles form a strong reading list. "From structured search to learning-to-rank-and-retrieve" walks through how Amazon evolved its catalog search into a unified learning-to-rank-and-retrieve stack — directly applicable to "design a product search" questions. "Using graph neural networks to recommend related products" anchors graph-based recommender design. "Ensuring that customers don\'t miss out on trending products" covers freshness and trend detection in ranking, a topic that surfaces in feed and discovery system design.' },
     ],
   },
   {
@@ -244,6 +246,7 @@ export const engBlogTopics = [
     keyQuestions: [
       { question: 'What topics does LinkedIn engineering blog cover?', answer: 'Graph-based recommendations (PYMK), federated learning, data infrastructure (Hadoop YARN at 10K+ nodes), GraphQL adoption, embeddings for job matching, feed ranking with multi-task learning, messaging systems, and Java performance tuning.' },
       { question: 'What can I learn about recommendations from LinkedIn?', answer: 'How to build graph-based candidate generation for "People You May Know," use embeddings for job-seeker matching, apply multi-task learning for feed ranking, and complete knowledge graphs with GNNs — all at the scale of 900M+ members.' },
+      { question: 'Which LinkedIn posts are most useful for data infrastructure interviews?', answer: '"Scaling LinkedIn\'s Hadoop YARN cluster beyond 10,000 nodes" is a candid case study in multi-tenant resource scheduling and noisy-neighbor isolation, directly relevant to designing batch compute platforms. "LinkedIn OpenHouse for Big Data Management" shows how to add a control plane on top of a data lake. "Upscaling LinkedIn\'s Profile Datastore While Reducing Costs" covers the storage cost-vs-latency tradeoffs that come up in data layer interviews.' },
     ],
   },
   {
@@ -281,6 +284,7 @@ export const engBlogTopics = [
     keyQuestions: [
       { question: 'What topics does Uber engineering blog cover?', answer: 'Kubernetes migration, database operations (MySQL, Cassandra at scale), ML-powered ETA prediction, LLM training optimization, search infrastructure (Lucene), Kafka tiered storage, real-time ad processing, push notification platforms, and distributed storage (LedgerStore).' },
       { question: 'Why is Uber\'s blog valuable for system design interviews?', answer: 'Uber operates massive real-time systems with strict latency requirements. Their articles on serving 40M reads/sec, Cassandra zone-failure tolerance, Kafka tiered storage, and real-time ad processing with exactly-once semantics are directly applicable to system design questions.' },
+      { question: 'Which Uber posts are most relevant to ride-hailing system design questions?', answer: 'Three posts form the core reading list. "How Uber Predicts Arrival Times Using Deep Learning" (DeepETA) is the canonical ETA-prediction reference for any ride-hailing or delivery design question. "How LedgerStore Supports Trillions of Indexes" anchors payment-ledger design with hard scale numbers. "Uber\'s Next Gen Push Platform on gRPC" maps directly to designing notification systems for a real-time marketplace.' },
     ],
   },
   {
@@ -301,6 +305,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Stripe\'s engineering blog?', answer: 'How to design ledger systems for financial accuracy, build document databases with 99.999% uptime, create ML-based fraud detection (Radar), design APIs that evolve over a decade, and build developer-focused documentation tools.' },
+      { question: 'Which Stripe posts are most useful for payment-system interviews?', answer: '"Stripe\'s system for tracking and validating money movement" is the canonical reference for double-entry payment ledger design, covering invariants and reconciliation that appear in every payment-system interview. "How Stripe Processed $1 Trillion with Zero Downtime" walks through online schema migrations on petabyte-scale stores, directly relevant to high-availability database questions. Pair them when prepping a "design a payments service" question.' },
+      { question: 'Why is Stripe\'s blog valuable for API-design discussions?', answer: '"Stripe\'s payments APIs: The first 10 years" is one of the most cited articles on API design as long-term product strategy. It covers backwards-compatible evolution, idempotency keys, expansion patterns, and versioning over a decade — all topics that come up in senior interview questions about designing public APIs. "How Stripe built its fraud prevention system" complements it by showing how Radar layers ML on top of those APIs without breaking the contract.' },
     ],
   },
   {
@@ -323,6 +329,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Shopify\'s engineering blog?', answer: 'How to scale a Rails monolith horizontally with Vitess, implement real-time ML for search, use SSE for data streaming at scale, build flexible routing systems with serverless functions, and implement change data capture on a sharded monolith.' },
+      { question: 'Which Shopify posts are most useful for sharding and scale interviews?', answer: '"Horizontally scaling Rails backend with Vitess" is the model answer for any database-sharding question on top of an existing relational store — it covers shard key choice, query routing, and online cutover. "Capturing Every Change From Shopify\'s Sharded Monolith" extends it by showing how to bolt a CDC pipeline onto sharded MySQL, which maps directly to event-sourcing and downstream-consumer design questions.' },
+      { question: 'Why is Shopify\'s blog valuable for real-time and search interviews?', answer: '"Using Server Sent Events for Real-time Streaming at Scale" is a strong reference for designing one-way streams (notifications, dashboards, live order updates) without WebSocket complexity — a common system design tradeoff. "How Shopify improved consumer search intent with real-time ML" shows how to combine ML ranking with low-latency serving, relevant to any e-commerce search design question where intent matters as much as text match.' },
     ],
   },
   {
@@ -353,6 +361,7 @@ export const engBlogTopics = [
     keyQuestions: [
       { question: 'What topics does Slack engineering blog cover?', answer: 'Real-time messaging architecture, cellular architecture for reliability, enterprise search with security, API design principles, WebSocket migration to Envoy, ML recommendations, notification tracing, session security, and scaling datastores with Vitess.' },
       { question: 'What makes Slack\'s architecture posts valuable?', answer: 'Slack\'s migration to cellular architecture and re-architecture for large customers are excellent case studies in evolving systems for reliability. Their posts on WebSocket migration and real-time messaging are directly relevant to chat system design questions.' },
+      { question: 'Which Slack posts should I read before a chat-system design interview?', answer: 'Three posts together form the reference architecture. "Real-time Messaging at Slack" covers the gateway, fan-out, and presence model. "Migrating Millions of Concurrent Websockets to Envoy" shows how to operate a persistent-connection fleet at scale, including connection draining and rolling deploys. "Scaling Datastores at Slack with Vitess" rounds it out with the message-history storage layer — the three pieces every "design Slack" answer needs to cover.' },
     ],
   },
   {
@@ -375,6 +384,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from GitHub\'s engineering blog?', answer: 'How to build code search at scale (indexing millions of repositories), partition relational databases for growth, optimize Git operations (garbage collection, monorepo performance), and design merge queue systems for high-velocity engineering teams.' },
+      { question: 'Which GitHub posts are most useful for search and indexing interviews?', answer: '"The technology behind GitHub\'s new code search" is the reference for designing a custom indexer (Blackbird) that handles trillions of tokens — covers tokenization, sharding, and incremental indexing, all directly applicable to system design questions like "design code search" or "design a search engine." "How GitHub Docs\' new search works" complements it for documentation search with simpler scale but smarter relevance ranking.' },
+      { question: 'Why is GitHub\'s blog valuable for database-scaling discussions?', answer: '"Partitioning GitHub\'s relational databases to handle scale" is a candid multi-year case study in vertical-to-horizontal database migration — exactly the kind of evolution interviewers ask about when discussing OLTP scaling. "How we improved push processing on GitHub" pairs well with it, showing how to redesign a write-heavy pipeline (every git push) under load. Both anchor any "design GitHub" or "scale a write-heavy system" question.' },
     ],
   },
   {
@@ -398,6 +409,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Figma\'s engineering blog?', answer: 'How to build real-time collaborative systems (LiveGraph), horizontally scale Postgres, implement AI-powered search, optimize load times with incremental rendering, handle autosave in collaborative editing, and scale to multiple databases for stability.' },
+      { question: 'Which Figma posts are most useful for collaboration system design interviews?', answer: '"Figma\'s LiveGraph: a real-time data system at scale" is the canonical reference for designing a collaborative-editing fan-out system, covering subscription models, change propagation, and consistency. "The hidden challenges of autosave" pairs with it on conflict resolution and CRDT-flavored persistence. Together they map directly to "design Google Docs" or any multi-user editor interview question.' },
+      { question: 'Why is Figma\'s blog valuable for Postgres-sharding discussions?', answer: '"How Figma horizontally scaled Postgres" and "How Figma reduced instability by scaling to multiple databases" together form one of the most candid case studies on relational sharding for an established product. They cover shard-key choice, query routing, and the operational pain of cutting over without losing relational guarantees — exactly the territory database-design interviews probe when you say "I would shard Postgres."' },
     ],
   },
   {
@@ -419,6 +432,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Notion\'s engineering blog?', answer: 'How to design flexible block-based data models, shard Postgres with zero downtime (The Great Re-shard), use WASM SQLite to speed up browser applications, build scalable data lakes, and design public APIs — all critical system design interview topics.' },
+      { question: 'Which Notion posts are most useful for online-resharding interviews?', answer: '"Lessons learned from sharding Postgres at Notion" and "The Great Re-shard: adding Postgres capacity with zero downtime" together form one of the best published case studies on online relational resharding, covering double-writes, backfill, cutover, and rollback. Read them before any "scale a Postgres OLTP store" question — they describe two consecutive shardings on one of the most write-heavy SaaS workloads.' },
+      { question: 'Why is Notion\'s data model post valuable for system design interviews?', answer: '"The data model behind Notion\'s flexibility" explains the recursive block schema where every paragraph, page, and database row is the same primitive — a powerful pattern for any flexible-content system. It anchors discussions of schema-vs-document trade-offs and is excellent prep for "design a doc/notes app" or "design a low-code platform" interview questions where data flexibility is the core requirement.' },
     ],
   },
   {
@@ -439,6 +454,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Discord\'s engineering blog?', answer: 'How to store trillions of messages efficiently (migration from Cassandra to ScyllaDB), optimize WebSocket traffic at scale, handle 1M+ concurrent users in a single server, build ML-powered notification systems, and process trillions of analytics data points.' },
+      { question: 'Which Discord posts are most useful for chat-storage interviews?', answer: '"How Discord Stores Trillions of Messages" is the canonical reference for chat-at-scale storage — it walks through the migration from Cassandra to ScyllaDB, partition-key design for messages, and how to keep tail latency predictable on a write-heavy workload. Read it before any "design Slack" or "design WhatsApp" question where message-history storage is the critical bottleneck.' },
+      { question: 'Why is Discord\'s blog valuable for real-time fan-out design questions?', answer: '"Pushing Discord\'s Limits with a Million+ Online Users in a Single Server" is a vivid case study in presence and message fan-out at extreme scale, covering the bottlenecks that emerge when one room has a million viewers. "How Discord Reduced Websocket Traffic by 40%" pairs with it on the wire-format optimizations (zstd compression) that keep gateway costs sane. Both anchor live-streaming and chat fan-out interview questions.' },
     ],
   },
 
@@ -462,6 +479,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Airbnb\'s engineering blog?', answer: 'Embedding-based search retrieval for marketplace ranking, HTTP streaming for faster page loads, building data frameworks for read-heavy workloads at scale, and idempotency patterns to avoid double payments in distributed payment systems.' },
+      { question: 'Why is Airbnb\'s blog valuable for marketplace search interviews?', answer: '"Embedding-Based Retrieval for Airbnb Search" is one of the earliest production writeups of two-tower retrieval applied to marketplace ranking, covering candidate generation, listing embeddings, and trade-offs against keyword search. It is essential reading before any "design a marketplace search" or "design a recommendation system" interview question where you need to discuss embedding-based retrieval at scale.' },
+      { question: 'Which Airbnb post is most useful for payment-system interviews?', answer: '"Avoiding Double Payments in a Distributed Payments System" is the model reference for idempotency-key design — it walks through how Airbnb engineers ensure exactly-once charge semantics across retries, network partitions, and partial failures. The patterns map directly to interview questions about designing a payment service, an order-placement API, or any side-effecting endpoint where duplicate execution is unacceptable.' },
     ],
   },
   {
@@ -486,6 +505,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What topics does DoorDash engineering blog cover?', answer: 'LLM-powered menu transcription and search, product knowledge graphs, in-house search engine design, write-heavy inventory platforms, real-time event processing (Kafka + Flink), web performance optimization, client-side caching, and unified chat systems.' },
+      { question: 'Which DoorDash posts map to real-time event-pipeline interviews?', answer: '"Doordash\'s scalable real time event processing with Kafka and Flink" is the model reference for designing a streaming pipeline with exactly-once semantics — it covers Kafka partitioning, Flink stateful processing, and the operational realities of running a marketplace event bus. Pair it with "DoorDash\'s write-heavy scalable and reliable inventory platform" before any "design a real-time inventory system" question.' },
+      { question: 'Why is DoorDash\'s blog valuable for LLM-application design interviews?', answer: '"How DoorDash leverages LLMs for better search retrieval" and "Building DoorDash\'s product knowledge graph with large language models" together show how to use LLMs as production components rather than research demos — covering retrieval augmentation, entity extraction, and grounding. They map directly to LLM-application design questions like "design a search system on top of an LLM" or "design a knowledge graph extractor."' },
     ],
   },
   {
@@ -517,6 +538,7 @@ export const engBlogTopics = [
     keyQuestions: [
       { question: 'What topics does Instacart engineering blog cover?', answer: 'ML-driven search (LLMs, embeddings, autocomplete, query correction), real-time fraud detection with ClickHouse, item availability prediction for 200M+ items, logistics optimization, distributed ML infrastructure, sequence models for recommendations, and hybrid retrieval systems.' },
       { question: 'Why is Instacart\'s blog useful for ML system design?', answer: 'Instacart demonstrates the full ML lifecycle in production: from embeddings and LLMs for search, to real-time ML serving, distributed training, and using one model across multiple surfaces — all with concrete metrics and architecture decisions.' },
+      { question: 'Which Instacart posts are most useful for search-relevance interviews?', answer: '"Optimizing search relevance using hybrid retrieval" is excellent prep for modern search-design questions — it shows how to fuse lexical, embedding, and LLM-based ranking signals, the architecture most large e-commerce search systems are converging on. "Predicting real-time availability of 200 million grocery items" complements it on the freshness and inventory problem that pure-text search ignores. Both anchor "design a grocery/e-commerce search" interviews.' },
     ],
   },
   {
@@ -540,6 +562,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from eBay\'s engineering blog?', answer: 'How to operate billion-scale graph databases, build blazingly fast vector similarity engines, use multimodal embeddings for product recommendations, handle real-time push notifications at scale, and design deep learning retrieval systems for personalized search.' },
+      { question: 'Which eBay posts are most useful for vector-search interviews?', answer: '"eBay\'s Blazingly Fast Billion-Scale Vector Similarity Engine" is one of the few public references for production-scale ANN at the billion-vector level, covering index structures, sharding, and tail-latency tuning. Pair it with "How Multimodal Embeddings Elevate eBay\'s Product Recommendations" before any "design a visual or semantic search" interview question — the two together cover both the embedding model and the serving stack.' },
+      { question: 'Why is eBay\'s blog valuable for graph-database discussions?', answer: '"How eBay Loads and Updates Over Ten-Billion-Vertex Graphs" and "How ebay Exports Billion-Scale Graphs on Transactional Graph Databases" describe a workload very few companies operate at — billion-vertex transactional graphs with online bulk-load and export. They are useful prep for any "design a knowledge graph" or "design a recommendation graph" interview question where you need to discuss storage and update patterns at scale.' },
     ],
   },
   {
@@ -563,6 +587,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from PayPal\'s engineering blog?', answer: 'How to scale Kafka and Kubernetes for fintech workloads, build custom key-value stores (JunoDB), adopt GraphQL incrementally, use graph databases for real-time fraud detection, build data movement platforms, and deploy large-scale fraud detection ML models with CI/CD.' },
+      { question: 'Which PayPal posts are most useful for fraud-detection interviews?', answer: '"How PayPal Uses Real-time Graph Database to Fight Fraud" is the model reference for graph-based fraud-ring detection across accounts, devices, and transactions — exactly the architecture interviewers expect when you say "I would model this as a graph." Pair it with "Deploying Large-scale Fraud Detection ML Models at PayPal" for the CI/CD and shadow-platform side of operating fraud models in production.' },
+      { question: 'Why is PayPal\'s blog valuable for fintech-storage discussions?', answer: '"JunoDB: PayPal\'s Key-Value Store" is a candid look at why a fintech might build its own KV layer instead of using DynamoDB or Cassandra — covering the latency and consistency requirements that financial workloads impose. It anchors "build vs buy" and "design a payment-grade KV store" interview discussions, especially when paired with "Scaling Kafka to Support PayPal\'s Data Growth" for the event-bus side.' },
     ],
   },
   {
@@ -584,6 +610,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Coinbase\'s engineering blog?', answer: 'How to optimize mobile network requests, adopt deep learning in production, launch enterprise GenAI solutions, use ML for traffic prediction and auto-scaling, detect fraudulent blockchain transactions at scale, and build reliable notification platforms.' },
+      { question: 'Which Coinbase posts are most useful for capacity-planning interviews?', answer: '"How Coinbase Uses ML to Predict Traffic and Scale Databases" is a strong reference for predictive autoscaling — it walks through how Coinbase forecasts the 50x traffic spikes that follow market-moving news and pre-warms database capacity instead of chasing the spike. It maps directly to interview questions about designing autoscaling systems, capacity planning, or absorbing thundering-herd traffic events.' },
+      { question: 'Why is Coinbase\'s blog valuable for fraud and notification interviews?', answer: '"Detecting Fraudulent Transactions at Coinbase" anchors blockchain-aware fraud-detection design, covering wallet-address risk scoring before transaction approval — a unique angle compared to traditional payment fraud. "Building a notification platform at Coinbase" pairs with it for the alerting-and-comms side that any fintech needs to operate. Together they cover the two pillars of customer-facing reliability in a regulated financial product.' },
     ],
   },
   {
@@ -608,6 +636,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Razorpay\'s engineering blog?', answer: 'How to optimize authentication for payment systems, achieve massive cost savings on Kubernetes ($300K) and data platforms ($2M), detect fraudulent merchants, build real-time data streaming pipelines, handle notification load at scale, and prepare for burst traffic events like IPL.' },
+      { question: 'Which Razorpay posts are most useful for burst-traffic interviews?', answer: '"Handling Burst Traffic During IPL" is a vivid case study in capacity planning for known-bursty workloads — Indian payment volume during IPL matches can 10x baseline load in minutes, which forces decisions that are hard to extract from steady-state design questions. Pair it with "How Razorpay\'s Notification Service Handles Increasing Load" for the comms side of absorbing the same spike. Both anchor "design a flash-sale-ready system" interviews.' },
+      { question: 'Why is Razorpay\'s blog valuable for streaming-pipeline interviews?', answer: '"Razorpay\'s Real-Time Denormalized Data Streaming Platform" is a strong reference for streaming materialized views — it covers the merchant-dashboard problem where every transaction has to update a denormalized read model in seconds. The patterns map directly to interview questions about CQRS, read-model projections, and keeping analytical dashboards consistent under high write load.' },
     ],
   },
   {
@@ -629,6 +659,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Flipkart\'s engineering blog?', answer: 'How to set up MySQL for high availability, run multi-region Zookeeper, tune JVM memory for high-throughput services, build personalized search autosuggestion, predict user queries before they type, and handle phonetic search for diverse languages.' },
+      { question: 'Which Flipkart posts are most useful for search-design interviews?', answer: '"How Flipkart Adapted Search to Indian Phonetics" is excellent reference for any internationalized-search design question — it covers Romanized-Hindi spelling variations and how to fold dozens of valid spellings into one query intent. Pair it with "Building Flipkart\'s Personalized Search Autosuggestion" and "Predicting your next query even before you type" for the prefix-completion and ranking layers, all of which map to "design e-commerce search" interview questions.' },
+      { question: 'Why is Flipkart\'s blog valuable for reliability and performance interviews?', answer: '"Flipkart\'s MySQL Highly Available Setup" and "Running a multi-region Zookeeper at Flipkart" together cover the foundational reliability primitives every senior interview probes — leader election, failover, and consensus across regions. "Memory Tuning a High Throughput Microservice" anchors performance discussions on JVM and GC behavior, the kind of detail interviewers expect when you claim "this service handles 100k QPS."' },
     ],
   },
   {
@@ -660,6 +692,7 @@ export const engBlogTopics = [
     keyQuestions: [
       { question: 'What topics does Swiggy engineering blog cover?', answer: 'Text-to-SQL for analytics, search relevance with small language models, food delivery time prediction, deep learning ranking for dish and restaurant search, microservice resilience patterns, logistics system architecture, geo queries at scale, and deploying ML models with TensorFlow Serving.' },
       { question: 'Why is Swiggy\'s blog valuable for interview prep?', answer: 'Swiggy tackles classic system design challenges — delivery time estimation, geo-spatial queries, ranking algorithms, resilient microservices, and real-time logistics — with practical, production-tested solutions at India-scale traffic.' },
+      { question: 'Which Swiggy posts are most useful for delivery-marketplace interviews?', answer: '"Predicting Food Delivery Time at Cart" anchors any ETA-design question, and "Learning to Predict Two-Wheeler Travel Distance" complements it with the routing model under the ETA — together they cover the two-wheeler delivery prediction problem end to end. "Running Geo Queries At Scale" rounds out the geospatial layer that any "design a hyperlocal delivery service" interview will probe, including overlapping serviceability polygons and high-QPS lookups.' },
     ],
   },
   {
@@ -682,6 +715,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Zomato\'s engineering blog?', answer: 'How to handle 100M daily search queries, build petabyte-scale logging with ClickHouse, power restaurant ads with ML, use embeddings for address deduplication, predict food preparation time, and build user location systems for delivery platforms.' },
+      { question: 'Which Zomato posts are most useful for search and ETA interviews?', answer: '"How Zomato Handles 100 Million Daily Search Queries" is a useful reference for high-QPS search design over a long-tail restaurant catalog, covering index sharding and ranking. "How Zomato predicts Food preparation time" and "The Deep Tech Behind Estimating Food Preparation Time" together anchor the FPT side of delivery ETA — the single most uncertain component, and a common follow-up in "design food delivery" interviews.' },
+      { question: 'Why is Zomato\'s blog valuable for observability and cost interviews?', answer: '"Building a cost-effective logging platform for petabyte scale" is a candid case study in replacing SaaS logging with a self-hosted ClickHouse stack, with concrete numbers on what that saves — exactly the territory interviewers probe in cost-vs-performance trade-off questions. "How Zomato uses embeddings to identify unique addresses" complements it on entity-resolution, a pattern that appears in fraud, dedup, and identity-graph design questions.' },
     ],
   },
   {
@@ -702,6 +737,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Booking.com\'s engineering blog?', answer: 'How to detect anomalies in time series data, achieve significant cloud cost savings with compression, build high-performance ranking platforms for travel search, use graph technology for real-time fraud prevention, and predict cancellations with survival modeling.' },
+      { question: 'Which Booking.com posts are most useful for ranking-system interviews?', answer: '"The Engineering Behind Booking.com\'s High-Performance Ranking Platform" is a strong reference for ranking-platform design — it covers reranking millions of properties in milliseconds while running thousands of concurrent A/B experiments, exactly the architecture interviewers expect when you say "I would A/B test the ranker." It anchors any "design a marketplace ranking system" interview question.' },
+      { question: 'Why is Booking.com\'s blog valuable for fraud and forecasting discussions?', answer: '"How Booking.com Leverage graph technology for real-time Fraud Detection and Prevention" anchors graph-based fraud-detection design — finding rings across guests, properties, and payment methods is a unique angle compared to per-transaction fraud. "How Booking.com Predicts cancellations with survival modeling" pairs with it on the modeling side, showing how to use survival analysis where most companies use heuristics — useful prep for any forecasting or churn-prediction interview question.' },
     ],
   },
 
@@ -730,6 +767,7 @@ export const engBlogTopics = [
     keyQuestions: [
       { question: 'What topics does Twitter/X engineering blog cover?', answer: 'The recommendation algorithm (open-sourced), database read scaling, real-time analytics with Apache Druid, ads pacing and serving platforms, storing millions of ad impressions per second, processing billions of real-time events, and logging infrastructure.' },
       { question: 'Why is Twitter\'s recommendation algorithm post important?', answer: 'It is one of the few times a major social platform open-sourced their entire recommendation pipeline — from candidate generation through ranking and filtering — making it invaluable for understanding real-world recommendation system design.' },
+      { question: 'Which Twitter/X posts are most useful for ads-infrastructure interviews?', answer: '"Storing and retrieving millions of ad impressions per second" is the canonical reference for high-throughput counter and ledger design under strict budget guarantees. Pair it with "How we built Twitter\'s highly reliable ads pacing service" for the budget-pacing layer that decides which impressions to serve, and "Twitter\'s ads serving platform" for the sharded selection stack — together they form a complete reading list for "design an ads-serving platform" interviews.' },
     ],
   },
   {
@@ -753,6 +791,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Pinterest\'s engineering blog?', answer: 'How to improve search with LLMs, build text-to-SQL features, implement change data capture, detect anomalies in real time, optimize distributed caching, leverage real-time user signals for recommendations, and scale ad infrastructure by 60x.' },
+      { question: 'Which Pinterest posts are most useful for recommendation-system interviews?', answer: '"How Pinterest Leverages Realtime User Actions for Homefeed" is a strong reference for session-aware recommendations — it covers within-session signals, fast feature stores, and updating the homefeed in seconds. Pair it with "How Pinterest scaled ad corpus by 60x" and "The machine learning behind delivering relevant ads" for the retrieval-and-ranking side, all of which map to "design a feed" or "design an ads ranking system" interviews.' },
+      { question: 'Why is Pinterest\'s blog valuable for caching-architecture discussions?', answer: '"Improving Distributed Caching Performance at Pinterest" is a candid look at memcached tuning under the read-heavy fan-out pattern that recommendations create — exactly the territory caching-design interviews probe. "Change Data Capture at Pinterest" pairs with it on the CDC side, showing how to keep cached projections fresh as the OLTP store mutates. Together they cover read-side performance and consistency for any "design a high-read service" interview.' },
     ],
   },
   {
@@ -776,6 +816,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Reddit\'s engineering blog?', answer: 'How to evolve media infrastructure at scale, validate ad events in real-time with Apache Flink, scale ad serving by eliminating redundancy, implement dynamic product ads, shard ads pacing systems, build retrieval ranking models, and design experiment-based routing services.' },
+      { question: 'Which Reddit posts are most useful for ads-infrastructure interviews?', answer: '"Scaling Ads Pacing: from Singleton to Sharded" is a useful case study in stateful service sharding — the move from a single-process pacer to a sharded fleet while keeping budget enforcement strict is the kind of evolution senior interviews probe. Pair it with "Introducing a Global Retrieval Ranking Model in Ads" for the two-stage ranking layer and "Scaling Apache Flink real-time ad event validation" for the event-validation pipeline.' },
+      { question: 'Why is Reddit\'s blog valuable for experimentation-platform interviews?', answer: '"Building an Experiment-Based Routing Service" is a clean reference for designing an A/B routing layer that any large product needs — covering bucketing, exposure logging, and stickiness across sessions. It maps directly to "design an A/B testing platform" or "design a feature-flag service" interview questions, where the routing and exposure-logging architecture is the core deliverable.' },
     ],
   },
   {
@@ -797,6 +839,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Snap\'s engineering blog?', answer: 'How to build ML platforms (Bento), implement embedding-based retrieval for video recommendations, speed up feature engineering workflows, use synthetic data to augment ML training, train recommendation models at scale with TPUs, and build ML-powered ad ranking systems.' },
+      { question: 'Which Snap posts are most useful for ML-platform interviews?', answer: '"Bento - Snap\'s ML Platform" is a strong reference for designing an end-to-end ML platform — covering feature engineering, training, and serving standardized across hundreds of models. Pair it with "How Snap Speed Up Feature Engineering" for the feature-store side and "Training Large-Scale Recommendation Models with TPUs" for the training infrastructure layer. Together they map to "design an ML platform" interview questions.' },
+      { question: 'Why is Snap\'s blog valuable for recommendation-retrieval discussions?', answer: '"Snap\'s Embedding-based Retrieval for video recommendation" is a useful reference for two-tower retrieval design at the millisecond latency a video feed demands — relevant to any "design Spotlight," "design TikTok," or "design a short-video recommender" interview question. "Machine Learning for Snapchat Ad Ranking" complements it on the ranking layer that decides which retrieved candidate to serve, and "How Snap leverages synthetic data for ML models" rounds out the data side.' },
     ],
   },
   {
@@ -817,6 +861,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Spotify\'s engineering blog?', answer: 'How to generate content annotations at scale with ML, design data platform architectures for streaming services, optimize mobile app size, automate content marketing with engineering, and build forecasting infrastructure for user growth prediction.' },
+      { question: 'Which Spotify post is most useful for data-platform interviews?', answer: '"Spotify\'s Data Platform" is a good reference for any "design a data platform" interview question — it covers the BigQuery-and-data-mesh architecture that has shaped industry conversations about self-service analytics and domain ownership. Pair it with "How Spotify Generated Millions of Content Annotations" for the ML-pipeline side that feeds search and recommendations downstream of the platform.' },
+      { question: 'Why is Spotify\'s blog valuable for forecasting and mobile interviews?', answer: '"Infrastructure to Run User Forecasts at Spotify" anchors any forecasting-system design discussion — it covers the modeling, scheduling, and result-serving layers that user-growth forecasts need. "The What, Why, and How of Mastering App Size" is an unusual mobile-engineering reference that covers the systematic app-size reduction discipline mattering on the global low-end Android base — useful for mobile-platform interview questions.' },
     ],
   },
   {
@@ -836,6 +882,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Twitch\'s engineering blog?', answer: 'How to ingest live video at global scale (crucial for live streaming system design), decompose a monolith into microservices, apply ML for content moderation, and design high-availability architectures with threat modeling for critical services.' },
+      { question: 'Which Twitch post is most useful for live-streaming interviews?', answer: '"Ingesting Live Video Streams at Global Scale" is the canonical reference for live-streaming ingest design — it covers the three-second window in which a stream has to be ingested, transcoded, and globally delivered while a single popular channel can spike from zero to a million viewers in minutes. It maps directly to "design Twitch" or "design a live-streaming platform" interview questions and is hard to substitute with another writeup at the same scale.' },
+      { question: 'Why is Twitch\'s blog valuable for monolith-decomposition discussions?', answer: '"Breaking the Monolith at Twitch" is a candid case study in incremental microservice extraction over multiple years — exactly the territory senior interviews probe when they ask "how would you decompose this?" Pair it with "Defense, threat modeling and High Availability at Twitch" for the reliability side, where high-availability architecture has to survive the same scale spikes as the streaming pipeline.' },
     ],
   },
   {
@@ -855,6 +903,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Tinder\'s engineering blog?', answer: 'How to design clean API style guides, build production design systems (Obsidian), architect API gateways for mobile-first platforms, and use state machines to manage complex payment flows in mobile applications.' },
+      { question: 'Which Tinder post is most useful for API-design interviews?', answer: '"How Tinder built its API Gateway" is a clean reference for designing a mobile-edge API gateway in front of a polyglot service mesh — it covers routing, auth offload, and rate-limiting choices that come up in "design an API gateway" interview questions. Pair it with the "Tinder API Style Guide" for the contract side, where versioning and resource conventions matter as much as the gateway itself for any mobile-first product.' },
+      { question: 'Why is Tinder\'s blog valuable for state-machine discussions?', answer: '"Scaling out Android Payment Flow using State Machine" is a useful reference for any interview question that involves modeling a multi-step user flow with retries and partial failures — like a payment, a verification, or an onboarding wizard. The Google Play, Apple, and server states drift constantly, and the post shows how a state-machine model contains that complexity, a pattern that generalizes to any cross-system reconciliation problem.' },
     ],
   },
   {
@@ -874,6 +924,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Quora\'s engineering blog?', answer: 'How to build embedding-based search systems, migrate from Redshift to Trino at scale, optimize Trino for cost and reliability, and implement MySQL sharding — all practical system design topics for interviews.' },
+      { question: 'Which Quora post is most useful for semantic-search interviews?', answer: '"Building Embedding Search at Quora" is a useful reference for designing semantic search across a long-tail content corpus where exact keyword matching fails for most queries — exactly the architecture interviewers expect when you say "I would use embeddings here." It anchors any "design Q&A search" or "design a knowledge-base search" interview question.' },
+      { question: 'Why is Quora\'s blog valuable for analytics-warehouse interviews?', answer: '"Migrating a decade of Redshift usages to Trino" and "Trino at Quora Scale: Cost, Speed, and Reliability" together form a candid multi-year case study in analytics-warehouse migration with concrete cost and reliability numbers. They are useful prep for "design an analytics platform" interviews where the build-vs-buy and migration-strategy questions come up — both cover trade-offs most companies experience but rarely write about.' },
     ],
   },
   {
@@ -897,6 +949,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Canva\'s engineering blog?', answer: 'How to collect 25B events/day, scale media uploads to 50M/day, save millions on S3 storage costs, build reverse image search with perceptual hashes, enable real-time collaboration with RSocket, and count billions of content usages reliably.' },
+      { question: 'Which Canva posts are most useful for media-pipeline interviews?', answer: '"How Canva scaled media uploads from Zero to 50 Million per day" is a strong reference for upload-pipeline design, covering chunked uploads, deduplication, and CDN integration. Pair it with "Canva\'s fast and scalable reverse image search" for the perceptual-hash and DynamoDB serving layer, which maps directly to "design an image search" or "design Pinterest visual search" interview questions where pHash plus a KV index is a common pattern.' },
+      { question: 'Why is Canva\'s blog valuable for cost and analytics interviews?', answer: '"How Canva saves millions annually in Amazon S3 costs" is one of the most concrete cost-engineering writeups available — it covers storage-class transitions, intelligent tiering, and lifecycle policies that show up in "minimize storage cost" interview questions. "How Canva collects 25 billion events per day" pairs with it on the analytics-ingest side, anchoring any "design an event-tracking pipeline" question with hard scale numbers.' },
     ],
   },
 
@@ -924,6 +978,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Atlassian\'s engineering blog?', answer: 'How to achieve six nines (99.9999%) availability, scale export services for throughput, optimize Git operations, revamp search systems (Confluence), implement caching for query languages (JQL), decompose monolithic cloud services, and scale multi-region services on AWS.' },
+      { question: 'Which Atlassian posts are most useful for high-availability interviews?', answer: '"How one of Atlassian\'s critical services consistently gets above 99.9999% of availability" is a useful reference for high-availability design — it covers the auth-and-routing layer where six-nines uptime requires deterministic request handling, multi-region failover, and careful blast-radius control. Pair it with "Atlassian\'s journey scaling low latency, multi-region services on AWS" for the multi-region-routing trade-offs that appear in any "design a globally available service" interview.' },
+      { question: 'Why is Atlassian\'s blog valuable for scaling-out OLTP discussions?', answer: '"Scaling Bitbucket\'s Database" is a candid case study in OLTP scale-out from a single-tenant origin — it walks through partitioning choices and the operational realities of sharding a customer-facing database. "Scaling, rearchitecting, and decomposing Confluence Cloud" complements it on the service-decomposition side, showing how a multi-tenant product evolves out of a single-tenant codebase, which is exactly the territory senior interviews probe.' },
     ],
   },
   {
@@ -945,6 +1001,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Dropbox\'s engineering blog?', answer: 'How to evolve infrastructure with messaging systems, build scalable metadata caching (Chrono), integrate AI features into existing products, automate file organization with ML, apply ML to unconventional problems (date format detection), and optimize payment flows with machine learning.' },
+      { question: 'Which Dropbox post is most useful for metadata-cache interviews?', answer: '"Dropbox\'s scalable, consistent, metadata caching solution" introducing Chrono is the canonical reference for metadata-cache design — it sits in front of the metadata service and has to keep file-tree operations fast and consistent across hundreds of millions of clients. It maps directly to interview questions about "design Dropbox" or "design a file-sync service" where metadata-read latency is the dominant bottleneck.' },
+      { question: 'Why is Dropbox\'s blog valuable for messaging-platform discussions?', answer: '"How Dropbox evolved its infrastructure through the messaging system model" is a useful reference for asynchronous-platform design — it covers the queueing layer that absorbs spike loads from sync clients and how it has evolved over a decade. Pair it with "Bringing AI-powered answers and summaries to file previews on the web" for the LLM-application side that increasingly sits on top of that messaging substrate, useful for any "design an async ML pipeline" interview question.' },
     ],
   },
   {
@@ -968,6 +1026,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Salesforce\'s engineering blog?', answer: 'How to scale real-time search to 30B queries with sub-second latency, build agentic AI systems at enterprise scale, implement RAG with near-perfect uptime, manage massive AI training infrastructure, and handle 250 trillion transactions weekly in a data cloud platform.' },
+      { question: 'Which Salesforce posts are most useful for RAG and agentic-AI interviews?', answer: '"How Agentforce Data Library Powers RAG with 99.99% Uptime" is a strong reference for production RAG design — it covers retrieval, freshness, and tenant isolation under enterprise SLAs that few other public writeups discuss. Pair it with "Inside the Brain of Agentforce" for the Atlas reasoning-engine architecture and "Scaling Agentic AI Powering 2 Billion Predictions Monthly" for the serving layer — together a complete reading list for "design an enterprise AI agent" interviews.' },
+      { question: 'Why is Salesforce\'s blog valuable for massive-scale data-platform discussions?', answer: '"How Data Cloud Handles 250 Trillion Transactions Weekly" anchors any massive-data-platform discussion — it covers ingest, indexing, and query against structured and unstructured customer data at a scale most companies never reach. "Scaling Real-Time Search to 30 Billion Queries" complements it on the serving side with sub-second latency and zero downtime requirements, both of which are recurring themes in enterprise system design interviews.' },
     ],
   },
   {
@@ -988,6 +1048,8 @@ export const engBlogTopics = [
     ],
     keyQuestions: [
       { question: 'What can I learn from Walmart\'s engineering blog?', answer: 'How to implement Cassandra CDC for event-driven architectures, scale inventory APIs for peak retail traffic (Black Friday), apply Markov chains to optimize grocery picking, rebuild autocomplete systems for better search, and build notification frameworks for microservice ecosystems.' },
+      { question: 'Which Walmart post is most useful for high-contention inventory interviews?', answer: '"Scaling the Walmart Inventory Reservations API" is a useful reference for high-contention inventory design — it covers the flash-sale problem of preventing oversells while keeping latency low, exactly the territory "design a flash-sale system" or "design ticketing inventory" interview questions probe. Pair it with "Walmart\'s Cassandra CDC Solution" for the event-sourcing layer that replicates hot inventory state into downstream systems.' },
+      { question: 'Why is Walmart\'s blog valuable for retail-search and notifications interviews?', answer: '"How we rebuilt the Walmart Autocomplete Backend" anchors search-prefix-completion design at retail scale, covering candidate generation, ranking, and the personalization signals that come up in any "design e-commerce search" interview. "Building a Notification Framework for Microservices" complements it on the comms side, showing how to design a cross-cutting notification platform that any large microservice ecosystem eventually needs.' },
     ],
   },
   {
@@ -1016,6 +1078,7 @@ export const engBlogTopics = [
     keyQuestions: [
       { question: 'What topics does Lyft engineering blog cover?', answer: 'Real-time ML serving (LyftLearn), recommendation systems, dynamic pricing algorithms, custom embeddings (lyft2vec), Elasticsearch optimization, map matching algorithms, destination prediction with attention models, data quality frameworks, and ML training infrastructure on Kubernetes.' },
       { question: 'Why is Lyft\'s blog valuable for ride-hailing system design?', answer: 'Lyft provides detailed breakdowns of core ride-hailing challenges: real-time pricing, map matching, destination prediction, positioning with client-side data, and ML-powered recommendations — all with production metrics and architecture decisions.' },
+      { question: 'Which Lyft posts are most useful for real-time ML interviews?', answer: '"Powering Millions of Real-Time Decisions with LyftLearn" is a strong reference for real-time ML serving — it covers the millions-of-decisions-per-minute serving layer that powers pricing, ETAs, and matching. Pair it with "Building Real-time Machine Learning Foundations" for the feature-store and freshness side, and "ML Model Training Infrastructure on Kubernetes" for the training stack. Together they map to "design an ML platform" interview questions for a real-time marketplace.' },
     ],
   },
 ];
