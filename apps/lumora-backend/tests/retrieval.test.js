@@ -178,6 +178,7 @@ describe('retrieve with warm kit', () => {
       hybridSearchUserDocs: vi.fn(),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    vi.doMock('../src/services/retrievalLogger.js', () => ({ logRetrieval: vi.fn().mockResolvedValue(undefined) }));
     const { retrieve } = await import('../src/services/retrieval.js');
     const r = await retrieve({ question: 'q', userId: 7 });
     expect(kitMock).toHaveBeenCalledWith(7);
@@ -195,9 +196,72 @@ describe('retrieve with warm kit', () => {
       hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    vi.doMock('../src/services/retrievalLogger.js', () => ({ logRetrieval: vi.fn().mockResolvedValue(undefined) }));
     const { retrieve } = await import('../src/services/retrieval.js');
     const r = await retrieve({ question: 'q', userId: 7 });
     expect(hybridKbMock).toHaveBeenCalled();
     expect(r.chunks[0].id).toBe('L1');
+  });
+});
+
+describe('retrieve writes to retrievalLogger', () => {
+  it('calls logRetrieval after a successful live retrieval', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_WARM_KIT = 'false';
+    const logMock = vi.fn().mockResolvedValue(undefined);
+    vi.doMock('../src/services/retrievalLogger.js', () => ({ logRetrieval: logMock }));
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: vi.fn().mockResolvedValue([{ tier: 'kb', id: 'k1', content: 'a' }]),
+      hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
+    }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    await retrieve({ question: 'q', userId: null });
+    // Logger is fire-and-forget via dynamic import — flush microtasks
+    await new Promise((r) => setTimeout(r, 10));
+    expect(logMock).toHaveBeenCalledTimes(1);
+    const args = logMock.mock.calls[0][0];
+    expect(args.question).toBe('q');
+    expect(args.timedOut).toBe(false);
+    expect(args.usedWarmKit).toBe(false);
+  });
+
+  it('marks usedWarmKit=true when kit short-circuit fires', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_WARM_KIT = '';
+    const logMock = vi.fn().mockResolvedValue(undefined);
+    vi.doMock('../src/services/retrievalLogger.js', () => ({ logRetrieval: logMock }));
+    vi.doMock('../src/services/sessionKit.js', () => ({
+      readSessionKit: vi.fn().mockResolvedValue({
+        chunks: [{ tier: 'kb', id: 'k1', content: 'kit' }],
+      }),
+    }));
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: vi.fn(),
+      hybridSearchUserDocs: vi.fn(),
+    }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    await retrieve({ question: 'q', userId: 7 });
+    await new Promise((r) => setTimeout(r, 10));
+    expect(logMock).toHaveBeenCalledTimes(1);
+    expect(logMock.mock.calls[0][0].usedWarmKit).toBe(true);
+  });
+
+  it('logs the timeout path', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_WARM_KIT = 'false';
+    const logMock = vi.fn().mockResolvedValue(undefined);
+    vi.doMock('../src/services/retrievalLogger.js', () => ({ logRetrieval: logMock }));
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: vi.fn().mockImplementation(() => new Promise((res) => setTimeout(() => res([]), 500))),
+      hybridSearchUserDocs: vi.fn(),
+    }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    await retrieve({ question: 'q', userId: null, timeoutMs: 50 });
+    await new Promise((r) => setTimeout(r, 10));
+    expect(logMock).toHaveBeenCalledTimes(1);
+    expect(logMock.mock.calls[0][0].timedOut).toBe(true);
+    expect(logMock.mock.calls[0][0].chunks).toEqual([]);
   });
 });
