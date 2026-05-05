@@ -83,6 +83,33 @@ describe('buildWebWatchlist', () => {
     });
     const { buildWebWatchlist } = await import('../src/services/webWatchlist.js');
     const r = await buildWebWatchlist({ userId: 7, prepData: { activeCompany: 'Stripe' } });
-    expect(r.totalChunks).toBe(n);
+    // Stripe now has both eng + docs entries so indexWatchlistRoot is called twice.
+    // totalChunks = sum of per-call return values (1 + 2 = 3 when n ends at 2).
+    const expectedTotal = (n * (n + 1)) / 2;
+    expect(r.totalChunks).toBe(expectedTotal);
+  });
+});
+
+describe('resolveWatchlist with docs URL', () => {
+  it('returns 2 entries when company has both eng and docs', async () => {
+    const { resolveWatchlist } = await import('../src/services/webWatchlist.js');
+    // Stripe has both eng and docs in COMPANY_SOURCES
+    const r = resolveWatchlist({ activeCompany: 'Stripe' });
+    expect(r.length).toBeGreaterThanOrEqual(2);
+    const labels = r.map((e) => e.label);
+    expect(labels.some((l) => /Blog/.test(l))).toBe(true);
+    expect(labels.some((l) => /Docs/.test(l))).toBe(true);
+    for (const e of r) {
+      expect(e.source).toBe('Stripe');
+      expect(e.url).toMatch(/^https:\/\//);
+    }
+  });
+
+  it('returns 1 entry when company has only eng (no docs)', async () => {
+    const { resolveWatchlist } = await import('../src/services/webWatchlist.js');
+    // Tesla has eng but no docs field in COMPANY_SOURCES
+    const r = resolveWatchlist({ activeCompany: 'Tesla' });
+    expect(r.length).toBe(1);
+    expect(r[0].label).toMatch(/Blog/);
   });
 });

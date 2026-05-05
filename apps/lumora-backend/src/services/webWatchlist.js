@@ -1,11 +1,11 @@
 /**
  * Web watchlist — derives crawl URLs from a user's Prep blob and runs
- * the indexer over each. v1 reuses the existing COMPANY_SOURCES map
- * from companyContext.js so allowlisted companies stay the single
- * source of truth across context-warmup and watchlist-crawl.
+ * the indexer over each. Reuses the existing COMPANY_SOURCES map from
+ * companyContext.js so allowlisted companies stay the single source of
+ * truth across context-warmup and watchlist-crawl.
  *
- * Currently emits one URL per company (the eng blog). Future v2 can
- * add the github org or product docs.
+ * Emits up to 2 entries per company: eng blog (if present) and product
+ * docs (if the optional `docs` field is set in COMPANY_SOURCES).
  */
 import { COMPANY_SOURCES } from './companyContext.js';
 import { indexWatchlistRoot } from './webIndexer.js';
@@ -15,14 +15,23 @@ export function resolveWatchlist(prepData) {
   const company = prepData.activeCompany;
   if (!company) return [];
   const sources = COMPANY_SOURCES[company];
-  if (!sources || !sources.eng) return [];
-  return [
-    {
+  if (!sources) return [];
+  const entries = [];
+  if (sources.eng) {
+    entries.push({
       url: sources.eng,
       label: `${company} Engineering Blog`,
       source: company,
-    },
-  ];
+    });
+  }
+  if (sources.docs) {
+    entries.push({
+      url: sources.docs,
+      label: `${company} Product Docs`,
+      source: company,
+    });
+  }
+  return entries;
 }
 
 export async function buildWebWatchlist({ userId, prepData }) {
