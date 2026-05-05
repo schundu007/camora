@@ -10575,4 +10575,915 @@ These are answers an Argo CD-fluent platform engineer should give without prepar
     ],
   },
 
+  {
+    id: 'fluxcd-architecture',
+    title: 'Flux v2 — GitOps Toolkit (GOTK), source-controller, kustomize-controller, helm-controller',
+    icon: 'gitPullRequest',
+    color: '#0891b2',
+    questions: 5,
+    description: 'CNCF Graduated GitOps tool. Originated at Weaveworks (the GitOps coiners). v2 rewrite from monolithic v1 to modular controllers (GOTK). Multi-tenant via K8s namespaces. Used at Mercedes-Benz, BMW, RingCentral, MOIA. Kustomize-first; tighter K8s-native than Argo CD.',
+    visualizations: [
+      {
+        title: 'Flux v2 GitOps Toolkit (GOTK) — five controllers, composable',
+        description: `Flux v2 (released 2021) is a complete rewrite of v1's monolithic flux daemon into modular Kubernetes controllers. Each controller does one thing.
+
+source-controller. Watches GitRepository, HelmRepository, Bucket, OCIRepository CRDs. Polls source on configurable interval (default 1 min for git). Fetches manifests; stores artifacts in cluster as in-memory tarballs accessible via internal HTTP endpoint. Other controllers consume artifacts.
+
+kustomize-controller. Watches Kustomization CRDs. Each Kustomization references a source (via sourceRef) and a path. Renders Kustomize at the referenced path; applies the result to the cluster via server-side-apply. Continuous reconciliation; configurable interval.
+
+helm-controller. Watches HelmRelease CRDs. Each HelmRelease references a HelmRepository or GitRepository source. Renders Helm chart with values; applies. Handles Helm-specific lifecycle (rollback, history, upgrade strategy).
+
+notification-controller. Watches Receiver and Provider CRDs. Receiver exposes webhook endpoints (GitHub, GitLab, Bitbucket, generic webhook). Provider sends events to Slack, Discord, Microsoft Teams, Rocket.Chat, generic webhook, GitHub commit status, etc. Bidirectional: receive webhooks → trigger sync; emit events on sync results.
+
+image-automation-controller + image-reflector-controller. The Flux equivalent of Argo CD Image Updater. image-reflector-controller scans container registries. image-automation-controller watches ImageUpdateAutomation CRDs and pushes commits to git updating image tags in manifests.
+
+Why GOTK matters:
+
+Composable. Each controller is independent. Need only kustomize-controller? Install just that. Need to extend? Write your own controller alongside.
+
+K8s-native idioms. Each CRD is a normal Kubernetes resource with its own RBAC, namespace scope, finalizers, status conditions. kubectl get gitrepository, kubectl describe kustomization work as expected.
+
+Multi-tenant via namespaces. Tenant team's GitRepository, Kustomization, HelmRelease all live in their namespace. K8s RBAC enforces isolation. No bolted-on multi-tenancy layer.
+
+Comparison with Argo CD:
+- Argo CD: one Application CRD; UI-first; centralized controller.
+- Flux: composed CRDs (GitRepository + Kustomization + HelmRelease); CLI/kubectl-first; per-controller.
+
+Flux's UI (Weave GitOps OSS) exists but is thinner than Argo CD's. Most Flux operations happen via flux CLI or kubectl.`,
+        image: '/diagrams/devops/g3-fluxcd.png',
+      },
+      {
+        title: 'Kustomization reconciliation lifecycle',
+        description: `Walk through a Flux Kustomization being reconciled.
+
+1. GitRepository CRD references a git URL + branch. source-controller polls every 1 minute (configurable). On new commits, fetches the tree, packages it as an artifact, stores in-cluster.
+
+2. Kustomization CRD references the GitRepository (sourceRef.name) and a path within the repo. kustomize-controller polls Kustomization CRDs every 10 minutes (configurable per CRD).
+
+3. Kustomization reconciles: fetches the artifact from source-controller's HTTP endpoint, runs kustomize build at the referenced path. Output is flat YAML.
+
+4. kustomize-controller computes diff against cluster state and applies via server-side-apply. fieldManager: kustomize-controller — K8s tracks which fields this controller manages.
+
+5. Status conditions update on the Kustomization CRD: Ready=True if applied successfully, lastAppliedRevision shows the git SHA.
+
+6. notification-controller watches Kustomization status changes. If a Provider is configured for Slack, fires an event for sync success/failure with the commit SHA.
+
+7. Drift detection: every reconciliation cycle re-runs the diff. If actual ≠ desired, kustomize-controller re-applies (default behavior is self-heal).
+
+Configurable intervals:
+- GitRepository.spec.interval: how often source-controller polls git (1m default).
+- Kustomization.spec.interval: how often kustomize-controller reconciles (10m default).
+- prune: true removes resources removed from git (similar to Argo CD).
+- timeout: maximum time for the reconciliation step.
+
+Performance characteristics: the two-step model (source-controller fetches, kustomize-controller applies) means git → cluster lag is at most max(GitRepository.interval, Kustomization.interval). Reduce both for faster GitOps; increase for less load.
+
+Webhook-triggered: configure Receiver CRD that GitHub/GitLab webhook hits. Receiver triggers a re-fetch on the GitRepository. Reduces lag from minutes to seconds.`,
+        image: '/diagrams/devops/g3-fluxcd.png',
+      },
+    ],
+    introduction: `Flux v2 is the K8s-native GitOps tool from Weaveworks (the originators of the term GitOps in 2017). v1 was the original implementation; v2 (released 2021) is a complete rewrite into the GitOps Toolkit (GOTK) — a set of composable Kubernetes controllers. CNCF Graduated November 2022, the same month as Argo CD.
+
+Why Flux wins:
+
+K8s-native idioms. Every Flux concept is a CRD: GitRepository, Kustomization, HelmRelease, Receiver, Provider, ImageUpdateAutomation. Standard K8s primitives — RBAC, namespaces, finalizers, status conditions — apply uniformly. kubectl get and kubectl describe work as expected for every Flux resource.
+
+Multi-tenancy via namespaces. Tenant team's GitRepository + Kustomization + HelmRelease live in their namespace. K8s RBAC enforces isolation. Cleaner than Argo CD's AppProject-based bolted-on multi-tenancy.
+
+Composable. The GOTK is multiple thin controllers. You can install just kustomize-controller without helm-controller; or just source-controller and image-automation-controller; or write a custom controller that consumes source-controller artifacts. Reuse and extension are first-class.
+
+flux CLI. Strong CLI for bootstrapping, generating manifests, reconciling, debugging. flux bootstrap installs Flux on a cluster and configures itself to manage its own configuration via GitOps.
+
+Active in CNCF ecosystem. Used at Mercedes-Benz, BMW, RingCentral, MOIA, MyFitnessPal. Featured in CNCF case studies.
+
+Where Flux has friction:
+
+UI is thinner than Argo CD. Weave GitOps OSS exists but is less polished. Most operations happen via flux CLI / kubectl. Application teams that want UI-driven workflows often prefer Argo CD.
+
+No equivalent of Application CRD as single deployment unit. Flux requires you to compose GitRepository + Kustomization (or HelmRelease). More moving parts; more YAML.
+
+Sharding is per-controller, not unified. application-controller in Argo CD scales as one; Flux's controllers scale independently. More flexibility, more configuration.
+
+When to pick Flux:
+
+K8s-native composability matters. Platform teams that operate K8s controllers comfortably; want CRD-first patterns; want to extend with custom controllers.
+
+Multi-tenancy via namespaces. Each team's Flux config in their namespace; RBAC enforces isolation. Cleaner than Argo CD's project model.
+
+Already on Flux v1. Migration to Flux v2 is more incremental than to Argo CD.
+
+GitOps-managed images via ImageUpdateAutomation. Built-in to Flux; Argo CD requires the separate Image Updater component.
+
+When Argo CD wins:
+
+Application teams need polished UI for sync status, troubleshooting, drift visualization. Argo CD's UI is significantly better.
+
+Centralized control plane managing many clusters. Argo CD's hub-and-spoke is more mature.
+
+Argo Rollouts integration. Tighter coupling with Argo CD.
+
+Three load-bearing concepts every Flux interview answer needs:
+
+1. GOTK is composable. Each controller (source, kustomize, helm, notification, image-automation) is independent. Pick what you need.
+
+2. Two-step reconciliation: source-controller fetches; kustomize-controller (or helm-controller) applies. Different from Argo CD's monolithic application-controller.
+
+3. Multi-tenancy via K8s namespaces + RBAC. Tenant CRDs in tenant namespace; standard K8s primitives enforce isolation.`,
+    whenToUse: [
+      'K8s-native composability matters; want CRD-first patterns',
+      'Multi-tenant clusters where namespace-based isolation is desired',
+      'Already on Flux v1 — migration to Flux v2 is incremental',
+      'GitOps-managed image automation via ImageUpdateAutomation',
+      'Platform team comfortable extending K8s controllers with custom CRDs',
+    ],
+    keyConcepts: [
+      {
+        term: 'GitRepository — source CRD',
+        definition: `Tells source-controller where to pull manifests from.
+
+\`\`\`yaml
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: gitops-prod
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://github.com/myorg/gitops-prod.git
+  ref:
+    branch: main
+    # OR tag: v1.4.2
+    # OR semver: '>=1.0.0 <2.0.0'
+    # OR commit: abc123...
+  secretRef:
+    name: github-deploy-key      # SSH key Secret for private repos
+  ignore: |
+    # exclude from artifact
+    /*
+    !/services
+    !/clusters/prod
+\`\`\`
+
+source-controller fetches at interval; produces an Artifact (in-cluster tarball with checksum). Other controllers consume the Artifact.
+
+ref options: branch (mutable; usually main), tag (immutable), semver (range), commit (specific SHA — most reproducible for production).
+
+Pin production GitRepository to specific commit or tag, not branch — avoids picking up unintended changes.
+
+ignore: gitignore-style filter to exclude paths from the artifact. Reduces artifact size; speeds up downstream rendering.
+
+Other source kinds:
+- HelmRepository — chart repository (https or OCI).
+- Bucket — S3, GCS, MinIO.
+- OCIRepository — OCI artifacts (manifests stored in container registry).`,
+      },
+      {
+        term: 'Kustomization — apply manifests',
+        definition: `kustomize-controller applies Kustomize-rendered manifests to the cluster.
+
+\`\`\`yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: payments-prod
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 2m
+  timeout: 5m
+  prune: true
+  wait: true                       # wait for resources to be Ready
+  sourceRef:
+    kind: GitRepository
+    name: gitops-prod
+    namespace: flux-system
+  path: ./services/payments
+  targetNamespace: payments
+  serviceAccountName: payments-deployer    # impersonate for tenant isolation
+  postBuild:
+    substitute:
+      cluster_name: prod-us-east-1
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-vars
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: payments
+      namespace: payments
+\`\`\`
+
+prune: true removes resources removed from git (Argo CD equivalent: prune: true in syncPolicy).
+
+wait: true blocks reconciliation until the applied resources are Ready (Deployment Available, etc.). Useful for ordering dependent Kustomizations via dependsOn.
+
+serviceAccountName: impersonate this ServiceAccount when applying. Used for multi-tenancy: tenant Kustomization runs as tenant ServiceAccount; RBAC restricts what it can apply.
+
+postBuild.substitute: variable substitution using \${var} placeholders in the rendered output. Useful for cluster-specific values (region, environment) without per-cluster overlays.
+
+healthChecks: explicit health check beyond what wait: true does. Useful for resources with custom health logic.
+
+Multiple Kustomizations can chain via dependsOn:
+
+\`\`\`yaml
+spec:
+  dependsOn:
+    - name: cert-manager
+    - name: ingress-nginx
+\`\`\`
+
+Reconciles only after the named Kustomizations are Ready.`,
+      },
+      {
+        term: 'HelmRelease — Helm chart deployment',
+        definition: `helm-controller applies Helm releases.
+
+\`\`\`yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: nginx-ingress
+  namespace: ingress-nginx
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: ingress-nginx
+      version: '4.10.x'             # semver range
+      sourceRef:
+        kind: HelmRepository
+        name: ingress-nginx
+        namespace: flux-system
+  values:
+    controller:
+      replicaCount: 3
+      service:
+        type: LoadBalancer
+        annotations:
+          service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  valuesFrom:
+    - kind: ConfigMap
+      name: cluster-overrides
+      valuesKey: values.yaml
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      strategy: rollback             # auto-rollback on failure
+  test:
+    enable: true                     # run helm test post-install
+\`\`\`
+
+helm-controller renders the chart with values, installs/upgrades the release, tracks Helm history.
+
+Auto-rollback on failure via upgrade.remediation.strategy: rollback. Helm reverts to previous release if upgrade fails health checks.
+
+Multiple HelmReleases can chain via dependsOn (same as Kustomization).
+
+Compared to ArgoCD's Helm support: Flux's HelmRelease is closer to native Helm semantics (uses helm install/upgrade under the hood); ArgoCD's Helm renders manifests and applies via kubectl. Different reconciliation models; both work.`,
+      },
+      {
+        term: 'Multi-tenancy via namespaces',
+        definition: `Flux's multi-tenancy story is namespace-native. Tenant CRDs in tenant namespace; K8s RBAC enforces isolation.
+
+Setup for tenant payments-team:
+
+1. Namespace per tenant:
+\`\`\`yaml
+apiVersion: v1
+kind: Namespace
+metadata: { name: payments-team }
+\`\`\`
+
+2. Tenant ServiceAccount with restricted permissions:
+\`\`\`yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: payments-deployer, namespace: payments-team }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: payments-deployer-binding, namespace: payments-prod }
+subjects:
+  - kind: ServiceAccount
+    name: payments-deployer
+    namespace: payments-team
+roleRef:
+  kind: ClusterRole
+  name: edit                      # or custom limited Role
+  apiGroup: rbac.authorization.k8s.io
+\`\`\`
+
+3. Tenant team owns GitRepository + Kustomization in their namespace:
+\`\`\`yaml
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata: { name: payments-app, namespace: payments-team }
+spec:
+  interval: 1m
+  url: https://github.com/payments-team/manifests.git
+  ref: { branch: main }
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: payments, namespace: payments-team }
+spec:
+  interval: 10m
+  sourceRef:
+    kind: GitRepository
+    name: payments-app
+  path: .
+  targetNamespace: payments-prod
+  serviceAccountName: payments-deployer    # impersonate tenant SA
+  prune: true
+\`\`\`
+
+Behavior: kustomize-controller impersonates payments-deployer SA when applying. SA only has edit on payments-prod namespace. Tenant cannot deploy to other namespaces, cannot create ClusterRoles, cannot escape their scope.
+
+Compared to Argo CD AppProject: similar isolation, different mechanism. Flux uses K8s-native impersonation; Argo CD uses AppProject scope checks. Flux's approach is more idiomatic; Argo CD's allows centralized governance more easily.`,
+      },
+      {
+        term: 'Notification controller — Slack/Webhook events',
+        definition: `notification-controller is bidirectional: receives webhooks, sends events.
+
+Receiver — incoming webhook to trigger reconciliation:
+
+\`\`\`yaml
+apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Receiver
+metadata: { name: github-receiver, namespace: flux-system }
+spec:
+  type: github
+  events:
+    - ping
+    - push
+  secretRef:
+    name: github-webhook-secret    # HMAC secret
+  resources:
+    - apiVersion: source.toolkit.fluxcd.io/v1
+      kind: GitRepository
+      name: gitops-prod
+      namespace: flux-system
+\`\`\`
+
+Receiver creates a Service exposing /hook/<id>. GitHub webhook hits it; Receiver triggers immediate reconciliation of listed resources. Reduces lag from minutes to seconds.
+
+Provider + Alert — outgoing events:
+
+\`\`\`yaml
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Provider
+metadata: { name: slack, namespace: flux-system }
+spec:
+  type: slack
+  channel: '#deploys'
+  secretRef:
+    name: slack-webhook
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata: { name: prod-syncs, namespace: flux-system }
+spec:
+  providerRef:
+    name: slack
+  eventSeverity: info
+  eventSources:
+    - kind: Kustomization
+      name: '*'                    # all Kustomizations
+      namespace: flux-system
+  inclusionList: ['^Reconciliation finished.*']
+\`\`\`
+
+Behavior: every Kustomization reconciliation produces an event; Alert filters by severity/source/regex; matching events forwarded to Slack via Provider.
+
+Provider types: slack, discord, msteams, rocket, generic, github, gitlab (commit status), webex, sentry, pagerduty, alertmanager.
+
+GitHub commit status integration: post sync results back to the commit on GitHub. Adds context to PRs ("deploy to prod-eu-west-1: succeeded").`,
+      },
+      {
+        term: 'Recipe: flux bootstrap on EKS with multi-cluster',
+        definition: `flux bootstrap installs Flux on a cluster and configures it to manage its own config via GitOps.
+
+Step 1 — bootstrap on hub cluster:
+
+\`\`\`bash
+export GITHUB_TOKEN=ghp_...
+flux bootstrap github \\
+  --owner=myorg \\
+  --repository=gitops-fleet \\
+  --branch=main \\
+  --path=./clusters/prod-hub \\
+  --personal=false                # for org repos
+\`\`\`
+
+What this does:
+- Creates github.com/myorg/gitops-fleet (if missing).
+- Generates flux-system manifests in clusters/prod-hub/flux-system/.
+- Commits + pushes to git.
+- Installs Flux on the cluster.
+- Configures Flux to reconcile clusters/prod-hub/.
+
+After bootstrap, Flux's own manifests live in git. Self-managed. Upgrades happen by editing the gotk-components.yaml in git and pushing.
+
+Step 2 — define spoke cluster Kustomizations:
+
+\`\`\`
+gitops-fleet/
+├── clusters/
+│   ├── prod-hub/
+│   │   └── flux-system/
+│   │       ├── gotk-components.yaml
+│   │       ├── gotk-sync.yaml
+│   │       └── kustomization.yaml
+│   ├── prod-us-east-1/
+│   │   ├── flux-system/
+│   │   └── apps/
+│   │       ├── ingress.yaml
+│   │       └── monitoring.yaml
+│   └── prod-eu-west-1/
+│       ├── flux-system/
+│       └── apps/
+└── infrastructure/
+    └── controllers/
+        ├── cert-manager/
+        └── external-secrets/
+\`\`\`
+
+Step 3 — bootstrap each spoke cluster:
+
+\`\`\`bash
+flux bootstrap github \\
+  --owner=myorg \\
+  --repository=gitops-fleet \\
+  --branch=main \\
+  --path=./clusters/prod-us-east-1 \\
+  --personal=false
+\`\`\`
+
+Each spoke runs its own Flux installation. Federated topology — each cluster manages itself from git. No central control plane.
+
+Compared to Argo CD hub-and-spoke: Flux federated approach has lower blast radius (hub failure doesn't affect spokes) but higher operational surface (5 clusters = 5 Flux installations).
+
+Step 4 — image automation (Flux's killer feature):
+
+\`\`\`yaml
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata: { name: payments, namespace: flux-system }
+spec:
+  image: ghcr.io/myorg/payments
+  interval: 5m
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata: { name: payments-policy, namespace: flux-system }
+spec:
+  imageRepositoryRef: { name: payments }
+  policy:
+    semver: { range: '>=1.0.0 <2.0.0' }
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageUpdateAutomation
+metadata: { name: payments-update, namespace: flux-system }
+spec:
+  interval: 5m
+  sourceRef:
+    kind: GitRepository
+    name: gitops-fleet
+  git:
+    commit:
+      author:
+        email: flux@example.com
+        name: fluxcd
+      messageTemplate: 'chore(images): update payments to {{ .Tag }}'
+    push:
+      branch: main
+  update:
+    path: ./clusters/prod-us-east-1/apps
+    strategy: Setters
+\`\`\`
+
+Setters strategy: in your manifests, mark fields with a comment:
+
+\`\`\`yaml
+spec:
+  template:
+    spec:
+      containers:
+        - name: payments
+          image: ghcr.io/myorg/payments:1.2.3 # {"$imagepolicy": "flux-system:payments-policy"}
+\`\`\`
+
+Behavior: image-reflector-controller scans GHCR every 5 min; new tag matching semver range → image-automation-controller commits the updated image tag to git → source-controller picks up commit → kustomize-controller applies.
+
+Fully GitOps-managed image updates with audit trail (the auto-commit is in git history).`,
+      },
+    ],
+    approach: [
+      'flux bootstrap github to install + self-manage Flux from git',
+      'GitRepository pinned to commit/tag for prod (not branch)',
+      'Kustomization with prune: true + wait: true; serviceAccountName for tenant isolation',
+      'HelmRelease with auto-rollback on failure (upgrade.remediation.strategy: rollback)',
+      'Multi-tenancy via namespace + impersonated ServiceAccount',
+      'notification-controller: Receiver for webhooks; Provider+Alert for Slack',
+      'Federated topology: each cluster has own Flux; CRDs in flux-system namespace',
+      'Image automation: ImageRepository + ImagePolicy + ImageUpdateAutomation for GitOps image bumps',
+    ],
+    pitfalls: [
+      'GitRepository.ref.branch: main on production — picks up unintended commits',
+      'No serviceAccountName on Kustomization — runs as kustomize-controller SA (cluster-admin); no tenant isolation',
+      'No prune: true — old resources accumulate as git rotates them out',
+      'HelmRelease without upgrade.remediation — failed Helm upgrades leave broken state',
+      'Kustomization without dependsOn for ordering — race conditions on cluster bootstrap',
+      'No Receiver — relying on polling-only sync (1-10 min lag)',
+      'Mixed v1beta1 + v2 CRDs after upgrade — schema mismatches; flux-cli reports errors',
+      'flux-system namespace overcrowded with all tenant CRDs — should be per-tenant namespace',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk through Flux v2 GOTK architecture — five controllers, each role.',
+        answer: `Flux v2 is structured as the GitOps Toolkit (GOTK) — five composable controllers, each with a specific job. Independent installations possible.
+
+source-controller. The "fetch" layer.
+
+Watches: GitRepository, HelmRepository, Bucket, OCIRepository CRDs.
+
+Behavior: polls each source on its configured interval (default 1 min for git). Fetches the source content; packages as a tarball with checksum (an Artifact); stores in-cluster; exposes via internal HTTP endpoint (artifact URL).
+
+Other controllers consume Artifacts. They never touch git directly.
+
+Resource profile: I/O-heavy (network + disk); CPU-light. Scaled with multiple replicas if you have many sources.
+
+kustomize-controller. The "apply Kustomize manifests" layer.
+
+Watches: Kustomization CRDs.
+
+Behavior: each Kustomization references a source (sourceRef.name) and a path. kustomize-controller fetches the artifact from source-controller, runs kustomize build at the path, applies the result via server-side-apply.
+
+Continuous reconciliation: every 10 min (default) regardless of source changes. Detects drift.
+
+Resource profile: CPU on render; memory for cache. Scaled independently of source-controller.
+
+helm-controller. The "apply Helm releases" layer.
+
+Watches: HelmRelease CRDs.
+
+Behavior: each HelmRelease references a chart source (HelmRepository or GitRepository). helm-controller renders the chart with values, installs/upgrades the release using Helm SDK, tracks Helm history.
+
+Native Helm semantics (uses helm install/upgrade under the hood); supports rollback, hooks, lifecycle.
+
+Resource profile: similar to kustomize-controller. Scaled independently.
+
+notification-controller. The events layer. Bidirectional.
+
+Inbound: Receiver CRDs expose /hook/<id> endpoints for GitHub/GitLab/Bitbucket/generic webhooks. Webhook hit → trigger immediate reconciliation of referenced resources.
+
+Outbound: Provider + Alert CRDs forward Flux events to Slack, Teams, Discord, generic webhook, GitHub commit status, etc.
+
+image-automation-controller + image-reflector-controller. The "update image tags in git" pair.
+
+image-reflector-controller scans ImageRepository CRDs (registry references). Tracks tags. Records latest matching tag per ImagePolicy.
+
+image-automation-controller watches ImageUpdateAutomation CRDs. When ImagePolicy reports a new tag, controller commits the updated tag to git.
+
+Result: GitOps-managed image updates. Pattern: CI builds and pushes to registry; Flux detects new tag; commits to git; source-controller picks up commit; kustomize-controller applies.
+
+Compared to Argo CD: Argo CD has one application-controller; Flux has multiple thin controllers. Flux's model is more K8s-native (one CRD type per controller; standard reconciler pattern); Argo CD's is more centralized (one controller knows about everything).
+
+Trade-off: Flux is more composable but has more YAML (need GitRepository AND Kustomization to deploy something; Argo CD just needs Application). For simple cases Argo CD is less verbose; for complex extension Flux is more flexible.
+
+Deployment shape. flux install (or flux bootstrap) installs all five controllers in flux-system namespace. Each runs as a Deployment with HPA for source-controller and kustomize-controller (the heavy hitters).
+
+Flux's controllers expose Prometheus metrics: gotk_reconcile_duration_seconds, gotk_suspend_status, gotk_reconcile_condition. Grafana dashboards from Flux's repo cover standard views.`,
+      },
+      {
+        question: 'How does Flux\'s multi-tenancy compare to Argo CD AppProjects?',
+        answer: `Both achieve tenant isolation; Flux uses K8s-native primitives (namespace + RBAC + ServiceAccount impersonation), Argo CD uses bolted-on AppProject scope checks. Different mechanisms, similar outcomes.
+
+Flux multi-tenancy:
+
+Each tenant gets a namespace. Tenant team's GitRepository, Kustomization, HelmRelease all live in that namespace. K8s RBAC restricts what they can do.
+
+Tenant Kustomization impersonates a tenant ServiceAccount when applying:
+
+\`\`\`yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: payments, namespace: payments-team }
+spec:
+  serviceAccountName: payments-deployer
+  ...
+\`\`\`
+
+The payments-deployer SA in payments-team namespace has RoleBinding to payments-prod namespace's edit role. When kustomize-controller applies, it acts as payments-deployer. K8s authorizes based on that SA's permissions.
+
+What this enforces:
+- Tenant can deploy only to namespaces where their SA has permissions.
+- Tenant cannot create cluster-scoped resources (ClusterRole, ClusterRoleBinding, CRD) unless their SA has cluster-scoped permissions.
+- Tenant cannot escape namespace by referencing other team's GitRepository (the GitRepository CRD itself is namespace-scoped in their namespace).
+
+Pros:
+- K8s-native: standard RBAC. Familiar to anyone who knows K8s.
+- Audit: K8s API audit log records the impersonated SA. Clear who did what.
+- No bolted-on scope-check layer.
+
+Cons:
+- Per-tenant namespace + ServiceAccount + RoleBinding setup. More YAML to bootstrap a tenant.
+- Cross-namespace references (sourceRef across namespaces) require explicit grants.
+
+Argo CD AppProject:
+
+Each tenant gets an AppProject. AppProject restricts:
+- sourceRepos: which git URLs allowed.
+- destinations: which clusters/namespaces.
+- clusterResourceWhitelist / namespaceResourceBlacklist: which resource types.
+- roles: who can do what (sync, override) on Applications.
+
+Argo CD's application-controller checks AppProject scope on every sync. Even though application-controller has cluster-admin, scope checks prevent tenant Applications from doing things outside their AppProject.
+
+Pros:
+- Centralized governance: AppProject is a single CRD per tenant.
+- RBAC bound to SSO group memberships; granular role definitions.
+- Sync windows: time-based deploy restrictions.
+
+Cons:
+- Bolted-on layer: AppProject check is application-controller logic, not K8s primitive. Bypass possible if you can write Application directly without AppProject reference.
+- More custom: must learn AppProject semantics separately from K8s RBAC.
+
+Pragmatic comparison:
+
+For pure K8s-native shops where teams operate K8s comfortably: Flux's namespace model is cleaner. Tenant onboarding: create namespace, create SA, create RoleBindings, give team kubeconfig with limited scope. Standard K8s onboarding.
+
+For shops with strong centralized governance + SSO + multiple non-K8s-fluent teams: Argo CD's AppProject is friendlier. UI shows AppProject restrictions clearly; SSO-bound roles are obvious; sync windows for change-freeze are first-class.
+
+For multi-cluster: both work. Flux federated (per-cluster Flux installation, per-namespace tenant). Argo CD hub-and-spoke (central Argo CD, per-AppProject tenant).
+
+Real-world: many orgs run both. Flux for platform-level GitOps (cluster bootstrap, infrastructure controllers in flux-system). Argo CD for application-team workloads (where UI matters). Both run side-by-side without conflict.
+
+Migration story: Flux → Argo CD or vice versa is moderate work (rewrite CRDs, restore namespacing). Most orgs stick with their initial choice.`,
+      },
+      {
+        question: 'How does Flux handle image automation (the GitOps for container images)?',
+        answer: `Flux's image automation is one of its differentiating features. Built into the GOTK; Argo CD requires the separate Image Updater component.
+
+The pattern: CI builds images and pushes to registry. Flux detects new tags matching a policy, commits the updated tag to git, source-controller picks up the commit, kustomize-controller applies. Fully GitOps-managed image updates with full audit trail.
+
+Three CRDs:
+
+ImageRepository — what to scan:
+
+\`\`\`yaml
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata: { name: payments, namespace: flux-system }
+spec:
+  image: ghcr.io/myorg/payments
+  interval: 5m
+  secretRef:
+    name: ghcr-pull              # for private registries
+\`\`\`
+
+image-reflector-controller scans the registry every 5 min. Records all tags in cluster state.
+
+ImagePolicy — which tag to pick:
+
+\`\`\`yaml
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata: { name: payments-policy, namespace: flux-system }
+spec:
+  imageRepositoryRef:
+    name: payments
+  policy:
+    semver:
+      range: '>=1.0.0 <2.0.0'    # pick highest matching semver
+    # OR alphabetical: { order: asc }
+    # OR numerical: { order: asc }
+\`\`\`
+
+ImagePolicy resolves to one tag per evaluation. Policy types:
+- semver — "highest matching semver range"
+- alphabetical — sort tags alphabetically, pick first/last
+- numerical — sort numerically, pick first/last
+- regex with extract — extract part of tag (commit SHA from tag like main-abc123)
+
+ImageUpdateAutomation — commit the updated tag to git:
+
+\`\`\`yaml
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageUpdateAutomation
+metadata: { name: payments-update, namespace: flux-system }
+spec:
+  interval: 5m
+  sourceRef:
+    kind: GitRepository
+    name: gitops-fleet
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: flux@example.com
+        name: fluxcd
+      messageTemplate: |
+        chore(images): update {{ .ImagePolicies | join " " }}
+
+        Updated by Flux image automation:
+        {{ range .Updated.Images -}}
+        - {{ .Name }}:{{ .Tag }}
+        {{ end }}
+    push:
+      branch: main
+  update:
+    path: ./clusters/prod-us-east-1/apps
+    strategy: Setters
+\`\`\`
+
+In your manifests, mark fields with a setter comment:
+
+\`\`\`yaml
+spec:
+  template:
+    spec:
+      containers:
+        - name: payments
+          image: ghcr.io/myorg/payments:1.2.3 # {"$imagepolicy": "flux-system:payments-policy"}
+\`\`\`
+
+Behavior:
+1. CI builds + pushes ghcr.io/myorg/payments:1.2.4.
+2. image-reflector-controller scans GHCR; records tag 1.2.4.
+3. ImagePolicy evaluates: 1.2.4 is highest matching >=1.0.0 <2.0.0; selects it.
+4. image-automation-controller checks deployment.yaml against policy; finds image:1.2.3, policy resolves to 1.2.4. Updates the file.
+5. Commits to git: chore(images): update payments to 1.2.4. Pushes.
+6. source-controller picks up the commit on next interval.
+7. kustomize-controller applies; payments deployment updates.
+8. notification-controller fires Slack notification.
+
+Audit trail: git log shows every image update with timestamp + author + version. SOC 2 / FedRAMP audits trivially satisfied.
+
+Compared to ArgoCD Image Updater:
+
+Argo CD Image Updater is a separate component. Functionality similar but configured via annotations on Applications, not separate CRDs. Less composable than Flux's ImageRepository + ImagePolicy + ImageUpdateAutomation.
+
+Flux's model wins for:
+- Centralized image policies (one ImagePolicy referenced by many manifests).
+- More flexible policy types (semver, regex with extract, etc.).
+- Native GOTK feel.
+
+Argo CD Image Updater wins for:
+- Simpler config (annotations on Application; no separate CRDs).
+- Tighter integration with Argo CD's UI for triggering updates.
+
+Both achieve the same outcome. Choose based on your GitOps tool.`,
+      },
+      {
+        question: 'Federated vs hub-and-spoke — when does each fit?',
+        answer: `Two multi-cluster GitOps topologies. Different trade-offs.
+
+Federated (Flux's natural model):
+
+Each cluster runs its own Flux installation. Each cluster manages itself from a shared git repo (or per-cluster repos). No centralized control plane.
+
+\`\`\`
+gitops-fleet/
+├── clusters/
+│   ├── prod-hub/                   # Flux on hub manages itself
+│   ├── prod-us-east-1/             # Flux on us-east-1 manages itself
+│   ├── prod-eu-west-1/             # Flux on eu-west-1 manages itself
+│   └── staging/
+└── infrastructure/                  # shared baselines
+\`\`\`
+
+Each cluster is bootstrapped with flux bootstrap pointing at its own clusters/<name>/ path. Each cluster's Flux only watches its own subdirectory.
+
+Pros:
+- Lower blast radius. Hub failure doesn't affect spokes — each spoke continues reconciling its last-known state.
+- Per-cluster autonomy. Spoke clusters can be in different network zones (private VPCs, on-prem) without hub egress.
+- Scales linearly. 100 clusters = 100 Flux installations, each handling its own work.
+- Per-cluster Flux upgrades independent — roll upgrades cluster-by-cluster.
+
+Cons:
+- Higher operational surface. 100 Flux installations to operate, monitor, upgrade.
+- No centralized UI. Each cluster has its own status; aggregation requires custom tooling (Weave GitOps OSS, custom dashboards, query each cluster).
+- Cross-cluster coordination harder. "Roll out to all prod clusters in sequence" is application-level orchestration, not built-in.
+
+Hub-and-spoke (Argo CD's natural model):
+
+One Argo CD installation (the hub) manages many target clusters (spokes) via kubeconfig secrets. Centralized control plane.
+
+\`\`\`
+hub cluster
+├── argocd namespace (Argo CD installation)
+└── connects to:
+    ├── spoke prod-us-east-1
+    ├── spoke prod-eu-west-1
+    └── spoke staging
+\`\`\`
+
+Pros:
+- Centralized UI. Single dashboard for all clusters.
+- Centralized RBAC + audit. One auth surface; one log.
+- Cross-cluster coordination easier. ApplicationSet + sync waves orchestrate cross-cluster patterns.
+- Single Argo CD installation to operate, monitor, upgrade.
+
+Cons:
+- Hub failure affects all spoke deployments. Mitigated by HA Argo CD (multiple controller replicas, Redis HA) but blast radius is meaningful.
+- Hub needs network egress to all spokes. VPC peering, Transit Gateway, PrivateLink — non-trivial in multi-cloud or hybrid.
+- Spoke kubeconfig secrets stored in hub. Secret leak compromises all spokes. Mitigated by ServiceAccount tokens + IAM rotation.
+- Sharding required at scale. application-controller bottleneck on 500+ Applications.
+
+When to pick federated:
+
+You operate K8s comfortably and prefer per-cluster autonomy. Spoke clusters in air-gapped or restricted-egress networks. Heavily multi-cloud where central hub egress is operationally complex. Strict cluster isolation requirements (regulatory, security).
+
+When to pick hub-and-spoke:
+
+You want centralized UI for application teams. Centralized RBAC + audit important. Cross-cluster coordination is common. Smaller / mid-size org where operational simplicity beats blast-radius reduction.
+
+Hybrid: many real-world deployments. Flux federated for platform infrastructure (each cluster manages its own controllers, monitoring). Argo CD hub-and-spoke for application workloads (centralized UI for app teams). Both run in each cluster.
+
+Tool defaults aren't strict. Flux can do hub-and-spoke (one Flux installation manages multiple clusters via per-cluster GitRepository + Kustomization with kubeconfig). Argo CD can do federated (per-cluster Argo CD installations). But each tool's model fits one pattern more naturally.
+
+Pragmatic 2026: large platforms tend toward federated for scale; mid-size shops tend toward hub-and-spoke for simplicity; very large platforms (Adobe, Tesla) often have hybrid.`,
+      },
+      {
+        question: 'Quick-fire interview answers — Flux essentials.',
+        answer: `Rapid-fire facts.
+
+Q: What's Flux v2?
+A: CNCF Graduated K8s GitOps tool. v2 rewrite from monolithic v1 to GitOps Toolkit (GOTK) — five modular controllers.
+
+Q: Five GOTK controllers?
+A: source-controller (fetches), kustomize-controller (applies Kustomize), helm-controller (applies Helm), notification-controller (events), image-automation + image-reflector controllers (image tag updates in git).
+
+Q: Three primary CRDs for deployment?
+A: GitRepository (source), Kustomization (apply Kustomize manifests), HelmRelease (apply Helm chart).
+
+Q: Why GOTK matters?
+A: Composable — install just what you need. K8s-native — every CRD is a normal K8s resource with own RBAC. Multi-tenant via namespaces.
+
+Q: Multi-tenancy model?
+A: Namespace per tenant + ServiceAccount + RoleBinding. Kustomization impersonates tenant SA via serviceAccountName. K8s RBAC enforces.
+
+Q: GitRepository options?
+A: ref.branch (mutable), ref.tag (immutable), ref.semver (range), ref.commit (specific SHA — most reproducible).
+
+Q: Kustomization key fields?
+A: sourceRef, path, prune, wait, serviceAccountName (impersonation), dependsOn (ordering), postBuild.substitute (variable substitution).
+
+Q: HelmRelease auto-rollback?
+A: upgrade.remediation.strategy: rollback. Helm reverts to previous release if upgrade fails health checks.
+
+Q: notification-controller bidirectional?
+A: Inbound — Receiver CRD with /hook/<id> webhook endpoint triggers reconciliation. Outbound — Provider + Alert CRDs forward events to Slack/Teams/etc.
+
+Q: Image automation?
+A: ImageRepository scans registry → ImagePolicy picks matching tag → ImageUpdateAutomation commits tag update to git → source-controller picks up commit → kustomize applies.
+
+Q: ImagePolicy types?
+A: semver (range matching), alphabetical (sort then pick), numerical (sort then pick), regex with extract (parse part of tag).
+
+Q: flux bootstrap?
+A: Installs Flux on cluster + commits GOTK manifests to git + configures Flux to manage its own config via GitOps. Self-managed installation.
+
+Q: Federated topology?
+A: Each cluster runs own Flux installation. Each manages itself from shared git repo or per-cluster repos. Lower blast radius; higher operational surface.
+
+Q: When pick Flux over Argo CD?
+A: K8s-native composability matters; multi-tenancy via namespaces; want CRD-first; already on Flux v1; image automation built-in.
+
+Q: When pick Argo CD over Flux?
+A: Application teams want polished UI; centralized hub-and-spoke; Argo Rollouts integration; richer cross-cluster orchestration.
+
+Q: Major Flux users?
+A: Mercedes-Benz, BMW, RingCentral, MOIA, MyFitnessPal.
+
+Q: How handle secrets?
+A: Same as Argo CD — External Secrets Operator + cloud secret manager (dominant 2026); Sealed Secrets for simpler; SOPS + KMS for KMS-rooted.
+
+Q: Performance characteristics?
+A: source-controller polls git on interval (1m default); kustomize-controller reconciles on interval (10m default). Lag = max(GitRepository.interval, Kustomization.interval). Webhook (Receiver) reduces to seconds.
+
+Q: Most common Flux pitfall?
+A: GitRepository.ref.branch: main on production (picks up unintended commits) + no serviceAccountName on Kustomization (runs as cluster-admin; no tenant isolation).
+
+Q: Upgrade Flux?
+A: Edit gotk-components.yaml in git (the manifests bootstrap created); push. Flux detects, upgrades itself. Or flux bootstrap re-run to regenerate.
+
+These are answers a Flux-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://fluxcd.io/flux/',
+      'https://fluxcd.io/flux/components/',
+      'https://fluxcd.io/flux/guides/image-update/',
+      'https://fluxcd.io/flux/security/multi-tenancy/',
+      'https://github.com/fluxcd/flux2',
+    ],
+  },
+
 ];
