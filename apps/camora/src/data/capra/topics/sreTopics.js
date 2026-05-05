@@ -40,6 +40,16 @@ export const sreTopicCategoryMap = {
   'scaling-bottlenecks':       'reliability',
   'performance-optimization':  'reliability',
   'distributed-consensus':     'reliability',
+  // Observability
+  'three-pillars':             'observability',
+  'red-use-golden-signals':    'observability',
+  'sli-types':                 'observability',
+  'modern-observability-stack':'observability',
+  'logging-best-practices':    'observability',
+  'distributed-tracing':       'observability',
+  'alerting-philosophy':       'observability',
+  'dashboards-design':         'observability',
+  'cardinality-cost':          'observability',
 };
 
 export const sreTopics = [
@@ -1549,6 +1559,1246 @@ Practical pattern: 5-replica clusters spread across 3 AZs (e.g. 2-2-1). Loss of 
       'https://sre.google/sre-book/managing-critical-state/',
       'https://raft.github.io/',
       'https://research.google/pubs/the-chubby-lock-service-for-loosely-coupled-distributed-systems/',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // C. Observability & Monitoring
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'three-pillars',
+    title: 'Three Pillars of Observability — Metrics, Logs, Traces',
+    icon: 'activity',
+    color: '#06b6d4',
+    questions: 3,
+    description: 'What each pillar is for, where they fail, and the unified-via-OpenTelemetry shift.',
+    visualizations: [
+      {
+        title: 'Three pillars + OpenTelemetry',
+        description: 'Metrics (numerical, aggregated, alert-driving), logs (structured events, debug-driving), traces (causality across services). OpenTelemetry instruments once and routes to all three.',
+        image: '/diagrams/sre/c1-three-pillars.png',
+      },
+    ],
+    introduction: `**Observability** is the property of a system that lets you understand its internal state from its external outputs. Sounds abstract; the practical decomposition has been the same for ~10 years: **metrics, logs, traces** — the "three pillars."
+
+Each pillar has a specific job:
+
+**Metrics** — numerical, time-series, aggregated. Cheap to store at scale. *"How many requests per second? What\'s the p99 latency? How full is the disk?"* Drives alerts and dashboards. Tools: Prometheus, Mimir, Cortex, Datadog, CloudWatch.
+
+**Logs** — structured (or semi-structured) events, one per occurrence. Expensive to store at scale (volume × retention). *"What did this specific request do? What was the exception stack trace?"* Drives debugging and audit. Tools: Loki, Elasticsearch/OpenSearch, Splunk, Datadog Logs.
+
+**Traces** — causality across services. A trace is a tree of spans, each span representing one unit of work. *"This 5-second user request — where did the time go?"* Drives latency investigations and dependency discovery. Tools: Jaeger, Tempo, Honeycomb, X-Ray.
+
+The 2020s shift: **OpenTelemetry (OTel)** unified the instrumentation. Before OTel, each pillar had its own SDK, its own wire format, its own collector. Now: instrument once with OTel SDK; the OTel Collector routes metrics to Prometheus, logs to Loki, traces to Tempo (or your vendor of choice). OTel is now CNCF\'s second-most-active project after Kubernetes.
+
+**Charity Majors\' challenge** to the three-pillar framing (founder of Honeycomb): the pillars view treats observability as three siloed datasets. Real debugging needs to *correlate* across them — a metric spike → click into the logs from that time range → see a slow trace. Modern stacks (Honeycomb, Datadog, Grafana LGTM) build the correlation in. The three-pillars view is correct as a mental model but limited as an architecture.
+
+Beyond the pillars, two newer signals:
+- **Profiles** (continuous profiling — Pyroscope, Parca) — CPU/memory profiles aggregated over time. Find which function is consuming resources, not just which service.
+- **Events** (deploy markers, feature-flag flips, scaling events) — discrete things that happened, correlated against the other signals.`,
+    whenToUse: [
+      'Designing observability for a new service — pick which pillars you need (usually all three)',
+      'Cost reviews — logs are usually the biggest spend; metrics are cheapest',
+      '"What\'s wrong with this service" investigations — start with metrics, drill into logs/traces',
+      'Picking a vendor or stack — open-source LGTM vs Datadog vs Honeycomb has different ergonomic and cost profiles',
+    ],
+    keyConcepts: [
+      { term: 'Metrics', definition: 'Numerical, time-series, aggregated. Cheap. Drives alerts and dashboards. Counter, gauge, histogram, summary types.' },
+      { term: 'Logs', definition: 'Structured events. Expensive. Drives debugging and audit. JSON-formatted preferred over plain text for queryability.' },
+      { term: 'Traces', definition: 'Span trees showing causality across services. Drives latency investigations. Span = unit of work; trace = tree of spans sharing a trace_id.' },
+      { term: 'OpenTelemetry (OTel)', definition: 'CNCF standard for instrumentation. One SDK emits metrics + logs + traces; OTel Collector routes to backends. The default for new services.' },
+      { term: 'Continuous profiling', definition: 'CPU/memory profiles aggregated over time (Pyroscope, Parca). Adds the "which function" dimension that traces and logs lack.' },
+      { term: 'Correlation', definition: 'The point of unified observability. Click from a metric spike into the logs from that range, into the slow trace within those logs.' },
+    ],
+    pitfalls: [
+      'Logging everything at INFO level. Generates 10x the storage cost without proportional debug value. Be discriminating.',
+      'Metrics with high cardinality. user_id as a label = exploding time series. Cardinality bombs are a leading cause of Prometheus OOMs.',
+      'Tracing only some services. Traces with gaps are nearly useless — the gap is exactly the part you wanted to understand.',
+      'Choosing one pillar over the others. Each answers different questions; needing only one is rare.',
+      'No retention strategy. Storing logs forever is a budget mistake; archive cold data to S3 / GCS at TTL.',
+    ],
+    keyQuestions: [
+      {
+        question: 'When do you reach for metrics vs logs vs traces?',
+        answer: `Each answers a different question:
+
+**Metrics**: *"Is the service healthy right now? What\'s the trend?"* Use when you need numbers — request rate, error rate, latency percentiles, resource utilisation. Pre-aggregated, cheap, queryable in milliseconds. Drives alerts because they\'re fast and stable.
+
+**Logs**: *"What did this specific request do? Why did it fail?"* Use when you need the *event* — the exception, the parameter values, the audit trail. Stored per-event, expensive at volume, queryable in seconds-to-minutes. Drives root-cause investigation and audit/compliance.
+
+**Traces**: *"This request was slow — where did the time go?"* Use when you need the *latency breakdown across services*. Stored per-span, expensive at full sample rate (so most teams sample 1-10%). Drives latency investigations and dependency mapping.
+
+The typical workflow:
+1. Alert fires from a metric (error rate spiked).
+2. Open the dashboard, see which service is unhealthy.
+3. Pull logs from that service for the spike window.
+4. Find a slow request in the logs; click into its trace.
+5. Trace shows the slow span is in a downstream DB call.
+
+If any pillar is missing or has a gap, the investigation stops there. That\'s why you instrument all three even though the cost looks high — the cost of NOT having them during an incident is higher.`,
+      },
+      {
+        question: 'What is OpenTelemetry and why does it matter?',
+        answer: `**OpenTelemetry (OTel)** is a CNCF project providing a unified, vendor-neutral standard for instrumenting metrics, logs, and traces. Before OTel, each pillar had its own SDK (Prometheus client lib for metrics, Logback / log4j for logs, OpenTracing or Jaeger SDK for traces) and each vendor had its own. Switching vendors meant re-instrumenting.
+
+OTel\'s architecture:
+- **OTel SDK**: language-specific library you embed in your service. Generates spans, metrics, log events.
+- **OTel Collector**: separate process (sidecar / DaemonSet / standalone) that receives data from SDKs and routes it to backends.
+- **OTLP wire format**: vendor-neutral protocol between SDK and Collector.
+- **Receivers / Processors / Exporters**: collector pipeline pieces. Receive from OTLP, batch / sample / enrich, export to Prometheus / Loki / Tempo / Datadog / wherever.
+
+Why it matters:
+1. **Switch vendors without re-instrumenting.** Change exporter config; code unchanged.
+2. **One SDK to learn instead of three.** Reduces friction for engineers.
+3. **Correlated signals out of the box.** Trace IDs propagate to logs automatically; metrics get exemplars (sample trace IDs that hit that bucket).
+4. **Auto-instrumentation libraries.** Java agent, Python opentelemetry-instrument CLI, Node SDK auto-attach — instrument popular frameworks (Express, Spring, Flask, Rails) with zero code changes.
+
+Adoption: as of 2026 OTel is the de-facto standard for new services. Datadog, New Relic, Honeycomb, Grafana, AWS, GCP all accept OTLP natively. Greenfield service in 2026 = OTel SDK by default.`,
+      },
+      {
+        question: 'What\'s wrong with the "three pillars" mental model?',
+        answer: `Charity Majors (Honeycomb co-founder) has been the loudest critic. The argument:
+
+**The pillars treat observability as three separate datasets**, each with its own tooling, its own query language, its own retention policy, its own UI. Engineers context-switch between them, struggling to correlate. *"Looking at the metrics dashboard, then opening Splunk to find the logs, then Jaeger to find the trace — and the timestamps are off by seconds, the trace IDs aren\'t in the logs."*
+
+**Real debugging needs correlation across pillars**, instantly. The unit of debugging isn\'t a metric or a log; it\'s a *failed user request*, which has a metric impact, multiple log lines, and a trace. The three-pillar architecture makes that hard.
+
+The Honeycomb / structured-events alternative: **wide structured events** as the primitive. Every "thing that happens" is a single event with rich attributes (200+ columns common). You query the events directly. Metrics are derived (count of events grouped by status). Logs are events. Traces are events linked by trace_id. Correlation is just SQL.
+
+The pragmatic stack today (most teams): use the three-pillar tools but invest in *correlation infrastructure* — exemplars in Prometheus that link to traces, trace IDs in log entries, unified UI (Grafana, Datadog, Honeycomb). The pillars survive as data shapes; the user experience is unified.
+
+Worth knowing: the pillars view is fine as a starting mental model. The "wide events" view is more sophisticated and starts to matter at scale (>100 services, >100 engineers). Be prepared to discuss both.`,
+      },
+    ],
+    references: [
+      'https://opentelemetry.io/docs/concepts/observability-primer/',
+      'https://www.honeycomb.io/blog/observability-101-terminology-and-concepts',
+      'https://sre.google/sre-book/monitoring-distributed-systems/',
+    ],
+  },
+
+  {
+    id: 'red-use-golden-signals',
+    title: 'RED, USE, and the Four Golden Signals',
+    icon: 'activity',
+    color: '#06b6d4',
+    questions: 3,
+    description: 'Three named methodologies for what to measure. Pick by what you\'re monitoring.',
+    visualizations: [
+      {
+        title: 'RED vs USE vs Four Golden Signals',
+        description: 'RED for request-driven services (rate, errors, duration). USE for resources (utilization, saturation, errors). Four Golden Signals — Google\'s superset.',
+        image: '/diagrams/sre/c2-red-use.png',
+      },
+    ],
+    introduction: `Three named methods exist for "what to measure," and engineers conflate them constantly. The interview-clean version:
+
+**RED Method (Tom Wilkie, formerly Weaveworks, now Grafana)** — for **services**:
+- **R**ate — requests per second
+- **E**rrors — count or % of failed requests
+- **D**uration — distribution of response latencies (p50, p95, p99)
+
+If you can answer those three for any service, you can tell whether it\'s healthy. Used widely in microservice monitoring; maps cleanly onto Prometheus histogram metrics.
+
+**USE Method (Brendan Gregg, Netflix → Intel)** — for **resources** (CPU, memory, disk, network, queue):
+- **U**tilization — % busy / % full
+- **S**aturation — queue depth or wait time (work backlog beyond utilization)
+- **E**rrors — error counts
+
+The USE method matches resource-level observability. CPU utilization tells you the average; CPU saturation (load average / runnable threads) tells you the queue beyond. A 80%-utilized CPU with 0 saturation is fine; a 80%-utilized CPU with deep saturation is overloaded.
+
+**Four Golden Signals (Google SRE Book Ch 6)** — Google\'s superset:
+- **Latency** — time to serve a request (success vs error latency separated)
+- **Traffic** — demand on the system (req/sec, MB/sec)
+- **Errors** — explicit failures, plus implicit failures (slow successes that miss SLO)
+- **Saturation** — how full the service is (queue depth, memory headroom)
+
+Quote (verbatim, Ch 6): *"If you can only measure four metrics of your user-facing system, focus on these four."*
+
+How to choose:
+- **User-facing service** → Four Golden Signals (or RED + saturation).
+- **Backend resource (DB host, message broker)** → USE.
+- **Microservice mesh** → RED everywhere; USE on each underlying host.
+- **Anything else** → Four Golden Signals; they generalize.
+
+These methods are about **completeness**, not about exact metrics. The point is to make sure you haven\'t missed a category — if you have rate but not errors, you\'ll learn about an outage from the customer.`,
+    whenToUse: [
+      'Designing dashboards or alerts for a new service — pick the appropriate method',
+      'Reviewing existing observability — checking that all four (or three) signals are actually instrumented',
+      'Capacity planning — saturation is the leading indicator',
+      'Interview answers about "what would you monitor for a service like X"',
+    ],
+    keyConcepts: [
+      { term: 'RED Method', definition: 'For services. Rate, Errors, Duration. Tom Wilkie. Maps to Prometheus histograms.' },
+      { term: 'USE Method', definition: 'For resources. Utilization, Saturation, Errors. Brendan Gregg. Resource-level observability.' },
+      { term: 'Four Golden Signals', definition: 'Google SRE Book. Latency, Traffic, Errors, Saturation. The superset; generalizes to most systems.' },
+      { term: 'Saturation', definition: 'Queue depth or wait time beyond utilization. Leading indicator: 80% CPU might be fine, 80% CPU + load average 30 means overload.' },
+      { term: 'Latency: success vs error separated', definition: 'Don\'t average them. Errors often fail fast; mixing them with successes makes the latency distribution lie.' },
+    ],
+    pitfalls: [
+      'Reporting only mean latency. Tail (p99) is what users feel; mean hides bimodal distributions.',
+      'Mixing success and error latency. Errors often fail in 5ms; successes take 200ms; the average is meaningless.',
+      'Watching utilization without saturation. 80% CPU is fine if no queue; same number with deep queue is overload.',
+      'Forgetting traffic. An "error rate of 0%" with 0 traffic is silent failure — the service stopped getting requests.',
+      'Picking USE for a service. Services are request-driven; USE is resource-level.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through RED, USE, and the Four Golden Signals — when do you use each?',
+        answer: `**RED** (Tom Wilkie) — for services:
+- Rate: req/sec
+- Errors: count or fraction failed
+- Duration: latency percentiles (p50, p95, p99)
+
+Use for: any request-driven service. The three numbers tell you if it\'s healthy.
+
+**USE** (Brendan Gregg) — for resources:
+- Utilization: % busy
+- Saturation: queue depth or wait time
+- Errors: error counts
+
+Use for: hosts, disks, networks, queues. Resource-level diagnosis. Saturation is the leading indicator that "fully utilized" is becoming "overloaded."
+
+**Four Golden Signals** (Google) — superset:
+- Latency
+- Traffic
+- Errors
+- Saturation
+
+Quote: *"If you can only measure four metrics of your user-facing system, focus on these four."* Generalizes RED + adds saturation, which RED leaves implicit.
+
+Decision rule:
+- Service-level monitoring → Four Golden Signals (or RED if your culture uses it).
+- Host / resource monitoring → USE.
+- Microservice fleet → RED on each service + USE on each host.
+- Mixed system → Four Golden Signals (most flexible).
+
+The methods aren\'t about specific metrics; they\'re about *completeness categories*. The check: for any service, can you answer all four signals? If no, you\'re flying blind on that signal.`,
+      },
+      {
+        question: 'Why is saturation so often missed?',
+        answer: `Because **utilization is easy and saturation is hard**.
+
+Utilization = "what % of the resource is busy" — directly observable. CPU is 70% used. RAM is 60% full. These come "free" from the OS.
+
+Saturation = "what work is queued or delayed beyond what the resource can serve" — needs explicit measurement. CPU run queue depth. Disk I/O wait time. Network packet drops or retries. Memory pressure (page faults, swapping).
+
+Engineers look at the easy one and miss the leading indicator:
+- A CPU at 80% util with run-queue depth 0 is fine.
+- A CPU at 80% util with run-queue depth 30 is *very* not fine — there\'s 30 threads waiting, latency spikes are imminent.
+
+The fix:
+- **Linux**: \`load average\` is your CPU saturation; \`vmstat\` for memory; \`iostat -x\` for disk \`%util\` AND \`avgqu-sz\` (queue size).
+- **node_exporter**: exposes node_load1, node_load5, node_load15, plus pressure metrics (node_pressure_*) for newer kernels. Pressure metrics are the modern saturation signal.
+- **Application-level**: thread pool queue depth, semaphore wait counts, connection pool saturation.
+
+Why it matters: saturation often *plateaus utilization at 100% but the queue keeps growing*. By the time utilization "looks bad," the queue is already so deep that latency has been awful for minutes. Saturation gives you 5-30 minutes of warning that utilization doesn\'t.`,
+      },
+      {
+        question: 'Why must success and error latency be tracked separately?',
+        answer: `Because **errors usually fail fast**, and mixing them with successes hides the actual user latency.
+
+Concrete example: imagine a service that serves 100 req/sec. 95% succeed in 200ms (p50). 5% fail with a connection-refused after 5ms.
+
+If you report only "average latency," you get **(0.95 × 200ms) + (0.05 × 5ms) = 190.25ms**. Looks fine!
+
+But the user-experience reality:
+- Successful users are seeing 200ms — same as before.
+- 5% of users are seeing instant errors — bad experience but not "slow."
+- The 95% figure dominates real latency; the average is artificially pulled down.
+
+Now imagine the failure mode flips: errors start taking 30 seconds (timeout). Same 5% fail. Average becomes \`(0.95 × 200ms) + (0.05 × 30000ms) = 1690ms\`. Looks terrible, fires alerts.
+
+But the user reality is mostly unchanged — successful users still see 200ms. The 5% that fail now wait 30s to fail, which is bad, but the *successful* user experience didn\'t degrade.
+
+If you alert on "p99 latency exceeded 500ms," you alert in the second case but not the first — even though the percentage of failures is the same.
+
+The fix: emit two histograms. \`http_request_duration_seconds{status="success"}\` and \`{status="error"}\`. Alert on each separately. SLOs are usually success-only ("99.9% of successful requests under 500ms"); errors get their own SLO ("error rate under 0.1%").
+
+Google SRE Book Ch 6 quote: *"It\'s important to distinguish between the latency of successful requests and the latency of failed requests."*`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/monitoring-distributed-systems/',
+      'https://www.brendangregg.com/usemethod.html',
+      'https://grafana.com/blog/2018/08/02/the-red-method-how-to-instrument-your-services/',
+    ],
+  },
+
+  {
+    id: 'sli-types',
+    title: 'Choosing the Right SLI — Availability, Latency, Quality, Freshness',
+    icon: 'target',
+    color: '#06b6d4',
+    questions: 3,
+    description: 'The SRE Workbook\'s SLI taxonomy and how to pick which to measure for which service.',
+    introduction: `Picking the right SLI is the single most consequential observability decision. A bad SLI makes a service look healthy when users are unhappy; a good SLI fires when users feel pain.
+
+The SRE Workbook (Ch 2) names six SLI types, each appropriate for a different kind of work:
+
+**1. Availability** — *"% of valid requests served successfully."*
+For request/response services. \`good = HTTP 2xx (or 5xx attributable to client). bad = HTTP 5xx.\` Computed as \`good_events / valid_events\`. Example: 99.9% of HTTP requests return success.
+
+**2. Latency** — *"% of valid requests served faster than threshold."*
+For request/response services where speed matters. \`good = duration < 500ms.\` Critical: pick the threshold from user expectations, not engineering convenience. Often **two SLIs**: 90% under 100ms (typical) and 99% under 1s (acceptable).
+
+**3. Quality** — for graceful degradation.
+"% of requests served at full quality" — degraded responses count as bad. Used for services that can serve a degraded response (cached results, partial answers) under load.
+
+**4. Freshness** — for data pipelines.
+"% of data elements that were updated within Y." Example: 99% of search index entries were updated within the last 5 minutes. This is what you want for batch jobs, replication pipelines, ETL.
+
+**5. Coverage** — for batch and stream pipelines.
+"% of data that was processed." Example: 99% of input records made it through the pipeline. Catches "the pipeline is up but it\'s dropping records."
+
+**6. Throughput** — for streaming systems.
+"% of time the system meets minimum throughput." Example: Kafka consumer lag stays under 1000 messages 99% of the time.
+
+The unifying formula (from the Workbook): **SLI = good_events / valid_events**. Note "valid" — you exclude things you can\'t serve (e.g., requests for nonexistent endpoints — those aren\'t your fault). Counter-example: don\'t exclude 5xx by classifying them as "client error" — that\'s gaming the SLI.
+
+How to pick:
+- **HTTP service** → availability + latency.
+- **Batch pipeline** → freshness + coverage.
+- **Streaming consumer** → freshness (lag) + throughput.
+- **Best-effort cache** → availability with quality (degraded responses count).
+- **Database** → availability + latency, sometimes durability (probabilistic).
+
+The Workbook\'s framing rule: **start with the user\'s journey**. What does success look like to them? Translate that into events; the SLI should be the fraction of events that succeed.`,
+    whenToUse: [
+      'Defining a new service\'s SLO — pick the SLI types first',
+      'Auditing an existing SLO — does it actually track user experience, or is it a vanity metric?',
+      'Reviewing batch pipelines — availability is wrong here, freshness/coverage are right',
+      'Designing degraded-response paths — quality SLI captures partial-failure correctly',
+    ],
+    keyConcepts: [
+      { term: 'Availability SLI', definition: 'good = success / valid. For request/response services. The default.' },
+      { term: 'Latency SLI', definition: '% of requests under threshold. Often two thresholds: typical-fast and acceptable-slow.' },
+      { term: 'Quality SLI', definition: '% of requests served at full (non-degraded) quality. For services with graceful degradation.' },
+      { term: 'Freshness SLI', definition: '% of data updated within window. For pipelines, replication, batch jobs.' },
+      { term: 'Coverage SLI', definition: '% of input data that completed processing. For pipelines that can drop records.' },
+      { term: 'Throughput SLI', definition: '% of time minimum throughput is met. For streaming systems.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you choose an SLI for a service?',
+        answer: `Start with the **user\'s journey**, not the service\'s internals. Ask: what does the user need to succeed? Translate to events; SLI = fraction of events that succeed.
+
+Map by service type:
+
+- **Request/response API** → availability (success rate) + latency (% under threshold).
+- **Batch pipeline (ETL)** → freshness (% of data updated within Y) + coverage (% of input records processed).
+- **Streaming consumer (Kafka, Kinesis)** → freshness (lag bounded) + throughput (min ops/sec maintained).
+- **Cache** → availability, plus quality (degraded responses on miss count as bad if user-visible).
+- **Storage** → availability + latency, plus durability (probabilistic — "P(data loss) < 10⁻¹¹").
+
+The SRE Workbook\'s formula: \`SLI = good_events / valid_events\`. Two traps:
+1. **"valid" is gameable.** Excluding requests as "invalid" is how teams hit fake SLOs. Be strict — only exclude things genuinely outside your responsibility (404s for nonexistent endpoints, requests with malformed input that the LB rejected before reaching you).
+2. **Multiple SLIs per service.** A typical web service has 2-4 SLIs. Latency at p99 < 500ms AND availability > 99.9%. Don\'t collapse them; they fail differently.
+
+Final check: when this SLI fires (drops below SLO), is a user actually unhappy? If you can\'t imagine a real customer feeling the impact, the SLI is wrong.`,
+      },
+      {
+        question: 'For a Kafka consumer, what SLIs do you use?',
+        answer: `**Freshness (consumer lag) + Throughput (ops/sec)**. Availability is wrong — consumers are pull-based; their "uptime" is measured indirectly via lag.
+
+**Freshness SLI**: % of time consumer lag is under threshold. Example: "99% of measurements show lag under 60 seconds." If lag exceeds 60s, the consumer is falling behind producers — users see stale data.
+
+**Throughput SLI**: % of time min messages/sec is sustained. Example: "99.5% of measurements show throughput >= 1000 msg/sec." Catches the "consumer is technically up but processing one message per minute" silent-failure mode.
+
+Why availability isn\'t enough:
+- A Kafka consumer can be "running" (process up, partitions assigned) but lag is growing because it\'s processing slowly. Availability SLI says 100%; users see stale data.
+- A consumer can be "running" with low lag but processing only the easy messages and silently dropping the hard ones. Availability is fine; coverage is failing.
+
+Add a **coverage SLI** if dropping records is possible: "99.99% of input messages are committed (processed) within Y minutes." Detects silent drops.
+
+Common mistake: alerting only on "consumer is down" / restart count. Misses the "consumer is technically up but lag is growing exponentially" case, which is the more common failure.
+
+Real-world dashboards: lag-by-partition + throughput-by-partition + commit-rate. All three needed because partition rebalances, dead consumers, and slow processing show up differently.`,
+      },
+      {
+        question: 'What\'s the difference between latency and quality SLIs?',
+        answer: `**Latency** measures HOW LONG. **Quality** measures WHAT YOU RETURNED.
+
+Concrete example: a search service.
+- **Latency SLI**: "99% of searches return within 500ms." Doesn\'t care what was returned, only timing.
+- **Quality SLI**: "99% of searches return the full top-100 results from the live index (not cached / not partial)."
+
+You need both because they fail differently:
+- A search that returns in 200ms with 50 cached results from 10 minutes ago hits latency but fails quality.
+- A search that returns in 5 seconds with the correct full results hits quality but fails latency.
+
+Quality SLIs matter most for services with **graceful degradation paths**:
+- Search engine that falls back to cached results on backend failure.
+- Recommendation service that returns a static fallback list when the model is down.
+- Feed that returns a smaller window of items when the full join is slow.
+
+Without a quality SLI, the degraded response is invisible — users complain "the recommendations look off" and the engineering team sees "100% availability."
+
+Implementation: emit a tag on every response indicating quality level (\`quality="full" | "degraded" | "fallback"\`). The quality SLI is the fraction of full-quality responses out of valid responses. This naturally aligns with feature-flag rollouts and circuit-breaker activations.
+
+Pragmatic guidance: most services don\'t need a quality SLI explicitly. But any service with a \`return cached_result\` fallback path should have one — that path will activate eventually, and you want to know.`,
+      },
+    ],
+    references: [
+      'https://sre.google/workbook/implementing-slos/',
+      'https://sre.google/workbook/slo-engineering-case-studies/',
+    ],
+  },
+
+  {
+    id: 'modern-observability-stack',
+    title: 'Modern Observability Stack — LGTM, Datadog, Honeycomb',
+    icon: 'layers',
+    color: '#06b6d4',
+    questions: 3,
+    description: 'Grafana LGTM (Loki/Grafana/Tempo/Mimir), Datadog, Honeycomb, eBPF — the 2026 landscape.',
+    visualizations: [
+      {
+        title: 'Grafana LGTM stack with OpenTelemetry',
+        description: 'OTel Collector ingests; Mimir for metrics, Loki for logs, Tempo for traces; Grafana for visualization; Alertmanager for routing.',
+        image: '/diagrams/sre/c4-prom-stack.png',
+      },
+    ],
+    introduction: `The 2026 observability landscape has consolidated around three commercial-grade options:
+
+**1. Grafana LGTM stack (open-source, self-hosted)**
+- **L**oki — log aggregation, label-indexed (cheaper than Elastic).
+- **G**rafana — visualization, dashboards, unified UI.
+- **T**empo — distributed traces, scales horizontally.
+- **M**imir — metrics (Prometheus-compatible, horizontally scalable).
+Plus **OpenTelemetry Collector** for ingestion, **Alertmanager** for alert routing.
+Strengths: open-source, vendor-neutral, scales horizontally, cheap at high volume. Weaknesses: ops burden — you run it.
+
+**2. Datadog (SaaS, comprehensive)**
+The dominant commercial vendor. APM + logs + metrics + traces + RUM (real-user monitoring) + synthetics + database monitoring + security all in one. Strengths: minimal setup, deep integrations, polished UI. Weaknesses: cost — Datadog is famously expensive at scale; teams over $1M ARR routinely face $200K+/year Datadog bills.
+
+**3. Honeycomb (SaaS, traces-first)**
+Charity Majors\' company. Built around wide structured events instead of three pillars. Best-in-class for "why is this request slow?" investigations via BubbleUp (automatically finds outlier dimensions). Strengths: phenomenal for debugging, especially traces. Weaknesses: less comprehensive than Datadog (lighter on logs/metrics-only use cases), pricing model is event-based.
+
+Other notable players:
+- **New Relic** — older, mature APM, repositioned in 2020 to consumption-based pricing.
+- **Splunk** — enterprise log juggernaut, expensive, big in compliance/security.
+- **Dynatrace** — APM-first, AI/automation-positioned.
+- **AWS CloudWatch / GCP Cloud Operations / Azure Monitor** — cloud-native, integrated, but usually paired with one of the above for serious monitoring.
+
+The 2024-2026 trends:
+- **eBPF-based observability** (Pixie, Cilium Hubble, Parca, Pyroscope) — kernel-level instrumentation without code changes. Continuous profiling becoming standard.
+- **OpenTelemetry as default** — every new vendor accepts OTLP; instrumentation code is portable.
+- **Cost optimization pressure** — high-cardinality metrics + logs at scale + APM traces add up; teams rebuilding observability for cost (sampling, aggregation, tiered storage) is a major industry theme.
+- **AI-assisted root cause analysis** — Datadog Watchdog, Honeycomb Bubble Up, New Relic AI Anomaly Detection. Most are still "anomaly detection lite," but improving.
+
+How to pick:
+- **Startup, <50 engineers** → Datadog (or Honeycomb if you trace a lot). Pay for the time saved.
+- **Mid-market, 50-500 engineers** → Datadog or LGTM. The crossover where self-hosting LGTM starts saving money.
+- **Large enterprise** → LGTM (or split: Datadog for traces, LGTM for cheap metrics). Cost optimization dominates.
+- **Compliance-heavy** → Splunk for logs, plus a separate metrics/traces tool.`,
+    whenToUse: [
+      'Choosing or migrating an observability stack — the 3-vendor decision',
+      'Cost-reduction projects — moving from Datadog to LGTM is a common path',
+      'New-service instrumentation — defaulting to OTel + LGTM = vendor-neutral starting point',
+      'Hiring — different stacks have different operational profiles',
+    ],
+    keyConcepts: [
+      { term: 'LGTM stack', definition: 'Loki / Grafana / Tempo / Mimir. Grafana Labs\' open-source observability suite. Horizontally scalable, OTel-native.' },
+      { term: 'Datadog APM', definition: 'Dominant commercial vendor. All-in-one. Famously expensive at scale; $200K+/year is normal for mid-sized teams.' },
+      { term: 'Honeycomb', definition: 'Wide structured events instead of three pillars. Best-in-class for trace-driven debugging via BubbleUp automatic dimension analysis.' },
+      { term: 'eBPF observability', definition: 'Kernel-level instrumentation without code changes. Pixie, Cilium Hubble, Parca, Pyroscope. Becoming standard for continuous profiling.' },
+      { term: 'OTel as default', definition: 'OpenTelemetry is now the de-facto instrumentation standard. Every major vendor accepts OTLP; your code is portable.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you choose between Datadog and the LGTM stack?',
+        answer: `Three axes:
+
+**1. Cost vs ops burden trade-off.**
+- Datadog: minimal ops, expensive at scale. Most teams: $50K-$500K/year. Heavy users (high-cardinality metrics, long retention): $1M+.
+- LGTM: open-source, you operate it. Infrastructure cost (compute + S3) is 5-10× cheaper at the same volume. But you pay 1-2 SREs to run it.
+- Crossover point: roughly 50-100 engineers / $100K Datadog bill. Below: Datadog wins on ROI. Above: LGTM saves real money if you have the SRE capacity.
+
+**2. Engineering culture and feature breadth.**
+- Datadog: best-in-class polish, integrations (300+), mobile RUM, synthetic monitoring, Database Monitoring (DBM), Continuous Profiling, security. Buying a stack, not a tool.
+- LGTM: focused on metrics + logs + traces + dashboards. RUM, security, profiling exist as separate Grafana products but are less mature than Datadog\'s.
+- Pick Datadog if you want one-vendor cohesion. LGTM if you want best-of-breed and don\'t mind composition.
+
+**3. Cloud lock-in tolerance.**
+- Datadog: vendor lock-in is real. Custom dashboards, monitors, runbooks are Datadog-specific. Migration effort = months.
+- LGTM: open-source, OTel-native. Move from self-hosted to Grafana Cloud to AWS Managed Grafana without rewriting.
+
+The pragmatic 2026 stack many teams converge to: **OpenTelemetry SDK + LGTM for cheap signals + Datadog for premium debugging**. OTel makes the split possible; you get the best of both at moderate cost.`,
+      },
+      {
+        question: 'When does Honeycomb make sense over Datadog?',
+        answer: `**When trace-driven debugging is the bottleneck**, especially for complex microservice architectures.
+
+Honeycomb\'s superpower is **BubbleUp** — feed it a slow trace, click the slow span, and BubbleUp automatically tells you which dimension(s) (user_id, region, request_type, etc.) explain the slowness. Datadog can do this with explicit groupings; Honeycomb does it automatically across all dimensions.
+
+The argument:
+- Most of your incidents are "X% of requests for some-cohort-of-users got slow." Honeycomb finds the cohort fast.
+- You have 50+ services and a request hits 10+ of them. Honeycomb\'s wide-event model preserves all the dimensions; Datadog\'s aggregated metrics often lose them to cardinality.
+
+When NOT Honeycomb:
+- Logs-heavy use cases (Honeycomb is event-store-shaped, not log-shaped — works but isn\'t the natural fit).
+- Compliance-heavy logging where you need raw log retention.
+- Server / host monitoring (Honeycomb cares less about CPU/memory metrics than about request behavior).
+- Tight budgets — Honeycomb is event-priced; high-traffic services with rich attributes get expensive fast.
+
+Common pattern at mid-to-large companies: **Honeycomb for traces and request-level debugging + Datadog or LGTM for metrics/logs/infra**. Each tool used where it\'s strongest. Cost-bearable because you sample traces (typically 1-10%) into Honeycomb and aggregate metrics into the cheaper system.`,
+      },
+      {
+        question: 'What is eBPF observability and why is it relevant?',
+        answer: `**eBPF (extended Berkeley Packet Filter)** lets you run sandboxed programs in the Linux kernel that observe and modify kernel behavior without changing kernel source or loading kernel modules. For observability, this means: **instrument any system call, any network packet, any function entry/exit, without changing application code**.
+
+What this unlocks:
+- **Continuous profiling without overhead** — Parca and Pyroscope use eBPF to sample stack traces of every running process, building a rolling CPU profile of production. Find which function is consuming CPU without re-deploying.
+- **Network observability without service mesh** — Cilium Hubble watches every packet at the kernel level. See which services talk to which, with latencies and error counts, without adding sidecars.
+- **Auto-instrumentation without SDK** — Pixie and similar tools instrument HTTP, gRPC, MySQL, Postgres, Redis, Kafka calls *automatically* by intercepting at the kernel. Zero code change to get golden-signals on any service running on the host.
+- **Security observability** — Falco, Tetragon use eBPF to monitor syscalls for security policy violations (e.g., a process executing /bin/sh is suspicious in production).
+
+Why it\'s shifting the landscape:
+- **No-instrumentation observability** for legacy / third-party code where you can\'t add OTel SDK.
+- **Lower overhead** than userspace agents — eBPF programs run inside the kernel\'s sandbox.
+- **Kernel-level visibility** — see what *actually* happens (syscalls, packets), not just what the application reports.
+
+State in 2026:
+- Pyroscope (continuous profiling) is mainstream — Grafana acquired it; many teams run it as default.
+- Cilium / Hubble (network) is standard for Kubernetes networking.
+- Tetragon / Falco (security) are widespread in regulated industries.
+- Pixie (auto-APM) is less common but growing.
+
+Trade-offs: eBPF requires a recent kernel (4.18+ for most features, 5.x preferred). Mac/Windows are non-options. Cloud-managed Kubernetes (EKS/GKE/AKS) all support it.`,
+      },
+    ],
+    references: [
+      'https://grafana.com/oss/',
+      'https://docs.datadoghq.com/',
+      'https://www.honeycomb.io/blog/',
+      'https://ebpf.io/applications/',
+    ],
+  },
+
+  {
+    id: 'logging-best-practices',
+    title: 'Logging Best Practices — Structured, Sampled, Correlated',
+    icon: 'fileText',
+    color: '#06b6d4',
+    questions: 3,
+    description: 'Structured JSON over text, log levels, sampling, correlation IDs, and the cost reality.',
+    introduction: `Logging is the most expensive of the three pillars at scale and the most often abused. Two engineers logging "everything at INFO" can quintuple a service\'s log spend without proportional debug value.
+
+**Rules that hold up in production:**
+
+**1. Structured (JSON) over plain-text.** Plain-text logs require regex to query; structured logs are queryable as data. The line:
+\`{"ts":"2026-05-04T12:00:00Z","level":"warn","service":"api","trace_id":"abc","user_id":12345,"event":"rate_limited","limit":100}\`
+beats:
+\`2026-05-04 12:00:00 WARN api: user 12345 rate-limited (limit=100)\`
+Every modern log tool (Loki, Elasticsearch, CloudWatch, Datadog) treats JSON natively.
+
+**2. Levels matter — calibrate them.** A canonical scale:
+- **TRACE** — hot-path step-by-step (rarely enabled in prod).
+- **DEBUG** — useful for debugging but noisy (off by default in prod).
+- **INFO** — discrete events of interest (request handled, job started). Default for "this happened."
+- **WARN** — handled but suspicious (retry, fallback, deprecated path).
+- **ERROR** — handled but bad (caught exception, rejected request).
+- **FATAL** — crashing now.
+The mistake is "log everything at INFO." Be discriminating: INFO should be 1-3 lines per request, not 50.
+
+**3. Sample at the source for high-volume services.** Logging every request at 100K req/sec is 8.6 billion events/day. Sample to 1-10% based on the trace context. Keep 100% sampling for errors and slow requests. Most modern frameworks (OpenTelemetry, Sentry) support this natively.
+
+**4. Correlation IDs everywhere.** Every log line should carry the **trace_id** of the request that produced it. The query "show me everything that happened during this user\'s slow request" becomes \`trace_id="abc"\` and instantly correlates logs + traces + metrics (via exemplars). Without trace_id, you grep timestamps and pray.
+
+**5. Don\'t log secrets.** PII, tokens, passwords, full request bodies. The cost of an accidental leak is much larger than the cost of "I have less context to debug." Use redaction libraries; whitelist what to log, not blacklist what to omit.
+
+**6. Retention is a budget knob.** Hot retention (queryable) for 7-30 days; cold archive (S3/GCS) for compliance / forensics. Loki + S3 makes this cheap; Datadog\'s default 15-day hot retention adds up.
+
+**Cost reality:** at 10 KB / log entry × 10K req/sec × 10 lines/request × 86400 sec/day = ~86 GB/day. A 30-day hot retention is 2.5 TB. Datadog charges around $1.7-$3/GB ingested + storage. That\'s $4K-$8K/month for one moderately-busy service. Multiply by 50 services and you see why log cost dominates observability budgets.
+
+The optimization stack:
+1. Sample low-value requests at the source.
+2. Drop fields you don\'t query (debug fields, full bodies).
+3. Tier hot vs cold retention.
+4. Aggregate at ingestion (counts of "rate_limited" events per minute, not every event).`,
+    whenToUse: [
+      'Designing logging strategy for a new service — set the levels, structured format, and sampling rate up front',
+      'Cost reviews — logs are usually the biggest line item; sampling/retention are the levers',
+      'Incident-response gaps — "we couldn\'t find the right log" is fixed by structure + correlation IDs',
+      'Compliance / audit — separate audit-log path with longer retention, no sampling',
+    ],
+    keyConcepts: [
+      { term: 'Structured logging', definition: 'JSON or key-value lines instead of plain text. Queryable as data. Standard in 2026.' },
+      { term: 'Log levels', definition: 'TRACE / DEBUG / INFO / WARN / ERROR / FATAL. Calibrate so INFO is rare; "everything at INFO" is a smell.' },
+      { term: 'Sampling at source', definition: '1-10% of requests for high-volume services; 100% for errors / slow requests. Decide at the SDK, not the backend.' },
+      { term: 'Correlation ID (trace_id)', definition: 'Propagated through every log line in a request. Lets you join logs to traces and metrics. OTel propagates automatically.' },
+      { term: 'Log retention tiering', definition: 'Hot (queryable, days-weeks) + cold (archived, months-years). Major cost lever; tune per service.' },
+    ],
+    pitfalls: [
+      'Logging full request/response bodies — explodes cost and risks PII leakage.',
+      'Plain-text logs that require regex to query — slow incident response, unfriendly to indexing.',
+      'No correlation ID — "find all logs for this user\'s session" requires timestamp guessing.',
+      'Sampling at the backend (after ingestion) — you paid for ingestion before the drop. Sample at the SDK.',
+      'Ignoring retention — Datadog default 15-day hot retention with no lifecycle = budget surprise.',
+    ],
+    keyQuestions: [
+      {
+        question: 'What\'s a good logging policy for a new service?',
+        answer: `Five rules I\'d set on day 1:
+
+**1. Structured JSON only.** No plain-text. Most languages have a logger that supports it: Python\'s structlog, Go\'s slog, Java\'s logback with JSON encoder, Node\'s pino.
+
+**2. Calibrated levels.**
+- ERROR: caught exceptions, request rejections, business-rule violations that propagate to user.
+- WARN: handled but interesting (retries, fallbacks, deprecation).
+- INFO: 1-3 lines per request — request received + request completed + 1 business-event.
+- DEBUG: off in prod by default; toggleable per-request via header for live debugging.
+
+**3. Correlation IDs propagated.** Every log line carries trace_id, span_id, user_id (if authenticated), request_id. OTel auto-propagates trace_id; the rest are explicit.
+
+**4. Source-side sampling.**
+- Errors and slow requests (>p95): 100%.
+- Normal successful requests at high volume (>1000 req/sec): 1-10% based on trace_id (consistent across services for the same trace).
+- Health checks: 0%.
+
+**5. PII redaction.** Wrap fields known to contain PII (email, phone, address, token, password) with redaction at the logging layer. Whitelist of safe fields > blacklist of unsafe fields.
+
+Plus: 7-day hot retention by default; longer retention for audit logs (separate stream); compress + tier to S3 after 7 days for the rest.
+
+Cost-control fence: budget per service per day for log ingestion; alert when exceeded. Forces engineers to think before adding INFO.log() in a hot path.`,
+      },
+      {
+        question: 'How do correlation IDs work in distributed systems?',
+        answer: `Every request gets a **trace_id** (typically 128-bit random) generated at the entry point. The trace_id propagates with the request through every service it touches. Every log line written for that request includes the trace_id.
+
+The mechanism:
+1. **Entry point** (load balancer, gateway, or first service) generates trace_id, attaches to the request as an HTTP header — typically \`traceparent\` (W3C standard) or \`x-b3-traceid\` (Zipkin standard).
+2. **Each service** reads the header, attaches it to its logger context (e.g., Python\'s contextvar, Go\'s context.Context, Java MDC). Every log line inside that request automatically gets the trace_id.
+3. **When calling downstream services**, the service propagates the same header. Downstream services receive it and continue the chain.
+4. **OpenTelemetry SDKs** do all of this automatically — auto-instrument the HTTP/gRPC client to inject the header outbound, auto-instrument the server to extract it inbound.
+
+The query: \`trace_id="abc-123"\` → every log line from every service that touched this request, in time order. Combined with the trace itself (span tree showing where time went) and metrics (request counters tagged with the same trace_id via exemplars), you get a unified picture.
+
+Without trace_id propagation:
+- "Find all logs for this user complaint" requires guessing timestamps and grepping by user_id (if logged).
+- Latency investigations stop at the first service boundary.
+- Multi-service errors are stitched together by humans, slowly.
+
+W3C \`traceparent\` is the modern standard — version + trace_id + span_id + flags. Format: \`00-<32-hex-trace-id>-<16-hex-span-id>-<2-hex-flags>\`. Adopted by every major OTel SDK.`,
+      },
+      {
+        question: 'How do you reduce log costs without losing visibility?',
+        answer: `Six levers, in rough order of impact:
+
+**1. Sample at the source.** 1-10% of normal requests + 100% of errors / slow requests. Implement at the SDK level so you don\'t pay for ingestion. Most teams\' biggest single saving (50%+).
+
+**2. Drop high-cardinality fields you don\'t query.** Fields like full request body, response body, internal IDs that aren\'t in any dashboard query — drop at the OTel collector before exporting.
+
+**3. Aggregate at ingestion.** "rate_limited" events for the same user → metric counter, not per-event log. Vector and OTel collectors support log-to-metric conversion.
+
+**4. Tier retention.** Hot (Loki / Datadog): 7-14 days for active debugging. Cold (S3 / GCS): 90+ days for compliance and forensics. Loki\'s tiered storage makes this nearly free.
+
+**5. Sample DEBUG/INFO at higher rates than WARN/ERROR.** A 10% sample of INFO + 100% of WARN+ catches errors fully while cutting routine noise.
+
+**6. Log levels as runtime config.** Default to INFO in prod; toggleable to DEBUG per-service or per-request when debugging. Some services run at WARN-only and only see logs when something\'s actually wrong.
+
+Numbers: a $50K/month log bill, applying these typically gets you to $15K-$25K/month. The constraint isn\'t the technology; it\'s engineering discipline. The team that says "log everything, we\'ll worry about cost later" pays 5× what a cost-aware team pays.
+
+Final guardrail: budget alerts per service. If service X\'s logs spike 2× overnight, page the team — usually it\'s a verbose stack trace in a hot path that someone added without sampling.`,
+      },
+    ],
+    references: [
+      'https://opentelemetry.io/docs/specs/otel/logs/',
+      'https://grafana.com/docs/loki/latest/best-practices/',
+      'https://www.honeycomb.io/blog/structured-events-basis-observability',
+    ],
+  },
+
+  {
+    id: 'distributed-tracing',
+    title: 'Distributed Tracing — Spans, Sampling, OpenTelemetry',
+    icon: 'gitBranch',
+    color: '#06b6d4',
+    questions: 3,
+    description: 'How traces work, head vs tail sampling, and why traces are the highest-leverage signal for microservice debugging.',
+    visualizations: [
+      {
+        title: 'Distributed trace — span tree across services',
+        description: 'A trace is a tree of spans. Root span is the entry point; child spans are work done by downstream services. Parent-child links carry trace_id.',
+        image: '/diagrams/sre/c6-trace.png',
+      },
+    ],
+    introduction: `**Distributed tracing** answers a question metrics and logs can\'t: *"this user request took 5 seconds — where did the time go across our 12 services?"*
+
+The mechanics:
+- A **trace** represents one user request crossing service boundaries.
+- A **span** represents one unit of work — typically one service handling part of the request, or one outbound RPC call.
+- Spans share a **trace_id** and have **parent-child links** via **span_id** and **parent_span_id**.
+- Each span carries: name, start time, duration, status (OK / error), and **attributes** (key-value annotations like http.method, db.statement, user.id).
+
+A trace is the **tree of spans** for one request. Visualised, it\'s a "waterfall" showing the request entering at the root, fanning out to downstream services, with each span\'s duration drawn as a horizontal bar. The slowest span on the critical path is the bottleneck.
+
+**The hard part: sampling.**
+Tracing every request at full detail is prohibitively expensive at scale (10K req/sec × hundreds of attributes per span × tens of spans per trace = TB/day). Two strategies:
+
+**Head sampling (decide at trace start)**
+- Easy to implement: decide at the gateway "this trace is sampled at 10%."
+- Problem: errors and slow requests are usually rare. A 10% head sample catches 10% of errors, missing the things you most want to see.
+
+**Tail sampling (decide at trace end)**
+- Wait for the trace to complete; sample 100% of error traces, 100% of slow traces, 1% of normal traces.
+- Far more useful but more complex: requires a tail-sampling collector (e.g., OpenTelemetry tailsampling processor or a dedicated service like Honeycomb\'s sampler).
+- Cost: hold every span in memory for ~30 seconds before deciding to keep or drop.
+
+The 2026 best practice is **tail sampling for error / slow traces + head sampling for normal traces**. Or use Honeycomb\'s "dynamic sampling" which is similar.
+
+**OpenTelemetry tracing** is now ubiquitous. The auto-instrumentation packages (otel-instrumentation-http, otel-instrumentation-pg, etc.) generate spans for HTTP, gRPC, database, and message-broker calls without code changes. Custom spans for business logic get added explicitly. Trace context propagates via W3C \`traceparent\` headers.
+
+**What traces are great at:**
+- Latency investigations — exact breakdown of where time went.
+- Dependency mapping — which services call which, in what order.
+- Root-cause analysis for distributed failures — see exactly which downstream call failed.
+- N+1 query detection — see 50 sequential DB spans where 1 batched call would suffice.
+
+**What traces are bad at:**
+- High-volume aggregation (use metrics).
+- Long-running processes (a 1-hour batch job has too many spans).
+- Anomaly detection across populations (use metrics or wide events).`,
+    whenToUse: [
+      'Latency investigations across services — find the slow span',
+      'Microservice dependency mapping — trace shows the actual graph, not the diagram',
+      'New-service rollouts — verify the request path matches your design',
+      'N+1 / chatty-pattern detection — sequential identical spans are the smell',
+    ],
+    keyConcepts: [
+      { term: 'Trace', definition: 'One user request\'s end-to-end journey across services. Identified by a single trace_id.' },
+      { term: 'Span', definition: 'One unit of work (a service\'s handling of part of a request, or an outbound call). Has name, start, duration, status, attributes.' },
+      { term: 'Parent-child link', definition: 'Spans form a tree via parent_span_id. The root span is the entry point; child spans are downstream work.' },
+      { term: 'Head sampling', definition: 'Decide at trace start (e.g., 10% of all requests). Easy but misses error / slow traces proportionally.' },
+      { term: 'Tail sampling', definition: 'Decide at trace end. 100% of errors / slow + 1% of normal. More useful, requires hold-and-decide infrastructure.' },
+      { term: 'W3C traceparent', definition: 'HTTP header standard for trace propagation. Every OTel SDK supports it; cross-vendor compatible.' },
+    ],
+    pitfalls: [
+      'Head sampling at 10% missing 90% of errors. Combine with tail sampling or 100% sample errors.',
+      'Spans without attributes — knowing "request hit service X" without knowing which user, which endpoint, what status is half-useful.',
+      'No baggage propagation — trace_id propagates but business attributes (user_id, tenant_id) don\'t. Add them as resource attributes.',
+      'Spans for hot loops — a span per loop iteration explodes data volume. Span the loop, count iterations as attribute.',
+      'Storage retention too short. 1-3 days makes "investigate yesterday\'s slowness" impossible. 7-14 days is the typical good balance.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does head sampling differ from tail sampling — and which should I use?',
+        answer: `**Head sampling**: decide at the gateway whether to record this trace. 10% sampled = 10% of requests have full traces, 90% are dropped. Simple — random decision based on trace_id.
+
+**Tail sampling**: hold all spans in a buffer (typically 30s); when the trace completes, decide whether to keep based on properties. Common policy:
+- 100% of traces with any error span.
+- 100% of traces over Xms total duration.
+- 1-5% of normal traces.
+
+The use case difference:
+- **Head sampling** is efficient (no buffering, decides instantly) but blind. Errors and slow requests have the same sampling rate as normal — you miss the interesting cases proportionally.
+- **Tail sampling** preserves interesting traces at 100% and discards uninteresting ones aggressively. Better signal-to-noise but more complex (buffer memory, longer paths).
+
+What I\'d use:
+- **Low traffic (< 100 req/sec)**: 100% head sample. Storage is cheap at this volume.
+- **Medium (100-10K req/sec)**: head sample at 100%, store traces 1-3 days only. OR head sample at 10-20% with errors at 100% via downstream filter.
+- **High (10K+ req/sec)**: tail sample. 100% errors / slow + 1-5% normal. OpenTelemetry tail-sampling processor or Honeycomb dynamic sampling.
+
+The biggest mistake is naive 1-10% head sample at high traffic — you\'ll consistently miss the rare bad-trace patterns that are the real reason you wanted tracing.`,
+      },
+      {
+        question: 'What\'s the difference between a span attribute and a baggage item?',
+        answer: `**Span attribute**: key-value attached to a single span. Lives in that span only. Available when querying the trace store. Example: \`http.method=GET, http.status_code=500, db.statement="SELECT * FROM users WHERE id=?"\`.
+
+**Baggage**: key-value attached to the *trace context* and propagated automatically across service boundaries. Every service downstream sees the same baggage. Example: \`user.id=12345\`, \`tenant.id=acme\`, \`feature_flag.experiment_a=on\`.
+
+Why both:
+- **Attributes** describe what THIS span did. Specific to one service\'s work.
+- **Baggage** describes properties of the request that all services should know. Authentication context, tenant ID, feature flag values, debug flags.
+
+Practical use: \`debug=true\` baggage flag set by an internal user → every service sees it → every service logs at DEBUG and traces at 100% for that request. Powerful for live troubleshooting.
+
+Caveat: baggage adds overhead to every outbound RPC (extra HTTP header bytes). Don\'t put large values in baggage — keep it to small identifiers and flags. The W3C standard limits baggage to 8KB total and 4KB per item.
+
+Another caveat: baggage often is **not** automatically applied to spans as attributes. You have to explicitly read baggage and set it as a span attribute if you want it queryable in the trace store. Some libraries (Honeycomb\'s) do this automatically; OTel doesn\'t by default.`,
+      },
+      {
+        question: 'Distributed tracing has overhead. How do you minimise it?',
+        answer: `Three categories of overhead and their fixes:
+
+**1. CPU overhead in the SDK** (typically 1-5% of request CPU).
+- Use OTel SDKs in their async/batched mode (default). Synchronous spans block the request.
+- Don\'t span hot loops — span the outer operation, count iterations as attribute.
+- Avoid expensive attribute computation. Don\'t serialize a 10MB struct as an attribute.
+- For ultra-hot paths: opt out (no spans for the literal hottest endpoint) and rely on metrics + sampling.
+
+**2. Network overhead** (small per request, large in aggregate).
+- Tracing data goes to the OTel collector (usually localhost). Local UDP / Unix socket = sub-microsecond.
+- Collector batches and exports to backend. Batch interval is 1-10s; tune based on memory/latency tradeoff.
+- Compression (gRPC default) makes the export bandwidth ~10× smaller.
+
+**3. Storage and processing overhead** (the dominant cost).
+- Sampling (head + tail) is the main lever. 100% sample is rarely necessary.
+- Drop low-value attributes at the collector before export. Common candidates: full URL paths (use the route template instead), large request/response bodies, internal IDs.
+- Tier hot vs cold storage. Tempo and Honeycomb support this; Datadog charges flat.
+
+What I\'d tell a team setting up tracing: aim for **<5% CPU overhead, <2% additional network, and 1-5% sampling at scale**. Anything more and you\'re paying for visibility you\'re not using; anything less and traces start to lie.`,
+      },
+    ],
+    references: [
+      'https://opentelemetry.io/docs/concepts/signals/traces/',
+      'https://www.honeycomb.io/blog/distributed-tracing-cheat-sheet',
+      'https://www.w3.org/TR/trace-context/',
+    ],
+  },
+
+  {
+    id: 'alerting-philosophy',
+    title: 'Alerting Philosophy — Page on Symptoms, Not Causes',
+    icon: 'alertTriangle',
+    color: '#06b6d4',
+    questions: 3,
+    description: 'The SRE Book\'s alerting principles, multi-window multi-burn-rate, and avoiding alert fatigue.',
+    introduction: `Alerting is where observability meets human attention. Bad alerting is the leading cause of SRE burnout. Good alerting is rare and load-bearing.
+
+**The SRE Book\'s core principle (Ch 6, paraphrased):** alert on **symptoms**, not on **causes**. *"Did something break?" is a better question than "Is the database CPU above 90%?"*
+
+Why: most causes don\'t matter. The DB at 90% CPU might be perfectly serving traffic. Pager you for a cause-based threshold and you wake up an SRE for nothing. Pager you only when **users are actually affected** (latency spike, error rate spike) and the page reflects a real problem.
+
+**The five qualities of a good alert** (from SRE Book Ch 6 + workbook):
+1. **Actionable** — someone can do something. Information-only "FYI, X happened" belongs on a dashboard, not a page.
+2. **Precise** — the alert itself tells you what\'s broken and where. "p99 latency on checkout-service > 500ms in us-east-1" beats "something is slow."
+3. **Timely** — fires fast enough to mitigate before users notice (or get worse).
+4. **Not noisy** — false-positive rate is low; SREs don\'t snooze it reflexively.
+5. **Linked to a runbook** — the page is paired with documented investigation steps.
+
+**The fundamental tension**: speed vs precision. Fast alerts have more false positives; precise alerts come too late. **Multi-window multi-burn-rate** alerting is the canonical solution from SRE Workbook Ch 5:
+
+- **Long window** (e.g., 1 hour) catches the trend with high precision but is slow.
+- **Short window** (e.g., 5 min) confirms the trend is current.
+- **AND-gate them**: both must fire to page.
+
+The math: if 30 days of error budget burns at 14.4× normal, you exhaust 2% of budget in 1 hour. That\'s actionable now. Pair it with a 5-minute window confirming "still burning."
+
+Recommended setup (Workbook):
+- **Page-rate-fast**: 14.4× burn over 1h AND over 5m → PAGE (fast, urgent).
+- **Page-rate-medium**: 6× burn over 6h AND over 30m → PAGE (slower, sustained).
+- **Ticket-rate-slow**: 1× burn over 3d AND over 6h → TICKET (no page, long-term issue).
+
+This catches three different incident shapes: explosive (immediate), sustained (a few hours), slow-creep (days). All three need response; only the first deserves a page.
+
+**Alert fatigue** is the practical failure mode. Symptoms:
+- SREs reflexively dismiss pages.
+- New SREs don\'t know which pages matter.
+- "Always firing" alerts that never get fixed.
+The fix is brutal: every alert must be actionable; every page must have a runbook; track noisy-alert metrics and kill alerts that fire >3× without action.
+
+Postmortem hygiene: every alert that fires should be reviewed weekly. Was it actionable? Did the runbook help? Does it need to fire faster, slower, or be deleted?`,
+    whenToUse: [
+      'Designing alerts for a new service — start from SLOs, derive burn-rate alerts',
+      'Reviewing on-call burden — count pages/week, identify noisy alerts to kill',
+      'Postmortems — was the alert that fired the right one? Did it page early enough?',
+      'On-call handbook — every page should link to a runbook',
+    ],
+    keyConcepts: [
+      { term: 'Alert on symptoms', definition: '"Did something break for the user?" beats "is some internal metric over a threshold?". Symptoms = SLI deviation; causes = internal saturation.' },
+      { term: 'Multi-window multi-burn-rate', definition: 'Long window for trend (precision) + short window for currency (speed) + burn-rate threshold based on error budget. SRE Workbook Ch 5 canonical formula.' },
+      { term: 'Page vs ticket', definition: 'Page = wake someone now. Ticket = work item for next business day. Slow burns get tickets; fast burns get pages.' },
+      { term: 'Actionable', definition: 'A first quality of any alert — someone can do something. If no action, it\'s a dashboard, not a page.' },
+      { term: 'Runbook', definition: 'Investigation + mitigation steps for an alert. Every alert links to one. SRE\'s test: a new on-call could resolve from the runbook alone.' },
+      { term: 'Alert fatigue', definition: 'SREs ignore pages because too many fire without merit. Cure: kill noisy alerts, every alert actionable.' },
+    ],
+    pitfalls: [
+      'Cause-based alerts — DB CPU, JVM heap, queue depth — page at thresholds that don\'t map to user pain.',
+      'Single-window alerts that fire on transient blips. 5 minutes of error spike is noise; 1 hour is real.',
+      'Pages without runbooks. New on-call is paralyzed when paged at 3am.',
+      'Alerts that always fire and are always ignored. Either fix the underlying issue or delete the alert.',
+      'Page on every minor SLO breach. SLOs are 30-day budgets; minor 1-hour burns are normal noise.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through multi-window multi-burn-rate alerting.',
+        answer: `From SRE Workbook Ch 5. The intuition: error budget = 1 - SLO. A 99.9% SLO over 30 days = 0.1% × 30 × 24 × 60 = ~43 minutes of allowable badness per month. The "burn rate" is how fast you\'re consuming that budget.
+
+A burn rate of 1× means you\'re using budget at the steady-state rate (43 min over 30 days = 1.4 sec/min). At this rate, you exhaust budget at exactly day 30. Sustainable.
+
+A burn rate of 14.4× means you\'re using budget 14.4× faster — you\'d exhaust the entire 30-day budget in **2 hours**. That\'s an emergency.
+
+The canonical alert recipe:
+- **Fast (14.4× over 1h AND over 5m)**: would burn 2% of budget per hour. Page immediately. Catches explosive incidents.
+- **Medium (6× over 6h AND over 30m)**: would burn 5% of budget over 6 hours. Page. Catches sustained incidents.
+- **Slow (1× over 3d AND over 6h)**: would burn 10% of budget over 3 days. Ticket (no page). Catches slow-burn problems.
+
+Why the AND-gate: the long window (1h, 6h, 3d) gives you statistical precision — confirms the burn is real, not a 30-second blip. The short window (5m, 30m, 6h) gives you currency — confirms you\'re still burning right now, not that it ended an hour ago.
+
+Without the short-window gate: a brief 30-second outage produces a 1-hour burn rate that fires for the next 60 minutes after the outage is resolved.
+
+Without the long-window gate: a 30-second blip from a noisy collector pages on-call for nothing.
+
+Together: the alert is precise AND timely. This is the alerting canon for SLO-based monitoring.`,
+      },
+      {
+        question: 'Why is "DB CPU > 90%" usually a bad page?',
+        answer: `Because **CPU usage isn\'t a user symptom** — it\'s an internal cause that may or may not correlate with user impact.
+
+Concrete failure modes:
+- **DB at 90% CPU + user latency = fine**: query optimizer is well-tuned, server has spare resources, p99 latency is unchanged. Pager fires; SRE looks at dashboards; nothing wrong; SRE goes back to bed. Noise.
+- **DB at 30% CPU + user latency = catastrophic**: a pathological query is taking 30 seconds; only one query is running but it\'s blocking everyone. Cause-based monitor doesn\'t fire because CPU is fine. Users complain. SRE didn\'t get paged.
+
+The pattern: **causes are weakly correlated with effects**. A given cause might be fine (90% CPU with optimized queries) or might be catastrophic (90% CPU with lock contention saturating worker threads). Without seeing the *user effect*, the page tells you nothing actionable.
+
+The fix: alert on the **symptom** ("p99 latency on the database > 500ms") which captures the user effect regardless of root cause. Then, as a debugging aid, dashboards show the causes — when a symptom alert fires, the SRE looks at CPU, memory, lock waits, query plans, etc. to figure out the cause.
+
+Cause-based alerts have *one valid use*: predictive paging on **leading indicators that cannot be detected via symptoms**. Disk-full at 95% is a cause but you want to page before disk-full at 100% causes write failures (the symptom). For these, cause-based alerts are right.
+
+The rule of thumb: **only page on a cause if the symptom hasn\'t shown up yet but is imminent**. Otherwise: page on the symptom; debug the cause.`,
+      },
+      {
+        question: 'How do you fix alert fatigue on an on-call team?',
+        answer: `**Audit, kill, and rebuild from SLOs.**
+
+The diagnostic step:
+- Pull alert history for the last 30-90 days. Count pages per alert.
+- Categorize each alert: actionable on-page (SRE took action), self-resolved (page fired but issue went away), false-positive (page fired with no underlying issue).
+- The 80/20: usually 5-10 alerts produce 50%+ of pages. Of those, 30-50% are non-actionable.
+
+The brutal kill list:
+- **Self-resolving alerts**: change the trigger so they don\'t fire on transient blips. Add longer windows; add deduplication.
+- **False-positive alerts**: either fix the alert (often by switching from cause to symptom) or delete it.
+- **Always-firing alerts that everyone ignores**: delete. They\'re training people to ignore the pager.
+- **Cause-based alerts duplicating symptom alerts**: keep symptom, kill cause. (If you have "DB CPU high" AND "DB latency high," kill the CPU one.)
+
+The rebuild from SLOs:
+- For each user-facing service, define 1-3 SLOs (availability + latency, sometimes quality).
+- Create the multi-window multi-burn-rate alerts off those SLOs (3-6 alerts per SLO).
+- Every alert has a runbook. No runbook = not a real alert.
+- Promote pages to ticket-only when they don\'t need 3am attention; promote tickets to pages only when they do.
+
+The cultural fix:
+- Page-rate dashboard visible to the team. Track alerts/oncall-shift; aim for <5/week per engineer (industry healthy benchmark).
+- Weekly alert review meeting. Every alert that fired the prior week reviewed: was it correct? Did the runbook help? Should it be tuned, killed, or kept?
+- Rotation reviews after every shift: was that a sustainable load?
+
+The first month is painful — you\'re killing alerts and people are nervous. The result is on-call shifts where pages reflect real problems, and engineers want to be on the rotation instead of dreading it.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/monitoring-distributed-systems/',
+      'https://sre.google/workbook/alerting-on-slos/',
+    ],
+  },
+
+  {
+    id: 'dashboards-design',
+    title: 'Dashboards — Hierarchy, Heatmaps, USE/RED Layouts',
+    icon: 'layout',
+    color: '#06b6d4',
+    questions: 3,
+    description: 'Dashboard hierarchy (overview → service → resource), heatmaps for tail latency, and what NOT to put on a dashboard.',
+    introduction: `Dashboards are how humans consume metrics. Bad dashboards are noise; great dashboards orient on-call instantly.
+
+**The hierarchy that works:**
+
+**1. Overview / executive dashboard** — top-level health for the whole product or company.
+- 5-15 panels, all SLO-derived.
+- Each panel = one user-facing SLO ("Checkout availability 30d", "Search latency p99 p99").
+- Color: green/yellow/red against SLO target.
+- Used by: leadership, engineering directors, on-call entry point.
+
+**2. Service-level dashboards** — one per service, RED-method or Four Golden Signals layout.
+- Top row: Rate, Errors, Duration (or Traffic, Errors, Latency, Saturation).
+- Middle: per-endpoint or per-route breakdowns.
+- Bottom: dependency health (downstream service latencies, DB query rates).
+- Used by: service team, on-call SRE during incidents.
+
+**3. Resource dashboards** — per-host or per-resource USE-method layout.
+- CPU utilization + saturation; memory; disk; network.
+- Used by: infrastructure / platform team, deep debugging.
+
+The rule: **drill down from overview → service → resource**. Overview alert fires → SRE lands on overview dashboard → identifies which service is unhealthy → drills into service dashboard → identifies which dependency or which host → drills into resource dashboard. Each level\'s purpose is to **point you at the next level\'s right view**.
+
+**What goes on a dashboard:**
+- ✓ SLO-relevant metrics for the time window.
+- ✓ Histograms for latency (heatmap with p50/p95/p99 lines).
+- ✓ Recent deployment markers (overlay events on timelines).
+- ✓ Counts grouped by relevant dimension (errors by endpoint, latencies by route).
+
+**What does NOT go on a dashboard:**
+- ✗ Internal cause-based metrics that don\'t correlate to user pain (random JVM gauges).
+- ✗ "Everything we have" (clutter — link to detail dashboards instead).
+- ✗ Single-data-point gauges that should be alerts ("disk full!" — make it an alert).
+- ✗ Stale metrics nobody looks at (delete; revive when needed).
+
+**Heatmaps for latency.**
+A line graph of "average latency" hides bimodality. A **heatmap** plots each request\'s latency on the Y-axis vs time on the X-axis, with color showing density. You instantly see:
+- Most requests are at 50ms (dense band there).
+- 5% are at 5000ms (faint band there).
+- The bimodality is visible; the average lies.
+
+Good observability tools (Grafana, Datadog, Honeycomb) have heatmap widgets out of the box. Use them on every latency panel.
+
+**Alert overlays.**
+Show alerts that fired during the time window as horizontal bands or markers on the time axis. During an incident review, you see "alert X fired at 2:15pm" overlaid with the metric trend — saves correlation effort.
+
+**Dashboard-as-code.**
+Don\'t click-build dashboards in the UI; check them into version control. Grafana JSON, Datadog Terraform provider, Honeycomb terraform module. Reviews catch bad metrics before they ship; rollback is git revert.`,
+    whenToUse: [
+      'Designing dashboards for a new service or product',
+      'Reviewing existing dashboards — are they still aligned with current SLOs?',
+      'On-call handover — does the dashboard set let a new on-call orient in <5 minutes?',
+      'Postmortems — could the dashboards have surfaced this incident faster?',
+    ],
+    keyConcepts: [
+      { term: 'Three-tier hierarchy', definition: 'Overview (SLO-driven) → Service (RED/Golden) → Resource (USE). Each tier points to the next.' },
+      { term: 'Heatmap', definition: 'Latency density over time. Reveals bimodality that means / percentile lines hide. Standard widget in Grafana, Datadog, Honeycomb.' },
+      { term: 'Deployment markers', definition: 'Overlay deploy events on metric timelines. "Did the deploy at 2pm cause the latency spike at 2:01pm?" — visible at a glance.' },
+      { term: 'Dashboard-as-code', definition: 'Dashboards in git (JSON / Terraform). Reviewable, rollback-able, reusable across services.' },
+      { term: 'Cardinality cost', definition: 'Per-user or per-request dashboards mean huge cardinality on the metrics layer. Aggregate at the metric level; drill down via traces or logs.' },
+    ],
+    pitfalls: [
+      'Dashboards full of "everything" — too much to read at a glance, useless under pressure.',
+      'Mean / median latency only — hides tail and bimodality. Always include p99 and a heatmap.',
+      'No deployment markers — incident timelines miss the "did the deploy cause this" question.',
+      'Stale dashboards. "We refactored that service 6 months ago, this dashboard is wrong" → delete it.',
+      'Click-built one-off dashboards. Lost when person leaves; not reviewable.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How would you design dashboards for a new service?',
+        answer: `Three-tier hierarchy:
+
+**Tier 1: Overview** (1 dashboard, used by everyone)
+- 5-10 panels, each one SLO. Color-coded green/yellow/red against target.
+- "Service X — 30-day availability: 99.92% (target 99.9%)" + sparkline.
+- Latency SLO panel: "p99 latency 30d: 387ms (target 500ms)" + sparkline.
+- Error budget remaining: "94% / 30d remaining (35h consumed)".
+- Designed for 30-second glance during a stand-up or incident triage.
+
+**Tier 2: Service health** (1 per service, used by service team + on-call)
+- RED-method top row: Rate (req/sec graph), Errors (% errors graph), Duration (heatmap with p50/p95/p99 lines).
+- Per-endpoint breakdown: top 5 endpoints by request volume, each with rate + error rate + latency.
+- Dependency latencies: latency to each downstream service (DB, cache, external API).
+- Saturation: thread pool utilization, queue depths, connection pool usage.
+- Recent deployment markers as event overlays.
+
+**Tier 3: Resource / host** (1 per fleet, used by platform team)
+- USE-method per-host panel grid: CPU util + saturation (load avg), memory used + page faults, disk %util + queue size, network errors.
+- Pressure metrics (PSI on Linux 5.x+): CPU, memory, IO pressure as % time stalled.
+- Annotated with autoscaling events.
+
+The drill-down workflow: Overview alert fires → SRE lands on tier 1 → identifies which service → drills to tier 2 → identifies which dependency or which host → drills to tier 3 (or to logs / traces). Each tier is purpose-built for a different question.
+
+Plus: every dashboard has a brief title text panel: "What this is for, what to look at first, what to drill into when X happens." Acts as inline runbook.`,
+      },
+      {
+        question: 'Why are heatmaps better than "average latency" for tail-latency monitoring?',
+        answer: `Because **averages and percentile lines hide bimodality**.
+
+Concrete: imagine 95% of requests at 50ms and 5% at 5000ms. The mean is 297ms; the p99 is 5000ms. Show both on a line chart and you see two lines moving over time — informative.
+
+But a heatmap shows the **distribution of every request**: a dense band at 50ms (where most requests live) AND a faint band at 5000ms (where the slow ones are). You see at a glance that the latency is **bimodal**, not "everyone is at the average."
+
+Why this matters:
+- A change that "improves the mean by 10%" by making the 50ms band tighter while keeping the 5000ms band the same has no user benefit.
+- A change that "improves the mean by 10%" by eliminating the 5000ms band is a major win.
+- Both look identical on a mean-latency chart. The heatmap distinguishes them.
+
+Other things heatmaps reveal:
+- **Daily traffic patterns**: peak hours produce a heavier band; off-peak is lighter. Visible at a glance.
+- **Slow-burn regressions**: a deploy that adds 20ms to the slow band is invisible in p99 (already 5000ms ± noise) but visible as a band shift in the heatmap.
+- **Latency regimes**: cache hits at 5ms, cache misses at 200ms — visible as two distinct bands.
+
+Implementation: Grafana\'s heatmap panel + Prometheus histogram metrics is the standard. Datadog has \`avg\` / \`p99\` / "distribution" — pick distribution. Honeycomb shows distribution natively because the underlying data is event-shaped.
+
+The mistake to avoid: heatmaps with too few buckets look discrete and lose the "see the distribution" benefit. Use exponentially-bucketed histograms (Prometheus default) for good resolution at low and high latencies.`,
+      },
+      {
+        question: 'What\'s the right way to put deployment markers on dashboards?',
+        answer: `**Treat deploys as discrete events; overlay them on metric timelines as vertical lines or shaded bands.**
+
+The mechanism:
+- Every deploy emits an event to your metrics backend at deploy-start and deploy-finish. Most CI systems (GitHub Actions, GitLab, Jenkins, ArgoCD) have plugins for this; OTel events / Prometheus events also work.
+- The dashboard\'s graph widgets render these events as vertical markers on the time axis with a hover-tooltip showing version, deployer, link to the diff.
+
+The use case (the killer one): incident triage at 2am.
+- Pager fires: "p99 latency spiked on checkout-service."
+- SRE opens dashboard. Sees the latency spike at 2:01am.
+- Sees a deployment marker at 2:00am — labeled "v3.2.1, deployed by alice, link to PR".
+- Click → diff is visible. Often the cause is obvious from the diff.
+- **Roll back. Investigate fully tomorrow.**
+- Total time from page to mitigation: <5 minutes.
+
+Without deployment markers: SRE sees the spike, opens 15 different dashboards looking for what changed, eventually checks the deploy log, finds the deployment from an hour ago, decides to roll back. Takes 30+ minutes.
+
+Other event types worth overlaying:
+- Feature flag flips (tied to flag-management tool).
+- Autoscaling events (HPA scaled up / scaled down).
+- Cloud provider incidents (overlay AWS Health events for the relevant region).
+- Database migrations / schema changes.
+
+The principle: **anything that COULD cause a metric change should be visible on the dashboard at the time it happened**. The minute saved during incidents is worth the minute spent setting it up.`,
+      },
+    ],
+    references: [
+      'https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/best-practices/',
+      'https://www.brendangregg.com/HeatMaps/',
+      'https://sre.google/workbook/monitoring/',
+    ],
+  },
+
+  {
+    id: 'cardinality-cost',
+    title: 'Cardinality, Volume, and the Cost of Observability',
+    icon: 'database',
+    color: '#06b6d4',
+    questions: 3,
+    description: 'Why cardinality blows up Prometheus, the math behind log/trace cost, and how to control them.',
+    introduction: `Observability is one of the largest line items in modern infrastructure budgets. Datadog's S-1 reveals customers spending double-digit percentages of cloud spend on observability alone. Understanding the cost levers is now an SRE-grade skill.
+
+**Cardinality** is the number of distinct combinations of label values for a metric. \`http_requests_total{service, route, status, method}\` with 5 services × 100 routes × 10 statuses × 5 methods = **25,000 time series**. Add \`user_id\` as a label and your 100K-user system becomes 25,000 × 100,000 = **2.5 billion time series**. Prometheus chokes on millions; billions are an OOM.
+
+The rule: **labels are dimensions, not data**. \`user_id\` is data; it doesn\'t belong as a metric label. Use logs or traces (which are event-shaped, naturally high-cardinality) instead.
+
+**Cardinality bombs** are the leading cause of Prometheus / observability outages:
+- Unbounded label values: \`{path="/users/12345"}\` instead of \`{route="/users/:id"}\`.
+- User IDs, session IDs, request IDs, IP addresses as labels.
+- Free-form labels from clients that you don\'t sanitize.
+
+**Logs and traces are inherently high-cardinality** — that's the design. But they cost more:
+
+**The math for logs.**
+Per-event size × event rate × retention.
+- 2 KB / event (structured, ~20 fields) × 5K events/sec × 86,400 sec/day = 864 GB/day raw.
+- Compressed (gzip / zstd ~5×): ~170 GB/day stored.
+- 30-day hot retention: 5 TB.
+- At Datadog\'s ~$2/GB ingest + $0.25/GB/month storage: **$1,725 ingest + $1,250 storage = ~$3,000/month** for one mid-sized service.
+
+**The math for traces.**
+Per-span size × spans/trace × trace rate × sampling.
+- 500 bytes / span (compressed) × 10 spans / trace × 1K traces/sec sampled at 10% × 86,400 sec/day = 4.3 GB/day.
+- 7-day retention: 30 GB. Cheap... unless you sample at 100%, which makes it 43 GB/day = 300 GB/week.
+
+**The math for metrics.**
+Series count × scrape interval × cardinality × retention.
+- 10,000 series × 4 bytes/sample × 60 samples/min × 1440 min/day = 3.5 GB/day raw.
+- Prometheus's WAL + compression: ~250 MB/day.
+- 30-day retention: 7.5 GB. Cheap.
+- BUT: blow cardinality to 10M series and you've multiplied by 1000× → 250 GB/day. OOM.
+
+**The optimization stack:**
+1. **Bound cardinality at the SDK.** Strip user_id from metric labels; use it in logs/traces only.
+2. **Sample at the source.** 1-10% of normal requests; 100% of errors / slow.
+3. **Tier retention.** Hot 7-14d (queryable in seconds), cold 30-365d (S3/GCS, queryable in minutes).
+4. **Drop high-cost fields you don't query.** Full request bodies, debug fields, internal IDs.
+5. **Pre-aggregate.** Counter "rate-limited events per user-hour" instead of one log per event.
+6. **Per-service budgets.** $X/month/service ceiling; alert on 2× spike.
+
+**The 2026 observability cost trend:** every team I see at >50 services has a "cost optimization" workstream. Common moves: leaving Datadog for LGTM (5-10× cheaper), aggressive tail sampling, retention tier-down, killing duplicate metrics.`,
+    whenToUse: [
+      'Designing observability for a new service — set cardinality and sampling policy upfront',
+      'Cost-reduction projects — almost every observability cost optimization starts with cardinality and sampling audit',
+      'Capacity planning — Prometheus / Tempo / Loki sizing depends on these numbers',
+      'Vendor evaluation — pricing models map to these dimensions',
+    ],
+    keyConcepts: [
+      { term: 'Cardinality', definition: 'Number of distinct label combinations on a metric. Linear in label distinct-values; multiplicative across labels.' },
+      { term: 'Cardinality bomb', definition: 'A label that takes unbounded values (user_id, request_id, IP) explodes the time-series count and OOMs Prometheus.' },
+      { term: 'Sampling policy', definition: 'Head sampling at gateway (% of all traces) + tail sampling at collector (% by error / latency). Standard 1-10% + 100% errors.' },
+      { term: 'Retention tiering', definition: 'Hot (queryable, days) + cold (archived, months/years). Loki, Tempo, Mimir support tiered storage natively.' },
+      { term: 'Pre-aggregation', definition: 'Convert per-event logs to per-time-window metrics. "rate_limited per user per hour" instead of per-event log.' },
+    ],
+    pitfalls: [
+      'user_id, IP, request_id, path-with-args as metric labels. Cardinality bombs.',
+      'Logging 100% of requests at 10K req/sec without sampling.',
+      'Storing all observability data hot indefinitely.',
+      'Not measuring per-service cost. Without per-service attribution, you can\'t prioritize where to optimize.',
+      'Datadog default 15-day hot retention without lifecycle. Bills compound silently.',
+    ],
+    keyQuestions: [
+      {
+        question: 'I added a metric label and Prometheus is OOMing. Why?',
+        answer: `**Cardinality explosion.** You added a label whose value space is too large.
+
+The math: cardinality = product of distinct values across all labels. \`http_requests_total{service, route, status, user_id}\` with 5 services × 100 routes × 10 statuses × 100,000 users = **500 million time series**. Each series is a few bytes in Prometheus's internal index but the index itself becomes huge — and every scrape generates thousands of new series for new user_ids.
+
+How to identify the bad label:
+- Run \`topk(20, count by (__name__)({}))\` to find your most-cardinal metrics.
+- For a suspected metric, check distinct label-values: \`count(count by (user_id) (http_requests_total))\`.
+- The offender is usually obvious from the count.
+
+The fix:
+1. **Drop the bad label.** \`relabel_config\` or rewrite at the SDK to drop \`user_id\` from the metric.
+2. **Replace with a lower-cardinality dimension.** "user_tier" (free / pro / team) is bounded; "user_id" is not.
+3. **Move that dimension to logs/traces.** Logs and traces handle high cardinality well; metrics don't.
+
+Recovery:
+- The bad time series are still in Prometheus storage. Restart with \`--storage.tsdb.head-chunks-write-queue-size\` increased; let Prometheus drop them after retention.
+- For acute OOM: drop the time series with \`tsdb delete\`-style API, or cycle the Prometheus instance with the bad metric blocked at the scrape-config relabel.
+
+Prevention:
+- Lint metric definitions in CI. Datadog and Honeycomb have linters; for Prometheus, write your own (regex-check for \`*_id\` suffixes in label names).
+- Set \`scrape_config\` cardinality limits — Prometheus will refuse to scrape series beyond a limit.
+- Use \`metricsstats\` from Grafana to find leaking metrics.`,
+      },
+      {
+        question: 'How do you decide on a trace sampling rate?',
+        answer: `Two-stage sampling, calibrated to volume and cost:
+
+**Stage 1: Head sampling at the gateway.**
+- Decide trace_id-deterministically (so all services for the same trace agree). Use the last byte of trace_id; if < N, sample.
+- For low-volume services (<100 req/sec): 100% head sample. Cost is fine.
+- For mid-volume (100-10K req/sec): 10-50% head sample. Balance visibility and cost.
+- For high-volume (10K+ req/sec): 1-10% head sample. Combined with stage 2.
+
+**Stage 2: Tail sampling at the collector.**
+The OTel tail-sampling processor (or Honeycomb's dynamic sampling, or AWS X-Ray's adaptive sampling).
+- 100% of traces with any error span — always keep.
+- 100% of traces with duration > Xms (e.g., > p99 SLO target) — always keep.
+- 1-10% of "normal" traces — based on traffic pattern.
+
+The combined effect: you drop ~95% of normal traces; keep 100% of bad ones. Storage drops 10-20×; signal-to-noise improves dramatically.
+
+Calibration knobs:
+- **Cost target**: I want to spend $X/month on traces. Work backward from $X to GB to events to sampling rate.
+- **Visibility target**: I want to be able to investigate any 1-second-or-slower request. Tail-sample 100% of traces > 1s.
+- **Error coverage target**: 100% of error traces always.
+
+Example for a 10K req/sec service:
+- 10% head sample → 1K traces/sec.
+- Tail sampling: 5% of normal + 100% errors (~0.5%) + 100% slow (~0.5%) → ~1% effective sample.
+- 100 traces/sec stored × 10 spans × 500B = 500 KB/sec = 43 GB/day.
+- 7-day retention: 300 GB. Manageable.
+
+Without sampling: 10K traces/sec × 10 spans × 500B = 50 MB/sec = 4.3 TB/day. Untenable.`,
+      },
+      {
+        question: 'How would you cut a $200K/month Datadog bill?',
+        answer: `Five-step playbook, in priority order:
+
+**1. Audit cardinality and kill the bombs (typically 10-20% savings).**
+- Find metrics with the highest cardinality; identify why. Often: a few metrics with user_id or path-with-args labels causing the bulk of the cost.
+- Fix at the SDK; drop the bad labels.
+
+**2. Sample logs aggressively (typically 30-50% savings).**
+- Identify the verbose services (top 20% of log volume produce 80% of cost).
+- Add source-side sampling: 1-10% of normal events + 100% of errors.
+- Drop fields you don't query (full bodies, debug fields).
+
+**3. Tier retention (typically 10-20% savings).**
+- Datadog has retention tiers; most teams accept the default 15-day hot. Drop to 7-day hot + 30-day flex (cheaper).
+- Logs you must retain for compliance: route to S3 directly via Datadog Forwarder; pay S3 prices, not Datadog prices.
+
+**4. Reduce custom metrics (typically 5-15% savings).**
+- Datadog charges per-custom-metric. 100 custom metrics × $0.05/metric/month × 1000 hosts = $5K/month. Audit the list; many "we'll need this" metrics never get queried.
+
+**5. Tail sample traces (typically 5-10% savings if APM is used heavily).**
+- Datadog APM is per-span priced. Tail-sample at the OTel collector level (or Datadog's dynamic-sampling) to keep 100% errors, 5-10% normal.
+
+**The bigger move: hybrid stack.** For teams in the $100K+/month range, the cost-effective architecture is **OpenTelemetry instrumentation + LGTM for cheap signals (metrics, logs) + Datadog for premium debugging (APM traces, RUM)**. The OTel layer makes the split transparent. Typical result: 50-70% bill reduction with same or better visibility.
+
+The hardest part is engineering buy-in: people are attached to the tools they know. But $200K/year is a senior SRE; the math usually wins.`,
+      },
+    ],
+    references: [
+      'https://prometheus.io/docs/practices/naming/',
+      'https://opentelemetry.io/docs/concepts/sampling/',
+      'https://www.honeycomb.io/blog/cost-of-observability',
     ],
   },
 ];
