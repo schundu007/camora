@@ -1565,7 +1565,10 @@ export default function TopicDetail({
 
                   const fullProblem = problemsFull[slug];
                   const problemText = fullProblem?.description || problemData?.description || `Solve: ${problemName}`;
-                  const href = `/capra/coding?problem=${encodeURIComponent(problemText)}&autosolve=true`;
+                  const isSqlTopic = activePage === 'sql' || (typeof selectedTopic === 'string' && selectedTopic.startsWith('sql-'));
+                  const href = isSqlTopic
+                    ? `/capra/practice?view=sql-editor&sqlProblem=${encodeURIComponent(problemName)}`
+                    : `/capra/coding?problem=${encodeURIComponent(problemText)}&autosolve=true`;
 
                   return (
                     <Link
