@@ -10,57 +10,34 @@
  * Per-user namespace is enforced at the SQL layer — every user-doc
  * query has WHERE user_id = $1. Namespace bugs are tested.
  */
-import { query } from '../lib/shared-db.js';
-import { embedQuery } from './embeddings.js';
+import { hybridSearchKb, hybridSearchUserDocs } from './hybridRetrieval.js';
 
 const DEFAULT_TIMEOUT_MS = 250;
-const KB_TOP_K = 6;
-const USER_TOP_K = 4;
+// When rerank is on, we cast a wider candidate net — Cohere will trim
+// down to FINAL_TOP_K. When rerank is off, we use the narrow LLM-ready
+// counts directly.
+const KB_TOP_K_NARROW = 6;
+const USER_TOP_K_NARROW = 4;
+const KB_TOP_K_WIDE = 30;
+const USER_TOP_K_WIDE = 20;
+const FINAL_TOP_K = 10;
 const MAX_CHUNK_CHARS = 1200; // hard cap injected into prompt per chunk
 
-function asVecLiteral(v) {
-  return `[${v.join(',')}]`;
+function resolveUseHyde(optsValue) {
+  if (typeof optsValue === 'boolean') return optsValue;
+  return process.env.RAG_USE_HYDE === 'true';
 }
 
-async function searchKb(vec, k) {
-  const r = await query(
-    `SELECT id, source, topic_id, topic_title, section, content,
-            embedding <=> $1::vector AS distance
-       FROM lumora_kb_chunks
-       ORDER BY embedding <=> $1::vector
-       LIMIT $2`,
-    [asVecLiteral(vec), k],
-  );
-  return r.rows.map((row) => ({
-    tier: 'kb',
-    id: row.id,
-    source: row.source,
-    topicId: row.topic_id,
-    topicTitle: row.topic_title,
-    section: row.section,
-    content: row.content.slice(0, MAX_CHUNK_CHARS),
-    distance: Number(row.distance),
-  }));
+function resolveUseRerank(optsValue) {
+  if (typeof optsValue === 'boolean') return optsValue;
+  return process.env.RAG_USE_RERANK === 'true' && !!process.env.COHERE_API_KEY;
 }
 
-async function searchUserDocs(userId, vec, k) {
-  const r = await query(
-    `SELECT id, doc_kind, section, content,
-            embedding <=> $2::vector AS distance
-       FROM lumora_user_doc_chunks
-       WHERE user_id = $1
-       ORDER BY embedding <=> $2::vector
-       LIMIT $3`,
-    [userId, asVecLiteral(vec), k],
-  );
-  return r.rows.map((row) => ({
-    tier: 'user',
-    id: row.id,
-    docKind: row.doc_kind,
-    section: row.section,
-    content: row.content.slice(0, MAX_CHUNK_CHARS),
-    distance: Number(row.distance),
-  }));
+function resolveUseWarmKit(optsValue) {
+  if (typeof optsValue === 'boolean') return optsValue;
+  // Default ON for any non-test environment when userId is present.
+  // Test code can pass useWarmKit: false to opt out.
+  return process.env.RAG_USE_WARM_KIT !== 'false';
 }
 
 /**
@@ -68,10 +45,11 @@ async function searchUserDocs(userId, vec, k) {
  * @param {string}  opts.question
  * @param {number?} opts.userId
  * @param {number}  [opts.timeoutMs=250]
+ * @param {boolean} [opts.useHyde]
  * @returns {Promise<{chunks, timedOut, latencyMs}>}
  */
 export async function retrieve(opts) {
-  const { question, userId, timeoutMs = DEFAULT_TIMEOUT_MS } = opts;
+  const { question, userId, timeoutMs = DEFAULT_TIMEOUT_MS, useHyde, useRerank, useWarmKit } = opts;
   const t0 = performance.now();
 
   let timer;
@@ -79,12 +57,44 @@ export async function retrieve(opts) {
     timer = setTimeout(() => resolve('__TIMEOUT__'), timeoutMs);
   });
 
+  const willRerank = resolveUseRerank(useRerank);
+  const willUseKit = resolveUseWarmKit(useWarmKit);
   const work = (async () => {
-    const vec = await embedQuery(question);
-    const promises = [searchKb(vec, KB_TOP_K)];
-    if (userId) promises.push(searchUserDocs(userId, vec, USER_TOP_K));
+    // Phase 5: prefer warm kit when available — skips embed + ANN.
+    if (userId && willUseKit) {
+      const { readSessionKit } = await import('./sessionKit.js');
+      const kit = await readSessionKit(userId).catch(() => null);
+      if (kit && Array.isArray(kit.chunks) && kit.chunks.length > 0) {
+        let kitChunks = kit.chunks;
+        if (willRerank) {
+          const { rerank } = await import('./reranker.js');
+          kitChunks = await rerank(question, kitChunks, FINAL_TOP_K);
+        } else {
+          kitChunks = kitChunks.slice(0, KB_TOP_K_NARROW + USER_TOP_K_NARROW);
+        }
+        return kitChunks.map((c) => ({ ...c, content: (c.content || '').slice(0, MAX_CHUNK_CHARS) }));
+      }
+    }
+    // ... existing live-retrieval code path follows ...
+    const { embedQuery } = await import('./embeddings.js');
+    let queryForEmbed = question;
+    if (resolveUseHyde(useHyde)) {
+      const { hydeRewrite } = await import('./hyde.js');
+      const rewritten = await hydeRewrite(question);
+      if (rewritten) queryForEmbed = `${question}\n\n${rewritten}`;
+    }
+    const vec = await embedQuery(queryForEmbed);
+    const kbTop = willRerank ? KB_TOP_K_WIDE : KB_TOP_K_NARROW;
+    const userTop = willRerank ? USER_TOP_K_WIDE : USER_TOP_K_NARROW;
+    const promises = [hybridSearchKb(question, kbTop, { vec })];
+    if (userId) promises.push(hybridSearchUserDocs(userId, question, userTop, { vec }));
     const results = await Promise.all(promises);
-    return results.flat();
+    let merged = results.flat();
+    if (willRerank) {
+      const { rerank } = await import('./reranker.js');
+      merged = await rerank(question, merged, FINAL_TOP_K);
+    }
+    return merged.map((c) => ({ ...c, content: (c.content || '').slice(0, MAX_CHUNK_CHARS) }));
   })();
 
   try {

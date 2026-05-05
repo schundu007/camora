@@ -1,36 +1,31 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const queryMock = vi.fn();
-vi.mock('../src/lib/shared-db.js', () => ({ query: queryMock }));
+const hybridKbMock = vi.fn();
+const hybridUserMock = vi.fn();
+vi.mock('../src/services/hybridRetrieval.js', () => ({
+  hybridSearchKb: hybridKbMock,
+  hybridSearchUserDocs: hybridUserMock,
+}));
 
 const embedQueryMock = vi.fn();
 vi.mock('../src/services/embeddings.js', () => ({ embedQuery: embedQueryMock }));
 
 beforeEach(() => {
-  queryMock.mockReset();
+  hybridKbMock.mockReset();
+  hybridUserMock.mockReset();
   embedQueryMock.mockReset();
+  embedQueryMock.mockResolvedValue(new Array(1536).fill(0.01));
+  process.env.RAG_USE_WARM_KIT = 'false'; // disable warm kit for default tests
 });
 
 describe('retrieve', () => {
-  it('returns chunks from KB and user tables, with source/topic metadata', async () => {
-    embedQueryMock.mockResolvedValue(new Array(1536).fill(0.01));
-    queryMock.mockImplementation((sql) => {
-      if (sql.includes('lumora_kb_chunks')) {
-        return Promise.resolve({
-          rows: [
-            { id: 'k1', source: 'capra-sre', topic_id: 'sli-slo-sla',
-              topic_title: 'SLI/SLO/SLA', section: 'summary',
-              content: 'An SLO is a target.', distance: 0.12 },
-          ],
-        });
-      }
-      return Promise.resolve({
-        rows: [
-          { id: 'u1', doc_kind: 'jd', section: 'body',
-            content: 'JD asks for SRE experience.', distance: 0.18 },
-        ],
-      });
-    });
+  it('returns chunks from KB and user tiers with metadata, no timeout', async () => {
+    hybridKbMock.mockResolvedValue([
+      { tier: 'kb', id: 'k1', source: 'capra-sre', topicId: 't1', topicTitle: 'SLI/SLO/SLA', section: 'summary', content: 'An SLO is a target.', rrfScore: 0.05 },
+    ]);
+    hybridUserMock.mockResolvedValue([
+      { tier: 'user', id: 'u1', docKind: 'jd', section: 'body', content: 'JD asks for SRE experience.', rrfScore: 0.04 },
+    ]);
     const { retrieve } = await import('../src/services/retrieval.js');
     const r = await retrieve({ question: 'what is an SLO?', userId: 42 });
     expect(r.chunks.length).toBe(2);
@@ -40,8 +35,8 @@ describe('retrieve', () => {
   });
 
   it('returns empty chunks (not throws) when retrieval exceeds timeout', async () => {
-    embedQueryMock.mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve(new Array(1536).fill(0)), 500)),
+    hybridKbMock.mockImplementation(
+      () => new Promise((resolve) => setTimeout(() => resolve([]), 500)),
     );
     const { retrieve } = await import('../src/services/retrieval.js');
     const r = await retrieve({ question: 'q', userId: 1, timeoutMs: 50 });
@@ -50,26 +45,28 @@ describe('retrieve', () => {
   });
 
   it('skips user-doc search when userId is missing', async () => {
-    embedQueryMock.mockResolvedValue(new Array(1536).fill(0.01));
-    queryMock.mockResolvedValue({ rows: [] });
+    hybridKbMock.mockResolvedValue([]);
     const { retrieve } = await import('../src/services/retrieval.js');
     await retrieve({ question: 'q', userId: null });
-    const userTableCalls = queryMock.mock.calls.filter((c) =>
-      c[0].includes('lumora_user_doc_chunks'),
-    );
-    expect(userTableCalls.length).toBe(0);
+    expect(hybridUserMock).not.toHaveBeenCalled();
   });
 
-  it('always filters user-doc search by user_id (namespace isolation)', async () => {
-    embedQueryMock.mockResolvedValue(new Array(1536).fill(0.01));
-    queryMock.mockResolvedValue({ rows: [] });
+  it('passes userId through to hybridSearchUserDocs (namespace isolation)', async () => {
+    hybridKbMock.mockResolvedValue([]);
+    hybridUserMock.mockResolvedValue([]);
     const { retrieve } = await import('../src/services/retrieval.js');
     await retrieve({ question: 'q', userId: 7 });
-    const userCall = queryMock.mock.calls.find((c) =>
-      c[0].includes('lumora_user_doc_chunks'),
-    );
-    expect(userCall[0]).toMatch(/WHERE user_id\s*=\s*\$1/);
-    expect(userCall[1][0]).toBe(7);
+    expect(hybridUserMock).toHaveBeenCalledWith(7, 'q', expect.any(Number), expect.any(Object));
+  });
+
+  it('truncates chunk content to MAX_CHUNK_CHARS', async () => {
+    const longContent = 'x'.repeat(2000);
+    hybridKbMock.mockResolvedValue([
+      { tier: 'kb', id: 'k1', source: 's', topicId: 't', topicTitle: 'T', section: 'sec', content: longContent, rrfScore: 0.05 },
+    ]);
+    const { retrieve } = await import('../src/services/retrieval.js');
+    const r = await retrieve({ question: 'q', userId: null });
+    expect(r.chunks[0].content.length).toBeLessThanOrEqual(1200);
   });
 });
 
@@ -90,5 +87,117 @@ describe('formatRetrievedContext', () => {
   it('returns empty string for no chunks', async () => {
     const { formatRetrievedContext } = await import('../src/services/retrieval.js');
     expect(formatRetrievedContext([])).toBe('');
+  });
+});
+
+describe('retrieve with HyDE', () => {
+  it('augments embedding query with hypothetical answer when useHyde=true', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_HYDE = '';
+    const hydeMock = vi.fn().mockResolvedValue('SLOs are reliability targets; error budgets cap outages.');
+    vi.doMock('../src/services/hyde.js', () => ({ hydeRewrite: hydeMock }));
+    const embedMock = vi.fn().mockResolvedValue(new Array(1536).fill(0.01));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: embedMock }));
+    const hybridKbMock = vi.fn().mockResolvedValue([]);
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: hybridKbMock,
+      hybridSearchUserDocs: vi.fn(),
+    }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    await retrieve({ question: 'what is an SLO?', userId: null, useHyde: true });
+    expect(hydeMock).toHaveBeenCalledWith('what is an SLO?');
+    expect(embedMock).toHaveBeenCalledWith(expect.stringContaining('reliability targets'));
+  });
+
+  it('does not call hyde when useHyde is undefined and env flag is off', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_HYDE = '';
+    const hydeMock = vi.fn();
+    vi.doMock('../src/services/hyde.js', () => ({ hydeRewrite: hydeMock }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: vi.fn().mockResolvedValue([]),
+      hybridSearchUserDocs: vi.fn(),
+    }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    await retrieve({ question: 'q', userId: null });
+    expect(hydeMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('retrieve with reranker', () => {
+  it('passes merged chunks through rerank when useRerank=true', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_RERANK = '';
+    process.env.COHERE_API_KEY = 'set';
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: vi.fn().mockResolvedValue([
+        { tier: 'kb', id: 'k1', content: 'A' },
+        { tier: 'kb', id: 'k2', content: 'B' },
+      ]),
+      hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
+    }));
+    const rerankMock = vi.fn().mockImplementation((q, chunks) => Promise.resolve(chunks.slice().reverse()));
+    vi.doMock('../src/services/reranker.js', () => ({ rerank: rerankMock }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    const r = await retrieve({ question: 'q', userId: null, useRerank: true });
+    expect(rerankMock).toHaveBeenCalledTimes(1);
+    expect(r.chunks[0].id).toBe('k2');
+    expect(r.chunks[1].id).toBe('k1');
+  });
+
+  it('skips rerank when useRerank is undefined and no env flag', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_RERANK = '';
+    delete process.env.COHERE_API_KEY;
+    const rerankMock = vi.fn();
+    vi.doMock('../src/services/reranker.js', () => ({ rerank: rerankMock }));
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: vi.fn().mockResolvedValue([{ tier: 'kb', id: 'k1', content: 'A' }]),
+      hybridSearchUserDocs: vi.fn(),
+    }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    await retrieve({ question: 'q', userId: null });
+    expect(rerankMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('retrieve with warm kit', () => {
+  it('reads warm kit when available, skipping live retrieval', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_WARM_KIT = '';
+    const kitMock = vi.fn().mockResolvedValue({
+      chunks: [{ tier: 'kb', id: 'k1', source: 'capra-sre', topicTitle: 'T', section: 's', content: 'x' }],
+    });
+    vi.doMock('../src/services/sessionKit.js', () => ({ readSessionKit: kitMock }));
+    const hybridKbMock = vi.fn();
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: hybridKbMock,
+      hybridSearchUserDocs: vi.fn(),
+    }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    const r = await retrieve({ question: 'q', userId: 7 });
+    expect(kitMock).toHaveBeenCalledWith(7);
+    expect(hybridKbMock).not.toHaveBeenCalled();
+    expect(r.chunks[0].id).toBe('k1');
+  });
+
+  it('falls through to live retrieval when no kit row exists', async () => {
+    vi.resetModules();
+    process.env.RAG_USE_WARM_KIT = '';
+    vi.doMock('../src/services/sessionKit.js', () => ({ readSessionKit: vi.fn().mockResolvedValue(null) }));
+    const hybridKbMock = vi.fn().mockResolvedValue([{ tier: 'kb', id: 'L1', content: 'live' }]);
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: hybridKbMock,
+      hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
+    }));
+    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
+    const { retrieve } = await import('../src/services/retrieval.js');
+    const r = await retrieve({ question: 'q', userId: 7 });
+    expect(hybridKbMock).toHaveBeenCalled();
+    expect(r.chunks[0].id).toBe('L1');
   });
 });
