@@ -71,6 +71,15 @@ export const sreTopicCategoryMap = {
   'autoscaling-strategies':    'capacity',
   'cost-vs-reliability':       'capacity',
   'database-capacity':         'capacity',
+  // Reliability Patterns
+  'circuit-breakers':          'patterns',
+  'cascading-failure':         'patterns',
+  'graceful-degradation':      'patterns',
+  'retry-jitter-backoff':      'patterns',
+  'load-shedding':             'patterns',
+  'idempotency':               'patterns',
+  'bulkheads':                 'patterns',
+  'timeouts-deadlines':        'patterns',
 };
 
 export const sreTopics = [
@@ -6261,6 +6270,2051 @@ The discipline: failover should be a **practiced, automated, tested procedure**,
       'https://sre.google/sre-book/managing-critical-state/',
       'https://www.pgbouncer.org/',
       'https://www.cockroachlabs.com/docs/',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // G. Reliability Patterns
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'circuit-breakers',
+    title: 'Circuit Breakers — Hystrix, resilience4j, Service Mesh',
+    icon: 'zap',
+    color: '#ec4899',
+    questions: 3,
+    description: 'The three-state machine, why fail-fast beats hanging, and how circuit breakers prevent cascading failures.',
+    visualizations: [
+      {
+        title: 'Circuit breaker — three-state machine',
+        description: 'CLOSED (normal) → OPEN (failing, fast-fail) → HALF-OPEN (probing) → CLOSED. Failure rate threshold trips to OPEN; timeout transitions to HALF-OPEN; probe results determine next state.',
+        image: '/diagrams/sre/g1-circuit-breaker.png',
+      },
+    ],
+    introduction: `**Circuit breaker** is a software pattern from Michael Nygard\'s *Release It!* (2007) that became canonical via Netflix Hystrix and now ships in service meshes (Istio, Linkerd) by default.
+
+The principle: **when a downstream dependency is failing, stop calling it for a while.** Counterintuitive but powerful — the failing dependency gets a chance to recover, and your service stops wasting threads/CPU on doomed calls.
+
+**The three-state machine:**
+
+**CLOSED** (normal operation):
+- Requests pass through to the dependency.
+- Track failure rate (errors + timeouts).
+- If failure rate exceeds threshold (e.g., 50% over a 1-minute window), trip to OPEN.
+
+**OPEN** (failing):
+- Requests **fail fast** — return an error or fallback immediately, don\'t call the dependency.
+- After a timeout (e.g., 30 seconds), transition to HALF-OPEN.
+
+**HALF-OPEN** (probing):
+- Allow a small number of requests through to test the dependency.
+- If they succeed, transition back to CLOSED (resume normal).
+- If they fail, transition back to OPEN (continue avoiding).
+
+**Why fail-fast beats hanging:**
+
+Without circuit breaker, a failing dependency hangs your service:
+- Request waits for the timeout (often 5-30 seconds).
+- Threads / connections remain allocated to that hung request.
+- Under load, your service exhausts threads / connections within minutes.
+- Now your service is unavailable too — **cascading failure.**
+
+With circuit breaker, a failing dependency trips the breaker quickly:
+- Failure rate exceeds 50% → OPEN.
+- Subsequent requests fast-fail (< 1ms).
+- Threads / connections aren\'t consumed waiting.
+- Your service stays healthy; users see a degraded response (cached / fallback) instead of a hung response.
+
+**Implementations:**
+
+**Netflix Hystrix** (Java) — the original. Now in maintenance mode (Netflix\'s recommendation: use resilience4j).
+
+**resilience4j** (Java) — modern replacement for Hystrix. Lighter, functional, integrates with Spring and Reactor.
+
+**Polly** (.NET) — equivalent for .NET ecosystem.
+
+**Service mesh circuit breakers** (Istio, Linkerd) — implemented at the proxy layer; no application code changes required.
+- Istio: \`outlierDetection\` setting on DestinationRule. Configure failure threshold, ejection time.
+- Linkerd: similar via "service profile" config.
+- Pros: no code change; per-service configuration; observable.
+- Cons: less granular than per-call breakers in code; only HTTP/gRPC, not in-process calls.
+
+**Configuration parameters:**
+
+- **Failure threshold**: % of requests that must fail to trip. Common: 50% over a 1-min window.
+- **Trip threshold**: minimum number of requests before tripping (avoid tripping on 1 of 1 failing). Common: 20+ requests.
+- **Open timeout**: how long to stay OPEN before HALF-OPEN. Common: 30-60 seconds.
+- **Half-open requests**: how many probes during HALF-OPEN. Common: 1-5.
+
+**Common mistakes:**
+
+- **No fallback when OPEN**: returning a 5xx is better than hanging, but a useful fallback (cached response, default value, partial result) is better.
+- **Per-instance breaker, not per-dependency**: each instance has its own breaker; if dependency is failing, all instances eventually trip. That\'s usually fine.
+- **Tripping too aggressively**: thresholds too low → breaker oscillates. Thresholds too high → cascading failure isn\'t prevented.
+- **No observability**: instrument breaker state changes as metrics; alert on OPEN/HALF-OPEN transitions.
+
+**The pattern in practice:**
+
+Circuit breakers should wrap every external call: database, cache, downstream HTTP/gRPC service, queue, third-party API. Best when paired with:
+- **Timeouts** (the call must time out before the breaker can detect failure).
+- **Bounded retries** (don\'t retry-storm a failing dependency).
+- **Fallbacks** (graceful degradation when breaker is OPEN).
+- **Bulkheads** (isolate resources per dependency).`,
+    whenToUse: [
+      'Every external dependency call — DB, cache, HTTP/gRPC service, third-party API',
+      'Service mesh deployments — enable per-service circuit breaker policies',
+      'Reviewing a postmortem with cascading failure — was a circuit breaker missing?',
+      'Designing a new microservice — circuit breakers around every external call by default',
+    ],
+    keyConcepts: [
+      { term: 'Three-state machine', definition: 'CLOSED (normal) → OPEN (failing fast-fail) → HALF-OPEN (probing) → CLOSED. Standard since Hystrix.' },
+      { term: 'Fail-fast', definition: 'When OPEN, return error/fallback in <1ms instead of hanging on timeout. Saves threads, prevents cascading failure.' },
+      { term: 'resilience4j', definition: 'Modern Java circuit-breaker library; replacement for Hystrix (which is in maintenance mode).' },
+      { term: 'Istio outlierDetection', definition: 'Service-mesh-level circuit breaker. No app code changes; configured per DestinationRule.' },
+      { term: 'Failure threshold + min requests', definition: 'Trip on 50% failure over 1m, min 20 requests. Both required to avoid false-positive trips.' },
+      { term: 'Fallback', definition: 'What to return when breaker is OPEN. Cached response, default value, partial result. Better than 5xx.' },
+    ],
+    pitfalls: [
+      'No timeouts on the underlying call — circuit breaker can\'t detect "slow" without timeout.',
+      'Tripping too easily — thresholds set so low that transient blips trip the breaker repeatedly.',
+      'Tripping too late — thresholds so high that cascading failure has already happened.',
+      'No fallback on OPEN — returning 5xx is barely better than hanging.',
+      'No observability — breaker state changes invisible; debugging cascading failure is hard.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through the circuit breaker state machine.',
+        answer: `Three states with explicit transitions:
+
+**CLOSED** (normal):
+- All requests go through to the dependency.
+- The breaker tracks the recent failure rate (errors + timeouts) over a sliding window.
+- If failure rate exceeds threshold (typically 50%) AND a minimum number of requests have been observed (typically 20), trip to **OPEN**.
+
+**OPEN** (dependency is broken):
+- Requests fail fast — return an error or fallback immediately.
+- After a configured timeout (typically 30-60s), transition to **HALF-OPEN**.
+
+**HALF-OPEN** (probing):
+- A small number of requests (e.g., 1-5) are allowed through.
+- If they succeed: dependency has recovered → back to **CLOSED**.
+- If they fail: dependency still broken → back to **OPEN** (timer resets).
+
+The key insight: **OPEN protects you AND protects the dependency**. By stopping requests, you give the dependency a chance to recover from its overload / GC / restart. Hammering a sick dependency makes it sicker.
+
+Configuration parameters:
+- **Failure threshold** (50%): tunable. Lower = more sensitive; higher = more tolerant.
+- **Min request volume** (20): prevents tripping on 1-of-1.
+- **Open timeout** (30s): how long to wait before probing.
+- **Half-open requests** (3): how many probes.
+- **Sliding window**: time-based (e.g., last 60 seconds) or count-based (e.g., last 100 requests).
+
+**Worked example:**
+- Service A calls service B, normally 1000 req/sec, 0.1% error rate.
+- Service B starts failing: 70% error rate.
+- Within 1-2 seconds, A\'s breaker for B detects 50% failure → trips to OPEN.
+- A\'s requests to B fast-fail; A serves cached / fallback for users.
+- 30 seconds later: A enters HALF-OPEN. Sends 3 probes to B.
+- If B is recovered: probes succeed, breaker → CLOSED. Resume normal.
+- If B still failing: probes fail, breaker → OPEN. Wait another 30s.
+
+This pattern keeps A healthy through B\'s outage. Without the breaker, A\'s threads pile up waiting for B; A becomes unavailable too.`,
+      },
+      {
+        question: 'How does Istio\'s circuit breaker compare to Hystrix?',
+        answer: `Two completely different layers, both valid.
+
+**Hystrix / resilience4j (in-process)**:
+- Implemented in application code as a library.
+- Per-call granularity: different breakers for different calls (DB vs cache vs API).
+- Custom fallback logic (return cached value, return default, partial result).
+- Works for in-process calls (e.g., to a thread pool) AND network calls.
+- Cons: every service must adopt the library; language-specific.
+
+**Istio outlierDetection (service mesh)**:
+- Implemented at the Envoy proxy sidecar.
+- No application code changes — config-only.
+- Per-destination granularity (you set a policy per upstream service).
+- Detects unhealthy instances and ejects them from the load balancer pool.
+- Cons: only HTTP/gRPC; no fallback logic (proxy can only return errors, not custom responses); coarser than in-process.
+
+**Decision:**
+- **Service mesh-heavy team**: use Istio for the basic pattern; supplement with in-process for critical paths needing custom fallback.
+- **Mixed-language fleet**: Istio is more practical (single config vs per-language libraries).
+- **Critical paths needing fallback**: in-process (resilience4j etc.) for the rich fallback logic.
+
+**Hybrid common pattern:**
+- Istio handles the basic detection and ejection of bad instances (per-destination).
+- Application-level libraries handle the rich fallback logic (return cached data, return default, etc.).
+
+Both layers can coexist; they\'re not redundant.
+
+**Istio config example:**
+\`\`\`yaml
+trafficPolicy:
+  outlierDetection:
+    consecutive5xxErrors: 5
+    interval: 30s
+    baseEjectionTime: 60s
+    maxEjectionPercent: 50
+\`\`\`
+After 5 consecutive 5xx, eject the unhealthy instance for 60s; up to 50% of pool can be ejected.
+
+**resilience4j config example** (Java):
+\`\`\`java
+CircuitBreakerConfig.custom()
+  .failureRateThreshold(50)
+  .slidingWindowSize(20)
+  .waitDurationInOpenState(Duration.ofSeconds(30))
+  .build();
+\`\`\`
+
+Both target the same outcome via different mechanisms.`,
+      },
+      {
+        question: 'When does a circuit breaker hurt instead of help?',
+        answer: `Three scenarios:
+
+**1. Configured too aggressively.**
+- Failure threshold 10% → breaker trips on transient blips.
+- Constant oscillation between CLOSED and OPEN; users see intermittent errors.
+- Worse than no breaker because of the ping-pong UX.
+
+Fix: set threshold based on dependency\'s normal error rate + buffer. If dependency is normally 0.1% errors, breaker tripping at 5% is fine; tripping at 1% is too aggressive.
+
+**2. No fallback for OPEN state.**
+- Breaker trips → all requests return 5xx.
+- User sees full outage even though dependency is "just" slow.
+- A useful fallback (cached value, partial result, default) would mask the dependency outage from users.
+
+Fix: every breaker has a fallback path. Even "return last-known-good cached value with stale=true header" is better than 5xx.
+
+**3. Inadequate timeout on the underlying call.**
+- Dependency is slow but not failing (responses take 30s).
+- Without timeout: requests hang, threads exhaust, your service degrades.
+- The breaker waits for "failure" — but slow != failure unless there\'s a timeout.
+- Even with breaker, you cascade.
+
+Fix: every external call MUST have a timeout (1-5 seconds typical). The breaker layer detects timeout = failure. Together they prevent cascading failure.
+
+**4. Per-instance vs per-dependency confusion.**
+- Each app instance has its own breaker for the same dependency.
+- If dependency is sick: instance A\'s breaker trips, instance B\'s breaker trips, etc. Each on its own schedule.
+- The aggregate effect is fine (all instances eventually fast-fail).
+- But: half-open probes from many instances simultaneously hit the dependency at once → re-overload.
+
+Fix: stagger the open timeout (e.g., 30s ± 20% jitter) so instances probe at different times.
+
+**5. False sense of security.**
+- "We have circuit breakers, so cascading failure can\'t happen."
+- Reality: breakers prevent ONE class of cascade. Other classes (memory pressure, GC, retry storms, slow shared resource) still happen.
+- Circuit breakers + retries + backoff + timeouts + bulkheads + load shedding all work together. Skipping any leaves a cascade vector.
+
+The pragmatic truth: circuit breakers are necessary but not sufficient. Layer the patterns.`,
+      },
+    ],
+    references: [
+      'https://martinfowler.com/bliki/CircuitBreaker.html',
+      'https://resilience4j.readme.io/',
+      'https://istio.io/latest/docs/concepts/traffic-management/#circuit-breakers',
+    ],
+  },
+
+  {
+    id: 'cascading-failure',
+    title: 'Cascading Failure — How Systems Die in Production',
+    icon: 'alertOctagon',
+    color: '#ec4899',
+    questions: 3,
+    description: 'The four canonical cascading-failure patterns from the SRE Book and how to prevent each.',
+    visualizations: [
+      {
+        title: 'Cascading failure — anatomy',
+        description: 'Slow dependency causes thread pool exhaustion in calling service; users retry, doubling load; GC death spiral amplifies. Each step makes the previous worse.',
+        image: '/diagrams/sre/g2-cascade.png',
+      },
+    ],
+    introduction: `**Cascading failure** is the SRE Book Ch 22\'s deepest material. The pattern: one component fails or slows; it triggers a series of compounding effects that bring down the whole system. Every SRE has seen it; many architectures don\'t survive their first one.
+
+**The four canonical cascading failure patterns** (SRE Book Ch 22):
+
+**1. Server overload**
+- Capacity insufficient for load.
+- Latency increases; threads/connections exhaust.
+- Health checks fail; load balancer removes nodes.
+- Remaining nodes get more load; their latency increases; they drop out.
+- **Death spiral.**
+
+**2. Resource exhaustion**
+- One resource (memory, CPU, file descriptors, connections) becomes constrained.
+- Subsidiary effects: GC pressure, thread starvation, connection-pool exhaustion.
+- Each subsidiary effect amplifies the original problem.
+- Without intervention, the system collapses.
+
+**3. Service unavailability**
+- A dependency goes down; calling service hangs (no timeout / no breaker).
+- Calling service\'s threads exhaust waiting on the dead dependency.
+- Calling service becomes unavailable too.
+- **Propagation up the stack.**
+
+**4. Retry amplification**
+- A request fails; client retries.
+- Retry succeeds → fine.
+- Retry fails → client retries again (exponential backoff hopefully).
+- Multiplied by every retrying client: a "small" failure becomes a load multiplier.
+- **2-5× the load on a system that\'s already failing.**
+
+**Prevention pattern stack** (each layer prevents specific failure modes):
+
+- **Circuit breakers** (G1): prevent service-unavailability propagation.
+- **Bulkheads** (G7): prevent one bad dependency from exhausting all your threads.
+- **Timeouts** (G8): prevent hung calls from accumulating.
+- **Bounded retries with jitter** (G4): prevent retry amplification.
+- **Load shedding** (G5): drop low-priority requests before the system collapses.
+- **Graceful degradation** (G3): serve degraded results instead of failing.
+- **Capacity planning + autoscaling** (F): provision for failure-mode peak.
+
+**The GC death spiral** (SRE Book Ch 22 quoted at length):
+
+In Java systems, insufficient CPU triggers more GC, which uses more CPU, which leaves less for actual work. Requests queue. The queue grows. More memory pressure → more GC → less CPU → more queue. Eventually OOM or full saturation.
+
+Recovery: usually requires a restart (the GC spiral is too far in to recover from). Prevention: heap headroom + GC tuning + bounded queue depths.
+
+**The retry storm** (verbatim from SRE Book Ch 22):
+
+Quote: *"Retries can amplify load, particularly during cascading failures."* When a service is degraded, automatic retries from clients double or triple the load — exactly when the service can least handle it.
+
+The fix:
+- **Bounded retries** (max 2-3 attempts).
+- **Exponential backoff** (each retry waits longer).
+- **Jitter** (random component prevents synchronized retries).
+- **Idempotent requests** (retries are safe).
+
+**The thundering herd**:
+
+Pattern: 10,000 clients all retry at exactly the same time after a brief outage.
+- The "brief outage" might have been 5 seconds; the retry storm at second 6 takes another minute to subside.
+- Without jitter, retries are synchronized; with jitter, they spread out.
+
+The classic mitigation: **jittered exponential backoff**. \`wait = base * 2^attempt * (0.5 + random())\`. AWS\'s "Full Jitter" formula: \`wait = random(0, base * 2^attempt)\`.
+
+**The "metastable failure" framing** (modern):
+
+A 2021 paper by Bronson et al. introduced "metastable failures" — systems that have two stable states: healthy (low load, low latency) and degraded (high load, high latency, retries amplifying). A small perturbation moves them from healthy to degraded; they don\'t recover without intervention. This is cascading failure formalized.`,
+    whenToUse: [
+      'Postmortem analysis — was a cascading failure pattern present? Which one?',
+      'Architecture review — does the design have all the prevention layers?',
+      'Pre-launch — load test specifically for cascading-failure scenarios',
+      'Incident response — when responding to a cascade, identify which pattern is active',
+    ],
+    keyConcepts: [
+      { term: 'Server overload spiral', definition: 'Capacity insufficient → latency up → nodes drop out → remaining nodes overloaded → more drop out → collapse.' },
+      { term: 'Resource exhaustion', definition: 'One resource (memory, threads, connections) constrained; subsidiary effects amplify.' },
+      { term: 'Service unavailability propagation', definition: 'Dependency dies; caller\'s threads exhaust waiting; caller dies; propagates up the stack.' },
+      { term: 'Retry amplification', definition: 'Client retries multiply load on a failing service. Without jitter and backoff, 2-5× load multiplier.' },
+      { term: 'GC death spiral', definition: 'Insufficient CPU → more GC → more CPU consumed → less for work → more queue → more memory pressure → more GC.' },
+      { term: 'Metastable failure', definition: 'System has two stable states; small perturbation moves it from healthy to degraded; doesn\'t auto-recover.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through a real cascading-failure scenario.',
+        answer: `Worked example, common in microservice architectures:
+
+**T+0**: Dependency service B is normally 50ms p99. Something happens — bad deploy, slow query, GC pause — and B\'s p99 jumps to 5 seconds.
+
+**T+30s**: Service A calls B with a 30-second timeout. A\'s requests pile up waiting on B. A\'s thread pool fills.
+
+**T+60s**: A\'s thread pool exhausted. A starts rejecting incoming requests. A\'s users see 503.
+
+**T+90s**: A\'s users retry (browser auto-retry, JS retry, mobile app retry). The retries arrive at A; A still can\'t serve them; rejected.
+
+**T+120s**: The retry rate at A doubles the original load. Even if A had spare capacity, it can\'t process them.
+
+**T+150s**: A\'s health checks fail (maybe because the health-check endpoint also calls B). Load balancer removes A instances. The remaining instances get more load.
+
+**T+180s**: A is fully unavailable. Users on A\'s downstream see no response. Their retries hammer A.
+
+**T+240s**: B is no longer the problem; B is sick but recoverable. A is fully cascaded; needs full restart.
+
+**Why it happens this way:**
+- No timeout (or timeout too long): A\'s threads hang on B for 5+ seconds.
+- No circuit breaker: A keeps calling B even though B is failing.
+- No bounded retries: clients retry endlessly.
+- No load shedding: A accepts requests it can\'t serve.
+- No bulkhead: B\'s problem exhausts A\'s entire thread pool, not just B-related threads.
+
+**Each prevention layer:**
+- **Timeout** (1s instead of 30s): A\'s threads free up faster.
+- **Circuit breaker**: A stops calling B once B\'s error rate exceeds threshold.
+- **Bounded retries with jitter**: client retries 2× max, with random delay; spread out.
+- **Load shedding**: A drops low-priority requests when overloaded.
+- **Bulkhead**: A has a separate thread pool for B-related calls; B\'s problem doesn\'t exhaust A\'s overall capacity.
+- **Graceful degradation**: A\'s response shows cached data when B is unavailable instead of 503.
+
+The point: **none of these alone are sufficient**. You need them all in layers.`,
+      },
+      {
+        question: 'How do you recover from a live cascading failure?',
+        answer: `**Stop the bleeding first; understand later.**
+
+The mitigation sequence:
+
+**Step 1: Reduce load immediately.**
+- Load shed: drop low-priority requests at the LB level (rate limit, queue length cap).
+- Block expensive paths: feature-flag off the slow code path causing the issue.
+- Cap concurrency: lower max in-flight requests.
+
+**Step 2: Block retry amplification.**
+- Set retry-after on errors so clients wait longer.
+- Disable client-side automatic retries via config / response headers.
+- If clients are mobile apps with hardcoded retry: emergency message to wait.
+
+**Step 3: Isolate the failing dependency.**
+- If the cause is identified (slow downstream), aggressively trip circuit breakers — manually if needed.
+- Disable optional features that depend on the slow path.
+- Route around the failing component if possible.
+
+**Step 4: Add capacity.**
+- Scale up the affected services if possible. Won\'t fix the root cause but may help absorb residual load.
+- Move traffic to healthy regions.
+
+**Step 5: Restart cascaded components.**
+- Cascaded services often need restart (GC spiral, exhausted thread pools, leaked resources).
+- Rolling restart, with circuit breakers OPEN to prevent re-cascade.
+
+**Step 6: Verify recovery.**
+- Watch SLI metrics. Latency back to normal? Error rate dropped?
+- Slowly close circuit breakers; observe.
+- Increase traffic gradually if you load-shed.
+
+**Step 7: Postmortem.**
+- What was the trigger?
+- What prevention layers were missing?
+- What enabled the cascade (no timeout, no breaker, etc.)?
+
+**The mental model**: cascading failures are positive-feedback systems. Once the spiral starts, simply "fixing" the trigger isn\'t enough — you have to break the feedback loops (load shed, restart, circuit-break) to return to a stable state.
+
+The recovery template: **load shed → trip breakers → restart cascaded services → gradually restore**. In that order.`,
+      },
+      {
+        question: 'What\'s the GC death spiral and how do you prevent it?',
+        answer: `**Quote from SRE Book Ch 22**: *"Insufficient CPU triggers more GC, which uses more CPU, which leaves less for actual work."*
+
+The spiral mechanics (Java specifically, also applies to other GC\'d languages):
+
+1. Service is busy; processing more requests than usual.
+2. Memory allocation rate is high; eventually heap is full.
+3. GC runs to free memory. GC consumes CPU.
+4. Less CPU for actual request processing → requests queue.
+5. The queue grows; queued objects consume memory; heap fills faster.
+6. GC runs more often / for longer.
+7. Less CPU for work → larger queue → more memory pressure → more GC.
+
+The endpoint: usually OOM (out of memory) or full saturation (request times out faster than service can process).
+
+**Recovery from a GC spiral typically requires restart.** The system is too far gone to recover on its own — every cycle of work makes the spiral worse.
+
+**Prevention:**
+
+**1. Heap headroom.**
+- Don\'t run at >70% heap utilization at steady state.
+- The other 30% is for spikes and avoid GC pressure.
+- Prometheus/Grafana: monitor JVM heap, alert at 80%.
+
+**2. GC tuning.**
+- Modern JVM: G1GC or ZGC (low pause). Avoid CMS (deprecated).
+- Tune young-generation size for allocation patterns.
+- Concurrent GC algorithms can do work in parallel with the application; reduces pause times.
+
+**3. Bounded queues.**
+- Don\'t use unbounded request queues. The queue itself becomes the source of memory pressure.
+- Bounded queue + reject when full → load shedding.
+
+**4. Bulkheads.**
+- Separate thread pools per dependency. One bad dependency shouldn\'t fill all threads.
+- Bulkheads also bound memory: each pool has its own queue depth.
+
+**5. Profiling.**
+- Continuous profiling (Pyroscope, Parca) shows where allocation is happening.
+- Find the hot allocation path; optimize.
+
+**6. Off-heap storage for caches.**
+- Large caches on heap = constant GC. Off-heap (e.g., Chronicle, OHC) bypasses GC.
+
+**7. Watch for memory leaks.**
+- Slow leaks accumulate; GC works harder over time; eventually a spiral.
+- Soak tests catch most leaks.
+
+**The discipline**: GC death spirals usually have warning signs. Heap usage trending up; GC time as % of CPU growing; latency creeping. Alert on these before the spiral kicks in.
+
+Other-language equivalents:
+- **Go**: similar dynamics with the goroutine + GC system. Off-heap not as common; bounded channels matter.
+- **Python**: GIL contention is the analogous issue; CPython\'s reference counting + cycle GC less prone to death spirals than tracing GC, but possible.
+- **Node.js**: V8 GC similar to JVM; same dynamics.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/addressing-cascading-failures/',
+      'https://www.usenix.org/conference/srecon21asia/presentation/bronson',
+    ],
+  },
+
+  {
+    id: 'graceful-degradation',
+    title: 'Graceful Degradation — Serving Less, Not Nothing',
+    icon: 'minimize',
+    color: '#ec4899',
+    questions: 3,
+    description: 'The art of returning a partial / cached / fallback response instead of failing.',
+    introduction: `**Graceful degradation** is the discipline of "serve less when you can\'t serve everything" instead of "fail completely." Often the difference between an outage and a recoverable incident.
+
+**The three patterns:**
+
+**1. Cached fallback.**
+When a downstream is unavailable, return the last-known-good cached value. Often with a header indicating staleness (\`Cache-Control: max-age=0, stale-if-error=86400\`). Examples:
+- Search service: when the index is unavailable, return cached results from 5 minutes ago.
+- User profile: when the profile DB is down, return cached profile (acceptable for many features).
+- Pricing service: return last-known prices (with a notice the data may be stale).
+
+**2. Partial response.**
+Return what you have; omit what you don\'t. Examples:
+- Feed service: when the recommendations engine is down, return the chronological feed without recs.
+- Product page: when reviews service is down, render the page without reviews.
+- Search results: when one index shard is down, return results from the others with a note.
+
+**3. Default / generic response.**
+Return a sensible default when personalized data is unavailable.
+- Recommendations: serve the global "most popular" list.
+- A/B test: serve the control variant.
+- Feature flag: default to the safe value.
+
+**The decision framework**:
+
+For each downstream call, ask: **what should we do when it fails?**
+
+Three options:
+- **Fail the request entirely**: appropriate for security checks, payment authorization, anything user-critical.
+- **Degrade**: appropriate for enrichment data, recommendations, optional features.
+- **Skip**: appropriate for logging, analytics, audit (failure-isolated to non-user-facing).
+
+Most user-facing services have a mix. **Auth check** must succeed; **recommendations** can degrade; **analytics** can skip silently.
+
+**Implementation patterns:**
+
+**Try / fallback structure:**
+\`\`\`
+result = try_call_dependency()
+if result.failed:
+    result = fallback_function()
+return result
+\`\`\`
+
+**Circuit breaker + fallback (resilience4j, Polly):**
+\`\`\`
+@CircuitBreaker(fallbackMethod = "getFallbackData")
+public Data getData() { return upstream.fetch(); }
+
+public Data getFallbackData(Exception e) { return cachedData; }
+\`\`\`
+
+**Service mesh + sidecar fallback:**
+- Istio + Envoy can return a default response on upstream failure.
+- Useful for "return 200 with empty body" patterns; not for rich fallbacks.
+
+**Response header signaling:**
+- \`X-Degraded: recommendations\` — tells clients which features are degraded.
+- \`X-Cache-Hit: true; X-Stale: true\` — indicates cached / stale data.
+- Allows client UIs to show "Some data may be outdated" notices.
+
+**The instrumentation discipline:**
+
+Every degraded path should be **observable**:
+- Metric: \`requests_total{quality="full|degraded|fallback"}\`.
+- SLI: % of requests served at full quality (vs. degraded).
+- Alert: when degraded > 10% of traffic for sustained period.
+
+Without instrumentation, you don\'t know how often degradation kicks in. A service that\'s "degrading silently" 50% of the time gives users a much worse experience than the SLO claims.
+
+**The product / engineering boundary:**
+
+Engineering can implement degradation; product needs to define **what counts as acceptable**. Some products demand "no degradation, period — fail loud" (e.g., financial settlement). Others welcome "show what you can" (e.g., feed apps).
+
+Have the conversation explicitly. Document per-feature: full quality, acceptable degradation, unacceptable failure.
+
+**Anti-pattern**: silent degradation that customers detect before you do. "Why are my search results so bad lately?" — turns out the index has been stale for a week. Always alert on degradation.`,
+    whenToUse: [
+      'Designing every external call — what\'s the fallback?',
+      'Reviewing user-facing services — does the experience degrade gracefully?',
+      'Postmortem — could degradation have prevented this outage?',
+      'Product conversations — explicit per-feature degradation policy',
+    ],
+    keyConcepts: [
+      { term: 'Cached fallback', definition: 'Return last-known-good cached value when downstream is unavailable. With staleness headers.' },
+      { term: 'Partial response', definition: 'Return what you have; omit what you don\'t. Better than complete failure for non-essential data.' },
+      { term: 'Default response', definition: 'Sensible fallback when personalized data unavailable. "Most popular" lists, control variants.' },
+      { term: 'Quality SLI', definition: '% of requests served at full quality vs degraded. Captures partial-failure invisible to availability SLI.' },
+      { term: 'Header signaling', definition: 'Response headers (X-Degraded, X-Stale) tell clients about degraded state; UIs can show notices.' },
+      { term: 'Per-feature policy', definition: 'Product + engineering decide per feature: must succeed, can degrade, can skip silently. Documented.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through how you\'d design a feature with graceful degradation.',
+        answer: `Worked example: a product page with reviews, recommendations, inventory, and pricing.
+
+**Step 1: Categorize each downstream by criticality.**
+- **Pricing**: must succeed. Wrong price is fraud.
+- **Inventory**: must succeed. Selling out-of-stock is a customer-trust issue.
+- **Reviews**: can degrade. Showing the page without reviews is fine.
+- **Recommendations**: can degrade. Default to "most popular" if personalized fails.
+- **Analytics tracking**: can skip silently. Don\'t fail user request because tracking failed.
+
+**Step 2: Define the fallback per category.**
+- **Pricing**: no fallback. Fail the request if pricing fails.
+- **Inventory**: no fallback for "in stock" (fail). Fallback for inventory count: show "available" without exact number.
+- **Reviews**: serve cached reviews from last hour. If cache is also down, omit the section.
+- **Recommendations**: serve global "best sellers" list.
+- **Analytics**: best-effort send; don\'t block.
+
+**Step 3: Implement with circuit breakers + fallbacks.**
+- Each dependency wrapped in a circuit breaker.
+- Each circuit breaker has a fallback method.
+- Fallback methods are pure (no further external calls) so they can\'t cascade.
+
+**Step 4: Instrument quality.**
+- Metric: \`product_page_request{quality="full|degraded_reviews|degraded_recs|...}\`.
+- Quality SLI: % of requests served at full quality.
+- Dashboard tracks degraded-quality events over time.
+
+**Step 5: Tell the user.**
+- Header: \`X-Degraded: reviews,recommendations\`.
+- UI: subtle notice ("Some content may be stale") when degraded.
+
+**Step 6: Monitor.**
+- Alert if any quality drops below 90% sustained.
+- Alert if cached fallback is hit > 10% (suggests upstream is unhealthy).
+
+**The result:**
+- Pricing failure → 503 (acceptable; rare).
+- Inventory failure → 503 (acceptable).
+- Reviews failure → page renders without reviews; SLI flag fires; users still buy.
+- Recommendations failure → page shows generic recs; users still buy.
+- Analytics failure → user unaware; engineers see metric.
+
+The key insight: **most "failures" are partial failures**. Pricing usually works; reviews usually work. The architecture that handles partial failures gracefully has dramatically higher availability than one that requires every dep to succeed.`,
+      },
+      {
+        question: 'When should a service NOT degrade gracefully?',
+        answer: `Three categories:
+
+**1. Security-critical decisions.**
+- Authentication: if the auth service is down, you cannot serve the user. Don\'t fall back to "trust the client; let them in."
+- Authorization: same. A "fallback" allows-all permission is a security disaster.
+- Payment processing: if the payment gateway fails, the transaction must fail (or be queued for retry); never assume success.
+- Fraud check: if fraud-scoring is down, reject or delay; don\'t fall back to "approve."
+
+The principle: a degraded **security** decision is worse than a failed request. Better to fail loud.
+
+**2. Financial / legal correctness.**
+- Pricing: showing wrong prices is fraud. Don\'t fall back to "last seen" pricing for a customer\'s order.
+- Inventory: claiming items in stock when they aren\'t is a customer-trust failure.
+- Tax calculation: must use the current rate. Stale tax rates cause compliance issues.
+- Order placement: must succeed atomically. Don\'t "queue and assume" without explicit confirmation.
+
+**3. Auditable / compliance work.**
+- Audit logging: must succeed. If you can\'t log who did what, the action shouldn\'t be allowed.
+- Compliance checks (KYC, AML): cannot be skipped or fallback.
+- Legal-mandated calculations (sales tax, regulatory limits): must use authoritative source.
+
+**The pragmatic test**: would the customer be unhappy / the business be at legal risk if this degraded? If yes, fail loud.
+
+Even within these categories, distinguish read vs write:
+- **Read of pricing**: degrade carefully (cached for sub-minute is sometimes OK; depends on volatility).
+- **Write of pricing in an order**: never. Use authoritative price.
+- **Read of fraud score**: maybe degrade for non-purchase contexts.
+- **Write of fraud-flagged decision**: never degrade.
+
+The discipline is product + engineering deciding explicitly. Default to "fail loud" and only degrade where the product team has signed off.`,
+      },
+      {
+        question: 'How do you avoid "silent degradation"?',
+        answer: `**Make degradation visible at every layer.**
+
+The three layers:
+
+**1. Service-level metrics.**
+- Every service emits a quality counter: \`requests_total{quality="full|degraded|fallback"}\`.
+- Quality SLI in the SLO doc: "% of requests served at full quality."
+- Dashboard widget: time-series of quality breakdown.
+
+**2. Alerts on degradation.**
+- Quality drops below threshold (e.g., 90% full quality) → alert.
+- Specific fallback path triggered (e.g., the "global recommendations fallback") at high rate → alert.
+- These are different from "is the service up" alerts; they catch "the service is up but degraded."
+
+**3. Client signaling.**
+- Response headers indicate degradation: \`X-Degraded: reviews\`.
+- UI shows subtle indicator when degraded (e.g., "Some data may be outdated" badge).
+- Clients can opt out of degraded responses if they want consistency.
+
+**The diagnostic for a "silent degradation" pattern:**
+- Run a quality query: "what fraction of last week\'s requests were degraded?"
+- If the number is surprising (e.g., 15% of requests degraded, but no one knew), that\'s silent degradation.
+- Common causes:
+  - The downstream is sick but breaker is tripping → fallback is silent because it "works."
+  - The downstream\'s slow path is slow enough to time out → fallback fires.
+  - The cache is being served as fallback because the upstream rarely succeeds.
+
+**Fix the silent degradation:**
+- Add the alerts (immediate fix).
+- Investigate why the upstream is returning fallbacks so often (capacity, code path, dependency).
+- Either fix the upstream or accept the degradation (and tell product, who may not have signed off on 15% degraded).
+
+**Cultural rule**: degradation that\'s instrumented and accepted is engineering. Degradation that\'s silent and unbeknownst is incompetence. The instrumentation is non-negotiable.
+
+**Common pitfall**: SREs build sophisticated graceful degradation, then never look at the quality metric. Months later, customers complain about "the search seems off." Investigation: 30% of search responses have been degraded for 3 months due to a downstream change no one fixed. Quality SLI would have surfaced this in week 1.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/addressing-cascading-failures/',
+      'https://learn.microsoft.com/en-us/azure/architecture/patterns/health-endpoint-monitoring',
+    ],
+  },
+
+  {
+    id: 'retry-jitter-backoff',
+    title: 'Retry, Jitter, and Backoff — AWS Full-Jitter and the Retry Storm',
+    icon: 'refreshCw',
+    color: '#ec4899',
+    questions: 3,
+    description: 'The exponential-backoff formula, why jitter is mandatory, and AWS\'s "full jitter" recommendation.',
+    introduction: `**Retries** are the most common cause of cascading failure. The intuition is fine ("if a request fails, try again"); the implementation is subtle.
+
+**The three knobs:**
+
+**1. Retry count.**
+- Bounded. Typically 2-3 attempts.
+- Unlimited retries are a source of retry storms.
+
+**2. Backoff (delay between retries).**
+- Linear: wait N seconds × attempt. Slow ramp.
+- Exponential: wait \`base × 2^attempt\`. Standard.
+- Fixed: same delay each time. Rarely correct.
+
+**3. Jitter (random component).**
+- Without jitter: all retrying clients retry at the same time → thundering herd.
+- With jitter: retries spread out → less load spike.
+
+**The classic exponential backoff formula:**
+\`wait = base × 2^attempt\`
+
+E.g., base=100ms: 100ms, 200ms, 400ms, 800ms, 1600ms.
+
+**Adding jitter (AWS\'s "Full Jitter" recommendation):**
+\`wait = random(0, base × 2^attempt)\`
+
+E.g., base=100ms: \`random(0, 100ms)\`, \`random(0, 200ms)\`, \`random(0, 400ms)\`, ...
+
+The reasoning (from AWS Architecture Blog, "Exponential Backoff and Jitter"): under load, simple "retry at random offset" produces a distribution that decreases load on the failing service. Full jitter is mathematically optimal for spreading retries.
+
+**Equal Jitter (alternative):**
+\`wait = (base × 2^attempt / 2) + random(0, base × 2^attempt / 2)\`
+
+E.g., 50-100ms, 100-200ms, 200-400ms. Slower than full jitter; same spreading effect.
+
+**Decorrelated Jitter** (also AWS):
+\`wait = min(cap, random(base, prev × 3))\`
+
+E.g., 100, then 100-300, then 100-900. Slightly faster than full jitter but harder to reason about.
+
+**The retry-storm anti-pattern:**
+
+A service is briefly degraded (5 seconds of high error rate). 10,000 clients with naive exponential backoff (no jitter) all retry at exactly the same time at T+200ms, then T+400ms, etc.
+
+The result: 10,000 simultaneous retries every 200ms × 2^attempt seconds. The pulses of retry traffic are larger than the original load. The service can\'t recover because every backoff window ends with another tsunami of requests.
+
+With full jitter: retries spread uniformly. Service sees small constant retry traffic; can absorb and recover.
+
+**Idempotency requirement:**
+
+Retries are only safe for **idempotent** operations.
+- Idempotent: can be performed multiple times with the same result. \`PUT /users/123\` (set state); \`GET\` (read).
+- Non-idempotent: each call has a side effect. \`POST /payments\` (charge once); \`POST /tweets\` (post once).
+
+Retrying a non-idempotent operation can cause duplicate side effects (charging twice). Solutions:
+- **Idempotency keys**: client generates a unique key; server deduplicates by key.
+- **Conditional updates**: \`If-Match\` headers; only proceed if state hasn\'t changed.
+- **Don\'t retry**: for some operations (financial), reject silently and let the user retry manually.
+
+**Where to retry:**
+
+- **Client-side** (browser, mobile, internal microservice client): retry network failures, 5xx, 429.
+- **Service-side** (proxies, gateways): retry transient errors (network, timeout) but NOT application errors (400 series typically).
+- **Don\'t retry on the same proxy that did the original**: amplifies load on the same path.
+
+**HTTP retry guidance:**
+
+- **5xx (except 501, 505)**: retry. Server says it\'s temporary.
+- **429 (Too Many Requests)**: retry per Retry-After header.
+- **408 (Request Timeout)**: retry.
+- **4xx (other)**: do NOT retry. Client error; retrying produces same error.
+- **Network errors (ECONNRESET, timeout)**: retry.
+- **3xx redirects**: follow, don\'t retry.
+
+**The maximum retry budget:**
+
+A service should have a global "retry budget": max N retries per second across all clients. Without this, retries during an incident can saturate even healthy capacity.
+
+Implementation: token bucket; retries cost tokens; tokens refill at a rate.`,
+    whenToUse: [
+      'Designing every retry policy — explicit jitter is non-negotiable',
+      'Reviewing existing retries — are they bounded, jittered, idempotent?',
+      'Postmortem with retry-storm component — was the policy correct?',
+      'Service mesh / API gateway config — global retry settings affect every service',
+    ],
+    keyConcepts: [
+      { term: 'Exponential backoff', definition: 'wait = base × 2^attempt. Standard formula. NEVER use without jitter.' },
+      { term: 'Full Jitter (AWS)', definition: 'wait = random(0, base × 2^attempt). Mathematically optimal for spreading retries. Industry standard.' },
+      { term: 'Retry storm', definition: 'Synchronized retries multiply load on a recovering service; prevent it from recovering. Solved by jitter.' },
+      { term: 'Idempotency', definition: 'Operation can be retried safely. Required for retries; non-idempotent ops need idempotency keys or no retry.' },
+      { term: 'Retry budget', definition: 'Global cap on retries per second. Token bucket. Prevents retry waves from exhausting healthy capacity.' },
+      { term: 'Bounded retries', definition: '2-3 attempts max. Unbounded is the canonical retry-storm cause.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Why is jitter mandatory for retries?',
+        answer: `**Without jitter, retries from many clients are SYNCHRONIZED — and synchronized retries are a thundering herd that prevents the service from recovering.**
+
+Worked example: 10,000 clients all calling service X. X has a 5-second hiccup at T0; all 10,000 requests fail.
+
+Without jitter:
+- All clients retry at T+200ms (the first exponential backoff step).
+- 10,000 simultaneous retries hit X at T+200ms.
+- X is still recovering; can\'t serve all 10,000; some succeed, some fail.
+- Failed clients retry at T+600ms (next backoff step).
+- 5,000 retries arrive at T+600ms. Same pattern.
+- Each backoff window ends with another wave; X stays sick longer.
+
+With full jitter (\`wait = random(0, base × 2^attempt)\`):
+- Clients\' retries are spread uniformly between T+0 and T+200ms.
+- ~50 clients retry per millisecond (10000 / 200).
+- X handles a manageable steady stream; recovers.
+- The "bursts of synchronized retry" pattern doesn\'t exist.
+
+**The math** (from the AWS blog):
+
+Without jitter: all clients fire at the same time → load = N × baseline at retry instants.
+With jitter: load distributed → load = N / (interval / step) per step ≈ baseline.
+
+Difference: a factor of N (10,000 in this example).
+
+**The critical pitfall**: people often think "exponential backoff" = "backoff with jitter" and get only the first part. They write \`wait = 2^attempt × 100ms\` and ship. Production retry storm a few months later. The fix is one line: \`wait = random(0, 2^attempt × 100ms)\`.
+
+**The AWS decorrelated jitter** is sometimes preferred: \`wait = min(cap, random(base, prev × 3))\`. Slightly tighter retry interval (less time spent waiting); same spreading. Used by AWS SDKs.
+
+**When to skip jitter**: never. There\'s no scenario where deterministic backoff is better than jittered. Always jitter.`,
+      },
+      {
+        question: 'How do you handle retries for non-idempotent operations?',
+        answer: `**Idempotency keys + server-side deduplication.**
+
+The pattern:
+1. Client generates a unique idempotency key for each operation (UUID).
+2. Client sends the key with the request: \`Idempotency-Key: abc-123\`.
+3. Server receives the request:
+   - First time seeing the key: process normally; store \`(key, result)\` in a dedup table.
+   - Already seen this key: return the stored result; don\'t re-process.
+4. Client retries with the same key:
+   - Server detects: returns the same response as the first time.
+   - No duplicate side effect.
+
+**Where the dedup state lives:**
+- **Cache** (Redis, Memcached): fast but bounded TTL. Good for short-lived ops.
+- **Database table**: durable. Good for financial / regulatory operations. Index on the key.
+- **Both**: cache for hot keys, DB for durability.
+
+**Key generation:**
+- Client-side: UUID per logical operation. Same UUID across retries.
+- Server-side: hash of (request body + user_id + timestamp_window). If client doesn\'t provide a key, server can derive one for HTTP idempotent methods.
+
+**TTL for the idempotency key:**
+- Match the retry window: if clients retry up to 24 hours, key should live 24+ hours.
+- Stripe uses 24 hours; AWS varies by service.
+
+**Patterns for specific use cases:**
+
+**Payment processing (Stripe-style):**
+- Client sends \`Idempotency-Key: payment-2024-01-15-userid-amount\`.
+- Server stores \`(key, payment_result)\` in DB after processing.
+- Retry with same key → return original result; no double-charge.
+- Different key → new payment.
+
+**Tweet / post / message-send:**
+- Client generates UUID per message.
+- Server stores message + key.
+- Retry → return original tweet; no duplicate post.
+
+**Ledger / transactional write:**
+- Client supplies sequence number.
+- Server checks for the sequence; if seen, returns previous result.
+
+**The "no retry" alternative:**
+
+For some operations, the right answer is **don\'t retry**. The user retries manually if the operation didn\'t succeed.
+- Banking transfers (single-shot intent-confirmed flow).
+- Critical destructive operations (delete account).
+- Anything where double-side-effect is unacceptable AND idempotency keys would be complex.
+
+The discipline: every API endpoint declares its idempotency. Either "idempotent (retries safe)" or "not idempotent (use idempotency key)" or "not idempotent (no retries)."`,
+      },
+      {
+        question: 'What\'s a "retry budget" and when do you need one?',
+        answer: `**Retry budget = a global token bucket limiting total retry RPS across all clients.**
+
+The problem it solves: retries are useful for transient errors but **dangerous during sustained outages**. A service that\'s 50% degraded for an hour will see 2× normal traffic from retries, prolonging the outage.
+
+The retry budget caps the damage:
+- E.g., "max 10% of total RPS can be retries."
+- During normal operation: retries are rare; budget barely consumed.
+- During an outage: retries grow until they hit the budget; further retries are suppressed.
+
+**Implementation (token bucket):**
+- Budget: 10% of total RPS = 100 retries/sec for a 1000 RPS service.
+- Token bucket: 100 tokens, refills at 100/sec.
+- Each retry costs 1 token.
+- If bucket is empty: retry is rejected at the proxy/gateway; client gets the original error.
+
+**Where to implement:**
+- **Service mesh** (Istio, Linkerd): retry policy with budget config.
+- **API gateway** (Kong, AWS API Gateway, Azure APIM): retry budget per service.
+- **Client-side libraries**: per-client local budget (less effective; can\'t coordinate across instances).
+
+**When you need it:**
+- High-traffic services with many client retrying.
+- Services with critical SLOs where extending an outage by retries is unacceptable.
+- Microservices fleets where one service\'s retries can saturate downstream.
+
+**Without a retry budget:**
+- A 30-second blip causes 30 seconds of outage + 60 seconds of retry storm = 90 seconds of degradation.
+- With budget: 30 seconds of outage + retries cap at 10% = ~30 seconds of degradation.
+
+**Trade-off**: budget rejects some retries that would have succeeded. For most services, this is fine — the retry was a duplicate of the original, and the original might succeed on its own anyway.
+
+**Service-mesh example (Istio):**
+\`\`\`yaml
+trafficPolicy:
+  tcp:
+    maxConnections: 1000
+  http:
+    h2UpgradePolicy: UPGRADE
+  outlierDetection:
+    consecutiveErrors: 5
+    interval: 30s
+\`\`\`
+
+(Istio doesn\'t have a direct "retry budget" knob; the combination of \`outlierDetection\` + retry policy + maxConnections approximates one.)
+
+**Better implementation**: service-mesh + custom logic via Envoy filters. Or use the gRPC retry policy with retry-budget extension.
+
+**The cultural framing**: retries help individual requests; retry budget protects the system. Both are needed.`,
+      },
+    ],
+    references: [
+      'https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/',
+      'https://docs.aws.amazon.com/sdkref/latest/guide/feature-retry-behavior.html',
+      'https://stripe.com/docs/api/idempotent_requests',
+    ],
+  },
+
+  {
+    id: 'load-shedding',
+    title: 'Load Shedding — Drop Before You Die',
+    icon: 'minus',
+    color: '#ec4899',
+    questions: 3,
+    description: 'How and when to deliberately reject requests so the rest succeed. Priority-based shedding, queue management, the AWS framing.',
+    introduction: `**Load shedding** is the discipline of **rejecting some requests so that others succeed**. Counterintuitive — engineers want to serve every request. The right reframe: serving 70% of requests successfully is much better than failing 100% of requests because the system collapsed.
+
+The SRE Book Ch 21 (Handling Overload) is the canonical treatment. Quote: *"Avoid serving requests that you can\'t serve gracefully. The point of load shedding is to reduce the load on the server such that it can return to a healthy state and serve the rest of its load."*
+
+**The three load-shedding patterns:**
+
+**1. Reject incoming connections (LB level).**
+- Load balancer / API gateway with concurrent-request cap.
+- When cap reached: new connections get 503 immediately.
+- Existing requests continue.
+- Fast; no resource consumed for shed requests.
+
+**2. Drop in-flight requests (queue management).**
+- Service has bounded request queue.
+- When queue exceeds threshold: reject new requests with 503.
+- Or: drop oldest requests in the queue (CoDel-style).
+- Prevents queue from growing without bound.
+
+**3. Priority-based shedding.**
+- Requests tagged by priority (premium customer, paid feature, internal vs external).
+- When overloaded: drop low-priority first; preserve high-priority.
+- Standard for tiered services (free, pro, enterprise).
+
+**The decision: when to start shedding.**
+
+Sheding too early: rejecting requests you could have served. Wasted capacity, unhappy customers.
+Sheding too late: system has already degraded; cascading failure starting; recovery hard.
+
+The sweet spot: **shed when system would otherwise enter degradation**. Indicators:
+- Queue depth > threshold.
+- p99 latency > target.
+- CPU > saturation point.
+- Memory > headroom.
+- Connection pool > 90%.
+
+Best practice: shed **before** the SLI breaches. If your latency SLO is "p99 < 500ms," shed when p99 starts climbing toward 500ms (e.g., at 300ms with growing trend), not when it\'s already at 600ms.
+
+**The "health check" trap:**
+
+Common mistake: when health check returns "unhealthy," LB removes the instance. Now remaining instances get more load → they get unhealthy → outage.
+
+Better: when health check returns "unhealthy," instance enters **quarantine** (rejecting low-priority traffic) but stays in the pool for high-priority. Sheds load gradually instead of bouncing instances.
+
+**The AWS pattern (from architecture blogs):**
+
+AWS services use a four-level shedding scheme:
+1. **All requests served**: normal.
+2. **Background work deprioritized**: cron jobs, async tasks paused; user-facing reads/writes prioritized.
+3. **Read-only mode**: writes rejected; reads served.
+4. **Critical-only mode**: only health checks and admin commands; all user traffic rejected.
+
+Each level has alerting; engineers know what mode the service is in.
+
+**Coordinated shedding via priority headers:**
+
+Internal microservices propagate a priority header (\`X-Priority: critical | high | normal | low\`). Service shedding uses this to decide which to drop.
+
+**Practical example:**
+- API call from logged-in user: critical.
+- API call from anonymous user: normal.
+- Background job request: low.
+- Health check from LB: critical (so the LB doesn\'t remove the instance).
+
+When overloaded: drop "low" first; then "normal"; then "high"; never "critical."
+
+**Anti-patterns:**
+
+- **Unbounded queues**: requests accumulate; eventually OOM or timeout-cascade.
+- **Synchronous full-thread-pool**: every thread waiting on something; new requests can\'t even be acknowledged. Needs request-rejection logic before threads.
+- **No metric for shed rate**: you don\'t know if shedding is happening or how much.
+- **Shedding only based on error rate**: by the time errors are happening, you\'re too late. Shed on load indicators (queue depth, latency).
+
+**Useful libraries:**
+- **Netflix concurrency-limits**: adaptive concurrency limiting; calculates the optimal in-flight request count.
+- **Hystrix / resilience4j**: bulkhead pattern enforces concurrency limits per dependency.
+- **Envoy / Istio**: rate-limit filters; concurrency caps.
+- **AWS API Gateway / Cloudflare**: rate limit at the edge.`,
+    whenToUse: [
+      'Pre-launch — bound the request queue; configure shedding before you need it',
+      'Reviewing capacity plans — what happens at 1.5× peak? Shed gracefully or collapse?',
+      'Postmortem with cascade involved — was shedding configured? Did it kick in?',
+      'Critical events (Black Friday, viral moments) — pre-tune shedding aggressiveness',
+    ],
+    keyConcepts: [
+      { term: 'Load shedding', definition: '"Reduce the load on the server such that it can return to a healthy state" — SRE Book Ch 21. Reject some so others succeed.' },
+      { term: 'Priority-based shedding', definition: 'Requests tagged by priority; drop low first. Standard for tiered services.' },
+      { term: 'Bounded queue', definition: 'Hard cap on request queue depth; reject when full. Prevents OOM cascade.' },
+      { term: 'Quarantine mode', definition: 'Health-check-failed instance rejects low-priority traffic but stays in pool for critical. Better than removing it.' },
+      { term: 'AWS shedding levels', definition: 'Normal → background-deprioritized → read-only → critical-only. Explicit modes; engineers know the state.' },
+      { term: 'Adaptive concurrency limit', definition: 'Calculate optimal in-flight count from latency / throughput data (Netflix concurrency-limits). Auto-tunes.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Why is "serve all requests" worse than "drop some requests"?',
+        answer: `Because trying to serve all requests at overload **eventually leads to serving none**.
+
+The mechanics:
+- 1000 requests arrive at a service that can handle 800.
+- Service tries to serve all 1000.
+- Latency for all requests increases (queueing).
+- Threads/connections fill up; new requests can\'t be accepted.
+- Health checks fail (the service can\'t respond fast enough to the LB).
+- LB removes the instance.
+- Remaining instances now get more load.
+- Cascade.
+
+vs:
+- 1000 requests arrive at a service that can handle 800.
+- Service rejects 200 with 503 immediately.
+- 800 requests served at normal latency.
+- System stays healthy.
+
+The math: serving 80% of requests successfully gives 80% successful UX. Trying to serve 100% and degrading gives 0% successful UX (everyone times out).
+
+**SRE Book Ch 21 quote**: *"It is better to provide a degraded experience to a fraction of users than to deliver a poor experience to all users."*
+
+The "rejected 503" is fast; the user can retry. With idempotency keys, the retry succeeds. Some users see brief errors; the alternative is everyone seeing extended outages.
+
+**Real-world example (the SRE Book\'s framing):**
+A service can normally handle 1000 RPS. Load spikes to 1500 RPS. Without shedding: latency climbs from 100ms to 5s; thread pool fills; service stops responding entirely. 0% success rate.
+With shedding: 500 RPS rejected with 503; 1000 RPS served at 100ms. 67% success rate (1000/1500). Plus the rejected clients retry; many of those succeed in subsequent windows.
+
+The framing for non-engineers: **shedding is triage**. In an emergency room, you don\'t treat everyone simultaneously to the same degree; you triage. Shedding is the same principle for software.`,
+      },
+      {
+        question: 'How would you implement priority-based shedding?',
+        answer: `Three components:
+
+**Component 1: Tag every request with a priority.**
+
+At the edge (LB or gateway), set a header: \`X-Priority: critical | high | normal | low\`.
+
+Examples:
+- **Critical**: health checks (LB needs them); admin commands; payment confirmations; login auth checks.
+- **High**: paid customer requests; latency-critical user actions.
+- **Normal**: free-tier user requests; standard browsing.
+- **Low**: prefetch, analytics, nice-to-have features, background sync.
+
+The tag is propagated through every internal service via header (\`X-Request-Priority\`).
+
+**Component 2: Per-service shed thresholds.**
+
+Each service has thresholds:
+- "Up to 70% load: serve everything."
+- "70-80% load: drop low priority."
+- "80-90% load: drop normal and below."
+- "90%+ load: drop everything except critical."
+
+Implementation: in the request handler, check the priority and the current load metric. Reject with 503 if the request is below the threshold for current load.
+
+**Component 3: Observable.**
+
+- Metric: \`shed_requests_total{priority="...", reason="overload"}\`.
+- Alert: when high-priority shedding > 0.
+- Dashboard: shed rate per priority over time.
+
+**Example of priority enforcement:**
+\`\`\`
+def handle_request(req):
+    load = get_current_load()  # 0.0 to 1.0
+    priority = req.headers.get('X-Priority', 'normal')
+
+    threshold_map = {
+        'critical': 1.0,   # never shed critical
+        'high':     0.95,  # shed only when very overloaded
+        'normal':   0.85,
+        'low':      0.70,
+    }
+
+    if load > threshold_map[priority]:
+        return 503, "Shed: priority too low for current load"
+
+    return process(req)
+\`\`\`
+
+**The discipline:**
+- **Only the gateway sets priority** (avoid clients lying about their priority).
+- **Priority bound to authentication / business rules**: paid customer = high; anonymous = normal.
+- **Critical is rare**: only ~1% of traffic. Reserve for things that genuinely cannot fail.
+- **Test under load**: verify shedding actually engages and the right priorities are preserved.
+
+**The Netflix pattern (from a 2024 blog):**
+
+Netflix uses a priority queue model:
+- Each request has a priority and an expected SLA.
+- When overloaded, drop requests whose SLA can\'t be met.
+- High-priority requests with tight SLAs are preserved; low-priority with loose SLAs are first to drop.
+
+This is a more sophisticated version of the basic priority shedding above; uses a SLA-deadline model.`,
+      },
+      {
+        question: 'What\'s the difference between rate limiting and load shedding?',
+        answer: `**Rate limiting** is per-client; **load shedding** is global.
+
+**Rate limiting**:
+- "Each client gets max X requests/sec."
+- Implemented via token bucket or leaky bucket per client identifier (user, API key, IP).
+- Returns 429 Too Many Requests.
+- Used to enforce quotas, prevent abuse, fair-share limits.
+- The client knows: "I\'m being throttled; back off."
+
+**Load shedding**:
+- "Service can\'t handle current load; some requests rejected regardless of who sent them."
+- Implemented based on overall system health (queue depth, latency, CPU).
+- Returns 503 Service Unavailable.
+- Used to protect the system from collapse.
+- Decision is made server-side based on aggregate state, not per-client.
+
+**They\'re complementary:**
+
+- Rate limiting prevents one greedy client from monopolizing the service.
+- Load shedding handles the sum of all traffic exceeding capacity (legitimate or not).
+
+**Practical setup:**
+- Rate limit at the edge: each customer has their tier\'s rate limit (free=100/min, pro=10000/min). Per-key, per-IP, per-user.
+- Load shed at the service: when overall load exceeds capacity, drop low-priority requests regardless of rate-limit status.
+
+**Example scenarios:**
+
+**Scenario 1**: 10 customers each at their rate limit (legitimate traffic). Total exceeds service capacity.
+- Rate limiting: doesn\'t help (each customer is within their limit).
+- Load shedding: kicks in; drops some requests. Service stays healthy.
+
+**Scenario 2**: 1 customer trying to abuse with 10× their rate limit.
+- Rate limiting: kicks in; drops most of their requests.
+- Load shedding: not needed (rate limiting handles it).
+
+**Scenario 3**: Service has a bug and is using 2× the CPU per request.
+- Rate limiting: doesn\'t help (the customers aren\'t over limit; the issue is service-side).
+- Load shedding: kicks in; reduces load until service recovers or restarts.
+
+**HTTP status code distinction:**
+- 429 (rate limited): "you are sending too much; back off." Client is at fault; client should obey.
+- 503 (overloaded): "we are too busy; try again." Server is at fault; client should retry-with-backoff.
+
+Both should include \`Retry-After\` header to tell clients when to retry.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/handling-overload/',
+      'https://aws.amazon.com/builders-library/using-load-shedding-to-avoid-overload/',
+      'https://github.com/Netflix/concurrency-limits',
+    ],
+  },
+
+  {
+    id: 'idempotency',
+    title: 'Idempotency — Making Retries Safe',
+    icon: 'repeat',
+    color: '#ec4899',
+    questions: 3,
+    description: 'What idempotency means precisely, idempotency keys, and the financial-systems pattern.',
+    introduction: `**Idempotent** = an operation that can be performed multiple times with the same result. \`f(x) = f(f(x))\`. Critical for retries: if an operation isn\'t idempotent, retries cause duplicate side effects.
+
+**Idempotent operations:**
+- \`PUT /users/123\` with body \`{name: "Alice"}\` — sets state. Multiple calls = same state.
+- \`DELETE /users/123\` — removes resource. Multiple calls = no-op after the first.
+- \`GET /users/123\` — read. Idempotent by definition.
+
+**Non-idempotent operations:**
+- \`POST /payments\` — creates a charge. Multiple calls = multiple charges.
+- \`POST /tweets\` — creates a tweet. Multiple calls = duplicate tweets.
+- \`PATCH /users/123/credits +10\` — increments by 10. Multiple calls = wrong total.
+
+**The retry problem:**
+
+If a non-idempotent request fails, you can\'t safely retry. Did the request fail before processing (safe to retry) or after processing but before responding (NOT safe to retry)? You don\'t know.
+
+**The solution: idempotency keys.**
+
+Client generates a unique key per logical operation. Server deduplicates on the key.
+
+**The pattern (Stripe-style):**
+
+1. Client decides to perform a non-idempotent operation. Generates UUID: \`abc-123\`.
+2. Client sends: \`POST /payments\` with header \`Idempotency-Key: abc-123\` and body.
+3. Server processes. Stores in dedup table: \`(key="abc-123", result=<processed>, ttl=24h)\`.
+4. Server responds.
+5. If client doesn\'t see response (network failure, timeout): client retries with same key.
+6. Server: looks up the key. Found! Returns the original response. No double-processing.
+
+**Implementation details:**
+
+**The dedup table:**
+- Key: idempotency key (UUID).
+- Value: response body + status code.
+- TTL: matches retry window (typically 24 hours).
+- Storage: Redis (fast, cap on memory) or DB (durable).
+
+**Concurrency:**
+- Two simultaneous requests with the same key: the second one waits for the first.
+- Lock per key: pessimistic lock or "INSERT IF NOT EXISTS" pattern.
+- After the first completes, the second returns the same result (or detects "in progress; come back later").
+
+**Edge cases:**
+- **Different request body, same key**: should be a 409 Conflict. The key represents an operation; if the operation is different, key is being misused.
+- **Long-running operation**: client retries before first completes. Server: return 409 ("already in progress; same key"). Client should poll or wait.
+- **TTL expired**: idempotency key is no longer in the table. Treat as a fresh request. The client should respect the TTL.
+
+**Where idempotency lives:**
+
+- **Application layer**: most common. Keep dedup in Redis or DB; check at the start of every non-idempotent handler.
+- **API gateway**: less common; needs to know which endpoints are non-idempotent.
+- **Library**: Stripe SDK handles it client-side automatically.
+
+**Idempotent vs idempotent-by-design:**
+
+Some APIs make idempotency mandatory. AWS\'s API for state machines, Stripe\'s payment APIs, and most cloud services\' write operations.
+
+Others (like Twitter\'s tweet API) require client-supplied idempotency tokens for every write — by design, can\'t do non-idempotent operations.
+
+**Financial systems pattern:**
+
+Payment processing requires strict idempotency. The pattern:
+1. **Client generates transaction ID** (sometimes called "intent ID" or "operation ID").
+2. **Send to processor with the ID**.
+3. **Processor stores ID + result; retries return same result**.
+4. **Client confirms**: "did the transaction succeed?" by looking up the ID.
+
+Stripe\'s docs: *"Stripe\'s API has built-in support for idempotency for safely retrying API requests without accidentally performing the same operation twice."*
+
+**The exception: distributed sagas.**
+
+Long-running multi-step operations (saga pattern) need different handling. Each step in the saga is idempotent; if a step fails, the saga retries from that step. Compensation actions handle rollbacks. More complex than single-call idempotency; needed for cross-service transactions.`,
+    whenToUse: [
+      'Designing every non-idempotent API — idempotency keys are mandatory',
+      'Reviewing existing retry logic — are retries safe?',
+      'Postmortem with duplicate side effects (double charges, duplicate posts) — was idempotency missing?',
+      'Cross-service workflows — saga pattern with idempotent steps',
+    ],
+    keyConcepts: [
+      { term: 'Idempotent', definition: 'Multiple calls = same result. f(x) = f(f(x)). Required for safe retries.' },
+      { term: 'Idempotency key', definition: 'Client-generated unique ID per operation. Server deduplicates by key. Standard for non-idempotent APIs.' },
+      { term: 'Dedup table', definition: 'Storage of (key, result) for retried operations. Redis (fast) or DB (durable). TTL matches retry window.' },
+      { term: 'Concurrency on same key', definition: 'Second simultaneous request with same key: lock or 409 Conflict. Don\'t process twice.' },
+      { term: 'Stripe / AWS API pattern', definition: 'Idempotency built into the API. Client provides key; server handles dedup. The standard for write APIs.' },
+      { term: 'Saga pattern', definition: 'Multi-step distributed workflow; each step idempotent; compensations for rollback. For cross-service transactions.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through implementing idempotent payment processing.',
+        answer: `Stripe-style implementation:
+
+**1. API design.**
+- \`POST /charges\` with header \`Idempotency-Key: <UUID>\`.
+- Body contains the charge details (amount, currency, customer, etc.).
+
+**2. Server handler:**
+
+\`\`\`
+def create_charge(request):
+    key = request.headers.get('Idempotency-Key')
+    if not key:
+        return 400, "Idempotency-Key required"
+
+    # Try to acquire lock for this key
+    lock = redis.lock(f"idem:{key}", timeout=30s)
+    if not lock.acquire(blocking=True, blocking_timeout=10s):
+        return 409, "Operation in progress; retry later"
+
+    try:
+        # Check if already processed
+        existing = dedup_db.get(key)
+        if existing:
+            # Verify the request matches
+            if existing.request_hash != hash(request.body):
+                return 409, "Idempotency-Key reused for different request"
+            return existing.status, existing.body
+
+        # First time seeing this key; process the charge
+        result = process_payment(request.body)
+
+        # Store the result
+        dedup_db.set(key, {
+            'request_hash': hash(request.body),
+            'status': result.status,
+            'body': result.body,
+            'created_at': now(),
+        }, ttl=24h)
+
+        return result.status, result.body
+    finally:
+        lock.release()
+\`\`\`
+
+**3. Storage (dedup table):**
+- Schema: \`(key, request_hash, response_status, response_body, created_at)\`.
+- Primary key: idempotency key.
+- TTL: 24 hours (Stripe\'s default).
+- Storage: Postgres for durability, with Redis cache for speed.
+
+**4. Client behavior:**
+- Generate UUID per logical operation.
+- Send request; if response received, done.
+- If no response (network timeout): retry with same UUID.
+- Server returns same result; no double-charge.
+
+**5. Error handling:**
+
+Cases:
+- **Key not found** (TTL expired or first call): process normally.
+- **Key found, same request**: return cached response.
+- **Key found, different request body**: 409 Conflict (don\'t silently process; bad client behavior).
+- **Lock contention**: 409 Conflict; client should retry after a delay.
+
+**6. Observability:**
+- Metric: \`charges_idempotent_returned\` (cache hits) vs \`charges_processed\` (new).
+- Cache hits are good; high rate suggests clients retrying often.
+- Alert: lock contention rate (suggests bug or high concurrency on same key).
+
+**7. Testing:**
+- Send same request twice rapidly → second should return cached response.
+- Send same key with different body → 409.
+- Sleep 25 hours; send same key → processed as new (TTL expired).
+
+The result: clients can retry safely; no double-charges; the API behaves correctly even under network failures.`,
+      },
+      {
+        question: 'How do you handle idempotency for long-running operations?',
+        answer: `Two patterns: **synchronous with status polling**, or **asynchronous with operation IDs**.
+
+**Pattern 1: Sync with status (for ops that take seconds to minutes).**
+
+\`\`\`
+POST /reports/generate
+Idempotency-Key: report-abc-123
+\`\`\`
+
+- Server starts processing; stores key with status="in_progress".
+- If processing fits within the request timeout (say, 30s): respond with the result.
+- If client retries during processing: server sees "in_progress" → returns 202 Accepted with location header to poll.
+- Eventually: server completes; updates dedup entry to "completed".
+- Client can poll the operation by key for the result.
+
+**Pattern 2: Async with operation IDs (for ops that take minutes to hours).**
+
+\`\`\`
+POST /imports/start
+Idempotency-Key: import-xyz-456
+\`\`\`
+
+- Server creates an "operation" entity with ID.
+- Returns 202 Accepted with the operation ID immediately.
+- Client polls \`GET /operations/{op_id}\` to check status.
+- Operation states: pending, in_progress, completed, failed.
+
+The idempotency key ensures: if client retries the create, server returns the same operation ID instead of starting a new one.
+
+**Implementation specifics:**
+
+**The dedup entry stores the operation reference**, not the result:
+\`\`\`
+{
+  key: "import-xyz-456",
+  operation_id: "op_789",
+  status: "completed" | "in_progress" | "failed",
+  result_url: "/operations/op_789"
+}
+\`\`\`
+
+**Timeouts:**
+- Per the dedup TTL: 24 hours typically.
+- Per the operation TTL: longer (week or month) so clients can poll old operations.
+
+**Failure handling:**
+- If the operation fails: dedup entry shows status="failed"; client retry with same key returns the failure.
+- Client must use a NEW idempotency key for a retry attempt; the original failed.
+- This is by design: idempotency means "same result"; "succeed despite failure" requires a new key.
+
+**Saga pattern (multi-step):**
+
+For workflows spanning multiple services:
+- Each step has its own idempotency key.
+- If a step fails: retry the failed step (idempotent).
+- If a step succeeds and a later step fails: compensate by undoing earlier steps.
+- The whole saga is identified by a saga_id; each step references it.
+
+Tools that help:
+- **AWS Step Functions**: built-in idempotency for state machines.
+- **Temporal / Cadence**: workflow engines designed for long-running, idempotent operations.
+- **Camunda**: BPMN-based workflows.
+
+These tools embed idempotency into the framework, so application code doesn\'t need to handle it explicitly.
+
+The pattern: **synchronous idempotency for short ops; async with operation IDs for long ops; saga for multi-service**.`,
+      },
+      {
+        question: 'When can you skip idempotency keys?',
+        answer: `Three cases where idempotency keys aren\'t needed:
+
+**1. The operation is already idempotent.**
+- \`PUT /users/123\` with full state body. Always sets to that state. No key needed.
+- \`DELETE /users/123\`. Multiple calls = no-op after first. No key needed.
+- \`GET\` (read). Always idempotent. No key.
+
+**2. The system has another deduplication mechanism.**
+- **Unique constraints in DB**: \`INSERT INTO emails (user_id, message_id) VALUES (...)\` with PK on (user_id, message_id). Duplicate inserts fail with constraint violation; client treats as success.
+- **Conditional updates**: \`If-Match: <etag>\` headers. Update only if state hasn\'t changed.
+- **Append-only logs with sequence numbers**: client supplies a sequence number; server rejects out-of-order or duplicate.
+
+**3. The cost of duplication is acceptable.**
+- **Analytics events**: a duplicate page-view is no big deal. Better to deduplicate downstream than to add idempotency complexity.
+- **Logs**: duplicate log entries are usually fine.
+- **Metrics**: the metric system itself handles dedup (counter increment is idempotent enough; counter-of-events is not, but acceptable for non-critical signals).
+
+**Cases where idempotency keys are MANDATORY:**
+
+- **Money operations**: payments, transfers, refunds, charges.
+- **Asset creation**: tweets, posts, comments, messages where duplicates are user-visible bad.
+- **Stateful actions**: triggering a workflow, sending an email, posting to social.
+- **External effects**: anything that calls a third-party API with side effects.
+
+**Pragmatic guidance:**
+
+For new APIs, default to **requiring idempotency keys for all non-idempotent operations**. Cost: small (one header, one dedup table). Benefit: retries are safe; no class of "duplicate" bugs.
+
+For existing APIs without idempotency: if you see duplicate-related bugs in production, retrofit. Otherwise: deferred.
+
+Stripe\'s opinion (from their docs): "Idempotency is fundamental to building reliable distributed systems." They require keys for all writes and consider it a missing feature on competitor APIs that don\'t.`,
+      },
+    ],
+    references: [
+      'https://stripe.com/docs/api/idempotent_requests',
+      'https://docs.aws.amazon.com/general/latest/gr/api-retries.html',
+      'https://temporal.io/blog/why-idempotency',
+    ],
+  },
+
+  {
+    id: 'bulkheads',
+    title: 'Bulkheads — Isolating Resource Pools',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 3,
+    description: 'Per-dependency thread pools, the ship-bulkhead analogy, and how Hystrix popularized the pattern.',
+    introduction: `**Bulkheads** are an isolation pattern from Michael Nygard\'s *Release It!* (2007). The analogy: ship hulls are divided into watertight compartments (bulkheads); a hole in one compartment doesn\'t flood the entire ship.
+
+In software: **isolate resource pools so a failure in one can\'t exhaust the whole service\'s capacity**.
+
+**The pattern:**
+
+Without bulkheads:
+- Service A has one global thread pool of 100 threads.
+- A calls services B, C, D.
+- B becomes slow (5s response instead of 50ms).
+- 100 threads waiting on B; A can\'t serve C or D either.
+- One sick dependency (B) → A is fully unavailable.
+
+With bulkheads:
+- A has separate thread pools per dependency: 30 for B, 30 for C, 30 for D, 10 reserve.
+- B becomes slow.
+- 30 threads (the B-pool) are blocked.
+- C-pool and D-pool still have full capacity; calls to C and D succeed.
+- A is partially degraded (B-features down) but not fully unavailable.
+
+**The Hystrix popularization:**
+
+Netflix Hystrix (2012) made the pattern famous via two implementations:
+- **Thread isolation**: each dependency has its own thread pool.
+- **Semaphore isolation**: lighter-weight; counts concurrent calls instead of using separate threads.
+
+Today (Hystrix is in maintenance mode), **resilience4j** and **service-mesh layers** implement the same patterns.
+
+**Thread vs semaphore isolation:**
+
+**Thread isolation:**
+- Separate thread pool per dependency.
+- Pros: full isolation; one slow dep can\'t block others.
+- Cons: thread overhead; each thread is 1-2 MB of stack; more threads = more context switching.
+
+**Semaphore isolation:**
+- Same threads; counted concurrent permits per dependency.
+- Pros: lightweight; no thread overhead.
+- Cons: doesn\'t isolate from CPU contention or thread blocking on other resources.
+
+**Best practice:**
+- **Thread isolation** for slow / blocking dependencies (DB, external APIs, anything that might hang).
+- **Semaphore isolation** for fast in-memory or trusted-fast operations.
+
+**The connection-pool bulkhead (database):**
+
+Common DB pattern:
+- Without bulkhead: one connection pool of 100 connections shared across all use cases.
+- A slow query path consumes 100 connections waiting on a hung query.
+- Other use cases (dashboards, admin) starve.
+
+With bulkhead:
+- Separate pools per use case: 30 for user requests, 30 for admin, 30 for batch jobs, 10 reserve.
+- Slow query consumes only the user-request pool; admin and batch continue.
+
+**The cost: more pools = more memory.**
+
+- Each pool has overhead (idle connections, monitoring threads).
+- Trade-off: granularity vs efficiency.
+- Practical limit: 5-10 pools per service.
+
+**Bulkheads in service mesh:**
+
+- Istio: \`maxConnections\` per destination + \`maxRequestsPerConnection\`.
+- Linkerd: similar via service profiles.
+- Both: per-destination concurrency caps act as bulkheads.
+
+**The discipline:**
+
+Identify the dependencies that can plausibly fail or slow down. For each:
+1. Allocate a dedicated pool.
+2. Size it: just enough for the dependency\'s normal throughput + buffer.
+3. Monitor: track pool saturation. Alert when a specific pool is exhausted.
+
+**Anti-patterns:**
+
+- **Single global pool for everything**: the canonical anti-pattern. One bad actor blocks everyone.
+- **Per-pool configuration drift**: different pools with inconsistent timeouts/limits become hard to reason about.
+- **Over-bulkheading**: too many pools, each too small, total capacity reduced. 5-10 pools is enough.
+
+**Combined with circuit breakers:**
+
+Circuit breakers + bulkheads layer:
+- Bulkhead: isolate the bad dependency to its own pool.
+- Circuit breaker: stop calling the bad dependency to free its pool.
+- Together: one bad dep can\'t cascade AND its pool gets recycled fast.
+
+This is the standard reliability pattern stack.`,
+    whenToUse: [
+      'Designing a service with multiple downstream dependencies',
+      'Reviewing for cascading-failure resilience — does one bad dep take down the whole service?',
+      'DB connection pool design — separate pools per workload type',
+      'Service mesh policy — per-destination concurrency caps',
+    ],
+    keyConcepts: [
+      { term: 'Bulkhead pattern', definition: 'Per-dependency resource pool. One bad dependency can\'t exhaust the whole service. From Nygard\'s Release It!.' },
+      { term: 'Thread isolation', definition: 'Separate thread pool per dependency. Strongest isolation; thread overhead.' },
+      { term: 'Semaphore isolation', definition: 'Same threads, counted permits per dependency. Lightweight; less full isolation.' },
+      { term: 'Connection-pool bulkheads', definition: 'Separate DB pools per workload (user, admin, batch). Slow query in one pool doesn\'t starve others.' },
+      { term: 'Hystrix legacy', definition: 'Popularized bulkhead pattern in microservices. resilience4j is modern replacement.' },
+      { term: 'Combined with circuit breaker', definition: 'Bulkhead isolates; breaker stops calling. Together they prevent cascade and recover quickly.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How do bulkheads differ from circuit breakers?',
+        answer: `Different problems, complementary solutions.
+
+**Bulkheads** isolate **resources** so one bad dependency can\'t consume them all.
+- "Even if dep X goes bad, only its pool of resources is affected."
+- Implementation: separate thread pools, connection pools, semaphores per dependency.
+- Effect: a slow dep blocks its own pool only.
+
+**Circuit breakers** stop **calling** a bad dependency once you detect it\'s broken.
+- "Once dep X has a high error rate, stop calling it for a while."
+- Implementation: state machine that fast-fails when OPEN.
+- Effect: spend zero resources on a broken dep; let it recover.
+
+**Together, they\'re a layered defense:**
+
+1. Dep X starts failing (slow responses).
+2. Bulkhead: only the X-pool is blocked; other deps continue.
+3. Circuit breaker: detects the high error/timeout rate; trips OPEN.
+4. Fast-fail: subsequent X requests return immediately (don\'t block the X-pool).
+5. X-pool drains; threads return to available state.
+6. Service is fully functional except for X-related features.
+
+Without bulkhead: X\'s problem blocks the entire service.
+Without circuit breaker: X-pool stays blocked even after X recovers (next-call-to-X-still-takes-5s).
+Without both: cascading failure within minutes.
+
+**Practical implementation order:**
+1. **First add timeouts** to every external call.
+2. **Then add bulkheads** (per-dep pools).
+3. **Then add circuit breakers** (fast-fail when failure rate high).
+4. **Then add retries with jitter** (cautious retry of failed calls).
+5. **Then add fallbacks** (degraded responses when all of above fail).
+
+Each layer prevents a different class of cascade.`,
+      },
+      {
+        question: 'Walk me through configuring a bulkhead for a database connection pool.',
+        answer: `Worked example: a service with mixed workloads.
+
+**Step 1: Identify the workload categories.**
+- **User requests**: latency-sensitive; high throughput. Most of the traffic.
+- **Admin / dashboard queries**: fewer requests; can tolerate more latency.
+- **Batch jobs**: occasional large queries; less time-sensitive.
+- **Health checks / monitoring**: very small queries; constant rate.
+
+**Step 2: Create separate pools per category.**
+
+PgBouncer or HikariCP example:
+\`\`\`
+pool.user_requests.max_connections = 50
+pool.user_requests.idle_timeout = 60s
+
+pool.admin.max_connections = 10
+pool.admin.idle_timeout = 300s
+
+pool.batch.max_connections = 5
+pool.batch.idle_timeout = 600s
+
+pool.health.max_connections = 5
+pool.health.idle_timeout = 60s
+\`\`\`
+
+**Step 3: Route each query to the right pool.**
+
+Application code categorizes:
+\`\`\`python
+def query_user_data(user_id):
+    return user_pool.execute(query, [user_id])
+
+def query_admin_dashboard():
+    return admin_pool.execute(complex_query)
+
+def run_batch_job():
+    return batch_pool.execute(batch_query)
+\`\`\`
+
+The categorization usually maps to API path or annotation.
+
+**Step 4: Monitor and alert per pool.**
+- Pool saturation: how many connections in use vs max.
+- Pool wait time: how long requests wait for a connection.
+- Pool errors: how often pool is exhausted.
+
+Alerts:
+- "User pool > 90% saturated" → page (user-facing impact).
+- "Admin pool exhausted" → ticket (less critical).
+- "Batch pool exhausted" → ticket; consider scaling DB or reducing batch concurrency.
+
+**Step 5: Handle pool exhaustion gracefully.**
+
+When a pool is exhausted, don\'t hang waiting:
+- **Bounded wait** (e.g., 100ms timeout to acquire connection).
+- **Reject and retry** (return 503; client retries).
+- **Fall back to a degraded path** (if available).
+
+**Sizing the pools:**
+
+The math: \`pool_size = (concurrent_users × queries_per_request × query_duration) / acceptable_latency\`.
+
+For user pool: 1000 RPS × 1 query/request × 50ms / 100ms acceptable wait = 500 connections. But DB max is 100. So actually: 50 connections per app instance × 10 instances = 500. Tune.
+
+**The win:**
+
+A slow batch query consumes 5 connections (the batch pool). The batch pool is full. New batch jobs block; user requests proceed normally.
+
+Without bulkhead: the slow batch query consumes 50 of the 50-connection pool; user requests starve; service degrades.
+
+Result: bulkhead + monitoring → graceful degradation in the right places.`,
+      },
+      {
+        question: 'When are bulkheads NOT worth it?',
+        answer: `Three cases:
+
+**1. Single-dependency services.**
+- A service that only calls one downstream. Bulkheading "the only call" doesn\'t isolate anything.
+- Use timeout + circuit breaker; bulkhead adds complexity without benefit.
+
+**2. Internal in-process operations.**
+- Bulkheading purely-CPU work doesn\'t prevent cascading; CPU is already shared.
+- Useful for I/O-bound operations (network, disk); less useful for pure compute.
+
+**3. Tiny services (< 10 RPS).**
+- Per-pool overhead (idle connections, threads) might exceed the cost of failure.
+- Use a single pool; rely on circuit breaker + timeout for resilience.
+
+**Cost-benefit framing:**
+
+Bulkheads add:
+- Configuration complexity (multiple pools to size and tune).
+- Memory overhead (multiple connection pools, multiple thread pools).
+- Operational overhead (more metrics to monitor, more alerts).
+
+They\'re worth it when:
+- Service has multiple downstream dependencies.
+- Failure of any one dependency would otherwise cascade.
+- The cost of cascade > the cost of bulkhead overhead.
+
+For most production microservices: yes, worth it.
+For monoliths with one DB and one cache: maybe overkill; rely on connection-pool sizing + circuit breakers.
+
+**Anti-pattern: over-bulkheading.**
+
+Some teams create 50 different pools, each tiny. Result: every pool is constantly saturated; total useful capacity reduced; configuration complexity high.
+
+The right granularity: 5-10 logical categories per service. Not per-endpoint, not per-method.
+
+**Modern alternative: virtual threads (Java 21+, Go goroutines).**
+
+For services with abundant lightweight threads (Java\'s Project Loom, Go), thread-isolation bulkheads are less critical because threads are cheap. Semaphore-style limits per dependency still useful; thread-pool partitioning becomes obsolete.
+
+In 2026 with Java 21 virtual threads being mainstream, the bulkhead pattern is shifting toward "concurrency permits per dependency" rather than "thread pool per dependency." The IDEA stays the same; the implementation becomes lighter.`,
+      },
+    ],
+    references: [
+      'https://docs.microsoft.com/en-us/azure/architecture/patterns/bulkhead',
+      'https://resilience4j.readme.io/docs/bulkhead',
+      'https://martinfowler.com/articles/microservices.html#DesignForFailure',
+    ],
+  },
+
+  {
+    id: 'timeouts-deadlines',
+    title: 'Timeouts and Deadlines — The Universal Discipline',
+    icon: 'clock',
+    color: '#ec4899',
+    questions: 3,
+    description: 'Why every external call needs a timeout, deadline propagation across services, and choosing the right values.',
+    introduction: `**Every external call must have a timeout.** This is non-negotiable. A call without a timeout is a call that can hang forever; under load, hung calls are how services collapse.
+
+The SRE Book Ch 22 quote: *"RPCs inherit and decrease deadlines as they descend the stack so a server doesn\'t waste cycles on a request whose caller already gave up."*
+
+**The default-no-timeout problem:**
+
+Many libraries default to "no timeout" or "very long timeout." HTTP clients in Python, Java, Node — many require explicit timeout configuration. Without it, the call might wait minutes or hours.
+
+In a request-handling thread pool: each hung call holds a thread. Hold 100 threads for 30 minutes; service is unavailable.
+
+**Timeout values:**
+
+The right timeout is **just longer than the call\'s p99 latency**, with a small buffer.
+
+If the dep\'s p99 is 200ms, set timeout at 500ms-1s. Tight enough to detect hangs; lax enough that legitimate slow calls succeed.
+
+**Common ranges:**
+- DB query: 1-5 seconds.
+- Cache lookup: 50-200 ms.
+- Internal microservice RPC: 100ms-2s depending on call.
+- External third-party API: 5-30 seconds.
+- Long-running batch operation: 30-300 seconds (or async with status).
+
+**The timeout pyramid (the deadline-propagation rule):**
+
+When service A calls B, A\'s timeout must be > B\'s timeout to all of B\'s downstreams. Otherwise A times out before B can detect its own failure.
+
+If A times out at 1s and B has timeouts of 0.5s to its 5 downstream services, B might accumulate 0.5s × 5 = 2.5s of downstream waits + processing — exceeding A\'s 1s timeout. A retries while B is still working; double the work.
+
+The "deadline propagation" approach:
+- A sets a 1-second deadline.
+- A passes the deadline to B as part of the request.
+- B sees: "I have 0.9s remaining (after network latency)." Adjusts its timeouts accordingly.
+- B passes the remaining deadline to its downstreams.
+- Each layer respects the original deadline; no work happens after the user has given up.
+
+**Implementation patterns:**
+
+**gRPC**: built-in deadline propagation via context. \`grpc.WithDeadline(time.Now().Add(1 * time.Second))\`. Server reads the deadline and uses it for downstream calls.
+
+**HTTP**: less standard; some implementations use \`X-Deadline\` header with absolute timestamp.
+
+**OpenTelemetry**: trace context can carry deadline information; emerging standard.
+
+**The "hard timeout" vs "soft timeout":**
+
+**Hard timeout**: kill the operation at the deadline. The call returns an error.
+- Used for synchronous operations.
+- Risk: the operation might have actually succeeded but the response didn\'t arrive in time.
+
+**Soft timeout**: cancel the operation but it might still complete in the background.
+- Useful for some async patterns.
+- Combined with idempotency keys: even if a "timed out" operation completed, retrying with same key returns the same result.
+
+**The cancellation cascade:**
+
+When a call times out, **cancel all downstream calls**. Don\'t leave them dangling. Goroutines / coroutines / cancellable threads pattern.
+
+In practice: pass a cancellation context. Downstream calls check cancellation periodically; abort if canceled.
+
+**Timeout-related cascading failure:**
+
+Pattern: A times out at 5s. A\'s downstream calls (B, C, D) don\'t time out at all. When A times out, the calls to B, C, D continue running in the background, holding threads.
+
+Even though A returns to the user with an error, A\'s thread pool is still consuming resources on the abandoned calls. Service degrades.
+
+The fix: **propagate cancellation**. When A times out, cancel the in-flight calls to B, C, D. Threads return to the pool.
+
+**Reading the timeout from a config:**
+
+Best practice: timeouts as configuration, not hard-coded constants. Tunable per environment, per dependency, per release.
+
+\`\`\`yaml
+dependencies:
+  user-service:
+    timeout: 500ms
+  recommendations-service:
+    timeout: 200ms
+  fraud-service:
+    timeout: 2000ms
+\`\`\`
+
+When the dep changes characteristics (faster, slower, new version), tune without redeploying.
+
+**Common mistakes:**
+
+- **No timeout** (the most common): defaults of "no timeout" in HTTP clients.
+- **Timeout too long** (5 minutes): not really protecting; threads still hang minutes.
+- **Timeout too short** (50ms when dep p99 is 100ms): false-positive timeouts; retries amplify load.
+- **Same timeout for every dependency**: ignores that deps have different characteristics.
+- **No cancellation propagation**: timed-out calls still consume resources downstream.`,
+    whenToUse: [
+      'Every single external call — timeouts are mandatory',
+      'Reviewing existing code — search for HTTP clients without timeout config',
+      'Postmortem with hung-thread component — was timeout missing or wrong?',
+      'Microservice design — propagate deadlines via gRPC or context',
+    ],
+    keyConcepts: [
+      { term: 'No timeout = no protection', definition: 'A call without timeout can hang forever; threads exhaust; service collapses. Mandatory.' },
+      { term: 'Right timeout value', definition: 'Just longer than dep\'s p99, with buffer. Tight enough to detect hangs; lax enough for legitimate slow calls.' },
+      { term: 'Deadline propagation', definition: 'Caller passes deadline; downstream services use it for their own timeouts. SRE Book Ch 22 verbatim.' },
+      { term: 'Cancellation cascade', definition: 'When a call times out, cancel all downstream in-flight calls. Free resources immediately.' },
+      { term: 'Hard vs soft timeout', definition: 'Hard: kill operation. Soft: cancel but allow background completion. Idempotency keys make soft safe.' },
+      { term: 'Timeout pyramid rule', definition: 'A\'s timeout > sum of B\'s downstream waits. Otherwise A times out while B is still working.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through deadline propagation in a microservice call.',
+        answer: `Worked example: user request flowing through 3 services.
+
+**Initial request:**
+- User\'s browser sends request to API gateway with 2-second timeout.
+- Gateway converts to internal call with deadline: \`now() + 2 seconds\`.
+
+**Hop 1: Gateway → Service A.**
+- Gateway calls A with the deadline in context.
+- 50ms network latency consumed.
+- A receives request with \`remaining_deadline = 1.95s\`.
+
+**Hop 2: Service A → Service B.**
+- A processes for 100ms; remaining = 1.85s.
+- A wants to call B. Sets B\'s timeout to \`min(1.85s, our_default_for_B)\`.
+- If A\'s default for B is 500ms: timeout = 500ms (use the smaller).
+- A passes deadline to B: \`absolute_deadline = original_deadline\`.
+
+**Hop 3: Service B → Service C.**
+- B processes for 50ms; remaining = 1.8s.
+- B calls C with deadline propagated.
+- C\'s timeout: \`min(1.8s, c_default)\`.
+
+**The principle:**
+- Every service\'s effective timeout for its callees = \`min(remaining_deadline, default_timeout_for_callee)\`.
+- The original deadline cascades down.
+- No service waits past the original user-given-up time.
+
+**Without deadline propagation:**
+
+- Gateway\'s 2s timeout is local.
+- A\'s timeout to B is 500ms (config default).
+- B\'s timeout to C is 500ms.
+- Total potential time spent: 500ms (B) + 500ms (C) = 1000ms... but actually, the client (gateway) timed out at 2s.
+
+Looks fine in nominal case. Pathological case:
+- Gateway calls A. A is slow; takes 1.9s.
+- A calls B. A\'s timeout to B is 500ms — it WAITS 500ms before timing out.
+- But the gateway already timed out the entire chain at 2s.
+- A\'s wait of 500ms is wasted; the user already gave up.
+
+With deadline propagation: A sees \`remaining = 0.1s\`; sets B\'s timeout to 0.1s; B fails fast or A times out without waiting full 500ms. Resources freed immediately.
+
+**Implementation:**
+- **gRPC**: built-in via \`context.Context\` with deadline. Standard pattern.
+- **HTTP**: not standardized; common conventions use \`X-Deadline-Timestamp\` or \`Grpc-Timeout\` header.
+- **OpenTelemetry baggage**: deadline can ride in trace context.
+
+**The cultural ask**: every microservice framework should default to deadline propagation. Many do (gRPC). HTTP is more inconsistent.`,
+      },
+      {
+        question: 'How do you choose a timeout value?',
+        answer: `**Look at the call\'s p99 latency in production and add buffer.**
+
+The formula: \`timeout = p99_latency × 1.5\` to \`p99_latency × 3\`.
+
+If a dep\'s p99 is 200ms, set timeout to 300-600ms.
+
+**Why this range:**
+- Tighter than p99 (e.g., timeout = p95): you\'d false-positive on legitimate p99 calls.
+- Way looser than p99 (e.g., timeout = 10× p99): protection is weak; long-tailed slow calls hold threads.
+
+**The data you need:**
+- p50, p95, p99 latency for each dep over the last 7-30 days.
+- p99 during peak load (the relevant target).
+- Trend over time (latency can drift).
+
+**Common values for reference:**
+
+- **In-memory cache hit**: p99 ~1-5ms; timeout 50-100ms.
+- **Local DB query (simple)**: p99 ~10-50ms; timeout 200ms-1s.
+- **Local DB query (complex)**: p99 ~100-500ms; timeout 1-5s.
+- **Internal RPC (sync)**: p99 ~50-500ms; timeout 200ms-2s.
+- **External third-party API**: p99 highly variable; timeout 5-30s.
+- **Long-running operation (export, ML inference)**: p99 1-30s; timeout 30-300s; consider async.
+
+**When the timeout should be tighter:**
+- High-traffic path: false-positive timeout costs less than holding threads.
+- Critical-latency service: 500ms target SLO requires tight timeouts everywhere.
+- Bulkheaded pool with limited threads: timeouts must be tight or pool exhausts.
+
+**When the timeout should be looser:**
+- Low-traffic path: false-positive timeout is more expensive.
+- Long-tailed dependency: p99 includes legitimate slow calls; cutting them hurts more than it helps.
+- Backend-only path: not in user\'s critical path; can wait longer.
+
+**Adaptive timeouts:**
+
+The Netflix concurrency-limits library and similar adaptive systems calculate optimal timeouts from real-time data. Adjust based on current latency distribution.
+
+For most teams: hand-tuned timeouts based on observed p99 work fine. Adaptive is fancy; rarely needed.
+
+**The check:**
+- Plot dep\'s latency distribution.
+- Mark the timeout line.
+- Verify: most p99 calls are below the timeout (legitimate calls succeed).
+- Verify: hung calls (>>>p99) hit the timeout fast (don\'t wait minutes).
+
+**Update timeouts on:**
+- Dep upgrade (might be faster or slower).
+- Traffic increase (latency might shift).
+- Postmortem finding (timeout was wrong).`,
+      },
+      {
+        question: 'I\'ve added timeouts everywhere. What ELSE is needed?',
+        answer: `Five complementary patterns:
+
+**1. Cancellation propagation.**
+- When a timeout fires, cancel all downstream in-flight calls.
+- Without this: A times out; A returns error; but A\'s downstream calls keep running, holding resources.
+- Implementation: cancellation context (Go\'s context.Context, JS AbortController, Java Future.cancel).
+
+**2. Bounded retries with jitter.**
+- Don\'t retry timed-out calls indefinitely.
+- 2-3 attempts max; exponential backoff with jitter.
+- Without this: timeout + retry = 2× the load on the failing service.
+
+**3. Circuit breakers.**
+- After repeated timeouts, stop calling.
+- Without breaker: every request waits the timeout; even after dep is broken, service degrades for the timeout duration per request.
+- With breaker: calls fast-fail after threshold; service stays responsive.
+
+**4. Bulkheads.**
+- Per-dependency thread pool (or semaphore).
+- One slow dep doesn\'t exhaust the entire service\'s threads.
+
+**5. Graceful degradation / fallbacks.**
+- Timeout fires → fallback path (cached value, default, partial response).
+- Better UX than just an error.
+
+**Typical layered stack:**
+
+\`\`\`
+result = circuit_breaker(dep_X).execute(
+    bulkhead(dep_X_pool).execute(
+        timeout(500ms,
+            dep_X.call_with_idempotency_key()
+        )
+    ),
+    fallback=cached_x_value
+)
+\`\`\`
+
+Each layer prevents a different failure mode:
+- **Timeout**: hangs.
+- **Bulkhead**: resource exhaustion.
+- **Circuit breaker**: cascading failure.
+- **Retry**: transient errors.
+- **Fallback**: degraded UX.
+
+**Without the full stack:**
+
+Just timeout: prevents hangs but cascading failure still possible.
+Timeout + retry: now retry storms.
+Timeout + retry + circuit breaker: now you\'re catching most cases.
+Timeout + retry + circuit breaker + bulkhead: production-grade.
+Add fallback: graceful degradation.
+
+The pragmatic order to add (each gives marginal returns):
+1. Timeout (mandatory; prevents the worst).
+2. Retry with jitter (low cost; high benefit).
+3. Circuit breaker (medium cost; high benefit at scale).
+4. Bulkhead (medium cost; needed for multi-dep services).
+5. Fallback (high cost — requires designing the fallback; high UX benefit).
+
+Skipping any leaves a failure mode open. The mature production service has all five.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/addressing-cascading-failures/',
+      'https://grpc.io/blog/deadlines/',
     ],
   },
 ];
