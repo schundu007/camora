@@ -66,7 +66,7 @@ export const engBlogTopics = [
     color: '#0668E1',
     questions: 22,
     description: 'Engineering blog posts from Meta covering infrastructure, ML, video processing, and distributed systems.',
-    introduction: 'Meta Engineering shares deep technical insights into building products used by billions of people worldwide. Their blog covers large-scale infrastructure, AI/ML training, video encoding, data platforms, caching strategies, and security — offering a unique window into operating at planet-scale.',
+    introduction: 'Meta runs the largest social graph on earth across Facebook, Instagram, WhatsApp, and Threads, and their engineering org has shaped how the industry thinks about caching, distributed storage, and ML infrastructure for over a decade. The blog goes deepest in three areas: cache consistency at multi-region scale (TAO and the consistency invariants that keep 3B+ users seeing fresh data), foundational storage systems (ZippyDB key-value, Delta chain replication, FOQS distributed priority queues), and GenAI training infrastructure (RoCE fabrics, FSDP, the data centers built for Llama). For interviews, \'Cache made consistent - How Meta handles cache invalidation\' is the canonical reference for cache-invalidation questions, and \'How we built a general purpose key value store for Facebook with ZippyDB\' is the template for designing a distributed KV store from scratch.',
     blogUrl: 'https://engineering.fb.com',
     articles: [
       { title: 'Indexing code at scale with Glean', url: 'https://engineering.fb.com/2024/12/19/developer-tools/glean-open-source-code-indexing/' },
@@ -105,7 +105,7 @@ export const engBlogTopics = [
     color: '#E1306C',
     questions: 6,
     description: 'Engineering insights from Instagram on recommendations, video processing, ML-driven notifications, and mobile optimization.',
-    introduction: 'Instagram Engineering (part of Meta) publishes deep dives into building one of the world\'s largest photo and video sharing platforms. Their posts cover recommendation systems, video processing optimization, ML-powered features, and mobile performance at massive scale.',
+    introduction: 'Instagram is the largest photo and short-form video product Meta operates, and the team writes from the perspective of running Reels, Stories, and Explore for 2B+ monthly users on constrained mobile hardware. The blog\'s sweet spot is three-fold: large-scale recommendation pipelines that personalize Explore through candidate generation plus ranking, mobile video encoding pipelines tuned to cut compute without hurting quality, and ML applied to product UX problems like notification fatigue. For interview prep, \'Scaling the Instagram Explore recommendations system\' is the article to read before any \'design a recommendations feed\' question, and \'Reducing Instagram\'s basic video compute time by 94 percent\' is excellent background for media-pipeline design.',
     blogUrl: 'https://engineering.fb.com',
     articles: [
       { title: 'Scaling the Instagram Explore recommendations system', url: 'https://engineering.fb.com/2023/08/09/ml-applications/scaling-instagram-explore-recommendations-system/' },
@@ -128,7 +128,7 @@ export const engBlogTopics = [
     color: '#4285F4',
     questions: 7,
     description: 'Research blog posts from Google covering search, ML, load balancing, and large-scale data processing.',
-    introduction: 'Google Research publishes cutting-edge work on search quality, machine learning, large-scale systems, and applied AI. Their blog offers insights into solving problems at unprecedented scale — from grammar checking billions of queries to inverse reinforcement learning for Maps.',
+    introduction: 'Google Research is the publication arm of the company that invented MapReduce, BigTable, Spanner, and the Transformer, and the blog continues to translate academic-grade CS into systems that serve a planet of users. The strongest threads are stochastic load balancing and queueing theory applied to real fleets, low-latency analytics over hundreds of billions of events per day, and ML applied where most companies use heuristics, like routing in Google Maps. For system-design prep, \'Load balancing with random job arrivals\' is the model answer for any \'design a load balancer\' question that goes beyond round-robin, and \'Answering billions of reporting queries each day with low latency\' maps directly to designing a real-time analytics system.',
     blogUrl: 'https://research.google/blog/',
     articles: [
       { title: 'Load balancing with random job arrivals', url: 'https://research.google/blog/load-balancing-with-random-job-arrivals/' },
@@ -151,7 +151,7 @@ export const engBlogTopics = [
     color: '#FF9900',
     questions: 8,
     description: 'Technical blog from Amazon covering AI assistants, search ranking, ad fraud detection, and DynamoDB lessons.',
-    introduction: 'Amazon Science shares research and engineering behind Amazon\'s core services. From training code generation models to powering the Rufus shopping assistant, their blog covers search, recommendations, ML training data synthesis, and hard-won lessons from operating DynamoDB for a decade.',
+    introduction: 'Amazon Science publishes the engineering behind Amazon retail, AWS, and Alexa, with a culture famously obsessed with operational excellence and writing things down. The blog is strongest on three topics: production search ranking that has evolved from inverted-index lookups into learning-to-rank-and-retrieve over a billion-product catalog, real-time fraud and abuse detection on streams of clicks and orders, and a decade of operational lessons running storage systems at AWS scale. The single highest-value article for interview prep is \'Lessons learned from 10 years of DynamoDB\' — it is the canonical reference for partition design, hot-key mitigation, and availability versus consistency tradeoffs that show up in nearly every NoSQL system-design question.',
     blogUrl: 'https://www.amazon.science/blog',
     articles: [
       { title: 'Training code generation models to debug their own outputs', url: 'https://www.amazon.science/blog/training-code-generation-models-to-debug-their-own-outputs' },
@@ -175,7 +175,7 @@ export const engBlogTopics = [
     color: '#E50914',
     questions: 21,
     description: 'Technical blog from Netflix covering recommendations, streaming infrastructure, ML platforms, and distributed systems.',
-    introduction: 'The Netflix Tech Blog is one of the most influential engineering blogs in the industry. It covers personalized recommendations, video processing pipelines, distributed data abstractions, ML platforms, GraphQL migration, and building resilient streaming infrastructure for 200M+ subscribers worldwide.',
+    introduction: 'Netflix runs the world\'s largest video streaming platform and pioneered chaos engineering, microservices, and the data-mesh pattern as disciplines the rest of the industry now copies. The blog is the gold standard in three areas: distributed data abstractions that hide Cassandra and EVCache behind unified KV, TimeSeries, and Counter APIs, foundation-model recommendations served to 280M+ subscribers, and a microservices video pipeline that ingests, encodes, and adapts streams across thousands of device profiles. For interviews, \'Netflix\'s Key-Value Data Abstraction Layer\' is the template for any \'design a database access layer\' question, \'Rebuilding Netflix Video Processing Pipeline with Microservices\' is the canonical YouTube-style media system, and \'Netflix\'s Distributed Counter Abstraction\' covers any counting-at-scale problem.',
     blogUrl: 'https://netflixtechblog.com',
     articles: [
       { title: 'Foundation Model for Personalized Recommendation', url: 'https://netflixtechblog.com/foundation-model-for-personalized-recommendation-1a0bd8e02d39' },
@@ -217,7 +217,7 @@ export const engBlogTopics = [
     color: '#0A66C2',
     questions: 20,
     description: 'Engineering blog from LinkedIn covering recommendations, data infrastructure, search, and large-scale graph systems.',
-    introduction: 'LinkedIn Engineering publishes extensively on building the world\'s largest professional network. Their blog covers recommendation systems (People You May Know), data infrastructure at massive scale, GraphQL adoption, federated learning, search embeddings, and scaling Hadoop clusters beyond 10,000 nodes.',
+    introduction: 'LinkedIn runs the world\'s largest professional graph at over a billion members, and many of the open-source pillars of modern data infrastructure — Kafka, Voldemort, Pinot, Samza — were born here. The blog goes deepest on three fronts: graph recommendations against a billion-vertex member graph (the People You May Know candidate-generation pipeline), big-data infrastructure run at extreme scale including a 10,000-plus-node Hadoop YARN cluster and the OpenHouse table service, and embeddings-driven matching that powers job-seeker recommendations and feed ranking. For interviews, \'Candidate Generation in a Large Scale Graph Recommendation System\' is the article to read before any social-graph design question, and \'Scaling LinkedIn\'s Hadoop YARN cluster beyond 10,000 nodes\' is a great primer on multi-tenant resource scheduling.',
     blogUrl: 'https://www.linkedin.com/blog/engineering',
     articles: [
       { title: 'Scalable federated learning at LinkedIn', url: 'https://www.linkedin.com/blog/engineering/machine-learning/scalable-federated-learning-at-linkedin' },
@@ -253,7 +253,7 @@ export const engBlogTopics = [
     color: '#000000',
     questions: 21,
     description: 'Engineering blog from Uber covering databases, ML optimization, search, real-time processing, and Kubernetes migration.',
-    introduction: 'Uber Engineering publishes deep technical content on operating one of the world\'s largest ride-hailing and delivery platforms. Their blog covers database operations at scale (MySQL, Cassandra), Kubernetes migration, ML-powered ETAs, LLM optimization, search with Lucene, real-time ad processing, and distributed storage systems.',
+    introduction: 'Uber runs ride-hailing, delivery, and freight as global real-time marketplaces where every dispatch is a stateful workflow that must finish in seconds, and the engineering blog reflects that operational discipline. Their strongest content covers database operations at marketplace scale (running MySQL and Cassandra across regions, plus the LedgerStore that backs trillions of indexed financial entries), real-time stream processing built on Kafka, Flink, and Pinot for ad events with exactly-once semantics, and ML systems for ETA prediction and push optimization. For interviews, \'How Uber Serves Over 40 Million Reads Per Second\' is excellent prep for any high-read cache-fronted design, \'How Uber Predicts Arrival Times Using Deep Learning\' (DeepETA) anchors ride-hailing ETA questions, and \'Real-Time Ad Event Processing with Flink, Kafka, and Pinot\' is a streaming-pipeline reference.',
     blogUrl: 'https://www.uber.com/blog/engineering/',
     articles: [
       { title: 'Migrating Uber\'s Compute Platform to Kubernetes', url: 'https://www.uber.com/en-IN/blog/migrating-ubers-compute-platform-to-kubernetes-a-technical-journey/' },
@@ -290,7 +290,7 @@ export const engBlogTopics = [
     color: '#635BFF',
     questions: 5,
     description: 'Engineering blog from Stripe covering payment infrastructure, fraud detection, API design, and high-availability systems.',
-    introduction: 'Stripe Engineering shares insights into building the internet\'s payment infrastructure. Their blog covers ledger systems for money movement, achieving 99.999% uptime with zero-downtime migrations, fraud detection with Radar, API design principles refined over a decade, and developer experience with Markdoc.',
+    introduction: 'Stripe is the payments infrastructure for a meaningful share of internet revenue, and their engineering culture is famous for treating API design and correctness as first-class disciplines. The blog\'s small but high-density catalog excels in three areas: double-entry ledger systems that have to reconcile to the cent across hundreds of currencies, document-database operations achieving five-nines uptime with online schema migrations on petabyte-scale stores, and API design as long-term product strategy refined over a decade of backwards-compatible evolution. For interviews, \'Stripe\'s system for tracking and validating money movement\' is the reference for any \'design a payment ledger\' question, and \'Stripe\'s payments APIs: The first 10 years\' is required reading before any API-design discussion.',
     blogUrl: 'https://stripe.com/blog/engineering',
     articles: [
       { title: 'Stripe\'s system for tracking and validating money movement', url: 'https://stripe.com/blog/ledger-stripe-system-for-tracking-and-validating-money-movement' },
@@ -310,7 +310,7 @@ export const engBlogTopics = [
     color: '#96BF48',
     questions: 7,
     description: 'Engineering blog from Shopify covering Rails scaling, real-time ML, event streaming, and e-commerce infrastructure.',
-    introduction: 'Shopify Engineering shares how they build and scale the world\'s leading e-commerce platform. Their blog covers horizontally scaling Rails with Vitess, real-time ML for search intent, server-sent events for streaming, flexible order routing, and capturing every change from a sharded monolith.',
+    introduction: 'Shopify powers a meaningful slice of independent e-commerce on the internet and famously runs the largest production Ruby on Rails monolith in existence, sharded into pods that survive Black Friday. The blog\'s most distinctive content shows how they make a monolith scale: horizontal Rails sharding on top of Vitess, change-data-capture pipelines that stream every row mutation off the sharded monolith for downstream consumers, and server-sent events for real-time UI streaming without web-socket complexity. For interviews, \'Horizontally scaling Rails backend with Vitess\' is excellent prep for any database-sharding question, and \'Capturing Every Change From Shopify\'s Sharded Monolith\' is a model answer for designing a CDC pipeline on top of an OLTP store.',
     blogUrl: 'https://shopify.engineering',
     articles: [
       { title: 'How Shopify improved consumer search intent with real-time ML', url: 'https://shopify.engineering/how-shopify-improved-consumer-search-intent-with-real-time-ml' },
@@ -332,7 +332,7 @@ export const engBlogTopics = [
     color: '#4A154B',
     questions: 14,
     description: 'Engineering blog from Slack covering real-time messaging, search, API design, cellular architecture, and WebSocket migration.',
-    introduction: 'Slack Engineering publishes detailed posts on building a real-time collaboration platform used by millions of teams. Their blog covers cellular architecture for reliability, real-time messaging at scale, enterprise search, API design philosophy, WebSocket migrations, ML-powered recommendations, and security (stolen cookie detection).',
+    introduction: 'Slack runs real-time messaging for hundreds of thousands of customer workspaces, including most of the Fortune 500, where a few seconds of message latency is a visible incident. The blog is strongest on three fronts: a cellular architecture migration that isolates blast radius by routing each workspace to a single cell, persistent WebSocket fleets at the millions-of-connections scale (including the Envoy migration), and enterprise-grade search that has to respect tenant isolation and per-channel ACLs. For interviews, \'Real-time Messaging at Slack\' and \'Migrating Millions of Concurrent Websockets to Envoy\' together form the reference architecture for any \'design a chat system\' question, and \'Slack\'s Migration to a Cellular Architecture\' anchors discussions of multi-tenant isolation.',
     blogUrl: 'https://slack.engineering',
     articles: [
       { title: 'How Slack Optimizes its E2E Pipeline', url: 'https://slack.engineering/speedup-e2e-testing/' },
@@ -362,7 +362,7 @@ export const engBlogTopics = [
     color: '#24292E',
     questions: 7,
     description: 'Engineering blog from GitHub covering code search, Git performance, database partitioning, and merge queue systems.',
-    introduction: 'GitHub Engineering shares insights into building the world\'s largest code hosting platform. Their blog covers the technology behind code search, Git performance optimization, database partitioning for scale, merge queue systems for shipping hundreds of changes daily, and improving push processing.',
+    introduction: 'GitHub hosts the majority of the world\'s open-source and a huge share of private source code, and the engineering team operates one of the few products where every customer is also a power user. The blog\'s most useful content is concentrated in three areas: production-scale code search built on a custom indexer (Blackbird) that handles trillions of tokens across millions of repos, MySQL operations including a multi-year journey to partition the relational database backing every issue and pull request, and Git internals scaled for repositories that ship hundreds of merges per day. For interviews, \'The technology behind GitHub\'s new code search\' is the reference for any large-scale search-indexing question, and \'Partitioning GitHub\'s relational databases to handle scale\' is a candid case study in vertical-to-horizontal database migration.',
     blogUrl: 'https://github.blog/engineering/',
     articles: [
       { title: 'How we improved push processing on GitHub', url: 'https://github.blog/engineering/architecture-optimization/how-we-improved-push-processing-on-github/' },
@@ -384,7 +384,7 @@ export const engBlogTopics = [
     color: '#F24E1E',
     questions: 8,
     description: 'Engineering blog from Figma covering real-time collaboration, database scaling, AI search, and performance optimization.',
-    introduction: 'Figma Engineering shares how they build a real-time collaborative design tool used by millions of designers. Their blog covers horizontal Postgres scaling, real-time data systems (LiveGraph), AI-powered search infrastructure, incremental frame loading for performance, and the challenges of autosave in collaborative environments.',
+    introduction: 'Figma is a browser-native design tool whose entire value proposition depends on tens of designers seeing each other\'s cursors and edits in the same document, and the engineering team has had to invent the scaling story for that as it grew. The blog goes deepest on three problems: horizontally sharding Postgres without losing the relational guarantees the app depends on, the LiveGraph subscription system that fans out collaborative document changes to every connected client in real time, and autosave plus conflict resolution in a CRDT-flavored editing model. For interviews, \'How Figma horizontally scaled Postgres\' and \'How Figma reduced instability by scaling to multiple databases\' are the model answer for sharding a relational primary, and \'Figma\'s LiveGraph: a real-time data system at scale\' anchors any collaborative-editing system design.',
     blogUrl: 'https://www.figma.com/blog/engineering/',
     articles: [
       { title: 'The infrastructure behind AI search in Figma', url: 'https://www.figma.com/blog/the-infrastructure-behind-ai-search-in-figma/' },
@@ -407,7 +407,7 @@ export const engBlogTopics = [
     color: '#000000',
     questions: 6,
     description: 'Engineering blog from Notion covering data modeling, Postgres sharding, WASM performance, and API design.',
-    introduction: 'Notion Engineering shares how they build the all-in-one workspace used by millions of teams. Their blog covers their unique block-based data model, Postgres sharding journey (including a zero-downtime re-shard), WASM SQLite for browser performance, data lake architecture, and the design of the Notion API.',
+    introduction: 'Notion is built on an unusual block-based data model where every paragraph, page, and database row is the same primitive, which makes flexibility easy for users and scaling hard for engineers. The blog\'s most distinctive content covers exactly that: the recursive block schema and how it shapes every query, two consecutive Postgres sharding migrations done online for one of the most write-heavy workloads in SaaS, and a client-side architecture that ships WASM SQLite to the browser to keep large workspaces responsive. For interviews, \'Lessons learned from sharding Postgres at Notion\' and \'The Great Re-shard: adding Postgres capacity with zero downtime\' together form one of the best published case studies on online relational resharding, and \'The data model behind Notion\'s flexibility\' is excellent for data-modeling questions.',
     blogUrl: 'https://www.notion.com/blog',
     articles: [
       { title: 'Building and scaling Notion\'s data lake', url: 'https://www.notion.com/blog/building-and-scaling-notions-data-lake' },
@@ -428,7 +428,7 @@ export const engBlogTopics = [
     color: '#5865F2',
     questions: 5,
     description: 'Engineering blog from Discord covering message storage, WebSocket optimization, ML notifications, and scaling to millions of concurrent users.',
-    introduction: 'Discord Engineering shares how they build the communication platform used by hundreds of millions of users. Their blog covers storing trillions of messages, reducing WebSocket traffic by 40%, pushing servers to 1M+ concurrent users, ML-driven notifications, and creating insights from trillions of data points.',
+    introduction: 'Discord runs persistent, low-latency voice and chat for hundreds of millions of users organized into servers that can each hold a million-plus members, which is a workload pattern almost nobody else operates at. The blog is famous in three areas: a candid migration from Cassandra to ScyllaDB to store trillions of messages with predictable tail latency, gateway and WebSocket optimizations including the zstd-based compression rollout that cut traffic by roughly 40 percent, and the all-hands-on-deck work to make a single server handle a million concurrent users for one viral event. For interviews, \'How Discord Stores Trillions of Messages\' is the canonical reference for chat-at-scale storage, and \'Pushing Discord\'s Limits with a Million+ Online Users in a Single Server\' anchors fan-out and presence design questions.',
     blogUrl: 'https://discord.com/blog',
     articles: [
       { title: 'How Discord Reduced Websocket Traffic by 40%', url: 'https://discord.com/blog/how-discord-reduced-websocket-traffic-by-40-percent' },
@@ -452,7 +452,7 @@ export const engBlogTopics = [
     color: '#FF5A5F',
     questions: 4,
     description: 'Engineering blog from Airbnb covering search, HTTP streaming, data frameworks, and distributed payments.',
-    introduction: 'Airbnb Engineering shares insights into building the world\'s largest hospitality marketplace. Their blog covers embedding-based search retrieval, HTTP streaming for page performance, scalable data frameworks for read-heavy workloads, and preventing double payments in distributed systems.',
+    introduction: 'Airbnb is a global two-sided marketplace where guest searches must rank a sparse, diverse listing inventory in milliseconds and host payouts must settle to the cent across dozens of currencies. The blog\'s small but high-impact catalog focuses on three areas: embedding-based retrieval that brought deep learning into marketplace search ranking before most peers, HTTP streaming and progressive rendering to cut perceived page-load latency, and idempotency engineering for distributed payments where a duplicate charge is a worse failure than a missed one. For interviews, \'Embedding-Based Retrieval for Airbnb Search\' is a model answer for any \'design a marketplace search\' question, and \'Avoiding Double Payments in a Distributed Payments System\' is the reference for idempotency-key design.',
     blogUrl: 'https://medium.com/airbnb-engineering',
     articles: [
       { title: 'Embedding-Based Retrieval for Airbnb Search', url: 'https://medium.com/airbnb-engineering/embedding-based-retrieval-for-airbnb-search-aabebfc85839' },
@@ -471,7 +471,7 @@ export const engBlogTopics = [
     color: '#FF3008',
     questions: 9,
     description: 'Engineering blog from DoorDash covering LLM-powered search, knowledge graphs, real-time event processing, and chat systems.',
-    introduction: 'DoorDash Engineering shares how they build and scale one of the largest food delivery platforms. Their blog covers using LLMs for menu transcription and search retrieval, building product knowledge graphs, real-time event processing with Kafka and Flink, client-side caching for feature stores, and unified chat experiences.',
+    introduction: 'DoorDash operates a three-sided logistics marketplace — consumers, merchants, and dashers — where every order is a real-time dispatch problem on top of a rapidly mutating restaurant catalog. The blog leads in three areas that are unusual to see written up so concretely: LLM-driven catalog work including menu OCR from photos and product knowledge graph extraction across millions of merchants, a homegrown search retrieval stack tuned for hyperlocal relevance, and Kafka-plus-Flink streaming pipelines that move events through pricing, dispatch, and analytics in seconds. For interviews, \'DoorDash\'s in-house search engine\' is the reference for designing a verticalized search stack, and \'Doordash\'s scalable real time event processing with Kafka and Flink\' anchors any \'design a real-time event pipeline\' question.',
     blogUrl: 'https://careersatdoordash.com/blog/',
     articles: [
       { title: 'How DoorDash Uses LLMs to transcribe restaurant menu photos', url: 'https://careersatdoordash.com/blog/doordash-llm-transcribe-menu/' },
@@ -495,7 +495,7 @@ export const engBlogTopics = [
     color: '#43B02A',
     questions: 15,
     description: 'Engineering blog from Instacart covering search, ML recommendations, fraud detection, availability prediction, and logistics optimization.',
-    introduction: 'Instacart Engineering publishes extensively on building the leading grocery delivery platform. Their blog covers ML-driven search (autocomplete, embeddings, LLMs), real-time fraud detection, predicting availability of 200M+ grocery items, logistics optimization, and distributed machine learning infrastructure.',
+    introduction: 'Instacart runs grocery delivery against a uniquely messy catalog where over 200 million SKUs across thousands of stores are constantly going out of stock, getting renamed, or being substituted, which makes search and availability prediction the central engineering problem. The blog is one of the most prolific in the industry on three topics: hybrid retrieval that fuses lexical, embedding, and LLM-based search ranking, a real-time availability prediction system that decides whether each item is actually on the shelf right now, and an end-to-end ML platform from feature engineering to distributed training and serving. For interviews, \'Optimizing search relevance using hybrid retrieval\' is excellent prep for modern search-design questions, and \'Predicting real-time availability of 200 million grocery items\' is the reference for any inventory-prediction problem.',
     blogUrl: 'https://tech.instacart.com',
     articles: [
       { title: 'Real-time Fraud Detection with Yoda and ClickHouse', url: 'https://tech.instacart.com/real-time-fraud-detection-with-yoda-and-clickhouse-bd08e9dbe3f4' },
@@ -526,7 +526,7 @@ export const engBlogTopics = [
     color: '#E53238',
     questions: 8,
     description: 'Engineering blog from eBay covering graph databases, vector search, recommendations, notifications, and indexing at scale.',
-    introduction: 'eBay Engineering shares insights into building one of the world\'s largest online marketplaces. Their blog covers billion-scale graph operations, vector similarity engines, multimodal embeddings for recommendations, real-time push notifications, deep learning retrieval systems, and high-performance global secondary indexes.',
+    introduction: 'eBay is the canonical long-tail marketplace, with billions of historical listings across every category imaginable, which makes graph traversal, similarity search, and indexing the central technical problems. The blog stands out in three areas that are hard to find good writeups on elsewhere: billion-vertex transactional graph databases including how to export and bulk-load them without downtime, a homegrown billion-scale vector similarity engine running ANN at production latency, and global secondary indexes built for marketplace catalog queries. For interviews, \'eBay\'s Blazingly Fast Billion-Scale Vector Similarity Engine\' is excellent reference material for any vector-search system-design question, and \'How Multimodal Embeddings Elevate eBay\'s Product Recommendations\' anchors discussions of embedding-driven recommendations.',
     blogUrl: 'https://innovation.ebayinc.com/stories/',
     articles: [
       { title: 'How ebay Exports Billion-Scale Graphs on Transactional Graph Databases', url: 'https://innovation.ebayinc.com/stories/how-we-export-billion-scale-graphs-on-transactional-graph-databases/' },
@@ -549,7 +549,7 @@ export const engBlogTopics = [
     color: '#003087',
     questions: 8,
     description: 'Engineering blog from PayPal covering Kafka scaling, Kubernetes, GraphQL adoption, fraud detection, and key-value stores.',
-    introduction: 'PayPal Engineering shares how they build and scale the world\'s leading digital payments platform. Their blog covers scaling Kafka for massive data growth, Kubernetes at 4K+ nodes, GraphQL adoption, real-time graph-based fraud detection, JunoDB key-value store, and deploying large-scale fraud detection ML models.',
+    introduction: 'PayPal moves trillions of dollars a year across hundreds of millions of accounts, and almost every engineering decision is shaped by either fraud risk or regulatory durability. The blog\'s strongest content covers three areas: a homegrown distributed key-value store called JunoDB built for the latency and consistency that financial workloads require, real-time graph databases used as the substrate for fraud-ring detection across accounts, devices, and transactions, and large-fleet Kubernetes operations that scaled to 4,000-plus nodes and 200,000-plus pods. For interviews, \'JunoDB: PayPal\'s Key-Value Store\' is a candid look at why a fintech might build its own KV layer, and \'How PayPal Uses Real-time Graph Database to Fight Fraud\' anchors any fraud-detection design question.',
     blogUrl: 'https://medium.com/paypal-tech',
     articles: [
       { title: 'Scaling PayPal\'s AI Capabilities', url: 'https://medium.com/paypal-tech/scaling-paypals-ai-capabilities-with-paypal-cosmos-ai-platform-e67a48e04691' },
@@ -572,7 +572,7 @@ export const engBlogTopics = [
     color: '#0052FF',
     questions: 6,
     description: 'Engineering blog from Coinbase covering network optimization, deep learning, GenAI, traffic prediction, fraud detection, and notifications.',
-    introduction: 'Coinbase Engineering shares how they build the leading cryptocurrency exchange. Their blog covers optimizing network requests for performance, accelerating deep learning adoption, enterprise-grade GenAI solutions, ML-based traffic prediction for database scaling, blockchain fraud detection, and building a notification platform.',
+    introduction: 'Coinbase runs the largest US cryptocurrency exchange, where engineering has to absorb 50x traffic spikes during market-moving news while also reading and writing to public blockchains that have their own consensus latency. The blog\'s most distinctive content lives in three areas: ML-driven traffic prediction used to autoscale databases ahead of demand rather than chasing it, blockchain-aware fraud detection that scores wallet addresses by risk before approving a transaction, and the operational lessons of rolling out enterprise-grade GenAI inside a regulated financial product. For interviews, \'How Coinbase Uses ML to Predict Traffic and Scale Databases\' is a strong reference for capacity-planning design questions, and \'Detecting Fraudulent Transactions at Coinbase\' anchors fraud-detection discussions.',
     blogUrl: 'https://www.coinbase.com/blog',
     articles: [
       { title: 'How Coinbase Optimizes Network Requests', url: 'https://www.coinbase.com/blog/boosting-app-performance-strategies-to-optimize-network-requests' },
@@ -593,7 +593,7 @@ export const engBlogTopics = [
     color: '#2D64EF',
     questions: 9,
     description: 'Engineering blog from Razorpay covering authentication, cost optimization, fraud detection, real-time streaming, and handling burst traffic.',
-    introduction: 'Razorpay Engineering shares insights into building India\'s leading payment gateway. Their blog covers authentication performance optimization, significant cost reductions on Kubernetes and data platforms, fraud merchant detection, real-time data streaming, notification services under heavy load, and handling IPL-scale burst traffic.',
+    introduction: 'Razorpay is one of India\'s largest payment gateways, and operates against a uniquely bursty traffic shape because Indian payment volume is dominated by a handful of mega-events like IPL matches and flash sales that can 10x baseline load in minutes. The blog\'s most useful content covers three areas: cost-engineering case studies with hard dollar numbers including a 2 million dollar data-platform reduction and a Kubernetes optimization that saved 300 thousand, real-time denormalized streaming pipelines built to keep merchant dashboards consistent under load, and authentication and notification services tuned for payment-grade tail latency. For interviews, \'Handling Burst Traffic During IPL\' is a vivid case study in capacity planning, and \'Razorpay\'s Real-Time Denormalized Data Streaming Platform\' is a reference for streaming materialized views.',
     blogUrl: 'https://engineering.razorpay.com',
     articles: [
       { title: 'Razorpay\'s Authentication Revamp', url: 'https://engineering.razorpay.com/razorpays-authentication-revamp-turbocharging-performance-b8bb9d750fe8' },
@@ -617,7 +617,7 @@ export const engBlogTopics = [
     color: '#F7D516',
     questions: 6,
     description: 'Engineering blog from Flipkart covering MySQL HA, Zookeeper, microservice tuning, and search personalization.',
-    introduction: 'Flipkart Engineering shares insights into building India\'s largest e-commerce platform. Their blog covers MySQL high availability setups, multi-region Zookeeper, memory tuning for high-throughput microservices, personalized search autosuggestion, predictive query completion, and adapting search to Indian phonetics.',
+    introduction: 'Flipkart is one of India\'s largest e-commerce platforms and has to engineer for two unusual constraints — Big Billion Days flash-sale traffic that reshapes infrastructure planning every year, and a multilingual user base that types product names in Romanized Hindi, Tamil, and Bengali. The blog\'s most distinctive content covers three areas: foundational reliability primitives like MySQL HA topologies and multi-region Zookeeper, JVM and memory tuning for the high-throughput microservices that fan out behind every product page, and search relevance work tailored to Indian phonetics where the same query has dozens of valid spellings. For interviews, \'How Flipkart Adapted Search to Indian Phonetics\' is excellent reference for any internationalized-search design, and \'Memory Tuning a High Throughput Microservice\' anchors performance-tuning discussions.',
     blogUrl: 'https://blog.flipkart.tech',
     articles: [
       { title: 'Flipkart\'s MySQL Highly Available Setup', url: 'https://blog.flipkart.tech/mysql-high-availability-5f71838f19e1' },
@@ -638,7 +638,7 @@ export const engBlogTopics = [
     color: '#FC8019',
     questions: 15,
     description: 'Engineering blog from Swiggy covering search, logistics, deep learning ranking, microservice resilience, and delivery optimization.',
-    introduction: 'Swiggy Engineering shares how they build India\'s leading food delivery platform. Their blog covers text-to-SQL solutions, search relevance with small language models, delivery time prediction, deep learning for dish ranking, resilient microservice design, logistics re-architecture, geo queries at scale, and deploying deep learning models in production.',
+    introduction: 'Swiggy runs hyperlocal food and grocery delivery across hundreds of Indian cities, where the central engineering problem is matching a fluctuating fleet of two-wheeler riders to time-sensitive orders against road and traffic conditions specific to each pincode. The blog is strongest in three areas: ETA and travel-distance prediction using deep learning calibrated to two-wheeler routing, geospatial query layers that support thousands of read-and-update operations per second across overlapping serviceability polygons, and learning-to-rank models for dish and restaurant search tuned for Indian food vocabulary. For interviews, \'Predicting Food Delivery Time at Cart\' anchors any ETA-design question, and \'Running Geo Queries At Scale\' is a strong reference for geospatial system design.',
     blogUrl: 'https://bytes.swiggy.com',
     articles: [
       { title: 'Swiggy\'s Text-to-SQL Solution', url: 'https://bytes.swiggy.com/hermes-a-text-to-sql-solution-at-swiggy-81573fb4fb6e' },
@@ -669,7 +669,7 @@ export const engBlogTopics = [
     color: '#E23744',
     questions: 7,
     description: 'Engineering blog from Zomato covering search, logging infrastructure, ML-powered ads, embeddings, and delivery time prediction.',
-    introduction: 'Zomato Engineering shares insights into building one of India\'s largest food delivery and restaurant discovery platforms. Their blog covers handling 100M daily search queries, building cost-effective logging at petabyte scale with ClickHouse, ML-powered restaurant ads, address embeddings, food preparation time prediction, and user location systems.',
+    introduction: 'Zomato runs restaurant discovery and food delivery for hundreds of millions of Indian users, where every order is a coordination problem between a restaurant\'s prep time, a rider\'s travel time, and a user\'s ever-shifting location. The blog\'s most distinctive content covers three areas: serving 100 million daily search queries against a long-tail restaurant catalog, cost-engineering observability by building petabyte-scale logging on ClickHouse instead of paying SaaS rates, and ML systems that estimate restaurant food-preparation time, which is the single most uncertain component of delivery ETA. For interviews, \'How Zomato Handles 100 Million Daily Search Queries\' is a useful reference for high-QPS search design, and \'How Zomato predicts Food preparation time\' anchors ETA-prediction discussions.',
     blogUrl: 'https://blog.zomato.com',
     articles: [
       { title: 'Building a cost-effective logging platform for petabyte scale', url: 'https://blog.zomato.com/building-a-cost-effective-logging-platform-using-clickhouse-for-petabyte-scale' },
@@ -691,7 +691,7 @@ export const engBlogTopics = [
     color: '#003580',
     questions: 5,
     description: 'Engineering blog from Booking.com covering anomaly detection, cost optimization, ranking systems, fraud detection, and cancellation prediction.',
-    introduction: 'Booking.com Engineering shares insights into building one of the world\'s largest travel platforms. Their blog covers anomaly detection in time series data, cutting cloud costs by 20% with a single code change, high-performance ranking platforms, graph-based fraud detection, and predicting cancellations with survival modeling.',
+    introduction: 'Booking.com is the largest online travel agency, where small ranking changes against millions of properties move tens of millions of dollars and the cost of a wrong fraud decision is a chargeback weeks after checkout. The blog\'s small but high-quality catalog goes deepest in three areas: a high-performance ranking platform that reranks property results in milliseconds while running thousands of concurrent A/B experiments, graph-based fraud detection that finds rings across guests, properties, and payment methods, and statistical modeling work like survival analysis for cancellation prediction that most companies treat as a heuristic. For interviews, \'The Engineering Behind Booking.com\'s High-Performance Ranking Platform\' is a strong reference for any ranking-system design, and \'How Booking.com Leverage graph technology for real-time Fraud Detection and Prevention\' anchors fraud-detection discussions.',
     blogUrl: 'https://medium.com/booking-com-development',
     articles: [
       { title: 'Anomaly Detection in Time Series Using Statistical Analysis', url: 'https://medium.com/booking-com-development/anomaly-detection-in-time-series-using-statistical-analysis-cc587b21d008' },
@@ -715,7 +715,7 @@ export const engBlogTopics = [
     color: '#1DA1F2',
     questions: 8,
     description: 'Engineering blog from Twitter/X covering the recommendation algorithm, database scaling, real-time analytics, and ads infrastructure.',
-    introduction: 'Twitter/X Engineering shares insights into building one of the world\'s most influential real-time platforms. Their blog covers the open-sourced recommendation algorithm, scaling the users database for reads, real-time analytics with Druid, ads pacing and serving infrastructure, processing billions of events in real time, and logging at scale.',
+    introduction: 'Twitter, now X, is the canonical real-time public timeline product, processing roughly half a million tweets per minute that have to fan out to followers globally within seconds, and is one of the few major platforms that has open-sourced its production recommendation pipeline. The blog\'s most valuable content lives in three areas: the For You algorithm including candidate generation, heavy ranking, and the SimClusters embedding model, real-time ads infrastructure that serves and paces millions of ad impressions per second with strict budget guarantees, and analytics on Apache Druid serving sub-second aggregations over event streams. For interviews, \'Twitter\'s Recommendation Algorithm\' is a rare end-to-end reference for production recommender design, and \'Storing and retrieving millions of ad impressions per second\' anchors high-throughput counter and ledger discussions.',
     blogUrl: 'https://blog.x.com/engineering',
     articles: [
       { title: 'Twitter\'s Recommendation Algorithm', url: 'https://blog.x.com/engineering/en_us/topics/open-source/2023/twitter-recommendation-algorithm' },
@@ -739,7 +739,7 @@ export const engBlogTopics = [
     color: '#E60023',
     questions: 8,
     description: 'Engineering blog from Pinterest covering search with LLMs, text-to-SQL, caching, real-time recommendations, and ads scaling.',
-    introduction: 'Pinterest Engineering shares how they build the visual discovery platform used by hundreds of millions. Their blog covers improving search relevance with LLMs, building text-to-SQL, change data capture, real-time anomaly detection, distributed caching optimization, leveraging real-time user actions for recommendations, and scaling the ads corpus.',
+    introduction: 'Pinterest is the largest visual discovery platform, where every pin is a multimodal object and the central engineering problem is recommending images that a user will save now from a corpus of hundreds of billions of pins. The blog is strongest in three areas: real-time recommendations that incorporate within-session user actions to update the homefeed in seconds, large-scale memcached and distributed caching tuned for the read-heavy fan-out pattern that recommendations create, and the 60x scale-out of the ads corpus that the retrieval and ranking stack now has to support. For interviews, \'How Pinterest Leverages Realtime User Actions for Homefeed\' is a strong reference for session-aware recommendations, and \'Improving Distributed Caching Performance at Pinterest\' anchors any caching-architecture design.',
     blogUrl: 'https://medium.com/pinterest-engineering',
     articles: [
       { title: 'How Pinterest improved Search Relevance using LLMs', url: 'https://medium.com/pinterest-engineering/improving-pinterest-search-relevance-using-large-language-models-4cd938d4e892' },
@@ -762,7 +762,7 @@ export const engBlogTopics = [
     color: '#FF4500',
     questions: 8,
     description: 'Engineering blog from Reddit covering media infrastructure, ad serving, Flink-based validation, and experiment routing.',
-    introduction: 'Reddit Engineering shares how they build one of the internet\'s largest community platforms. Their blog covers evolving media infrastructure, scaling ad serving systems, real-time ad event validation with Apache Flink, dynamic product ads, ads pacing from singleton to sharded, retrieval ranking models, experiment-based routing, and media metadata storage.',
+    introduction: 'Reddit is the long-tail community platform of the internet, with hundreds of thousands of subreddits whose voting, ranking, and ad serving have to work coherently across wildly different content shapes from text to image to video. The blog\'s best content over the last two years has concentrated on the ads stack: real-time ad-event validation built on Apache Flink, a homegrown global retrieval-ranking model used to pick candidate ads, and the migration of ads pacing from a single-process service to a sharded fleet to keep budget enforcement strict at higher QPS. For interviews, \'Scaling Ads Pacing: from Singleton to Sharded\' is a useful case study in stateful service sharding, and \'Introducing a Global Retrieval Ranking Model in Ads\' anchors discussions of two-stage ranking systems.',
     blogUrl: 'https://www.reddit.com/r/RedditEng/',
     articles: [
       { title: 'Evolving Reddit\'s Media Infrastructure', url: 'https://www.reddit.com/r/RedditEng/comments/1k4o2mc/evolving_reddits_media_infrastructure/' },
@@ -785,7 +785,7 @@ export const engBlogTopics = [
     color: '#FFFC00',
     questions: 6,
     description: 'Engineering blog from Snap covering ML platforms, embedding-based retrieval, feature engineering, synthetic data, and ad ranking.',
-    introduction: 'Snap Engineering shares how they build Snapchat and its ecosystem of products. Their blog covers Bento (their ML platform), embedding-based retrieval for video recommendations, speeding up feature engineering, leveraging synthetic data for ML models, training recommendation models with TPUs, and ML for ad ranking.',
+    introduction: 'Snap is the company behind Snapchat, where ephemeral video and Spotlight short-form content drive the central ML problems and the user base skews young and mobile-first, which puts unusual pressure on personalization quality. The blog\'s most distinctive content covers three areas: Bento, an internal ML platform that standardizes feature engineering, training, and serving for hundreds of models across the company, embedding-based retrieval for video recommendations on Spotlight that has to surface the right clip in milliseconds, and TPU-based training infrastructure for very large recommendation models. For interviews, \'Snap\'s Embedding-based Retrieval for video recommendation\' is a useful reference for two-tower retrieval design, and \'Bento - Snap\'s ML Platform\' anchors discussions of building an ML platform end to end.',
     blogUrl: 'https://eng.snap.com',
     articles: [
       { title: 'Bento - Snap\'s ML Platform', url: 'https://eng.snap.com/introducing-bento' },
@@ -806,7 +806,7 @@ export const engBlogTopics = [
     color: '#1DB954',
     questions: 5,
     description: 'Engineering blog from Spotify covering content annotations, data platforms, app size optimization, content marketing, and user forecasting.',
-    introduction: 'Spotify Engineering shares how they build the world\'s largest audio streaming platform. Their blog covers generating millions of content annotations with ML, their data platform architecture, mastering app size for mobile performance, automating content marketing at scale, and building infrastructure for user forecast models.',
+    introduction: 'Spotify is the largest audio streaming platform globally, with a catalog spanning music, podcasts, and audiobooks where personalization has to bridge wildly different content models and the data platform underpins editorial, royalties, and recommendations alike. The blog is best known in three areas: a long-running data platform built on Google Cloud and BigQuery that has shaped industry conversations about data mesh and self-service analytics, ML pipelines that generate tens of millions of content annotations to feed downstream search and recommendations, and mobile engineering disciplines like systematic app-size reduction that matter on the global low-end Android base. For interviews, \'Spotify\'s Data Platform\' is a good reference for any \'design a data platform\' question, and \'Infrastructure to Run User Forecasts at Spotify\' anchors forecasting-system discussions.',
     blogUrl: 'https://engineering.atspotify.com',
     articles: [
       { title: 'How Spotify Generated Millions of Content Annotations', url: 'https://engineering.atspotify.com/2024/10/how-we-generated-millions-of-content-annotations/' },
@@ -826,7 +826,7 @@ export const engBlogTopics = [
     color: '#9146FF',
     questions: 4,
     description: 'Engineering blog from Twitch covering live video ingestion, monolith decomposition, ML for content moderation, and high availability.',
-    introduction: 'Twitch Engineering shares how they build the world\'s leading live streaming platform. Their blog covers ingesting live video streams at global scale, breaking apart their monolith, using machine learning for emote review and content moderation, and building high-availability systems for mission-critical cloud services.',
+    introduction: 'Twitch is the dominant live streaming platform for gaming and creator content, and uniquely operates a workload where ingest, transcode, and global delivery all have to happen in the same few seconds while a chat fan-out runs alongside the video stream. The blog\'s most useful content covers three areas: live video ingest at global scale where a single popular stream can spike from zero to a million viewers in minutes, a multi-year decomposition of the original Twitch monolith into services, and ML-driven content moderation including the tricky case of reviewing custom emotes. For interviews, \'Ingesting Live Video Streams at Global Scale\' is the reference for any live-streaming system-design question, and \'Breaking the Monolith at Twitch\' is a candid case study in incremental microservice extraction.',
     blogUrl: 'https://blog.twitch.tv',
     articles: [
       { title: 'Ingesting Live Video Streams at Global Scale', url: 'https://blog.twitch.tv/en/2022/04/26/ingesting-live-video-streams-at-global-scale/' },
@@ -845,7 +845,7 @@ export const engBlogTopics = [
     color: '#FE3C72',
     questions: 4,
     description: 'Engineering blog from Tinder covering API design, design systems, API gateway architecture, and payment flow state machines.',
-    introduction: 'Tinder Engineering shares how they build the world\'s most popular dating app. Their blog covers API style guide best practices, building the Obsidian design system, constructing a scalable API gateway, and using state machines to manage complex Android payment flows.',
+    introduction: 'Tinder is the most-used dating app in the world, and the engineering team has to ship a card-swiping client that feels instant on patchy mobile networks while operating a backend that personalizes a globally varying liquidity pool of users in real time. The blog is small but practical, with its strongest material in three areas: a published API style guide that codifies versioning and resource conventions across a dozen client teams, a homegrown API gateway built to be the single mobile-edge for a polyglot service mesh, and state-machine modeling for purchase flows where Google Play, Apple, and server states get out of sync constantly. For interviews, \'How Tinder built its API Gateway\' is a clean reference for API-gateway design, and \'Tinder API Style Guide\' is a useful checklist for API-design discussions.',
     blogUrl: 'https://medium.com/tinder',
     articles: [
       { title: 'Tinder API Style Guide', url: 'https://medium.com/tinder/tinder-api-style-guide-part-1-081804a7ef40' },
@@ -864,7 +864,7 @@ export const engBlogTopics = [
     color: '#B92B27',
     questions: 4,
     description: 'Engineering blog from Quora covering embedding search, data warehouse migration, Trino optimization, and MySQL sharding.',
-    introduction: 'Quora Engineering shares how they build the world\'s largest Q&A platform. Their blog covers building embedding-based search, migrating a decade of Redshift usage to Trino, optimizing Trino at scale for cost and reliability, and sharding MySQL for horizontal scalability.',
+    introduction: 'Quora is one of the largest English-language question-and-answer platforms, with a content corpus that grows by tens of thousands of answers per day and an interaction graph between users, questions, topics, and answers that the entire ranking stack depends on. The blog is small but candid, with its strongest content in three areas: embedding-based semantic search across a long-tail question corpus where exact keyword matching fails for most queries, a multi-year analytics-warehouse migration from Redshift to Trino with concrete cost and reliability numbers, and a MySQL sharding journey to horizontally scale the OLTP store. For interviews, \'Building Embedding Search at Quora\' is a useful reference for semantic-search design, and \'MySQL sharding at Quora\' anchors discussions of relational sharding for an established product.',
     blogUrl: 'https://quoraengineering.quora.com',
     articles: [
       { title: 'Building Embedding Search at Quora', url: 'https://quoraengineering.quora.com/Building-Embedding-Search-at-Quora' },
@@ -883,7 +883,7 @@ export const engBlogTopics = [
     color: '#00C4CC',
     questions: 8,
     description: 'Engineering blog from Canva covering data pipelines, event collection, media uploads, S3 cost optimization, and real-time collaboration.',
-    introduction: 'Canva Engineering shares how they build the world\'s leading visual design platform. Their blog covers continuous data platforms, collecting 25 billion events per day, scaling media uploads to 50M/day, saving millions on S3 costs, reverse image search at scale, real-time collaboration with RSocket, and building their drawing tool.',
+    introduction: 'Canva is a browser-native design tool used by hundreds of millions of people who upload, remix, and collaborate on visual content from any device, which means the central engineering problems are media at scale, real-time collaboration, and operating cost on AWS. The blog is one of the most concrete in the industry on cost and scale numbers, with its best content in three areas: an analytics pipeline ingesting 25 billion events per day into Snowflake via Snowpipe Streaming, media-upload infrastructure that scaled from zero to 50 million uploads per day, and S3 cost optimizations that pull millions of dollars per year out of the bill. For interviews, \'How Canva scaled media uploads from Zero to 50 Million per day\' is a strong reference for upload-pipeline design, and \'Canva\'s fast and scalable reverse image search\' anchors visual-search discussions.',
     blogUrl: 'https://www.canva.dev/blog/engineering/',
     articles: [
       { title: 'Canva\'s continuous data platform', url: 'https://www.canva.dev/blog/engineering/snowpipe-streaming/' },
@@ -910,7 +910,7 @@ export const engBlogTopics = [
     color: '#0052CC',
     questions: 8,
     description: 'Engineering blog from Atlassian covering Jira performance, Confluence search, Bitbucket scaling, and multi-region AWS architecture.',
-    introduction: 'Atlassian Engineering shares how they build tools used by millions of software teams. Their blog covers scaling Jira export throughput, achieving six nines of availability, faster Git push for Bitbucket, revamping Confluence search, JQL caching, decomposing Confluence Cloud, scaling Bitbucket\'s database, and multi-region AWS architecture.',
+    introduction: 'Atlassian builds Jira, Confluence, and Bitbucket, the toolchain that runs the engineering process at most software companies, and operates them as multi-tenant cloud products where a single noisy customer can degrade thousands of others. The blog\'s strongest content covers three areas: extreme-availability case studies for the auth-and-routing layer that have hit six nines of uptime, multi-region AWS architecture with the latency-sensitive routing tradeoffs that come with it, and the still-ongoing decomposition of Confluence Cloud and sharding of Bitbucket\'s database out of single-tenant origins. For interviews, \'How one of Atlassian\'s critical services consistently gets above 99.9999% of availability\' is a useful reference for high-availability design, and \'Scaling Bitbucket\'s Database\' is a candid case study in OLTP scale-out.',
     blogUrl: 'https://www.atlassian.com/blog/atlassian-engineering',
     articles: [
       { title: 'How Atlassian Scaled and Enhanced Throughput in the Jira Export Service', url: 'https://www.atlassian.com/blog/atlassian-engineering/boosting-performance-how-we-scaled-and-enhanced-throughput-in-the-jira-export-service' },
@@ -933,7 +933,7 @@ export const engBlogTopics = [
     color: '#0061FF',
     questions: 6,
     description: 'Engineering blog from Dropbox covering infrastructure messaging, metadata caching, AI-powered features, ML file organization, and payment optimization.',
-    introduction: 'Dropbox Engineering shares how they build one of the world\'s largest cloud storage platforms. Their blog covers evolving infrastructure through messaging systems, scalable metadata caching (Chrono), AI-powered file previews, ML-driven file organization, identifying date formats with ML, and optimizing payments with machine learning.',
+    introduction: 'Dropbox runs one of the largest consumer-and-business file-sync products on the internet, where the central engineering problem has always been keeping file metadata fast and consistent across hundreds of millions of clients while the actual bytes live in a custom storage backend. The blog\'s most distinctive content covers three areas: Chrono, a scalable consistent metadata-caching system that fronts the Dropbox metadata service, the underlying async messaging and queueing platform that has evolved over a decade to absorb spike loads from sync clients, and ML applied to file-organization and preview problems that turn raw user files into searchable and summarizable knowledge. For interviews, \'Dropbox\'s scalable, consistent, metadata caching solution\' is the reference for metadata-cache design, and \'How Dropbox evolved its infrastructure through the messaging system model\' anchors async-platform discussions.',
     blogUrl: 'https://dropbox.tech',
     articles: [
       { title: 'How Dropbox evolved its infrastructure through the messaging system model', url: 'https://dropbox.tech/infrastructure/infrastructure-messaging-system-model-async-platform-evolution' },
@@ -954,7 +954,7 @@ export const engBlogTopics = [
     color: '#00A1E0',
     questions: 8,
     description: 'Engineering blog from Salesforce covering real-time search, agentic AI, RAG systems, and handling trillions of transactions.',
-    introduction: 'Salesforce Engineering shares how they build the world\'s leading CRM and enterprise AI platform. Their blog covers scaling real-time search to 30 billion queries, building agentic AI (Agentforce) with 2 billion monthly predictions, RAG with 99.99% uptime, managing 100K training requests per minute, and handling 250 trillion weekly transactions in Data Cloud.',
+    introduction: 'Salesforce is the largest enterprise CRM platform and now operates Agentforce, an enterprise agentic-AI product that has to meet the same multi-tenant SLA, audit, and data-residency expectations as the rest of the cloud. The blog\'s most useful content lives in three areas that few other companies write about at the same scale: Data Cloud absorbing 250 trillion transactions per week across structured and unstructured customer data, a production RAG retrieval layer (Agentforce Data Library) running at 99.99 percent uptime across enterprise tenants, and reasoning-engine architecture (Atlas) for multi-step agent workflows. For interviews, \'How Agentforce Data Library Powers RAG with 99.99% Uptime\' is a strong reference for production RAG design, and \'How Data Cloud Handles 250 Trillion Transactions Weekly\' anchors any massive-data-platform discussion.',
     blogUrl: 'https://engineering.salesforce.com',
     articles: [
       { title: 'Scaling Real-Time Search to 30 Billion Queries', url: 'https://engineering.salesforce.com/scaling-real-time-search-to-30-billion-queries-with-sub-second-latency-and-0-downtime/' },
@@ -977,7 +977,7 @@ export const engBlogTopics = [
     color: '#0071CE',
     questions: 5,
     description: 'Engineering blog from Walmart covering Cassandra CDC, inventory scaling, grocery optimization, autocomplete, and notification systems.',
-    introduction: 'Walmart Engineering shares how they build technology for the world\'s largest retailer. Their blog covers Cassandra change data capture, scaling inventory reservation APIs for peak traffic, Markov chain formulations for grocery picking, rebuilding autocomplete backends, and building notification frameworks for microservice architectures.',
+    introduction: 'Walmart is the world\'s largest retailer by revenue, and its engineering team has to keep ecommerce, inventory, and in-store fulfillment in sync across thousands of physical stores, with Black Friday and holiday peaks that effectively define the upper bound of the system\'s design. The blog\'s most useful content covers three areas: a Cassandra change-data-capture pipeline used to replicate hot inventory state into downstream systems, an inventory-reservation API engineered to survive flash-sale traffic without overselling, and applied operations-research like Markov-chain formulations for grocery picking that most companies treat as a black box. For interviews, \'Scaling the Walmart Inventory Reservations API\' is a useful reference for high-contention inventory design, and \'Walmart\'s Cassandra CDC Solution\' anchors CDC discussions.',
     blogUrl: 'https://medium.com/walmartglobaltech',
     articles: [
       { title: 'Walmart\'s Cassandra CDC Solution', url: 'https://medium.com/walmartglobaltech/walmarts-cassandra-cdc-solution-6fc650031a3' },
@@ -997,7 +997,7 @@ export const engBlogTopics = [
     color: '#FF00BF',
     questions: 12,
     description: 'Engineering blog from Lyft covering real-time ML, recommendation systems, pricing, Elasticsearch, map matching, and data quality.',
-    introduction: 'Lyft Engineering shares how they build and scale a major ride-hailing platform. Their blog covers real-time ML foundations, recommendation systems, dynamic pricing algorithms, Elasticsearch optimizations, map matching with OpenStreetMap, client-side positioning, destination prediction with attention models, and ensuring data quality at scale.',
+    introduction: 'Lyft is the second-largest US ride-hailing platform, where every ride request is a real-time matching, pricing, and routing decision that has to land in seconds against a moving fleet on a map that itself is being updated. The blog\'s most distinctive content covers three areas: LyftLearn, a real-time ML serving and training stack that powers millions of decisions per minute across pricing, ETAs, and matching, mapping work including the migration to OpenStreetMap and a real-time map-matching algorithm that decides which road a GPS trace is actually on, and dynamic pricing systems where surge has to react to demand without overshooting. For interviews, \'Pricing at Lyft\' is a strong reference for marketplace-pricing design, and \'A New Real-Time Map-Matching Algorithm\' anchors GPS and routing discussions.',
     blogUrl: 'https://eng.lyft.com',
     articles: [
       { title: 'From Big Data to Better Data: Ensuring Data Quality with Verity', url: 'https://eng.lyft.com/from-big-data-to-better-data-ensuring-data-quality-with-verity-a996b49343f6' },
