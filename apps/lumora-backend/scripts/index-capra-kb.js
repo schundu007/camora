@@ -3,9 +3,12 @@
  * Index Capra Prepare topics into lumora_kb_chunks.
  *
  * Usage:
- *   node apps/lumora-backend/scripts/index-capra-kb.js
- *   node apps/lumora-backend/scripts/index-capra-kb.js --source capra-sre
- *   node apps/lumora-backend/scripts/index-capra-kb.js --dry-run
+ *   npx tsx apps/lumora-backend/scripts/index-capra-kb.js
+ *   npx tsx apps/lumora-backend/scripts/index-capra-kb.js --source capra-sre
+ *   npx tsx apps/lumora-backend/scripts/index-capra-kb.js --dry-run
+ *
+ * (Run via `tsx` rather than bare `node` so .ts source files like
+ *  sqlProblems.ts can be loaded; tsx handles plain .js files too.)
  *
  * Idempotent. Skips chunks whose content_hash is unchanged in the DB,
  * so re-running after a topic edit only re-embeds what changed.
@@ -42,6 +45,7 @@ function chunkOne(item, entry) {
   if (kind === 'problem-leetcode') return chunkProblem(item, { source: entry.source, kind: 'leetcode' });
   if (kind === 'problem-lld') return chunkProblem(item, { source: entry.source, kind: 'lld' });
   if (kind === 'problem-sd') return chunkProblem(item, { source: entry.source, kind: 'sd' });
+  if (kind === 'problem-sql') return chunkProblem(item, { source: entry.source, kind: 'sql' });
   throw new Error(`Unknown manifest kind: ${kind}`);
 }
 

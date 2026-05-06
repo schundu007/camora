@@ -15,6 +15,11 @@
  *               { title, description, productMeta: { keyChallenge },
  *                 introduction }
  *
+ *   sql       — apps/camora/src/data/capra/sqlProblems.ts (SQL_PROBLEMS)
+ *               { id, title, difficulty, category, description,
+ *                 tables: [{ name, columns, createSql }],
+ *                 hints: [string], solution }
+ *
  * Citation granularity goal: a question at retrieval time should hit the
  * smallest chunk that still answers it. So keyQuestions get one chunk
  * each (highest-value grounding for an interview AI), while broad
@@ -164,9 +169,51 @@ function chunkSd(p, { source }) {
   return chunks;
 }
 
+function chunkSql(p, { source }) {
+  const slug = (p.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const topicId = slug || String(p.id);
+  const topicTitle = p.title || topicId;
+  const chunks = [];
+
+  const tableDdl = Array.isArray(p.tables)
+    ? p.tables
+        .map((t) => (t.createSql ? t.createSql.trim() : `CREATE TABLE ${t.name} (${(t.columns || []).join(', ')});`))
+        .join('\n\n')
+    : '';
+
+  const summaryParts = [
+    `# ${topicTitle}${p.difficulty ? ` (${p.difficulty})` : ''}`,
+    p.category ? `Category: ${p.category}` : null,
+    p.description ? p.description : null,
+    tableDdl ? `Schema:\n\`\`\`sql\n${tableDdl}\n\`\`\`` : null,
+  ];
+  const summary = summaryParts.filter(Boolean).join('\n\n');
+  if (summary.trim()) {
+    chunks.push(makeChunk({ source, topicId, topicTitle, section: 'summary', content: summary }));
+  }
+
+  if (p.solution || (Array.isArray(p.hints) && p.hints.length > 0)) {
+    const solutionParts = [];
+    if (Array.isArray(p.hints) && p.hints.length > 0) {
+      solutionParts.push(`Hints:\n${p.hints.map((h, i) => `${i + 1}. ${h}`).join('\n')}`);
+    }
+    if (p.solution) {
+      solutionParts.push(`Reference solution:\n\`\`\`sql\n${p.solution.trim()}\n\`\`\``);
+    }
+    chunks.push(makeChunk({
+      source, topicId, topicTitle,
+      section: 'solution',
+      content: solutionParts.join('\n\n'),
+    }));
+  }
+
+  return chunks;
+}
+
 export function chunkProblem(problem, { source, kind }) {
   if (kind === 'leetcode') return chunkLeetcode(problem, { source });
   if (kind === 'lld') return chunkLld(problem, { source });
   if (kind === 'sd') return chunkSd(problem, { source });
+  if (kind === 'sql') return chunkSql(problem, { source });
   return [];
 }
