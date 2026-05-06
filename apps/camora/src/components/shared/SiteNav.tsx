@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../hooks/useTheme';
 import CamoraLogo from './CamoraLogo';
@@ -32,6 +32,8 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   void variant;
   const { isAuthenticated, logout, onboardingCompleted } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const isLanding = location.pathname === '/' || location.pathname === '/landing';
   const { theme, toggle: toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
 
@@ -66,6 +68,25 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
               Camora
             </span>
           </Link>
+
+          {/* Back — visible on every non-landing page so the desktop Electron
+              build (no browser chrome) and web users alike can return to
+              the previous page without bouncing through "/". navigate(-1)
+              with a "/" fallback for cold launches with no history. */}
+          {!isLanding && (
+            <button
+              type="button"
+              onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
+              className="hidden sm:flex items-center gap-1 ml-3 px-2.5 py-1.5 rounded-full text-[12px] font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+              title="Back"
+              aria-label="Back"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              <span>Back</span>
+            </button>
+          )}
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-0.5 ml-8">
