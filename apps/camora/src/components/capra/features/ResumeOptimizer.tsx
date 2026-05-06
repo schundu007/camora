@@ -760,34 +760,50 @@ export default function ResumeOptimizer() {
           >
             {(
               [
-                { key: 'resume' as OutputTab, label: 'Optimized Resume' },
-                { key: 'coverLetter' as OutputTab, label: 'Cover Letter' },
-                { key: 'atsScore' as OutputTab, label: 'ATS Score' },
+                { key: 'resume' as OutputTab, label: 'Resume', dot: 'var(--accent)' },
+                { key: 'coverLetter' as OutputTab, label: 'Cover Letter', dot: 'var(--cam-gold-leaf)' },
+                { key: 'atsScore' as OutputTab, label: 'ATS Score', dot: 'var(--accent)' },
               ] as const
-            ).map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveTab(tab.key)}
-                style={{
-                  padding: '7px 14px',
-                  border: '1px solid var(--border)',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  fontWeight: activeTab === tab.key ? 600 : 500,
-                  fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
-                  color: activeTab === tab.key ? '#fff' : 'var(--text-muted)',
-                  background: activeTab === tab.key ? 'var(--accent)' : 'transparent',
-                  border: activeTab === tab.key ? '1px solid var(--accent)' : '1px solid var(--border)',
-                  boxShadow: 'none',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.15s ease-out, color 0.15s ease-out, border-color 0.15s ease-out',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
+            ).map((tab) => {
+              const isActive = activeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  style={{
+                    padding: '8px 16px',
+                    border: isActive ? '1px solid var(--accent)' : '1px solid var(--border)',
+                    borderRadius: '8px',
+                    background: isActive ? 'var(--accent)' : 'var(--bg-elevated)',
+                    color: isActive ? '#fff' : 'var(--text-muted)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '7px',
+                    whiteSpace: 'nowrap',
+                    transition: 'background-color 0.15s ease-out, color 0.15s ease-out, border-color 0.15s ease-out',
+                  }}
+                >
+                  <span style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: isActive ? 'rgba(255,255,255,0.7)' : tab.dot,
+                    flexShrink: 0,
+                  }} />
+                  <span style={{
+                    fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                  }}>
+                    {tab.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Copy + Download */}
@@ -801,15 +817,17 @@ export default function ResumeOptimizer() {
                   border: '1px solid var(--border)',
                   borderRadius: '8px',
                   background: 'var(--bg-surface)',
-                  fontSize: '12px',
-                  fontWeight: 500,
+                  fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
                   color: 'var(--text-muted)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '5px',
-                  fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
-                  transition: 'border-color 0.15s',
+                  transition: 'border-color 0.15s ease-out, color 0.15s ease-out',
                 }}
                 onMouseEnter={(e) =>
                   ((e.currentTarget as HTMLButtonElement).style.borderColor =
