@@ -51,7 +51,10 @@ import { ROLE_TOPIC_MAP, ONBOARDING_ROLE_TO_TOPIC_KEY } from '../../../data/capr
 // activePage. See loader.js for the chunk boundaries.
 import { loadTopicsForPage } from '../../../data/capra/topics/loader.js';
 
-import TopicDetail from './TopicDetail.jsx';
+// TopicDetail is 3.5k lines and only renders when a topic is selected.
+// Lazy-load it so the initial DocsPage bundle (browse + listing surface)
+// doesn't carry the entire topic-detail rendering tree as dead weight.
+const TopicDetail = lazy(() => import('./TopicDetail.jsx'));
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -820,7 +823,13 @@ export default function DocsPage({ onBack }) {
                   </div>
                 </div>
               ) : selectedTopic ? (
-                <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} progressInfo={getProgress()} isLocked={contentAccess.isTopicLocked(activePage, selectedTopic)} contentAccess={contentAccess} />
+                <Suspense fallback={
+                  <div className="flex items-center justify-center py-16">
+                    <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} aria-label="Loading topic detail" />
+                  </div>
+                }>
+                  <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} progressInfo={getProgress()} isLocked={contentAccess.isTopicLocked(activePage, selectedTopic)} contentAccess={contentAccess} />
+                </Suspense>
               ) : (
                 <>
                   {/* ── Resume & Cover Letter ── */}
