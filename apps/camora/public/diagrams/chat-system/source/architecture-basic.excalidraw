@@ -29,9 +29,9 @@
       "x": 30,
       "y": 76,
       "width": 120,
-      "height": 14,
+      "height": 18,
       "text": "CLIENT A",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -63,10 +63,10 @@
       "type": "text",
       "x": 42,
       "y": 111,
-      "width": 96,
-      "height": 28,
+      "width": 148,
+      "height": 35,
       "text": "Client A\n(Alice, userId=1)",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -94,7 +94,16 @@
       "angle": 0,
       "startArrowhead": "arrow",
       "endArrowhead": "arrow",
-      "points": [[0,0],[88,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          88,
+          0
+        ]
+      ]
     },
     {
       "id": "lbl-ws",
@@ -102,9 +111,9 @@
       "x": 250,
       "y": 60,
       "width": 200,
-      "height": 14,
+      "height": 18,
       "text": "WEBSOCKET SERVER",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -137,9 +146,9 @@
       "x": 262,
       "y": 90,
       "width": 176,
-      "height": 66,
+      "height": 88,
       "text": "WebSocket Server\n- Auth token verify\n- Route messages\n- Manage connections\n- Track online users",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -167,7 +176,16 @@
       "angle": 0,
       "startArrowhead": "arrow",
       "endArrowhead": "arrow",
-      "points": [[0,0],[88,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          88,
+          0
+        ]
+      ]
     },
     {
       "id": "lbl-clientb",
@@ -175,9 +193,9 @@
       "x": 550,
       "y": 76,
       "width": 120,
-      "height": 14,
+      "height": 18,
       "text": "CLIENT B",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -209,10 +227,10 @@
       "type": "text",
       "x": 562,
       "y": 111,
-      "width": 96,
-      "height": 28,
+      "width": 131,
+      "height": 35,
       "text": "Client B\n(Bob, userId=2)",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -240,7 +258,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[0,66]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          66
+        ]
+      ]
     },
     {
       "id": "lbl-msgdb",
@@ -248,9 +275,9 @@
       "x": 250,
       "y": 252,
       "width": 200,
-      "height": 14,
+      "height": 18,
       "text": "MESSAGE STORE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -283,9 +310,9 @@
       "x": 262,
       "y": 286,
       "width": 176,
-      "height": 32,
+      "height": 35,
       "text": "PostgreSQL\nmessages table",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -303,9 +330,9 @@
       "x": 30,
       "y": 252,
       "width": 180,
-      "height": 14,
+      "height": 18,
       "text": "PRESENCE SERVICE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -337,10 +364,10 @@
       "type": "text",
       "x": 42,
       "y": 284,
-      "width": 156,
-      "height": 36,
+      "width": 209,
+      "height": 53,
       "text": "Presence Service\nonline/offline status\nRedis: user:1 → \"online\"",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -368,7 +395,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[-40,108]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -40,
+          108
+        ]
+      ]
     },
     {
       "id": "lbl-offline",
@@ -376,9 +412,9 @@
       "x": 480,
       "y": 252,
       "width": 220,
-      "height": 14,
+      "height": 18,
       "text": "OFFLINE DELIVERY QUEUE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -410,10 +446,10 @@
       "type": "text",
       "x": 492,
       "y": 284,
-      "width": 196,
-      "height": 36,
+      "width": 244,
+      "height": 53,
       "text": "Offline Queue\nStore msgs for offline users\nDeliver on reconnect",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -441,7 +477,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[138,108]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          138,
+          108
+        ]
+      ]
     },
     {
       "id": "lbl-schema",
@@ -449,9 +494,9 @@
       "x": 30,
       "y": 362,
       "width": 400,
-      "height": 14,
+      "height": 18,
       "text": "DB SCHEMA",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -483,10 +528,10 @@
       "type": "text",
       "x": 44,
       "y": 390,
-      "width": 332,
-      "height": 100,
+      "width": 339,
+      "height": 140,
       "text": "messages (\n  id         BIGSERIAL PRIMARY KEY,\n  sender_id  BIGINT NOT NULL,\n  receiver_id BIGINT NOT NULL,\n  content    TEXT NOT NULL,\n  timestamp  TIMESTAMPTZ DEFAULT NOW(),\n  delivered  BOOLEAN DEFAULT FALSE\n)",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -504,9 +549,9 @@
       "x": 420,
       "y": 362,
       "width": 400,
-      "height": 14,
+      "height": 18,
       "text": "WEBSOCKET FRAME EVIDENCE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -539,9 +584,9 @@
       "x": 434,
       "y": 390,
       "width": 372,
-      "height": 100,
+      "height": 175,
       "text": "# Alice sends message to Bob\nWS → { \"type\": \"message\",\n        \"to\": \"user456\",\n        \"text\": \"hey!\",\n        \"client_msg_id\": \"abc-123\" }\n\n# Server → Bob's socket\nWS → { \"type\": \"message\",\n        \"from\": \"user123\", \"text\": \"hey!\",\n        \"msg_id\": 9871, \"ts\": 1746523200 }",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

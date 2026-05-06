@@ -29,9 +29,9 @@
       "x": 40,
       "y": 78,
       "width": 150,
-      "height": 16,
+      "height": 18,
       "text": "CLIENT",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -63,10 +63,10 @@
       "type": "text",
       "x": 50,
       "y": 114,
-      "width": 130,
-      "height": 56,
+      "width": 139,
+      "height": 70,
       "text": "Browser Client\nCRDT local state\nOffline queue\nPresence cursors",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -94,7 +94,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[68,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          0
+        ]
+      ]
     },
     {
       "id": "label-ws",
@@ -102,9 +111,9 @@
       "x": 270,
       "y": 78,
       "width": 160,
-      "height": 16,
+      "height": 18,
       "text": "COLLAB GATEWAY",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -136,10 +145,10 @@
       "type": "text",
       "x": 280,
       "y": 114,
-      "width": 140,
-      "height": 56,
+      "width": 157,
+      "height": 70,
       "text": "Collab Gateway\nWebSocket mux\nSession routing\nPresence heartbeat",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -167,7 +176,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[68,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          0
+        ]
+      ]
     },
     {
       "id": "label-crdt",
@@ -175,9 +193,9 @@
       "x": 510,
       "y": 78,
       "width": 170,
-      "height": 16,
+      "height": 18,
       "text": "CRDT ENGINE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -209,10 +227,10 @@
       "type": "text",
       "x": 520,
       "y": 112,
-      "width": 150,
-      "height": 56,
+      "width": 165,
+      "height": 70,
       "text": "CRDT Engine\nConflict-free merge\nOffline edits sync\nCausal ordering",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -240,7 +258,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[68,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          0
+        ]
+      ]
     },
     {
       "id": "label-presence",
@@ -248,9 +275,9 @@
       "x": 760,
       "y": 78,
       "width": 180,
-      "height": 16,
+      "height": 18,
       "text": "PRESENCE SERVICE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -282,10 +309,10 @@
       "type": "text",
       "x": 770,
       "y": 112,
-      "width": 160,
-      "height": 56,
+      "width": 200,
+      "height": 70,
       "text": "Presence Service\nCursor positions\nUser avatars in doc\nLive collaborators list",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -313,7 +340,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[0,82]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          82
+        ]
+      ]
     },
     {
       "id": "label-revhist",
@@ -321,9 +357,9 @@
       "x": 460,
       "y": 274,
       "width": 270,
-      "height": 16,
+      "height": 18,
       "text": "REVISION HISTORY + COMMENTS",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -355,10 +391,10 @@
       "type": "text",
       "x": 470,
       "y": 308,
-      "width": 250,
+      "width": 322,
       "height": 70,
       "text": "Revision History (git-like snapshots)\nNamed versions + timestamps\nComment threads on text ranges\nSuggested edits (track changes)",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -376,9 +412,9 @@
       "x": 760,
       "y": 274,
       "width": 180,
-      "height": 16,
+      "height": 18,
       "text": "PERMISSIONS (ACL)",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -410,10 +446,10 @@
       "type": "text",
       "x": 770,
       "y": 308,
-      "width": 160,
+      "width": 200,
       "height": 70,
       "text": "Permissions ACL\nOwner / Editor / Viewer\nLink sharing (public)\nDomain-restricted",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -431,9 +467,9 @@
       "x": 40,
       "y": 274,
       "width": 400,
-      "height": 16,
+      "height": 18,
       "text": "CRDT + PRESENCE EVIDENCE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -465,10 +501,10 @@
       "type": "text",
       "x": 52,
       "y": 304,
-      "width": 376,
-      "height": 110,
+      "width": 417,
+      "height": 193,
       "text": "CRDT insert (offline-safe):\n{type:\"insert\", id:\"node_xyz\",\n after:\"node_abc\", text:\"hello\",\n clock:{userId:123, seq:7}}\n\nPresence update (broadcast <100ms):\n{userId:456, cursor:{line:12, col:5},\n selection:{from:10, to:20},\n color:\"#f87171\"}\n\nOffline queue merges on reconnect, no conflicts.",
-      "fontSize": 10,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

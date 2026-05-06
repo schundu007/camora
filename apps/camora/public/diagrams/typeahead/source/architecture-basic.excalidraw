@@ -29,9 +29,9 @@
       "x": 40,
       "y": 78,
       "width": 130,
-      "height": 16,
+      "height": 18,
       "text": "USER INPUT",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -63,10 +63,10 @@
       "type": "text",
       "x": 50,
       "y": 118,
-      "width": 110,
-      "height": 42,
+      "width": 131,
+      "height": 53,
       "text": "User types \"ap\"\nSearch box\nDebounce 150ms",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -94,7 +94,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-trie",
@@ -102,9 +111,9 @@
       "x": 260,
       "y": 78,
       "width": 200,
-      "height": 16,
+      "height": 18,
       "text": "TRIE DATA STRUCTURE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -136,10 +145,10 @@
       "type": "text",
       "x": 270,
       "y": 112,
-      "width": 180,
-      "height": 56,
+      "width": 226,
+      "height": 70,
       "text": "Prefix Trie\nO(k) lookup (k=prefix len)\na→p→[app, apple, april]\nTop-k stored at each node",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -167,7 +176,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-topk",
@@ -175,9 +193,9 @@
       "x": 550,
       "y": 78,
       "width": 180,
-      "height": 16,
+      "height": 18,
       "text": "TOP-K SUGGESTIONS",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -209,10 +227,10 @@
       "type": "text",
       "x": 560,
       "y": 112,
-      "width": 160,
-      "height": 56,
+      "width": 165,
+      "height": 88,
       "text": "Top-5 Suggestions\nSorted by frequency\napple (9.2M/day)\napplication (4.1M)\napp (3.8M)",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -240,7 +258,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-freq",
@@ -248,9 +275,9 @@
       "x": 818,
       "y": 78,
       "width": 200,
-      "height": 16,
+      "height": 18,
       "text": "FREQUENCY STORE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -282,10 +309,10 @@
       "type": "text",
       "x": 828,
       "y": 112,
-      "width": 180,
-      "height": 56,
+      "width": 226,
+      "height": 70,
       "text": "Frequency DB\nquery → search_count\nUpdated by analytics\nBatch rebuild trie nightly",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -303,9 +330,9 @@
       "x": 40,
       "y": 230,
       "width": 300,
-      "height": 16,
+      "height": 18,
       "text": "TRIE STRUCTURE FOR PREFIX \"ap\"",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -337,10 +364,10 @@
       "type": "text",
       "x": 52,
       "y": 260,
-      "width": 276,
-      "height": 130,
+      "width": 426,
+      "height": 175,
       "text": "root\n└─ a (freq: 42M)\n   └─ p (freq: 18M) ← user typed here\n      ├─ p (freq: 9.2M)\n      │  ├─ l (freq: 9.1M)\n      │  │  └─ e → \"apple\" [9.1M]\n      │  └─ \"app\" [3.8M]\n      ├─ p-l-i-c-a-t-i-o-n → \"application\" [4.1M]\n      ├─ r-i-l → \"april\" [2.3M]\n      └─ a-r-t-m-e-n-t → \"apartment\" [1.9M]",
-      "fontSize": 10,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -358,9 +385,9 @@
       "x": 360,
       "y": 230,
       "width": 690,
-      "height": 16,
+      "height": 18,
       "text": "API EVIDENCE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -393,9 +420,9 @@
       "x": 372,
       "y": 260,
       "width": 666,
-      "height": 130,
+      "height": 210,
       "text": "GET /suggest?q=ap&limit=5\n→ 200 OK (< 50ms)\n[\"apple\", \"application\", \"app\", \"april\", \"apartment\"]\n\nFrequency update (async, batched):\nKafka topic: search_clicks\n{query: \"apple\", clicked: true, position: 0, ts: 1714982400}\n\nTrie rebuild (nightly, 30min batch):\nSELECT query, count(*) FROM search_log\nWHERE ts > NOW() - INTERVAL '1 day'\nGROUP BY query ORDER BY count DESC LIMIT 10M",
-      "fontSize": 10,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

@@ -8,7 +8,7 @@
       "type": "text",
       "x": 760,
       "y": 20,
-      "width": 400,
+      "width": 506,
       "height": 36,
       "text": "URL Shortener — Basic Architecture",
       "fontSize": 24,
@@ -29,9 +29,9 @@
       "x": 40,
       "y": 80,
       "width": 120,
-      "height": 16,
+      "height": 18,
       "text": "CLIENT",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -64,9 +64,9 @@
       "x": 55,
       "y": 122,
       "width": 90,
-      "height": 28,
+      "height": 35,
       "text": "Browser /\nMobile App",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -94,7 +94,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-gw",
@@ -102,9 +111,9 @@
       "x": 250,
       "y": 80,
       "width": 140,
-      "height": 16,
+      "height": 18,
       "text": "API GATEWAY",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -137,9 +146,9 @@
       "x": 265,
       "y": 122,
       "width": 110,
-      "height": 28,
+      "height": 35,
       "text": "API Gateway\nRate Limiter",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -167,7 +176,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-url-svc",
@@ -175,9 +193,9 @@
       "x": 480,
       "y": 80,
       "width": 140,
-      "height": 16,
+      "height": 18,
       "text": "URL SERVICE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -209,10 +227,10 @@
       "type": "text",
       "x": 495,
       "y": 117,
-      "width": 110,
-      "height": 42,
+      "width": 148,
+      "height": 53,
       "text": "URL Service\nValidate + Store\nLookup + Redirect",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -240,7 +258,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[0,68]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          68
+        ]
+      ]
     },
     {
       "id": "label-hash",
@@ -248,9 +275,9 @@
       "x": 440,
       "y": 252,
       "width": 220,
-      "height": 16,
+      "height": 18,
       "text": "HASH GENERATOR",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -282,10 +309,10 @@
       "type": "text",
       "x": 455,
       "y": 289,
-      "width": 190,
-      "height": 40,
+      "width": 209,
+      "height": 53,
       "text": "Hash Generator\nMD5(url) → Base62 Encode\nabc123 (6 chars)",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -313,7 +340,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-db",
@@ -321,9 +357,9 @@
       "x": 710,
       "y": 80,
       "width": 160,
-      "height": 16,
+      "height": 18,
       "text": "DATABASE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -358,7 +394,7 @@
       "width": 130,
       "height": 36,
       "text": "PostgreSQL\nurls table",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -386,7 +422,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[0,68]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          68
+        ]
+      ]
     },
     {
       "id": "label-cache",
@@ -394,9 +439,9 @@
       "x": 710,
       "y": 252,
       "width": 160,
-      "height": 16,
+      "height": 18,
       "text": "CACHE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -431,7 +476,7 @@
       "width": 130,
       "height": 36,
       "text": "Redis Cache\nHot URLs (LRU)",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -449,9 +494,9 @@
       "x": 900,
       "y": 80,
       "width": 260,
-      "height": 16,
+      "height": 18,
       "text": "DB SCHEMA",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -483,10 +528,10 @@
       "type": "text",
       "x": 915,
       "y": 110,
-      "width": 230,
-      "height": 100,
+      "width": 270,
+      "height": 105,
       "text": "urls (\n  short_code  VARCHAR(8) PK,\n  original_url TEXT NOT NULL,\n  created_at   TIMESTAMP,\n  hits         BIGINT DEFAULT 0\n)",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -504,9 +549,9 @@
       "x": 40,
       "y": 252,
       "width": 380,
-      "height": 16,
+      "height": 18,
       "text": "API EVIDENCE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -538,10 +583,10 @@
       "type": "text",
       "x": 55,
       "y": 282,
-      "width": 355,
-      "height": 110,
+      "width": 408,
+      "height": 140,
       "text": "POST /shorten\n{ \"url\": \"https://example.com/very/long/path\" }\n→ 201 Created\n{ \"short_url\": \"https://short.ly/abc123\" }\n\nGET /abc123\n→ 301 Moved Permanently\nLocation: https://example.com/very/long/path",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -569,17 +614,26 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[-90,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -90,
+          0
+        ]
+      ]
     },
     {
       "id": "cache-hit-label",
       "type": "text",
       "x": 630,
       "y": 315,
-      "width": 80,
-      "height": 16,
+      "width": 96,
+      "height": 18,
       "text": "cache hit →",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -597,9 +651,9 @@
       "x": 900,
       "y": 252,
       "width": 260,
-      "height": 16,
+      "height": 18,
       "text": "REQUEST FLOW",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -631,10 +685,10 @@
       "type": "text",
       "x": 915,
       "y": 282,
-      "width": 230,
-      "height": 110,
+      "width": 252,
+      "height": 158,
       "text": "Shorten:\n1. Client → Gateway → URL Svc\n2. Hash Generator → Base62\n3. Store in DB + warm cache\n\nRedirect:\n1. Client → Gateway → URL Svc\n2. Check Redis cache first\n3. DB lookup if miss → 301",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",

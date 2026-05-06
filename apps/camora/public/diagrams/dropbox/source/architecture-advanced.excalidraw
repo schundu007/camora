@@ -29,9 +29,9 @@
       "x": 40,
       "y": 78,
       "width": 130,
-      "height": 16,
+      "height": 18,
       "text": "CLIENT",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -63,10 +63,10 @@
       "type": "text",
       "x": 50,
       "y": 118,
-      "width": 110,
-      "height": 42,
+      "width": 122,
+      "height": 53,
       "text": "Multi-Device\nClient\n(Device A/B/C)",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -94,17 +94,26 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-notify",
       "type": "text",
       "x": 260,
       "y": 78,
-      "width": 170,
-      "height": 16,
+      "width": 174,
+      "height": 18,
       "text": "NOTIFICATION SERVICE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -136,10 +145,10 @@
       "type": "text",
       "x": 270,
       "y": 112,
-      "width": 150,
-      "height": 56,
+      "width": 200,
+      "height": 70,
       "text": "Notification Service\nLong Polling (90s hold)\nDelta cursor per device\nPush change deltas",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -167,7 +176,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-api",
@@ -175,9 +193,9 @@
       "x": 520,
       "y": 78,
       "width": 150,
-      "height": 16,
+      "height": 18,
       "text": "SYNC API",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -209,10 +227,10 @@
       "type": "text",
       "x": 530,
       "y": 118,
-      "width": 130,
-      "height": 42,
+      "width": 131,
+      "height": 70,
       "text": "Sync API Server\nVersion history\nConflict detect\nACL checks",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -240,7 +258,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-conflict",
@@ -248,9 +275,9 @@
       "x": 760,
       "y": 78,
       "width": 200,
-      "height": 16,
+      "height": 18,
       "text": "CONFLICT RESOLVER",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -282,10 +309,10 @@
       "type": "text",
       "x": 770,
       "y": 112,
-      "width": 180,
-      "height": 56,
+      "width": 226,
+      "height": 70,
       "text": "Conflict Resolution\nLast-write-wins (default)\nConflict copy on collision\nVersion vector compare",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -313,7 +340,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[0,70]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          70
+        ]
+      ]
     },
     {
       "id": "label-changelog",
@@ -321,9 +357,9 @@
       "x": 450,
       "y": 262,
       "width": 290,
-      "height": 16,
+      "height": 18,
       "text": "CHANGE LOG + VERSION HISTORY",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -355,10 +391,10 @@
       "type": "text",
       "x": 460,
       "y": 296,
-      "width": 270,
-      "height": 56,
+      "width": 313,
+      "height": 70,
       "text": "Change Log (append-only)\nOp: create|modify|delete|rename\nVersion snapshots (30-day retention)\nDevice cursor per user per device",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -376,9 +412,9 @@
       "x": 760,
       "y": 262,
       "width": 200,
-      "height": 16,
+      "height": 18,
       "text": "SHARED FOLDERS / ACL",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -410,10 +446,10 @@
       "type": "text",
       "x": 770,
       "y": 296,
-      "width": 180,
-      "height": 56,
+      "width": 200,
+      "height": 70,
       "text": "Shared Folders ACL\nowner / editor / viewer\nGroup permissions\nInvite link management",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -431,9 +467,9 @@
       "x": 40,
       "y": 262,
       "width": 390,
-      "height": 16,
+      "height": 18,
       "text": "LONG POLL FLOW",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -465,10 +501,10 @@
       "type": "text",
       "x": 52,
       "y": 292,
-      "width": 366,
-      "height": 110,
+      "width": 408,
+      "height": 140,
       "text": "GET /poll?cursor=abc123 (held open 90s)\n→ file change on server →\n{ changes: [{op:\"modify\", path:\"/docs/a.txt\",\n  version: 7, chunks:[\"sha256_x\",\"sha256_y\"]}],\n  next_cursor: \"def456\" }\n\nDevice fetches delta, downloads missing chunks,\nupdates local metadata, advances cursor.",
-      "fontSize": 10,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

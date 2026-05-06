@@ -64,7 +64,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[100,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          0
+        ]
+      ]
     },
     {
       "id": "router",
@@ -105,7 +114,7 @@
       "width": 184,
       "height": 20,
       "text": "hash(user_id) % 3",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -120,10 +129,10 @@
       "type": "text",
       "x": 330,
       "y": 220,
-      "width": 184,
+      "width": 200,
       "height": 20,
       "text": "Consistent hashing ring",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -141,7 +150,7 @@
       "width": 184,
       "height": 20,
       "text": "Shard key = user_id",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -163,7 +172,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[76,-80]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          76,
+          -80
+        ]
+      ]
     },
     {
       "id": "arrow-router-s1",
@@ -177,7 +195,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[76,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          76,
+          0
+        ]
+      ]
     },
     {
       "id": "arrow-router-s2",
@@ -191,7 +218,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[76,80]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          76,
+          80
+        ]
+      ]
     },
     {
       "id": "shard0",
@@ -232,7 +268,7 @@
       "width": 200,
       "height": 20,
       "text": "user_id 0 – 1,000,000",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -250,7 +286,7 @@
       "width": 200,
       "height": 20,
       "text": "+ 1 replica",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -299,7 +335,7 @@
       "width": 200,
       "height": 20,
       "text": "user_id 1M – 2,000,000",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -317,7 +353,7 @@
       "width": 200,
       "height": 20,
       "text": "+ 1 replica",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -366,7 +402,7 @@
       "width": 200,
       "height": 20,
       "text": "user_id 2M – 3,000,000",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -384,7 +420,7 @@
       "width": 200,
       "height": 20,
       "text": "+ 1 replica",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -413,9 +449,9 @@
       "x": 78,
       "y": 444,
       "width": 724,
-      "height": 52,
+      "height": 53,
       "text": "user_id=500000  → hash(500000) % 3 = 2  → Shard 2\nuser_id=1500000 → hash(1500000) % 3 = 0 → Shard 0\nCross-shard JOIN avoided by denormalizing or routing at app layer",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

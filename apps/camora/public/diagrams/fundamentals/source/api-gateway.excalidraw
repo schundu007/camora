@@ -64,7 +64,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[88,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          88,
+          0
+        ]
+      ]
     },
     {
       "id": "gw",
@@ -105,7 +114,7 @@
       "width": 200,
       "height": 22,
       "text": "JWT Auth validation",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -120,10 +129,10 @@
       "type": "text",
       "x": 290,
       "y": 158,
-      "width": 200,
+      "width": 235,
       "height": 22,
       "text": "Rate limiting (100 req/min)",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -141,7 +150,7 @@
       "width": 200,
       "height": 22,
       "text": "SSL termination",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -159,7 +168,7 @@
       "width": 200,
       "height": 22,
       "text": "Request routing",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -174,10 +183,10 @@
       "type": "text",
       "x": 290,
       "y": 236,
-      "width": 200,
+      "width": 209,
       "height": 22,
       "text": "Request/response logging",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -195,7 +204,7 @@
       "width": 200,
       "height": 22,
       "text": "Load balancing",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -213,7 +222,7 @@
       "width": 200,
       "height": 22,
       "text": "Caching responses",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -228,10 +237,10 @@
       "type": "text",
       "x": 290,
       "y": 352,
-      "width": 200,
+      "width": 217,
       "height": 22,
       "text": "Kong / AWS API GW / Nginx",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -253,7 +262,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[88,-30]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          88,
+          -30
+        ]
+      ]
     },
     {
       "id": "arrow-gw-order",
@@ -267,7 +285,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[88,30]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          88,
+          30
+        ]
+      ]
     },
     {
       "id": "arrow-gw-payment",
@@ -281,7 +308,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[88,30]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          88,
+          30
+        ]
+      ]
     },
     {
       "id": "arrow-gw-notif",
@@ -295,7 +331,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[88,20]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          88,
+          20
+        ]
+      ]
     },
     {
       "id": "svc-user",
@@ -336,7 +381,7 @@
       "width": 170,
       "height": 20,
       "text": "/api/users",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -385,7 +430,7 @@
       "width": 170,
       "height": 20,
       "text": "/api/orders",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -434,7 +479,7 @@
       "width": 170,
       "height": 20,
       "text": "/api/payments",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -462,7 +507,7 @@
       "type": "text",
       "x": 590,
       "y": 400,
-      "width": 170,
+      "width": 186,
       "height": 24,
       "text": "Notification Service",
       "fontSize": 15,
@@ -483,7 +528,7 @@
       "width": 170,
       "height": 20,
       "text": "/api/notifications",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -512,9 +557,9 @@
       "x": 68,
       "y": 504,
       "width": 684,
-      "height": 64,
+      "height": 70,
       "text": "POST /api/orders  { Authorization: Bearer <JWT> }\n  → Gateway: verify JWT (401 if invalid)\n  → Gateway: check rate limit (429 if exceeded)\n  → Route to Order Service → 201 Created",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

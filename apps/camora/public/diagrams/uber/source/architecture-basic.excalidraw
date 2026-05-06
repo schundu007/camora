@@ -58,7 +58,7 @@
       "locked": false,
       "text": "CLIENTS",
       "originalText": "CLIENTS",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -70,8 +70,8 @@
       "id": "rider-app",
       "x": 40,
       "y": 105,
-      "width": 140,
-      "height": 60,
+      "width": 172,
+      "height": 64,
       "angle": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -84,10 +84,17 @@
       "versionNonce": 5003,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "rider-app-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "rider-app-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -125,8 +132,8 @@
       "id": "driver-app",
       "x": 40,
       "y": 210,
-      "width": 140,
-      "height": 60,
+      "width": 172,
+      "height": 64,
       "angle": 0,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -139,10 +146,17 @@
       "versionNonce": 5005,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "driver-app-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "driver-app-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -199,7 +213,7 @@
       "locked": false,
       "text": "CORE SERVICES",
       "originalText": "CORE SERVICES",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -211,8 +225,8 @@
       "id": "trip-svc",
       "x": 270,
       "y": 105,
-      "width": 150,
-      "height": 60,
+      "width": 182,
+      "height": 64,
       "angle": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -225,10 +239,17 @@
       "versionNonce": 5008,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "trip-svc-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "trip-svc-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -266,8 +287,8 @@
       "id": "location-svc",
       "x": 270,
       "y": 210,
-      "width": 150,
-      "height": 70,
+      "width": 182,
+      "height": 81,
       "angle": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -280,10 +301,17 @@
       "versionNonce": 5010,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "location-svc-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "location-svc-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -291,7 +319,7 @@
       "x": 270,
       "y": 217,
       "width": 150,
-      "height": 56,
+      "height": 57,
       "angle": 0,
       "strokeColor": "#ffffff",
       "backgroundColor": "transparent",
@@ -321,8 +349,8 @@
       "id": "matching-engine",
       "x": 270,
       "y": 320,
-      "width": 150,
-      "height": 70,
+      "width": 182,
+      "height": 81,
       "angle": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -335,10 +363,17 @@
       "versionNonce": 5012,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "matching-engine-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "matching-engine-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -346,7 +381,7 @@
       "x": 270,
       "y": 330,
       "width": 150,
-      "height": 50,
+      "height": 57,
       "angle": 0,
       "strokeColor": "#ffffff",
       "backgroundColor": "transparent",
@@ -393,7 +428,16 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [90, 0]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          90,
+          0
+        ]
+      ],
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
@@ -421,7 +465,16 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [90, 0]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          90,
+          0
+        ]
+      ],
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
@@ -449,7 +502,16 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [0, 155]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          155
+        ]
+      ],
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
@@ -479,7 +541,7 @@
       "locked": false,
       "text": "STORAGE",
       "originalText": "STORAGE",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -491,8 +553,8 @@
       "id": "redis-geo",
       "x": 520,
       "y": 105,
-      "width": 180,
-      "height": 80,
+      "width": 223,
+      "height": 94,
       "angle": 0,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -505,17 +567,24 @@
       "versionNonce": 5018,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "redis-geo-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "redis-geo-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
       "id": "redis-geo-label",
       "x": 520,
       "y": 110,
-      "width": 180,
+      "width": 191,
       "height": 70,
       "angle": 0,
       "strokeColor": "#78350f",
@@ -546,8 +615,8 @@
       "id": "trips-db",
       "x": 520,
       "y": 225,
-      "width": 180,
-      "height": 60,
+      "width": 212,
+      "height": 64,
       "angle": 0,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -560,10 +629,17 @@
       "versionNonce": 5020,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "trips-db-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "trips-db-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -618,7 +694,16 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [100, -80]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          -80
+        ]
+      ],
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
@@ -646,7 +731,16 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [100, -210]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          -210
+        ]
+      ],
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
@@ -674,7 +768,16 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [100, 100]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          100
+        ]
+      ],
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
@@ -717,7 +820,7 @@
       "x": 40,
       "y": 440,
       "width": 1100,
-      "height": 210,
+      "height": 217,
       "angle": 0,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -730,10 +833,17 @@
       "versionNonce": 5026,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "evidence-uber-basic-text"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "evidence-uber-basic-text"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -741,7 +851,7 @@
       "x": 60,
       "y": 455,
       "width": 1060,
-      "height": 180,
+      "height": 193,
       "angle": 0,
       "strokeColor": "#22c55e",
       "backgroundColor": "transparent",

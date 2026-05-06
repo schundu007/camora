@@ -60,7 +60,7 @@
       "width": 150,
       "height": 20,
       "text": "Browser / Mobile",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -82,7 +82,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[88,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          88,
+          0
+        ]
+      ]
     },
     {
       "id": "ctrl",
@@ -123,7 +132,7 @@
       "width": 164,
       "height": 20,
       "text": "Parse request body",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -141,7 +150,7 @@
       "width": 164,
       "height": 20,
       "text": "Validate input",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -159,7 +168,7 @@
       "width": 164,
       "height": 20,
       "text": "Return HTTP status",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -174,10 +183,10 @@
       "type": "text",
       "x": 298,
       "y": 262,
-      "width": 164,
+      "width": 183,
       "height": 20,
       "text": "200 / 201 / 400 / 404",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -199,7 +208,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "svc",
@@ -240,7 +258,7 @@
       "width": 164,
       "height": 20,
       "text": "Business logic",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -258,7 +276,7 @@
       "width": 164,
       "height": 20,
       "text": "Auth checks",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -273,10 +291,10 @@
       "type": "text",
       "x": 558,
       "y": 240,
-      "width": 164,
+      "width": 165,
       "height": 20,
       "text": "Data transformation",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -294,7 +312,7 @@
       "width": 164,
       "height": 20,
       "text": "Orchestrates calls",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -316,7 +334,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "repo",
@@ -354,10 +381,10 @@
       "type": "text",
       "x": 818,
       "y": 196,
-      "width": 144,
+      "width": 148,
       "height": 20,
       "text": "Data access layer",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -372,10 +399,10 @@
       "type": "text",
       "x": 818,
       "y": 218,
-      "width": 144,
+      "width": 148,
       "height": 20,
       "text": "SQL / ORM queries",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -393,7 +420,7 @@
       "width": 144,
       "height": 20,
       "text": "Hides DB details",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -415,7 +442,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[68,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          0
+        ]
+      ]
     },
     {
       "id": "db",
@@ -456,7 +492,7 @@
       "width": 150,
       "height": 20,
       "text": "PostgreSQL",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -487,7 +523,7 @@
       "width": 664,
       "height": 96,
       "text": "GET    /users         → 200 OK  [ list of users ]\nPOST   /users         → 201 Created  { id, name, email }\nGET    /users/{id}    → 200 OK  { id, name } | 404 Not Found\nPUT    /users/{id}    → 200 OK  { updated } | 400 Bad Request\nDELETE /users/{id}    → 204 No Content | 500 Internal Error",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -505,7 +541,7 @@
       "width": 420,
       "height": 120,
       "text": "REST Constraints:\n- Stateless (no server-side session)\n- Uniform interface (HTTP verbs)\n- Resource-based URLs (/nouns)\n- Idempotent: GET, PUT, DELETE\n- Non-idempotent: POST",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",

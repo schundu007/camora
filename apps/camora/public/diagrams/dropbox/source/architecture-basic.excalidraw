@@ -29,9 +29,9 @@
       "x": 40,
       "y": 78,
       "width": 140,
-      "height": 16,
+      "height": 18,
       "text": "CLIENT",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -63,10 +63,10 @@
       "type": "text",
       "x": 55,
       "y": 118,
-      "width": 110,
-      "height": 42,
+      "width": 131,
+      "height": 53,
       "text": "Desktop\nSync Agent\n(watches files)",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -94,7 +94,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-api",
@@ -102,9 +111,9 @@
       "x": 270,
       "y": 78,
       "width": 140,
-      "height": 16,
+      "height": 18,
       "text": "API SERVER",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -137,9 +146,9 @@
       "x": 285,
       "y": 125,
       "width": 110,
-      "height": 28,
+      "height": 35,
       "text": "API Server\n(HTTPS REST)",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -167,7 +176,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-chunker",
@@ -175,9 +193,9 @@
       "x": 500,
       "y": 78,
       "width": 170,
-      "height": 16,
+      "height": 18,
       "text": "CHUNKER SERVICE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -209,10 +227,10 @@
       "type": "text",
       "x": 510,
       "y": 112,
-      "width": 150,
-      "height": 56,
+      "width": 200,
+      "height": 70,
       "text": "Chunker\nSplit file → 4MB blocks\nCompute SHA-256\nper chunk",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -240,7 +258,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-s3",
@@ -248,9 +275,9 @@
       "x": 760,
       "y": 78,
       "width": 180,
-      "height": 16,
+      "height": 18,
       "text": "OBJECT STORE (S3)",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -282,10 +309,10 @@
       "type": "text",
       "x": 775,
       "y": 115,
-      "width": 150,
-      "height": 56,
+      "width": 183,
+      "height": 70,
       "text": "S3 Object Store\nKeyed by SHA-256 hash\nContent-addressed\nDedup via hash match",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -313,7 +340,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[0,70]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          70
+        ]
+      ]
     },
     {
       "id": "label-metadb",
@@ -321,9 +357,9 @@
       "x": 210,
       "y": 262,
       "width": 260,
-      "height": 16,
+      "height": 18,
       "text": "METADATA DB",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -355,10 +391,10 @@
       "type": "text",
       "x": 225,
       "y": 296,
-      "width": 230,
+      "width": 261,
       "height": 70,
       "text": "Metadata DB (PostgreSQL)\nfiles: path, version, user_id\nchunks[]: [sha256_1, sha256_2]\nupdated_at, size_bytes",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -376,9 +412,9 @@
       "x": 500,
       "y": 262,
       "width": 200,
-      "height": 16,
+      "height": 18,
       "text": "DEDUP CHECK",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -410,10 +446,10 @@
       "type": "text",
       "x": 510,
       "y": 296,
-      "width": 180,
-      "height": 42,
+      "width": 235,
+      "height": 53,
       "text": "Hash Exists Check\nhash present → skip upload\nhash missing → upload block",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -441,7 +477,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[0,100]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          100
+        ]
+      ]
     },
     {
       "id": "label-evidence",
@@ -449,9 +494,9 @@
       "x": 40,
       "y": 262,
       "width": 160,
-      "height": 16,
+      "height": 18,
       "text": "API EVIDENCE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -483,10 +528,10 @@
       "type": "text",
       "x": 50,
       "y": 292,
-      "width": 135,
-      "height": 100,
+      "width": 191,
+      "height": 158,
       "text": "POST /chunks/check\n{\n  chunk: \"sha256:abc\",\n  exists: true\n}\n→ skip upload\n\nexists: false\n→ upload block",
-      "fontSize": 10,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -504,9 +549,9 @@
       "x": 760,
       "y": 262,
       "width": 380,
-      "height": 16,
+      "height": 18,
       "text": "SYNC FLOW",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -538,10 +583,10 @@
       "type": "text",
       "x": 772,
       "y": 292,
-      "width": 356,
-      "height": 100,
+      "width": 365,
+      "height": 123,
       "text": "1. File change detected (inotify/FSEvents)\n2. Split into 4MB blocks, SHA-256 each\n3. POST /chunks/check → get missing hashes\n4. Upload only missing blocks to S3\n5. Commit metadata: PUT /files/{path}\n   { version, chunks: [hash1, hash2...] }\n6. Other devices notified via long poll",
-      "fontSize": 10,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

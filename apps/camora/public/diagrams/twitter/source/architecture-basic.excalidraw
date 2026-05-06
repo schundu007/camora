@@ -29,9 +29,9 @@
       "x": 30,
       "y": 76,
       "width": 100,
-      "height": 14,
+      "height": 18,
       "text": "USER",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -63,10 +63,10 @@
       "type": "text",
       "x": 40,
       "y": 113,
-      "width": 80,
-      "height": 24,
+      "width": 96,
+      "height": 35,
       "text": "User\nPosts Tweet",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -94,7 +94,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[68,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          0
+        ]
+      ]
     },
     {
       "id": "lbl-tweet-svc",
@@ -102,9 +111,9 @@
       "x": 210,
       "y": 76,
       "width": 140,
-      "height": 14,
+      "height": 18,
       "text": "TWEET SERVICE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -136,10 +145,10 @@
       "type": "text",
       "x": 222,
       "y": 108,
-      "width": 116,
-      "height": 36,
+      "width": 174,
+      "height": 53,
       "text": "Tweet Service\nValidate (280 chars)\nSnowflake ID gen",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -157,9 +166,9 @@
       "x": 210,
       "y": 176,
       "width": 140,
-      "height": 14,
+      "height": 18,
       "text": "TWEET DB",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -191,9 +200,9 @@
       "x": 222,
       "y": 208,
       "width": 116,
-      "height": 30,
+      "height": 53,
       "text": "Tweet DB\nMySQL sharded\nby userId",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -221,7 +230,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[0,36]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          36
+        ]
+      ]
     },
     {
       "id": "arr-svc-fanout",
@@ -239,7 +257,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[68,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          0
+        ]
+      ]
     },
     {
       "id": "lbl-fanout",
@@ -247,9 +274,9 @@
       "x": 430,
       "y": 76,
       "width": 160,
-      "height": 14,
+      "height": 18,
       "text": "FANOUT WORKER",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -281,10 +308,10 @@
       "type": "text",
       "x": 442,
       "y": 108,
-      "width": 136,
-      "height": 36,
+      "width": 174,
+      "height": 53,
       "text": "Fanout Worker\nFetch follower list\nPush tweetId to each",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -312,7 +339,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[68,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          0
+        ]
+      ]
     },
     {
       "id": "lbl-redis",
@@ -320,9 +356,9 @@
       "x": 670,
       "y": 60,
       "width": 300,
-      "height": 14,
+      "height": 18,
       "text": "TIMELINE CACHE (Redis)",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -355,9 +391,9 @@
       "x": 682,
       "y": 88,
       "width": 276,
-      "height": 56,
+      "height": 70,
       "text": "Redis — Pre-computed Timelines\nKey: \"timeline:{userId}\"\nLPUSH tweet_id → LTRIM 0 799\n(max 800 tweets per user list)",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -375,9 +411,9 @@
       "x": 670,
       "y": 176,
       "width": 300,
-      "height": 14,
+      "height": 18,
       "text": "ON READ (fast path)",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -409,10 +445,10 @@
       "type": "text",
       "x": 682,
       "y": 205,
-      "width": 276,
-      "height": 36,
+      "width": 304,
+      "height": 53,
       "text": "LRANGE timeline:123 0 99\n→ [tweetId1, tweetId2, ...]\nHydrate tweet details from Tweet DB",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -430,9 +466,9 @@
       "x": 30,
       "y": 290,
       "width": 380,
-      "height": 14,
+      "height": 18,
       "text": "API EVIDENCE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -464,10 +500,10 @@
       "type": "text",
       "x": 44,
       "y": 318,
-      "width": 372,
-      "height": 90,
+      "width": 400,
+      "height": 123,
       "text": "POST /api/tweets\n{ content: \"Hello world!\", userId: \"user123\" }\n→ { tweetId: \"1234567890\", createdAt: \"...\" }\n\nFanout: LPUSH timeline:follower1 1234567890\n        LPUSH timeline:follower2 1234567890\n        ... × N followers (one per follower!)",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -485,9 +521,9 @@
       "x": 450,
       "y": 290,
       "width": 520,
-      "height": 14,
+      "height": 18,
       "text": "LIMITATION (why basic fails)",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -519,10 +555,10 @@
       "type": "text",
       "x": 464,
       "y": 318,
-      "width": 492,
-      "height": 90,
+      "width": 521,
+      "height": 123,
       "text": "Celebrity Problem: @elonmusk has 100M followers\n→ ONE tweet triggers 100M Redis LPUSH writes!\n→ Timeline service is overwhelmed for seconds/minutes\n→ Followers see delayed or missing tweets\n\nWasted Storage: 10M inactive users still get timeline writes\nSolution needed: Hybrid Fanout (Advanced)",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
