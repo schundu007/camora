@@ -701,17 +701,17 @@ export default function DocsPage({ onBack }) {
   // ── Overview dashboard data ──
   const overviewCategories = (() => {
     const cats = [
-      { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: 'var(--text-primary)', topics: codingTopics },
-      { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: 'var(--text-primary)', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] },
-      { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: 'var(--text-primary)', topics: microservicesPatterns },
-      { id: 'databases', href: 'databases', title: 'Databases & SQL', icon: 'database', color: 'var(--text-primary)', topics: [...databaseTopics, ...sqlTopics] },
-      { id: 'low-level', href: 'low-level-design', title: 'Low Level Design', icon: 'layers', color: 'var(--text-primary)', topics: [...lldTopics, ...lldProblems] },
-      { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: 'var(--text-primary)', topics: projectTopics },
-      { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: 'var(--text-primary)', topics: roadmapTopics },
-      { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: 'var(--text-primary)', topics: engBlogTopics },
-      { id: 'behavioral', href: 'behavioral', title: 'Behavioral', icon: 'users', color: 'var(--text-primary)', topics: [...behavioralTopics, ...companyPrep] },
-      { id: 'sre', href: 'sre', title: 'Site Reliability Engineering', icon: 'shield', color: 'var(--text-primary)', topics: sreTopics },
-      { id: 'devops', href: 'devops', title: 'DevOps', icon: 'gitMerge', color: 'var(--text-primary)', topics: devopsTopics },
+      { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: 'var(--text-primary)', topics: codingTopics, description: 'Arrays, strings, trees, graphs, DP — the algorithmic core of every coding interview.' },
+      { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: 'var(--text-primary)', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics], description: 'Scale, sharding, caching, queues, consistency — design Twitter, Uber, WhatsApp end to end.' },
+      { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: 'var(--text-primary)', topics: microservicesPatterns, description: 'Service decomposition, API gateways, saga + outbox, service mesh — patterns for splitting the monolith.' },
+      { id: 'databases', href: 'databases', title: 'Databases & SQL', icon: 'database', color: 'var(--text-primary)', topics: [...databaseTopics, ...sqlTopics], description: 'Indexes, transactions, isolation levels, query plans — relational + NoSQL with hands-on SQL practice.' },
+      { id: 'low-level', href: 'low-level-design', title: 'Low Level Design', icon: 'layers', color: 'var(--text-primary)', topics: [...lldTopics, ...lldProblems], description: 'OOP, SOLID, design patterns — parking lot, LRU cache, vending machine, chess engine.' },
+      { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: 'var(--text-primary)', topics: projectTopics, description: 'Build-from-zero portfolio projects with architecture diagrams and deployment guides.' },
+      { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: 'var(--text-primary)', topics: roadmapTopics, description: 'Stage-by-stage learning paths to backend, frontend, ML, and SRE specializations.' },
+      { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: 'var(--text-primary)', topics: engBlogTopics, description: 'Curated engineering posts from Netflix, Uber, Stripe, Meta — the architectures behind real products.' },
+      { id: 'behavioral', href: 'behavioral', title: 'Behavioral', icon: 'users', color: 'var(--text-primary)', topics: [...behavioralTopics, ...companyPrep], description: 'STAR method, leadership stories, conflict resolution — company-specific prep for FAANG and startups.' },
+      { id: 'sre', href: 'sre', title: 'Site Reliability Engineering', icon: 'shield', color: 'var(--text-primary)', topics: sreTopics, description: 'SLOs, error budgets, incident response, observability — the reliability + on-call interview track.' },
+      { id: 'devops', href: 'devops', title: 'DevOps', icon: 'gitMerge', color: 'var(--text-primary)', topics: devopsTopics, description: 'CI/CD, infrastructure as code, containers, GitOps, progressive delivery — platform engineer essentials.' },
     ];
     return cats.map(c => {
       const count = c.topics.length;
@@ -1003,6 +1003,17 @@ export default function DocsPage({ onBack }) {
                                 <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
                                   <div className="h-full rounded-full transition-colors duration-1000" style={{ width: `${Math.max(cat.progress, 2)}%`, background: 'var(--accent)' }} />
                                 </div>
+
+                                {/* Category description — always rendered so cards with
+                                    no topics yet (DSA / LLD / Projects on a fresh
+                                    install) still tell the user what the category is
+                                    about. Without this the empty cards in the
+                                    screenshot are blank below the progress bar. */}
+                                {cat.description && (
+                                  <p className="mt-3 text-[13px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
+                                    {cat.description}
+                                  </p>
+                                )}
 
                                 {/* "What's inside" preview — first three topic titles +
                                     "+ N more" suffix. Mirrors the bullet-sublists pattern

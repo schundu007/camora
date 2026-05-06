@@ -277,12 +277,21 @@ export default function FormattedContent({ content, inline = false }) {
           return;
         }
 
-        if (
-          trimmed.match(/^\*\*[^*]+\*\*[:\s(]/) ||
-          (trimmed.startsWith('**') && trimmed.endsWith(':'))
-        ) {
+        // Section heading detection — ONLY when the bold span is a
+        // standalone line (`**Header**` or `**Header:**` or `**Header**:`
+        // with nothing after). When body content follows on the same
+        // line (`**The challenge:** WebSocket connections are long-lived…`)
+        // we let the line fall through to the paragraph renderer so
+        // formatInlineText keeps the bold span as an inline `<strong>`
+        // lead-in. Without this gate every "bold lead, then body" line
+        // was promoted to a 20px h3 and the answer body had wildly
+        // uneven font sizes (the bug shown in the user screenshots).
+        const standaloneBoldHeader =
+          trimmed.match(/^\*\*([^*]+?)\*\*\s*:?\s*$/) ||
+          trimmed.match(/^\*\*([^*]+?):\*\*\s*$/);
+        if (standaloneBoldHeader) {
           flushList();
-          const headerText = trimmed.replace(/\*\*/g, '').replace(/:\s*$/, '');
+          const headerText = standaloneBoldHeader[1].replace(/:\s*$/, '');
           if (isStarKey(headerText)) {
             const keyword =
               headerText.charAt(0).toUpperCase() + headerText.slice(1).toLowerCase();
@@ -300,7 +309,7 @@ export default function FormattedContent({ content, inline = false }) {
             openSection(
               <h3
                 key={`h-${blockIdx}-${lineIdx}`}
-                className="text-[var(--text-primary)] font-bold text-[20px] mt-8 mb-2 first:mt-0 landing-display tracking-tight leading-tight"
+                className="text-[var(--accent)] font-bold text-[18px] mt-8 mb-2 first:mt-0 landing-display tracking-tight leading-tight"
               >
                 {headerText}
               </h3>,
@@ -330,7 +339,7 @@ export default function FormattedContent({ content, inline = false }) {
           openSection(
             <h4
               key={`h-${blockIdx}-${lineIdx}`}
-              className="text-[var(--text-primary)] font-bold text-[16px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
+              className="text-[var(--accent)] font-semibold text-[15px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
             >
               {trimmed.replace(/:\s*$/, '')}
             </h4>,
@@ -347,7 +356,7 @@ export default function FormattedContent({ content, inline = false }) {
         pushBody(
           <p
             key={`p-${blockIdx}-${lineIdx}`}
-            className="text-[var(--text-primary)] text-[15px] leading-[1.6] my-3 landing-body"
+            className="text-[var(--text-secondary)] text-[15px] leading-[1.6] my-3 landing-body"
           >
             {formatInlineText(trimmed)}
           </p>,
