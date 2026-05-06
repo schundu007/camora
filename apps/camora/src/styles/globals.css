@@ -78,19 +78,16 @@
     --cat-primary: #26619C;
     --cat-primary-bg: rgba(38,97,156,0.10);
 
-    /* Fonts — Adobe Source family (display + mono) + Inter (body/UI) */
-    --font-sans: 'Inter', 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-display: 'Source Sans 3', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-mono: 'Source Code Pro', 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
-    --font-brand: 'Source Sans 3', 'Inter', sans-serif;
-    /* Answer surface — wider, more "studied" type so Sona's responses
-       read like a textbook rather than UI chrome. Source Sans 3 (body)
-       + Source Serif 4 (headings) are Adobe's open-source display
-       families; we ship them via Google Fonts to avoid an Adobe Fonts
-       kit dependency. Tuned at 16 px/1.7 line-height for Lumora's
-       answer panel which routinely renders 200-800 word responses. */
-    --font-answer: 'Source Sans 3', 'Inter', -apple-system, sans-serif;
-    --font-answer-heading: 'Source Serif 4', 'Source Sans 3', Georgia, serif;
+    /* Fonts — Clash Display (headings/brand) + Satoshi (body/UI) + JetBrains Mono */
+    --font-sans: 'Satoshi', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-display: 'Clash Display', 'Satoshi', sans-serif;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-brand: 'Clash Display', 'Satoshi', sans-serif;
+    /* Answer surface — Satoshi (body) + Source Serif 4 (headings).
+       Tuned at 16px/1.7 line-height for Lumora's answer panel
+       which routinely renders 200-800 word responses. */
+    --font-answer: 'Satoshi', 'Plus Jakarta Sans', -apple-system, sans-serif;
+    --font-answer-heading: 'Source Serif 4', Georgia, serif;
     --fs-answer-body: 16px;
     --fs-answer-lead: 17px;     /* first paragraph / intro line */
     --fs-answer-heading: 19px;  /* HEADLINE / section titles */
@@ -413,9 +410,10 @@
     height: 100%;
   }
 
-  /* Display font on all headings and prominent text */
+  /* Display font on all headings — Clash Display with geometric tight tracking */
   h1, h2, h3, h4 {
     font-family: var(--font-display);
+    letter-spacing: -0.015em;
   }
 
   .light-theme {
@@ -571,13 +569,13 @@
 .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
 
 /* Typography */
-.heading-1 { font-size: 30px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
-.heading-2 { font-size: 20px; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
-.heading-3 { font-size: 16px; font-weight: 600; color: var(--text-primary); line-height: 1.4; }
-.text-body { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
-.text-small { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
-.heading-4 { font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.5; }
+.heading-1 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); line-height: 1.15; }
+.heading-2 { font-size: 20px; font-weight: 700; letter-spacing: -0.014em; color: var(--text-primary); line-height: 1.28; }
+.heading-3 { font-size: 16px; font-weight: 600; letter-spacing: -0.006em; color: var(--text-primary); line-height: 1.4; }
+.heading-4 { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); line-height: 1.5; font-family: var(--font-sans); }
+.text-body { font-size: 15px; color: var(--text-secondary); line-height: 1.65; }
 .text-body-lg { font-size: 16px; color: var(--text-secondary); line-height: 1.75; }
+.text-small { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
 /* Landing page typography aliases */
 .landing-display { font-family: var(--font-display); letter-spacing: -0.01em; }
@@ -1379,8 +1377,7 @@ img { max-width: 100%; height: auto; }
 
 .docs-page,
 .prep-content {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   font-feature-settings: 'ss01', 'ss02', 'cv01', 'cv02';
   color: var(--text-primary);
 }
