@@ -348,6 +348,7 @@ export default function ResumeOptimizer() {
               value={jobUrl}
               onChange={(e) => setJobUrl(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleFetchJd(); }}
+              onBlur={() => { if (jobUrl.trim()) handleFetchJd(); }}
               placeholder="https://jobs.example.com/posting/123"
               style={{
                 flex: 1,
