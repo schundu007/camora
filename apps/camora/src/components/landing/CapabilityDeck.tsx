@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 const ACCENT = 'var(--cam-primary)';
 const DANGER = 'var(--danger)';
 const SUCCESS = 'var(--accent)';
-const MONO = "'Source Code Pro', monospace";
-const DISPLAY = "'Source Sans 3', sans-serif";
+const MONO = 'var(--font-mono)';
+const DISPLAY = 'var(--font-display)';
 
 type SceneId = 'live' | 'company' | 'code' | 'design' | 'prep' | 'score';
 const SCENES: SceneId[] = ['live', 'company', 'code', 'design', 'prep', 'score'];
