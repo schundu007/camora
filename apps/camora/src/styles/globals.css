@@ -43,7 +43,12 @@
        secondary  #0F172A   19:1   near-black, tiny hierarchy drop
        muted      #1E293B   15:1   slate-800, for captions / count chips
        dimmed     #334155   11:1   slate-700, rare — only for disabled  */
-    --text-primary: #000000;
+    /* Slate-tinted near-black instead of pure #000. Per impeccable
+       color law: every neutral should be tinted toward the brand hue
+       (chroma 0.005-0.01). Visually indistinguishable from #000 to
+       most users; restores the OKLCH-first design philosophy and
+       resolves a known DESIGN.md drift. */
+    --text-primary: oklch(15% 0.015 250);
     --text-secondary: #0F172A;
     --text-muted: #1E293B;
     --text-dimmed: #334155;
@@ -1230,8 +1235,14 @@ img { max-width: 100%; height: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-lift, .press, .ai-float, .ai-slow-spin, .shimmer::after, .tab-fade-in,
-  .sona-breathe, .bg-navy-drift::before, .celebration-badge, .celebration-toast {
+  .card-lift, .press, .ai-float, .ai-slow-spin, .shimmer, .shimmer::after,
+  .tab-fade-in, .sona-breathe, .bg-navy-drift::before,
+  .celebration-badge, .celebration-toast,
+  /* Newly added in the prepare-page audit: kill the three viewport-wide
+     infinite keyframe animations that repaint continuously even off-screen.
+     auroraShift, pulse-dot, and shimmer-sweep are decorative, not signal. */
+  .ai-aurora::before,
+  .status-dot-listen, .status-dot-write, .status-dot-search {
     transition: none;
     animation: none;
     transform: none !important;
@@ -1408,6 +1419,16 @@ img { max-width: 100%; height: auto; }
   border-bottom: 1px solid var(--border);
   background: color-mix(in oklab, var(--bg-elevated) 60%, transparent);
 }
+/* content-visibility: auto on the parent <figure> so visualizations
+   below the fold skip layout + paint until they're scrolled near.
+   Caps a typical viz figure (caption + image) at ~800px so the page
+   scrollbar still tracks correctly. After today's gate fix, devops
+   topics can render 60+ viz items per page; without this, every PNG
+   layout-cost is paid up-front on initial mount. */
+figure:has(> .viz-caption) {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 800px;
+}
 .viz-caption-eyebrow {
   display: inline-block;
   font-family: var(--font-mono);
@@ -1447,6 +1468,12 @@ img { max-width: 100%; height: auto; }
   border-radius: 4px;
   background: color-mix(in oklab, var(--cam-primary) 10%, transparent);
   color: var(--text-primary);
+  /* Long inline identifiers (SDK call chains, fully qualified class
+     names) would otherwise force horizontal scroll on narrow
+     sidebars. Allow break inside the token; leaves break direction
+     to the layout engine. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .viz-caption-body ul,
 .viz-caption-body ol {

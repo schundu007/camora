@@ -25,6 +25,8 @@ import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView } from './companion/answer-view';
 import { Citations } from '@/components/lumora/Citations';
 import { SonaMicButton } from './SonaMicButton';
+import { Icon } from '@/components/shared/Icons';
+import { dialogConfirm } from '@/components/shared/Dialog';
 import type { Citation } from '@/types';
 
 interface ChatMessage {
@@ -133,6 +135,9 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
 
     const controller = new AbortController();
     abortRef.current = controller;
+    // Snapshot the question so a stream failure can restore it to the
+    // textarea for one-tap retry instead of forcing the user to retype.
+    const originalQuestion = question;
 
     try {
       await streamResponse({
@@ -170,6 +175,10 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
           setError(msg);
           setStreamText('');
           setStreaming(false);
+          // Restore the question so the user can press Enter again
+          // without retyping. The user message bubble is left in
+          // place as the ledger of "this was attempted".
+          setInput(originalQuestion);
         },
         onComplete: () => { setStreaming(false); },
       });
@@ -178,6 +187,7 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
       setError(e?.message || 'Failed to reach Sona');
       setStreaming(false);
       setStreamText('');
+      setInput(originalQuestion);
     }
   }, [token, streaming, buildContext]);
 
@@ -188,7 +198,18 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
     }
   }, [input, send]);
 
-  const clearHistory = useCallback(() => {
+  const clearHistory = useCallback(async () => {
+    // Project memory: never window.confirm/alert/prompt. Always
+    // dialogConfirm via DialogProvider. Destructive without
+    // confirmation is the bug Audit P1 flagged.
+    const ok = await dialogConfirm({
+      title: 'Clear chat history?',
+      message: 'This removes all of your follow-up Q&A with Sona on this surface. The current solve context stays loaded.',
+      confirmLabel: 'Clear',
+      cancelLabel: 'Keep',
+      tone: 'danger',
+    });
+    if (!ok) return;
     abortRef.current?.abort();
     setMessages([]);
     setStreamText('');
@@ -203,11 +224,12 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
 
   return (
     <aside
-      className="shrink-0 flex flex-col border-l overflow-hidden transition-all duration-200"
+      className="shrink-0 flex flex-col border-l overflow-hidden"
       style={{
         width: open ? 360 : 0,
         background: 'var(--bg-surface)',
         borderColor: 'var(--border)',
+        transition: 'width 0.2s ease-out',
       }}
       aria-hidden={!open}
     >
@@ -229,28 +251,26 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
               {messages.length > 0 && (
                 <button
                   onClick={clearHistory}
-                  className="text-[9px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-colors"
+                  className="inline-flex items-center justify-center text-[9px] font-bold uppercase tracking-[0.12em] px-3 h-7 min-h-[1.75rem] rounded transition-colors"
                   style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.20)' }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                   title="Clear chat history"
+                  aria-label="Clear chat history"
                 >
                   Clear
                 </button>
               )}
               <button
                 onClick={onClose}
-                className="p-1 rounded-md transition-colors"
+                className="inline-flex items-center justify-center w-7 h-7 rounded-md transition-colors"
                 style={{ color: 'rgba(255,255,255,0.85)' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 title="Close sidebar"
                 aria-label="Close Sona sidebar"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <Icon name="close" size={14} aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -274,9 +294,7 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
           <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-3">
             {messages.length === 0 && !streaming && (
               <div className="flex flex-col items-center justify-center h-full text-center px-4 py-10" style={{ color: 'var(--text-muted)' }}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
-                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                </svg>
+                <Icon name="messageSquare" size={32} strokeWidth={1.4} style={{ opacity: 0.5 }} aria-hidden="true" />
                 <p className="mt-3 text-[12px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: "var(--font-sans)" }}>
                   No follow-ups yet
                 </p>
@@ -405,10 +423,7 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
                   transition: 'background-color 0.15s ease-out, opacity 0.15s ease-out',
                 }}
               >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <line x1="22" y1="2" x2="11" y2="13" />
-                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                </svg>
+                <Icon name="send" size={11} aria-hidden="true" />
                 Ask Sona
               </button>
             </div>
