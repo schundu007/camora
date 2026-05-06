@@ -18260,4 +18260,397 @@ These are answers an SRE-fluent platform engineer should give without preparatio
     ],
   },
 
+  {
+    id: 'progressive-delivery',
+    title: 'Progressive Delivery — Canary, Blue/Green, Argo Rollouts, Flagger',
+    icon: 'send',
+    color: '#06b6d4',
+    questions: 5,
+    description: 'Beyond rolling updates: gradual exposure of new versions to users with metric gates and automatic rollback. Strategies (blue/green, canary, A/B, shadow), platforms (Argo Rollouts, Flagger, Spinnaker), and the analysis-driven decision model from the Continuous Delivery / SRE traditions.',
+    visualizations: [
+      {
+        title: 'Progressive delivery — the spectrum of rollout strategies',
+        description: `Progressive delivery is the umbrella term for "expose a new version to a subset of traffic, measure, then expand or roll back". Walking the spectrum:
+
+Recreate (the bad baseline). Stop all old pods, start all new ones. Downtime equal to startup time. Used only for stateful systems that can't run two versions concurrently.
+
+Rolling update (Kubernetes default). Replace pods incrementally — bring up N new, drain N old. Deployment.spec.strategy.rollingUpdate.maxSurge / maxUnavailable. Eliminates downtime but: traffic hits new + old simultaneously during the rollout, no metric gate, manual rollback if you notice problems.
+
+Blue/Green. Two full environments (blue = current, green = new). Deploy to green, validate, then swap traffic at the load balancer. Properties:
+- Instant cutover, instant rollback (swap back).
+- 2x infrastructure during deploy. Tradeoff for speed and safety.
+- Database schema must support both versions during cutover (expand-contract migrations).
+- Common in stateful platforms: Spinnaker pioneered this for Netflix. AWS CodeDeploy supports natively. Argo Rollouts has BlueGreen strategy.
+
+Canary. Send small fraction (1%, 5%, 10%) of traffic to new version. Measure error rate, latency, business KPIs. If healthy, expand to 100%. If unhealthy, rollback automatically. Properties:
+- Bounded blast radius. A bad release affects only the canary slice.
+- Requires traffic-splitting capability (service mesh, ingress, or in-app).
+- Requires telemetry to make the decision (metric source: Prometheus, Datadog, NewRelic).
+- Slower than blue/green: canary phases take minutes to hours to gather signal.
+- Argo Rollouts and Flagger are the K8s-native implementations.
+
+A/B testing. Like canary but the routing decision is by user attribute (geo, account tier, header), not random. Used for product experiments more than safe deploy. Often combined with feature flags (LaunchDarkly, Unleash, Statsig) — "show feature X to users in cohort A".
+
+Shadow / Dark launch. Send copy of production traffic to new version; new version's responses discarded (just observe). Lets you test new version under real load without user impact. Cost: 2x backend traffic. Useful for performance regression testing pre-cutover.
+
+Progressive rollout (geo / cell / region). Deploy to one cell or region at a time. Validate, expand. Industry standard at Google, Microsoft, Amazon. Slower per-rollout but reduces blast radius across geographies. Often combined with canary inside each cell.
+
+Choosing among them:
+
+| Strategy      | Blast radius | Infra cost | Speed     | Best for                                          |
+|---------------|--------------|------------|-----------|---------------------------------------------------|
+| Recreate      | 100% downtime| 1x         | Fast      | Stateful, no zero-downtime requirement            |
+| Rolling       | Random       | 1x         | Fast      | Stateless, simple                                 |
+| Blue/Green    | 0%           | 2x         | Instant   | Critical apps, schema changes, fast rollback      |
+| Canary        | 1-10%        | 1x + small | Medium    | Most production apps with telemetry               |
+| A/B           | Targeted     | 1x         | Slow      | Product experiments                               |
+| Shadow        | 0% user      | 2x backend | Long      | Pre-prod load test                                |
+| Geo rollout   | One region   | 1x         | Slow      | Multi-region apps                                 |
+
+Most mature platforms layer these: a single change rolls out as canary inside one region, then geo-progresses to additional regions, with shadow tests preceding real customer traffic for performance-sensitive code paths.
+
+The deeper point. Progressive delivery isn't a deploy strategy — it's an admission that pre-prod testing isn't sufficient and the rollout itself must be a controlled experiment. The savings are real: high-functioning teams catch ~80% of bad deploys at 1-5% canary, not in 100% of users.`,
+        image: '/diagrams/devops/c1-progressive-delivery.png',
+      },
+      {
+        title: 'Argo Rollouts vs Flagger — K8s progressive delivery',
+        description: `Two CNCF projects own the K8s progressive-delivery space. Same goal, different architectures:
+
+Argo Rollouts (Argo Project, CNCF graduated):
+
+What it is. A Deployment-replacement CRD. You write a Rollout instead of a Deployment, declare strategy (BlueGreen or Canary), and Rollouts manages the ReplicaSets and traffic-shifting:
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata: { name: api }
+spec:
+  replicas: 10
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause: { duration: 5m }
+        - setWeight: 25
+        - analysis: { templates: [{ templateName: success-rate }] }
+        - setWeight: 50
+        - pause: {}                # manual approval
+        - setWeight: 100
+      trafficRouting:
+        istio:
+          virtualService:
+            name: api
+            routes: [primary]
+  selector: { matchLabels: { app: api } }
+  template:
+    metadata: { labels: { app: api } }
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/myorg/api:v2.0.0
+\`\`\`
+
+Properties:
+- Uses external traffic splitter: Istio, Linkerd, ALB, NGINX, Traefik, Apache APISIX, SMI. The Rollouts controller updates the splitter's config; Rollouts itself doesn't proxy traffic.
+- AnalysisTemplate CRD declares metric checks (Prometheus query, Datadog metric, NewRelic NRQL, Wavefront, Web). If query result fails threshold during the canary phase, Rollouts automatically rolls back.
+- Has its own dashboard CLI (kubectl-argo-rollouts) and UI (argo-rollouts-dashboard).
+- Best paired with Argo CD for full GitOps. Argo CD applies the Rollout manifest, Rollouts handles the cutover.
+
+Flagger (Weaveworks → Flux project, CNCF):
+
+What it is. A Canary CRD that wraps an existing Deployment and orchestrates traffic shifting:
+
+\`\`\`yaml
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata: { name: api }
+spec:
+  targetRef: { apiVersion: apps/v1, kind: Deployment, name: api }
+  service: { port: 8080 }
+  analysis:
+    interval: 1m
+    threshold: 5
+    maxWeight: 50
+    stepWeight: 10
+    metrics:
+      - name: request-success-rate
+        thresholdRange: { min: 99 }
+        interval: 30s
+      - name: request-duration
+        thresholdRange: { max: 500 }
+        interval: 30s
+    webhooks:
+      - name: load-test
+        url: http://flagger-loadtester/
+\`\`\`
+
+Properties:
+- Wraps existing Deployment — when the Deployment image changes, Flagger detects, scales up a "primary" + "canary" ReplicaSet pair, and orchestrates traffic shift via service mesh / ingress.
+- Built-in metric checks via Prometheus (default) or Datadog/NewRelic/Dynatrace/CloudWatch/Stackdriver.
+- Loadtester webhook: synthetic traffic during canary windows so the metric query has signal.
+- Best paired with Flux CD for full GitOps. Often deployed via the Flux toolkit's helmrelease.
+
+Differences in practice:
+
+Architecture:
+- Argo Rollouts replaces the Deployment with a Rollout CRD.
+- Flagger sits on top of an unchanged Deployment, manages a parallel canary.
+
+CD pairing:
+- Argo Rollouts + Argo CD = the full Argo stack. Common at orgs that adopted Argo end-to-end.
+- Flagger + Flux = the full Flux stack. Common at orgs that adopted Flux end-to-end.
+
+Both work with either CD platform; pairings reflect community gravity.
+
+UI:
+- Argo Rollouts has a richer UI (dashboard with rollout state, manual promotion, abort).
+- Flagger doesn't have its own UI; you observe via Prometheus/Grafana and kubectl describe.
+
+Strategy support:
+- Argo Rollouts: Canary + BlueGreen + Experiment (pure A/B).
+- Flagger: Canary + BlueGreen + A/B (header-based) + Mirroring (shadow traffic).
+
+Manual approvals:
+- Argo Rollouts: pause: {} step pauses indefinitely, kubectl-argo-rollouts promote resumes.
+- Flagger: less prescriptive; you change the Canary spec or use webhooks for approval gating.
+
+Operationally, both are mature and production-grade at large scale (Intuit, Adobe, BlackRock for Argo Rollouts; weaveworks customers, large EU enterprises for Flagger). Pick the one that matches the rest of your platform stack.
+
+Spinnaker — for completeness. Netflix-pioneered multi-cloud deploy platform with deep canary capability via Kayenta (statistical canary analysis). Heavyweight to operate; popular at orgs with deep Netflix-OSS lineage. Modern shops increasingly pick Argo Rollouts or Flagger for K8s-native simplicity.
+
+LaunchDarkly Release Management, Statsig deployment-aware flags — feature flag platforms with rollout capabilities at the application layer (in-app routing, not infrastructure). Different model: works for any app stack, but doesn't shape K8s pod traffic. Often layered with Argo Rollouts or Flagger for "K8s rollout + per-user flag" hybrid.`,
+      },
+      {
+        title: 'Metric-driven canary analysis — what to measure and how',
+        description: `The hard part of canary deploys isn't the traffic split — it's the decision: is this canary healthy?
+
+Three classes of signals to gate canary on:
+
+Class 1: Request-level health (the floor).
+- Error rate (HTTP 5xx, gRPC error codes, custom error counters). Comparison: canary error rate ≤ baseline error rate × 1.0 (strict) or × 1.5 (loose).
+- Request latency (p99 ideally; avoid p50, which masks tail issues). Comparison: canary p99 ≤ baseline p99 × 1.1.
+- Throughput. If canary RPS dropped suddenly, something is hanging. Comparison: canary RPS ≥ baseline RPS × 0.95.
+
+These three are minimum viable. If you have nothing else, gate on these.
+
+Class 2: Application-specific health.
+- Saturation: CPU, memory, connection pool utilization, lock contention. New version may pass functional tests but be 30% more CPU-hungry.
+- Cache hit rate. New version may bypass cache due to bug.
+- Database query rate / slow query count. New version may issue 10x queries from N+1 bug.
+- Background job success rate.
+
+These catch issues invisible at the request layer — "code works, but produces 10x DB load".
+
+Class 3: Business KPIs.
+- Conversion rate, signup rate, checkout success rate.
+- Per-segment KPIs (new users, paid users, EU users) when canary is geo-targeted.
+
+Hardest to instrument; highest signal of real impact.
+
+Statistical comparison vs threshold:
+
+Threshold canary: "canary p99 < 500ms". Simple, brittle. Doesn't account for normal variance.
+
+Comparative canary: "canary p99 ≤ baseline p99 × tolerance". Compares canary to a parallel baseline pod (same version as old, same time window). The Argo Rollouts and Flagger AnalysisTemplate / metrics support both.
+
+Statistical canary (Kayenta-style): runs Mann-Whitney U or similar non-parametric test to determine whether canary metric distribution is statistically different from baseline. Gives a confidence score. More robust to noise, more complex to operate. Spinnaker / Kayenta is the open-source reference; few teams need this level.
+
+Recommended canary phase pattern (for 99.9% SLO services):
+
+Phase 1: 1% traffic, 5 minutes — sanity check. Catches deploy-breaking bugs.
+Phase 2: 5% traffic, 10 minutes — early signal on intermittent issues.
+Phase 3: 25% traffic, 15 minutes — wider statistical validity, catches issues that need volume to surface.
+Phase 4: 50% traffic, 15 minutes — final gate before 100%.
+Phase 5: 100% — done.
+
+Pause longer if your traffic is low (need request volume for signal). Skip phases for low-risk changes (config-only, image-only-no-code-change). Add manual approval at 50% if business hours / change-management requires it.
+
+Auto-rollback triggers vs auto-promote triggers:
+- Promote: all metrics within threshold for full duration of phase.
+- Rollback: any metric exceeds threshold for X consecutive checks (3-5 typical) OR any metric exceeds 2x threshold immediately.
+
+Forward-only deploys. Database schema or stateful protocol changes that can't be rolled back must be expand-contract:
+- Phase 1: Deploy schema change that's compatible with old + new versions (add column, don't drop).
+- Phase 2: Deploy app code that uses new schema, canary as usual.
+- Phase 3: After full rollout, separate later deploy removes deprecated schema.
+
+Skipping the expand-contract is the most common cause of "we can't roll back" pain.
+
+Synthetic traffic during canary. Real production traffic has noise — endpoint mix changes hourly, cache warmth varies. Tools like Flagger's loadtester or Argo Rollouts' analysis webhook hit canary endpoints on a schedule with known query mix to give the analysis stable signal.
+
+Common mistakes:
+- Canary on a window too short for the metric. P99 latency over 30 seconds at 10 RPS = no useful signal.
+- Promoting on cumulative metric ("error rate over 1h") that smooths over a 10-minute incident in canary.
+- Comparing canary to historical baseline (yesterday's data) instead of parallel baseline (same time, same load).
+- Ignoring slow regression: canary 5% slower passes naive threshold but at 100%, the cumulative slowness breaks p99 SLO.
+
+The deeper point. Progressive delivery's value is the metric gate, not the traffic split. Getting the traffic split working in K8s is a weekend project. Getting metrics that reliably catch real regressions without false positives is months of tuning per service. Plan for it.`,
+      },
+      {
+        title: 'Operational patterns and gotchas',
+        description: `What goes wrong with progressive delivery in production, and what mature teams have learned:
+
+Database schema and progressive delivery don't compose naively. Two versions running simultaneously means schema must support both:
+- Add column: safe (old version ignores).
+- Drop column: requires expand-contract (deploy code that doesn't read column → migration to drop column).
+- Rename column: requires three deploys (add new, deploy code that writes both, deploy code that reads new, drop old).
+- Change column type: extreme expand-contract; often easier to add new column, dual-write, switch reads, drop.
+
+Skipping these steps is the #1 cause of "canary worked but caused outage at 100%".
+
+Distributed systems compose canary risk multiplicatively. If service A is canarying and service A calls service B which is also canarying, you might have canary-A→canary-B traffic, baseline-A→canary-B, canary-A→baseline-B, and baseline-A→baseline-B all at once. Most platforms aren't equipped to track this. The standard mitigation: don't canary multiple services at once; serialize.
+
+Sticky session and progressive delivery. If a user's first request hits new version (canary), their second hits old (baseline) due to load balancer hashing → user sees inconsistent state. Service mesh "consistent hash by user-id" header solves this. Naive round-robin canary doesn't.
+
+Long-running connections (websockets, gRPC streaming, SSE). Canary affects new connections, not existing ones. Existing connections stay on old pods until they disconnect or pod is drained. Plan for: long bake time, or explicit drain at canary phase boundaries.
+
+Stateful workloads. Databases, caches, queue workers can't easily canary because their state migrates with them. Pattern: canary read-only replicas first, validate, then promote. For queue workers: deploy new version to one shard, validate, expand. Most progressive delivery tools assume stateless apps.
+
+Cost of always-on canary. Running canary continuously means a small population of users always sees the freshest version. For some teams (Netflix, Google), this is fine. For others, it leaks unfinished work to early users. Match canary intensity to your release confidence.
+
+Failure modes of automated rollback. The metric source is part of the rollback machinery. If Prometheus is down, canary analysis fails. Decision: fail open (assume healthy, promote) or fail closed (assume unhealthy, hold)?
+- Most teams fail closed: hold canary at current weight if analysis fails. Surfaces the problem (can't promote) but doesn't expose users.
+- Pure fail-open is dangerous: a metric backend outage shouldn't cause every canary to auto-promote.
+
+Manual approval gates — and when they're a smell. Some shops add manual approval at 50% canary because "humans should review". This is often a smell:
+- If your metric gates are good, the human adds nothing.
+- If they're not good, fix them; don't paper over with humans.
+- The right place for manual gates: business-hours-only deploys, change-management-required windows, regulated industries.
+
+Multi-region deploys. The pattern: one region is the "canary region" (smallest customer impact). Roll there fully, observe for ~24h, then expand to next region. Combine with progressive delivery within each region. Geographic + traffic-percentage canary = compounded blast radius reduction.
+
+Feature flags vs progressive delivery. Often confused; complementary:
+- Progressive delivery: route X% of traffic to new pods.
+- Feature flags: route X% of users to new code path within same pods.
+
+Use progressive delivery for infrastructure changes (new image, new pod template). Use feature flags for product changes (new UI, new pricing). Use both for "new version of payment service that introduces new payment method" — progressive delivery rolls out the binary, feature flag rolls out the new method.
+
+Argo Rollouts gotchas:
+- Rollout replaces Deployment. If you have Helm charts that hardcode kind: Deployment, conversion is real work.
+- ReplicaSet labels include rollouts-pod-template-hash; if you scrape with selectors that exclude this, queries break.
+
+Flagger gotchas:
+- Wraps existing Deployment but creates -primary and -canary copies; if your manifests reference exact Deployment name in services or other resources, may need adjustment.
+- Loadtester is essential for low-traffic services but adds infrastructure.
+
+Both:
+- Canary for low-RPS endpoints is unreliable: 0.1 RPS gives no statistical signal in 5 minutes.
+- Pause-then-promote workflows require human-in-loop tooling (Slack approvals, dashboard); CI is not enough.
+
+Gradual adoption path. Most teams that adopt progressive delivery do it in this order:
+1. Start with rolling updates + good observability. Many bugs are caught by alerts on 5xx, no progressive delivery needed.
+2. Add blue/green for the most critical service (payment, auth). Lowest cognitive overhead, instant rollback.
+3. Add canary for next-tier services. Argo Rollouts or Flagger.
+4. Expand canary to all services that have telemetry to support metric gates.
+5. Add geo-progressive rollout if you have multi-region.
+
+Don't skip ahead to "every service has fully automated canary with statistical significance gates"; you'll burn out tuning analysis configs that nobody trusts.
+
+The deeper point. Progressive delivery is a maturity progression, not a feature flag. Each step requires operational investment and pays back in proportional incident reduction. Teams that try to skip from rolling-only to fully-automated-statistical-canary fail because the surrounding maturity (telemetry, runbooks, rollback discipline) isn't in place yet.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Progressive Delivery',
+        question: 'Quick-fire interview answers — Progressive Delivery.',
+        answer: `Rapid-fire facts.
+
+Q: Define progressive delivery in one line.
+A: Gradual exposure of a new version to traffic with metric-driven decisions to promote or roll back.
+
+Q: Rolling update vs canary?
+A: Rolling = replace pods incrementally, no metric gate, traffic randomly hits old + new. Canary = explicit small slice (1-10%) with metric analysis before promotion.
+
+Q: Blue/green vs canary?
+A: Blue/green = two full environments, instant cutover via load balancer swap, instant rollback. Canary = single environment, fractional traffic split with metric gates. Blue/green: 2x infra, instant. Canary: 1x infra, slower but bounded blast radius.
+
+Q: When pick blue/green over canary?
+A: Schema changes that need atomic cutover. Stateful systems where two versions running concurrently is hard. Critical services where any user impact is unacceptable. Faster rollback than canary.
+
+Q: When canary?
+A: Most production apps with telemetry. Smaller blast radius (1-5% of users see issues if they exist). Cheaper than blue/green.
+
+Q: A/B test vs canary?
+A: Canary = random traffic split for safety. A/B = targeted (cohort, geo, header) for product experiments. Often both layered.
+
+Q: Shadow / dark launch?
+A: Mirror production traffic to new version; discard responses. Tests under real load with no user impact. Cost: 2x backend traffic.
+
+Q: Argo Rollouts in one line?
+A: K8s CRD that replaces Deployment, declares Canary or BlueGreen strategy with metric analysis steps, integrates with service mesh / ingress for traffic splitting.
+
+Q: Flagger in one line?
+A: K8s operator that wraps an existing Deployment, orchestrates a -primary / -canary pair with traffic shift via service mesh, gated on Prometheus / Datadog metrics.
+
+Q: Argo Rollouts vs Flagger?
+A: Architecture: Argo replaces Deployment; Flagger wraps it. CD pairing: Argo Rollouts + Argo CD; Flagger + Flux. UI: Argo has a richer dashboard. Both production-grade.
+
+Q: Spinnaker?
+A: Netflix-pioneered multi-cloud CD with Kayenta statistical canary analysis (Mann-Whitney U). Heavyweight; popular in Netflix-OSS shops.
+
+Q: AnalysisTemplate?
+A: Argo Rollouts CRD that declares metric checks (PromQL, Datadog, NewRelic, Wavefront). Failed checks during canary trigger automatic rollback.
+
+Q: What metrics gate canary?
+A: Floor: error rate, p99 latency, throughput. Application: saturation, cache hit, slow query rate. Business: conversion, signup. Most teams gate on the first three.
+
+Q: Comparative vs threshold canary?
+A: Threshold = "canary p99 < 500ms". Comparative = "canary p99 ≤ baseline p99 × 1.1" (compare to parallel baseline). Comparative is more robust to load variance.
+
+Q: Statistical canary?
+A: Kayenta-style Mann-Whitney U test on metric distributions. Returns confidence score. More robust to noise; complex to operate. Few teams need it.
+
+Q: Default canary phases?
+A: 1% × 5min, 5% × 10min, 25% × 15min, 50% × 15min, 100%. Adjust based on traffic volume (need RPS for signal) and risk.
+
+Q: When does canary mislead?
+A: Low-RPS services (no statistical signal). Cumulative metrics that smooth over short incidents. Historical baselines instead of parallel baselines. Sticky-session apps without consistent hashing.
+
+Q: Schema migrations and progressive delivery?
+A: Expand-contract. Phase 1: add column. Phase 2: deploy code that uses it. Phase 3: drop deprecated column. Skipping expand-contract = "can't roll back" outages.
+
+Q: Distributed canary risk?
+A: Multiple services canarying simultaneously creates A-canary→B-canary, A-baseline→B-canary, etc. Hard to attribute incidents. Mitigation: serialize canaries.
+
+Q: Sticky sessions and canary?
+A: Naive round-robin sends user's request 1 to canary, request 2 to baseline → inconsistent state. Service mesh consistent-hash by user-id solves it.
+
+Q: Long-running connections?
+A: Websockets / gRPC streams stay on old pods until disconnect. Plan for long bake or explicit drain at phase boundaries.
+
+Q: Stateful workloads?
+A: Most progressive delivery assumes stateless. For DBs: canary read replicas. For workers: shard-by-shard rollout. For caches: nontrivial; usually full blue/green.
+
+Q: Auto-rollback gone wrong?
+A: Metric source down → analysis fails. Fail-closed (hold canary, don't promote) is safer than fail-open. Build alerting for canaries that can't progress.
+
+Q: When is manual approval gate the right call?
+A: Business-hours change windows, regulatory compliance, large blast radius (geo-rollout). Otherwise, if humans add nothing over good metrics, drop the gate.
+
+Q: Feature flag vs canary?
+A: Canary = % of pods. Feature flag = % of users within same pods. Layer both: canary the binary, flag the feature. LaunchDarkly / Statsig for flags, Argo Rollouts / Flagger for binary.
+
+Q: Multi-region + canary?
+A: Canary within each region, then geo-progress region-by-region. Canary blast radius (per-region) × region count → much smaller total impact than full-global canary.
+
+Q: First service to convert to progressive delivery?
+A: Most critical with the best telemetry. Payment, auth, checkout. The investment in telemetry pays back in incident reduction.
+
+Q: Most common progressive-delivery anti-pattern?
+A: Skipping straight to "fully automated statistical canary" before having rolling updates + alerts working reliably. Operationally fails because surrounding maturity is missing.
+
+Q: Cost of "always-on canary"?
+A: Some users always see freshest version. Fine at scale (Netflix, Google) where unfinished features behind flags is normal. Risky at startup scale where users see broken UX.
+
+These are answers a CD-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://argoproj.github.io/argo-rollouts/',
+      'https://docs.flagger.app/',
+      'https://martinfowler.com/bliki/BlueGreenDeployment.html',
+      'https://launchdarkly.com/blog/what-is-progressive-delivery/',
+      'https://spinnaker.io/docs/guides/user/canary/',
+      'https://sre.google/workbook/canarying-releases/',
+    ],
+  },
+
 ];
