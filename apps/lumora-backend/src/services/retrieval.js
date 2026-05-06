@@ -10,7 +10,7 @@
  * Per-user namespace is enforced at the SQL layer — every user-doc
  * query has WHERE user_id = $1. Namespace bugs are tested.
  */
-import { hybridSearchKb, hybridSearchUserDocs } from './hybridRetrieval.js';
+import { hybridSearchKb, hybridSearchUserDocs, hybridSearchUserCode } from './hybridRetrieval.js';
 import { sourcesForMode } from './modeSourceFilter.js';
 
 const DEFAULT_TIMEOUT_MS = 250;
@@ -21,6 +21,7 @@ const KB_TOP_K_NARROW = 6;
 const USER_TOP_K_NARROW = 4;
 const KB_TOP_K_WIDE = 30;
 const USER_TOP_K_WIDE = 20;
+const CODE_TOP_K = 2;       // tight cap — past attempts shouldn't crowd KB
 const FINAL_TOP_K = 10;
 const MAX_CHUNK_CHARS = 1200; // hard cap injected into prompt per chunk
 
@@ -108,6 +109,13 @@ export async function retrieve(opts) {
     const userTop = willRerank ? USER_TOP_K_WIDE : USER_TOP_K_NARROW;
     const promises = [hybridSearchKb(question, kbTop, { vec, sourceFilter })];
     if (userId) promises.push(hybridSearchUserDocs(userId, question, userTop, { vec }));
+    // Per-user code kit: only relevant for coding/sql modes (or general,
+    // since coding follow-ups can come up in any chat). Keep CODE_TOP_K
+    // small so past attempts inform but don't dominate.
+    const wantsCode = !sourceFilter || mode === 'coding' || mode === 'sql' || mode === 'general';
+    if (userId && wantsCode) {
+      promises.push(hybridSearchUserCode(userId, question, CODE_TOP_K, { vec }));
+    }
     const results = await Promise.all(promises);
     let merged = results.flat();
     if (willRerank) {
@@ -177,6 +185,8 @@ export function formatRetrievedContext(chunks) {
   for (const c of chunks) {
     if (c.tier === 'kb') {
       lines.push(`[KB ${c.source} / ${c.topicTitle} / ${c.section}]`);
+    } else if (c.tier === 'code') {
+      lines.push(`[YOUR CODE / ${c.problemTitle} / ${c.language}]`);
     } else {
       lines.push(`[USER ${c.docKind}${c.section ? ' / ' + c.section : ''}]`);
     }

@@ -127,10 +127,11 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       const citations = retrieved.chunks.map((c) => ({
         tier: c.tier,
         source: c.source || null,
-        topicId: c.topicId || null,
-        topicTitle: c.topicTitle || null,
+        topicId: c.topicId || c.problemSlug || null,
+        topicTitle: c.topicTitle || c.problemTitle || null,
         section: c.section || null,
         docKind: c.docKind || null,
+        language: c.language || null,
         url: c.url || null,
         distance: c.distance,
       }));
@@ -445,10 +446,11 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       const citations = retrieved.chunks.map((c) => ({
         tier: c.tier,
         source: c.source || null,
-        topicId: c.topicId || null,
-        topicTitle: c.topicTitle || null,
+        topicId: c.topicId || c.problemSlug || null,
+        topicTitle: c.topicTitle || c.problemTitle || null,
         section: c.section || null,
         docKind: c.docKind || null,
+        language: c.language || null,
         url: c.url || null,
         distance: c.distance,
       }));

@@ -2,9 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const hybridKbMock = vi.fn();
 const hybridUserMock = vi.fn();
+const hybridUserCodeMock = vi.fn();
 vi.mock('../src/services/hybridRetrieval.js', () => ({
   hybridSearchKb: hybridKbMock,
   hybridSearchUserDocs: hybridUserMock,
+  hybridSearchUserCode: hybridUserCodeMock,
 }));
 
 const embedQueryMock = vi.fn();
@@ -13,6 +15,8 @@ vi.mock('../src/services/embeddings.js', () => ({ embedQuery: embedQueryMock }))
 beforeEach(() => {
   hybridKbMock.mockReset();
   hybridUserMock.mockReset();
+  hybridUserCodeMock.mockReset();
+  hybridUserCodeMock.mockResolvedValue([]);
   embedQueryMock.mockReset();
   embedQueryMock.mockResolvedValue(new Array(1536).fill(0.01));
   process.env.RAG_USE_WARM_KIT = 'false'; // disable warm kit for default tests
@@ -102,6 +106,7 @@ describe('retrieve with HyDE', () => {
     vi.doMock('../src/services/hybridRetrieval.js', () => ({
       hybridSearchKb: hybridKbMock,
       hybridSearchUserDocs: vi.fn(),
+      hybridSearchUserCode: vi.fn(),
     }));
     const { retrieve } = await import('../src/services/retrieval.js');
     await retrieve({ question: 'what is an SLO?', userId: null, useHyde: true });
@@ -118,6 +123,7 @@ describe('retrieve with HyDE', () => {
     vi.doMock('../src/services/hybridRetrieval.js', () => ({
       hybridSearchKb: vi.fn().mockResolvedValue([]),
       hybridSearchUserDocs: vi.fn(),
+      hybridSearchUserCode: vi.fn(),
     }));
     const { retrieve } = await import('../src/services/retrieval.js');
     await retrieve({ question: 'q', userId: null });
@@ -136,6 +142,7 @@ describe('retrieve with reranker', () => {
         { tier: 'kb', id: 'k2', content: 'B' },
       ]),
       hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
+      hybridSearchUserCode: vi.fn().mockResolvedValue([]),
     }));
     const rerankMock = vi.fn().mockImplementation((q, chunks) => Promise.resolve(chunks.slice().reverse()));
     vi.doMock('../src/services/reranker.js', () => ({ rerank: rerankMock }));
@@ -156,6 +163,7 @@ describe('retrieve with reranker', () => {
     vi.doMock('../src/services/hybridRetrieval.js', () => ({
       hybridSearchKb: vi.fn().mockResolvedValue([{ tier: 'kb', id: 'k1', content: 'A' }]),
       hybridSearchUserDocs: vi.fn(),
+      hybridSearchUserCode: vi.fn(),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');
@@ -176,6 +184,7 @@ describe('retrieve with warm kit', () => {
     vi.doMock('../src/services/hybridRetrieval.js', () => ({
       hybridSearchKb: hybridKbMock,
       hybridSearchUserDocs: vi.fn(),
+      hybridSearchUserCode: vi.fn(),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     vi.doMock('../src/services/retrievalLogger.js', () => ({ logRetrieval: vi.fn().mockResolvedValue(undefined) }));
@@ -194,6 +203,7 @@ describe('retrieve with warm kit', () => {
     vi.doMock('../src/services/hybridRetrieval.js', () => ({
       hybridSearchKb: hybridKbMock,
       hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
+      hybridSearchUserCode: vi.fn().mockResolvedValue([]),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     vi.doMock('../src/services/retrievalLogger.js', () => ({ logRetrieval: vi.fn().mockResolvedValue(undefined) }));
@@ -213,6 +223,7 @@ describe('retrieve writes to retrievalLogger', () => {
     vi.doMock('../src/services/hybridRetrieval.js', () => ({
       hybridSearchKb: vi.fn().mockResolvedValue([{ tier: 'kb', id: 'k1', content: 'a' }]),
       hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
+      hybridSearchUserCode: vi.fn().mockResolvedValue([]),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');
@@ -239,6 +250,7 @@ describe('retrieve writes to retrievalLogger', () => {
     vi.doMock('../src/services/hybridRetrieval.js', () => ({
       hybridSearchKb: vi.fn(),
       hybridSearchUserDocs: vi.fn(),
+      hybridSearchUserCode: vi.fn(),
     }));
     const { retrieve } = await import('../src/services/retrieval.js');
     await retrieve({ question: 'q', userId: 7 });
@@ -255,6 +267,7 @@ describe('retrieve writes to retrievalLogger', () => {
     vi.doMock('../src/services/hybridRetrieval.js', () => ({
       hybridSearchKb: vi.fn().mockImplementation(() => new Promise((res) => setTimeout(() => res([]), 500))),
       hybridSearchUserDocs: vi.fn(),
+      hybridSearchUserCode: vi.fn(),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');
@@ -274,6 +287,7 @@ describe('retrieve.lowConfidence', () => {
     vi.doMock('../src/services/hybridRetrieval.js', () => ({
       hybridSearchKb: vi.fn().mockResolvedValue([]),
       hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
+      hybridSearchUserCode: vi.fn().mockResolvedValue([]),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');
@@ -290,6 +304,7 @@ describe('retrieve.lowConfidence', () => {
         { tier: 'kb', id: 'k1', content: 'a', rrfScore: 0.05 },
       ]),
       hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
+      hybridSearchUserCode: vi.fn().mockResolvedValue([]),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');
@@ -306,6 +321,7 @@ describe('retrieve.lowConfidence', () => {
         { tier: 'kb', id: 'k1', content: 'a', rrfScore: 0.01 },
       ]),
       hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
+      hybridSearchUserCode: vi.fn().mockResolvedValue([]),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');
@@ -320,6 +336,7 @@ describe('retrieve.lowConfidence', () => {
     vi.doMock('../src/services/hybridRetrieval.js', () => ({
       hybridSearchKb: vi.fn().mockImplementation(() => new Promise((res) => setTimeout(() => res([]), 500))),
       hybridSearchUserDocs: vi.fn(),
+      hybridSearchUserCode: vi.fn(),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');
