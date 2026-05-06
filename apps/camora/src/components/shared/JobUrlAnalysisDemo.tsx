@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const F = {
-  display: "'Source Sans 3', sans-serif",
-  body: "'Inter', sans-serif",
-  mono: "'Source Code Pro', monospace",
+  display: 'var(--font-display)',
+  body: 'var(--font-sans)',
+  mono: 'var(--font-mono)',
 };
 const accent = 'var(--cam-primary)';
 

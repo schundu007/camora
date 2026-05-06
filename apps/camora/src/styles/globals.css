@@ -1242,6 +1242,13 @@ img { max-width: 100%; height: auto; }
   }
   .celebration-badge[data-state="in"] { transform: scale(1) !important; }
   .celebration-toast[data-state="in"] { transform: translate(-50%, 0) !important; }
+
+  /* Page-level entrance and staggered card animations */
+  main, [role="main"] { animation: none; }
+  .solution-cards-appear > *, .design-result-appear > * { animation: none; }
+
+  /* Continuous ambient animations */
+  .shimmer { animation: none; background: var(--bg-elevated); }
 }
 
 /* ───────────────────────────────────────────────────────────────────
@@ -1381,6 +1388,78 @@ img { max-width: 100%; height: auto; }
   font-family: var(--font-sans);
   font-feature-settings: 'ss01', 'ss02', 'cv01', 'cv02';
   color: var(--text-primary);
+}
+
+/* ── Visualization figcaption — long-form figure prose ────────────
+ * The viz items in topic pages (DevOps, SRE, etc.) carry substantial
+ * editorial body text inside the figcaption, not just a label. The
+ * old inline classes (text-[14px] title + text-[13px] body) collapsed
+ * the hierarchy into a 1px gap and rendered outside .prep-content's
+ * font-feature settings, costing legibility on the surface where
+ * sustained reading actually happens.
+ *
+ * Ramp: 10px mono eyebrow -> 18px display title (1.125 ratio over
+ * 16px body) -> 16px sans body @ 1.7 line-height, max 70ch measure.
+ * All families come from --font-* tokens; no hardcoded values. */
+.viz-caption {
+  font-family: var(--font-sans);
+  font-feature-settings: 'ss01', 'ss02', 'cv01', 'cv02';
+  padding: 1.125rem 1.5rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in oklab, var(--bg-elevated) 60%, transparent);
+}
+.viz-caption-eyebrow {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.625rem;
+}
+.viz-caption-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.125rem;             /* 18px */
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--text-primary);
+  text-wrap: balance;
+}
+.viz-caption-body {
+  margin-top: 0.875rem;
+  max-width: 70ch;
+  font-size: 1rem;                 /* 16px */
+  line-height: 1.7;
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+.viz-caption-body p { margin: 0 0 0.875rem; }
+.viz-caption-body p:last-child { margin-bottom: 0; }
+.viz-caption-body strong { color: var(--text-primary); font-weight: 700; }
+.viz-caption-body em { color: var(--text-secondary); font-style: italic; }
+.viz-caption-body code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--cam-primary) 10%, transparent);
+  color: var(--text-primary);
+}
+.viz-caption-body ul,
+.viz-caption-body ol {
+  margin: 0.25rem 0 0.875rem 1.25rem;
+  padding: 0;
+}
+.viz-caption-body li { margin-bottom: 0.5rem; line-height: 1.65; }
+.viz-caption-body li:last-child { margin-bottom: 0; }
+/* Narrower viewports: tighter padding, slightly smaller display title.
+   Body stays at 16px so reading comfort never drops below the floor. */
+@media (max-width: 768px) {
+  .viz-caption { padding: 1rem 1.125rem; }
+  .viz-caption-title { font-size: 1.0625rem; }
 }
 
 /* ── Body typography ─────────────────────────────────────────────── */

@@ -1,7 +1,7 @@
 import React from 'react';
 
 const ACCENT = 'var(--cam-primary)';
-const MONO = "'Source Code Pro', monospace";
+const MONO = 'var(--font-mono)';
 
 export function CardAnimationStyles() {
   return (
