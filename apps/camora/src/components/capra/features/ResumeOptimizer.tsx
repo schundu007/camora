@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
@@ -36,9 +36,47 @@ export default function ResumeOptimizer() {
   const [copied, setCopied] = useState(false);
 
   const [fetchingJd, setFetchingJd] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Generate inline PDF preview once streaming finishes
+  useEffect(() => {
+    if (loading) return;
+    const text = activeTab === 'resume' ? optimizedResume : activeTab === 'coverLetter' ? coverLetter : '';
+    if (!text) return;
+
+    let cancelled = false;
+    (async () => {
+      const { default: jsPDF } = await import('jspdf');
+      if (cancelled) return;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      const pageLines = doc.splitTextToSize(text, 180);
+      let y = 20;
+      for (const line of pageLines as string[]) {
+        if (y > 280) { doc.addPage(); y = 20; }
+        doc.text(line, 15, y);
+        y += 6;
+      }
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      if (cancelled) { URL.revokeObjectURL(url); return; }
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = url;
+      setPreviewUrl(url);
+    })();
+
+    return () => { cancelled = true; };
+  }, [loading, activeTab]);
+
+  // Revoke blob URL on unmount
+  useEffect(() => {
+    return () => { if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current); };
+  }, []);
 
   const getOutputContent = useCallback(() => {
     switch (activeTab) {
@@ -61,6 +99,7 @@ export default function ResumeOptimizer() {
     setLoading(true);
     setError(null);
     setter('');
+    setPreviewUrl(null);
 
     // Abort any in-flight request
     if (abortRef.current) {
@@ -804,9 +843,10 @@ export default function ResumeOptimizer() {
             background: 'var(--bg-elevated)',
             border: '1px solid var(--border)',
             borderRadius: '10px',
-            padding: '20px',
-            overflowY: 'auto',
+            overflow: 'hidden',
             minHeight: '400px',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
           {loading ? (
@@ -816,11 +856,11 @@ export default function ResumeOptimizer() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                height: '100%',
+                flex: 1,
                 gap: '16px',
+                padding: '20px',
               }}
             >
-              {/* Spinner */}
               <div
                 style={{
                   width: '36px',
@@ -831,32 +871,34 @@ export default function ResumeOptimizer() {
                   animation: 'resumeOptimizerSpin 0.8s linear infinite',
                 }}
               />
-              <span
-                style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}
-              >
+              <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
                 {activeTab === 'resume'
                   ? 'Optimizing your resume...'
                   : activeTab === 'coverLetter'
                     ? 'Generating cover letter...'
                     : 'Calculating ATS score...'}
               </span>
-              {/* Inline keyframes */}
-              <style>{`
-                @keyframes resumeOptimizerSpin {
-                  to { transform: rotate(360deg); }
-                }
-              `}</style>
+              <style>{`@keyframes resumeOptimizerSpin { to { transform: rotate(360deg); } }`}</style>
             </div>
+          ) : previewUrl && (activeTab === 'resume' || activeTab === 'coverLetter') ? (
+            <iframe
+              src={previewUrl}
+              title="Document preview"
+              style={{ flex: 1, width: '100%', border: 'none', minHeight: '600px' }}
+            />
           ) : outputContent ? (
             <pre
               style={{
                 margin: 0,
+                padding: '20px',
                 fontFamily: "'Source Code Pro', monospace",
                 fontSize: '13px',
                 lineHeight: '1.7',
                 color: 'var(--text-primary)',
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
+                overflowY: 'auto',
+                flex: 1,
               }}
             >
               {outputContent}
@@ -868,7 +910,8 @@ export default function ResumeOptimizer() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                height: '100%',
+                flex: 1,
+                padding: '20px',
                 gap: '12px',
                 color: 'var(--text-muted)',
               }}
