@@ -17,7 +17,7 @@ The distinction between concurrency and parallelism matters: concurrency is abou
       basicImplementation: {
         title: 'Process vs Thread',
         description: 'Concurrency manages multiple tasks through time-slicing (illusion of parallelism). Parallelism executes tasks truly simultaneously on multiple cores. Processes have isolated memory (higher overhead, IPC needed). Threads share memory within a process (lower overhead, need synchronization).',
-        svgTemplate: 'concurrencyFundamentals'
+        diagramSrc: '/diagrams/concurrency/concurrency-fundamentals.png',
       },
 
       coreEntities: [
@@ -183,7 +183,7 @@ The distinction between concurrency and parallelism matters: concurrency is abou
       basicImplementation: {
         title: 'Producer-Consumer Pattern',
         description: 'Producers add items to a bounded buffer while consumers remove them. Uses semaphores (empty_slots, filled_slots) and mutex for synchronization. Producer: wait(empty)→lock→add→unlock→signal(filled). Consumer: wait(filled)→lock→remove→unlock→signal(empty).',
-        svgTemplate: 'producerConsumer'
+        diagramSrc: '/diagrams/concurrency/producer-consumer.png',
       },
 
       problems: [
@@ -266,7 +266,7 @@ Each fork starts "dirty." A philosopher requests forks from neighbors. If a neig
       basicImplementation: {
         title: 'Thread Pool Architecture',
         description: 'Managing worker threads efficiently with task queue and bounded concurrency',
-        svgTemplate: 'threadPool',
+        diagramSrc: '/diagrams/concurrency/thread-pool.png',
         architecture: `![Thread pool — submitter, queue, workers, results](/diagrams/systemdesign/thread-pool.png)
 
 The pool has three regions:
@@ -471,7 +471,7 @@ Java's ForkJoinPool is the backbone of parallel streams and CompletableFuture. U
       basicImplementation: {
         title: 'Fork/Join Architecture',
         description: 'Recursive decomposition with work-stealing across worker threads. Each worker has a deque: it pushes/pops its own tasks from one end, while thieves steal from the other end. This minimizes contention between the task owner and stealers.',
-        svgTemplate: 'forkJoin'
+        diagramSrc: '/diagrams/concurrency/fork-join.png',
       },
 
       coreEntities: [
