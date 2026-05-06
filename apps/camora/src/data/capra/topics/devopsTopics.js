@@ -17683,4 +17683,264 @@ These are answers an APM-fluent platform/SRE engineer should give without prepar
     ],
   },
 
+  {
+    id: 'ebpf-observability',
+    title: 'eBPF Observability — Cilium Hubble, Pixie, Parca, Falco',
+    icon: 'activity',
+    color: '#f97316',
+    questions: 5,
+    description: 'Kernel-level observability without code changes. eBPF runs verified programs at kprobes/uprobes/tracepoints/XDP, attaches them to syscalls and network paths, and exports telemetry to user-space. Cilium Hubble (L3/L4/L7 network flows), Pixie (in-cluster auto-telemetry), Parca/Pyroscope (continuous profiling), Falco/Tetragon (runtime security), Kepler (power).',
+    visualizations: [
+      {
+        title: 'eBPF as an observability primitive',
+        description: `eBPF (extended Berkeley Packet Filter) is the substrate underneath the modern observability tool generation. Walking the model:
+
+What it actually is. eBPF lets you load small programs into the running Linux kernel, attached to specific kernel events. The programs are verified for safety (bounded loops, no arbitrary memory access, no kernel panics), JIT-compiled to native code, and run with near-zero overhead — typically 1-3% CPU at production load.
+
+Attach points (where programs run):
+- kprobes / kretprobes: any kernel function entry/exit. Trace tcp_sendmsg, ext4_file_write_iter, schedule(), anything.
+- uprobes / uretprobes: user-space function entry/exit in a target binary. Trace SSL_read in libssl to decrypt TLS, malloc/free, application functions.
+- tracepoints: stable kernel-defined events (syscall enter/exit, scheduler events, page faults). Preferred over kprobes — survive kernel upgrades.
+- XDP (eXpress Data Path): runs at the NIC driver before sk_buff allocation. Used for DDoS filtering, load balancing (Katran), Cilium L4 LB.
+- tc (traffic control): network packet processing at the qdisc layer. Used for L7 visibility, network policy enforcement.
+- LSM (Linux Security Module) hooks: kernel security checks. Used by Tetragon, Tracee for runtime security.
+- perf events: CPU sampling, hardware counters. Used by Parca, Pyroscope for continuous profiling.
+- USDT (User Statically-Defined Tracing): probe points compiled into binaries (Postgres, Node.js, Python). Stable, intentional probe points.
+
+Maps: kernel ↔ user-space shared memory. eBPF programs write events into ring buffers / hash maps; user-space agents read them. This is how telemetry escapes the kernel without context switches.
+
+Verifier: rejects unsafe programs at load time. Bounded loops only (proven to terminate), all memory accesses must be checked, no NULL derefs, complexity limits (1M instructions verified). The price of safety: some patterns won't compile and require rewrites.
+
+CO-RE (Compile Once, Run Everywhere): BPF programs use BTF (BPF Type Format) to relocate field accesses at load time across kernel versions. Lets one binary work across kernel 5.4 → 6.x without rebuilding. Critical for portable tooling (Cilium, Falco distribute single binaries).
+
+Why this rewrites observability. Old model: instrument every app with SDKs, run sidecars, pay 20-50% latency tax. New model: run an eBPF agent on the node, see everything kernel-level. No app changes. No language-specific SDKs. Works the same for Go, Rust, Python, Java, COBOL. The kernel is the universal instrumentation layer.
+
+Limits. Need privileged container or specific capabilities (CAP_BPF, CAP_PERFMON in 5.8+; CAP_SYS_ADMIN before). L7 protocol parsing (HTTP/2, gRPC, Kafka) is per-protocol code you have to write or rely on a tool that wrote it. TLS visibility requires uprobing libssl (BoringSSL/Rustls have different uprobe layouts). Managed K8s sometimes restricts eBPF (GKE Sandbox, EKS Bottlerocket variants).`,
+        image: '/diagrams/devops/o6-ebpf.png',
+      },
+      {
+        title: 'eBPF observability tool landscape',
+        description: `The major eBPF-powered observability tools, what each one does, and when you reach for it:
+
+Cilium Hubble (network observability):
+- L3/L4 flow logs: source → dest, protocol, port, verdict, duration. From kernel, no app changes.
+- L7 visibility: HTTP, gRPC, Kafka, DNS — Hubble parses these in eBPF and emits structured flow events.
+- Service map: auto-built from flow data; shows which services talk to which, error rates, P99 latency.
+- DNS observability: every kube-dns lookup, every NXDOMAIN, every slow resolution surfaced.
+- Network policy enforcement (Cilium proper, not just Hubble): identity-based (SA, label) policies in eBPF — orders of magnitude faster than iptables.
+- Backed by Isovalent (acquired by Cisco 2024). Default CNI on GKE Dataplane v2, EKS optional, AKS optional. Largest commercial eBPF deployment.
+
+Pixie (in-cluster auto-observability):
+- Drop a DaemonSet, get full telemetry: HTTP request/response bodies, MySQL/Postgres queries, gRPC calls, JVM heap, CPU profiles.
+- PxL: SQL-like query language to ask ad-hoc questions across the cluster. No persistent storage by default — last ~24h kept in memory.
+- Open-source under New Relic. Best for "what just happened in the last hour" debugging without setup.
+- Tradeoff: not designed for long-term retention or compliance archival. Pair with another stack for that.
+
+Parca (continuous profiling):
+- Samples on-CPU stack traces from every process via perf events + eBPF.
+- Builds flame graphs across the whole fleet. Compare profiles between deploys. Find the function that regressed.
+- Native pprof format. Interoperates with Pyroscope, Datadog Profiler, Grafana Tempo profiling.
+- Polar Signals (commercial behind it). Open-source server.
+
+Pyroscope (profiling, broader):
+- Continuous profiling, multi-language. Eats lang profilers (Go pprof, py-spy, async-profiler) AND eBPF profiles.
+- Now part of Grafana Labs (acquired 2023). Integrated with Grafana, Tempo, Loki.
+
+Falco (runtime security observability):
+- Syscall-level rule engine. "Alert if a shell is spawned in a container", "alert if /etc/shadow is read", "alert if outbound connection to X".
+- Originally libsinsp + kernel module; modern Falco uses libbpf (eBPF backend) by default.
+- CNCF graduated. Sysdig commercial offering builds on it.
+
+Tetragon (security + enforcement):
+- Built by Isovalent on top of Cilium's eBPF infrastructure.
+- Goes further than Falco: not just observe, also enforce in-kernel (kill process, block syscall) via signal injection.
+- Lower overhead than Falco (no event copy to user-space until after policy decision).
+
+Kepler (Kubernetes-aware energy):
+- Estimates per-pod CPU, GPU, RAM energy consumption via eBPF + RAPL counters + ML model.
+- Reports kWh per workload — cloud-FinOps and sustainability use case.
+- Sandbox in CNCF.
+
+Tracee (security tracing):
+- Aqua Security's open-source tool. eBPF-based runtime security and forensics. Records syscalls, network, file access for incident replay.
+
+bcc / bpftrace (DIY tracing):
+- Sandbox tools. bpftrace = awk-like one-liners ("kprobe:tcp_sendmsg { @[comm] = count(); }").
+- Brendan Gregg's bcc collection: hundreds of canned scripts (execsnoop, biolatency, opensnoop). What SREs reach for during deep debugging when canned dashboards don't show the answer.
+
+Choosing among them. Network: Cilium Hubble. Application telemetry without instrumentation: Pixie. Continuous profiling: Parca or Pyroscope. Runtime security: Falco (observe-only) or Tetragon (observe + enforce). Custom one-off questions: bpftrace.`,
+        image: '/diagrams/devops/o6-ebpf.png',
+      },
+      {
+        title: 'eBPF vs sidecar vs agent — telemetry tradeoffs',
+        description: `Three deployment models for cluster-level observability, three different tradeoff profiles:
+
+Sidecar model (Envoy / Istio-proxy / linkerd-proxy):
+- Per-pod userspace proxy. Every packet to/from the app goes through it.
+- Capabilities: full L7 visibility (HTTP/2, gRPC, mTLS, retries, circuit breaking, traffic shaping). The proxy can do anything userspace TCP can.
+- Overhead: 5-50ms p99 latency added per hop, ~10-50% CPU/memory per pod (Envoy is not free). Multiplies in microservices: 5 hops = 5x sidecar tax.
+- Setup: requires service mesh control plane (Istio CP, linkerd CP). Pod injection via webhook. Day-2 ops are real work.
+- Best for: when you want L7 features (retries, circuit breaking, mTLS, traffic shifting) AND telemetry. The telemetry is a side benefit; you're paying for the proxy primarily for the runtime features.
+
+DaemonSet agent model (Datadog Agent, New Relic Infrastructure, OTel Collector):
+- One agent pod per node, reads from app processes (file logs, stdout, /proc, /sys, instrumentation endpoints).
+- Capabilities: depends on what apps emit. Logs from stdout/files: yes. Metrics from /metrics endpoint: yes. Traces from app SDK + OTLP: yes. Random network flows between pods on same node: not visible.
+- Overhead: per-node, amortized across pods. Typically 100-500MB RAM / 0.1-0.5 CPU per node.
+- Setup: easy. DaemonSet, RBAC, hostPath mounts, configmap.
+- Best for: traditional observability where apps cooperate (have SDKs, write logs, expose /metrics). Fails for legacy apps you can't instrument.
+
+eBPF model (Cilium Hubble, Pixie, Parca, Falco):
+- Per-node DaemonSet, but the agent loads kernel programs and observes from kernel space.
+- Capabilities: every packet, every syscall, every CPU sample — without app cooperation. Sees TLS-decrypted traffic if uprobe libssl. Sees network flows between pods on different nodes. Sees process spawns, file opens, namespace transitions.
+- Overhead: 1-5% CPU at typical load. Higher if you sample aggressively (full perf events, continuous profiling at high frequency).
+- L7 limitation: HTTP/1 and DNS easy. HTTP/2, gRPC require parser. TLS requires uprobing or session-key extraction.
+- Setup: needs privileged or CAP_BPF/CAP_PERFMON. Requires kernel 5.4+ (5.15+ recommended). Some managed K8s offerings restrict (Knative, Cloud Run).
+- Best for: visibility into apps you can't change (legacy, third-party, vendored), network-level observability, low-overhead at scale, runtime security.
+
+Hybrid is the real-world answer. Most large platforms run all three:
+- Service mesh (sidecar) for selected service-to-service traffic that needs mTLS + circuit breaking.
+- DaemonSet agent for app-emitted telemetry (logs, metrics, traces from apps with SDKs).
+- eBPF tooling for network flow logs (Hubble), continuous profiling (Parca), and runtime security (Falco/Tetragon) — the things sidecars and agents can't see cheaply.
+
+Specifically: eBPF doesn't replace OTel SDKs for application traces. It complements them. You still want app-emitted spans for "what was the SQL query?", "what user ID was this request for?". eBPF gives you the floor — the things every connection does at kernel level — so apps don't need to instrument network plumbing. The two compose well.`,
+      },
+      {
+        title: 'eBPF gotchas and operational reality',
+        description: `What goes wrong with eBPF in production, and what you wish you'd known before betting on it:
+
+Kernel version politics. eBPF features are tied to kernel version:
+- 4.18: production-viable baseline (CO-RE landed in 5.4 though, makes life much easier).
+- 5.4: BTF (BPF Type Format), CO-RE — single binary across kernel versions. Everything modern assumes 5.4+.
+- 5.8: CAP_BPF / CAP_PERFMON split out from CAP_SYS_ADMIN.
+- 5.10: BPF LSM, sleepable BPF programs, ring buffer.
+- 5.15: long-term support, modern eBPF baseline. RHEL 9, Ubuntu 22.04, Amazon Linux 2023.
+- 6.x: kfunc, more attach points, fentry/fexit (faster than kprobes).
+
+If you're on a managed K8s with 5.4 (older Amazon Linux 2, older GKE), you're fine for most tools but lose some features. EKS on Amazon Linux 2023 = 6.1, easy. GKE Container-Optimized OS = recent kernels. AKS depends on node image.
+
+Permission model. Loading BPF programs requires capabilities. Three options:
+- privileged: true — works always but anti-pattern, breaks pod security standards.
+- CAP_BPF + CAP_PERFMON + CAP_NET_ADMIN — modern minimum for most observability tools. Pod security policies must allow.
+- specific seccomp + AppArmor profiles — possible but laborious.
+
+Managed K8s sometimes blocks. GKE Autopilot historically blocked BPF, recent versions allow specific capabilities. Cloud Run and serverless don't expose kernel — eBPF doesn't apply.
+
+Verifier surprises. The verifier rejects programs that humans look at and think "this is fine":
+- Loops with non-trivial bounds — must be unrolled or use bpf_loop helper.
+- Pointer arithmetic across map boundaries — must be re-bounds-checked after every operation.
+- Stack frame too large — 512-byte BPF stack limit per program; use map storage instead.
+- Complexity limit — programs over ~1M verifier instructions reject. Real programs hit this with deep parsers.
+
+Debugging is hard. The kernel doesn't give friendly errors. Tools:
+- bpftool prog list / bpftool prog show — what's loaded.
+- bpftool map dump — current map contents.
+- bpf_printk in your program → /sys/kernel/debug/tracing/trace_pipe.
+- libbpf debug logs — verbose verifier output. Read it slowly.
+- Vector / Cilium / etc. each have their own diagnostic dashboards. Use them.
+
+L7 protocol parsing is per-protocol work. HTTP/1 is easy. HTTP/2 requires HPACK header decompression in BPF — non-trivial. gRPC adds protobuf parsing on top of HTTP/2 — most tools punt and only parse headers. Kafka, Postgres wire protocol — each requires a parser someone wrote. Cilium covers HTTP/1+2, gRPC, Kafka, DNS, MySQL/Postgres. Pixie covers HTTP/1+2, gRPC, MySQL, PgSQL, Cassandra, Redis, NATS, Mongo. Outside that list, you're writing the parser.
+
+TLS visibility tradeoff. Three approaches:
+- uprobe libssl (SSL_read / SSL_write): works for OpenSSL/BoringSSL with consistent symbols. Breaks if app statically links a custom build. BoringSSL on different versions can shift symbols.
+- Session key extraction (SSLKEYLOGFILE) → packet decode userspace: works for browsers; harder for servers without restart.
+- mTLS via Cilium identity: skip the TLS layer altogether — Cilium does L7 policy on identity, not bytes-on-wire. Good if you're in their model.
+
+Multi-architecture pain. AArch64 (ARM Graviton, M-series) eBPF was experimental for years. As of 2026 it's mostly stable for the major tools but expect occasional bugs. Test before assuming feature parity.
+
+Cost surprises. eBPF tools are usually low overhead, but:
+- Continuous profiling at 100Hz on every CPU → measurable CPU. Drop to 19Hz (Parca/Pyroscope default) or 10Hz.
+- Network flow log every connection at L7 → flow log volume can rival raw traffic in JSON. Sample. Aggregate.
+- Stack trace symbolization is expensive on the agent. Offload to a central symbolizer if at scale.
+
+Vendor lock vs. portability. Cilium, Pixie, Parca all open source. But running them well at scale = commercial support (Isovalent, New Relic, Polar Signals, Grafana). Same dynamic as Prometheus → Grafana Cloud — community core, paid ops. Plan for it; don't pretend you'll self-operate forever.
+
+Kernel updates are now load-bearing. With eBPF in your observability path, kernel rolls become CI events. A kernel deprecating an attach point = your tool breaks. Watch CO-RE compatibility releases of your tools before kernel upgrades.`,
+      },
+      {
+        title: 'Quick-fire interview answers — eBPF observability',
+        question: 'Quick-fire interview answers — eBPF observability.',
+        answer: `Rapid-fire facts.
+
+Q: What is eBPF in one sentence?
+A: Verified, JIT-compiled programs that run inside the Linux kernel at attach points (kprobes, tracepoints, XDP, perf events) and export telemetry to user-space via maps.
+
+Q: Why does it matter for observability?
+A: Zero application instrumentation, language-agnostic, near-zero overhead (~1-3% CPU). Replaces or complements sidecars and per-language SDKs.
+
+Q: kprobe vs tracepoint?
+A: kprobe attaches to any kernel function — flexible but breaks across kernel versions. Tracepoint is a stable kernel-defined event — survives upgrades. Prefer tracepoints.
+
+Q: What's CO-RE?
+A: Compile Once, Run Everywhere. Programs use BTF to relocate field accesses at load time. One binary works across kernel versions without rebuilding. Required for portable tooling.
+
+Q: Cilium Hubble?
+A: Network observability built on Cilium's eBPF datapath. L3/L4/L7 flow logs, DNS observability, auto-built service map. Default CNI on GKE Dataplane v2.
+
+Q: Pixie?
+A: In-cluster auto-observability — DaemonSet captures HTTP/gRPC/SQL traffic, JVM/CPU profiles, queryable via PxL. Last ~24h in memory. From New Relic.
+
+Q: Parca?
+A: Continuous CPU profiling via perf events + eBPF. Fleet-wide flame graphs. From Polar Signals. Pyroscope (Grafana) plays similar role with broader profiler ingest.
+
+Q: Falco vs Tetragon?
+A: Both runtime security via eBPF. Falco observes only and emits alerts. Tetragon also enforces in-kernel (kill process, block syscall) via signal injection.
+
+Q: Kepler?
+A: Kubernetes-aware energy estimator. Per-pod kWh from eBPF + RAPL + ML. FinOps and sustainability use case.
+
+Q: bpftrace?
+A: awk-like one-liner DSL for ad-hoc tracing. "kprobe:tcp_sendmsg { @[comm] = count(); }" — tells you which processes are sending TCP traffic, no setup.
+
+Q: Verifier rejects my program — why?
+A: Unbounded loops, untracked pointer arithmetic, stack > 512 bytes, complexity > 1M insns, missing NULL checks. Read libbpf verifier debug logs slowly.
+
+Q: Sidecar vs eBPF for L7?
+A: Sidecar (Envoy): full L7 features, 10-50% latency tax. eBPF: zero latency tax, but L7 parsing is per-protocol work. Hybrid is common: mesh for selected hops, eBPF for everything else.
+
+Q: Does eBPF replace OTel SDKs?
+A: No. eBPF gives you the kernel-level floor (network, syscalls, CPU). OTel SDKs give you app-level context (user ID, query, business semantics). They compose.
+
+Q: TLS visibility?
+A: uprobe libssl SSL_read/SSL_write to see decrypted bytes. Works for OpenSSL/BoringSSL. Breaks if app statically links a custom TLS lib.
+
+Q: Minimum kernel for production?
+A: 5.4 with BTF/CO-RE for tooling portability. 5.15+ for modern features (sleepable programs, BPF LSM). Most managed K8s offerings now ship 5.15+ on default node images.
+
+Q: Capabilities?
+A: CAP_BPF + CAP_PERFMON (kernel 5.8+), plus CAP_NET_ADMIN for networking. Avoid full privileged. PSPs / pod security standards must allow these.
+
+Q: Managed K8s gotchas?
+A: GKE Autopilot historically blocks BPF (recent loosening), GKE Sandbox / gVisor doesn't expose kernel, Cloud Run / Lambda / Fargate are out (no kernel access).
+
+Q: AArch64 support?
+A: Stable for major tools by 2026; was experimental for years. Test before assuming feature parity vs x86_64.
+
+Q: Most common eBPF cost surprise?
+A: Continuous profiling at 100Hz on every CPU → measurable CPU. Use 19Hz (default), aggregate stack traces, defer symbolization.
+
+Q: How do you debug eBPF in prod?
+A: bpftool prog/map list, bpf_printk → trace_pipe, libbpf verifier logs, tool-specific dashboards (Cilium status, Pixie API). Friendly tools? Few. Plan time.
+
+Q: When is eBPF the wrong choice?
+A: Pure userspace business semantics ("which user hit this endpoint?"), serverless / no-kernel-access platforms, environments where you can't get CAP_BPF, very old kernels (<5.4) that don't justify the upgrade.
+
+Q: eBPF for runtime security — Falco vs commercial?
+A: Falco (CNCF graduated) for the rule engine. Sysdig commercial wraps it with managed rules, response, integrations. Tetragon (Isovalent / Cisco) for in-kernel enforcement.
+
+Q: Latest eBPF trend 2026?
+A: GPU observability (NVIDIA's nvbpf), broader confidential-VM compatibility, BPF in Windows (Microsoft's eBPF for Windows project — different runtime, similar API surface).
+
+These are answers a kernel-fluent platform/SRE engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://ebpf.io/',
+      'https://docs.cilium.io/en/stable/overview/intro/',
+      'https://docs.px.dev/',
+      'https://www.parca.dev/',
+      'https://falco.org/docs/',
+      'https://tetragon.io/',
+    ],
+  },
+
 ];
