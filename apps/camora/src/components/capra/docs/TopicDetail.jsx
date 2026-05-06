@@ -2796,10 +2796,20 @@ export default function TopicDetail({
               <div className="pt-3 space-y-4">
                 {topicDetails.visualizations.map((viz, vi) => (
                   <figure key={vi} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
-                    <figcaption className="px-5 py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)]/40">
-                      <h4 className="text-[14px] font-semibold text-[var(--text-primary)] landing-display">{viz.title}</h4>
+                    <figcaption className="viz-caption">
+                      {/* Eyebrow gives the reader an at-a-glance progress
+                          marker through the diagram set, mirroring the
+                          PPT-slide numbering convention used elsewhere
+                          on the page. Stays inline-block so it sits
+                          flush above the title. */}
+                      <span className="viz-caption-eyebrow">
+                        {topicDetails.visualizations.length > 1
+                          ? `Diagram ${vi + 1} / ${topicDetails.visualizations.length}`
+                          : 'Diagram'}
+                      </span>
+                      <h4 className="viz-caption-title">{viz.title}</h4>
                       {viz.description && (
-                        <div className="mt-2 text-[13px] text-[var(--text-secondary)] landing-body leading-relaxed">
+                        <div className="viz-caption-body">
                           <FormattedContent content={viz.description} />
                         </div>
                       )}
