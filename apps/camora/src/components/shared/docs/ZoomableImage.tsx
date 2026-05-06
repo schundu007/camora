@@ -48,7 +48,24 @@ export default function ZoomableImage({
   const [open, setOpen] = useState(false);
   const [broken, setBroken] = useState(false);
 
-  if (broken) return null;
+  if (broken) {
+    return (
+      <div
+        className={`flex items-center justify-center rounded-xl ${className}`}
+        style={{
+          minHeight: 64,
+          background: 'var(--bg-elevated)',
+          border: '1px dashed var(--border)',
+          color: 'var(--text-muted)',
+          fontSize: 12,
+          fontFamily: 'var(--font-mono)',
+          ...frameStyle,
+        }}
+      >
+        diagram not generated yet
+      </div>
+    );
+  }
 
   // Esc to close + body scroll lock while modal open.
   useEffect(() => {

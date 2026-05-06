@@ -35,12 +35,21 @@ export default function OnThisPage({
     // element — works whether the page scrolls on window or inside an
     // inner overflow-y:auto container like Capra's #app-scroll-container.
     const handler = () => {
+      // Find the element that most recently scrolled past the offset line.
+      // Using "highest (least-negative) top" instead of "last in TOC order"
+      // so that DOM sections rendered out of TOC sequence (e.g. implementation
+      // block appearing before api-design in the JSX) don't hijack the active
+      // state while the user is still viewing the earlier section.
       let current: string | null = null;
+      let closestTop = -Infinity;
       for (const item of items) {
         const el = document.getElementById(item.id);
         if (!el) continue;
-        const top = el.getBoundingClientRect().top;
-        if (top - offset <= 0) current = item.id;
+        const top = el.getBoundingClientRect().top - offset;
+        if (top <= 0 && top > closestTop) {
+          closestTop = top;
+          current = item.id;
+        }
       }
       setActiveId(current ?? items[0].id);
     };
