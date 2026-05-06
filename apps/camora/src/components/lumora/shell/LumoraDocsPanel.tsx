@@ -2720,7 +2720,7 @@ export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void })
         {/* LeetCode-style sidebar header */}
         <div className="px-3 py-3" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[10px] font-bold uppercase tracking-wider text-white" style={{ fontFamily: "'Inter', sans-serif" }}>Interview Prep</h2>
+            <h2 className="text-[10px] font-bold uppercase tracking-wider text-white" style={{ fontFamily: "var(--font-sans)" }}>Interview Prep</h2>
             {/* Mobile-only collapse button so users can dismiss the
                 sidebar without picking a different section. Hidden on
                 ≥sm where the sidebar is permanent chrome. */}

@@ -944,7 +944,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             <span className="hidden sm:inline">Back</span>
           </button>
           <div className="h-4 w-px" style={{ background: 'rgba(255,255,255,0.25)' }} />
-          <span className="font-extrabold text-xs md:text-sm text-white" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Coding</span>
+          <span className="font-extrabold text-xs md:text-sm text-white" style={{ fontFamily: "var(--font-sans)" }}>Coding</span>
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-2">
@@ -1458,7 +1458,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                                     Copy
                                   </button>
                                 </div>
-                                <p className="px-2.5 py-2 text-[12px] leading-[1.55]" style={{ color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif", opacity: 1 }}>
+                                <p className="px-2.5 py-2 text-[12px] leading-[1.55]" style={{ color: 'var(--text-primary)', fontFamily: "var(--font-sans)", opacity: 1 }}>
                                   {activeSol.narration}
                                 </p>
                               </div>

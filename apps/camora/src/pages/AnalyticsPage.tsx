@@ -250,7 +250,7 @@ export default function AnalyticsPage() {
   }
   if (isAdmin === false) {
     return (
-      <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)]" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)]" style={{ fontFamily: "var(--font-sans)" }}>
         <div className="flex items-center justify-center py-32">
           <p className="text-[var(--text-muted)] text-lg">You don't have access to this page.</p>
         </div>
@@ -259,7 +259,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ fontFamily: "'Inter', system-ui, sans-serif", background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
+    <div className="min-h-screen" style={{ fontFamily: "var(--font-sans)", background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
       <SiteNav variant="dark" />
       {/* LeetCode hero band */}
       <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>

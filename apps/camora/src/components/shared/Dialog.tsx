@@ -161,7 +161,7 @@ function DialogOverlay({ pending, confirmBtnRef, onClose }: {
     >
       <div
         className="w-full max-w-md rounded-xl shadow-2xl overflow-hidden"
-        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', fontFamily: "'Inter', var(--font-sans)" }}
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', fontFamily: "var(--font-sans)" }}
       >
         {/* Body */}
         <div className="p-5 flex gap-3">

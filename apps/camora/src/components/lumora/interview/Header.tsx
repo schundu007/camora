@@ -132,7 +132,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   };
 
   return (
-    <header className="z-50 shrink-0" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', fontFamily: "'Inter', sans-serif" }}>
+    <header className="z-50 shrink-0" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', fontFamily: "var(--font-sans)" }}>
       {/* Row 1: Nav + Audio + Controls — horizontally scrollable */}
       <div className="flex items-center h-[42px] overflow-x-auto no-scrollbar">
         {/* Sidebar toggle */}
@@ -162,7 +162,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
 
         {/* Navigation — pill tabs with icon+label, Jakarta Sans bold */}
         <div data-tour="tabs" className="flex items-center h-full shrink-0 px-1" style={{ borderRight: '1px solid var(--border)' }}>
-          <Link to="/capra/prepare" className="flex items-center gap-1 px-2 py-1 mx-0.5 rounded-md text-[11px] transition-[background-color,color] active:scale-[0.98]" style={{ color: 'var(--text-muted)', fontFamily: "'Inter', sans-serif", fontWeight: 700 }} title="Prepare">
+          <Link to="/capra/prepare" className="flex items-center gap-1 px-2 py-1 mx-0.5 rounded-md text-[11px] transition-[background-color,color] active:scale-[0.98]" style={{ color: 'var(--text-muted)', fontFamily: "var(--font-sans)", fontWeight: 700 }} title="Prepare">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
             <span className="hidden xl:inline">Prepare</span>
           </Link>
@@ -170,8 +170,8 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
             <button key={tab.id} onClick={() => handleTabClick(tab.id)}
               className="flex items-center gap-1.5 px-2.5 py-1 mx-0.5 rounded-md text-[11px] font-bold transition-[background-color,color,box-shadow] active:scale-[0.98]"
               style={currentTab === tab.id
-                ? { background: 'var(--accent-subtle)', color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif", boxShadow: 'inset 0 0 0 1px var(--border)' }
-                : { color: 'var(--text-muted)', fontFamily: "'Inter', sans-serif" }}>
+                ? { background: 'var(--accent-subtle)', color: 'var(--text-primary)', fontFamily: "var(--font-sans)", boxShadow: 'inset 0 0 0 1px var(--border)' }
+                : { color: 'var(--text-muted)', fontFamily: "var(--font-sans)" }}>
               <span className="hidden md:inline">{TAB_ICONS[tab.id]}</span>
               <span>{tab.label}</span>
             </button>

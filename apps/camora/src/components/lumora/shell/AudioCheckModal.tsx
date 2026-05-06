@@ -263,7 +263,7 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
       aria-modal="true"
       aria-label="Audio check"
     >
-      <div className="w-full max-w-2xl rounded-xl shadow-2xl flex flex-col overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', fontFamily: "'Inter', var(--font-sans)", maxHeight: '92vh' }}>
+      <div className="w-full max-w-2xl rounded-xl shadow-2xl flex flex-col overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', fontFamily: "var(--font-sans)", maxHeight: '92vh' }}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
           <div className="flex items-center gap-2.5">

@@ -1451,7 +1451,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
             onKeyDown={e => { if (e.key === 'Enter' && input.trim()) handleSubmit(); }}
             placeholder="Type a question..."
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40 text-[16px] md:text-[10px]"
-            style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-primary)' }} disabled={streaming} />
+            style={{ fontFamily: "var(--font-sans)", color: 'var(--text-primary)' }} disabled={streaming} />
           {input.trim() && !streaming && (
             <button onClick={handleSubmit} className="w-9 h-9 md:w-6 md:h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--cam-primary)' }} aria-label="Send question">
               <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" className="w-4 h-4 md:w-3 md:h-3"><path d="M5 12h14M12 5l7 7-7 7" /></svg>

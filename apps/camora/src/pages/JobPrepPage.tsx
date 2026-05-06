@@ -520,7 +520,7 @@ export default function JobPrepPage() {
                   letterSpacing: '-0.01em',
                   lineHeight: 1.25,
                   margin: 0,
-                  fontFamily: "'Inter', system-ui, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   wordBreak: 'break-word',
                 }}>
                   {job.title}
@@ -617,7 +617,7 @@ export default function JobPrepPage() {
           {/* ── Tech Stack Extracted ── */}
           {techStack.length > 0 && (
             <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
-              <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "var(--font-sans)", display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ width: '4px', height: '16px', borderRadius: '2px', background: 'var(--accent)' }} />
                 Tech stack
               </h2>
@@ -665,7 +665,7 @@ export default function JobPrepPage() {
           {/* ── AI Analysis Insights (shown for URL-analyzed jobs) ── */}
           {urlAnalysis && (
             <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
-              <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "var(--font-sans)", display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ width: '4px', height: '16px', borderRadius: '2px', background: 'var(--accent)' }} />
                 AI analysis
               </h2>
@@ -701,7 +701,7 @@ export default function JobPrepPage() {
 
           {/* ── Recommended Study Path ── */}
           <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 6px', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 6px', fontFamily: "var(--font-sans)", display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ width: '4px', height: '16px', borderRadius: '2px', background: 'var(--accent)' }} />
               Recommended study path
             </h2>
@@ -724,7 +724,7 @@ export default function JobPrepPage() {
                   }}>
                     {round.icon}
                   </div>
-                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "'Inter', system-ui, sans-serif" }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "var(--font-sans)" }}>
                     {round.title}
                   </h3>
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>({round.estimate})</span>
@@ -741,7 +741,7 @@ export default function JobPrepPage() {
           {/* ── JD based Interview Preparation ── */}
           <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
             <div className="flex items-start justify-between mb-3">
-              <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, fontFamily: "var(--font-sans)", display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ width: '4px', height: '16px', borderRadius: '2px', background: 'var(--accent)' }} />
                 Interview prep material
               </h2>
@@ -771,7 +771,7 @@ export default function JobPrepPage() {
                   padding: '14px 24px',
                   cursor: 'pointer',
                   transition: 'background 0.15s',
-                  fontFamily: "'Inter', system-ui, sans-serif",
+                  fontFamily: "var(--font-sans)",
                 }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--accent-hover)'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--accent)'; }}
@@ -801,7 +801,7 @@ export default function JobPrepPage() {
                   borderRadius: '10px',
                   padding: '14px 24px',
                   cursor: 'not-allowed',
-                  fontFamily: "'Inter', system-ui, sans-serif",
+                  fontFamily: "var(--font-sans)",
                 }}
               >
                 <div
@@ -941,7 +941,7 @@ export default function JobPrepPage() {
                             fontSize: '14px',
                             fontWeight: 600,
                             color: isDone ? 'var(--text-primary)' : 'var(--text-muted)',
-                            fontFamily: "'Inter', system-ui, sans-serif",
+                            fontFamily: "var(--font-sans)",
                           }}>
                             {sec.label}
                           </div>
@@ -1021,7 +1021,7 @@ export default function JobPrepPage() {
 
           {/* ── Bottom CTAs ── */}
           <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "var(--font-sans)", display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ width: '4px', height: '16px', borderRadius: '2px', background: 'var(--accent)' }} />
               Ready to start?
             </h2>
@@ -1184,7 +1184,7 @@ const S = {
   ul: { margin: '0 0 8px', paddingLeft: '38px' },
   callout: (color: string) => ({ background: color === 'amber' ? 'var(--cam-gold-leaf-50)' : color === 'red' ? 'var(--bg-elevated)' : color === 'blue' || color === 'violet' ? 'var(--accent-subtle)' : 'var(--bg-elevated)', borderLeft: `3px solid ${color === 'green' ? 'var(--success)' : color === 'blue' ? 'var(--accent)' : color === 'amber' ? 'var(--warning)' : color === 'red' ? 'var(--danger)' : 'var(--accent)'}`, borderRadius: '6px', padding: '12px 16px', margin: '8px 0 12px 20px' }),
   divider: { borderBottom: '1px solid var(--border)', margin: '16px 0' },
-  code: { fontSize: '13px', background: '#0d1117', color: '#c9d1d9', borderRadius: '8px', padding: '14px 16px', overflow: 'auto' as const, margin: '8px 0 12px 20px', fontFamily: "'Source Code Pro', monospace" },
+  code: { fontSize: '13px', background: '#0d1117', color: '#c9d1d9', borderRadius: '8px', padding: '14px 16px', overflow: 'auto' as const, margin: '8px 0 12px 20px', fontFamily: "var(--font-mono)" },
   // When color is the bright gold, the text needs the darkened text-safe
   // sibling — gold-on-cream tint fails WCAG AA. Other passed colors
   // (lapis #0B5CFF / accent) already meet contrast at body weight.

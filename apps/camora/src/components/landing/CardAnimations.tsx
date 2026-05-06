@@ -588,7 +588,7 @@ export function FeaturePrepAnim() {
               fontSize="9"
               fontWeight="800"
               fill={n.filled ? '#FFFFFF' : ACCENT}
-              fontFamily="'Source Code Pro', monospace"
+              fontFamily="var(--font-mono)"
               letterSpacing="0.5"
             >
               {n.label}
@@ -606,7 +606,7 @@ export function FeaturePrepAnim() {
               fontSize="8"
               fontWeight="800"
               fill="#FFFFFF"
-              fontFamily="'Source Code Pro', monospace"
+              fontFamily="var(--font-mono)"
               letterSpacing="1"
             >
               {t}
@@ -683,7 +683,7 @@ export function FeatureMockInterviewAnim() {
                   textAnchor="middle"
                   fontSize="13"
                   fill="var(--text-secondary)"
-                  fontFamily="'Source Code Pro', monospace"
+                  fontFamily="var(--font-mono)"
                   fontWeight="800"
                   style={{ opacity: 0, animation: `feat-pop 0.3s ease-out ${g.delay + 0.3}s forwards` }}
                 >

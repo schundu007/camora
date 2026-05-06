@@ -406,7 +406,7 @@ export default function ChallengePage() {
                     <div key={i} className="transition-all duration-300" style={{ width: i === quizIdx ? 24 : 8, height: 8, borderRadius: 99, background: i < quizIdx ? 'var(--accent)' : i === quizIdx ? 'var(--accent)' : 'var(--bg-elevated)', boxShadow: 'none' }} />
                   ))}
                 </div>
-                <span style={{ fontFamily: "'Source Code Pro', monospace", fontSize: 22, fontWeight: 700, color: quizTimeLeft > 300 ? 'var(--accent)' : quizTimeLeft > 120 ? 'var(--text-muted)' : 'var(--danger)', textShadow: `0 0 12px ${quizTimeLeft > 300 ? 'var(--accent)' : quizTimeLeft > 120 ? 'var(--text-muted)' : 'var(--danger)'}` }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 700, color: quizTimeLeft > 300 ? 'var(--accent)' : quizTimeLeft > 120 ? 'var(--text-muted)' : 'var(--danger)', textShadow: `0 0 12px ${quizTimeLeft > 300 ? 'var(--accent)' : quizTimeLeft > 120 ? 'var(--text-muted)' : 'var(--danger)'}` }}>
                   {Math.floor(quizTimeLeft / 60)}:{(quizTimeLeft % 60).toString().padStart(2, '0')}
                 </span>
               </div>
@@ -752,7 +752,7 @@ export default function ChallengePage() {
           flex-direction: column;
           background: var(--bg-surface);
           color: var(--text-primary);
-          font-family: 'Source Sans 3', 'Inter', system-ui, sans-serif;
+          font-family: var(--font-sans);
           overflow-x: hidden;
         }
 
@@ -780,7 +780,7 @@ export default function ChallengePage() {
           background: rgba(255,255,255,0.06);
           border: 1px solid rgba(255,255,255,0.12);
           margin-bottom: 24px;
-          font-family: 'Source Code Pro', monospace;
+          font-family: var(--font-mono);
         }
         .ch-hero .ch-badge-dot {
           width: 6px; height: 6px; border-radius: 50%;
@@ -811,7 +811,7 @@ export default function ChallengePage() {
           width: 64px; height: 64px;
           display: flex; align-items: center; justify-content: center;
           border-radius: 12px;
-          font-family: 'Source Code Pro', monospace;
+          font-family: var(--font-mono);
           font-size: 28px; font-weight: 700;
           color: #FFFFFF;
           background: rgba(255,255,255,0.08);
@@ -835,7 +835,7 @@ export default function ChallengePage() {
           color: rgba(255,255,255,0.7) !important;
         }
         .ch-hero .ch-prize-amount {
-          font-family: 'Source Sans 3', sans-serif;
+          font-family: var(--font-sans);
           font-size: 48px; font-weight: 800;
           color: var(--cam-gold-leaf-lt);
         }
@@ -895,7 +895,7 @@ export default function ChallengePage() {
         .ch-section { padding: 60px 0; position: relative; }
         .ch-section:nth-child(even) { background: var(--bg-elevated); }
         .ch-section-head { text-align: center; margin-bottom: 32px; }
-        .ch-section-tag { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.2em; font-family: 'Source Code Pro', monospace; }
+        .ch-section-tag { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.2em; font-family: var(--font-mono); }
         .ch-section-title { font-size: clamp(1.8rem, 4vw, 2.75rem); font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; margin-top: 12px; text-transform: uppercase; }
         .ch-section-sub { font-size: 16px; color: var(--text-secondary); margin-top: 10px; line-height: 1.6; }
 
@@ -921,7 +921,7 @@ export default function ChallengePage() {
 
         .ch-code-editor {
           min-height: 180px; padding: 16px; border-radius: 8px;
-          font-family: 'Source Code Pro', monospace;
+          font-family: var(--font-mono);
           font-size: 14px; line-height: 1.6;
           background: var(--bg-surface);
           border: 1px solid var(--border);
@@ -959,7 +959,7 @@ export default function ChallengePage() {
           margin-bottom: 12px;
         }
         .ch-prize-amount-card {
-          font-family: 'Source Sans 3', sans-serif;
+          font-family: var(--font-sans);
           font-size: 36px; font-weight: 800; color: var(--text-primary);
           margin-bottom: 4px;
         }
@@ -994,7 +994,7 @@ export default function ChallengePage() {
         .ch-timeline-node {
           width: 36px; height: 36px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
-          font-family: 'Source Code Pro', monospace;
+          font-family: var(--font-mono);
           font-size: 14px; font-weight: 700; color: #FFFFFF;
           background: var(--node-color, var(--cam-primary));
           position: relative; z-index: 2;
