@@ -1,4 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
+import mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist';
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -172,24 +175,35 @@ export default function ResumeOptimizer() {
     streamResponse('/api/v1/resume/cover-letter', setCoverLetter);
   }
 
-  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = '';
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result;
-      if (typeof text === 'string') {
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+
+      if (ext === 'docx') {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        setResume(result.value);
+      } else if (ext === 'pdf') {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const pages: string[] = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          pages.push(content.items.map((item: { str?: string }) => item.str ?? '').join(' '));
+        }
+        setResume(pages.join('\n\n'));
+      } else {
+        const text = await file.text();
         setResume(text);
       }
-    };
-    reader.onerror = () => {
+    } catch {
       setError('Failed to read file. Please paste your resume instead.');
-    };
-    reader.readAsText(file);
-
-    // Reset file input so same file can be re-selected
-    e.target.value = '';
+    }
   }
 
   function handleCopy() {
