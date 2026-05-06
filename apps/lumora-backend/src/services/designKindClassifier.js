@@ -156,13 +156,16 @@ function lookupKnownProblemKind(q) {
  */
 export function classifyDesignKind(question, hint = null) {
   const q = String(question || '').toLowerCase();
-  // 1. Authoritative typology for known problems wins over everything.
+  // 1. Multi-cloud cues win over EVERYTHING (including known-problem
+  //    lookup). When the user explicitly frames a question as multi-CSP /
+  //    cross-cloud / heterogeneous, the diagram needs the side-by-side
+  //    grouped-cluster layout, even when the underlying problem is one
+  //    we have a typology for ("design twitter for multi-cloud failover"
+  //    is a multi-cloud question, not a stock Twitter system).
+  if (hasAnyCue(q, MULTI_CLOUD_CUES)) return 'multi_cloud';
+  // 2. Authoritative typology for known problems.
   const known = lookupKnownProblemKind(q);
   if (known) return known;
-  // 2. Multi-cloud cues trump infra/app cues — "design k8s on multiple
-  //    cloud providers" is a multi-cloud question, even though it also
-  //    mentions infrastructure-y things.
-  if (hasAnyCue(q, MULTI_CLOUD_CUES)) return 'multi_cloud';
   // 3-5. Cues, then hint.
   if (hasAnyCue(q, INFRA_CUES)) return 'infrastructure';
   if (hasAnyCue(q, APP_CUES)) return 'application';

@@ -118,4 +118,30 @@ describe('classifyDesignKind', () => {
     // "Kafka client OOP design" — infra wins
     expect(classifyDesignKind('design a kafka producer client in OOP')).toBe('infrastructure');
   });
+
+  describe('Phase 3 — multi_cloud archetype (heterogeneous CSP questions)', () => {
+    it('routes explicit multi-cloud / heterogeneous-CSP questions to multi_cloud', () => {
+      expect(classifyDesignKind('design a multi-cloud failover strategy')).toBe('multi_cloud');
+      expect(classifyDesignKind('design a multicloud k8s control plane')).toBe('multi_cloud');
+      expect(classifyDesignKind('design k8s on heterogeneous cloud providers')).toBe('multi_cloud');
+      expect(classifyDesignKind('provision GPU clusters on arbitrary cloud providers')).toBe('multi_cloud');
+      expect(classifyDesignKind('CSP A might be AWS-like, CSP B might give cluster IPs in a Google Doc')).toBe('multi_cloud');
+      expect(classifyDesignKind('design a hybrid cloud system bridging AWS and GCP')).toBe('multi_cloud');
+      expect(classifyDesignKind('cross-cloud k8s networking')).toBe('multi_cloud');
+    });
+
+    it('multi_cloud cues beat infra/app cues when both appear', () => {
+      // "load balancer for multi-cloud" — multi_cloud wins because the
+      // multi-cloud framing is what makes the diagram different.
+      expect(classifyDesignKind('design a load balancer for multi-cloud failover')).toBe('multi_cloud');
+      // "rate limiter cross-cloud" — same logic.
+      expect(classifyDesignKind('design a cross-cloud rate limiter')).toBe('multi_cloud');
+    });
+
+    it('does NOT misfire on single-CSP questions that mention a provider', () => {
+      // Mentions AWS but isn't multi-cloud — should still be system.
+      expect(classifyDesignKind('design Twitter on AWS')).toBe('system');
+      expect(classifyDesignKind('design a payment system on GCP')).toBe('system');
+    });
+  });
 });
