@@ -211,7 +211,7 @@ A B-tree is a self-balancing tree where each node corresponds to a fixed-size di
     basicImplementation: {
       title: 'B-tree Storage Engine',
       description: 'Classic storage engine using a B-tree for primary key lookups, with a buffer pool caching disk pages in memory. Suitable for read-heavy OLTP workloads with predictable latency requirements.',
-      svgTemplate: 'singleServer',
+      diagramSrc: '/diagrams/fundamentals/single-server.png',
       problems: [
         'Write amplification from full-page rewrites on small updates',
         'Page splits cause random I/O and briefly lock the tree',
@@ -223,7 +223,7 @@ A B-tree is a self-balancing tree where each node corresponds to a fixed-size di
     advancedImplementation: {
       title: 'LSM-tree with Tiered Compaction',
       description: 'WAL for durability -> MemTable for fast writes -> Immutable SSTables flushed to disk -> Background compaction merges levels -> Bloom filters accelerate reads.',
-      svgTemplate: 'loadBalancer',
+      diagramSrc: '/diagrams/fundamentals/load-balancer.png',
       keyPoints: [
         'Sequential writes achieve near-disk-bandwidth throughput',
         'Bloom filters eliminate 99% of unnecessary SSTable reads',
@@ -447,7 +447,7 @@ Inefficient (index not useful):
     basicImplementation: {
       title: 'Single-Column B-tree Index',
       description: 'Standard B-tree index on a single column. Accelerates equality and range lookups. The default and most common index type in relational databases.',
-      svgTemplate: 'singleServer',
+      diagramSrc: '/diagrams/fundamentals/single-server.png',
       problems: [
         'Cannot serve multi-column queries efficiently without composite index',
         'Heap lookups for non-indexed columns add random I/O',
@@ -459,7 +459,7 @@ Inefficient (index not useful):
     advancedImplementation: {
       title: 'Multi-Strategy Indexing',
       description: 'Composite B-tree indexes for OLTP queries -> Covering indexes to eliminate heap access -> Partial indexes for hot subsets -> GIN for full-text/JSONB -> Expression indexes for computed lookups.',
-      svgTemplate: 'loadBalancer',
+      diagramSrc: '/diagrams/fundamentals/load-balancer.png',
       keyPoints: [
         'Composite indexes serve the most common multi-column query patterns',
         'INCLUDE columns in covering indexes avoid heap fetches',
@@ -685,7 +685,7 @@ COMMIT;
     basicImplementation: {
       title: 'Single-Node ACID Transactions',
       description: 'WAL-based atomicity and durability, MVCC-based isolation, constraint-based consistency. All operations on a single database node with full ACID guarantees.',
-      svgTemplate: 'singleServer',
+      diagramSrc: '/diagrams/fundamentals/single-server.png',
       problems: [
         'Single-node limits: cannot distribute data or load',
         'Long transactions hold locks and block other transactions',
@@ -697,7 +697,7 @@ COMMIT;
     advancedImplementation: {
       title: 'Saga-based Distributed Transactions',
       description: 'Orchestrator coordinates sequence of local transactions across services -> Each service commits independently -> On failure, compensating transactions undo completed steps -> Event log provides audit trail and recovery.',
-      svgTemplate: 'loadBalancer',
+      diagramSrc: '/diagrams/fundamentals/load-balancer.png',
       keyPoints: [
         'Each step is a local ACID transaction with full guarantees',
         'Compensating actions provide eventual atomicity',
@@ -937,7 +937,7 @@ X        NO    NO    NO    NO    NO
     basicImplementation: {
       title: 'Lock-based Concurrency Control',
       description: 'Two-Phase Locking (2PL): acquire locks in a growing phase, release in a shrinking phase. Guarantees serializability but limits concurrency.',
-      svgTemplate: 'singleServer',
+      diagramSrc: '/diagrams/fundamentals/single-server.png',
       problems: [
         'Readers block writers and writers block readers',
         'Lock contention reduces throughput under high concurrency',
@@ -949,7 +949,7 @@ X        NO    NO    NO    NO    NO
     advancedImplementation: {
       title: 'MVCC with Snapshot Isolation',
       description: 'Each transaction sees a consistent snapshot -> Readers access old tuple versions -> Writers create new versions -> VACUUM removes dead tuples -> No read locks needed.',
-      svgTemplate: 'loadBalancer',
+      diagramSrc: '/diagrams/fundamentals/load-balancer.png',
       keyPoints: [
         'Readers never block writers — critical for mixed OLTP workloads',
         'Snapshot isolation prevents dirty reads and non-repeatable reads',
@@ -1201,7 +1201,7 @@ Two consecutive rw-conflicts form a cycle -> ABORT one
     basicImplementation: {
       title: 'Read Committed Isolation',
       description: 'Default isolation level for most databases. Each statement sees only committed data, but different statements within the same transaction may see different snapshots.',
-      svgTemplate: 'singleServer',
+      diagramSrc: '/diagrams/fundamentals/single-server.png',
       problems: [
         'Non-repeatable reads: same query returns different results within one transaction',
         'Phantom reads: new rows appear between queries',
@@ -1213,7 +1213,7 @@ Two consecutive rw-conflicts form a cycle -> ABORT one
     advancedImplementation: {
       title: 'Serializable Snapshot Isolation',
       description: 'Full snapshot isolation with rw-conflict tracking -> SIRead predicate locks detect dangerous patterns -> Automatic abort on detected anomalies -> Application retries aborted transactions.',
-      svgTemplate: 'loadBalancer',
+      diagramSrc: '/diagrams/fundamentals/load-balancer.png',
       keyPoints: [
         'Prevents all anomalies including write skew and phantom reads',
         'Non-blocking: detection only, no lock waits for reads',
@@ -1454,7 +1454,7 @@ SELECT COUNT(*), SUM(total) FROM orders WHERE status = 'active';
     basicImplementation: {
       title: 'Single-Node Table Partitioning',
       description: 'PostgreSQL declarative partitioning: split a large table into smaller partitions on the same server. Improves query performance by scanning only relevant partitions.',
-      svgTemplate: 'singleServer',
+      diagramSrc: '/diagrams/fundamentals/single-server.png',
       problems: [
         'Still limited by single-machine resources',
         'Partition pruning only works if queries filter on the partition key',
@@ -1466,7 +1466,7 @@ SELECT COUNT(*), SUM(total) FROM orders WHERE status = 'active';
     advancedImplementation: {
       title: 'Distributed Sharding with Consistent Hashing',
       description: 'Hash ring distributes data across nodes -> Virtual nodes ensure uniform distribution -> Shard router directs queries to correct shard -> Rebalancing moves only 1/N of data when adding nodes.',
-      svgTemplate: 'loadBalancer',
+      diagramSrc: '/diagrams/fundamentals/load-balancer.png',
       keyPoints: [
         'Consistent hashing minimizes data movement during rebalancing',
         'Virtual nodes handle heterogeneous hardware and improve uniformity',
@@ -1708,7 +1708,7 @@ Client -> Leader -> Write to WAL
     basicImplementation: {
       title: 'Single-Leader Async Replication',
       description: 'One leader accepts all writes, replicates asynchronously to followers. Followers serve read traffic. Simple, well-understood, works for most applications.',
-      svgTemplate: 'singleServer',
+      diagramSrc: '/diagrams/fundamentals/single-server.png',
       problems: [
         'Replication lag causes stale reads from followers',
         'Leader failure risks losing committed writes (RPO > 0)',
@@ -1720,7 +1720,7 @@ Client -> Leader -> Write to WAL
     advancedImplementation: {
       title: 'Multi-Region Replication with Conflict Resolution',
       description: 'Leaders in each region accept local writes with low latency -> Asynchronous cross-region replication -> Conflict resolution via CRDTs or custom merge functions -> Read-your-writes consistency via session affinity.',
-      svgTemplate: 'loadBalancer',
+      diagramSrc: '/diagrams/fundamentals/load-balancer.png',
       keyPoints: [
         'Local writes in each region provide low latency for users',
         'CRDTs resolve conflicts automatically for supported data types',
@@ -1966,7 +1966,7 @@ In an asynchronous system (no bounds on message delay), no deterministic consens
     basicImplementation: {
       title: 'Three-Node Raft Cluster',
       description: 'Minimum viable consensus cluster. One leader handles all writes, replicates to two followers. Tolerates one node failure. Suitable for metadata storage and configuration management.',
-      svgTemplate: 'singleServer',
+      diagramSrc: '/diagrams/fundamentals/single-server.png',
       problems: [
         'Tolerates only one failure (2 of 3 must be up)',
         'Leader handles all writes — single bottleneck',
@@ -1978,7 +1978,7 @@ In an asynchronous system (no bounds on message delay), no deterministic consens
     advancedImplementation: {
       title: 'Multi-Raft with Range-based Sharding',
       description: 'Data split into ranges, each with its own Raft group -> Thousands of independent consensus groups -> Leaders distributed across nodes for load balancing -> Multi-Raft batching reduces message overhead.',
-      svgTemplate: 'loadBalancer',
+      diagramSrc: '/diagrams/fundamentals/load-balancer.png',
       keyPoints: [
         'Each range operates as an independent Raft group',
         'Leader placement optimization spreads write load across nodes',
@@ -2216,7 +2216,7 @@ Note: Dirty pages may have changed between begin and end — that's OK, ARIES re
     basicImplementation: {
       title: 'WAL-based Crash Recovery',
       description: 'Write-Ahead Log ensures committed transactions survive crashes. Sequential WAL writes followed by lazy data page flushes. ARIES three-phase recovery after crash.',
-      svgTemplate: 'singleServer',
+      diagramSrc: '/diagrams/fundamentals/single-server.png',
       problems: [
         'Recovery time proportional to WAL since last checkpoint',
         'WAL fsync adds latency to every commit',
@@ -2228,7 +2228,7 @@ Note: Dirty pages may have changed between begin and end — that's OK, ARIES re
     advancedImplementation: {
       title: 'Continuous Archiving with PITR',
       description: 'WAL segments continuously archived to remote storage -> Periodic base backups provide restore points -> PITR recovers to any timestamp -> Streaming replication provides zero-RPO standby.',
-      svgTemplate: 'loadBalancer',
+      diagramSrc: '/diagrams/fundamentals/load-balancer.png',
       keyPoints: [
         'Continuous WAL archiving provides RPO of seconds',
         'Base backups reduce recovery time (less WAL to replay)',
@@ -2503,7 +2503,7 @@ At depth 3-4, SQL JOIN performance becomes unacceptable (minutes), while graph d
     basicImplementation: {
       title: 'Single-Node Document Store',
       description: 'MongoDB-style document store with flexible schema, BSON storage, and B-tree indexes. Good for prototyping and moderate-scale applications with varied data shapes.',
-      svgTemplate: 'singleServer',
+      diagramSrc: '/diagrams/fundamentals/single-server.png',
       problems: [
         'No transactions across collections (pre MongoDB 4.0)',
         'Schema flexibility can lead to data quality issues without validation',
@@ -2515,7 +2515,7 @@ At depth 3-4, SQL JOIN performance becomes unacceptable (minutes), while graph d
     advancedImplementation: {
       title: 'Distributed NoSQL with Tunable Consistency',
       description: 'Token ring distributes data across nodes -> Configurable replication factor (RF=3 typical) -> Tunable consistency per query (ONE to ALL) -> Anti-entropy repairs divergent replicas.',
-      svgTemplate: 'loadBalancer',
+      diagramSrc: '/diagrams/fundamentals/load-balancer.png',
       keyPoints: [
         'Tunable consistency allows per-query trade-off between latency and correctness',
         'Token ring with virtual nodes ensures even data distribution',
@@ -2773,7 +2773,7 @@ Choose NoSQL when:
     basicImplementation: {
       title: 'Single-Region Distributed SQL',
       description: 'CockroachDB or TiDB cluster within a single region. Raft consensus provides fault tolerance. Automatic sharding distributes data. SQL interface for application developers.',
-      svgTemplate: 'singleServer',
+      diagramSrc: '/diagrams/fundamentals/single-server.png',
       problems: [
         'Distributed transactions add 5-20ms latency vs single-node SQL',
         'Operational complexity higher than single-node PostgreSQL',
@@ -2785,7 +2785,7 @@ Choose NoSQL when:
     advancedImplementation: {
       title: 'Multi-Region Distributed SQL',
       description: 'Raft groups span multiple regions for fault tolerance -> Leaseholder placement optimized for read locality -> Follower reads serve stale reads from local region -> Global transactions coordinate across regions with commit wait or uncertainty intervals.',
-      svgTemplate: 'loadBalancer',
+      diagramSrc: '/diagrams/fundamentals/load-balancer.png',
       keyPoints: [
         'Geo-partitioning pins data to specific regions for compliance and latency',
         'Follower reads serve local reads without cross-region round trips',
@@ -3072,7 +3072,7 @@ WHERE ST_Intersects(a.geom, b.geom) AND a.id != b.id;
     basicImplementation: {
       title: 'PostgreSQL with Specialized Extensions',
       description: 'Use PostgreSQL extensions for specialized workloads: pg_trgm for fuzzy text search, PostGIS for spatial queries, pgvector for similarity search, TimescaleDB for time-series. Single operational footprint.',
-      svgTemplate: 'singleServer',
+      diagramSrc: '/diagrams/fundamentals/single-server.png',
       problems: [
         'Jack of all trades: 2-10x slower than purpose-built specialized databases',
         'Extensions compete for shared buffer pool and CPU resources',
@@ -3084,7 +3084,7 @@ WHERE ST_Intersects(a.geom, b.geom) AND a.id != b.id;
     advancedImplementation: {
       title: 'Polyglot Persistence Architecture',
       description: 'PostgreSQL for transactional data -> Elasticsearch for full-text search -> TimescaleDB for metrics -> pgvector/Pinecone for embeddings -> Redis for caching. Each database optimized for its workload.',
-      svgTemplate: 'loadBalancer',
+      diagramSrc: '/diagrams/fundamentals/load-balancer.png',
       keyPoints: [
         'Each database handles its optimal workload at peak performance',
         'Change Data Capture (CDC) keeps databases synchronized',
