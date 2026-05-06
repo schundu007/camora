@@ -479,6 +479,137 @@ NOW generate for: {question}
 REMEMBER: ONE infrastructure component, two clusters (data plane + control plane). Return ONLY the Python code."""
 
 
+# Multi-cloud cluster styles. Pastel bgcolors + thick borders match the
+# Excalidraw whiteboard aesthetic that single-provider AWS-icon diagrams
+# can't produce. Keys are referenced by the multi_cloud prompt below.
+MULTI_CLOUD_CLUSTER_STYLES = {
+    "control":   '{"bgcolor": "#E8F0FF", "pencolor": "#3B5BDB", "fontcolor": "#1E40AF", "style": "rounded", "fontsize": "14", "fontname": "Helvetica-Bold", "labeljust": "l", "penwidth": "2"}',
+    "iac":       '{"bgcolor": "#FFFBEB", "pencolor": "#C9A227", "fontcolor": "#92400E", "style": "rounded", "fontsize": "14", "fontname": "Helvetica-Bold", "labeljust": "l", "penwidth": "2"}',
+    "csp_group": '{"bgcolor": "#FFE8F0", "pencolor": "#C9184A", "fontcolor": "#9D174D", "style": "rounded", "fontsize": "14", "fontname": "Helvetica-Bold", "labeljust": "l", "penwidth": "2"}',
+    "csp_a":     '{"bgcolor": "#FFF1F2", "pencolor": "#C9184A", "fontcolor": "#9D174D", "style": "rounded", "fontsize": "12", "fontname": "Helvetica-Bold", "labeljust": "l", "penwidth": "1.5"}',
+    "csp_b":     '{"bgcolor": "#FEF3C7", "pencolor": "#B45309", "fontcolor": "#92400E", "style": "rounded", "fontsize": "12", "fontname": "Helvetica-Bold", "labeljust": "l", "penwidth": "1.5"}',
+    "csp_c":     '{"bgcolor": "#DCFCE7", "pencolor": "#15803D", "fontcolor": "#166534", "style": "rounded", "fontsize": "12", "fontname": "Helvetica-Bold", "labeljust": "l", "penwidth": "1.5"}',
+    "workload":  '{"bgcolor": "#F0E8FF", "pencolor": "#7048E8", "fontcolor": "#5B21B6", "style": "rounded", "fontsize": "14", "fontname": "Helvetica-Bold", "labeljust": "l", "penwidth": "2"}',
+}
+
+
+def _get_multi_cloud_prompt(question, detail_level, direction):
+    """Heterogeneous-CSP / multi-cloud architecture — Excalidraw-style.
+
+    The single-provider _get_system_prompt forces an AWS-only stack
+    even when the question explicitly spans cloud providers — the
+    resulting diagram looks like one CSP doing everything, which
+    misrepresents the answer.
+
+    This prompt deliberately AVOIDS provider logos in favour of plain
+    text-labeled rectangles grouped by colored clusters. `Blank` is
+    the closest the diagrams library gets to "rectangle with text".
+    Adapted from the apps/ai-services version with the constraint
+    that ascend's TEMPLATE owns the Diagram() constructor — the body
+    only emits imports + indented code.
+    """
+    scope = (
+        "8-12 nodes total: 2 control-plane + 2 IaC + 2-3 CSP clusters "
+        "with 2 nodes each + 2 workload nodes."
+        if detail_level == "overview"
+        else "12-18 nodes total: 2-3 control-plane + 3 IaC + 3 CSP clusters "
+             "with 3-4 nodes each + 3 workload nodes. Show the manual / API "
+             "handoff distinction explicitly."
+    )
+    return f"""Generate Python code for a HETEROGENEOUS / MULTI-CLOUD architecture diagram in WHITEBOARD / EXCALIDRAW style — clean text-labeled rectangles grouped into colored clusters, NO cloud-vendor service icons.
+
+PROBLEM: {question}
+ARCHETYPE: MULTI-CLOUD. The diagram MUST show two or more cloud-provider regions side by side, each as its own nested Cluster (e.g. "CSP A — API-driven", "CSP B — Bare-metal handoff", "CSP C — Hybrid"). Do NOT collapse everything into a single AWS stack.
+LAYOUT: Left-to-right (LR). The per-CSP columns must read horizontally.
+SCOPE: {scope}.
+
+I will wrap your output inside a template that already has:
+- `import os`, `from diagrams import Diagram, Cluster, Edge`
+- Diagram() constructor + graph_attr already configured (LR direction is forced for multi-cloud)
+- node_attr and edge_attr already set
+
+YOUR OUTPUT must have TWO parts:
+
+PART 1 — IMPORTS: Use ONLY these provider-neutral shape modules. No diagrams.aws / diagrams.gcp / diagrams.azure / diagrams.onprem / diagrams.k8s — they all carry vendor logos that break the whiteboard aesthetic.
+
+from diagrams.generic.blank import Blank
+from diagrams.generic.network import Subnet, Switch, Router, Firewall
+from diagrams.generic.storage import Storage
+from diagrams.programming.flowchart import Action, Document, Database, InputOutput, Decision
+
+Mapping convention:
+- Blank(...)    = the default shape — use for ANY component that would otherwise be an AWS/GCP/Azure/Terraform/Ansible/ArgoCD logo. Label carries the meaning ("Provisioning API\\n(Cluster Spec)", "Terraform\\nAPI-driven CSPs").
+- Document(...) = spec files (IP lists, kubeconfigs, manifests)
+- Database(...) = state stores
+- Storage(...)  = blob / object storage
+- InputOutput(...) = external feeds
+- Network shapes (Subnet/Switch/Router/Firewall) only when actually drawing network topology.
+
+PART 2 — BODY: 4-space-indented code that goes inside `with Diagram(...):`
+
+CLUSTER PRESETS — copy the graph_attr dicts EXACTLY (these are the colored/styled buckets):
+  Control plane / orchestration:    graph_attr={MULTI_CLOUD_CLUSTER_STYLES["control"]}
+  IaC & config management:          graph_attr={MULTI_CLOUD_CLUSTER_STYLES["iac"]}
+  Cloud providers (heterogeneous, OUTER cluster):
+                                    graph_attr={MULTI_CLOUD_CLUSTER_STYLES["csp_group"]}
+  CSP A column (nested):            graph_attr={MULTI_CLOUD_CLUSTER_STYLES["csp_a"]}
+  CSP B column (nested):            graph_attr={MULTI_CLOUD_CLUSTER_STYLES["csp_b"]}
+  CSP C column (nested):            graph_attr={MULTI_CLOUD_CLUSTER_STYLES["csp_c"]}
+  Production workloads:             graph_attr={MULTI_CLOUD_CLUSTER_STYLES["workload"]}
+
+EDGE GUIDANCE:
+- API-driven / happy-path flow: Edge(label="provision", color="#3B5BDB", penwidth="2.0", fontsize="11")
+- Manual handoff / fallback path: Edge(label="manual import", style="dashed", color="#9CA3AF", penwidth="1.6", fontsize="11")
+- Cross-cluster deploys: Edge(label="deploy AI apps", color="#7048E8", penwidth="2.0", fontsize="11")
+
+RULES:
+1. Multi-line labels are ENCOURAGED. `Blank("Provisioning API\\n(Cluster Spec)")`, `Blank("Manual Importer\\nIP list + kubeconfig")` — the second line gives context the way an Excalidraw diagram would.
+2. Each CSP cluster shows its DIFFERENTIATOR — don't repeat the same node set in every CSP. Examples:
+   - API-driven CSP: Blank("GPU VMs / Managed k8s\\nTerraform provider"), Blank("Cluster API\\nNative")
+   - Bare-metal CSP: Document("IP list\\n(shared doc)"), Blank("kubeconfig\\nManual import")
+   - Hybrid: a mix — Blank for compute, Document for the manual piece
+3. EVERY connection MUST use Edge(label="…", color="…", penwidth="…").
+4. NEVER chain: WRONG: a >> Edge() >> b >> c. RIGHT: split into separate lines.
+5. Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or the Diagram() call — the template adds them.
+6. Do NOT collapse to a single-provider stack — multi-CSP grouping is the WHOLE POINT of this archetype.
+
+EXAMPLE OUTPUT (skeleton — adapt the labels and CSP list to the question above):
+from diagrams.generic.blank import Blank
+from diagrams.programming.flowchart import Document
+
+    with Cluster("Control plane / Orchestration", graph_attr={MULTI_CLOUD_CLUSTER_STYLES["control"]}):
+        api = Blank("Provisioning API\\n(Cluster Spec)")
+        scheduler = Blank("Scheduler\\n(GPU placement)")
+
+    with Cluster("IaC & Config Management", graph_attr={MULTI_CLOUD_CLUSTER_STYLES["iac"]}):
+        tf = Blank("Terraform\\nAPI-driven CSPs")
+        ansible = Blank("Ansible\\nNode bootstrap")
+
+    with Cluster("Cloud Providers (Heterogeneous)", graph_attr={MULTI_CLOUD_CLUSTER_STYLES["csp_group"]}):
+        with Cluster("CSP A — API-driven", graph_attr={MULTI_CLOUD_CLUSTER_STYLES["csp_a"]}):
+            csp_a_k8s = Blank("Managed k8s\\nGPU node pool")
+        with Cluster("CSP B — Bare-metal handoff", graph_attr={MULTI_CLOUD_CLUSTER_STYLES["csp_b"]}):
+            csp_b_doc = Document("IP list\\n(shared doc)")
+            csp_b_kc = Blank("kubeconfig\\nManual import")
+        with Cluster("CSP C — Hybrid", graph_attr={MULTI_CLOUD_CLUSTER_STYLES["csp_c"]}):
+            csp_c_k8s = Blank("Self-managed k8s")
+
+    with Cluster("Production Workloads", graph_attr={MULTI_CLOUD_CLUSTER_STYLES["workload"]}):
+        ai_apps = Blank("AI training jobs\\n(GPU)")
+
+    api >> Edge(label="provision", color="#3B5BDB", penwidth="2.0", fontsize="11") >> tf
+    tf >> Edge(label="apply", color="#3B5BDB", penwidth="2.0", fontsize="11") >> csp_a_k8s
+    api >> Edge(label="manual import", style="dashed", color="#9CA3AF", penwidth="1.6", fontsize="11") >> csp_b_doc
+    csp_b_doc >> Edge(label="bootstrap", style="dashed", color="#9CA3AF", penwidth="1.6", fontsize="11") >> csp_b_kc
+    api >> Edge(label="provision", color="#3B5BDB", penwidth="2.0", fontsize="11") >> csp_c_k8s
+    csp_a_k8s >> Edge(label="deploy AI apps", color="#7048E8", penwidth="2.0", fontsize="11") >> ai_apps
+    csp_b_kc >> Edge(label="deploy AI apps", color="#7048E8", penwidth="2.0", fontsize="11") >> ai_apps
+    csp_c_k8s >> Edge(label="deploy AI apps", color="#7048E8", penwidth="2.0", fontsize="11") >> ai_apps
+
+NOW generate for: {question}
+REMEMBER: TWO OR MORE CSP columns side by side, NO vendor logos, the manual handoff path uses dashed gray edges. Return ONLY the Python code."""
+
+
 def get_prompt(question, provider, detail_level, direction, design_kind="system"):
     """Dispatch to the right prompt by archetype.
 
@@ -491,6 +622,8 @@ def get_prompt(question, provider, detail_level, direction, design_kind="system"
         return _get_application_prompt(question, detail_level, direction)
     if design_kind == "infrastructure":
         return _get_infrastructure_prompt(question, provider, detail_level, direction)
+    if design_kind == "multi_cloud":
+        return _get_multi_cloud_prompt(question, detail_level, direction)
     return _get_system_prompt(question, provider, detail_level, direction)
 
 
@@ -955,6 +1088,11 @@ def execute_code(code, output_path, output_dir):
 
 def generate_diagram(question, provider, detail_level, direction, output_dir, api_key, design_kind="system"):
     client = anthropic.Anthropic(api_key=api_key)
+    # Multi-cloud needs horizontal layout — per-CSP columns must read
+    # left-to-right. Override the CLI direction so a stale frontend
+    # passing TB doesn't ruin the layout.
+    if design_kind == "multi_cloud":
+        direction = "LR"
     prompt = get_prompt(question, provider, detail_level, direction, design_kind)
 
     diagram_id = uuid.uuid4().hex[:8]
@@ -981,7 +1119,9 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
     # Provider lock — reject and retry if Claude emitted wrong-provider imports.
     # We treat this as a soft failure (don't execute) so attempt 2 can rebuild
     # cleanly with a stronger prompt instead of producing a wrong-provider PNG.
-    foreign_imports = find_foreign_provider_imports(full_code, provider)
+    # Multi-cloud archetype is provider-agnostic by design (Blank rectangles,
+    # no AWS/GCP/Azure imports allowed in the prompt) — skip the check.
+    foreign_imports = [] if design_kind == "multi_cloud" else find_foreign_provider_imports(full_code, provider)
     empty_body = not has_meaningful_body(_extract_body_from_assembled(full_code))
     if foreign_imports:
         sys.stderr.write(f"[DiagramEngine] Foreign-provider imports detected (provider={provider}): {foreign_imports}\n")
