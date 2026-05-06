@@ -139,6 +139,7 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
         token,
         useSearch: false,
         systemContext: buildContext(),
+        mode: 'coding',
         signal: controller.signal,
         onCitations: (citations) => {
           pendingCitationsRef.current = citations;

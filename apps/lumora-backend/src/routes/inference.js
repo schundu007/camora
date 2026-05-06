@@ -56,7 +56,7 @@ function getQuestionType(answer) {
 // ---------------------------------------------------------------------------
 router.post('/conversations/:conversationId/stream', authenticate, checkUsage('questions'), async (req, res) => {
   const { conversationId } = req.params;
-  const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws' } = req.body;
+  const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', mode = 'general' } = req.body;
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -100,6 +100,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       question,
       userId: user?.id || null,
       timeoutMs: 250,
+      mode,
     });
     const retrievedContext = formatRetrievedContext(retrieved.chunks);
     if (retrieved.timedOut) {
@@ -259,7 +260,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 // POST /stream — stream (auto-creates conversation)
 // ---------------------------------------------------------------------------
 router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
-  const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache } = req.body;
+  const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general' } = req.body;
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -434,6 +435,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       question,
       userId: user?.id || null,
       timeoutMs: 250,
+      mode,
     });
     retrievedContext = formatRetrievedContext(retrieved.chunks);
     if (retrieved.timedOut) {

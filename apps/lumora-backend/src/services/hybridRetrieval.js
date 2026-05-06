@@ -32,15 +32,17 @@ function fuse(lists, finalK) {
     .slice(0, finalK);
 }
 
-async function vecKb(vec) {
+async function vecKb(vec, sourceFilter) {
+  const filterClause = sourceFilter ? ' WHERE source = ANY($3)' : '';
+  const params = sourceFilter ? [asVecLiteral(vec), VECTOR_TOP, sourceFilter] : [asVecLiteral(vec), VECTOR_TOP];
   const r = await query(
     `SELECT id, source, topic_id, topic_title, section, content,
             metadata->>'url' AS url,
             embedding <=> $1::vector AS distance
-       FROM lumora_kb_chunks
+       FROM lumora_kb_chunks${filterClause}
        ORDER BY embedding <=> $1::vector
        LIMIT $2`,
-    [asVecLiteral(vec), VECTOR_TOP],
+    params,
   );
   return r.rows.map((row) => ({
     tier: 'kb', id: row.id, source: row.source, topicId: row.topic_id,
@@ -49,15 +51,17 @@ async function vecKb(vec) {
     distance: Number(row.distance),
   }));
 }
-async function bm25Kb(question) {
+async function bm25Kb(question, sourceFilter) {
+  const filterClause = sourceFilter ? ' AND source = ANY($3)' : '';
+  const params = sourceFilter ? [question, BM25_TOP, sourceFilter] : [question, BM25_TOP];
   const r = await query(
     `SELECT id, source, topic_id, topic_title, section, content,
             metadata->>'url' AS url,
             ts_rank(content_tsv, plainto_tsquery('english', $1)) AS ts_rank
        FROM lumora_kb_chunks
-       WHERE content_tsv @@ plainto_tsquery('english', $1)
+       WHERE content_tsv @@ plainto_tsquery('english', $1)${filterClause}
        ORDER BY ts_rank DESC LIMIT $2`,
-    [question, BM25_TOP],
+    params,
   );
   return r.rows.map((row) => ({
     tier: 'kb', id: row.id, source: row.source, topicId: row.topic_id,
@@ -96,7 +100,8 @@ async function bm25User(userId, question) {
 
 export async function hybridSearchKb(question, finalK, opts = {}) {
   const vec = opts.vec || await embedQuery(question);
-  const [v, b] = await Promise.all([vecKb(vec), bm25Kb(question)]);
+  const sourceFilter = (Array.isArray(opts.sourceFilter) && opts.sourceFilter.length > 0) ? opts.sourceFilter : null;
+  const [v, b] = await Promise.all([vecKb(vec, sourceFilter), bm25Kb(question, sourceFilter)]);
   return fuse([v, b], finalK);
 }
 

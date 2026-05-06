@@ -44,6 +44,7 @@ export default function FollowupAsk({ problem, activeSolutionName, activeSolutio
       await streamResponse({
         question,
         systemContext: getSystemContext(),
+        mode: 'coding',
         token,
         signal: controller.signal,
         onToken: (d) => { if (d.t) { acc += d.t; setAnswer(acc); } },

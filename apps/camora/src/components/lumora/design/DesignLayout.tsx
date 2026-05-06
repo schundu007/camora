@@ -278,6 +278,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         systemContext: getSystemContext(),
         detailLevel,
         cloudProvider,
+        mode: 'design',
         token,
         bypassCache: options?.bypassCache,
         onToken: (data) => {

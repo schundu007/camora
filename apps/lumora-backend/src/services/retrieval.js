@@ -11,6 +11,7 @@
  * query has WHERE user_id = $1. Namespace bugs are tested.
  */
 import { hybridSearchKb, hybridSearchUserDocs } from './hybridRetrieval.js';
+import { sourcesForMode } from './modeSourceFilter.js';
 
 const DEFAULT_TIMEOUT_MS = 250;
 // When rerank is on, we cast a wider candidate net — Cohere will trim
@@ -46,11 +47,15 @@ function resolveUseWarmKit(optsValue) {
  * @param {number?} opts.userId
  * @param {number}  [opts.timeoutMs=250]
  * @param {boolean} [opts.useHyde]
+ * @param {string}  [opts.mode]    'general' | 'coding' | 'design' | 'sql' | 'behavioral' | 'sre'
+ *                                  Biases KB retrieval to a subset of sources.
+ *                                  Unknown/general → no filter (full hybrid search).
  * @returns {Promise<{chunks, timedOut, latencyMs}>}
  */
 export async function retrieve(opts) {
-  const { question, userId, timeoutMs = DEFAULT_TIMEOUT_MS, useHyde, useRerank, useWarmKit } = opts;
+  const { question, userId, timeoutMs = DEFAULT_TIMEOUT_MS, useHyde, useRerank, useWarmKit, mode } = opts;
   const t0 = performance.now();
+  const sourceFilter = sourcesForMode(mode);
 
   let timer;
   const timeout = new Promise((resolve) => {
@@ -67,16 +72,27 @@ export async function retrieve(opts) {
       const kit = await readSessionKit(userId).catch(() => null);
       if (kit && Array.isArray(kit.chunks) && kit.chunks.length > 0) {
         let kitChunks = kit.chunks;
-        if (willRerank) {
-          const { rerank } = await import('./reranker.js');
-          kitChunks = await rerank(question, kitChunks, FINAL_TOP_K);
-        } else {
-          kitChunks = kitChunks.slice(0, KB_TOP_K_NARROW + USER_TOP_K_NARROW);
+        // Mode gating: drop kit chunks whose source isn't in the
+        // mode's allowed list. User-tier chunks (no source) always
+        // pass — Prep Kit content is per-user and mode-agnostic.
+        if (sourceFilter) {
+          const allowed = new Set(sourceFilter);
+          kitChunks = kitChunks.filter((c) => c.tier === 'user' || allowed.has(c.source));
         }
-        return {
-          chunks: kitChunks.map((c) => ({ ...c, content: (c.content || '').slice(0, MAX_CHUNK_CHARS) })),
-          usedKit: true,
-        };
+        // If gating left nothing usable, fall through to live retrieval
+        // rather than returning an empty kit.
+        if (kitChunks.length > 0) {
+          if (willRerank) {
+            const { rerank } = await import('./reranker.js');
+            kitChunks = await rerank(question, kitChunks, FINAL_TOP_K);
+          } else {
+            kitChunks = kitChunks.slice(0, KB_TOP_K_NARROW + USER_TOP_K_NARROW);
+          }
+          return {
+            chunks: kitChunks.map((c) => ({ ...c, content: (c.content || '').slice(0, MAX_CHUNK_CHARS) })),
+            usedKit: true,
+          };
+        }
       }
     }
     // ... existing live-retrieval code path follows ...
@@ -90,7 +106,7 @@ export async function retrieve(opts) {
     const vec = await embedQuery(queryForEmbed);
     const kbTop = willRerank ? KB_TOP_K_WIDE : KB_TOP_K_NARROW;
     const userTop = willRerank ? USER_TOP_K_WIDE : USER_TOP_K_NARROW;
-    const promises = [hybridSearchKb(question, kbTop, { vec })];
+    const promises = [hybridSearchKb(question, kbTop, { vec, sourceFilter })];
     if (userId) promises.push(hybridSearchUserDocs(userId, question, userTop, { vec }));
     const results = await Promise.all(promises);
     let merged = results.flat();
