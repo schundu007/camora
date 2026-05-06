@@ -841,24 +841,18 @@ export default function DocsPage({ onBack }) {
                             </p>
                           </div>
 
-                          {/* Stats row — translucent on navy */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-                            {[
-                              { label: 'Total Topics', value: overviewTotalTopics, icon: 'bookOpen' },
-                              { label: 'Completed', value: overviewTotalCompleted, icon: 'check' },
-                              { label: 'Categories', value: overviewCategories.length, icon: 'grid' },
-                              { label: 'Progress', value: `${overviewTotalTopics > 0 ? Math.round((overviewTotalCompleted / overviewTotalTopics) * 100) : 0}%`, icon: 'trendingUp' },
-                            ].map(stat => (
-                              <div key={stat.label} className="rounded p-4" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)' }}>
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="w-8 h-8 rounded flex items-center justify-center" style={{ background: 'var(--cam-gold-leaf)' }}>
-                                    <Icon name={stat.icon} size={15} style={{ color: 'var(--cam-primary-dk)' }} />
-                                  </div>
-                                </div>
-                                <div className="text-2xl font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>{stat.value}</div>
-                                <div className="text-[11px] landing-body mt-0.5 font-semibold" style={{ color: 'rgba(255,255,255,0.75)' }}>{stat.label}</div>
-                              </div>
-                            ))}
+                          {/* Inline progress line — replaces the 4-box metric grid */}
+                          <div className="flex items-center gap-2 mt-5 flex-wrap" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+                            <span style={{ color: 'var(--cam-gold-leaf-lt)', fontWeight: 700 }}>{overviewTotalCompleted}</span>
+                            <span>of {overviewTotalTopics} topics completed</span>
+                            <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
+                            <span>{overviewCategories.length} categories</span>
+                            {overviewTotalTopics > 0 && (
+                              <>
+                                <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
+                                <span>{Math.round((overviewTotalCompleted / overviewTotalTopics) * 100)}% complete</span>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -965,7 +959,7 @@ export default function DocsPage({ onBack }) {
                             Browse
                           </span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                           {overviewCategories.map((cat) => {
                             const radius = 20;
                             const circumference = 2 * Math.PI * radius;
@@ -974,33 +968,33 @@ export default function DocsPage({ onBack }) {
                             <Link
                               key={cat.id}
                               to={`/capra/prepare/${cat.href}`}
-                              className="card-lift group relative rounded-lg overflow-hidden flex flex-col"
+                              className="card-lift group relative rounded-xl overflow-hidden flex flex-col active:scale-[0.98]"
                               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                             >
                               <TopicIllustration name={cat.id} />
-                              <div className="p-4">
+                              <div className="p-5">
                                 <div className="flex items-center justify-between mb-3">
                                   <div className="flex items-center gap-3">
                                     <DatabricksThumb
                                       color={CATEGORY_HEX[cat.id] || 'navy'}
-                                      size={56}
-                                      icon={<Icon name={cat.icon} size={28} style={{ color: '#FFFFFF' }} />}
+                                      size={44}
+                                      icon={<Icon name={cat.icon} size={22} style={{ color: '#FFFFFF' }} />}
                                       title={cat.title}
                                     />
                                     <div>
-                                      <h3 className="text-[21px] font-bold leading-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
-                                      <span className="text-[15px] font-semibold" style={{ color: 'var(--text-muted)' }}>{cat.completed}/{cat.count} topics</span>
+                                      <h3 className="text-[17px] font-bold leading-tight tracking-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
+                                      <span className="text-[12px] font-semibold tabular-nums" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
                                     </div>
                                   </div>
                                   {/* Progress ring */}
-                                  <div className="relative shrink-0" style={{ width: 60, height: 60 }}>
-                                    <svg width="60" height="60" viewBox="0 0 60 60" className="transform -rotate-90">
-                                      <circle cx="30" cy="30" r="25" fill="none" stroke="rgba(38,97,156,0.1)" strokeWidth="3.5" />
-                                      <circle cx="30" cy="30" r="25" fill="none" stroke="var(--accent)" strokeWidth="3.5"
-                                        strokeDasharray={2 * Math.PI * 25} strokeDashoffset={(2 * Math.PI * 25) - (cat.progress / 100) * (2 * Math.PI * 25)}
+                                  <div className="relative shrink-0" style={{ width: 52, height: 52 }}>
+                                    <svg width="52" height="52" viewBox="0 0 52 52" className="transform -rotate-90">
+                                      <circle cx="26" cy="26" r="21" fill="none" stroke="rgba(38,97,156,0.1)" strokeWidth="3" />
+                                      <circle cx="26" cy="26" r="21" fill="none" stroke="var(--accent)" strokeWidth="3"
+                                        strokeDasharray={2 * Math.PI * 21} strokeDashoffset={(2 * Math.PI * 21) - (cat.progress / 100) * (2 * Math.PI * 21)}
                                         strokeLinecap="round" className="transition-colors duration-1000" />
                                     </svg>
-                                    <span className="absolute inset-0 flex items-center justify-center text-[15px] font-extrabold" style={{ color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
+                                    <span className="absolute inset-0 flex items-center justify-center text-[12px] font-bold tabular-nums" style={{ color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                                       {cat.progress}%
                                     </span>
                                   </div>
@@ -1016,28 +1010,24 @@ export default function DocsPage({ onBack }) {
                                     about. Without this the empty cards in the
                                     screenshot are blank below the progress bar. */}
                                 {cat.description && (
-                                  <p className="mt-3 text-[13px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
+                                  <p className="mt-2.5 text-[12.5px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                                     {cat.description}
                                   </p>
                                 )}
 
-                                {/* "What's inside" preview — first three topic titles +
-                                    "+ N more" suffix. Mirrors the bullet-sublists pattern
-                                    on Databricks docs category cards so users see what a
-                                    category contains before clicking in. */}
                                 {cat.topics.length > 0 && (
                                   <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
-                                    <ul className="space-y-1.5">
+                                    <ul className="space-y-1">
                                       {cat.topics.slice(0, 3).map(t => (
-                                        <li key={t.id} className="flex items-center gap-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-                                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--accent)' }} />
-                                          <span className="truncate font-semibold">{t.title}</span>
+                                        <li key={t.id} className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                                          <span className="w-1 h-1 rounded-full shrink-0" style={{ background: 'var(--text-dimmed)' }} />
+                                          <span className="truncate">{t.title}</span>
                                         </li>
                                       ))}
                                     </ul>
                                     {cat.topics.length > 3 && (
-                                      <p className="text-[13px] font-bold mt-2.5 uppercase tracking-wider" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
-                                        + {cat.topics.length - 3} more
+                                      <p className="text-[11px] font-bold mt-2 uppercase tracking-widest" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
+                                        +{cat.topics.length - 3} more
                                       </p>
                                     )}
                                   </div>
@@ -1547,7 +1537,7 @@ export default function DocsPage({ onBack }) {
 
                   {/* Search and Filters — hidden when SQL Playground is active */}
                   {activePage !== 'overview' && !(activePage === 'databases' && sqlPlaygroundOpen) && (
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
                     <div className="relative flex-1 sm:max-w-md">
                       <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
                       <input
@@ -1607,14 +1597,14 @@ export default function DocsPage({ onBack }) {
                           })()}
                           <div
                             onClick={() => setSelectedTopic(topic.id)}
-                            className={`group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200   ${codingLocked ? 'opacity-60' : ''}`}
+                            className={`group rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer transition-[background-color] duration-150 hover:bg-[var(--bg-elevated)] active:scale-[0.99] ${codingLocked ? 'opacity-60' : ''}`}
                             style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                           >
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: codingLocked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
+                            <div className="flex items-center gap-3">
+                              <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: codingLocked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.07)' }}>
                                 {codingLocked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                               </div>
-                              <span className={`text-sm landing-body font-medium transition-colors ${codingLocked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'}`}>{topic.title}</span>
+                              <span className={`text-[14px] landing-body font-medium transition-colors ${codingLocked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'}`}>{topic.title}</span>
                             </div>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
                               {topic.commonProblems && (() => {
@@ -1623,9 +1613,9 @@ export default function DocsPage({ onBack }) {
                                 const hard = topic.commonProblems.filter(p => p.difficulty === 'Hard').length;
                                 return (
                                   <div className="flex items-center gap-1">
-                                    {easy > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border)] font-medium text-[var(--text-muted)]">{easy}E</span>}
-                                    {med > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border)] font-semibold text-[var(--text-primary)]">{med}M</span>}
-                                    {hard > 0 && <span className="text-[9px] landing-mono px-1 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border)] font-bold text-[var(--accent)]">{hard}H</span>}
+                                    {easy > 0 && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ color: '#16a34a', background: 'rgba(22,163,74,0.08)' }}>{easy}E</span>}
+                                    {med > 0 && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ color: '#b45309', background: 'rgba(180,83,9,0.08)' }}>{med}M</span>}
+                                    {hard > 0 && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ color: '#dc2626', background: 'rgba(220,38,38,0.08)' }}>{hard}H</span>}
                                   </div>
                                 );
                               })()}
@@ -1634,7 +1624,7 @@ export default function DocsPage({ onBack }) {
                                   {topic.keyQuestions?.length || 0}Q
                                 </span>
                               )}
-                              <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
+                              <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-[color,transform] duration-150" />
                             </div>
                           </div>
                         </div>
