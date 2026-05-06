@@ -1335,18 +1335,24 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               · Enrolled, on       → quiet green confirmation
               · Enrolled, on, ≥7d  → amber stale-nudge: refresh enrollment
             The VoiceEnrollment component handles enroll / toggle / unenroll. */}
-        {/* Embedded + dismissed → render only the mic pill so the user can
-            still talk; the warning copy + enrollment buttons collapse out
-            but the primary action stays visible. Mirrors LumoraBottomBar's
-            dismissed branch (Coding/Design surfaces). */}
+        {/* Embedded + dismissed → keep mic + voice-enrollment buttons
+            visible. Only the warning copy + tinted banner collapse out;
+            the primary action (mic) and the voice-enrollment toggles
+            (Filter On/Off, Enroll, Re-enroll) stay reachable so the
+            user can still talk and manage their voice profile without
+            re-opening the dismissed banner. */}
         {embedded && voiceBannerDismissed && (
-          <div className="w-full flex items-center justify-center" aria-label="Audio controls">
+          <div
+            className="w-full flex flex-wrap items-center justify-center gap-2"
+            aria-label="Audio controls"
+          >
             <div
               className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl"
               style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
             >
               <AudioCapture onTranscription={handleAutoTranscription} />
             </div>
+            <VoiceEnrollment disabled={false} variant="light" />
           </div>
         )}
         {embedded && !voiceBannerDismissed && (() => {
