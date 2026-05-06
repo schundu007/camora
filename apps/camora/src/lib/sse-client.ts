@@ -63,6 +63,10 @@ export interface StreamOptions {
       cache so the next plain stream hits. Used by Sona/Design's
       "Regenerate" affordance. */
   bypassCache?: boolean;
+  /** Mode hint for retrieval gating. The backend biases KB retrieval to
+   *  a subset of sources (e.g. 'coding' → algorithm + LLD problems).
+   *  Default 'general' = full hybrid search, no filter. */
+  mode?: 'general' | 'coding' | 'design' | 'sql' | 'behavioral' | 'sre';
   token: string;
   signal?: AbortSignal;
   onStreamStart?: (data: StreamStartEvent) => void;
@@ -90,6 +94,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     cloudProvider,
     model,
     bypassCache,
+    mode,
     token,
     signal: externalSignal,
     onStreamStart,
@@ -137,6 +142,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
         ...(cloudProvider ? { cloud_provider: cloudProvider } : {}),
         ...(model ? { model } : {}),
         ...(bypassCache ? { bypass_cache: true } : {}),
+        ...(mode && mode !== 'general' ? { mode } : {}),
       }),
       credentials: 'include',
       signal: abortController.signal,

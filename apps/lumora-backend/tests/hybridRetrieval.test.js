@@ -90,6 +90,30 @@ describe('hybridSearchKb', () => {
   });
 });
 
+describe('hybridSearchKb sourceFilter', () => {
+  it('passes sourceFilter into both vec and bm25 SQL when present', async () => {
+    embedQueryMock.mockResolvedValue(new Array(1536).fill(0.01));
+    queryMock.mockResolvedValue({ rows: [] });
+    const { hybridSearchKb } = await import('../src/services/hybridRetrieval.js');
+    await hybridSearchKb('q', 4, { sourceFilter: ['capra-coding', 'capra-coding-problems'] });
+    const sqls = queryMock.mock.calls.map((c) => c[0]);
+    expect(sqls.some((s) => s.includes('embedding <=>') && s.includes('source = ANY'))).toBe(true);
+    expect(sqls.some((s) => s.includes('content_tsv @@') && s.includes('source = ANY'))).toBe(true);
+    // The filter array must be threaded as a bound parameter (not inlined)
+    const params = queryMock.mock.calls.flatMap((c) => c[1]);
+    expect(params).toEqual(expect.arrayContaining([['capra-coding', 'capra-coding-problems']]));
+  });
+
+  it('omits the source = ANY clause when sourceFilter is null', async () => {
+    embedQueryMock.mockResolvedValue(new Array(1536).fill(0.01));
+    queryMock.mockResolvedValue({ rows: [] });
+    const { hybridSearchKb } = await import('../src/services/hybridRetrieval.js');
+    await hybridSearchKb('q', 4);
+    const sqls = queryMock.mock.calls.map((c) => c[0]);
+    expect(sqls.every((s) => !s.includes('source = ANY'))).toBe(true);
+  });
+});
+
 describe('hybridSearchUserDocs', () => {
   it('always filters by user_id and merges vector + BM25', async () => {
     embedQueryMock.mockResolvedValue(new Array(1536).fill(0.01));
