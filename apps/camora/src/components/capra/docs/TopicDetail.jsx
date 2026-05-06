@@ -787,7 +787,8 @@ export default function TopicDetail({
                 {isSDStyle && (
                   <Link
                     to={`/capra/design?problem=${encodeURIComponent(`Design ${topicDetails.title}. ${topicDetails.description || topicDetails.subtitle || ''}`)}&autosolve=true`}
-                    className="ml-auto px-3 py-1.5 rounded text-sm font-medium bg-[var(--cam-gold-leaf)] text-[var(--cam-gold-leaf-text)] hover:opacity-90 transition-opacity flex items-center gap-2 flex-shrink-0 landing-body"
+                    className="ml-auto px-3 py-1.5 rounded text-sm font-medium bg-[var(--cam-gold-leaf)] hover:opacity-90 transition-opacity flex items-center gap-2 flex-shrink-0 landing-body"
+                    style={{ color: '#1A0C00' }}
                   >
                     <Icon name="zap" size={14} />
                     Design
