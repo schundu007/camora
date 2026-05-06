@@ -454,15 +454,13 @@ export default function LandingPage() {
             })}
           </div>
 
-          {/* Highlights bar */}
+          {/* Highlights — flat divided list */}
           <Reveal className="mt-10">
-            <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3 rounded-2xl bg-[var(--cam-primary)] px-6 py-4">
-              {HIGHLIGHTS.map((f) => (
-                <span key={f} className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-white">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                    <path d="m5 12 5 5L20 7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  {f}
+            <div className="flex flex-wrap items-center justify-center">
+              {HIGHLIGHTS.map((f, i) => (
+                <span key={f} className="flex items-center">
+                  {i > 0 && <span className="mx-5 h-3 w-px bg-[var(--border)]" aria-hidden="true" />}
+                  <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">{f}</span>
                 </span>
               ))}
             </div>
@@ -523,7 +521,7 @@ export default function LandingPage() {
             />
           </Reveal>
 
-          <div className="mt-14 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="mt-14 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
             <AudienceCard
               eyebrow="For engineers"
               title="Roles, practice & live AI"
@@ -565,7 +563,7 @@ export default function LandingPage() {
                   <span className="text-[var(--cam-gold-leaf-lt)]">Win the offer.</span>
                 </h2>
                 <p className="mt-3 max-w-md text-[14px] leading-relaxed text-white/70">
-                  One free hour, no card required. Pick a plan when you're ready — top-ups never expire.
+                  One free hour, no card required. Pick a plan when you're ready; top-ups never expire.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
