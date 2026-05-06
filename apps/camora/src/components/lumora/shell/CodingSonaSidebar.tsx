@@ -24,6 +24,7 @@ import { useInterviewStore } from '@/stores/interview-store';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView } from './companion/answer-view';
 import { Citations } from '@/components/lumora/Citations';
+import { SonaMicButton } from './SonaMicButton';
 import type { Citation } from '@/types';
 
 interface ChatMessage {
@@ -367,6 +368,14 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
               style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
             />
             <div className="flex items-center gap-2">
+              {/* Voice input — one-shot record/stop. Appends transcript
+                  to the textarea (with a leading space when there's
+                  existing text) so the user can edit before submitting.
+                  Independent of the bottom-bar mic; never collides. */}
+              <SonaMicButton
+                disabled={streaming}
+                onText={(t) => setInput((prev) => prev ? `${prev.trimEnd()} ${t}` : t)}
+              />
               <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
                 Enter to send · Shift+Enter for newline
               </span>
