@@ -357,7 +357,7 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
                 <div className="p-3 text-[12px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                   {streamText
                     ? <AnswerView text={cleanTags(streamText)} streaming />
-                    : <span style={{ opacity: 0.6 }}>Thinking…</span>}
+                    : <span style={{ opacity: 0.6 }}>Sona is thinking…</span>}
                 </div>
               </div>
             )}
@@ -457,7 +457,7 @@ export function CodingSonaSidebarToggle({ open, onToggle, hasSolve }: { open: bo
         background:
           'radial-gradient(circle at 30% 25%, rgba(217,181,67,0.35) 0%, transparent 55%),' +
           'radial-gradient(circle at 70% 80%, rgba(38,97,156,0.55) 0%, transparent 70%),' +
-          'linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, #03132E 100%)',
+          'linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, oklch(8% 0.03 250) 100%)',
         border: '1px solid var(--cam-gold-leaf)',
         boxShadow:
           '0 12px 28px -6px rgba(38,97,156,0.55),' +
