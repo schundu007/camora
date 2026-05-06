@@ -1100,8 +1100,14 @@ def main():
     parser.add_argument(
         "--design-kind",
         default="system",
-        choices=["application", "system", "infrastructure"],
-        help="Archetype that controls prompt + diagram style. application=class diagram, system=cloud architecture (default), infrastructure=topology.",
+        # Accept any archetype the classifier may emit. Unknown kinds
+        # fall through to _get_system_prompt() inside get_prompt() — a
+        # soft degrade is far better than crashing the diagram pipeline
+        # (the previous strict choices= rejected 'multi_cloud' from a
+        # sibling commit and broke the Design page entirely).
+        # When a new archetype is added here, also add a matching
+        # _get_<kind>_prompt() function in this file.
+        help="Archetype that controls prompt + diagram style. Known: application, system (default), infrastructure, multi_cloud. Unknown values soft-degrade to system.",
     )
     args = parser.parse_args()
     os.makedirs(args.output_dir, exist_ok=True)
