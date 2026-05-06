@@ -279,11 +279,13 @@ export default function ResumeOptimizer() {
     });
   }
 
-  const fileLabel: Record<OutputTab, string> = {
-    resume: 'optimized-resume',
-    coverLetter: 'cover-letter',
-    atsScore: 'ats-score',
-  };
+  function buildFilename(ext: string): string {
+    const slug = (s: string) => s.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') || 'Unknown';
+    const base = activeTab === 'coverLetter' ? 'CoverLetter'
+      : activeTab === 'atsScore' ? 'ATSScore'
+      : `${slug(role || 'Resume')}_${slug(company || 'Company')}`;
+    return `${base}.${ext}`;
+  }
 
   async function handleDownloadDocx() {
     const content = getOutputContent();
@@ -296,7 +298,7 @@ export default function ResumeOptimizer() {
     const blob = await Packer.toBlob(doc);
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `${fileLabel[activeTab]}.docx`;
+    a.download = buildFilename('docx');
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -315,7 +317,7 @@ export default function ResumeOptimizer() {
       doc.text(line, 15, y);
       y += 6;
     }
-    doc.save(`${fileLabel[activeTab]}.pdf`);
+    doc.save(buildFilename('pdf'));
   }
 
   const outputContent = getOutputContent();
