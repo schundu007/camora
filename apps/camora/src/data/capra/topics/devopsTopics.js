@@ -25746,4 +25746,836 @@ These are answers a platform-engineering-fluent engineer should give without pre
     ],
   },
 
+  {
+    id: 'shift-left-security',
+    title: 'Shift-Left Security — Embedding Security in Dev',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 5,
+    description: 'Move security earlier in the SDLC: pre-commit hooks, IDE plugins, PR-time scans, security champions, and design-time threat modeling. The discipline of catching vulnerabilities at the keyboard instead of in production, and the developer-experience tradeoffs.',
+    visualizations: [
+      {
+        title: 'The shift-left spectrum and threat modeling',
+        description: `"Shift left" = move security from the right edge of the SDLC (pen tests, runtime scanners, post-incident forensics) toward the left edge (design, IDE, commit, PR). The economic argument: NIST/IBM data shows defect costs ~1x at design, ~6x at build, ~15x in QA, ~100x in production. Security defects follow the same curve plus breach amplification.
+
+The spectrum left-to-right:
+
+Design-time. Threat modeling on the architecture diagram before the first commit. STRIDE (Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege) — Microsoft 1999, still standard. LINDDUN extends for privacy threats. Tools: Microsoft Threat Modeling Tool, OWASP Threat Dragon, IriusRisk, pytm (Python-as-code threat models).
+
+IDE-time. Vulnerability feedback inline:
+- Snyk IDE plugins (VS Code, IntelliJ) — flag vulnerable deps and SAST findings as you type.
+- SonarLint — Sonar's static analyzer surfaced inline.
+- Checkov VS Code extension — IaC scanning at edit time.
+- Semgrep VS Code extension — pattern-based static analysis.
+- GitHub Copilot Autofix and Code Scanning suggestions inline (2024+).
+
+Pre-commit. Git hooks that block bad commits before they leave the laptop:
+- Talisman — entropy-based secret + credential pattern scanner.
+- gitleaks — fast Go-based secret scanner.
+- detect-secrets (Yelp) — baseline-driven, good for legacy repos.
+- pre-commit framework — orchestrates many hooks (gitleaks, ruff, eslint, hadolint, terraform fmt).
+
+PR-time. CI runs full scans on every pull request:
+- SAST suite (Semgrep, CodeQL, SonarQube) reports as PR comments.
+- SCA scan (Snyk, Dependabot) flags vulnerable transitive deps.
+- IaC scan (Checkov, tfsec, KICS) on Terraform/K8s manifests.
+- Secret scan (gitleaks).
+- Findings posted via SARIF — GitHub renders SARIF natively.
+
+Build-time. Container scanning:
+- Trivy, Grype scan base image for OS-package CVEs and language-pkg CVEs.
+- Hadolint lints the Dockerfile.
+- SBOM generated alongside (syft, cyclonedx).
+
+Pre-deploy. Admission controllers verify before pod scheduling:
+- Kyverno verify-images, sigstore-policy-controller — enforce signed images.
+- OPA Gatekeeper, Kyverno — block manifests violating Pod Security Standards.
+
+Runtime. Falco, Tetragon, Wiz, Prisma Cloud — watch live workloads. Always still needed; shift-left doesn't replace runtime.
+
+Security champions program. One developer per team trained in security basics, owns the team's threat model, attends a weekly security guild call. Multiplies a small AppSec team's reach 5-10x.
+
+Threat modeling at design — STRIDE, LINDDUN, pytm.
+
+STRIDE per-element on a Data Flow Diagram (DFD):
+| Letter | Threat              | Property           |
+|--------|---------------------|--------------------|
+| S      | Spoofing            | Authentication     |
+| T      | Tampering           | Integrity          |
+| R      | Repudiation         | Non-repudiation    |
+| I      | Information disc.   | Confidentiality    |
+| D      | Denial of service   | Availability       |
+| E      | Elev. of privilege  | Authorization      |
+
+LINDDUN (KU Leuven, 2010s). Privacy-focused: Linkability, Identifiability, Non-repudiation, Detectability, Disclosure, Unawareness, Non-compliance.
+
+PASTA (Process for Attack Simulation and Threat Analysis). Heavyweight 7-stage method. Used in regulated industries.
+
+pytm (OWASP). Threat-model-as-code. Pythonic DSL describes actors, servers, datastores, dataflows; emits DFD via Graphviz and threat report. Lives in-repo, reviewed in PRs.
+
+When to threat-model: New service or external integration (mandatory), new auth/authz (mandatory), new PII handling (mandatory + LINDDUN), refactor crossing trust boundaries (recommended), pure internal refactor with no new flows (skip).
+
+The tradeoff: shift-left adds developer cognitive load. Calibrating noise vs signal is the actual hard problem:
+- Pre-commit hooks must run in <5s; otherwise developers --no-verify around them.
+- PR comments must be <10% false positive rate; otherwise reviewers stop reading.
+- Triage automation (auto-close stale findings, auto-suppress test-only paths) is mandatory at scale.
+
+The deeper point: shift-left is a developer-experience problem disguised as a security problem. Making the tooling tolerable to live with is what separates programs that work from programs that get bypassed.`,
+        image: '/diagrams/devops/i1-shift-left.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Shift-Left Security.',
+        question: 'Quick-fire interview answers — Shift-Left Security.',
+        answer: `Rapid-fire facts.
+
+Q: Shift-left security in one line?
+A: Move security activities (threat modeling, scanning, secret detection) earlier in the SDLC — design and IDE, not just pre-prod and runtime.
+
+Q: Why shift left?
+A: Cost curve. NIST/IBM data: defect costs ~1x at design, ~6x at build, ~15x in QA, ~100x in production.
+
+Q: STRIDE?
+A: Microsoft 1999 threat-model framework — Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege.
+
+Q: LINDDUN?
+A: Privacy-focused threat model from KU Leuven — Linkability, Identifiability, Non-repudiation, Detectability, Disclosure, Unawareness, Non-compliance.
+
+Q: PASTA?
+A: Process for Attack Simulation and Threat Analysis — 7-stage heavyweight method, used in finance/healthcare.
+
+Q: pytm?
+A: OWASP threat-model-as-code in Python. DSL describes actors/servers/datastores/dataflows; emits DFD via Graphviz.
+
+Q: Pre-commit secret scanners?
+A: gitleaks (Go, fast), Talisman (entropy + patterns), detect-secrets (Yelp). Run via pre-commit framework.
+
+Q: IDE security plugins?
+A: Snyk (deps + SAST), SonarLint (static), Checkov (IaC), Semgrep (pattern). Inline underlines.
+
+Q: SARIF?
+A: Static Analysis Results Interchange Format — JSON schema for scanner output. GitHub Code Scanning, Azure DevOps, GitLab consume natively.
+
+Q: Security champions program?
+A: One developer per team trained in security basics. Multiplies AppSec team reach 5-10x.
+
+Q: How fast must a pre-commit hook run?
+A: Under 5 seconds.
+
+Q: Acceptable PR security comment FP rate?
+A: Under 10%.
+
+Q: Threat-model when?
+A: New service, new auth, new PII handling, anything crossing trust boundaries.
+
+Q: DFD?
+A: Data Flow Diagram — external entities, processes, datastores, dataflows, trust boundaries.
+
+Q: Most common shift-left anti-pattern?
+A: High false-positive scanners blocking PRs. Trains developers to bypass.
+
+Q: pre-commit framework?
+A: Python-authored hook runner. .pre-commit-config.yaml lists hooks.
+
+Q: Hadolint?
+A: Dockerfile linter — flags unsafe patterns.
+
+Q: tfsec vs Checkov?
+A: Both IaC scanners. Checkov is broader; tfsec was Terraform-only and merged into Trivy in 2023.
+
+Q: PR-time stack — minimum viable?
+A: Semgrep + Dependabot or Snyk + gitleaks + Checkov.
+
+Q: Cost of shifting left wrong?
+A: Developer attrition. Friction without value teaches the team that security is a tax.
+
+Q: GitHub Code Scanning?
+A: GitHub's native SARIF-based scanning surface. Ingests CodeQL, Semgrep, ESLint, Checkov.
+
+Q: Copilot Autofix?
+A: GitHub 2024 feature — proposes a code fix for a Code Scanning alert.
+
+Q: Bottom-line shift-left value?
+A: Move 70-80% of findings to where developers can fix them in seconds.
+
+These are answers a security-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://owasp.org/www-community/Threat_Modeling',
+      'https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool',
+      'https://linddun.org/',
+      'https://owasp.org/www-project-pytm/',
+      'https://pre-commit.com/',
+      'https://github.com/gitleaks/gitleaks',
+    ],
+  },
+
+  {
+    id: 'sast-dast-sca',
+    title: 'SAST, DAST, SCA, IAST — The Application Security Taxonomy',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 5,
+    description: 'The four pillars of application security testing — static, dynamic, software composition, and interactive. What each catches, what each misses, false-positive economics, and where they fit in CI/CD.',
+    visualizations: [
+      {
+        title: 'Four pillars and the 2026 reachability frontier',
+        description: `Application security testing splits into four classes:
+
+SAST (Static Application Security Testing). Analyzes source code or compiled artifacts without executing them. Pattern matching, taint analysis, abstract interpretation, control-flow graphs. Catches: injection (SQL, command, LDAP), XSS, hardcoded secrets, insecure crypto APIs, unsafe deserialization, path traversal. Misses: anything requiring runtime context, third-party dependency CVEs.
+
+Tools: Semgrep (pattern-based, fast), CodeQL (GitHub semantic), SonarQube (enterprise), Checkmarx, Snyk Code, Veracode, Fortify.
+
+False-positive rate: 10-30%, worse on dynamic languages.
+
+DAST (Dynamic Application Security Testing). Probes a running application from outside — sends crafted HTTP requests, observes responses. Black-box. Catches: auth bypass, session flaws, server misconfigs (TLS, headers), reflected XSS confirmed by execution, IDOR, open redirects. Misses: source-only issues, anything behind authenticated flows the scanner can't reach.
+
+Tools: OWASP ZAP (open-source, scriptable), Burp Suite (PortSwigger), Invicti (proof-based), Acunetix, Detectify, Nuclei (template-based).
+
+False-positive rate: 5-15% — lower than SAST when scanner confirms with live exploit.
+
+SCA (Software Composition Analysis). Inventories third-party dependencies and matches against vulnerability databases (NVD, GHSA, OSV). Catches: known CVEs in dependencies, license issues, outdated packages, malicious packages. Misses: first-party code bugs.
+
+Tools: Dependabot (GitHub-native, free), Renovate (more configurable), Snyk Open Source, OWASP Dependency-Check, Trivy, Grype.
+
+False-positive rate: very low for "is this version vulnerable?" (database lookup). Higher for "is this exploitable in your usage?".
+
+IAST (Interactive Application Security Testing). Instruments the running application (JVM agent, .NET profiler, Node hook) to observe code execution during testing. Hybrid SAST + DAST. Catches: confirmed exploitability — knows the request reached the vulnerable code path.
+
+Tools: Contrast Security, Seeker (Synopsys), Checkmarx CxIAST, HCL AppScan.
+
+False-positive rate: <5%. Lowest of the four.
+
+Combining the four — typical mature pipeline:
+
+PR open → SAST (Semgrep / CodeQL) + SCA (Dependabot / Snyk) + secret scan → block on critical findings.
+PR merge → build container → SCA on image (Trivy) + sign + SBOM.
+Deploy to staging → IAST during E2E tests + smoke DAST.
+Promote to prod → continuous DAST against prod (light).
+
+False-positive economics. A 5,000-developer org running full SAST + SCA generates 50,000+ findings per month. Each takes 5-30 minutes to triage. 30% FP rate × 10,000 findings = 25,000-150,000 minutes per month. The single highest-leverage AppSec investment after coverage is FP reduction.
+
+Reachability analysis (the 2024-2026 frontier):
+
+Snyk Reachable Vulnerabilities. Static call-graph analysis: does the vulnerable function in the dependency get called from any application code path?
+
+Endor Labs Reachability. Similar approach; emphasizes dependency lifecycle.
+
+Semgrep Pro / Supply Chain. Combines SAST + SCA + reachability.
+
+Reachability changes the math: 10,000 raw findings × 30% FP = 7,000 real. Of those, ~80% are unreachable. Real actionable: ~1,400. Manageable.
+
+SBOM-driven response. When a CVE drops: query SBOMs across all production artifacts → reachability analysis → risk score (severity × reachability × asset criticality) → auto-PR via Dependabot/Renovate → track-only for unreachable. Without SBOMs, step 1 is "ask each team manually" — that's how Log4Shell took weeks.
+
+Severity scoring beyond CVSS:
+- EPSS (Exploit Prediction Scoring System, FIRST). Probability that a CVE will be exploited within 30 days.
+- KEV (CISA Known Exploited Vulnerabilities catalog). Confirmed in-the-wild exploitation.
+- Combined risk = (CVSS / 10) × EPSS × asset_criticality.
+
+Triage automation patterns:
+- Auto-suppress findings in test fixtures and example code.
+- Auto-de-dupe across scanners.
+- Auto-close stale findings.
+- Confidence threshold.
+- SLA by severity: critical = 7d, high = 30d, medium = 90d, low = backlog.
+
+The deeper point: coverage is solved; signal is the problem. Mature AppSec teams in 2026 spend more engineering effort on reducing false positives than on adding scanners.`,
+        image: '/diagrams/devops/i2-security-taxonomy.png',
+      },
+      {
+        title: 'Quick-fire interview answers — SAST, DAST, SCA, IAST.',
+        question: 'Quick-fire interview answers — SAST, DAST, SCA, IAST.',
+        answer: `Rapid-fire facts.
+
+Q: SAST in one line?
+A: Static Application Security Testing — analyzes source or built artifacts without executing them.
+
+Q: DAST?
+A: Dynamic Application Security Testing — probes a running app from outside.
+
+Q: SCA?
+A: Software Composition Analysis — inventory third-party deps and match against CVE/GHSA/OSV.
+
+Q: IAST?
+A: Interactive Application Security Testing — instruments the running app (agent, profiler, hook) to observe code execution.
+
+Q: Best open-source SAST?
+A: Semgrep for pattern-based; CodeQL for semantic.
+
+Q: Best open-source DAST?
+A: OWASP ZAP. Burp Suite Community for manual; Nuclei for template-based.
+
+Q: Default SCA in GitHub?
+A: Dependabot. Free for public and most private repos.
+
+Q: Renovate vs Dependabot?
+A: Both auto-bump. Renovate more configurable, supports more ecosystems.
+
+Q: Trivy?
+A: Aqua's open-source scanner — primary use is container scanning. Absorbed tfsec in 2023.
+
+Q: SARIF?
+A: Static Analysis Results Interchange Format — industry-standard interop format.
+
+Q: SAST false-positive rate?
+A: 10-30% typical, worse on dynamic languages.
+
+Q: DAST false-positive rate?
+A: 5-15% — lower than SAST when confirmed with live exploit.
+
+Q: IAST false-positive rate?
+A: Under 5% — observation-based.
+
+Q: Why isn't IAST more widely adopted?
+A: Requires runtime instrumentation, not all languages well-supported, commercial-heavy.
+
+Q: CodeQL?
+A: GitHub's semantic code analysis as a query language. Powers GitHub Code Scanning.
+
+Q: Sonar — what role?
+A: SonarQube/SonarCloud combine SAST + code-quality. SonarLint is the IDE plugin.
+
+Q: Snyk in one line?
+A: Commercial unified platform — Snyk Open Source (SCA), Snyk Code (SAST), Snyk Container, Snyk IaC.
+
+Q: Reachability analysis?
+A: Static call-graph join with vulnerable functions in dependencies. Snyk Reachable, Endor Labs, Semgrep Pro.
+
+Q: EPSS?
+A: Exploit Prediction Scoring System — probability of exploitation within 30 days.
+
+Q: KEV?
+A: CISA Known Exploited Vulnerabilities catalog — confirmed in-the-wild exploitation.
+
+Q: CVSS in 2026?
+A: Useful but environment-agnostic. Combine with EPSS + asset-criticality.
+
+Q: When to run DAST?
+A: Against staging post-deploy. Smoke DAST per deploy; full DAST nightly.
+
+Q: When to run SAST?
+A: Every PR — incremental scan. Full scan nightly. Block on critical only.
+
+Q: Hardcoded secret detected at PR-time — best response?
+A: Block PR, rotate secret immediately (assume compromised), audit usage, re-author commit. Don't just delete and force-push.
+
+Q: Minimum-viable AppSec stack?
+A: Semgrep + Dependabot + gitleaks + Trivy + OWASP ZAP. All open-source.
+
+These are answers a security-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://owasp.org/www-project-top-ten/',
+      'https://semgrep.dev/docs/',
+      'https://codeql.github.com/docs/',
+      'https://www.zaproxy.org/docs/',
+      'https://docs.snyk.io/',
+      'https://www.first.org/epss/',
+    ],
+  },
+
+  {
+    id: 'supply-chain-slsa',
+    title: 'Supply Chain Security — SLSA, SBOM, Sigstore Beyond Basics',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 5,
+    description: 'The post-SolarWinds discipline of treating every artifact as a tamper-evident, attested, signed object. SLSA levels, SBOM formats, Sigstore keyless signing, in-toto attestations, GUAC graphs, OpenSSF Scorecard.',
+    visualizations: [
+      {
+        title: 'Supply chain shock and the modern stack',
+        description: `Two events forced supply-chain security from background concern to first-class discipline:
+
+SolarWinds (December 2020). Russian SVR (APT29) compromised SolarWinds' build system and inserted SUNBURST malware into Orion. Code shipped through legitimate update channel, signed with legitimate cert. ~18,000 customers including 9 US federal agencies impacted. Lesson: the build pipeline itself is a target.
+
+Log4Shell (December 2021). CVE-2021-44228 in Apache Log4j 2 — JNDI lookups allow RCE. Vulnerability simple; response exposed deeper issue: nobody knew where Log4j was. Triage took weeks at most orgs because they had no SBOM inventory. Lesson: you cannot defend what you cannot enumerate.
+
+The 2021 White House Executive Order 14028 codified the response: federal vendors must produce SBOMs, support vulnerability disclosure, meet NIST SP 800-218 (SSDF). CISA Secure Software Self-Attestation form (2024) made it operational.
+
+The supply-chain stack:
+
+1. Provenance. Where did this artifact come from? Which repo, commit, build system, build steps?
+2. Identity. Who/what built it? Workload identity (OIDC) replacing long-lived signing keys.
+3. Signature. Cryptographic proof of (1) + (2), logged immutably.
+4. Bill of Materials. What's inside? Every dependency + version + license + checksum.
+5. Attestation. Statements about the artifact — "passed test X", "scanned by tool Y".
+6. Verification. At deploy time, policy engine checks all of the above.
+
+Four open frameworks/projects:
+
+SLSA (Supply-chain Levels for Software Artifacts). Graduated maturity model:
+- Level 0: No provenance.
+- Level 1: Provenance documented automatically. Can verify "which CI workflow built this".
+- Level 2: Provenance signed and tamper-resistant. Hosted CI with OIDC.
+- Level 3: Hardened CI. Reusable workflows; isolated builders. Most enterprises target this.
+- Level 4: Reproducible builds. Bit-identical artifacts. Few projects fully achieve.
+
+SBOM (Software Bill of Materials). Two leading specs: SPDX (Linux Foundation, ISO 5962:2021, license-focused) and CycloneDX (OWASP, vulnerability-focused, more compact).
+
+Sigstore — signing infrastructure:
+- cosign (sign/verify).
+- Fulcio (short-lived OIDC certs, 10 minutes).
+- Rekor (transparency log, Merkle tree).
+
+Keyless signing flow:
+1. CI runner authenticates to OIDC issuer (GHA: token.actions.githubusercontent.com).
+2. cosign requests cert from Fulcio, presenting OIDC token.
+3. Fulcio validates, issues 10-min cert bound to OIDC identity.
+4. cosign signs artifact, embeds signature + cert.
+5. cosign uploads to Rekor; receives inclusion proof.
+6. Cert expires after 10 minutes — no signing key to steal.
+
+Verification:
+\`\`\`bash
+cosign verify \\
+  --certificate-identity-regexp='^https://github.com/myorg/myrepo/.*$' \\
+  --certificate-oidc-issuer='https://token.actions.githubusercontent.com' \\
+  ghcr.io/myorg/api:v1.2.3
+\`\`\`
+
+in-toto — attestation framework. Statements about artifacts (provenance, scan results, approvals), signed and verifiable. SLSA provenance is one in-toto predicate type.
+
+Common attestation types: SLSA Provenance v1.0, SPDX/CycloneDX SBOM, vulnerability scan results, VEX (Vulnerability Exploitability eXchange — "this artifact not affected because vulnerable function isn't called"), custom predicates.
+
+Policy enforcement at deploy time:
+
+sigstore-policy-controller — K8s admission controller. Verifies image signatures and attestations before pod schedules.
+
+Kyverno verify-images — alternative; Kyverno's image verification rule does the same job.
+
+GUAC (Graph for Understanding Artifact Composition). OpenSSF project — ingests SBOMs, signatures, attestations, vulnerability data; builds queryable graph. Answers "which deployed artifacts contain log4j 2.14.x?" in seconds.
+
+OpenSSF Scorecard. Automated 0-10 score per check on a repository — Branch-Protection, Code-Review, Pinned-Dependencies, Signed-Releases, Fuzzing, CI-Tests, SAST. Used as gating for OSS dependency adoption.
+
+The deeper point: the pre-2020 model — long-lived signing keys, manual signing, trust-by-vendor — is dead. The 2026 model is keyless, automated, transparency-logged, attestation-rich, and policy-enforced. Tooling is solved; adoption is the friction.`,
+        image: '/diagrams/devops/i3-supply-chain-slsa.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Supply Chain Security.',
+        question: 'Quick-fire interview answers — Supply Chain Security.',
+        answer: `Rapid-fire facts.
+
+Q: SLSA in one line?
+A: Supply-chain Levels for Software Artifacts — graduated framework (0-4) for build provenance, signing, and reproducibility.
+
+Q: SLSA Level 1?
+A: Provenance documented automatically. Can verify "which CI workflow built this".
+
+Q: SLSA Level 2?
+A: Provenance signed and tamper-resistant. Hosted CI with OIDC.
+
+Q: SLSA Level 3?
+A: Hardened CI — reusable workflows, ephemeral isolated builders. Most enterprise programs target this.
+
+Q: SLSA Level 4?
+A: Reproducible builds. Bit-identical from independent rebuilds. Few projects fully achieve.
+
+Q: SBOM?
+A: Software Bill of Materials. Inventory of every package + version + license + checksum.
+
+Q: SPDX vs CycloneDX?
+A: SPDX (Linux Foundation, ISO standard, license-focused). CycloneDX (OWASP, vulnerability-focused).
+
+Q: SBOM tools?
+A: syft, Tern, bom (k8s-sigs), cyclonedx-cli, Trivy, Grype.
+
+Q: Sigstore stack?
+A: cosign + Fulcio (10-min OIDC certs) + Rekor (transparency log). Keyless signing.
+
+Q: Why keyless?
+A: No long-lived signing key to steal. Cert lives 10 minutes; bound to OIDC identity.
+
+Q: Rekor?
+A: Append-only Merkle-tree transparency log for signature operations.
+
+Q: Fulcio?
+A: Short-lived CA. Issues X.509 certs bound to OIDC identity, valid for 10 minutes.
+
+Q: in-toto?
+A: Attestation framework — signed statements about artifacts. SLSA provenance is one in-toto predicate type.
+
+Q: VEX?
+A: Vulnerability Exploitability eXchange — "this artifact not affected by CVE-X because vulnerable function isn't called".
+
+Q: GUAC?
+A: Graph for Understanding Artifact Composition — OpenSSF. Ingests SBOMs, signatures, attestations, vuln data.
+
+Q: Why GUAC?
+A: Answers "which deployed artifacts contain Log4j 2.14.x?" in seconds.
+
+Q: OpenSSF Scorecard?
+A: Automated 0-10 score per check on OSS supply-chain hygiene.
+
+Q: Sigstore policy controller?
+A: K8s admission controller — verifies cosign signatures before pod schedules.
+
+Q: Kyverno verify-images?
+A: Alternative — Kyverno's image-verification rule does same job in YAML.
+
+Q: SolarWinds lesson?
+A: Build pipeline is a target. Signed binaries with compromised build are still compromised.
+
+Q: Log4Shell lesson?
+A: Can't defend what you can't enumerate. SBOMs turn weeks-long incident response into hours.
+
+Q: EO 14028?
+A: 2021 White House EO — federal software vendors must produce SBOMs, run vuln-disclosure programs, meet NIST SSDF.
+
+Q: NIST SSDF?
+A: Secure Software Development Framework, NIST SP 800-218.
+
+Q: Pinned dependencies?
+A: Dependencies referenced by exact version + checksum, not floating tag/range.
+
+Q: Floating tag in production — why bad?
+A: ghcr.io/x:latest can change under you. Use @sha256:... digests.
+
+Q: Minimum-viable supply chain stack?
+A: GHA OIDC + cosign sign + syft SBOM + sigstore-policy-controller. ~1-2 weeks; SLSA Level 2 + verifiable deploy.
+
+These are answers a security-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://slsa.dev/spec/v1.0/',
+      'https://www.sigstore.dev/',
+      'https://in-toto.io/',
+      'https://github.com/ossf/scorecard',
+      'https://guac.sh/',
+      'https://www.cisa.gov/sbom',
+    ],
+  },
+
+  {
+    id: 'policy-as-code',
+    title: 'Policy as Code — OPA, Kyverno, Cedar, IAM Access Analyzer',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 5,
+    description: 'Express security and compliance rules in version-controlled, testable code. OPA/Rego, Kyverno YAML, AWS Cedar, IAM Access Analyzer, HashiCorp Sentinel, Cloud Custodian.',
+    visualizations: [
+      {
+        title: 'Policy-as-code landscape and the K8s migration story',
+        description: `Policy as code = expressing authorization, admission, and compliance rules as version-controlled, testable, reviewable artifacts instead of spreadsheets, wikis, or imperative middleware.
+
+The policy engines:
+
+OPA (Open Policy Agent) + Rego. CNCF-graduated, the de facto standard for PaC. Rego is a declarative query language. Used everywhere — Spacelift, env0, Terraform Cloud, Argo CD admission, Kyverno alternative for K8s only. Domain-agnostic; rich language; battle-tested at scale.
+
+Kyverno. CNCF-graduated, K8s-native. YAML-based, no Rego. Validate, mutate, generate, verifyImages rules. Strengths: no new language, mutate and generate are first-class, Sigstore integration native. K8s-only.
+
+AWS Cedar. Open-sourced May 2023. Purpose-built for fine-grained authz. Powers AWS Verified Permissions. Strengths: formally verified; static analysis tools prove "no policy permits action X" without running engine.
+
+AWS IAM Access Analyzer. AWS-native. Detects: public/cross-account access, unused access, policy validation, custom policy checks.
+
+HashiCorp Sentinel. Commercial. Embedded in Terraform Cloud/Enterprise, Vault, Consul, Nomad. Pre-apply policy checks on Terraform plans.
+
+Cloud Custodian. Capital One open-source, YAML-based. Find + tag + remediate misconfigured cloud resources. Reactive cloud governance.
+
+Choosing — concrete heuristics:
+| Use case                                | Best tool                       |
+|-----------------------------------------|---------------------------------|
+| K8s admission only                      | Kyverno                         |
+| K8s + IaC + API authz unified           | OPA (+ Gatekeeper, conftest)    |
+| Terraform Enterprise                    | Sentinel (or OPA + conftest)    |
+| App-level fine-grained authz            | Cedar / AVP                     |
+| AWS resource compliance                 | IAM Access Analyzer + Custodian |
+| Multi-cloud governance                  | Cloud Custodian                 |
+| Policy across SaaS + cloud              | OPA (most flexible)             |
+
+OPA Gatekeeper vs Kyverno — the K8s admission migration story:
+
+OPA Gatekeeper architecture. OPA engine + ConstraintTemplate CRDs (define a Rego rule + parameter schema) + Constraint CRDs (instantiate the template). Two-layer model: platform team writes templates in Rego; app teams instantiate constraints in YAML.
+
+Strengths: powerful Rego; abstraction; audit and dry-run modes; portable across non-K8s OPA contexts.
+Weaknesses: Rego learning curve; templates gatekeep themselves; mutation is a separate add-on.
+
+Kyverno architecture. Pure YAML; no Rego. ClusterPolicy / Policy resources contain validate, mutate, generate, verifyImages rules. Single-layer: each policy self-contained.
+
+Strengths: no new language; mutate and generate are first-class; verifyImages integrates Sigstore natively; lower memory footprint at scale.
+Weaknesses: YAML pattern matching has a ceiling; K8s-only — can't reuse policies in other contexts.
+
+The migration trend (2023-2026):
+
+Why teams move to Kyverno:
+1. Lower onboarding cost.
+2. App teams can read and propose policies without learning Rego.
+3. Mutate and generate close common gaps.
+4. Sigstore integration built-in.
+5. Lower memory at scale.
+
+Why teams stay on OPA Gatekeeper:
+1. Existing investment in Rego skills.
+2. Cross-domain reuse — same Rego runs admission + IaC scan + API authz.
+3. Higher policy expressiveness for complex invariants.
+4. Audit/dry-run history.
+
+CNCF surveys 2024-2025 show Kyverno surpassing Gatekeeper in new K8s deployments; Gatekeeper retains larger absolute install base in mature enterprises.
+
+Hybrid pattern. Many shops run both: Kyverno for the 80% of policies that fit YAML naturally; Gatekeeper or raw OPA for the 20% that need Rego.
+
+The deeper point: policy as code is the same shift that happened to infrastructure (IaC), config (12-factor), tests (CI). Engine landscape diversified because policy domains are genuinely different.`,
+        image: '/diagrams/devops/i4-policy-as-code.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Policy as Code.',
+        question: 'Quick-fire interview answers — Policy as Code.',
+        answer: `Rapid-fire facts.
+
+Q: Policy as code in one line?
+A: Express authorization, admission, and compliance rules as version-controlled, testable, reviewable code.
+
+Q: OPA?
+A: Open Policy Agent — CNCF-graduated general-purpose policy engine. Rego language.
+
+Q: Rego?
+A: OPA's declarative datalog-inspired language. Expressive but steep learning curve.
+
+Q: OPA Gatekeeper?
+A: OPA wrapped in K8s CRDs (ConstraintTemplate + Constraint). Admission-time validation via Rego.
+
+Q: Kyverno?
+A: K8s-native policy engine. YAML-based, no Rego. Validate, mutate, generate, verifyImages rules.
+
+Q: Kyverno vs Gatekeeper trend?
+A: 2023-2026: Kyverno surpassing Gatekeeper in new K8s deploys. Gatekeeper retains larger enterprise install base.
+
+Q: AWS Cedar?
+A: AWS-authored open-source language for fine-grained app authz. Open-sourced May 2023.
+
+Q: Why Cedar?
+A: Formally verified; static analysis can prove invariants without running the engine.
+
+Q: AWS Verified Permissions?
+A: Managed Cedar service for app-level authz.
+
+Q: IAM Access Analyzer?
+A: AWS-native — detects public/cross-account access, unused permissions, policy validation.
+
+Q: Sentinel?
+A: HashiCorp's commercial policy engine. Embedded in TFC/TFE, Vault, Consul, Nomad.
+
+Q: conftest?
+A: OPA-based CLI for testing structured config (YAML, JSON, HCL, Dockerfile) against Rego rules.
+
+Q: Cloud Custodian?
+A: Capital One open-source YAML-based cloud-resource governance. Find + tag + remediate misconfigured AWS/Azure/GCP resources.
+
+Q: When pick Kyverno?
+A: K8s admission only, want YAML-native, want mutate/generate, value low ramp time.
+
+Q: When pick OPA?
+A: Cross-domain policy reuse (K8s + IaC + API), complex invariants, existing Rego investment.
+
+Q: When pick Cedar?
+A: App-level fine-grained authorization, want formal-verification properties, AWS-native preferred.
+
+Q: When pick Sentinel?
+A: Already on Terraform Cloud/Enterprise.
+
+Q: When pick Custodian?
+A: Ongoing cloud-resource governance, scan/tag/remediate workflows.
+
+Q: Mutate rule?
+A: Kyverno (and Gatekeeper Mutation) — modify an inbound resource at admission.
+
+Q: Generate rule?
+A: Kyverno-only — auto-create new resources in response to events.
+
+Q: verifyImages?
+A: Kyverno rule type — verify cosign signatures and attestations on images at admission.
+
+Q: ClusterImagePolicy?
+A: sigstore-policy-controller equivalent of Kyverno verifyImages.
+
+Q: Pre-merge policy testing?
+A: conftest test against Rego rules; Kyverno CLI test; Sentinel test.
+
+Q: Most common policy-as-code anti-pattern?
+A: Writing policies that block deploys on day-one without dry-run. Roll out via audit mode first.
+
+Q: Hybrid pattern?
+A: Kyverno for 80% YAML-friendly K8s policies; OPA/Gatekeeper for 20% needing complex Rego.
+
+These are answers a security-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://www.openpolicyagent.org/docs/latest/',
+      'https://kyverno.io/docs/',
+      'https://www.cedarpolicy.com/',
+      'https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html',
+      'https://cloudcustodian.io/docs/',
+      'https://docs.hashicorp.com/sentinel',
+    ],
+  },
+
+  {
+    id: 'runtime-security',
+    title: 'Runtime Security — Falco, Tetragon, eBPF, Container Sandboxing',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 5,
+    description: 'The right edge of the security pipeline: detecting and blocking malicious behavior in running workloads. Falco, Tetragon, Tracee, gVisor, Kata, Pod Security Standards, seccomp/AppArmor/SELinux, and the CNAPP consolidation.',
+    visualizations: [
+      {
+        title: 'Runtime detection, sandboxing, PSS, and CNAPP',
+        description: `Runtime security catches what shift-left missed: novel exploits, supply-chain compromises, insider misuse, misconfiguration that surfaces only under load. The 2020-2026 transformation: eBPF replaced kernel modules and userspace agents as the substrate.
+
+Why eBPF changed runtime security. Before eBPF: agents traced syscalls via ptrace (slow), parsed audit logs (lossy), or required kernel modules (operational risk). eBPF programs run in a sandboxed in-kernel VM, attached at tracepoints/kprobes/uprobes, cost ~1-5% CPU, loaded/unloaded without reboot.
+
+Falco — CNCF graduated 2024, the rules-engine reference. Userspace daemon reads syscall events from a kernel module or eBPF probe, evaluates against rules, emits alerts. Mature rule library (>200 default rules); MITRE ATT&CK tagging; outputs integrate with Falcosidekick (Slack, PagerDuty, S3, Loki). Detection-only.
+
+Tetragon — Cilium project, Isovalent, 2022, in-kernel enforcement. eBPF programs run entirely in-kernel, observe AND enforce. Key differentiator: signal-based enforcement — eBPF can send SIGKILL to a process committing a forbidden syscall, before the syscall returns. Younger project; smaller rule ecosystem than Falco.
+
+Tracee — Aqua Security, eBPF-based. Detection + forensics. Pre-built detection signatures.
+
+Other: Pixie (New Relic), Cilium itself + Hubble flow telemetry, Inspektor Gadget.
+
+The detection vs enforcement divide:
+| Tool         | Detection | In-kernel enforcement | K8s native |
+|--------------|-----------|-----------------------|------------|
+| Falco        | Yes       | No (userspace)        | Yes        |
+| Tetragon     | Yes       | Yes (signal-based)    | Yes        |
+| Tracee       | Yes       | No                    | Yes        |
+| AppArmor     | No        | Yes (LSM)             | Limited    |
+| SELinux      | No        | Yes (LSM)             | Limited    |
+| seccomp-bpf  | No        | Yes (syscall filter)  | Yes        |
+
+Container sandboxing — when the kernel boundary isn't enough.
+
+gVisor — Google, 2018. User-space kernel in Go (Sentry process); container syscalls intercepted via ptrace or KVM. Performance overhead: 20-50% on syscall-heavy workloads. Powers Google App Engine, Cloud Run; available as runsc OCI runtime. Best for: untrusted code execution (CI runners, FaaS, multi-tenant compute).
+
+Kata Containers — OpenStack Foundation, 2017. Each container in a stripped-down VM (Cloud Hypervisor or Firecracker). Stronger isolation than gVisor; ~100MB memory overhead per VM; near-native CPU. Best for: per-tenant isolation, regulatory boundaries.
+
+Firecracker — AWS, open-source. MicroVM that powers Lambda and Fargate. Boot time <125ms, memory overhead ~5MB.
+
+Pod Security Standards (PSS) — Kubernetes-native baseline. Replaced PodSecurityPolicies (deprecated 1.21, removed 1.25). Three profiles enforced via the built-in PodSecurity admission controller:
+- Privileged. No restrictions.
+- Baseline. Block known-bad — privileged: true, hostNetwork, hostPID, all capabilities, hostPath.
+- Restricted. Strict — runAsNonRoot enforced, allowPrivilegeEscalation: false, capabilities drop ALL, seccompProfile: RuntimeDefault.
+
+Most production namespaces should run Restricted.
+
+LSM hardening:
+- seccomp: filters syscalls. RuntimeDefault profile blocks ~50 dangerous syscalls.
+- AppArmor: path-based MAC. Distro-default on Ubuntu/Debian.
+- SELinux: type-based MAC. Default on RHEL/CentOS/Fedora; CRI-O auto-labels container processes container_t.
+
+Network Policy — east-west zero-trust. K8s NetworkPolicy CRD. Implementations: Calico (most popular), Cilium (eBPF, supports L7), Antrea, kube-router. Deny-all default + per-app allow rules is the modern pattern.
+
+CNAPP — Cloud-Native Application Protection Platform consolidation. The 2023-2026 trend: vendors merged previously-separate categories (CSPM, CWPP, KSPM, IaC scanning, runtime detection) into single platforms:
+
+Wiz. Agentless cloud security; reads cloud APIs to graph cross-resource risk. Famous for 2023 Microsoft tenant-isolation finding.
+Orca Security. Agentless via SideScanning of cloud volumes. Pioneered agentless CWPP.
+Prisma Cloud (Palo Alto). Bought from Twistlock + RedLock + PureSec. Most comprehensive; heaviest.
+Lacework. ML-driven anomaly detection.
+Sysdig Secure. Built on Falco; CWPP + CSPM + posture management.
+Aqua Security. Container-focused CNAPP; Trivy + Tracee + cloud posture.
+
+What CNAPPs unify: CSPM (Cloud Security Posture — IAM, S3, network ACL misconfigs), CWPP (workload protection — runtime malware/behavior), KSPM (Kubernetes Security Posture — RBAC, NetworkPolicy, image vulns), IaC scanning, DSPM (Data Security — sensitive-data discovery).
+
+The deeper point: runtime security in 2026 isn't just "install Falco". It's a stack: PSS at admission, seccomp+AppArmor at the kernel, NetworkPolicy on the wire, eBPF detection in the runtime, sandboxes for high-risk tenants, and a CNAPP correlating it all.`,
+        image: '/diagrams/devops/i5-runtime-security.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Runtime Security.',
+        question: 'Quick-fire interview answers — Runtime Security.',
+        answer: `Rapid-fire facts.
+
+Q: Falco?
+A: CNCF-graduated 2024 runtime detection engine. Reads syscalls via eBPF or kernel module. Detection-only.
+
+Q: Tetragon?
+A: Cilium-stack runtime security. eBPF detection AND in-kernel enforcement (signal-based, can SIGKILL).
+
+Q: Tracee?
+A: Aqua's eBPF-based detection + forensics tool.
+
+Q: Falco vs Tetragon — when which?
+A: Falco for broad detection with mature rule library. Tetragon when you need in-kernel enforcement.
+
+Q: Why eBPF for runtime?
+A: Sandboxed in-kernel VM, ~1-5% CPU, no kernel modules, no reboot.
+
+Q: gVisor in one line?
+A: Google's user-space kernel in Go. 20-50% overhead on syscall-heavy workloads.
+
+Q: Kata Containers?
+A: Each container in lightweight VM (Cloud Hypervisor / Firecracker). ~100MB memory per VM.
+
+Q: Firecracker?
+A: AWS open-source microVM. Powers Lambda and Fargate. <125ms boot.
+
+Q: When to sandbox?
+A: Untrusted code (CI runners, FaaS, multi-tenant), regulatory tenant boundaries.
+
+Q: Pod Security Standards profiles?
+A: Privileged (no restrictions), Baseline (block known-bad), Restricted (strict — runAsNonRoot, drop ALL caps, RuntimeDefault seccomp).
+
+Q: PSS replaced what?
+A: PodSecurityPolicy (PSP) — deprecated K8s 1.21, removed 1.25.
+
+Q: seccomp?
+A: Kernel syscall filter. RuntimeDefault blocks ~50 dangerous syscalls.
+
+Q: AppArmor?
+A: Path-based LSM. Default on Ubuntu/Debian.
+
+Q: SELinux?
+A: Type-based LSM. Default on RHEL/CentOS/Fedora.
+
+Q: NetworkPolicy implementations?
+A: Calico (most popular), Cilium (eBPF + L7), Antrea, kube-router.
+
+Q: Cilium L7 NetworkPolicy?
+A: eBPF-based — match HTTP methods, paths, headers.
+
+Q: CNAPP?
+A: Cloud-Native Application Protection Platform. Unifies CSPM + CWPP + KSPM + IaC + DSPM. Wiz, Orca, Prisma Cloud, Lacework, Sysdig, Aqua.
+
+Q: CSPM?
+A: Cloud Security Posture Management. Detects IAM, S3, network ACL misconfigurations.
+
+Q: CWPP?
+A: Cloud Workload Protection Platform. Runtime malware/behavior detection.
+
+Q: KSPM?
+A: Kubernetes Security Posture Management. RBAC, NetworkPolicy, image vulns, PSS compliance.
+
+Q: Wiz claim to fame?
+A: Agentless cloud security with attack-path graphs. Famous for Azure tenant-isolation findings (2023).
+
+Q: Orca pioneered?
+A: Agentless CWPP via SideScanning. No agent installation.
+
+Q: Sysdig Secure built on?
+A: Falco. Sysdig open-sourced Falco then productized it.
+
+Q: Privileged container — what?
+A: privileged: true gives all capabilities and host devices. Effectively root on host.
+
+Q: hostPath risk?
+A: Mounts host directory into container. /var/run/docker.sock or / mounts can escape entirely.
+
+Q: runAsNonRoot?
+A: securityContext setting preventing UID 0. Mandatory under PSS Restricted.
+
+Q: Layered runtime defense — minimum?
+A: PSS Restricted + RuntimeDefault seccomp + Calico/Cilium NetworkPolicy default-deny + Falco for detection. Add Tetragon or sandboxing for higher-risk workloads.
+
+These are answers a security-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://falco.org/docs/',
+      'https://tetragon.io/docs/',
+      'https://kubernetes.io/docs/concepts/security/pod-security-standards/',
+      'https://gvisor.dev/docs/',
+      'https://katacontainers.io/docs/',
+      'https://www.cncf.io/blog/2023/10/02/the-cnapp-landscape/',
+    ],
+  },
+
 ];
