@@ -46,6 +46,9 @@ export default function ZoomableImage({
   hideExpandHint = false,
 }: ZoomableImageProps) {
   const [open, setOpen] = useState(false);
+  const [broken, setBroken] = useState(false);
+
+  if (broken) return null;
 
   // Esc to close + body scroll lock while modal open.
   useEffect(() => {
@@ -102,6 +105,7 @@ export default function ZoomableImage({
           loading="lazy"
           decoding="async"
           className="img-bespoke"
+          onError={() => setBroken(true)}
           style={{
             display: 'block',
             width: '100%',
