@@ -43,11 +43,11 @@ describe('classifyDesignKind', () => {
     expect(classifyDesignKind('build a scalable platform for stocks')).toBe('system');
   });
 
-  it('uses frontend hint when question text has no cue', () => {
-    // No infra/app cue in "design Twitter" → hint decides
-    expect(classifyDesignKind('design Twitter', 'application')).toBe('application');
-    expect(classifyDesignKind('design Twitter', 'infrastructure')).toBe('infrastructure');
-    expect(classifyDesignKind('design Twitter', 'system')).toBe('system');
+  it('uses frontend hint when question text has no cue and no known-problem match', () => {
+    // Truly novel question — no APP/INFRA cue, not in category map.
+    expect(classifyDesignKind('design my custom workflow', 'application')).toBe('application');
+    expect(classifyDesignKind('design my custom workflow', 'infrastructure')).toBe('infrastructure');
+    expect(classifyDesignKind('design my custom workflow', 'system')).toBe('system');
   });
 
   it('question-text cues BEAT frontend hint (hint is fallback, not override)', () => {
@@ -70,6 +70,46 @@ describe('classifyDesignKind', () => {
   it('case-insensitive on infrastructure cues', () => {
     expect(classifyDesignKind('Design A CDN For Video Streaming')).toBe('infrastructure');
     expect(classifyDesignKind('DESIGN A RATE LIMITER')).toBe('infrastructure');
+  });
+
+  describe('Phase 2 — known-problem category override (systemDesignProblemCategoryMap)', () => {
+    it('routes known infra problems to infrastructure (highest precedence)', () => {
+      // url-shortener and rate-limiter are in the categoryMap as 'infrastructure'.
+      expect(classifyDesignKind('Design a URL shortener')).toBe('infrastructure');
+      expect(classifyDesignKind('how would you design a tiny URL service')).toBe('infrastructure');
+      expect(classifyDesignKind('design typeahead suggestions')).toBe('infrastructure');
+      expect(classifyDesignKind('design Google Maps')).toBe('infrastructure');
+      expect(classifyDesignKind('design an autocomplete system')).toBe('infrastructure');
+    });
+
+    it('routes known social/streaming/communication products to system', () => {
+      expect(classifyDesignKind('design Twitter')).toBe('system');
+      expect(classifyDesignKind('design WhatsApp')).toBe('system');
+      expect(classifyDesignKind('design Netflix')).toBe('system');
+      expect(classifyDesignKind('design YouTube')).toBe('system');
+      expect(classifyDesignKind('design Zoom')).toBe('system');
+    });
+
+    it('known-problem lookup beats hint AND keyword cues', () => {
+      // Twitter is in the map → system, not whatever 'application' hint says.
+      expect(classifyDesignKind('design Twitter', 'application')).toBe('system');
+      // 'twitter trends' → infrastructure per map; the bare word "trends"
+      // could otherwise be ambiguous.
+      expect(classifyDesignKind('design twitter trends', 'system')).toBe('infrastructure');
+    });
+
+    it('prefers more-specific (longer) slug match when multiple match', () => {
+      // 'twitter' AND 'twitter-trends' both substrings of "twitter trends" —
+      // longer slug wins.
+      expect(classifyDesignKind('design twitter trends')).toBe('infrastructure');
+    });
+
+    it('falls through to keyword cues when no slug matches', () => {
+      // "design a parking lot" is in APP_CUES but not in the map → application.
+      expect(classifyDesignKind('design a parking lot')).toBe('application');
+      // "design an LRU cache" → application via APP_CUES.
+      expect(classifyDesignKind('design an LRU cache')).toBe('application');
+    });
   });
 
   it('infrastructure cues win when both app and infra cues appear (more specific)', () => {
