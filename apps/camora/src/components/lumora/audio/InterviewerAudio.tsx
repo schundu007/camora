@@ -281,7 +281,7 @@ export function InterviewerAudioPill() {
     <button
       onClick={onClick}
       disabled={state === 'connecting'}
-      className="hidden sm:flex items-center gap-1.5 px-2 py-1 text-[11px] font-bold rounded-lg transition-all shrink-0 disabled:cursor-wait"
+      className="hidden sm:flex items-center gap-1.5 px-2 py-1 text-[11px] font-bold rounded-lg transition-[background-color,color,border-color,opacity] duration-150 active:scale-[0.98] shrink-0 disabled:cursor-wait"
       style={{ background: palette.bg, color: palette.fg, border: `1px solid ${palette.border}` }}
       title={tooltip}
       aria-pressed={state === 'live'}

@@ -201,7 +201,7 @@ function SettingCard({ icon, title, description, children }: {
   icon: React.ReactNode; title: string; description: string; children?: React.ReactNode;
 }) {
   return (
-    <div className="p-4 rounded-xl transition-all hover:shadow-sm" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+    <div className="p-4 rounded-xl transition-[box-shadow,transform] hover:shadow-sm" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--bg-elevated)', color: 'var(--cam-primary)' }}>
         {icon}
       </div>
@@ -219,7 +219,7 @@ function VoiceModeCard({ active, onClick, icon, title, description, badge, disab
   return (
     <button
       onClick={disabled ? undefined : onClick}
-      className="p-5 rounded-xl text-left transition-all relative"
+      className="p-5 rounded-xl text-left transition-[background-color,border-color,box-shadow,transform] relative active:scale-[0.98]"
       style={{
         background: active ? 'var(--accent-subtle)' : 'var(--bg-surface)',
         border: active ? '2px solid var(--cam-primary)' : '1.5px solid var(--border)',

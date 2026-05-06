@@ -784,7 +784,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
           window.addEventListener('mousemove', handleMove);
           window.addEventListener('mouseup', handleUp);
         }}
-        className="fixed z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 select-none group"
+        className="fixed z-50 w-14 h-14 rounded-full flex items-center justify-center transition-[transform,box-shadow,opacity] hover:scale-110 active:scale-[0.98] select-none group"
         style={{
           right: `calc(24px - ${position.x}px)`,
           bottom: `calc(24px - ${position.y}px)`,
@@ -974,7 +974,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               <button
                 key={mode}
                 onClick={(e) => { e.stopPropagation(); setAnswerMode(mode); }}
-                className="px-2.5 py-0.5 rounded transition-all"
+                className="px-2.5 py-0.5 rounded transition-[background-color,color]"
                 style={{
                   fontSize: '9px',
                   fontWeight: 700,
@@ -1074,7 +1074,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   <p className="text-[10px] mb-3" style={{ color: 'var(--text-muted)' }}>Ask a question to get started</p>
                   <div className="space-y-1.5">
                     {['Tell me about yourself', 'Describe a conflict at work', 'Why should we hire you?', 'Your biggest weakness?'].map(s => (
-                      <button key={s} onClick={() => { ask(s); setMobileRailOpen(false); }} className="w-full text-left px-3 py-2.5 md:py-2 rounded-lg text-[13px] md:text-[11px] transition-all" style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
+                      <button key={s} onClick={() => { ask(s); setMobileRailOpen(false); }} className="w-full text-left px-3 py-2.5 md:py-2 rounded-lg text-[13px] md:text-[11px] transition-[background-color,border-color,color] active:scale-[0.98]" style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
                         onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.borderColor = 'var(--cam-primary)'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--border)'; }}>{s}</button>
                     ))}
@@ -1248,7 +1248,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               </p>
               <div className="grid grid-cols-2 gap-1.5 w-full">
                 {['Design a URL shortener', 'Explain TCP vs UDP', 'Tell me about a conflict', 'Detect cycle in linked list'].map(s => (
-                  <button key={s} onClick={() => ask(s)} className="text-left px-2.5 py-2 rounded-lg transition-all"
+                  <button key={s} onClick={() => ask(s)} className="text-left px-2.5 py-2 rounded-lg transition-[background-color,border-color,color] active:scale-[0.98]"
                     style={{ border: '1px solid var(--border)', fontSize: '10px', color: 'var(--text-muted)' }}
                     onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'var(--bg-elevated)'; }}
                     onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}>
@@ -1467,7 +1467,7 @@ export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => voi
   return (
     <button
       onClick={onClick}
-      className="fixed right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105"
+      className="fixed right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-[transform,box-shadow,opacity] hover:scale-105 active:scale-[0.98]"
       style={{
         // Float above the mobile bottom nav (56px + safe-area-inset)
         // so the toggle never overlaps the Home/Code/Design/Prep tabs.

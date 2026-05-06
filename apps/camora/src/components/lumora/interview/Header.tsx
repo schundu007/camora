@@ -162,13 +162,13 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
 
         {/* Navigation — pill tabs with icon+label, Jakarta Sans bold */}
         <div data-tour="tabs" className="flex items-center h-full shrink-0 px-1" style={{ borderRight: '1px solid var(--border)' }}>
-          <Link to="/capra/prepare" className="flex items-center gap-1 px-2 py-1 mx-0.5 rounded-md text-[11px] transition-all" style={{ color: 'var(--text-muted)', fontFamily: "'Inter', sans-serif", fontWeight: 700 }} title="Prepare">
+          <Link to="/capra/prepare" className="flex items-center gap-1 px-2 py-1 mx-0.5 rounded-md text-[11px] transition-[background-color,color] active:scale-[0.98]" style={{ color: 'var(--text-muted)', fontFamily: "'Inter', sans-serif", fontWeight: 700 }} title="Prepare">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
             <span className="hidden xl:inline">Prepare</span>
           </Link>
           {TABS.map((tab) => (
             <button key={tab.id} onClick={() => handleTabClick(tab.id)}
-              className="flex items-center gap-1.5 px-2.5 py-1 mx-0.5 rounded-md text-[11px] font-bold transition-all"
+              className="flex items-center gap-1.5 px-2.5 py-1 mx-0.5 rounded-md text-[11px] font-bold transition-[background-color,color,box-shadow] active:scale-[0.98]"
               style={currentTab === tab.id
                 ? { background: 'var(--accent-subtle)', color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif", boxShadow: 'inset 0 0 0 1px var(--border)' }
                 : { color: 'var(--text-muted)', fontFamily: "'Inter', sans-serif" }}>
@@ -227,11 +227,11 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
 
         {/* Actions — icon-only, subtle */}
         <div className="flex items-center gap-0.5 px-1.5 h-full shrink-0" style={{ borderLeft: '1px solid var(--border)' }}>
-          <button onClick={() => setUseSearch(!useSearch)} className="p-1.5 rounded-md transition-all"
+          <button onClick={() => setUseSearch(!useSearch)} className="p-1.5 rounded-md transition-[background-color,color] active:scale-[0.98]"
             style={useSearch ? { background: 'var(--accent-subtle)', color: 'var(--text-primary)' } : { color: 'var(--text-muted)' }} title="Search (⌘S)">
             <SearchIcon />
           </button>
-          <button className="p-1.5 rounded-md transition-all" style={{ color: 'var(--text-muted)' }} onClick={() => clearHistory()} title="Reset (⌘⌫)">
+          <button className="p-1.5 rounded-md transition-[background-color,color] active:scale-[0.98]" style={{ color: 'var(--text-muted)' }} onClick={() => clearHistory()} title="Reset (⌘⌫)">
             <ResetIcon />
           </button>
         </div>
@@ -257,7 +257,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           />
           <button
             onClick={toggleExpand}
-            className="p-1.5 rounded-lg transition-all duration-200 ml-1 shrink-0"
+            className="p-1.5 rounded-lg transition-[background-color,color] duration-200 ml-1 shrink-0 active:scale-[0.98]"
             style={isExpanded ? { color: 'var(--text-primary)', background: 'var(--accent-subtle)' } : { color: 'var(--text-muted)' }}
             onMouseEnter={(e) => { if (!isExpanded) { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'var(--bg-elevated)'; }}}
             onMouseLeave={(e) => { if (!isExpanded) { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}}
@@ -268,7 +268,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           {inputValue && (
             <button
               onClick={onSubmit}
-              className="font-display flex items-center gap-1.5 px-4 py-1.5 text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all ml-2"
+              className="font-display flex items-center gap-1.5 px-4 py-1.5 text-white text-xs font-bold rounded-lg hover:opacity-90 transition-[opacity,transform] active:scale-[0.98] ml-2"
               style={{ background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -299,7 +299,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
               <button
                 onClick={handleTextareaSubmit}
                 disabled={!inputValue}
-                className="font-display flex items-center gap-1.5 px-4 py-2 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+                className="font-display flex items-center gap-1.5 px-4 py-2 text-white text-xs font-bold rounded-xl transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
                 style={{ background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -309,7 +309,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
               </button>
               <button
                 onClick={() => setIsExpanded(false)}
-                className="font-display flex items-center justify-center px-4 py-2 text-gray-400 text-xs font-medium rounded-xl hover:bg-white/5 hover:text-white transition-all"
+                className="font-display flex items-center justify-center px-4 py-2 text-gray-400 text-xs font-medium rounded-xl hover:bg-white/5 hover:text-white transition-[background-color,color] active:scale-[0.98]"
               >
                 Collapse
               </button>

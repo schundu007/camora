@@ -122,13 +122,13 @@ export function PaywallGate({ children, requiredPlan: _requiredPlan = 'any_paid'
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             to={`/pricing?returnTo=${returnTo}`}
-            className="px-6 py-3 bg-[var(--accent)] text-white font-bold text-sm rounded-xl hover:opacity-90 transition-all"
+            className="px-6 py-3 bg-[var(--accent)] text-white font-bold text-sm rounded-xl hover:opacity-90 transition-[opacity,transform] active:scale-[0.98]"
           >
             View Plans
           </Link>
           <Link
             to="/capra/prepare"
-            className="px-6 py-3 bg-[var(--bg-elevated)] text-[var(--text-secondary)] font-semibold text-sm rounded-xl hover:bg-[var(--border)] transition-all"
+            className="px-6 py-3 bg-[var(--bg-elevated)] text-[var(--text-secondary)] font-semibold text-sm rounded-xl hover:bg-[var(--border)] transition-[background-color,color,transform] active:scale-[0.98]"
           >
             Continue Free
           </Link>

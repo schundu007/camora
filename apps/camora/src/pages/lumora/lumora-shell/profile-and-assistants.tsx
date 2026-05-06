@@ -329,7 +329,7 @@ export function AssistantsPage() {
             <h2 className="text-xl font-bold text-white">Interview <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Assistants</span></h2>
             <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Role + Resume + JD profiles for personalized AI</p>
           </div>
-          <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full transition-all hover:scale-[1.02]" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+          <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full transition-[transform,box-shadow] duration-150 hover:scale-[1.02] active:scale-[0.98]" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
             New
           </button>
@@ -351,7 +351,7 @@ export function AssistantsPage() {
           <div className="mb-3">
             <label className="text-[10px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-muted)' }}>AI Model</label>
             <div className="flex gap-2">{AI_MODELS.map(m => (
-              <button key={m.value} onClick={() => setForm(f => ({ ...f, model: m.value }))} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all" style={{ border: form.model === m.value ? '2px solid ' + m.color : '1px solid var(--border)', color: form.model === m.value ? m.color : 'var(--text-muted)', background: form.model === m.value ? m.color + '14' : 'var(--bg-surface)' }}>{m.label}</button>
+              <button key={m.value} onClick={() => setForm(f => ({ ...f, model: m.value }))} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-[background-color,border-color,color] duration-150 active:scale-[0.98]" style={{ border: form.model === m.value ? '2px solid ' + m.color : '1px solid var(--border)', color: form.model === m.value ? m.color : 'var(--text-muted)', background: form.model === m.value ? m.color + '14' : 'var(--bg-surface)' }}>{m.label}</button>
             ))}</div>
           </div>
           <div className="mb-3">
@@ -407,7 +407,7 @@ export function AssistantsPage() {
         <div className="space-y-3">{assistants.map(a => {
           const mi = AI_MODELS.find(m => m.value === a.model);
           return (
-            <div key={a.id} className="p-4 rounded-xl hover:shadow-sm transition-all" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+            <div key={a.id} className="p-4 rounded-xl hover:shadow-sm transition-[box-shadow,border-color] duration-150" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-subtle)' }}>

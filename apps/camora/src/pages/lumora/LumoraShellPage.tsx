@@ -310,7 +310,7 @@ export function LumoraShellPage() {
           <button
             type="button"
             onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
-            className="flex items-center gap-1 px-2 py-1.5 rounded-md text-[12px] font-semibold transition-colors hover:bg-[var(--bg-elevated)] shrink-0"
+            className="flex items-center gap-1 px-2 py-1.5 rounded-md text-[12px] font-semibold transition-[background-color,color] hover:bg-[var(--bg-elevated)] active:scale-[0.98] shrink-0"
             style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
             title="Back"
             aria-label="Back"
@@ -326,8 +326,8 @@ export function LumoraShellPage() {
               / jobs surfaces. Hidden on small screens; mobile users get the
               same destinations from the hamburger sheet. */}
           <div className="hidden md:flex items-center gap-1 shrink-0">
-            <Link to="/capra/prepare" className="px-2 py-1.5 rounded-md text-[12px] font-semibold transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }}>Prepare</Link>
-            <Link to="/pricing" className="px-2 py-1.5 rounded-md text-[12px] font-semibold transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }}>Pricing</Link>
+            <Link to="/capra/prepare" className="px-2 py-1.5 rounded-md text-[12px] font-semibold transition-[background-color,color] hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }}>Prepare</Link>
+            <Link to="/pricing" className="px-2 py-1.5 rounded-md text-[12px] font-semibold transition-[background-color,color] hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }}>Pricing</Link>
           </div>
 
           {/* LEFT spacer — pushes the tab pills toward the centre of the
@@ -361,7 +361,7 @@ export function LumoraShellPage() {
                 <Link
                   key={tab.id}
                   to={tab.path}
-                  className="px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all"
+                  className="px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-[background-color,color,transform]"
                   style={isActive
                     ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }
                     : { color: 'rgba(255,255,255,0.85)' }}
@@ -583,7 +583,7 @@ export function LumoraShellPage() {
                     <p className="text-xs mt-1 mb-4">Start an interview to see your history here.</p>
                     <Link
                       to="/lumora"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all hover:opacity-90"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]"
                       style={{ background: 'var(--cam-gold-leaf)', color: '#020617' }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -603,7 +603,7 @@ export function LumoraShellPage() {
                           tabIndex={0}
                           onClick={() => { setFocusedEntry(realIdx); navigate('/lumora'); }}
                           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFocusedEntry(realIdx); navigate('/lumora'); } }}
-                          className="flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all duration-200"
+                          className="flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-[transform,box-shadow,border-color] duration-200"
                           style={{
                             background:
                               'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(34,211,238,0.02) 100%)',
@@ -639,7 +639,7 @@ export function LumoraShellPage() {
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); setFocusedEntry(realIdx); navigate('/lumora'); }}
-                            className="text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors shrink-0"
+                            className="text-[11px] font-semibold px-3 py-1.5 rounded-md transition-[background-color,color] active:scale-[0.98] shrink-0"
                             style={{ color: 'var(--cam-primary-dk)', background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}
                           >View</button>
                           <button

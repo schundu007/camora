@@ -593,14 +593,14 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           <div className="hidden md:flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.1)' }}>
             <button
               onClick={() => setDetailLevel('basic')}
-              className={`px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all ${
+              className={`px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-[background-color,color,transform] active:scale-[0.98] ${
                 detailLevel === 'basic' ? 'text-white shadow-sm' : 'text-white/75 hover:text-white'
               }`}
               style={detailLevel === 'basic' ? { background: 'rgba(255,255,255,0.2)' } : {}}
             >Basic</button>
             <button
               onClick={() => setDetailLevel('full')}
-              className={`px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all ${
+              className={`px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-[background-color,color,transform] active:scale-[0.98] ${
                 detailLevel === 'full' ? 'text-white shadow-sm' : 'text-white/75 hover:text-white'
               }`}
               style={detailLevel === 'full' ? { background: 'rgba(255,255,255,0.2)' } : {}}
@@ -716,7 +716,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 <button
                   key={tab}
                   onClick={() => { setInputTab(tab); setInputCollapsed(false); }}
-                  className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all"
+                  className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
                   style={
                     inputTab === tab
                       ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
@@ -729,7 +729,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             </div>
             <button
               onClick={() => setInputCollapsed(!inputCollapsed)}
-              className="shrink-0 flex items-center justify-center w-7 h-7 transition-all hover:bg-white/10"
+              className="shrink-0 flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
               style={{
                 color: '#FFFFFF',
                 border: '1px solid rgba(255,255,255,0.16)',
@@ -800,7 +800,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   const file = e.dataTransfer.files?.[0];
                   if (file && file.type.startsWith('image/')) handleImageUpload(file);
                 }}
-                className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer transition-all"
+                className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer transition-[border-color,background-color]"
                 style={{ borderColor: t.inputBorder, background: t.sectionBg }}
               >
                 <input
@@ -838,7 +838,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <button
               onClick={() => handleSubmit()}
               disabled={!problemText.trim() || isLoading}
-              className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}
+              className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}
             >
               {isLoading ? (
                 <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
@@ -1127,7 +1127,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                             }}
                             disabled={isLoading}
                             title={`Drill into ${tier.tech}`}
-                            className="rounded-lg p-2 text-center transition-all hover:shadow-sm disabled:opacity-60"
+                            className="rounded-lg p-2 text-center transition-[box-shadow,transform] hover:shadow-sm active:scale-[0.98] disabled:opacity-60"
                             style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg, cursor: isLoading ? 'not-allowed' : 'pointer' }}
                             onMouseEnter={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--cam-primary)'; }}
                             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = t.cardBorder; }}>
@@ -1231,7 +1231,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                           key={i}
                           onClick={() => handleSubmit(f.question)}
                           disabled={isLoading}
-                          className="rounded-lg p-2.5 text-left transition-all hover:shadow-sm disabled:opacity-60"
+                          className="rounded-lg p-2.5 text-left transition-[box-shadow,transform] hover:shadow-sm active:scale-[0.98] disabled:opacity-60"
                           style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg, cursor: isLoading ? 'not-allowed' : 'pointer' }}
                           title="Click to re-stream a focused answer to this follow-up"
                           onMouseEnter={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--cam-primary)'; }}

@@ -132,7 +132,7 @@ export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSideba
                       >
                         <button
                           onClick={() => { onSelectEntry(item.index); if (window.innerWidth < 1024) onClose(); }}
-                          className="w-full text-left px-4 py-2 text-[13px] transition-all flex items-center gap-2 hover:bg-[var(--bg-elevated)]"
+                          className="w-full text-left px-4 py-2 text-[13px] transition-[background-color] duration-150 active:scale-[0.98] flex items-center gap-2 hover:bg-[var(--bg-elevated)]"
                           style={{ color: 'var(--text-secondary)' }}
                         >
                           <span

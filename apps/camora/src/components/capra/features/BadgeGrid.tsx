@@ -162,7 +162,7 @@ export default function BadgeGrid() {
         {badges.map((badge) => (
           <div
             key={badge.key}
-            className={`relative rounded-xl p-4 text-center transition-all ${
+            className={`relative rounded-xl p-4 text-center transition-[border-color,box-shadow] duration-150 ${
               badge.earned
                 ? 'border-2 shadow-sm'
                 : 'border'

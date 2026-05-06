@@ -59,14 +59,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <div className="flex items-center justify-center gap-2">
               <button
                 onClick={() => this.setState({ hasError: false, error: null })}
-                className="px-5 py-2 text-[12px] font-bold rounded-lg cursor-pointer transition-all hover:scale-[1.02]"
+                className="px-5 py-2 text-[12px] font-bold rounded-lg cursor-pointer transition-[background-color,transform] hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)' }}
               >
                 Try again
               </button>
               <button
                 onClick={() => { window.location.href = '/'; }}
-                className="px-5 py-2 text-[12px] font-semibold rounded-lg cursor-pointer transition-colors"
+                className="px-5 py-2 text-[12px] font-semibold rounded-lg cursor-pointer transition-[background-color,border-color,color] active:scale-[0.98]"
                 style={{ background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
               >
                 Go home

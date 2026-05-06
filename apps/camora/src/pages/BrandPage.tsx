@@ -301,7 +301,7 @@ export default function BrandPage() {
               <button
                 key={logo.name}
                 onClick={() => setSelectedLogo(i)}
-                className={`group text-left rounded-2xl border transition-all duration-300 overflow-hidden ${
+                className={`group text-left rounded-2xl border transition-[transform,box-shadow,border-color] duration-300 overflow-hidden active:scale-[0.98] ${
                   selectedLogo === i
                     ? 'border-[var(--accent)]/40 ring-2 ring-[var(--accent)]/20'
                     : 'border-white/[0.08] hover:border-white/[0.15]'
@@ -352,7 +352,7 @@ export default function BrandPage() {
               <button
                 key={wm.name}
                 onClick={() => setSelectedWordmark(i)}
-                className={`group text-left rounded-2xl border transition-all duration-300 overflow-hidden ${
+                className={`group text-left rounded-2xl border transition-[transform,box-shadow,border-color] duration-300 overflow-hidden active:scale-[0.98] ${
                   selectedWordmark === i
                     ? 'border-[var(--accent)]/40 ring-2 ring-[var(--accent)]/20'
                     : 'border-white/[0.08] hover:border-white/[0.15]'

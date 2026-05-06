@@ -313,7 +313,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
             <button
               key={cp.name}
               onClick={cp.onClick}
-              className="group relative text-left rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+              className="group relative text-left rounded-2xl overflow-hidden transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 active:scale-[0.98]"
               style={{
                 background: 'linear-gradient(135deg, rgba(38,97,156,0.06) 0%, rgba(34,211,238,0.04) 100%)',
                 border: '1px solid rgba(255,255,255,0.06)',
@@ -351,7 +351,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
               <div className="p-5">
                 <div className="flex items-center gap-2.5 mb-2.5">
                   <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-all group-hover:scale-110"
+                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-[transform] group-hover:scale-110"
                     style={{ background: 'rgba(38,97,156,0.12)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)' }}
                   >
                     {cp.icon}
@@ -359,7 +359,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
                   <span className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>{cp.name}</span>
                 </div>
                 <p className="text-[12px] leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{cp.desc}</p>
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-all group-hover:gap-2" style={{ color: 'var(--cam-primary)' }}>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-[gap,color,opacity] group-hover:gap-2" style={{ color: 'var(--cam-primary)' }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
                   Launch
                 </span>
@@ -382,7 +382,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
             <button
               key={p.text}
               onClick={() => handlePromptClick(p)}
-              className="group flex items-center gap-3 text-left p-3 rounded-xl transition-all duration-200 hover:-translate-y-0.5"
+              className="group flex items-center gap-3 text-left p-3 rounded-xl transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
               style={{
                 background: 'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(34,211,238,0.02) 100%)',
                 border: '1px solid rgba(38,97,156,0.10)',
@@ -399,7 +399,7 @@ function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
               <PromptThumb type={p.type} />
               <span className="text-[13px] leading-snug flex-1" style={{ color: 'var(--text-secondary)' }}>{p.text}</span>
               <svg
-                className="w-3.5 h-3.5 shrink-0 opacity-0 -translate-x-1 group-hover:opacity-60 group-hover:translate-x-0 transition-all"
+                className="w-3.5 h-3.5 shrink-0 opacity-0 -translate-x-1 group-hover:opacity-60 group-hover:translate-x-0 transition-[transform,opacity]"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}

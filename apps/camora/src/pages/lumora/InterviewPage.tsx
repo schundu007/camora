@@ -195,7 +195,7 @@ export function InterviewPage() {
                       <div className="flex items-center gap-2">
                         <button onClick={() => setIsExpanded(false)} className="text-xs transition-colors px-2 py-1" style={{ color: 'var(--text-muted)' }}>Collapse</button>
                         <button onClick={handleInputSubmit} disabled={!inputValue.trim() || isStreaming}
-                          className="px-4 py-1.5 rounded-lg text-xs font-bold disabled:opacity-30 transition-all"
+                          className="px-4 py-1.5 rounded-lg text-xs font-bold disabled:opacity-30 transition-[background-color,color,opacity] duration-150 active:scale-[0.98]"
                           style={{ background: inputValue.trim() ? 'linear-gradient(135deg, var(--accent), var(--accent))' : 'var(--border)', color: '#FFFFFF' }}>
                           Send
                         </button>
@@ -203,7 +203,7 @@ export function InterviewPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 rounded-2xl px-3 sm:px-4 h-12 sm:h-12 transition-all focus-within:shadow-[0_0_0_2px_rgba(38,97,156,0.3)]"
+                  <div className="flex items-center gap-2 rounded-2xl px-3 sm:px-4 h-12 sm:h-12 transition-[box-shadow] duration-150 focus-within:shadow-[0_0_0_2px_rgba(38,97,156,0.3)]"
                     style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', boxShadow: '0 -2px 12px rgba(0,0,0,0.06)' }}>
                     {isStreaming && (
                       <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse shrink-0" style={{ boxShadow: '0 0 8px rgba(38,97,156,0.4)' }} />
@@ -230,7 +230,7 @@ export function InterviewPage() {
                     </button>
                     {inputValue.trim() && !isStreaming && (
                       <button onClick={handleInputSubmit}
-                        className="p-1.5 rounded-lg transition-all shrink-0"
+                        className="p-1.5 rounded-lg transition-[transform,box-shadow] duration-150 active:scale-[0.98] shrink-0"
                         style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent))', boxShadow: '0 2px 8px rgba(38,97,156,0.3)' }}>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#FFFFFF' }}>
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />

@@ -113,7 +113,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
             <Link
               key={item.id}
               to={item.path}
-              className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-all ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
+              className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
               style={itemStyle(active)}
               title={expanded ? undefined : item.label}
             >
@@ -133,7 +133,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         {/* Account dropdown */}
         <button
           onClick={() => setAccountOpen(!accountOpen)}
-          className={`flex items-center ${expanded ? 'justify-between px-3' : 'justify-center px-0'} w-full py-2 rounded-lg text-[13px] font-medium transition-all hover:bg-[var(--bg-elevated)]`}
+          className={`flex items-center ${expanded ? 'justify-between px-3' : 'justify-center px-0'} w-full py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] hover:bg-[var(--bg-elevated)]`}
           style={{ color: 'var(--text-secondary)' }}
           title={expanded ? undefined : 'Account'}
         >
@@ -149,7 +149,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
               <Link
                 key={item.id}
                 to={item.path}
-                className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all hover:bg-[var(--bg-elevated)]"
+                className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-[background-color,color,transform] hover:bg-[var(--bg-elevated)]"
                 style={{ color: 'var(--text-muted)' }}
               >
                 {item.label}
@@ -178,7 +178,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
           <button
             key={item.label}
             onClick={item.onClick}
-            className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium hover:bg-[var(--bg-elevated)] transition-all text-left w-full`}
+            className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium hover:bg-[var(--bg-elevated)] transition-[background-color,color,transform] text-left w-full`}
             style={{ color: 'var(--text-secondary)' }}
             title={expanded ? undefined : item.label}
           >

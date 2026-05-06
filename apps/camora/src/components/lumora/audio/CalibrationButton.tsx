@@ -30,7 +30,7 @@ export function CalibrationButton({ deviceId, disabled, variant = 'dark' }: Cali
       <button
         onClick={handleCalibrate}
         disabled={isCalibrating || disabled}
-        className="flex items-center justify-center gap-2 font-bold rounded-lg transition-all shrink-0"
+        className="flex items-center justify-center gap-2 font-bold rounded-lg transition-[background-color,border-color,box-shadow,opacity,transform] active:scale-[0.98] shrink-0"
         style={isLight ? {
           fontSize: '13px',
           padding: '10px 16px',
