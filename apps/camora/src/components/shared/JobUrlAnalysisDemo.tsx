@@ -244,7 +244,7 @@ export default function JobUrlAnalysisDemo() {
                 className="mt-6 flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
                 <motion.div className="w-1.5 h-1.5 rounded-full" style={{ background: accent }}
                   animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.4 }} />
-                Matching to 800+ study topics…
+                Matching to 1,400+ study topics…
               </motion.div>
             </motion.div>
           )}

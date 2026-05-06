@@ -103,7 +103,7 @@ export default function GettingStartedPage() {
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li><strong>1 hour of AI hours</strong>, valid for 7 days from sign-up. Covers a short
             live session or a handful of prep / coding generations.</li>
-          <li><strong>Topic browsing</strong> &mdash; you can browse all 800+ topic titles for free
+          <li><strong>Topic browsing</strong> &mdash; you can browse all 1,400+ topic titles for free
             on the Prepare surface.</li>
           <li><strong>Web app only</strong> for the trial period. Desktop is for paid users.</li>
         </ul>
