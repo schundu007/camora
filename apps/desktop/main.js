@@ -167,6 +167,31 @@ app.whenReady().then(async () => {
   if (process.platform === 'darwin') {
     try { await systemPreferences.askForMediaAccess('microphone'); } catch {}
   }
+
+  // Electron 41 tightened renderer permission gating: navigator.mediaDevices.
+  // getUserMedia() in the renderer now needs an explicit grant from the main
+  // process, otherwise the renderer sees a NotAllowedError and shows
+  // "Failed to access microphone" — even when macOS TCC has already granted
+  // mic access to the app. Approve `media` (mic + camera) and `display-capture`
+  // for the camora.cariara.com origin we control; deny anything else by default.
+  // Without this, every Lumora audio surface broke after the 35→41 bump.
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    const url = webContents?.getURL?.() || '';
+    const allowed = ['media', 'mediaKeySystem', 'display-capture', 'clipboard-read', 'clipboard-sanitized-write'];
+    const trusted = url.startsWith('https://camora.cariara.com')
+      || url.startsWith('http://localhost:')
+      || url.startsWith(APP_URL);
+    callback(Boolean(trusted && allowed.includes(permission)));
+  });
+  session.defaultSession.setPermissionCheckHandler((webContents, permission) => {
+    const url = webContents?.getURL?.() || '';
+    const allowed = ['media', 'mediaKeySystem', 'display-capture', 'clipboard-read', 'clipboard-sanitized-write'];
+    const trusted = url.startsWith('https://camora.cariara.com')
+      || url.startsWith('http://localhost:')
+      || url.startsWith(APP_URL);
+    return Boolean(trusted && allowed.includes(permission));
+  });
+
   createWindow();
 
   globalShortcut.register('CommandOrControl+B', () => {
