@@ -161,9 +161,15 @@ async def speaker_enroll(
         # unparseable .npy that 500s every subsequent verify/diarize call.
         # Write to a per-process temp file and os.replace into place
         # (atomic on POSIX same-fs).
+        #
+        # IMPORTANT: np.save(path, ...) silently appends ".npy" if the path
+        # does not already end in ".npy" — so passing a path ending in
+        # ".tmp" wrote to "<tmp>.npy" and the os.replace below 500'd with
+        # ENOENT. Pass a file handle so numpy uses the exact path we gave.
         final = _embedding_path(user_id)
         tmp = final.with_suffix(f".npy.{os.getpid()}.{secrets.token_hex(4)}.tmp")
-        np.save(str(tmp), embedding)
+        with open(tmp, "wb") as f:
+            np.save(f, embedding)
         os.replace(tmp, final)
         return {"success": True, "message": "Voice enrolled successfully"}
     except HTTPException:
