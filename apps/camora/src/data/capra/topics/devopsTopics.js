@@ -24003,4 +24003,874 @@ These are answers a container-security-fluent platform engineer should give with
     ],
   },
 
+  {
+    id: 'kubernetes-architecture',
+    title: 'Kubernetes Architecture — Control Plane, Nodes, etcd',
+    icon: 'gitBranch',
+    color: '#14b8a6',
+    questions: 5,
+    description: 'How a Kubernetes cluster is wired: a control plane (kube-apiserver, etcd, scheduler, controller-manager, cloud-controller-manager) coordinating worker nodes (kubelet, kube-proxy, container runtime) through pluggable interfaces (CRI, CNI, CSI). Covers etcd Raft consensus, HA control plane sizing, managed offerings (EKS, GKE, AKS) versus self-managed installers (kubeadm, K3s, K0s).',
+    visualizations: [
+      {
+        title: 'Control plane components — kube-apiserver, etcd, scheduler, controller-manager, CCM',
+        description: `A Kubernetes cluster is a control plane plus a fleet of worker nodes. The control plane is five processes; everything in the system is reducible to "client writes object to apiserver, controller reconciles".
+
+kube-apiserver. The only component that talks to etcd. Stateless, horizontally scalable; production runs 3+ replicas behind a load balancer. Responsibilities: authn (x509, OIDC, service-account tokens, webhook), authz (RBAC, ABAC, Node, Webhook authorizers chained), admission (mutating and validating webhooks, ValidatingAdmissionPolicy CEL since v1.30 GA), schema validation against the OpenAPI spec, and persistence to etcd. Every kubectl call, every controller, every kubelet heartbeat goes through the apiserver.
+
+etcd. Distributed key-value store using Raft consensus. The single source of truth for cluster state — every Pod, Node, Secret, ConfigMap, custom resource lives here. Production deployments run 3 or 5 etcd nodes; tolerates floor((N-1)/2) failures. 5 nodes tolerates 2 failures, 3 nodes tolerates 1. Even numbers are wasteful. Backed up via etcdctl snapshot save; restore is the only meaningful disaster-recovery story for a cluster. Latency-sensitive: etcd disk fsync p99 below 25ms is the well-known SLO; SSDs mandatory.
+
+kube-scheduler. Watches for Pods with spec.nodeName empty; assigns one. Two-phase: filter (predicates — fit on node, taints/tolerations, affinity, topology spread) then score (priority — least requested, image locality, inter-pod affinity). Pluggable via the Scheduler Framework. Multiple schedulers can run side-by-side (spec.schedulerName routes Pods).
+
+kube-controller-manager. Single binary running ~30 built-in controllers as goroutines: Deployment, ReplicaSet, StatefulSet, DaemonSet, Job, CronJob, Endpoints, ServiceAccount, Node lifecycle, garbage collection, namespace, PV binder, etc. Each watches its CRD type, computes desired vs observed, issues writes. Leader-elected via Lease; only one replica is active.
+
+cloud-controller-manager (CCM). Cloud-specific controllers extracted from kube-controller-manager since v1.16 (now mandatory for cloud installs in v1.31+). Manages Node objects (annotates with provider ID, instance type, zone), Service type=LoadBalancer (provisions ELB/NLB/GCLB/Azure LB), Route controller (adds VPC routes for Pod CIDRs). Each cloud ships its own CCM binary.
+
+Together these five components form a closed reconciliation loop: clients write desired state to apiserver, apiserver persists to etcd and emits watch events, controllers and scheduler observe events and write back the next state. Worker nodes run separate components that participate the same way — kubelet writes Node status, watches for Pods bound to itself.`,
+        image: '/diagrams/devops/g1-k8s-arch.png',
+      },
+      {
+        title: 'Node components and the CRI / CNI / CSI plugin model',
+        description: `Every worker node runs three components plus pluggable interfaces.
+
+kubelet. The node agent. Watches the apiserver for Pods bound to its node (via spec.nodeName). For each Pod: pulls images, starts containers via CRI, sets up volumes via CSI, configures networking via CNI, runs liveness/readiness/startup probes, reports Pod status back. Also reports Node status (capacity, conditions, allocatable) every 10s by default. Node lease since v1.17 reduces apiserver load — kubelet only updates the Lease object every 40s, full Node status only on change.
+
+kube-proxy. Implements Service abstraction on each node. Three modes:
+- iptables (default in most distributions). Programs iptables NAT rules — every Service gets a chain, every Endpoint a rule. O(N) lookup; rule sync gets slow above ~5,000 Services.
+- IPVS. Kernel-level load balancing. O(1) lookup, scales to ~50,000 Services. Recommended for clusters above 1,000 Services.
+- nftables (beta in v1.29, GA path). Modern replacement for iptables.
+
+Cilium kube-proxy replacement (eBPF) bypasses kube-proxy entirely; the Cilium agent programs eBPF maps in the kernel for Service handling. Common in 2026 production clusters.
+
+Container runtime. Implements the Container Runtime Interface (CRI). dockershim was removed in v1.24 (April 2022); containerd (CNCF Graduated) is the dominant runtime in 2026, with CRI-O (Red Hat, OpenShift default) the major alternative. Both delegate low-level container lifecycle to runc (or alternatives like crun, gVisor, Kata Containers) via the OCI Runtime Spec.
+
+The three plugin interfaces:
+
+CRI (Container Runtime Interface). gRPC API kubelet uses to talk to the runtime. Two services: RuntimeService (Pod sandbox + container lifecycle) and ImageService (pull/list/remove images).
+
+CNI (Container Network Interface). Spec from CNCF. kubelet (via the runtime) calls CNI plugins on Pod create/delete to set up the network namespace. CNI plugin assigns an IP from its IPAM, configures routes, sets up the veth pair to the Pod netns. Plugins by adoption (2026): Cilium (eBPF, ~40% of new clusters), Calico (BGP/eBPF, broad enterprise base), AWS VPC CNI (EKS default — Pod gets ENI IP from VPC), Azure CNI / Azure CNI overlay, GCE/Alias IPs (GKE), Flannel (legacy simple), Weave Net (deprecated 2024). NetworkPolicy enforcement requires a CNI that supports it (Cilium, Calico).
+
+CSI (Container Storage Interface). Spec for storage drivers. CSI driver runs as a Deployment (controller plugin: provision/attach) plus DaemonSet (node plugin: mount). Major drivers: AWS EBS CSI, GCP PD CSI, Azure Disk/File CSI, Ceph CSI, Portworx, Longhorn, Rook, OpenEBS. In-tree volume plugins are removed since v1.27+; CSI is the only path.
+
+The architectural payoff. The control plane stays small, generic, and cloud-agnostic. Vendor differentiation lives in CRI/CNI/CSI plugins and the cloud-controller-manager. Switching CNI is non-disruptive in design (in practice you cordon-drain a node, swap the DaemonSet, uncordon).`,
+      },
+      {
+        title: 'Quick-fire interview answers — Kubernetes architecture essentials.',
+        question: 'Quick-fire interview answers — Kubernetes architecture essentials.',
+        answer: `Rapid-fire facts.
+
+Q: What's the only component that talks to etcd?
+A: kube-apiserver. Every other control-plane and node component goes through the API.
+
+Q: What consensus algorithm does etcd use?
+A: Raft. Quorum = floor(N/2)+1. 3 nodes tolerate 1 failure, 5 tolerate 2.
+
+Q: Why 3 or 5 etcd nodes, not 4?
+A: Even-numbered clusters need the same quorum as the smaller odd cluster but increase write latency. No fault-tolerance benefit.
+
+Q: What's the etcd disk SLO?
+A: fsync p99 under 25ms. Means SSD only.
+
+Q: Two phases of the scheduler?
+A: Filter (predicates: node fit, taints, affinity, topology spread) then score (priorities: least-requested, image locality, spread).
+
+Q: How are multiple schedulers selected?
+A: spec.schedulerName on the Pod. Default is "default-scheduler".
+
+Q: What does cloud-controller-manager own?
+A: Cloud-specific controllers — Node lifecycle annotation, Service type=LoadBalancer provisioning, Route controller for Pod CIDRs.
+
+Q: Three kube-proxy modes?
+A: iptables (default, slow above 5k Services), IPVS (O(1), 50k+ Services), nftables (beta v1.29).
+
+Q: What replaces kube-proxy with eBPF?
+A: Cilium kube-proxy replacement. Programs eBPF maps directly; bypasses iptables.
+
+Q: dockershim status?
+A: Removed in v1.24 (April 2022). containerd or CRI-O are the runtimes.
+
+Q: Containerd vs CRI-O?
+A: Both CRI-compliant, both delegate to runc. containerd is dominant; CRI-O is OpenShift default.
+
+Q: Top CNIs in 2026?
+A: Cilium (eBPF, ~40% of new clusters), Calico, AWS VPC CNI (EKS default), Azure CNI, GKE Alias IPs.
+
+Q: What's CSI?
+A: Container Storage Interface. Plugin spec for storage. Controller plugin (provision/attach) + node plugin DaemonSet (mount).
+
+Q: Are in-tree volume plugins still supported?
+A: No. Removed v1.27+. CSI is the only path.
+
+Q: What's a Node lease?
+A: Lightweight Lease object kubelet updates every 40s as a heartbeat. Reduces apiserver load.
+
+Q: Managed K8s offerings?
+A: EKS (AWS), GKE (Google), AKS (Azure), DOKS, LKE, OKE, ACK. Provider runs the control plane.
+
+Q: Self-managed installers?
+A: kubeadm (official), K3s (Rancher edge, single-binary), K0s (Mirantis), kops (AWS), kubespray (Ansible).
+
+Q: K3s vs K0s vs kubeadm?
+A: K3s strips features for edge (sqlite default), K0s ships clean upstream as one binary, kubeadm is the canonical bootstrapper.
+
+Q: Most common HA control plane mistake?
+A: Running etcd on the same disk as host OS. Etcd needs a dedicated SSD.
+
+Q: Stacked vs external etcd?
+A: Stacked: etcd runs on the same nodes as apiserver (kubeadm default). External: separate cluster. External preferred at scale; stacked fine to ~50 nodes.
+
+These are answers a Kubernetes-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/concepts/architecture/',
+      'https://kubernetes.io/docs/concepts/overview/components/',
+      'https://etcd.io/docs/v3.5/op-guide/hardware/',
+      'https://github.com/container-storage-interface/spec',
+      'https://github.com/containernetworking/cni/blob/main/SPEC.md',
+      'https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/',
+    ],
+  },
+
+  {
+    id: 'k8s-core-resources',
+    title: 'Kubernetes Core Resources — Pods, Services, Workloads',
+    icon: 'gitBranch',
+    color: '#14b8a6',
+    questions: 5,
+    description: 'The everyday API surface: Pod (smallest schedulable unit), workload controllers (Deployment, StatefulSet, DaemonSet, Job, CronJob), Services (ClusterIP, NodePort, LoadBalancer, ExternalName), Ingress, ConfigMap, Secret, PersistentVolumeClaim, StorageClass, Namespace, ResourceQuota, LimitRange.',
+    visualizations: [
+      {
+        title: 'Pods, workload controllers, Services, storage, namespace policy',
+        description: `Pod. The smallest schedulable unit. One or more containers sharing network namespace, shared volumes, and a Pod-level lifecycle. Patterns: Sidecar (sidecar container as v1.29 GA via restartPolicy: Always on initContainer), Adapter, Ambassador, Init container.
+
+You almost never write a bare Pod. Pods are managed by a controller.
+
+Deployment. The default workload for stateless apps. Owns a ReplicaSet which owns Pods. Rolling-update strategy with maxSurge / maxUnavailable. Each spec.template change creates a new ReplicaSet; old one scaled down as new one scales up. revisionHistoryLimit caps stored ReplicaSets (default 10).
+
+StatefulSet. Pods get stable identity: pod-0, pod-1, pod-2 — DNS names predictable, ordinal-indexed. Ordered start (pod-0 ready before pod-1 starts) and reverse-ordered terminate. Each Pod gets its own PersistentVolumeClaim from a volumeClaimTemplate. Use for: distributed databases (Cassandra, MongoDB, etcd), Kafka, Elasticsearch.
+
+DaemonSet. One Pod per node. Use for: log shippers (Fluent Bit, Vector), node monitoring (node-exporter, Datadog agent), CNI plugin agents (cilium-agent), CSI node plugins.
+
+Job. Run-to-completion. completions sets total runs; parallelism sets concurrent. Used for batch: schema migrations, one-shot data pipelines. Indexed Job (since v1.24 GA) gives each Pod a JOB_COMPLETION_INDEX env var.
+
+CronJob. Job on a schedule. cron expression in spec.schedule. concurrencyPolicy: Allow / Forbid / Replace.
+
+Choosing: Deployment for stateless web/API. StatefulSet for stateful database with stable identity. DaemonSet for per-node agent. Job for batch one-shot. CronJob for scheduled batch.
+
+Services. Stable virtual IP (ClusterIP) backed by a set of Pods selected via label selector. Types: ClusterIP (default, internal VIP), NodePort (cluster + high port), LoadBalancer (cloud LB provisioned by CCM), ExternalName (CNAME indirection), Headless (clusterIP: None, DNS returns Pod IPs directly — used by StatefulSets).
+
+EndpointSlices replaced single-Endpoints object for scale — Endpoints had a 1MB etcd object size limit, painful above ~1,000 backing Pods.
+
+Ingress (legacy but everywhere). HTTP/HTTPS L7 routing. Implementations: NGINX (most common), Traefik, HAProxy, Contour, Istio, Kong, AWS ALB controller, GCE ingress. Annotations approach is what Gateway API exists to replace.
+
+ConfigMap. Non-secret config. Mount as files (volumeMount) or inject as env vars. Updates propagate to mounted files within ~minutes (kubelet refresh). Env vars don't update — pod restart required. Size limit 1MB.
+
+Secret. Same shape as ConfigMap; base64-encoded by default (NOT encrypted at rest unless EncryptionConfiguration enabled). Production: pair with External Secrets Operator + cloud secret manager.
+
+PersistentVolumeClaim (PVC). Request for storage of size X with access mode (ReadWriteOnce, ReadOnlyMany, ReadWriteMany, ReadWriteOncePod since v1.27). Bound to a PersistentVolume by the PV binder. Dynamic provisioning: PVC references a StorageClass.
+
+StorageClass. "Profile" for dynamic provisioning. Specifies CSI provisioner, parameters (EBS volume type gp3, IOPS), reclaim policy (Delete, Retain), volume binding mode (WaitForFirstConsumer delays binding until a Pod schedules — volume lands in the right zone).
+
+Namespace. Soft tenancy boundary. Most resources are namespaced. Cluster-scoped: Node, PV, StorageClass, ClusterRole, CRD, Namespace itself.
+
+ResourceQuota. Caps aggregate resource usage in a namespace: CPU/memory requests+limits, storage, object counts.
+
+LimitRange. Per-Pod / per-Container defaults and bounds. Default container request: 100m/128Mi. Stops un-requested Pods (BestEffort QoS class, evicted first under pressure).
+
+QoS class. Derived from requests/limits: Guaranteed (requests == limits everywhere), Burstable (some requests but not equal), BestEffort (none). Eviction order under MemoryPressure: BestEffort > Burstable > Guaranteed.`,
+        image: '/diagrams/devops/g2-k8s-resources.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Kubernetes core resources.',
+        question: 'Quick-fire interview answers — Kubernetes core resources.',
+        answer: `Rapid-fire facts.
+
+Q: Smallest schedulable unit?
+A: Pod. One or more containers sharing network namespace and volumes.
+
+Q: Sidecar container status as of 2026?
+A: GA in v1.29 via initContainer with restartPolicy: Always. Lifecycle ordered relative to main containers.
+
+Q: Default workload for stateless apps?
+A: Deployment. Owns a ReplicaSet, which owns Pods.
+
+Q: Deployment rolling-update knobs?
+A: maxSurge (extra pods during rollout) and maxUnavailable (pods that can be down).
+
+Q: When use StatefulSet over Deployment?
+A: Need stable Pod identity (pod-0, pod-1) and stable per-Pod storage. Distributed databases, Kafka, etcd.
+
+Q: What does a headless Service do?
+A: clusterIP: None. DNS returns all Pod IPs directly. Required for StatefulSet per-Pod DNS.
+
+Q: DaemonSet use cases?
+A: One Pod per node — log shippers, node monitoring, CNI agents, kube-proxy.
+
+Q: Job vs CronJob?
+A: Job runs to completion once. CronJob is a Job on a cron schedule.
+
+Q: Indexed Job?
+A: GA v1.24. Each Pod gets JOB_COMPLETION_INDEX env. Work-queue parallelism without external coordinator.
+
+Q: Service types?
+A: ClusterIP (internal VIP, default), NodePort (high port on every node), LoadBalancer (cloud LB), ExternalName (CNAME), Headless (no VIP).
+
+Q: Why EndpointSlices replaced Endpoints?
+A: Single Endpoints object hit the 1MB etcd value limit at ~1,000 Pods. EndpointSlices shard.
+
+Q: Ingress status in 2026?
+A: Legacy but everywhere. Gateway API is the replacement; both will coexist for years.
+
+Q: ConfigMap vs Secret?
+A: Same shape. Secrets base64-encoded (not encrypted by default). Use EncryptionConfiguration + External Secrets Operator for real security.
+
+Q: ConfigMap update propagation?
+A: Mounted files refresh within minutes. Env vars don't update — restart required.
+
+Q: ConfigMap/Secret size limit?
+A: 1MB. etcd value cap.
+
+Q: PVC access modes?
+A: ReadWriteOnce, ReadOnlyMany, ReadWriteMany, ReadWriteOncePod (v1.27 GA).
+
+Q: WaitForFirstConsumer volume binding?
+A: Defers PV creation until a Pod schedules. Ensures volume lands in the correct zone for zonal storage like EBS.
+
+Q: ResourceQuota covers what?
+A: Aggregate CPU/memory requests+limits, storage, and object counts in a namespace.
+
+Q: LimitRange purpose?
+A: Per-Pod default and max requests/limits inside a namespace. Stops BestEffort pods.
+
+Q: Three QoS classes?
+A: Guaranteed (requests == limits), Burstable (some requests), BestEffort (none). Eviction order: BestEffort > Burstable > Guaranteed.
+
+Q: Cluster-scoped vs namespaced?
+A: Cluster-scoped: Node, PV, StorageClass, ClusterRole, CRD, Namespace itself. Most else is namespaced.
+
+Q: Most common ConfigMap mistake?
+A: Mounting as env vars and expecting hot reload. Doesn't happen — only file mounts refresh.
+
+Q: Most common StatefulSet mistake?
+A: Treating it like a Deployment and not understanding ordered start blocks rollouts on first-Pod failure.
+
+These are answers a Kubernetes-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/concepts/workloads/pods/',
+      'https://kubernetes.io/docs/concepts/workloads/controllers/deployment/',
+      'https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/',
+      'https://kubernetes.io/docs/concepts/services-networking/service/',
+      'https://kubernetes.io/docs/concepts/storage/persistent-volumes/',
+      'https://kubernetes.io/docs/concepts/policy/resource-quotas/',
+    ],
+  },
+
+  {
+    id: 'helm-vs-kustomize',
+    title: 'Helm vs Kustomize — Templating vs Patching',
+    icon: 'gitBranch',
+    color: '#14b8a6',
+    questions: 5,
+    description: 'The two dominant K8s manifest tools, with opposite philosophies. Helm packages charts (Go-templated YAML + values.yaml + releases) for vendoring and distribution. Kustomize patches a base with environment overlays — no templates, pure structured merge. The 2026 consensus: Helm for third-party software you consume, Kustomize for your own app, and a hybrid pattern when you need both.',
+    visualizations: [
+      {
+        title: 'Helm 3 charts and Kustomize overlays',
+        description: `Helm is the package manager for Kubernetes. A chart is a directory: Chart.yaml (metadata + dependencies), values.yaml (defaults), templates/*.yaml (Go templates), templates/_helpers.tpl (named templates), charts/ (vendored sub-charts).
+
+Templates render Go template syntax against the merged values. helm install myrelease ./mychart -f prod-values.yaml renders templates with merged values (chart defaults + -f files + --set CLI overrides), validates against the K8s OpenAPI schema, and applies as a Release. Helm tracks releases as Secrets in the cluster (kind=helm.sh/release.v1).
+
+Helm 3 vs Helm 2. Helm 3 (released November 2019) removed Tiller, the in-cluster server-side component of Helm 2. Tiller had cluster-admin RBAC by default — major security regression. Helm 3 is fully client-side; renders locally and applies via kubectl. Helm 2 EOL November 2020.
+
+Hooks. Annotations on resources to run them at specific lifecycle phases: pre-install, post-install, pre-upgrade, post-upgrade, pre-delete, post-delete, pre-rollback, post-rollback, test. Typical hook: a Job that runs DB migration pre-upgrade.
+
+Dependencies. Chart.yaml dependencies references sub-charts (alias, version, repository, condition). helm dependency update fetches into charts/. Sub-chart values nest under their alias in parent values.yaml.
+
+OCI registry support (Helm 3.8+, GA). Charts pushed and pulled as OCI artifacts to any OCI-compliant registry — ECR, GHCR, GAR, Docker Hub, Harbor, Quay. helm push, helm pull, helm install oci://registry/chart:1.0.0. Has largely replaced the legacy "Helm repo" for new infrastructure.
+
+Helm strengths: Mature ecosystem (Bitnami, prometheus-community, ingress-nginx, cert-manager all distribute as Helm charts). Vendoring third-party software easy. Release lifecycle (helm history, helm rollback). Templating power.
+
+Helm weaknesses: Templating is fragile. Whitespace, indent, nindent, toYaml — complex charts become unreadable. Not GitOps-native by itself.
+
+Kustomize. The templates-free alternative. Built into kubectl since v1.14 (kubectl apply -k). Model: a base directory of plain manifests + overlay directories that patch the base.
+
+Patch types: Strategic merge patch (K8s-aware: merges by key inside lists). JSON 6902 patch (operation-based: add/remove/replace, path, value). Strategic merge can't always express your change — JSON 6902 needed for replacing a list rather than merging.
+
+Generators: configMapGenerator (builds ConfigMap from files or literals; appends content hash to name — forces Pod restart when config changes). secretGenerator (same for Secrets).
+
+Transformers: namespace, namePrefix, nameSuffix, commonLabels, commonAnnotations, replicas, images.
+
+Components (Kustomize 4+). Reusable mixins. Multiple overlays consume the same component without copy-paste.
+
+Kustomize strengths: No templates. Native to kubectl. Diffable in PRs. GitOps-friendly.
+
+Kustomize weaknesses: Limited expressiveness. No package distribution. Cross-resource transformations need configuration.
+
+When each wins:
+
+Helm wins for: vendoring third-party software (cert-manager, prometheus, ingress-nginx); distributing your software to external consumers; apps with many environments and feature toggles; release lifecycle without GitOps.
+
+Kustomize wins for: your own application with environment overlays; internal platform abstractions where pure YAML matters; audit-friendly review.
+
+Hybrid (the 2026 consensus): Helm chart with Kustomize overlay. Argo CD and Flux both support this — render the Helm chart, then apply Kustomize patches on top.
+
+Other tools to know: Jsonnet / Tanka (Grafana Labs), cdk8s (CDK style for K8s), KCL (CNCF sandbox).`,
+        image: '/diagrams/devops/g3-helm-kustomize.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Helm and Kustomize.',
+        question: 'Quick-fire interview answers — Helm and Kustomize.',
+        answer: `Rapid-fire facts.
+
+Q: What's Helm?
+A: Package manager for Kubernetes. Charts of Go-templated YAML rendered against values.yaml.
+
+Q: Helm 2 vs Helm 3 main difference?
+A: Helm 3 removed Tiller (the cluster-side daemon). Fully client-side now.
+
+Q: Why was Tiller a problem?
+A: Cluster-admin RBAC by default. Anyone with Helm access had cluster-admin. Helm 2 EOL 2020.
+
+Q: How do Helm releases get tracked?
+A: As Secrets in the release namespace, kind=helm.sh/release.v1.
+
+Q: Helm hook lifecycle phases?
+A: pre/post-install, pre/post-upgrade, pre/post-delete, pre/post-rollback, test.
+
+Q: Typical hook use?
+A: Pre-upgrade Job for DB migration.
+
+Q: How does a Helm chart depend on another chart?
+A: Chart.yaml dependencies stanza. helm dependency update vendors into charts/.
+
+Q: OCI distribution status?
+A: GA since Helm 3.8. helm push to ECR/GHCR/Harbor/Quay; helm install oci://...
+
+Q: What's Kustomize?
+A: Template-free K8s manifest tool. Base + overlays + patches.
+
+Q: Two patch types?
+A: Strategic merge (K8s-aware) and JSON 6902 (operation-based).
+
+Q: When need JSON 6902?
+A: Replace a list rather than merge it, or operate on paths strategic merge can't express.
+
+Q: configMapGenerator special behavior?
+A: Hashes content into the name. Pod template references hashed name → new hash → new ReplicaSet → restart.
+
+Q: Common transformers?
+A: namespace, namePrefix, nameSuffix, commonLabels, replicas, images.
+
+Q: Kustomize built into kubectl?
+A: Yes since v1.14. kubectl apply -k.
+
+Q: What are Components?
+A: Reusable mixins consumed by multiple overlays (since Kustomize 4).
+
+Q: Helm vs Kustomize — when Helm?
+A: Vendoring third-party (cert-manager, prometheus), distributing software externally, lifecycle management without GitOps.
+
+Q: Helm vs Kustomize — when Kustomize?
+A: Your own app, environment overlays, audit-friendly diffs.
+
+Q: Hybrid pattern?
+A: Helm chart rendered then Kustomize patched on top. Native in Argo CD and Flux.
+
+Q: Argo CD support for Kustomize and Helm?
+A: Both first-class source types.
+
+Q: Most common Helm template bug?
+A: Whitespace/indent — toYaml without nindent, or stray hyphens stripping required newlines.
+
+Q: Most common Kustomize misuse?
+A: Per-environment forks of base instead of overlays, leading to drift.
+
+Q: Alternatives in 2026?
+A: Jsonnet/Tanka (Grafana Labs), cdk8s, KCL (CNCF sandbox).
+
+Q: helm template vs helm install?
+A: helm template renders to stdout, helm install renders + applies + records release. CI uses helm template piped into kubectl apply for GitOps compatibility.
+
+These are answers a Kubernetes-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://helm.sh/docs/topics/architecture/',
+      'https://helm.sh/docs/topics/charts/',
+      'https://helm.sh/docs/topics/registries/',
+      'https://kustomize.io/',
+      'https://kubectl.docs.kubernetes.io/references/kustomize/',
+      'https://argo-cd.readthedocs.io/en/stable/user-guide/kustomize/',
+    ],
+  },
+
+  {
+    id: 'operators-and-crds',
+    title: 'Kubernetes Operators and CRDs — Extending the API',
+    icon: 'gitBranch',
+    color: '#14b8a6',
+    questions: 5,
+    description: 'How Kubernetes turns into a platform for everything: define a CustomResourceDefinition, write a controller that reconciles it, ship the pair as an Operator. Covers controller pattern, Operator SDK, Kubebuilder, finalizers, ownerReferences, leader election, OperatorHub, well-known operators (cert-manager, ArgoCD, Strimzi, CloudNativePG), capability levels 1-5.',
+    visualizations: [
+      {
+        title: 'CRDs, controller pattern, building operators',
+        description: `A CustomResourceDefinition (CRD) extends the Kubernetes API with a new kind. The CRD itself is a cluster-scoped resource. Once the CRD exists, kubectl get postgresclusters works just like kubectl get pods. The OpenAPI schema is enforced by the apiserver.
+
+A controller is a process that runs the reconcile loop:
+1. Watch CRD instances via the K8s informer (efficient list/watch with caching).
+2. On any event (create/update/delete), enqueue a reconcile request keyed by namespace/name.
+3. Reconcile reads current state of the CR + the world (child Pods, PVCs, Services).
+4. Diff against desired state; compute actions.
+5. Apply actions via the K8s client (create/update/patch).
+6. Write status back to the CR's /status subresource.
+
+Reconcile must be idempotent. The reconciler is called many times for the same object — on every event, periodic resync, retry on error. Common pattern: every reconcile recomputes desired state from spec and applies via server-side-apply with a stable fieldManager — drift heals automatically.
+
+Owner references. When the controller creates child resources (Pods, PVCs, Secrets), it sets metadata.ownerReferences pointing to the parent CR. The garbage collector deletes children when the parent is deleted.
+
+Finalizers. metadata.finalizers is a list of strings. K8s won't actually delete an object until the list is empty. The controller uses this to do cleanup before the object disappears (drain volumes, release cloud resources, deregister from external systems).
+
+Leader election. Operator runs as a Deployment with replicas: 2 or 3 for HA, but only one replica should reconcile at a time. Standard solution: client-go leaderelection package coordinates via a Lease resource. Losers wait; on leader Pod death, a new leader is elected within seconds.
+
+Conditions. status.conditions is a list of typed status statements. The K8s convention since v1.19 (metav1.Condition). kubectl wait --for=condition=Ready depends on this.
+
+Two dominant scaffolding frameworks for Go operators:
+
+Kubebuilder (sigs.k8s.io/kubebuilder). The "official" K8s SIG project. Generates: CRD manifests from Go structs (kubebuilder markers), a Manager with cache + client + leader election, Reconcile loop skeleton, RBAC manifests, webhook server scaffolding, test harness with envtest (apiserver + etcd in tmpfs).
+
+Operator SDK (operator-framework/operator-sdk). Red Hat's superset. Wraps Kubebuilder for Go and adds Helm-based and Ansible-based operator paths (no Go required). Adds OLM packaging (ClusterServiceVersion, CatalogSource), scorecard for capability testing, bundle generation.
+
+Use Kubebuilder if you're writing pure Go. Use Operator SDK if you need OLM or Helm/Ansible-based operators.
+
+OperatorHub.io. Catalog of operators packaged as OLM bundles. Operators distributed here include: cert-manager (X.509 cert issuance + rotation), Argo CD operator, Strimzi Kafka operator, CloudNativePG (PostgreSQL), Prometheus operator, External Secrets Operator (ESO), Velero (backup/restore + DR).
+
+Operator Capability Levels:
+- Level 1 — Basic install. Operator can create the workload from the CR.
+- Level 2 — Seamless upgrades. Operator can upgrade the operand and itself without data loss.
+- Level 3 — Full lifecycle. Backup, restore, scaling, fault recovery.
+- Level 4 — Deep insights. Metrics, alerts, log streaming, performance analysis.
+- Level 5 — Auto-pilot. Auto-scaling, auto-healing, auto-tuning, capacity prediction.
+
+Most production operators are Level 3-4. Level 5 is rare; CloudNativePG and Strimzi approach it.
+
+OLM (Operator Lifecycle Manager). The K8s-native package manager for operators. Concepts: CatalogSource (index of available operators), Subscription ("I want operator X version Y"), ClusterServiceVersion (CSV — operator metadata + install plan + RBAC), InstallPlan. Outside of OpenShift, OLM adoption is partial — many shops install operators directly via Helm chart and skip OLM.
+
+Anti-patterns to avoid:
+1. Operators that own infrastructure outside the cluster but don't use finalizers.
+2. Reconcile that isn't idempotent. Endless ReplicaSet churn.
+3. Over-broad RBAC. Operator with cluster-admin to be safe. Use Kubebuilder marker generators to scope precisely.
+4. Watching too much. Cluster-wide Pod watch consumes memory and apiserver bandwidth.
+5. Putting business logic in admission webhooks. Webhooks must be fast and reliable.
+6. Storing operational state in CR status. Status should be observed state.
+7. Operators per service. Use community operators instead of building yet another from scratch.
+
+The deeper point. Operators are how Kubernetes became infrastructure: anything stateful or operationally complex (databases, message queues, observability stacks, cert managers) ships as a CRD + controller. The platform team's job in 2026 is increasingly "compose existing operators" rather than "write new ones".`,
+        image: '/diagrams/devops/g4-operators.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Operators and CRDs.',
+        question: 'Quick-fire interview answers — Operators and CRDs.',
+        answer: `Rapid-fire facts.
+
+Q: What's a CRD?
+A: CustomResourceDefinition. Cluster-scoped object that registers a new kind in the apiserver.
+
+Q: What enforces a CR's schema?
+A: The apiserver, against the OpenAPI v3 schema in the CRD's spec.versions[].schema.
+
+Q: Two important subresources?
+A: /status (separates spec writes from status writes for RBAC and conflict avoidance) and /scale (lets HPA target the resource generically).
+
+Q: What's a controller?
+A: Process running a reconcile loop: watch the CR + related objects, diff desired vs observed, take actions, write status.
+
+Q: Reconcile must be?
+A: Idempotent. Called many times for the same key.
+
+Q: What enables cascade delete of children?
+A: ownerReferences on child resources pointing to the parent CR.
+
+Q: What are finalizers for?
+A: Pre-delete cleanup. Object stays in Terminating until controller removes its finalizer string.
+
+Q: How do operators run HA?
+A: Multiple replicas with leader election via a Lease resource. Only the leader reconciles.
+
+Q: status.conditions standard type?
+A: metav1.Condition since v1.19. Has type, status, reason, message, lastTransitionTime, observedGeneration.
+
+Q: Two main scaffolding frameworks?
+A: Kubebuilder (official SIG) and Operator SDK (Red Hat, superset).
+
+Q: When pick Operator SDK over Kubebuilder?
+A: Publishing to OperatorHub via OLM, or writing Helm/Ansible operators without Go.
+
+Q: What's envtest?
+A: Local apiserver + etcd in tmpfs for unit testing controllers. Ships with controller-runtime.
+
+Q: What's OLM?
+A: Operator Lifecycle Manager. K8s-native package manager for operators.
+
+Q: OLM adoption status?
+A: Mandatory in OpenShift; partial elsewhere. Many shops install operators via Helm and skip OLM.
+
+Q: Capability levels 1-5?
+A: 1 install, 2 upgrades, 3 lifecycle (backup/restore/scale), 4 metrics+alerts, 5 auto-pilot.
+
+Q: cert-manager use case?
+A: X.509 cert issuance and rotation. Issues from ACME (Let's Encrypt), Vault, internal CA.
+
+Q: ESO use case?
+A: External Secrets Operator. Syncs secrets from AWS/GCP/Azure/Vault into K8s Secret objects.
+
+Q: Strimzi?
+A: CNCF Kafka operator. Manages Kafka, Kafka Connect, Mirror Maker.
+
+Q: CloudNativePG?
+A: PostgreSQL operator. Replaces older zalando and crunchy operators.
+
+Q: Prometheus operator?
+A: Manages Prometheus, Alertmanager, ServiceMonitor, PodMonitor, PrometheusRule.
+
+Q: Big anti-pattern with operator RBAC?
+A: cluster-admin "to be safe". Use kubebuilder markers to scope per-resource precisely.
+
+Q: Why not put business logic in admission webhooks?
+A: Webhooks are in the apiserver write path. Latency adds to every API call; failures break the resource type.
+
+Q: Why not store operational state in status?
+A: Status is observed state; the controller will overwrite it on next reconcile.
+
+These are answers a Kubernetes-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/',
+      'https://book.kubebuilder.io/',
+      'https://sdk.operatorframework.io/docs/',
+      'https://operatorhub.io/',
+      'https://operatorframework.io/operator-capabilities/',
+      'https://github.com/kubernetes-sigs/controller-runtime',
+    ],
+  },
+
+  {
+    id: 'service-mesh',
+    title: 'Service Mesh — Istio, Linkerd, Cilium Mesh',
+    icon: 'gitBranch',
+    color: '#14b8a6',
+    questions: 5,
+    description: 'East-west traffic plane: mTLS, retries, timeouts, circuit breakers, traffic shifting, zero-trust networking. Three production-grade meshes in 2026: Istio (Envoy data plane, ambient mode 2024+), Linkerd (Linkerd2-proxy in Rust), and Cilium Service Mesh (eBPF data plane).',
+    visualizations: [
+      {
+        title: 'Data plane architectures and 2026 mesh capabilities',
+        description: `Every service mesh has two halves: a data plane (intercepts traffic) and a control plane (configures the data plane).
+
+Sidecar data plane. A proxy container in every Pod. The proxy intercepts ingress/egress traffic via iptables redirection. Used by: Istio (Envoy sidecar), Linkerd (Linkerd2-proxy sidecar), Consul Connect, AWS App Mesh. Tradeoff: per-Pod resource cost (50-200MB RAM, 0.1-0.5 CPU per sidecar) and an extra hop on every request (~0.5-2ms).
+
+Ambient / sidecarless data plane. New in Istio (ambient mode, GA 2024). Two layers: ztunnel (per-node DaemonSet, handles L4 TCP mTLS and policy) + waypoint proxy (per-namespace or per-service-account Envoy, handles L7 HTTP/gRPC features). If you only need mTLS + L4 policy, you only run ztunnel. Pods stay clean.
+
+eBPF data plane. Cilium Service Mesh (Cilium 1.12+, GA-quality 2024+). The Cilium agent loads eBPF programs into the kernel. Programs intercept socket-level operations and apply policy/encryption without proxies. For L4, Cilium runs entirely in the kernel — zero userspace hop. For L7, Cilium uses Envoy as a per-node proxy.
+
+Tradeoffs: No per-Pod sidecar cost. Lowest latency for L4-only meshes. Linux-only (eBPF). L7 features still rely on Envoy under the hood, but per-node not per-Pod.
+
+Control plane. Istio: istiod (single binary since v1.5). Linkerd: control plane runs as a few Deployments — destination, identity, proxy-injector. Cilium: cilium-agent DaemonSet plus cilium-operator. No separate control-plane binary.
+
+Capabilities common to all production meshes:
+
+mTLS. Every service-to-service call encrypted, both sides authenticate via cert. Identity bound to ServiceAccount (Istio SPIFFE-based, Linkerd similar). Zero-trust pods.
+
+Traffic shifting. Weighted routing between subsets of a Service. Used by progressive-delivery tools (Argo Rollouts, Flagger).
+
+Retries / timeouts / circuit breakers. Per-route policy. Linkerd uses retry budgets (max 20% retry traffic) rather than fixed attempt counts — opinionated choice that prevents retry storms.
+
+L7 authorization. AuthorizationPolicy in Istio, Server + ServerAuthorization in Linkerd, CiliumNetworkPolicy with HTTP rules in Cilium.
+
+Observability: Per-call metrics (success rate, latency p50/p95/p99, RPS, by source/destination/route). Distributed tracing. Per-call access logs.
+
+The 2026 reality:
+
+Istio. The dominant CNCF graduated mesh. Largest user base, most features, ambient mode now production-recommended over sidecar for new installs. Heavy in operational complexity. IBM, Salesforce, Airbnb, eBay, Atlassian all run Istio at scale.
+
+Linkerd. CNCF graduated, second-largest. Famously simpler than Istio. Linkerd 2.14+ stabilized HTTPRoute Gateway API support. License change in 2024 (split between OSS and commercial Buoyant Enterprise) caused friction; some shops moved to Istio in response.
+
+Cilium Service Mesh. Ascending fast 2024-2026. The eBPF differentiator (no sidecar = no per-Pod cost) is genuinely valuable at scale. Adopted at scale by Datadog, Capital One, Bell Canada, Adobe.
+
+Comparison summary:
+
+| Dimension       | Istio (sidecar)   | Istio (ambient)   | Linkerd          | Cilium Mesh      |
+|-----------------|-------------------|-------------------|------------------|------------------|
+| Data plane      | Envoy per Pod     | ztunnel + waypoint| Linkerd2-proxy   | eBPF + Envoy/node|
+| Per-Pod cost    | 100-200MB         | ~0                | 30-80MB          | ~0               |
+| Latency (L4)    | +1-2ms            | +0.5-1ms          | +0.5-1ms         | +tens of us      |
+| L7 features     | Full              | Via waypoint      | Subset           | Via Envoy/node   |
+| Multi-cluster   | Mature            | Mature            | Mature           | Mature           |
+| Complexity      | High              | Medium            | Low              | Medium           |
+| Windows nodes   | Yes               | Yes               | Yes              | No               |
+
+When service mesh is wrong:
+1. You have 5 services and call them via in-cluster DNS. Mesh complexity dwarfs the benefit.
+2. All your traffic is north-south (browser → app). Use API gateway / Gateway API.
+3. You need P99 < 1ms east-west. Sidecar mesh adds too much.
+4. You don't have a platform team. Mesh becomes a debugging tax.
+5. Your apps are mostly external SaaS calls.
+
+The deeper point. Service mesh solved the late-2010s problem: "we have hundreds of services in K8s and no one knows who can call what". For greenfield apps in 2026, NetworkPolicy + Gateway API + per-app retry libraries cover 80% of needs without a mesh.`,
+        image: '/diagrams/devops/g5-service-mesh.png',
+      },
+      {
+        title: 'Quick-fire interview answers — service mesh.',
+        question: 'Quick-fire interview answers — service mesh.',
+        answer: `Rapid-fire facts.
+
+Q: What does a service mesh do?
+A: Adds mTLS, retries, timeouts, traffic shifting, and observability to east-west service-to-service traffic without changing app code.
+
+Q: Two halves of every mesh?
+A: Data plane (intercepts traffic) and control plane (configures it).
+
+Q: Sidecar data plane mechanism?
+A: Per-Pod proxy. iptables redirect via initContainer.
+
+Q: Ambient mode in Istio?
+A: Sidecarless. ztunnel DaemonSet handles L4+mTLS, waypoint proxies handle L7 per-namespace or per-SA.
+
+Q: When was Istio ambient GA?
+A: 2024.
+
+Q: Cilium service mesh data plane?
+A: eBPF in the kernel for L4. Per-node Envoy invoked only when L7 policy applies.
+
+Q: Cilium platform constraint?
+A: Linux-only (eBPF). Windows nodes can't participate.
+
+Q: Istio control plane binary?
+A: istiod (consolidated since v1.5).
+
+Q: Linkerd proxy language?
+A: Rust. Linkerd2-proxy. Small (~10MB) and fast.
+
+Q: Per-Pod sidecar overhead?
+A: 50-200MB RAM, 0.1-0.5 CPU, ~0.5-2ms added latency.
+
+Q: How does mTLS bind identity?
+A: To ServiceAccount via SPIFFE-style URI in cert.
+
+Q: Istio traffic-shifting CRDs?
+A: VirtualService (route weights) + DestinationRule (subsets). Argo Rollouts/Flagger drive both.
+
+Q: Linkerd retry model?
+A: Retry budget (max 20% of traffic is retries) instead of fixed attempt count. Prevents retry storms.
+
+Q: Outlier detection?
+A: Eject endpoints with high error rate from the load-balancer pool.
+
+Q: Authz CRDs by mesh?
+A: Istio AuthorizationPolicy. Linkerd Server + ServerAuthorization. Cilium CiliumNetworkPolicy with HTTP rules.
+
+Q: Observability auto-emitted?
+A: Per-call success rate, latency p50/95/99, RPS — to Prometheus. Plus traces and optional access logs.
+
+Q: 2026 mesh leader?
+A: Istio. Largest user base; ambient mode is the recommended new-install path.
+
+Q: Linkerd 2024 issue?
+A: License change split OSS vs Buoyant Enterprise. Some shops migrated off.
+
+Q: Mesh that's growing fastest?
+A: Cilium Service Mesh. eBPF differentiator + Cilium CNI gravity.
+
+Q: When is mesh the wrong call?
+A: ~5 services, all north-south traffic, no platform team to own it, or sub-ms latency required at L4.
+
+Q: Mesh alternative for "who can call what"?
+A: NetworkPolicy + Gateway API. Covers ~80% of mesh demand for greenfield.
+
+Q: Multi-cluster mesh?
+A: All three meshes support it. Istio with primary-remote or multi-primary; Linkerd via multicluster extension; Cilium via Cluster Mesh.
+
+Q: Most common mesh adoption mistake?
+A: Adopting before there's a platform team to own upgrades, cert rotation, and routing-rule debugging.
+
+These are answers a Kubernetes-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://istio.io/latest/docs/ops/deployment/architecture/',
+      'https://istio.io/latest/docs/ambient/overview/',
+      'https://linkerd.io/2-edge/reference/architecture/',
+      'https://docs.cilium.io/en/stable/network/servicemesh/',
+      'https://spiffe.io/docs/latest/spiffe-about/overview/',
+      'https://gateway-api.sigs.k8s.io/',
+    ],
+  },
+
+  {
+    id: 'ingress-gateway-api',
+    title: 'Ingress and Gateway API — North-South Traffic',
+    icon: 'gitBranch',
+    color: '#14b8a6',
+    questions: 5,
+    description: 'How external traffic reaches Pods. Ingress (legacy, controller-specific via annotations) vs Gateway API (CNCF-standard, GA mid-2023, role-separated GatewayClass / Gateway / HTTPRoute / TCPRoute / GRPCRoute). Covers controllers (NGINX, Traefik, HAProxy, Contour, Istio gateway, Kong, Envoy Gateway) and the 2026 implementation status.',
+    visualizations: [
+      {
+        title: 'Ingress legacy and Gateway API role separation',
+        description: `Ingress is the original K8s API for HTTP(S) ingress. Stable since v1.19 (networking.k8s.io/v1). The Ingress resource describes intent. An Ingress controller running in the cluster watches Ingress objects and configures something (NGINX config, Envoy xDS, HAProxy config, cloud LB) to make it real.
+
+The annotation problem. The Ingress spec is intentionally minimal; advanced features are smuggled through controller-specific annotations: nginx.ingress.kubernetes.io/* (~80 annotations), traefik.ingress.kubernetes.io/*, alb.ingress.kubernetes.io/*, haproxy.org/*. Switching controllers requires rewriting every annotation.
+
+Major Ingress controllers in 2026:
+- NGINX Ingress (kubernetes/ingress-nginx). The community-led NGINX-based controller. Most-deployed globally.
+- Traefik. Cloud-native HTTP reverse proxy. Native CRDs (IngressRoute, Middleware).
+- HAProxy Ingress / HAProxy Kubernetes Ingress. Battle-tested HAProxy, lower memory than NGINX.
+- Contour. CNCF incubating. Envoy-based.
+- Istio Gateway. When you already run Istio.
+- AWS Load Balancer Controller. Provisions ALB or NLB per Ingress. EKS standard.
+- GCE Ingress. On GKE, provisions GCLB.
+- Kong Ingress. API gateway with authn, rate limiting, transformation.
+- Envoy Gateway (CNCF, GA 2024). Full Gateway API implementation backed by Envoy.
+- NGINX Gateway Fabric (NGF). Separate from ingress-nginx; future-direction product.
+
+Gateway API is the CNCF-standardized successor to Ingress. SIG-Network project. Core resources GA mid-2023; ongoing feature additions (ServiceMesh GAMMA, CORS, RetryOnTimeout) in beta/experimental tracks.
+
+Why a successor? Ingress had three structural problems:
+1. Annotations as feature smuggling.
+2. No role separation — same Ingress YAML mixed cluster-operator concerns (TLS cert names, controller class) with app-team concerns (routes, backends).
+3. No expressivity for non-HTTP protocols.
+
+Gateway API splits the model:
+
+GatewayClass. Cluster-scoped. Names the controller. The infra team owns this — same way StorageClass works for storage.
+
+Gateway. Namespaced. References a GatewayClass. Declares listeners (port, protocol, TLS). The platform team owns this; it's the "shared ingress" object that app teams attach routes to.
+
+HTTPRoute, TCPRoute, GRPCRoute, TLSRoute, UDPRoute. Namespaced. Owned by app teams. Attaches to a Gateway; describes routing rules.
+
+Properties of the new model:
+
+Role separation. Cluster-admin owns GatewayClass. Platform team owns Gateway and listener TLS. App teams own *Route. ReferenceGrant gates cross-namespace references explicitly.
+
+Expressive routing without annotations. weight, timeouts, header/path/method matchers, RequestHeaderModifier / ResponseHeaderModifier filters, URLRewrite, RequestRedirect, RequestMirror — all in the spec.
+
+Multi-protocol. TCPRoute and TLSRoute for L4. GRPCRoute for native gRPC. UDPRoute for UDP.
+
+Cross-namespace by design. A Gateway in gateway-infra namespace can be attached to by HTTPRoutes in many app namespaces.
+
+Conformance program. SIG-Network publishes a conformance test suite. Implementations declare conformance levels (Core, Extended, Mesh).
+
+2026 implementation status (Gateway API support):
+
+Solid Gateway API support (Core conformant): Envoy Gateway, NGINX Gateway Fabric, Contour, Istio Gateway, Kong Gateway, Traefik (3.x), Cilium Gateway, Gloo Gateway (Solo.io), HAProxy Kubernetes Ingress.
+
+Cloud-managed: GKE Gateway (GA), AKS Application Gateway for Containers (GA 2024), AWS Gateway API support via AWS Gateway API Controller for VPC Lattice.
+
+Migration patterns:
+- Greenfield: start with Gateway API directly.
+- Brownfield: run both. Ingress for legacy app routes; Gateway API for new routes.
+- Conversion: most controllers ship a one-time converter from Ingress + their annotations to HTTPRoute + standard fields.
+
+When to still use Ingress in 2026:
+- Stable existing setups where migration cost outweighs benefit.
+- Tools that emit Ingress (most cert-manager solver setups).
+
+When Gateway API wins clearly:
+- Multi-team setups where role separation matters.
+- Multi-protocol routing (TCP, gRPC, TLS passthrough, UDP).
+- Service mesh ingress (GAMMA initiative).
+- New clusters / new platforms.
+
+The deeper point. Gateway API is the explicit, multi-team, multi-protocol Ingress that should have shipped in 2018. By mid-2026, most new K8s platforms are Gateway API first.`,
+        image: '/diagrams/devops/g6-gateway-api.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Ingress and Gateway API.',
+        question: 'Quick-fire interview answers — Ingress and Gateway API.',
+        answer: `Rapid-fire facts.
+
+Q: What is Ingress?
+A: K8s resource for HTTP(S) routing. Stable since v1.19 under networking.k8s.io/v1.
+
+Q: Two-component model?
+A: Ingress resource (intent) + Ingress controller (implementation, runs in-cluster).
+
+Q: Main problem with Ingress?
+A: Advanced features smuggled through controller-specific annotations. Switching controllers means rewriting every manifest.
+
+Q: Most-deployed Ingress controller?
+A: ingress-nginx (community NGINX-based). Distinct from F5's commercial NGINX Plus Ingress.
+
+Q: AWS path for Ingress?
+A: AWS Load Balancer Controller. Provisions ALB or NLB per Ingress.
+
+Q: GKE path?
+A: GCE Ingress controller. Provisions GCLB.
+
+Q: Kong vs ingress-nginx?
+A: Kong is API-gateway grade — authn, rate limiting, transformation plugins.
+
+Q: NGINX Gateway Fabric vs ingress-nginx?
+A: NGF is the NGINX team's Gateway API implementation; ingress-nginx is the Ingress-only community project.
+
+Q: When did Gateway API go GA?
+A: Mid-2023. Ongoing extension via experimental and standard channels.
+
+Q: Three Gateway API roles?
+A: GatewayClass (cluster-admin), Gateway (platform team), *Route (app team).
+
+Q: GatewayClass purpose?
+A: Names the controller. Like StorageClass for storage.
+
+Q: Standard Route kinds?
+A: HTTPRoute, GRPCRoute, TCPRoute, TLSRoute, UDPRoute.
+
+Q: How are cross-namespace references gated?
+A: ReferenceGrant. Without it, a Route can't reference a backend in another namespace.
+
+Q: HTTPRoute features without annotations?
+A: weight, timeouts, header/path/method matchers, RequestHeaderModifier, URLRewrite, RequestRedirect, RequestMirror.
+
+Q: Conformance program?
+A: SIG-Network publishes a test suite. Implementations declare Core, Extended, or Mesh conformance.
+
+Q: Solid Gateway API implementations 2026?
+A: Envoy Gateway, NGINX Gateway Fabric, Contour, Istio Gateway, Kong Gateway, Traefik 3, Cilium Gateway, Gloo Gateway, HAProxy.
+
+Q: Cloud Gateway API support?
+A: GKE Gateway (GA), AKS Application Gateway for Containers (GA 2024), AWS via Gateway API Controller for VPC Lattice.
+
+Q: Migration pattern?
+A: Run both. Existing Ingress stays; new routes use HTTPRoute.
+
+Q: GAMMA?
+A: Gateway API for Mesh — the SIG initiative to use HTTPRoute for east-west service mesh traffic.
+
+Q: When still use Ingress in 2026?
+A: Stable existing setups, tooling that only emits Ingress, simple single-team apps.
+
+Q: When Gateway API clearly wins?
+A: Multi-team, multi-protocol, mesh integration, greenfield platforms.
+
+Q: pathType options on Ingress?
+A: Exact, Prefix, ImplementationSpecific.
+
+Q: Path matching on HTTPRoute?
+A: PathPrefix, Exact, RegularExpression (Extended).
+
+Q: Most common Ingress annotation pitfall?
+A: Copying NGINX rewrite-target without understanding the regex capture and the trailing-slash behavior.
+
+These are answers a Kubernetes-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/concepts/services-networking/ingress/',
+      'https://gateway-api.sigs.k8s.io/',
+      'https://gateway-api.sigs.k8s.io/concepts/api-overview/',
+      'https://gateway-api.sigs.k8s.io/implementations/',
+      'https://gateway-api.sigs.k8s.io/concepts/gamma/',
+      'https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/',
+    ],
+  },
+
 ];
