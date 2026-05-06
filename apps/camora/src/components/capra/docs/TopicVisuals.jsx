@@ -413,7 +413,14 @@ export function StaticDiagram({ diagram }) {
 }
 
 // ── StaticDiagramGrid ───────────────────────────────────────────────────────
-// Grid wrapper for multiple static diagrams
+// Grid wrapper for multiple static diagrams.
+//
+// Layout:  CSS-grid `auto-fit` with a 360px floor — cards flow into a
+// SINGLE ROW whenever the container is wide enough to hold them at
+// readable width, and only wrap to a new row once a card would shrink
+// below 360px. The previous fixed `lg:grid-cols-2` capped the row at
+// two cards regardless of available width and forced both to ~half
+// width on wide screens, which made each diagram visibly tiny.
 export function StaticDiagramGrid({ diagrams, title = 'Architecture Diagrams' }) {
   return (
     <div className="space-y-2">
@@ -421,7 +428,10 @@ export function StaticDiagramGrid({ diagrams, title = 'Architecture Diagrams' })
         <Icon name="layers" size={14} className="text-[var(--accent)]" />
         <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{title}</h3>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+      <div
+        className="grid gap-3"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))' }}
+      >
         {diagrams.map((d) => (
           <StaticDiagram key={d.id} diagram={d} />
         ))}
