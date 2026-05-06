@@ -60,7 +60,7 @@
       "width": 160,
       "height": 20,
       "text": "HTTP request",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -82,7 +82,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[128,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          128,
+          0
+        ]
+      ]
     },
     {
       "id": "dns",
@@ -120,10 +129,10 @@
       "type": "text",
       "x": 370,
       "y": 182,
-      "width": 160,
+      "width": 165,
       "height": 20,
       "text": "Resolves IP address",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -145,7 +154,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[128,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          128,
+          0
+        ]
+      ]
     },
     {
       "id": "server-box",
@@ -217,7 +235,7 @@
       "width": 160,
       "height": 20,
       "text": "Apache / Nginx",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -263,10 +281,10 @@
       "type": "text",
       "x": 860,
       "y": 167,
-      "width": 160,
+      "width": 183,
       "height": 20,
       "text": "HTML + CSS + JS + API",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -315,7 +333,7 @@
       "width": 200,
       "height": 20,
       "text": "All reads + writes",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -337,7 +355,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[18,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          18,
+          0
+        ]
+      ]
     },
     {
       "id": "arrow-app-db",
@@ -351,7 +378,20 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[-100,0],[0,100]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -100,
+          0
+        ],
+        [
+          0,
+          100
+        ]
+      ]
     },
     {
       "id": "limitations-box",
@@ -389,10 +429,10 @@
       "type": "text",
       "x": 100,
       "y": 348,
-      "width": 500,
+      "width": 556,
       "height": 90,
       "text": "Single point of failure — any crash takes down entire system\nCannot scale horizontally — constrained by one machine's CPU/RAM\nNo redundancy — data loss risk on disk failure\nMaintenance requires complete downtime",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -423,7 +463,7 @@
       "width": 380,
       "height": 60,
       "text": "GET /api/users  →  Web Server\n  App code queries MySQL\n  MySQL returns rows  →  JSON response",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

@@ -29,9 +29,9 @@
       "x": 40,
       "y": 78,
       "width": 130,
-      "height": 16,
+      "height": 18,
       "text": "CLIENT",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -63,10 +63,10 @@
       "type": "text",
       "x": 50,
       "y": 120,
-      "width": 110,
-      "height": 42,
+      "width": 139,
+      "height": 53,
       "text": "Browser Client\nLocal doc buffer\nSend/recv ops",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -94,7 +94,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-ws",
@@ -102,9 +111,9 @@
       "x": 260,
       "y": 78,
       "width": 160,
-      "height": 16,
+      "height": 18,
       "text": "WEBSOCKET SERVER",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -136,10 +145,10 @@
       "type": "text",
       "x": 270,
       "y": 114,
-      "width": 140,
-      "height": 56,
+      "width": 191,
+      "height": 70,
       "text": "WebSocket Server\nPersistent connections\nBroadcast ops to\ncollaborators",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -167,7 +176,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-docsvc",
@@ -175,9 +193,9 @@
       "x": 510,
       "y": 78,
       "width": 160,
-      "height": 16,
+      "height": 18,
       "text": "DOCUMENT SERVICE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -209,10 +227,10 @@
       "type": "text",
       "x": 520,
       "y": 118,
-      "width": 140,
-      "height": 42,
+      "width": 157,
+      "height": 70,
       "text": "Document Service\nValidate ops\nApply to doc state\nRoute to OT engine",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -240,7 +258,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[78,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          78,
+          0
+        ]
+      ]
     },
     {
       "id": "label-ot",
@@ -248,9 +275,9 @@
       "x": 760,
       "y": 78,
       "width": 200,
-      "height": 16,
+      "height": 18,
       "text": "OT ENGINE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -282,10 +309,10 @@
       "type": "text",
       "x": 770,
       "y": 110,
-      "width": 180,
-      "height": 56,
+      "width": 191,
+      "height": 70,
       "text": "Operational Transform\nMerge concurrent edits\nTransform ops against\nrevision history",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -313,7 +340,16 @@
       "angle": 0,
       "startArrowhead": null,
       "endArrowhead": "arrow",
-      "points": [[0,0],[0,82]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          82
+        ]
+      ]
     },
     {
       "id": "label-docstore",
@@ -321,9 +357,9 @@
       "x": 760,
       "y": 274,
       "width": 200,
-      "height": 16,
+      "height": 18,
       "text": "DOCUMENT STORE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -355,10 +391,10 @@
       "type": "text",
       "x": 770,
       "y": 310,
-      "width": 180,
-      "height": 56,
+      "width": 226,
+      "height": 70,
       "text": "Document Store\ncontent (full snapshot)\nop_log (revision history)\nversion number (monotonic)",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -376,9 +412,9 @@
       "x": 440,
       "y": 274,
       "width": 290,
-      "height": 16,
+      "height": 18,
       "text": "OT OPERATION EXAMPLE",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -410,10 +446,10 @@
       "type": "text",
       "x": 452,
       "y": 304,
-      "width": 266,
-      "height": 100,
+      "width": 348,
+      "height": 140,
       "text": "User A: {op:\"insert\",pos:5,text:\"hello\",\n  userId:123, revision:42}\nUser B: {op:\"insert\",pos:3,text:\"world\",\n  userId:456, revision:42}\n\nOT transforms B's pos=3 against A's op:\nResult: B inserts at pos=3, A at pos=10\n(positions adjusted, no data lost)",
-      "fontSize": 10,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -431,9 +467,9 @@
       "x": 40,
       "y": 274,
       "width": 380,
-      "height": 16,
+      "height": 18,
       "text": "WEBSOCKET MESSAGE FLOW",
-      "fontSize": 11,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -466,9 +502,9 @@
       "x": 52,
       "y": 304,
       "width": 356,
-      "height": 100,
+      "height": 210,
       "text": "Client → Server (WebSocket):\n{type:\"op\", docId:\"abc\", revision:42,\n op:{type:\"insert\",pos:5,text:\"hello\"}}\n\nServer → All Clients (broadcast):\n{type:\"ack\", revision:43,\n op:{type:\"insert\",pos:5,text:\"hello\"},\n transformedFrom:42}\n\n1. Client sends op + its current revision\n2. OT transforms against concurrent ops\n3. Server acks new revision, broadcasts",
-      "fontSize": 10,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

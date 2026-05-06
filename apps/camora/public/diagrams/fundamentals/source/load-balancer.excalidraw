@@ -64,7 +64,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[108,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          108,
+          0
+        ]
+      ]
     },
     {
       "id": "lb",
@@ -102,10 +111,10 @@
       "type": "text",
       "x": 318,
       "y": 220,
-      "width": 164,
+      "width": 165,
       "height": 20,
       "text": "Round-robin routing",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -120,10 +129,10 @@
       "type": "text",
       "x": 318,
       "y": 242,
-      "width": 164,
+      "width": 183,
       "height": 20,
       "text": "Health checks /health",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -141,7 +150,7 @@
       "width": 164,
       "height": 20,
       "text": "SSL termination",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -163,7 +172,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[88,-80]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          88,
+          -80
+        ]
+      ]
     },
     {
       "id": "arrow-lb-ws2",
@@ -177,7 +195,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[88,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          88,
+          0
+        ]
+      ]
     },
     {
       "id": "arrow-lb-ws3",
@@ -191,7 +218,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[88,80]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          88,
+          80
+        ]
+      ]
     },
     {
       "id": "ws1",
@@ -232,7 +268,7 @@
       "width": 160,
       "height": 20,
       "text": "Stateless app",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -281,7 +317,7 @@
       "width": 160,
       "height": 20,
       "text": "Stateless app",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -330,7 +366,7 @@
       "width": 160,
       "height": 20,
       "text": "Stateless app",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -352,7 +388,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[68,100]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          100
+        ]
+      ]
     },
     {
       "id": "arrow-ws2-db",
@@ -366,7 +411,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[68,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          0
+        ]
+      ]
     },
     {
       "id": "arrow-ws3-db",
@@ -380,7 +434,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[68,-100]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          -100
+        ]
+      ]
     },
     {
       "id": "db",
@@ -421,7 +484,7 @@
       "width": 170,
       "height": 20,
       "text": "PostgreSQL primary",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -467,10 +530,10 @@
       "type": "text",
       "x": 810,
       "y": 278,
-      "width": 170,
+      "width": 200,
       "height": 20,
       "text": "Redis (sticky sessions)",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -498,10 +561,10 @@
       "type": "text",
       "x": 78,
       "y": 474,
-      "width": 464,
-      "height": 52,
+      "width": 582,
+      "height": 53,
       "text": "Request 1 → Server1  |  Request 2 → Server2  |  Request 3 → Server3\nGET /health → 200 OK  (health check every 5s)\nFailed server removed from rotation automatically",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -519,7 +582,7 @@
       "width": 400,
       "height": 80,
       "text": "Benefits:\n- No single point of failure\n- Horizontal scaling: add more servers\n- Zero-downtime deployments (rolling)",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",

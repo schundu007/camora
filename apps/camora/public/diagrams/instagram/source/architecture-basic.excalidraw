@@ -58,7 +58,7 @@
       "locked": false,
       "text": "CLIENT LAYER",
       "originalText": "CLIENT LAYER",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -70,7 +70,7 @@
       "id": "mobile-app",
       "x": 60,
       "y": 105,
-      "width": 160,
+      "width": 192,
       "height": 70,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -84,10 +84,21 @@
       "versionNonce": 1003,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "mobile-app-label"}, {"type": "arrow", "id": "arrow-upload"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "mobile-app-label"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-upload"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -144,7 +155,7 @@
       "locked": false,
       "text": "API LAYER",
       "originalText": "API LAYER",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -156,7 +167,7 @@
       "id": "api-gateway",
       "x": 300,
       "y": 105,
-      "width": 160,
+      "width": 192,
       "height": 70,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -170,10 +181,29 @@
       "versionNonce": 1006,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "api-gateway-label"}, {"type": "arrow", "id": "arrow-upload"}, {"type": "arrow", "id": "arrow-to-upload-svc"}, {"type": "arrow", "id": "arrow-to-feed-svc"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "api-gateway-label"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-upload"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-to-upload-svc"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-to-feed-svc"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -228,9 +258,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [80, 0]],
-      "startBinding": {"elementId": "mobile-app", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "api-gateway", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          80,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "mobile-app",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "api-gateway",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -258,7 +305,7 @@
       "locked": false,
       "text": "SERVICE LAYER",
       "originalText": "SERVICE LAYER",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -270,7 +317,7 @@
       "id": "upload-svc",
       "x": 550,
       "y": 105,
-      "width": 160,
+      "width": 192,
       "height": 70,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -284,10 +331,29 @@
       "versionNonce": 1010,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "upload-svc-label"}, {"type": "arrow", "id": "arrow-to-upload-svc"}, {"type": "arrow", "id": "arrow-to-s3"}, {"type": "arrow", "id": "arrow-to-posts-db"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "upload-svc-label"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-to-upload-svc"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-to-s3"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-to-posts-db"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -325,7 +391,7 @@
       "id": "feed-svc",
       "x": 550,
       "y": 210,
-      "width": 160,
+      "width": 192,
       "height": 70,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -339,10 +405,29 @@
       "versionNonce": 1012,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "feed-svc-label"}, {"type": "arrow", "id": "arrow-to-feed-svc"}, {"type": "arrow", "id": "arrow-feed-to-posts"}, {"type": "arrow", "id": "arrow-feed-to-social"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "feed-svc-label"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-to-feed-svc"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-feed-to-posts"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-feed-to-social"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -397,9 +482,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [90, 0]],
-      "startBinding": {"elementId": "api-gateway", "focus": -0.3, "gap": 1},
-      "endBinding": {"elementId": "upload-svc", "focus": -0.3, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          90,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "api-gateway",
+        "focus": -0.3,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "upload-svc",
+        "focus": -0.3,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -425,9 +527,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [90, 90]],
-      "startBinding": {"elementId": "api-gateway", "focus": 0.3, "gap": 1},
-      "endBinding": {"elementId": "feed-svc", "focus": -0.3, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          90,
+          90
+        ]
+      ],
+      "startBinding": {
+        "elementId": "api-gateway",
+        "focus": 0.3,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "feed-svc",
+        "focus": -0.3,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -455,7 +574,7 @@
       "locked": false,
       "text": "STORAGE LAYER",
       "originalText": "STORAGE LAYER",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -467,7 +586,7 @@
       "id": "s3",
       "x": 810,
       "y": 105,
-      "width": 160,
+      "width": 192,
       "height": 70,
       "angle": 0,
       "strokeColor": "#047857",
@@ -481,10 +600,25 @@
       "versionNonce": 1017,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "s3-label"}, {"type": "arrow", "id": "arrow-to-s3"}, {"type": "arrow", "id": "arrow-s3-to-cdn"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "s3-label"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-to-s3"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-s3-to-cdn"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -522,7 +656,7 @@
       "id": "posts-db",
       "x": 810,
       "y": 210,
-      "width": 160,
+      "width": 192,
       "height": 70,
       "angle": 0,
       "strokeColor": "#047857",
@@ -536,10 +670,25 @@
       "versionNonce": 1019,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "posts-db-label"}, {"type": "arrow", "id": "arrow-to-posts-db"}, {"type": "arrow", "id": "arrow-feed-to-posts"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "posts-db-label"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-to-posts-db"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-feed-to-posts"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -577,7 +726,7 @@
       "id": "social-db",
       "x": 810,
       "y": 315,
-      "width": 160,
+      "width": 192,
       "height": 70,
       "angle": 0,
       "strokeColor": "#047857",
@@ -591,10 +740,21 @@
       "versionNonce": 1021,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "social-db-label"}, {"type": "arrow", "id": "arrow-feed-to-social"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "social-db-label"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-feed-to-social"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -649,9 +809,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [100, 0]],
-      "startBinding": {"elementId": "upload-svc", "focus": -0.3, "gap": 1},
-      "endBinding": {"elementId": "s3", "focus": -0.3, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "upload-svc",
+        "focus": -0.3,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "s3",
+        "focus": -0.3,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -677,9 +854,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [100, 90]],
-      "startBinding": {"elementId": "upload-svc", "focus": 0.3, "gap": 1},
-      "endBinding": {"elementId": "posts-db", "focus": -0.3, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          90
+        ]
+      ],
+      "startBinding": {
+        "elementId": "upload-svc",
+        "focus": 0.3,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "posts-db",
+        "focus": -0.3,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -705,9 +899,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [100, 0]],
-      "startBinding": {"elementId": "feed-svc", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "posts-db", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "feed-svc",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "posts-db",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -733,9 +944,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [100, 85]],
-      "startBinding": {"elementId": "feed-svc", "focus": 0.3, "gap": 1},
-      "endBinding": {"elementId": "social-db", "focus": -0.3, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          85
+        ]
+      ],
+      "startBinding": {
+        "elementId": "feed-svc",
+        "focus": 0.3,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "social-db",
+        "focus": -0.3,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -763,7 +991,7 @@
       "locked": false,
       "text": "DELIVERY",
       "originalText": "DELIVERY",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -775,7 +1003,7 @@
       "id": "cdn",
       "x": 1060,
       "y": 105,
-      "width": 160,
+      "width": 201,
       "height": 70,
       "angle": 0,
       "strokeColor": "#b45309",
@@ -789,17 +1017,32 @@
       "versionNonce": 1028,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "cdn-label"}, {"type": "arrow", "id": "arrow-s3-to-cdn"}, {"type": "arrow", "id": "arrow-cdn-to-client"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "cdn-label"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-s3-to-cdn"
+        },
+        {
+          "type": "arrow",
+          "id": "arrow-cdn-to-client"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
       "id": "cdn-label",
       "x": 1060,
       "y": 118,
-      "width": 160,
+      "width": 169,
       "height": 44,
       "angle": 0,
       "strokeColor": "#78350f",
@@ -847,9 +1090,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [90, 0]],
-      "startBinding": {"elementId": "s3", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "cdn", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          90,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "s3",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "cdn",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -872,11 +1132,29 @@
       "versionNonce": 1031,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "arrow-cdn-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "arrow-cdn-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [0, 80]],
-      "startBinding": {"elementId": "cdn", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          80
+        ]
+      ],
+      "startBinding": {
+        "elementId": "cdn",
+        "focus": 0,
+        "gap": 1
+      },
       "endBinding": null,
       "startArrowhead": null,
       "endArrowhead": "arrow"
@@ -886,7 +1164,7 @@
       "id": "arrow-cdn-label",
       "x": 1145,
       "y": 200,
-      "width": 130,
+      "width": 139,
       "height": 20,
       "angle": 0,
       "strokeColor": "#b45309",
@@ -905,7 +1183,7 @@
       "locked": false,
       "text": "serve to clients",
       "originalText": "serve to clients",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -918,7 +1196,7 @@
       "x": 60,
       "y": 430,
       "width": 1160,
-      "height": 170,
+      "height": 231,
       "angle": 0,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -931,10 +1209,17 @@
       "versionNonce": 1033,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "evidence-text"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "evidence-text"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -942,7 +1227,7 @@
       "x": 80,
       "y": 445,
       "width": 1120,
-      "height": 140,
+      "height": 207,
       "angle": 0,
       "strokeColor": "#22c55e",
       "backgroundColor": "transparent",
@@ -972,7 +1257,7 @@
       "id": "schema-label",
       "x": 60,
       "y": 380,
-      "width": 400,
+      "width": 921,
       "height": 20,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -1003,7 +1288,7 @@
       "id": "upload-flow-label",
       "x": 60,
       "y": 310,
-      "width": 800,
+      "width": 1138,
       "height": 20,
       "angle": 0,
       "strokeColor": "#475569",
@@ -1034,7 +1319,7 @@
       "id": "feed-flow-label",
       "x": 60,
       "y": 340,
-      "width": 800,
+      "width": 1007,
       "height": 20,
       "angle": 0,
       "strokeColor": "#475569",

@@ -58,7 +58,7 @@
       "locked": false,
       "text": "CELL-BASED GEOGRAPHY",
       "originalText": "CELL-BASED GEOGRAPHY",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -70,8 +70,8 @@
       "id": "gateway",
       "x": 40,
       "y": 105,
-      "width": 140,
-      "height": 60,
+      "width": 172,
+      "height": 64,
       "angle": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -84,10 +84,17 @@
       "versionNonce": 6003,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "gateway-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "gateway-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -125,8 +132,8 @@
       "id": "cell-sf",
       "x": 250,
       "y": 85,
-      "width": 160,
-      "height": 100,
+      "width": 192,
+      "height": 114,
       "angle": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -139,10 +146,17 @@
       "versionNonce": 6005,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "cell-sf-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "cell-sf-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -180,8 +194,8 @@
       "id": "cell-nyc",
       "x": 250,
       "y": 205,
-      "width": 160,
-      "height": 100,
+      "width": 197,
+      "height": 114,
       "angle": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -194,17 +208,24 @@
       "versionNonce": 6007,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "cell-nyc-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "cell-nyc-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
       "id": "cell-nyc-label",
       "x": 250,
       "y": 210,
-      "width": 160,
+      "width": 165,
       "height": 90,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -252,7 +273,16 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [70, 0]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          70,
+          0
+        ]
+      ],
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
@@ -280,7 +310,16 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [70, 110]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          70,
+          110
+        ]
+      ],
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
@@ -310,7 +349,7 @@
       "locked": false,
       "text": "PLATFORM SERVICES",
       "originalText": "PLATFORM SERVICES",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -322,8 +361,8 @@
       "id": "eta-svc",
       "x": 490,
       "y": 105,
-      "width": 160,
-      "height": 70,
+      "width": 232,
+      "height": 80,
       "angle": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -336,17 +375,24 @@
       "versionNonce": 6012,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "eta-svc-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "eta-svc-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
       "id": "eta-svc-label",
       "x": 490,
       "y": 112,
-      "width": 160,
+      "width": 200,
       "height": 56,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -377,8 +423,8 @@
       "id": "pricing-svc",
       "x": 490,
       "y": 205,
-      "width": 160,
-      "height": 70,
+      "width": 197,
+      "height": 77,
       "angle": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -391,18 +437,25 @@
       "versionNonce": 6014,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "pricing-svc-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "pricing-svc-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
       "id": "pricing-svc-label",
       "x": 490,
       "y": 215,
-      "width": 160,
-      "height": 50,
+      "width": 165,
+      "height": 53,
       "angle": 0,
       "strokeColor": "#ffffff",
       "backgroundColor": "transparent",
@@ -432,8 +485,8 @@
       "id": "payment-svc",
       "x": 700,
       "y": 105,
-      "width": 160,
-      "height": 70,
+      "width": 192,
+      "height": 77,
       "angle": 0,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -446,10 +499,17 @@
       "versionNonce": 6016,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "payment-svc-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "payment-svc-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -457,7 +517,7 @@
       "x": 700,
       "y": 115,
       "width": 160,
-      "height": 50,
+      "height": 53,
       "angle": 0,
       "strokeColor": "#065f46",
       "backgroundColor": "transparent",
@@ -487,8 +547,8 @@
       "id": "rating-svc",
       "x": 700,
       "y": 205,
-      "width": 160,
-      "height": 70,
+      "width": 192,
+      "height": 77,
       "angle": 0,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -501,10 +561,17 @@
       "versionNonce": 6018,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "rating-svc-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "rating-svc-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -512,7 +579,7 @@
       "x": 700,
       "y": 215,
       "width": 160,
-      "height": 50,
+      "height": 53,
       "angle": 0,
       "strokeColor": "#065f46",
       "backgroundColor": "transparent",
@@ -559,7 +626,16 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [80, 0]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          80,
+          0
+        ]
+      ],
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
@@ -587,7 +663,16 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [80, 0]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          80,
+          0
+        ]
+      ],
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
@@ -615,7 +700,16 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [50, 0]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          50,
+          0
+        ]
+      ],
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
@@ -643,7 +737,16 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [50, 0]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          50,
+          0
+        ]
+      ],
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
@@ -654,8 +757,8 @@
       "id": "kafka-adv",
       "x": 910,
       "y": 140,
-      "width": 170,
-      "height": 60,
+      "width": 237,
+      "height": 64,
       "angle": 0,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -668,17 +771,24 @@
       "versionNonce": 6024,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "kafka-adv-label"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "kafka-adv-label"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
       "id": "kafka-adv-label",
       "x": 910,
       "y": 150,
-      "width": 170,
+      "width": 205,
       "height": 40,
       "angle": 0,
       "strokeColor": "#78350f",
@@ -726,7 +836,16 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [500, 0]],
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          500,
+          0
+        ]
+      ],
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
@@ -738,7 +857,7 @@
       "x": 40,
       "y": 340,
       "width": 1140,
-      "height": 240,
+      "height": 269,
       "angle": 0,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -751,10 +870,17 @@
       "versionNonce": 6027,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "evidence-uber-adv-text"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "evidence-uber-adv-text"
+        }
+      ],
       "link": null,
       "locked": false,
-      "roundness": {"type": 3}
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "type": "text",
@@ -762,7 +888,7 @@
       "x": 60,
       "y": 355,
       "width": 1100,
-      "height": 210,
+      "height": 245,
       "angle": 0,
       "strokeColor": "#22c55e",
       "backgroundColor": "transparent",

@@ -58,7 +58,7 @@
       "locked": false,
       "text": "UPLOAD & INGEST",
       "originalText": "UPLOAD & INGEST",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -89,7 +89,7 @@
       "locked": false,
       "text": "PROCESSING",
       "originalText": "PROCESSING",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -120,7 +120,7 @@
       "locked": false,
       "text": "DELIVERY & INTELLIGENCE",
       "originalText": "DELIVERY & INTELLIGENCE",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -132,7 +132,7 @@
       "id": "creator",
       "x": 60,
       "y": 110,
-      "width": 150,
+      "width": 172,
       "height": 70,
       "angle": 0,
       "strokeColor": "#c2410c",
@@ -146,7 +146,16 @@
       "versionNonce": 10010,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "creator-lbl"}, {"type": "arrow", "id": "ya1"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "creator-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "ya1"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -156,7 +165,7 @@
       "x": 65,
       "y": 132,
       "width": 140,
-      "height": 26,
+      "height": 35,
       "angle": 0,
       "strokeColor": "#7c2d12",
       "backgroundColor": "transparent",
@@ -186,7 +195,7 @@
       "id": "upload-api",
       "x": 280,
       "y": 110,
-      "width": 160,
+      "width": 182,
       "height": 70,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -200,7 +209,20 @@
       "versionNonce": 10020,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "upload-api-lbl"}, {"type": "arrow", "id": "ya1"}, {"type": "arrow", "id": "ya2"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "upload-api-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "ya1"
+        },
+        {
+          "type": "arrow",
+          "id": "ya2"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -210,7 +232,7 @@
       "x": 285,
       "y": 132,
       "width": 150,
-      "height": 26,
+      "height": 35,
       "angle": 0,
       "strokeColor": "#ffffff",
       "backgroundColor": "transparent",
@@ -257,9 +279,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [70, 0]],
-      "startBinding": {"elementId": "creator", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "upload-api", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          70,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "creator",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "upload-api",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -268,7 +307,7 @@
       "id": "kafka",
       "x": 530,
       "y": 110,
-      "width": 160,
+      "width": 206,
       "height": 70,
       "angle": 0,
       "strokeColor": "#b45309",
@@ -282,7 +321,24 @@
       "versionNonce": 10030,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "kafka-lbl"}, {"type": "arrow", "id": "ya2"}, {"type": "arrow", "id": "ya3"}, {"type": "arrow", "id": "ya4"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "kafka-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "ya2"
+        },
+        {
+          "type": "arrow",
+          "id": "ya3"
+        },
+        {
+          "type": "arrow",
+          "id": "ya4"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -291,8 +347,8 @@
       "id": "kafka-lbl",
       "x": 535,
       "y": 132,
-      "width": 150,
-      "height": 26,
+      "width": 174,
+      "height": 35,
       "angle": 0,
       "strokeColor": "#92400e",
       "backgroundColor": "transparent",
@@ -339,9 +395,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [90, 0]],
-      "startBinding": {"elementId": "upload-api", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "kafka", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          90,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "upload-api",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "kafka",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -350,7 +423,7 @@
       "id": "ffmpeg-workers",
       "x": 790,
       "y": 90,
-      "width": 180,
+      "width": 223,
       "height": 110,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -364,7 +437,20 @@
       "versionNonce": 10040,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "ffmpeg-lbl"}, {"type": "arrow", "id": "ya3"}, {"type": "arrow", "id": "ya5"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "ffmpeg-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "ya3"
+        },
+        {
+          "type": "arrow",
+          "id": "ya5"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -373,7 +459,7 @@
       "id": "ffmpeg-lbl",
       "x": 795,
       "y": 107,
-      "width": 170,
+      "width": 191,
       "height": 76,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -392,7 +478,7 @@
       "locked": false,
       "text": "FFmpeg Workers\n(parallel transcoding)\n360p/720p/1080p/4K\nH.264 + VP9 + AV1",
       "originalText": "FFmpeg Workers\n(parallel transcoding)\n360p/720p/1080p/4K\nH.264 + VP9 + AV1",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -421,9 +507,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [100, 0]],
-      "startBinding": {"elementId": "kafka", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "ffmpeg-workers", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "kafka",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "ffmpeg-workers",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -432,7 +535,7 @@
       "id": "multi-cdn",
       "x": 1060,
       "y": 90,
-      "width": 200,
+      "width": 222,
       "height": 110,
       "angle": 0,
       "strokeColor": "#047857",
@@ -446,7 +549,16 @@
       "versionNonce": 10050,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "multi-cdn-lbl"}, {"type": "arrow", "id": "ya5"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "multi-cdn-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "ya5"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -474,7 +586,7 @@
       "locked": false,
       "text": "Multi-CDN\nAkamai + Cloudfront\n+ YouTube Edge PoPs\n(95%+ cache hit)",
       "originalText": "Multi-CDN\nAkamai + Cloudfront\n+ YouTube Edge PoPs\n(95%+ cache hit)",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -503,9 +615,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [90, 0]],
-      "startBinding": {"elementId": "ffmpeg-workers", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "multi-cdn", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          90,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "ffmpeg-workers",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "multi-cdn",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -514,7 +643,7 @@
       "id": "analytics-kafka",
       "x": 530,
       "y": 260,
-      "width": 180,
+      "width": 258,
       "height": 70,
       "angle": 0,
       "strokeColor": "#b45309",
@@ -528,7 +657,20 @@
       "versionNonce": 10060,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "analytics-kafka-lbl"}, {"type": "arrow", "id": "ya4"}, {"type": "arrow", "id": "ya6"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "analytics-kafka-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "ya4"
+        },
+        {
+          "type": "arrow",
+          "id": "ya6"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -537,8 +679,8 @@
       "id": "analytics-kafka-lbl",
       "x": 535,
       "y": 278,
-      "width": 170,
-      "height": 34,
+      "width": 226,
+      "height": 35,
       "angle": 0,
       "strokeColor": "#92400e",
       "backgroundColor": "transparent",
@@ -556,7 +698,7 @@
       "locked": false,
       "text": "Analytics Kafka\n(views, watch time events)",
       "originalText": "Analytics Kafka\n(views, watch time events)",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -585,9 +727,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [0, 80]],
-      "startBinding": {"elementId": "kafka", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "analytics-kafka", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          80
+        ]
+      ],
+      "startBinding": {
+        "elementId": "kafka",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "analytics-kafka",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -596,7 +755,7 @@
       "id": "bigquery",
       "x": 790,
       "y": 260,
-      "width": 180,
+      "width": 206,
       "height": 70,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -610,7 +769,20 @@
       "versionNonce": 10070,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "bigquery-lbl"}, {"type": "arrow", "id": "ya6"}, {"type": "arrow", "id": "ya7"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "bigquery-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "ya6"
+        },
+        {
+          "type": "arrow",
+          "id": "ya7"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -619,8 +791,8 @@
       "id": "bigquery-lbl",
       "x": 795,
       "y": 278,
-      "width": 170,
-      "height": 34,
+      "width": 174,
+      "height": 35,
       "angle": 0,
       "strokeColor": "#ffffff",
       "backgroundColor": "transparent",
@@ -667,9 +839,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [80, 0]],
-      "startBinding": {"elementId": "analytics-kafka", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "bigquery", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          80,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "analytics-kafka",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "bigquery",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -678,7 +867,7 @@
       "id": "recommender",
       "x": 1060,
       "y": 260,
-      "width": 200,
+      "width": 232,
       "height": 90,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -692,7 +881,16 @@
       "versionNonce": 10080,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "recommender-lbl"}, {"type": "arrow", "id": "ya7"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "recommender-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "ya7"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -701,7 +899,7 @@
       "id": "recommender-lbl",
       "x": 1065,
       "y": 278,
-      "width": 190,
+      "width": 200,
       "height": 54,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -720,7 +918,7 @@
       "locked": false,
       "text": "Recommendation Engine\n(ML two-tower model)\nwatch history + signals",
       "originalText": "Recommendation Engine\n(ML two-tower model)\nwatch history + signals",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -749,9 +947,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [90, 0]],
-      "startBinding": {"elementId": "bigquery", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "recommender", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          90,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "bigquery",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "recommender",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -760,8 +975,8 @@
       "id": "evidence",
       "x": 60,
       "y": 410,
-      "width": 580,
-      "height": 100,
+      "width": 592,
+      "height": 104,
       "angle": 0,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -774,7 +989,12 @@
       "versionNonce": 10090,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "evidence-lbl"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "evidence-lbl"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -802,7 +1022,7 @@
       "locked": false,
       "text": "SCALE EVIDENCE\nKafka: 1M+ messages/sec  |  FFmpeg: 1.4M GPU-hours/day\nBigQuery: 5B view events/day processed via Flink + batch\nCDN: 175 Tbps peak bandwidth  |  Recommendation: 1.4M QPS",
       "originalText": "SCALE EVIDENCE\nKafka: 1M+ messages/sec  |  FFmpeg: 1.4M GPU-hours/day\nBigQuery: 5B view events/day processed via Flink + batch\nCDN: 175 Tbps peak bandwidth  |  Recommendation: 1.4M QPS",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

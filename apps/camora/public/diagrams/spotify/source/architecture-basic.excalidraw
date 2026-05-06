@@ -58,7 +58,7 @@
       "locked": false,
       "text": "CLIENT",
       "originalText": "CLIENT",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -89,7 +89,7 @@
       "locked": false,
       "text": "BACKEND SERVICES",
       "originalText": "BACKEND SERVICES",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -120,7 +120,7 @@
       "locked": false,
       "text": "STORAGE & CDN",
       "originalText": "STORAGE & CDN",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -132,7 +132,7 @@
       "id": "sp-client",
       "x": 60,
       "y": 110,
-      "width": 150,
+      "width": 172,
       "height": 80,
       "angle": 0,
       "strokeColor": "#c2410c",
@@ -146,7 +146,16 @@
       "versionNonce": 7010,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "sp-client-lbl"}, {"type": "arrow", "id": "sp-arr1"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "sp-client-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "sp-arr1"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -156,7 +165,7 @@
       "x": 65,
       "y": 126,
       "width": 140,
-      "height": 48,
+      "height": 53,
       "angle": 0,
       "strokeColor": "#7c2d12",
       "backgroundColor": "transparent",
@@ -174,7 +183,7 @@
       "locked": false,
       "text": "Spotify Client\n(iOS/Android\n/Web/Desktop)",
       "originalText": "Spotify Client\n(iOS/Android\n/Web/Desktop)",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -186,7 +195,7 @@
       "id": "api-server",
       "x": 320,
       "y": 110,
-      "width": 160,
+      "width": 182,
       "height": 70,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -200,7 +209,24 @@
       "versionNonce": 7020,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "api-server-lbl"}, {"type": "arrow", "id": "sp-arr1"}, {"type": "arrow", "id": "sp-arr2"}, {"type": "arrow", "id": "sp-arr3"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "api-server-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "sp-arr1"
+        },
+        {
+          "type": "arrow",
+          "id": "sp-arr2"
+        },
+        {
+          "type": "arrow",
+          "id": "sp-arr3"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -210,7 +236,7 @@
       "x": 325,
       "y": 130,
       "width": 150,
-      "height": 30,
+      "height": 35,
       "angle": 0,
       "strokeColor": "#ffffff",
       "backgroundColor": "transparent",
@@ -257,9 +283,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [110, 0]],
-      "startBinding": {"elementId": "sp-client", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "api-server", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          110,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "sp-client",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "api-server",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -268,7 +311,7 @@
       "id": "track-svc",
       "x": 560,
       "y": 110,
-      "width": 160,
+      "width": 182,
       "height": 70,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -282,7 +325,20 @@
       "versionNonce": 7030,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "track-svc-lbl"}, {"type": "arrow", "id": "sp-arr2"}, {"type": "arrow", "id": "sp-arr4"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "track-svc-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "sp-arr2"
+        },
+        {
+          "type": "arrow",
+          "id": "sp-arr4"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -292,7 +348,7 @@
       "x": 565,
       "y": 130,
       "width": 150,
-      "height": 30,
+      "height": 35,
       "angle": 0,
       "strokeColor": "#ffffff",
       "backgroundColor": "transparent",
@@ -339,9 +395,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [80, 0]],
-      "startBinding": {"elementId": "api-server", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "track-svc", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          80,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "api-server",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "track-svc",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -350,7 +423,7 @@
       "id": "playlist-svc",
       "x": 560,
       "y": 220,
-      "width": 160,
+      "width": 182,
       "height": 70,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -364,7 +437,20 @@
       "versionNonce": 7040,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "playlist-svc-lbl"}, {"type": "arrow", "id": "sp-arr3"}, {"type": "arrow", "id": "sp-arr5"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "playlist-svc-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "sp-arr3"
+        },
+        {
+          "type": "arrow",
+          "id": "sp-arr5"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -374,7 +460,7 @@
       "x": 565,
       "y": 240,
       "width": 150,
-      "height": 30,
+      "height": 35,
       "angle": 0,
       "strokeColor": "#ffffff",
       "backgroundColor": "transparent",
@@ -421,9 +507,30 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [0, 75], [80, 75]],
-      "startBinding": {"elementId": "api-server", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "playlist-svc", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          75
+        ],
+        [
+          80,
+          75
+        ]
+      ],
+      "startBinding": {
+        "elementId": "api-server",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "playlist-svc",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -432,7 +539,7 @@
       "id": "db",
       "x": 820,
       "y": 110,
-      "width": 180,
+      "width": 206,
       "height": 100,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -446,7 +553,20 @@
       "versionNonce": 7050,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "db-lbl"}, {"type": "arrow", "id": "sp-arr4"}, {"type": "arrow", "id": "sp-arr5"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "db-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "sp-arr4"
+        },
+        {
+          "type": "arrow",
+          "id": "sp-arr5"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -455,8 +575,8 @@
       "id": "db-lbl",
       "x": 825,
       "y": 126,
-      "width": 170,
-      "height": 68,
+      "width": 174,
+      "height": 70,
       "angle": 0,
       "strokeColor": "#ffffff",
       "backgroundColor": "transparent",
@@ -474,7 +594,7 @@
       "locked": false,
       "text": "Database\n(tracks, playlists,\nusers)\nPostgres + Cassandra",
       "originalText": "Database\n(tracks, playlists,\nusers)\nPostgres + Cassandra",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -503,9 +623,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [100, 0]],
-      "startBinding": {"elementId": "track-svc", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "db", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "track-svc",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "db",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -531,9 +668,30 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [100, 0], [100, -45]],
-      "startBinding": {"elementId": "playlist-svc", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "db", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          0
+        ],
+        [
+          100,
+          -45
+        ]
+      ],
+      "startBinding": {
+        "elementId": "playlist-svc",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "db",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -542,7 +700,7 @@
       "id": "cache",
       "x": 820,
       "y": 250,
-      "width": 180,
+      "width": 215,
       "height": 60,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -556,7 +714,12 @@
       "versionNonce": 7060,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "cache-lbl"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "cache-lbl"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -565,8 +728,8 @@
       "id": "cache-lbl",
       "x": 825,
       "y": 268,
-      "width": 170,
-      "height": 24,
+      "width": 183,
+      "height": 35,
       "angle": 0,
       "strokeColor": "#ffffff",
       "backgroundColor": "transparent",
@@ -584,7 +747,7 @@
       "locked": false,
       "text": "Cache (Redis)\ntop tracks / sessions",
       "originalText": "Cache (Redis)\ntop tracks / sessions",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -596,7 +759,7 @@
       "id": "cdn-audio",
       "x": 1090,
       "y": 110,
-      "width": 200,
+      "width": 223,
       "height": 80,
       "angle": 0,
       "strokeColor": "#047857",
@@ -610,7 +773,20 @@
       "versionNonce": 7070,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "cdn-audio-lbl"}, {"type": "arrow", "id": "sp-arr6"}, {"type": "arrow", "id": "sp-cdn-client"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "cdn-audio-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "sp-arr6"
+        },
+        {
+          "type": "arrow",
+          "id": "sp-cdn-client"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -619,8 +795,8 @@
       "id": "cdn-audio-lbl",
       "x": 1095,
       "y": 126,
-      "width": 190,
-      "height": 48,
+      "width": 191,
+      "height": 53,
       "angle": 0,
       "strokeColor": "#065f46",
       "backgroundColor": "transparent",
@@ -638,7 +814,7 @@
       "locked": false,
       "text": "CDN\n(audio files: MP3/OGG\nprogressive streaming)",
       "originalText": "CDN\n(audio files: MP3/OGG\nprogressive streaming)",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -650,7 +826,7 @@
       "id": "obj-store",
       "x": 1090,
       "y": 230,
-      "width": 200,
+      "width": 223,
       "height": 70,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -664,7 +840,16 @@
       "versionNonce": 7080,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "obj-store-lbl"}, {"type": "arrow", "id": "sp-arr6"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "obj-store-lbl"
+        },
+        {
+          "type": "arrow",
+          "id": "sp-arr6"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -673,8 +858,8 @@
       "id": "obj-store-lbl",
       "x": 1095,
       "y": 252,
-      "width": 190,
-      "height": 26,
+      "width": 191,
+      "height": 35,
       "angle": 0,
       "strokeColor": "#ffffff",
       "backgroundColor": "transparent",
@@ -692,7 +877,7 @@
       "locked": false,
       "text": "Object Store (S3/GCS)\nraw + transcoded audio",
       "originalText": "Object Store (S3/GCS)\nraw + transcoded audio",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -721,9 +906,26 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [90, 0]],
-      "startBinding": {"elementId": "db", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "cdn-audio", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          90,
+          0
+        ]
+      ],
+      "startBinding": {
+        "elementId": "db",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "cdn-audio",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -749,9 +951,30 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "points": [[0, 0], [0, 80], [-980, 80]],
-      "startBinding": {"elementId": "cdn-audio", "focus": 0, "gap": 1},
-      "endBinding": {"elementId": "sp-client", "focus": 0, "gap": 1},
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          80
+        ],
+        [
+          -980,
+          80
+        ]
+      ],
+      "startBinding": {
+        "elementId": "cdn-audio",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "sp-client",
+        "focus": 0,
+        "gap": 1
+      },
       "startArrowhead": null,
       "endArrowhead": "arrow"
     },
@@ -760,7 +983,7 @@
       "id": "cdn-note",
       "x": 200,
       "y": 278,
-      "width": 300,
+      "width": 313,
       "height": 18,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -779,7 +1002,7 @@
       "locked": false,
       "text": "CDN streams audio directly to client",
       "originalText": "CDN streams audio directly to client",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
       "verticalAlign": "top",
@@ -791,8 +1014,8 @@
       "id": "evidence-box",
       "x": 60,
       "y": 380,
-      "width": 520,
-      "height": 100,
+      "width": 605,
+      "height": 104,
       "angle": 0,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -805,7 +1028,12 @@
       "versionNonce": 9010,
       "isDeleted": false,
       "groupIds": [],
-      "boundElements": [{"type": "text", "id": "evidence-text"}],
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "evidence-text"
+        }
+      ],
       "link": null,
       "locked": false
     },
@@ -814,7 +1042,7 @@
       "id": "evidence-text",
       "x": 70,
       "y": 390,
-      "width": 500,
+      "width": 573,
       "height": 80,
       "angle": 0,
       "strokeColor": "#22c55e",
@@ -833,7 +1061,7 @@
       "locked": false,
       "text": "AUDIO DELIVERY EVIDENCE\nGET /tracks/{id}/stream  => 302 redirect to CDN pre-signed URL\nContent-Type: audio/mpeg  (MP3) | audio/ogg  (Vorbis)\nRange: bytes=0-  => progressive streaming, no full download needed",
       "originalText": "AUDIO DELIVERY EVIDENCE\nGET /tracks/{id}/stream  => 302 redirect to CDN pre-signed URL\nContent-Type: audio/mpeg  (MP3) | audio/ogg  (Vorbis)\nRange: bytes=0-  => progressive streaming, no full download needed",
-      "fontSize": 13,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

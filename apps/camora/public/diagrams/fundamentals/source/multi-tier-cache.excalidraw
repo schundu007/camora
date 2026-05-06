@@ -64,7 +64,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[68,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          0
+        ]
+      ]
     },
     {
       "id": "l1",
@@ -102,10 +111,10 @@
       "type": "text",
       "x": 278,
       "y": 184,
-      "width": 164,
+      "width": 174,
       "height": 20,
       "text": "Latency: 0ms (local)",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -120,10 +129,10 @@
       "type": "text",
       "x": 278,
       "y": 206,
-      "width": 164,
+      "width": 217,
       "height": 20,
       "text": "TTL: Cache-Control header",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -141,7 +150,7 @@
       "width": 164,
       "height": 20,
       "text": "Hit rate: ~40%",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -156,10 +165,10 @@
       "type": "text",
       "x": 278,
       "y": 252,
-      "width": 164,
+      "width": 183,
       "height": 20,
       "text": "HTML, JS, CSS, images",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -181,7 +190,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[68,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          0
+        ]
+      ]
     },
     {
       "id": "l2",
@@ -219,10 +237,10 @@
       "type": "text",
       "x": 528,
       "y": 184,
-      "width": 164,
+      "width": 183,
       "height": 20,
       "text": "Latency: 5-20ms (PoP)",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -240,7 +258,7 @@
       "width": 164,
       "height": 20,
       "text": "TTL: 3600s (1hr)",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -258,7 +276,7 @@
       "width": 164,
       "height": 20,
       "text": "Hit rate: ~70%",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -273,10 +291,10 @@
       "type": "text",
       "x": 528,
       "y": 252,
-      "width": 164,
+      "width": 200,
       "height": 20,
       "text": "Cloudflare / CloudFront",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -298,7 +316,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[68,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          0
+        ]
+      ]
     },
     {
       "id": "l3",
@@ -318,7 +345,7 @@
       "type": "text",
       "x": 770,
       "y": 158,
-      "width": 180,
+      "width": 183,
       "height": 24,
       "text": "L3: Redis (App Cache)",
       "fontSize": 14,
@@ -336,10 +363,10 @@
       "type": "text",
       "x": 778,
       "y": 184,
-      "width": 164,
+      "width": 191,
       "height": 20,
       "text": "Latency: < 1ms network",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -357,7 +384,7 @@
       "width": 164,
       "height": 20,
       "text": "TTL: 300s (5min)",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -375,7 +402,7 @@
       "width": 164,
       "height": 20,
       "text": "Hit rate: ~85%",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -390,10 +417,10 @@
       "type": "text",
       "x": 778,
       "y": 252,
-      "width": 164,
+      "width": 200,
       "height": 20,
       "text": "API responses, sessions",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -415,7 +442,16 @@
       "fillStyle": "solid",
       "roughness": 0,
       "opacity": 100,
-      "points": [[0,0],[68,0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          68,
+          0
+        ]
+      ]
     },
     {
       "id": "l4",
@@ -456,7 +492,7 @@
       "width": 164,
       "height": 20,
       "text": "Latency: 10-100ms",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -471,10 +507,10 @@
       "type": "text",
       "x": 1028,
       "y": 206,
-      "width": 164,
+      "width": 165,
       "height": 20,
       "text": "Persistent (no TTL)",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -492,7 +528,7 @@
       "width": 164,
       "height": 20,
       "text": "Source of truth",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -510,7 +546,7 @@
       "width": 164,
       "height": 20,
       "text": "PostgreSQL on disk",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -541,7 +577,7 @@
       "width": 1100,
       "height": 52,
       "text": "Request path: Browser cache (HIT 40%) → CDN (HIT 70%) → Redis GET user:123 (HIT 85%) → SELECT * FROM users WHERE id=123\nCache hierarchy: Each tier absorbs misses from the tier before it — DB only sees ~15% of total requests",
-      "fontSize": 12,
+      "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
