@@ -130,16 +130,21 @@ const KNOWN_SLUGS_BY_LENGTH = Object.freeze(
 );
 
 /**
- * Match the question text against a known problem slug. Tries both
- * the slug as-is ("url-shortener") and the slug with dashes replaced
- * by spaces ("url shortener") so a free-form question hits.
+ * Match the question text against a known problem slug. Normalizes
+ * both sides — collapses hyphens/underscores to spaces, then to single
+ * spaces — so "key-value store" matches the "key-value-store" slug
+ * regardless of how the user typed the separator.
  * Returns the archetype or null.
  */
+function normalizeForSlugMatch(s) {
+  return s.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 function lookupKnownProblemKind(q) {
+  const normQ = normalizeForSlugMatch(q);
   for (const slug of KNOWN_SLUGS_BY_LENGTH) {
-    const dashed = slug;
-    const spaced = slug.replace(/-/g, ' ');
-    if (q.includes(dashed) || q.includes(spaced)) {
+    const normSlug = normalizeForSlugMatch(slug);
+    if (normQ.includes(normSlug)) {
       return KNOWN_PROBLEM_KIND[slug];
     }
   }
