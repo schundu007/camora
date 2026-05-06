@@ -39,7 +39,7 @@ export default function ContentHeading({
           style={{ background: accent }}
         />
       )}
-      <h3 className="text-[15px] font-bold text-white landing-display tracking-tight whitespace-nowrap">
+      <h3 className="text-[15px] font-bold text-white landing-display tracking-tight min-w-0 leading-snug">
         {title}
       </h3>
       {pills && pills.length > 0 && (
