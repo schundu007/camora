@@ -301,6 +301,35 @@ export function LumoraShellPage() {
             <CamoraLogo size={26} />
           </Link>
 
+          {/* Back — the Electron desktop build has no browser chrome and the
+              IconRail's Camora mark goes to /, so without this button the
+              only way back from a /lumora/* screen is to detour through the
+              landing page. navigate(-1) preserves the user's actual prior
+              location; falls back to / when there's no history (e.g. cold
+              desktop launch). */}
+          <button
+            type="button"
+            onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
+            className="flex items-center gap-1 px-2 py-1.5 rounded-md text-[12px] font-semibold transition-colors hover:bg-[var(--bg-elevated)] shrink-0"
+            style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+            title="Back"
+            aria-label="Back"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+            <span className="hidden sm:inline">Back</span>
+          </button>
+
+          {/* Cross-section quick links — saves a round-trip through the
+              landing page when jumping between Lumora and the prep / pricing
+              / jobs surfaces. Hidden on small screens; mobile users get the
+              same destinations from the hamburger sheet. */}
+          <div className="hidden md:flex items-center gap-1 shrink-0">
+            <Link to="/capra/prepare" className="px-2 py-1.5 rounded-md text-[12px] font-semibold transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }}>Prepare</Link>
+            <Link to="/pricing" className="px-2 py-1.5 rounded-md text-[12px] font-semibold transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }}>Pricing</Link>
+          </div>
+
           {/* LEFT spacer — pushes the tab pills toward the centre of the
               top bar instead of letting them sit flush against the
               logo. Paired with the matching spacer after the tab cluster
