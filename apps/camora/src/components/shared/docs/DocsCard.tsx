@@ -39,8 +39,8 @@ export default function DocsCard({
   const padding = density === 'compact' ? 'p-4' : 'p-6';
 
   const baseClass =
-    `block rounded-xl ${padding} transition-all ` +
-    `${interactive ? 'cursor-pointer hover:scale-[1.01]' : ''} ` +
+    `block rounded-xl ${padding} transition-[transform,box-shadow,border-color] duration-150 ` +
+    `${interactive ? 'cursor-pointer hover:scale-[1.01] active:scale-[0.98]' : ''} ` +
     className;
 
   const baseStyle = {
