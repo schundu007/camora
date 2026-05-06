@@ -11,7 +11,7 @@ interface DocCard {
 
 const USER_GUIDES: DocCard[] = [
   { title: 'Getting started', description: 'Sign up, onboarding, and your first interview prep session.', href: '/docs/getting-started' },
-  { title: 'Prepare', description: 'Browse 800+ prep topics, generate company-specific prep, free tier limits.', href: '/docs/prepare' },
+  { title: 'Prepare', description: 'Browse 1,400+ prep topics, generate company-specific prep, free tier limits.', href: '/docs/prepare' },
   { title: 'Practice', description: 'DSA problems, system design exercises, behavioral STAR practice.', href: '/docs/practice' },
   { title: 'Live Interview', description: 'Connect audio, use Sona, capture system audio, run a live interview.', href: '/docs/lumora-live' },
   { title: 'Coding helper', description: 'Multi-language coding playground with three-approach solutions and complexity analysis.', href: '/docs/lumora-coding' },

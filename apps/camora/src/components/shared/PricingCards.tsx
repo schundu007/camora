@@ -58,7 +58,7 @@ export const SOLO_PLANS: PlanCard[] = [
       '2 AI hours included every month',
       'Live interview AI co-pilot + coding solver',
       'System design generator + voice filter',
-      'Interview prep · 800+ topics (unlimited browsing)',
+      'Interview prep · 1,400+ topics (unlimited browsing)',
       'Top-ups at $15/hr if you need more',
     ],
     cta: 'Start Monthly',

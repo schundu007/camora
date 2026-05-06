@@ -11,7 +11,6 @@ import {
   FeatureLiveAIAnim, FeatureJobMatchAnim, FeaturePrepAnim, FeatureMockInterviewAnim,
 } from '../components/landing/CardAnimations';
 import CapabilityDeck from '../components/landing/CapabilityDeck';
-import CountUp from '../components/shared/animation/CountUp';
 import { Container, Section, Eyebrow, SectionHeading, CTAButton, SurfaceCard, Pill } from '../components/marketing/primitives';
 import { cn } from '../utils/cn';
 
@@ -45,14 +44,14 @@ const APPA: Step[] = [
   },
   {
     key: 'prepare', label: 'Prepare', href: '/capra/prepare',
-    headline: '800+ curated study topics',
+    headline: '1,400+ curated study topics',
     desc: 'System design, DSA, behavioral, databases. Each with AI explanations and architecture diagrams.',
     Anim: PrepareAnim,
     icon: Glyph(<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>),
   },
   {
     key: 'practice', label: 'Practice', href: '/capra/practice',
-    headline: '1,850+ problems with AI feedback',
+    headline: '3,500+ problems with AI feedback',
     desc: 'Real interview problems, multi-approach solutions, timed mock interviews scored on every dimension.',
     Anim: PracticeAnim,
     icon: Glyph(<><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></>),
@@ -67,8 +66,8 @@ const APPA: Step[] = [
 ];
 
 const STATS: { value: number; suffix: string; label: string }[] = [
-  { value: 800,   suffix: '+', label: 'Study topics' },
-  { value: 1850,  suffix: '+', label: 'Problems' },
+  { value: 1400,  suffix: '+', label: 'Study topics' },
+  { value: 3500,  suffix: '+', label: 'Problems' },
   { value: 1000,  suffix: '+', label: 'Companies' },
   { value: 50,    suffix: '+', label: 'Languages' },
 ];
@@ -96,7 +95,7 @@ const FEATURES = [
   },
   {
     label: 'Prep',
-    title: '800+ topics with diagrams',
+    title: '1,400+ topics with diagrams',
     desc: 'System design, DSA, behavioral, databases — each with AI explanations and company-specific prep.',
     Anim: FeaturePrepAnim,
   },
@@ -478,7 +477,7 @@ export default function LandingPage() {
             <AudienceCard
               eyebrow="For engineers"
               title="Roles, practice & live AI"
-              body="1,000+ engineering roles matched to your skills, 800+ curated study topics with diagrams, and 1,850+ problems with AI feedback. Then live transcription assistance during the interview itself: the moment that decides the offer."
+              body="1,000+ engineering roles matched to your skills, 1,400+ curated study topics with diagrams, and 3,500+ problems with AI feedback. Then live transcription assistance during the interview itself: the moment that decides the offer."
               ctaLabel={isAuthenticated ? 'Open dashboard' : 'Start free'}
               ctaHref="/capra/prepare"
             />

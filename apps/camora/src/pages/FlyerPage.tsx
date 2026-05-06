@@ -10,7 +10,7 @@ const FORMATS: { value: Format; label: string; size: string; dims: string }[] = 
 
 const VALUE_PROPS = [
   { headline: 'Live during interviews', body: 'Real-time transcription + AI answers in any browser tab. Works with Zoom, Meet, Teams.' },
-  { headline: '800+ prep topics', body: 'DSA, system design, behavioral STAR — written by engineers, not LLMs.' },
+  { headline: '1,400+ prep topics', body: 'DSA, system design, behavioral STAR — written by engineers, not LLMs.' },
   { headline: 'Coding playground', body: 'Multi-language solutions with three approaches and complexity analysis.' },
   { headline: 'Team plans', body: 'Bootcamps, study groups, recruiting teams — pool hours across up to 10 mates.' },
 ];
@@ -153,7 +153,7 @@ export default function FlyerPage() {
                   maxWidth: isLandscape ? 480 : '100%',
                 }}
               >
-                Real-time AI during live interviews. 800+ curated prep topics. Multi-language coding playground.
+                Real-time AI during live interviews. 1,400+ curated prep topics. Multi-language coding playground.
                 Built by engineers who failed enough interviews to want better tools.
               </p>
             </div>

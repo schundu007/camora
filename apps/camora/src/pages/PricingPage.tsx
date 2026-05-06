@@ -32,7 +32,7 @@ const COMPARE_SECTIONS: CompareSection[] = [
     rows: [
       { label: 'AI hours included',                    free: 'muted:1 hr · 7-day trial', monthly: '2 hrs / month',  yearly: '5 hrs / year', team: 'Pooled across team' },
       { label: 'Live interview AI co-pilot',           free: '✓',                        monthly: '✓',              yearly: '✓',            team: '✓' },
-      { label: 'Interview prep · 800+ topics',         free: 'muted:1 / category',       monthly: 'All',            yearly: 'All',          team: 'All' },
+      { label: 'Interview prep · 1,400+ topics',        free: 'muted:1 / category',       monthly: 'All',            yearly: 'All',          team: 'All' },
       { label: 'Coding solver + system design',        free: 'muted:Limited',            monthly: '✓',              yearly: '✓',            team: '✓' },
       { label: 'Voice filter + architecture diagrams', free: '—',                        monthly: '✓',              yearly: '✓',            team: '✓' },
     ],
