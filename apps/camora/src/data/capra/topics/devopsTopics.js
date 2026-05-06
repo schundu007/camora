@@ -17943,4 +17943,321 @@ These are answers a kernel-fluent platform/SRE engineer should give without prep
     ],
   },
 
+  {
+    id: 'slo-sli-error-budgets',
+    title: 'SLO / SLI / Error Budgets — Reliability Math and Burn-Rate Alerts',
+    icon: 'activity',
+    color: '#f97316',
+    questions: 5,
+    description: 'Service Level Indicators (what you measure), Service Level Objectives (target you commit to), and Error Budgets (the gap that funds risk). Multi-window multi-burn-rate alerts from the Google SRE Workbook. Tooling: Sloth, Pyrra, Nobl9, Datadog SLO, Grafana SLO, Honeycomb SLO.',
+    visualizations: [
+      {
+        title: 'SLI / SLO / SLA — definitions and math',
+        description: `Three terms, often confused, mean different things:
+
+SLI — Service Level Indicator. A measurement of one aspect of service behavior. Always a ratio of "good events" / "valid events". Examples:
+- Availability SLI: HTTP requests with status < 500 and latency < 1s, divided by all HTTP requests (excluding 4xx that aren't service fault — 401, 403, 404 typically excluded as "valid request, valid response").
+- Latency SLI: Requests served within 200ms, divided by all requests.
+- Freshness SLI (data pipelines): Records processed within 5 minutes of arrival, divided by all records.
+- Correctness SLI (ML systems): Predictions matching ground truth, divided by labeled predictions.
+
+SLI definition matters. The Google SRE Workbook is exact: an SLI is a ratio over a measurement window, with explicit numerator (good) and denominator (valid). Vague SLIs ("uptime") fail in production — they don't tell you what counts and what doesn't.
+
+SLO — Service Level Objective. The target you commit to internally for that SLI, over a defined window. Three components:
+- The SLI definition.
+- A target percentage (99.9%, 99.95%, 99%).
+- A rolling time window (28 days is most common; 30 days, 7 days, or quarterly also seen).
+
+Example: "99.9% of HTTP requests return non-5xx within 1s, measured over a rolling 28-day window."
+
+The number of nines isn't aspirational. It's a budget for how much downtime you tolerate while remaining within the objective. Write it down and treat it as a contract internally.
+
+SLA — Service Level Agreement. The contractual commitment to a customer with financial penalties for breach. Examples: AWS S3 SLA = 99.9% monthly availability, with service credits below 99.9%, more credits below 99.0%.
+
+Relationship: SLA < SLO < actual performance. Set the SLO inside the SLA so you have margin. Set actual SLI tracking inside the SLO so you have signal before breach.
+
+Math — converting "nines" to allowed downtime over a 28-day window:
+- 99%      → 6h 43m allowed bad time per 28 days (~0.96% bad)
+- 99.5%    → 3h 21m
+- 99.9%    → 40m 19s
+- 99.95%   → 20m 9s
+- 99.99%   → 4m 1s
+- 99.999%  → 24s
+
+Each "nine" is 10x harder than the previous one. Going from 99.9% → 99.99% is not a 0.09% improvement — it's a 10x reduction in allowed bad time. This is why teams that promise "five nines" without infrastructure for it always miss.
+
+Choosing your target is a product decision, not an engineering decision. Ask: what level of reliability do users actually need to achieve their goals? More than that is wasted effort that should have gone elsewhere. Less than that loses customers. Consumer search: 99.9%. Internal batch ETL: 99% might be plenty. Stripe payment processing: 99.99%+ because failed payments are catastrophic.
+
+Aggregating SLIs across endpoints. Most services have many endpoints with very different criticality. Two patterns:
+- One SLO per critical endpoint or endpoint class. "POST /payments availability" has its own SLO; "GET /healthz" doesn't.
+- Weighted SLI: aggregate "good events" across endpoints, weighted by request volume, into one number. Simpler dashboarding; can mask failure of low-volume but critical paths.
+
+Most teams that mature into SLO discipline end up with a small number (3-10) of named, durable SLOs per service. Resist the temptation to add an SLO per metric — they become noise no one defends.`,
+        image: '/diagrams/devops/o7-slo.png',
+      },
+      {
+        title: 'Error budgets — the budget for risk',
+        description: `An error budget is what makes SLOs operational. Without one, an SLO is a number on a dashboard. With one, it changes engineering behavior:
+
+The arithmetic. If your SLO is 99.9% availability over 28 days, your error budget is 0.1% of requests (or 40m 19s of total downtime). Burn through the budget and the policy kicks in. Don't burn through it and you have margin to take risks.
+
+What an error budget pays for:
+- Releases. Every deploy carries risk. Error budget pays for the experiments and hotfixes.
+- Maintenance windows. Scheduled outages count against budget.
+- Experiments. A/B tests with measurable error impact.
+- Risk-tolerant deploys. Canary at 5% for 10 minutes spends some budget; that's fine if budget is healthy.
+
+What it doesn't pay for:
+- Operational incidents. Those are unbudgeted; they're the reason the budget exists. The budget represents the bar below which operational issues become a strategic problem (not just a Tuesday).
+
+Error budget policies — the actual enforcement mechanism. Without policy, the budget is just data. Common policies:
+
+Policy 1 (mild): When budget < 25% remaining, leadership reviews release cadence; non-essential deploys deprioritized.
+
+Policy 2 (medium): When budget < 0% (overspent), all non-critical changes pause. Bug fixes only. Engineering effort redirected to reliability.
+
+Policy 3 (strict, Google-style): SLO breach triggers a specific protocol — feature freeze, on-call rotation review, post-mortem on contributing changes, paging chain escalation.
+
+The political reality. Error budget policies require executive support to enforce. "We can't ship Feature X this week because we burnt our error budget" lands flat unless there's organizational alignment that the SLO is real.
+
+Burn rate vs simple budget. Better than tracking "% remaining" is tracking burn rate — how fast are we spending budget, normalized to budget? Burn rate = 1 means at the end of 28 days you'll have spent exactly all budget. Burn rate = 10 means you're spending 10x faster than sustainable; you'll exhaust budget in ~2.8 days.
+
+Burn rate is what alerts on. The Google SRE Workbook prescribes multi-window multi-burn-rate alerting for actionable, non-noisy SLO alerts.
+
+Error budget review cadence:
+- Weekly: did anything dent the budget? What was it?
+- Monthly: are we spending budget on the right things (releases, experiments) or the wrong things (incidents)?
+- Quarterly: is the SLO target right? Should it be tighter (we're way under budget every cycle, customers might be willing to pay for it) or looser (we breach every cycle, the target is unrealistic)?
+
+Common anti-patterns:
+- Setting SLOs no one can defend ("99.99% across the board, because more reliable is better"). Almost certainly wrong.
+- Tracking SLOs but never enforcing budget. Performative.
+- One-month-only retrospection without burn rate alerting. You learn after the fact, which is too late.
+- Pure availability SLO when the actual user pain is latency. Pick the SLI that matches the customer experience.
+
+Multi-team SLO accounting. In microservices, your SLO depends on dependencies' SLOs. The naive math: 99.9% × 99.9% × 99.9% (three sequential dependencies, each 99.9%) = 99.7%. So you can't credibly commit to 99.9% if you have three serial dependencies at 99.9%. Either negotiate dependency SLOs upward, add redundancy, or set your SLO realistically.`,
+        image: '/diagrams/devops/o7-slo.png',
+      },
+      {
+        title: 'Multi-window multi-burn-rate alerting',
+        description: `The Google SRE Workbook's prescription for actionable SLO alerts. The problem it solves: naive SLO alerting is either too sensitive (constant pages on temporary blips) or too slow (you don't know you breached until it's too late).
+
+Naive approaches and why they fail:
+- "Alert when budget drops below 10%". You only learn when most of the damage is done.
+- "Alert when error rate > X% over last N minutes". Fires constantly during normal variability; engineers learn to ignore.
+
+The multi-window multi-burn-rate framework uses two signals together:
+1. Burn rate over a short window (1h). Catches fast incidents.
+2. Burn rate over a long window (6h or 72h). Confirms the issue is sustained, not a transient.
+
+Both windows must exceed a threshold to fire. This eliminates noise from short blips and from slow drift, and pages only on genuinely concerning trends.
+
+Concrete recommended thresholds (28-day SLO, 99.9%):
+
+Page (high urgency, wake someone up):
+- 1h burn rate ≥ 14.4 AND 5m burn rate ≥ 14.4 → "fast burn" — at this rate, full budget exhaustion in 2 days.
+- 6h burn rate ≥ 6 AND 30m burn rate ≥ 6 → "moderate burn" — at this rate, budget exhaustion in ~5 days.
+
+Ticket (lower urgency, route to backlog):
+- 24h burn rate ≥ 3 AND 2h burn rate ≥ 3 → "slow burn" — sustained drift, address within a week.
+- 3d burn rate ≥ 1 AND 6h burn rate ≥ 1 → "very slow burn" — address by next planning cycle.
+
+Why two windows? Each pair has a long window (the trend) and a short window (the recent corroboration). Both must agree before alerting. This prevents:
+- Long-only: would fire 6 hours late on a fast incident.
+- Short-only: would fire on every brief spike that doesn't actually exceed long-term budget burn.
+
+Implementation in PromQL (sketch):
+\`\`\`
+# Burn rate = error rate / SLO error budget
+sum(rate(http_requests_total{status=~"5.."}[1h]))
+  / sum(rate(http_requests_total[1h]))
+  / 0.001  # 1 - 0.999 SLO target
+\`\`\`
+
+Then alert: this expression ≥ 14.4 AND a 5m version ≥ 14.4 → page.
+
+Tooling that bakes this in:
+- Sloth: open-source PromQL SLO generator. You declare SLOs in YAML; Sloth generates Prometheus recording rules + alert rules following the SRE workbook pattern. Production standard for OSS Prometheus.
+- Pyrra: similar, K8s-native via CRDs. Generates SLO + budget UI inside the cluster.
+- Nobl9: commercial SLO platform. Multi-cloud, multi-data-source. UI for SLO editing, budget tracking, error budget policy hooks.
+- Datadog SLO: native, integrated. Burn rate alerts built in. Error budget UI.
+- Grafana SLO (in Cloud + plugin for OSS): UI for declaring SLOs over Prometheus or Loki data; generates the same multi-window alerts.
+- Honeycomb SLO: BubbleUp integration — when SLO budget burns, automatically surface the trace dimensions correlated with the burn.
+
+Setting alert windows for non-28-day SLOs. Multi-window thresholds scale linearly with SLO window. A 7-day SLO uses 1/4 the multi-burn rates. Sloth and similar tools handle this automatically when you declare the window.
+
+The deeper point. Multi-burn-rate is the only alert pattern that scales to dozens of services without becoming noise. It is the SRE workbook's most copied, least-understood pattern. If you have one thing in place from the SRE book, make it this.
+
+Common mistakes:
+- Single-window alerts (just "5xx > 1% for 5 minutes"). Doesn't connect to budget; pages on noise.
+- Forgetting the corroboration window. Long-window-only alerts are slow; short-window-only are noisy.
+- Wrong SLO window. 7-day windows recover too quickly from incidents (false sense of security after a breach); 90-day windows respond too slowly.
+- Same alert thresholds for every service. Ad-tech click-tracking can tolerate higher burn than a payment service.`,
+      },
+      {
+        title: 'SLO tooling landscape and operational gotchas',
+        description: `Where SLOs live in 2026, and what the field has learned the hard way:
+
+OSS tools (Prometheus-native):
+
+Sloth — declare SLOs in YAML, get Prometheus rules + alert rules.
+- OSS, lightweight, production-grade.
+- Generates multi-window multi-burn-rate alert rules following the SRE workbook.
+- Output is just Prometheus rules; no separate runtime to operate.
+- Best for: Prometheus shops that want SLOs without buying a platform.
+
+Pyrra — Kubernetes-native, CRD-driven.
+- ServiceLevelObjective CRD; generates rules + budget UI.
+- Has a small UI for budget exploration that Sloth lacks.
+- Best for: K8s shops who want UI-on-cluster.
+
+OpenSLO — vendor-neutral SLO spec (YAML format).
+- Adopted by Sloth, Pyrra, Nobl9, others. Lets you declare once, render to multiple backends.
+- Status as of 2026: stable spec but not all tools agree on extensions; portability claim partly aspirational.
+
+Commercial / SaaS:
+
+Nobl9 — pure-play SLO platform.
+- Connects to Prometheus, Datadog, New Relic, Splunk, BigQuery, Lightstep, etc.
+- UI for SLO management, error budget policies, integrations with Slack/PagerDuty/Jira.
+- Best for: orgs with multi-vendor data sources who want one SLO UI on top.
+
+Datadog SLO, New Relic SLO — vendor-bundled.
+- Already integrated with their telemetry. Click-to-create from existing metrics or traces.
+- Burn rate alerts built in, integrated with their incident management.
+- Best for: orgs already in those vendors. Friction is low.
+
+Grafana SLO — in Cloud + plugin for OSS Grafana.
+- UI for declaring SLOs over Prometheus, Loki, or any Grafana datasource.
+- Generates multi-window alert rules; integrates with Grafana incident management (since 2023).
+- OSS plugin available, more features in Cloud.
+
+Honeycomb SLO — strong in high-cardinality.
+- BubbleUp SLO: when the budget is burning, automatically shows which dimensions of the trace data correlate with the burn (which user, which endpoint, which version).
+- Best for: orgs already on Honeycomb who want SLO + RCA in one motion.
+
+Operational gotchas:
+
+Defining the SLI is harder than the math suggests. "Availability" sounds simple. In practice: do 4xx errors count? (No — caller's fault.) Do 401s? (Usually no.) Does latency > 1s on a 200 response count? (You decide — and document it.) Spend 90% of SLO project time on definition, 10% on implementation; you'll save 10x downstream.
+
+Cardinality cost. SLOs measured per-customer, per-tenant, per-region multiply quickly. 1,000 tenants × 5 endpoints × 3 regions = 15,000 series per SLO. At 10 SLOs per service × 50 services, you get 7.5M series. Prometheus dies; Datadog bills hurt. Aggregate sensibly.
+
+Tracking the wrong window. If your customers care about hour-by-hour reliability (real-time service), a 28-day SLO smooths over big incidents. Use a shorter window or add a daily / weekly tier.
+
+Burn rate windows must align with on-call schedules. "Page on 5min burn rate" is fine if you have on-call; it's noise if your team does business hours support. Tune to the response window you actually have.
+
+SLOs vs uptime SLAs. Customer-facing SLAs are often availability (99.9% monthly uptime). Internal SLOs should be tighter and more nuanced (latency, error rate, freshness, correctness). The SLA is a contract; the SLO is a tool for engineering decisions.
+
+Reliability isn't binary. A request that returned 200 but took 30 seconds is "available" but not really. SLOs that combine availability + latency (the "good event" criterion) capture this; pure-availability SLOs miss it.
+
+When SLOs fail organizationally:
+- Engineering owns SLO; product doesn't believe in error budget enforcement → no real consequences for breach → SLOs become a vanity dashboard.
+- Set SLO at "99.9% because that's industry standard" → nobody can articulate why → policy meetings devolve into "we'll do better next quarter".
+- One mega-SLO covering "the whole service" hides per-endpoint failures.
+
+When SLOs work organizationally:
+- Tied to feature freeze policy with executive backing.
+- Reviewed weekly with on-call as a standard ritual.
+- Each SLO has a named owner (a single team or person, not "Platform").
+- Burn rate alerts go to Slack first, then PagerDuty if not acked — visibility before urgency.
+- Quarterly tuning conversation: are these the right SLOs?
+
+The deeper point. SLOs aren't a metric. They're a forcing function for the conversation between engineering and product about reliability tradeoffs. The math is easy; the conversation is the hard part. Tools (Sloth, Pyrra, Nobl9, Datadog SLO) automate the math so the conversation can focus on the tradeoffs.`,
+      },
+      {
+        title: 'Quick-fire interview answers — SLO / SLI / Error Budgets',
+        question: 'Quick-fire interview answers — SLO / SLI / Error Budgets.',
+        answer: `Rapid-fire facts.
+
+Q: SLI vs SLO vs SLA in one line each?
+A: SLI = the measurement (good/valid ratio). SLO = the internal target on that SLI over a window. SLA = the customer-facing contract with financial consequences for breach.
+
+Q: How do you write a good SLI?
+A: Ratio of good events to valid events. Specify exactly what counts as good (e.g., HTTP 2xx/3xx with latency under 1s) and what's excluded from valid (e.g., client errors 4xx, calls during planned maintenance).
+
+Q: 99.9% over 28 days = how much downtime?
+A: 40 minutes and 19 seconds. Each additional nine cuts that 10x: 99.99% = ~4 minutes per 28 days.
+
+Q: What's an error budget?
+A: The complement of your SLO target — 0.1% for a 99.9% SLO. The amount of "bad" you can tolerate per window. Used to fund risk: deploys, experiments, planned maintenance.
+
+Q: Burn rate?
+A: Speed of error budget consumption normalized to budget. Burn rate 1 = exhaust budget exactly at end of window. Burn rate 14.4 = exhaust full budget in 2 days. Alerts fire on high burn rate.
+
+Q: Multi-window multi-burn-rate?
+A: Google SRE Workbook alert pattern. Two corroborating windows (long + short) must both exceed a burn rate threshold to fire. Eliminates false positives from blips and false negatives from drift.
+
+Q: Recommended page thresholds for 99.9% SLO?
+A: Fast burn: 1h burn rate ≥ 14.4 and 5m burn rate ≥ 14.4. Moderate burn: 6h burn rate ≥ 6 and 30m burn rate ≥ 6. Slow burn (ticket, not page): 24h burn rate ≥ 3 and 2h burn rate ≥ 3.
+
+Q: Sloth?
+A: OSS tool that takes SLO definitions in YAML and generates Prometheus recording + alert rules following the SRE workbook multi-burn-rate pattern. Production standard for OSS Prometheus shops.
+
+Q: Pyrra?
+A: K8s-native SLO tool. CRD-driven; generates Prometheus rules + small UI for budget exploration.
+
+Q: Nobl9?
+A: Commercial pure-play SLO platform. Connects to multiple data sources (Datadog, Prometheus, NR, Splunk, BigQuery), UI for SLO management, integrations with incident tools.
+
+Q: OpenSLO?
+A: Vendor-neutral SLO YAML spec. Adopted by Sloth, Pyrra, Nobl9. Stable spec but extensions vary across tools.
+
+Q: Datadog SLO?
+A: Native SLO product in Datadog. Click-to-create from existing metrics, burn rate alerts integrated. Best for orgs already on Datadog.
+
+Q: How do dependencies affect your SLO?
+A: Sequential dependencies multiply unreliability. Three serial 99.9% deps = 99.7% best case. Either negotiate higher dep SLOs, add redundancy, or set your SLO realistically.
+
+Q: SLO window — 7 day vs 28 day vs 90 day?
+A: 28 days is most common; matches monthly billing cadence and recovers slowly enough to make breaches felt. 7 days recovers too fast (false sense of security after incidents). 90+ days responds too slowly.
+
+Q: Should we use the same SLO target everywhere?
+A: No. Match the target to user need. Consumer search 99.9%. Internal batch 99%. Payment processing 99.99%+. "More nines is better" wastes engineering effort that should go elsewhere.
+
+Q: What's an error budget policy?
+A: Pre-agreed organizational response to budget exhaustion. Mild: leadership review of release cadence. Medium: pause non-critical changes. Strict: feature freeze + reliability redirect.
+
+Q: How do you avoid SLOs becoming vanity?
+A: Tie to enforcement (release pause / freeze on budget breach), assign per-SLO owners, weekly review ritual, executive backing for the policy. Without these, SLOs are decorative.
+
+Q: SLO for availability vs latency?
+A: Often combine in one SLI — "good event" requires both 2xx response AND latency under threshold. Pure availability misses slow-but-successful requests that frustrate users.
+
+Q: Common SLI definition mistake?
+A: "Uptime" without specifics. Define exactly what "up" means: which endpoints, which status codes count, what latency threshold, what's excluded.
+
+Q: Can you SLO data freshness or correctness?
+A: Yes. Freshness: data records processed within X minutes of arrival / total records. Correctness (ML): predictions matching ground truth / labeled predictions. Same ratio framing.
+
+Q: Cardinality concern?
+A: SLOs measured per-customer × per-endpoint × per-region multiply series fast. 1k × 5 × 3 = 15k per SLO; with 10 SLOs × 50 services = 7.5M series. Aggregate sensibly to control cost.
+
+Q: Should SLO breaches be incidents?
+A: Burn rate alerts that page should follow normal incident response. Slow-burn tickets should land in the backlog with priority. Don't elevate every slow burn to incident — it numbs response.
+
+Q: Honeycomb's SLO differentiator?
+A: BubbleUp SLO — when budget burns, automatically surfaces which trace dimensions correlate with the bad events. Goes from "we breached" to "this is why" in one click.
+
+Q: SLO for batch / async systems?
+A: Same framing, different SLI. Throughput SLI (records processed per minute), freshness SLI (lag), correctness SLI (job-success rate). Pick what users actually feel.
+
+Q: Single most-copied SRE book pattern?
+A: Multi-window multi-burn-rate alerts. Most common implementation: Sloth-generated PromQL rules. If you have one SRE book pattern, make it this.
+
+Q: Gut check: how many SLOs per service?
+A: 3-10 named, durable SLOs covering the user journeys that matter. More than that and they become noise nobody defends.
+
+These are answers an SRE-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://sre.google/workbook/implementing-slos/',
+      'https://sre.google/workbook/alerting-on-slos/',
+      'https://sloth.dev/',
+      'https://github.com/pyrra-dev/pyrra',
+      'https://www.nobl9.com/resources/the-slo-handbook',
+      'https://github.com/openslo/openslo',
+    ],
+  },
+
 ];
