@@ -21498,4 +21498,850 @@ These are answers a data-observability-fluent platform engineer should give with
     ],
   },
 
+  {
+    id: 'ansible-essentials',
+    title: 'Ansible — Inventory, Playbooks, Roles, Collections, AWX',
+    icon: 'settings',
+    color: '#8b5cf6',
+    questions: 5,
+    description: 'SSH-based agentless configuration management from Red Hat. YAML playbooks, idempotent modules, dynamic inventory, Roles and Collections via Galaxy, ansible-vault for secrets, and AWX / Ansible Automation Platform for execution at scale.',
+    visualizations: [
+      {
+        title: 'Ansible model — agentless, push-based, YAML-declarative',
+        description: `Ansible (acquired by Red Hat in 2015, current OSS version ansible-core 2.18 as of late 2025) is the dominant agentless config management tool. The model is intentionally simple compared to Puppet / Chef / Salt:
+
+Push, not pull. The control node opens an SSH connection to each managed node, copies a Python module to /tmp on the target, executes it with the right arguments, collects JSON output, then deletes it. WinRM is used for Windows targets. There is no daemon on the managed node — only Python (and on Windows, PowerShell).
+
+Idempotent modules. Each module (file, copy, template, package, service, user, lineinfile, blockinfile, systemd, etc.) reports changed: true / false. A second run on a converged host produces all changed: false — that is the convergence guarantee. Modules are written to be safe to re-run, not "create then fail because exists".
+
+Declarative-ish. Playbooks describe desired state but are executed top-to-bottom in order; tasks see the host's state from previous tasks within the same play. This is "ordered declarative", not pure declarative like Terraform's graph.
+
+Inventory. The list of hosts plus per-host / per-group variables.
+- Static INI: hosts.ini with [web], [db], [web:vars] sections. Smallest setup.
+- Static YAML: same idea, nested groups, easier to template.
+- Dynamic plugins: aws_ec2, gcp_compute, azure_rm, vmware_vm_inventory, kubernetes.core.k8s, netbox.netbox.nb_inventory. Inventory is generated on every run from the cloud / source-of-truth, so adding an EC2 instance with the right tag means it shows up in the next ansible-playbook run with no edit.
+- Constructed plugin layers groups on top (e.g. group hosts by tag.environment).
+
+A minimal play:
+
+\`\`\`yaml
+- name: Configure web tier
+  hosts: web
+  become: true
+  vars:
+    nginx_version: '1.27.3'
+  tasks:
+    - name: Install nginx
+      ansible.builtin.package:
+        name: "nginx={{ nginx_version }}"
+        state: present
+    - name: Render nginx.conf
+      ansible.builtin.template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        mode: '0644'
+      notify: reload nginx
+  handlers:
+    - name: reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+\`\`\`
+
+Handlers fire only if a notifying task reported changed: true, and only once at end of play.
+
+Variables and precedence. Ansible has 22 documented levels of variable precedence (command-line extra-vars highest, role defaults lowest). The sane subset:
+- group_vars/all.yml — defaults for every host.
+- group_vars/<group>.yml — per-environment / per-tier overrides.
+- host_vars/<host>.yml — per-host overrides (rare; usually a smell).
+- Role defaults — what the role assumes if nothing else is set.
+- --extra-vars on command line — emergency override.
+
+If you find yourself fighting precedence, you have too many layers; flatten.
+
+Ansible Facts. ansible.builtin.setup runs at play start and gathers ~500 facts per host (OS, network interfaces, mounts, packages). Cached optionally in Redis / JSON files for fact_caching to skip the gather on subsequent runs.
+
+Performance. SSH + Python is slower than agent-based pull. Mitigations:
+- Mitogen plugin (3-7x speedup via SSH multiplexing + Python interpreter reuse) — popular but unmaintained as of 2025; use with caution.
+- pipelining: true in ansible.cfg eliminates the temp-file copy step.
+- forks = 50 or higher for fan-out. Default 5 is conservative.
+- Async tasks (async: 300, poll: 0) for long-running operations.
+
+Even with all tuning, 1000+ hosts in a single play is slower than Puppet/Salt's pull model. For that scale, AWX / AAP shards execution across multiple control nodes.`,
+        image: '/diagrams/devops/e1-ansible.png',
+      },
+      {
+        title: 'Roles, Collections, Galaxy, ansible-vault, AWX/AAP',
+        description: `Roles. A directory layout convention for reusable units:
+
+\`\`\`
+roles/
+  nginx/
+    defaults/main.yml      # role's default variables
+    vars/main.yml          # role's mandatory variables
+    tasks/main.yml         # the tasks the role runs
+    handlers/main.yml      # handlers
+    templates/             # Jinja2 templates
+    files/                 # static files
+    meta/main.yml          # role metadata
+\`\`\`
+
+Roles are the unit of reuse for in-repo Ansible code. Most teams structure as one role per service (role/api, role/postgres, role/monitoring-agent).
+
+Collections. Higher-level packaging introduced in 2.9 (2019). A Collection bundles roles + modules + plugins + docs + tests under a namespace.fqcn naming scheme. Modules are now referenced by FQCN: ansible.builtin.copy, community.general.archive, amazon.aws.ec2_instance, kubernetes.core.k8s, cisco.ios.ios_command. Flat names are deprecated aliases.
+
+ansible-core (the engine) ships only ansible.builtin.* modules. Everything else is in collections. This split was contentious in 2020-2021 but is now standard.
+
+Galaxy and Automation Hub. galaxy.ansible.com is the public registry; Red Hat Automation Hub (subscription) is the certified registry with vendor SLAs. Install with ansible-galaxy collection install community.general:7.5.0. Pin versions in requirements.yml; commit it; install in CI.
+
+ansible-vault. Symmetric encryption (AES-256) for secrets in source. Two patterns:
+- Encrypt entire files: ansible-vault encrypt group_vars/prod/secrets.yml.
+- Encrypt single strings: !vault | inline tag inside an otherwise-plain YAML file.
+
+The vault password comes from --vault-password-file (a script that prints the password) — typically pulling from HashiCorp Vault, AWS SSM, or 1Password CLI.
+
+Modern alternative: pull secrets at runtime via lookup plugins instead of vaulting. community.hashi_vault.vault_kv2_get, amazon.aws.aws_ssm, community.general.bitwarden.
+
+ansible-lint. Standard linter; flags deprecated module usage, non-idempotent shell commands, missing tags. Required in any CI worth running.
+
+Molecule. Test framework for roles. Spins up a Docker / Podman / Vagrant / EC2 instance, applies the role, runs assertions with testinfra or ansible itself.
+
+Execution Environments (EE). Container images that bundle ansible-core + collections + Python deps + system packages. Built with ansible-builder. Required in AWX / AAP.
+
+AWX (open source). Upstream of Ansible Tower / AAP. Web UI + API + RBAC for Ansible. Provides job templates, schedules, workflows (DAG of job templates), surveys, RBAC, credential vault, notifications. Architecture: Postgres + Redis + Django control plane + execution nodes (in EE containers) + receptor mesh between them. Modern AWX runs on Kubernetes only — the awx-operator is the supported install path.
+
+Ansible Automation Platform (AAP). Red Hat's commercial productization. AWX core + Automation Hub + Event-Driven Ansible (EDA — react to webhooks / Kafka / alerts by running playbooks) + content management + 24/7 support. Subscription priced per managed node.
+
+Event-Driven Ansible (added 2023, GA in AAP 2.4). Rulebooks listen on event sources and trigger playbooks based on conditions. Closer to how Salt's reactor system works. Adoption still early as of 2026.
+
+When Ansible vs Salt / Puppet / Chef:
+
+Ansible wins when:
+- Ad-hoc remediation: ansible web -m shell -a 'systemctl restart nginx' is unbeatable for "fix one thing across N hosts now".
+- Network device automation: ansible-network on Cisco IOS / Arista EOS / Juniper Junos / Palo Alto / F5. Dominant tool.
+- Multi-vendor heterogeneous infra (mix of Linux, Windows, network gear, cloud APIs in one playbook).
+- One-shot orchestration (deploy app version X to all of fleet now).
+- Teams that want YAML, not Ruby DSL.
+
+Ansible loses to:
+- Puppet / Chef when you have 5000+ hosts that need continuous convergence every 30 minutes.
+- Salt for high-frequency event-driven ops.
+- Kubernetes for app config at scale.
+- Terraform for cloud infra provisioning.
+
+2026 reality. Ansible's center of gravity has shifted. Ten years ago Ansible was the default tool for "configure 500 EC2 instances running a Rails app". Today those instances are pods in K8s, and Ansible's role shrunk to: bootstrapping K8s clusters (kubespray, RKE2-ansible), network device automation (still dominant), multi-vendor / hybrid-cloud orchestration, compliance scanning + remediation on legacy fleets.
+
+Common pitfalls:
+- shell / command modules instead of proper modules. Not idempotent and not visible to --check mode.
+- Ignoring --check (dry-run) and --diff. Both supported by most modules; teams that run blind miss the cheapest safety net.
+- Inventory drift between sources of truth.
+- Massive monolithic playbooks. Split by tier, use import_playbook for orchestration.
+- Storing secrets in ansible-vault but committing the vault password to the same repo.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Ansible.',
+        question: 'Quick-fire interview answers — Ansible.',
+        answer: `Rapid-fire facts.
+
+Q: Define Ansible in one line.
+A: Agentless YAML-driven configuration management and orchestration tool that runs over SSH (or WinRM) and executes idempotent Python modules on managed hosts.
+
+Q: Push or pull?
+A: Push. Control node opens SSH to each target, runs the module, collects JSON. No agent, no daemon.
+
+Q: How does idempotency work?
+A: Modules report changed: true / false. Re-running on a converged host produces all changed: false. Modules are designed to be safe to re-run.
+
+Q: Inventory types?
+A: Static INI, static YAML, dynamic plugins (aws_ec2, gcp_compute, azure_rm, kubernetes.core.k8s, netbox), constructed plugin for layered groups.
+
+Q: Group_vars vs host_vars?
+A: group_vars/<group>.yml = per-group / per-environment defaults. host_vars/<host>.yml = single-host override (rare; usually a smell).
+
+Q: What's a Role?
+A: A directory convention (defaults, vars, tasks, handlers, templates, files, meta) bundling a reusable unit — typically one role per service.
+
+Q: Role vs Collection?
+A: Role packages tasks + templates. Collection bundles roles + modules + plugins + filters under a namespace.fqcn — the modern packaging unit.
+
+Q: ansible-core vs ansible the package?
+A: ansible-core ships only ansible.builtin.* modules. The legacy ansible package ships core plus a curated bundle of community collections. Most teams pin ansible-core and install collections explicitly.
+
+Q: FQCN?
+A: Fully qualified collection name — ansible.builtin.copy, amazon.aws.ec2_instance, kubernetes.core.k8s. Required style; flat names are deprecated aliases.
+
+Q: Galaxy vs Automation Hub?
+A: galaxy.ansible.com = public OSS registry. Red Hat Automation Hub = subscription-only certified registry with vendor SLAs.
+
+Q: Handlers?
+A: Tasks that run only when notified (notify: reload nginx) and only once at end of play. Standard pattern for "reload service if config changed".
+
+Q: ansible-vault?
+A: AES-256 symmetric encryption of files or inline strings (!vault tag) in source. Vault password supplied at runtime via --vault-password-file.
+
+Q: Lookup plugin alternative to vault?
+A: community.hashi_vault.vault_kv2_get, amazon.aws.aws_ssm, community.general.bitwarden — pull secrets at runtime instead of vaulting on disk.
+
+Q: ansible-lint?
+A: Standard linter; flags deprecated modules, non-idempotent shell, missing become_user. Required in CI.
+
+Q: Molecule?
+A: Role test framework — spins up Docker / Podman / Vagrant / EC2, applies role, asserts with testinfra or ansible.
+
+Q: Execution Environment?
+A: Container image bundling ansible-core + collections + Python deps. Built with ansible-builder. Required in AWX / AAP.
+
+Q: AWX vs AAP?
+A: AWX = upstream open source (web UI + RBAC + scheduler + workflows). AAP = Red Hat's commercial product = AWX + Automation Hub + Event-Driven Ansible + 24/7 support.
+
+Q: Event-Driven Ansible?
+A: Rulebooks listen on event sources (alertmanager, Kafka, ServiceNow, syslog) and trigger playbooks on conditions. GA in AAP 2.4 (2023).
+
+Q: Performance tuning levers?
+A: pipelining: true, forks = 50+, fact_caching, async tasks for long jobs, Mitogen plugin (3-7x speedup, but unmaintained as of 2025).
+
+Q: When does Ansible scale break down?
+A: 1000+ hosts in one play exceeds practical SSH fan-out. AWX / AAP shards execution across nodes via the receptor mesh.
+
+Q: Ansible vs Puppet / Chef / Salt today?
+A: Ansible dominant for ad-hoc remediation, network device automation, multi-vendor infra, K8s bootstrapping. Declining for app config (replaced by K8s + Helm / Argo CD).
+
+Q: Ansible vs Terraform?
+A: Terraform = stateful infra provisioning with plan/apply graph. Ansible = config / orchestration with no state file.
+
+Q: Network automation in Ansible?
+A: ansible-network — modules for Cisco IOS, Arista EOS, Juniper Junos, Palo Alto, F5, Cisco NX-OS. Dominant tool; agents not viable on switches.
+
+Q: Common pitfall: shell module?
+A: shell: rm -rf /var/cache/x is not idempotent and not visible to --check mode. Always prefer the proper module (file: state: absent).
+
+Q: --check and --diff?
+A: --check = dry-run, predicts changes without applying. --diff = shows file content diffs.
+
+Q: When should you not use Ansible?
+A: K8s app config (use Helm / Kustomize / Argo CD). Cloud infra greenfield (use Terraform / OpenTofu / Pulumi). Pure stateless container deploys. High-frequency reactive ops at scale.
+
+These are answers a config-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.ansible.com/ansible/latest/index.html',
+      'https://galaxy.ansible.com/',
+      'https://www.ansible.com/products/automation-platform',
+      'https://github.com/ansible/awx',
+      'https://ansible.readthedocs.io/projects/lint/',
+      'https://ansible.readthedocs.io/projects/molecule/',
+    ],
+  },
+
+  {
+    id: 'puppet-chef-salt',
+    title: 'Puppet, Chef, Salt — Pull-Based and Eventually-Consistent Config',
+    icon: 'settings',
+    color: '#8b5cf6',
+    questions: 5,
+    description: 'The pre-Ansible / pre-Kubernetes generation of config management. Puppet (Ruby DSL, master/agent), Chef (Ruby cookbooks, Knife, Test Kitchen), Salt (Python, master/minion ZeroMQ). Mortality watch, license changes, and migration paths in 2026.',
+    visualizations: [
+      {
+        title: 'Puppet, Chef, Salt — architectures and current state',
+        description: `Puppet (Luke Kanies, 2005) was the first widely adopted modern config management tool.
+
+Master / agent pull model. A puppet-agent daemon runs on each managed node and checks in with the puppetserver every 30 minutes (configurable via runinterval). The agent sends facts, the server compiles a catalog (the desired state for that host), and the agent applies it.
+
+Resources, manifests, modules. The unit of config is a resource with a type and parameters. Resources combine into manifests (.pp files) which combine into modules (a directory with manifests/, files/, templates/, lib/, examples/, spec/).
+
+Hiera. Hierarchical key-value store separating data from code. hiera.yaml defines a lookup hierarchy (per-node, per-environment, common). Resolves server-side at catalog compile time.
+
+Forge. forge.puppet.com — module registry. PDK (Puppet Development Kit) is the standard tool for authoring + linting + testing modules.
+
+Bolt. The agentless ad-hoc tool from Puppet, Inc. Like Ansible: SSH/WinRM, no agent. Modest adoption.
+
+Ownership. Puppet, Inc. acquired by Perforce in 2022. Open source release cadence slowed post-acquisition; major version 8.x current as of 2026 with no announced 9.x roadmap.
+
+Mortality watch. Greenfield adoption rare in 2026. Most active Puppet shops are large enterprises (financial services, government, telco) that adopted 2010-2015 and have too much code to migrate cheaply.
+
+When Puppet still wins: continuous convergence on 5000+ Linux hosts; compliance use cases; existing Puppet investment.
+
+Chef. Adam Jacob and the Opscode crew (2009).
+
+Chef Server + chef-client agents. Same pull model as Puppet. Agents check in every 30 minutes and converge to the run list.
+
+Cookbooks and recipes. The unit of config is a recipe (Ruby file). Recipes live in cookbooks (a directory with recipes/, attributes/, templates/, files/, libraries/, resources/, spec/). The whole thing is Ruby — full language, not a DSL.
+
+Knife. The CLI for interacting with Chef Server.
+
+Test Kitchen. The original infrastructure-test framework — predates Molecule by years.
+
+InSpec. Compliance testing DSL (Ruby). Originally built for Chef but now a standalone product.
+
+License crisis (2019-2020). Chef changed from Apache 2.0 to a proprietary EULA in April 2019. Community forked into Cinc (Cinc Is Not Chef) — bit-for-bit binary-compatible OSS rebuild. Chef Inc. sold to Progress Software in September 2020.
+
+Mortality watch. Chef's market share dropped sharply after the 2019 license change. New adoption is rare.
+
+Salt. Thomas Hatch, SaltStack (2011). Architecture is structurally different from Puppet / Chef.
+
+Master / minion via ZeroMQ. salt-minion connects to salt-master over a persistent ZeroMQ pub/sub channel. Real-time orchestration — not 30-minute polling.
+
+Salt-ssh. Agentless mode that mirrors Ansible.
+
+States and pillar. Salt's equivalent of manifests is a state file (YAML, optionally with Jinja templating). Pillar is the equivalent of Hiera — hierarchical, secret-friendly data store.
+
+Reactor and beacons. Salt's killer feature: minions emit events on local conditions (file change, process death, log line match — beacons), and the master runs states in response (reactor). Ansible's EDA in 2023 was inspired by this model.
+
+Ownership. SaltStack acquired by VMware in 2020, which was acquired by Broadcom in 2023. As of 2026, Salt's commercial offerings are part of the VMware Aria suite and being actively repackaged.
+
+Mortality watch. Salt has the smallest user base of the three and the most uncertain corporate sponsor.
+
+The 2026 picture: Puppet, Chef, Salt are all legacy-tool territory. Maintenance, not greenfield. Most new infra avoids host-level config management entirely by running in containers on Kubernetes.`,
+        image: '/diagrams/devops/e2-pcs.png',
+      },
+      {
+        title: 'Migration paths off Puppet / Chef / Salt',
+        description: `Most teams that own Puppet / Chef / Salt code in 2026 are evaluating where to go. The realistic options:
+
+Option 1: Stay. The cheapest path. Puppet 8 and Chef Infra 18 still receive patches; Salt 3007 is current. The risk is talent — finding engineers who know Puppet DSL or Chef Ruby cookbooks gets harder every year. Expect 30-50% pay premium for a Puppet-fluent engineer in 2026 vs an Ansible-fluent one.
+
+Option 2: Migrate to Ansible. The most common destination. Why:
+- YAML is more accessible than Puppet DSL or Ruby.
+- Agentless eliminates the master/agent operational tax.
+- Ad-hoc remediation is much easier.
+- Network device automation comes free.
+
+Process is incremental:
+1. Inventory all Puppet manifests / Chef cookbooks; categorize by criticality.
+2. Convert the simplest first — package install, file management, service. Map nearly 1:1 to Ansible modules.
+3. Convert templated configs.
+4. Hardest: idiomatic Puppet defined types or Chef LWRPs — these are real custom logic that needs rewriting as Ansible modules / roles.
+5. Run both in parallel during migration; cut over per-role, not per-host.
+
+No turnkey converter exists; the data extraction is mechanical, the logic conversion is human.
+
+Option 3: Move to Kubernetes. Skip host-level config management entirely. Bake an OS image with cloud-init / Packer for the K8s nodes; manage everything else as containers + Helm / Kustomize / Argo CD manifests. Right move when: workload is stateless or already containerized, team can absorb K8s operational learning curve, new compute being provisioned anyway. Wrong move when: workload is stateful in ways that don't translate, fleet is heterogeneous.
+
+Option 4: Move to immutable infrastructure (Packer / AMIs). Bake images, replace instances, retire config management entirely. Works best for stateless or 12-factor; works poorly when local state on hosts is part of the design.
+
+Option 5: Cinc (for Chef shops). Drop-in OSS replacement. Same code, same cookbooks, same Knife CLI; just replaces the binary. Right call when you have heavy Chef investment, can't justify migration cost, want to escape commercial Chef licensing.
+
+Option 6: Hybrid. Run K8s for new workloads, keep Puppet / Chef / Salt for the legacy fleet that won't move. What most large enterprises actually do.
+
+Common migration anti-patterns:
+- Big-bang rewrites (rewrite all 200 modules in 6 months). Always over-runs; teams burn out.
+- Treating Ansible as Puppet-with-different-syntax. The idioms differ.
+- Migrating data without rationalizing it. Hiera trees with 10 levels of inheritance translate to Ansible group_vars hell. Flatten on migration.
+- Underestimating testing. Test Kitchen / rspec-puppet have no Ansible equivalent at the same fidelity.
+- Forgetting the secrets path. Hiera-eyaml / Chef encrypted data bags / Salt pillar GPG don't trivially map to ansible-vault.
+
+The realistic timeline. Migrating a meaningful Puppet / Chef / Salt estate (50+ modules, mature CI, multiple environments) to Ansible takes 9-18 months for a 2-3 person platform team.
+
+The deeper point. Puppet, Chef, and Salt are not bad tools — they were great for their era and remain capable today. They are losing not on technical merit but on:
+- Corporate sponsor turbulence (Perforce, Progress, Broadcom).
+- Generational change (engineers under 30 mostly haven't used them).
+- The K8s eclipse (most new compute doesn't need host-level config).
+
+Plan migrations on this basis, not on "tool X is bad". Pick the destination that fits your future workload, not the most fashionable one.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Puppet / Chef / Salt.',
+        question: 'Quick-fire interview answers — Puppet / Chef / Salt.',
+        answer: `Rapid-fire facts.
+
+Q: One-line: Puppet vs Chef vs Salt vs Ansible?
+A: Puppet = Ruby DSL, master/agent pull, 30-min check-in. Chef = Ruby cookbooks, server/client pull. Salt = Python + YAML, master/minion ZeroMQ real-time push. Ansible = YAML, push over SSH, agentless.
+
+Q: Puppet's resource model in one sentence?
+A: Declarative resources (package, file, service, exec, user) with parameters, composed into manifests, composed into modules, applied from a master-compiled catalog.
+
+Q: Hiera?
+A: Puppet's hierarchical key-value data lookup. Resolves server-side at catalog compile.
+
+Q: Bolt?
+A: Puppet's agentless ad-hoc tool — SSH/WinRM, plans, tasks. The Ansible-alternative inside the Puppet ecosystem.
+
+Q: Forge?
+A: forge.puppet.com — Puppet module registry. puppetlabs/* are vendor-supported.
+
+Q: PDK?
+A: Puppet Development Kit — module scaffolding, linting, unit tests (rspec-puppet), acceptance tests.
+
+Q: Puppet's owner today?
+A: Perforce, since 2022. Open source releases continue but cadence slowed.
+
+Q: Chef's recipe in one line?
+A: A Ruby file that declares resources using Chef's DSL, executed by chef-client agents on each managed node.
+
+Q: Knife?
+A: Chef CLI — knife cookbook upload, knife node show, knife ssh.
+
+Q: Test Kitchen?
+A: Chef's role-test framework. Predates Molecule by years.
+
+Q: InSpec?
+A: Compliance testing DSL (Ruby) originally built for Chef, now a standalone Progress product.
+
+Q: Chef's license history?
+A: Apache 2.0 until April 2019, then proprietary "Chef Software" EULA. Community forked Cinc. Sold to Progress in September 2020.
+
+Q: Cinc?
+A: Cinc Is Not Chef — bit-for-bit binary-compatible OSS rebuild.
+
+Q: Salt's transport?
+A: ZeroMQ pub/sub — persistent connection from each minion to the master. Real-time push, not polling.
+
+Q: salt-ssh?
+A: Salt's agentless mode mirroring Ansible.
+
+Q: Salt state file?
+A: YAML (with optional Jinja) declaring resources (pkg, file, service, cmd).
+
+Q: Salt pillar?
+A: Hierarchical secret-friendly data store; equivalent of Hiera.
+
+Q: Salt reactor / beacons?
+A: Beacons emit events on local conditions on minions. Reactor on master runs states in response. Predates Ansible EDA by years.
+
+Q: Salt's owner today?
+A: VMware (2020), then Broadcom (2023). Commercial Salt is part of VMware Aria.
+
+Q: Why did Puppet / Chef / Salt decline?
+A: Three reasons. Corporate sponsor turbulence. Generational shift. Kubernetes eclipse — most new compute doesn't need host-level config.
+
+Q: When does Puppet still win?
+A: Continuous convergence on 5000+ Linux hosts; compliance / drift reporting at large scale; existing investment with no forcing function to migrate.
+
+Q: How long does a Puppet to Ansible migration take?
+A: 50+ modules with mature CI: 9-18 months for a 2-3 person platform team.
+
+Q: Most common migration anti-pattern?
+A: Big-bang rewrite of all modules at once. Always over-runs and burns out the team.
+
+Q: Cinc as a stopgap?
+A: For Chef shops, Cinc is a drop-in replacement that buys time at zero migration cost.
+
+Q: Move to K8s instead of migrating?
+A: Right when workload is stateless / already containerized and K8s operational tax is acceptable. Wrong when stateful or heterogeneous fleet.
+
+Q: Hybrid approach?
+A: K8s for new workloads, keep legacy Puppet / Chef / Salt for fleet that won't move, constrain new dev to Ansible. What most large enterprises actually do.
+
+These are answers a config-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://www.puppet.com/docs/puppet/8/puppet_index.html',
+      'https://docs.chef.io/',
+      'https://cinc.sh/',
+      'https://docs.saltproject.io/en/latest/',
+      'https://docs.puppet.com/bolt/',
+      'https://forge.puppet.com/',
+    ],
+  },
+
+  {
+    id: 'immutable-infrastructure',
+    title: 'Immutable Infrastructure — Bake, Replace, Never Mutate',
+    icon: 'settings',
+    color: '#8b5cf6',
+    questions: 5,
+    description: 'The discipline of never modifying running servers or containers — replace them instead. Image baking with Packer and Docker, AMI / GCE / Azure image lifecycles, distroless and minimal-OS patterns (Bottlerocket, Talos), and the tradeoffs against mutable config management.',
+    visualizations: [
+      {
+        title: 'The principle and the build pipeline',
+        description: `Immutable infrastructure: once a server or container is deployed, it is never modified in place. To change anything, you build a new image, deploy a new instance from that image, and retire the old one.
+
+The term was popularized by Chad Fowler in 2013 ("Trash Your Servers and Burn Your Code"); the practice predates the term, going back to AMI-based deployments at Netflix and Etsy in the late 2000s.
+
+What "immutable" actually means in practice: the host's persistent disk is read-only or treated as read-only. /etc, /usr, /opt all come from the image. Configuration is not edited on a live host. Application configuration is injected at boot — environment variables, mounted ConfigMaps / Secrets, cloud-init userdata. State that must persist (databases, user uploads, logs) goes on a separate volume. The compute is immutable; the data isn't.
+
+Patches and config changes don't happen via SSH. They happen via: edit source (Packer template, Dockerfile), build new image, test (image scanning, Trivy / Grype, smoke tests), roll out new image, retire old image after a retention window.
+
+Why immutable wins:
+
+Drift-free by construction. Two instances launched from the same image are identical at boot. No "works on prod-3 but not prod-7" mystery.
+
+Predictable rollback. To roll back, redeploy the previous image. There is no question of "what state is the host in right now".
+
+Faster horizontal scaling. Boot from image is seconds (containers) to minutes (VMs from AMI).
+
+Better security posture. Read-only filesystem reduces attack surface. Vulnerability fixes propagate by image rebuild. Rotation eliminates accumulated cruft.
+
+Auditability. The image hash is the source of truth.
+
+Why immutable doesn't always win: stateful systems still need state. Image build cycle time. Storage cost. Hardware-bound workloads. Long bake times during incidents.
+
+Image baking — Packer, Docker, layered base images.
+
+Packer (HashiCorp, since 2013). The reference tool for building VM images across clouds and hypervisors. Builders cover EC2 (amazon-ebs), GCE (googlecompute), Azure (azure-arm), DigitalOcean, vSphere, KVM, VirtualBox, Vagrant, Docker. License change (2023): HashiCorp moved Packer from MPL 2.0 to BSL 1.1; Linux Foundation incubating an OSS fork.
+
+Docker / OCI containers. The other branch of image baking. A Dockerfile is a deterministic build script; the resulting image is content-addressed (sha256 digest), layer-cached, and pushable to any OCI registry.
+
+Best practices for production images:
+
+Use minimal base images. distroless (Google) ships only the runtime — no shell, no package manager, no debug tools:
+- gcr.io/distroless/static-debian12 (just glibc)
+- gcr.io/distroless/cc-debian12 (glibc + libgcc + libssl)
+- gcr.io/distroless/java21-debian12, python3-debian12, nodejs20-debian12
+
+Multi-stage builds. Build dependencies in stage 1, copy artifacts to a minimal stage 2:
+
+\`\`\`dockerfile
+FROM golang:1.23 AS build
+WORKDIR /src
+COPY . .
+RUN CGO_ENABLED=0 go build -o /out/api ./cmd/api
+
+FROM gcr.io/distroless/static-debian12
+COPY --from=build /out/api /api
+USER 65532:65532
+ENTRYPOINT ["/api"]
+\`\`\`
+
+Final image is ~15 MB instead of ~1 GB.
+
+Pin everything. FROM golang:1.23.4-bookworm@sha256:... Reproducibility requires immutable inputs.
+
+Don't run as root. USER 65532:65532 (the standard distroless nonroot UID).
+
+Scan images. Trivy, Grype, Snyk Container — fail the build on critical CVEs above a threshold.
+
+Sign images. cosign (sigstore project) signs and verifies images. Verifying signatures at deploy time prevents pulling tampered images.
+
+Generate SBOMs. Software Bill of Materials in SPDX or CycloneDX format. syft (anchore) is the standard generator.
+
+Layered base images at scale: Layer 1 = hardened OS base (rebuilt weekly or on CVE). Layer 2 = language / runtime base. Layer 3 = application image (rebuilt per commit). CVE in glibc → rebuild Layer 1 → cascade.
+
+Modern minimal OS distros for K8s nodes:
+
+Bottlerocket (AWS, OSS). Container-optimized Linux. Read-only root, atomic A/B partition updates, no SSH, apiclient is the only admin interface. Standard EKS node OS.
+
+Talos Linux (Sidero Labs, OSS). Even more aggressive — entire OS managed via gRPC API, no SSH, no shell, kernel + containerd + kubelet only.
+
+Flatcar (Microsoft). CoreOS Container Linux fork. Auto-updating image-based Linux, A/B partitions.
+
+The trend: K8s-node OSes are moving toward "minimal, immutable, A/B-update, no SSH".`,
+        image: '/diagrams/devops/e3-immutable.png',
+      },
+      {
+        title: 'Tradeoffs, anti-patterns, stateful corner cases',
+        description: `Anti-pattern 1: "Immutable" images that aren't deterministic. FROM ubuntu:latest, apt-get install without version pin, pip install without lock file. Two builds an hour apart can produce different images. Fix: pin everything.
+
+Anti-pattern 2: Mutating "immutable" images. Teams that say "we're immutable" but SSH into production hosts to fix things. This is mutable infrastructure with extra steps. Two enforcement levers: no SSH to production (replace with break-glass tooling like AWS SSM Session Manager, Teleport), read-only root filesystem.
+
+Anti-pattern 3: Image sprawl without lifecycle. Every CI run pushes a new image; nothing ever deletes anything. ECR / GCR storage costs grow linearly forever. Fix: lifecycle policies on day one — keep last N production images, expire untagged after X days.
+
+Anti-pattern 4: Treating database hosts as immutable. You can replace a stateless web server. Replacing a database means moving 200 GB of data. Patterns that work: compute / storage separation, operator-managed stateful workloads (CloudNativePG, Crunchy, Zalando), managed services (RDS, Cloud SQL).
+
+Anti-pattern 5: Long bake times that block emergencies. If "patch the TLS cert in prod" requires a 30-minute Packer rebuild, you have an incident-response problem. Mitigations: hot config injection (certs / secrets from Vault, Secrets Manager at boot), layered images, emergency RW mode with strict audit.
+
+Cost / complexity tradeoffs:
+- Storage scales with deploy frequency × image count × image size. Mitigations: layered images, lifecycle policies.
+- Build infrastructure needs beefy CI runners. Self-hosted ARC runners on K8s scale better.
+- Network egress for image pulls. Mitigations: per-region registries (ECR replication, Harbor), pull-through caches.
+- Cold-start time. New instance from AMI = boot + cloud-init + app start. Mitigations: pre-warmed pools.
+
+Security tradeoffs. Immutable improves security in steady state but creates risk if image build pipelines are compromised. The supply chain becomes the attack target. Mitigations: signed images (cosign), SLSA-attested builds, build-time SBOM generation, separation of build / sign / deploy credentials.
+
+The 2026 patterns:
+- Build pipeline standardization. Packer for VM images, Docker buildx / kaniko for containers, sigstore for signing, syft for SBOMs, Trivy / Grype for scanning, OPA / Kyverno for admission policies that block unsigned or unscanned images.
+- Talos / Bottlerocket as the K8s node OS. Mainstream on EKS / GKE / AKS for new deployments.
+- Immutable everywhere except where it breaks. Compute is immutable; data layer is mutable but isolated. Don't fight statefulness; fence it.
+- GitOps for deploy artifacts. Image references in Kustomize / Helm / Argo CD manifests in Git.
+
+The deeper point. Immutable infrastructure is the operational model that K8s, modern AWS, and most platform-engineering practice converge toward. The tradeoffs are real (build cycle time, storage, stateful awkwardness) but the benefits — drift-free fleets, predictable rollback, auditable artifacts — compound over time.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Immutable Infrastructure.',
+        question: 'Quick-fire interview answers — Immutable Infrastructure.',
+        answer: `Rapid-fire facts.
+
+Q: Define immutable infrastructure in one line.
+A: Servers and containers are never modified after deployment; to change anything, build a new image and replace the instance.
+
+Q: Pets vs cattle?
+A: Pets = long-lived, named, manually maintained. Cattle = interchangeable, replaceable, identified by image hash. Immutable infra = cattle-only.
+
+Q: Packer in one line?
+A: HashiCorp tool that builds VM / container images across clouds (EC2, GCE, Azure, vSphere, Docker, etc.).
+
+Q: Packer license today?
+A: BSL 1.1 since August 2023. Linux Foundation incubating an OSS fork.
+
+Q: Why distroless?
+A: Minimal base image with only the runtime — no shell, no package manager, no debug tools. Smaller attack surface and image size.
+
+Q: Multi-stage Docker build benefit?
+A: Build deps in stage 1 (huge), copy artifacts to minimal stage 2 (small). Final image goes from ~1 GB to ~15 MB for a Go binary on distroless.
+
+Q: Pin dependencies how?
+A: FROM image@sha256:digest, requirements.txt with hashes, package-lock.json, Cargo.lock. Pin everything that affects the output.
+
+Q: Run as root in container?
+A: No. USER 65532:65532 (distroless nonroot UID).
+
+Q: Image scanning tools?
+A: Trivy (Aqua Security, OSS), Grype (Anchore, OSS), Snyk Container (commercial). Fail builds on critical CVEs.
+
+Q: Image signing?
+A: cosign from sigstore. Sign at build, verify at deploy. Standard in supply-chain-conscious orgs.
+
+Q: SBOM?
+A: Software Bill of Materials in SPDX or CycloneDX format. syft is the standard generator. Required by some compliance regimes.
+
+Q: SLSA?
+A: Supply-chain Levels for Software Artifacts — Google-led framework for build-pipeline integrity. Levels 1-4. Modern build pipelines target SLSA 3.
+
+Q: Layered image pattern?
+A: Layer 1 = hardened OS (weekly / on CVE). Layer 2 = language runtime. Layer 3 = application (per commit).
+
+Q: AMI Image Builder?
+A: AWS-managed pipeline alternative to Packer — components, recipes, scheduled builds, multi-region distribution.
+
+Q: ASG InstanceRefresh?
+A: AWS Auto Scaling Group API (since 2020) that replaces instances batch-by-batch with the new launch template. Standard EC2 immutable rollout primitive.
+
+Q: Bottlerocket?
+A: AWS-built OSS container-optimized Linux. Read-only root, A/B partition updates with auto-rollback, no SSH, apiclient as the only admin interface.
+
+Q: Talos Linux?
+A: Sidero Labs OSS Linux for K8s. No SSH, no shell, gRPC API only.
+
+Q: Flatcar Linux?
+A: Microsoft-owned auto-updating container Linux. CoreOS Container Linux fork.
+
+Q: Phoenix server?
+A: Replace the entire fleet on every deploy.
+
+Q: How does immutable interact with K8s?
+A: K8s is immutable-by-default for the workload (pod replacement on each rollout). Modern practice: immutable nodes too (Bottlerocket / Talos).
+
+Q: How does state work in immutable infra?
+A: Compute is immutable; state lives on a separate persistent volume / managed database.
+
+Q: What about emergency hotfixes?
+A: Hot config / secret injection (Vault, Secrets Manager) avoids most needs. For real emergencies, an explicit RW window with audit.
+
+Q: Build cycle pain mitigations?
+A: Layered images, aggressive caching, pre-built test fleets, parallel builds.
+
+Q: Storage cost mitigations?
+A: Lifecycle policies day one — keep N production images, expire untagged after X days.
+
+Q: When should you not go immutable?
+A: Heavily stateful workloads, heterogeneous fleets, workloads requiring sub-second autoscaling that can't tolerate boot time.
+
+Q: Most common anti-pattern?
+A: "Immutable" images that aren't deterministic. Pin everything.
+
+Q: Second most common anti-pattern?
+A: Saying "we're immutable" while SSHing to production. Enforcement: no SSH to prod, read-only root filesystem.
+
+Q: Immutable + GitOps fit?
+A: Natural — image references live in Git manifests, image updates are PRs, deploy is reconciliation.
+
+These are answers a config-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://www.packer.io/docs',
+      'https://github.com/GoogleContainerTools/distroless',
+      'https://bottlerocket.dev/',
+      'https://www.talos.dev/',
+      'https://docs.sigstore.dev/cosign/overview/',
+      'https://slsa.dev/',
+    ],
+  },
+
+  {
+    id: 'drift-remediation',
+    title: 'Configuration Drift — Detection and Remediation',
+    icon: 'settings',
+    color: '#8b5cf6',
+    questions: 5,
+    description: 'When the running system diverges from its declared state — manual SSH fixes, time-based decay, partial deploys. Detection (Puppet / Chef / Salt periodic runs, AWS Config, Terraform plan, Ansible --check), remediation choices (auto-correct vs alert-only), and the modern stance: don\'t remediate, replace.',
+    visualizations: [
+      {
+        title: 'Drift sources, detection tools, remediation strategies',
+        description: `Configuration drift: a managed system's actual state diverges from its declared / intended state.
+
+This topic is about host-level drift — file contents, package versions, sysctl tunables, user accounts, service flags. Kubernetes drift is covered in the gitops-drift-recon topic.
+
+Sources of drift:
+
+1. Manual remediation. Engineer SSHes in to fix something during an incident, doesn't backport. The single most common cause.
+
+2. Partial deploy. A config-management run failed midway — half the hosts converged, half didn't.
+
+3. Time-based decay. Log rotation, cron jobs, package managers' background updates (unattended-upgrades, dnf-automatic).
+
+4. External actor changes. Someone installs monitoring agent X without telling you. Cloud provider auto-applies a patch. Compliance team runs CIS-hardening scripts.
+
+5. Hardware-specific divergence. NIC firmware updates, BIOS settings, disk replacements.
+
+6. Source-of-truth ambiguity. Two teams own different parts of the same host; both make changes.
+
+Why drift matters: reliability (the bug that fires on host-7 but not host-1), security (drifted config is real attack surface), cost (engineers debug ghost issues), trust in tooling.
+
+Drift in mutable vs immutable infra. Mutable infra is structurally drift-prone. Immutable infra is structurally drift-resistant — hosts are short-lived, replace-don't-remediate.
+
+Detection vs remediation as separate decisions:
+- Detect-only: tell me, don't change.
+- Detect-and-alert: tell me, page on critical.
+- Detect-and-auto-remediate: fix every run.
+
+Detection tools — what each one catches:
+
+Puppet / Chef / Salt periodic runs. 30-min check-ins; reports show fleet-wide drift trends. What they catch: anything declared in the manifest. Untracked changes are invisible.
+
+Ansible --check + --diff. Dry-run mode. What it catches: anything Ansible would converge if run for real.
+
+Terraform plan. Compares declared state to actual cloud-API state. Gold standard for cloud-resource drift. Driftctl (CloudSkiff) goes further: scans cloud accounts for resources Terraform doesn't know about.
+
+AWS Config. AWS-managed continuous configuration monitoring. Records every supported resource's state on every change; lets you define Config Rules. Auto-remediation via Systems Manager Automation runbooks. GCP Cloud Asset Inventory + Azure Resource Graph are equivalents.
+
+OSQuery. Facebook-originated agent that exposes the OS as a SQL-queryable database:
+
+\`\`\`sql
+SELECT name, version FROM rpm_packages WHERE name = 'nginx';
+SELECT * FROM listening_ports WHERE port = 22;
+\`\`\`
+
+Run via Fleet (osquery-fleet) or Kolide for fleet-wide queries.
+
+CIS-CAT, OpenSCAP, InSpec. Compliance scanners. Run a benchmark, report findings. Each finding is effectively a drift assertion.
+
+Tripwire / AIDE. File integrity monitoring. Hash known files at baseline; rescan periodically; alert on hash changes.
+
+Falco. Runtime security tool (CNCF). eBPF-based; observes syscalls in real time, alerts on rule violations.
+
+Remediation strategies:
+
+Strategy 1: Auto-correct on every config-management run. Puppet / Chef / Salt's default. Aggressive; eventually consistent; surprising during incidents.
+
+Strategy 2: Alert-only with manual remediation gate. Conservative; slower drift correction.
+
+Strategy 3: Staged remediation. Auto-correct in dev / staging. Alert-only in prod.
+
+Strategy 4: Replace, don't remediate. The immutable-infra approach. If a host has drifted, terminate it. Eliminates remediation as a separate operational concern.
+
+When to use which:
+- Mutable, well-managed Linux fleet at scale → auto-correct.
+- Mutable, smaller fleet with cautious change management → alert-only or staged.
+- Cloud resources managed by Terraform → auto-correct via terraform apply on schedule, or alert-only with PR-driven correction.
+- Immutable container / VM fleet → replace.
+- Compliance-driven drift → auto-remediate via Systems Manager runbooks.
+- Security-critical drift → AWS Config + auto-remediation. Detection-to-fix in minutes is the goal.
+
+Anti-patterns:
+- Aggressive auto-remediation without good observability. Always log corrective changes; surface them in a dashboard.
+- Alert-only without alert routing. Drift findings pile up in a ticket queue no one reads.
+- Whitelist-based exceptions that grow forever. Periodic exception review is necessary.
+- Drift remediation that introduces new drift. Symptom of declarative config that doesn't match reality.
+- Treating Terraform drift as state rot. The "fix" is either revert reality or update Terraform; deciding requires human judgment.
+
+The 2026 stance:
+- Move drift detection into CI / CD. terraform plan on every PR.
+- Remediate by deploy, not by SSH.
+- Replace where you can.
+- Treat drift as signal. Triage drift like alerts; don't treat all as equal-priority.
+- Cost-aware compliance scanning.
+
+The deeper point. Drift is the symptom of mutable infrastructure interacting with humans. The two paths forward: make humans interact less (immutable, GitOps, no-SSH) or make detection cheaper than the cost of drift. Most mature teams do both — immutable where possible, robust detect-and-correct where not.`,
+        image: '/diagrams/devops/e4-drift-remediation.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Configuration Drift.',
+        question: 'Quick-fire interview answers — Configuration Drift.',
+        answer: `Rapid-fire facts.
+
+Q: Define configuration drift in one line.
+A: A managed system's actual state diverges from its declared / intended state — file contents, package versions, sysctl values, user accounts, service configs.
+
+Q: Top source of drift?
+A: Manual SSH remediation during incidents that doesn't get backported to source.
+
+Q: Other common sources?
+A: Partial / failed config-management runs, time-based decay, external-actor changes, source-of-truth ambiguity, hardware divergence.
+
+Q: Why does drift matter for reliability?
+A: The bug that fires on host-7 but not host-1 is almost always drift.
+
+Q: Mutable vs immutable infra and drift?
+A: Mutable infra is structurally drift-prone. Immutable infra is drift-resistant; replace-don't-remediate.
+
+Q: How does Puppet detect drift?
+A: 30-minute periodic agent runs; resources reported as "corrective" indicate drift.
+
+Q: Ansible drift detection?
+A: ansible-playbook --check (dry-run) and --diff. Schedule via cron / CI.
+
+Q: Terraform plan as drift detector?
+A: Compares declared state to actual cloud-API state. Gold standard for cloud-resource drift.
+
+Q: Driftctl?
+A: CloudSkiff OSS. Scans cloud accounts for resources Terraform doesn't know about.
+
+Q: AWS Config in one line?
+A: AWS-managed continuous configuration monitoring. Records every resource state change, evaluates Config Rules, can auto-remediate via Systems Manager Automation runbooks.
+
+Q: OSQuery?
+A: Agent that exposes the OS as SQL-queryable tables. Run fleet-wide via Fleet or Kolide.
+
+Q: OpenSCAP / CIS-CAT / InSpec?
+A: Compliance scanners. Each finding is a drift assertion.
+
+Q: Tripwire / AIDE?
+A: File integrity monitoring. Hash known files at baseline, alert on changes.
+
+Q: Falco?
+A: CNCF runtime security tool. eBPF-based syscall monitoring.
+
+Q: Auto-correct vs alert-only — when which?
+A: Auto-correct when declarative config is mature. Alert-only when low confidence, regulated env, blast-radius concerns.
+
+Q: Most surprising auto-correct behavior?
+A: Engineer fixes a thing during incident; 30 minutes later config-management run undoes the fix.
+
+Q: Strategy 4: replace, don't remediate?
+A: Immutable-infra approach. Drifted host → terminate → replace with fresh instance from canonical image.
+
+Q: When does "replace" not work?
+A: Stateful workloads, hardware-bound systems, legacy apps with on-host state.
+
+Q: Terraform drift remediation choice?
+A: Either revert reality to match Terraform or update Terraform to match reality. Both valid; human judgment.
+
+Q: Compliance drift auto-remediation?
+A: AWS Config Rules + Systems Manager Automation runbooks.
+
+Q: Security-critical drift detect-to-fix target?
+A: Minutes. Open S3 bucket, IAM policy change, modified security group → auto-remediation runbook fires immediately.
+
+Q: Whitelist-based exceptions anti-pattern?
+A: Exception list grows to hundreds over years. Periodic audit mandatory.
+
+Q: K8s drift vs host drift?
+A: K8s drift = manifest in Git vs cluster state (gitops-drift-recon topic). Host drift = file contents, package versions on a host.
+
+Q: GitOps and drift?
+A: Argo CD / Flux continuously reconcile cluster state to Git. Drift detection built in; remediation auto by default.
+
+Q: Cost-aware drift scanning?
+A: Match scan frequency to risk. Security-critical: every 15 min. Compliance: daily. Low-risk: weekly.
+
+Q: 2026 stance in one line?
+A: Replace where you can (immutable + GitOps), detect-and-correct where you can't, treat drift as triaged signal not flat alert.
+
+These are answers a config-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/config/latest/developerguide/WhatIsConfig.html',
+      'https://www.puppet.com/docs/puppet/8/report_format.html',
+      'https://osquery.readthedocs.io/en/stable/',
+      'https://www.open-scap.org/',
+      'https://github.com/snyk/driftctl',
+      'https://falco.org/docs/',
+    ],
+  },
+
 ];
