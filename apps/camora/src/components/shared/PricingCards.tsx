@@ -245,7 +245,7 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
     // Yearly = navy card, gold accents (mirrors Team identity)
     return (
       <div
-        className="rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+        className="rounded-2xl overflow-hidden flex flex-col transition-[transform,box-shadow] duration-200 active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-lg"
         style={{ background: 'var(--cam-primary-dk)', border: '2px solid var(--cam-primary-dk)' }}
       >
         <div className="p-6 flex flex-col flex-1 text-white">
@@ -285,7 +285,7 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
           <button
             onClick={() => priceId ? checkout(priceId, plan.name) : navigate('/pricing')}
             disabled={loading === plan.name}
-            className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50 hover:scale-[1.01]"
+            className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-[transform,background-color,box-shadow,opacity] duration-150 active:scale-[0.98] disabled:opacity-50 hover:scale-[1.01]"
             style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', border: '1px solid var(--cam-gold-leaf)' }}
           >
             {loading === plan.name ? 'Processing…' : `${plan.cta} — ${plan.price}${plan.period}`}
@@ -301,7 +301,7 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
   // Monthly = light card, navy accents
   return (
     <div
-      className="rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+      className="rounded-2xl overflow-hidden flex flex-col transition-[transform,box-shadow] duration-200 active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-lg"
       style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
     >
       <div className="p-6 flex flex-col flex-1">
@@ -341,7 +341,7 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
         <button
           onClick={() => priceId ? checkout(priceId, plan.name) : navigate('/pricing')}
           disabled={loading === plan.name}
-          className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50 hover:scale-[1.01]"
+          className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-[transform,background-color,box-shadow,opacity] duration-150 active:scale-[0.98] disabled:opacity-50 hover:scale-[1.01]"
           style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)' }}
         >
           {loading === plan.name ? 'Processing…' : `${plan.cta} — ${plan.price}${plan.period}`}
@@ -476,7 +476,7 @@ function HourTopupCard({ prices, checkout, loading }: {
           <button
             onClick={() => priceId ? checkout(priceId, planName, { quantity: qty }) : navigate('/pricing')}
             disabled={loading === planName}
-            className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50 hover:scale-[1.01]"
+            className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-[transform,background-color,box-shadow,opacity] duration-150 active:scale-[0.98] disabled:opacity-50 hover:scale-[1.01]"
             style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)' }}
           >
             {loading === planName ? 'Processing…' : `Buy ${qty} ${qty === 1 ? 'hour' : 'hours'} — $${total}`}
@@ -506,7 +506,7 @@ function TeamPlanCard({ checkout, loading }: {
 
   return (
     <div
-      className="rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+      className="rounded-2xl overflow-hidden flex flex-col transition-[transform,box-shadow] duration-200 active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-lg"
       style={{ background: 'var(--cam-primary-dk)', border: '2px solid var(--cam-primary-dk)' }}
     >
       <div className="p-6 flex flex-col flex-1 text-white">
@@ -587,7 +587,7 @@ function TeamPlanCard({ checkout, loading }: {
         <button
           onClick={() => checkout('', planName, { team: { seats } })}
           disabled={loading === planName}
-          className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50 hover:scale-[1.01]"
+          className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-[transform,background-color,box-shadow,opacity] duration-150 active:scale-[0.98] disabled:opacity-50 hover:scale-[1.01]"
           style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', border: '1px solid var(--cam-gold-leaf)' }}
         >
           {loading === planName ? 'Processing…' : `Start Team — $${monthly}/month`}

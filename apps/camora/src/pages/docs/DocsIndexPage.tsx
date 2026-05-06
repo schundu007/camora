@@ -38,7 +38,7 @@ function DocCardLink({ card }: { card: DocCard }) {
   return (
     <Link
       to={card.href}
-      className="group block rounded-xl p-5 transition-all hover:-translate-y-0.5 hover:shadow-md"
+      className="group block rounded-xl p-5 transition-[transform,box-shadow] duration-200 active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-md"
       style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
     >
       <div className="flex items-start justify-between gap-3 mb-1.5">
