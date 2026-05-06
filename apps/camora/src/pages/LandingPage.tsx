@@ -46,7 +46,7 @@ const APPA: Step[] = [
   {
     key: 'prepare', label: 'Prepare', href: '/capra/prepare',
     headline: '800+ curated study topics',
-    desc: 'System design, DSA, behavioral, databases — each with AI explanations and architecture diagrams.',
+    desc: 'System design, DSA, behavioral, databases. Each with AI explanations and architecture diagrams.',
     Anim: PrepareAnim,
     icon: Glyph(<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>),
   },
@@ -60,7 +60,7 @@ const APPA: Step[] = [
   {
     key: 'attend', label: 'Attend', href: '/lumora',
     headline: 'Real-time AI in the room',
-    desc: 'Voice transcription captures the question. AI generates instant answers — diagrams, code, STAR coaching.',
+    desc: 'Voice transcription captures the question. AI generates instant answers: diagrams, code, STAR coaching.',
     Anim: AttendAnim,
     icon: Glyph(<><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></>),
   },
@@ -85,7 +85,7 @@ const FEATURES = [
   {
     label: 'Live AI',
     title: 'Real-time AI during interviews',
-    desc: 'Voice transcription captures the question. AI generates instant answers in seconds — no other tool does this.',
+    desc: 'Voice transcription captures the question. AI generates instant answers in seconds. No other tool does this.',
     Anim: FeatureLiveAIAnim,
   },
   {
@@ -137,7 +137,10 @@ function Reveal({ children, className, delay = 0 }: { children: React.ReactNode;
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.45, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+      // emil-design-eng: stronger ease-out (cubic-bezier(0.23, 1, 0.32, 1)) and
+      // sub-300ms duration. The previous 0.45s tween with the default soft curve
+      // is the recognizable AI/Framer reveal — recognizable means slop.
+      transition={{ duration: 0.28, delay, ease: [0.23, 1, 0.32, 1] }}
       className={className}
     >
       {children}
@@ -198,7 +201,7 @@ export default function LandingPage() {
 
         <Container className="relative pt-16 pb-20 md:pt-24 md:pb-28">
           <div className="mx-auto max-w-4xl text-center">
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}>
               <Pill tone="inverse" withDot>
                 The career platform for engineers
               </Pill>
@@ -208,10 +211,10 @@ export default function LandingPage() {
               className="mt-6 font-display text-[40px] sm:text-[52px] md:text-[64px] lg:text-[72px] font-semibold tracking-tight leading-[1.02]"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.08 }}
+              transition={{ duration: 0.32, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
             >
               <span className="block text-white">All your prep.</span>
-              <span className="block bg-gradient-to-r from-[var(--cam-gold-leaf-lt)] via-[var(--cam-gold-leaf)] to-[var(--cam-gold-leaf-lt)] bg-clip-text text-transparent">
+              <span className="block text-[var(--cam-gold-leaf)]">
                 One trusted platform.
               </span>
             </motion.h1>
@@ -220,16 +223,16 @@ export default function LandingPage() {
               className="mt-6 mx-auto max-w-2xl text-base md:text-lg leading-relaxed text-white/72"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.16 }}
+              transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
             >
-              Job discovery, interview prep, mock practice, and live AI assistance — engineered for the moment that decides the offer.
+              Job discovery, interview prep, mock practice, and live AI assistance, engineered for the moment that decides the offer.
             </motion.p>
 
             <motion.div
               className="mt-9 flex flex-wrap items-center justify-center gap-3"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.24 }}
+              transition={{ duration: 0.28, delay: 0.16, ease: [0.23, 1, 0.32, 1] }}
             >
               <CTAButton to={heroCtaHref} variant="inverse-primary" size="lg" trailingArrow>
                 {heroCta}
@@ -240,7 +243,7 @@ export default function LandingPage() {
             </motion.div>
 
             {visitorCount !== null && visitorCount > 0 && (
-              <motion.p className="mt-7 text-[13px] text-white/55" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+              <motion.p className="mt-7 text-[13px] text-white/55" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.24, delay: 0.22, ease: [0.23, 1, 0.32, 1] }}>
                 Trusted by <strong className="text-white font-semibold">{visitorCount.toLocaleString()}+</strong> engineers worldwide
               </motion.p>
             )}
@@ -249,7 +252,7 @@ export default function LandingPage() {
               className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-8 max-w-3xl mx-auto pt-10 border-t border-white/10"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.32 }}
+              transition={{ duration: 0.30, delay: 0.22, ease: [0.23, 1, 0.32, 1] }}
             >
               {STATS.map((s) => (
                 <div key={s.label} className="text-center">
@@ -298,7 +301,7 @@ export default function LandingPage() {
               align="center"
               eyebrow="The process"
               title={<>Your path to <span className="text-[var(--cam-primary)]">the offer.</span></>}
-              lead="Four surfaces, one continuous workflow — from the first job description to the live interview."
+              lead="Four surfaces, one continuous workflow: from the first job description to the live interview."
             />
           </Reveal>
 
@@ -348,7 +351,7 @@ export default function LandingPage() {
                 <SectionHeading
                   eyebrow="Camora · AI copilot"
                   title={<>One tool.<br /><span className="text-[var(--cam-primary)]">Every interview.</span></>}
-                  lead="Live voice assistance. Coding with three approaches and follow-ups. Multi-cloud architecture on AWS, GCP, Azure. Complete design problems — requirements through API. Company-specific prep for the full loop. Mock-interview scoring across every dimension."
+                  lead="Live voice assistance. Coding with three approaches and follow-ups. Multi-cloud architecture on AWS, GCP, Azure. Complete design problems: requirements through API. Company-specific prep for the full loop. Mock-interview scoring across every dimension."
                 />
                 <div className="mt-7 flex items-center gap-4">
                   <CTAButton to="/lumora" variant="primary" size="md" trailingArrow>
@@ -376,7 +379,7 @@ export default function LandingPage() {
             <SectionHeading
               eyebrow="Only on Camora"
               title="Features that set us apart."
-              lead="Live transcription. Architecture diagrams. AI-scored mocks. Engineered for the moment that decides the offer."
+              lead="Live transcription. Architecture diagrams. AI-scored mocks. Built so the live interview goes the way you rehearsed."
             />
           </Reveal>
 
@@ -475,14 +478,14 @@ export default function LandingPage() {
             <AudienceCard
               eyebrow="For engineers"
               title="Roles, practice & live AI"
-              body="1,000+ engineering roles matched to your skills, 800+ curated study topics with diagrams, and 1,850+ problems with AI feedback. Then live transcription assistance during the interview itself — the moment that decides the offer."
+              body="1,000+ engineering roles matched to your skills, 800+ curated study topics with diagrams, and 1,850+ problems with AI feedback. Then live transcription assistance during the interview itself: the moment that decides the offer."
               ctaLabel={isAuthenticated ? 'Open dashboard' : 'Start free'}
               ctaHref="/capra/prepare"
             />
             <AudienceCard
               eyebrow="For recruiters"
               title="Identify top technical talent"
-              body="Camora trains engineers — sponsor coding contests, surface candidates ready for the loop, and shorten time-to-hire. The same platform that shapes the candidate is the one that helps you spot them."
+              body="Camora trains engineers, then helps you spot them. Sponsor coding contests, surface candidates ready for the loop, and shorten time-to-hire."
               ctaLabel="Explore partnerships"
               ctaHref="/pricing"
               tone="dark"
