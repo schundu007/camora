@@ -509,7 +509,7 @@ export default function JobsPage() {
       const timer = setTimeout(() => fetchJobs(), 300);
       return () => clearTimeout(timer);
     }
-  }, [fetchJobs, role, locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter]);
+  }, [fetchJobs, search, role, locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter]);
 
   /* ── Scroll to top on mount ── */
   useEffect(() => {
