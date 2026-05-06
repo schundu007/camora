@@ -3602,7 +3602,7 @@ def process_message(msg):
       basicImplementation: {
         title: 'Simple Message Queue (Single Broker)',
         description: 'Single RabbitMQ or Redis instance for async processing. Producer sends to queue, consumer processes asynchronously. Suitable for low-throughput workloads with simple routing.',
-        svgTemplate: 'simpleQueue',
+        diagramSrc: '/diagrams/fundamentals/simple-queue.png',
         problems: [
           'Single point of failure — broker crash loses all in-flight and undelivered messages',
           'Limited throughput — single node bottleneck at ~50K messages/second',
@@ -3616,7 +3616,7 @@ def process_message(msg):
       advancedImplementation: {
         title: 'Distributed Event Streaming Platform (Kafka)',
         description: 'Multi-broker Kafka cluster with partitioned topics (RF=3), consumer groups for horizontal scaling, Schema Registry for type safety, and Debezium CDC for transactional outbox — processing millions of messages per second with zero data loss.',
-        svgTemplate: 'distributedQueue',
+        diagramSrc: '/diagrams/fundamentals/distributed-queue.png',
         keyPoints: [
           'Partitions enable parallel processing — each partition consumed by exactly one consumer within a group',
           'Replication factor of 3 across rack-aware brokers ensures zero data loss on single broker failure',
@@ -5267,7 +5267,7 @@ Client-side:  Service A ──────────▶ Service B    (direct)
       basicImplementation: {
         title: 'Single Load Balancer',
         description: 'Basic load balancing with NGINX distributing traffic across multiple backend servers using round-robin.',
-        svgTemplate: 'loadBalancer',
+        diagramSrc: '/diagrams/fundamentals/load-balancer.png',
         problems: [
           'Load balancer is single point of failure',
           'No automatic failover',
@@ -5279,7 +5279,7 @@ Client-side:  Service A ──────────▶ Service B    (direct)
       advancedImplementation: {
         title: 'Global Load Balancing Architecture',
         description: 'GeoDNS routing users to nearest region, with regional HA load balancers and server pools',
-        svgTemplate: 'globalLoadBalancer',
+        diagramSrc: '/diagrams/fundamentals/global-load-balancer.png',
         keyPoints: [
           'GeoDNS routes users to nearest region',
           'Each region has redundant load balancers',
@@ -5949,14 +5949,14 @@ return {1, math.floor(limit - estimated - 1), 0}  -- allowed, remaining
       basicImplementation: {
         title: 'Basic Rate Limiter',
         description: 'Single Redis instance with Lua scripts for token bucket implementation',
-        svgTemplate: 'rateLimiter',
+        diagramSrc: '/diagrams/fundamentals/rate-limiter.png',
         problems: ['Single point of failure', 'No failover']
       },
 
       advancedImplementation: {
         title: 'Production Architecture',
         description: 'CDN Edge → API Gateway → Redis Cluster for distributed rate limiting',
-        svgTemplate: 'rateLimiterAdvanced',
+        diagramSrc: '/diagrams/fundamentals/rate-limiter-advanced.png',
         keyPoints: [
           'Edge rate limiting at CDN for DDoS protection',
           'Redis Cluster with automatic failover',
@@ -6676,7 +6676,7 @@ Request: GET /api/checkout
       basicImplementation: {
         title: 'Simple Microservices',
         description: 'API Gateway routing to independent services, each owning their database',
-        svgTemplate: 'simpleMicroservices',
+        diagramSrc: '/diagrams/fundamentals/simple-microservices.png',
         problems: [
           'Direct calls create tight coupling',
           'No fault tolerance (cascading failures)',
@@ -6688,7 +6688,7 @@ Request: GET /api/checkout
       advancedImplementation: {
         title: 'Production Microservices Architecture',
         description: 'API Gateway with service mesh providing mTLS, circuit breakers, and observability across services.',
-        svgTemplate: 'apiGateway',
+        diagramSrc: '/diagrams/fundamentals/api-gateway.png',
         architecture: `
 ![Production microservices architecture](/diagrams/systemdesign/microservices-mesh.png)
 
@@ -7428,7 +7428,7 @@ Key features:
       basicImplementation: {
         title: 'Basic Authentication',
         description: 'Client → Auth Service → Session Store (Redis) + User Database',
-        svgTemplate: 'sessionAuth',
+        diagramSrc: '/diagrams/fundamentals/session-auth.png',
         problems: [
           'Server must store session state',
           'Hard to scale across servers',
@@ -7440,7 +7440,7 @@ Key features:
       advancedImplementation: {
         title: 'Zero-Trust Security Architecture',
         description: 'WAF → API Gateway → Identity Provider (JWT) → Service Mesh with mTLS',
-        svgTemplate: 'serviceMesh',
+        diagramSrc: '/diagrams/fundamentals/service-mesh.png',
         oldArchitecture: `
 ![Zero-trust services and encrypted store](/diagrams/systemdesign/zero-trust-services.png)
 
@@ -8335,7 +8335,7 @@ Cold (S3):   30+ days -- archive, very cheap, slow retrieval
       basicImplementation: {
         title: 'Basic Monitoring Stack',
         description: 'Services → Collector → Prometheus, Jaeger, ELK → Grafana dashboards',
-        svgTemplate: 'observability',
+        diagramSrc: '/diagrams/fundamentals/observability.png',
         problems: [
           'No distributed tracing',
           'Manual alert configuration',
@@ -8346,7 +8346,7 @@ Cold (S3):   30+ days -- archive, very cheap, slow retrieval
 
       advancedImplementation: {
         title: 'Enterprise Observability Platform',
-        svgTemplate: 'observabilityAdvanced',
+        diagramSrc: '/diagrams/fundamentals/observability-advanced.png',
         architecture: `
 ![Enterprise observability — OTel pipeline to dedicated backends](/diagrams/systemdesign/otel-pipeline.png)
 
@@ -9261,7 +9261,7 @@ Step 6: Demonstrate adding a node (show which keys migrate)
       basicImplementation: {
         title: 'Simple Hash Ring',
         description: 'Basic consistent hashing with one position per node on the ring',
-        svgTemplate: 'simpleCache',
+        diagramSrc: '/diagrams/fundamentals/simple-cache.png',
         problems: [
           'Uneven distribution with few nodes',
           'Single node absorbs all load on neighbor failure',
@@ -9273,7 +9273,7 @@ Step 6: Demonstrate adding a node (show which keys migrate)
       advancedImplementation: {
         title: 'Production Consistent Hash Ring',
         description: 'Virtual nodes, rack-aware replication, gossip-based membership, and Merkle tree anti-entropy for data verification.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'Virtual nodes (100-200 per server) for uniform distribution',
           'Rack/AZ-aware replica placement for fault tolerance',
@@ -10261,7 +10261,7 @@ This is one of the most impactful Bloom filter optimizations in big data process
       basicImplementation: {
         title: 'Simple Bloom Filter',
         description: 'Single bit array with k hash functions for basic membership testing',
-        svgTemplate: 'simpleCache',
+        diagramSrc: '/diagrams/fundamentals/simple-cache.png',
         problems: [
           'Cannot delete elements once inserted',
           'False positive rate increases as more elements are added',
@@ -10273,7 +10273,7 @@ This is one of the most impactful Bloom filter optimizations in big data process
       advancedImplementation: {
         title: 'Production Bloom Filter in LSM Storage',
         description: 'Per-SSTable Bloom filters in an LSM-tree database (Cassandra/LevelDB) to skip unnecessary disk reads during point queries.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'Each SSTable has its own Bloom filter stored in memory',
           'Point lookup checks all Bloom filters before any disk read',
@@ -10962,7 +10962,7 @@ Result: Point + range query in a single partition -- optimal performance
       basicImplementation: {
         title: 'Simple Hash-Based Sharding',
         description: 'Application routes queries to shards using hash(key) % N, with each shard being an independent database.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         problems: [
           'Adding shards requires rehashing and data migration',
           'No cross-shard queries or transactions',
@@ -10974,7 +10974,7 @@ Result: Point + range query in a single partition -- optimal performance
       advancedImplementation: {
         title: 'Production Sharding with Proxy Layer',
         description: 'Proxy layer (Vitess/ProxySQL) handles routing, with consistent hashing, automatic rebalancing, and global secondary indexes.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'Proxy layer abstracts sharding from the application',
           'Consistent hashing minimizes data movement on rebalance',
@@ -11849,7 +11849,7 @@ Query "design interview" -> doc1 AND doc2 match "design", doc2 matches "intervie
       basicImplementation: {
         title: 'Single-Column B-Tree Index',
         description: 'Basic B-tree index on a primary lookup column for point queries.',
-        svgTemplate: 'singleDatabase',
+        diagramSrc: '/diagrams/fundamentals/single-database.png',
         problems: [
           'Only speeds up queries on the indexed column',
           'Requires table lookup for non-indexed columns',
@@ -11861,7 +11861,7 @@ Query "design interview" -> doc1 AND doc2 match "design", doc2 matches "intervie
       advancedImplementation: {
         title: 'Comprehensive Indexing Strategy',
         description: 'Composite indexes aligned with query patterns, covering indexes for hot queries, partial indexes for filtered subsets, and full-text indexes for search.',
-        svgTemplate: 'singleDatabase',
+        diagramSrc: '/diagrams/fundamentals/single-database.png',
         keyPoints: [
           'Composite indexes ordered by equality-first, range-last',
           'Covering indexes for the top 5 most frequent queries',
@@ -12864,7 +12864,7 @@ Improvement: 5.6x avg latency, 4.8x p99 latency, 60% CPU reduction
       basicImplementation: {
         title: 'Simple Reverse Proxy',
         description: 'Single NGINX instance as a reverse proxy with SSL termination and basic load balancing.',
-        svgTemplate: 'loadBalancer',
+        diagramSrc: '/diagrams/fundamentals/load-balancer.png',
         problems: [
           'Single point of failure',
           'No content-based routing',
@@ -12876,7 +12876,7 @@ Improvement: 5.6x avg latency, 4.8x p99 latency, 60% CPU reduction
       advancedImplementation: {
         title: 'Multi-Layer Proxy Architecture',
         description: 'CDN edge proxies -> API Gateway -> Service mesh sidecar proxies, providing caching, auth, routing, and observability at every layer.',
-        svgTemplate: 'apiGateway',
+        diagramSrc: '/diagrams/fundamentals/api-gateway.png',
         keyPoints: [
           'CDN edge handles static content and DDoS protection',
           'API Gateway handles auth, rate limiting, API versioning',
@@ -13864,7 +13864,7 @@ This means serving both A and AAAA records is beneficial:
       basicImplementation: {
         title: 'Simple DNS Setup',
         description: 'Single DNS provider with A records pointing to a load balancer IP.',
-        svgTemplate: 'singleServer',
+        diagramSrc: '/diagrams/fundamentals/single-server.png',
         problems: [
           'Single DNS provider is a point of failure',
           'No geographic routing',
@@ -13876,7 +13876,7 @@ This means serving both A and AAAA records is beneficial:
       advancedImplementation: {
         title: 'Global DNS Architecture',
         description: 'Multi-provider Anycast DNS with GeoDNS routing, health-checked failover, and low TTL for fast traffic shifting.',
-        svgTemplate: 'globalLoadBalancer',
+        diagramSrc: '/diagrams/fundamentals/global-load-balancer.png',
         keyPoints: [
           'Multiple DNS providers for redundancy',
           'Anycast for DNS server high availability',
@@ -14958,7 +14958,7 @@ For a smaller streaming service (1M subscribers):
       basicImplementation: {
         title: 'Simple CDN Setup',
         description: 'Single CDN provider with pull-based caching for static assets and a custom origin.',
-        svgTemplate: 'multiTierCache',
+        diagramSrc: '/diagrams/fundamentals/multi-tier-cache.png',
         problems: [
           'No cache hierarchy (every edge miss hits origin)',
           'Manual cache invalidation',
@@ -14970,7 +14970,7 @@ For a smaller streaming service (1M subscribers):
       advancedImplementation: {
         title: 'Enterprise CDN Architecture',
         description: 'Multi-CDN with edge computing, tiered cache hierarchy (edge -> shield -> origin), versioned assets, and real-time purge.',
-        svgTemplate: 'globalLoadBalancer',
+        diagramSrc: '/diagrams/fundamentals/global-load-balancer.png',
         keyPoints: [
           'Multi-CDN with traffic splitting for redundancy and performance',
           'Tiered cache hierarchy reduces origin load by 100x+',
@@ -15989,7 +15989,7 @@ Use single-leader: When strong consistency is non-negotiable
       basicImplementation: {
         title: 'Simple Leader-Follower Replication',
         description: 'One leader accepts writes, two followers replicate asynchronously for read scaling.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         problems: [
           'Replication lag causes stale reads',
           'Leader is a single point of failure (manual failover)',
@@ -16001,7 +16001,7 @@ Use single-leader: When strong consistency is non-negotiable
       advancedImplementation: {
         title: 'Multi-Region Active-Active Replication',
         description: 'Multi-leader replication across regions with conflict resolution, automated failover, and tunable consistency levels.',
-        svgTemplate: 'globalLoadBalancer',
+        diagramSrc: '/diagrams/fundamentals/global-load-balancer.png',
         keyPoints: [
           'Multi-leader for low-latency writes in every region',
           'Automated conflict resolution (LWW or version vectors)',
@@ -17112,7 +17112,7 @@ Interceptors are the gRPC equivalent of HTTP middleware:
       basicImplementation: {
         title: 'Standard HTTP/1.1 + TLS',
         description: 'Traditional REST API over HTTP/1.1 with TLS termination at the load balancer.',
-        svgTemplate: 'restApi',
+        diagramSrc: '/diagrams/fundamentals/rest-api.png',
         problems: [
           'Head-of-line blocking limits concurrent requests',
           'Text-based headers are verbose and redundant',
@@ -17124,7 +17124,7 @@ Interceptors are the gRPC equivalent of HTTP middleware:
       advancedImplementation: {
         title: 'Modern Protocol Stack',
         description: 'HTTP/3 (QUIC) for external clients, gRPC (HTTP/2) for internal services, mTLS everywhere, with protocol negotiation at the edge.',
-        svgTemplate: 'apiGateway',
+        diagramSrc: '/diagrams/fundamentals/api-gateway.png',
         keyPoints: [
           'HTTP/3 for external clients (fast connection, no HOL blocking)',
           'gRPC for internal microservice communication (efficient, typed)',
@@ -18322,7 +18322,7 @@ Webhook delivery service architecture:
       basicImplementation: {
         title: 'Simple Long Polling',
         description: 'Server holds HTTP requests open for up to 30 seconds, returning immediately when data is available.',
-        svgTemplate: 'restApi',
+        diagramSrc: '/diagrams/fundamentals/rest-api.png',
         problems: [
           'Connection overhead from repeated HTTP requests',
           'Higher latency than persistent connections',
@@ -18334,7 +18334,7 @@ Webhook delivery service architecture:
       advancedImplementation: {
         title: 'Scaled WebSocket Architecture',
         description: 'WebSocket servers behind sticky load balancer, Redis Pub/Sub for cross-server messaging, with SSE fallback and message replay.',
-        svgTemplate: 'distributedQueue',
+        diagramSrc: '/diagrams/fundamentals/distributed-queue.png',
         keyPoints: [
           'WebSocket servers handle 100K+ connections each',
           'Redis Pub/Sub routes messages between server instances',
@@ -19376,7 +19376,7 @@ CockroachDB "follow the workload":
       basicImplementation: {
         title: 'Single-Leader CP System',
         description: 'Single-leader database with synchronous replication, prioritizing consistency over availability.',
-        svgTemplate: 'singleDatabase',
+        diagramSrc: '/diagrams/fundamentals/single-database.png',
         problems: [
           'Unavailable during leader failure until election completes',
           'Write latency includes replication delay',
@@ -19388,7 +19388,7 @@ CockroachDB "follow the workload":
       advancedImplementation: {
         title: 'Tunable Consistency Architecture',
         description: 'Different consistency levels per operation, with CP databases for critical writes and AP databases for high-traffic reads.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'Critical operations (payments, inventory) use CP storage',
           'Read-heavy operations (catalog, recommendations) use AP storage',
@@ -20412,7 +20412,7 @@ Multipart upload:
       basicImplementation: {
         title: 'Single-Master File System',
         description: 'A basic distributed file system with one master tracking all metadata and multiple chunk servers storing data blocks with replication factor 3.',
-        svgTemplate: 'singleServer',
+        diagramSrc: '/diagrams/fundamentals/single-server.png',
         problems: [
           'Master is a single point of failure',
           'Master memory limits total file count',
@@ -20424,7 +20424,7 @@ Multipart upload:
       advancedImplementation: {
         title: 'Production Distributed File System',
         description: 'High-availability NameNode with automatic failover, rack-aware replication, erasure coding for cold data, and tiered storage (hot SSD, warm HDD, cold object store).',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'Active/Standby NameNode with ZooKeeper-based failover',
           'Rack-aware block placement for fault tolerance',
@@ -21635,7 +21635,7 @@ At extreme scale:
       basicImplementation: {
         title: 'Single-Broker Message Queue',
         description: 'A single Kafka broker with topics, no replication, and basic producer/consumer setup.',
-        svgTemplate: 'simpleCache',
+        diagramSrc: '/diagrams/fundamentals/simple-cache.png',
         problems: [
           'Single point of failure -- broker crash loses all data',
           'No replication means no durability guarantee',
@@ -21647,7 +21647,7 @@ At extreme scale:
       advancedImplementation: {
         title: 'Production Kafka Cluster',
         description: 'Multi-broker cluster with replication, consumer groups, schema registry, and stream processing. ISR-based durability with acks=all.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'Replication factor 3 with min.insync.replicas=2 for durability',
           'Consumer groups with cooperative rebalancing for high availability',
@@ -22338,7 +22338,7 @@ Solution: DataLoader (batching + caching)
       basicImplementation: {
         title: 'REST API',
         description: 'Standard RESTful API with JSON payloads over HTTP/1.1. Suitable for simple CRUD applications and public APIs.',
-        svgTemplate: 'simpleCache',
+        diagramSrc: '/diagrams/fundamentals/simple-cache.png',
         problems: [
           'Overfetching: Clients receive more data than needed',
           'Underfetching: Multiple round trips for related resources',
@@ -22350,7 +22350,7 @@ Solution: DataLoader (batching + caching)
       advancedImplementation: {
         title: 'Hybrid API Gateway',
         description: 'GraphQL gateway for external clients aggregating multiple gRPC backend services, with REST endpoints for partner integrations.',
-        svgTemplate: 'loadBalancer',
+        diagramSrc: '/diagrams/fundamentals/load-balancer.png',
         keyPoints: [
           'GraphQL federation composes multiple service schemas',
           'gRPC between services for low latency and type safety',
@@ -23032,7 +23032,7 @@ Common Async Patterns:
       basicImplementation: {
         title: 'Synchronous Microservices',
         description: 'Services communicate directly via HTTP/gRPC. Simple but tightly coupled -- a failure in any downstream service causes cascading failures.',
-        svgTemplate: 'simpleCache',
+        diagramSrc: '/diagrams/fundamentals/simple-cache.png',
         problems: [
           'Cascading failures when downstream services are slow or down',
           'Temporal coupling: all services must be available simultaneously',
@@ -23044,7 +23044,7 @@ Common Async Patterns:
       advancedImplementation: {
         title: 'Event-Driven Architecture',
         description: 'Services communicate via an event broker (Kafka/SQS). Sync only for user-facing requests; all background processing is async with dead letter queues and saga orchestration.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'Sync for user-facing reads and critical writes (login, payment authorization)',
           'Async for everything else (notifications, analytics, downstream processing)',
@@ -23925,7 +23925,7 @@ Two clients write different values to the same key concurrently:
       basicImplementation: {
         title: 'Simple Quorum (N=3, W=2, R=2)',
         description: 'Three replicas with strict quorum for reads and writes. Provides strong consistency but fails writes if more than one replica is down.',
-        svgTemplate: 'simpleCache',
+        diagramSrc: '/diagrams/fundamentals/simple-cache.png',
         problems: [
           'Writes fail if fewer than W replicas are available',
           'No mechanism for handling temporary failures gracefully',
@@ -23937,7 +23937,7 @@ Two clients write different values to the same key concurrently:
       advancedImplementation: {
         title: 'Dynamo-Style Quorum System',
         description: 'Tunable quorum with sloppy quorum support, hinted handoff, read repair, Merkle tree anti-entropy, and vector clock conflict detection.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'Tunable N/R/W per operation for flexible consistency-latency trade-off',
           'Sloppy quorum with hinted handoff for availability during partitions',
@@ -24819,7 +24819,7 @@ Phase 2: ACCEPT
       basicImplementation: {
         title: 'Single-Leader with Manual Failover',
         description: 'One leader, two followers with async replication. Failover requires manual operator intervention to promote a follower.',
-        svgTemplate: 'simpleCache',
+        diagramSrc: '/diagrams/fundamentals/simple-cache.png',
         problems: [
           'Manual failover means minutes to hours of downtime',
           'Async replication means potential data loss',
@@ -24831,7 +24831,7 @@ Phase 2: ACCEPT
       advancedImplementation: {
         title: 'Raft-Based Automated Failover',
         description: 'Raft consensus protocol with automatic leader election, semi-synchronous replication, fencing tokens, and health-checked failover.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'Raft-based leader election with sub-second failover',
           'Semi-synchronous replication for zero data loss on promoted follower',
@@ -25625,7 +25625,7 @@ Step 4: Validate with simulation
       basicImplementation: {
         title: 'Centralized Health Monitor',
         description: 'A single monitoring service polls all nodes via HTTP health checks. Simple but has a single point of failure and O(N) network overhead.',
-        svgTemplate: 'simpleCache',
+        diagramSrc: '/diagrams/fundamentals/simple-cache.png',
         problems: [
           'Monitor is a single point of failure',
           'O(N) health checks per interval from one machine',
@@ -25637,7 +25637,7 @@ Step 4: Validate with simulation
       advancedImplementation: {
         title: 'Gossip-Based Failure Detection',
         description: 'SWIM-style gossip protocol with phi accrual failure detection, separate liveness/readiness probes, circuit breakers, and graceful degradation.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'Gossip protocol for decentralized, scalable failure detection',
           'Phi accrual detector adapts timeout to network conditions',
@@ -26427,7 +26427,7 @@ Merkle Tree (used for replica comparison):
       basicImplementation: {
         title: 'Simple Checksum Verification',
         description: 'CRC32 checksums stored alongside data. Verified on read. No background scrubbing or end-to-end integrity.',
-        svgTemplate: 'simpleCache',
+        diagramSrc: '/diagrams/fundamentals/simple-cache.png',
         problems: [
           'Checksum stored next to data can be corrupted together',
           'No background scrubbing to detect silent corruption',
@@ -26439,7 +26439,7 @@ Merkle Tree (used for replica comparison):
       advancedImplementation: {
         title: 'End-to-End Data Integrity System',
         description: 'Multi-layer checksums (CRC32 for blocks, SHA-256 for objects), Merkle trees for replica comparison, background scrubbing, and automatic repair from healthy replicas.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'End-to-end checksums verified at every layer boundary',
           'Merkle trees for efficient replica comparison (O(log N))',
@@ -27163,7 +27163,7 @@ A client always sees the results of its own writes.
       basicImplementation: {
         title: 'Single-Leader Strong Consistency',
         description: 'All reads and writes go through a single leader with synchronous replication. Consistent but limited by leader throughput and single-region latency.',
-        svgTemplate: 'simpleCache',
+        diagramSrc: '/diagrams/fundamentals/simple-cache.png',
         problems: [
           'Leader is a throughput bottleneck',
           'Cross-region reads have high latency',
@@ -27175,7 +27175,7 @@ A client always sees the results of its own writes.
       advancedImplementation: {
         title: 'Tunable Consistency with Polyglot Persistence',
         description: 'Different consistency levels per data type: strong consistency for transactions, causal for user-facing data, eventual for analytics. Multiple storage systems chosen to match each consistency need.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'Strong consistency (PostgreSQL) for financial data and constraints',
           'Causal consistency (MongoDB causal sessions) for user-facing reads',
@@ -27871,7 +27871,7 @@ But for a page that makes 50 backend calls in parallel:
       basicImplementation: {
         title: 'Single Server with Basic Monitoring',
         description: 'One server handling all traffic with basic latency/throughput metrics. No load balancing or redundancy.',
-        svgTemplate: 'singleServer',
+        diagramSrc: '/diagrams/fundamentals/single-server.png',
         problems: [
           'No horizontal scaling (throughput limited to one server)',
           'No redundancy (single point of failure)',
@@ -27883,7 +27883,7 @@ But for a page that makes 50 backend calls in parallel:
       advancedImplementation: {
         title: 'SLO-Driven Auto-Scaling Architecture',
         description: 'Auto-scaling based on SLO compliance, hedged requests for tail latency, load shedding under pressure, and comprehensive latency/throughput monitoring with error budgets.',
-        svgTemplate: 'loadBalancer',
+        diagramSrc: '/diagrams/fundamentals/load-balancer.png',
         keyPoints: [
           'Auto-scaling triggered by SLO breach (p99 > threshold)',
           'Hedged requests to reduce tail latency by 50-90%',
@@ -28494,7 +28494,7 @@ A real e-commerce stack pairs each data type with the store best suited for it. 
       basicImplementation: {
         title: 'Single-Database ACID Transactions',
         description: 'All data in one PostgreSQL database with ACID transactions and default Read Committed isolation.',
-        svgTemplate: 'singleDatabase',
+        diagramSrc: '/diagrams/fundamentals/single-database.png',
         problems: [
           'Single database limits write throughput',
           'No horizontal scaling for writes',
@@ -28506,7 +28506,7 @@ A real e-commerce stack pairs each data type with the store best suited for it. 
       advancedImplementation: {
         title: 'CQRS with ACID Writes and BASE Reads',
         description: 'ACID database for writes, event bus propagates changes to BASE read stores. Different consistency levels per operation.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'PostgreSQL for ACID writes (orders, payments, inventory)',
           'Kafka event bus propagates changes to read models',
