@@ -157,7 +157,121 @@ RULES:
 - Use my real experience from resume when available`;
 }
 
-function buildInterviewDesignPrompt(resume, technical, detailLevel = null, cloudProvider = 'aws') {
+// ── Per-archetype DEEPDESIGN section templates ─────────────────────
+// Each archetype owns the body of the [DEEPDESIGN] block. Section
+// names stay constant (the frontend renderer only knows HEADLINE/
+// REQUIREMENTS/SCALEMATH/DEEPDESIGN/TRADEOFFS/EDGECASES/FOLLOWUP) —
+// only the *content prompt inside* changes.
+const DEEPDESIGN_SYSTEM = `[DEEPDESIGN]
+1. LAYER TITLE
+  - Detail bullet 1
+  - Detail bullet 2
+(6-8 layers covering CDN, LB, App, Cache, DB, Async, HA/DR, Monitoring)
+[/DEEPDESIGN]`;
+
+const DEEPDESIGN_APPLICATION = `[DEEPDESIGN]
+Cover the application design in 5-7 numbered sections — pick the ones that fit the problem. NO infra layers (no CDN/LB/cache tiers); this is software design at the class/API level.
+
+1. API CONTRACT
+  - Method signatures with input / output types and error cases
+  - Idempotency / pagination / auth if relevant
+
+2. CLASS / MODULE STRUCTURE
+  - Core classes with one-line responsibilities
+  - Composition vs inheritance choice
+  - Public vs private surface
+
+3. DATA MODEL
+  - In-memory representation (HashMap + DLL, Tree, Heap, etc.)
+  - Why this choice supports each operation's complexity
+  - Memory footprint tradeoff
+
+4. DESIGN PATTERNS
+  - Specific patterns applied (Factory, Strategy, Observer, Decorator, Singleton)
+  - Why each pattern fits this problem
+
+5. CONCURRENCY / THREAD-SAFETY
+  - Read-write contention model
+  - Locking strategy or lock-free / atomic operations
+
+6. ERROR HANDLING
+  - Pre-condition checks vs runtime exceptions
+  - Recovery semantics
+
+7. EXTENSIBILITY
+  - What's deliberately easy to add later, and how
+[/DEEPDESIGN]`;
+
+const DEEPDESIGN_INFRASTRUCTURE = `[DEEPDESIGN]
+Cover the infrastructure component in 5-7 numbered sections — emphasize data plane vs control plane. This is NOT a multi-tier app stack.
+
+1. DATA PLANE
+  - Hot path: how a request is served (e.g. consistent-hash route → cache shard → response)
+  - Latency budget per hop
+
+2. CONTROL PLANE
+  - How config / membership / topology is managed (gossip, ZK, etcd, custom)
+  - Failure-detection mechanism
+
+3. PARTITIONING STRATEGY
+  - Hash / range / geographic
+  - Resharding cost
+  - Hot-key mitigation
+
+4. REPLICATION & CONSISTENCY MODEL
+  - Sync vs async replication
+  - Strong / eventual / causal / quorum
+  - Read & write quorum sizing
+
+5. NETWORK PROTOCOL
+  - Wire format (gRPC, custom binary, HTTP/2)
+  - Backpressure / flow control
+
+6. FAILURE MODES
+  - Node failure recovery
+  - Network-partition behavior
+  - Cascading-failure prevention (circuit breakers, hedged requests)
+
+7. CAPACITY & SIZING
+  - Throughput per node
+  - Headroom for traffic spikes
+[/DEEPDESIGN]`;
+
+const SCALEMATH_BLOCK = `[SCALEMATH]
+DAU: estimated daily active users
+QPS: queries per second calculation
+Storage: data storage estimate
+Bandwidth: network bandwidth estimate
+[/SCALEMATH]
+
+[SCALECALC]
+DAU=<integer — daily active users baseline, no commas, no units, e.g. 1000000>
+RequestsPerUser=<integer — avg requests per user per day, e.g. 10>
+PayloadBytes=<integer — average bytes per request/record, e.g. 1200>
+RetentionDays=<integer — days of data retained, e.g. 90>
+PeakMultiplier=<float — peak-to-average QPS factor, e.g. 3>
+ReadWriteRatio=<float — reads per write, e.g. 20>
+[/SCALECALC]`;
+
+const VALID_DESIGN_KINDS = new Set(['application', 'system', 'infrastructure']);
+
+function deepDesignFor(kind) {
+  if (kind === 'application') return DEEPDESIGN_APPLICATION;
+  if (kind === 'infrastructure') return DEEPDESIGN_INFRASTRUCTURE;
+  return DEEPDESIGN_SYSTEM;
+}
+
+function scaleMathFor(kind) {
+  // Application design (LRU, parking lot, OOP) is sized by complexity,
+  // not capacity — emitting QPS/DAU here pollutes the answer with
+  // irrelevant numbers. Keep system + infrastructure symmetric so the
+  // existing renderer + SCALECALC behavior is unchanged.
+  if (kind === 'application') return '';
+  return SCALEMATH_BLOCK;
+}
+
+export function buildInterviewDesignPrompt(resume, technical, detailLevel = null, cloudProvider = 'aws', designKind = 'system') {
+  const kind = VALID_DESIGN_KINDS.has(designKind) ? designKind : 'system';
   const isBasic = detailLevel === 'basic';
   const isFull = detailLevel === 'full';
   const detailRules = isBasic
@@ -171,6 +285,8 @@ function buildInterviewDesignPrompt(resume, technical, detailLevel = null, cloud
   // already AWS-flavored.
   const cloudHint = buildCloudHint(cloudProvider);
   const cloudPrefix = cloudHint ? `${cloudHint}\n\n` : '';
+  const scaleSection = scaleMathFor(kind);
+  const deepSection = deepDesignFor(kind);
   return `${cloudPrefix}You ARE the candidate in a LIVE SYSTEM DESIGN interview happening right now. Speak AS the candidate, in their voice, so the candidate can read your output aloud verbatim. You are NOT a sidebar coach.
 
 VOICE — NON-NEGOTIABLE:
@@ -206,33 +322,12 @@ NON-FUNCTIONAL
 - Availability requirement
 - Scalability requirement
 [/REQUIREMENTS]
-
-[SCALEMATH]
-DAU: estimated daily active users
-QPS: queries per second calculation
-Storage: data storage estimate
-Bandwidth: network bandwidth estimate
-[/SCALEMATH]
-
-[SCALECALC]
-DAU=<integer — daily active users baseline, no commas, no units, e.g. 1000000>
-RequestsPerUser=<integer — avg requests per user per day, e.g. 10>
-PayloadBytes=<integer — average bytes per request/record, e.g. 1200>
-RetentionDays=<integer — days of data retained, e.g. 90>
-PeakMultiplier=<float — peak-to-average QPS factor, e.g. 3>
-ReadWriteRatio=<float — reads per write, e.g. 20>
-[/SCALECALC]
-
+${scaleSection ? '\n' + scaleSection + '\n' : ''}
 [DIAGRAM]
 skip
 [/DIAGRAM]
 
-[DEEPDESIGN]
-1. LAYER TITLE
-  - Detail bullet 1
-  - Detail bullet 2
-(6-8 layers covering CDN, LB, App, Cache, DB, Async, HA/DR, Monitoring)
-[/DEEPDESIGN]
+${deepSection}
 
 [EDGECASES]
 - 3-5 bullet points, one line each
@@ -544,7 +639,13 @@ IMPORTANT CODE FORMATTING RULE:
 - Separate explanatory text from code blocks clearly.`;
     maxTokens = MAX_TOKENS_DESIGN;
   } else if (isDesign) {
-    systemPrompt = buildInterviewDesignPrompt(resume, technical, detailLevel, cloudProvider);
+    // Branch the design prompt by archetype. Frontend may pass an
+    // explicit designKind (e.g. CodingSonaSidebar → 'application'); when
+    // absent, classify from the question text. Defaults to 'system' so
+    // existing distributed-system questions never regress.
+    const { classifyDesignKind } = await import('./designKindClassifier.js');
+    const resolvedKind = classifyDesignKind(cleanQuestion, options.designKind);
+    systemPrompt = buildInterviewDesignPrompt(resume, technical, detailLevel, cloudProvider, resolvedKind);
     maxTokens = MAX_TOKENS_DESIGN;
   } else {
     systemPrompt = buildGeneralPrompt(resume, technical) + `

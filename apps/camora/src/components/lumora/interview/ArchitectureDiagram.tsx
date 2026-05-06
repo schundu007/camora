@@ -13,16 +13,22 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.co
 const DIRECTION = 'TB';
 const DETAIL = 'detailed';
 
-function getCacheKey(question: string, provider: string) {
-  return `${question}::${provider}::${DIRECTION}::${DETAIL}`;
+function getCacheKey(question: string, provider: string, designKind: string = 'system') {
+  return `${question}::${provider}::${DIRECTION}::${DETAIL}::${designKind}`;
 }
+
+type DesignKind = 'application' | 'system' | 'infrastructure';
 
 interface ArchitectureDiagramProps {
   question: string;
   className?: string;
+  /** Hint passed to the diagram service. Question-text cues still
+   *  override (e.g. "design a CDN" → infrastructure even if hint=system).
+   *  Default 'system' matches the historical behavior. */
+  designKind?: DesignKind;
 }
 
-export function ArchitectureDiagram({ question, className = '' }: ArchitectureDiagramProps) {
+export function ArchitectureDiagram({ question, className = '', designKind = 'system' }: ArchitectureDiagramProps) {
   const { token, user } = useAuth();
   // Only owners/admins may trigger fresh generation. Regular users consume
   // pre-generated diagrams from the cache. Backend enforces this via 403
@@ -64,7 +70,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
   // Step 1: Cache-only lookup (fast, no generation)
   useEffect(() => {
     if (!question || !token) return;
-    const key = getCacheKey(question, cloudProvider);
+    const key = getCacheKey(question, cloudProvider, designKind);
 
     // Check in-memory cache
     const mem = getDiagramCache(key);
@@ -88,7 +94,7 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
           credentials: 'include',
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ question, cloudProvider, detailLevel: DETAIL, direction: DIRECTION }),
+          body: JSON.stringify({ question, cloudProvider, detailLevel: DETAIL, direction: DIRECTION, designKind }),
         });
         const data = await r.json();
         if (!cancelled) {
@@ -121,13 +127,13 @@ export function ArchitectureDiagram({ question, className = '' }: ArchitectureDi
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ question, cloudProvider, detailLevel: DETAIL, direction: DIRECTION }),
+        body: JSON.stringify({ question, cloudProvider, detailLevel: DETAIL, direction: DIRECTION, designKind }),
       });
       const data = await r.json();
       if (data.success && data.image_url) {
         const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
         setImageUrl(url);
-        const key = getCacheKey(question, cloudProvider);
+        const key = getCacheKey(question, cloudProvider, designKind);
         setDiagramCache(key, { type: 'png', data: url, timestamp: Date.now() });
         resetView();
       } else {

@@ -27,6 +27,7 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 VALID_PROVIDERS = {"aws", "gcp", "azure"}
 VALID_DETAIL_LEVELS = {"high", "medium", "low"}
+VALID_DESIGN_KINDS = {"application", "system", "infrastructure"}
 
 # Maps detail_level to rough guidance for the LLM
 DETAIL_GUIDANCE = {
@@ -40,6 +41,7 @@ class DiagramRequest(BaseModel):
     question: str
     cloud_provider: str = Field(default="aws")
     detail_level: Optional[str] = None
+    design_kind: Optional[str] = Field(default="system")
     user_id: Optional[int] = None
 
 
@@ -48,38 +50,42 @@ class DiagramResponse(BaseModel):
     code: str   # Python source that produced it
 
 
-def _build_prompt(question: str, cloud_provider: str, detail_level: str) -> str:
-    """Construct the system + user prompt for generating diagrams code."""
-    detail_text = DETAIL_GUIDANCE.get(detail_level, DETAIL_GUIDANCE["medium"])
+_PROVIDER_IMPORTS = {
+    "aws": (
+        "from diagrams.aws.compute import EC2, ECS, Lambda\n"
+        "from diagrams.aws.database import RDS, Dynamodb, ElastiCache\n"
+        "from diagrams.aws.network import ELB, CloudFront, Route53, APIGateway\n"
+        "from diagrams.aws.storage import S3\n"
+        "from diagrams.aws.integration import SQS, SNS\n"
+        "from diagrams.aws.security import IAM, Cognito\n"
+        "from diagrams.aws.analytics import Kinesis"
+    ),
+    "gcp": (
+        "from diagrams.gcp.compute import ComputeEngine, Functions, Run\n"
+        "from diagrams.gcp.database import SQL, Datastore, Memorystore\n"
+        "from diagrams.gcp.network import LoadBalancing, CDN, DNS\n"
+        "from diagrams.gcp.storage import GCS\n"
+        "from diagrams.gcp.analytics import PubSub, BigQuery"
+    ),
+    "azure": (
+        "from diagrams.azure.compute import VM, FunctionApps, ContainerInstances\n"
+        "from diagrams.azure.database import SQLDatabases, CosmosDb, CacheForRedis\n"
+        "from diagrams.azure.network import LoadBalancers, FrontDoors, ApplicationGateway\n"
+        "from diagrams.azure.storage import BlobStorage\n"
+        "from diagrams.azure.integration import ServiceBus"
+    ),
+}
 
-    provider_imports = {
-        "aws": (
-            "from diagrams.aws.compute import EC2, ECS, Lambda\n"
-            "from diagrams.aws.database import RDS, Dynamodb, ElastiCache\n"
-            "from diagrams.aws.network import ELB, CloudFront, Route53, APIGateway\n"
-            "from diagrams.aws.storage import S3\n"
-            "from diagrams.aws.integration import SQS, SNS\n"
-            "from diagrams.aws.security import IAM, Cognito\n"
-            "from diagrams.aws.analytics import Kinesis"
-        ),
-        "gcp": (
-            "from diagrams.gcp.compute import ComputeEngine, Functions, Run\n"
-            "from diagrams.gcp.database import SQL, Datastore, Memorystore\n"
-            "from diagrams.gcp.network import LoadBalancing, CDN, DNS\n"
-            "from diagrams.gcp.storage import GCS\n"
-            "from diagrams.gcp.analytics import PubSub, BigQuery"
-        ),
-        "azure": (
-            "from diagrams.azure.compute import VM, FunctionApps, ContainerInstances\n"
-            "from diagrams.azure.database import SQLDatabases, CosmosDb, CacheForRedis\n"
-            "from diagrams.azure.network import LoadBalancers, FrontDoors, ApplicationGateway\n"
-            "from diagrams.azure.storage import BlobStorage\n"
-            "from diagrams.azure.integration import ServiceBus"
-        ),
-    }
 
-    example_imports = provider_imports.get(cloud_provider, provider_imports["aws"])
+def _build_system_prompt(question: str, cloud_provider: str, detail_text: str) -> str:
+    """Distributed system architecture (Twitter, Uber, WhatsApp).
 
+    Cloud-provider-flavored layered diagram: clients → CDN/LB → app
+    services → cache → DB → async/queue → monitoring. This is the
+    existing default — kept identical so questions that fit it never
+    regress.
+    """
+    example_imports = _PROVIDER_IMPORTS.get(cloud_provider, _PROVIDER_IMPORTS["aws"])
     return f"""You are an expert cloud architect. Generate Python code using the `diagrams` library to create a cloud architecture diagram.
 
 REQUIREMENTS:
@@ -105,6 +111,91 @@ IMPORTANT:
 
 Generate a diagram for this architecture question:
 {question}"""
+
+
+def _build_application_prompt(question: str, detail_text: str) -> str:
+    """Application / OOP / LLD design (LRU cache, parking lot, REST API).
+
+    Class-and-component diagram. NO cloud nodes — this is software
+    structure, not infrastructure. Boxes are classes / modules /
+    interfaces; edges are method calls or data flow between them.
+    """
+    return f"""You are an expert software designer. Generate Python code using the `diagrams` library to create a CLASS / COMPONENT diagram for an application or OOP design.
+
+REQUIREMENTS:
+1. This is an APPLICATION DESIGN — show classes, methods, and module relationships. Do NOT draw a cloud architecture (no CDN, no Load Balancer, no S3).
+2. Use `from diagrams import Diagram, Cluster, Edge` and these provider-agnostic shape modules:
+{
+"from diagrams.programming.flowchart import Action, Decision, Document, InputOutput, StartEnd, Database\n"
+"from diagrams.generic.storage import Storage\n"
+"from diagrams.generic.compute import Rack"
+}
+3. Each `Action(...)` represents a class or component (label = class name + ":<method>" if useful).
+4. Use `Cluster` to group classes that belong to the same module / package.
+5. Use `Edge(label="…")` to show method calls, data flow, or composition relationships ("uses", "creates", "stores in").
+6. The Diagram constructor MUST be `Diagram("…", show=False, filename="output", outformat="png")`.
+7. Detail level: {detail_text}
+
+IMPORTANT:
+- Output ONLY the Python code, no explanations or markdown.
+- The diagram should reflect the CLASS STRUCTURE of the design, not infrastructure.
+- For data structures (HashMap, DoublyLinkedList, Tree, Heap), use `Database(...)` from flowchart with the structure name.
+- Only import from the `diagrams` package.
+- The diagram must be a single self-contained script.
+
+Generate a class/component diagram for this application design question:
+{question}"""
+
+
+def _build_infrastructure_prompt(question: str, detail_text: str) -> str:
+    """Infrastructure component design (CDN, message queue, distributed cache).
+
+    Topology / data-plane diagram. Emphasis: shards/replicas, control
+    plane vs data plane, network paths. Avoids the multi-tier app
+    stack — this is one infra component, drawn at protocol level.
+    """
+    return f"""You are an expert distributed-systems engineer. Generate Python code using the `diagrams` library to draw the TOPOLOGY of a single infrastructure component (CDN, message queue, distributed cache, rate limiter, load balancer, etc.).
+
+REQUIREMENTS:
+1. This is an INFRASTRUCTURE COMPONENT — show shards/replicas, the data plane, and a separate control plane. Do NOT draw a multi-tier app stack (no "App Servers" → "Cache" → "DB" sequence; that's product-system design).
+2. Use `from diagrams import Diagram, Cluster, Edge` and these provider-agnostic shape modules:
+{
+"from diagrams.generic.compute import Rack\n"
+"from diagrams.generic.storage import Storage\n"
+"from diagrams.generic.network import Subnet, Switch, Router, Firewall\n"
+"from diagrams.generic.database import SQL\n"
+"from diagrams.programming.flowchart import Action"
+}
+3. Use TWO Clusters: one for the DATA PLANE (the shards/replicas serving requests) and one for the CONTROL PLANE (config/coordination, e.g. ZK, etcd, gossip).
+4. Use `Edge(label="replicate", style="dashed")` for replication links between data-plane nodes.
+5. Use `Edge(label="…")` with descriptive labels on the request hot path (e.g. "consistent hash → shard").
+6. The Diagram constructor MUST be `Diagram("…", show=False, filename="output", outformat="png")`.
+7. Detail level: {detail_text}
+
+IMPORTANT:
+- Output ONLY the Python code, no explanations or markdown.
+- The diagram should reflect the COMPONENT'S INTERNAL TOPOLOGY, not a multi-tier app stack.
+- Only import from the `diagrams` package.
+- The diagram must be a single self-contained script.
+
+Generate a topology diagram for this infrastructure component design question:
+{question}"""
+
+
+def _build_prompt(question: str, cloud_provider: str, detail_level: str, design_kind: str = "system") -> str:
+    """Construct the prompt for generating diagram code.
+
+    Branches by design_kind so an LRU-cache question doesn't get a
+    CDN-LB-Cache-DB diagram and a CDN question doesn't get a generic
+    multi-tier app stack.
+    """
+    detail_text = DETAIL_GUIDANCE.get(detail_level, DETAIL_GUIDANCE["medium"])
+    kind = design_kind if design_kind in VALID_DESIGN_KINDS else "system"
+    if kind == "application":
+        return _build_application_prompt(question, detail_text)
+    if kind == "infrastructure":
+        return _build_infrastructure_prompt(question, detail_text)
+    return _build_system_prompt(question, cloud_provider, detail_text)
 
 
 def _extract_python_code(text: str) -> str:
@@ -300,7 +391,7 @@ async def generate_diagram(request: DiagramRequest):
         )
 
     # --- Step 1: generate code via Anthropic API ---
-    prompt = _build_prompt(request.question, cloud_provider, detail_level)
+    prompt = _build_prompt(request.question, cloud_provider, detail_level, request.design_kind or "system")
 
     try:
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)

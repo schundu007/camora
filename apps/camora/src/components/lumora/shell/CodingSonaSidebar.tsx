@@ -140,6 +140,11 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
         useSearch: false,
         systemContext: buildContext(),
         mode: 'coding',
+        // Coding-playground context defaults design questions to the
+        // application archetype (LLD / OOP). The classifier still
+        // routes infra-cued questions ("design a rate limiter") to
+        // 'infrastructure' regardless of this hint.
+        designKind: 'application',
         signal: controller.signal,
         onCitations: (citations) => {
           pendingCitationsRef.current = citations;

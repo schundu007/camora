@@ -45,6 +45,7 @@ export default function FollowupAsk({ problem, activeSolutionName, activeSolutio
         question,
         systemContext: getSystemContext(),
         mode: 'coding',
+        designKind: 'application',
         token,
         signal: controller.signal,
         onToken: (d) => { if (d.t) { acc += d.t; setAnswer(acc); } },

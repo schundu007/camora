@@ -279,6 +279,12 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         detailLevel,
         cloudProvider,
         mode: 'design',
+        // DesignLayout is the dedicated /lumora/design page — questions
+        // here are distributed-system design by default. The classifier
+        // can still override on infra-cued queries ("design a CDN")
+        // because the explicit hint feeds INTO classifyDesignKind, but
+        // for plain "design Twitter" we want the system archetype.
+        designKind: 'system',
         token,
         bypassCache: options?.bypassCache,
         onToken: (data) => {

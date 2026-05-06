@@ -299,7 +299,202 @@ def build_import_list(provider):
     return "\n".join(lines)
 
 
-def get_prompt(question, provider, detail_level, direction):
+def _get_application_prompt(question, detail_level, direction):
+    """Application / OOP / LLD design — class & component diagram.
+
+    NO cloud nodes. Boxes are classes / components / data structures.
+    Edges are method calls / data flow / composition. Provider-neutral
+    imports from diagrams.programming.flowchart + diagrams.generic.
+    """
+    direction_hint = (
+        "LAYOUT: Left-to-right (LR). Public interface on the LEFT, internals on the RIGHT."
+        if direction == "LR" else
+        "LAYOUT: Top-to-bottom (TB). Public interface at the TOP, internals at the BOTTOM."
+    )
+    scope = (
+        "5-8 boxes in 2-3 clusters" if detail_level == "overview"
+        else "8-12 boxes in 3-4 clusters"
+    )
+    return f"""Generate Python code for a CLASS / COMPONENT diagram using the `diagrams` library.
+
+PROBLEM: {question}
+ARCHETYPE: APPLICATION DESIGN (OOP / LLD / API). This is software structure — boxes are CLASSES or COMPONENTS, NOT cloud services. Do NOT use any aws/gcp/azure imports.
+{direction_hint}
+SCOPE: {scope}.
+
+I will wrap your output inside a template that already has:
+- `import os`, `from diagrams import Diagram, Cluster, Edge`
+- Diagram() constructor with graph_attr (white bg, spline arrows)
+- node_attr and edge_attr already set
+
+YOUR OUTPUT must have TWO parts:
+
+PART 1 — IMPORTS: Pick from these provider-neutral classes:
+from diagrams.programming.flowchart import Action, Decision, Document, InputOutput, StartEnd, Database
+from diagrams.generic.storage import Storage
+from diagrams.generic.compute import Rack
+
+Mapping convention:
+- Action(...)   = a class or component (label = ClassName)
+- Decision(...) = a branching decision or strategy
+- Database(...) = a data structure (HashMap, DoublyLinkedList, Tree, Heap)
+- Document(...) = a config object / DTO
+- InputOutput(...) = an external input source / external sink
+- Storage(...)  = persistent storage (only if the design has it)
+
+PART 2 — BODY: 4-space-indented code that goes inside `with Diagram(...):`
+
+CLUSTER PRESETS — copy exactly:
+  API surface cluster: graph_attr={CLUSTER_COLORS["edge"]}
+  Core classes cluster: graph_attr={CLUSTER_COLORS["app"]}
+  Data structures cluster: graph_attr={CLUSTER_COLORS["data"]}
+
+{EDGE_COLORS}
+
+RULES:
+1. Do NOT start with users = Users(...). Application design has no end-users in the diagram — the surface is an API or a class interface.
+2. Each box label is a short ClassName or "Class.method" (2-4 words). Examples: "LRUCache", "Node", "DoublyLinkedList", "get(key)", "evict()".
+3. EVERY connection MUST use Edge(label="...", color="...", penwidth="2.0"). Labels describe the relationship: "calls", "creates", "stores in", "delegates to", "composes".
+4. Use Cluster to group classes by module / package / responsibility.
+5. NEVER chain: WRONG: a >> Edge() >> b >> c. RIGHT: split into separate lines.
+6. Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or the Diagram() call — I add those.
+7. NO cloud-vendor imports. NO Users. NO ELB / RDS / EC2 / Lambda / etc.
+8. Only import classes you actually use.
+
+EXAMPLE OUTPUT (for an LRU Cache problem — adapt the boxes to the question above):
+from diagrams.programming.flowchart import Action, Database
+from diagrams.generic.storage import Storage
+
+    with Cluster("API surface", graph_attr={CLUSTER_COLORS["edge"]}):
+        get_op = Action("get(key)")
+        put_op = Action("put(key, val)")
+
+    with Cluster("Core classes", graph_attr={CLUSTER_COLORS["app"]}):
+        cache = Action("LRUCache")
+        node = Action("Node")
+        dll = Action("DoublyLinkedList")
+
+    with Cluster("Data structures", graph_attr={CLUSTER_COLORS["data"]}):
+        hashmap = Database("HashMap")
+        head_tail = Database("Sentinel head/tail")
+
+    get_op >> Edge(label="lookup", color="#2563eb", penwidth="2.0") >> cache
+    put_op >> Edge(label="insert", color="#2563eb", penwidth="2.0") >> cache
+    cache >> Edge(label="O(1) get", color="#2563eb", penwidth="2.0") >> hashmap
+    cache >> Edge(label="reorder", color="#16a34a", penwidth="2.0") >> dll
+    dll >> Edge(label="composes", color="#16a34a", penwidth="2.0") >> node
+    dll >> Edge(label="anchors", color="#16a34a", penwidth="2.0") >> head_tail
+
+NOW generate for: {question}
+REMEMBER: classes and components only. NO cloud services. Return ONLY the Python code."""
+
+
+def _get_infrastructure_prompt(question, provider, detail_level, direction):
+    """Infrastructure component design — topology diagram.
+
+    Two clusters (data plane + control plane), replication edges,
+    partitioning shown via labels. Provider-neutral imports.
+    """
+    direction_hint = (
+        "LAYOUT: Left-to-right (LR). Clients on the LEFT, control plane on the RIGHT."
+        if direction == "LR" else
+        "LAYOUT: Top-to-bottom (TB). Clients at the TOP, control plane at the BOTTOM."
+    )
+    scope = (
+        "Show 4-6 data-plane nodes + 2-3 control-plane nodes" if detail_level == "overview"
+        else "Show 6-10 data-plane nodes + 3-4 control-plane nodes"
+    )
+    return f"""Generate Python code for a TOPOLOGY diagram using the `diagrams` library.
+
+COMPONENT: {question}
+ARCHETYPE: INFRASTRUCTURE COMPONENT (CDN, message queue, distributed cache, rate limiter, load balancer, consensus protocol). This is ONE component drawn at protocol level — NOT a multi-tier app stack. No "App Server" → "Cache" → "DB" sequence.
+{direction_hint}
+SCOPE: {scope}. Two clusters: DATA PLANE (the shards/replicas serving the hot path) + CONTROL PLANE (config / coordination / failure detection).
+
+I will wrap your output inside a template that already has the Diagram() constructor.
+
+YOUR OUTPUT must have TWO parts:
+
+PART 1 — IMPORTS: Pick from these provider-neutral classes:
+from diagrams.generic.compute import Rack
+from diagrams.generic.storage import Storage
+from diagrams.generic.network import Subnet, Switch, Router, Firewall
+from diagrams.programming.flowchart import Action
+from diagrams.onprem.client import Users
+
+Mapping convention:
+- Rack(...)    = a server / shard / replica node in the data plane
+- Storage(...) = a storage backend behind a node
+- Switch(...)  = a routing layer (e.g. consistent-hash router, ingress)
+- Action(...)  = a control-plane component (config server, coordinator, gossip layer)
+- Users(...)   = clients hitting the component (only one node, labeled "Clients")
+
+PART 2 — BODY: 4-space-indented code that goes inside `with Diagram(...):`
+
+CLUSTER PRESETS — copy exactly:
+  Data plane cluster:    graph_attr={CLUSTER_COLORS["app"]}
+  Control plane cluster: graph_attr={CLUSTER_COLORS["edge"]}
+
+{EDGE_COLORS}
+
+RULES:
+1. Start with: clients = Users("Clients")
+2. Create EXACTLY one Cluster("Data plane", ...) and one Cluster("Control plane", ...).
+3. In the data plane, use Rack(...) for shards/replicas. Label them "Shard 1", "Shard 2", "Replica A", etc.
+4. Replication edges between data-plane nodes MUST use Edge(label="replicate", style="dashed", color="#16a34a", penwidth="2.0").
+5. Hot-path edges use Edge(label="<route reason>", color="#2563eb", penwidth="2.0"). Examples: "consistent hash", "round-robin", "leader read".
+6. Control plane should connect to data-plane nodes with Edge(label="config", style="dotted", color="#6b7280", penwidth="1.5").
+7. Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or the Diagram() call.
+8. NO multi-tier app stack. NO RDS / DynamoDB / EC2 / S3 / etc.
+
+EXAMPLE OUTPUT (for a distributed cache — adapt to the question above):
+from diagrams.generic.compute import Rack
+from diagrams.generic.network import Switch
+from diagrams.programming.flowchart import Action
+from diagrams.onprem.client import Users
+
+    clients = Users("Clients")
+    router = Switch("Consistent-hash router")
+
+    with Cluster("Data plane", graph_attr={CLUSTER_COLORS["app"]}):
+        shard1 = Rack("Shard 1\\n(primary)")
+        shard2 = Rack("Shard 2\\n(primary)")
+        shard3 = Rack("Shard 3\\n(primary)")
+        rep1 = Rack("Replica A")
+        rep2 = Rack("Replica B")
+
+    with Cluster("Control plane", graph_attr={CLUSTER_COLORS["edge"]}):
+        coord = Action("Coordinator (etcd)")
+        gossip = Action("Gossip / membership")
+
+    clients >> Edge(label="key request", color="#2563eb", penwidth="2.0") >> router
+    router >> Edge(label="hash bucket 1", color="#2563eb", penwidth="2.0") >> shard1
+    router >> Edge(label="hash bucket 2", color="#2563eb", penwidth="2.0") >> shard2
+    shard1 >> Edge(label="replicate", style="dashed", color="#16a34a", penwidth="2.0") >> rep1
+    shard2 >> Edge(label="replicate", style="dashed", color="#16a34a", penwidth="2.0") >> rep2
+    coord >> Edge(label="config", style="dotted", color="#6b7280", penwidth="1.5") >> shard1
+    gossip >> Edge(label="health", style="dotted", color="#6b7280", penwidth="1.5") >> shard2
+
+NOW generate for: {question}
+REMEMBER: ONE infrastructure component, two clusters (data plane + control plane). Return ONLY the Python code."""
+
+
+def get_prompt(question, provider, detail_level, direction, design_kind="system"):
+    """Dispatch to the right prompt by archetype.
+
+    Branches added 2026-05 to fix the "every design problem gets the
+    same diagram" bug. The original system-archetype prompt is
+    preserved unchanged (as `_get_system_prompt` below) so distributed-
+    system questions (Twitter, Uber, etc.) never regress.
+    """
+    if design_kind == "application":
+        return _get_application_prompt(question, detail_level, direction)
+    if design_kind == "infrastructure":
+        return _get_infrastructure_prompt(question, provider, detail_level, direction)
+    return _get_system_prompt(question, provider, detail_level, direction)
+
+
+def _get_system_prompt(question, provider, detail_level, direction):
     """Ask Claude to generate imports + body (no Diagram/graph_attr — those are hardcoded)."""
 
     available = build_import_list(provider)
@@ -758,9 +953,9 @@ def execute_code(code, output_path, output_dir):
             pass
 
 
-def generate_diagram(question, provider, detail_level, direction, output_dir, api_key):
+def generate_diagram(question, provider, detail_level, direction, output_dir, api_key, design_kind="system"):
     client = anthropic.Anthropic(api_key=api_key)
-    prompt = get_prompt(question, provider, detail_level, direction)
+    prompt = get_prompt(question, provider, detail_level, direction, design_kind)
 
     diagram_id = uuid.uuid4().hex[:8]
     output_path = os.path.join(output_dir, f"diagram-{diagram_id}")
@@ -902,6 +1097,12 @@ def main():
     parser.add_argument("--api-key", required=True)
     parser.add_argument("--detail-level", default="overview")
     parser.add_argument("--direction", default="LR")
+    parser.add_argument(
+        "--design-kind",
+        default="system",
+        choices=["application", "system", "infrastructure"],
+        help="Archetype that controls prompt + diagram style. application=class diagram, system=cloud architecture (default), infrastructure=topology.",
+    )
     args = parser.parse_args()
     os.makedirs(args.output_dir, exist_ok=True)
     # When provider is "auto", infer from question keywords. Falling back
@@ -924,6 +1125,7 @@ def main():
             question=args.question, provider=provider,
             detail_level=args.detail_level, direction=args.direction,
             output_dir=args.output_dir, api_key=args.api_key,
+            design_kind=args.design_kind,
         )
         print(json.dumps(result))
     except Exception as e:

@@ -206,7 +206,7 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
   req.setTimeout(120000);
   res.setTimeout(120000);
   try {
-    const { question, cloudProvider, difficulty, category, format, cacheKey } = req.body;
+    const { question, cloudProvider, difficulty, category, format, cacheKey, designKind: explicitDesignKind } = req.body;
     const provider = cloudProvider || 'auto';
     // Direction + detail are now driven by the frontend. The earlier
     // server-side lock to TB/detailed silently overrode the panel's
@@ -223,10 +223,19 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
       throw new AppError('Question is required', ErrorCode.VALIDATION_ERROR);
     }
 
+    // Resolve archetype: question-text cues win over frontend hint.
+    // Frontend hint is a fallback for ambiguous questions (e.g. "design
+    // Twitter" → no cue → use the page-default 'system'). See
+    // designKindClassifier.js for the priority order.
+    const { classifyDesignKind } = await import('../services/designKindClassifier.js');
+    const designKind = classifyDesignKind(question, explicitDesignKind);
+
     // 1. Check DB cache first — cached diagrams cost nothing to serve.
     // Only treat a row as a hit when we actually have a PNG (image_url or
-    // image_data).
-    const problemHash = hashProblem(`${cacheKey || question}::${provider}::${direction}::${detailLevel}`);
+    // image_data). Cache key includes designKind so an LRU-cache
+    // class-diagram doesn't collide with a Twitter system-architecture
+    // diagram on the same hash bucket.
+    const problemHash = hashProblem(`${cacheKey || question}::${provider}::${direction}::${detailLevel}::${designKind}`);
     try {
       const cached = await query(
         'SELECT image_url, image_data IS NOT NULL AS has_image_data FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_url IS NOT NULL OR image_data IS NOT NULL)',
@@ -278,6 +287,7 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
         format: format || 'png',
         detailLevel,
         direction,
+        designKind,
       });
       if (!pythonResult.success) {
         pythonError = pythonResult.error || 'Diagram generation failed';
@@ -349,7 +359,7 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
  */
 router.post('/lookup', async (req, res) => {
   try {
-    const { question, cloudProvider = 'auto' } = req.body;
+    const { question, cloudProvider = 'auto', designKind: explicitDesignKind } = req.body;
     if (!question) return res.status(400).json({ error: 'Question required' });
 
     // Direction + detail come from the request body — must match the
@@ -360,11 +370,14 @@ router.post('/lookup', async (req, res) => {
     const ALLOWED_DETAIL_LEVELS = new Set(['overview', 'detailed']);
     const direction = ALLOWED_DIRECTIONS.has(req.body.direction) ? req.body.direction : 'LR';
     const detailLevel = ALLOWED_DETAIL_LEVELS.has(req.body.detailLevel) ? req.body.detailLevel : 'overview';
+    // Resolve archetype to match the hash that /generate writes.
+    const { classifyDesignKind } = await import('../services/designKindClassifier.js');
+    const designKind = classifyDesignKind(question, explicitDesignKind);
     const providers = cloudProvider === 'auto' ? ['auto'] : [cloudProvider, 'auto'];
     const tried = new Set();
 
     for (const p of providers) {
-      const hash = hashProblem(`${question}::${p}::${direction}::${detailLevel}`);
+      const hash = hashProblem(`${question}::${p}::${direction}::${detailLevel}::${designKind}`);
       if (tried.has(hash)) continue;
       tried.add(hash);
 
