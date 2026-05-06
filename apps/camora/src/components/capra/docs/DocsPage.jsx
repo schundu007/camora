@@ -785,7 +785,7 @@ export default function DocsPage({ onBack }) {
             </div>
 
             {/* Content */}
-            <div className="px-4 py-4">
+            <div className="pt-4">
               {/* Show topic detail or list */}
               {selectedTopic && !topicDetails ? (
                 /* Topic not found state */

@@ -703,7 +703,7 @@ export default function TopicDetail({
   );
 
   return (
-    <div className="landing-root animate-fade-in flex gap-8">
+    <div className="landing-root animate-fade-in flex">
       {/* Right: Topic content (rendered first; OnThisPage rail anchors to
           the right per NVIDIA-style docs convention).
           `prep-content` opts this surface into the docs design system —
@@ -714,7 +714,7 @@ export default function TopicDetail({
           NOT auto-restyled. Use <h2/h3/h4 className="prep-section-heading">
           to opt a specific heading into the navy-strip + hex-glyph
           treatment. */}
-      <div className="prep-content flex-1 min-w-0">
+      <div className="prep-content flex-1 min-w-0 pr-6 xl:pr-8">
       {/* Topic Header — navy-strip + gold-leaf-border + glassy-pill capsules,
           matching the docs design system across every topic surface. */}
       <div className="mb-4">
@@ -3406,8 +3406,10 @@ export default function TopicDetail({
           scroll-spy. Hidden under xl; primitive owns the active-id
           tracking via IntersectionObserver. */}
       {onThisPageItems.length > 2 && (
-        <aside className="hidden xl:block flex-shrink-0 sticky self-start" style={{ top: '80px', width: '220px' }}>
-          <OnThisPage items={onThisPageItems} />
+        <aside className="hidden xl:flex flex-col flex-shrink-0" style={{ width: '220px', borderLeft: '1px solid var(--border)' }}>
+          <div className="sticky pl-5 pr-3 pt-4" style={{ top: '80px' }}>
+            <OnThisPage items={onThisPageItems} />
+          </div>
         </aside>
       )}
 
