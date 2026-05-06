@@ -16465,4 +16465,1222 @@ These are answers a logging-fluent platform engineer should give without prepara
     ],
   },
 
+  {
+    id: 'apm-platforms',
+    title: 'APM Platforms — Datadog, New Relic, Dynatrace, Honeycomb',
+    icon: 'activity',
+    color: '#f97316',
+    questions: 5,
+    description: 'Application Performance Monitoring — integrated traces + metrics + logs + RUM + profiling in one product. Datadog (market leader), New Relic (Java/.NET strong), Dynatrace (auto-discovery), Honeycomb (high-cardinality, BubbleUp). Vendor APM vs OSS Grafana stack.',
+    visualizations: [
+      {
+        title: 'APM platform integrated stack',
+        description: `Walking the integrated APM stack:
+
+Layer 1: Instrumentation. APM platforms accept telemetry from:
+- Vendor-specific SDK (dd-trace, newrelic agent, dynatrace OneAgent). Auto-instrumentation; rich features (continuous profiling, RUM tracking).
+- OpenTelemetry SDK + OTLP exporter. Vendor-neutral. Most APM vendors accept OTLP natively as of 2024-2026.
+
+Layer 2: Real User Monitoring (RUM). Browser SDK tracks:
+- Page load times (Core Web Vitals: LCP, FID, CLS, INP).
+- JavaScript errors with stack traces.
+- User interactions (clicks, route changes).
+- Resource timing (every script, image, API call from browser).
+
+Datadog RUM, New Relic Browser, Sentry Performance.
+
+Layer 3: Synthetic monitoring. Scripted browser tests + uptime checks from multiple regions:
+- "Is the homepage loading in under 2s from us-east-1, eu-west-1, ap-northeast-1?"
+- Multi-step user journeys (login → checkout → confirm).
+- API endpoint health checks.
+
+Layer 4: APM service. The core: traces + metrics + errors + profiling per service:
+- Trace search and flame graphs.
+- Service map auto-generated from trace data.
+- Per-service metrics dashboards (request rate, error rate, latency p50/p99).
+- Continuous profiling (CPU, memory, goroutines, locks) — sampled in-prod.
+- Error tracking with grouping, deduplication, regression detection.
+
+Layer 5: SLO tracking. Define SLO (99.9% availability over 30 days). Platform tracks burn rate; alerts on fast-burn or slow-burn budget exhaustion.
+
+Layer 6: Dependency map / service graph. Auto-discovered from traces — which services call which, traffic volumes, error rates between them. Critical for understanding architecture in microservices systems.
+
+Layer 7: Notifications routing. Slack, PagerDuty, Teams. Per-service routing rules. On-call rotation integration.
+
+This is the value proposition vs OSS Grafana stack: integrated. Single UI for traces, metrics, logs, RUM, synthetic, profiling, SLO. Single login, single billing, single contract. The integration tax is paid once by the vendor.`,
+        image: '/diagrams/devops/o5-apm.png',
+      },
+      {
+        title: 'APM platform comparison matrix',
+        description: `Five major APM platforms, distinct strengths:
+
+Datadog (market leader, ~30% APM share 2026):
+
+Strengths:
+- Most polished UI in the category.
+- Deepest cloud integrations (AWS, GCP, Azure). 600+ pre-built integrations.
+- Continuous profiling (CPU, memory, lock contention) in-prod with low overhead.
+- Watchdog: auto-anomaly detection on metrics + traces.
+- RUM + APM + Logs + Synthetic + DBM (database monitoring) all integrated.
+
+Weaknesses:
+- Aggressive pricing; bills add up at scale ($50-200k/year for moderate orgs is common).
+- Per-host base price + per-feature add-ons.
+- Vendor lock concerns (proprietary trace format until OTLP support 2024).
+
+Best for: mid-to-large orgs, cloud-heavy architectures, willing to pay for polish.
+
+New Relic (long-time #2):
+
+Strengths:
+- Java/.NET ecosystem strongest (oldest agents).
+- Per-data-ingest pricing model differs from Datadog's per-host.
+- Strong ecosystem of integrations.
+- Database monitoring (Java-specific).
+
+Weaknesses:
+- UI less polished than Datadog.
+- Reorganization in 2020 around per-data-ingest pricing simplified some things, complicated others.
+- Smaller community / less content than Datadog.
+
+Best for: Java/.NET-heavy shops, cost-conscious vs Datadog.
+
+Dynatrace (enterprise-focused):
+
+Strengths:
+- OneAgent: single binary auto-discovers everything (containers, services, languages). No per-language SDK.
+- Davis AI: causation analysis (not just anomaly detection). Surfaces likely root cause.
+- Deepest Java/.NET observability (Code-level visibility, no manual instrumentation).
+
+Weaknesses:
+- Enterprise pricing model; opaque per-host costs.
+- Less developer-friendly than Datadog.
+- UI feels older.
+
+Best for: large enterprises, mainframe/legacy + cloud hybrid, Java-heavy.
+
+Honeycomb (high-cardinality specialist):
+
+Strengths:
+- BubbleUp: anomaly attribute analysis. Outlier traces vs population auto-compared.
+- Heatmaps: distribution visualization that beats line charts for high-cardinality.
+- Designed for unbounded cardinality. user_id, request_id as attributes are fine; storage doesn't blow up.
+- Best-in-class for debugging "why is THIS request slow" at scale.
+
+Weaknesses:
+- Less polished general-purpose UI than Datadog.
+- Smaller integration catalog.
+- Trace-first; logs/metrics secondary (vs Datadog's parity).
+
+Best for: multi-tenant SaaS, ML inference, debugging-heavy teams that value high-cardinality.
+
+AppDynamics (Cisco-owned):
+
+Strengths:
+- Java/.NET strong (similar to Dynatrace).
+- Business transaction tracking (correlate technical metrics to business KPIs like checkout success).
+- Cisco enterprise integrations.
+
+Weaknesses:
+- Acquired by Cisco 2017; less active development pace.
+- Enterprise-only orientation.
+
+Best for: large enterprises with Cisco footprint.
+
+Splunk Observability Cloud (formerly SignalFx):
+
+Strengths:
+- Real-time streaming analytics (faster than batch-based vendors).
+- Splunk integration for log-heavy environments.
+
+Weaknesses:
+- Smaller APM market share post-Splunk acquisition.
+- UI has aged.
+
+Best for: existing Splunk shops.
+
+OSS alternative: Grafana stack (Prometheus + Tempo + Loki + Grafana). Covered in earlier topics. ~10-30x cheaper at scale; operational responsibility on you.
+
+Decision matrix:
+
+Mid-size, polished UX, cloud-native: Datadog.
+Java/.NET, cost-conscious: New Relic.
+Enterprise, hybrid (mainframe + cloud): Dynatrace.
+High-cardinality, multi-tenant: Honeycomb.
+Cost-conscious at scale, OSS-friendly: Grafana stack.
+
+Hybrid common: Datadog for production app teams (UI matters); Grafana stack for infrastructure observability (volume too high for Datadog cost).`,
+        image: '/diagrams/devops/o5-apm.png',
+      },
+    ],
+    introduction: `Application Performance Monitoring (APM) platforms bundle traces, metrics, logs, real user monitoring, synthetic monitoring, profiling, and SLO tracking into a single integrated product. The category emerged ~2008 (New Relic launched 2008, AppDynamics 2008) and matured through the 2010s.
+
+The 2026 APM landscape:
+
+Datadog. Market leader. Founded 2010. IPO 2019. ~$2.5B revenue 2024. Polished UX, deep cloud integrations, continuous profiling, RUM + APM + Logs + Synthetic + DBM all in one product.
+
+New Relic. Long-time #2. Founded 2008. Pivoted to per-data-ingest pricing in 2020. Strongest in Java/.NET ecosystem.
+
+Dynatrace. Enterprise focus. Founded 2005. OneAgent — single binary auto-discovers everything. Davis AI — causation analysis.
+
+Honeycomb. Founded 2016. Founded by ex-Facebook engineers. Designed for high-cardinality / multi-tenant. BubbleUp — anomaly attribute analysis.
+
+AppDynamics. Cisco-owned (acquired 2017). Java/.NET enterprise. Less active development.
+
+Splunk Observability Cloud (acquired SignalFx 2019; Cisco acquired Splunk 2024). Real-time streaming analytics.
+
+OSS alternative: Grafana stack (Prometheus + Tempo + Loki + Grafana + Pyroscope for profiling).
+
+The OTel impact:
+
+Pre-2024, APM platforms had vendor-specific SDKs. App instrumentation locked you to a vendor.
+
+OpenTelemetry (covered in OTel topic) standardized SDK + wire protocol. By 2024-2026, all major APM vendors accept OTLP natively. Migration between vendors is now Collector config change, not app re-instrumentation.
+
+Vendors still recommend their proprietary agents for advanced features (Datadog continuous profiling, RUM, network monitoring) but core APM (traces + metrics + logs) is OTel-compatible.
+
+Why pick a vendor APM vs OSS:
+
+UX. Vendor UIs are significantly more polished than self-hosted Grafana. Engineering productivity matters; saved hours per debugging session add up.
+
+Operational simplicity. Vendor handles ingestion, storage, query, scaling. Engineering team focuses on application features, not running observability infrastructure.
+
+Integration breadth. Datadog ships 600+ integrations (AWS services, databases, queues, frameworks, every major SaaS). Self-host = build your own.
+
+Advanced features. Continuous profiling (Datadog), causation analysis (Dynatrace Davis), BubbleUp (Honeycomb), business transaction tracking (AppDynamics) aren't trivially replicable in OSS.
+
+Compliance. SOC 2, HIPAA, FedRAMP-Ready (some vendors). Self-host requires equivalent investment.
+
+Why OSS:
+
+Cost. Vendor APM at scale: $50k-1M+/year. OSS at same scale: $5-30k/year compute + storage + engineering time.
+
+Data sovereignty. Telemetry contains business-sensitive data. Some orgs (regulated, government) cannot send observability data to vendor cloud.
+
+Customization. OSS allows custom storage tiers, retention policies, query patterns that vendors don't support.
+
+No vendor lock. OTLP-instrumented apps can switch backends; OSS keeps you portable.
+
+When to use vendor APM:
+
+<200 hosts. Operational simplicity dominates. Vendor cost is acceptable.
+
+App-team-led observability. App teams want to focus on shipping; SRE handoff is friction.
+
+Compliance needs covered by vendor. SOC 2 + HIPAA + FedRAMP requirements all satisfied by vendor's certifications.
+
+Polished UX critical. Customer support, sales, executive dashboards need polished views.
+
+When to use OSS:
+
+>500 hosts. Vendor cost crosses $200k+/year; OSS savings dominate.
+
+Engineering team has K8s + observability ops capacity (SRE / platform team).
+
+Multi-cloud / hybrid where vendor data egress is operationally complex.
+
+Strong cost focus.
+
+Hybrid: most large orgs use both. Vendor APM for application teams (Datadog or New Relic); OSS Prometheus/Grafana for infrastructure observability (volume too high for vendor cost).
+
+Three load-bearing concepts every APM interview answer needs:
+
+1. Vendors integrate the four signals + RUM + synthetic. Single UI for traces + metrics + logs + frontend perf. The integration is the value vs OSS.
+
+2. OTel changes the lock-in story. Apps instrument with OTel; backend choice is Collector config change. Migration between vendors substantially easier post-2024.
+
+3. Cost-vs-features trade-off. Vendor APM at $50-200/host/month vs OSS at ~$10-50/host/month. Operational savings vs feature polish.`,
+    whenToUse: [
+      'Integrated observability without operational overhead',
+      'App teams that want to focus on shipping, not running observability infra',
+      'Polished UX requirements (customer-facing dashboards, executive reporting)',
+      'Advanced features (continuous profiling, business transaction tracking, BubbleUp)',
+      'Compliance requirements (SOC 2, HIPAA, FedRAMP) where vendor certifications cover',
+    ],
+    keyConcepts: [
+      {
+        term: 'Datadog APM — features and pricing',
+        definition: `Datadog APM is the most-used commercial APM in 2026. Bundled with Datadog's broader platform.
+
+Core APM features:
+- Trace ingestion via dd-trace SDK or OTLP.
+- Trace search by traceID, service, route, status, custom attributes.
+- Flame graph visualization with span detail.
+- Service map auto-generated from trace flow.
+- Trace analytics: aggregations over trace data ("p99 latency by route by service").
+
+Adjacent features:
+- Continuous profiling: in-prod CPU/memory/goroutine profiling. ~5% overhead. Identifies hot functions, lock contention.
+- Watchdog: auto-anomaly detection on traces and metrics. ML-based.
+- DBM (Database Monitoring): per-query performance tracking. SQL Server, PostgreSQL, MySQL, MongoDB, Redis.
+- Network Monitoring: TCP/IP-level observability between services.
+- RUM: browser SDK for frontend perf + JS errors.
+- Synthetic Monitoring: scripted user journeys + API uptime.
+- Logs (Datadog Logs): full-text indexed; pivots from APM.
+- Metrics (Datadog Metrics): per-host dashboards + custom metrics.
+- Error Tracking: error grouping, regression detection, ownership routing.
+
+Pricing model (2026):
+- Pro plan: $15-23/host/month.
+- Enterprise: $23-40/host/month + per-feature.
+- APM add-on: $31/host/month (1M ingested spans).
+- Continuous Profiling: $2/host/month.
+- DBM: $70/host/month per host monitoring DB.
+- Logs: $0.10/M ingested + $1.27-3.75/M indexed (depends on retention).
+- RUM: $1.50/1k sessions.
+- Synthetic: $5/10k API tests, $12/1k browser tests.
+
+Cost example (200 hosts moderate APM + Logs + RUM):
+- Pro: 200 × $23 = $4.6k/month.
+- APM: 200 × $31 = $6.2k/month.
+- Logs (50GB/day ingested, 30d retention): ~$3k/month.
+- RUM (10M sessions/month): $15k/month.
+- Total: ~$30k/month, ~$360k/year.
+
+This scales aggressively. At 1000 hosts with full feature set: $1M+/year.
+
+Why teams pay:
+- UI is best-in-class. Engineers find issues fast.
+- Service map auto-built; understand architecture without effort.
+- Watchdog catches anomalies you didn't know to alert on.
+- Continuous profiling catches inefficiencies metrics miss.
+- Vendor handles scale/HA.
+
+Common Datadog patterns:
+
+Trace correlation with logs: every Datadog log includes trace_id when emitted in a span scope. Click span → "View related logs" auto-filters by trace_id.
+
+Trace-level alerts: alert on trace.http.request.errors{service:payments}.as_rate() > 0.05 for 5min.
+
+SLO tracking: define SLO target; Datadog computes burn rate; alerts on fast-burn (5%+ budget in 1h) and slow-burn (full month budget in 30d).
+
+Deployment tracking: tag traces with version label (e.g., version:v1.2.3). Compare metrics across versions; auto-detect regression after deploy.
+
+Datadog vs OTel migration:
+
+dd-trace SDK has more features than OTel SDK currently (continuous profiling integration, automatic propagation across some non-standard protocols). Migration to pure OTel sometimes loses features.
+
+Pragmatic path: instrument with OTel; export to Datadog via OTLP. Keep dd-trace for specific advanced features (profiling, RUM). Hybrid SDK approach.`,
+      },
+      {
+        term: 'Honeycomb — BubbleUp and high-cardinality',
+        definition: `Honeycomb's distinctive feature: BubbleUp. Solves "why is this slow?" at scale.
+
+The problem: in production microservices, p99 latency is 5x p50. Why? Average aggregation hides it. Cardinality is too high to drill manually.
+
+BubbleUp approach:
+
+1. Engineer selects an outlier set in a heatmap (slow traces, error traces).
+2. Honeycomb compares the outlier set's attribute distribution against the rest of the population.
+3. Surfaces attributes where outliers differ significantly. "Outliers have user.region=eu-west-1 (90% of outliers vs 30% of population). Outliers have plan_tier=enterprise (40% of outliers vs 5% of population)."
+
+Result: hypothesis generated automatically. Engineer pivots to investigate that segment.
+
+Equivalent in Datadog/New Relic: manual filter + groupBy iteration. Maybe surfaces in Watchdog (Datadog) for known-pattern anomalies. Honeycomb's BubbleUp is automatic for arbitrary attribute combinations.
+
+Why high-cardinality matters:
+
+Multi-tenant SaaS: tenant_id is high-cardinality (10k+ unique). Datadog/Prometheus charge per-cardinality; Honeycomb storage scales linearly with row count, not cardinality.
+
+ML inference: model_version, input_features, prediction_class — all high-cardinality. Honeycomb storage handles; many APMs can't.
+
+Per-user debugging: user_id as attribute on every span. Find traces for support-reported user issue trivially.
+
+Honeycomb's storage model:
+
+Columnar (similar to ClickHouse). Compressed columns. Aggregations are fast even on high-cardinality columns.
+
+Trade-off: full-text search across log content is less ergonomic than Elastic. Honeycomb is trace-and-metric-first; logs are events with attributes (no full-text).
+
+Pricing model:
+
+Per-event (= per span). Tiered by retention.
+
+Sample free tier: 20M events/month, 60-day retention. Useful for OSS / small teams.
+
+Pro: $130/month for 100M events.
+
+Enterprise: custom pricing. Typically $20-100k/year for moderate-large orgs.
+
+Cheaper than Datadog for trace-heavy workloads at scale; Datadog wins on RUM + Logs combined pricing.
+
+When Honeycomb wins:
+
+Multi-tenant SaaS where per-tenant debugging matters.
+
+ML applications with high-cardinality features.
+
+Teams that value debugging UX over generic dashboard polish.
+
+Engineering culture that's data-savvy and willing to learn Honeycomb's query language.
+
+When Honeycomb loses to Datadog:
+
+Need integrated RUM + Synthetic + Logs.
+
+Need polished out-of-box dashboards.
+
+Don't have high-cardinality data; standard label dimensions work fine.
+
+Honeycomb's adoption is concentrated in observability-savvy orgs (Slack, Vox Media, Tailscale, observability tooling vendors themselves). Smaller market share than Datadog but loyal users.`,
+      },
+      {
+        term: 'Continuous profiling — the fourth pillar',
+        definition: `Continuous profiling samples application performance in production. Measures: CPU, memory allocations, goroutine waiting time, lock contention, file I/O. Different signal from traces and metrics.
+
+What it shows:
+
+Per-function CPU time. "checkPolicy() consumed 35% of CPU last hour."
+
+Memory allocation hotspots. "createSession() allocated 200MB."
+
+Lock contention. "DB connection pool mutex held 8% of time."
+
+Off-CPU analysis. "Goroutines waiting on syscalls 15% of time."
+
+How it works:
+
+In-process sampler runs at low frequency (10-100 Hz). Captures stack trace per sample. Aggregates samples → flame graph.
+
+Overhead: 1-5% CPU. Acceptable for production.
+
+Stack traces include line numbers; click flame graph element → source code line.
+
+Tools:
+
+Datadog Continuous Profiler. Bundled with Datadog APM. Per-language profilers (Go, Java, Python, .NET, Node, Ruby, PHP). $2/host/month add-on.
+
+Pyroscope (Grafana Labs, OSS). Independent of Grafana stack but integrates. Apache 2.0. Self-host or Grafana Cloud Pyroscope.
+
+Parca (CNCF Sandbox). eBPF-based profiling. No SDK in app; profiles via kernel-level instrumentation. Whole-host profiling.
+
+Pyrra. Pyroscope-compatible profiling for K8s.
+
+When you need it:
+
+CPU spikes that metrics show but root cause is unclear. "Service is using 80% CPU; metrics don't show why."
+
+Memory growth without OOM. Slow leak. Profiler shows which function is allocating.
+
+Tail latency mystery. Median is fine; p99 is bad. Profile high-latency requests; find the slow function.
+
+Why traces alone don't suffice:
+
+Traces show external calls (DB, HTTP). Profiling shows in-process work (loops, JSON parsing, regex evaluation, string copies).
+
+A 500ms span "process_request" with no children: tracing dead end. Profiler shows internal breakdown.
+
+Profiling vs APM trace span timing:
+
+Spans measure wall-clock duration of explicit boundaries. Profiling samples actual CPU usage continuously.
+
+Span: "stripe_call took 1500ms". Profiler: "while waiting for stripe, the calling function did nothing useful (off-CPU)." Different views.
+
+Production profiling concerns:
+
+Stack trace privacy. Stack traces may include data passed through functions. Some tools redact; verify.
+
+Symbol resolution. Production binaries are stripped; need separate symbol upload. Otherwise profile shows hex addresses.
+
+Sampling consistency across services. Different sample rates → can't compare directly.
+
+Cost: storage for profiles is meaningful. Compressed flame graph = ~100KB; 1000 hosts × 1 profile/min × 1 day = ~140GB/day of profile data. S3 storage for Pyroscope: cheap. Vendor: bundled.
+
+OSS alternative for profiling:
+
+Pyroscope: self-host on K8s. Helm chart. Apps instrument with language-specific Pyroscope SDK or OTel Profiler (CNCF Incubating; spec stabilizing 2025-2026).
+
+OTel profiling signal will likely standardize the field by 2027+. Until then, vendor-specific (Datadog Profiler, Pyroscope) or eBPF-based (Parca) are the options.`,
+      },
+      {
+        term: 'RUM and Synthetic monitoring',
+        definition: `Two complementary frontend monitoring approaches.
+
+Real User Monitoring (RUM):
+
+Browser SDK (or mobile SDK) tracks every user session. Captures:
+- Page load metrics: TTFB, FCP, LCP, FID, CLS, INP.
+- Resource timing: every script, image, API call timing.
+- JavaScript errors with stack traces.
+- User interactions: clicks, scrolls, route changes.
+- Custom user actions.
+- Session replay (some vendors): pixel-level recording of user sessions for debugging.
+
+Embedded as <script> tag:
+
+\`\`\`html
+<script src="https://www.datadoghq-browser-agent.com/datadog-rum.js" type="text/javascript"></script>
+<script>
+  window.DD_RUM && window.DD_RUM.init({
+    clientToken: 'YOUR_CLIENT_TOKEN',
+    applicationId: 'YOUR_APPLICATION_ID',
+    site: 'datadoghq.com',
+    service: 'frontend',
+    env: 'prod',
+    version: '1.2.3',
+    sampleRate: 100,
+    sessionReplaySampleRate: 20,    // 20% session replay
+    trackInteractions: true,
+    trackResources: true,
+    trackLongTasks: true,
+    defaultPrivacyLevel: 'mask-user-input',
+  });
+</script>
+\`\`\`
+
+What RUM answers:
+- "What's the slowest page load for actual users?"
+- "Where do users hit JS errors?"
+- "Why do users abandon checkout?"
+
+Pros:
+- Real user data; perfect representativeness.
+- Catches issues that synthetic tests miss (specific browser bugs, network conditions, ad blockers).
+
+Cons:
+- Privacy concerns. PII in URLs, form data; redaction essential.
+- Performance overhead on the page. Modern SDKs are <50KB; older were heavier.
+- Cost per session at scale ($1-5/1k sessions for Datadog/New Relic).
+
+Vendors: Datadog RUM, New Relic Browser, Sentry Performance, FullStory, LogRocket, Rookout. OSS: limited (no first-class OSS RUM at scale).
+
+Synthetic monitoring:
+
+Scripted browser tests + API uptime checks running on schedule from multiple regions.
+
+Configures via UI or YAML:
+
+\`\`\`yaml
+# Datadog Synthetic test
+- type: browser
+  name: "Checkout flow"
+  locations: [aws:us-east-1, aws:eu-west-1, aws:ap-northeast-1]
+  steps:
+    - { name: "Navigate", type: goto, params: { url: "https://app.example.com/checkout" } }
+    - { name: "Login", type: type, params: { selector: "#username", value: "{{ env.TEST_USER }}" } }
+    - { name: "Click Login", type: click, params: { selector: "#login-btn" } }
+    - { name: "Wait dashboard", type: assertElementPresent, params: { selector: ".dashboard" } }
+  schedule: "*/15 * * * *"
+\`\`\`
+
+What Synthetic answers:
+- "Is the homepage up from all regions?"
+- "Did the checkout flow break in production?"
+- "Did p99 latency for the API endpoint regress?"
+
+Pros:
+- Predictable; runs on schedule regardless of traffic.
+- Catches issues before users report.
+- Multi-region coverage tests CDN, network paths.
+
+Cons:
+- Doesn't catch user-specific edge cases.
+- False positives: scheduled test from us-east-1 fails because that one region's network was glitchy.
+- Cost per test ($5-12/1k tests).
+
+Vendors: Datadog Synthetic, Pingdom, Catchpoint, Checkly, UptimeRobot.
+
+Combination pattern:
+
+Synthetic for known-critical journeys (uptime, checkout, login). Few tests, high reliability.
+
+RUM for breadth (catch issues real users hit). Sample every session.
+
+Both tied to APM trace context — RUM session attached to backend trace; synthetic test attached to backend trace. Engineer can see "real user experienced 5s page load" → "click for backend trace" → drill to slow span.
+
+OSS alternative: Lighthouse CI (Google) for synthetic in CI pipelines; no first-class OSS RUM.`,
+      },
+      {
+        term: 'Recipe: migrate from Datadog APM to Grafana stack',
+        definition: `Cost-driven migration. Multi-quarter project. Common at $200k+/year Datadog spend with mature K8s ops.
+
+Phase 1: parallel ingest (1-3 months).
+
+Apps emit OTel telemetry. OTel Collector exports to Datadog AND Grafana stack simultaneously:
+
+\`\`\`yaml
+exporters:
+  datadog:
+    api: { key: \${DD_API_KEY} }
+  otlp/tempo:
+    endpoint: tempo.observability:4317
+  prometheusremotewrite:
+    endpoint: https://mimir.example.com/api/v1/push
+  loki:
+    endpoint: https://loki.observability:3100/loki/api/v1/push
+
+service:
+  pipelines:
+    traces:
+      exporters: [datadog, otlp/tempo]
+    metrics:
+      exporters: [datadog, prometheusremotewrite]
+    logs:
+      exporters: [datadog, loki]
+\`\`\`
+
+Both systems receive identical telemetry. Compare for parity.
+
+Phase 2: dashboard parity (4-12 weeks).
+
+Datadog dashboards → Grafana. Manual rewrite required:
+- Datadog Notebook → Grafana Dashboard.
+- Datadog query syntax → PromQL / LogQL / TraceQL.
+- Datadog widgets → Grafana panels.
+
+Auto-import plugins exist (community Grafana plugins) but coverage is partial.
+
+Estimate: 30-100 critical dashboards × ~30-60 min each = 30-100 engineering hours.
+
+Phase 3: alert parity (4-8 weeks).
+
+Datadog Monitors → Prometheus alert rules + Loki alert rules. Each monitor reviewed:
+- PromQL/LogQL equivalent.
+- Threshold tuning (Datadog and Prometheus aggregate slightly differently).
+- Alertmanager routing config.
+
+Critical: run new alerts in audit mode (notification to alert-test channel, not page) during parallel phase. Tune thresholds before cutover.
+
+Estimate: 50-200 alerts × ~15-30 min each = 12-100 hours.
+
+Phase 4: APM-specific feature replacement.
+
+Datadog Service Map → Tempo's metricsGenerator service-graph + Grafana node-graph plugin. Functional equivalent; less polished UX.
+
+Datadog Watchdog → Grafana Mimir's anomaly detection (newer; less mature).
+
+Datadog Continuous Profiler → Pyroscope (Grafana Labs OSS). App-level changes to swap profiling SDK.
+
+Datadog DBM → Database-specific Prometheus exporters (postgres_exporter, mysqld_exporter). No equivalent of query-level monitoring out of box.
+
+Datadog RUM → Sentry / FullStory / commercial RUM (no first-class OSS RUM at scale).
+
+Datadog Synthetic → Checkly / Lighthouse CI (limited OSS).
+
+Phase 5: cutover (2-4 weeks).
+
+Disable Datadog ingestion in OTel Collector. Datadog account read-only mode for 30-60 days for fallback. Then cancel.
+
+Cost analysis:
+
+Datadog (typical mid-large): $200-600k/year for 200-host fleet with full APM + Logs + RUM.
+
+Grafana stack at same scale:
+- Compute: ~$3-10k/month for Tempo/Mimir/Loki.
+- S3: ~$200-1k/month.
+- Engineering: 0.5-1 full-time observability engineer (~$200-400k/year fully loaded).
+
+Total: ~$240-450k/year. Marginal savings; significant operational shift.
+
+At 1000+ host scale: Datadog $1-2M/year vs Grafana stack $250k-500k/year. 2-4x savings.
+
+Operational shift:
+
+Datadog: app teams use UI; no infrastructure to operate.
+
+Grafana: SRE / platform team operates Tempo, Mimir, Loki, Grafana, Pyroscope. Helm upgrades, scaling, capacity planning, S3 cost management.
+
+Engineering capacity required: 0.5-2 engineers depending on scale.
+
+When migration succeeds:
+
+Existing K8s expertise + observability ops capacity.
+
+Cost has reached pain point ($500k+/year).
+
+Multi-cloud / on-prem requirements that complicate Datadog egress.
+
+Engineering culture comfortable with OSS.
+
+When migration fails:
+
+Insufficient SRE / platform team. Dashboards/alerts atrophy.
+
+Underestimate replication time. 6 months becomes 18 months.
+
+Don't replace advanced features (Watchdog, BubbleUp). Engineering productivity drops.
+
+App teams resent the UX downgrade. Adoption plateaus.
+
+Hybrid as alternative:
+
+Keep Datadog for app teams (Logs + RUM + Synthetic).
+
+Move infrastructure metrics to Prometheus + Grafana (volume too high for Datadog cost).
+
+Volume gets cut in half; Datadog spend drops 40-60%; less migration work.
+
+Many large orgs (Shopify, Cloudflare) run hybrid permanently. Pure migration is uncommon at hyperscale.`,
+      },
+    ],
+    approach: [
+      'Vendor APM for app teams; OSS Grafana stack for infrastructure (hybrid is normal at scale)',
+      'Instrument apps with OpenTelemetry; export to vendor via OTLP (no vendor lock at SDK level)',
+      'Vendor strengths: Datadog (polish, integrations), New Relic (Java/.NET), Dynatrace (enterprise), Honeycomb (high-cardinality)',
+      'OSS strengths: cost (10-30x), data sovereignty, customization, no lock-in',
+      'Migration paths: parallel ingest → dashboard parity → alert parity → cutover (multi-quarter)',
+      'Continuous profiling complements traces (in-process work vs external calls)',
+      'RUM + Synthetic for frontend perf (real users + scheduled tests)',
+      'Trace correlation across signals: trace_id in logs, exemplars in metrics, RUM session ↔ APM trace',
+    ],
+    pitfalls: [
+      'Vendor lock through proprietary SDKs — OTel SDK + OTLP exporter avoids this',
+      'Migrating to OSS without engineering capacity — dashboards/alerts atrophy',
+      'Pure cost focus — operational savings on OSS often offset by engineering time',
+      'Datadog billing surprises at scale — RUM session pricing, custom metrics, log indexing all stack',
+      'Continuous profiling with PII in stack traces — verify redaction',
+      'RUM SDK overhead on slow connections — affects user-perceived performance',
+      'Synthetic tests with hardcoded test users credentials — credential rotation breaks tests',
+      'Service map staleness — relies on traces; if sampling drops important paths, map is incomplete',
+      'Alert fatigue from vendor auto-detection (Watchdog) — tune to avoid notification flood',
+    ],
+    keyQuestions: [
+      {
+        question: 'When do you pick Datadog over OSS Grafana stack?',
+        answer: `The choice comes down to scale, engineering capacity, and what you value.
+
+Datadog wins when:
+
+1. Operational simplicity matters more than cost.
+
+Engineering team without dedicated SRE / platform engineers benefits from "just works" SaaS. Vendor handles ingestion, storage, scaling, HA. Engineering team focuses on application features.
+
+Cost premium pays for: 0.5-2 engineering FTEs of observability ops work that you don't have to do.
+
+2. UX matters and you can budget it.
+
+Datadog UI is meaningfully better than self-hosted Grafana for many workflows:
+- Service map auto-generated; no setup.
+- Watchdog auto-anomaly detection.
+- Trace search with rich filters.
+- Continuous profiling integrated with traces.
+- Logs integrated with everything.
+
+App teams find issues faster. Saved hours per debugging session × team size × year = real productivity.
+
+3. Polished out-of-box for compliance / customer-facing.
+
+SOC 2 reports, customer-facing dashboards, exec reporting. Grafana can do these; Datadog does them better with less effort.
+
+4. Advanced features without separate setup.
+
+Continuous profiling, DBM, network monitoring, RUM, synthetic — all integrated. Equivalent OSS requires assembling: Pyroscope + database exporters + service mesh + (no first-class OSS RUM) + Lighthouse CI. Each is its own ops investment.
+
+5. Mid-size (50-500 hosts) where cost is manageable.
+
+Datadog at 100 hosts: ~$30-50k/year. Manageable for a Series B SaaS. Marginal savings on OSS not worth ops time.
+
+Datadog loses when:
+
+1. Scale crosses cost ceiling.
+
+>500 hosts with full feature set: $200k-1M+/year. OSS savings dominate. At >1000 hosts: 5-10x cost differential.
+
+2. Multi-cloud / on-prem with data egress concerns.
+
+Datadog requires telemetry leaving your network. On-prem clusters or strict data residency rules complicate.
+
+3. Engineering team has K8s expertise.
+
+If you're already running Argo CD + Tempo + Loki for free, adding Mimir and Grafana is incremental. The marginal cost of OSS goes to zero.
+
+4. Customization beyond Datadog's options.
+
+Custom retention tiers, custom storage backends, custom query patterns. OSS allows; vendor doesn't.
+
+5. Strong cost-control culture.
+
+Cost-conscious orgs (early-stage, tight budgets, FinOps-driven) value OSS savings.
+
+Hybrid is common:
+
+Most large orgs (Shopify, Cloudflare, Etsy) run hybrid:
+- Datadog for application teams (UI matters, integrated stack).
+- Grafana stack for infrastructure (volume too high for Datadog cost).
+- Honeycomb for high-cardinality debugging.
+
+Migration patterns:
+
+Migrating off Datadog: 3-6 months minimum at moderate scale. Dashboard rewrite + alert rewrite + advanced feature replacement. Don't underestimate.
+
+Migrating onto Datadog: weeks. Install agent or OTel Collector; auto-discover everything. Investment is in dashboard/alert customization, not setup.
+
+Decision matrix (2026):
+
+Below 50 hosts: Datadog. Marginal cost; ops simplicity dominates.
+
+50-300 hosts: Datadog default; OSS if engineering team has capacity.
+
+300-1000 hosts: hybrid (Datadog for apps, Grafana for infra). Pure Datadog if cost-tolerant.
+
+>1000 hosts: hybrid or pure Grafana stack. Datadog cost crosses ROI threshold.
+
+Regulated/on-prem-required: OSS or self-hosted Datadog (Datadog Tier 4 supports on-prem; expensive).
+
+The pragmatic 2026 stance: Datadog is the safe default for most mid-size SaaS companies. OSS is the right call for large-scale, cost-focused, or engineering-capacity-rich orgs. Hybrid is most common at scale.`,
+      },
+      {
+        question: 'What advanced APM features matter most?',
+        answer: `Beyond traces + metrics + logs, advanced APM features distinguish vendors and address specific pain points.
+
+Continuous profiling (Datadog Profiler, Pyroscope, Parca):
+
+Samples per-function CPU, memory, locks in production. Low overhead (~5%).
+
+Why it matters:
+
+Traces show external calls; profiling shows in-process work. A 500ms "process_request" span with no child spans: tracing dead end. Profiler shows "JSON parsing took 150ms; regex matching took 200ms; string copies 100ms".
+
+Catches:
+- CPU hot paths invisible to APM.
+- Memory leaks (slow allocator growth).
+- Lock contention.
+- Inefficient algorithms.
+
+When you need it:
+- "CPU is 80% but I don't know why."
+- "Memory grows slowly; eventually OOM."
+- "p99 latency is bad but no obvious slow span."
+
+Datadog: $2/host/month. Pyroscope: free (self-host).
+
+Anomaly detection (Datadog Watchdog, Dynatrace Davis):
+
+ML-based detection of unusual patterns in metrics + traces. Doesn't require alert rule definition.
+
+Surfaces:
+- Service degradation patterns.
+- Unusual error spikes correlated with specific tags.
+- Resource saturation patterns before threshold breach.
+
+Why it matters: catches issues you didn't think to alert on.
+
+Limitation: false positive rate. Tuning takes weeks. Auto-detection signals need owner accountability or fade to noise.
+
+Davis (Dynatrace) goes further with causation analysis: "X spike caused Y; root cause is Z." Stronger than Watchdog's correlation-only.
+
+OSS equivalent: weak. Some Grafana Mimir anomaly detection (newer; less mature). Most teams alert manually on known patterns.
+
+Service Map (Datadog Service Map, New Relic Service Map, Tempo metricsGenerator + Grafana node-graph):
+
+Auto-discovered service topology from trace data. Shows: which services call which, traffic volumes, error rates between them.
+
+Why it matters:
+- Architecture self-documenting; no manual ER diagrams.
+- Identify high-traffic dependencies.
+- Spot dead services (no traffic).
+- Plan refactoring with full call graph visibility.
+
+Datadog: best in class. Animated, drill-down, real-time.
+
+OSS: Tempo + Grafana node-graph plugin. Less polished; functional.
+
+Database Monitoring (Datadog DBM, New Relic SQL):
+
+Query-level performance tracking. Slowest queries, query plans, lock contention.
+
+Why it matters:
+
+Application traces show "SQL took 200ms"; DBM shows which query, what plan, what's blocking.
+
+Datadog DBM: $70/host/month per host monitoring DB. Covers PostgreSQL, MySQL, SQL Server, MongoDB, Redis.
+
+OSS equivalent: postgres_exporter + pgbadger; less integrated.
+
+RUM (covered separately):
+
+Real user monitoring for browser/mobile. Catches frontend perf issues APM misses.
+
+Datadog RUM, New Relic Browser, Sentry Performance.
+
+OSS: limited.
+
+Session replay (Datadog Session Replay, FullStory, LogRocket):
+
+Pixel-level recording of user sessions. Reproduce bug from user's session.
+
+Privacy concerns dominate; PII redaction required.
+
+Cost: aggressive ($1-5/1k sessions).
+
+When useful: customer-reported issues you can't reproduce. Session replay shows exact user actions.
+
+OSS: limited. PostHog has session replay (open core).
+
+Distributed tracing for queues (Datadog APM with Kafka/RabbitMQ instrumentation):
+
+Some APMs auto-correlate producer span to consumer span across queues. Most need manual context propagation in OTel SDK.
+
+Why it matters: async architectures lose request context; APM with queue correlation restores it.
+
+Network monitoring (Datadog NPM, Cisco AppDynamics):
+
+TCP/IP layer observability between services. Connection counts, retransmits, bandwidth.
+
+Why it matters: catches network-layer issues APM misses (DNS resolution, TCP retransmits, MTU mismatches).
+
+OSS equivalent: eBPF-based (Cilium Hubble, Pixie). Different paradigm; complementary.
+
+SLO tracking (Datadog SLO, Grafana SLO, Honeycomb SLO):
+
+Define SLO target (99.9% over 30 days). Platform tracks burn rate; alerts on fast-burn (5%+ in 1h) or slow-burn.
+
+Why it matters: aligns engineering with reliability targets; prevents alert fatigue from threshold-only alerts.
+
+Datadog: native. Grafana: ServiceLevels plugin or Sloth (OSS).
+
+BubbleUp (Honeycomb):
+
+Anomaly attribute analysis. Outlier traces vs population auto-compared.
+
+Why it matters: high-cardinality debugging without manual filter iteration.
+
+OSS equivalent: none directly. ClickHouse + custom queries can approximate; not as polished.
+
+The ranking of "advanced features by ROI":
+
+1. Continuous profiling — frequently solves CPU/memory mysteries.
+
+2. SLO tracking — aligns engineering with reliability culture.
+
+3. Service Map — self-documenting architecture.
+
+4. Anomaly detection (Datadog Watchdog) — catches unknown patterns.
+
+5. RUM — frontend perf issues APM misses.
+
+6. DBM — database perf issues APM misses.
+
+7. Session replay — useful but expensive; customer-reported bugs only.
+
+8. Network monitoring — niche; only when you suspect network layer.
+
+For OSS shops: Pyroscope (profiling), Grafana SLO (Sloth), Tempo Service Map cover the top 4. Anomaly detection and RUM are gaps.`,
+      },
+      {
+        question: 'How does APM vendor cost scale with usage?',
+        answer: `APM vendor pricing is multi-dimensional; understanding the cost levers prevents surprise bills.
+
+Datadog pricing model (most complex):
+
+Base APM:
+- Pro: $15-23/host/month (host = ~vCPU billing unit).
+- Enterprise: $23-40/host/month.
+- APM add-on: $31/host/month (1M ingested spans).
+
+Add-ons stack:
+- Logs: $0.10/M ingested + $1.27-3.75/M indexed (varies by retention).
+- RUM: $1.50/1k sessions for Browser, $2.85/1k for mobile.
+- Synthetic: $5/10k API tests, $12/1k browser tests.
+- Profiling: $2/host/month.
+- DBM: $70/host/month per host monitoring DB.
+- Network Monitoring: $40/host/month.
+- Custom Metrics: $0.05/100 custom metrics/host.
+
+Cost example for 200-host SaaS:
+- Pro: 200 × $23 = $4,600
+- APM: 200 × $31 = $6,200
+- Logs (50GB/day, 30d): ~$3,000
+- RUM (10M sessions/month): $15,000
+- Profiling: 200 × $2 = $400
+- Total: ~$30k/month, $360k/year.
+
+Bigger shop (1000 hosts, full features):
+- Base + APM: $54k/month
+- Logs (200GB/day): $15k
+- RUM (50M sessions): $75k
+- DBM (50 DB hosts): $3.5k
+- Profiling: $2k
+- Total: ~$150k/month, $1.8M/year.
+
+Scaling factors:
+
+1. Host count: linear with infrastructure size.
+
+2. Trace volume: ingested spans matter. 100k RPS service × 10 spans/req × 30 days = 26B spans/month. At $0.10/M: $2.6M/month. Tail sampling reduces.
+
+3. Custom metrics: each unique metric+label combination counts. Cardinality explosions blow this fast.
+
+4. Log volume: ingested vs indexed. Indexed costs 10-30x more. Index only what you query.
+
+5. RUM sessions: each user session counts. High-traffic consumer apps explode this.
+
+6. Synthetic tests: per-execution. Expensive at high frequency.
+
+Cost control techniques:
+
+Trace sampling: tail-sample at OTel Collector before forwarding to Datadog. Reduces span volume 95%+.
+
+Custom metric pruning: review monthly; delete unused. Each metric × label combination is a counter.
+
+Log indexing tiers: Standard (high cost, fast query), Flex (lower cost, slower query), Forward to Archive (cheap S3, no query without rehydration). Tier by importance.
+
+Drop noise at Agent: Datadog Agent supports filters. Drop /health logs, drop trace spans for /metrics scrapes.
+
+Sampling RUM sessions: don't track 100% of sessions. 20-50% sample is typical for high-volume apps.
+
+Right-size hosts: scale-to-zero of unused dev/staging hosts. Datadog charges per active host.
+
+Annual contracts: 20-30% discount over month-to-month.
+
+Reserved capacity / pre-purchased volume: discounts for committed usage.
+
+Other vendors:
+
+New Relic: per-data-ingest model (pivoted in 2020).
+- Free tier: 100GB/month ingest free; 1 user.
+- Pro: $0.30/GB ingested + per-seat.
+
+Cost example: 5TB/month ingested at $0.30 = $1500. Plus 50 seats × $99 = $4950. Total ~$6450/month at this scale.
+
+Simpler than Datadog but caps less generous.
+
+Dynatrace:
+- Per-host pricing similar to Datadog.
+- "Davis" AI add-ons.
+- Enterprise pricing typically $80-120/host/month.
+
+Honeycomb:
+- Per-event (= per span). Tiered.
+- 100M events: $130/month.
+- Enterprise: $20-100k/year for moderate.
+
+Cheaper for trace-heavy workloads at scale; doesn't compete on integrated RUM/Logs.
+
+Splunk Observability Cloud:
+- Per-data-ingest similar to New Relic.
+- Bundle pricing if combined with Splunk Logs.
+
+Cost optimization process:
+
+1. Monthly review: Datadog usage dashboard shows top cost drivers.
+
+2. Cost attribution: tag traces/metrics/logs with team/service. Allocate costs.
+
+3. Per-team budgets: "team-payments has $5k/month for observability." Fail-safe at threshold.
+
+4. Right-tier features: don't enable RUM for internal admin dashboards (low-traffic; cost-inefficient).
+
+5. Sampling discipline: tail-sample traces; sample RUM sessions; drop noise logs.
+
+6. Annual recompete: every 12-18 months, evaluate vendor vs OSS migration. Vendor pricing has historically risen faster than inflation.
+
+Real-world surprise stories:
+
+Service team adds debug-level logging in production. Datadog Logs cost spikes 10x in one week.
+
+Dev team explores RUM session replay; doesn't sample. 100% session capture × 1M sessions = $5k unexpected.
+
+CI cluster tests use Synthetic browser tests at every PR. Unintended high-frequency execution; bill jumps $10k.
+
+Each requires monitoring + rate limiting. Datadog Cost Analytics (newer) helps.`,
+      },
+      {
+        question: 'Walk through OTel migration from vendor SDK to vendor-neutral.',
+        answer: `Migrating from vendor SDK (dd-trace, newrelic-agent, dynatrace OneAgent) to OpenTelemetry SDK reduces vendor lock-in. OTel-instrumented apps can switch backends via Collector config; vendor SDKs lock you to that vendor.
+
+Migration phases:
+
+Phase 1: side-by-side instrumentation (1-2 months).
+
+OTel SDK + vendor SDK in same app initially. Both emit telemetry to vendor backend.
+
+Java example:
+
+\`\`\`xml
+<!-- pom.xml — keep vendor agent javaagent -->
+<dependency>
+  <groupId>com.datadoghq</groupId>
+  <artifactId>dd-java-agent</artifactId>
+  <version>1.40.0</version>
+</dependency>
+
+<!-- Add OTel SDK -->
+<dependency>
+  <groupId>io.opentelemetry.javaagent</groupId>
+  <artifactId>opentelemetry-javaagent</artifactId>
+  <version>2.10.0</version>
+</dependency>
+\`\`\`
+
+Both agents configured; both emit. Verify in Datadog dashboard that traces appear from both sources (slight overhead; remove vendor SDK after parity verified).
+
+Avoid double instrumentation: configure one as "shadow" mode (emit but don't apply business logic side effects). Default for OTel SDK in most vendor agent configs.
+
+Phase 2: OTel-only instrumentation (1-2 months).
+
+Remove vendor SDK; OTel SDK exports to vendor backend via OTLP.
+
+Configure OTLP exporter:
+
+\`\`\`yaml
+# Application.yaml or env vars
+OTEL_EXPORTER_OTLP_ENDPOINT: https://api.datadoghq.com/api/v0.2/traces
+OTEL_EXPORTER_OTLP_HEADERS: dd-api-key=YOUR_KEY
+OTEL_RESOURCE_ATTRIBUTES: service.name=payments,service.version=1.2.3,deployment.environment=prod
+\`\`\`
+
+Or via OTel Collector (recommended; centralized config):
+
+\`\`\`yaml
+exporters:
+  datadog:
+    api: { key: \${DD_API_KEY} }
+\`\`\`
+
+App-level: only set OTEL_EXPORTER_OTLP_ENDPOINT pointing at OTel Collector.
+
+Verify trace coverage matches pre-migration. Some vendor SDK features may regress (Datadog dd-trace's automatic redis-py instrumentation differs slightly from OTel's redis-py instrumentation). Compare specific service patterns.
+
+Phase 3: switch backend (multi-quarter, separate project).
+
+Now that apps emit OTel, switching backends is OTel Collector config:
+
+\`\`\`yaml
+exporters:
+  datadog: { api: { key: \${DD_API_KEY} } }
+  otlp/tempo: { endpoint: tempo.observability:4317 }
+  prometheusremotewrite: { endpoint: https://mimir.example.com/api/v1/push }
+
+service:
+  pipelines:
+    traces:
+      exporters: [datadog, otlp/tempo]                   # multi-export during transition
+\`\`\`
+
+Send to both during validation phase. After parity verified, drop Datadog exporter; keep Tempo.
+
+What gets lost in pure-OTel migration:
+
+Datadog Continuous Profiler: dd-trace bundled. OTel profiling signal experimental. Solution: Pyroscope alongside OTel.
+
+Datadog DBM: requires Datadog Agent + dd-trace integration. No OTel equivalent. Solution: postgres_exporter + custom.
+
+Datadog Network Monitoring: requires Datadog Agent kernel module. Solution: Cilium Hubble (OSS).
+
+Datadog Watchdog: ML-based anomaly detection. No OSS equivalent of equivalent quality. Solution: alert manually on known patterns.
+
+Datadog auto-instrumentation depth: dd-trace has been around longer; auto-instruments more libraries. OTel catching up; some gaps remain. Solution: manual instrumentation for gaps.
+
+What gets gained:
+
+Vendor neutrality: any future migration is Collector config change.
+
+Multi-backend: send to Datadog AND Honeycomb during evaluation. Pick best per service.
+
+Standardized semantic conventions: http.method, db.system standardized across languages. Cross-service queries work.
+
+OSS option: Grafana stack (Tempo + Mimir + Loki + Pyroscope) becomes available without re-instrumentation.
+
+Decision criteria for migration:
+
+Migrate to OTel when:
+- Vendor lock concerns matter (regulated, multi-cloud, OSS-friendly culture).
+- Considering OSS migration in next 2-3 years.
+- Multi-vendor strategy (Datadog for production, Tempo for staging).
+- Greenfield projects (use OTel from day 1).
+
+Stay on vendor SDK when:
+- Feature parity critical (Datadog's advanced features outweigh vendor lock).
+- Operational simplicity (one less thing to learn).
+- Small team (OTel learning curve cost > benefit).
+
+Hybrid (most common):
+
+OTel SDK for standard traces + metrics + logs.
+
+Vendor SDK / agent for advanced features (Datadog Continuous Profiler, RUM SDK).
+
+Pragmatic; takes incremental advantage of OTel without sacrificing features.
+
+Real-world example:
+
+Shopify: migrated to OTel SDK 2022-2023. Backend remains Datadog primarily. Future-proofed for potential OSS migration.
+
+Cloudflare: OTel-instrumented; primarily uses internal observability stack.
+
+Mid-size SaaS: most still on Datadog dd-trace; OTel migration not yet pressing.
+
+The OTel migration story shifts vendor relationship power. Pre-OTel: switching vendors was a multi-quarter app-level project. Post-OTel: switching is a Collector config change. Vendors know this; pricing pressure increases.`,
+      },
+      {
+        question: 'Quick-fire interview answers — APM platforms.',
+        answer: `Rapid-fire facts.
+
+Q: What's APM?
+A: Application Performance Monitoring. Integrated traces + metrics + logs + RUM + synthetic + profiling in one product.
+
+Q: Market leader 2026?
+A: Datadog. ~30% APM market share. Polished UX, deep cloud integrations, continuous profiling, integrated RUM/Logs/Synthetic.
+
+Q: Datadog vs New Relic vs Dynatrace?
+A: Datadog: polished UX, mid-large orgs. New Relic: Java/.NET, per-data-ingest pricing, cost-conscious. Dynatrace: enterprise, OneAgent auto-discovery, Davis AI causation analysis.
+
+Q: Honeycomb's distinctive feature?
+A: BubbleUp — anomaly attribute analysis. Outlier traces vs population auto-compared. Best for high-cardinality / multi-tenant debugging.
+
+Q: When pick OSS Grafana stack over Datadog?
+A: >500 hosts (cost), engineering team has K8s expertise, multi-cloud / on-prem requirements, strong cost focus, customization beyond vendor options.
+
+Q: When pick Datadog?
+A: <500 hosts, app-team-led observability without SRE capacity, polished UX matters, advanced features (profiling, RUM, DBM) without separate setup.
+
+Q: Continuous profiling?
+A: In-prod CPU/memory/lock sampling at low overhead (~5%). Catches issues traces miss (in-process work). Datadog Profiler, Pyroscope (OSS), Parca (eBPF).
+
+Q: RUM?
+A: Real User Monitoring. Browser/mobile SDK tracks actual user sessions. Page load metrics, JS errors, user interactions. Datadog RUM, New Relic Browser, Sentry Performance, FullStory.
+
+Q: Synthetic monitoring?
+A: Scripted browser tests + API uptime checks running on schedule from multiple regions. Datadog Synthetic, Pingdom, Catchpoint, Checkly.
+
+Q: OTel impact on APM?
+A: 2024-2026: all major APM vendors accept OTLP. App instrumentation no longer locks to vendor. Migration between vendors = Collector config change.
+
+Q: Datadog cost levers?
+A: Host count, trace volume, custom metric cardinality, log indexing, RUM sessions, synthetic test frequency. Stack quickly at scale.
+
+Q: SLO tracking?
+A: Define SLO (99.9% over 30d); platform tracks burn rate; alerts on fast-burn / slow-burn budget exhaustion. Datadog native, Grafana SLO plugin, Honeycomb SLO, Sloth (OSS).
+
+Q: Service Map?
+A: Auto-discovered service topology from traces. Shows traffic between services, error rates. Datadog (best UX), New Relic, Tempo metricsGenerator + Grafana.
+
+Q: DBM?
+A: Database Monitoring. Query-level performance tracking. Datadog DBM ($70/host/month per DB host).
+
+Q: Network Monitoring?
+A: TCP/IP-level observability between services. Datadog NPM. OSS alternative: Cilium Hubble (eBPF-based, complementary paradigm).
+
+Q: Migration vendor SDK → OTel?
+A: 1-3 month parallel instrumentation. OTel-only export to vendor via OTLP. Future: switch backends via Collector config without app changes.
+
+Q: Migration off Datadog?
+A: 3-6 months minimum. Parallel ingest → dashboard parity → alert parity → advanced feature replacement → cutover. Underestimate at peril.
+
+Q: Hybrid pattern?
+A: Datadog for app teams (UI matters, integrated stack). Grafana stack for infrastructure observability (volume too high for Datadog cost). Common at large scale.
+
+Q: Session replay?
+A: Pixel-level recording of user sessions. Reproduce bugs. Datadog Session Replay, FullStory, LogRocket. Privacy concerns (PII redaction required).
+
+Q: Most common APM cost surprise?
+A: Service team logs full request bodies at info → log indexing 10x. Or RUM session replay at 100% sampling → unexpected $10k/month.
+
+Q: APM vs observability vs monitoring?
+A: Monitoring: alerts on known problems. Observability: ability to ask new questions. APM: integrated commercial product covering both for application services.
+
+These are answers an APM-fluent platform/SRE engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.datadoghq.com/tracing/',
+      'https://newrelic.com/platform/application-monitoring',
+      'https://www.dynatrace.com/platform/',
+      'https://www.honeycomb.io/',
+      'https://opentelemetry.io/docs/',
+      'https://grafana.com/oss/pyroscope/',
+    ],
+  },
+
 ];
