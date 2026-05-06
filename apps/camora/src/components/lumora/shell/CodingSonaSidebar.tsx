@@ -354,7 +354,13 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
             )}
           </div>
 
-          {/* Input row */}
+          {/* Input row — vertical rhythm:
+                · textarea (primary input surface)
+                · controls bar: [mic] [keyboard hint, hidden when recording / on narrow widths]   [Ask Sona]
+              The mic and Ask Sona button bookend the row so left = capture,
+              right = commit. The hint is the only optional element — it
+              hides on narrow sidebars and during recording so the timer
+              gets visual room without the row reflowing. */}
           <div className="shrink-0 border-t p-3 flex flex-col gap-2" style={{ borderColor: 'var(--border)' }}>
             <textarea
               ref={inputRef}
@@ -364,10 +370,15 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
               placeholder={placeholder}
               disabled={streaming}
               rows={2}
-              className="w-full text-[12px] leading-relaxed rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/30 transition-all disabled:opacity-60"
-              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+              className="w-full text-[12px] leading-relaxed rounded-lg px-3 py-2 resize-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cam-primary)]/30 disabled:opacity-60"
+              style={{
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-primary)',
+                transition: 'border-color 0.15s ease-out, box-shadow 0.15s ease-out',
+              }}
             />
-            <div className="flex items-center gap-2">
+            <div className="flex items-end gap-3 min-h-[2rem]">
               {/* Voice input — one-shot record/stop. Appends transcript
                   to the textarea (with a leading space when there's
                   existing text) so the user can edit before submitting.
@@ -376,20 +387,25 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
                 disabled={streaming}
                 onText={(t) => setInput((prev) => prev ? `${prev.trimEnd()} ${t}` : t)}
               />
-              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                Enter to send · Shift+Enter for newline
+              <span
+                className="hidden md:inline text-[10px] leading-tight self-center"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                <kbd className="font-mono">Enter</kbd> to send <span aria-hidden="true">·</span>{' '}
+                <kbd className="font-mono">Shift+Enter</kbd> for newline
               </span>
               <button
                 onClick={() => send(input)}
                 disabled={!input.trim() || streaming}
-                className="ml-auto flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="ml-auto flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] px-3 h-8 rounded-md disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)] focus-visible:ring-[var(--cam-primary)]"
                 style={{
                   background: 'var(--cam-primary)',
                   color: '#FFFFFF',
                   border: '1px solid var(--cam-primary-dk)',
+                  transition: 'background-color 0.15s ease-out, opacity 0.15s ease-out',
                 }}
               >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <line x1="22" y1="2" x2="11" y2="13" />
                   <polygon points="22 2 15 22 11 13 2 9 22 2" />
                 </svg>
