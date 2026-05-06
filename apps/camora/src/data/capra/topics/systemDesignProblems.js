@@ -406,7 +406,6 @@ Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
         title: 'Basic Implementation',
         description: 'Client → Load Balancer → Web Server → Count Cache → Database. The web server requests a base-10 number from the count cache, converts it to base-62, and uses it as the short URL.',
         diagramSrc: '/diagrams/url-shortener/impl-basic.png',
-        svgTemplate: 'urlShortener',
         problems: [
           'Single point of failure in web server, cache, and database',
           'When horizontally scaled, distributed caches can return same number → COLLISION',
@@ -419,7 +418,6 @@ Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
         title: 'Advanced Implementation with ZooKeeper',
         description: 'ZooKeeper allocates ID ranges to web servers, avoiding collisions. Each server generates IDs independently.',
         diagramSrc: '/diagrams/url-shortener/impl-advanced.png',
-        svgTemplate: 'urlShortenerAdvanced',
         keyPoints: [
           'ZooKeeper allocates ranges of 1 million IDs to each web server',
           'Each server generates IDs independently within its range - no collisions',
@@ -1431,7 +1429,6 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
         title: 'Basic Implementation (Fan-out on Write)',
         description: 'When a user posts a tweet, fan-out service pushes it to all followers\' timeline caches',
         diagramSrc: '/diagrams/twitter/impl-basic.png',
-        svgTemplate: 'fanoutOnWrite',
         problems: [
           'Celebrity tweets to 10M followers = 10M cache writes',
           'Hot celebrities cause massive write amplification',
@@ -1444,7 +1441,6 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
         title: 'Hybrid Fan-out (Twitter\'s Approach)',
         description: 'Fan-out on write for <10K followers, celebrity tweets merged on read from cache',
         diagramSrc: '/diagrams/twitter/impl-advanced.png',
-        svgTemplate: 'hybridFanout',
         keyPoints: [
           'Follower threshold (e.g., 10K) determines fan-out strategy',
           'Timeline read merges pre-computed feed + celebrity tweets',
@@ -2172,7 +2168,6 @@ rides {
         title: 'Basic Implementation',
         description: 'Rider and Driver apps connect to Matching service, with Location service and Redis for real-time tracking',
         diagramSrc: '/diagrams/uber/impl-basic.png',
-        svgTemplate: 'rideSharing',
         problems: [
           'Database cannot handle 1M location updates/second',
           'PostGIS queries slow at scale',
@@ -2185,7 +2180,6 @@ rides {
         title: 'Scalable Implementation with Cell-based Architecture',
         description: 'City divided into S2 cells, each with dedicated services. Redis Geo for O(log N) spatial queries.',
         diagramSrc: '/diagrams/uber/impl-advanced.png',
-        svgTemplate: 'cellBasedArch',
         keyPoints: [
           'Divide city into S2 cells (roughly 1km²)',
           'Each cell service manages drivers in that area',
@@ -2900,7 +2894,6 @@ Quick quality first: 360p available in minutes, 4K later`
         title: 'Basic Architecture',
         description: 'Upload → Transcode → Store → CDN → Client pipeline for video streaming',
         diagramSrc: '/diagrams/youtube/impl-basic.png',
-        svgTemplate: 'videoStreaming',
         problems: [
           'Single transcoding queue becomes bottleneck',
           'No adaptive bitrate - fixed quality',
@@ -2913,7 +2906,6 @@ Quick quality first: 360p available in minutes, 4K later`
       advancedImplementation: {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/youtube/impl-advanced.png',
-        svgTemplate: 'youtubeAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Chunked upload with resume: Handle large files (up to 256GB)',
@@ -4758,7 +4750,6 @@ The threshold between push and pull (10K followers) is tunable based on system l
         title: 'Basic Architecture',
         description: 'Monolithic service with pull-based feed generation',
         diagramSrc: '/diagrams/instagram/impl-basic.png',
-        svgTemplate: 'instagram',
         architecture: 'See diagram above.',
         problems: [
           'Feed query is slow: N+1 queries for each followed user',
@@ -4772,7 +4763,6 @@ The threshold between push and pull (10K followers) is tunable based on system l
       advancedImplementation: {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/instagram/impl-advanced.png',
-        svgTemplate: 'instagramAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Hybrid feed model: Push for regular users, pull for celebrity followers',
@@ -5761,7 +5751,6 @@ Changes are pushed through notification service, client then fetches full delta.
         title: 'Basic Architecture',
         description: 'Simple upload/download without block-level sync',
         diagramSrc: '/diagrams/dropbox/impl-basic.png',
-        svgTemplate: 'dropbox',
         architecture: 'See diagram above.',
         problems: [
           'Entire file uploaded/downloaded on any change',
@@ -5775,7 +5764,6 @@ Changes are pushed through notification service, client then fetches full delta.
       advancedImplementation: {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/dropbox/impl-advanced.png',
-        svgTemplate: 'dropboxAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Block-level sync: 4MB chunks, only upload changed blocks',
@@ -6456,7 +6444,6 @@ Stage 2 -- Ranking (online, at request time, <200ms):
         title: 'Basic Architecture',
         description: 'Simple streaming with single CDN',
         diagramSrc: '/diagrams/netflix/impl-basic.png',
-        svgTemplate: 'netflix',
         architecture: 'See diagram above.',
         problems: [
           'Third-party CDN is expensive at scale',
@@ -6470,7 +6457,6 @@ Stage 2 -- Ranking (online, at request time, <200ms):
       advancedImplementation: {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/netflix/impl-advanced.png',
-        svgTemplate: 'netflixAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Open Connect CDN: 17,000+ edge servers at ISPs worldwide',
@@ -7749,7 +7735,6 @@ cart {
         title: 'Basic Architecture',
         description: 'Client → CDN → Load Balancer → microservices (Product, Order, Payment)',
         diagramSrc: '/diagrams/ecommerce-platform/impl-basic.png',
-        svgTemplate: 'ecommerce',
         problems: [
           'Single database bottleneck',
           'Long transactions with external calls',
@@ -7762,7 +7747,6 @@ cart {
       advancedImplementation: {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/ecommerce-platform/impl-advanced.png',
-        svgTemplate: 'ecommerceAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Microservices: Each domain has own database and scales independently',
@@ -8546,7 +8530,6 @@ presence {
         title: 'Basic Architecture',
         description: 'Simple last-write-wins without real-time collaboration',
         diagramSrc: '/diagrams/google-docs/impl-basic.png',
-        svgTemplate: 'googleDocs',
         architecture: 'See diagram above.',
         problems: [
           'Last-write-wins causes data loss',
@@ -8560,7 +8543,6 @@ presence {
       advancedImplementation: {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/google-docs/impl-advanced.png',
-        svgTemplate: 'googleDocsAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'OT engine: Transforms concurrent operations for consistency',
@@ -9348,7 +9330,6 @@ Step 2 — Merchant payout:
       advancedImplementation: {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/payment-system/impl-advanced.png',
-        svgTemplate: 'paymentAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Client-side tokenization: Card data never touches merchant server',
@@ -10103,7 +10084,6 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
         title: 'Basic Search Architecture',
         description: 'Query → Search Service → Elasticsearch with index shards for parallel query processing',
         diagramSrc: '/diagrams/search-engine/impl-basic.png',
-        svgTemplate: 'searchEngine',
         architecture: 'See diagram above.',
         problems: [
           'Single datacenter = high latency for distant users',
@@ -10116,7 +10096,6 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
       advancedImplementation: {
         title: 'Production Search Architecture',
         diagramSrc: '/diagrams/search-engine/impl-advanced.png',
-        svgTemplate: 'searchEngineAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Tiered index: Hot (1% in memory), warm (10% on SSD), cold (disk)',
@@ -11402,7 +11381,6 @@ Rules evaluated in order: specific overrides general.
         title: 'Basic Rate Limiter Architecture',
         description: 'Single server rate limiting with Redis',
         diagramSrc: '/diagrams/rate-limiter/impl-basic.png',
-        svgTemplate: 'distributedRateLimiter',
         architecture: 'See diagram above.',
         problems: [
           'Single point of failure (Redis)',
@@ -11416,7 +11394,6 @@ Rules evaluated in order: specific overrides general.
       advancedImplementation: {
         title: 'Production Distributed Rate Limiter',
         diagramSrc: '/diagrams/rate-limiter/impl-advanced.png',
-        svgTemplate: 'rateLimiterDistributed',
         architecture: 'See diagram above.',
         keyPoints: [
           'Edge rate limiting at CDN for DDoS protection',
@@ -12131,7 +12108,6 @@ queue_positions {
         title: 'Basic Architecture',
         description: 'Simple booking without queue or advanced locking',
         diagramSrc: '/diagrams/ticketmaster/impl-basic.png',
-        svgTemplate: 'ticketBooking',
         architecture: 'See diagram above.',
         problems: [
           'Race condition: Multiple users can select same seat',
@@ -12145,7 +12121,6 @@ queue_positions {
       advancedImplementation: {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/ticketmaster/impl-advanced.png',
-        svgTemplate: 'ticketmasterAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Virtual waiting room: Queue absorbs traffic spikes',
@@ -12643,7 +12618,6 @@ Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (
         title: 'Basic Typeahead Architecture',
         description: 'In-memory trie with pre-computed suggestions',
         diagramSrc: '/diagrams/typeahead/impl-basic.png',
-        svgTemplate: 'typeahead',
         architecture: 'See diagram above.',
         problems: [
           'Single server = limited scalability',
@@ -12656,7 +12630,6 @@ Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (
       advancedImplementation: {
         title: 'Production Typeahead Architecture',
         diagramSrc: '/diagrams/typeahead/impl-advanced.png',
-        svgTemplate: 'typeaheadAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Client-side debouncing (wait 100ms after keystroke)',
@@ -13173,7 +13146,6 @@ When a channel receives messages faster than members can consume, the gateway ap
         title: 'Basic Chat Architecture',
         description: 'Single WebSocket server with direct database connection for real-time messaging',
         diagramSrc: '/diagrams/chat-system/impl-basic.png',
-        svgTemplate: 'simpleChat',
         problems: [
           'Single server = limited connections',
           'No fan-out mechanism for multi-server',
@@ -13186,7 +13158,6 @@ When a channel receives messages faster than members can consume, the gateway ap
         title: 'Production Chat Architecture',
         description: 'WebSocket gateway cluster with Redis Pub/Sub for cross-server message fan-out, Vitess/ScyllaDB for message storage.',
         diagramSrc: '/diagrams/chat-system/impl-advanced.png',
-        svgTemplate: 'distributedChat',
         keyPoints: [
           'WebSocket Gateway cluster with 50K connections per node',
           'Redis Pub/Sub for cross-gateway message fan-out',
@@ -13803,7 +13774,6 @@ Not all photos are equal. The "primary photo" for a business listing is selected
         title: 'Basic Yelp Architecture',
         description: 'PostGIS for geospatial, single database',
         diagramSrc: '/diagrams/yelp/impl-basic.png',
-        svgTemplate: 'yelp',
         problems: [
           'Single database = scaling bottleneck',
           'No full-text search',
@@ -13815,7 +13785,6 @@ Not all photos are equal. The "primary photo" for a business listing is selected
       advancedImplementation: {
         title: 'Production Yelp Architecture',
         diagramSrc: '/diagrams/yelp/impl-advanced.png',
-        svgTemplate: 'yelpAdvanced',
         keyPoints: [
           'QuadTree + Elasticsearch for geospatial + full-text search',
           'Redis cache for business details and popular searches',
@@ -14474,7 +14443,6 @@ The first 24 hours of swipe data from other users seeing the new profile provide
         title: 'Basic Architecture',
         description: 'Simple swipe and match without optimization',
         diagramSrc: '/diagrams/tinder/impl-basic.png',
-        svgTemplate: 'tinder',
         problems: [
           'Query users on every recommendation request',
           'No geospatial indexing - slow location queries',
@@ -14487,7 +14455,6 @@ The first 24 hours of swipe data from other users seeing the new profile provide
       advancedImplementation: {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/tinder/impl-advanced.png',
-        svgTemplate: 'tinderAdvanced',
         keyPoints: [
           'Pre-computed recommendations: Redis sorted sets per user',
           'O(1) match detection: Redis sets for likes',
@@ -15153,7 +15120,6 @@ When a user has zero listening history, recommendations must still feel relevant
         title: 'Basic Music Streaming',
         description: 'Simple audio serving with basic playlists',
         diagramSrc: '/diagrams/spotify/impl-basic.png',
-        svgTemplate: 'spotify',
         architecture: 'See diagram above.',
         problems: [
           'No CDN = high latency for distant users',
@@ -15166,7 +15132,6 @@ When a user has zero listening history, recommendations must still feel relevant
       advancedImplementation: {
         title: 'Production Spotify Architecture',
         diagramSrc: '/diagrams/spotify/impl-advanced.png',
-        svgTemplate: 'spotifyAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Global CDN with edge caching for popular tracks',
@@ -15961,7 +15926,6 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
         title: 'Basic Architecture',
         description: 'Simple search and booking without availability optimization',
         diagramSrc: '/diagrams/airbnb/impl-basic.png',
-        svgTemplate: 'airbnb',
         problems: [
           'Slow search: JOIN between listings and availability',
           'No geo-indexing: Full table scan for location',
@@ -15973,7 +15937,6 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
       advancedImplementation: {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/airbnb/impl-advanced.png',
-        svgTemplate: 'airbnbAdvanced',
         keyPoints: [
           'Two-stage search: ES for filtering, DB for availability',
           'Optimistic locking: Prevent double-booking at DB level',
@@ -16720,7 +16683,6 @@ Constraints:
         title: 'Basic Food Delivery',
         description: 'Simple order flow without optimization',
         diagramSrc: '/diagrams/doordash/impl-basic.png',
-        svgTemplate: 'doordash',
         architecture: 'See diagram above.',
         problems: [
           'No dispatch optimization',
@@ -16733,7 +16695,6 @@ Constraints:
       advancedImplementation: {
         title: 'Production Food Delivery Architecture',
         diagramSrc: '/diagrams/doordash/impl-advanced.png',
-        svgTemplate: 'doordashAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Kafka for real-time event streaming',
@@ -17310,7 +17271,6 @@ Where credibility considers:
         title: 'Single Region Architecture',
         description: 'Handle trends for one geographic area',
         diagramSrc: '/diagrams/twitter-trends/impl-basic.png',
-        svgTemplate: 'twitterTrending',
         architecture: 'See diagram above.',
         problems: [
           'Single region only - no geo trends',
@@ -17323,7 +17283,6 @@ Where credibility considers:
       advancedImplementation: {
         title: 'Global Multi-Region Architecture',
         diagramSrc: '/diagrams/twitter-trends/impl-advanced.png',
-        svgTemplate: 'twitterTrendsAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Geo-partitioned streams for regional trends',
@@ -17908,7 +17867,6 @@ Cons: Storage not immediately reclaimed
         title: 'Simple Architecture',
         description: 'Single server with direct S3 access',
         diagramSrc: '/diagrams/pastebin/impl-basic.png',
-        svgTemplate: 'pastebin',
         architecture: 'See diagram above.',
         problems: [
           'Single server bottleneck',
@@ -17921,7 +17879,6 @@ Cons: Storage not immediately reclaimed
       advancedImplementation: {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/pastebin/impl-advanced.png',
-        svgTemplate: 'pastebinAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'CDN caches paste content globally',
@@ -18314,7 +18271,6 @@ Bloom filter for fast "definitely not seen" checks before expensive hash lookups
         title: 'Basic Architecture',
         description: 'Single-threaded crawler',
         diagramSrc: '/diagrams/web-crawler/impl-basic.png',
-        svgTemplate: 'webCrawler',
         architecture: 'See diagram above.',
         problems: ['Single-threaded: Max 100 pages/min', 'No politeness', 'No duplicate detection']
       },
@@ -18322,7 +18278,6 @@ Bloom filter for fast "definitely not seen" checks before expensive hash lookups
       advancedImplementation: {
         title: 'Production Architecture',
         diagramSrc: '/diagrams/web-crawler/impl-advanced.png',
-        svgTemplate: 'webCrawlerAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'URL Frontier: Priority + per-domain politeness',
@@ -18984,7 +18939,6 @@ When a normal user (<10K followers) posts:
         title: 'Pull-Based Architecture',
         description: 'Simple pull model - compute feed on read',
         diagramSrc: '/diagrams/facebook-newsfeed/impl-basic.png',
-        svgTemplate: 'facebookFeed',
         architecture: 'See diagram above.',
         problems: [
           'N+1 query problem (query per friend)',
@@ -18998,7 +18952,6 @@ When a normal user (<10K followers) posts:
       advancedImplementation: {
         title: 'Hybrid Fan-out Architecture',
         diagramSrc: '/diagrams/facebook-newsfeed/impl-advanced.png',
-        svgTemplate: 'facebookFeedAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Hybrid fan-out: push for normal users, pull for celebrities',
@@ -19564,7 +19517,6 @@ Merkle Tree sync:
         title: 'Single-Node Key-Value Store',
         description: 'In-memory hash map with persistence',
         diagramSrc: '/diagrams/key-value-store/impl-basic.png',
-        svgTemplate: 'keyValueStore',
         architecture: 'See diagram above.',
         problems: [
           'Single point of failure',
@@ -19577,7 +19529,6 @@ Merkle Tree sync:
       advancedImplementation: {
         title: 'Distributed Key-Value Store',
         diagramSrc: '/diagrams/key-value-store/impl-advanced.png',
-        svgTemplate: 'keyValueAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Consistent hashing with virtual nodes for partitioning',
@@ -20201,7 +20152,6 @@ No coordination, but:
         title: 'Single Server Snowflake',
         description: 'Simple in-memory generator',
         diagramSrc: '/diagrams/unique-id-generator/impl-basic.png',
-        svgTemplate: 'distributedId',
         architecture: 'See diagram above.',
         problems: [
           'Single point of failure',
@@ -20214,7 +20164,6 @@ No coordination, but:
       advancedImplementation: {
         title: 'Distributed Snowflake Service',
         diagramSrc: '/diagrams/unique-id-generator/impl-advanced.png',
-        svgTemplate: 'distributedIdAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Embedded library - no network overhead',
@@ -21122,7 +21071,6 @@ Monitor and alert on:
         title: 'Simple News Aggregator',
         description: 'RSS ingestion with basic ranking',
         diagramSrc: '/diagrams/news-aggregator/impl-basic.png',
-        svgTemplate: 'googleNews',
         architecture: 'See diagram above.',
         problems: [
           'No deduplication - same story shown multiple times',
@@ -21135,7 +21083,6 @@ Monitor and alert on:
       advancedImplementation: {
         title: 'Production News Platform',
         diagramSrc: '/diagrams/news-aggregator/impl-advanced.png',
-        svgTemplate: 'googleNewsAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Distributed crawlers with Kafka for async processing',
@@ -21989,7 +21936,6 @@ DEL temp:friends:player123 temp:result
         title: 'Single Redis Leaderboard',
         description: 'Simple sorted set implementation',
         diagramSrc: '/diagrams/leaderboard/impl-basic.png',
-        svgTemplate: 'leaderboard',
         architecture: 'See diagram above.',
         problems: [
           'Single Redis instance = SPOF',
@@ -22002,7 +21948,6 @@ DEL temp:friends:player123 temp:result
       advancedImplementation: {
         title: 'Production Leaderboard System',
         diagramSrc: '/diagrams/leaderboard/impl-advanced.png',
-        svgTemplate: 'leaderboardAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Kafka for write buffering and exactly-once delivery',
@@ -22953,7 +22898,6 @@ Every layer is safe to retry independently.
         title: 'Simple Booking System',
         description: 'Single database with basic search',
         diagramSrc: '/diagrams/hotel-booking/impl-basic.png',
-        svgTemplate: 'hotelBooking',
         architecture: 'See diagram above.',
         problems: [
           'Slow search (geo + availability join)',
@@ -22966,7 +22910,6 @@ Every layer is safe to retry independently.
       advancedImplementation: {
         title: 'Production Booking Platform',
         diagramSrc: '/diagrams/hotel-booking/impl-advanced.png',
-        svgTemplate: 'hotelBookingAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Two-phase search: Elasticsearch candidates → DB availability',
@@ -23934,7 +23877,6 @@ Compared to PostGIS ST_DWithin: S2 cell range queries can be 10x faster for larg
         title: 'Basic Mapping System',
         description: 'Static tiles with simple routing',
         diagramSrc: '/diagrams/google-maps/impl-basic.png',
-        svgTemplate: 'googleMaps',
         architecture: 'See diagram above.',
         problems: [
           'Slow routing (Dijkstra too slow at scale)',
@@ -23947,7 +23889,6 @@ Compared to PostGIS ST_DWithin: S2 cell range queries can be 10x faster for larg
       advancedImplementation: {
         title: 'Production Maps Platform',
         diagramSrc: '/diagrams/google-maps/impl-advanced.png',
-        svgTemplate: 'googleMapsAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Vector tiles: Smaller, styleable, rendered client-side',
@@ -24502,7 +24443,6 @@ For very large meetings (webinars):
         title: 'Simple Video Call',
         description: 'Peer-to-peer for 2 participants',
         diagramSrc: '/diagrams/zoom/impl-basic.png',
-        svgTemplate: 'zoom',
         architecture: 'See diagram above.',
         problems: [
           'Only works for 2-4 participants (N² problem)',
@@ -24515,7 +24455,6 @@ For very large meetings (webinars):
       advancedImplementation: {
         title: 'Production Video Conferencing',
         diagramSrc: '/diagrams/zoom/impl-advanced.png',
-        svgTemplate: 'zoomAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'SFU-based architecture for scalability',
@@ -25201,7 +25140,6 @@ Privacy: Option to view anonymously (hides viewer)
         title: 'Simple Professional Network',
         description: 'Basic profiles and connections',
         diagramSrc: '/diagrams/linkedin/impl-basic.png',
-        svgTemplate: 'linkedin',
         architecture: 'See diagram above.',
         problems: [
           '2nd degree queries are O(N²)',
@@ -25214,7 +25152,6 @@ Privacy: Option to view anonymously (hides viewer)
       advancedImplementation: {
         title: 'Production LinkedIn Architecture',
         diagramSrc: '/diagrams/linkedin/impl-advanced.png',
-        svgTemplate: 'linkedinAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Custom graph database for connection queries',

@@ -1951,7 +1951,7 @@ export default function TopicDetail({
 
               {/* 5c. Basic + Advanced Implementation — right after layered design, before flows */}
               {(topicDetails.basicImplementation || topicDetails.advancedImplementation) && (
-                <div id="implementation" className={`grid gap-3 scroll-mt-24 ${topicDetails.basicImplementation && topicDetails.advancedImplementation ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+                <div id="implementation" className="grid grid-cols-1 gap-6 scroll-mt-24">
                   {topicDetails.basicImplementation && (
                     <div className="">
                       <ContentHeading
