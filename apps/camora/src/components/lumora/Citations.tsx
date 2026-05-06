@@ -12,8 +12,10 @@
  *   - Collapsed by default: a small footer row showing "Sources" +
  *     count badge.
  *   - Click to toggle the expanded list.
- *   - Each row shows tier-appropriate metadata (no external links —
- *     KB chunks are internal Capra topics; user chunks are uploaded docs).
+ *   - Each row shows tier-appropriate metadata. Web-watchlist chunks
+ *     (Plan C) carry a URL — those rows render as a clickable link
+ *     (target=_blank, rel=noopener). KB chunks without a URL and user
+ *     uploaded docs render as plain text.
  */
 
 import { useState } from 'react';
@@ -91,12 +93,25 @@ function CitationRow({ c, index }: { c: Citation; index: number }) {
           >
             {isKb ? 'KB' : 'YOURS'}
           </span>
-          <span
-            className="text-[13px] font-semibold leading-tight truncate"
-            style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-answer)' }}
-          >
-            {primaryLabel}
-          </span>
+          {c.url ? (
+            <a
+              href={c.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[13px] font-semibold leading-tight truncate hover:underline"
+              style={{ color: 'var(--cam-primary)', fontFamily: 'var(--font-answer)' }}
+              title={c.url}
+            >
+              {primaryLabel}
+            </a>
+          ) : (
+            <span
+              className="text-[13px] font-semibold leading-tight truncate"
+              style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-answer)' }}
+            >
+              {primaryLabel}
+            </span>
+          )}
         </div>
 
         {/* Secondary line */}

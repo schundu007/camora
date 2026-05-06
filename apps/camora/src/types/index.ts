@@ -94,6 +94,8 @@ export interface Citation {
   topicTitle: string | null;
   section: string | null;
   docKind: string | null;
+  /** Present for web-watchlist (Plan C) chunks; null for static KB + user docs. */
+  url: string | null;
   distance: number;
 }
 
