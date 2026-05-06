@@ -58,11 +58,11 @@ const CHAR_WIDTH_RATIO = {
 };
 
 // Padding inside container boxes so text doesn't kiss the borders.
-// Bumped from 16/12 after the first pass still showed boxes that
-// clipped the last line of multi-line labels (e.g. "Presence cursors"
-// inside the CLIENT box on Google Docs basic).
-const CONTAINER_PAD_X = 24;
-const CONTAINER_PAD_Y = 22;
+// Bumped progressively (16->24->32 horizontal, 12->22->32 vertical)
+// after each pass still left text spilling. Hand-drawn font rendering
+// adds significant leading that pure char-metric estimation under-counts.
+const CONTAINER_PAD_X = 32;
+const CONTAINER_PAD_Y = 32;
 
 // Minimum readable text size. Small labels under this threshold
 // get bumped — the audit complained text was too tiny to read.
@@ -76,12 +76,12 @@ function measureText(text, fontSize, fontFamily) {
   // 5% extra horizontal margin: real font metrics drift ~3-5% past
   // pure char-count estimates, especially with wide letterforms (m, w).
   const width = Math.ceil(longestLineChars * fontSize * ratio * 1.05);
-  // Excalidraw's actual rendered lineHeight is ~1.5-1.6 for hand-drawn
-  // fonts (Virgil/Excalifont). Bumped to 1.6 + 8px slack after the
-  // second pass still showed 4-line labels ("Browser Client / CRDT
-  // local state / Offline queue / Presence cursors") clipping out of
-  // their containers on Google Docs.
-  const height = Math.ceil(lines.length * fontSize * 1.6) + 8;
+  // Excalidraw's actual rendered lineHeight for hand-drawn fonts
+  // (Virgil/Excalifont) is ~1.7-2.0 in practice — these fonts render
+  // taller than their declared metrics. Pure-math estimates kept
+  // under-counting. Use 2.0× as a hard ceiling; over-grown boxes
+  // are visually fine, under-grown boxes clip and frustrate users.
+  const height = Math.ceil(lines.length * fontSize * 2.0);
   return { width, height };
 }
 
