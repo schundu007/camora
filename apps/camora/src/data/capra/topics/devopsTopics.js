@@ -20941,4 +20941,561 @@ These are answers a GitOps-fluent platform engineer should give without preparat
     ],
   },
 
+  {
+    id: 'db-schema-migrations',
+    title: 'Database Schema Evolution — Patterns Beyond CI Tooling',
+    icon: 'database',
+    color: '#a855f7',
+    questions: 5,
+    description: 'Schema evolution as a discipline, not a tool. Expand-contract in depth, online DDL theory, multi-region migration ordering, chunked-resumable backfills, and schema-on-read evolution rules for streaming and data-lake worlds.',
+    visualizations: [
+      {
+        title: 'Expand-contract in depth and online DDL theory',
+        description: `Schema evolution is a separate discipline from migration tooling. Flyway, Liquibase, Atlas, and Alembic apply migrations; they do not tell you what migration is safe. The safety theory lives one level up.
+
+Expand-contract — the canonical breaking-change pattern.
+
+The premise. During any rolling deploy, two app versions execute the same schema. Any schema change that one version cannot tolerate causes errors during the rollout window. Expand-contract decomposes one logical change into a sequence of additive (safe) changes plus a final destructive (safe-by-then) change.
+
+The full ladder for a column rename email_address to email:
+
+1. Migration 1 (expand). ADD COLUMN email; nullable, no default that rewrites the table.
+2. App release A. Writes both columns on every insert/update. Reads still come from email_address.
+3. Backfill job. Chunked UPDATE that sets email = email_address WHERE email IS NULL, throttled by replica lag.
+4. Migration 2. Add NOT NULL via the safe path (Postgres: CHECK NOT VALID then VALIDATE; MySQL: ALTER with online DDL tool).
+5. App release B. Reads from email; still writes both for safety.
+6. Validation window. Metrics confirm zero reads of email_address in production logs (audit via column-level access tracing or query log sampling).
+7. App release C. Stops writing email_address.
+8. Migration 3 (contract). DROP COLUMN email_address.
+
+Eight steps, three migrations, three app deploys, one backfill, one validation gate. The point: the dangerous step (step 8) only runs after step 6 has proven nothing reads the old column. The pattern fails when teams compress steps to save time; the most common failure is collapsing release B and release C, which leaves no observable gap to detect lingering reads.
+
+Online DDL theory. The fundamental tension: ALTER on a hot table either holds a lock long enough to break SLOs or copies data in the background and reconciles concurrent writes. Every online DDL implementation picks one of three reconciliation strategies:
+
+Strategy A — trigger-based shadow table (pt-online-schema-change). The tool creates an empty shadow with the new shape, installs INSERT/UPDATE/DELETE triggers on the original that mirror writes to the shadow, then chunk-copies historical rows. Atomic RENAME at the end. Cost: every write does double the work for the duration of the migration; trigger overhead is real on write-heavy workloads.
+
+Strategy B — log-replay shadow table (gh-ost). Same shadow, but reads the binary log instead of installing triggers. The migrator process replays binlog events into the shadow, throttling on replica lag and pausing during traffic spikes. Cost: needs row-based binlog and a separate process; benefit: no trigger overhead on the original table, easier to pause and resume.
+
+Strategy C — multi-version table (pgroll, Postgres logical-evolution proposals). The original table is unchanged; a new "version" of the table is built as a view or partition with the new shape. Both versions visible simultaneously; readers pick a schema version per-connection. The shape change is purely metadata. Cost: only works when the change can be expressed as a view (column rename, additive change, type widening); cannot handle arbitrary DDL.
+
+Postgres specifics worth memorizing:
+- ADD COLUMN with a non-volatile default in PG 11+ stores the default in pg_attribute and avoids a table rewrite. Volatile defaults still rewrite.
+- ALTER COLUMN ... TYPE rewrites unless the new type is binary-coercible (e.g. varchar(50) to varchar(100), or text to varchar without length).
+- SET NOT NULL is fast in PG 12+ if a matching CHECK constraint already exists with VALIDATE.
+- CREATE INDEX CONCURRENTLY is two passes; if the second pass fails the index is left INVALID. Always check pg_index.indisvalid after.
+- VACUUM FULL is a full rewrite under exclusive lock; pg_repack is the online substitute.
+
+MySQL specifics:
+- INSTANT DDL (8.0+) supports column add, rename, default change, drop in O(1) for most cases. Check ALGORITHM=INSTANT support before reaching for gh-ost.
+- INPLACE algorithm rebuilds the clustered index without locking, but holds metadata lock briefly at start and end. Use for index ops on smaller tables.
+- COPY algorithm is the lock-the-world fallback. Should never appear in a production migration plan.
+
+The senior heuristic: pick the smallest tool for the change. INSTANT and concurrent index builds first; pgroll or gh-ost when the operation actually requires a table rewrite or trigger-fan-out; pt-osc only when binlog-based replication is unavailable.`,
+        image: '/diagrams/devops/k1-db-migrations.png',
+      },
+      {
+        title: 'Multi-region ordering, chunked backfills, schema-on-read evolution',
+        description: `Multi-region migration ordering. The problem: a schema change must apply to every replica in every region without breaking applications routing to those regions.
+
+Topology 1 — single primary, async replicas (most Postgres, MySQL Aurora-style). DDL applies on the primary; the WAL/binlog stream replicates the change to replicas. Constraints:
+- Replicas execute DDL serially; a heavy ALTER blocks all subsequent replication on that replica until it finishes. A multi-hour migration on the primary becomes a multi-hour replication lag on every replica simultaneously.
+- Read-replicas serving traffic in other regions will fall behind during this window.
+- Mitigation: drain reads from replicas before the migration, run the DDL, let replicas catch up, restore reads.
+
+Topology 2 — multi-primary or globally distributed (CockroachDB, Spanner, YugabyteDB, Aurora Global). DDL is a distributed protocol. CockroachDB executes online schema changes with a state machine across all nodes; Spanner uses long-running operations with versioned schema dictionaries. Constraints:
+- Schema changes require quorum agreement across regions; a partition during the migration leaves the cluster in an intermediate state until healed.
+- Application code must tolerate the transitional schema for the duration of the rollout.
+
+The senior rule: the application rollout window must contain the schema rollout window. App release that depends on the new column does not start its rolling update until every replica or region reports the column exists.
+
+Chunked, resumable, idempotent data migration. A backfill that updates 200M rows in one transaction is an outage. The pattern that scales:
+
+1. Chunked. Update by primary key range, 1k to 10k rows per chunk. UPDATE ... WHERE id BETWEEN :lo AND :hi.
+2. Throttled. Sleep between chunks proportional to replica lag or vacuum pressure. Common: target replica lag below 5 seconds, pause if higher.
+3. Resumable. Persist the last-completed range in a separate progress table. On restart, the job reads the last range and continues. Never assume the job will run to completion in one invocation.
+4. Idempotent. UPDATE ... WHERE id BETWEEN :lo AND :hi AND new_col IS NULL. Re-running a chunk is a no-op.
+5. Observable. Emit metrics: rows_processed, chunks_per_second, replica_lag_seconds, errors. Alert on stalled progress.
+6. Reversible. The backfill should not corrupt rows on failure. Transactional per-chunk; the chunk either succeeds entirely or rolls back.
+
+Backfill anti-patterns:
+- Running the backfill inside the migration transaction. Locks the schema_migrations row for the duration; blocks every other deploy.
+- Running without an index on the predicate. Each chunk becomes a full scan; the job is O(N^2).
+- Treating the backfill as one-shot. The job will fail mid-run; without resumption logic, restarting from zero is the only option.
+
+Schema-on-read evolution — Avro, Protobuf, JSON Schema. The streaming and data-lake world (Kafka, Pulsar, Kinesis, Iceberg, Delta Lake, Parquet datasets) does not have ALTER TABLE. The schema is attached to the data, and consumers evolve at their own pace. The evolution rules differ by format.
+
+Avro (Confluent Schema Registry). Compatibility modes:
+- BACKWARD: new schema can read old data. Allowed: add nullable fields with defaults, remove fields. Forbidden: rename, type change, add required field.
+- FORWARD: old schema can read new data. Allowed: add fields (any), remove optional fields. Forbidden: remove required fields, rename.
+- FULL: both directions. Intersection of the above.
+- BACKWARD_TRANSITIVE / FORWARD_TRANSITIVE: applies across all historical versions, not just the previous one. The realistic default for production topics.
+
+Protobuf. Field numbers are the contract; names are documentation. Rules:
+- Adding a field: safe, gets default value in old readers.
+- Removing a field: reserve the field number to prevent reuse; otherwise a future field with the same number silently corrupts data.
+- Changing a type: safe only within wire-compatible groups (int32 to int64, etc.); unsafe across groups.
+- Renaming: safe (names are not on the wire); update consumers at leisure.
+
+Iceberg and Delta Lake. Schema evolution is first-class: add column, drop column, rename column, type widening. Delta Lake supports column mapping (rename without rewriting data files); Iceberg uses field IDs identical to Protobuf field numbers. Drop is metadata-only; data files retain the old column but readers skip it.
+
+Versioning APIs alongside schema — consumer-driven contracts. The pattern: the producer does not unilaterally decide what is safe. Each consumer publishes a contract describing what it actually reads; the producer's CI verifies that any proposed schema change still satisfies every published contract. Tooling: Pact, Spring Cloud Contract, Confluent Schema Registry compatibility checks.
+
+The senior insight: contract testing is the only mechanism that catches "I dropped a field that nobody on my team reads, but two downstream services parse it" before production. Schema registries enforce wire-format compatibility; consumer-driven contracts enforce semantic compatibility.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Schema Evolution.',
+        question: 'Quick-fire interview answers — Schema Evolution.',
+        answer: `Rapid-fire facts.
+
+Q: Expand-contract in one line?
+A: Decompose any breaking change into additive migrations plus a final destructive migration, with app releases between each step that prove the previous shape is unused.
+
+Q: Minimum step count for a column rename done right?
+A: Three migrations and three app releases: add new column, write both, backfill, switch reads, stop writing old, drop old.
+
+Q: Why is "deploy migration plus new code together" wrong?
+A: Rolling update means the old app version runs against the new schema. If the migration removed or changed a column the old version queries, requests 500 during the rollout window.
+
+Q: Online DDL — three reconciliation strategies?
+A: Trigger-based shadow (pt-osc), log-replay shadow (gh-ost), multi-version metadata (pgroll, Iceberg-style). Each picks a different way to handle writes during the copy.
+
+Q: Postgres ADD COLUMN with default — does it rewrite?
+A: Non-volatile default in PG 11+ does not rewrite; the default lives in pg_attribute. Volatile default still rewrites.
+
+Q: Fast SET NOT NULL on a big Postgres table?
+A: Add CHECK constraint NOT VALID, then VALIDATE in a separate statement, then SET NOT NULL. PG 12+ uses the constraint to skip the table scan.
+
+Q: CREATE INDEX CONCURRENTLY caveat?
+A: Two-pass scan; if the second pass fails the index is INVALID. Check pg_index.indisvalid; drop and recreate if invalid.
+
+Q: MySQL INSTANT DDL?
+A: 8.0+ supports add, rename, default-change, and drop in O(1) for many cases. Check ALGORITHM=INSTANT before reaching for gh-ost.
+
+Q: Multi-region migration ordering rule?
+A: App rollout window must contain the schema rollout window. App release that depends on the new column waits until every region reports the column exists.
+
+Q: Why is replication lag during a migration a problem?
+A: Replicas apply DDL serially. A long ALTER on the primary stalls replication for the same duration on every replica simultaneously. Region-local reads go stale.
+
+Q: Chunked backfill — required properties?
+A: Chunked by PK range, throttled on replica lag, resumable from a progress table, idempotent (predicate excludes already-processed rows), observable via metrics.
+
+Q: Backfill inside the migration transaction — why is it wrong?
+A: Holds the schema_migrations lock for the duration of the backfill; blocks every other deploy and prevents the migration from being interrupted safely.
+
+Q: Avro BACKWARD compatibility — what is allowed?
+A: Add nullable fields with defaults, remove fields. Forbidden: rename, type change, add required field. New schema must read old data.
+
+Q: BACKWARD_TRANSITIVE vs BACKWARD?
+A: TRANSITIVE checks against all historical versions, not just the previous one. Production default for long-lived topics.
+
+Q: Protobuf — what is the contract?
+A: Field numbers. Names are documentation. Reserve numbers when removing fields so future additions cannot reuse them and silently corrupt data.
+
+Q: Iceberg or Delta Lake schema evolution — how does drop column work?
+A: Metadata-only. Data files retain the column; readers skip it via field IDs. Rename is also metadata-only via column mapping (Delta) or field IDs (Iceberg).
+
+Q: Consumer-driven contracts — what problem do they solve?
+A: Wire-format compatibility is not semantic compatibility. Schema registries cannot tell you which fields downstream consumers actually read. Pact-style contracts publish that information so producer CI can block incompatible changes.
+
+Q: Most common multi-region migration mistake?
+A: Initiating the schema change and the dependent app release in the same deploy window without confirming every region has caught up.
+
+Q: Most common backfill mistake?
+A: Missing index on the predicate. Each chunk becomes a full scan; the job runs O(N^2) and never finishes on a billion-row table.
+
+Q: When does pgroll win over gh-ost?
+A: Postgres workloads where the change can be expressed as a view (column rename, type widen, nullable add). Pgroll keeps the original table untouched and exposes a versioned view; clients pick a schema version per-connection.
+
+Q: When does the expand-contract pattern not apply?
+A: Purely additive changes (add nullable column, add index concurrently, add table). Anything destructive or type-changing requires the full ladder.
+
+These are answers a schema-evolution-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://www.postgresql.org/docs/current/ddl-alter.html',
+      'https://github.com/xataio/pgroll',
+      'https://docs.confluent.io/platform/current/schema-registry/avro.html',
+      'https://protobuf.dev/programming-guides/proto3/#updating',
+      'https://iceberg.apache.org/docs/latest/evolution/',
+      'https://docs.pact.io/',
+    ],
+  },
+
+  {
+    id: 'gitops-for-databases',
+    title: 'GitOps for Databases — Schemas, Roles, Snapshots in Git',
+    icon: 'database',
+    color: '#a855f7',
+    questions: 5,
+    description: 'Why databases were excluded from the original GitOps wave and how Atlas Operator, Bytebase, Schemahero, and pgroll closed the gap. Declarative schema, role, and index management with controllers, drift detection, and the hard limit at stateful data.',
+    visualizations: [
+      {
+        title: 'Why databases were excluded and what changed',
+        description: `GitOps as defined by Weaveworks in 2017 had a clean premise: the cluster's desired state lives in Git, a controller continuously reconciles the cluster toward that state, and any drift is auto-corrected or alerted. ArgoCD and Flux operationalized this for Kubernetes manifests. Databases sat outside the model for almost five years.
+
+Why databases were excluded.
+
+Reason 1 — state mutation has side effects. Applying a Deployment manifest replaces the previous Deployment; the action is idempotent and the previous resource is recoverable. Applying a DROP COLUMN destroys data. The reconciliation loop cannot blindly apply a DDL.
+
+Reason 2 — schema is not the whole state. The cluster's desired state is the full set of manifests. The database's desired state is shape only; the data is not in Git and never will be. Any GitOps tool for databases has to define the boundary between what it owns (schema, roles, indexes, extensions) and what it does not (rows, sequences, statistics).
+
+Reason 3 — order matters. K8s manifests can be applied in any order; the controller resolves dependencies. SQL migrations are inherently ordered.
+
+Reason 4 — failure modes are catastrophic. A Deployment that fails health-checks is rolled back automatically. A migration that corrupts data is not rollback-able from a controller's perspective.
+
+The 2022 to 2026 thaw. Several tools converged on the same architecture: declare schema in Git, controller computes the diff against live DB, generates a migration, optionally requires human approval, applies, records the result.
+
+Atlas Operator (Ariga, 2023+). Kubernetes CRD: AtlasSchema and AtlasMigration. Desired schema lives in HCL or SQL files referenced from the CR. The operator runs Atlas internally to compute the diff, generates the migration, and applies it according to the policy in the CR (auto-apply for additive, require approval for destructive). Built-in lint catches dangerous diffs before they reach the cluster.
+
+Strengths: native K8s primitive, integrates with ArgoCD/Flux as just another resource, supports MySQL/Postgres/SQLite/SQL Server. Lint policy is the killer feature; you can declare "block any diff that drops a column" cluster-wide.
+
+Limits: no first-class workflow for multi-step expand-contract beyond what Atlas itself supports.
+
+Bytebase (2022+). Not a controller in the strict GitOps sense; a database DevOps platform with a Git integration. PRs in a designated repo trigger Bytebase pipelines that propose migrations, route them through review/approval, and apply them in stages (dev to staging to prod). Workflow-heavy. RBAC, audit trail, multi-environment promotion, scheduled runs, slack/email approvals. The de facto choice for compliance-heavy orgs.
+
+Limits: not declarative in the K8s sense; cannot reconcile drift autonomously.
+
+Schemahero (Replicated, 2020+). Earliest of the group. K8s CRD: Database (connection) and Table (desired shape per table). The operator computes the diff and applies it. Smaller community than Atlas Operator in 2026; still maintained.
+
+pgroll (Xata, 2023+). Postgres-only. Implements multi-version schema evolution natively: every migration creates a new schema version exposed as a view; clients select a version per-connection. Old and new schemas coexist; rollout is a client-side switch, not a server-side cutover. Solves the multi-deploy expand-contract ladder at the database level.
+
+Limits: Postgres-only; constrains DDL to operations that can be expressed as views.
+
+Liquibase Hub / Flyway Cloud. Hosted policy and audit layers on top of the existing migration tools. Less "GitOps" and more "Git-integrated migration service with cloud-side policy enforcement".`,
+        image: '/diagrams/devops/k2-gitops-dbs.png',
+      },
+      {
+        title: 'Drift detection, the stateful-data limit, and real-world adoption',
+        description: `What GitOps for databases actually owns:
+
+Schema (tables, columns, types, constraints, indexes). The clear win. Declarative tools handle this well; lint policies enforce the safe-change subset.
+
+Roles and grants. Increasingly common. Atlas, Bytebase, and Schemahero all support declaring CREATE ROLE / GRANT in the same files as schema. The controller reconciles drift; a manual GRANT in prod is detected and (per policy) reverted or alerted.
+
+Extensions (Postgres). Atlas and pgroll handle CREATE EXTENSION declaratively. CRDs that pin extension versions; controller installs missing extensions on reconciliation.
+
+Functions, triggers, views, sequences. Supported by most tools but with caveats. Functions are bodies-of-code; diffing them produces noisy migrations. Sequences have current values that are runtime state — the tools manage definition, not value.
+
+Partitions. Range and list partition definitions can be declared; partition maintenance (creating next month's partition) typically lives outside the GitOps tool, in a cron or pg_partman job.
+
+What GitOps for databases does NOT own:
+
+Data. Rows, sequence values, statistics. Not in Git, not reconciled. A DELETE FROM users in prod is invisible to the controller.
+
+Hot data corrections. The hotfix UPDATE that adjusts a misbilled customer is not in Git and should not be. Process lives outside the GitOps loop.
+
+Indexes that exist for tuning but not for correctness. Some teams leave performance indexes outside the GitOps schema and let DBAs adjust them in prod. Pick one pattern per cluster, document it.
+
+Drift detection in practice. The architecture: controller polls live schema, compares against desired schema, emits a diff event. Three response policies:
+
+Policy 1 — auto-correct. Controller applies a reverse migration to bring the DB back to declared state. Rare in production; too dangerous for accidental hotfixes.
+
+Policy 2 — alert and block deploys. Drift detection raises a critical alert; subsequent migrations are blocked until the drift is resolved (either by reverting the manual change or by updating Git to match). Most common pattern in 2026.
+
+Policy 3 — alert only. Notification, no enforcement. The minimum useful response; works only when the team is small enough that drift is rare.
+
+The realistic adoption pattern in 2026. Most production teams do not run "full GitOps for databases". They run:
+- Atlas or Bytebase for migration generation and CI lint.
+- Migration application via a dedicated CI step or K8s Job, not a continuously reconciling controller.
+- Drift detection runs nightly or on-PR, alerts to Slack, does not auto-correct.
+- Roles, grants, and extensions in Git; tables and indexes in Git; functions and views sometimes in Git, sometimes managed by DBA.
+- Data corrections happen via approved one-off scripts that are logged but not committed to the schema repo.
+
+The honest summary: full GitOps reconciliation works for cluster manifests because applying them is idempotent. For databases, the destructive failure mode is permanent, so the loop is intentionally broken at the apply step.
+
+Limits worth understanding:
+
+Limit 1 — order across services. App service A declares "needs column X". Controller for service A's database creates column X. App service B's deploy reads column X via service A's API. The K8s reconciliation loop has no model of cross-service ordering; orchestration falls to the deployment pipeline.
+
+Limit 2 — rollback semantics. Atlas Operator can revert the last migration; it cannot un-drop a column with data. The "rollback" is shape-only; data loss is unrecoverable from the controller's perspective.
+
+Limit 3 — multi-environment promotion. GitOps loops are per-environment. Promoting a schema change from staging to prod is a separate process; controllers do not promote across clusters automatically.
+
+Limit 4 — approval friction. Compliance environments require approval for production schema changes. ArgoCD's sync waves and manual sync gates compose with this; Bytebase does it natively. Pure declarative GitOps without approval gates is incompatible with SOC 2 / HIPAA controls in most readings.
+
+Tooling choice as of 2026:
+- Pure K8s shop, additive-mostly schemas: Atlas Operator.
+- Compliance-heavy, DBAs in the loop: Bytebase.
+- Postgres-only, expand-contract central to the workflow: pgroll alongside Atlas or as the primary tool.
+- Existing Liquibase/Flyway investment: stay with the current tool plus their cloud governance layer; switching costs are high and the gain is marginal.`,
+      },
+      {
+        title: 'Quick-fire interview answers — GitOps for Databases.',
+        question: 'Quick-fire interview answers — GitOps for Databases.',
+        answer: `Rapid-fire facts.
+
+Q: Why were databases originally excluded from GitOps?
+A: State mutation with side effects (DROP COLUMN destroys data), schema is not the whole state (data is not in Git), order matters for SQL, and failure modes are not auto-rollback-able.
+
+Q: Atlas Operator in one line?
+A: K8s CRD for declarative schema; operator runs Atlas to diff Git against live DB, generates migration, applies per policy, with built-in lint to block dangerous diffs.
+
+Q: Bytebase in one line?
+A: Database DevOps platform with Git integration; PR triggers pipelines through review/approval/apply across environments. Workflow-heavy, audit-strong, not a continuous reconciler.
+
+Q: Schemahero in one line?
+A: Earliest K8s-native schema operator. CRDs per table. Simpler than Atlas Operator; less Postgres-specific intelligence.
+
+Q: pgroll in one line?
+A: Postgres multi-version schema evolution. Each migration creates a new schema version exposed as a view; clients select per-connection. Solves expand-contract at the DB layer.
+
+Q: What does "GitOps for databases" actually own in production?
+A: Schema (tables, columns, indexes, constraints), roles and grants, extensions, sometimes functions and views. Not data, not sequence values, not hot corrections.
+
+Q: Drift detection — three response policies?
+A: Auto-correct (rare, dangerous), alert-and-block-deploys (most common), alert-only (smallest teams).
+
+Q: Why is auto-correct rarely used?
+A: Manual prod changes are sometimes legitimate hotfixes. Reverting them automatically reintroduces the bug. Block-and-alert is safer.
+
+Q: Difference between Atlas Operator and Atlas CLI in CI?
+A: Operator runs continuously inside the cluster with CRDs; CLI runs as a CI step. Same diff engine, different invocation. Operator gives drift detection; CLI does not.
+
+Q: Why is Bytebase popular for compliance?
+A: Native RBAC, audit trail, approval workflows, multi-environment promotion. Maps cleanly to SOC 2 / HIPAA change management requirements.
+
+Q: pgroll vs gh-ost?
+A: pgroll is Postgres multi-version evolution via views; gh-ost is MySQL online DDL via binlog replay. Different databases, different strategies.
+
+Q: Can the controller reconcile DROP COLUMN safely?
+A: No. Even with policy gating, dropping a column with data is destructive. Most tools require explicit approval (Atlas: lint blocks; Bytebase: approval workflow).
+
+Q: GitOps for roles and grants?
+A: Common. Declare CREATE ROLE / GRANT in the same files as schema; controller reconciles. Catches accidentally-granted prod access.
+
+Q: What about indexes not in Git?
+A: Two patterns. Either everything is in Git and DBAs propose changes via PR, or performance indexes are explicitly out-of-scope and tracked separately. Pick one per cluster.
+
+Q: Multi-environment promotion in GitOps?
+A: Not native. GitOps loops are per-environment. Promotion from staging to prod is a separate pipeline; controllers do not cross clusters automatically.
+
+Q: Rollback semantics for Atlas Operator?
+A: Reverts the last migration definition. Cannot un-drop a column with data. Shape rollback only.
+
+Q: Why does ArgoCD's sync-wave matter for DBs?
+A: Lets you order: migration job in wave 1, app deployment in wave 2. Without this, the controller might deploy the app before the schema change applies.
+
+Q: Can full GitOps reconciliation work for databases?
+A: For shape changes that are additive and reversible, yes. For destructive changes and data, no. Most production "GitOps for databases" is schema-as-code with CI-driven application, not a continuously reconciling loop.
+
+Q: What is the realistic 2026 adoption pattern?
+A: Atlas or Bytebase for migration generation and lint, application via CI step or K8s Job, drift detection runs nightly with Slack alerts, no auto-correction.
+
+Q: When pick Atlas Operator over Bytebase?
+A: Pure K8s shop, additive-heavy schemas, no DBA approval requirement. Atlas is leaner; Bytebase wins when workflow and audit dominate.
+
+Q: When pick pgroll?
+A: Postgres workloads where expand-contract appears often and the team wants per-connection schema versions instead of orchestrating multi-deploy ladders.
+
+These are answers a database-GitOps-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://atlasgo.io/integrations/kubernetes/operator',
+      'https://www.bytebase.com/docs/',
+      'https://schemahero.io/',
+      'https://github.com/xataio/pgroll',
+      'https://argo-cd.readthedocs.io/en/stable/user-guide/sync-waves/',
+      'https://www.weave.works/technologies/gitops/',
+    ],
+  },
+
+  {
+    id: 'data-observability-lineage',
+    title: 'Data Observability — Freshness, Volume, Schema, Lineage',
+    icon: 'database',
+    color: '#a855f7',
+    questions: 5,
+    description: 'Five-pillar data observability (freshness, volume, schema, distribution, lineage), the OpenLineage standard, dbt and Airflow integrations, data SLOs, and how 2026 has consolidated around Monte Carlo, Bigeye, Anomalo on the commercial side and OpenLineage plus Marquez on the open-source side.',
+    visualizations: [
+      {
+        title: 'The five pillars and the tooling landscape',
+        description: `Data observability emerged as a discipline distinct from application observability around 2020 (Monte Carlo coined the framing) and consolidated through 2024 to 2026 into a recognized category. The premise: data systems break in ways that monitoring CPU, memory, and request latency cannot detect. A pipeline that returns a 200 with empty results is "available" but broken. A schema migration upstream that quietly changes column types corrupts every downstream consumer. Application observability cannot see any of this.
+
+The five pillars (Monte Carlo's framing, broadly adopted):
+
+Pillar 1 — Freshness. When did this table last update? Most data SLAs are freshness SLAs: "the daily revenue table should have data through midnight UTC by 6am UTC". Detection: monitor max(updated_at), compare against SLA, alert on breach. Common failure mode: upstream Airflow DAG failed silently; the downstream SQL query still returns yesterday's data without error.
+
+Pillar 2 — Volume. How many rows arrived? Sudden volume drops indicate upstream failures; sudden volume increases indicate duplication or replay bugs. Common failure: a Kafka consumer crashed and restarted from offset zero; downstream table double-loaded.
+
+Pillar 3 — Schema. Has the shape changed? New columns, dropped columns, type changes. Detection: schema snapshots over time, alert on diff. Common failure: upstream Postgres migration added a column; downstream Spark job ignored it; new revenue numbers missing from reports for two weeks before someone noticed.
+
+Pillar 4 — Distribution. Have value distributions shifted? Null rates, cardinality, range, format conformance. Common failure: a feature flag rolled out a bug that wrote NULL into a previously-required field; downstream JOINs silently lost rows.
+
+Pillar 5 — Lineage. What produced this table, and what depends on it? Upstream and downstream graphs, column-level when available. Common use: when a table breaks, the lineage tells you which downstream dashboards and ML models are affected.
+
+Tooling landscape — commercial.
+
+Monte Carlo (2019, dominant in 2026). End-to-end platform: ML-based anomaly detection on freshness/volume/distribution, schema change tracking, lineage from query parsing across Snowflake, BigQuery, Databricks, Redshift. Strong brand and the source of the five-pillar framing. Pricing is enterprise; mid-market often finds it expensive.
+
+Bigeye (2020, second in mindshare). Similar feature set, more emphasis on user-defined SLAs over fully automatic anomaly detection. The "explicit SLO" framing appeals to teams that want predictable alerts rather than ML-driven surprises.
+
+Anomalo (2021, ML-first). Deeper anomaly detection on data distributions; less emphasis on lineage in the early product. Strong fit for orgs where data quality (statistical anomalies) is the primary concern over freshness.
+
+Soda (open-core, 2020+). YAML-defined data tests (Soda Checks Language) that run as part of dbt or Airflow pipelines. Soda Cloud adds the dashboard and alerting layer. Cheaper than Monte Carlo, more code-centric, less ML-driven.
+
+Datafold. Strong on data-diff (regression testing for SQL changes); recently expanded into the broader observability category.
+
+Tooling landscape — open source.
+
+OpenLineage (2020+, LF AI and Data project). The emerging standard for lineage events. A spec, not a product: defines a JSON event format describing job runs, inputs, outputs, schemas, facets. Producers (dbt, Airflow, Spark, Flink) emit events; consumers (Marquez, DataHub, custom) ingest them.
+
+The 2026 reality: OpenLineage is winning as the lineage interchange format. Every major orchestrator and processing engine has either native or plugin-based emission. Commercial vendors increasingly accept OpenLineage events as input.
+
+Marquez (WeWork, 2018; LF AI and Data, 2020). The reference OpenLineage server. Stores events, exposes a REST and UI for browsing. Production-grade for moderate scale; usually paired with self-hosted Postgres.
+
+DataHub (LinkedIn, 2020+). Broader scope than just lineage: metadata catalog, governance, lineage. Accepts OpenLineage events. Heavier deployment than Marquez; more complete feature set.
+
+Amundsen (Lyft, 2019). Predates OpenLineage; data discovery and catalog with lineage. Less actively developed in 2026 than DataHub.
+
+Apache Atlas. Enterprise lineage (Hadoop ecosystem origin). Still used in Cloudera-style stacks; less common in modern Snowflake/BigQuery shops.
+
+Lineage capture in practice — three integration points:
+
+dbt manifest.json. Every dbt run produces a manifest describing models, tests, sources, and the SQL graph. Tools parse this for column-level lineage within the warehouse. The cleanest lineage source that exists; if the org runs dbt, lineage is solved for the analytics layer.
+
+Airflow OpenLineage plugin. Emits an event per task: input datasets, output datasets, run metadata, schema. Built into Airflow 2.7+; configurable via the openlineage-airflow package. Captures pipeline-level lineage that dbt manifests miss (the part before data lands in the warehouse).
+
+Spark/Beam OpenLineage integration. SparkListener-based; emits events per Spark job. Captures lineage for ETL jobs that don't use dbt (Iceberg writes, Delta Lake transformations, ML feature engineering). Beam has a similar SDK-level integration.
+
+Putting it together. A modern data org in 2026 typically emits OpenLineage events from Airflow, Spark, and dbt to a central server (Marquez or DataHub or a commercial backend). Lineage queries answer "what depends on this table" and "what produced this column" across the entire stack.`,
+        image: '/diagrams/devops/k3-data-observability.png',
+      },
+      {
+        title: 'Data SLOs and the distinction from application observability',
+        description: `Data SLOs. Application SLOs measure availability and latency. Data SLOs measure freshness, completeness, and quality. The grammar is the same (target percentage over a window) but the SLIs are different.
+
+SLI 1 — Freshness SLI. Percentage of windows where the table was updated within the SLA. Example: the orders_daily table SLO: 99% of days, the table contains all of yesterday's orders by 6am UTC. Implementation: SQL query that runs hourly, checks max(event_time) and updated_at, records a boolean. Soda, dbt freshness tests, or Monte Carlo freshness monitors all do this.
+
+SLI 2 — Schema-stability SLI. Percentage of days with no unexpected schema change. Approved changes (PR-reviewed dbt model edits) are expected. Unapproved changes (upstream Postgres migration without coordination) are violations. Implementation: schema snapshot service, comparison against a registered contract, alert on diff.
+
+SLI 3 — Anomaly-detection SLI. Percentage of windows free of distribution anomalies. For each metric (null rate, row count, mean of revenue column), did the value stay within the expected range? Implementation: anomaly detection (Monte Carlo, Anomalo, Bigeye, custom) producing one alert per metric per window; SLI rolls up over the SLO window.
+
+SLI 4 — Volume SLI. Percentage of windows with row count within expected range. The table received between expected_min and expected_max rows in the window. Implementation: anomaly detection on count(*) per window; or static threshold for stable workloads.
+
+The senior insight on data SLOs: error budgets work the same way as application SLOs. A team that burns its freshness SLO four weeks in a row should freeze new pipeline development until the existing pipelines are stabilized. The cultural challenge is that data teams have historically not been on-call for freshness; SLOs make that operational reality explicit.
+
+Distinction from application observability:
+
+What application observability cares about: availability (does the request succeed), latency (how long does it take), error rate (what fraction fail), saturation (how close to capacity).
+
+What data observability cares about: freshness (is the data current), completeness (are all the rows there), correctness (are the values right), conformance (does the schema match the contract), lineage (what depends on what).
+
+The first three pillars (freshness, volume, schema) have direct application-observability analogues. Distribution and lineage do not. Lineage in particular has no app-side equivalent: distributed tracing answers "what calls what during this request"; data lineage answers "what produced this dataset, statically, across all runs". They are different graphs.
+
+The 2026 consolidation. The category is mature. Three commercial leaders (Monte Carlo, Bigeye, Anomalo); Soda for code-first and budget-conscious teams; OpenLineage emerging as the de facto interchange standard. Marquez and DataHub dominate the OSS lineage server space.
+
+Three trends worth tracking:
+
+Trend 1 — OpenLineage as the universal contract. Commercial vendors increasingly support OpenLineage event ingestion as a first-class input. Long-term direction: lineage becomes vendor-neutral, observability vendors compete on detection and UX, not on lineage capture.
+
+Trend 2 — Column-level lineage becomes table stakes. Through 2023, table-level was the norm; column-level was a premium feature. By 2026, dbt manifest parsing has made column-level lineage standard for warehouse layers; Spark/Beam still typically table-level.
+
+Trend 3 — Data contracts. The shift toward explicit producer-consumer contracts (often Avro or Protobuf in Schema Registry, or YAML in dbt's contracts feature) has reduced reliance on automatic schema-diff detection. Schema breaks are fewer; the ones that happen are caught at the producer side.
+
+Anti-patterns worth avoiding:
+
+Anti-pattern 1 — Per-table tests but no lineage. Running 5,000 dbt tests with no graph means alerts are isolated; you cannot tell which alerts cascade from one root cause. Lineage turns 5,000 alerts into one root-cause alert with 4,999 affected dashboards.
+
+Anti-pattern 2 — Anomaly detection on everything. Auto-monitoring every metric on every column produces alert fatigue. Pick the columns that matter (revenue, user_id, primary keys) and tune thresholds. Monte Carlo and Anomalo both warn against this.
+
+Anti-pattern 3 — Lineage without query parsing. Lineage from dbt sources (which someone declared) is incomplete; lineage from parsed SQL queries (across all tools) is the truth. OpenLineage emission from query engines beats hand-curated lineage every time.
+
+Anti-pattern 4 — Treating data observability as the data team's problem. Schema changes are produced by application teams; they need to be in the alert path. Monte Carlo's GitHub integration and dbt's contracts feature are explicitly cross-team mechanisms.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Data Observability.',
+        question: 'Quick-fire interview answers — Data Observability.',
+        answer: `Rapid-fire facts.
+
+Q: Five pillars of data observability?
+A: Freshness, volume, schema, distribution, lineage. Monte Carlo's framing, broadly adopted.
+
+Q: Why is application observability not enough?
+A: A pipeline returning empty rows is "available" with zero latency. Schema changes upstream that corrupt downstream consumers are invisible to APM. Data systems need their own SLIs.
+
+Q: Freshness SLI in one line?
+A: Percentage of windows where the table updated within the latency budget. Detected by max(event_time) and max(updated_at) checks.
+
+Q: Volume anomaly — typical cause?
+A: Upstream consumer crashed and replayed from offset zero (over-counting), or a DAG failed silently (under-counting).
+
+Q: Schema-stability SLI?
+A: Percentage of days with no unapproved schema change. Approved changes go through dbt contracts or Schema Registry; unapproved changes are SLO violations.
+
+Q: Distribution anomaly — typical cause?
+A: Feature flag bug writing NULL into a previously-required field, or a code change shifting a value range without coordination.
+
+Q: Lineage — table-level vs column-level?
+A: Table-level: which tables produce or consume which tables. Column-level: which columns flow into which columns. Column-level became table stakes in 2026 via dbt manifest parsing.
+
+Q: Monte Carlo in one line?
+A: Dominant commercial data-observability platform. ML anomaly detection across freshness/volume/distribution, schema tracking, query-parsed lineage. Source of the five-pillar framing.
+
+Q: Bigeye?
+A: Commercial data observability emphasizing user-defined SLAs over fully automatic anomaly detection. Predictable alerts.
+
+Q: Anomalo?
+A: Commercial, ML-first on distribution anomalies. Strong fit when data quality is the primary concern.
+
+Q: Soda?
+A: Open-core, YAML-defined data tests (Soda Checks Language) integrated with dbt and Airflow. Cheaper than Monte Carlo, more code-centric.
+
+Q: OpenLineage in one line?
+A: Open spec for lineage events. JSON describing job runs, inputs, outputs, schemas. LF AI and Data project. The de facto interchange standard in 2026.
+
+Q: Marquez?
+A: Reference OpenLineage server. Stores events, exposes REST and UI. Production-grade for moderate scale.
+
+Q: DataHub?
+A: LinkedIn's metadata platform. Catalog plus lineage; accepts OpenLineage events. Heavier than Marquez; broader scope.
+
+Q: Three lineage capture integration points?
+A: dbt manifest.json (warehouse layer), Airflow OpenLineage plugin (orchestration), Spark/Beam OpenLineage SDK (ETL).
+
+Q: dbt manifest.json — why does it matter?
+A: It's the cleanest lineage source available. Every dbt run produces a graph of models, tests, sources, and SQL relationships. Tools parse it for column-level warehouse lineage.
+
+Q: Airflow OpenLineage support?
+A: Built into Airflow 2.7+; configured via openlineage-airflow. Emits one event per task with inputs, outputs, schemas.
+
+Q: Spark OpenLineage integration?
+A: SparkListener-based; emits events per Spark job. Captures ETL lineage outside the warehouse.
+
+Q: Anti-pattern: anomaly detection on everything?
+A: Alert fatigue. Pick columns that matter (revenue, user_id, primary keys) and tune thresholds. Auto-monitoring every column produces noise.
+
+Q: Anti-pattern: tests without lineage?
+A: 5,000 isolated alerts with no root-cause grouping. Lineage turns them into one root-cause alert with 4,999 affected downstreams.
+
+Q: Data contracts — what changed?
+A: Explicit producer-consumer contracts (Avro/Protobuf in Schema Registry, dbt contracts feature) catch breaks at the producer side, reducing reliance on downstream schema-diff detection.
+
+Q: 2026 consolidation — three commercial leaders?
+A: Monte Carlo, Bigeye, Anomalo. Soda for code-first and budget-conscious teams.
+
+Q: Trend: OpenLineage as universal contract?
+A: Commercial vendors increasingly accept OpenLineage events as input. Lineage capture becomes vendor-neutral; vendors compete on detection and UX.
+
+Q: Why do data SLOs matter culturally?
+A: They put data teams on-call for freshness and quality, not just for pipeline-up. Error budgets force tradeoffs between new pipeline work and stabilizing existing ones.
+
+Q: Distinction between data observability and app observability — one-line summary?
+A: App observability watches request availability and latency. Data observability watches dataset freshness, completeness, and correctness. Different graphs, different SLIs, both required.
+
+These are answers a data-observability-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://www.montecarlodata.com/blog-data-observability-the-next-frontier-of-data-engineering/',
+      'https://openlineage.io/docs/',
+      'https://marquezproject.ai/',
+      'https://docs.getdbt.com/docs/deploy/source-freshness',
+      'https://airflow.apache.org/docs/apache-airflow-providers-openlineage/stable/index.html',
+      'https://datahubproject.io/docs/',
+    ],
+  },
+
 ];
