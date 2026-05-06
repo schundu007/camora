@@ -141,7 +141,7 @@ type CTAAsButton = CTACommon & { to?: undefined; href?: undefined } & Omit<Butto
 type CTAProps = CTAAsLink | CTAAsAnchor | CTAAsButton;
 
 const ctaBase =
-  'group inline-flex items-center justify-center gap-2 font-semibold tracking-tight rounded-full transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--cam-primary)] focus-visible:ring-offset-[var(--bg-surface)] disabled:opacity-50 disabled:cursor-not-allowed';
+  'group inline-flex items-center justify-center gap-2 font-semibold tracking-tight rounded-full transition-[transform,background-color,border-color,box-shadow,color] duration-150 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--cam-primary)] focus-visible:ring-offset-[var(--bg-surface)] disabled:opacity-50 disabled:cursor-not-allowed';
 
 const ctaSize = {
   md: 'h-10 px-5 text-[13px]',
@@ -150,7 +150,7 @@ const ctaSize = {
 
 const ctaVariant = {
   primary:
-    'bg-[var(--cam-primary)] text-white shadow-[0_4px_14px_-4px_rgba(38,97,156,0.45)] hover:bg-[var(--cam-primary-dk)] hover:shadow-[0_8px_22px_-6px_rgba(38,97,156,0.55)] active:translate-y-px',
+    'bg-[var(--cam-primary)] text-white shadow-[0_4px_14px_-4px_rgba(38,97,156,0.45)] hover:bg-[var(--cam-primary-dk)] hover:shadow-[0_8px_22px_-6px_rgba(38,97,156,0.55)]',
   secondary:
     'bg-transparent text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--cam-primary)] hover:text-[var(--cam-primary)]',
   ghost:
@@ -225,7 +225,7 @@ export const SurfaceCard = forwardRef<HTMLDivElement, SurfaceCardProps>(
       ref={ref}
       className={cn(
         'rounded-2xl bg-[var(--bg-surface)] border border-[var(--border)] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]',
-        interactive && 'transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-hover)] hover:shadow-[0_4px_8px_rgba(15,23,42,0.06),0_16px_32px_-12px_rgba(15,23,42,0.16)]',
+        interactive && 'transition-[transform,border-color,box-shadow] duration-200 active:scale-[0.98] hover:-translate-y-0.5 hover:border-[var(--border-hover)] hover:shadow-[0_4px_8px_rgba(15,23,42,0.06),0_16px_32px_-12px_rgba(15,23,42,0.16)]',
         padding === 'sm' && 'p-4',
         padding === 'md' && 'p-6',
         padding === 'lg' && 'p-8',
