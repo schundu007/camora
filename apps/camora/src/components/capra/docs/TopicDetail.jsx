@@ -714,7 +714,7 @@ export default function TopicDetail({
           NOT auto-restyled. Use <h2/h3/h4 className="prep-section-heading">
           to opt a specific heading into the navy-strip + hex-glyph
           treatment. */}
-      <div className="prep-content flex-1 min-w-0">
+      <div className="prep-content flex-1 min-w-0 max-w-[840px]">
       {/* Topic Header — navy-strip + gold-leaf-border + glassy-pill capsules,
           matching the docs design system across every topic surface. */}
       <div className="mb-4">
@@ -753,7 +753,7 @@ export default function TopicDetail({
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-[20px] font-bold text-white landing-display tracking-tight">{topicDetails.title}</h1>
+                <h1 className="text-[22px] font-bold text-white landing-display tracking-tight" style={{ textWrap: 'balance' }}>{topicDetails.title}</h1>
                 {topicDetails.isNew && (
                   <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 landing-mono"
                     style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 999, color: 'rgba(255,255,255,0.9)' }}>
@@ -795,7 +795,7 @@ export default function TopicDetail({
                 )}
               </div>
               {topicDetails.description && (
-                <p className="text-[13px] mt-1 landing-body leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)' }}>{fmtCloud(topicDetails.description)}</p>
+                <p className="text-[14px] mt-1.5 landing-body leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)' }}>{fmtCloud(topicDetails.description)}</p>
               )}
               {topicDetails.subtitle && !topicDetails.difficulty && (
                 <p className="text-[12px] mt-1 landing-body" style={{ color: 'rgba(255,255,255,0.65)' }}>{fmtCloud(topicDetails.subtitle)}</p>
@@ -836,7 +836,7 @@ export default function TopicDetail({
       </div>
 
       {/* ── Interactive Toolbar with Progress ── */}
-      <div className="flex flex-wrap items-center justify-between gap-2 py-2 mb-4 border-b border-[var(--border)]">
+      <div className="flex flex-wrap items-center justify-between gap-2 py-3 mb-5 border-b border-[var(--border)]">
         <div className="flex items-center gap-2">
           {/* Progress */}
           {progressInfo && (

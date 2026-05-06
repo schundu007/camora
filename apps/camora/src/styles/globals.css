@@ -1402,9 +1402,10 @@ img { max-width: 100%; height: auto; }
 .prep-content > section > ol > li,
 .prep-content > ul > li,
 .prep-content > ol > li {
-  font-size: 15px;
-  line-height: 1.72;
-  letter-spacing: -0.002em;
+  font-size: 16px;
+  line-height: 1.75;
+  letter-spacing: -0.003em;
+  text-wrap: pretty;
 }
 .docs-page p,
 .prep-content > p,
@@ -1423,12 +1424,13 @@ img { max-width: 100%; height: auto; }
   font-size: 26px;
   line-height: 1.18;
   font-weight: 800;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.014em;
   color: var(--cam-primary);
   padding-left: 18px;
-  margin-top: 2.75rem;
+  margin-top: 3rem;
   margin-bottom: 1.1rem;
   scroll-margin-top: 6rem;
+  text-wrap: balance;
 }
 .docs-page section:first-child > h2,
 .prep-content > h2:first-child { margin-top: 0.5rem; }
@@ -1478,12 +1480,13 @@ img { max-width: 100%; height: auto; }
   font-size: 19px;
   line-height: 1.32;
   font-weight: 700;
-  letter-spacing: -0.008em;
+  letter-spacing: -0.010em;
   color: var(--cam-primary);
   padding-left: 18px;
-  margin-top: 1.85rem;
-  margin-bottom: 0.6rem;
+  margin-top: 2rem;
+  margin-bottom: 0.65rem;
   scroll-margin-top: 6rem;
+  text-wrap: balance;
 }
 .docs-page section h3::before,
 .prep-content > h3::before,
