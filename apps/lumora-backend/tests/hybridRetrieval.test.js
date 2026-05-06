@@ -43,6 +43,37 @@ describe('hybridSearchKb', () => {
     expect(r[0].rrfScore).toBeGreaterThan(r[1].rrfScore);
   });
 
+  it('carries url from metadata column when present (web-watchlist chunks)', async () => {
+    embedQueryMock.mockResolvedValue(new Array(1536).fill(0.01));
+    queryMock.mockImplementation((sql) =>
+      sql.includes('embedding <=>')
+        ? Promise.resolve({ rows: [
+            { id: 'W', source: 'stripe', topic_id: 't', topic_title: 'T', section: 's', content: 'c', distance: 0.1, url: 'https://stripe.com/blog/x' },
+          ] })
+        : Promise.resolve({ rows: [] }),
+    );
+    const { hybridSearchKb } = await import('../src/services/hybridRetrieval.js');
+    const r = await hybridSearchKb('q', 4);
+    expect(r[0].url).toBe('https://stripe.com/blog/x');
+    // SELECT must request metadata->>'url' so column is available
+    const sql = queryMock.mock.calls[0][0];
+    expect(sql).toMatch(/metadata->>'url'/);
+  });
+
+  it('sets url to null when metadata has no url (legacy KB chunks)', async () => {
+    embedQueryMock.mockResolvedValue(new Array(1536).fill(0.01));
+    queryMock.mockImplementation((sql) =>
+      sql.includes('embedding <=>')
+        ? Promise.resolve({ rows: [
+            { id: 'K', source: 'aws', topic_id: 't', topic_title: 'T', section: 's', content: 'c', distance: 0.1, url: null },
+          ] })
+        : Promise.resolve({ rows: [] }),
+    );
+    const { hybridSearchKb } = await import('../src/services/hybridRetrieval.js');
+    const r = await hybridSearchKb('q', 4);
+    expect(r[0].url).toBeNull();
+  });
+
   it('returns vector-only results when BM25 returns empty', async () => {
     embedQueryMock.mockResolvedValue(new Array(1536).fill(0.01));
     queryMock.mockImplementation((sql) =>

@@ -35,6 +35,7 @@ function fuse(lists, finalK) {
 async function vecKb(vec) {
   const r = await query(
     `SELECT id, source, topic_id, topic_title, section, content,
+            metadata->>'url' AS url,
             embedding <=> $1::vector AS distance
        FROM lumora_kb_chunks
        ORDER BY embedding <=> $1::vector
@@ -44,12 +45,14 @@ async function vecKb(vec) {
   return r.rows.map((row) => ({
     tier: 'kb', id: row.id, source: row.source, topicId: row.topic_id,
     topicTitle: row.topic_title, section: row.section, content: row.content,
+    url: row.url || null,
     distance: Number(row.distance),
   }));
 }
 async function bm25Kb(question) {
   const r = await query(
     `SELECT id, source, topic_id, topic_title, section, content,
+            metadata->>'url' AS url,
             ts_rank(content_tsv, plainto_tsquery('english', $1)) AS ts_rank
        FROM lumora_kb_chunks
        WHERE content_tsv @@ plainto_tsquery('english', $1)
@@ -59,6 +62,7 @@ async function bm25Kb(question) {
   return r.rows.map((row) => ({
     tier: 'kb', id: row.id, source: row.source, topicId: row.topic_id,
     topicTitle: row.topic_title, section: row.section, content: row.content,
+    url: row.url || null,
     tsRank: Number(row.ts_rank),
   }));
 }

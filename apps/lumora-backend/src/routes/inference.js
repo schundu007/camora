@@ -130,6 +130,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
         topicTitle: c.topicTitle || null,
         section: c.section || null,
         docKind: c.docKind || null,
+        url: c.url || null,
         distance: c.distance,
       }));
       sendSSE(res, 'citations', citations);
@@ -446,6 +447,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
         topicTitle: c.topicTitle || null,
         section: c.section || null,
         docKind: c.docKind || null,
+        url: c.url || null,
         distance: c.distance,
       }));
       sendSSE(res, 'citations', citations);
