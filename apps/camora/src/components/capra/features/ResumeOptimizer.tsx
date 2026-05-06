@@ -549,9 +549,11 @@ export default function ResumeOptimizer() {
             >
               Target Company
             </label>
-            <select
+            <input
+              list="company-suggestions"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
+              placeholder="e.g. Google, Zscaler…"
               style={{
                 padding: '10px 12px',
                 border: '1px solid var(--border)',
@@ -561,22 +563,15 @@ export default function ResumeOptimizer() {
                 color: 'var(--text-primary)',
                 background: 'var(--bg-elevated)',
                 outline: 'none',
-                cursor: 'pointer',
-                appearance: 'none',
-                backgroundImage:
-                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")",
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 12px center',
-                paddingRight: '32px',
                 boxSizing: 'border-box',
+                width: '100%',
               }}
-            >
+            />
+            <datalist id="company-suggestions">
               {COMPANIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+                <option key={c} value={c} />
               ))}
-            </select>
+            </datalist>
           </div>
 
           <div
