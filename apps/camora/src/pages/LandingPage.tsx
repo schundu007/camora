@@ -65,12 +65,6 @@ const APPA: Step[] = [
   },
 ];
 
-const STATS: { value: number; suffix: string; label: string }[] = [
-  { value: 1400,  suffix: '+', label: 'Study topics' },
-  { value: 3500,  suffix: '+', label: 'Problems' },
-  { value: 1000,  suffix: '+', label: 'Companies' },
-  { value: 50,    suffix: '+', label: 'Languages' },
-];
 
 const LOGO_TOKEN = 'pk_VzK1OM-OQSCUuysDpOCzKw';
 const COMPANY_LOGOS = [
@@ -181,9 +175,9 @@ export default function LandingPage() {
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 70% 55% at 50% 0%, rgba(255,255,255,0.10), transparent 60%),' +
-              'radial-gradient(ellipse 55% 60% at 12% 30%, rgba(201,162,39,0.18), transparent 60%),' +
-              'radial-gradient(ellipse 50% 60% at 88% 70%, rgba(38,97,156,0.30), transparent 60%),' +
+              'radial-gradient(ellipse 80% 90% at 0% 55%, rgba(255,255,255,0.07), transparent 55%),' +
+              'radial-gradient(ellipse 60% 80% at 12% 25%, rgba(201,162,39,0.18), transparent 60%),' +
+              'radial-gradient(ellipse 50% 60% at 92% 65%, rgba(38,97,156,0.28), transparent 60%),' +
               'linear-gradient(135deg, #07112A 0%, #0B1A3D 50%, #0A1228 100%)',
           }}
         />
@@ -194,76 +188,103 @@ export default function LandingPage() {
             backgroundImage:
               'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
             backgroundSize: '56px 56px',
-            maskImage: 'radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent 80%)',
+            maskImage: 'radial-gradient(ellipse 60% 70% at 20% 30%, black, transparent 80%)',
           }}
         />
 
         <Container className="relative pt-16 pb-20 md:pt-24 md:pb-28">
-          <div className="mx-auto max-w-4xl text-center">
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}>
-              <Pill tone="inverse" withDot>
-                The career platform for engineers
-              </Pill>
-            </motion.div>
+          <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] items-center gap-12 lg:gap-16">
 
-            <motion.h1
-              className="mt-6 font-display text-[40px] sm:text-[52px] md:text-[64px] lg:text-[72px] font-semibold tracking-tight leading-[1.02]"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.32, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
-            >
-              <span className="block text-white">All your prep.</span>
-              <span className="block text-[var(--cam-gold-leaf)]">
-                One trusted platform.
-              </span>
-            </motion.h1>
+            {/* Left: headline + CTAs */}
+            <div>
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}>
+                <Pill tone="inverse" withDot>
+                  The career platform for engineers
+                </Pill>
+              </motion.div>
 
-            <motion.p
-              className="mt-6 mx-auto max-w-2xl text-base md:text-lg leading-relaxed text-white/72"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
-            >
-              Job discovery, interview prep, mock practice, and live AI assistance, engineered for the moment that decides the offer.
-            </motion.p>
+              <motion.h1
+                className="mt-6 font-display text-[40px] sm:text-[52px] md:text-[60px] lg:text-[64px] font-semibold tracking-tight leading-[1.02]"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.32, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
+              >
+                <span className="block text-white">All your prep.</span>
+                <span className="block text-[var(--cam-gold-leaf)]">
+                  One trusted platform.
+                </span>
+              </motion.h1>
 
-            <motion.div
-              className="mt-9 flex flex-wrap items-center justify-center gap-3"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.28, delay: 0.16, ease: [0.23, 1, 0.32, 1] }}
-            >
-              <CTAButton to={heroCtaHref} variant="inverse-primary" size="lg" trailingArrow>
-                {heroCta}
-              </CTAButton>
-              <CTAButton to="/pricing" variant="inverse-secondary" size="lg">
-                View pricing
-              </CTAButton>
-            </motion.div>
-
-            {visitorCount !== null && visitorCount > 0 && (
-              <motion.p className="mt-7 text-[13px] text-white/55" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.24, delay: 0.22, ease: [0.23, 1, 0.32, 1] }}>
-                Trusted by <strong className="text-white font-semibold">{visitorCount.toLocaleString()}+</strong> engineers worldwide
+              <motion.p
+                className="mt-6 max-w-[520px] text-base md:text-lg leading-relaxed text-white/72"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
+              >
+                1,000+ matched roles, 1,400+ study topics, 3,500+ practice problems, and a live AI copilot answering the interviewer in real time: everything from first application to final offer.
               </motion.p>
-            )}
 
+              <motion.div
+                className="mt-9 flex flex-wrap items-center gap-3"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.28, delay: 0.16, ease: [0.23, 1, 0.32, 1] }}
+              >
+                <CTAButton to={heroCtaHref} variant="inverse-primary" size="lg" trailingArrow>
+                  {heroCta}
+                </CTAButton>
+                <CTAButton to="/pricing" variant="inverse-secondary" size="lg">
+                  View pricing
+                </CTAButton>
+              </motion.div>
+
+              {visitorCount !== null && visitorCount > 0 && (
+                <motion.p className="mt-7 text-[13px] text-white/55" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.24, delay: 0.22, ease: [0.23, 1, 0.32, 1] }}>
+                  Trusted by <strong className="text-white font-semibold">{visitorCount.toLocaleString()}+</strong> engineers worldwide
+                </motion.p>
+              )}
+            </div>
+
+            {/* Right: live session preview */}
             <motion.div
-              className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-8 max-w-3xl mx-auto pt-10 border-t border-white/10"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.30, delay: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              className="hidden lg:block"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.40, delay: 0.18, ease: [0.23, 1, 0.32, 1] }}
             >
-              {STATS.map((s) => (
-                <div key={s.label} className="text-center">
-                  <p className="font-display text-[36px] md:text-[42px] font-semibold tracking-tight leading-none text-white">
-                    <CountUp value={s.value} suffix={s.suffix} duration={1400} />
-                  </p>
-                  <p className="mt-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-white/55">
-                    {s.label}
-                  </p>
+              <div className="rounded-2xl border border-white/10 overflow-hidden" style={{ background: 'rgba(10,18,40,0.85)' }}>
+                <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.08]">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-green-400" style={{ boxShadow: '0 0 6px rgba(74,222,128,0.55)' }} />
+                    <span className="text-[10px] font-mono text-white/45 tracking-[0.14em] uppercase">Sona · Live session</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-white/28">00:03:42</span>
                 </div>
-              ))}
+
+                <div className="p-4 space-y-3">
+                  <div className="rounded-xl border border-white/[0.08] p-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                    <p className="text-[9px] font-mono text-white/35 mb-1.5 uppercase tracking-[0.12em]">Interviewer</p>
+                    <p className="text-[12.5px] text-white/80 leading-relaxed">Design a rate limiter handling 10M requests per day across multiple data centers.</p>
+                  </div>
+
+                  <div className="rounded-xl border p-3" style={{ background: 'rgba(201,162,39,0.07)', borderColor: 'rgba(201,162,39,0.2)' }}>
+                    <p className="text-[9px] font-mono mb-1.5 uppercase tracking-[0.12em]" style={{ color: 'rgba(201,162,39,0.65)' }}>Sona</p>
+                    <p className="text-[12.5px] text-white/90 leading-relaxed">Token bucket at the API gateway. Redis tracks per-user counters with sliding-window TTL. For multi-DC: replicate via pub/sub with eventual consistency, accept slight over-counting at boundaries.</p>
+                    <div className="mt-2.5 flex flex-wrap gap-1.5">
+                      <span className="text-[9px] font-mono text-white/40 rounded-full px-2 py-0.5 border border-white/[0.08]" style={{ background: 'rgba(255,255,255,0.05)' }}>Architecture</span>
+                      <span className="text-[9px] font-mono text-white/40 rounded-full px-2 py-0.5 border border-white/[0.08]" style={{ background: 'rgba(255,255,255,0.05)' }}>Scalability</span>
+                      <span className="text-[9px] font-mono text-white/40 rounded-full px-2 py-0.5 border border-white/[0.08]" style={{ background: 'rgba(255,255,255,0.05)' }}>Draw diagram</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between px-4 py-2.5 border-t border-white/[0.08]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                  <span className="text-[9px] font-mono text-white/28">Voice captured · transcribed in 0.4s</span>
+                  <span className="text-[9px] font-mono" style={{ color: 'rgba(74,222,128,0.7)' }}>Answer ready</span>
+                </div>
+              </div>
             </motion.div>
+
           </div>
         </Container>
       </section>
