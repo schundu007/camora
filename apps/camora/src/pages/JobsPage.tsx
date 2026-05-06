@@ -1162,6 +1162,26 @@ export default function JobsPage() {
                       </span>
                     </div>
 
+                    {/* Description snippet — 4-5 lines of context */}
+                    {(job.ai_summary || job.description) && (() => {
+                      const raw = (job.ai_summary || job.description || '').replace(/\s+/g, ' ').trim();
+                      const snippet = raw.length > 320 ? raw.slice(0, 320) + '…' : raw;
+                      return (
+                        <p style={{
+                          margin: '0 0 18px',
+                          fontSize: '13px',
+                          lineHeight: '1.65',
+                          color: 'var(--text-muted)',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 4,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}>
+                          {snippet}
+                        </p>
+                      );
+                    })()}
+
                     {/* Footer CTA — outlined "Learn more" pill button +
                         secondary text links for Apply / Resume. Mirrors
                         Google Careers' single-pill CTA pattern. */}
