@@ -2693,7 +2693,7 @@ export default function TopicDetail({
           framed content card with comfortable max-width, generous gutters
           between sections. Two-column layouts where applicable.
           ────────────────────────────────────────────────────────────── */}
-      {!isLocked && (activePage === 'sre' || activePage === 'devops') && (topicDetails.introduction || topicDetails.keyQuestions) && (() => {
+      {!isLocked && (activePage === 'sre' || activePage === 'devops') && (topicDetails.introduction || topicDetails.keyQuestions || topicDetails.visualizations?.length) && (() => {
         // Build the agenda — one entry per section that's actually present.
         const agenda = [];
         if (topicDetails.introduction)                                          agenda.push({ id: 'overview',     label: 'Overview' });
