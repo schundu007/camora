@@ -48,4 +48,8 @@ export const TOPIC_MANIFEST = [
   // System Design problems (array exported as `systemDesigns`).
   { file: 'systemDesignProblems.js',  export: 'systemDesigns',         source: 'capra-sd-problems',
     kind: 'problem-sd' },
+  // SQL problems (.ts file with merged Top50 catalog). Loader uses
+  // tsx for TypeScript; run the indexer with: npx tsx scripts/index-capra-kb.js
+  { file: 'sqlProblems.ts',           export: 'SQL_PROBLEMS',          source: 'capra-sql-problems',
+    kind: 'problem-sql', dir: 'data' },
 ];

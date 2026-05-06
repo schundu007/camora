@@ -39,6 +39,7 @@ function chunkFor(item, entry) {
   if (kind === 'problem-leetcode') return chunkProblem(item, { source: entry.source, kind: 'leetcode' });
   if (kind === 'problem-lld') return chunkProblem(item, { source: entry.source, kind: 'lld' });
   if (kind === 'problem-sd') return chunkProblem(item, { source: entry.source, kind: 'sd' });
+  if (kind === 'problem-sql') return chunkProblem(item, { source: entry.source, kind: 'sql' });
   throw new Error(`Unknown kind: ${kind}`);
 }
 

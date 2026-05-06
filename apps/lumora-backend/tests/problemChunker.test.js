@@ -101,6 +101,50 @@ describe('chunkProblem — sd (system design)', () => {
   });
 });
 
+describe('chunkProblem — sql', () => {
+  const p = {
+    id: 1,
+    title: 'Replace Employee ID with Unique Identifier',
+    difficulty: 'Easy',
+    category: 'basic-joins',
+    description: 'Show the unique ID of each employee. If absent, show null.',
+    tables: [
+      { name: 'Employees', columns: ['id', 'name'], createSql: 'CREATE TABLE Employees (id INT, name TEXT)' },
+      { name: 'EmployeeUNI', columns: ['id', 'unique_id'], createSql: 'CREATE TABLE EmployeeUNI (id INT, unique_id INT)' },
+    ],
+    hints: [
+      'You need all employees even if they have no unique ID — which JOIN type?',
+      'A LEFT JOIN preserves all rows from the left table.',
+    ],
+    solution: 'SELECT eu.unique_id, e.name FROM Employees e LEFT JOIN EmployeeUNI eu ON e.id = eu.id;',
+  };
+
+  it('emits a summary chunk with title, difficulty, category, description, and table DDL', () => {
+    const chunks = chunkProblem(p, { source: 'capra-sql-problems', kind: 'sql' });
+    const summary = chunks.find((c) => c.section === 'summary');
+    expect(summary).toBeDefined();
+    expect(summary.content).toContain('Replace Employee ID');
+    expect(summary.content).toContain('Easy');
+    expect(summary.content).toContain('basic-joins');
+    expect(summary.content).toContain('CREATE TABLE Employees');
+    expect(summary.content).toContain('CREATE TABLE EmployeeUNI');
+  });
+
+  it('emits a solution chunk with hints + reference SQL', () => {
+    const chunks = chunkProblem(p, { source: 'capra-sql-problems', kind: 'sql' });
+    const sol = chunks.find((c) => c.section === 'solution');
+    expect(sol).toBeDefined();
+    expect(sol.content).toContain('LEFT JOIN');
+    expect(sol.content).toContain('preserves all rows');
+  });
+
+  it('uses kebab-case slug derived from title for topicId', () => {
+    const chunks = chunkProblem(p, { source: 'x', kind: 'sql' });
+    expect(chunks[0].topicId).toBe('replace-employee-id-with-unique-identifier');
+    expect(chunks[0].topicTitle).toBe('Replace Employee ID with Unique Identifier');
+  });
+});
+
 describe('chunkProblem — invariants', () => {
   it('returns empty array for unknown kind rather than throwing', () => {
     const out = chunkProblem({ id: 'x', title: 'X' }, { source: 's', kind: 'unknown' });
