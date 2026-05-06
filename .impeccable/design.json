@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-06T03:30:00-07:00",
+  "title": "Design System: Camora",
+  "extensions": {
+    "northStar": "The Navy Atlas",
+    "register": "product",
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Lapis Navy",
+        "canonical": "#26619C",
+        "oklch": "oklch(46% 0.10 250)",
+        "tonalRamp": ["#EAF0F7", "#C5D5E8", "#9FB9D8", "#7A9DC8", "#5482B8", "#26619C", "#1F4F7E", "#173C61", "#0F2A44", "#051C40"],
+        "purpose": "Structure: section heading text, primary actions, focus rings, sidebar accents, navy left-strip on .prep-content > h2."
+      },
+      "primary-dark-mode": {
+        "role": "primary",
+        "displayName": "Lifted Lapis (dark)",
+        "canonical": "#6E96C0",
+        "contrastNote": "7.4:1 on --bg-app",
+        "purpose": "Same structural role, lifted in dark mode for contrast."
+      },
+      "gold-leaf": {
+        "role": "secondary",
+        "displayName": "Gold Leaf",
+        "canonical": "#C9A227",
+        "oklch": "oklch(72% 0.13 85)",
+        "tonalRamp": ["#FBF6E3", "#F2E6B8", "#E9D58D", "#DFC462", "#D6B33B", "#C9A227", "#A8881F", "#7A5C0A", "#5C4408", "#221C02"],
+        "purpose": "Signal + momentum: agenda numerals, gold-leaf hairlines, problem counts, YOURS-tier citation badge.",
+        "textSafeVariant": "#7A5C0A (--cam-gold-leaf-text) for use as label text on light surfaces."
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Danger Red",
+        "canonical": "#EF4444",
+        "darkMode": "#F87171",
+        "purpose": "Destructive states only. SonaMicButton recording state uses color-mix(in oklab, var(--danger) 14%, transparent) background.",
+        "constraint": "Only saturated hue beyond navy/gold permitted by the Two-Accent Rule."
+      },
+      "neutral-light": {
+        "displayName": "Cool Slate Neutrals (light theme)",
+        "tokens": {
+          "bg-app": "#FFFFFF",
+          "bg-surface": "#FFFFFF",
+          "bg-elevated": "#F1F5F9",
+          "border": "#E2E8F0",
+          "border-hover": "#CBD5E1"
+        },
+        "tintNote": "Surfaces tint toward cool slate. Hairlines via --border are the default container boundary; shadows are reserved for floating chrome."
+      },
+      "neutral-dark": {
+        "displayName": "Warm Charcoal Neutrals (dark theme)",
+        "tokens": {
+          "bg-app": "#11141A",
+          "bg-surface": "#1A1E26",
+          "bg-elevated": "#232830",
+          "border": "#2E343F"
+        },
+        "tintNote": "Warm charcoal so the lifted navy reads correctly. Text-primary shifts to a cream #F5F0E5 (14.7:1 contrast) so dark mode never feels neon-developer."
+      },
+      "knownDrift": [
+        {
+          "token": "--text-primary (light mode)",
+          "currentValue": "#000000",
+          "issue": "Pure black. Per impeccable color law: never use #000; tint every neutral toward the brand hue (chroma 0.005-0.01).",
+          "suggestedFix": "oklch(15% 0.015 250) — slate-tinted near-black."
+        },
+        {
+          "token": "Citations CODE-tier badge",
+          "currentValue": "#059669 (green), background rgba(16,185,129,0.12)",
+          "issue": "Introduces a third saturated hue (green) outside the Two-Accent Rule. Currently signals 'your past code attempts'.",
+          "suggestedFix": "Collapse to gold-tier ('YOURS' covers both docs and code) OR shift to a darker gold (#A88817) so it sits inside the gold family."
+        },
+        {
+          "token": "PRODUCT.md vs code navy",
+          "currentValue": "PRODUCT.md says #0047AB; code uses #26619C (--cam-primary)",
+          "issue": "Two different navies named 'the brand navy'.",
+          "suggestedFix": "Update PRODUCT.md to match #26619C, OR update code to #0047AB. PRODUCT.md is older; code is shipped, so reconciling toward #26619C is the lower-risk path."
+        }
+      ]
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display (Section Headings)",
+        "purpose": "Topic page section h2 — 26px Clash Display 700, tight tracking, paired with navy left-strip + gold hairline."
+      },
+      "title": {
+        "displayName": "Title (Figure / Callout Headings)",
+        "purpose": "viz-caption-title — 18px Clash Display 600 — figcaption headings inside framed surfaces."
+      },
+      "body": {
+        "displayName": "Body (Reading Surface)",
+        "purpose": "Topic prose — 16px Satoshi @ 1.75 line-height, max 72ch, OpenType features ss01/ss02/cv01/cv02 enabled."
+      },
+      "body-figure": {
+        "displayName": "Body Figure (Tighter Variant)",
+        "purpose": "viz-caption-body — same family + size as body, slightly tighter 1.7 leading because figure captions sit inside framed surfaces."
+      },
+      "label": {
+        "displayName": "Label (Mono Eyebrow)",
+        "purpose": "Eyebrows, IDs, timers, agenda numerals — 10px JetBrains Mono 700 with 0.18em tracking, uppercase."
+      },
+      "answer": {
+        "displayName": "Sona Answer Body",
+        "purpose": "Live interview answer prose — 16px Satoshi @ 1.7 line-height. Distinct from Capra body to give Lumora its own voice."
+      },
+      "answer-heading": {
+        "displayName": "Sona Answer Heading",
+        "purpose": "19px Source Serif 4 — the only serif in the system, reserved for Sona's answer headings to give Lumora editorial weight."
+      }
+    },
+    "shadows": [
+      { "name": "shadow-xs", "value": "0 1px 2px rgba(56,189,248,0.06)", "purpose": "Default rest shadow on .btn — almost imperceptible." },
+      { "name": "shadow-sm", "value": "0 2px 6px rgba(56,189,248,0.08)", "purpose": "Hover state, button press feedback." },
+      { "name": "shadow-md", "value": "0 4px 12px rgba(56,189,248,0.10)", "purpose": "Floating chrome — topbar, sidebar drawer." },
+      { "name": "shadow-lg", "value": "0 8px 24px rgba(56,189,248,0.12)", "purpose": "Popovers, dropdowns." },
+      { "name": "shadow-xl", "value": "0 16px 48px rgba(56,189,248,0.15)", "purpose": "Modal scrims, command palette." }
+    ],
+    "shadowNote": "All shadows tint with sky-blue chroma (rgb 56,189,248) for ambient cool cast — deliberate; do not switch to neutral grey.",
+    "motion": [
+      { "name": "fast", "value": "0.15s ease-out", "purpose": "Default state-change duration. Used on background-color, border-color, color, opacity. Replaces the deprecated transition-all shorthand." },
+      { "name": "medium", "value": "0.3s ease-out", "purpose": "Card entries, larger transitions." },
+      { "name": "page-fade", "value": "fadeUp 0.15s ease-out", "purpose": "Main route entry animation." },
+      { "name": "ambient-pulse", "value": "pulse-dot 1.5s ease-in-out infinite", "purpose": "Status dots, never-stops indicators." },
+      { "name": "shimmer", "value": "shimmer 1.5s ease-in-out infinite", "purpose": "Loader backgrounds." },
+      { "name": "mic-dot-pulse", "value": "sona-mic-dot-pulse 1.2s ease-in-out infinite (staggered 0.18s offset between dots)", "purpose": "SonaMicButton transcribing state. Honors prefers-reduced-motion (becomes static at 0.6 opacity)." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ],
+    "layoutTokens": {
+      "sidebar-width": "56px",
+      "topbar-height": "56px",
+      "toc-width": "200px",
+      "content-max": "720px",
+      "page-max": "1280px"
+    },
+    "rules": [
+      { "name": "Two-Accent Rule", "section": "colors", "doctrine": "Navy + gold are the only saturated colors that may carry meaning. State colors reuse navy (success, info) and gold (warning); only --danger introduces a third hue and only for destructive UI." },
+      { "name": "Surface-Wash Rule", "section": "colors", "doctrine": "Use color-mix(in oklab, var(--token) X%, transparent) for tints. Never hardcode rgba(...)." },
+      { "name": "16px Floor Rule", "section": "typography", "doctrine": "Body-mode prose never drops below 16px. Captions and labels can be 10-12px; running text never can." },
+      { "name": "Display-For-Display-Only Rule", "section": "typography", "doctrine": "Clash Display is for headings and titles only. Body always belongs to Satoshi." },
+      { "name": "Hairline-First Rule", "section": "elevation", "doctrine": "Every container starts with a 1px var(--border) border, no shadow. Add shadow only when the element needs to read as floating above the page." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (Ask Sona)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Navy fill, white label, mono uppercase. The primary commit affordance throughout Lumora and Capra surfaces.",
+      "html": "<button class=\"ds-btn-primary\">Ask Sona</button>",
+      "css": ".ds-btn-primary { background: var(--cam-primary); color: #FFFFFF; border: 1px solid var(--cam-primary-dk); border-radius: 8px; padding: 0.375rem 0.75rem; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; transition: background-color 0.15s ease-out, opacity 0.15s ease-out; cursor: pointer; } .ds-btn-primary:hover { background: var(--cam-primary-dk); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--bg-surface), 0 0 0 3px var(--cam-primary); } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Icon Button (SonaMicButton, Back)",
+      "kind": "button",
+      "refersTo": "button-icon",
+      "description": "Square 32×32, neutral-elevated rest, focus-visible ring on the brand color.",
+      "html": "<button class=\"ds-btn-icon\" aria-label=\"Voice input\"><svg viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z\"/><path d=\"M19 10v2a7 7 0 01-14 0v-2\"/><line x1=\"12\" y1=\"19\" x2=\"12\" y2=\"23\"/><line x1=\"8\" y1=\"23\" x2=\"16\" y2=\"23\"/></svg></button>",
+      "css": ".ds-btn-icon { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); transition: background-color 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out; cursor: pointer; } .ds-btn-icon:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--bg-surface), 0 0 0 3px var(--cam-primary); }"
+    },
+    {
+      "name": "Tier Badge (Citations)",
+      "kind": "chip",
+      "refersTo": "badge-tier-kb",
+      "description": "Tiny mono uppercase tag: 9px tracking 0.14em. Tier-coded background + text. KB navy, YOURS gold; CODE green is a known drift.",
+      "html": "<span class=\"ds-tier-badge ds-tier-kb\">KB</span>",
+      "css": ".ds-tier-badge { display: inline-block; font-family: var(--font-mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; padding: 2px 6px; border-radius: 4px; } .ds-tier-kb { background: color-mix(in oklab, var(--cam-primary) 12%, transparent); color: var(--cam-primary); border: 1px solid color-mix(in oklab, var(--cam-primary) 25%, transparent); }"
+    },
+    {
+      "name": "Visualization Figcaption",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Long-form figure caption: 10px mono eyebrow, 18px display title, 16px body with OpenType features. Reading-comfort spec applied via .viz-caption-* classes in globals.css.",
+      "html": "<figure class=\"viz-figure\"><figcaption class=\"viz-caption\"><span class=\"viz-caption-eyebrow\">Diagram 1 / 3</span><h4 class=\"viz-caption-title\">What ML-assisted RCA actually does</h4><div class=\"viz-caption-body\"><p>Pattern matching, change correlation, dimension surfacing.</p></div></figcaption></figure>",
+      "css": ".viz-figure { border: 1px solid var(--border); border-radius: 12px; background: var(--bg-surface); overflow: hidden; } /* All typography rules live in globals.css under .viz-caption / .viz-caption-eyebrow / .viz-caption-title / .viz-caption-body. */"
+    }
+  ],
+  "antiReferences": [
+    "LeetCode (cluttered, gamified, visually noisy)",
+    "HackerRank (bureaucratic, depressing, low information density)",
+    "Generic SaaS Academy products (pastel cards, emoji bullets)",
+    "Notion-style wikis (no hierarchy, everything looks equal weight)",
+    "Dark-mode neon (developer side-project aesthetic)",
+    "Mermaid diagrams (banned project-wide; use Graphviz/Python PNGs)",
+    "Native window.confirm / alert / prompt (use DialogProvider)",
+    "Hover-only affordances on destructive buttons",
+    "Long-press / double-tap / gesture controls"
+  ]
+}
