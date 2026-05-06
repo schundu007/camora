@@ -114,55 +114,49 @@ Generate a diagram for this architecture question:
 
 
 def _build_multi_cloud_prompt(question: str, detail_text: str) -> str:
-    """Heterogeneous-CSP / multi-cloud architecture.
+    """Heterogeneous-CSP / multi-cloud architecture — Excalidraw-style.
 
     The single-provider _build_system_prompt forces an AWS-only stack
     even when the question explicitly spans cloud providers — the
     resulting diagram looks like one CSP doing everything, which
-    misrepresents the answer. This prompt switches to a horizontal
-    grouped-cluster layout where each CSP / on-prem region is its own
-    side-by-side cluster, with shared control-plane / IaC / workload
-    clusters above and below — matching the visual grammar of the
-    references the user provided.
+    misrepresents the answer.
+
+    This prompt deliberately AVOIDS provider logos (AWS / GCP / Azure /
+    Terraform / Ansible / ArgoCD service marks) in favour of plain
+    text-labeled rectangles grouped by colored clusters. The reference
+    diagrams the user wants to match are whiteboard-style: a few crisp
+    boxes per cluster, labels carry the meaning, no decorative service
+    icons. `diagrams.generic.blank.Blank` is the closest the diagrams
+    library gets to "rectangle with text", so we lean on it heavily.
     """
-    return f"""You are an expert multi-cloud architect. Generate Python code using the `diagrams` library to create a HETEROGENEOUS / MULTI-CLOUD architecture diagram.
+    return f"""You are an expert multi-cloud architect. Generate Python code using the `diagrams` library to create a HETEROGENEOUS / MULTI-CLOUD architecture diagram in WHITEBOARD / EXCALIDRAW style — clean text-labeled rectangles grouped into colored clusters, NO cloud-vendor service icons.
 
 REQUIREMENTS:
 1. This is a MULTI-CSP question — the diagram MUST show two or more cloud provider regions side by side (e.g. "CSP A — API-driven", "CSP B — Bare-metal handoff", "CSP C — Hybrid", "On-prem"), each as its own `Cluster`. Do NOT collapse everything into a single AWS stack.
-2. Use `from diagrams import Diagram, Cluster, Edge` plus a MIX of provider-specific and generic shape modules:
+2. Use `from diagrams import Diagram, Cluster, Edge` plus ONLY these shape modules — no AWS / GCP / Azure / Onprem provider icons:
 
-from diagrams.generic.compute import Rack
+from diagrams.generic.blank import Blank
+from diagrams.generic.network import Subnet, Switch, Router, Firewall
 from diagrams.generic.storage import Storage
-from diagrams.generic.network import Subnet, Switch, Router
-from diagrams.generic.os import LinuxGeneral
-from diagrams.programming.flowchart import Action, Document, Database
-from diagrams.onprem.container import Docker, Containerd
-from diagrams.k8s.compute import Pod, Deployment
-from diagrams.onprem.ci import GitlabCI, GithubActions, Jenkins
-from diagrams.onprem.gitops import ArgoCD, Flux
-from diagrams.onprem.iac import Terraform, Ansible
-from diagrams.onprem.monitoring import Prometheus, Grafana
-from diagrams.onprem.vcs import Github, Gitlab
-from diagrams.onprem.network import Nginx
-from diagrams.aws.compute import EKS
-from diagrams.gcp.compute import GKE
-from diagrams.azure.compute import AKS
+from diagrams.programming.flowchart import Action, Document, Database, InputOutput, Decision
 
-3. The Diagram constructor MUST be `Diagram("…", show=False, filename="output", outformat="png", direction="LR", graph_attr={{"splines": "ortho", "nodesep": "0.7", "ranksep": "1.2", "fontsize": "16", "compound": "true"}})`. Horizontal layout is REQUIRED — the per-CSP columns must read left-to-right.
-4. Use NESTED `Cluster` blocks. Top-level groups (each their own colored cluster):
-   - Control Plane / Orchestration  (bgcolor=#E8F0FF, pencolor=#3B5BDB)
-   - IaC & Config Management        (bgcolor=#FFF8DC, pencolor=#C9A227)
-   - Cloud Providers (Heterogeneous) (bgcolor=#FFE8F0, pencolor=#C9184A) — contains one nested Cluster per CSP
-   - Production Workloads           (bgcolor=#F0E8FF, pencolor=#7048E8)
-   Each cluster: `graph_attr={{"bgcolor": "<hex>", "pencolor": "<hex>", "style": "rounded", "fontsize": "14", "labeljust": "l"}}`.
-5. Use `Edge(label="…", color="<hex>")` on cross-cluster flows ("provision", "import IPs", "bootstrap", "deploy AI apps", "GPU capacity"). Use `Edge(style="dashed")` for the "manual handoff" / fallback path so it's visually distinct from the API-driven happy path.
-6. Each CSP cluster should show its differentiator: API-driven (Terraform → managed k8s), Bare-metal (Document for IP-list + Action for kubeconfig), Hybrid (mix of IaC + manual). Don't repeat the same node set in every CSP cluster.
-7. Detail level: {detail_text}
+   `Blank` is the default — use it for ANY component that would otherwise be an AWS/GCP/Azure/Terraform/Ansible/ArgoCD logo. The label carries the meaning ("Provisioning API\\n(Cluster Spec)", "Terraform\\nAPI-driven CSPs", "Ansible\\nnode bootstrap"). Use `Document` for spec-files (IP lists, kubeconfigs), `Database` for state stores, `Storage` for blob/object storage, `InputOutput` for external feeds. Network shapes (Subnet/Switch/Router/Firewall) only when actually drawing network topology.
+3. The Diagram constructor MUST be `Diagram("…", show=False, filename="output", outformat="png", direction="LR", graph_attr={{"splines": "ortho", "nodesep": "0.7", "ranksep": "1.2", "fontsize": "16", "compound": "true", "bgcolor": "white"}})`. Horizontal layout is REQUIRED — the per-CSP columns must read left-to-right.
+4. Use NESTED `Cluster` blocks with colored backgrounds + thick borders, mirroring the reference whiteboard style:
+   - Control Plane / Orchestration   (bgcolor=#E8F0FF, pencolor=#3B5BDB, fontcolor=#1E40AF)
+   - IaC & Config Management         (bgcolor=#FFFBEB, pencolor=#C9A227, fontcolor=#92400E)
+   - Cloud Providers (Heterogeneous) (bgcolor=#FFE8F0, pencolor=#C9184A, fontcolor=#9D174D) — nested: one Cluster per CSP, each with its own pastel bgcolor
+   - Production Workloads            (bgcolor=#F0E8FF, pencolor=#7048E8, fontcolor=#5B21B6)
+   Each cluster: `graph_attr={{"bgcolor": "<hex>", "pencolor": "<hex>", "fontcolor": "<hex>", "style": "rounded", "fontsize": "14", "fontname": "Helvetica-Bold", "labeljust": "l", "penwidth": "2"}}`.
+5. Multi-line labels are encouraged: `Blank("Provisioning API\\n(Cluster Spec)")`, `Blank("Manual Importer\\nIP list + kubeconfig")`. The second line gives context the way an Excalidraw diagram would.
+6. Use `Edge(label="…", color="<hex>", fontsize="11")` on cross-cluster flows ("provision", "import IPs", "bootstrap", "deploy AI apps", "GPU capacity"). Use `Edge(style="dashed", color="#9CA3AF")` for the "manual handoff" / fallback path so it's visually distinct from the API-driven happy path.
+7. Each CSP cluster should show its differentiator: API-driven (Blank "GPU VMs / Managed k8s\\nTerraform provider"), Bare-metal (Document "Google Doc\\nIP list" + Blank "kubeconfig\\nManual import"), Hybrid (mix). Don't repeat the same node set in every CSP cluster.
+8. Detail level: {detail_text}
 
 IMPORTANT:
 - Output ONLY the Python code, no explanations or markdown.
 - The code must be a single self-contained script.
-- Only import from the `diagrams` package.
+- Only import from the `diagrams` package, and ONLY from the modules listed in requirement 2 (no diagrams.aws, diagrams.gcp, diagrams.azure, diagrams.onprem, diagrams.k8s — they all carry vendor logos that break the whiteboard aesthetic).
 - The Diagram context manager MUST include `show=False, filename="output", outformat="png", direction="LR"`.
 - Do NOT collapse to a single-provider stack — the multi-CSP grouping is the WHOLE POINT of this archetype.
 
