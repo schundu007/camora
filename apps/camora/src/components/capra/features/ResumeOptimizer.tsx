@@ -35,6 +35,8 @@ export default function ResumeOptimizer() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const [fetchingJd, setFetchingJd] = useState(false);
+
   const abortRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -116,8 +118,8 @@ export default function ResumeOptimizer() {
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6));
-              if (data.chunk) {
-                setter((prev) => prev + data.chunk);
+              if (data.text) {
+                setter((prev) => prev + data.text);
               }
               if (data.error) {
                 throw new Error(data.error);
@@ -173,6 +175,29 @@ export default function ResumeOptimizer() {
     }
     setActiveTab('coverLetter');
     streamResponse('/api/v1/resume/cover-letter', setCoverLetter);
+  }
+
+  async function handleFetchJd() {
+    const url = jobUrl.trim();
+    if (!url) return;
+    setFetchingJd(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/v1/resume/fetch-jd`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch job description');
+      setJobDescription(data.text);
+      setJobUrl('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch URL');
+    } finally {
+      setFetchingJd(false);
+    }
   }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -322,6 +347,7 @@ export default function ResumeOptimizer() {
               type="url"
               value={jobUrl}
               onChange={(e) => setJobUrl(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleFetchJd(); }}
               placeholder="https://jobs.example.com/posting/123"
               style={{
                 flex: 1,
@@ -336,6 +362,26 @@ export default function ResumeOptimizer() {
                 boxSizing: 'border-box',
               }}
             />
+            <button
+              type="button"
+              onClick={handleFetchJd}
+              disabled={fetchingJd || !jobUrl.trim()}
+              style={{
+                padding: '8px 14px',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                background: fetchingJd || !jobUrl.trim() ? 'var(--bg-elevated)' : 'var(--accent)',
+                color: fetchingJd || !jobUrl.trim() ? 'var(--text-muted)' : '#fff',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: fetchingJd || !jobUrl.trim() ? 'not-allowed' : 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'background 0.15s',
+                opacity: fetchingJd ? 0.7 : 1,
+              }}
+            >
+              {fetchingJd ? 'Fetching…' : 'Fetch'}
+            </button>
           </div>
         </div>
 

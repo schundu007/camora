@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
+import * as cheerio from 'cheerio';
 import { authenticate } from '../middleware/authenticate.js';
 
 const router = Router();
@@ -180,6 +181,83 @@ Return this exact JSON format:
   } catch (err) {
     console.error('[Resume] ATS score error:', err);
     res.status(500).json({ error: 'ATS analysis failed' });
+  }
+});
+
+/**
+ * POST /api/v1/resume/fetch-jd
+ * Fetch and extract job description text from a URL.
+ */
+router.post('/fetch-jd', authenticate, async (req, res) => {
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ error: 'URL is required' });
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    let response;
+    try {
+      response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (!response.ok) {
+      return res.status(400).json({ error: `Could not fetch URL (${response.status})` });
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Remove boilerplate elements
+    $('script, style, nav, header, footer, aside, iframe, [class*="cookie"], [class*="banner"], [class*="sidebar"]').remove();
+
+    // Try common job board selectors first
+    const selectors = [
+      '[data-qa="job-description"]',       // Greenhouse
+      '.job-description',
+      '.jobDescription',
+      '.job__description',
+      '#job-description',
+      '[class*="description"]',
+      'main article',
+      'main',
+      'article',
+    ];
+
+    let text = '';
+    for (const sel of selectors) {
+      const candidate = $(sel).first().text().trim();
+      if (candidate.length > 200) {
+        text = candidate;
+        break;
+      }
+    }
+
+    if (!text || text.length < 200) {
+      text = $('body').text();
+    }
+
+    // Collapse excessive whitespace
+    text = text.replace(/\n{3,}/g, '\n\n').replace(/[ \t]{2,}/g, ' ').trim().substring(0, 10000);
+
+    if (text.length < 100) {
+      return res.status(400).json({ error: 'Could not extract job description from that URL. Try pasting it directly.' });
+    }
+
+    res.json({ text });
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      return res.status(408).json({ error: 'URL took too long to respond. Try pasting the job description directly.' });
+    }
+    res.status(500).json({ error: 'Failed to fetch URL. Try pasting the job description directly.' });
   }
 });
 
