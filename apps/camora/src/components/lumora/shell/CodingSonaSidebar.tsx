@@ -480,21 +480,13 @@ export function CodingSonaSidebarToggle({ open, onToggle, hasSolve }: { open: bo
         }}
       />
 
-      {/* Chat-bubble icon, white on the navy/gold field. */}
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#FFFFFF"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="relative"
-        style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.35))' }}
-      >
-        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-      </svg>
+      {/* Chat-bubble icon, white on the navy/gold field. The Icon
+          library uses currentColor for stroke; force white via the
+          parent button's color and let the drop-shadow ride on the
+          inline style. */}
+      <span className="relative" style={{ color: '#FFFFFF', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.35))' }}>
+        <Icon name="messageSquare" size={22} aria-hidden="true" />
+      </span>
 
       {/* Live-context indicator dot — gold pill in the corner with a
           blurred aura so the user knows Sona is loaded with the
