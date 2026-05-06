@@ -238,6 +238,11 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     try { localStorage.setItem('lumora_voice_banner_dismissed', '1'); } catch {}
     try { window.dispatchEvent(new Event('lumora:voice-banner-dismissed')); } catch {}
   };
+  const restoreVoiceBanner = () => {
+    setVoiceBannerDismissedState(false);
+    try { localStorage.setItem('lumora_voice_banner_dismissed', '0'); } catch {}
+    try { window.dispatchEvent(new Event('lumora:voice-banner-dismissed')); } catch {}
+  };
 
   // Backfill the enrollment timestamp for users who enrolled before
   // we tracked it. Without this, they'd have voiceEnrolled=true but a
@@ -1353,6 +1358,18 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               <AudioCapture onTranscription={handleAutoTranscription} />
             </div>
             <VoiceEnrollment disabled={false} variant="light" />
+            <button
+              type="button"
+              onClick={restoreVoiceBanner}
+              className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-black/10 dark:hover:bg-white/10"
+              style={{ color: 'var(--text-muted)' }}
+              aria-label="Show voice-filter status"
+              title="Show voice-filter status"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 15l6-6 6 6" />
+              </svg>
+            </button>
           </div>
         )}
         {embedded && !voiceBannerDismissed && (() => {
@@ -1415,11 +1432,11 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
                   onClick={dismissVoiceBanner}
                   className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-black/10 dark:hover:bg-white/10"
                   style={{ color: 'var(--text-muted)' }}
-                  aria-label="Dismiss this hint"
-                  title="Dismiss"
+                  aria-label="Minimize voice-filter status"
+                  title="Minimize"
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M6 6l12 12M18 6L6 18" />
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9l6 6 6-6" />
                   </svg>
                 </button>
               </div>
