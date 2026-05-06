@@ -428,10 +428,7 @@ export function StaticDiagramGrid({ diagrams, title = 'Architecture Diagrams' })
         <Icon name="layers" size={14} className="text-[var(--accent)]" />
         <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{title}</h3>
       </div>
-      <div
-        className="grid gap-3"
-        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))' }}
-      >
+      <div className="grid grid-cols-1 gap-3">
         {diagrams.map((d) => (
           <StaticDiagram key={d.id} diagram={d} />
         ))}

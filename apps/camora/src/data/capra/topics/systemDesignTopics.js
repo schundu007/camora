@@ -442,7 +442,7 @@ Database: 110 TB over 5 years -- 3 shards at ~40 TB each, plus replicas
       basicImplementation: {
         title: 'Single Server Architecture',
         description: 'Starting point for small applications. A single server hosts both the web server and database, suitable for low-traffic applications with ~1,000 concurrent users and 100-1,000 RPS.',
-        svgTemplate: 'singleServer',
+        diagramSrc: '/diagrams/fundamentals/single-server.png',
         problems: [
           'Single point of failure - any failure takes down entire system',
           'Limited scalability - constrained by single machine',
@@ -454,7 +454,7 @@ Database: 110 TB over 5 years -- 3 shards at ~40 TB each, plus replicas
       advancedImplementation: {
         title: 'Distributed Architecture',
         description: 'CDN for static assets → Load Balancer distributes traffic → Multiple stateless App Servers → Redis Cache + Primary-Replica Database setup.',
-        svgTemplate: 'loadBalancer',
+        diagramSrc: '/diagrams/fundamentals/load-balancer.png',
         keyPoints: [
           'Stateless app servers enable horizontal scaling',
           'CDN offloads static content and reduces latency',
@@ -1398,7 +1398,7 @@ order_items (id PK, order_id FK, variant_id FK, quantity, unit_price)
       basicImplementation: {
         title: 'Single Database Architecture',
         description: 'Traditional setup with one database server',
-        svgTemplate: 'singleDatabase',
+        diagramSrc: '/diagrams/fundamentals/single-database.png',
         problems: [
           'No failover capability',
           'Read contention at scale',
@@ -1410,7 +1410,7 @@ order_items (id PK, order_id FK, variant_id FK, quantity, unit_price)
       advancedImplementation: {
         title: 'Sharded Database Architecture',
         description: 'Distributed database with data partitioned across multiple shards, each with its own replicas for high availability.',
-        svgTemplate: 'shardedDatabase',
+        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
         keyPoints: [
           'Consistent hashing minimizes data movement when adding shards',
           'Each shard has its own replicas for read scaling',
@@ -2546,7 +2546,7 @@ The two-tier approach is what most high-performance systems use. GitHub, Twitter
       basicImplementation: {
         title: 'Simple Application Cache',
         description: 'Single Redis instance for caching with cache-aside pattern',
-        svgTemplate: 'simpleCache',
+        diagramSrc: '/diagrams/fundamentals/simple-cache.png',
         problems: [
           'Single point of failure',
           'Limited memory capacity',
@@ -2558,7 +2558,7 @@ The two-tier approach is what most high-performance systems use. GitHub, Twitter
       advancedImplementation: {
         title: 'Multi-Tier Caching Architecture',
         description: 'CDN for edge caching → L1 in-process cache → L2 Redis cluster → Database, with each tier providing faster access than the next.',
-        svgTemplate: 'multiTierCache',
+        diagramSrc: '/diagrams/fundamentals/multi-tier-cache.png',
         keyPoints: [
           'Multi-tier reduces load on each subsequent tier',
           'L1 cache prevents network round-trip for hot data',
@@ -4650,7 +4650,7 @@ In practice, few APIs implement full HATEOAS, but including a "self" link and li
       basicImplementation: {
         title: 'Simple REST API',
         description: 'Client → REST API with CRUD operations (GET, POST, PUT, DELETE)',
-        svgTemplate: 'restApi',
+        diagramSrc: '/diagrams/fundamentals/rest-api.png',
         problems: [
           'Over-fetching: Getting more data than needed',
           'Under-fetching: Multiple requests for related data',
@@ -4662,7 +4662,7 @@ In practice, few APIs implement full HATEOAS, but including a "self" link and li
       advancedImplementation: {
         title: 'API Gateway Architecture',
         description: 'API Gateway handling auth, rate limiting, SSL, and routing to internal gRPC microservices',
-        svgTemplate: 'apiGateway',
+        diagramSrc: '/diagrams/fundamentals/api-gateway.png',
         keyPoints: [
           'Gateway handles auth, rate limiting, logging',
           'Internal services use gRPC for performance',
