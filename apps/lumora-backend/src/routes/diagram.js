@@ -19,8 +19,13 @@ const diagramCache = new Map();
 const CACHE_MAX_SIZE = 200;
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-function getCacheKey(question, provider, detailLevel) {
-  const str = `${question}::${provider || 'auto'}::${detailLevel || 'overview'}`;
+function getCacheKey(question, provider, detailLevel, designKind) {
+  // designKind in the cache key prevents collisions: the same
+  // question text generates a different diagram style for each
+  // archetype (application class diagram vs system architecture vs
+  // infrastructure topology). Without this, the first request's
+  // archetype would poison the cache for every subsequent variant.
+  const str = `${question}::${provider || 'auto'}::${detailLevel || 'overview'}::${designKind || 'system'}`;
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
@@ -72,14 +77,21 @@ const DETAIL_LEVEL_MAP = {
 
 router.post('/generate', checkUsage('diagrams'), async (req, res) => {
   try {
-    const { question, cloud_provider = 'aws', detail_level } = req.body;
+    const { question, cloud_provider = 'aws', detail_level, design_kind: explicitDesignKind } = req.body;
 
     if (!question) {
       return res.status(400).json({ success: false, error: '"question" is required' });
     }
 
-    // Check in-memory cache first
-    const cacheKey = getCacheKey(question, cloud_provider, detail_level);
+    // Resolve archetype: frontend hint wins; otherwise classify from
+    // the question text. Diagram style follows the same partition the
+    // text answer uses (see designKindClassifier).
+    const { classifyDesignKind } = await import('../services/designKindClassifier.js');
+    const designKind = classifyDesignKind(question, explicitDesignKind);
+
+    // Check in-memory cache first (key includes designKind to prevent
+    // cross-archetype collisions on the same question text).
+    const cacheKey = getCacheKey(question, cloud_provider, detail_level, designKind);
     const cached = getCachedDiagram(cacheKey);
     if (cached) {
       console.log('[DiagramCache] Lumora cache hit');
@@ -97,6 +109,7 @@ router.post('/generate', checkUsage('diagrams'), async (req, res) => {
     const payload = {
       question,
       cloud_provider,
+      design_kind: designKind,
       user_id: req.user.id,
     };
     if (detail_level) {

@@ -67,6 +67,14 @@ export interface StreamOptions {
    *  a subset of sources (e.g. 'coding' → algorithm + LLD problems).
    *  Default 'general' = full hybrid search, no filter. */
   mode?: 'general' | 'coding' | 'design' | 'sql' | 'behavioral' | 'sre';
+  /** Design archetype hint. When the question is detected as a design
+   *  question, the backend picks a different prompt + diagram style:
+   *    application    OOP / LLD / API design (LRU, parking lot, REST)
+   *    infrastructure infra component (CDN, message queue, cache)
+   *    system         distributed product system (Twitter, Uber)
+   *  When omitted, the backend classifies from the question text and
+   *  defaults to 'system' on no match. */
+  designKind?: 'application' | 'system' | 'infrastructure';
   token: string;
   signal?: AbortSignal;
   onStreamStart?: (data: StreamStartEvent) => void;
@@ -95,6 +103,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     model,
     bypassCache,
     mode,
+    designKind,
     token,
     signal: externalSignal,
     onStreamStart,
@@ -143,6 +152,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
         ...(model ? { model } : {}),
         ...(bypassCache ? { bypass_cache: true } : {}),
         ...(mode && mode !== 'general' ? { mode } : {}),
+        ...(designKind ? { design_kind: designKind } : {}),
       }),
       credentials: 'include',
       signal: abortController.signal,

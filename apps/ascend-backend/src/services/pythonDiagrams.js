@@ -73,6 +73,7 @@ export async function generateDiagram({
   format = 'png',
   detailLevel = 'overview',
   direction = 'LR',
+  designKind = 'system',
 }) {
   const apiKey = getApiKey();
   if (!apiKey) {
@@ -97,6 +98,7 @@ export async function generateDiagram({
       '--api-key', apiKey,
       '--detail-level', detailLevel,
       '--direction', direction,
+      '--design-kind', designKind,
     ];
 
     // Use venv Python on Railway, fall back to system python3 locally
