@@ -26578,4 +26578,864 @@ These are answers a security-fluent platform engineer should give without prepar
     ],
   },
 
+  {
+    id: 'iac-fundamentals',
+    title: 'Infrastructure as Code — Fundamentals, Declarative vs Imperative',
+    icon: 'codepen',
+    color: '#f59e0b',
+    questions: 5,
+    description: 'The discipline of expressing infrastructure as version-controlled, reviewable, idempotent code. Declarative state, plan/apply loops, drift detection, and the 2026 OSS landscape — Terraform/OpenTofu, Pulumi, AWS CDK, Crossplane, CloudFormation, Bicep.',
+    visualizations: [
+      {
+        title: 'IaC discipline and the 2026 landscape',
+        description: `Infrastructure as Code (IaC) is the practice of defining infrastructure (VMs, networks, IAM, DNS, K8s clusters, queues, databases, CDN config, SaaS settings) in machine-readable files that live in version control alongside application code, with the same review, test, and deploy discipline. The first widely-used tool was Puppet (2005); Terraform (2014) and CloudFormation (2011) extended the model to cloud provisioning. By 2026 IaC is the default — clicking through the console for production is a code smell.
+
+Declarative vs imperative. Imperative: a sequence of steps. "Create VPC. Create subnet. Create instance." Bash + AWS CLI. Easy line-by-line; impossible to re-run safely. Declarative: a description of desired state. "There should be one VPC named prod with these CIDRs, three subnets, one EC2 with these tags." The tool diffs current vs desired and produces the minimal change set.
+
+Declarative wins because it is idempotent — running the same code twice produces the same end state with zero changes on the second run. That property is what makes CI-driven infra safe.
+
+State. Declarative tools must remember which resources they manage. Three approaches:
+- External state file (Terraform, OpenTofu, Pulumi). JSON document mapping logical names to cloud IDs. Stored in S3 + DynamoDB, Terraform Cloud, etc.
+- Tag-based state (CloudFormation, AWS CDK). The cloud itself owns the state.
+- Reconcile-loop state (Crossplane, ACK, Config Connector, Argo CD). The K8s API server holds desired state as Custom Resources; a controller continuously reconciles.
+
+Plan / apply. plan = read current cloud state, compare to desired, output diff (+ create, ~ update, -/+ replace, - destroy). apply = execute the plan in dependency order. PR review on the plan output is the core safety mechanism.
+
+Drift detection. The cloud is mutable; engineers click in the console, AWS Lambda auto-scales, DNS providers change records out-of-band. Detect with terraform plan against unchanged code (any non-zero diff = drift). Common 2026 pattern: nightly drift-detection job that opens a Slack alert.
+
+The discipline shift. Hard problems:
+- "Pets vs cattle" for infra. No more named, lovingly-tended SREs hand-curing each environment.
+- Code review for infra changes. A misplaced sg_ingress can take down prod.
+- Module reuse vs copy-paste. Internal module registries pay for themselves around team #4.
+- Drift discipline. Manual changes in the console are an emergency, not a Tuesday afternoon.
+- Secret hygiene. Never commit a secret to state.
+
+2026 reality. The OSS landscape:
+- Cloud provisioning, multi-cloud: Terraform 1.10 (HashiCorp, BSL since Aug 2023), OpenTofu 1.9 (Linux Foundation fork, MPL-2.0). Pulumi 3.x for teams that want real programming languages.
+- Cloud provisioning, single-cloud: AWS CDK (synthesizes CloudFormation), Azure Bicep (compiles to ARM JSON), Google Cloud Deployment Manager (deprecated).
+- K8s-native control plane: Crossplane v1.18 (CNCF), AWS Controllers for K8s (ACK), GCP Config Connector, Azure Service Operator.
+- Config management: Ansible (push, agentless), Puppet/Chef (pull, dying), Salt (event-driven, niche).
+
+Terraform vs OpenTofu. The fork that defines 2024-2026 IaC. Aug 2023 HashiCorp relicensed Terraform from MPL-2.0 to BSL (usable by end users but prohibits competing managed offerings). The community forked the last MPL release as OpenTofu, donated to the Linux Foundation in Sep 2023, and shipped 1.6 GA in Jan 2024. As of 2026 OpenTofu is the default at Spacelift, env0, Gruntwork, and most license-conscious shops; HashiCorp Terraform is still default at Terraform Cloud and large F500 with HCP contracts. HCL is identical; provider plugins shared via OpenTofu Registry mirror.
+
+Pulumi. Real programming languages — TypeScript, Python, Go, .NET, Java, YAML. Same providers as Terraform under the hood (Pulumi has a bridge wrapping Terraform providers). Wins for teams that want loops, conditionals, OOP abstractions, and IDE autocomplete on infra code.
+
+AWS CDK. TypeScript / Python / Java / .NET / Go that synthesizes a CloudFormation template, which CFN deploys. Three layers: L1 (CfnBucket — 1:1 with CFN), L2 (Bucket — sane defaults + IAM grants), L3 (patterns combining many resources). AWS-only.
+
+Crossplane. K8s as the IaC control plane. Cloud resources become Kubernetes CRDs (apiVersion: rds.aws.upbound.io/v1beta1, kind: Instance), reconciled by Crossplane providers. Compositions let platform teams expose simplified interfaces backed by underlying CRDs. CNCF Incubating.
+
+Choosing — a 2026 decision tree:
+- Multi-cloud or might be: Terraform / OpenTofu wins on community modules. Pulumi if you want real languages.
+- AWS-only, large org: AWS CDK for new work; Terraform for cross-account/org-level.
+- Azure-only: Bicep.
+- Already running K8s as platform: Crossplane on top of OpenTofu, or pure Crossplane.
+- Embedded / edge: Ansible still wins.
+
+Common anti-patterns:
+- One mega-state for the entire org.
+- Click-then-import. Console first, import into TF later. Imports are lossy.
+- Modules wrapping one resource.
+- Storing secrets in state.
+- Drift accepted as normal.`,
+        image: '/diagrams/devops/d1-iac-fundamentals.png',
+      },
+      {
+        title: 'Quick-fire interview answers — IaC fundamentals.',
+        question: 'Quick-fire interview answers — IaC fundamentals.',
+        answer: `Rapid-fire facts.
+
+Q: Define IaC in one line.
+A: Infrastructure expressed as version-controlled, reviewable, idempotent code with a plan/apply workflow against a state store.
+
+Q: Declarative vs imperative?
+A: Declarative = describe end state; engine diffs and applies. Imperative = sequence of steps. Declarative is idempotent.
+
+Q: Three state strategies?
+A: External state file (Terraform/OpenTofu/Pulumi); cloud-tag-based (CloudFormation/AWS CDK); reconcile-loop in K8s (Crossplane/ACK/Config Connector).
+
+Q: Plan vs apply?
+A: plan = diff against desired, no mutation. apply = execute in dependency order.
+
+Q: What is drift?
+A: Live cloud state diverging from declared code, usually from manual console changes.
+
+Q: Terraform vs OpenTofu in 2026?
+A: OpenTofu is the MPL-licensed Linux Foundation fork after HashiCorp's Aug 2023 BSL relicense. Wire-compatible with Terraform.
+
+Q: Pulumi pitch?
+A: Real programming languages (TS/Python/Go/.NET/Java/YAML) for IaC.
+
+Q: AWS CDK in one line?
+A: TypeScript/Python that synthesizes CloudFormation; AWS-only.
+
+Q: Crossplane?
+A: Kubernetes as the IaC control plane; cloud resources become CRDs; CNCF Incubating.
+
+Q: AWS Controllers for Kubernetes?
+A: AWS-official K8s controllers for AWS resources.
+
+Q: Azure Bicep?
+A: Microsoft's clean DSL that compiles to ARM JSON; Azure-only.
+
+Q: When choose Terraform vs Pulumi?
+A: Terraform if you want HCL + the largest module ecosystem. Pulumi if you want real languages.
+
+Q: When does Crossplane win?
+A: K8s is your platform; you want GitOps for cloud infra and self-service abstractions.
+
+Q: Anti-pattern — one mega-state?
+A: A single Terraform state for the whole org. Lock contention, blast radius, slow plan.
+
+Q: Why never store secrets in state?
+A: State files are plaintext JSON unless encrypted; pull secrets at runtime.
+
+Q: HashiCorp's BSL — what changed?
+A: Aug 2023, MPL → BSL. Managed-service competitors blocked. Triggered OpenTofu.
+
+Q: 2026 trend?
+A: OpenTofu adoption, AI-assisted generation, Crossplane v2 with Functions, mandatory Policy-as-Code.
+
+These are answers an IaC-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://opentofu.org/docs/',
+      'https://developer.hashicorp.com/terraform/docs',
+      'https://www.pulumi.com/docs/',
+      'https://docs.aws.amazon.com/cdk/v2/guide/home.html',
+      'https://docs.crossplane.io/',
+      'https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/',
+    ],
+  },
+
+  {
+    id: 'terraform-internals',
+    title: 'Terraform / OpenTofu Internals — Providers, State, Modules, Plans',
+    icon: 'codepen',
+    color: '#f59e0b',
+    questions: 5,
+    description: 'How Terraform and OpenTofu actually work — HCL parsing, provider plugin gRPC protocol, the state file as source of truth, the dependency DAG behind plan/apply, modules vs root, refresh/import/move/replace, and the OpenTofu fork after HashiCorp BSL.',
+    visualizations: [
+      {
+        title: 'HCL, providers, state, DAG, plan/apply, modules, OpenTofu fork',
+        description: `HCL (HashiCorp Configuration Language). Typed, declarative DSL with three top-level constructs: resource, data, module. Plus variable, output, locals, terraform required_providers, and provider blocks. HCL2 (since 0.12) is the current syntax.
+
+Providers. Plugins that translate Terraform's CRUD operations into cloud API calls. 4000+ providers as of 2026. The provider protocol is gRPC over a local TCP socket. Terraform launches the provider binary as a subprocess, exchanges gRPC, and calls Schema, Configure, ReadDataSource, PlanResourceChange, ApplyResourceChange.
+
+terraform init downloads providers from the registry. Lockfile (.terraform.lock.hcl) records exact versions + checksums.
+
+The state file. JSON at .terraform/terraform.tfstate (local) or remote backend. Critical properties: serial increments on every write (optimistic concurrency); lineage UUID detects state divergence; instances[*].attributes contains full resource schema including (dangerously) sometimes secrets. Refresh (implicit during plan) re-reads each resource via provider Read, surfacing drift.
+
+Plan as a graph. Internally Terraform builds a DAG where edges = explicit dependencies (depends_on) plus implicit references. Plan walks the graph in topological order. Output: + create, ~ update in-place, -/+ destroy and replace, - destroy. Some attributes marked ForceNew trigger replace.
+
+Refresh, import, state mv, replace:
+- terraform refresh — explicit re-read.
+- terraform import aws_instance.web i-0abc... — bring existing cloud resource into state. Lossy: must hand-write matching HCL. Terraform 1.5+ added import { } blocks for HCL-driven imports.
+- terraform state mv — rename in state without destroy/recreate.
+- terraform state rm — remove from state without destroying cloud resource.
+- terraform apply -replace=aws_instance.web — force destroy + recreate.
+
+Modules. Three roles: Root (where you run apply), Child (referenced via module {}), Shared (registry-published). Sources: registry.terraform.io (50M+ downloads on terraform-aws-modules/vpc/aws), git::https with ?ref=v1.2.3, local ./modules/vpc, S3, GCS.
+
+count, for_each, dynamic blocks. count = numeric index, brittle when middle items removed. for_each = string-keyed, stable on add/remove. dynamic generates nested blocks at plan time. for_each is the modern default.
+
+Backends. local (solo dev only), s3 + dynamodb_table (most-used), gcs (native locking), azurerm (Azure Blob native locking), remote/cloud (Terraform Cloud), http (GitLab managed state, Atlantis), kubernetes (Secret-based).
+
+Locking. Concurrent terraform apply against shared state corrupts state. S3 + DynamoDB does conditional write on a LockID item. Stuck locks: terraform force-unlock <ID> with care.
+
+Provisioners. local-exec and remote-exec. Listed as last resort. Imperative escape hatches with no idempotency. Avoid.
+
+OpenTofu fork. Aug 2023 HashiCorp moved Terraform from MPL-2.0 to BSL. Linux Foundation announced OpenTofu Sep 2023; 1.6 GA Jan 2024.
+
+Compatibility: HCL syntax identical, providers shared, state wire-compatible, CLI tofu (vs terraform).
+
+OpenTofu-only features:
+- State encryption (1.7, May 2024) — at-rest AES-256 with KMS / Vault key providers. Terraform never shipped this.
+- Provider iteration improvements (1.8) — for_each on provider blocks.
+- Better init concurrency.
+- Removed all telemetry.
+
+Terraform-only features:
+- Terraform Cloud / HCP integration polish.
+- Stacks (1.9, 2024) — first-class multi-config orchestration. Free for HCP only.
+
+Picking in 2026:
+- Default to OpenTofu unless deep into HCP / Terraform Cloud.
+- Mandatory if you build any product automating Terraform for customers (BSL blocks).
+
+terraform fmt + tflint + tfsec/checkov + Infracost. The standard CI toolchain.
+
+Common pitfalls:
+- Storing AWS access keys in providers.tf instead of using profiles/IAM roles.
+- Using count instead of for_each, getting renumber pain.
+- Not pinning provider or module versions.
+- Manual changes to state file.
+- 4000-line root modules (split).
+- One state file for the whole org.`,
+        image: '/diagrams/devops/d2-terraform-internals.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Terraform internals.',
+        question: 'Quick-fire interview answers — Terraform internals.',
+        answer: `Rapid-fire facts.
+
+Q: HCL — what is it?
+A: HashiCorp Configuration Language. Typed, declarative.
+
+Q: How does the provider protocol work?
+A: gRPC over stdio. Terraform launches provider as subprocess.
+
+Q: What's serial in the state file?
+A: Monotonic counter incremented on every write. Optimistic concurrency.
+
+Q: Refresh — what does it do?
+A: Calls provider Read on each resource and updates state attributes.
+
+Q: Plan output symbols?
+A: + create, ~ update in-place, -/+ destroy and replace, - destroy.
+
+Q: ForceNew?
+A: Provider schema flag. Changing a ForceNew attribute triggers destroy + recreate.
+
+Q: count vs for_each?
+A: count = numeric, brittle. for_each = string key, stable. Default to for_each.
+
+Q: terraform import?
+A: Reads existing cloud resource into state. Lossy. import { } blocks (1.5+) make it HCL-driven.
+
+Q: terraform state mv?
+A: Rename in state without destroy/recreate.
+
+Q: How does S3 + DynamoDB locking work?
+A: DynamoDB conditional write on LockID — first writer wins.
+
+Q: Modules — three roles?
+A: Root (where you run apply), child (referenced via module {}), shared (published to registry).
+
+Q: Module versioning best practice?
+A: Pin via ?ref=v1.2.3 (Git) or version = "~> 5.0" (Registry). Never source from main.
+
+Q: OpenTofu — what is it?
+A: Linux Foundation MPL-2.0 fork after HashiCorp's Aug 2023 BSL relicense. Wire-compatible.
+
+Q: OpenTofu-only features?
+A: State encryption (1.7), provider for_each (1.8), no telemetry.
+
+Q: Terraform-only features?
+A: HCP integration polish; Stacks (1.9) for multi-config orchestration.
+
+Q: Picking TF vs OT in 2026?
+A: Default OpenTofu unless deep in HCP / Terraform Cloud.
+
+Q: terraform fmt / tflint / tfsec / Infracost?
+A: Standard CI gates — formatter, linter, security scanner, cost diff.
+
+Q: Common pitfalls?
+A: Hardcoded credentials, count instead of for_each, unpinned modules, manual state edits, 4000-line root modules.
+
+These are answers a Terraform-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://developer.hashicorp.com/terraform/docs',
+      'https://opentofu.org/docs/',
+      'https://developer.hashicorp.com/terraform/plugin/framework',
+      'https://registry.terraform.io/',
+      'https://github.com/opentofu/opentofu',
+      'https://github.com/aquasecurity/tfsec',
+    ],
+  },
+
+  {
+    id: 'pulumi-language-iac',
+    title: 'Pulumi — Real Programming Languages for Infrastructure',
+    icon: 'codepen',
+    color: '#f59e0b',
+    questions: 5,
+    description: 'Pulumi expresses infrastructure in TypeScript, Python, Go, .NET, Java, or YAML — same providers as Terraform under the hood, but with loops, conditionals, OOP abstractions, and IDE autocomplete.',
+    visualizations: [
+      {
+        title: 'Pulumi engine, when it wins, and 2026 reality',
+        description: `Pulumi (founded 2017, current 3.x as of 2026) lets you write IaC in real programming languages instead of HCL or YAML. The pitch: infrastructure has loops, conditionals, abstractions, and types. HCL pretends those problems don't exist; Pulumi embraces them.
+
+Supported languages: TypeScript / JavaScript (most popular), Python, Go, C# / F# / VB.NET, Java, YAML.
+
+The execution model. A Pulumi program is not a config file — it's a program that registers resources with the Pulumi engine. pulumi up runs your program in its native runtime; resource constructors RPC into a Go engine; the engine builds a DAG, computes a diff against state, and applies via providers over gRPC (most providers are auto-generated from Terraform providers via pulumi-terraform-bridge).
+
+Outputs vs Inputs. Pulumi's twist on async resource attributes. A resource attribute known only after creation is wrapped in pulumi.Output<T>. You can't .toString() it directly — must use .apply() or pulumi.interpolate.
+
+State. Pulumi Cloud (default, free for individuals, paid for teams), S3, Azure Blob, GCS, local filesystem.
+
+Pulumi ESC (Environments, Secrets, Configuration). Released GA 2024. Centralized config + secrets layer with hierarchical environments, references to AWS Secrets Manager / Vault / 1Password, and OIDC for short-lived cloud creds.
+
+Stacks. Per-project instances (dev, staging, prod). Stronger primitive than Terraform workspaces. Cross-stack references via StackReference.
+
+Component Resources. The unit of abstraction. A class extending pulumi.ComponentResource creating child resources. The killer feature for platform teams — expose WebService as a single class to dev teams, hide 30 underlying resources.
+
+Crosswalk. @pulumi/awsx, @pulumi/aws-native, @pulumi/eks — opinionated higher-level abstractions.
+
+Automation API. Embed Pulumi inside an application — programmatic pulumi up. Used to build self-service IaC platforms.
+
+When Pulumi wins:
+- Loops/conditionals are first-class. In HCL needs for_each + provider aliases + module-per-region.
+- Real OOP abstractions for platform teams.
+- IDE autocomplete + types — biggest DX win.
+- Test infra — pulumi.test mocks providers, unit-test "creating WebService creates LB" without touching AWS.
+- Embedding Pulumi in your own app via Automation API.
+
+When Terraform / OpenTofu still wins:
+- Community module breadth (terraform-aws-modules/vpc/aws has 50M+ downloads).
+- Auditability for non-coders.
+- Plan determinism (Terraform plan deterministic given config + state; Pulumi plan can vary if program contains non-deterministic logic).
+- Faster onboarding for HCL-fluent teams.
+
+License. Pulumi engine + SDKs Apache 2.0. Pulumi Cloud is paid SaaS; self-hosting fully free.
+
+2026 reality. Pulumi has 25-30k GitHub stars and a real but smaller community than Terraform / OpenTofu (50k each). Adoption strongest at: startups with strong TS / Python culture, multi-tenant SaaS provisioning per-tenant infra (Automation API), teams invested in heavy abstraction layers.
+
+Underrepresented at: banks, F500 with Terraform inertia, heavy-Ansible shops, teams with no TS/Python depth.
+
+Migration: tf2pulumi reads HCL and emits Pulumi code. First pass useful; always requires hand-editing.
+
+Default recommendation: Terraform / OpenTofu for greenfield platform teams unless they have a specific reason to pick Pulumi.`,
+        image: '/diagrams/devops/d3-pulumi.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Pulumi.',
+        question: 'Quick-fire interview answers — Pulumi.',
+        answer: `Rapid-fire facts.
+
+Q: Define Pulumi in one line.
+A: Declarative IaC tool that uses real programming languages instead of HCL, with same provider model as Terraform under the hood.
+
+Q: Supported languages?
+A: TypeScript/JavaScript, Python, Go, C#/F#/VB.NET, Java, YAML.
+
+Q: What's an Output?
+A: pulumi.Output<T> wraps async resource attribute (id, arn) known only after creation. Use .apply() or pulumi.interpolate.
+
+Q: State backends?
+A: Pulumi Cloud (default), S3, Azure Blob, GCS, local filesystem.
+
+Q: Pulumi ESC?
+A: Environments, Secrets, Configuration. Centralized config + secrets layer; GA 2024.
+
+Q: Stacks?
+A: Per-project instances (dev, staging, prod) — own config, own state. Stronger primitive than Terraform workspaces.
+
+Q: StackReference?
+A: Read another stack's exported outputs.
+
+Q: Component Resource?
+A: Class extending pulumi.ComponentResource that creates child resources. Equivalent to Terraform module but typed.
+
+Q: Crosswalk?
+A: @pulumi/awsx, @pulumi/eks, @pulumi/aws-native — opinionated higher-level libraries.
+
+Q: Automation API?
+A: Embed Pulumi in your own app. Used for self-service IaC platforms.
+
+Q: When does Pulumi win?
+A: Loops/conditionals, OOP abstractions for platform teams, IDE types, complex computed logic, infra unit testing, Automation API embedding.
+
+Q: When does Terraform still win?
+A: Community module breadth, auditability for non-coders, plan determinism, faster onboarding.
+
+Q: How do Pulumi providers compare?
+A: Most are bridged from TF providers, so feature coverage tracks closely. AWS Cloud Control (aws-native) is broader on AWS.
+
+Q: License?
+A: Pulumi engine + SDKs Apache 2.0. Pulumi Cloud is paid SaaS; self-hosting fully free.
+
+Q: tf2pulumi?
+A: Official converter from HCL to Pulumi. First-pass useful; always requires hand-editing.
+
+Q: Testing infra?
+A: pulumi.test mocks providers — unit-test without touching AWS.
+
+Q: Where does Pulumi shine in 2026?
+A: SaaS multi-tenant infra (Automation API), TS/Python startups, platform teams building strong typed component libraries.
+
+Q: Pulumi vs CDK?
+A: CDK is AWS-only and synthesizes CloudFormation; Pulumi is multi-cloud and uses its own engine.
+
+Q: Default recommendation?
+A: Terraform/OpenTofu for greenfield unless team has a specific Pulumi-shaped need.
+
+These are answers an IaC-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://www.pulumi.com/docs/',
+      'https://www.pulumi.com/docs/concepts/inputs-outputs/',
+      'https://www.pulumi.com/docs/using-pulumi/components/',
+      'https://www.pulumi.com/docs/esc/',
+      'https://www.pulumi.com/docs/using-pulumi/automation-api/',
+      'https://github.com/pulumi/pulumi-terraform-bridge',
+    ],
+  },
+
+  {
+    id: 'cloud-native-iac',
+    title: 'Cloud-Native IaC — CDK, Crossplane, AWS CDK, Bicep, ACK',
+    icon: 'codepen',
+    color: '#f59e0b',
+    questions: 5,
+    description: 'Cloud-vendor-native IaC tools — AWS CDK on top of CloudFormation, Azure Bicep on top of ARM, Crossplane / ACK / Config Connector using Kubernetes as the control plane.',
+    visualizations: [
+      {
+        title: 'AWS CDK, Bicep, Crossplane, ACK — when each wins',
+        description: `AWS CDK. Open-sourced 2019; v2 GA 2021. TypeScript / Python / Java / .NET / Go that synthesizes a CloudFormation template, which CFN deploys. cdk synth produces cdk.out/MyStack.template.json; cdk deploy uploads to CFN. Not a runtime IaC engine — it's a compiler.
+
+Three construct levels:
+- L1 (CfnXxx) — auto-generated 1:1 with CloudFormation.
+- L2 (Xxx) — sane defaults, helper methods, IAM grants. bucket.grantRead(role) is the killer feature — auto-generates the right IAM policy.
+- L3 (Patterns) — opinionated multi-resource compositions. ApplicationLoadBalancedFargateService creates ECS cluster + service + task def + ALB + target group + log group + IAM in one line.
+
+Stacks and Apps. A Stack maps to one CFN stack. CDK Pipelines (a CDK construct) generates a CodePipeline that self-mutates.
+
+Bootstrap. cdk bootstrap creates a CDKToolkit CFN stack per account/region with S3 bucket (asset uploads), ECR repo (Docker images), and IAM roles. Required once per account/region.
+
+Aspects and Tags. Aspect.of(stack).add(new Tag("Owner", "platform")) walks the construct tree.
+
+Pros: Best-in-class DX for AWS-only teams. L2 grants and L3 patterns save hundreds of lines.
+Cons: AWS-only. CFN slow (5-15min stack updates common). Drift detection weak. No real plan output. Stack size limits (500 resources) force splitting.
+
+CDK for Terraform (cdktf). Same idea but emits Terraform JSON. Multi-cloud version. Less polished than AWS CDK.
+
+Azure Bicep. Microsoft's clean DSL for ARM. Released 2021. Compiles to ARM JSON. Modules first-class. what-if = Azure equivalent of terraform plan. Azure-only.
+
+CloudFormation directly. The original AWS IaC. JSON or YAML. Verbose, slow, no plan, but state owned by AWS itself. Most teams use through CDK now.
+
+GCP Deployment Manager. Deprecated 2024. Migrate to Terraform or Config Connector.
+
+K8s-native IaC pattern. Push CRDs to a K8s API server; controller reconciles cloud reality continuously.
+
+Why interesting:
+- Same workflow as your apps. kubectl apply is the same gesture.
+- Continuous reconciliation. Pulls drift back without nightly cron.
+- Self-service via RBAC.
+- Composability (XDatabase, XCluster bundle 10 underlying CRDs).
+
+Crossplane (CNCF Incubating, v1.18). The most general-purpose. Architecture: core engine + per-cloud or per-API providers (provider-aws-s3, provider-aws-rds, provider-gcp-storage, provider-helm, provider-kubernetes) + Managed Resources (CRDs) + Compositions and Composite Resource Definitions (XRDs) for platform abstractions. Composition Functions (v1.14+, GA 2024) — write Compositions in Go / Python / starlark instead of YAML patches.
+
+AWS Controllers for Kubernetes (ACK). AWS-official K8s controllers per service. CRDs 1:1 with AWS APIs. Officially supported by AWS. AWS-only.
+
+Crossplane is right when: multi-cloud or you might be, want platform abstractions for dev teams, can absorb operational overhead.
+
+ACK is right when: AWS-only, want vendor support, don't need higher-level abstractions.
+
+GCP Config Connector. Google's official K8s controllers for GCP. Bundled into Anthos.
+
+Azure Service Operator (ASO). Microsoft's K8s controllers for Azure. Less mature than the AWS / GCP equivalents.
+
+GitOps for cloud infra. The combined pattern: Argo CD / Flux watches a Git repo; the repo contains both app YAMLs and Crossplane / ACK CRDs; the cluster reconciles both.
+
+Picking among cloud-native IaC tools — 2026:
+- AWS-only, app team: AWS CDK.
+- AWS-only, platform team all-in on K8s: ACK or Crossplane.
+- Azure-only, app team: Bicep.
+- Multi-cloud or might be: Crossplane (K8s control plane) or Terraform/Pulumi (external engine).
+- Heavy GitOps culture: Crossplane + Argo CD.
+
+Common pitfalls:
+- Crossplane in production without operational maturity is painful.
+- AWS CDK stacks growing past 500 resources hit CFN limit.
+- Using both Crossplane and CDK for overlapping resources.
+
+The bigger trend in 2026: every major cloud now has K8s-native CRDs as first-class IaC story. Teams already on K8s are migrating off Terraform for cloud infra.`,
+        image: '/diagrams/devops/d4-cloud-native-iac.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Cloud-native IaC.',
+        question: 'Quick-fire interview answers — Cloud-native IaC.',
+        answer: `Rapid-fire facts.
+
+Q: AWS CDK in one line?
+A: TypeScript/Python that synthesizes CloudFormation, which CFN deploys.
+
+Q: CDK is a runtime?
+A: No — it's a compiler. cdk synth emits JSON; cdk deploy uploads to CFN.
+
+Q: Three CDK construct levels?
+A: L1 (1:1 with CFN), L2 (sane defaults + grants), L3 (Patterns).
+
+Q: Why is L2's grantRead so important?
+A: Auto-generates correct IAM policy.
+
+Q: cdk bootstrap?
+A: Creates CDKToolkit CFN stack with S3 asset bucket, ECR repo, IAM roles. Required once per account/region.
+
+Q: cdktf?
+A: CDK for Terraform. TS/Python/Go/Java/C# emits Terraform JSON.
+
+Q: Bicep?
+A: Microsoft's clean DSL that compiles to ARM JSON. Azure-only.
+
+Q: az deployment group what-if?
+A: Bicep/ARM equivalent of terraform plan.
+
+Q: K8s-native IaC pattern?
+A: Push CRDs to K8s; controller reconciles cloud reality continuously.
+
+Q: Crossplane?
+A: CNCF Incubating. Cloud resources as K8s CRDs reconciled by per-cloud providers; Compositions expose platform abstractions.
+
+Q: Crossplane Compositions?
+A: Bundle multiple Managed Resources behind a single XRD. Dev teams see one CRD; platform team owns the recipe.
+
+Q: Composition Functions?
+A: v1.14+, write Compositions in Go/Python/starlark instead of YAML patches.
+
+Q: ACK?
+A: AWS Controllers for Kubernetes. AWS-official controllers per service.
+
+Q: ACK vs Crossplane on AWS?
+A: ACK = vendor-supported, AWS-only. Crossplane = multi-cloud, compositions, CNCF.
+
+Q: Config Connector?
+A: GCP equivalent — official K8s controllers for GCP. Bundled into Anthos.
+
+Q: Azure Service Operator?
+A: Microsoft's K8s controllers for Azure.
+
+Q: GitOps for infra?
+A: Argo CD / Flux watches Git repo containing both app YAMLs and Crossplane/ACK CRDs.
+
+Q: When pick AWS CDK?
+A: AWS-only app team. Best DX for AWS.
+
+Q: When pick Crossplane?
+A: K8s is your platform; want compositions for dev self-service; multi-cloud.
+
+Q: 2026 trend?
+A: Every major cloud now ships K8s-native CRDs. K8s-first teams migrating off Terraform.
+
+These are answers a cloud-native platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/cdk/v2/guide/home.html',
+      'https://developer.hashicorp.com/terraform/cdktf',
+      'https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/',
+      'https://docs.crossplane.io/latest/concepts/',
+      'https://aws-controllers-k8s.github.io/community/',
+      'https://cloud.google.com/config-connector/docs/overview',
+    ],
+  },
+
+  {
+    id: 'iac-state-at-scale',
+    title: 'IaC State Management at Scale — Locking, Encryption, Splits',
+    icon: 'codepen',
+    color: '#f59e0b',
+    questions: 5,
+    description: 'State is the bottleneck of declarative IaC. S3 + DynamoDB locking, Terraform Cloud / Spacelift / env0 / Atlantis, splitting strategies, OpenTofu state encryption, secrets-in-state anti-pattern.',
+    visualizations: [
+      {
+        title: 'State as bottleneck — locking, splitting, encryption, secrets',
+        description: `Why state matters more than HCL. The HCL config is reconstructible from Git history. The state file is the only place the resource ID mapping lives. Lose the state, you lose the ability to manage your cloud — every resource has to be re-imported by hand.
+
+Risks: concurrency (corrupts), loss (single S3 object with no versioning), drift between state and cloud, secrets leakage.
+
+Locking mechanisms:
+- S3 + DynamoDB (Terraform's standard pattern). dynamodb_table holds LockID item; first writer wins via conditional PutItem. terraform force-unlock to break stuck locks.
+- GCS native (object-level lock).
+- Azure Blob native (lease).
+- Terraform Cloud / Enterprise (run-state-machine locks).
+- Atlantis (per-PR locks via Git PR labels).
+
+State managers:
+
+Terraform Cloud / HCP Terraform. HashiCorp's managed service. VCS-driven runs (push → plan → PR comment → manual approve → apply). RBAC, run history, Sentinel policy, private module registry. Paid tiers required for orgs >5 users.
+
+Spacelift. Leading TF/OpenTofu/Pulumi/CFN/Kubernetes orchestration platform. Stack = config + state + run policies. Run hooks, drift detection, dependent stacks. First-class OpenTofu support.
+
+env0. Similar feature set. Strong on cost estimation, OPA policies. Cheaper than Spacelift.
+
+Atlantis. Open source self-hosted. PR-driven. atlantis plan / atlantis apply commands as PR comments.
+
+Splitting state:
+
+One mega-state for the whole org is the canonical anti-pattern. As state grows past 1000 resources you hit: plan time > 5 minutes, lock contention between teams, blast radius (one bad apply wrecks the entire org), API rate limits during refresh.
+
+Standard splits:
+1. Per-environment. dev.tfstate, staging.tfstate, prod.tfstate. Minimum split.
+2. Per-team. platform/, app-team-a/, data-team/.
+3. Per-service / per-stack. networking/, kubernetes/, databases/, observability/, app-frontend/, app-backend/. Most-scaled pattern; each stack 50-300 resources, applies in <2 min.
+4. Per-region. eu-west-1/, us-east-1/, ap-southeast-1/.
+
+Most large orgs end up at per-team x per-environment x per-stack — a 3D grid where each cell is a small state.
+
+Cross-state references: terraform_remote_state data source (tight coupling) or via SSM / Consul / registry (loose coupling).
+
+State migration. terraform state mv -state-out=other.tfstate moves resources between states. Terraform 1.5+ moved blocks: moved { from = aws_instance.old; to = aws_instance.new } in HCL — declarative state mv at plan time, no ad-hoc CLI dance. Should be the default in 2026.
+
+State encryption (the 2024 reform). Terraform's state file is plaintext JSON. Anyone with read access on the bucket sees passwords, RDS connection strings, SSH keys.
+
+OpenTofu 1.7 (May 2024) added in-engine state encryption with pluggable key providers (AWS KMS, GCP KMS, Azure Key Vault, HashiCorp Vault, PBKDF2 passphrase):
+
+\`\`\`hcl
+terraform {
+  encryption {
+    key_provider "aws_kms" "key" { kms_key_id = "alias/tofu-state"; region = "us-east-1" }
+    method "aes_gcm" "method" { keys = key_provider.aws_kms.key }
+    state { method = method.aes_gcm.method }
+    plan { method = method.aes_gcm.method }
+  }
+}
+\`\`\`
+
+Terraform never shipped this — major OpenTofu differentiator. Top-three reason for shops to migrate to OpenTofu in 2026.
+
+Secrets in state — the anti-pattern. If you do new aws_db_instance with password = var.db_password, the password lands in state. Solutions:
+- Generate the secret outside Terraform and pull at runtime via aws_secretsmanager_secret_version data source — but data source value also stored in state.
+- The only clean fix: provision a placeholder, then have the application or a separate process rotate / set the secret out-of-band. AWS RDS supports manage_master_user_password = true (RDS-managed Secrets Manager rotation).
+- Vault dynamic secrets, AWS RDS IAM authentication, GCP IAM database auth.
+
+Drift detection at scale: Spacelift / env0 / Terraform Cloud have built-in scheduled drift detection. Atlantis: cron job that runs terraform plan, alerts on diff. Custom: terraform plan -detailed-exitcode (2 = drift, 0 = none, 1 = error).
+
+State backups. S3 bucket versioning + MFA delete + cross-region replication for prod state buckets. Lifecycle: 90 days of versions, archive to Glacier afterward. DynamoDB lock table PITR (35 days). Test restores quarterly.
+
+Common pitfalls:
+- Storing one mega-state.
+- No state versioning on S3 buckets.
+- Skipping state encryption when secrets are in state.
+- terraform_remote_state across accounts without explicit IAM.
+- Not using moved blocks for refactors.
+- "force-unlock as a habit".
+
+2026 best practice baseline:
+- OpenTofu (or TF) state in S3 + DynamoDB lock + bucket versioning + cross-region replica.
+- State encryption via OpenTofu key provider.
+- Per-team x per-env x per-stack splits.
+- moved blocks for refactors.
+- Spacelift / env0 / Terraform Cloud / Atlantis for run orchestration.
+- Daily drift detection with Slack alerts.
+- No secrets in state (RDS managed master, Vault dynamic, IAM auth).`,
+        image: '/diagrams/devops/d5-iac-state.png',
+      },
+      {
+        title: 'Quick-fire interview answers — IaC state at scale.',
+        question: 'Quick-fire interview answers — IaC state at scale.',
+        answer: `Rapid-fire facts.
+
+Q: Why is state the bottleneck of declarative IaC?
+A: HCL is reconstructible from Git; state is the only place the logical-name → cloud-ID mapping lives.
+
+Q: S3 + DynamoDB locking — how?
+A: DynamoDB conditional PutItem on a LockID — first writer wins, others block.
+
+Q: Terraform Cloud vs Spacelift vs env0 vs Atlantis?
+A: TC = HashiCorp managed. Spacelift = leading multi-IaC orchestration. env0 = similar, cheaper. Atlantis = open source self-hosted, PR-driven.
+
+Q: Why split state?
+A: Plan time, lock contention, blast radius, API rate limits all degrade at >1000 resources.
+
+Q: Standard split strategies?
+A: Per-environment, per-team, per-service/per-stack, per-region.
+
+Q: terraform state mv?
+A: Renames in state without destroy/recreate.
+
+Q: moved { } blocks?
+A: HCL-native state mv at plan time (1.5+). Should be default in 2026.
+
+Q: terraform import?
+A: Brings existing cloud resource into state. Lossy.
+
+Q: OpenTofu state encryption?
+A: 1.7 (May 2024) — in-engine AES-GCM with KMS/Vault/passphrase key providers.
+
+Q: Why is OpenTofu state encryption a big deal?
+A: Terraform never shipped it. Top-three migration reason.
+
+Q: Secrets in state — why bad?
+A: State is plaintext JSON. Anyone with read on the backend sees passwords, connection strings, SSH keys.
+
+Q: Secrets-in-state mitigations?
+A: RDS managed_master_user_password (AWS-side rotation), Vault dynamic secrets, RDS IAM auth.
+
+Q: State backups?
+A: S3 versioning + MFA delete + cross-region replication; DynamoDB PITR for lock table; quarterly restore drills.
+
+Q: Drift detection at scale?
+A: Spacelift/env0/TC built-in schedules. Atlantis = cron + diff. Custom = terraform plan -detailed-exitcode.
+
+Q: Cross-state references?
+A: terraform_remote_state (tight coupling) or via SSM/Consul/registry (loose coupling).
+
+Q: 2026 baseline?
+A: OpenTofu + S3+Dynamo lock + bucket versioning + state encryption + per-team x per-env x per-stack splits + moved blocks + run orchestration + daily drift + no secrets in state.
+
+These are answers an IaC-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://opentofu.org/docs/language/state/encryption/',
+      'https://developer.hashicorp.com/terraform/language/state',
+      'https://developer.hashicorp.com/terraform/language/modules/develop/refactoring',
+      'https://docs.spacelift.io/concepts/stack',
+      'https://www.env0.com/docs',
+      'https://www.runatlantis.io/docs/',
+    ],
+  },
+
+  {
+    id: 'iac-governance',
+    title: 'IaC Governance — OPA, Sentinel, CI Gates, Policy as Code',
+    icon: 'codepen',
+    color: '#f59e0b',
+    questions: 5,
+    description: 'Policy enforcement at PR time — OPA Rego, HashiCorp Sentinel, Checkov, tfsec, Terrascan, Infracost cost gates, IAM linting, tagging policies, and the workflow from PR to apply.',
+    visualizations: [
+      {
+        title: 'Policy as Code — engines, scanners, cost gates, the CI workflow',
+        description: `Why governance. Once IaC scales past a few engineers, "the senior person reviews every PR" stops scaling. Policy as Code (PaC) externalizes the rules into machine-checkable policies that run in CI before any apply.
+
+Failures PaC catches: public S3 with sensitive data, security group ingress 0.0.0.0/0 on port 22, IAM role with iam:* on Resource:*, RDS without encryption_at_rest, EKS without private endpoint, untagged resources, $10K/month change.
+
+The policy engines:
+
+OPA + Rego. CNCF-graduated, the de facto standard. Rego is a declarative query language. OPA reads terraform show -json out.tfplan as input. conftest test plan.json runs the policy. Used everywhere — Spacelift, env0, Terraform Cloud (alongside Sentinel), Argo CD admission, Kyverno alternative for K8s only.
+
+HashiCorp Sentinel. HashiCorp's proprietary PaC engine, BSL-licensed. Still in HCP/Terraform Cloud. OPA is the more portable choice in 2026.
+
+Static security scanners. Run against HCL or terraform plan JSON:
+- Checkov (Bridgecrew/Prisma). 1500+ checks across Terraform/CFN/K8s/Helm/Dockerfile/Bicep. Active development.
+- tfsec (Aqua). Terraform-only, mostly subsumed by Trivy in 2024.
+- Terrascan (Tenable). Built on OPA Rego. Multi-IaC.
+- Trivy (Aqua). Container + IaC scanner. Includes tfsec's rule set.
+- KICS (Checkmarx). Multi-IaC, MIT-licensed.
+
+Most teams pick Checkov + Trivy.
+
+Cost estimation. Infracost. Reads HCL, queries cloud pricing APIs, produces monthly cost estimates per resource. infracost diff produces a PR-friendly delta. CI integration: fail if diff exceeds threshold.
+
+IAM linting. parliament (Salesforce), Cloudsplaining, AWS Access Analyzer policy validation.
+
+Tagging policies. Required tags (Owner, CostCenter, Env) via OPA, default_tags blocks, AWS Organizations Tag Policies.
+
+Org-wide modules and module registries. Internal module registries: Terraform Cloud private registry, Spacelift module registry, env0 module registry, terralist (open source), GitLab Terraform module registry, Artifactory.
+
+The CI workflow. Standard 2026 PR pipeline:
+1. terraform fmt -check (style).
+2. tflint (provider-aware linter).
+3. terraform validate.
+4. terraform plan -out=plan.tfplan + terraform show -json plan.tfplan.
+5. checkov / trivy / terrascan (security scan against HCL + plan JSON).
+6. opa eval / conftest test (policy as code against plan JSON).
+7. infracost diff.
+8. PR comment posted with plan + scan + cost diff.
+9. Reviewers approve.
+10. Merge → apply.
+
+Gating modes: Hard fail (PR can't merge), Soft warn (informational), Tiered (critical hard-fail, medium warn, low informational).
+
+Approval workflows: plan auto-approved for non-prod; manual approval for prod (Spacelift "manual confirm", TC "Apply Required"); two-person rule for high-risk; time-window gates (no Friday apply).
+
+Cloud-side complement to PaC: AWS Config rules (runtime drift/compliance, non-blocking), AWS Security Hub, Azure Policy / GCP Org Policy. Most mature teams run both — PaC at PR time for fast feedback; cloud-native at runtime for backstop.
+
+Module registries as governance. Centrally-curated modules are the deepest form of IaC governance — give teams safe building blocks. Platform team owns ~30 modules: vpc, eks-cluster, rds-postgres, s3-bucket, kms-key, alb, route53-zone, iam-role, lambda. Variants per env (multi_az, retention, performance_insights) baked in.
+
+Module testing: terratest (Gruntwork, Go-based, real cloud), terraform test (1.6+, limited), examples/ folder + plan in CI, conftest against plan output.
+
+Exemption mechanisms. Hard PaC gates need escape hatches: PR labels (security-exception-approved triggers different policy bundle), policy overrides in HCL, time-bounded exemptions.
+
+Shift-left culture. Linters in editor (VS Code Terraform extension), pre-commit hooks (terraform_fmt, tflint, checkov), IDE-time policy checks (Snyk IaC, Checkov VS Code), cost preview (Infracost VS Code). CI becomes the backstop, not the first signal.
+
+Auditor-friendly evidence: policy rule = stated control, PR plan + scan output = evidence. SOC 2 / ISO 27001 / PCI auditors accept it.
+
+2026 baseline:
+- terraform fmt, tflint, terraform validate in pre-commit + CI.
+- Checkov + Trivy in CI.
+- OPA / Rego policy bundle covering S3, IAM, RDS, security groups, tagging.
+- Infracost diff with $1000/month threshold for soft warn, $5000/month hard fail.
+- Internal module registry with platform-team-owned modules and pinned versions.
+- Two-person rule for prod apply.
+- Time-bounded exemption process via PR labels.
+- terratest CI coverage on critical modules.
+- AWS Config / Azure Policy / GCP Org Policy as runtime backstop.
+
+Common pitfalls:
+- Bolting PaC on after years of Terraform — finds 5000 violations, team gives up.
+- Soft-warn-only forever.
+- Cost gates set too high.
+- IAM scanners that flag every Resource:* including legitimate read-all roles.
+- Policies in a separate repo from IaC.
+- No exemption mechanism.`,
+        image: '/diagrams/devops/d6-iac-governance.png',
+      },
+      {
+        title: 'Quick-fire interview answers — IaC governance.',
+        question: 'Quick-fire interview answers — IaC governance.',
+        answer: `Rapid-fire facts.
+
+Q: Define Policy as Code in one line.
+A: Externalizing infrastructure rules into machine-checkable policies that run in CI before any terraform apply.
+
+Q: OPA + Rego — what is it?
+A: CNCF-graduated PaC engine; Rego is a declarative query language.
+
+Q: HashiCorp Sentinel?
+A: HashiCorp's proprietary PaC engine, BSL-licensed. OPA is the portable choice.
+
+Q: Checkov vs tfsec vs Terrascan vs Trivy?
+A: Checkov = 1500+ checks across multi-IaC, active. tfsec = Terraform-only, mostly subsumed by Trivy. Terrascan = OPA-Rego-based. Trivy = Aqua's containers+IaC.
+
+Q: Most teams pick what?
+A: Checkov + Trivy.
+
+Q: Infracost?
+A: Cost estimator. Reads HCL, queries cloud pricing APIs, produces monthly estimates and PR diffs.
+
+Q: Cost gate threshold?
+A: Common 2026: $1000/month soft warn, $5000/month hard fail.
+
+Q: IAM linting tools?
+A: parliament (Salesforce), Cloudsplaining, AWS Access Analyzer.
+
+Q: Standard 2026 PR pipeline?
+A: fmt → tflint → validate → plan → security scan → OPA → Infracost diff → PR comment → review → merge → apply.
+
+Q: Hard fail vs soft warn?
+A: Hard fail blocks merge. Soft warn is informational. Tiered: critical hard-fail, medium warn, low info.
+
+Q: Approval workflows for prod?
+A: Manual confirm gate, two-person rule, time-window denies.
+
+Q: AWS Config / Azure Policy / GCP Org Policy?
+A: Cloud-vendor-native runtime PaC backstop.
+
+Q: Module registry — why?
+A: Centralized safe building blocks. Defaults baked in.
+
+Q: Module testing?
+A: terratest (Go, real cloud), terraform test (1.6+, limited), examples/ folder + plan in CI.
+
+Q: Exemption mechanism — why?
+A: Without it, engineers route around gates. PR labels, time-bounded overrides.
+
+Q: Shift-left for IaC?
+A: Linters in editor, pre-commit hooks, Checkov VS Code, Infracost VS Code.
+
+Q: Auditor evidence?
+A: PaC rules = stated controls. PR plan + scan output = evidence.
+
+Q: 2026 baseline?
+A: fmt + tflint + validate + Checkov + Trivy + OPA bundle + Infracost diff + module registry + two-person prod gate + cloud-side backstop.
+
+These are answers a governance-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://www.openpolicyagent.org/docs/latest/',
+      'https://www.checkov.io/1.Welcome/Quick%20Start.html',
+      'https://www.infracost.io/docs/',
+      'https://aquasecurity.github.io/trivy/latest/docs/coverage/iac/',
+      'https://developer.hashicorp.com/sentinel/docs',
+      'https://docs.spacelift.io/concepts/policy',
+    ],
+  },
+
 ];
