@@ -22344,4 +22344,758 @@ These are answers a config-fluent platform engineer should give without preparat
     ],
   },
 
+  {
+    id: 'aiops-fundamentals',
+    title: 'AIOps — From Reactive Monitoring to Predictive Operations',
+    icon: 'zap',
+    color: '#d946ef',
+    questions: 5,
+    description: 'Applying ML to operational telemetry — anomaly detection, alert correlation, root-cause assistance, capacity forecasting. Gartner introduced the term in 2016; by 2026 every major APM vendor ships AIOps features and the pure-play vendors have largely consolidated. Honest read on what works (alert grouping, single-metric anomalies) versus what is mostly marketing (true root-cause analysis).',
+    visualizations: [
+      {
+        title: 'AIOps — definition, history, capabilities, the 2026 landscape',
+        description: `AIOps stands for "Artificial Intelligence for IT Operations". Gartner coined the term in 2016 (originally "Algorithmic IT Operations") to describe a category of tools that apply machine learning and analytics to operational telemetry. The pitch: shift from reactive dashboards-and-alerts toward predictive, self-healing operations.
+
+Gartner's three-layer AIOps capability model:
+
+Observe — ingest and normalize signals from across the stack. Metrics from Prometheus / Datadog / CloudWatch, logs from Splunk / Elastic / Loki, traces from Jaeger / Tempo / X-Ray, events from CMDB and change-management systems, topology from service mesh / APM.
+
+Engage — interaction layer for humans. Dashboards, incident chat, runbook search, conversational query (the LLM-era addition). PagerDuty AIOps, Datadog Bits AI, ServiceNow Now Assist all live here.
+
+Act — automation that closes the loop. Auto-remediation (restart this pod, scale this group), auto-ticketing, auto-routing of incidents to the right on-call. The ambition is "self-healing"; in practice this layer is the least adopted and most fragile.
+
+History — how the category evolved:
+
+2013-2015: pure-play AIOps vendors form. Moogsoft (founded 2012, focus on alert correlation), BigPanda (founded 2012, also alert correlation), OpsRamp, FixStream. Pitch: SaaS layer above your existing monitoring that de-noises alert storms.
+
+2016: Gartner publishes the AIOps Market Guide and the term sticks.
+
+2017-2019: APM vendors build native AIOps. Dynatrace Davis, Datadog Watchdog (2018), New Relic Applied Intelligence (2019), Splunk ITSI. The pitch shifts from "buy a separate AIOps platform" to "your APM has AIOps built in".
+
+2020-2023: consolidation. Cisco acquires AppDynamics (2017). Moogsoft acquired by Dell in 2023. BigPanda remains independent but pivots from "AIOps" branding toward "incident intelligence".
+
+2023-2026: LLM-era reframing. PagerDuty AIOps ships incident summarization and runbook chat. Datadog's Bits AI (2023, expanded through 2025). New Relic AI, Splunk AI Assistant, ServiceNow Now Assist all do similar. Marketing moves from "ML detects anomalies" to "chatbots over your runbooks and telemetry".
+
+The 2026 landscape:
+
+APM-native (most adoption): Datadog Watchdog + Bits AI, Dynatrace Davis, New Relic AI, Splunk Observability Cloud + AI Assistant, AppDynamics Cognition.
+
+Incident management AIOps: PagerDuty AIOps, OpsGenie (Atlassian), ServiceNow ITOM.
+
+Pure-play / specialized: BigPanda, Anodot, Cisco AIOps. Smaller share than 2018; the bundled APM offerings won by default.
+
+Open source / DIY: Prometheus + custom Python (Prophet, scikit-learn, isolation forest), Grafana ML plugin, open-source forecasting libraries.
+
+Honest read — what works and what does not:
+
+Genuinely valuable in 2026:
+- Alert correlation and grouping. 80% noise reduction is achievable.
+- Single-metric anomaly detection on well-behaved series.
+- Forecasting for capacity (Prophet-class models on predictable seasonal workloads).
+- Log pattern mining.
+- LLM-era runbook search and incident summarization.
+
+Mostly hype or partial:
+- "Root cause analysis" by ML. What these tools do is correlate changes with anomalies. They do not prove causation. The label "RCA" oversells; "root-cause assistance" is closer.
+- "Self-healing" autonomous remediation. Outside narrow runbooks, broadly autonomous remediation is a 2018 promise that did not arrive.
+- Multivariate anomaly detection across the entire stack. Sounds impressive in demos; in production produces too much noise.
+
+The deeper point. AIOps is a useful umbrella for "ML-augmented ops tooling" but is not a magic productivity multiplier. Teams that get value pick specific capabilities (alert grouping, anomaly detection on key SLIs) and integrate them into existing workflows. Teams that buy "an AIOps platform" expecting the platform to fix observability hygiene problems consistently disappoint themselves.`,
+        image: '/diagrams/devops/z1-aiops.png',
+      },
+      {
+        title: 'AIOps capabilities — what each layer actually does',
+        description: `1. Anomaly detection on metrics. Instead of static thresholds, the system learns the metric's normal pattern and alerts on deviations.
+
+How it works in production tools (Datadog Watchdog, Dynatrace Davis, New Relic Applied Intelligence): typically a stack of statistical methods — STL or robust seasonal decomposition to model daily / weekly cycles, then 3-sigma or quantile-based bands on the residual. Some products use LSTM / Prophet-style models for series with complex multi-period seasonality.
+
+Where it works: well-behaved request rate / error rate / latency series with clear seasonality.
+
+Where it fails: regime changes (post-deploy the metric shifts permanently), holidays / one-off events, low-volume series, bursty workloads.
+
+2. Alert correlation and grouping. 1 incident → 1000 alerts via cascading dependencies. The platform groups them into one incident.
+
+How it works: clustering on (timestamp, service, alert text) plus topology when available. Temporal clustering, topological clustering, text similarity.
+
+Where it works: organizations with topology data (service mesh, APM auto-discovery, CMDB). 70-90% noise reduction is realistic.
+
+3. Log pattern mining. Surface the N dominant patterns in your logs without you writing regexes.
+
+How it works: token sequence clustering (Drain algorithm and variants), template extraction. Datadog's log patterns view, Splunk Smart Mode, Elastic Categorize text.
+
+4. RCA assistance via correlation. When a metric anomaly fires, the platform tells you what changed. Recent deploys, config changes, infrastructure events, dependent-service anomalies.
+
+How it works: time-aligned correlation across signal sources. Datadog Watchdog Insights surfaces "this metric anomaly correlates with deploy X at 14:32". Dynatrace Davis builds a problem tree using its Smartscape topology. Honeycomb's BubbleUp surfaces dimensions where the anomaly population differs from baseline.
+
+Where it works: when there is a single recent change that lines up.
+
+Where it fails: multi-cause incidents, slow-burn issues with no clean change marker, infrastructure-layer causes invisible to the application APM.
+
+5. Forecasting and capacity prediction. Forecast disk fill rate, traffic growth, queue depth, capacity headroom.
+
+How it works: Prophet, ARIMA, exponential smoothing, sometimes DeepAR. Tools: Datadog Forecasts, Grafana ML plugin, Anodot.
+
+6. Conversational interfaces (LLM-era). Ask a question in natural language, get an answer over your telemetry and runbooks.
+
+How it works: LLM (Claude, GPT-4 family) reads runbook documents, past incidents, optionally runs queries against the observability backend (function calling). RAG over runbook stores. Tools: Datadog Bits AI, PagerDuty AIOps incident summarization, ServiceNow Now Assist, New Relic AI assistant.
+
+Where it works: runbook search ("how do we restart the orders service?"), incident summarization ("summarize what happened in incident #4727"), simple metric queries.
+
+Where it fails: open-ended diagnosis ("why is my service slow?") — the model speculates plausibly but does not actually diagnose. Treating the chatbot's answer as authoritative is the failure mode.
+
+The accuracy reality. Vendor demos make all of these look like end-to-end automation. In production they are best treated as assistants — they propose, the engineer disposes.
+
+Adoption sequence that actually works:
+
+Step 1. Pick one painful alert problem. Usually alert storm reduction or one specific noisy anomaly source. Pilot one capability against it. Measure noise reduction over a month.
+
+Step 2. Tune sensitivity by service. AIOps configs are not one-size-fits-all. Critical services (auth, payments) need tighter thresholds; batch jobs need looser. Per-service tuning is the work.
+
+Step 3. Integrate into existing on-call. Route AIOps-grouped incidents into PagerDuty / OpsGenie alongside your other alerts.
+
+Step 4. Layer on second capability (forecasting, log mining, RCA assistance) only when first is solid.
+
+Common pitfalls:
+- Alert sensitivity wrong (too sensitive = noise; too insensitive = missed incidents).
+- Trusting RCA suggestions without verification.
+- Holiday and one-off events (model has not seen them).
+- Regime change after a deploy (baseline is now wrong).
+- Buying the platform before adopting the practice (12 months of integration before value).
+- "Self-healing" theater (autonomous remediation rare).
+- Chatbot as authority (LLM hallucinations propagate).
+
+Measuring AIOps value. Before-and-after metrics: alerts per incident (should drop from N to 1-2 with correlation), time-to-acknowledge, time-to-resolve, false-positive rate, engineer pages per week.
+
+The deeper point. AIOps is operations engineering with ML assistance, not ML engineering with operational data. The teams that succeed treat it as a force multiplier on existing SRE / platform discipline, not a substitute.`,
+      },
+      {
+        title: 'Quick-fire interview answers — AIOps Fundamentals.',
+        question: 'Quick-fire interview answers — AIOps Fundamentals.',
+        answer: `Rapid-fire facts.
+
+Q: Define AIOps in one line.
+A: Applying ML and analytics to operational telemetry — anomaly detection, alert correlation, RCA assistance, forecasting — to augment human SRE / ops work.
+
+Q: Who coined the term?
+A: Gartner, 2016. Originally "Algorithmic IT Operations", later relabeled "AI for IT Operations".
+
+Q: Gartner's three layers?
+A: Observe (ingest), Engage (human interface), Act (automation).
+
+Q: Pure-play AIOps vendors?
+A: Moogsoft, BigPanda, OpsRamp, Anodot. Founded around 2012-2013. Largely consolidated by 2026.
+
+Q: APM-native AIOps?
+A: Datadog Watchdog, Dynatrace Davis, New Relic Applied Intelligence, Splunk ITSI, AppDynamics Cognition. Most adopted in practice.
+
+Q: PagerDuty AIOps?
+A: Combination of acquired Rundeck automation plus AI features for alert grouping and incident summarization.
+
+Q: What does Datadog Watchdog do?
+A: Anomaly detection on customer metrics, plus Watchdog Insights for change correlation.
+
+Q: What does Dynatrace Davis do?
+A: Causation engine that builds a problem tree using the Smartscape topology graph.
+
+Q: What is Bits AI?
+A: Datadog's LLM-based assistant. Natural language queries over telemetry, incident summaries, runbook search.
+
+Q: Is the chatbot doing the RCA?
+A: No. It is summarizing logs, runbooks, and past incidents and presenting a plausible narrative. Engineer still does the actual diagnosis.
+
+Q: Anomaly detection — production implementation?
+A: Usually STL or robust seasonal decomposition + 3-sigma or quantile bands on residual.
+
+Q: When does anomaly detection work well?
+A: Single metric, clear seasonality, reasonable volume.
+
+Q: When does it fail?
+A: Regime changes, holidays, low-volume series, bursty workloads.
+
+Q: Alert correlation in one line?
+A: Cluster N alerts that come from one incident into one grouped page.
+
+Q: Realistic noise reduction?
+A: 70-90% with topology data; 95% requires investment.
+
+Q: RCA via ML — what is real?
+A: Change correlation and dimension surfacing. Datadog Watchdog Insights, Honeycomb BubbleUp, Dynatrace Davis problem trees.
+
+Q: What is hype?
+A: "Root cause analysis" — these tools find correlations, not proven causes.
+
+Q: Self-healing autonomous remediation?
+A: Largely a 2018 promise that did not arrive.
+
+Q: Forecasting that genuinely works?
+A: Disk fill prediction.
+
+Q: BigPanda vs Moogsoft?
+A: BigPanda still independent. Moogsoft acquired by Dell in 2023.
+
+Q: Open-source AIOps?
+A: Prometheus + custom Python, Grafana ML plugin, statsforecast, NeuralProphet.
+
+Q: Build vs buy?
+A: Buy if your APM already includes it. Build for a small set of business-critical metrics. Hybrid is common.
+
+Q: What is the cost shape?
+A: Multiplier on observability spend.
+
+Q: What metrics measure AIOps value?
+A: Alerts per incident, time-to-acknowledge, time-to-resolve, false-positive rate, engineer pages per week.
+
+Q: Common failure mode?
+A: Buying the platform before fixing observability hygiene.
+
+Q: First capability to adopt?
+A: Alert correlation and grouping.
+
+Q: Last capability to trust?
+A: Autonomous remediation.
+
+Q: When does an LLM chatbot help?
+A: Runbook search, incident summarization, simple query translation. Not open-ended diagnosis.
+
+These are answers an AIOps-fluent platform / SRE engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://www.gartner.com/en/information-technology/glossary/aiops-artificial-intelligence-operations',
+      'https://www.datadoghq.com/product/watchdog/',
+      'https://www.dynatrace.com/platform/artificial-intelligence/',
+      'https://www.pagerduty.com/platform/aiops/',
+      'https://newrelic.com/platform/applied-intelligence',
+      'https://www.bigpanda.io/our-product/',
+    ],
+  },
+
+  {
+    id: 'anomaly-detection-ml',
+    title: 'Anomaly Detection in Ops — Statistical, ML, and Forecasting',
+    icon: 'zap',
+    color: '#d946ef',
+    questions: 5,
+    description: 'Algorithms for catching metric deviations without static thresholds — 3-sigma and ESD on stationary series, STL / Prophet / DeepAR for seasonal forecasting, isolation forest and autoencoders for multivariate. Covers when statistical methods are sufficient, when ML is genuinely needed, and the operational pitfalls.',
+    visualizations: [
+      {
+        title: 'Algorithm families and when each one fits',
+        description: `Family 1: simple statistical (single metric, stationary, no seasonality).
+
+3-sigma. Compute rolling mean and standard deviation; alert when value exceeds mean ± 3σ. Fast, interpretable. Fails on seasonal data.
+
+Z-score with rolling window. Same idea, normalized.
+
+ESD (Generalized Extreme Studentized Deviate). Detects up to k outliers in a sample without specifying which ones. Twitter AnomalyDetection R package made it popular in ops.
+
+MAD (Median Absolute Deviation). Robust to outliers in training data. Good when historical data already contains incidents.
+
+Family 2: seasonal decomposition (single metric, seasonal pattern).
+
+STL (Seasonal-Trend decomposition using LOESS). Decomposes a series into trend + seasonal + residual; apply 3-sigma on the residual. Workhorse for daily / weekly seasonal metrics.
+
+Holt-Winters. Triple exponential smoothing — level, trend, seasonality.
+
+Family 3: forecasting models (multi-period seasonality, holidays, events).
+
+Prophet (Meta, 2017). Bayesian additive model: trend + seasonal Fourier + holiday effects + change-points. Standard starting point for capacity forecasting.
+
+NeuralProphet. Prophet-architecture plus neural autoregressive components.
+
+ARIMA / SARIMA. Classical Box-Jenkins. Less popular in ops than Prophet.
+
+DeepAR (Amazon). RNN-based probabilistic forecasting trained jointly across many related series.
+
+Family 4: tree-based and unsupervised (multivariate, no labels).
+
+Isolation Forest (Liu et al, 2008). Tree-based; anomalies are points easy to isolate via random splits. Common choice for multivariate.
+
+Local Outlier Factor (LOF). Density-based.
+
+One-class SVM. Less common in production ops.
+
+Family 5: deep learning (high-dimensional, complex temporal).
+
+LSTM / GRU autoencoders. Train to reconstruct normal sequences; reconstruction error spikes on anomalies.
+
+Transformer-based forecasters (Informer, PatchTST, Temporal Fusion Transformer). State-of-the-art on benchmarks; expensive.
+
+VAE anomaly detection. Probabilistic version of autoencoder.
+
+Picking — the practical hierarchy:
+1. Start with STL + 3-sigma residual on a single metric. If this is enough, stop.
+2. If holidays / events distort the model, move to Prophet.
+3. If you need joint multivariate signal, isolation forest.
+4. Only consider deep learning if simpler methods leave real gaps.
+
+Most production ops anomaly detection is solved by Family 1 + Family 2. Family 3 is for forecasting. Families 4 and 5 are for the harder problems that most teams do not have.
+
+Tools — production landscape:
+
+Datadog Watchdog. Automatic anomaly detection across APM and infrastructure. Combines seasonal decomposition with statistical bands. Datadog also exposes anomaly() monitor types: basic (rolling baseline), agile (light seasonal modeling), robust (handles broken seasonality).
+
+Anodot. Independent vendor focused on time-series anomaly detection, especially business KPIs.
+
+Dynatrace Davis. Causation engine plus per-entity anomaly detection. Topology-aware.
+
+Splunk ITSI. Adaptive Thresholding feature uses time-policy-aware baselines.
+
+Sentry. Anomaly detection on error rates, transaction volume, performance metrics.
+
+Grafana Machine Learning plugin. Forecasting and anomaly detection over Prometheus / Loki / Tempo.
+
+Honeycomb BubbleUp. Surfaces dimensions where a failing population differs from baseline. "What is different about the failing slice?"
+
+Open-source / DIY: Prometheus + Python (Prophet, statsforecast, scikit-learn). statsforecast (Nixtla) is production-grade Python with classical methods.
+
+Operational realities:
+
+Problem 1: alert fatigue from sensitivity drift. Mitigations: per-service sensitivity, alert on duration not single points, severity tiers, periodic review.
+
+Problem 2: holidays and one-off events. Mitigations: calendar-aware models, manual mute windows, annotated baselines.
+
+Problem 3: regime changes after a deploy. Mitigations: retraining cadence, deploy-aware baselines, manual re-baseline after planned major changes.
+
+Problem 4: low-volume series. Aggregate, longer windows, rate-based detection, or skip anomaly detection and use absolute thresholds.
+
+Problem 5: bursty workloads. Detect on quantile metrics (p99 duration), rate-of-change instead of value detection, windowed aggregation.
+
+Problem 6: dependent anomalies. Topology-aware grouping at the alerting layer.
+
+Problem 7: multivariate that doesn't work. Restrict to a small hand-picked set of related metrics; don't try the full stack.
+
+The maturity progression that works: SLO-based alerting → anomaly on top 5-10 critical metrics → forecasting for capacity → multivariate on hand-picked clusters → periodic prune.
+
+The deeper point. Anomaly detection's value comes from disciplined sensitivity tuning, calendar awareness, and topology-aware grouping — not algorithmic sophistication.`,
+        image: '/diagrams/devops/z2-anomaly.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Anomaly Detection.',
+        question: 'Quick-fire interview answers — Anomaly Detection.',
+        answer: `Rapid-fire facts.
+
+Q: Define anomaly detection in ops.
+A: Identifying metric values or patterns that deviate from expected behavior, replacing or augmenting static thresholds.
+
+Q: When are static thresholds enough?
+A: Stable metrics with known operating bounds.
+
+Q: 3-sigma in one line?
+A: Alert when value exceeds rolling mean ± 3 standard deviations. Cheap, fails on seasonal data.
+
+Q: STL in one line?
+A: Seasonal-Trend decomposition using LOESS. Splits a series into trend + seasonal + residual; apply 3-sigma on residual.
+
+Q: Prophet?
+A: Meta open-sourced 2017. Bayesian additive model: trend + Fourier seasonality + holidays + change-points.
+
+Q: NeuralProphet vs Prophet?
+A: NeuralProphet adds neural autoregressive components.
+
+Q: DeepAR?
+A: Amazon's RNN-based probabilistic forecaster trained jointly across related series.
+
+Q: Isolation Forest?
+A: Tree-based unsupervised; anomalies are points easy to isolate via random splits.
+
+Q: LOF?
+A: Local Outlier Factor. Density-based.
+
+Q: When do you actually need deep learning?
+A: Rarely in pure ops. More common in security UEBA, fraud, IoT predictive maintenance.
+
+Q: Datadog Watchdog?
+A: Automatic anomaly detection plus Watchdog Insights for change correlation.
+
+Q: Datadog anomaly() monitor types?
+A: basic (rolling baseline), agile (light seasonal), robust (handles broken seasonality).
+
+Q: Anodot?
+A: Independent vendor focused on time-series anomaly detection, especially business KPIs.
+
+Q: Dynatrace Davis?
+A: Causation engine plus per-entity anomaly detection. Topology-aware.
+
+Q: Honeycomb BubbleUp?
+A: Surfaces dimensions where a failing population differs from baseline.
+
+Q: Grafana ML plugin?
+A: Grafana Cloud feature for forecasting and anomaly detection over Prometheus / Loki.
+
+Q: When is multivariate anomaly detection worth it?
+A: A small hand-picked cluster of related metrics for one service.
+
+Q: Most common anomaly detection mistake?
+A: Sensitivity tuned globally instead of per-service.
+
+Q: Holiday handling?
+A: Calendar-aware models (Prophet holiday parameter), manual mute windows.
+
+Q: Regime change after deploy?
+A: Re-baseline on rolling window. Verify retraining cadence matches deploy frequency.
+
+Q: Low-volume series?
+A: 3-sigma cannot get signal at 0.1 RPS. Aggregate, longer windows, or absolute thresholds.
+
+Q: Bursty workloads?
+A: Detect on quantile metrics (p99 duration) not instantaneous values.
+
+Q: SLO burn-rate vs anomaly alerts?
+A: SLO burn-rate is primary signal. Anomaly alerts are supporting context.
+
+Q: Build vs buy?
+A: Buy if your APM includes it. Build for a small set of business-critical metrics.
+
+Q: Maturity progression?
+A: SLO alerts on golden signals → anomaly detection on top 5-10 critical metrics → forecasting for capacity → multivariate on hand-picked clusters → periodic prune.
+
+These are answers an anomaly-detection-fluent platform / SRE engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.datadoghq.com/monitors/types/anomaly/',
+      'https://facebook.github.io/prophet/',
+      'https://otexts.com/fpp3/',
+      'https://github.com/Nixtla/statsforecast',
+      'https://docs.honeycomb.io/investigate/bubbleup/',
+      'https://grafana.com/docs/grafana-cloud/alerting-and-irm/machine-learning/',
+    ],
+  },
+
+  {
+    id: 'alert-correlation-grouping',
+    title: 'Alert Correlation and Grouping — Reducing Alert Storm Noise',
+    icon: 'zap',
+    color: '#d946ef',
+    questions: 5,
+    description: 'When one incident produces a thousand alerts via cascading dependencies, on-call engineers cannot triage. Correlation strategies (temporal, topological, causal), platforms (PagerDuty AIOps, BigPanda, Moogsoft, Datadog Incidents, ServiceNow ITOM), and what realistic noise reduction (70-90% achievable) looks like in production.',
+    visualizations: [
+      {
+        title: 'The alert storm problem and correlation strategies',
+        description: `One incident generates many alerts because dependencies cascade, and humans cannot triage 1000 pages. Concrete example: auth service has DB connection pool exhaustion at 14:32. Within two minutes: auth-service paged for 3 conditions, api-gateway paged for 2, web-frontend, mobile-app, payments, plus 50 downstream services. 80+ pages for one root cause.
+
+Why naive deduplication is not enough: alerts are about different services and symptoms — not duplicates. Real correlation needs more than a dedup hash.
+
+Strategy 1: temporal. Group alerts that fire within a window (typically 1-15 minutes). Simple, vendor-agnostic. Where it works: high-severity, sharp-onset incidents. Where it fails: slow-burn incidents, co-incidental simultaneous incidents.
+
+Strategy 2: topological. Group alerts on services that share a dependency edge in the service map. Topology comes from: APM auto-discovery (Datadog, Dynatrace, New Relic), service mesh (Istio, Linkerd), CMDB (ServiceNow), Kubernetes (NetworkPolicies), or manual YAML. Where it works: organizations with complete and accurate topology. Where it fails: cross-cutting infrastructure failures (shared DB, shared network) where topology doesn't reflect actual coupling.
+
+Strategy 3: causal. Determine that one alert is the upstream cause of another. Produces a tree (one root cause, many downstream effects). How tools approximate: topology + temporal precedence; change correlation; dependency graph traversal. Where it works: tools with strong topology + change data (Dynatrace Davis is canonical).
+
+Strategy 4: text similarity. Cluster alerts by message content via NLP / token similarity. Useful as complement when topology is missing.
+
+Strategy 5: statistical co-occurrence. Learn from history that "alert A and B usually fire together within 5 minutes". Used by ML-based correlation tools.
+
+Mature platforms layer multiple strategies. The output that matters: one incident summarizing all the alerts.
+
+Platforms:
+
+PagerDuty AIOps. Add-on tier above PagerDuty Incident Response. Rules-based grouping, content-based (NLP), or intelligent grouping (ML model learns from history). Strengths: PagerDuty is already the on-call routing system; AIOps lives where the workflow is.
+
+BigPanda. Independent AIOps platform focused on incident intelligence. Founded 2012; remains independent in 2026. Strengths: heterogeneous environments where alerts come from many tools.
+
+Moogsoft. Pure-play AIOps platform. Acquired by Dell in 2023. Less independent product velocity than the standalone years.
+
+Datadog Incidents + Watchdog. Native incident management plus Watchdog correlation. Topology auto-built from APM. Strengths: deep topology because Datadog owns the APM data.
+
+Dynatrace Davis. Causation engine over Smartscape topology. Most-praised AI features in AIOps for RCA assistance.
+
+ServiceNow ITOM. AIOps integrated with ServiceNow CMDB and ITSM workflows.
+
+OpsGenie (Atlassian). Less ML-heavy than PagerDuty AIOps.
+
+Open-source: Karma (alertmanager dashboard) for grouping visualization; Alertmanager itself supports grouping by labels.
+
+Realistic noise reduction figures. Vendor case studies cite 95%+ noise reduction. Real deployments achieve 70-90% in steady state, after months of tuning.
+
+Operating in production:
+
+Alert hygiene is the prerequisite. Service ownership tag, severity, type, source service identifier, runbook link. Symptoms that hygiene is missing: alerts with messages like "Error in service" with no service field; "Critical" severity used for everything.
+
+Topology data quality: auto-discovered (best), service mesh-derived (good), CMDB-curated (mixed), manual YAML (worst). Heuristic: if topology updates within 24 hours of a real architectural change, it's good enough.
+
+Sensitivity tuning. Aggressive grouping risks merging separate real incidents. Conservative leaves residual storm. Start conservative, tune up.
+
+Co-incidental incidents. Tool may merge two real but unrelated problems. On-call must inspect alert list and split if domains are unrelated.
+
+Cross-cutting infrastructure failures. Maintain explicit synthetic alerts on shared infrastructure (AZ health, cache cluster, DNS) so the correlation tool has the actual root in its alert stream.
+
+Change correlation as a forcing function. The most reliable RCA signal is a change event temporally adjacent to the alert. Wire CI / CD pipelines and IaC to emit deploy events.
+
+Anti-pattern 1: "let AIOps fix our alerting". The team has 200 noisy alerts; AIOps is bought instead of pruning. Result: AIOps groups noisy alerts into noisy incidents.
+
+Anti-pattern 2: trusting root-cause designation without verification. Engineer rolls back deploy X because tool said so; actual cause was unrelated.
+
+Measuring success: alerts ingested per day, incidents created per day, mean time to acknowledge, engineer pages per week, false-merge rate, missed-incident rate.
+
+The deeper point. Alert correlation is one of the highest-ROI AIOps capabilities — when the inputs are clean. The work is in alert metadata, topology, and change-event integration. Treat AIOps adoption as 70% data hygiene and 30% tool selection.`,
+        image: '/diagrams/devops/z3-alert-correlation.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Alert Correlation.',
+        question: 'Quick-fire interview answers — Alert Correlation.',
+        answer: `Rapid-fire facts.
+
+Q: The alert storm problem in one line?
+A: One incident produces hundreds of alerts via cascading dependencies; correlation collapses them into one incident.
+
+Q: Temporal correlation?
+A: Group alerts firing within a window (typically 1-15 minutes).
+
+Q: Topological correlation?
+A: Group alerts on services that share a dependency edge in the service map.
+
+Q: Causal correlation?
+A: Determine that one alert is the upstream cause of others. Produces a tree (one root, many effects).
+
+Q: Text similarity correlation?
+A: Cluster by alert message content using NLP / token similarity.
+
+Q: How do mature platforms combine these?
+A: Layered — temporal for the initial group, topological / causal to refine root cause, text similarity as a tiebreaker.
+
+Q: PagerDuty AIOps?
+A: Add-on tier above PagerDuty. Rules / content / intelligent grouping plus change correlation plus LLM summarization.
+
+Q: BigPanda?
+A: Independent AIOps platform. Best for heterogeneous monitoring estates.
+
+Q: Moogsoft today?
+A: Acquired by Dell in 2023.
+
+Q: Datadog Incidents + Watchdog?
+A: Native incident management plus Watchdog correlation. Topology auto-built from APM.
+
+Q: Dynatrace Davis?
+A: Causation engine over Smartscape topology.
+
+Q: ServiceNow ITOM?
+A: AIOps integrated with CMDB and ITSM workflow.
+
+Q: Realistic noise reduction in production?
+A: 70-90% in steady state. 95% requires significant investment.
+
+Q: Most important prerequisite?
+A: Alert hygiene — service ownership tags, consistent service names, severity discipline, type tags.
+
+Q: How do you get topology data?
+A: Best: APM auto-discovery. Good: service mesh logs. Mixed: CMDB. Worst-acceptable: manual YAML.
+
+Q: Topology heuristic?
+A: If it updates within 24 hours of a real architectural change, it's good enough.
+
+Q: Aggressive vs conservative grouping?
+A: Aggressive risks merging separate incidents; conservative leaves residual storm. Start conservative.
+
+Q: Co-incidental incidents?
+A: The tool may merge two real but unrelated problems. On-call must inspect and split.
+
+Q: Cross-cutting infra failure handling?
+A: Synthetic health-check alerts on shared infrastructure (AZ, cache, DNS).
+
+Q: Change correlation in one line?
+A: Alerts adjacent to recent deploys / config changes get the change as candidate root cause.
+
+Q: How to wire change events?
+A: CI / CD pipeline webhooks, Terraform / Pulumi apply hooks, feature-flag platforms.
+
+Q: Most common organizational anti-pattern?
+A: Buying AIOps to fix bad alerting instead of doing alert hygiene work.
+
+Q: Trusting the root-cause designation?
+A: Always verify before acting. Tools surface candidates; engineers confirm.
+
+Q: Metrics that measure AIOps value?
+A: Incidents per day vs alerts per day, mean time to acknowledge, engineer pages per week, false-merge and missed-incident rates.
+
+Q: First step for a team starting from zero?
+A: Audit alert hygiene. Standardize service names, ownership tags, severity. Then enable correlation in the platform you already pay for.
+
+These are answers an AIOps-fluent platform / SRE engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://www.pagerduty.com/platform/aiops/',
+      'https://www.bigpanda.io/our-product/',
+      'https://docs.datadoghq.com/service_management/incident_management/',
+      'https://www.dynatrace.com/platform/artificial-intelligence/',
+      'https://www.servicenow.com/products/it-operations-management.html',
+      'https://prometheus.io/docs/alerting/latest/alertmanager/',
+    ],
+  },
+
+  {
+    id: 'incident-rca-ml',
+    title: 'ML-Assisted Incident RCA — Pattern Matching and Causal Inference',
+    icon: 'zap',
+    color: '#d946ef',
+    questions: 5,
+    description: 'Tools that surface candidate root causes during incidents — pattern matching to past incidents, change correlation, dimension surfacing, LLM-based summarization. Honest read on what works (correlation finders, runbook search) versus what is overclaimed marketing (true causal RCA). The engineer is still doing the actual root-cause reasoning.',
+    visualizations: [
+      {
+        title: 'What ML-assisted RCA actually does, and the disciplined use',
+        description: `"Root cause analysis" is the most overclaimed phrase in AIOps. The tools labeled RCA are correlation-finders, dimension-surfacers, and change-correlators. They are useful — they accelerate human RCA — but they do not prove causation, and treating their output as the answer is the most common failure mode.
+
+Capability 1: pattern matching to past incidents. When an incident is declared, search past incident records for similar fingerprints. How: similarity over (alert pattern, affected services, error patterns, time-of-day, recent deploys). Vector embeddings of incident summaries (post LLM era) plus structured fingerprints. Tools: PagerDuty AIOps incident similarity, BigPanda pattern matching, FireHydrant / incident.io similar-incident search.
+
+Capability 2: change correlation. Surface deploys, config changes, infrastructure changes, and feature-flag flips that happened in the temporal window before the incident. How: ingests change events from CI / CD, Terraform / Pulumi, feature-flag platforms, and config management. Tools: Datadog Watchdog Insights, Dynatrace Davis change correlation, PagerDuty AIOps change events, ServiceNow ITOM.
+
+Capability 3: dimension surfacing (the "what is different" pattern). Given a slow / failing population, identify dimensions where the failing population differs from the healthy baseline. "5% of requests are failing — they all have user_agent=X and region=eu-west-1 and feature_flag=Y enabled". How: chi-squared, KL-divergence, or similar comparison across high-cardinality dimensions. Tools: Honeycomb BubbleUp (canonical example), Datadog APM dimensional analysis, Lightstep / ServiceNow Cloud Observability.
+
+Capability 4: causal graph reasoning (Dynatrace-style). Build a real-time topology graph annotated with metric / log anomalies; reason over the graph to find candidate root nodes. How: Dynatrace Smartscape continuously updates the graph from OneAgent observations; the Davis engine traverses upstream from each anomaly looking for the source.
+
+Capability 5: LLM-based incident summarization and runbook chat (2024-2026 wave). Generate human-readable incident summaries from raw alert / log streams. Answer questions about past incidents and runbooks via chat. How: LLM (Claude, GPT-4 family) reads alert payloads, recent log samples, runbook documents. RAG over the org's runbook corpus. Tools: Datadog Bits AI, PagerDuty AIOps incident summarization, ServiceNow Now Assist, New Relic AI assistant.
+
+Where they work and fail:
+
+Pattern matching: works on organizations with 12+ months of incident records and consistent post-mortem hygiene. Fails on novel incidents; tool surfaces closest match even if poor.
+
+Change correlation: works when there's one recent change in the affected service. Fails on slow-burn issues, infrastructure-layer causes invisible to application change feeds, second-order effects.
+
+Dimension surfacing: works on high-cardinality observability data with rich attributes. Fails on low-cardinality data or environments where the relevant dimension isn't instrumented.
+
+Causal graph reasoning: works on monolithic single-vendor APM coverage. Fails on gaps in topology coverage, cross-vendor environments, infrastructure-layer issues.
+
+LLM summarization: works for incident summaries, runbook search, simple metric queries. Fails on open-ended diagnosis — produces confident-sounding plausible answers that may be wrong.
+
+The honest summary: tools surface candidates. The engineer reads, picks the most likely 1-2 to investigate, validates by checking logs / running queries / talking to humans, confirms or rejects. The tools save the candidate-selection step. Steps 2-5 are still human work.
+
+Why "RCA" is misleading marketing:
+- Causation is not correlation.
+- Multi-cause incidents are common; tools tend to pick one.
+- Infrastructure causes are invisible to application APM.
+- Recency bias in models.
+
+Pitfalls and disciplined use:
+
+Pitfall 1: trusting the suggested cause without verification. Engineer rolls back deploy X because tool said so; X wasn't the cause. Mitigation: treat output as candidate, not conclusion. Verify with logs / queries before acting.
+
+Pitfall 2: model bias toward recent changes. Tools weighted toward recent events miss slow-burn issues. Mitigation: expand lookback window manually for incidents that started slowly.
+
+Pitfall 3: missing infrastructure-layer causes. Application APM doesn't see AZ degradation, network partitions, noisy neighbors. Mitigation: explicit infrastructure-layer health alerts; manually check infrastructure dashboards during incidents.
+
+Pitfall 4: multi-cause incidents flattened. Real incidents often have 2-3 contributing factors. Tool labels one as "the cause". Mitigation: post-incident review explicitly asks "what other factors contributed".
+
+Pitfall 5: LLM hallucinations in summaries. Mitigation: verify before any external publication. Treat summaries as drafts requiring human edit.
+
+Pitfall 6: pattern matching surfaces poor matches. Mitigation: check actual content of matched incident, not just label.
+
+Pitfall 7: over-reliance leading to skill atrophy. Mitigation: periodic incident drills without RCA-assist tools.
+
+Disciplined use patterns:
+
+Pattern 1: tool-assisted triage, human investigation. Tool surfaces candidates; engineer picks 1-2 to investigate; confirms or rejects.
+
+Pattern 2: change correlation as default first check. When alerted, default first check is "what changed".
+
+Pattern 3: dimension surfacing for unfamiliar patterns. Faced with multi-dimensional problems, use BubbleUp.
+
+Pattern 4: pattern matching for runbook reuse. Validate match, apply runbook for recurring issues.
+
+Pattern 5: LLM summary for external communication, with human edit.
+
+What to instrument for RCA-assist tools to work well: service-tagged golden signals, high-cardinality request attributes, change events flowing in, topology data, consistent past incident records.
+
+The deeper point. ML-assisted RCA is best framed as "candidate surfacing" or "RCA acceleration", not "root cause analysis". The framing matters as much as the tool.`,
+        image: '/diagrams/devops/z4-incident-rca.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Incident RCA with ML.',
+        question: 'Quick-fire interview answers — Incident RCA with ML.',
+        answer: `Rapid-fire facts.
+
+Q: What does ML-assisted RCA actually do?
+A: Surfaces candidate root causes — past similar incidents, recent changes, differing dimensions, upstream anomalies, plausible narratives. The engineer still confirms or rejects.
+
+Q: Why is "RCA" misleading marketing?
+A: The tools find correlations, not causation. The label oversells; "root-cause assistance" or "candidate surfacing" is closer.
+
+Q: Pattern matching to past incidents?
+A: When an incident is declared, search past incident records for similar fingerprints; surface the most similar with its runbook.
+
+Q: Change correlation in one line?
+A: Surface deploys, config changes, infra changes, and feature-flag flips that happened in the temporal window before the incident.
+
+Q: Most reliable RCA signal?
+A: Recent change events temporally adjacent to anomaly onset.
+
+Q: Datadog Watchdog Insights?
+A: Surfaces candidate cause for a Watchdog anomaly — typically a recent deploy or config change with strong temporal correlation.
+
+Q: Dynatrace Davis problem detection?
+A: Builds a "Problem" with candidate root entity by traversing the Smartscape topology graph upstream from anomalies.
+
+Q: Honeycomb BubbleUp?
+A: Given a slow / failing population, surface dimensions where the bad population differs from the baseline.
+
+Q: PagerDuty AIOps RCA features?
+A: Change correlation plus similar-incident matching plus LLM-based incident summarization.
+
+Q: Datadog Bits AI?
+A: Natural-language interface over Datadog telemetry — summarize incidents, query metrics, search runbooks.
+
+Q: ServiceNow Now Assist?
+A: LLM layer over ServiceNow ITOM. Summarizes incidents, suggests remediation.
+
+Q: When does LLM summarization work?
+A: Incident summaries, runbook search, simple metric queries.
+
+Q: When does it fail?
+A: Open-ended diagnosis — produces confident-sounding plausible answers that may be wrong.
+
+Q: Most common RCA-assist failure mode?
+A: Trusting the suggested cause without verification.
+
+Q: Model bias toward recent changes?
+A: Tools weighted toward recent events miss slow-burn issues.
+
+Q: Missing infrastructure-layer causes?
+A: Application APM does not see AZ degradation, network partitions, noisy neighbors.
+
+Q: Multi-cause incidents and ML?
+A: Tool labels one as "the cause"; real incident has multiple contributors.
+
+Q: LLM hallucination in summaries?
+A: Verify before any external publication. Treat as drafts requiring engineer edit.
+
+Q: Skill atrophy from over-reliance?
+A: Periodic drills without tool assistance keep skills sharp.
+
+Q: Disciplined use pattern 1?
+A: Tool-assisted triage, human investigation.
+
+Q: Default first check during an incident?
+A: "What changed". Change correlation feed answers fastest.
+
+Q: When to use dimension surfacing?
+A: Multi-dimensional problems — "some users see this, others not".
+
+Q: When to use pattern matching?
+A: Recurring issue families. Tool surfaces past incident with runbook.
+
+Q: When to use LLM summaries?
+A: Status-page updates, stakeholder communications, post-incident timeline drafts. Always with engineer edit.
+
+Q: What instrumentation makes RCA-assist work?
+A: Service-tagged golden signals, high-cardinality request attributes, change events flowing in, topology data, consistent past incident records.
+
+Q: Most useful RCA-assist capability today?
+A: Change correlation. Single biggest signal-to-noise win.
+
+Q: Biggest mindset shift for engineers using RCA tools?
+A: Treat output as candidates to verify, not conclusions to act on.
+
+These are answers an incident-RCA-fluent platform / SRE engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.datadoghq.com/watchdog/',
+      'https://www.dynatrace.com/platform/artificial-intelligence/',
+      'https://docs.honeycomb.io/investigate/bubbleup/',
+      'https://www.pagerduty.com/platform/aiops/',
+      'https://newrelic.com/platform/applied-intelligence',
+      'https://sre.google/workbook/postmortem-culture/',
+    ],
+  },
+
 ];
