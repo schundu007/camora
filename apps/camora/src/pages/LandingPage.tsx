@@ -325,39 +325,68 @@ export default function LandingPage() {
             />
           </Reveal>
 
-          <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {APPA.map((step, i) => (
-              <Reveal key={step.key} delay={i * 0.06}>
+          <div className="mt-14 grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-5 items-stretch">
+
+            {/* Left: Apply / Prepare / Practice — compact horizontal cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-5">
+              {APPA.filter(s => s.key !== 'attend').map((step, i) => (
+                <Reveal key={step.key} delay={i * 0.06}>
+                  <Link
+                    to={step.href}
+                    className="group flex h-full items-start gap-4 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-hover)] hover:shadow-[0_4px_8px_rgba(15,23,42,0.06),0_16px_32px_-12px_rgba(15,23,42,0.16)]"
+                  >
+                    <span className="shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--cam-primary)]">
+                      {step.icon}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--cam-primary)]">
+                        {step.label}
+                      </p>
+                      <h3 className="mt-0.5 font-display text-[15px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
+                        {step.headline}
+                      </h3>
+                      <p className="mt-1.5 text-[12.5px] leading-relaxed text-[var(--text-secondary)]">
+                        {step.desc}
+                      </p>
+                    </div>
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
+
+            {/* Right: Attend — large feature card */}
+            {APPA.filter(s => s.key === 'attend').map(step => (
+              <Reveal key={step.key} delay={0.12}>
                 <Link
                   to={step.href}
-                  className="group block h-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-hover)] hover:shadow-[0_4px_8px_rgba(15,23,42,0.06),0_16px_32px_-12px_rgba(15,23,42,0.16)]"
+                  className="group flex flex-col h-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-hover)] hover:shadow-[0_4px_8px_rgba(15,23,42,0.06),0_16px_32px_-12px_rgba(15,23,42,0.16)]"
                 >
-                  <div className="relative h-32 overflow-hidden bg-[var(--bg-elevated)]">
+                  <div className="relative h-48 sm:h-56 overflow-hidden bg-[var(--bg-elevated)] shrink-0">
                     <step.Anim />
                   </div>
-                  <div className="p-5">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--cam-primary)]">
+                  <div className="flex flex-col flex-1 p-7">
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--cam-primary)]">
                       {step.icon}
                     </span>
                     <p className="mt-4 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-[var(--cam-primary)]">
                       {step.label}
                     </p>
-                    <h3 className="mt-1.5 font-display text-[17px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
+                    <h3 className="mt-1.5 font-display text-[24px] md:text-[28px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
                       {step.headline}
                     </h3>
-                    <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--text-secondary)]">
+                    <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-secondary)]">
                       {step.desc}
                     </p>
-                    <span className="mt-4 inline-flex items-center gap-1 text-[12px] font-bold uppercase tracking-wider text-[var(--cam-primary)] transition-all group-hover:gap-2">
-                      Explore
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
-                        <polyline points="9 18 15 12 9 6" />
-                      </svg>
-                    </span>
+                    <div className="mt-6">
+                      <CTAButton to={step.href} variant="primary" size="md" trailingArrow>
+                        Try live AI
+                      </CTAButton>
+                    </div>
                   </div>
                 </Link>
               </Reveal>
             ))}
+
           </div>
         </Container>
       </Section>
