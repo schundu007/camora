@@ -240,25 +240,43 @@ export default function ResumeOptimizer() {
     });
   }
 
-  function handleDownload() {
+  const fileLabel: Record<OutputTab, string> = {
+    resume: 'optimized-resume',
+    coverLetter: 'cover-letter',
+    atsScore: 'ats-score',
+  };
+
+  async function handleDownloadDocx() {
     const content = getOutputContent();
     if (!content) return;
-
-    const labelMap: Record<OutputTab, string> = {
-      resume: 'optimized-resume',
-      coverLetter: 'cover-letter',
-      atsScore: 'ats-score',
-    };
-    const filename = `${labelMap[activeTab]}.txt`;
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
+    const { Document, Packer, Paragraph, TextRun } = await import('docx');
+    const paragraphs = content.split('\n').map(
+      (line) => new Paragraph({ children: [new TextRun(line)] }),
+    );
+    const doc = new Document({ sections: [{ children: paragraphs }] });
+    const blob = await Packer.toBlob(doc);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
+    a.href = URL.createObjectURL(blob);
+    a.download = `${fileLabel[activeTab]}.docx`;
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(a.href);
+  }
+
+  async function handleDownloadPdf() {
+    const content = getOutputContent();
+    if (!content) return;
+    const { default: jsPDF } = await import('jspdf');
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    const lines = doc.splitTextToSize(content, 180);
+    let y = 20;
+    for (const line of lines) {
+      if (y > 280) { doc.addPage(); y = 20; }
+      doc.text(line, 15, y);
+      y += 6;
+    }
+    doc.save(`${fileLabel[activeTab]}.pdf`);
   }
 
   const outputContent = getOutputContent();
@@ -740,49 +758,41 @@ export default function ResumeOptimizer() {
                 </svg>
                 {copied ? 'Copied!' : 'Copy'}
               </button>
-              <button
-                type="button"
-                onClick={handleDownload}
-                style={{
-                  padding: '6px 14px',
-                  border: '1px solid var(--border)',
-                  borderRadius: '8px',
-                  background: 'var(--bg-surface)',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  fontFamily: "'Inter', sans-serif",
-                  transition: 'border-color 0.15s',
-                }}
-                onMouseEnter={(e) =>
-                  ((e.currentTarget as HTMLButtonElement).style.borderColor =
-                    'var(--accent)')
-                }
-                onMouseLeave={(e) =>
-                  ((e.currentTarget as HTMLButtonElement).style.borderColor =
-                    'var(--border)')
-                }
-              >
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              {(['docx', 'pdf'] as const).map((fmt) => (
+                <button
+                  key={fmt}
+                  type="button"
+                  onClick={fmt === 'docx' ? handleDownloadDocx : handleDownloadPdf}
+                  style={{
+                    padding: '6px 14px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    background: 'var(--bg-surface)',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontFamily: "'Inter', sans-serif",
+                    transition: 'border-color 0.15s',
+                  }}
+                  onMouseEnter={(e) =>
+                    ((e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--accent)')
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)')
+                  }
                 >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Download .txt
-              </button>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  .{fmt}
+                </button>
+              ))}
             </div>
           )}
         </div>
