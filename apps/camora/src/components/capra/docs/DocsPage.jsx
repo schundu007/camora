@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile';
 import { useAppShell } from '../layout/AppShellContext';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -71,6 +71,7 @@ export default function DocsPage({ onBack }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const contentAccess = useContentAccess();
   const routerLocation = useLocation();
+  const navigate = useNavigate();
   // Initialize state from URL params for persistence on refresh
   const getInitialState = () => {
     const params = new URLSearchParams(routerLocation.search);
@@ -731,17 +732,26 @@ export default function DocsPage({ onBack }) {
           <div className={`flex-1 min-w-0 mx-auto w-full lg:max-w-[85%] ${isMobile ? 'px-3' : 'px-4 sm:px-6 lg:px-8'}`}>
             {/* Breadcrumb Bar — secondary bar below TopBar */}
             <div className="sticky z-20 px-3 sm:px-4 py-1.5 sm:py-3 flex items-center justify-between gap-2 bg-[var(--bg-surface)] border-b border-[var(--border)]" style={{ top: 0 }}>
-              {/* Mobile: back button when viewing a topic */}
-              {isMobile && selectedTopic && (
-                <button
-                  onClick={() => setSelectedTopic(null)}
-                  className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded font-semibold text-xs transition-colors"
-                  style={{ color: 'var(--accent)', background: 'var(--accent-subtle)', border: '1px solid rgba(38,97,156,0.25)' }}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-                  Back
-                </button>
-              )}
+              {/* Back — desktop + mobile. When a topic is selected, returns
+                  to the topic list. Otherwise uses navigate(-1) with a "/"
+                  fallback for cold launches with no history (matches the
+                  SiteNav and Lumora-shell back-button behavior so all
+                  surfaces — landing, Capra, Lumora — have a consistent
+                  Back affordance). */}
+              <button
+                onClick={() => {
+                  if (selectedTopic) { setSelectedTopic(null); return; }
+                  if (window.history.length > 1) navigate(-1);
+                  else navigate('/');
+                }}
+                className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded font-semibold text-xs transition-colors"
+                style={{ color: 'var(--accent)', background: 'var(--accent-subtle)', border: '1px solid rgba(38,97,156,0.25)' }}
+                title="Back"
+                aria-label="Back"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                Back
+              </button>
               {/* Breadcrumb */}
               <div className="flex items-center gap-2 text-sm min-w-0 flex-1">
                 <Link to="/capra/prepare" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer landing-body font-medium no-underline">Prepare</Link>
