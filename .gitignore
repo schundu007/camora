@@ -19,3 +19,7 @@ coverage/
 
 # Local self-signed code-signing cert for desktop dev builds — never commit
 apps/desktop/.local-cert/
+
+# Repo-root tool caches (project-scoped equivalents are tracked under apps/*)
+/.serena/
+/.trunk/
