@@ -17944,7 +17944,7 @@ These are answers a kernel-fluent platform/SRE engineer should give without prep
   },
 
   {
-    id: 'slo-sli-error-budgets',
+    id: 'slo-error-budgets-dashboards',
     title: 'SLO / SLI / Error Budgets — Reliability Math and Burn-Rate Alerts',
     icon: 'activity',
     color: '#f97316',
@@ -18650,6 +18650,889 @@ These are answers a CD-fluent platform engineer should give without preparation.
       'https://launchdarkly.com/blog/what-is-progressive-delivery/',
       'https://spinnaker.io/docs/guides/user/canary/',
       'https://sre.google/workbook/canarying-releases/',
+    ],
+  },
+
+  {
+    id: 'feature-flags-platforms',
+    title: 'Feature Flags — LaunchDarkly, Statsig, Unleash, Flagsmith',
+    icon: 'send',
+    color: '#06b6d4',
+    questions: 5,
+    description: 'Decouple deploy from release. Flag types (release, ops, experiment, permission), evaluation models (server-side vs client-side, streaming vs polling), targeting rules, audit + kill-switch, technical debt management. Vendors: LaunchDarkly (market leader), Statsig (experiment-heavy, free tier), Unleash (OSS), Flagsmith (OSS / SaaS), Optimizely (experimentation).',
+    visualizations: [
+      {
+        title: 'Flag taxonomy and evaluation model',
+        description: `Four canonical flag types with very different lifecycles:
+
+Release flags — gate code that's deployed but not yet released. Live for days or weeks; deleted after rollout. The most common type. "feature-checkout-v2" turns on for 1% of users on Monday, 100% by Friday, code path collapsed to always-on by next sprint.
+
+Experiment flags — A/B/n testing. Flag value drives variant assignment, often with bucketing by user ID for stable assignment. Live for the duration of the experiment (weeks). Tied to analytics for outcome measurement.
+
+Operational flags — kill switches, circuit breakers, rate limiters. Long-lived; often permanent. "disable-recommendations" lets ops turn off a heavy code path during an incident without a deploy.
+
+Permission flags — entitlement gating tied to plan tier or beta access. Long-lived; tied to user/account attributes. "premium-export" on for paid plans only.
+
+Why the distinction matters. Release flags are technical debt — every one represents a "remove me" task. Experiment flags expire. Operational flags are infrastructure. Permission flags are product. Mixing them in one config screen creates rot. Mature platforms tag flags by type.
+
+Evaluation model — server-side vs client-side:
+
+Server-side: Flag SDK runs in your backend. Receives full ruleset; evaluates locally. User attributes never leave your service. No latency in flag check. Most platforms (LaunchDarkly, Statsig, Unleash) support this via streaming SDK that maintains a local cache.
+
+Client-side (browser/mobile): Flag SDK runs in the user's device. Two patterns:
+- "Bootstrap mode": server evaluates flags for the user, ships pre-evaluated values to the client. Simpler; cheaper at scale; less responsive to flag changes.
+- "Direct evaluation": client SDK fetches rules and evaluates locally. Reactive to flag changes mid-session. Costs API requests; rules are exposed (sometimes a security concern).
+
+Streaming vs polling:
+- Streaming SDK opens a long-lived connection (SSE, websocket) to the flag service, gets pushed flag changes within ~1s. Production-grade for mid-session updates.
+- Polling SDK fetches the ruleset every N seconds (typically 30-60s). Simpler; bandwidth-efficient at scale; can take a minute to propagate changes.
+
+Local evaluation, central authority. The architecture all major platforms converge on: SDKs evaluate locally with cached rules, control plane is the source of truth, changes flow via push or pull. This keeps flag checks at microsecond latency while preserving the ability to flip flags from a UI in seconds.`,
+        image: '/diagrams/devops/c2-feature-flags.png',
+      },
+      {
+        title: 'Vendor landscape — choosing a feature flag platform',
+        description: `LaunchDarkly (market leader, ~40% share):
+- Strengths: most mature SDK ecosystem (20+ languages), polished UI, sophisticated targeting (segments, percentages, prerequisites), audit log, role-based permissions, integrations everywhere (Datadog, Slack, Jira, Terraform).
+- Weaknesses: pricing aggressive (per-MAU model gets expensive at consumer scale).
+- Best for: orgs that have outgrown OSS, need enterprise features and don't want to operate the flag service.
+
+Statsig (fastest-growing, 2026):
+- Strengths: experimentation-first design (built-in stats for A/B tests with confidence intervals), generous free tier (1M events/month), feature gates + experiments + dynamic config in one product, tight client-side SDK.
+- Weaknesses: less mature server-side SDK ecosystem than LaunchDarkly, heavier metadata overhead (events ingested for analytics).
+- Best for: product-led teams that run experiments heavily, startups that want enterprise capability without enterprise pricing.
+
+Unleash (OSS leader):
+- Strengths: open source (Apache 2.0), self-hostable, OSS feature parity is real (not crippled vs paid). SaaS option from Unleash Labs.
+- Weaknesses: smaller SDK ecosystem than LaunchDarkly, less polished UI, fewer integrations.
+- Best for: orgs that want to self-host (compliance, data residency, cost), willing to operate the service.
+
+Flagsmith (OSS + SaaS):
+- Strengths: open source, self-hostable, simpler than Unleash, good Python/Django origin community, free tier on SaaS.
+- Weaknesses: smaller scale references than the others; experiment features limited.
+- Best for: small teams that want OSS without operational overhead.
+
+Optimizely (experimentation):
+- Strengths: deepest experimentation toolkit (Web Experimentation, Full Stack, Personalization), strong stats engine, marketer-friendly UI for web experiments.
+- Weaknesses: enterprise pricing, less developer-centric than LaunchDarkly/Statsig for backend gates.
+- Best for: marketing-led experimentation, especially web/UX testing.
+
+Cloudflare Workers + KV / Edge Config:
+- DIY pattern: store flag rules in Workers KV or Cloudflare Edge Config; evaluate at edge.
+- Strengths: free at small scale, sub-millisecond evaluation at edge, no third-party in the request path.
+- Weaknesses: no UI, no targeting engine, no audit log — you build it.
+- Best for: orgs already deep in Cloudflare; willing to build internal tooling.
+
+Open question — when to build vs buy. Build if: <100 flags, 1-2 services, limited targeting needs. Buy if: targeting (geo, plan, custom attributes), >5 services, audit/compliance requirements, experimentation. Most teams that try to build outgrow it within 12 months.
+
+Operational gotchas:
+- Long-lived release flags become "ZombieFlags" — never deleted, code paths atrophy. Track flag age; alert on flags older than N days.
+- Targeting rule sprawl: 50 nested rules nobody can debug. Rule limits + tagging + ownership matter at scale.
+- Flag evaluation in hot path: use cached SDK; don't HTTP-request per check.
+- Default values matter: SDK should serve a safe default if the flag service is unreachable. Test with the SDK in error state.
+- Event volume: experiment flags emit events per evaluation. At 10k QPS × 10 flags = 100k events/sec — vendor bills surprise.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Feature Flags.',
+        question: 'Quick-fire interview answers — Feature Flags.',
+        answer: `Rapid-fire facts.
+
+Q: What's the main value of feature flags?
+A: Decouple deploy from release. Code goes to production behind a flag; release happens by flipping the flag, no deploy required. Faster recovery (flip off in seconds), gradual rollout, A/B testing, kill switches.
+
+Q: Four flag types?
+A: Release (short-lived gate for unrelased code), Experiment (A/B testing), Operational (kill switch, rate limit), Permission (entitlement gating).
+
+Q: Server-side vs client-side evaluation?
+A: Server-side SDK evaluates flags inside your backend; user attributes don't leave your service. Client-side runs in the browser/mobile — exposes rules but reacts to flag changes mid-session.
+
+Q: Streaming vs polling SDK?
+A: Streaming = long-lived connection (SSE/WS), pushes flag changes in ~1s. Polling = fetches rules every 30-60s. Streaming for production-grade responsiveness, polling for cheaper bandwidth at scale.
+
+Q: LaunchDarkly's main strength?
+A: Most mature SDK ecosystem (20+ languages), polished UI, deep targeting (segments, percentages, prerequisites), strong enterprise features. Market leader.
+
+Q: Statsig's differentiator?
+A: Experimentation-first — built-in A/B stats with confidence intervals. Generous free tier. Feature gates + experiments + dynamic config in one product.
+
+Q: Unleash?
+A: OSS feature flag platform (Apache 2.0). Real feature parity vs paid; self-hostable. SaaS option from Unleash Labs.
+
+Q: Flagsmith?
+A: OSS + SaaS, simpler than Unleash, good for small teams. Less mature experimentation features.
+
+Q: Optimizely?
+A: Experimentation-heavy, especially web. Marketer-friendly UI for non-developer-driven experiments. Enterprise pricing.
+
+Q: When to build vs buy?
+A: Build if <100 flags, 1-2 services, simple targeting. Buy if you need geo/plan/attribute targeting, audit, experiments, or have >5 services. Most build attempts outgrow themselves within a year.
+
+Q: Zombie flags?
+A: Flags that should have been removed but linger. Code paths atrophy; behavior depends on a long-forgotten flag. Mitigation: tag flags by type, alert on flags older than N days, periodic cleanup sprints.
+
+Q: Default value behavior on flag service outage?
+A: SDK should fall through to a safe default. Test with the flag service unreachable; verify the app degrades gracefully. Never let a flag-service outage cascade.
+
+Q: Event-volume gotcha?
+A: Experiment flags emit one event per evaluation. At 10k QPS × 10 flags = 100k events/sec → vendor-bill surprise. Sample events or evaluate experiment flags less aggressively.
+
+Q: Flag vs canary?
+A: Canary = % of pods see new code. Flag = % of users see new code path within same pods. Layer them: canary the binary, flag the feature.
+
+Q: Flag-driven rollback?
+A: Faster than redeploy. Flip flag off in seconds via UI, code path falls back to old behavior. The standout reason people buy flag platforms even if they don't experiment.
+
+Q: Hot path latency?
+A: Flag check should be <1ms via cached SDK. Don't HTTP-request per check. If you're calling out to the flag service synchronously, you're doing it wrong.
+
+Q: Targeting attribute strategies?
+A: Pass user-id, account-id, plan-tier, region, custom attributes. Rules combine: "users in EU AND on plan=premium AND account >30 days old". Keep rules under 5 levels of nesting; deeper becomes unmaintainable.
+
+Q: Audit and compliance?
+A: Enterprise must-haves: who flipped what, when, why. LaunchDarkly, Optimizely, Statsig all have audit logs. OSS Unleash has it; Flagsmith partial.
+
+Q: Bootstrap pattern for client-side flags?
+A: Server evaluates flags for the user, embeds pre-evaluated values in the initial HTML or first API response. Simpler, cheaper, less responsive to mid-session flag changes.
+
+Q: Most common flag platform mistake?
+A: No flag lifecycle. Teams add flags forever, never remove. Within 18 months, hundreds of zombie flags, branch coverage of code becomes impossible.
+
+These are answers a flag-platform-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://launchdarkly.com/blog/feature-flag-best-practices/',
+      'https://docs.statsig.com/',
+      'https://docs.getunleash.io/',
+      'https://docs.flagsmith.com/',
+      'https://martinfowler.com/articles/feature-toggles.html',
+      'https://docs.developers.optimizely.com/',
+    ],
+  },
+
+  {
+    id: 'deployment-strategies',
+    title: 'Deployment Strategies — Rolling, Blue/Green, Canary, Recreate',
+    icon: 'send',
+    color: '#06b6d4',
+    questions: 5,
+    description: 'The deploy mechanics under progressive delivery. K8s Deployment rolling-update internals (maxSurge, maxUnavailable, readiness, PDBs), blue/green at L4/L7, canary mechanics, recreate when you must, in-place vs swap. The tradeoff dimensions and when each strategy is correct.',
+    visualizations: [
+      {
+        title: 'Strategy comparison — when to pick which',
+        description: `Six strategies, with the tradeoff dimensions:
+
+Recreate. Stop all old, start all new. Properties: 100% downtime equal to startup; simplest; one version live. Use for: stateful apps that can't run two versions concurrently, dev/staging without uptime requirement, single-instance utilities.
+
+Rolling update (K8s default). Replace pods incrementally — maxSurge controls extra pods during deploy, maxUnavailable controls pods that can be down. Both versions live during the rollout, traffic randomly hits both. Properties: zero downtime if readiness probes work, no metric gate, no instant rollback.
+- Rule of thumb: maxSurge 25%, maxUnavailable 0 for production stateless apps. Surge buys you no-impact rollout at 1.25x infrastructure cost during the deploy.
+
+Blue/Green. Two full environments. Deploy to green, validate, swap traffic at the load balancer. Properties: instant cutover, instant rollback (swap back), 2x infrastructure during deploy, schema must support both versions.
+- L4 swap: change LB target group. Connection-level cutover; old connections drain.
+- L7 swap: change ingress/service routing rules. Request-level cutover.
+
+Canary. Send small fraction (1-10%) to new version, measure, expand. Properties: bounded blast radius, requires traffic-splitting (mesh, ingress) and metrics, slower than blue/green. Argo Rollouts and Flagger automate this on K8s.
+
+A/B test. Like canary but split by user attribute (geo, header, cohort) for product experiments rather than safety. Often paired with feature flags.
+
+Shadow / dark launch. Mirror production traffic to new version; discard responses. Tests under real load with no user impact. 2x backend traffic.
+
+Decision matrix:
+
+| Need                                            | Strategy                       |
+|-------------------------------------------------|--------------------------------|
+| Zero downtime, simple                           | Rolling update                 |
+| Critical app, fast rollback                     | Blue/green                     |
+| Have telemetry, want bounded blast radius       | Canary                         |
+| Database schema change                          | Blue/green + expand-contract   |
+| Stateful app, can't run two versions            | Recreate (with maintenance)    |
+| Performance regression test                     | Shadow                         |
+| Test product variants                           | A/B (canary mechanics, segmented) |
+
+Most production K8s shops layer: rolling for routine, canary for risky changes, blue/green for the most critical service, shadow for performance-sensitive paths.`,
+        image: '/diagrams/devops/c3-deployment-strategies.png',
+      },
+      {
+        title: 'K8s rolling update internals and gotchas',
+        description: `K8s rolling update is the default for Deployment — and the most-misconfigured strategy in production.
+
+The mechanics:
+
+\`\`\`yaml
+spec:
+  replicas: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%        # extra pods beyond desired during deploy
+      maxUnavailable: 0    # pods allowed to be unavailable
+  template:
+    spec:
+      readinessProbe:
+        httpGet: { path: /healthz, port: 8080 }
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        successThreshold: 1
+        failureThreshold: 3
+      containers:
+        - name: app
+          # ...
+\`\`\`
+
+Step-by-step what happens with maxSurge: 25%, maxUnavailable: 0:
+1. New ReplicaSet created with replicas=0.
+2. Scale new RS by maxSurge (10 × 0.25 = 3 → new RS to 3 replicas).
+3. Wait for new pods to become Ready.
+4. Scale old RS down by 3.
+5. Repeat 2-4 until new RS=10, old RS=0.
+
+The whole rollout: 10 pods → 13 → 10 → 13 → 10 ... until done.
+
+Common misconfigurations:
+
+maxSurge: 0, maxUnavailable: 25%. This means "tolerate 25% pods missing during deploy". Causes user-visible degradation. Wrong for production. Default of 25%/25% is also wrong — accept the 1.25x cost during the deploy and set maxUnavailable: 0.
+
+Missing readinessProbe. Pods marked Ready as soon as the container starts. K8s sends traffic before the app is actually serving. Result: 503s during every rollout. Fix: readiness probe that returns 200 only when the app can serve.
+
+readinessProbe checks /healthz that always returns 200. Probe doesn't actually check anything meaningful. Best practice: probe checks that the app's dependencies are reachable (DB pool initialized, cache warm). But not so heavy that one slow dep flaps every pod.
+
+No PodDisruptionBudget. K8s will drain the entire Deployment during a node drain (cluster upgrade, node replacement). PDB:
+
+\`\`\`yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: api-pdb }
+spec:
+  minAvailable: 8        # or maxUnavailable: 2
+  selector:
+    matchLabels: { app: api }
+\`\`\`
+
+Without PDB, a node drain can take all pods of a Deployment offline simultaneously. With PDB, drain proceeds only as fast as the Deployment can replace pods.
+
+terminationGracePeriodSeconds default 30s. Production apps that hold long connections (websockets, gRPC streams) need longer grace. Set to 90s or more, plus a preStop hook that drains LB before SIGTERM.
+
+\`\`\`yaml
+spec:
+  terminationGracePeriodSeconds: 90
+  containers:
+    - name: app
+      lifecycle:
+        preStop:
+          exec:
+            command: ["/bin/sh", "-c", "sleep 15"]    # let LB drain first
+\`\`\`
+
+Order: K8s sends SIGTERM, preStop runs first, then your app gets the signal. The 15s sleep gives the load balancer time to mark the pod NotReady before requests stop landing.
+
+revisionHistoryLimit. Defaults to 10 — K8s keeps 10 old ReplicaSets for rollback. For high-frequency deploys (50/day), this fills etcd with junk. Tune to 3-5 for high-velocity environments.
+
+Multi-AZ scheduling. Pods all on one AZ defeats the point of replicas. Pod anti-affinity or topologySpreadConstraints to distribute:
+
+\`\`\`yaml
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels: { app: api }
+\`\`\`
+
+Resource requests for HPA. HPA needs requests set on containers. Without it, HPA can't compute utilization and won't scale. The most common "HPA isn't working" cause.
+
+The deeper point. Rolling update done right is invisible to users — but the defaults aren't right. Nearly every production K8s outage attributed to "the deploy" comes from missing readiness probes, incorrect maxUnavailable, or no preStop hook. Fix these once per service and move on.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Deployment Strategies.',
+        question: 'Quick-fire interview answers — Deployment Strategies.',
+        answer: `Rapid-fire facts.
+
+Q: Default K8s deployment strategy?
+A: RollingUpdate. maxSurge 25%, maxUnavailable 25%. The default maxUnavailable is wrong for production — set to 0.
+
+Q: Recreate when?
+A: Stateful apps that can't run two versions, dev/staging, single-instance utilities. Accept downtime equal to startup time.
+
+Q: Blue/green vs canary?
+A: Blue/green = two full environments, instant cutover, 2x infra. Canary = single environment, fractional traffic split with metric gates, 1x infra. Blue/green for fastest rollback; canary for bounded blast radius.
+
+Q: Why maxUnavailable: 0?
+A: With maxUnavailable > 0, you tolerate degraded capacity during deploys. With maxUnavailable: 0 and maxSurge > 0, you scale up before scaling down — no degradation, but 1.25x infra cost during deploy.
+
+Q: Why readinessProbe matters?
+A: Without it, pods are marked Ready when container starts — K8s routes traffic before the app can serve. Result: 5xx errors during every deploy.
+
+Q: PodDisruptionBudget purpose?
+A: Limits how many pods can be unavailable during voluntary disruption (node drain, cluster upgrade). Without PDB, all pods of a Deployment can drain simultaneously.
+
+Q: terminationGracePeriodSeconds default?
+A: 30s. Often too short for apps with long-lived connections. Set 60-120s plus a preStop hook that delays SIGTERM to let the LB drain.
+
+Q: preStop hook pattern?
+A: sleep 15s before SIGTERM. Lets the load balancer notice the pod is going away (after readiness flips) and stop sending requests before your app shuts down.
+
+Q: revisionHistoryLimit?
+A: K8s keeps N old ReplicaSets for rollback. Default 10. For high-frequency deploys, tune to 3-5 to keep etcd lean.
+
+Q: Why HPA isn't scaling — most common cause?
+A: Missing resource requests on the container. HPA can't compute utilization without requests. Set requests; the HPA wakes up.
+
+Q: Pod anti-affinity vs topologySpreadConstraints?
+A: Anti-affinity: hard rules ("never on same node"). topologySpreadConstraints: soft, distribute across topologies (zones). Spread constraints are preferred for distribution; anti-affinity for stricter rules.
+
+Q: Blue/green at L4 vs L7?
+A: L4 (load balancer target group) — connection-level swap, old connections drain. L7 (ingress / service mesh) — request-level swap, instant cutover for new requests, can preserve sticky sessions.
+
+Q: Canary mechanics on K8s?
+A: Two ReplicaSets behind one service. Traffic split via service mesh (Istio VirtualService weights, Linkerd routes), ingress (NGINX canary annotations), or Argo Rollouts / Flagger automation.
+
+Q: Shadow deploy?
+A: Mirror production traffic to new version; discard responses. Tests under real load, no user impact. 2x backend traffic. Service mesh (Istio mirror) is the K8s pattern.
+
+Q: A/B vs canary?
+A: Canary = random traffic split for safety. A/B = targeted (cohort, geo, header) for product experiments. Same mechanics, different routing rule.
+
+Q: Most common deployment-related outage cause?
+A: Missing or wrong readinessProbe. App doesn't gate on dependencies; pods get traffic before they're ready; deploys cause 5xx spikes.
+
+Q: Why bother with blue/green when rolling exists?
+A: Instant rollback (swap LB back vs re-deploy old). Atomic cutover. Schema migrations that need clean version boundary. Critical services where partial-rollout is unacceptable.
+
+Q: Schema migration during rolling update?
+A: Both versions running simultaneously. Schema must be compatible with both. Expand-contract: add column, deploy code that uses it, drop old column. Skip this and rollback fails.
+
+Q: Sticky sessions and rolling deploys?
+A: Naive round-robin sends user's request 1 to old pod, request 2 to new → inconsistent. Service mesh consistent-hash by user-id or session affinity at LB.
+
+Q: When recreate is right?
+A: Stateful app that can't run two versions (some DBs, some queue workers), dev environments without HA requirements, single-instance utilities.
+
+Q: How to verify deploy didn't break anything?
+A: Synthetic health check (probes / canary), metric gates (error rate, latency, throughput), real-user monitoring observed during/after, rollback runbook ready before deploy.
+
+These are answers a deploy-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/concepts/workloads/controllers/deployment/',
+      'https://kubernetes.io/docs/tasks/run-application/configure-pdb/',
+      'https://argoproj.github.io/argo-rollouts/features/canary/',
+      'https://docs.flagger.app/usage/deployment-strategies',
+      'https://martinfowler.com/bliki/BlueGreenDeployment.html',
+    ],
+  },
+
+  {
+    id: 'database-migrations-cicd',
+    title: 'Database Migrations in CI/CD — Flyway, Liquibase, Atlas, Online DDL',
+    icon: 'send',
+    color: '#06b6d4',
+    questions: 5,
+    description: 'Versioned schema migrations under CI/CD. Tools (Flyway, Liquibase, Sqitch, Atlas, Bytebase, Prisma Migrate, Alembic). Online DDL for high-traffic tables (gh-ost, pt-online-schema-change, pg_repack). Expand-contract pattern. Handling rollbacks (or not). PR-gating, drift detection, migration in K8s init containers vs pre-deploy job.',
+    visualizations: [
+      {
+        title: 'Migration tooling and the expand-contract pattern',
+        description: `Migration tools — what each one is good at:
+
+Flyway (JVM-native, broad support):
+- Versioned SQL files (V1__init.sql, V2__add_column.sql).
+- Tracks applied migrations in flyway_schema_history table.
+- "Migrate-only" — does not generate migrations, you write the SQL.
+- Strong checksum validation (fails if a previously-applied migration was edited).
+- Best for: Java/JVM shops, polyglot teams that want plain SQL.
+
+Liquibase (XML/YAML/SQL changesets):
+- Multi-format changesets, can describe changes abstractly (Liquibase generates DB-specific SQL).
+- Stronger rollback support than Flyway (declarative reversal).
+- Heavier than Flyway; opinionated about format.
+- Best for: enterprise shops with strict change management, multi-database environments.
+
+Atlas (HCL-first, schema-as-code, 2023+):
+- Declare desired schema in HCL; Atlas computes the diff vs live DB and generates migration.
+- Built-in linting (catches dangerous migrations), migration directory + lint + apply pipeline.
+- Cloud version offers schema review in PRs.
+- Best for: teams that want Terraform-style schema-as-code; modern Postgres/MySQL/SQLite shops.
+
+Bytebase (database DevOps platform):
+- Migration platform with PR-style review workflows, RBAC, audit log.
+- Web UI for DBAs and developers to collaborate on migrations.
+- Multi-database (Postgres, MySQL, MongoDB, ClickHouse, Snowflake).
+- Best for: orgs with dedicated DBA function or compliance-heavy migration approval.
+
+Sqitch (no-config, dependency graph):
+- Plain SQL, no framework lock-in, dependency between migrations declared explicitly.
+- Smaller community but principled design.
+
+Prisma Migrate (TypeScript / ORM):
+- Tied to Prisma schema; generates migrations from schema diffs.
+- Best for: Prisma-using TypeScript apps; less compelling outside that stack.
+
+Alembic (SQLAlchemy / Python):
+- The Python equivalent of Flyway. Generates migrations from SQLAlchemy model diffs.
+- Best for: Python apps using SQLAlchemy.
+
+Expand-contract pattern (the only safe rolling-update pattern):
+
+The problem. Rolling deploys mean two app versions run simultaneously. Schema must support both. A naive "drop column" while the old version still queries it = 500s.
+
+The pattern, three deploys per breaking change:
+
+Phase 1 (Expand). Migration adds new shape, keeps old.
+- Add column: ALTER TABLE users ADD COLUMN new_email VARCHAR(255);
+- New name and old name coexist. Old code unaffected.
+
+Phase 2 (Migrate). App version that writes both old and new.
+- App writes new_email and old email_address simultaneously.
+- Backfill old rows: UPDATE users SET new_email = email_address WHERE new_email IS NULL;
+- Validation: spot-check rows; both values match.
+
+Phase 3 (Contract). App version that reads only new; migration drops old.
+- Deploy app that ignores old column.
+- After full rollout, separate migration: ALTER TABLE users DROP COLUMN email_address;
+
+This is three deploys. It is slow. It is correct. The shortcut (deploy migration + new code together) loses rollback capability and breaks the rolling update.
+
+Patterns by change type:
+- Add column nullable → safe, single deploy.
+- Add column NOT NULL → expand-contract (add nullable, backfill, then NOT NULL).
+- Drop column → expand-contract (deploy code that ignores column, then drop).
+- Rename column → expand-contract twice (add new, dual-write, switch reads, drop old).
+- Change column type → typically expand-contract twice with a new column.
+- Add index → online if your DB supports it (Postgres CREATE INDEX CONCURRENTLY, MySQL pt-online-schema-change).
+- Drop index → usually safe online.
+- Rename table → expand-contract via view: create view with new name, deploy code that uses view, eventually rename and drop view.
+
+Tools that automate expand-contract:
+- Atlas migrate lint flags dangerous migrations (drop column without prior check).
+- Bytebase enforces review workflows for breaking changes.
+- gh-ost / pt-online-schema-change perform online schema changes with the rolling update pattern built in.
+
+Skipping expand-contract is the #1 cause of "we deployed and DB queries started 500-ing".`,
+        image: '/diagrams/devops/c4-db-migrations.png',
+      },
+      {
+        title: 'Online DDL and CI/CD integration',
+        description: `Online DDL — running schema changes on tables under load:
+
+The problem. ALTER TABLE on a 100M-row MySQL table can lock for hours. Postgres ALTER TABLE on a busy table can require rewrites that lock writes. "Just run the migration" doesn't work at scale.
+
+Solutions:
+
+MySQL — pt-online-schema-change (Percona Toolkit):
+- Creates a shadow table with the desired schema.
+- Copies rows in chunks, throttling on replica lag.
+- Uses triggers to capture changes during the copy.
+- Atomic rename at the end.
+- Production-grade for MySQL; runs without locking the original table.
+
+MySQL — gh-ost (GitHub):
+- Like pt-osc but uses binlog replay instead of triggers (less overhead).
+- Throttling on replica lag, with pause/resume during high traffic.
+- The standard for large-scale MySQL.
+
+Postgres — CREATE INDEX CONCURRENTLY:
+- Builds index without taking write lock. Required for prod adds.
+- Two-pass scan; longer total time than non-concurrent but no blocking.
+
+Postgres — pg_repack:
+- Online table reorganization (compact, change tablespace).
+- Doesn't lock; uses triggers + shadow table similar to pt-osc.
+
+Postgres — adding NOT NULL on existing column:
+- Postgres 11+: add CHECK constraint NOT VALID, then VALIDATE in second statement. Avoids full table scan during the constraint add.
+- Postgres 12+: ALTER TABLE ... ALTER COLUMN ... SET NOT NULL is fast if the table has no NULLs (uses constraint metadata).
+
+Postgres — adding default to existing column:
+- Postgres 11+: NEW columns with default no longer rewrite the table.
+- Existing column default change: still rewrites in some cases. Verify.
+
+CI/CD integration — where migrations run:
+
+Pattern 1: Pre-deploy migration job.
+- CI builds image, runs migration job (kubernetes Job or CI step), then deploys app.
+- App pods come up against migrated schema.
+- Pro: clean ordering, app never sees old schema.
+- Con: failed migration blocks deploy. Rollback is harder if app already partially deployed.
+
+Pattern 2: Init container migration.
+- Each pod runs migration as init container before app starts.
+- Pro: app and schema versioned together; works for distributed migrations.
+- Con: race condition (multiple pods try to migrate simultaneously) — rely on tool's locking (Flyway uses pg_advisory_lock).
+
+Pattern 3: Migration as a separate deploy.
+- Run migration completely separately from app deploy. App rolling-update doesn't include migration.
+- Pro: cleanest expand-contract; explicit phases.
+- Con: more orchestration; humans must remember sequence.
+
+The de facto standard:
+- Backend services: Pattern 1 (pre-deploy migration job) for additive migrations, Pattern 3 (separate deploy) for breaking schema changes.
+- For high-availability: always Pattern 3 with expand-contract phases.
+
+Production runbook for a breaking change:
+
+1. Phase 1 PR: schema migration only (expand). CI runs it on staging; verifies idempotency.
+2. Deploy migration to prod. Backfill if needed (separate job, throttled).
+3. Phase 2 PR: app code that writes both old and new schemas.
+4. Deploy app rolling. Both versions handle both schemas.
+5. Verification: query metrics confirm both columns being written.
+6. Phase 3 PR: app code that reads only new schema. Deploy.
+7. Phase 4 PR: schema migration that drops old shape.
+8. Deploy. Done.
+
+This is 3-4 deploys for one logical change. Tools (Atlas, Bytebase) help orchestrate; nothing fully automates.
+
+Migration anti-patterns:
+- Combining schema and code in one deploy. Loses rollback.
+- ALTER TABLE on hot table without online tool. Locks production for hours.
+- Long-running migration in a request-response transaction. Migration lock holds while app waits.
+- Trusting your "test it on staging" to reveal lock issues. Staging has 1% of prod data; locks behave differently.
+- Forgetting indexes on the new column. Migration adds the column; forgot to add the index → query plan changes silently.
+
+Drift detection. Schema drift = prod schema diverges from migration history (manual hotfix in prod, dev-only changes leaking). Atlas, Bytebase, and Liquibase Pro detect drift. CI step that compares schema snapshots; alert on divergence.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Database Migrations.',
+        question: 'Quick-fire interview answers — Database Migrations.',
+        answer: `Rapid-fire facts.
+
+Q: Flyway in one line?
+A: Versioned plain-SQL migrations with checksum-validated history table. Java-native, broad DB support.
+
+Q: Liquibase vs Flyway?
+A: Liquibase: multi-format changesets (XML/YAML/SQL), declarative rollback, opinionated. Flyway: SQL-first, simpler. Liquibase favored where rollback matters; Flyway where simplicity wins.
+
+Q: Atlas?
+A: Schema-as-code in HCL; computes migration diff. Built-in lint flags dangerous changes. Modern Postgres/MySQL/SQLite shops.
+
+Q: Bytebase?
+A: Database DevOps platform with PR-style migration review, RBAC, audit. For orgs with DBAs or compliance.
+
+Q: Prisma Migrate / Alembic / Sqitch?
+A: ORM-bound (Prisma for TypeScript, Alembic for SQLAlchemy/Python). Sqitch: framework-free, dependency-graph-based.
+
+Q: Expand-contract in one line?
+A: Three deploys per breaking change. Phase 1: add new shape. Phase 2: app writes both. Phase 3: app reads new, drop old.
+
+Q: Why three deploys?
+A: Rolling update means two app versions run simultaneously. Schema must support both. Skipping expand-contract = old version fails when schema changes mid-rollout.
+
+Q: Add column NOT NULL — safe?
+A: No, not directly. Add nullable first; backfill; then add NOT NULL constraint as separate migration. Otherwise full table scan blocks.
+
+Q: Drop column — safe?
+A: Not directly. Deploy code that ignores the column first. After rollout, drop in separate migration.
+
+Q: pt-online-schema-change?
+A: MySQL online schema change. Shadow table + chunked copy + triggers + atomic rename. Production-grade.
+
+Q: gh-ost?
+A: GitHub's MySQL online schema change. Uses binlog replay instead of triggers. Lower overhead than pt-osc; throttles on replica lag.
+
+Q: CREATE INDEX CONCURRENTLY (Postgres)?
+A: Builds index without taking write lock. Required for prod index adds. Slower total time than non-concurrent, no blocking.
+
+Q: pg_repack?
+A: Postgres online table reorganization (compact, change tablespace). Like pt-osc for Postgres.
+
+Q: Postgres NOT NULL on existing column?
+A: Postgres 11+: add CHECK constraint NOT VALID, then VALIDATE in separate statement. Avoids full table scan during constraint add.
+
+Q: Pre-deploy migration job vs init container?
+A: Pre-deploy job: CI runs migration, then deploys app. Cleaner ordering. Init container: each pod migrates before app starts; relies on advisory lock for safety.
+
+Q: Best pattern for breaking schema change?
+A: Migration as separate deploy from app deploy. Expand-contract: three or four deploys total. Slow but rollback-safe.
+
+Q: Most dangerous migration pattern?
+A: ALTER TABLE on a hot multi-million-row table without online DDL. Locks for hours. Use pt-osc, gh-ost, pg_repack, or Postgres CONCURRENTLY.
+
+Q: Drift detection?
+A: Compare prod schema against migration history. Atlas, Bytebase, Liquibase Pro detect. CI step that flags divergence.
+
+Q: Rollback?
+A: Schema rollback is unreliable for non-trivial changes. Forward-only with expand-contract is the safer pattern. Tools advertise rollback; production teams generally don't trust it for data-bearing changes.
+
+Q: Long-running backfill?
+A: Run as separate throttled job, not as part of migration. Migration adds shape; backfill fills data; another migration enforces constraints (NOT NULL, unique).
+
+Q: Migrations in tests?
+A: Test environment runs migrations from scratch on every CI run. Catches checksum drift, ordering issues, missing indexes. Most CI pipelines spin up an ephemeral DB for this.
+
+Q: Multi-tenant / sharded DB migration strategy?
+A: Run migration per shard. Tooling: gh-ost handles MySQL replicas, pgroll for Postgres logical replication. Order: canary on one shard, validate, expand.
+
+Q: Migration in K8s — common pattern?
+A: Kubernetes Job for pre-deploy migration. ImagePullPolicy IfNotPresent. ttlSecondsAfterFinished to clean up completed jobs. RBAC for the migration ServiceAccount.
+
+Q: When skip expand-contract?
+A: Additive-only changes (add nullable column, add index concurrently) don't need it. Anything destructive (drop, rename, type change) does.
+
+Q: Most common migration outage cause?
+A: Schema and code shipped together; rollback partially-rolled-out app fails because new schema requires new code.
+
+These are answers a migration-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://flywaydb.org/documentation/',
+      'https://docs.liquibase.com/',
+      'https://atlasgo.io/',
+      'https://github.com/github/gh-ost',
+      'https://docs.percona.com/percona-toolkit/pt-online-schema-change.html',
+      'https://www.postgresql.org/docs/current/sql-createindex.html',
+    ],
+  },
+
+  {
+    id: 'release-engineering',
+    title: 'Release Engineering — Versioning, Branches, Hotfixes, Artifacts, SLSA',
+    icon: 'send',
+    color: '#06b6d4',
+    questions: 5,
+    description: 'The discipline of producing, signing, and shipping releases. Versioning (semver, calver), branch strategies (trunk-based vs gitflow), hotfix flow, signed artifacts, build provenance (SLSA), bill-of-materials (SBOM), release notes generation, deploy windows.',
+    visualizations: [
+      {
+        title: 'Versioning, branching, and the hotfix flow',
+        description: `Versioning strategies:
+
+Semantic versioning (semver — MAJOR.MINOR.PATCH):
+- MAJOR: breaking change (API removal, behavior change).
+- MINOR: feature addition (backward compatible).
+- PATCH: bug fix (backward compatible).
+- Pre-release: 1.2.0-rc.1, 1.2.0-beta.3.
+- Build metadata: 1.2.0+sha.abc1234.
+- Best for: libraries, SDKs, anything consumed as a dependency.
+
+Calendar versioning (calver — YYYY.MM.PATCH or YY.MM):
+- 2026.05.01, 2026.05.02 — version is the date.
+- No semantic meaning to bumps; users compare by date.
+- Best for: applications (browsers, services), where users don't reason about API stability.
+
+Hybrid: semver for libraries you ship to others; calver or trunk-based version (commit SHA + timestamp) for services you operate yourself.
+
+Branch strategies — three production models:
+
+Trunk-based (main only):
+- Single long-lived branch (main).
+- Short-lived feature branches (<24h) merged via PR.
+- Release = tag a commit on main; deploy that tag.
+- Hotfix = branch from a tag, fix, tag, deploy.
+- Best for: high-velocity teams with continuous deployment, strong CI.
+
+Release branch (mainline + release-X):
+- main is the integration branch.
+- release-1.5 branched from main when 1.5 ships.
+- Hotfixes: PR to release-1.5, cherry-pick to main.
+- Best for: products with multiple supported versions, slower release cadence.
+
+GitFlow (deprecated for most cases):
+- main + develop + feature/* + release/* + hotfix/*.
+- Heavyweight; designed for older release patterns.
+- Most modern teams have moved away from it; cited mostly for historical context.
+
+The realistic 2026 pattern: trunk-based for services, release branches for libraries that support multiple major versions concurrently.
+
+Hotfix flow (the moment that matters):
+
+1. Production bug detected.
+2. Cut hotfix branch from the deployed tag (not main, which may have other changes).
+3. Apply minimal fix; PR with high-priority review.
+4. CI runs full test suite on hotfix branch.
+5. Tag and deploy hotfix.
+6. Cherry-pick or merge to main; ensure the fix lands in next regular release.
+
+Common hotfix mistakes:
+- Branching from main instead of the deployed tag (drags in unreleased changes).
+- Over-scoping the hotfix (turning into a small feature). Keep the fix minimal; the urgency justifies tight scope.
+- Forgetting to cherry-pick to main; the bug returns in the next release.
+
+Release notes generation. Most teams automate from PR titles or commit messages:
+- conventional commits (feat:, fix:, chore:, BREAKING CHANGE:).
+- Tools: changesets (TypeScript), goreleaser (Go), release-drafter (GitHub), semantic-release.
+- Output: CHANGELOG.md categorized by type, with PR links.
+
+Deploy windows. Common policies:
+- No deploys Friday afternoon (limit weekend pages).
+- No deploys during business-critical windows (Black Friday, Super Bowl ads).
+- Override for security hotfixes.
+- Some shops allow continuous deploy 24/7; depends on telemetry maturity.`,
+        image: '/diagrams/devops/c5-release-engineering.png',
+      },
+      {
+        title: 'Build provenance, signing, and SLSA',
+        description: `Modern release engineering = supply-chain security. The shift since SolarWinds (2020) and Log4Shell (2021): every release artifact has provenance and signatures.
+
+SLSA (Supply-chain Levels for Software Artifacts) — graduated framework:
+
+Level 0: No provenance.
+
+Level 1: Provenance documented automatically during build. Can verify "which CI workflow built this".
+
+Level 2: Provenance signed and tamper-resistant. Hosted CI (GitHub Actions, GitLab CI) with workload identity (OIDC).
+
+Level 3: Provenance from hardened CI. Reusable workflows; build environment is reproducible. CI runner is isolated per build.
+
+Level 4: Reproducible builds. Two independent rebuilds from the same source produce bit-identical artifacts. Hard to achieve; few projects fully comply.
+
+Most production shops target Level 2-3. Level 1 is the floor; Level 4 is aspirational.
+
+Sigstore — the cryptographic infrastructure:
+
+cosign — sign and verify container images.
+- Keyless signing via OIDC: no long-lived signing keys; sign with the build runner's OIDC identity.
+- "cosign sign --yes ghcr.io/myorg/api:v1.2.3" — signs with workload identity.
+- Verify: "cosign verify --certificate-identity ... --certificate-oidc-issuer https://token.actions.githubusercontent.com ghcr.io/myorg/api:v1.2.3".
+
+Rekor — transparency log for signatures (Merkle tree, like CT logs for TLS).
+- Every signature recorded immutably; verifiers can check the signature was logged.
+
+Fulcio — short-lived certificate authority (10-minute certs based on OIDC identity).
+
+The chain: build runner → OIDC token → Fulcio cert → cosign sign → Rekor log entry. Verifier traverses backward.
+
+SBOM (Software Bill of Materials) — what's inside the artifact:
+
+Formats:
+- SPDX (Linux Foundation; license-focused, mature).
+- CycloneDX (OWASP; vulnerability-focused, more compact).
+
+Tools:
+- syft — generates SBOM from container images, filesystem, source.
+- cyclonedx-cli, syft, trivy can output CycloneDX.
+- bom (kubernetes-sigs) generates SPDX.
+
+What's in an SBOM: every package + version + license + supplier + checksums. Used for vulnerability matching (when a CVE drops, you query "which artifacts contain this lib?"), license compliance, and incident response.
+
+OSS Build (the supply-chain stack):
+
+\`\`\`yaml
+# .github/workflows/release.yml (sketch)
+jobs:
+  build:
+    permissions:
+      id-token: write    # for keyless cosign
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t ghcr.io/myorg/api:\${{ github.sha }} .
+      - run: docker push ghcr.io/myorg/api:\${{ github.sha }}
+      - uses: sigstore/cosign-installer@v3
+      - run: cosign sign --yes ghcr.io/myorg/api:\${{ github.sha }}
+      - uses: anchore/sbom-action@v0
+        with:
+          image: ghcr.io/myorg/api:\${{ github.sha }}
+          format: cyclonedx-json
+      - uses: slsa-framework/slsa-github-generator@v2.0.0
+        with:
+          base64-subjects: \${{ steps.hash.outputs.hashes }}
+\`\`\`
+
+Verification at deploy time:
+- Admission controller (Kyverno, OPA Gatekeeper, sigstore-policy-controller) verifies image signature before scheduling pods.
+- "Only deploy images signed by our org's GHA workload" = a cluster-wide policy.
+
+Reproducible builds (SLSA Level 4):
+- Two independent rebuilds from the same source produce identical artifacts.
+- Requires fixing build timestamps, ordering, and toolchain versions.
+- Bazel + remote caching is one path; Nix + flakes is another.
+- Few projects fully achieve it; partial reproducibility is more common.
+
+The deeper point. Release engineering today is not just "tag and deploy". It's "tag, build, sign, log, SBOM, attest provenance, deploy with verification". The toolchain is mature; adoption is the friction. Get to SLSA Level 2 in a single sprint; getting to Level 3 takes a few months.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Release Engineering.',
+        question: 'Quick-fire interview answers — Release Engineering.',
+        answer: `Rapid-fire facts.
+
+Q: Semver in one line?
+A: MAJOR.MINOR.PATCH — major = breaking, minor = additive, patch = fix. Pre-release suffixes (-rc.1, -beta.2) and build metadata (+sha.abc) round it out.
+
+Q: Calver?
+A: Calendar versioning — 2026.05.01. No semantic meaning; users compare by date. Best for applications, not libraries.
+
+Q: Trunk-based vs release branch?
+A: Trunk: single main, short-lived branches. Release branch: mainline + release-X for supported versions. Trunk for services with continuous deploy; release branches for libraries with multiple supported majors.
+
+Q: GitFlow?
+A: main + develop + feature/* + release/* + hotfix/*. Heavyweight; mostly deprecated. Modern teams favor trunk-based.
+
+Q: Hotfix flow?
+A: Branch from the deployed tag (not main), apply minimal fix, tag, deploy. Cherry-pick or merge to main. Don't drag in unreleased changes.
+
+Q: Most common hotfix mistake?
+A: Branching from main instead of the deployed tag — pulls in untested changes.
+
+Q: Conventional Commits?
+A: feat:, fix:, chore:, refactor:, BREAKING CHANGE: — structured commit messages that automation can parse for changelog and version bumps.
+
+Q: Tools for changelog automation?
+A: changesets (TS), goreleaser (Go), release-drafter (GitHub), semantic-release.
+
+Q: SLSA in one line?
+A: Supply-chain Levels for Software Artifacts — graduated framework (0-4) for build provenance, signing, and reproducibility. Level 2 floor for serious orgs; Level 3 typical, Level 4 aspirational.
+
+Q: SLSA Level 2 means?
+A: Provenance is signed and tamper-resistant. Hosted CI (GHA, GitLab) with OIDC workload identity. Most orgs reach this in a sprint.
+
+Q: SLSA Level 4?
+A: Reproducible builds — two independent rebuilds produce bit-identical artifacts. Hard to achieve; Bazel + remote cache and Nix + flakes are paths.
+
+Q: Sigstore stack?
+A: cosign (sign/verify) + Fulcio (short-lived OIDC certs) + Rekor (transparency log). Keyless signing replaces long-lived signing keys.
+
+Q: Keyless signing?
+A: cosign uses build runner's OIDC token to get a 10-min cert from Fulcio, signs, logs to Rekor. No persistent signing key to lose.
+
+Q: Verify image signature in K8s?
+A: Admission controller (Kyverno, sigstore-policy-controller, Gatekeeper) verifies cosign signature before pod schedules. Policy: "only signed by our GHA workload".
+
+Q: SBOM?
+A: Software Bill of Materials. Lists every package + version + license + checksum. SPDX (Linux Foundation, license-focused) or CycloneDX (OWASP, vulnerability-focused).
+
+Q: SBOM tools?
+A: syft (generates SBOM from containers/filesystem/source), cyclonedx-cli, bom (k8s-sigs). Most CI pipelines emit SBOM as a release artifact.
+
+Q: SBOM use cases?
+A: Vulnerability matching (when CVE drops, query "which artifacts contain this lib?"), license compliance, incident response.
+
+Q: Reproducible build?
+A: Same source + same toolchain → bit-identical artifact. Requires fixing timestamps, ordering, build environment. Bazel + Nix are common paths; full reproducibility is rare.
+
+Q: Release notes — automation?
+A: Conventional commits + release-drafter / semantic-release / changesets. CI generates CHANGELOG.md from PR titles or commit messages.
+
+Q: Deploy windows?
+A: Common: no deploy Friday afternoon (limit weekend pages), no deploy during business-critical windows. Override for security hotfixes. Continuous-deploy shops drop windows entirely if telemetry maturity supports it.
+
+Q: Atomic version bump?
+A: Tag the release commit (git tag v1.2.3), push tag, CI builds and deploys from that tag. Single source of truth. Don't deploy from a branch; deploy from a tag.
+
+Q: Dual versioning (lib + service)?
+A: Library uses semver (consumers depend on it). Service uses calver or commit-based version (you operate it). Same monorepo can have both.
+
+Q: SLSA + SBOM + signing — minimum viable?
+A: GHA OIDC + cosign sign + syft SBOM + admission controller verification. ~1-2 weeks of integration work; SLSA Level 2 + verifiable deploy. Start here.
+
+Q: Most common release-engineering anti-pattern?
+A: Deploys from main without tags. Loses traceability — "which commit is in production?" becomes a runtime question instead of an artifact attribute.
+
+Q: Promotion model?
+A: Same artifact promoted across environments (dev → staging → prod). One image, signed once, deployed many times with environment-specific config. No rebuild per env.
+
+Q: Image immutability?
+A: Production images use SHA digest, not floating tags. ghcr.io/myorg/api@sha256:abc...not :latest. Floating tags break promotion guarantees.
+
+These are answers a release-engineering-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://semver.org/',
+      'https://calver.org/',
+      'https://slsa.dev/',
+      'https://www.sigstore.dev/',
+      'https://cyclonedx.org/',
+      'https://spdx.dev/',
     ],
   },
 
