@@ -58,8 +58,11 @@ const CHAR_WIDTH_RATIO = {
 };
 
 // Padding inside container boxes so text doesn't kiss the borders.
-const CONTAINER_PAD_X = 16;
-const CONTAINER_PAD_Y = 12;
+// Bumped from 16/12 after the first pass still showed boxes that
+// clipped the last line of multi-line labels (e.g. "Presence cursors"
+// inside the CLIENT box on Google Docs basic).
+const CONTAINER_PAD_X = 24;
+const CONTAINER_PAD_Y = 22;
 
 // Minimum readable text size. Small labels under this threshold
 // get bumped — the audit complained text was too tiny to read.
@@ -70,9 +73,13 @@ function measureText(text, fontSize, fontFamily) {
   const ratio = CHAR_WIDTH_RATIO[fontFamily] || CHAR_WIDTH_RATIO[2];
   const lines = String(text).split('\n');
   const longestLineChars = Math.max(...lines.map((l) => l.length));
-  const width = Math.ceil(longestLineChars * fontSize * ratio);
-  // Excalidraw uses lineHeight 1.25 for text by default.
-  const height = Math.ceil(lines.length * fontSize * 1.25);
+  // 5% extra horizontal margin: real font metrics drift ~3-5% past
+  // pure char-count estimates, especially with wide letterforms (m, w).
+  const width = Math.ceil(longestLineChars * fontSize * ratio * 1.05);
+  // Excalidraw's actual rendered lineHeight is ~1.5 for hand-drawn
+  // fonts (Virgil/Excalifont) — bumped from 1.25 after the first pass
+  // still left the last line clipping out of containers.
+  const height = Math.ceil(lines.length * fontSize * 1.5);
   return { width, height };
 }
 

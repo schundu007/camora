@@ -92,9 +92,15 @@ function htmlHarness() {
       maxX = Math.max(maxX, el.x + (el.width || 0));
       maxY = Math.max(maxY, el.y + (el.height || 0));
     }
-    const PAD = 64;
-    const width = Math.ceil(maxX - minX + PAD * 2);
-    const height = Math.ceil(maxY - minY + PAD * 2);
+    const PAD = 96;
+    const baseW = Math.ceil(maxX - minX + PAD * 2);
+    const baseH = Math.ceil(maxY - minY + PAD * 2);
+    // 3× scale: sharp text at any inline preview width (typically
+    // ~1000-1200px container) AND sharp at lightbox native size.
+    // Roughly matches the original 5520-wide manual exports.
+    const SCALE = 3;
+    const width = baseW * SCALE;
+    const height = baseH * SCALE;
 
     const canvas = await exportToCanvas({
       elements,
@@ -105,7 +111,7 @@ function htmlHarness() {
         exportPadding: PAD,
       },
       files,
-      getDimensions: () => ({ width, height, scale: 2 }),
+      getDimensions: () => ({ width, height, scale: SCALE }),
     });
     return canvas.toDataURL('image/png');
   };
