@@ -234,6 +234,38 @@ async function runMigrations() {
       `CREATE INDEX IF NOT EXISTS lumora_user_doc_chunks_tsv_gin
          ON lumora_user_doc_chunks USING GIN (content_tsv)`,
 
+      // ── RAG Phase 6: per-user code kit ─────────────────────────────
+      // Captures the user's submitted code from the Practice playground
+      // so Sona can ground future questions in the user's own coding
+      // style + past attempts. Per-user namespace enforced at SQL.
+      // problem_slug stays denormalised to avoid a join during retrieval.
+      `CREATE TABLE IF NOT EXISTS lumora_user_code_chunks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        problem_slug TEXT NOT NULL,
+        problem_title TEXT NOT NULL,
+        language VARCHAR(40) NOT NULL,
+        section TEXT NOT NULL,
+        content TEXT NOT NULL,
+        token_count INTEGER NOT NULL,
+        embedding vector(1536) NOT NULL,
+        success BOOLEAN NOT NULL DEFAULT TRUE,
+        metadata JSONB DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
+      `CREATE INDEX IF NOT EXISTS lumora_user_code_chunks_user
+         ON lumora_user_code_chunks (user_id, created_at DESC)`,
+      `CREATE INDEX IF NOT EXISTS lumora_user_code_chunks_user_problem
+         ON lumora_user_code_chunks (user_id, problem_slug)`,
+      `CREATE INDEX IF NOT EXISTS lumora_user_code_chunks_hnsw
+         ON lumora_user_code_chunks USING hnsw (embedding vector_cosine_ops)
+         WITH (m = 16, ef_construction = 64)`,
+      `ALTER TABLE lumora_user_code_chunks
+         ADD COLUMN IF NOT EXISTS content_tsv tsvector
+         GENERATED ALWAYS AS (to_tsvector('english', coalesce(content, ''))) STORED`,
+      `CREATE INDEX IF NOT EXISTS lumora_user_code_chunks_tsv_gin
+         ON lumora_user_code_chunks USING GIN (content_tsv)`,
+
       // ── RAG Phase 5: session warm kit ──────────────────────────────
       // Per-user prefetched chunks, refreshed on Prep save. Inference
       // reads this and skips live retrieval when the kit is fresh.
@@ -312,6 +344,7 @@ import storiesRouter from './routes/stories.js';
 import prepRouter from './routes/prep.js';
 import companyContextRouter from './routes/companyContext.js';
 import audioPrefsRouter from './routes/audioPreferences.js';
+import usercodeRouter from './routes/usercode.js';
 
 // Per-IP rate limiting — previously only ascend had limits. Transcribe/speaker/
 // diagram were wide open to abuse before this.
@@ -340,6 +373,11 @@ app.use('/api/v1/inference', aiLimiter, authenticate, requirePaidSubscription, i
 app.post('/api/v1/stream', aiLimiter, authenticate, requirePaidSubscription,
   (req, res, next) => { req.url = '/stream'; inferenceRouter(req, res, next); });
 app.use('/api/v1/coding', aiLimiter, authenticate, requirePaidSubscription, codingRouter);
+// Per-user code kit indexing (RAG Phase 6). Server-to-server hook from
+// ascend-backend's run.js after a successful Practice run. Free-tier
+// users can also build their kit, so this skips requirePaidSubscription;
+// the daily free limit on Capra solves provides the rate floor.
+app.use('/api/v1/usercode', apiLimiter, authenticate, usercodeRouter);
 app.use('/api/v1/transcribe', aiLimiter, authenticate, requirePaidSubscription, transcriptionRouter);
 app.use('/api/v1/speaker', aiLimiter, authenticate, requirePaidSubscription, speakerRouter);
 app.use('/api/v1/diagram', aiLimiter, authenticate, requirePaidSubscription, diagramRouter);

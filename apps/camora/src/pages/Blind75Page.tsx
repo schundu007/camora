@@ -393,7 +393,7 @@ export default function Blind75Page() {
   const progressPercent = Math.round((completedCount / TOTAL) * 100);
 
   /* ── API calls ── */
-  const runCode = async () => {
+  const runCode = async (problemTitle?: string) => {
     setIsRunning(true);
     setOutput('Running...');
     try {
@@ -401,7 +401,7 @@ export default function Blind75Page() {
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ code, language, input: '' }),
+        body: JSON.stringify({ code, language, input: '', ...(problemTitle ? { problem: problemTitle } : {}) }),
       });
       if (!res.ok) throw new Error(`Server error (${res.status})`);
       const data = await res.json();
@@ -1020,7 +1020,7 @@ export default function Blind75Page() {
                                 <div style={{ flex: 1 }} />
 
                                 <button
-                                  onClick={runCode}
+                                  onClick={() => runCode(problem.title)}
                                   disabled={isRunning}
                                   style={{
                                     fontSize: '12px',

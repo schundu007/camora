@@ -313,12 +313,48 @@ print('\\n\\n'.join(out_blocks))
   }
 }
 
+// Fire-and-forget cross-service hook: index a successful Practice run
+// into the user's Lumora code kit so future Sona answers can ground on
+// the user's own past attempts. Failures are logged-only — never block
+// or surface to the Practice page.
+async function indexUserCodeFireAndForget({ authHeader, problem, language, code, success }) {
+  if (!authHeader || !problem || !language || !code) return;
+  const url = process.env.LUMORA_BACKEND_URL || 'http://localhost:8000';
+  try {
+    await fetch(`${url}/api/v1/usercode/index`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader,
+      },
+      body: JSON.stringify({ problem, language, code, success }),
+      signal: AbortSignal.timeout(2000),
+    });
+  } catch (err) {
+    // Non-fatal: kit-building is best-effort.
+    safeLog('warn', '[run] usercode index hook failed:', err.message);
+  }
+}
+
 router.post('/', validate('run'), async (req, res, next) => {
   try {
-    const { code, language, input } = req.body;
+    const { code, language, input, problem } = req.body;
 
     const result = await executeCode(code, language, input);
     res.json(result);
+
+    // Fire-and-forget: index the user's code attempt for future RAG
+    // grounding. Only when the caller named the problem (so the kit
+    // stays organized by problem-slug) and the run succeeded.
+    if (problem && result.success) {
+      indexUserCodeFireAndForget({
+        authHeader: req.headers.authorization,
+        problem,
+        language,
+        code,
+        success: true,
+      });
+    }
   } catch (error) {
     next(new AppError(
       'Failed to execute code',

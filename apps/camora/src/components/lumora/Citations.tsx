@@ -38,15 +38,20 @@ function docKindLabel(docKind: string | null): string {
 /** Render a single citation row. */
 function CitationRow({ c, index }: { c: Citation; index: number }) {
   const isKb = c.tier === 'kb';
+  const isCode = c.tier === 'code';
 
   // Primary label — what to call this source.
   const primaryLabel = isKb
     ? (c.topicTitle || c.topicId || c.source || 'Knowledge base')
+    : isCode
+    ? (c.topicTitle ? `Your past attempt: ${c.topicTitle}` : 'Your past attempt')
     : docKindLabel(c.docKind);
 
-  // Secondary detail — source path / section.
+  // Secondary detail — source path / section / language.
   const secondary = isKb
     ? [c.source, c.section].filter(Boolean).join(' / ')
+    : isCode
+    ? [c.language, c.section].filter(Boolean).join(' / ')
     : c.section || null;
 
   // Distance badge — format to 3 decimals, colour-coded by proximity.
@@ -84,14 +89,24 @@ function CitationRow({ c, index }: { c: Citation; index: number }) {
           <span
             className="text-[9px] font-bold uppercase tracking-[0.14em] px-1.5 py-0.5 rounded"
             style={{
-              background: isKb ? 'var(--accent-subtle)' : 'rgba(201,162,39,0.12)',
-              color: isKb ? 'var(--cam-primary-dk)' : 'var(--cam-gold-leaf-text, var(--cam-gold-leaf))',
+              background: isKb
+                ? 'var(--accent-subtle)'
+                : isCode
+                ? 'rgba(16,185,129,0.12)'
+                : 'rgba(201,162,39,0.12)',
+              color: isKb
+                ? 'var(--cam-primary-dk)'
+                : isCode
+                ? 'var(--success, #059669)'
+                : 'var(--cam-gold-leaf-text, var(--cam-gold-leaf))',
               border: isKb
                 ? '1px solid rgba(0,71,171,0.18)'
+                : isCode
+                ? '1px solid rgba(16,185,129,0.28)'
                 : '1px solid rgba(201,162,39,0.28)',
             }}
           >
-            {isKb ? 'KB' : 'YOURS'}
+            {isKb ? 'KB' : isCode ? 'CODE' : 'YOURS'}
           </span>
           {c.url ? (
             <a

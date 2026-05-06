@@ -88,12 +88,16 @@ export interface ParsedBlock {
 // the answer. `tier` distinguishes Capra knowledge-base chunks ('kb') from
 // the user's own uploaded documents ('user').
 export interface Citation {
-  tier: 'kb' | 'user';
+  /** kb = Capra knowledge base topic. user = uploaded Prep doc.
+   *  code = the user's own past Practice attempt (per-user code kit). */
+  tier: 'kb' | 'user' | 'code';
   source: string | null;
   topicId: string | null;
   topicTitle: string | null;
   section: string | null;
   docKind: string | null;
+  /** Programming language for 'code' tier rows ("python", "javascript", …). */
+  language?: string | null;
   /** Present for web-watchlist (Plan C) chunks; null for static KB + user docs. */
   url: string | null;
   distance: number;

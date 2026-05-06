@@ -110,3 +110,43 @@ export async function hybridSearchUserDocs(userId, question, finalK, opts = {}) 
   const [v, b] = await Promise.all([vecUser(userId, vec), bm25User(userId, question)]);
   return fuse([v, b], finalK);
 }
+
+// ── Per-user code kit (RAG Phase 6) ──────────────────────────────────
+async function vecUserCode(userId, vec) {
+  const r = await query(
+    `SELECT id, problem_slug, problem_title, language, section, content,
+            embedding <=> $2::vector AS distance
+       FROM lumora_user_code_chunks
+       WHERE user_id = $1
+       ORDER BY embedding <=> $2::vector LIMIT $3`,
+    [userId, asVecLiteral(vec), VECTOR_TOP],
+  );
+  return r.rows.map((row) => ({
+    tier: 'code', id: row.id,
+    problemSlug: row.problem_slug, problemTitle: row.problem_title,
+    language: row.language, section: row.section, content: row.content,
+    distance: Number(row.distance),
+  }));
+}
+async function bm25UserCode(userId, question) {
+  const r = await query(
+    `SELECT id, problem_slug, problem_title, language, section, content,
+            ts_rank(content_tsv, plainto_tsquery('english', $2)) AS ts_rank
+       FROM lumora_user_code_chunks
+       WHERE user_id = $1 AND content_tsv @@ plainto_tsquery('english', $2)
+       ORDER BY ts_rank DESC LIMIT $3`,
+    [userId, question, BM25_TOP],
+  );
+  return r.rows.map((row) => ({
+    tier: 'code', id: row.id,
+    problemSlug: row.problem_slug, problemTitle: row.problem_title,
+    language: row.language, section: row.section, content: row.content,
+    tsRank: Number(row.ts_rank),
+  }));
+}
+
+export async function hybridSearchUserCode(userId, question, finalK, opts = {}) {
+  const vec = opts.vec || await embedQuery(question);
+  const [v, b] = await Promise.all([vecUserCode(userId, vec), bm25UserCode(userId, question)]);
+  return fuse([v, b], finalK);
+}
