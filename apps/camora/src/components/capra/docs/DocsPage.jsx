@@ -735,7 +735,13 @@ export default function DocsPage({ onBack }) {
     <div className="min-h-screen" style={{ color: 'var(--text-primary)' }}>
       <div className="relative min-h-screen flex">
           {/* Center Content */}
-          <div className={`flex-1 min-w-0 w-full ${isMobile ? 'px-3' : 'px-4 sm:px-6 lg:px-8'}`}>
+          {/* Cap content at the project's --page-max (1280px) and center
+              with mx-auto. The previous "lg:max-w-[85%]" felt like dead
+              space because it scaled with viewport; this cap is measured
+              in pixels so a 1920px monitor gets ~320px of comfortable
+              margin per side rather than edge-to-edge stretch. Below
+              1280px the cap is inert and content fills the column. */}
+          <div className={`flex-1 min-w-0 w-full mx-auto ${isMobile ? 'px-3' : 'px-4 sm:px-6 lg:px-8'}`} style={{ maxWidth: 'var(--page-max, 1280px)' }}>
             {/* Breadcrumb Bar — secondary bar below TopBar */}
             <div className="sticky z-20 px-3 sm:px-4 py-1.5 sm:py-3 flex items-center justify-between gap-2 bg-[var(--bg-surface)] border-b border-[var(--border)]" style={{ top: 0 }}>
               {/* Back — desktop + mobile. When a topic is selected, returns
