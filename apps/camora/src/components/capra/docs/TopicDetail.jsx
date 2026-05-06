@@ -905,7 +905,7 @@ export default function TopicDetail({
             <div className="mb-3">
               <ContentHeading title="Introduction" />
               <div className="pt-2">
-                <div className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed">
+                <div className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed max-w-[72ch]">
                   <FormattedContent content={topicDetails.introduction} color="blue" />
                 </div>
               </div>
