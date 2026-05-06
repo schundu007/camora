@@ -328,7 +328,7 @@ export default function ResumeOptimizer() {
         gridTemplateColumns: '1fr 1fr',
         gap: '24px',
         minHeight: '600px',
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
       }}
     >
       {/* ───────── Left: Input Panel ───────── */}
@@ -343,27 +343,41 @@ export default function ResumeOptimizer() {
           gap: '24px',
         }}
       >
-        <h2
-          style={{
-            fontSize: '20px',
+        <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
+          <span style={{
+            display: 'block',
+            fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+            fontSize: '10px',
+            fontWeight: 700,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: 'var(--cam-gold-leaf)',
+            marginBottom: '6px',
+          }}>
+            AI-Powered
+          </span>
+          <h2 style={{
+            fontFamily: "'Clash Display', Satoshi, sans-serif",
+            fontSize: '22px',
             fontWeight: 700,
             color: 'var(--text-primary)',
             margin: 0,
-            letterSpacing: '-0.01em',
-          }}
-        >
-          Resume Optimizer
-        </h2>
+            letterSpacing: '-0.02em',
+          }}>
+            Resume Optimizer
+          </h2>
+        </div>
 
         {/* Job Description */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <label
             style={{
-              fontSize: '13px',
-              fontWeight: 600,
+              fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+              fontSize: '10px',
+              fontWeight: 700,
               color: 'var(--text-muted)',
               textTransform: 'uppercase',
-              letterSpacing: '0.05em',
+              letterSpacing: '0.18em',
             }}
           >
             Job Description
@@ -379,7 +393,7 @@ export default function ResumeOptimizer() {
               border: '1px solid var(--border)',
               borderRadius: '10px',
               fontSize: '14px',
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
               color: 'var(--text-primary)',
               background: 'var(--bg-elevated)',
               resize: 'vertical',
@@ -430,12 +444,16 @@ export default function ResumeOptimizer() {
                 borderRadius: '8px',
                 background: fetchingJd || !jobUrl.trim() ? 'var(--bg-elevated)' : 'var(--accent)',
                 color: fetchingJd || !jobUrl.trim() ? 'var(--text-muted)' : '#fff',
-                fontSize: '13px',
-                fontWeight: 600,
+                border: fetchingJd || !jobUrl.trim() ? '1px solid var(--border)' : '1px solid var(--accent)',
+                fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+                fontSize: '10px',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
                 cursor: fetchingJd || !jobUrl.trim() ? 'not-allowed' : 'pointer',
                 whiteSpace: 'nowrap',
-                transition: 'background 0.15s',
-                opacity: fetchingJd ? 0.7 : 1,
+                transition: 'background-color 0.15s ease-out, border-color 0.15s ease-out',
+                opacity: fetchingJd ? 0.65 : 1,
               }}
             >
               {fetchingJd ? 'Fetching…' : 'Fetch'}
@@ -447,11 +465,12 @@ export default function ResumeOptimizer() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <label
             style={{
-              fontSize: '13px',
-              fontWeight: 600,
+              fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+              fontSize: '10px',
+              fontWeight: 700,
               color: 'var(--text-muted)',
               textTransform: 'uppercase',
-              letterSpacing: '0.05em',
+              letterSpacing: '0.18em',
             }}
           >
             Your Resume
@@ -467,7 +486,7 @@ export default function ResumeOptimizer() {
               border: '1px solid var(--border)',
               borderRadius: '10px',
               fontSize: '14px',
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
               color: 'var(--text-primary)',
               background: 'var(--bg-elevated)',
               resize: 'vertical',
@@ -559,7 +578,7 @@ export default function ResumeOptimizer() {
                 border: '1px solid var(--border)',
                 borderRadius: '8px',
                 fontSize: '14px',
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
                 color: 'var(--text-primary)',
                 background: 'var(--bg-elevated)',
                 outline: 'none',
@@ -603,7 +622,7 @@ export default function ResumeOptimizer() {
                 border: '1px solid var(--border)',
                 borderRadius: '8px',
                 fontSize: '14px',
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
                 color: 'var(--text-primary)',
                 background: 'var(--bg-elevated)',
                 outline: 'none',
@@ -618,11 +637,11 @@ export default function ResumeOptimizer() {
           <div
             style={{
               padding: '10px 14px',
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
+              background: 'color-mix(in oklab, var(--danger) 10%, transparent)',
+              border: '1px solid color-mix(in oklab, var(--danger) 35%, transparent)',
               borderRadius: '8px',
               fontSize: '13px',
-              color: '#0B5CFF',
+              color: 'var(--danger)',
               fontWeight: 500,
             }}
           >
@@ -641,16 +660,16 @@ export default function ResumeOptimizer() {
               padding: '12px 20px',
               border: '1px solid var(--border)',
               borderRadius: '10px',
-              background: loading
-                ? 'var(--bg-elevated)'
-                : 'linear-gradient(135deg, var(--accent) 0%, #0B5CFF 100%)',
+              background: loading ? 'var(--bg-elevated)' : 'var(--accent)',
               color: '#ffffff',
-              fontSize: '14px',
-              fontWeight: 600,
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+              fontSize: '11px',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
               cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'opacity 0.15s',
-              opacity: loading ? 0.7 : 1,
+              transition: 'background-color 0.15s ease-out, opacity 0.15s ease-out',
+              opacity: loading ? 0.65 : 1,
             }}
           >
             Optimize Resume
@@ -664,16 +683,16 @@ export default function ResumeOptimizer() {
               padding: '12px 20px',
               border: '1px solid var(--border)',
               borderRadius: '10px',
-              background: loading
-                ? 'var(--bg-elevated)'
-                : 'linear-gradient(135deg, var(--accent) 0%, #0B5CFF 100%)',
+              background: loading ? 'var(--bg-elevated)' : 'var(--accent)',
               color: '#ffffff',
-              fontSize: '14px',
-              fontWeight: 600,
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+              fontSize: '11px',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
               cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'opacity 0.15s',
-              opacity: loading ? 0.7 : 1,
+              transition: 'background-color 0.15s ease-out, opacity 0.15s ease-out',
+              opacity: loading ? 0.65 : 1,
             }}
           >
             Generate Cover Letter
@@ -694,6 +713,30 @@ export default function ResumeOptimizer() {
           minHeight: 0,
         }}
       >
+        {/* Panel header */}
+        <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+          <div>
+            <span style={{
+              display: 'block',
+              fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+              fontSize: '10px',
+              fontWeight: 700,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--cam-gold-leaf)',
+              marginBottom: '6px',
+            }}>Output</span>
+            <h3 style={{
+              fontFamily: "'Clash Display', Satoshi, sans-serif",
+              fontSize: '18px',
+              fontWeight: 700,
+              color: 'var(--text-primary)',
+              margin: 0,
+              letterSpacing: '-0.016em',
+            }}>Document Preview</h3>
+          </div>
+        </div>
+
         {/* Tab switcher + action buttons row */}
         <div
           style={{
@@ -730,15 +773,13 @@ export default function ResumeOptimizer() {
                   borderRadius: '8px',
                   fontSize: '13px',
                   fontWeight: activeTab === tab.key ? 600 : 500,
-                  fontFamily: "'Inter', sans-serif",
-                  color: activeTab === tab.key ? 'var(--text-primary)' : 'var(--text-muted)',
-                  background: activeTab === tab.key ? 'var(--bg-surface)' : 'transparent',
-                  boxShadow:
-                    activeTab === tab.key
-                      ? '0 1px 3px rgba(0,0,0,0.08)'
-                      : 'none',
+                  fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
+                  color: activeTab === tab.key ? '#fff' : 'var(--text-muted)',
+                  background: activeTab === tab.key ? 'var(--accent)' : 'transparent',
+                  border: activeTab === tab.key ? '1px solid var(--accent)' : '1px solid var(--border)',
+                  boxShadow: 'none',
                   cursor: 'pointer',
-                  transition: 'all 0.15s',
+                  transition: 'background-color 0.15s ease-out, color 0.15s ease-out, border-color 0.15s ease-out',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -765,7 +806,7 @@ export default function ResumeOptimizer() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '5px',
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
                   transition: 'border-color 0.15s',
                 }}
                 onMouseEnter={(e) =>
@@ -809,7 +850,7 @@ export default function ResumeOptimizer() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '5px',
-                    fontFamily: "'Inter', sans-serif",
+                    fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
                     transition: 'border-color 0.15s',
                   }}
                   onMouseEnter={(e) =>
