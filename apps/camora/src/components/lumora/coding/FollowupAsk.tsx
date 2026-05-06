@@ -73,7 +73,7 @@ export default function FollowupAsk({ problem, activeSolutionName, activeSolutio
           <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
           <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
-        <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-primary-dk)', fontFamily: "'Source Sans 3', sans-serif" }}>
+        <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-primary-dk)', fontFamily: "var(--font-sans)" }}>
           Ask a follow-up
         </span>
         <span className="ml-auto text-[9px]" style={{ color: 'var(--text-muted)' }}>Context-aware · scoped to this problem</span>
@@ -107,7 +107,7 @@ export default function FollowupAsk({ problem, activeSolutionName, activeSolutio
 
         {(answer || loading) && (
           <div className="rounded-lg px-2.5 py-2" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
-            <p className="text-[12px] leading-[1.55] whitespace-pre-wrap" style={{ color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif" }}>
+            <p className="text-[12px] leading-[1.55] whitespace-pre-wrap" style={{ color: 'var(--text-primary)', fontFamily: "var(--font-sans)" }}>
               {answer || <span style={{ color: 'var(--text-muted)' }}>Thinking…</span>}
               {loading && answer && <span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--cam-primary)', verticalAlign: 'middle' }} />}
             </p>

@@ -70,7 +70,7 @@ export function ContextBadge({ variant = 'dark' }: ContextBadgeProps) {
         background: palette.bg,
         border: `1px solid ${palette.border}`,
         color: palette.text,
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "var(--font-sans)",
       }}
       title={tooltip}
     >

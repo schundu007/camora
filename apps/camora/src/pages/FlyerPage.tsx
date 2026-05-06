@@ -73,7 +73,7 @@ export default function FlyerPage() {
             borderRadius: 0,
             boxShadow: '0 40px 80px rgba(0,0,0,0.5)',
             color: '#FFFFFF',
-            fontFamily: "'Inter', system-ui, sans-serif",
+            fontFamily: "var(--font-sans)",
           }}
         >
           {/* Decorative gold radial — top-right */}
@@ -139,7 +139,7 @@ export default function FlyerPage() {
                 className="font-black tracking-tight leading-[1.05] mb-6"
                 style={{
                   fontSize: isLandscape ? 64 : isSquare ? 88 : 120,
-                  fontFamily: "'Inter', system-ui, sans-serif",
+                  fontFamily: "var(--font-sans)",
                 }}
               >
                 Land<br />

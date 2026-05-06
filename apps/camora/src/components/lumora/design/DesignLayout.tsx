@@ -586,7 +586,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <div className="w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center" style={{ background: 'var(--cam-gold-leaf)' }}>
               <span className="text-[10px] md:text-xs font-extrabold" style={{ color: 'var(--cam-primary-dk)' }}>L</span>
             </div>
-            <span className="font-extrabold text-xs md:text-sm text-white" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>System Design</span>
+            <span className="font-extrabold text-xs md:text-sm text-white" style={{ fontFamily: "var(--font-sans)" }}>System Design</span>
           </div>
           <div className="h-4 w-px bg-white/10 hidden md:block" />
           {/* Detail level toggle */}

@@ -102,7 +102,7 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         title="Camora home"
       >
         <CamoraLogo size={expanded ? 22 : 20} />
-        {expanded && <span className="text-sm font-bold whitespace-nowrap text-white" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Camora</span>}
+        {expanded && <span className="text-sm font-bold whitespace-nowrap text-white" style={{ fontFamily: "var(--font-sans)" }}>Camora</span>}
       </Link>
 
       {/* Main nav */}

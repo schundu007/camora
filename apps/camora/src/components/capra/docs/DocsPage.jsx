@@ -3181,19 +3181,19 @@ export default function DocsPage({ onBack }) {
         .landing-root {
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          font-family: 'Inter', system-ui, sans-serif;
+          font-family: var(--font-sans);
         }
 
         .landing-display {
-          font-family: 'Inter', system-ui, sans-serif;
+          font-family: var(--font-sans);
         }
 
         .landing-body {
-          font-family: 'Inter', system-ui, sans-serif;
+          font-family: var(--font-sans);
         }
 
         .landing-mono {
-          font-family: 'Source Code Pro', monospace;
+          font-family: var(--font-mono);
         }
 
         .animate-fade-in {

@@ -469,7 +469,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
               </button>
               <h2
                 className="text-lg font-bold text-slate-900 flex-1"
-                style={{ fontFamily: "'Source Sans 3', sans-serif" }}
+                style={{ fontFamily: "var(--font-sans)" }}
               >
                 {problem.id}. {problem.title}
               </h2>
@@ -497,7 +497,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
             {/* Description */}
             <p
               className="text-[13px] leading-snug mb-2 whitespace-pre-line font-medium"
-              style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-primary)' }}
+              style={{ fontFamily: "var(--font-sans)", color: 'var(--text-primary)' }}
             >
               {problem.description}
             </p>

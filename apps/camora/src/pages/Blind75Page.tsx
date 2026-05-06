@@ -1078,7 +1078,7 @@ export default function Blind75Page() {
                                     width: '100%',
                                     minHeight: '240px',
                                     padding: '16px',
-                                    fontFamily: "'Source Code Pro', 'Fira Code', 'SF Mono', Consolas, monospace",
+                                    fontFamily: "var(--font-mono)",
                                     fontSize: '13px',
                                     lineHeight: 1.6,
                                     background: '#0d1117',
@@ -1103,7 +1103,7 @@ export default function Blind75Page() {
                                   <pre style={{
                                     margin: 0,
                                     padding: '12px 16px',
-                                    fontFamily: "'Source Code Pro', 'Fira Code', 'SF Mono', Consolas, monospace",
+                                    fontFamily: "var(--font-mono)",
                                     fontSize: '12px',
                                     lineHeight: 1.6,
                                     background: '#1a1a2e',
@@ -1262,7 +1262,7 @@ export default function Blind75Page() {
                                     <td style={{ padding: '6px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)', fontWeight: 500 }}>
                                       {key.replace(/([A-Z])/g, ' $1').replace(/^./, (s: string) => s.toUpperCase())}
                                     </td>
-                                    <td style={{ padding: '6px 12px', borderBottom: '1px solid var(--border)', color: 'var(--accent)', fontFamily: "'Source Code Pro', monospace", fontWeight: 600 }}>
+                                    <td style={{ padding: '6px 12px', borderBottom: '1px solid var(--border)', color: 'var(--accent)', fontFamily: "var(--font-mono)", fontWeight: 600 }}>
                                       {String(value)}
                                     </td>
                                   </tr>

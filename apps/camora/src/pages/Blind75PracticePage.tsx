@@ -5736,7 +5736,7 @@ export default function Blind75PracticePage() {
 
   if (!problem) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "var(--font-sans)" }}>
         <div style={{ textAlign: 'center' }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>Problem not found</h2>
           <Link to="/handbook" style={{ color: 'var(--accent)', fontSize: 14, fontWeight: 600, marginTop: 8, display: 'inline-block' }}>&#8592; Back to Blind 75</Link>
@@ -5749,7 +5749,7 @@ export default function Blind75PracticePage() {
   const solutionLang = (language === 'python' || language === 'javascript') ? language : 'python';
 
   return (
-    <div style={{ minHeight: '100vh', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', fontFamily: "var(--font-sans)", display: 'flex', flexDirection: 'column' }}>
       <SiteNav variant="dark" />
       {/* Breadcrumb Bar — LeetCode navy + 2px gold underline (matches /lumora/coding tabs) */}
       <div style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', flexShrink: 0 }}>
@@ -5789,7 +5789,7 @@ export default function Blind75PracticePage() {
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>Examples</div>
                 {problem.examples.map((ex, i) => (
-                  <pre key={i} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, padding: 14, fontSize: 13, fontFamily: "'Source Code Pro', monospace", color: 'var(--text-secondary)', marginBottom: 10, whiteSpace: 'pre-wrap', lineHeight: 1.6, boxShadow: 'none' }}>{ex}</pre>
+                  <pre key={i} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, padding: 14, fontSize: 13, fontFamily: "var(--font-mono)", color: 'var(--text-secondary)', marginBottom: 10, whiteSpace: 'pre-wrap', lineHeight: 1.6, boxShadow: 'none' }}>{ex}</pre>
                 ))}
               </div>
             )}
@@ -5825,11 +5825,11 @@ export default function Blind75PracticePage() {
             </div>
             {/* Editor */}
             <textarea value={code} onChange={e => setCode(e.target.value)} spellCheck={false}
-              style={{ flex: 1, resize: 'none', border: '1px solid var(--border)', outline: 'none', padding: 16, fontFamily: "'Source Code Pro', 'Fira Code', monospace", fontSize: 14, lineHeight: 1.6, background: '#1e1e1e', color: '#d4d4d4', tabSize: 2, minHeight: 300 }} />
+              style={{ flex: 1, resize: 'none', border: '1px solid var(--border)', outline: 'none', padding: 16, fontFamily: "var(--font-mono)", fontSize: 14, lineHeight: 1.6, background: '#1e1e1e', color: '#d4d4d4', tabSize: 2, minHeight: 300 }} />
             {/* Output */}
             <div style={{ borderTop: '1px solid #333', background: '#1a1a1a', padding: 12, minHeight: 80, maxHeight: 200, overflow: 'auto' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>OUTPUT</div>
-              <pre style={{ margin: 0, fontSize: 13, fontFamily: "'Source Code Pro', monospace", color: output.startsWith('Error') ? 'var(--danger)' : 'var(--success)', whiteSpace: 'pre-wrap' }}>
+              <pre style={{ margin: 0, fontSize: 13, fontFamily: "var(--font-mono)", color: output.startsWith('Error') ? 'var(--danger)' : 'var(--success)', whiteSpace: 'pre-wrap' }}>
                 {output || 'Click "Run Code" to execute'}
               </pre>
             </div>
@@ -5906,7 +5906,7 @@ export default function Blind75PracticePage() {
                         </div>
                         <pre style={{
                           margin: 0, padding: 20, background: '#0f172a', color: '#e2e8f0',
-                          fontSize: 14, fontFamily: "'Source Code Pro', 'Fira Code', monospace",
+                          fontSize: 14, fontFamily: "var(--font-mono)",
                           lineHeight: 1.7, whiteSpace: 'pre-wrap', overflowX: 'auto',
                         }}>
                           {codeStr}
@@ -5967,7 +5967,7 @@ export default function Blind75PracticePage() {
                     </div>
                     <pre style={{
                       margin: 0, padding: 24, fontSize: 14,
-                      fontFamily: "'Source Code Pro', monospace",
+                      fontFamily: "var(--font-mono)",
                       color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', lineHeight: 1.7,
                     }}>
                       {aiSolution || 'Generating...'}

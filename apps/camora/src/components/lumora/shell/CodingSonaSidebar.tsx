@@ -277,7 +277,7 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                 </svg>
-                <p className="mt-3 text-[12px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: "'Source Sans 3', sans-serif" }}>
+                <p className="mt-3 text-[12px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: "var(--font-sans)" }}>
                   No follow-ups yet
                 </p>
                 <p className="mt-1 text-[11px] leading-relaxed">

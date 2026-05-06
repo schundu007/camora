@@ -355,7 +355,7 @@ export function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraS
                   ))}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold truncate" style={{ color: TEXT_PRIMARY, fontFamily: "'Source Sans 3', sans-serif" }}>
+                  <p className="text-[10px] font-bold truncate" style={{ color: TEXT_PRIMARY, fontFamily: "var(--font-sans)" }}>
                     {s.title}
                   </p>
                   {s.impact && <p className="text-[9px] truncate" style={{ color: 'var(--cam-primary-dk)' }}>{s.impact}</p>}

@@ -127,7 +127,7 @@ export function LumoraTopBar({ onTranscription, inline = false }: LumoraTopBarPr
             (status.state === 'listen' || status.state === 'write') ? 'bg-[var(--cam-gold-leaf-lt)] animate-pulse' :
             ''
           }`} />
-          <span className="hidden lg:inline text-xs font-bold" style={{ fontFamily: "'Inter', sans-serif", color: 'rgba(255,255,255,0.92)' }}>{status.message}</span>
+          <span className="hidden lg:inline text-xs font-bold" style={{ fontFamily: "var(--font-sans)", color: 'rgba(255,255,255,0.92)' }}>{status.message}</span>
         </div>
 
         {/* AI hour budget chip — shown during live interview when running

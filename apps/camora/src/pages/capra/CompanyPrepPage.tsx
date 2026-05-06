@@ -520,8 +520,8 @@ export default function CompanyPrepPage() {
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
           body { margin: 0; }
-          .practice-display { font-family: 'Inter', system-ui, sans-serif; }
-          .practice-body { font-family: 'Inter', system-ui, sans-serif; }
+          .practice-display { font-family: var(--font-sans); }
+          .practice-body { font-family: var(--font-sans); }
         `}</style>
       </div>
     );
@@ -562,7 +562,7 @@ export default function CompanyPrepPage() {
                   boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
                 }}
               >
-                <span style={{ fontSize: 24, fontWeight: 800, color: 'var(--cam-primary-dk)', fontFamily: "'Inter', system-ui, sans-serif" }}>
+                <span style={{ fontSize: 24, fontWeight: 800, color: 'var(--cam-primary-dk)', fontFamily: "var(--font-sans)" }}>
                   {companyData.logo}
                 </span>
               </div>
@@ -832,19 +832,19 @@ export default function CompanyPrepPage() {
           margin: 0;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          font-family: 'Inter', system-ui, sans-serif;
+          font-family: var(--font-sans);
         }
 
         .practice-display {
-          font-family: 'Inter', system-ui, sans-serif;
+          font-family: var(--font-sans);
         }
 
         .practice-body {
-          font-family: 'Inter', system-ui, sans-serif;
+          font-family: var(--font-sans);
         }
 
         .practice-mono {
-          font-family: 'Source Code Pro', monospace;
+          font-family: var(--font-mono);
         }
 
         html { scroll-behavior: smooth; }

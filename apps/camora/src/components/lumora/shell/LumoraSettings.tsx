@@ -50,7 +50,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-4 sm:py-5 border-b" style={{ borderColor: 'var(--border)' }}>
-            <h2 className="text-xl font-bold" style={{ fontFamily: "'Source Sans 3', sans-serif", color: 'var(--text-primary)' }}>
+            <h2 className="text-xl font-bold" style={{ fontFamily: "var(--font-sans)", color: 'var(--text-primary)' }}>
               Settings
             </h2>
             <button onClick={onClose} className="p-2 rounded-lg transition-colors hover:bg-black/5" style={{ color: 'var(--text-muted)' }}>
@@ -61,7 +61,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
           <div className="px-4 sm:px-5 md:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6">
             {/* ── Audio Settings ── */}
             <section>
-              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-muted)' }}>
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "var(--font-sans)", color: 'var(--text-muted)' }}>
                 Audio Settings
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -109,7 +109,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
 
             {/* ── Voice Recognition ── */}
             <section>
-              <h3 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-muted)' }}>
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ fontFamily: "var(--font-sans)", color: 'var(--text-muted)' }}>
                 Voice Recognition
               </h3>
               <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
@@ -170,7 +170,7 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
 
             {/* ── Keyboard Shortcuts ── */}
             <section>
-              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-muted)' }}>
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "var(--font-sans)", color: 'var(--text-muted)' }}>
                 Keyboard Shortcuts
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -183,8 +183,8 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                   { keys: '⌘↵', action: 'Submit' },
                 ].map(s => (
                   <div key={s.keys} className="flex items-center gap-3 px-3 py-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                    <kbd className="px-2 py-1 rounded text-[11px] font-bold" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-secondary)', fontFamily: "'Source Code Pro', monospace" }}>{s.keys}</kbd>
-                    <span className="text-xs" style={{ color: 'var(--text-secondary)', fontFamily: "'Inter', sans-serif" }}>{s.action}</span>
+                    <kbd className="px-2 py-1 rounded text-[11px] font-bold" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-secondary)', fontFamily: "var(--font-mono)" }}>{s.keys}</kbd>
+                    <span className="text-xs" style={{ color: 'var(--text-secondary)', fontFamily: "var(--font-sans)" }}>{s.action}</span>
                   </div>
                 ))}
               </div>
@@ -205,7 +205,7 @@ function SettingCard({ icon, title, description, children }: {
       <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--bg-elevated)', color: 'var(--cam-primary)' }}>
         {icon}
       </div>
-      <h4 className="text-sm font-bold mb-1" style={{ color: 'var(--cam-primary)', fontFamily: "'Inter', sans-serif" }}>{title}</h4>
+      <h4 className="text-sm font-bold mb-1" style={{ color: 'var(--cam-primary)', fontFamily: "var(--font-sans)" }}>{title}</h4>
       <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{description}</p>
       {children}
     </div>
@@ -244,7 +244,7 @@ function VoiceModeCard({ active, onClick, icon, title, description, badge, disab
           <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: active ? 'var(--accent-subtle)' : 'var(--bg-elevated)', color: active ? 'var(--cam-primary)' : 'var(--text-dimmed)' }}>
             {icon}
           </div>
-          <h4 className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif" }}>{title}</h4>
+          <h4 className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: "var(--font-sans)" }}>{title}</h4>
           <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{description}</p>
         </div>
       </div>
