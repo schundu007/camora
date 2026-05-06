@@ -70,20 +70,34 @@ router.get('/', async (req, res, next) => {
     let paramIdx = 1;
 
     if (req.query.role) {
+      // Role keywords match the JOB TITLE only — matching against
+      // j.job_description was producing massive over-matching: a backend
+      // role whose description mentions "may collaborate with frontend"
+      // came back under both backend AND frontend filters; a Java backend
+      // role mentioning "we use React on the client" came back under
+      // frontend; etc. The title is the authoritative role signal — if
+      // a role isn't in the title, the JD reference is incidental.
+      //
+      // Tightened keyword lists too: removed generic terms like
+      // "software engineer" / "software developer" from `fullstack`
+      // (they matched ~80% of all postings), and pulled tech-stack tokens
+      // (react / vue / angular / kubernetes / terraform / aws / azure / gcp)
+      // out of role categories — those belong in a separate tech-stack
+      // filter, not as title-keyword proxies.
       const categoryKeywords = {
-        devops: ['devops', 'dev ops', 'devsecops', 'release engineer', 'build engineer', 'ci/cd', 'deployment engineer', 'automation engineer', 'kubernetes', 'terraform'],
-        sre: ['sre', 'site reliability', 'reliability engineer', 'production engineer', 'observability'],
+        devops: ['devops', 'dev ops', 'devsecops', 'release engineer', 'build engineer', 'deployment engineer', 'automation engineer'],
+        sre: ['sre', 'site reliability', 'reliability engineer', 'production engineer', 'observability engineer'],
         security: ['security engineer', 'security analyst', 'appsec', 'infosec', 'cybersecurity', 'penetration test', 'red team', 'blue team', 'soc analyst', 'security architect'],
-        ml: ['machine learning', 'ml engineer', 'ml ops', 'deep learning', 'nlp', 'artificial intelligence', 'ai engineer', 'ai research', 'computer vision', 'generative ai', 'applied scientist', 'research scientist'],
-        data: ['data engineer', 'data scientist', 'data analyst', 'analytics engineer', 'etl', 'data platform', 'business intelligence', 'bi engineer', 'data architect', 'database engineer', 'dba'],
-        mobile: ['mobile engineer', 'mobile developer', 'ios engineer', 'ios developer', 'android engineer', 'android developer', 'react native', 'flutter'],
+        ml: ['machine learning', 'ml engineer', 'mlops', 'deep learning', 'nlp engineer', 'ai engineer', 'ai research', 'computer vision', 'generative ai', 'applied scientist', 'research scientist'],
+        data: ['data engineer', 'data scientist', 'data analyst', 'analytics engineer', 'data platform', 'business intelligence', 'bi engineer', 'data architect', 'database engineer', 'dba'],
+        mobile: ['mobile engineer', 'mobile developer', 'ios engineer', 'ios developer', 'android engineer', 'android developer', 'react native developer', 'flutter developer'],
         qa: ['qa engineer', 'qa analyst', 'quality assurance', 'test engineer', 'sdet', 'test automation', 'quality engineer'],
-        embedded: ['embedded', 'firmware', 'hardware engineer', 'fpga', 'rtos', 'iot engineer', 'robotics engineer'],
-        fullstack: ['full stack', 'fullstack', 'full-stack', 'software engineer', 'software developer', 'web developer'],
-        frontend: ['frontend', 'front-end', 'front end', 'ui engineer', 'ux engineer', 'react', 'vue', 'angular', 'javascript engineer'],
-        backend: ['backend', 'back-end', 'back end', 'server engineer', 'api engineer', 'golang', 'java developer', 'python developer', 'systems engineer'],
+        embedded: ['embedded engineer', 'firmware engineer', 'hardware engineer', 'fpga engineer', 'iot engineer', 'robotics engineer'],
+        fullstack: ['full stack', 'fullstack', 'full-stack'],
+        frontend: ['frontend', 'front-end', 'front end', 'ui engineer', 'ux engineer'],
+        backend: ['backend', 'back-end', 'back end', 'server engineer', 'api engineer'],
         platform: ['platform engineer', 'developer experience', 'developer tools', 'dx engineer', 'internal tools'],
-        cloud: ['cloud engineer', 'cloud architect', 'aws', 'azure', 'gcp', 'infrastructure engineer', 'network engineer', 'solutions architect'],
+        cloud: ['cloud engineer', 'cloud architect', 'infrastructure engineer', 'network engineer', 'solutions architect'],
         tech_lead: ['tech lead', 'technical lead', 'team lead', 'engineering lead', 'lead engineer'],
         staff: ['staff engineer', 'staff software', 'senior staff'],
         principal: ['principal engineer', 'distinguished engineer'],
@@ -91,8 +105,8 @@ router.get('/', async (req, res, next) => {
         tpm: ['technical program manager', 'tpm', 'program manager'],
         product_manager: ['product manager', 'product owner', 'technical product'],
         architect: ['solutions architect', 'software architect', 'system architect', 'enterprise architect'],
-        blockchain: ['blockchain', 'web3', 'smart contract', 'solidity', 'defi'],
-        game_dev: ['game developer', 'game engineer', 'unity developer', 'unreal', 'gameplay engineer'],
+        blockchain: ['blockchain engineer', 'web3 engineer', 'smart contract engineer', 'solidity engineer'],
+        game_dev: ['game developer', 'game engineer', 'unity developer', 'unreal engineer', 'gameplay engineer'],
         ios: ['ios engineer', 'ios developer', 'swift developer'],
         android: ['android engineer', 'android developer', 'kotlin developer'],
         network: ['network engineer', 'network architect', 'network operations'],
@@ -101,14 +115,14 @@ router.get('/', async (req, res, next) => {
       const keywords = categoryKeywords[role];
       if (keywords) {
         const roleConds = keywords.map((kw) => {
-          const cond = `(j.title ILIKE $${paramIdx} OR j.job_description ILIKE $${paramIdx})`;
+          const cond = `j.title ILIKE $${paramIdx}`;
           params.push(`%${kw}%`);
           paramIdx++;
           return cond;
         });
         conditions.push(`(${roleConds.join(' OR ')})`);
       } else {
-        conditions.push(`(j.title ILIKE $${paramIdx} OR j.job_description ILIKE $${paramIdx})`);
+        conditions.push(`j.title ILIKE $${paramIdx}`);
         params.push(`%${req.query.role}%`);
         paramIdx++;
       }
