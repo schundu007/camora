@@ -2804,14 +2804,16 @@ export default function TopicDetail({
                         </div>
                       )}
                     </figcaption>
-                    <div className="p-4 bg-white">
-                      <ZoomableImage
-                        src={viz.image}
-                        alt={viz.title}
-                        maxHeight={640}
-                        frameStyle={{ background: 'white' }}
-                      />
-                    </div>
+                    {viz.image && (
+                      <div className="p-4 bg-white">
+                        <ZoomableImage
+                          src={viz.image}
+                          alt={viz.title}
+                          maxHeight={640}
+                          frameStyle={{ background: 'white' }}
+                        />
+                      </div>
+                    )}
                   </figure>
                 ))}
               </div>
