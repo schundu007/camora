@@ -48,7 +48,7 @@ The key design insight is combining a HashMap for O(1) key lookup with a doubly 
       basicImplementation: {
         title: 'LRU Cache Architecture',
         description: 'Combines HashMap for O(1) lookup with Doubly Linked List for O(1) order management. HEAD = Most Recently Used, TAIL = Least Recently Used (evict first). get(key) returns value and moves to front. put(key,val) inserts at front, evicts LRU if full.',
-        svgTemplate: 'lruCache'
+        diagramSrc: '/diagrams/lld/lru-cache.png',
       },
 
       implementation: `class Node:
@@ -185,7 +185,7 @@ The key design challenge is the spot allocation algorithm -- finding the best-fi
       basicImplementation: {
         title: 'Parking Lot System',
         description: 'ParkingLot (Singleton) manages multiple Floors with ParkingSpots. Vehicle hierarchy (Bike/Car/Truck) with SpotSize compatibility. PricingStrategy interface for flexible fee calculation. Entry/Exit issues ParkingTicket tracking vehicle, spot, and time.',
-        svgTemplate: 'parkingLot'
+        diagramSrc: '/diagrams/lld/parking-lot.png',
       },
 
       implementation: `from abc import ABC, abstractmethod
@@ -347,7 +347,7 @@ The key design challenge is the dispatch algorithm -- deciding which elevator sh
       basicImplementation: {
         title: 'Elevator System Architecture',
         description: 'ElevatorSystem manages multiple Elevators with DispatchStrategy. Each Elevator has state (IDLE/UP/DOWN), current floor, and request queues. LOOK Algorithm: Move UP serving requests in order, reverse when no more UP requests, move DOWN serving in reverse order.',
-        svgTemplate: 'elevatorSystem'
+        diagramSrc: '/diagrams/lld/elevator-system.png',
       },
 
       implementation: `from enum import Enum
