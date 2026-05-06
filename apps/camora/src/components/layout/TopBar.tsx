@@ -108,7 +108,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="px-3.5 py-1.5 text-sm rounded-full transition-all no-underline"
+                  className="px-3.5 py-1.5 text-sm rounded-full transition-[background-color,color] duration-150 active:scale-[0.98] no-underline"
                   style={{
                     color: active ? '#020617' : '#FFFFFF',
                     fontWeight: 700,
@@ -181,7 +181,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex items-center justify-center w-10 h-10 min-h-[40px] transition-all hover:bg-white/15"
+            className="flex items-center justify-center w-10 h-10 min-h-[40px] transition-[background-color,transform] duration-150 active:scale-[0.98] hover:bg-white/15"
             style={{
               color: '#FFFFFF',
               border: '1px solid rgba(255,255,255,0.25)',

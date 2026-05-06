@@ -51,7 +51,7 @@ type Tab = 'analytics' | 'users' | 'emails';
 function RefreshBtn({ onClick, loading }: { onClick: () => void; loading: boolean }) {
   return (
     <button onClick={onClick} disabled={loading}
-      className="ml-auto px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--border)] transition-all disabled:opacity-50 flex items-center gap-1.5">
+      className="ml-auto px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--border)] transition-[background-color,color,opacity,transform] active:scale-[0.98] disabled:opacity-50 flex items-center gap-1.5">
       <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
@@ -280,7 +280,7 @@ export default function AnalyticsPage() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-5 py-2 rounded-md text-sm font-medium capitalize transition-all ${
+              className={`px-5 py-2 rounded-md text-sm font-medium capitalize transition-[background-color,color,transform] active:scale-[0.98] ${
                 tab === t ? 'bg-[var(--accent)] text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
             >
@@ -297,7 +297,7 @@ export default function AnalyticsPage() {
                 <button
                   key={d}
                   onClick={() => setDays(d)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-[background-color,color,transform] active:scale-[0.98] ${
                     days === d ? 'bg-[var(--accent)] text-[var(--text-primary)]' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--border)]'
                   }`}
                 >
@@ -404,7 +404,7 @@ export default function AnalyticsPage() {
                   { label: 'Free', value: freeUsers, color: 'text-[var(--text-muted)]', filter: 'free' },
                 ].map(c => (
                   <button key={c.label} onClick={() => setPlanFilter(planFilter === c.filter ? '' : c.filter)}
-                    className={`bg-[var(--bg-surface)] border rounded-xl p-4 text-left transition-all ${
+                    className={`bg-[var(--bg-surface)] border rounded-xl p-4 text-left transition-[border-color,box-shadow,transform] active:scale-[0.98] ${
                       planFilter === c.filter ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]/30' : 'border-[var(--border)] hover:border-[var(--border)]'
                     }`}>
                     <p className="text-[var(--text-muted)] text-xs">{c.label}</p>
@@ -518,14 +518,14 @@ export default function AnalyticsPage() {
                                   key={d}
                                   onClick={() => grantTrial(u.id, d)}
                                   disabled={granting === u.id}
-                                  className="px-2 py-1 rounded text-[11px] font-medium bg-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)]/40 transition-all disabled:opacity-50"
+                                  className="px-2 py-1 rounded text-[11px] font-medium bg-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)]/40 transition-[background-color,opacity,transform] active:scale-[0.98] disabled:opacity-50"
                                 >
                                   {granting === u.id ? '...' : `${d}d`}
                                 </button>
                               ))}
                               <button
                                 onClick={() => deleteUser(u.id)}
-                                className="px-2 py-1 rounded text-[11px] font-medium text-red-500 hover:bg-red-50 transition-all ml-1"
+                                className="px-2 py-1 rounded text-[11px] font-medium text-red-500 hover:bg-red-50 transition-[background-color,transform] active:scale-[0.98] ml-1"
                                 title={`Delete ${u.email}`}
                               >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>

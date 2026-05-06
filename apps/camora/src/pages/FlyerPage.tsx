@@ -49,7 +49,7 @@ export default function FlyerPage() {
           <button
             key={f.value}
             onClick={() => setFormat(f.value)}
-            className="px-3 py-1.5 text-[12px] font-bold rounded-full transition-all"
+            className="px-3 py-1.5 text-[12px] font-bold rounded-full transition-[background-color,color,opacity] duration-150 active:scale-[0.98]"
             style={{
               background: format === f.value ? '#C9A227' : 'rgba(255,255,255,0.08)',
               color: format === f.value ? '#020617' : '#FFFFFF',

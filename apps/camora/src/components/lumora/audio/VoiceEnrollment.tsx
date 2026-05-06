@@ -225,7 +225,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
         <button
           onClick={handleEnroll}
           disabled={isEnrolling || disabled}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 font-bold rounded-lg transition-all shrink-0"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 font-bold rounded-lg transition-[background-color,border-color,box-shadow,opacity,transform] active:scale-[0.98] shrink-0"
           style={isLight ? {
             fontSize: '13px',
             color: '#ffffff',
@@ -271,7 +271,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
       <button
         onClick={handleToggleFilter}
         disabled={disabled}
-        className="flex items-center justify-center gap-2 font-bold rounded-lg transition-all shrink-0"
+        className="flex items-center justify-center gap-2 font-bold rounded-lg transition-[background-color,border-color,box-shadow,opacity,transform] active:scale-[0.98] shrink-0"
         style={isLight ? {
           fontSize: '13px',
           padding: '10px 16px',
@@ -297,7 +297,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
       <button
         onClick={handleUnenroll}
         disabled={isEnrolling || disabled}
-        className="font-bold rounded-lg transition-colors"
+        className="font-bold rounded-lg transition-[background-color,border-color,color,opacity,transform] active:scale-[0.98]"
         style={isLight ? {
           fontSize: '12px',
           padding: '8px 16px',

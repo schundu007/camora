@@ -1720,7 +1720,7 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste: _onPa
 
   return (
     <div
-      className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[120px] ${dragOver ? 'ring-2 ring-[var(--cam-primary)]' : ''}`}
+      className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-[border-color,background-color,box-shadow] min-h-[120px] ${dragOver ? 'ring-2 ring-[var(--cam-primary)]' : ''}`}
       style={{ background: value ? 'var(--accent-subtle)' : 'var(--bg-elevated)', border: `1px solid ${value ? 'var(--cam-primary)' : 'var(--border)'}` }}
       onClick={() => { if (onClickOverride) onClickOverride(); else ref.current?.click(); }}
       onDrop={handleDrop}
@@ -1774,7 +1774,7 @@ function MultiUploadZone({ docs, onAdd, onRemove }: {
   return (
     <div className="space-y-2">
       <div
-        className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all min-h-[120px] ${dragOver ? 'ring-2 ring-[var(--cam-primary)]' : ''}`}
+        className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-[border-color,background-color,box-shadow] min-h-[120px] ${dragOver ? 'ring-2 ring-[var(--cam-primary)]' : ''}`}
         style={{ background: 'var(--bg-elevated)', border: `1px dashed ${dragOver ? 'var(--cam-primary)' : 'var(--border)'}` }}
         onClick={() => ref.current?.click()}
         onDrop={handleDrop}
@@ -2928,7 +2928,7 @@ export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void })
               <button
                 onClick={() => handleDownload('pdf')}
                 disabled={downloading !== null || generatedCount === 0}
-                className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ background: 'var(--cam-primary)', color: '#fff', border: '1px solid var(--cam-primary)' }}
               >
                 {downloading === 'pdf' ? (
@@ -2943,7 +2943,7 @@ export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void })
               <button
                 onClick={() => handleDownload('docx')}
                 disabled={downloading !== null || generatedCount === 0}
-                className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
               >
                 {downloading === 'docx' ? (
@@ -3163,7 +3163,7 @@ export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void })
                 <button
                   onClick={() => fetchJdUrl(jdUrl)}
                   disabled={!jdUrl.trim() || jdFetching}
-                  className="px-4 py-2 rounded-md text-[12px] font-bold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-4 py-2 rounded-md text-[12px] font-bold uppercase tracking-wider transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ background: 'var(--cam-primary)', color: '#FFFFFF', boxShadow: (!jdUrl.trim() || jdFetching) ? 'none' : '0 4px 12px rgba(38,97,156,0.32)' }}
                 >
                   {jdFetching ? 'Fetching…' : 'Fetch JD'}
@@ -3210,7 +3210,7 @@ export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void })
                   closeJdModal();
                 }}
                 disabled={!jdEditText.trim()}
-                className="px-5 py-2 rounded-md text-[12px] font-bold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-5 py-2 rounded-md text-[12px] font-bold uppercase tracking-wider transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ background: 'var(--cam-primary)', color: '#FFFFFF', boxShadow: jdEditText.trim() ? '0 4px 12px rgba(38,97,156,0.32)' : 'none' }}
               >
                 Save

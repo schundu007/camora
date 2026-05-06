@@ -194,7 +194,7 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
             right={
               <button
                 onClick={() => navigator.clipboard.writeText(s.body)}
-                className="text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-colors"
+                className="text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-[background-color,color,transform] active:scale-[0.98]"
                 style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.20)' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
@@ -337,7 +337,7 @@ export function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraS
         {sorted.map(s => {
           const matches = !!activeArchetype && s.archetypes.includes(activeArchetype);
           return (
-            <div key={s.id} className="px-2 py-1.5 rounded-md transition-all"
+            <div key={s.id} className="px-2 py-1.5 rounded-md transition-[background-color,border-color]"
               style={{
                 background: matches ? 'var(--accent-subtle)' : 'var(--bg-surface)',
                 border: matches ? '1px solid var(--cam-primary)' : '1px solid var(--border)',
@@ -464,7 +464,7 @@ function RichText({ text }: { text: string }) {
         </span>
         <button
           onClick={() => navigator.clipboard.writeText(content)}
-          className="ml-auto text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-colors"
+          className="ml-auto text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-[background-color,color,transform] active:scale-[0.98]"
           style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.20)' }}
           onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}

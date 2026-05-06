@@ -984,7 +984,7 @@ function MethodCard({
       type="button"
       onClick={() => !disabled && onPick(value)}
       disabled={disabled}
-      className="text-left p-3 rounded-lg transition-all disabled:cursor-not-allowed"
+      className="text-left p-3 rounded-lg transition-[background-color,border-color,opacity] duration-150 active:scale-[0.98] disabled:cursor-not-allowed"
       style={{
         background: selected ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
         border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,

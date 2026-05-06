@@ -404,7 +404,7 @@ export function AudioCheckModal({ isOpen, onClose }: Props) {
               <button
                 type="button"
                 onClick={playTestTone}
-                className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-bold uppercase tracking-wider rounded-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="flex items-center gap-1.5 px-3.5 py-2 text-[12px] font-bold uppercase tracking-wider rounded-md transition-[transform,opacity] hover:scale-[1.02] active:scale-[0.98]"
                 style={{
                   color: '#FFFFFF',
                   background: 'var(--cam-primary)',

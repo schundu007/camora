@@ -236,7 +236,7 @@ function FadeInSection({ children, className, delay = 0 }: { children: React.Rea
   return (
     <div
       ref={ref}
-      className={cn('transition-all duration-500 ease-out', className)}
+      className={cn('transition-[opacity,transform] duration-500 ease-out', className)}
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(16px)',
@@ -403,7 +403,7 @@ export default function DownloadPage() {
                 <FadeInSection key={p.id} delay={0.05 * i}>
                   <div
                     className={cn(
-                      'relative h-full rounded-2xl border p-6 flex flex-col items-center text-center transition-all',
+                      'relative h-full rounded-2xl border p-6 flex flex-col items-center text-center transition-[transform,box-shadow,border-color]',
                       isRecommended
                         ? 'border-[var(--cam-primary)] bg-[var(--accent-subtle)]'
                         : 'border-[var(--border)] bg-[var(--bg-surface)] hover:-translate-y-0.5 hover:border-[var(--border-hover)]',

@@ -17,7 +17,7 @@ function ThemeToggleButton() {
     <button
       type="button"
       onClick={toggle}
-      className="flex items-center justify-center w-9 h-9 transition-all"
+      className="flex items-center justify-center w-9 h-9 transition-[background-color,color,transform] active:scale-[0.98]"
       style={{
         color: 'var(--text-primary)',
         border: '1px solid var(--border)',
@@ -140,7 +140,7 @@ export function LumoraTopBar({ onTranscription, inline = false }: LumoraTopBarPr
         {/* Settings gear */}
         <button
           onClick={() => setShowSettings(true)}
-          className="flex items-center justify-center w-9 h-9 transition-all hover:bg-white/10"
+          className="flex items-center justify-center w-9 h-9 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
           style={{
             color: '#FFFFFF',
             border: '1px solid rgba(255,255,255,0.16)',

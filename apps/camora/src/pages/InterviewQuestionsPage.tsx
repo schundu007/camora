@@ -197,7 +197,7 @@ export default function InterviewQuestionsPage() {
                 <Link
                   key={relSlug}
                   to={`/interview-questions/${relSlug}`}
-                  className="bg-[var(--bg-surface)] border-0 rounded-xl p-4 text-center transition-all"
+                  className="bg-[var(--bg-surface)] border-0 rounded-xl p-4 text-center transition-[transform,box-shadow] duration-150 active:scale-[0.98]"
                 >
                   <img src={rel.logo} alt={rel.name} className="w-10 h-10 rounded-lg object-contain mx-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                   <p className="mt-1.5 text-sm font-semibold text-[var(--text-primary)]">{rel.name}</p>

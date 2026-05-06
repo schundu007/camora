@@ -157,7 +157,7 @@ export default function PublicScoreCardPage() {
           <div className="flex justify-center mt-6">
             <Link
               to="/signup"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3 text-sm font-bold uppercase tracking-[0.06em] rounded-full transition-all hover:scale-[1.02]"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3 text-sm font-bold uppercase tracking-[0.06em] rounded-full transition-[transform,box-shadow] duration-150 hover:scale-[1.02] active:scale-[0.98]"
               style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 6px 18px rgba(0,0,0,0.18)' }}
             >
               Get Started Free

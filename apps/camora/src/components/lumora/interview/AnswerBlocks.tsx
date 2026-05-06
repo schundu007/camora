@@ -148,7 +148,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
             <div className="-m-4 group">
               <div className="flex items-center justify-end px-3 py-1.5" style={{ borderBottom: '1px solid var(--border)' }}>
                 <button
-                  className="text-[10px] font-mono px-2 py-0.5 border rounded transition-all opacity-0 group-hover:opacity-100"
+                  className="text-[10px] font-mono px-2 py-0.5 border rounded transition-[background-color,border-color,color,opacity] opacity-0 group-hover:opacity-100 active:scale-[0.98]"
                   style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
                   onClick={() => navigator.clipboard.writeText(block.content)}
                 >
@@ -282,7 +282,7 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
           </div>
           {byType.CODE && (
             <button
-              className="font-mono text-xs text-text-dim hover:text-text px-2 py-0.5 border border-border rounded hover:border-border2 transition-colors"
+              className="font-mono text-xs text-text-dim hover:text-text px-2 py-0.5 border border-border rounded hover:border-border2 transition-[background-color,border-color,color] active:scale-[0.98]"
               onClick={() => navigator.clipboard.writeText(byType.CODE.content)}
             >
               Copy

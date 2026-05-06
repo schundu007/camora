@@ -406,7 +406,7 @@ export function CodingSonaSidebarToggle({ open, onToggle, hasSolve }: { open: bo
     <button
       type="button"
       onClick={onToggle}
-      className="fixed z-30 w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 select-none"
+      className="fixed z-30 w-14 h-14 rounded-full flex items-center justify-center transition-[transform,box-shadow,opacity] hover:scale-110 active:scale-[0.98] select-none"
       style={{
         right: 24,
         // Mobile: the bottom nav is 56px + safe-area-inset-bottom, so

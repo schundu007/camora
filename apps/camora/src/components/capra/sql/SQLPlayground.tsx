@@ -418,7 +418,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
               const first = SQL_PROBLEMS.find((p) => p.category === cat.id);
               if (first) setSelectedProblemId(first.id);
             }}
-              className="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex items-center gap-1.5"
+              className="px-3 py-1.5 text-xs font-bold rounded-lg transition-[background-color,color,opacity] duration-150 active:scale-[0.98] whitespace-nowrap flex items-center gap-1.5"
               style={selectedCategory === cat.id
                 ? { background: 'var(--accent)', color: '#fff' }
                 : { color: 'var(--text-secondary)' }
@@ -434,7 +434,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
       <div className="flex items-center gap-1 px-3 py-1.5 overflow-x-auto" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
         {categoryProblems.map((p) => (
           <button key={p.id} onClick={() => setSelectedProblemId(p.id)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium rounded-lg transition-all whitespace-nowrap"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium rounded-lg transition-[background-color,color,border-color] duration-150 active:scale-[0.98] whitespace-nowrap"
             style={p.id === selectedProblemId
               ? { background: 'var(--accent-subtle)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
               : { color: 'var(--text-muted)' }
@@ -532,7 +532,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                       setDropTargetIdx(null);
                     }}
                     onDragEnd={() => { setDraggingIdx(null); setDropTargetIdx(null); }}
-                    className="rounded-md transition-all"
+                    className="rounded-md transition-[opacity,outline] duration-150"
                     style={{
                       cursor: 'grab',
                       opacity: isDragging ? 0.5 : 1,

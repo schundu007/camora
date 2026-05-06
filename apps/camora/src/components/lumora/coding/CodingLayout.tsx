@@ -1045,7 +1045,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
             >
               <button
                 onClick={() => setProblemTab('description')}
-                className="px-3.5 py-1 text-xs font-bold uppercase tracking-wider transition-all"
+                className="px-3.5 py-1 text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
                 style={
                   problemTab === 'description'
                     ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
@@ -1054,7 +1054,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
               >Description</button>
               <button
                 onClick={() => setProblemTab('solution')}
-                className="px-3.5 py-1 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5"
+                className="px-3.5 py-1 text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98] flex items-center gap-1.5"
                 style={
                   problemTab === 'solution'
                     ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
@@ -1119,7 +1119,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                   >
                     {(['paste', 'url', 'image'] as const).map(mode => (
                       <button key={mode} onClick={() => { setInputMode(mode); setIsInputCollapsed(false); }}
-                        className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all"
+                        className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
                         style={
                           inputMode === mode
                             ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
@@ -1130,7 +1130,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                   </div>
                   <button
                     onClick={() => setIsInputCollapsed(!isInputCollapsed)}
-                    className="flex items-center justify-center w-7 h-7 transition-all hover:bg-white/10"
+                    className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
                     style={{
                       color: '#FFFFFF',
                       border: '1px solid rgba(255,255,255,0.16)',
@@ -1179,7 +1179,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                       {inputMode === 'image' && (
                         <div className="space-y-2">
                           <div onClick={() => fileInputRef.current?.click()} onDrop={handleDrop} onDragOver={(e) => e.preventDefault()}
-                            className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-[var(--accent)]/50 transition-all"
+                            className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-[var(--accent)]/50 transition-[border-color,background-color]"
                             style={{ borderColor: t.inputBorder }}>
                             <input ref={fileInputRef} type="file" id="problem-image" name="problem-image" accept="image/*" onChange={handleImageSelect} className="hidden" />
                             {imagePreview ? (
@@ -1213,7 +1213,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
 
                   {/* Generate Button */}
                   <button onClick={handleGenerateSolution} disabled={isLoading || !problemText.trim()}
-                    className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}>
+                    className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}>
                     {isLoading ? (
                       <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
                     ) : (
@@ -1376,7 +1376,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                                   || (sol.explanations?.length > 0 ? sol.explanations.map((ex: any) => ex.code).filter(Boolean).join('\n') : null);
                                 if (solCode) setCode(solCode);
                               }}
-                              className={`flex-1 px-2 py-1.5 text-[10px] md:text-xs font-semibold rounded-md transition-all text-center ${
+                              className={`flex-1 px-2 py-1.5 text-[10px] md:text-xs font-semibold rounded-md transition-[background-color,color,border-color] active:scale-[0.98] text-center ${
                                 activeSolutionIdx === i ? 'shadow-sm' : ''
                               }`}
                               style={activeSolutionIdx === i
@@ -1830,7 +1830,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
                     {testResults.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {testResults.map((r, i) => (
-                          <div key={i} className="rounded-lg border p-2 text-xs transition-all"
+                          <div key={i} className="rounded-lg border p-2 text-xs transition-[border-color,background-color]"
                             style={r.passed
                               ? { borderColor: t.passedBorder, background: t.passedBg }
                               : { borderColor: t.failedBorder, background: t.failedBg }
