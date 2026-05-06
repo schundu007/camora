@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
-import * as cheerio from 'cheerio';
 import { authenticate } from '../middleware/authenticate.js';
 
 const router = Router();
@@ -187,6 +186,7 @@ Return this exact JSON format:
 /**
  * POST /api/v1/resume/fetch-jd
  * Fetch and extract job description text from a URL.
+ * Uses plain string manipulation — no extra dependencies.
  */
 router.post('/fetch-jd', authenticate, async (req, res) => {
   const { url } = req.body;
@@ -210,43 +210,25 @@ router.post('/fetch-jd', authenticate, async (req, res) => {
     }
 
     if (!response.ok) {
-      return res.status(400).json({ error: `Could not fetch URL (${response.status})` });
+      return res.status(400).json({ error: `Could not fetch URL (${response.status}). Try pasting the job description directly.` });
     }
 
-    const html = await response.text();
-    const $ = cheerio.load(html);
+    let html = await response.text();
 
-    // Remove boilerplate elements
-    $('script, style, nav, header, footer, aside, iframe, [class*="cookie"], [class*="banner"], [class*="sidebar"]').remove();
-
-    // Try common job board selectors first
-    const selectors = [
-      '[data-qa="job-description"]',       // Greenhouse
-      '.job-description',
-      '.jobDescription',
-      '.job__description',
-      '#job-description',
-      '[class*="description"]',
-      'main article',
-      'main',
-      'article',
-    ];
-
-    let text = '';
-    for (const sel of selectors) {
-      const candidate = $(sel).first().text().trim();
-      if (candidate.length > 200) {
-        text = candidate;
-        break;
-      }
-    }
-
-    if (!text || text.length < 200) {
-      text = $('body').text();
-    }
-
-    // Collapse excessive whitespace
-    text = text.replace(/\n{3,}/g, '\n\n').replace(/[ \t]{2,}/g, ' ').trim().substring(0, 10000);
+    // Strip scripts, styles, and HTML tags with regex (no cheerio dependency)
+    html = html.replace(/<script[\s\S]*?<\/script>/gi, ' ');
+    html = html.replace(/<style[\s\S]*?<\/style>/gi, ' ');
+    html = html.replace(/<[^>]+>/g, ' ');
+    // Decode common HTML entities
+    html = html
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ');
+    // Collapse whitespace
+    const text = html.replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n').trim().substring(0, 10000);
 
     if (text.length < 100) {
       return res.status(400).json({ error: 'Could not extract job description from that URL. Try pasting it directly.' });
