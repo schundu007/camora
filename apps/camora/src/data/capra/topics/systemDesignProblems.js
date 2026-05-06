@@ -10721,8 +10721,7 @@ const userTime = convertToTimezone(now(), user.timezone);
       basicImplementation: {
         title: 'Basic Notification Architecture',
         description: 'Single queue with multiple channel workers distributing to Push, Email, and SMS providers',
-        diagramSrc: '/diagrams/notification-system/impl-basic.png',
-        svgTemplate: 'notificationSystem',
+        diagramSrc: '/diagrams/notification-system/architecture-basic.png',
         problems: [
           'Single queue = no priority handling',
           'No user preference checking',
@@ -10734,7 +10733,6 @@ const userTime = convertToTimezone(now(), user.timezone);
       advancedImplementation: {
         title: 'Production Notification Architecture',
         diagramSrc: '/diagrams/notification-system/impl-advanced.png',
-        svgTemplate: 'notificationAdvanced',
         architecture: 'See diagram above.',
         keyPoints: [
           'Priority queues with different worker pool sizes',
