@@ -240,7 +240,26 @@ export function LumoraShellPage() {
         </div>
       </div>
     )}
-    <div className="fixed inset-0 w-full flex overflow-hidden" style={{ background: 'var(--bg-app)' }}>
+    <div
+      className="fixed inset-0 w-full flex overflow-hidden"
+      style={{
+        background: 'var(--bg-app)',
+        // Electron desktop on macOS uses titleBarStyle: 'hiddenInset', which
+        // floats the red/yellow/green traffic lights at (14, 14) over the
+        // page. Push BOTH the icon rail and the right column down by 20px so
+        // the sidebar's wordmark band and the right shell topbar share the
+        // same y baseline (and same at the bottom — see paddingBottom: 0 on
+        // the rail). Lifting the offset to this shared parent is what keeps
+        // the two columns aligned; if it lives only on the rail, the right
+        // header floats 20px above the wordmark.
+        paddingTop:
+          typeof window !== 'undefined' &&
+          (window as any).camo?.isDesktop &&
+          (window as any).camo?.platform === 'darwin'
+            ? 20
+            : 0,
+      }}
+    >
       {/* Left icon rail */}
       <LumoraIconRail
         activeTab={activeTab}

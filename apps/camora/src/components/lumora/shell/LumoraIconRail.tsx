@@ -60,11 +60,10 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
 
   // The Electron desktop build uses titleBarStyle: 'hiddenInset' on macOS,
   // which keeps the red/yellow/green traffic-light buttons at (14, 14) over
-  // the page. The icon rail's logo otherwise lives in that exact spot.
-  // Reserve ~28px of top padding when running inside Electron on macOS so
-  // the wordmark sits below the controls.
-  const camo = typeof window !== 'undefined' ? (window as any).camo : undefined;
-  const needsMacChromeOffset = !!camo?.isDesktop && camo?.platform === 'darwin';
+  // the page. That offset is now applied on the shared parent in
+  // LumoraShellPage so the icon rail AND the right column shift together —
+  // a per-rail spacer here would push the wordmark band 20px below the
+  // right shell topbar.
 
   return (
     <nav
@@ -79,20 +78,15 @@ export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         borderRight: '1px solid var(--cam-gold-leaf)',
         boxShadow: 'inset -8px 0 32px rgba(217,181,67,0.04), 4px 0 24px rgba(0,0,0,0.18)',
         paddingTop: 0,
-        paddingBottom: 12,
+        // No bottom padding — the right column's bottom audio bar sits flush
+        // against the viewport, so leaving 12px of empty bg below the
+        // UserDropdown band made the two columns end at different y values.
+        paddingBottom: 0,
       }}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
       onTouchStart={() => setExpanded(prev => !prev)}
     >
-      {/* Mac Electron traffic-light offset — when the desktop build hides
-          the title bar, render a transparent spacer above the wordmark so
-          the brand mark doesn't sit under the red/yellow/green buttons.
-          Kept as a separate strip so the wordmark itself can match the
-          shell topbar height (h-12) exactly — matching the cam-hero-strip
-          + 2px gold-leaf border chrome on both elements. */}
-      {needsMacChromeOffset && <div aria-hidden="true" className="h-5 shrink-0" />}
-
       {/* Wordmark — sole navy strip on the rail, same chrome grammar as
           every other Camora header (cam-hero-strip + 2px gold-leaf bottom
           border). Height locked to h-12 to match the LumoraShell topbar
