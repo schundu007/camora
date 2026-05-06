@@ -410,10 +410,10 @@
     height: 100%;
   }
 
-  /* Display font on all headings — Clash Display with geometric tight tracking */
+  /* Display font on all headings — Clash Display */
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.015em;
+    letter-spacing: -0.008em;
   }
 
   .light-theme {
@@ -1483,6 +1483,7 @@ img { max-width: 100%; height: auto; }
   line-height: 1.75;
   letter-spacing: -0.003em;
   text-wrap: pretty;
+  max-width: 72ch;
 }
 .docs-page p,
 .prep-content > p,
