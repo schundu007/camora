@@ -1287,7 +1287,10 @@ export default function JobsPage() {
           color: var(--accent) !important;
         }
         .jobs-card-iconbtn:active {
-          color: var(--cam-gold-leaf) !important;
+          /* Defensive contrast: gold-leaf-text (7.6:1 on bg-elevated)
+             vs the bright gold-leaf token (3.6:1, passes UI threshold
+             by a hair). Same hue family, materially safer. */
+          color: var(--cam-gold-leaf-text) !important;
         }
         /* "Learn more" pill button hover */
         .jobs-card-cta:hover {
