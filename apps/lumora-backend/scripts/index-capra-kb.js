@@ -20,14 +20,30 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { query } from '../src/lib/shared-db.js';
 import { embedBatch } from '../src/services/embeddings.js';
 import { chunkTopic, rehash } from '../src/services/chunker.js';
+import { chunkProblem } from '../src/services/problemChunker.js';
 import { addContextToChunks } from '../src/services/contextualChunker.js';
 import { TOPIC_MANIFEST } from './topic-manifest.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TOPICS_DIR = path.resolve(
+const DATA_DIR = path.resolve(
   __dirname,
-  '../../../apps/camora/src/data/capra/topics',
+  '../../../apps/camora/src/data/capra',
 );
+const TOPICS_DIR = path.join(DATA_DIR, 'topics');
+
+function resolveEntryPath(entry) {
+  const base = entry.dir === 'data' ? DATA_DIR : TOPICS_DIR;
+  return path.join(base, entry.file);
+}
+
+function chunkOne(item, entry) {
+  const kind = entry.kind || 'topic';
+  if (kind === 'topic') return chunkTopic(item, { source: entry.source });
+  if (kind === 'problem-leetcode') return chunkProblem(item, { source: entry.source, kind: 'leetcode' });
+  if (kind === 'problem-lld') return chunkProblem(item, { source: entry.source, kind: 'lld' });
+  if (kind === 'problem-sd') return chunkProblem(item, { source: entry.source, kind: 'sd' });
+  throw new Error(`Unknown manifest kind: ${kind}`);
+}
 
 // text-embedding-3-small pricing (May 2026 — verify if model rev changes).
 const COST_PER_M_TOKENS_USD = 0.02;
@@ -57,14 +73,22 @@ function topicAsDocText(topic) {
 }
 
 async function loadTopicsForEntry(entry) {
-  const abs = path.join(TOPICS_DIR, entry.file);
+  const abs = resolveEntryPath(entry);
   const url = pathToFileURL(abs).href;
   const mod = await import(url);
-  const arr = mod[entry.export];
-  if (!Array.isArray(arr)) {
+  const exp = mod[entry.export];
+  if (entry.shape === 'object') {
+    if (!exp || typeof exp !== 'object') {
+      throw new Error(`${entry.file}: export ${entry.export} is not an object`);
+    }
+    // Promote object key onto each value as `slug` so the chunker can
+    // use it as a stable topic_id (matches the frontend's URL routing).
+    return Object.entries(exp).map(([slug, val]) => ({ ...val, slug }));
+  }
+  if (!Array.isArray(exp)) {
     throw new Error(`${entry.file}: export ${entry.export} is not an array`);
   }
-  return arr;
+  return exp;
 }
 
 async function getExistingHashes(source) {
@@ -113,8 +137,10 @@ async function indexEntry(entry, { dryRun, withContext }) {
   const existing = await getExistingHashes(entry.source);
   const allChunks = [];
   for (const t of topics) {
-    let topicChunks = chunkTopic(t, { source: entry.source });
-    if (withContext && !dryRun) {
+    let topicChunks = chunkOne(t, entry);
+    if (withContext && !dryRun && (!entry.kind || entry.kind === 'topic')) {
+      // Contextual chunking only meaningful for topic shape today; the
+      // problem chunker already produces self-contained sections.
       const docText = topicAsDocText(t);
       topicChunks = await addContextToChunks(topicChunks, docText);
       topicChunks = topicChunks.map(rehash);
@@ -170,7 +196,7 @@ async function main() {
       const existing = await getExistingHashes(entry.source);
       const allChunks = [];
       for (const t of topics) {
-        for (const c of chunkTopic(t, { source: entry.source })) {
+        for (const c of chunkOne(t, entry)) {
           allChunks.push(c);
         }
       }
