@@ -19536,4 +19536,847 @@ These are answers a release-engineering-fluent platform engineer should give wit
     ],
   },
 
+  {
+    id: 'twelve-factor-app',
+    title: 'Twelve-Factor App — The Modern Reinterpretation',
+    icon: 'cloud',
+    color: '#0ea5e9',
+    questions: 5,
+    description: 'The 2011 Heroku-authored manifesto for cloud-portable apps. Each factor reread for K8s + serverless + microservices in 2026. What still applies, what bent, what is honored in the breach.',
+    visualizations: [
+      {
+        title: 'The twelve factors and how each holds up in 2026',
+        description: `The twelve factors as written (2011) — and what experience has done to each:
+
+I. Codebase. One codebase tracked in version control, many deploys.
+- Then: one repo per service, deployed to dev/staging/prod.
+- Now: monorepos (Bazel, Nx, Turborepo) for many services in one codebase. The "one codebase" rule re-reads as "one source of truth, possibly multi-service".
+
+II. Dependencies. Explicitly declare and isolate dependencies.
+- Then: requirements.txt, package.json, Gemfile.
+- Now: lockfiles mandatory (poetry.lock, package-lock.json, Cargo.lock); container images include all deps; reproducible builds via Nix or Bazel for higher SLSA levels.
+
+III. Config. Store config in the environment.
+- Then: env vars instead of config files.
+- Now: env vars + secret managers (Vault, AWS Secrets Manager, External Secrets Operator). The factor still holds; mechanism is more sophisticated.
+
+IV. Backing services. Treat backing services as attached resources.
+- Then: same code talks to local Postgres in dev, RDS in prod, swapped via DATABASE_URL.
+- Now: same idea, but expanded. K8s ExternalName services, service binding (operator pattern), serviceless DBs (Neon, Supabase, PlanetScale) make this even more first-class.
+
+V. Build, release, run. Strictly separate build, release, and run stages.
+- Then: one build artifact promoted across environments.
+- Now: same artifact, but with provenance + signature (SLSA). Build once, sign, promote. Image immutability via SHA digest, not tags.
+
+VI. Processes. Execute the app as one or more stateless processes.
+- Then: stateless app servers; sessions in Redis or DB.
+- Now: still true. Stateless tier scales horizontally; state lives in DB, cache, queue, object store.
+
+VII. Port binding. Export services via port binding.
+- Then: the app embeds a server (puma, gunicorn, node http) — no external Apache/Nginx.
+- Now: still true. K8s pods bind a port; service mesh proxies traffic via sidecar (Istio) or eBPF (Cilium).
+
+VIII. Concurrency. Scale out via the process model.
+- Then: more processes, not bigger threads. UNIX process model.
+- Now: still true conceptually. K8s scales replicas. Goroutines and async runtimes complicate "process model" framing but the principle (scale out via copies) holds.
+
+IX. Disposability. Maximize robustness with fast startup and graceful shutdown.
+- Then: SIGTERM handling, fast boot.
+- Now: critical for K8s — pods restart constantly, autoscalers spin up new replicas. Cold start under 30s ideal; under 5s for autoscaling-friendly apps. Serverless makes this even more salient.
+
+X. Dev/prod parity. Keep development, staging, and production as similar as possible.
+- Then: same backing services in dev as prod (Postgres in dev, not SQLite).
+- Now: docker-compose, devcontainers, Tilt, Skaffold for K8s-parity dev. Still routinely violated; teams still ship "works on my machine" bugs.
+
+XI. Logs. Treat logs as event streams.
+- Then: write to stdout, let the platform handle aggregation.
+- Now: still true. Fluent Bit, Vector, Grafana Alloy collect stdout. Don't write to local files.
+
+XII. Admin processes. Run admin/management tasks as one-off processes.
+- Then: rails console, migration commands run as separate processes.
+- Now: K8s Jobs for migrations, kubectl exec for ad-hoc, GitOps for drift-correcting admin actions.
+
+What twelve-factor missed (the implicit XIII-XV that experience has added):
+
+XIII. Telemetry. Logs, metrics, and traces are first-class. Originally implicit; now explicit (OpenTelemetry).
+
+XIV. Identity. Workload identity (SPIFFE, K8s ServiceAccount + IRSA) replaces shared secrets. Implicit in 2011, mandatory in 2026.
+
+XV. API contracts. Backward-compatible API evolution as a discipline. Not in twelve-factor but treated as foundational now.
+
+What aged poorly:
+- "One codebase" — monorepos are clearly fine.
+- "Backing services" implies all-stateless app — modern systems acknowledge stateful workloads (databases, queues) as first-class K8s residents via Operators.
+
+What aged well:
+- Config in env. Logs as streams. Disposability. Build/release/run separation. These are universal.
+
+The pragmatic 2026 reading. Twelve-factor isn't a checklist; it's a framework for "is this app cloud-portable?". Score yourself against it; deviations should be conscious, not accidental.`,
+        image: '/diagrams/devops/j1-twelve-factor.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Twelve-Factor App.',
+        question: 'Quick-fire interview answers — Twelve-Factor App.',
+        answer: `Rapid-fire facts.
+
+Q: When and who wrote twelve-factor?
+A: 2011, Heroku engineers (Adam Wiggins lead author), based on observations from running thousands of customer apps on the Heroku platform.
+
+Q: Factor I in one line?
+A: One codebase in version control, many deploys. Modern reading: monorepos are fine; the factor is about source-of-truth singularity, not folder layout.
+
+Q: Factor III — config?
+A: Store config (URLs, keys, ports) in environment variables, not in code or files. Modern: env + secret managers (Vault, External Secrets, AWS Secrets Manager).
+
+Q: Factor V — build/release/run?
+A: Three strictly separate stages. Modern: one signed artifact (SLSA Level 2+) promoted across environments via image SHA, not tag.
+
+Q: Factor VI — processes?
+A: Stateless processes; persistent data in backing services. Still true; sessions in Redis or DB, not local filesystem.
+
+Q: Factor IX — disposability?
+A: Fast startup, graceful shutdown. Critical for K8s autoscaling and pod churn. Cold start under 30s; serverless apps under 5s.
+
+Q: Factor XI — logs?
+A: Write to stdout/stderr; let the platform aggregate. Don't write to local files. Fluent Bit, Vector, Grafana Alloy pick up stdout.
+
+Q: Most-violated factor in production?
+A: X (dev/prod parity). Teams still ship "works on my machine" bugs because dev uses SQLite, prod uses Postgres, etc.
+
+Q: Why does monorepo violate Factor I?
+A: It doesn't, on a strict reading. The factor says one codebase per app; monorepos with workspace boundaries (Nx, Turborepo, Bazel) preserve the per-app-codebase invariant within shared tooling.
+
+Q: Twelve-factor and Kubernetes?
+A: Twelve-factor maps cleanly to K8s. Stateless processes = pods. Port binding = service. Backing services = ConfigMap/Secret/external services. Factor IX (disposability) is even more critical with K8s.
+
+Q: Twelve-factor and serverless?
+A: Mostly compatible. Disposability becomes mandatory (cold starts). Backing services treated as managed (DynamoDB, RDS Proxy, SQS). Factor XII (admin processes) is awkward — Lambda for one-off scripts feels wrong.
+
+Q: What's missing from twelve-factor?
+A: Telemetry (logs/metrics/traces as first-class), workload identity (SPIFFE, ServiceAccount), API contract evolution. All implicit in 2011, foundational in 2026.
+
+Q: Modern reinterpretation — Heroku's "twelve-factor v2"?
+A: Heroku didn't formally update it. The community produced essays ("beyond twelve-factor", "fifteen-factor") with telemetry and identity added. No canonical v2 exists; the original document still stands.
+
+Q: When does twelve-factor not apply?
+A: Stateful workloads (DBs, queues, caches) violate Factor VI (processes). They're handled by separate principles (Operator pattern, StatefulSet semantics, replica + leader election).
+
+Q: Most enduring factor?
+A: III (config in env). Universal across platforms, languages, stacks. Almost no exceptions in 15 years.
+
+These are answers a cloud-native-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://12factor.net/',
+      'https://www.amazon.com/Beyond-Twelve-Factor-App-Exploring-Practices/dp/1491944226',
+      'https://kubernetes.io/docs/concepts/workloads/',
+      'https://www.heroku.com/podcasts/codeish/100-12-factor-app-revisited',
+      'https://martinfowler.com/articles/microservice-trade-offs.html',
+    ],
+  },
+
+  {
+    id: 'microservices-design',
+    title: 'Microservices Design — Boundaries, Communication, and Failure',
+    icon: 'cloud',
+    color: '#0ea5e9',
+    questions: 5,
+    description: 'Service boundaries via DDD bounded contexts, sync (REST/gRPC) vs async (events) communication, the distributed systems tax (latency, partial failure, transactions), service mesh, when microservices are wrong (premature decomposition).',
+    visualizations: [
+      {
+        title: 'Service boundaries and the decomposition decision',
+        description: `Microservices are not a goal. They are a structure that enables independent deployability and team autonomy at the cost of distributed-systems complexity. The decomposition decision is the most important.
+
+When microservices help:
+- Multiple teams want to ship independently. Coordination overhead in a monolith dominates.
+- Different parts of the system have very different scale or technology requirements (the recommendations service needs Python for ML; the API needs Go for performance; the admin tool needs Ruby for productivity).
+- Different SLOs per area (payment 99.99%, recommendations 99%).
+- Compliance boundary (PCI scope reduction by isolating payment from rest of system).
+
+When microservices hurt:
+- Single team owns everything. Distributed monolith is worse than a real monolith.
+- Strong consistency requirements across many services. Distributed transactions are pain.
+- Team is small (<20 engineers). Operational overhead of microservices doesn't pay back.
+- Domain not well-understood. You'll redraw boundaries 5 times; in a monolith refactoring is cheap, in microservices it is months.
+
+Domain-Driven Design (DDD) bounded contexts are the standard tool:
+
+Bounded context = a region where a domain model and its terminology are consistent. "Customer" in Sales context (lead, prospect) is a different model from "Customer" in Billing context (account, payment method).
+
+Method:
+1. Event Storming — workshop where domain experts list domain events on sticky notes.
+2. Cluster events into commands and aggregates.
+3. Identify bounded contexts where models are consistent.
+4. Each bounded context becomes a candidate microservice (or remains a module within a service).
+
+Boundary smells:
+- One service calls another in 80% of requests → boundary is wrong; merge.
+- One change requires modifications to N services → boundary is wrong; redraw.
+- Two teams constantly modify the same service → boundary doesn't match team structure.
+
+Conway's Law as a tool. The system reflects the team structure. Inverse Conway maneuver — restructure teams to match desired architecture, then build it. Used at Amazon (two-pizza teams), Spotify (squads).
+
+Sizing rule: each service is small enough that one team owns it end-to-end (build, deploy, oncall) and big enough that the team has interesting work for 6+ months. "How small" depends on team size; "10x services per engineer" is a smell.
+
+Anti-patterns to avoid:
+- Distributed monolith: services that must deploy together, share schemas, have synchronous chains. Monolith with microservices' tax.
+- Nano-services: every endpoint a service. Operational overhead destroys productivity.
+- Layered services (UI, BFF, API, DB): horizontal layers, not domain boundaries. Hard to add features (touches every layer).
+
+The 2026 reality. Many teams that adopted microservices 2017-2020 are consolidating in 2024-2026. "Modular monolith" is the current pragmatic frame: well-structured monolith with module boundaries that you could split later if needed.`,
+        image: '/diagrams/devops/j2-microservices.png',
+      },
+      {
+        title: 'Communication patterns and failure modes',
+        description: `Synchronous communication (REST, gRPC):
+
+Pros: simple, request-response is the default mental model, easy to test.
+
+Cons:
+- Latency adds linearly. 5 hops × 20ms each = 100ms before any work.
+- Tight coupling — caller blocks on callee's availability and latency.
+- Cascading failure — slow callee blocks caller's threads, which blocks their callers.
+
+When to use: read-heavy paths where caller needs the result before continuing.
+
+Asynchronous communication (events, messages):
+
+Patterns:
+- Publish/subscribe (Kafka, NATS, Pulsar): producer doesn't know consumers.
+- Queue (SQS, RabbitMQ): producer puts on queue, one of N consumers handles.
+- Event sourcing (events as the source of truth, state computed by replay).
+
+Pros: decoupling, natural scalability, retry/replay, no synchronous failure cascade.
+
+Cons: eventual consistency, harder debugging (no stack trace through services), ordering and exactly-once-delivery hard.
+
+When to use: notifications, side effects, command-query separation, multi-consumer scenarios.
+
+The transactional outbox pattern (the bridge between sync DB writes and async events):
+
+Problem: write to DB AND publish event must be atomic. Naively done, the second can fail after the first.
+
+Pattern:
+1. Service writes domain change AND an event row to outbox table in same DB transaction.
+2. Separate process polls outbox table (or uses Debezium CDC), publishes events to broker.
+3. Mark outbox row as published.
+
+Result: at-least-once delivery; consumers must be idempotent. Fixes the "wrote DB, failed to publish" race.
+
+Saga patterns for distributed transactions:
+
+Choreography: each service listens to events and reacts. No central coordinator.
+- Pro: decentralized, resilient.
+- Con: hard to reason about overall flow, no single place to debug.
+
+Orchestration: central orchestrator service drives the flow.
+- Pro: explicit flow, debuggable.
+- Con: orchestrator is a single point of failure; can become a god service.
+
+Tooling: Temporal (orchestration), Camunda (BPMN orchestration), MassTransit (saga DSL).
+
+Failure modes specific to microservices:
+
+Cascade failure. Slow service A causes its callers' threads/memory to pile up. They become slow. Their callers pile up. The system collapses.
+- Mitigations: timeouts on every call, circuit breakers (Hystrix, resilience4j), bulkheads (separate thread pools per dependency), backpressure.
+
+Retry storm. Caller retries on failure; callee already overwhelmed; retries cause more load; system collapses.
+- Mitigations: exponential backoff with jitter, circuit breakers (open after N failures), client-side rate limiting.
+
+Service mesh as the failure-mode infrastructure:
+
+Istio, Linkerd, Cilium-mesh inject sidecars (or eBPF datapath) that apply:
+- Timeouts, retries, circuit breakers (no app code).
+- mTLS between services (zero-trust by default).
+- Traffic shifting (canary, A/B).
+- Observability (per-call metrics, traces, access logs).
+
+Tradeoff: 5-50ms latency tax, operational complexity. Cilium service mesh (eBPF) much cheaper than Envoy sidecar but smaller feature set.
+
+Common mistakes:
+- Distributed transactions across services. 2-phase commit doesn't work at scale; use sagas or outbox + idempotency.
+- No timeouts. The default timeout in HTTP libraries is often "infinite". Always set a deadline.
+- Synchronous chain of 5+ services per request. Latency budget gone before doing real work.
+- One service per database (correct) but joins across services in app code (wrong). Reshape data flow; don't reproduce SQL joins in HTTP.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Microservices Design.',
+        question: 'Quick-fire interview answers — Microservices Design.',
+        answer: `Rapid-fire facts.
+
+Q: When are microservices the wrong choice?
+A: Single team, strong consistency requirements, small team (<20 engineers), domain not well-understood. Modular monolith first; split when independent deployability becomes a real bottleneck.
+
+Q: Bounded context?
+A: Domain-Driven Design term. A region where a domain model and terminology are consistent. Customer in Sales context differs from Customer in Billing. Bounded contexts are candidate microservice boundaries.
+
+Q: Event storming?
+A: DDD workshop. Domain experts list domain events on stickies, group into aggregates and commands, identify bounded contexts. Tool for finding service boundaries.
+
+Q: Inverse Conway?
+A: Restructure teams to match desired architecture, then build it. Conway's Law: systems mirror communication structures. Inverse maneuver: change communication structure to get desired system.
+
+Q: Distributed monolith?
+A: Microservices that must deploy together, share schemas, have synchronous chains. Monolith with microservices' operational tax. Anti-pattern.
+
+Q: Sync vs async — when each?
+A: Sync (REST, gRPC) for read-heavy paths where caller needs result before continuing. Async (events, queues) for notifications, side effects, multi-consumer, decoupling.
+
+Q: Transactional outbox?
+A: Write domain change + event row to outbox table in same DB transaction. Separate process publishes events from outbox, marks as published. Solves "wrote DB, failed to publish" race. At-least-once delivery; consumers must be idempotent.
+
+Q: Saga?
+A: Distributed transaction via local transactions + compensating actions. Two flavors: choreography (each service reacts to events) and orchestration (central coordinator).
+
+Q: Choreography vs orchestration?
+A: Choreography: decentralized, resilient, hard to debug. Orchestration: explicit flow, debuggable, single coordinator becomes potential SPOF.
+
+Q: Saga tooling?
+A: Temporal (orchestration with code-as-workflow), Camunda (BPMN orchestration), MassTransit (saga DSL for .NET). Temporal increasingly the standard 2024-2026.
+
+Q: Cascade failure?
+A: Slow service causes callers' threads/memory to pile up; they slow; their callers pile up. Mitigations: timeouts, circuit breakers, bulkheads, backpressure.
+
+Q: Retry storm?
+A: Caller retries on failure; callee already overwhelmed; retries amplify load; system collapses. Mitigations: exponential backoff with jitter, circuit breakers, client-side rate limiting.
+
+Q: Circuit breaker?
+A: After N consecutive failures, "open" the breaker — stop calling the dependency for a window, return error immediately. After window, "half-open" and test. Hystrix (Netflix, abandoned), resilience4j (JVM), service mesh built-in.
+
+Q: Bulkhead?
+A: Isolate resource pools (thread pool, connection pool) per dependency. One slow dependency exhausts only its bulkhead, not the whole app.
+
+Q: Service mesh value?
+A: Apply timeouts, retries, circuit breakers, mTLS, observability without app code. Istio, Linkerd, Cilium-mesh. Tradeoff: 5-50ms latency, ops complexity.
+
+Q: Why one DB per service?
+A: Service ownership of schema, independent deployability, technology choice per service. The pattern is broken if app code joins data across services — that's reproducing SQL joins in HTTP. Reshape data flow instead.
+
+Q: 2026 trend?
+A: Consolidation. Teams that microserviced aggressively 2017-2020 are merging back to modular monolith. "Modular monolith" — well-structured monolith with module boundaries you could split later — is the pragmatic default.
+
+Q: Most common microservices mistake?
+A: Premature decomposition. Splitting before the domain is understood; redrawing boundaries 5 times; each redraw is months. Start with monolith, split when independent deployability is a real constraint.
+
+Q: API contract management?
+A: Backward-compatible API evolution as discipline. Add fields, never remove; deprecate before drop; version when forced. Tools: Buf (protobuf), Spectral (OpenAPI), Pact (consumer-driven contract tests).
+
+Q: Cross-service trace?
+A: OpenTelemetry trace context propagated via W3C TraceContext header. Single trace ID through all services. Required for debugging distributed flows.
+
+These are answers a microservices-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://martinfowler.com/articles/microservices.html',
+      'https://martinfowler.com/articles/microservice-trade-offs.html',
+      'https://microservices.io/patterns/data/transactional-outbox.html',
+      'https://microservices.io/patterns/data/saga.html',
+      'https://temporal.io/blog/temporal-the-microservices-revolution',
+      'https://www.thoughtworks.com/insights/blog/microservices-when-not-to',
+    ],
+  },
+
+  {
+    id: 'event-driven-saga-outbox',
+    title: 'Event-Driven Architecture — Saga, Outbox, CQRS, Event Sourcing',
+    icon: 'cloud',
+    color: '#0ea5e9',
+    questions: 5,
+    description: 'The patterns that make event-driven systems work in practice. Transactional outbox (atomic write + publish), sagas for distributed transactions, CQRS (separate read and write models), event sourcing (events as source of truth), and the operational realities at scale.',
+    visualizations: [
+      {
+        title: 'The core pattern toolbox',
+        description: `Transactional outbox — the "atomic write and publish" problem solved:
+
+Problem: A service updates its DB and publishes an event. If the publish fails after the DB commit, downstream systems miss the event. If publish succeeds before commit, downstream sees the event but the data isn't there yet.
+
+Solution: write the event row to an "outbox" table in the same DB transaction as the domain change. A separate process polls the outbox (or reads via CDC) and publishes to the broker.
+
+\`\`\`
+BEGIN
+  UPDATE accounts SET balance = balance - 100 WHERE id = $1;
+  INSERT INTO outbox (event_type, payload, created_at)
+    VALUES ('AccountDebited', '{"id": 42, "amount": 100}', NOW());
+COMMIT;
+\`\`\`
+
+Separate process:
+\`\`\`
+SELECT id, payload FROM outbox WHERE published = false ORDER BY id LIMIT 100;
+-- publish to Kafka
+UPDATE outbox SET published = true WHERE id IN (...);
+\`\`\`
+
+Properties:
+- At-least-once delivery (consumers must be idempotent).
+- DB write is atomic; broker publishing is asynchronous.
+- Survives broker outages (events accumulate in outbox; published when broker recovers).
+
+Polling vs CDC:
+- Polling: simple, occasional duplicate checks, slight latency (1-10s).
+- Debezium CDC: reads Postgres WAL or MySQL binlog, near-real-time, more setup.
+
+Saga — distributed transactions without 2PC:
+
+Two-phase commit doesn't work at scale (network partitions, blocking, vendor-specific). Sagas substitute: a sequence of local transactions, with compensating transactions on failure.
+
+Example (order placement):
+1. Reserve inventory (local txn). Compensation: release reservation.
+2. Charge payment (local txn). Compensation: refund.
+3. Ship order (local txn). Compensation: cancel shipment.
+
+If step 3 fails, compensations run for steps 1-2. Final state is consistent (no orphan reservation, no charge without ship).
+
+Choreography (decentralized): each service listens for events and acts. No coordinator. Hard to reason about; resilient.
+
+Orchestration (centralized): a coordinator drives the flow. Easier to reason about; coordinator is critical infrastructure.
+
+2026 standard: Temporal for orchestration, treating workflow as code with deterministic replay. AWS Step Functions for AWS-bound. Camunda for BPMN-style.
+
+CQRS — Command Query Responsibility Segregation:
+
+Separate models for writes (commands) and reads (queries). Write side optimized for consistency (transactional, normalized). Read side optimized for query (denormalized, indexed).
+
+Implementation: write model emits events; read model is built by projecting events. Different storage often (write to Postgres, read to Elasticsearch / Redis).
+
+Pros: each side scales independently, read model can be rebuilt by replaying events, multiple read models for different access patterns.
+
+Cons: complexity (two models to maintain), eventual consistency between write and read (read can lag write by milliseconds to seconds).
+
+When to use: when read and write have very different scale or shape. Most CRUD apps don't need it.
+
+Event sourcing — events as the source of truth:
+
+Instead of storing current state, store the sequence of events that led to it. State is computed by replay.
+
+Example: account doesn't store balance directly. It stores deposits and withdrawals. Balance = sum(deposits) - sum(withdrawals).
+
+Pros:
+- Audit log built in.
+- Historical queries ("what was the balance on Jan 15?").
+- Rebuild any view by replaying.
+- Time-travel debugging.
+
+Cons:
+- Schema evolution of events is hard (you can't change an event after it's stored).
+- Snapshots needed for performance (replay 10M events on every read = slow).
+- Hard to onboard team unfamiliar with the pattern.
+
+Tooling: EventStoreDB (purpose-built), Kafka with compacted topics, Axon Framework (Java).
+
+When to use: domains where audit + history matter (financial, healthcare). Most domains don't need it; the cost is high.
+
+Combining patterns:
+- CQRS + event sourcing: classic combo. Write side stores events; read side projects to query-optimized models.
+- Outbox + saga: outbox publishes events that drive saga steps.
+- Outbox + CQRS: outbox events feed read-side projections.
+
+Practical guidance: start with outbox (universal value, low cost). Add sagas when distributed transactions appear. Consider CQRS only if read/write asymmetry is severe. Avoid event sourcing unless the domain explicitly requires it.`,
+        image: '/diagrams/devops/j3-event-driven.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Event-Driven Patterns.',
+        question: 'Quick-fire interview answers — Event-Driven Patterns.',
+        answer: `Rapid-fire facts.
+
+Q: Transactional outbox in one line?
+A: Write event to outbox table in same DB txn as domain change; separate process publishes from outbox. Solves "wrote DB, failed to publish" atomicity.
+
+Q: Outbox vs direct publish?
+A: Direct publish risks losing events on broker outage or post-commit failure. Outbox guarantees at-least-once: events accumulate in DB, publish when broker recovers.
+
+Q: Polling outbox vs CDC?
+A: Polling: simple, 1-10s latency, occasional duplicate checks. Debezium CDC: reads WAL/binlog, near-real-time, more setup. CDC at scale; polling for simpler shops.
+
+Q: Saga in one line?
+A: Distributed transaction via sequence of local transactions plus compensating actions on failure. Substitute for 2PC at scale.
+
+Q: Choreography vs orchestration?
+A: Choreography: services react to events, no coordinator. Orchestration: central coordinator drives flow. Temporal, Step Functions, Camunda are orchestration tools.
+
+Q: Why not 2PC?
+A: Two-phase commit blocks during partitions, vendor-specific, doesn't compose across heterogeneous systems. Sagas substitute with eventual consistency.
+
+Q: CQRS?
+A: Command Query Responsibility Segregation. Separate models for writes (commands) and reads (queries). Read side typically denormalized projection of events.
+
+Q: When CQRS makes sense?
+A: Severe read/write asymmetry — different scale, different shape. Most CRUD apps don't need it; complexity cost is real.
+
+Q: Event sourcing?
+A: Store events, not current state. State computed by replay. Audit, history, time-travel debugging built in. Schema evolution hard; snapshots needed for performance.
+
+Q: When event sourcing?
+A: Domains where audit + historical queries are first-class (financial ledger, healthcare records). Don't reach for it as default.
+
+Q: Saga compensation gotcha?
+A: Compensations are not the same as rollback. Refund != reverse charge perfectly (timing, fees, partial). Design compensations as new actions, not undo.
+
+Q: Idempotency?
+A: At-least-once delivery means consumers may receive duplicates. Idempotency key + dedupe table, or "outcome-based" idempotency (writing same domain change twice yields same final state).
+
+Q: Outbox at scale?
+A: Outbox table grows fast. TTL or archive policy. Indexes on (published, created_at) for the publisher to find unpublished rows quickly.
+
+Q: Inbox pattern?
+A: Mirror of outbox on consumer side. Consumer writes (received event id, processed timestamp) in same txn as domain change; idempotency via inbox.
+
+Q: Event schema evolution?
+A: Backward-compatible only — add fields, never remove. Stored events are forever; consumers must handle any version. Tools: Avro/Protobuf with schema registry (Confluent), JSON Schema with versioning.
+
+Q: Eventual consistency window?
+A: From event publish to read-side projection complete. Typical: 50ms-500ms in Kafka + projection systems. Seconds to minutes at saturation. UI must handle "not yet visible" state gracefully.
+
+Q: Hot partition gotcha?
+A: Kafka partitions sized by key hash. Single hot key (e.g., user with 10k events/s) overwhelms one partition. Mitigation: bucket the key (key + bucket_id) at producer.
+
+Q: Exactly-once?
+A: Doesn't exist truly. Kafka has "transactional producer + idempotent consumer" which is exactly-once-from-the-broker's-view, not end-to-end. Consumer-side idempotency still required.
+
+Q: Temporal's value?
+A: Workflow as code with deterministic replay. Worker dies mid-saga; new worker resumes from event log. Eliminates orchestration retry/recover code.
+
+Q: When NOT event-driven?
+A: Strong consistency requirements, simple CRUD with one team, no real publish-subscribe need. Don't add events for the sake of architecture diagrams.
+
+Q: Most common event-driven mistake?
+A: Synchronous in disguise. Service A publishes event, blocks on response from B's projection. That's RPC with extra steps. Real async means firing and continuing.
+
+These are answers an event-driven-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://microservices.io/patterns/data/transactional-outbox.html',
+      'https://microservices.io/patterns/data/saga.html',
+      'https://martinfowler.com/eaaDev/EventSourcing.html',
+      'https://martinfowler.com/bliki/CQRS.html',
+      'https://temporal.io/',
+      'https://debezium.io/documentation/reference/stable/',
+    ],
+  },
+
+  {
+    id: 'serverless-patterns',
+    title: 'Serverless Patterns — Lambda, Cloud Run, Knative, Functions',
+    icon: 'cloud',
+    color: '#0ea5e9',
+    questions: 5,
+    description: 'FaaS (AWS Lambda, GCF, Azure Functions) vs request-driven containers (Cloud Run, Knative, Fly.io Machines). Cold start, billing models, vendor lock, concurrency limits, cold-path patterns. When serverless wins; when it loses.',
+    visualizations: [
+      {
+        title: 'The serverless landscape and trade dimensions',
+        description: `Serverless really has two flavors: function-as-a-service (FaaS) and request-driven containers. Different shapes, different tradeoffs.
+
+Function-as-a-service (FaaS):
+
+AWS Lambda. The market leader. Pay per invocation + execution time. Memory range 128MB to 10GB. Max execution 15 minutes. Concurrency limit per region (default 1000, raise on request).
+
+Google Cloud Functions (Gen 2 = built on Cloud Run). 1st gen still around but Gen 2 recommended.
+
+Azure Functions. Event-driven, similar concept. Premium plan to avoid cold starts.
+
+Vercel Functions / Netlify Functions / Cloudflare Workers. Edge-first FaaS. Cloudflare Workers run on V8 isolates (no container) — sub-millisecond cold starts.
+
+Request-driven containers:
+
+Cloud Run (GCP). Run any container, scale to zero, billed per request × CPU seconds. Less constrained than Lambda — any language, any binary, up to 60 minutes per request.
+
+Knative (K8s). Open-source serverless on K8s. Auto-scales pods based on concurrency. Used by GCP Cloud Run, IBM Cloud Code Engine, on-prem K8s.
+
+Fly.io Machines. Fast-boot Firecracker microVMs; scale to zero or hibernate.
+
+AWS App Runner / Lambda + Container Image. Lambda lets you bring an OCI image; App Runner is a separate service for containerized apps with autoscaling.
+
+Decision dimensions:
+
+Cold start:
+- Lambda Node/Python: 200-500ms typical. Can be 1-2s for large deps.
+- Lambda Java: 1-3s without SnapStart, 200-500ms with SnapStart.
+- Lambda provisioned concurrency: keeps N warm; eliminates cold starts (pay for idle).
+- Cloud Run: 1-3s typical for warm container; 5-30s cold start with large image.
+- Cloudflare Workers: 5ms cold start (V8 isolate, not a container).
+
+Billing:
+- Lambda: per invocation + GB-seconds. Idle = $0.
+- Cloud Run (CPU only during request): per request × CPU seconds. Idle = $0.
+- Cloud Run (CPU always allocated): per CPU second always. Cheaper for steady traffic.
+- Vercel/Netlify Functions: per invocation + duration with platform-specific pricing.
+- Cloudflare Workers: per 1M requests, no duration billing for fast handlers.
+
+Concurrency model:
+- Lambda: one request per instance. N concurrent requests = N instances.
+- Cloud Run: configurable concurrency per instance (1 to 1000 default 80). Multi-tenant per instance.
+- This matters for connection pooling, in-memory caching: Cloud Run can amortize across requests; Lambda cannot.
+
+Vendor lock concerns:
+- Lambda: tightly coupled to AWS triggers (S3, SNS, SQS, API Gateway, EventBridge).
+- Cloud Run: just HTTP container; portable to Knative, K8s, anywhere.
+- Cloudflare Workers: tied to Workers runtime; some Node APIs not present.
+
+When serverless wins:
+- Spiky traffic with long idle periods. Pay for what you use.
+- Event-driven processing (S3 upload triggers, queue consumers).
+- Glue code between AWS services.
+- Edge computing (Workers, Lambda@Edge).
+- Prototyping; minimize ops overhead.
+
+When serverless loses:
+- Steady high traffic. Cost-per-request often higher than equivalent EC2/GKE.
+- Long-running workloads. Lambda 15min, Cloud Run 60min limits.
+- Apps with heavy startup (JVM, large dep trees) without provisioned concurrency.
+- Shared connection pools (DB pool that holds connections) — each Lambda instance opens its own.
+- Sub-millisecond latency requirements (cold starts are unavoidable in FaaS).
+
+Cold-start mitigations:
+- Provisioned concurrency (Lambda) / min instances (Cloud Run): pay for warm.
+- SnapStart (Lambda Java): snapshot warm state, restore for new instances. Faster than full cold.
+- Smaller deps: tree-shake, exclude dev deps, minimize bundle.
+- Lazy-load: defer expensive imports until request comes in.
+
+Connection pooling pattern: serverless-friendly DB connection management is its own discipline.
+- RDS Proxy (AWS): pooler that sits between Lambda and RDS. Handles N Lambda instances → small pool to RDS.
+- PgBouncer / Supavisor (Postgres): same idea, OSS.
+- Database: serverless-native (Aurora Serverless v2, PlanetScale, Neon, Supabase) handles many short-lived connections natively.
+
+The pragmatic 2026 view. Serverless excels at spiky, event-driven, glue-code workloads. It struggles for steady, long-running, latency-critical workloads. Cloud Run blurs the line — it's "serverless container" with fewer constraints than Lambda. Edge functions (Workers) win for sub-100ms latency and high QPS.`,
+        image: '/diagrams/devops/j4-serverless.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Serverless Patterns.',
+        question: 'Quick-fire interview answers — Serverless Patterns.',
+        answer: `Rapid-fire facts.
+
+Q: FaaS vs serverless containers?
+A: FaaS (Lambda, GCF, Azure Functions): function-shaped, vendor-specific runtime, fast cold start. Containers (Cloud Run, Knative, Fly): bring container, more portable, slower cold start.
+
+Q: Lambda max execution?
+A: 15 minutes. Hard limit. Long workloads must split.
+
+Q: Cloud Run max execution?
+A: 60 minutes per request (recently raised from 60 min). For longer workloads, use Cloud Run jobs or another platform.
+
+Q: Cold start typical?
+A: Lambda Node/Python: 200-500ms warm, similar cold. Lambda Java: 1-3s without SnapStart. Cloud Run: 1-3s warm, 5-30s cold with large image. Cloudflare Workers: ~5ms.
+
+Q: Provisioned concurrency?
+A: Lambda feature: keep N warm instances. Eliminates cold starts. Pay for idle. Use for low-latency or critical paths.
+
+Q: SnapStart?
+A: Lambda Java/Python feature: snapshot the post-init state, restore for new instances. Much faster than full cold start.
+
+Q: Billing — Lambda vs Cloud Run?
+A: Lambda: per invocation + GB-seconds. Cloud Run: per request × CPU seconds (CPU only during request) or per CPU second always. Cloud Run "CPU always" cheaper for steady traffic.
+
+Q: Concurrency model — Lambda vs Cloud Run?
+A: Lambda: 1 request per instance. Cloud Run: configurable (1-1000, default 80) per instance. Cloud Run can amortize connection pools and caches; Lambda cannot.
+
+Q: Vendor lock?
+A: Lambda: tied to AWS triggers (S3, SNS, EventBridge). Cloud Run: HTTP container, portable to Knative/K8s. Workers: tied to Workers runtime.
+
+Q: When serverless wins?
+A: Spiky traffic with idle periods, event-driven (S3 upload triggers, queue consumers), glue code, edge computing, prototyping.
+
+Q: When serverless loses?
+A: Steady high traffic (cost), long-running workloads (limits), heavy-startup languages (cold starts), shared connection pools, sub-millisecond latency.
+
+Q: DB connection problem in Lambda?
+A: Each Lambda instance opens its own DB connection. At 1000 concurrent Lambdas you have 1000 DB connections. Mitigation: RDS Proxy / PgBouncer / serverless-native DB (Aurora Serverless v2, Neon, PlanetScale).
+
+Q: Knative?
+A: OSS serverless on K8s. Autoscales pods based on concurrency. Powers GCP Cloud Run, IBM Code Engine, on-prem K8s.
+
+Q: Cloudflare Workers differentiator?
+A: V8 isolates, not containers. ~5ms cold start. Per-request billing. Edge-distributed (200+ locations). Limited Node API surface.
+
+Q: Edge functions — when?
+A: Sub-100ms latency requirements globally, simple personalization at request time, A/B routing at edge, TLS termination + auth before origin.
+
+Q: Lambda + container image?
+A: Lambda accepts OCI images up to 10GB. Useful for ML deps, large bundles, custom runtimes. Cold start can be slower than Lambda zip.
+
+Q: API Gateway vs Function URL vs Application Load Balancer?
+A: API Gateway: full gateway features (auth, throttling), per-call cost. Function URL: free, simpler, no gateway features. ALB: existing infra integration.
+
+Q: Most expensive serverless mistake?
+A: Steady production traffic on Lambda. Per-request billing × millions = often 3-5x equivalent EC2/GKE cost. Migrate to Cloud Run "CPU always" or to containers.
+
+Q: FaaS observability?
+A: CloudWatch Logs (Lambda), Cloud Logging (Cloud Run). Distributed tracing via X-Ray, OTel. Cold-start visibility: AWS Lambda Insights, Datadog Lambda layer.
+
+Q: Statelessness?
+A: All FaaS instances are stateless between invocations. /tmp may be reused but not guaranteed. State to DB, cache, object store.
+
+Q: Region failover?
+A: Serverless instances are single-region. Multi-region requires deploying to each region and routing (Route 53 latency-based, Cloud LB, Cloudflare).
+
+Q: Most common adoption pattern 2026?
+A: Cloud Run for web services (serverless container, portable), Lambda for AWS event integrations and glue code, Workers for edge personalization. Hybrid is normal.
+
+These are answers a serverless-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/lambda/latest/dg/welcome.html',
+      'https://cloud.google.com/run/docs/overview/what-is-cloud-run',
+      'https://knative.dev/docs/',
+      'https://developers.cloudflare.com/workers/',
+      'https://learn.microsoft.com/en-us/azure/azure-functions/',
+    ],
+  },
+
+  {
+    id: 'strangler-fig',
+    title: 'Strangler Fig — Incremental Migration Without a Rewrite',
+    icon: 'cloud',
+    color: '#0ea5e9',
+    questions: 5,
+    description: "Martin Fowler's pattern for replacing a legacy system: route some traffic to the new implementation, gradually expand, retire the old. The discipline that makes mid-migration systems livable, and why big-bang rewrites still fail.",
+    visualizations: [
+      {
+        title: 'The pattern, the discipline, and the failure modes',
+        description: `Strangler fig (Fowler, 2004) — named for the tropical strangler fig that grows on a host tree and eventually replaces it. Pattern: build new functionality alongside the old; route traffic incrementally; retire old when nothing depends on it.
+
+The mechanics:
+
+Step 1: Front the legacy system with a routing layer. Reverse proxy (NGINX, Cloudflare, API Gateway, service mesh). Initial config: 100% traffic to legacy.
+
+Step 2: Implement one feature in the new system. Same external API contract. Deploy alongside.
+
+Step 3: Route that feature's traffic to the new system. Other features still go to legacy.
+
+Step 4: Validate. Monitor for parity (response shape, error rate, latency). Run shadow traffic if feasible (mirror to new, compare responses).
+
+Step 5: Repeat for each feature. Each migration is independent and reversible.
+
+Step 6: When legacy has zero traffic, retire it.
+
+What makes this work in practice:
+
+Routing layer is the keystone. Whatever you use must support per-route or per-feature routing rules, gradual rollout, observability, and instant rollback.
+- Reverse proxy: NGINX, Caddy, HAProxy, Traefik. Per-path routing. Manual rollout via config.
+- API gateway: Kong, AWS API Gateway, Azure API Management. Built-in routing rules, version management.
+- Service mesh: Istio VirtualService, Linkerd ServiceProfile. Per-route weight + retry config.
+- Cloudflare Workers / Vercel Edge Middleware: programmatic routing at edge.
+
+Data ownership transitions. The hardest part of strangler. Three patterns:
+- Shared database. New code reads/writes same DB as legacy. Easy migration; couples deployment lifecycles. Use only as transitional state.
+- Anti-corruption layer (DDD). New service has its own DB; an adapter translates between legacy and new schemas. Decouples code; keeps data canonical in one place.
+- Bidirectional sync. New service has its own DB; CDC syncs both ways. Most flexible; most operationally complex. Use only when needed.
+
+Rollback discipline. Each migration step must be independently reversible. If the new system shows higher error rate at 10% rollout, route back to legacy in seconds. This requires:
+- Same external API contract (no client changes per migration step).
+- Telemetry that compares old vs new (error rate, latency, business metrics).
+- Operational tooling that can flip routing in <1 minute.
+
+Common failure modes:
+
+Big-bang temptation. Six months in, "we're 60% migrated, let's just rewrite the rest". Rewrite blows up at scale (the 40% are the hardest cases). Stay disciplined: feature by feature.
+
+Half-migrated forever. Strangler can stall at 70%. The remaining 30% are the gnarliest features (legacy logic with no documentation). Plan for "what if we never finish?" — system must remain operable indefinitely in mixed state.
+
+Routing layer becomes a god service. The reverse proxy / API gateway accumulates business logic ("if user is in cohort A and request has header X, route to..."). Should be only routing rules; business logic belongs in services.
+
+Schema lock. New system can't evolve schema because legacy still reads/writes shared DB. Anti-corruption layer required to break this.
+
+Test coverage gaps. Legacy lacks tests; new system rewrites without preserving edge cases. Strangler provides natural cover: deploy new alongside, shadow traffic, compare responses. Use it.
+
+Loss of context. Original devs gone; nobody knows why this code does X. Before extracting, document behavior with characterization tests (golden file tests, recorded responses). Then strangler.
+
+Big-bang rewrite alternative — when it actually works:
+
+Rare but real cases:
+- System is small (a few thousand LOC).
+- Domain is well-understood; you can list every feature.
+- Team has bandwidth to maintain old + new for the duration.
+- External API can change in lockstep (single client team).
+
+If any are missing, strangler fig is the safer path.
+
+The 2026 lens. Strangler fig is two decades old and still the right pattern. Modern adaptations:
+- Edge routing (Cloudflare Workers) lets you do strangler at the edge without touching origin infrastructure.
+- Service mesh weights make percentage-based migration trivial.
+- Observability tools (Datadog, Honeycomb) make response comparison automatic.
+
+The pattern hasn't changed; the tooling has gotten dramatically better.`,
+        image: '/diagrams/devops/j5-strangler-fig.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Strangler Fig.',
+        question: 'Quick-fire interview answers — Strangler Fig.',
+        answer: `Rapid-fire facts.
+
+Q: Strangler fig in one line?
+A: Route some traffic to a new implementation, gradually expand, retire the old. Migration without a big-bang rewrite.
+
+Q: Why named "strangler fig"?
+A: Named after the tropical fig that grows on a host tree, eventually replacing it. Fowler coined the analogy in 2004.
+
+Q: When to use it?
+A: Replacing a legacy system that's too large or risky to rewrite, where you can put a routing layer in front and migrate feature-by-feature.
+
+Q: Routing layer options?
+A: Reverse proxy (NGINX, Caddy, HAProxy), API gateway (Kong, AWS API Gateway), service mesh (Istio, Linkerd), edge functions (Cloudflare Workers, Vercel Middleware).
+
+Q: Data ownership patterns?
+A: Shared DB (transitional), anti-corruption layer (new service own schema, adapter translates), bidirectional sync (CDC both ways).
+
+Q: Anti-corruption layer?
+A: DDD pattern. New service has its own model; an adapter translates between legacy and new schemas. Lets new system evolve without legacy coupling.
+
+Q: Rollback discipline?
+A: Each step must be independently reversible. Same external API contract, telemetry to compare old vs new, ops tooling to flip routing in under a minute.
+
+Q: Shadow traffic in strangler?
+A: Mirror requests to new implementation; compare responses to legacy without affecting users. Catches parity bugs before exposing real traffic.
+
+Q: Most common failure mode?
+A: "Half-migrated forever" — the last 30% of features are the gnarliest, often stall. Plan for indefinite operation in mixed state.
+
+Q: Big-bang rewrite vs strangler?
+A: Big-bang works for small systems with well-understood domains and lockstep clients. Strangler for everything else. Bias to strangler unless all big-bang preconditions hold.
+
+Q: Routing god service?
+A: Reverse proxy accumulates business logic ("if user X and header Y, route to..."). Anti-pattern. Routing rules only; business logic in services.
+
+Q: Test coverage during strangler?
+A: Legacy often lacks tests. Use shadow traffic + response comparison as the test net. Characterization tests on legacy before extraction.
+
+Q: Schema migration during strangler?
+A: Hardest part. Shared DB transitional only; anti-corruption layer to decouple; CDC for bidirectional sync if needed. Each migration step needs schema strategy.
+
+Q: 2026 modernizations?
+A: Edge routing (Cloudflare Workers, Vercel Middleware), service mesh weights, observability tools that auto-compare responses. Pattern unchanged, tooling much better.
+
+Q: Strangler timeline?
+A: Months to years for non-trivial systems. Plan for sustained dual-system operation. Budget for the long tail.
+
+Q: When NOT to strangler?
+A: Greenfield (no legacy to strangler). Tiny system. Lockstep client + clear bounds = big-bang acceptable.
+
+Q: Strangler + microservices?
+A: Strangler is the dominant pattern for monolith-to-microservices migration. Each extracted feature becomes a microservice; routing layer fronts both.
+
+Q: Strangler + feature flags?
+A: Layer them. Routing layer routes percentage to new system. Feature flags inside new system control feature exposure to subset of users.
+
+Q: Most underestimated cost?
+A: Operational cost of dual systems. Both must be runnable, monitored, on-call'd, deploy-pipeline'd for the duration. Often years.
+
+Q: When do you retire legacy?
+A: When new system handles 100% of traffic for the feature, no legacy code is invoked, and you've kept it parked for a regression window (often 30-90 days).
+
+These are answers a migration-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://martinfowler.com/bliki/StranglerFigApplication.html',
+      'https://docs.microsoft.com/en-us/azure/architecture/patterns/strangler-fig',
+      'https://martinfowler.com/articles/break-monolith-into-microservices.html',
+      'https://www.thoughtworks.com/insights/blog/microservices/incremental-migration-strangler-pattern',
+      'https://docs.aws.amazon.com/prescriptive-guidance/latest/modernization-aws-microservices/strangler-fig-pattern.html',
+    ],
+  },
+
 ];
