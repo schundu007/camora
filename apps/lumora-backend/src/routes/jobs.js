@@ -307,6 +307,17 @@ router.get('/', async (req, res, next) => {
     if (err.message === 'Jobs database not configured') {
       return res.status(503).json({ detail: 'Jobs database not configured' });
     }
+    // Surface the actual failure into the Railway log so a 500 on a
+    // filter click doesn't require redeploying with extra prints to
+    // diagnose. Logs the pg-error shape (code/position/detail) plus the
+    // offending query params so the failure can be reproduced locally.
+    console.error('[jobs] GET / failed', {
+      query: req.query,
+      message: err?.message,
+      code: err?.code,
+      position: err?.position,
+      detail: err?.detail,
+    });
     next(err);
   }
 });
