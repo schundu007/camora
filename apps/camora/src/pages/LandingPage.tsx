@@ -156,8 +156,15 @@ export default function LandingPage() {
     return () => { document.title = 'Camora'; };
   }, []);
 
+  // Both branches route to /capra/prepare — the Prepare surface is
+  // freely browseable without auth or onboarding (see ProtectedRoute's
+  // isOnboardingExempt list), so dropping logged-out users straight
+  // into the catalog removes one click of friction. Signup is still
+  // one tap away in SiteNav and any paywalled action will prompt for
+  // it. Label stays auth-aware so the affordance still reads as a CTA
+  // for new visitors.
   const heroCta = isAuthenticated ? 'Open dashboard' : 'Get started free';
-  const heroCtaHref = isAuthenticated ? '/capra/prepare' : '/signup';
+  const heroCtaHref = '/capra/prepare';
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg-surface)] text-[var(--text-primary)] font-sans">
@@ -470,7 +477,7 @@ export default function LandingPage() {
               title="Roles, practice & live AI"
               body="1,000+ engineering roles matched to your skills, 800+ curated study topics with diagrams, and 1,850+ problems with AI feedback. Then live transcription assistance during the interview itself — the moment that decides the offer."
               ctaLabel={isAuthenticated ? 'Open dashboard' : 'Start free'}
-              ctaHref={isAuthenticated ? '/capra/prepare' : '/signup'}
+              ctaHref="/capra/prepare"
             />
             <AudienceCard
               eyebrow="For recruiters"
