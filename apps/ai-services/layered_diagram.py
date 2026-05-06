@@ -60,12 +60,11 @@ def _normalize(s: str) -> str:
 
 
 def render_layered(spec: dict, out_path: Path) -> None:
-    """Render a stack of layer clusters with components inside each.
+    """Render a stack of layers with components inside each.
 
-    Layout: each layer is a subgraph cluster, top to bottom. Inside each
-    cluster, components flow left to right and wrap. A vertical chain of
-    invisible edges (between the last cluster's anchor and the next
-    cluster's anchor) gives the cluster ordering a "down" semantic.
+    Layout: each layer is a single HTML-table node (shape="none"). A simple
+    sequential edge between consecutive layer nodes produces a centered arrow
+    without the left-boundary misalignment caused by compound cluster edges.
     """
     layers = spec.get("layers") or []
     title = spec.get("title", "")
@@ -78,103 +77,88 @@ def render_layered(spec: dict, out_path: Path) -> None:
         "graph",
         bgcolor=BG_GRAPH,
         rankdir="TB",
-        splines="ortho",
-        compound="true",
-        nodesep="0.18",
-        ranksep="0.45",
-        pad="0.4",
+        splines="spline",
+        nodesep="0.3",
+        ranksep="0.5",
+        pad="0.5",
         fontname=FONT_BODY,
         fontcolor=TEXT_PRIMARY,
         label=title or "",
         labelloc="t",
         fontsize="20",
     )
+    # shape="none" lets the HTML table drive all geometry
     g.attr(
         "node",
-        shape="box",
-        style="rounded,filled",
-        fillcolor=BG_COMPONENT,
-        color=BORDER,
-        fontname=FONT_BODY,
-        fontsize="11",
-        fontcolor=TEXT_PRIMARY,
-        margin="0.16,0.08",
-        penwidth="1",
+        shape="none",
+        margin="0",
     )
     g.attr(
         "edge",
-        color=NAVY,
-        penwidth="1.6",
-        arrowsize="0.7",
+        color=GOLD_LEAF,
+        penwidth="2.5",
+        arrowsize="1.0",
         arrowhead="vee",
     )
 
-    # Each cluster gets one anchor node we use to chain clusters
-    # vertically (Graphviz can't `edge` between clusters directly without
-    # a node on each end).
-    anchors: list[str] = []
-
     for i, layer in enumerate(layers):
-        cid = f"cluster_l{i}_{_normalize(layer.get('name', f'layer{i}'))}"
-        with g.subgraph(name=cid) as c:
-            label = layer.get("name", f"Layer {i + 1}")
-            purpose = layer.get("purpose", "")
-            cluster_label = (
-                f"<<B>{_html_escape(label)}</B>"
-                + (f"<BR/><FONT POINT-SIZE='10' COLOR='{TEXT_SECONDARY}'>"
-                   f"{_html_escape(purpose)}</FONT>" if purpose else "")
-                + ">"
-            )
-            c.attr(
-                label=cluster_label,
-                style="rounded,filled",
-                fillcolor=BG_LAYER,
-                color=GOLD_LEAF,
-                penwidth="1.2",
-                fontname=FONT_HEADING,
-                fontsize="13",
-                fontcolor=TEXT_PRIMARY,
-                margin="14",
-            )
+        name    = _html_escape(layer.get("name", f"Layer {i + 1}"))
+        purpose = _html_escape(layer.get("purpose", ""))
+        comps   = layer.get("components") or []
 
-            comps = layer.get("components") or []
-            anchor_id = f"_anchor_{i}"
-            # Hidden anchor — pinned at top of the cluster so the
-            # vertical chain edges can attach without leaking visually.
-            c.node(
-                anchor_id,
-                label="",
-                shape="point",
-                width="0.01",
-                height="0.01",
-                style="invis",
-            )
-            anchors.append(anchor_id)
-
-            if not comps:
-                # Empty layer still needs at least one visible node.
-                c.node(f"l{i}_empty", label="(no components)",
-                       fontcolor=TEXT_SECONDARY, color=BORDER)
-            else:
-                # Force same rank inside cluster so components sit on
-                # one row (Graphviz wraps if too wide for the page).
-                with c.subgraph() as row:
-                    row.attr(rank="same")
-                    for j, comp in enumerate(comps):
-                        row.node(f"l{i}_c{j}", label=comp)
-
-    # Chain anchors top-to-bottom to enforce layer order; the gold edges
-    # form the right-rail connector between layers.
-    for i in range(len(anchors) - 1):
-        g.edge(
-            anchors[i],
-            anchors[i + 1],
-            ltail=f"cluster_l{i}_{_normalize(layers[i].get('name', f'layer{i}'))}",
-            lhead=f"cluster_l{i + 1}_{_normalize(layers[i + 1].get('name', f'layer{i + 1}'))}",
-            color=GOLD_LEAF,
-            penwidth="2",
-            arrowsize="0.9",
+        # ── title row ────────────────────────────────────────────────
+        title_row = (
+            f'<TR><TD ALIGN="CENTER" CELLPADDING="10">'
+            f'<FONT FACE="{FONT_HEADING}" POINT-SIZE="13"'
+            f' COLOR="{TEXT_PRIMARY}"><B>{name}</B></FONT>'
+            f'</TD></TR>'
         )
+
+        # ── optional purpose row ─────────────────────────────────────
+        purpose_row = ""
+        if purpose:
+            purpose_row = (
+                f'<TR><TD ALIGN="CENTER" CELLPADDING="4">'
+                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="10"'
+                f' COLOR="{TEXT_SECONDARY}">{purpose}</FONT>'
+                f'</TD></TR>'
+            )
+
+        # ── components row ───────────────────────────────────────────
+        if comps:
+            cells = "".join(
+                f'<TD ALIGN="CENTER" BGCOLOR="{BG_COMPONENT}"'
+                f' STYLE="ROUNDED" CELLPADDING="8">'
+                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="11"'
+                f' COLOR="{TEXT_PRIMARY}">{_html_escape(c)}</FONT>'
+                f'</TD>'
+                for c in comps
+            )
+            comp_row = (
+                f'<TR><TD CELLPADDING="8"><TABLE BORDER="0"'
+                f' CELLBORDER="1" CELLSPACING="6"'
+                f' CELLPADDING="0" COLOR="{BORDER}">'
+                f'<TR>{cells}</TR></TABLE></TD></TR>'
+            )
+        else:
+            comp_row = (
+                f'<TR><TD ALIGN="CENTER" CELLPADDING="8">'
+                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="10"'
+                f' COLOR="{TEXT_SECONDARY}">(no components)</FONT>'
+                f'</TD></TR>'
+            )
+
+        label = (
+            f'<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0"'
+            f' BGCOLOR="{BG_LAYER}" COLOR="{GOLD_LEAF}"'
+            f' CELLPADDING="0" STYLE="ROUNDED">'
+            f'{title_row}{purpose_row}{comp_row}'
+            f'</TABLE>>'
+        )
+        g.node(f"layer_{i}", label=label)
+
+    for i in range(len(layers) - 1):
+        g.edge(f"layer_{i}", f"layer_{i + 1}")
 
     _render_to_file(g, out_path)
 
