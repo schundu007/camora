@@ -24873,4 +24873,877 @@ These are answers a Kubernetes-fluent platform engineer should give without prep
     ],
   },
 
+  {
+    id: 'platform-engineering-principles',
+    title: 'Platform Engineering — Product Mindset for Internal Tooling',
+    icon: 'layers',
+    color: '#6366f1',
+    questions: 5,
+    description: 'Platform engineering treats internal developer tooling as a product with internal customers — paved roads, golden paths, explicit roadmap, adoption metrics. Distinct from traditional ops and SRE; named as a discipline 2022-2026.',
+    visualizations: [
+      {
+        title: 'Discipline definition, lineage, and the platform-as-product practice',
+        description: `Platform engineering is the practice of designing, building, and operating internal developer platforms (IDPs) as PRODUCTS, with internal engineers as CUSTOMERS. The defining shift from prior eras: developer tooling is treated with the same rigor as customer-facing product — explicit roadmap, user research, adoption metrics, deprecation lifecycle, support model.
+
+Lineage:
+- 2003-2010: traditional ops / sysadmin. Tickets-based service.
+- 2009-2015: DevOps movement. "you build it, you run it" (Werner Vogels, 2006).
+- 2014-2019: SRE adoption (Google's SRE book, 2016). Engineering discipline applied to operations.
+- 2017-2022: Team Topologies (Skelton & Pais, 2019) names the "Platform Team" as a distinct team type.
+- 2022-2026: Platform engineering emerges as a NAMED DISCIPLINE. Gartner adds it to the Hype Cycle (2022). PlatformCon launches (June 2022, online, ~10k attendees; 2024 hits ~30k). CNCF Platforms WG publishes the Platform Engineering Maturity Model (2023). The "Platform Engineering" book (Camille Fournier and Ian Nowland, O'Reilly 2024) crystallizes the practice.
+
+What "product mindset" actually means:
+- Internal customers are NOT a captive audience. If platform is bad, teams build shadow IT.
+- Roadmap is published and gathered from user needs.
+- Paved roads: well-trodden, supported, opinionated default. 80% of services should fit.
+- Golden paths: same idea, popularized by Spotify (2020 blog post by Gary Niemen).
+- Tiered support: self-service first, docs second, Slack channel third, on-call escalation last.
+
+Distinct from traditional ops:
+- Ops: ticket-based service. Reactive.
+- Platform engineering: self-service product. Proactive.
+
+Distinct from SRE:
+- SRE: reliability of services in production. Error budgets, SLOs, incident response.
+- Platform engineering: dev experience and self-service infrastructure. Focuses on the inner-loop.
+
+Success metrics:
+- Adoption: % of new services using the platform vs bypassing it. Target: >80% within 12 months.
+- Time-to-X: time-to-first-deploy, time-to-production, time-to-recovery (DORA metrics).
+- Developer satisfaction: NPS or DX survey scores. Industry benchmark: 30-50 NPS for healthy platforms.
+- Support load: tickets per developer per quarter trending DOWN.
+
+Key trap (the #1 failure mode 2023-2026): "Build the platform we want, mandate it, then wonder why nobody uses it." Symptoms: low adoption, shadow IT, complaints in retros. Fix: act like a startup. Talk to internal customers. Watch them work. Find friction. Solve it. Measure adoption weekly.
+
+Team Topologies platform team archetype:
+- Provides internal services that stream-aligned teams consume "as a platform" — i.e., self-service.
+- "Thinnest Viable Platform" (TVP) principle: only build platform capabilities that are a clear net win.
+
+X-as-a-Service interaction mode:
+- Platform team exposes capabilities for self-consumption.
+- Stream-aligned teams consume without coordination.
+- Low cognitive load on consumers; concentrated cognitive load on platform team.
+
+Practice 1: Internal customer model. Identify primary user personas. Run discovery: interview 5-10 engineers per persona per quarter.
+
+Practice 2: Roadmap and prioritization. Public roadmap. RICE / WSJF prioritization. Quarterly OKRs tied to adoption + DX metrics.
+
+Practice 3: Paved roads and golden paths. Backstage scaffolder template that creates a service with logging, metrics, tracing, CI/CD wired up. Off-road allowed but unsupported.
+
+Practice 4: Internal SLAs and on-call. Platform has uptime SLO (99.9% control plane, 99.95% data plane). On-call rotation.
+
+Practice 5: Adoption motion. Don't mandate; sell. Pilot with friendly teams; refine; expand.
+
+Practice 6: Funding model. Typically G&A overhead or internal "tax". Headcount: ~5-15% of total engineering.
+
+Cognitive load lens (Sweller; applied in Team Topologies). Platform engineering's job: ABSORB extraneous load (K8s YAML, certificate rotation, log shipping) so stream-aligned teams focus on intrinsic load (their domain) and germane load (learning).
+
+Anti-patterns:
+- "Pet platform": platform team builds what excites them, not what users need.
+- "Shadow IT": stream-aligned teams build covert platform because the official one is bad.
+- "Platform-team-as-renamed-ops": same ticket-based service, new name.
+- "Platform-team-as-architecture-police": team mandates standards but provides no useful service.
+- "Captive customer fallacy": "they have to use us; mandate is enough."
+
+The deeper point: platform engineering is the discipline of EARNING ADOPTION through utility, not mandating it through politics. If your platform is genuinely better than the alternative, devs will adopt it.`,
+        image: '/diagrams/devops/h1-platform-eng.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Platform Engineering Principles.',
+        question: 'Quick-fire interview answers — Platform Engineering Principles.',
+        answer: `Rapid-fire facts.
+
+Q: Define platform engineering in one line.
+A: The discipline of building and operating internal developer platforms as products, with internal engineers as customers and adoption as the success metric.
+
+Q: When did it emerge as a named discipline?
+A: 2022-2026. Gartner Hype Cycle 2022, PlatformCon launches June 2022, CNCF Maturity Model 2023, Fournier/Nowland book 2024.
+
+Q: Lineage?
+A: Traditional ops → DevOps (2009) → SRE (2016) → Team Topologies platform team (2019) → platform engineering as named discipline (2022-2026).
+
+Q: Platform engineering vs SRE?
+A: SRE owns reliability of services in production. Platform engineering owns developer experience and self-service infrastructure.
+
+Q: Platform engineering vs traditional ops?
+A: Ops = ticket-based, reactive. Platform = self-service product, proactive.
+
+Q: What's "platform as a product"?
+A: Treat internal devs as customers. Roadmap, user research, adoption metrics, internal SLAs, deprecation lifecycle.
+
+Q: What's a paved road?
+A: The supported, opinionated default that 80% of services fit.
+
+Q: What's a golden path?
+A: Spotify-coined term (2020). Same as paved road. Template + docs + ops support + lifecycle.
+
+Q: What's "Thinnest Viable Platform"?
+A: Team Topologies principle. Only build platform capabilities that are a clear net win.
+
+Q: Top success metrics?
+A: Adoption, time-to-X (DORA), DX satisfaction (NPS 30-50 healthy), support load trending down.
+
+Q: Adoption target for paved road?
+A: >80% of new services within 12 months.
+
+Q: How big should platform team be?
+A: ~5-15% of total engineering.
+
+Q: Number-one trap?
+A: Building a platform nobody wants. Symptoms: low adoption, shadow IT.
+
+Q: Shadow IT?
+A: Stream-aligned teams building covert tooling because the official platform is inadequate.
+
+Q: How avoid being "renamed ops"?
+A: Self-service first; ticket-based last. Product roadmap, not work queue.
+
+Q: How does cognitive load apply?
+A: Platform absorbs extraneous load so stream-aligned teams focus on domain (intrinsic) and learning (germane).
+
+Q: X-as-a-Service interaction mode?
+A: Team Topologies term. Platform team exposes capabilities for self-consumption.
+
+Q: How measure DX?
+A: DX surveys, instrumentation (DX Core 4: Speed, Quality, Effectiveness, Impact), vendor tools.
+
+Q: Right adoption motion?
+A: Pilot with 2-3 friendly teams, refine, expand. Don't mandate.
+
+Q: Platform team at 50 engineers?
+A: 0-2 platform engineers; mostly enabling team work.
+
+Q: Platform team at 1000 engineers?
+A: 50-150 platform engineers, often split into sub-platforms (compute, data, ML, observability).
+
+Q: One book to read?
+A: "Team Topologies" (2019) for archetype. "Platform Engineering" (Fournier & Nowland, 2024) for operating practice.
+
+These are answers a platform-engineering-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://platformengineering.org/blog/what-is-platform-engineering',
+      'https://teamtopologies.com/key-concepts',
+      'https://www.cncf.io/blog/2023/11/30/platform-engineering-maturity-model/',
+      'https://www.gartner.com/en/articles/what-is-platform-engineering',
+      'https://martinfowler.com/articles/talk-about-platforms.html',
+    ],
+  },
+
+  {
+    id: 'internal-developer-platforms',
+    title: 'Internal Developer Platforms — IDP Reference Architecture',
+    icon: 'layers',
+    color: '#6366f1',
+    questions: 5,
+    description: 'IDPs are self-service abstraction layers over multi-cluster, multi-cloud infrastructure. Components: service catalog, scaffolding, deployment, observability portal, secrets, environments. Reference architectures: Humanitec, Mia-Platform, Crossplane-based, Backstage-based.',
+    visualizations: [
+      {
+        title: 'Eight-component IDP reference architecture',
+        description: `An Internal Developer Platform (IDP) is a curated, integrated set of tools and services that enables developers to self-serve the full software delivery lifecycle, abstracting underlying multi-cluster / multi-cloud infrastructure complexity behind a consistent interface.
+
+The CNCF Platforms WG (2023 whitepaper) defines an IDP as composed of EIGHT logical components:
+
+1. Developer Portal (the front door). Single pane of glass: service catalog, docs, scorecards, runbooks. Backstage (CNCF, Spotify-origin), Port, Cortex, OpsLevel, Roadie are the dominant choices.
+
+2. Service Catalog. The source of truth for what services exist, who owns them, where they run, dependencies. Drives ownership routing for incidents and policy enforcement. Backstage software catalog is the open-source reference.
+
+3. Scaffolding (templates / golden paths). Self-service service creation. Backstage Scaffolder, Cookiecutter, Copier, Yeoman are the tooling layer.
+
+4. Deployment / Workload Orchestrator. Abstracts K8s manifests, Terraform, cloud-provider APIs. Humanitec calls this the "Platform Orchestrator". Alternatives: raw K8s with golden-path manifests, Crossplane, Pulumi, Kratix.
+
+5. Environment Management. Self-service ephemeral environments per PR / per branch. Built on K8s namespaces, vcluster, or per-PR cloud accounts. Argo CD ApplicationSets, Flux Helm releases, Humanitec environment cloning.
+
+6. Observability Portal. Aggregated logs, metrics, traces, deployment events per service. Datadog, Grafana, Honeycomb, New Relic — surfaced through Backstage / Port plugins.
+
+7. Secrets Management. Self-service secret provisioning with audit trail. Vault, AWS Secrets Manager, GCP Secret Manager, External Secrets Operator on K8s.
+
+8. Identity, Access, Policy. RBAC at platform layer. OPA / Gatekeeper, Kyverno, Cerbos for K8s policy. SSO via Okta / Auth0 / Azure AD.
+
+Reference architecture (typical 2026 stack):
+- Backstage = developer portal + service catalog + scaffolder.
+- Argo CD or Flux = GitOps deployment.
+- Crossplane or Humanitec Platform Orchestrator = infrastructure abstraction.
+- Argo Workflows or Tekton = CI/CD pipelines.
+- Vault + External Secrets = secrets.
+- OPA Gatekeeper = policy.
+- Datadog or Grafana stack = observability surfaced in Backstage.
+
+Multi-cluster / multi-cloud abstraction. IDPs decouple "I need a service" from "running on EKS in us-east-1 with these IAM roles, this VPC, this RDS." Workload spec is cloud-agnostic; the orchestrator translates to per-environment infrastructure.
+
+The "abstraction debate" (active 2024-2026):
+- Humanitec / Score (CNCF Sandbox) camp: workload-spec abstraction is the unit of scale. K8s YAML is too low-level for devs.
+- Raw-K8s + golden-paths camp: YAML is fine if golden-path templates handle 80% of cases.
+- Crossplane camp: don't abstract K8s; EXTEND it. Treat infrastructure as K8s CRDs.
+
+No consensus. The right answer is org-dependent.
+
+Reference architectures in 2026:
+
+Humanitec Platform Orchestrator (commercial). SaaS or self-hosted control plane. Score format (CNCF Sandbox) is the dev interface. Translates spec → K8s manifests + Terraform + secrets per environment. Pricing: per-developer per-month, ~$50-200/dev/mo. Used at Allianz, Deutsche Telekom.
+
+Mia-Platform (commercial / SaaS, EU). Microservices-focused. Built-in API gateway, MongoDB-as-a-service, marketplace of templates. Strong on regulated industries.
+
+Crossplane-based (open source, K8s-native). Compositions bundle cloud resources into single CRDs devs apply. Pure open source; one control plane for both apps and infra. Used at Upbound, Grafana Labs, Adobe.
+
+Backstage-based (open source, vendor-neutral). Backstage as portal + scaffolder + catalog. Plugins for deployment (Argo CD), observability (Datadog), secrets (Vault). Maximum flexibility; vendor-neutral; significant platform-team headcount required.
+
+Comparison:
+- Humanitec: high cost, weeks to value, high lock-in, moderate customization. Best for large enterprise fast adoption.
+- Mia-Platform: high cost, weeks, high lock-in, EU regulated industries.
+- Crossplane-based: OSS + ops cost, months, low lock-in, high customization. K8s-native shops.
+- Backstage-based: OSS + ops cost, months, low lock-in, high customization. Mid-large org with platform headcount.
+
+Decision drivers:
+- Platform team headcount: <5 → buy. 10+ → can build.
+- Compliance: regulated industries lean toward turnkey vendors.
+- K8s maturity: K8s-native orgs lean Crossplane.
+- Org size: <500 engineers → Backstage often fine. >2000 → orchestrator value compounds.
+
+The deeper point: there's no universally right IDP architecture. Match the architecture to your platform team's headcount, K8s maturity, compliance requirements, and tolerance for vendor lock-in.`,
+        image: '/diagrams/devops/h2-idp.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Internal Developer Platforms.',
+        question: 'Quick-fire interview answers — Internal Developer Platforms.',
+        answer: `Rapid-fire facts.
+
+Q: Define IDP in one line.
+A: A self-service abstraction layer over multi-cluster, multi-cloud infrastructure that lets developers deliver software end-to-end without ticketing the platform team.
+
+Q: Eight components?
+A: Developer portal, service catalog, scaffolding, deployment / orchestrator, environment management, observability portal, secrets, identity / access / policy.
+
+Q: Most popular developer portal?
+A: Backstage (CNCF Graduated 2024, Spotify origin).
+
+Q: Platform orchestrator?
+A: Humanitec coinage. Control plane that takes a workload spec and produces K8s manifests + Terraform + secrets.
+
+Q: Score?
+A: Open spec for cloud-agnostic workload definitions. CNCF Sandbox.
+
+Q: Crossplane?
+A: K8s-native infrastructure CRDs. Cloud resources become kubectl-applyable. CNCF Incubating.
+
+Q: Crossplane composition?
+A: Bundles cloud resources (RDS + IAM + S3) into a single CRD devs apply.
+
+Q: Backstage scaffolder?
+A: Template engine that generates new service repos with CI/CD, observability, deploy wired up.
+
+Q: Backstage software catalog?
+A: YAML-defined entities (Component, System, API, Domain, User, Group). Source of truth.
+
+Q: Ephemeral environments — how?
+A: K8s namespaces per PR, vcluster, or per-PR cloud accounts. Argo CD ApplicationSets automate.
+
+Q: vcluster?
+A: Virtual K8s control plane inside a host K8s cluster. Loft Labs OSS project.
+
+Q: External Secrets Operator?
+A: K8s operator that syncs secrets from external stores into K8s Secrets.
+
+Q: Humanitec vs Backstage?
+A: Humanitec = commercial workload orchestrator. Backstage = open portal/catalog. Often combined.
+
+Q: Build vs buy?
+A: <5 platform engineers → buy. 10+ → build on Backstage + Argo CD + Crossplane.
+
+Q: Most common IDP failure mode?
+A: Building before knowing internal customer needs.
+
+Q: K8s YAML — abstract or not?
+A: Active debate. Humanitec/Score: yes. Crossplane: extend K8s. Raw K8s + golden paths: templates handle 80%.
+
+Q: Adoption metric?
+A: % of new services using golden path within 12 months. Healthy: >80%.
+
+Q: Time to value?
+A: Backstage / Crossplane: 6-12 months. Humanitec / Mia turnkey: 4-8 weeks.
+
+Q: Multi-cluster IDP?
+A: Argo CD ApplicationSets or Flux multi-tenancy patterns. Crossplane providers can manage cross-cluster.
+
+Q: Workload spec example?
+A: Score / Humanitec: containers + resources (db: postgres class: small). Orchestrator generates per-env infra.
+
+Q: Cost of running Backstage at scale?
+A: 2-5 engineers minimum to operate well at 500+ engineer org.
+
+Q: When NOT to build an IDP?
+A: <100 engineers, <20 services, single cluster. Premature platform = waste.
+
+Q: Best book?
+A: "Platform Engineering" (Fournier & Nowland, 2024). CNCF Platforms WG whitepaper.
+
+These are answers a platform-engineering-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://internaldeveloperplatform.org/',
+      'https://tag-app-delivery.cncf.io/whitepapers/platforms/',
+      'https://humanitec.com/platform-orchestrator',
+      'https://score.dev/',
+      'https://www.crossplane.io/',
+      'https://mia-platform.eu/',
+    ],
+  },
+
+  {
+    id: 'backstage-and-alternatives',
+    title: 'Backstage — Spotify-Origin Developer Portal and Alternatives',
+    icon: 'layers',
+    color: '#6366f1',
+    questions: 5,
+    description: 'Backstage is the CNCF-graduated (2024) open-source developer portal originated at Spotify. Includes software catalog, scaffolder, TechDocs, and a plugin ecosystem. Alternatives: Port, Cortex, OpsLevel, Roadie (hosted Backstage). Self-host complexity is real.',
+    visualizations: [
+      {
+        title: 'Backstage anatomy and the SaaS alternatives',
+        description: `Backstage is an open-source developer portal framework, originated at Spotify (open-sourced March 2020), donated to CNCF (September 2020), promoted to Incubating (2022), graduated (March 2024).
+
+What Backstage IS:
+- React frontend + Node.js backend with a plugin architecture.
+- Frontend = developer portal UX. Backend exposes APIs for catalog, scaffolder, and plugin endpoints.
+- Spotify uses it as front door for ~2000 engineers. Netflix, American Airlines, Toyota, Splunk, Box, Mercedes-Benz, HP all run it in production.
+
+Core features (the FOUR pillars):
+
+1. Software Catalog. YAML-defined entities tracked in Git. Entity kinds: Component (a service/app/library), System, API, Domain, User, Group, Resource, Location. catalog-info.yaml lives in the service repo. Catalog autodiscovery scans Git orgs.
+
+2. Scaffolder. Template engine for new repos. Templates live in Git; devs pick from portal. Backstage Scaffolder runs Cookiecutter-style template + post-actions (create repo, register catalog entity, set up CI/CD).
+
+3. TechDocs. Docs-as-code. Markdown in service repo, mkdocs.yml configures, Backstage renders. Search across all docs.
+
+4. Plugins. Plugin SDK lets you add tabs/cards. Official plugins: Kubernetes, Argo CD, Jenkins, GitHub Actions, PagerDuty, Sentry, Datadog, SonarQube. Community plugins: 200+. Custom: most large adopters write 5-30 internal plugins.
+
+Architecture:
+- Self-hosted Node.js app, typically on K8s.
+- Database: Postgres.
+- Auth: OIDC / SAML / Google / GitHub OAuth.
+- Storage: S3 / GCS for TechDocs build output.
+- 2-5 platform engineers to operate well at 500+ engineer org.
+
+What Backstage is NOT:
+- NOT a deployment platform. Plugins surface deploy state via Argo CD plugin.
+- NOT an observability platform. Plugins surface Datadog / Grafana data.
+- It is the FRONT DOOR. Underlying tools must already exist.
+
+Common adoption pattern:
+- Phase 1 (months 1-2): autodiscover catalog from existing repos.
+- Phase 2 (months 3-6): add owner/lifecycle/system metadata. Scorecards begin.
+- Phase 3 (months 6-12): scaffolder templates for top 3-5 service types.
+- Phase 4 (months 12-24): plugin ecosystem matures.
+
+Pain points:
+- Frontend customization is React + Material UI. Theming is real work.
+- Plugin upgrades break the app. Major releases require integration testing.
+- Catalog hygiene requires ongoing effort.
+- Auth + multi-tenancy weaker out-of-box than commercial alternatives.
+
+Alternatives to self-hosted Backstage:
+
+Port (port.io, founded 2022). SaaS no-code developer portal. Drag-and-drop entity model. Strengths: fastest time to value (days, not months). Weaknesses: less customization than Backstage. Pricing: ~$15-60/user/mo. Used at SoFi, Wix, Lemonade.
+
+Cortex (cortex.io, founded 2019). SaaS with strong production-readiness scorecard focus. CQL (Cortex Query Language). Strengths: strongest scorecard / quality enforcement. Used at Brex, Grammarly, Faire.
+
+OpsLevel (opslevel.com, founded 2018). SaaS catalog + maturity scorecards + Slack-integrated workflows. Used at Tucows, Big Commerce, Under Armour.
+
+Roadie (roadie.io, founded 2020). HOSTED Backstage. Roadie operates Backstage as a service; you bring your config + plugins. ~$30-50/user/mo enterprise tier.
+
+Decision framework:
+- Want maximum flexibility, have platform team headcount → self-host Backstage.
+- Want Backstage capability without operating it → Roadie.
+- Want fast SaaS, no-code → Port.
+- Want strong scorecards → Cortex or OpsLevel.
+
+Self-host Backstage complexity reality:
+- Time to first production: 3-6 months for a dedicated team.
+- Ongoing operational cost: ~30-50% of one platform engineer FTE.
+- Plugin maintenance: 10-20% of platform team time at maturity.
+- Backstage version upgrades: quarterly, ~1 week of work each.
+
+Many orgs that started self-hosted Backstage moved to Roadie or Port after 2-3 years when operational burden exceeded customization value.
+
+When Backstage is RIGHT: 500+ engineers, 3+ platform team, deep customization, multi-year horizon.
+
+When Backstage is WRONG: <200 engineers, 1-2 platform team, want fast adoption.
+
+The deeper point: Backstage is a FRAMEWORK, not a finished product. The flexibility is the value AND the cost.`,
+        image: '/diagrams/devops/h3-backstage.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Backstage and Alternatives.',
+        question: 'Quick-fire interview answers — Backstage and Alternatives.',
+        answer: `Rapid-fire facts.
+
+Q: Define Backstage in one line.
+A: Open-source developer portal framework, Spotify-origin, CNCF graduated 2024. Self-hosted React + Node.js with software catalog, scaffolder, TechDocs, plugin SDK.
+
+Q: When did Backstage graduate CNCF?
+A: March 2024.
+
+Q: Four pillars of Backstage?
+A: Software catalog, scaffolder (templates), TechDocs (docs-as-code), plugin ecosystem.
+
+Q: Software catalog entity kinds?
+A: Component, System, API, Domain, User, Group, Resource, Location.
+
+Q: catalog-info.yaml — where does it live?
+A: In the service repo. Backstage autodiscovers via Git org scanning.
+
+Q: Scaffolder in one line?
+A: Template engine that generates new service repos with CI/CD, observability, deploy wired up.
+
+Q: TechDocs in one line?
+A: Markdown in service repo + mkdocs.yml config. Backstage renders alongside catalog entry.
+
+Q: How many official plugins?
+A: ~30 official, 200+ community.
+
+Q: Backstage runs on what stack?
+A: Node.js backend, React frontend. Self-hosted on K8s. Postgres for catalog state.
+
+Q: Operational cost at scale?
+A: 2-5 platform engineers at 500+ engineer org. ~30-50% FTE ongoing.
+
+Q: Backstage upgrade cadence?
+A: Quarterly major releases. ~1 week integration testing for plugins per upgrade.
+
+Q: Most common Backstage failure mode?
+A: Underestimating operational burden.
+
+Q: When is Backstage right?
+A: 500+ engineers, 3+ platform team, deep customization, multi-year horizon.
+
+Q: When is Backstage wrong?
+A: <200 engineers, 1-2 platform team, want fast adoption.
+
+Q: Port in one line?
+A: SaaS no-code developer portal. Days-to-value vs months.
+
+Q: Cortex in one line?
+A: SaaS portal with strongest scorecard / production-readiness focus.
+
+Q: OpsLevel in one line?
+A: SaaS catalog + service-maturity scorecards. Slack-integrated owner accountability.
+
+Q: Roadie in one line?
+A: HOSTED Backstage. Backstage capability without operational burden.
+
+Q: Backstage vs Port?
+A: Backstage = self-hosted, max flexibility, months to value. Port = SaaS, no-code, days to value.
+
+Q: Self-host vs Roadie?
+A: Roadie if you want Backstage capability without ops burden ($30-50/user/mo).
+
+Q: Most common adoption phase 1?
+A: Catalog autodiscovery. ~80% of services automatically appear via catalog-info.yaml.
+
+Q: Scorecards in Backstage?
+A: Tech-Insights plugin or community scorecard plugins. Less mature than Cortex / OpsLevel.
+
+Q: Backstage at Spotify scale?
+A: ~2000 engineers, ~4000 entities in catalog, ~50 internal plugins.
+
+Q: One-line answer to "should we adopt Backstage?"
+A: If 3+ platform engineers, 500+ developers, multi-year customization horizon, yes. Otherwise look at Port, Cortex, OpsLevel, or Roadie first.
+
+These are answers a platform-engineering-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://backstage.io/',
+      'https://backstage.io/docs/overview/what-is-backstage/',
+      'https://www.cncf.io/projects/backstage/',
+      'https://www.getport.io/',
+      'https://www.cortex.io/',
+      'https://www.opslevel.com/',
+      'https://roadie.io/',
+    ],
+  },
+
+  {
+    id: 'golden-paths',
+    title: 'Golden Paths — Paved Roads for the 80% Use Case',
+    icon: 'layers',
+    color: '#6366f1',
+    questions: 5,
+    description: 'Golden paths are the well-trodden, supported, opinionated default for the 80% of use cases. Spotify-coined term. Template + docs + ops support + lifecycle. Distinct from mandated paths — going off-road is allowed but unsupported.',
+    visualizations: [
+      {
+        title: 'Golden paths definition, structure, evolution',
+        description: `A "golden path" is the well-trodden, supported, opinionated default for the 80% use case. The term entered the platform-engineering vocabulary via Gary Niemen (Spotify, 2020 blog post "How We Use Golden Paths to Solve Fragmentation in Our Software Ecosystem"). Netflix's "paved road" (Adrian Cockcroft, ~2014) is the same concept with different naming.
+
+Definition: a documented, supported, opinionated way to accomplish a common engineering task — bootstrap a new service, deploy to production, add observability — that is genuinely the EASIEST and SAFEST option. It bundles:
+- Template (scaffold that produces working code/infra)
+- Documentation (how to use it, when to use it)
+- Ops support (platform team owns issues with the path itself)
+- Lifecycle (path evolves; old versions deprecated; clear migration story)
+
+Critical distinction: "golden path" vs "mandated path":
+- Golden path: easy and supported; off-road is allowed but unsupported.
+- Mandated path: only path; off-road is prohibited.
+
+Mandated paths breed shadow IT. Golden paths self-select — teams choose because it's genuinely easier; teams with edge cases go off-road and accept the trade.
+
+Spotify origin (Gary Niemen, 2020): Spotify had ~2000 engineers, hundreds of services, multiple languages, fragmented tooling. Golden path concept: Spotify defines a recommended Java + Maven + GitHub Actions + GKE + standard observability stack. Templates in Backstage Scaffolder. Result: ~80% of new services use the golden path.
+
+Structure of a complete golden path:
+
+1. Template (the scaffold). Backstage Scaffolder template, Cookiecutter, Copier, or Yeoman generator. Produces a working repo: starter code, Dockerfile, Helm chart, CI/CD pipeline, observability config, README. Should produce a deployable service in <15 minutes.
+
+2. Documentation. Co-located with template. Explains: what this path is for, when to use it, when NOT to use it, how to extend safely.
+
+3. Ops support. Platform team treats the golden path as a product. Issues with template, framework, or wired-in observability are platform-team-owned. Slack channel. SLA on response.
+
+4. Lifecycle. Versioning. Templates evolve. v1, v2, v3 with documented changes. Deprecation. v1 deprecated 90+ days after v2 ready. Migration tooling. Sunset when adoption drops to <5%.
+
+Examples in 2026 platforms:
+
+Golden Java Service: Spring Boot 3 + Java 21 + Maven; GitHub Actions CI + GHCR; Helm + Argo CD; OpenTelemetry SDK pre-wired; Datadog dashboards templated.
+
+Golden Frontend App: Next.js or React + Vite; GitHub Actions CI; Vercel or internal CDN; Sentry pre-wired; A/B testing flag system pre-wired.
+
+Golden Python ML Service: FastAPI + uvicorn; MLflow tracking pre-wired; Argo Workflows pipeline templates; GPU-aware Helm chart.
+
+Each path has explicit scope. Teams with different requirements go off-road.
+
+Evolutionary process:
+1. Start with ONE golden path for the most common service type.
+2. Drive adoption. Pilot with 2-3 friendly teams; refine.
+3. Measure adoption (% of new services using the path).
+4. Add a second path for the next-most-common type.
+5. Watch for off-road clusters. If 5+ teams independently went off-road for the same reason, expand the path.
+6. Deprecate paths that drop below 5% adoption.
+
+Tooling deep-dive:
+
+Backstage Scaffolder. Templates declared as YAML, parameters from UI form. Steps: render template files, run actions (create GitHub repo, register catalog entry, send Slack notification, create Datadog dashboard). Templates live in Git.
+
+Cookiecutter. Python-based template engine. Template repo with {{cookiecutter.var_name}} placeholders + cookiecutter.json. CLI: cookiecutter gh:org/template-repo. No update mechanism (re-running on existing repo overwrites).
+
+Copier. Python-based, Cookiecutter successor with copier update — re-applies template changes to existing repos. Three-way merge. Increasingly popular for golden paths.
+
+Yeoman. JavaScript-based, 2012-era. Used in JS-heavy shops.
+
+Choosing the engine:
+- Backstage shop → Scaffolder.
+- Non-Backstage simple → Cookiecutter.
+- Want updates → Copier.
+
+Adoption metrics:
+- New services using path / total new services (target >70% canonical paths).
+- Time-from-template-to-first-deploy (target <1 day).
+- Path-related Slack questions / new service (target <2).
+- Path-related incidents / new service (target <0.1).
+
+Common mistakes:
+1. Too many paths. 12 golden paths at a 200-engineer org → confusion.
+2. Path mandated, not supported. "Use the golden Java service" + zero ops support = silent off-roading.
+3. Path doesn't evolve. v1 from 2 years ago still in use; teams build workarounds.
+4. Template opinionated about wrong things. Forces auth provider that was wrong choice.
+5. No off-ramp for edge cases. Team builds shadow IT.
+6. Path requires platform-team approval. Self-service is the point.
+
+Off-road governance:
+- Off-road services should still register in catalog with type: off-road.
+- Scorecard: off-road services must have explicit owner, on-call, runbook.
+- If off-road grows beyond 30% of services, expand the golden path.
+
+The deeper point: golden paths win adoption by being GENUINELY EASIER, not by mandate. The platform team's job is to make the easy path the right path.`,
+        image: '/diagrams/devops/h4-golden-paths.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Golden Paths.',
+        question: 'Quick-fire interview answers — Golden Paths.',
+        answer: `Rapid-fire facts.
+
+Q: Define golden path in one line.
+A: The well-trodden, supported, opinionated default for the 80% use case — template + docs + ops support + lifecycle, bundled.
+
+Q: Who coined the term?
+A: Gary Niemen, Spotify, 2020 blog post.
+
+Q: Older equivalent term?
+A: "Paved road" — Adrian Cockcroft / Netflix, ~2014.
+
+Q: Golden path vs mandated path?
+A: Golden = easy and supported; off-road allowed but unsupported. Mandated = only option; off-road prohibited.
+
+Q: Four ingredients of a complete golden path?
+A: Template (scaffold), documentation, ops support, lifecycle (versions + deprecation).
+
+Q: Time-to-deploy target?
+A: <15 minutes from "I want a new service" to "running in dev."
+
+Q: Adoption target?
+A: >70% of new services use canonical paths within 12 months.
+
+Q: Common golden path examples?
+A: Golden Java Service, Golden Frontend App, Golden Python ML, Golden Mobile App.
+
+Q: Backstage Scaffolder?
+A: Most common golden path tool in 2026. YAML templates, UI form, actions.
+
+Q: Cookiecutter?
+A: Python template engine. Simple; no update support.
+
+Q: Copier?
+A: Cookiecutter successor with copier update support.
+
+Q: Yeoman?
+A: JavaScript template engine, 2012-era.
+
+Q: Backstage Scaffolder vs Cookiecutter — which?
+A: Backstage Scaffolder if you're a Backstage shop. Cookiecutter / Copier if not.
+
+Q: How does a path evolve?
+A: v1 → v2 migration. Copier update or scripted migration. 90-day grace; v1 deprecated.
+
+Q: Drift detection?
+A: Audit existing services for path version. Cortex / OpsLevel scorecards or copier update --pretend script.
+
+Q: When deprecate a path?
+A: Adoption <5% sustained. Announce 90 days, provide migration, freeze, archive at 180 days.
+
+Q: Number-one failure mode?
+A: Mandated, not supported. Teams forced to use it but get no help.
+
+Q: Vanity golden path?
+A: Path nobody uses. <10% adoption, no requested features. Kill it.
+
+Q: How many paths is too many?
+A: ~5-10 canonical paths is healthy at 500-2000 engineers.
+
+Q: How handle off-road services?
+A: Register in catalog with type: off-road. Require explicit owner, on-call, runbook.
+
+Q: First golden path to build?
+A: The most-common service type at your org.
+
+Q: Common opinionation traps?
+A: Hardcoding wrong auth provider, wrong logging stack. Make these configurable.
+
+Q: Path-as-product mindset?
+A: Roadmap, user research, adoption metrics, deprecation lifecycle.
+
+Q: Best book / reference?
+A: Spotify Engineering blog (Niemen 2020), "Platform Engineering" (Fournier & Nowland, 2024).
+
+These are answers a platform-engineering-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://engineering.atspotify.com/2020/08/how-we-use-golden-paths-to-solve-fragmentation-in-our-software-ecosystem/',
+      'https://backstage.io/docs/features/software-templates/',
+      'https://copier.readthedocs.io/',
+      'https://www.cookiecutter.io/',
+      'https://martinfowler.com/articles/talk-about-platforms.html',
+    ],
+  },
+
+  {
+    id: 'developer-experience-metrics',
+    title: 'Developer Experience Metrics — DORA, SPACE, DX Core 4',
+    icon: 'layers',
+    color: '#6366f1',
+    questions: 5,
+    description: 'Three frameworks for measuring developer experience: DORA (deploy frequency, lead time, MTTR, change failure rate), SPACE (Satisfaction, Performance, Activity, Communication, Efficiency), and DX Core 4 (Speed, Quality, Effectiveness, Impact). Beware Goodhart\'s Law.',
+    visualizations: [
+      {
+        title: 'DORA, SPACE, DX Core 4 frameworks and Goodhart\'s Law',
+        description: `Three dominant frameworks for measuring developer experience in 2026, each from a different research lineage:
+
+DORA (DevOps Research & Assessment, 2014-present). Origin: Nicole Forsgren, Jez Humble, Gene Kim. Published as the "State of DevOps" report (annual, 2014-2024) and the book "Accelerate" (2018). Acquired by Google Cloud (2018); now hosted at dora.dev.
+
+Four key metrics (the "DORA 4"):
+- Deploy frequency: how often the team deploys to production.
+- Lead time for changes: time from code commit to running in production.
+- Mean time to recovery (MTTR): time to recover from a production incident.
+- Change failure rate: % of deploys causing a production failure.
+
+Performance tiers (2024 report):
+- Elite: deploy on demand (multiple per day), lead time <1 hour, MTTR <1 hour, failure rate <5%.
+- High: 1 per day to 1 per week, 1 day to 1 week, <1 day, <10%.
+- Medium: 1/week to 1/month, 1/week to 1/month, <1 day, 10-15%.
+- Low: <1/month, >1 month, >1 week, >15%.
+
+DORA 2024 added a 5th metric: reliability (operational SLO conformance).
+
+SPACE (2021). Origin: Nicole Forsgren (post-DORA) + Microsoft Research + GitHub. Five dimensions:
+- Satisfaction: dev sentiment about tools, work, growth.
+- Performance: outcomes (DORA-like; reliability, quality).
+- Activity: counts (commits, PRs, deploys). USE WITH CAUTION; high gameability.
+- Communication and collaboration: handoffs, code review effectiveness.
+- Efficiency and flow: focus time, interruptions, blocked time.
+
+Key insight: NO SINGLE METRIC suffices. Always measure across multiple dimensions.
+
+DX Core 4 (2024). Origin: getdx.com (Abi Noda). Synthesizes DORA + SPACE.
+- Speed: lead time, PR cycle time, deploy frequency.
+- Quality: change failure rate, defect rate, code health.
+- Effectiveness: time spent on focused work, deep-work hours, perceived productivity.
+- Impact: business outcomes attributable to engineering.
+
+Goodhart's Law (Charles Goodhart, 1975): "When a measure becomes a target, it ceases to be a good measure."
+
+Examples of DX metric gaming:
+- Deploy frequency goal? Teams split one logical change into 10 trivial deploys.
+- PR throughput goal? Teams open many tiny PRs that don't add value.
+- Lead-time goal? Teams hide work behind feature flags.
+- Code review thoroughness goal? Reviewers rubber-stamp.
+
+Mitigations:
+- Always measure metrics in pairs (deploy frequency + change failure rate).
+- Measure outcomes AND inputs (satisfaction, focus time).
+- Use surveys for what counts can't capture.
+- Don't tie metrics to performance reviews. Use for system-level diagnosis.
+
+Surveys (the soft data):
+- DORA Quick Check (free): 5-question pulse on the four DORA metrics.
+- Internal NPS / DX surveys: quarterly. "How easy is it to get a code change into production?" 1-10 scale.
+- Westrum organizational culture survey (Ron Westrum, 2004): generative vs bureaucratic vs pathological. DORA found culture predicts performance.
+
+Instrumentation tools:
+- LinearB: pulls Git + Jira + CI data. PR cycle time, deploy frequency, branch hygiene. ~$50-100/dev/mo.
+- Code Climate Velocity: similar; some legacy users.
+- GitHub Insights: built into GitHub; basic.
+- Swarmia (Finnish): strong on flow + investment-balance dashboards. ~$50/dev/mo.
+- DX (getdx.com): combined surveys + instrumentation. Opinionated DX Core 4.
+- Jellyfish: exec-focused; investment categories.
+- Faros AI: open + commercial; broader engineering data graph.
+
+Choosing a framework:
+- Want industry-standard, outcome-focused → DORA.
+- Want holistic, research-backed → SPACE.
+- Want operational, dev-experience-focused → DX Core 4.
+- Most mature orgs use DORA + survey-based satisfaction layered together.
+
+Operational guidance:
+
+Survey design:
+- DORA Quick Check quarterly, all engineers.
+- Internal DX survey: 10-15 questions max. Mix Likert scales and open text. Run quarterly. Response target >60%.
+- Westrum culture annually.
+
+What to instrument first:
+1. PR cycle time (open → merged). High signal, easy.
+2. Deploy frequency.
+3. Lead time for changes (commit → prod).
+4. Change failure rate.
+5. MTTR.
+6. Focus time / deep-work hours (complex).
+
+Avoiding Goodhart's Law:
+1. Always measure metric pairs.
+2. Use metrics for system improvement, NEVER for individual evaluation.
+3. Triangulate hard data and surveys.
+4. Show the metric trend, not the snapshot.
+5. Talk to engineers about the metric.
+
+Common mistakes:
+- Tying DORA metrics to performance reviews.
+- Comparing teams without context.
+- Measuring activity instead of outcomes.
+- Ignoring satisfaction.
+- Survey fatigue (30-question quarterly).
+- Reporting metrics without ownership.
+
+Westrum culture as predictor: DORA's research consistently finds generative culture predicts performance better than tooling. Tooling investments without culture work = expensive, low-ROI.
+
+The deeper point: DX metrics are diagnostic instruments for SYSTEMS, not scorecards for INDIVIDUALS.`,
+        image: '/diagrams/devops/h5-dx-metrics.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Developer Experience Metrics.',
+        question: 'Quick-fire interview answers — Developer Experience Metrics.',
+        answer: `Rapid-fire facts.
+
+Q: Define DORA in one line.
+A: DevOps Research & Assessment. Four key metrics — deploy frequency, lead time, MTTR, change failure rate — researched by Forsgren, Humble, Kim since 2014. 5th metric (reliability) added 2024.
+
+Q: Define SPACE in one line.
+A: 2021 framework by Forsgren + Microsoft Research + GitHub. Five dimensions: Satisfaction, Performance, Activity, Communication, Efficiency.
+
+Q: Define DX Core 4 in one line.
+A: 2024 framework from getdx.com. Four dimensions: Speed, Quality, Effectiveness, Impact.
+
+Q: Elite DORA tier?
+A: Deploy on demand (multiple per day), lead time <1 hour, MTTR <1 hour, change failure rate <5%.
+
+Q: Low DORA tier?
+A: Deploy <1/month, lead time >1 month, MTTR >1 week, change failure rate >15%.
+
+Q: Goodhart's Law in one line?
+A: Charles Goodhart, 1975: "When a measure becomes a target, it ceases to be a good measure."
+
+Q: Most-gamed DX metric?
+A: Activity counts — commits, PRs, lines. SPACE paper explicitly warns.
+
+Q: Mitigation for Goodhart?
+A: Measure metric pairs, triangulate hard data + surveys, use for system improvement not individual evaluation.
+
+Q: DORA Quick Check?
+A: Free 5-question pulse at dora.dev. Quarterly cadence.
+
+Q: Westrum culture survey?
+A: Ron Westrum, 2004. Maps culture as generative / bureaucratic / pathological.
+
+Q: SPACE — why no single metric?
+A: Authors deliberately argue NO single metric suffices.
+
+Q: LinearB?
+A: SaaS DX instrumentation. Git + Jira + CI. ~$50-100/dev/mo.
+
+Q: Swarmia?
+A: Finnish DX vendor. Strong on flow + investment-balance.
+
+Q: DX (getdx.com)?
+A: Combined surveys + instrumentation. Opinionated DX Core 4 framework.
+
+Q: Should you tie DORA metrics to performance reviews?
+A: NEVER. Instant gaming.
+
+Q: First metric to instrument?
+A: PR cycle time (open → merged).
+
+Q: Lead time — what intervals?
+A: Commit → running in production. Includes review wait, build, test, deploy.
+
+Q: MTTR — what counts as recovered?
+A: User impact mitigated.
+
+Q: Change failure rate — what counts?
+A: Deploy that requires immediate hotfix, rollback, or causes user-visible incident.
+
+Q: Reliability (DORA's 5th)?
+A: SLO conformance. Added 2024.
+
+Q: Survey response target?
+A: >60%. Below 40% = sample bias.
+
+Q: How often run DX surveys?
+A: Quarterly. Same questions for trend. Annual Westrum culture.
+
+Q: Best book?
+A: "Accelerate" (Forsgren / Humble / Kim, 2018). SPACE paper (2021, IEEE). DX Core 4 white paper (2024).
+
+Q: One-line answer to "should we adopt a DX metrics program?"
+A: Yes if >50 engineers and want to invest in platform / DX. Start with DORA + quarterly internal DX survey.
+
+These are answers a platform-engineering-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://dora.dev/',
+      'https://queue.acm.org/detail.cfm?id=3454124',
+      'https://getdx.com/research/measuring-developer-productivity-real-world-examples',
+      'https://itrevolution.com/product/accelerate/',
+      'https://linearb.io/dora-metrics',
+      'https://swarmia.com/blog/dora-metrics/',
+    ],
+  },
+
 ];
