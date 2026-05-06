@@ -567,7 +567,7 @@
 .badge-new { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; color: var(--success); background: rgba(70,167,88,0.12); border: 1px solid rgba(70,167,88,0.25); text-transform: uppercase; }
 
 /* Pills */
-.pill { font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+.pill { font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; transition: border-color 0.15s ease-out, color 0.15s ease-out, background-color 0.15s ease-out; }
 .pill:hover { border-color: var(--border-hover); color: var(--text-primary); }
 
 /* Section label */
@@ -680,7 +680,17 @@
   /* Buttons */
   .btn {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-sans text-sm font-medium cursor-pointer whitespace-nowrap;
-    border-radius: 8px; border: 1px solid transparent; transition: all 0.15s ease-out;
+    border-radius: 8px; border: 1px solid transparent;
+    /* Named props instead of `all` so layout-property changes (height,
+       width, padding) never accidentally animate. transform is included
+       for the :active scale, box-shadow for hover lift on subclasses. */
+    transition:
+      background-color 0.15s ease-out,
+      color 0.15s ease-out,
+      border-color 0.15s ease-out,
+      opacity 0.15s ease-out,
+      box-shadow 0.15s ease-out,
+      transform 0.15s ease-out;
   }
   .btn:active { transform: scale(0.97); }
   .btn:focus-visible { outline: 2px solid rgba(45,140,255,0.5); outline-offset: 2px; }

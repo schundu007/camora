@@ -3,6 +3,7 @@ import { Link, useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
+import { Icon } from '../components/shared/Icons';
 
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -5755,7 +5756,7 @@ export default function Blind75PracticePage() {
       <div style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link to="/handbook" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 500 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            <Icon name="chevronLeft" size={14} aria-hidden="true" />
             Blind 75
           </Link>
           <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.25)' }} />
@@ -5771,7 +5772,7 @@ export default function Blind75PracticePage() {
           <button onClick={() => setActiveTab('solution')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, cursor: 'pointer', border: 'none',
             background: activeTab === 'solution' ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.1)', color: activeTab === 'solution' ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)' }}>Solution</button>
           <a href={problem.leetcode} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.25)', background: 'transparent', color: 'rgba(255,255,255,0.85)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-            LeetCode <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg>
+            LeetCode <Icon name="externalLink" size={9} aria-hidden="true" />
           </a>
         </div>
       </div>
