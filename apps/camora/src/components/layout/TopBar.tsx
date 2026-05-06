@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import UserDropdown from '../shared/UserDropdown';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../hooks/useTheme';
@@ -21,6 +21,8 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
   const [cmdOpen, setCmdOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const isLanding = location.pathname === '/' || location.pathname === '/landing';
   const isNavActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
 
   // Close mobile dropdown on route change or Escape.
@@ -74,6 +76,27 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <Link to="/" className="flex items-center gap-2.5 no-underline" aria-label="Camora — home">
             <CamoraLogo size={32} />
           </Link>
+
+          {/* Back — every Capra page (Prepare / Practice / Apply / Resume /
+              Plan / etc.) was missing this affordance, so the only way back
+              from a topic to the previous list view was to either hit the
+              Camora logo (lands on landing) or use the browser's back button
+              (which doesn't exist in the Electron desktop build).
+              navigate(-1) with a "/" fallback for cold launches. */}
+          {!isLanding && (
+            <button
+              type="button"
+              onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
+              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[12px] font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+              title="Back"
+              aria-label="Back"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              <span>Back</span>
+            </button>
+          )}
 
           {/* Nav links — desktop only (hide Pricing & Challenge in app shell).
               Active link gets a lapis-tinted pill with a subtle inset
