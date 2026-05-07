@@ -1,0 +1,73 @@
+{
+  "title": "Twitter Feed — Hybrid Fanout (Advanced)",
+  "subtitle": "Push for regular users, pull-on-read for celebrities",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "user",
+          "label": "User\nPosts Tweet",
+          "kind": "actor"
+        },
+        {
+          "id": "tweet-svc",
+          "label": "Tweet Service\nStore tweet\nCheck follower count",
+          "kind": "service"
+        },
+        {
+          "id": "branch",
+          "label": "Followers > 10K?",
+          "kind": "decision"
+        },
+        {
+          "id": "fanout",
+          "label": "Fanout Worker\nFetch follower IDs\nLPUSH to each timeline",
+          "kind": "worker"
+        },
+        {
+          "id": "timeline",
+          "label": "Timeline Service (read)\n1. LRANGE timeline:{user} 0 99\n2. Fetch celebrity tweets\n3. Merge + sort by timestamp",
+          "kind": "service"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "branch",
+      "nodes": [
+        {
+          "id": "celeb-store",
+          "label": "Celebrity Tweet Store\nStore in celebrity cache only\n(no fanout on write)",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    { "from": "celeb-store", "to": "timeline", "label": "fetched on demand", "style": "dashed" }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Redis cache keys",
+      "lang": "redis",
+      "body": "# Regular user timeline (fanout on write)\ntimeline:user123  → [tweetId9, tweetId8, …, tweetId1]\n\n# Celebrity cache (no fanout)\nceleb:tweets:elonmusk  → sorted set (score = timestamp)\n\n# Follower threshold check\nGET follower_count:userId  → \"18500\"  (celebrity!)"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Tradeoffs",
+      "pros": [
+        "Eliminates celebrity write amplification",
+        "Regular users: O(1) read (just LRANGE)",
+        "Celebrities: far fewer total writes"
+      ],
+      "cons": [
+        "Read path more complex (must merge two sources)",
+        "Slight latency increase for reads (celebrity fetch)",
+        "Threshold boundary (9.9K vs 10K followers) can be inconsistent"
+      ]
+    }
+  ]
+}
