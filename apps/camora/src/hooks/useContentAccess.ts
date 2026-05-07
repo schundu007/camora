@@ -72,10 +72,14 @@ export function useContentAccess() {
     return isPaidUser || loadedCategories.has(category);
   }, [isPaidUser, loadedCategories]);
 
+  // Pure read — never triggers a fetch. Prefetch happens on mount via the
+  // useEffect above. Calling fetchCategory from here was a setState path
+  // executed during render (consumers like DocsPage call this synchronously
+  // when computing `isLocked` props), which cascaded into React error #300
+  // ("Maximum update depth exceeded") on scroll-heavy surfaces.
   const getReadTopicIds = useCallback((category: Category): string[] => {
-    if (!isCategoryLoaded(category)) fetchCategory(category);
     return topicsMap[category] || [];
-  }, [topicsMap, isCategoryLoaded, fetchCategory]);
+  }, [topicsMap]);
 
   const getReadCount = useCallback((category: Category): number => {
     return getReadTopicIds(category).length;
@@ -88,15 +92,16 @@ export function useContentAccess() {
   const canReadTopic = useCallback((category: Category, topicId: string): boolean => {
     if (subscriptionLoading) return true; // Don't lock while checking subscription
     if (isPaidUser) return true;
-    // If category not loaded from server yet, lock by default (safe side)
-    if (!isCategoryLoaded(category)) {
-      fetchCategory(category);
-      return false; // Locked until server confirms
-    }
+    // If category not loaded from server yet, default UNLOCKED so we don't
+    // flash a lock on first paint. The mount-time prefetch (above) populates
+    // the map shortly after; a subsequent render will lock if appropriate.
+    // Previous behavior called fetchCategory(category) here as a render-time
+    // side effect, which was the React #300 trigger on scroll.
+    if (!isCategoryLoaded(category)) return true;
     const readList = topicsMap[category] || [];
     if (readList.includes(topicId)) return true; // Already read
     return readList.length < getFreeLimitForCategory(category);
-  }, [isPaidUser, subscriptionLoading, topicsMap, isCategoryLoaded, fetchCategory]);
+  }, [isPaidUser, subscriptionLoading, topicsMap, isCategoryLoaded]);
 
   const isTopicLocked = useCallback((category: Category, topicId: string): boolean => {
     if (subscriptionLoading) return false; // Don't flash locks while loading

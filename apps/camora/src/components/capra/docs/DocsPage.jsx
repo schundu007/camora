@@ -51,10 +51,13 @@ import { ROLE_TOPIC_MAP, ONBOARDING_ROLE_TO_TOPIC_KEY } from '../../../data/capr
 // activePage. See loader.js for the chunk boundaries.
 import { loadTopicsForPage } from '../../../data/capra/topics/loader.js';
 
-// TopicDetail is 3.5k lines and only renders when a topic is selected.
-// Lazy-load it so the initial DocsPage bundle (browse + listing surface)
-// doesn't carry the entire topic-detail rendering tree as dead weight.
-const TopicDetail = lazy(() => import('./TopicDetail.jsx'));
+// REVERTED from lazy() — the lazy + Suspense boundary appeared to
+// interact with the scroll-spy + repeated React renders to trigger
+// React error #300 (Maximum update depth exceeded) on scroll. The
+// 466KB -> 22KB browse-chunk win wasn't worth users hitting the
+// "Something broke" page. Re-introduce only after the underlying
+// render-loop cause is found and fixed.
+import TopicDetail from './TopicDetail.jsx';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 

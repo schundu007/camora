@@ -48,6 +48,21 @@ export default function ZoomableImage({
   const [open, setOpen] = useState(false);
   const [broken, setBroken] = useState(false);
 
+  // Esc to close + body scroll lock while modal open — must be before any early return.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open]);
+
   if (broken) {
     return (
       <div
@@ -66,21 +81,6 @@ export default function ZoomableImage({
       </div>
     );
   }
-
-  // Esc to close + body scroll lock while modal open.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('keydown', onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [open]);
 
   return (
     <>

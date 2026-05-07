@@ -51,7 +51,12 @@ export default function OnThisPage({
           current = item.id;
         }
       }
-      setActiveId(current ?? items[0].id);
+      const next = current ?? items[0].id;
+      // Functional updater + equality guard. Without this, an unstable
+      // `items` prop would re-attach the listener and call handler() on
+      // every render, feeding React error #300 ("Maximum update depth
+      // exceeded") on scroll. This makes the leaf setState idempotent.
+      setActiveId((prev) => (prev === next ? prev : next));
     };
 
     handler();
