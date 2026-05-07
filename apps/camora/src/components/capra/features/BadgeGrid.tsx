@@ -128,7 +128,7 @@ export default function BadgeGrid() {
 
   if (loading) {
     return (
-      <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+      <div className="rounded-2xl p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="animate-pulse space-y-4">
           <div className="h-5 bg-[var(--bg-elevated)] rounded w-32" />
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
@@ -143,14 +143,14 @@ export default function BadgeGrid() {
 
   if (error) {
     return (
-      <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+      <div className="rounded-2xl p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <p className="text-sm text-red-500">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl p-6 space-y-5" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', border: '1px solid rgba(56,189,248,0.12)', boxShadow: '0 1px 4px rgba(56,189,248,0.06)' }}>
+    <div className="rounded-2xl p-6 space-y-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div>
         <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Badges</h3>
         <p className="text-sm text-[var(--text-muted)] mt-1">
@@ -174,7 +174,7 @@ export default function BadgeGrid() {
           >
             {/* Lock overlay for unearned badges */}
             {!badge.earned && (
-              <div className="absolute inset-0 flex items-center justify-center rounded-xl" style={{ background: 'rgba(221,233,247,0.55)' }}>
+              <div className="absolute inset-0 flex items-center justify-center rounded-xl" style={{ background: 'color-mix(in srgb, var(--bg-elevated) 65%, transparent)' }}>
                 <svg className="w-5 h-5" fill="var(--text-dimmed)" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                 </svg>

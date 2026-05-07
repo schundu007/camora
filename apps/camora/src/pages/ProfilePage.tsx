@@ -304,7 +304,7 @@ export default function ProfilePage() {
       {/* LeetCode hero — navy band w/ diagonal cut */}
       <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
-        <div className="relative max-w-3xl mx-auto px-6 pt-24 pb-16">
+        <div className="relative mx-auto px-6 pt-24 pb-16" style={{ maxWidth: 'var(--page-max, 1280px)' }}>
           <h1 className="text-3xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>Your <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Profile</span></h1>
           <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>{user?.email || 'Manage account, achievements, and referrals'}</p>
         </div>
@@ -313,7 +313,7 @@ export default function ProfilePage() {
         </svg>
       </section>
 
-      <div className="max-w-3xl mx-auto px-6 pt-8 pb-20 flex-1">
+      <div className="mx-auto px-6 pt-8 pb-20 flex-1 w-full" style={{ maxWidth: 'var(--page-max, 1280px)' }}>
 
         {/* Tabs */}
         <div className="flex items-center gap-6 mb-8 border-b border-[var(--border)]">
