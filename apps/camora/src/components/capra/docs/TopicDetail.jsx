@@ -552,7 +552,7 @@ export default function TopicDetail({
   // previously caused error #300 because the hook returned a new plain
   // object literal every render, making this effect fire every render.
   const contentAccessRef = useRef(contentAccess);
-  useEffect(() => { contentAccessRef.current = contentAccess; });
+  contentAccessRef.current = contentAccess; // sync ref update — avoids a no-deps effect that ran every render
   const lastReadRef = useRef(null);
   useEffect(() => {
     const key = `${activePage}::${selectedTopic}`;
