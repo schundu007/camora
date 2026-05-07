@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,6 +11,10 @@ import {
   FeatureLiveAIAnim, FeatureJobMatchAnim, FeaturePrepAnim, FeatureMockInterviewAnim,
 } from '../components/landing/CardAnimations';
 import CapabilityDeck from '../components/landing/CapabilityDeck';
+import LiveSessionPreview from '../components/landing/LiveSessionPreview';
+import VisitorCountLine from '../components/landing/VisitorCountLine';
+import SkillDrift from '../components/landing/SkillDrift';
+import MagneticCTA from '../components/landing/MagneticCTA';
 import { Container, Section, Eyebrow, SectionHeading, CTAButton, SurfaceCard, Pill } from '../components/marketing/primitives';
 import { cn } from '../utils/cn';
 
@@ -115,15 +119,6 @@ const HIGHLIGHTS = [
 ];
 
 /* ── Hooks ────────────────────────────────────────────── */
-function useVisitorCount() {
-  const [count, setCount] = useState<number | null>(null);
-  useEffect(() => {
-    const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
-    fetch(`${API}/api/visitors/unique-count`).then(r => r.json()).then(d => setCount(d.total)).catch(() => {});
-  }, []);
-  return count;
-}
-
 function Reveal({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   return (
     <motion.div
@@ -144,7 +139,6 @@ function Reveal({ children, className, delay = 0 }: { children: React.ReactNode;
 /* ════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
-  const visitorCount = useVisitorCount();
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
   useEffect(() => {
@@ -230,59 +224,32 @@ export default function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.28, delay: 0.16, ease: [0.23, 1, 0.32, 1] }}
               >
-                <CTAButton to={heroCtaHref} variant="inverse-primary" size="lg" trailingArrow>
-                  {heroCta}
-                </CTAButton>
-                <CTAButton to="/pricing" variant="inverse-secondary" size="lg">
-                  View pricing
-                </CTAButton>
+                <MagneticCTA strength={6}>
+                  <CTAButton to={heroCtaHref} variant="inverse-primary" size="lg" trailingArrow>
+                    {heroCta}
+                  </CTAButton>
+                </MagneticCTA>
+                <MagneticCTA strength={4}>
+                  <CTAButton to="/pricing" variant="inverse-secondary" size="lg">
+                    View pricing
+                  </CTAButton>
+                </MagneticCTA>
               </motion.div>
 
-              {visitorCount !== null && visitorCount > 0 && (
-                <motion.p className="mt-7 text-[13px] text-white/55" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.24, delay: 0.22, ease: [0.23, 1, 0.32, 1] }}>
-                  Trusted by <strong className="text-white font-semibold">{visitorCount.toLocaleString()}+</strong> engineers worldwide
-                </motion.p>
-              )}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.24, delay: 0.22, ease: [0.23, 1, 0.32, 1] }}>
+                <VisitorCountLine />
+              </motion.div>
             </div>
 
-            {/* Right: live session preview */}
+            {/* Right: live session preview (extracted + memoized so its
+                perpetual motion never re-renders the landing tree) */}
             <motion.div
               className="hidden lg:block"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.40, delay: 0.18, ease: [0.23, 1, 0.32, 1] }}
             >
-              <div className="rounded-2xl border border-white/10 overflow-hidden" style={{ background: 'rgba(10,18,40,0.85)' }}>
-                <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.08]">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-green-400" style={{ boxShadow: '0 0 6px rgba(74,222,128,0.55)' }} />
-                    <span className="text-[10px] font-mono text-white/45 tracking-[0.14em] uppercase">Sona · Live session</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-white/28">00:03:42</span>
-                </div>
-
-                <div className="p-4 space-y-3">
-                  <div className="rounded-xl border border-white/[0.08] p-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                    <p className="text-[9px] font-mono text-white/35 mb-1.5 uppercase tracking-[0.12em]">Interviewer</p>
-                    <p className="text-[12.5px] text-white/80 leading-relaxed">Design a rate limiter handling 10M requests per day across multiple data centers.</p>
-                  </div>
-
-                  <div className="rounded-xl border p-3" style={{ background: 'rgba(201,162,39,0.07)', borderColor: 'rgba(201,162,39,0.2)' }}>
-                    <p className="text-[9px] font-mono mb-1.5 uppercase tracking-[0.12em]" style={{ color: 'rgba(201,162,39,0.65)' }}>Sona</p>
-                    <p className="text-[12.5px] text-white/90 leading-relaxed">Token bucket at the API gateway. Redis tracks per-user counters with sliding-window TTL. For multi-DC: replicate via pub/sub with eventual consistency, accept slight over-counting at boundaries.</p>
-                    <div className="mt-2.5 flex flex-wrap gap-1.5">
-                      <span className="text-[9px] font-mono text-white/40 rounded-full px-2 py-0.5 border border-white/[0.08]" style={{ background: 'rgba(255,255,255,0.05)' }}>Architecture</span>
-                      <span className="text-[9px] font-mono text-white/40 rounded-full px-2 py-0.5 border border-white/[0.08]" style={{ background: 'rgba(255,255,255,0.05)' }}>Scalability</span>
-                      <span className="text-[9px] font-mono text-white/40 rounded-full px-2 py-0.5 border border-white/[0.08]" style={{ background: 'rgba(255,255,255,0.05)' }}>Draw diagram</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between px-4 py-2.5 border-t border-white/[0.08]" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                  <span className="text-[9px] font-mono text-white/28">Voice captured · transcribed in 0.4s</span>
-                  <span className="text-[9px] font-mono" style={{ color: 'rgba(74,222,128,0.7)' }}>Answer ready</span>
-                </div>
-              </div>
+              <LiveSessionPreview />
             </motion.div>
 
           </div>
@@ -466,19 +433,10 @@ export default function LandingPage() {
             </div>
           </Reveal>
 
-          {/* Skills — minor visual rhythm */}
+          {/* Skills — drift marquee so the row reads as alive vs static. */}
           <Reveal className="mt-10 text-center">
             <Eyebrow>Skills you'll master</Eyebrow>
-            <div className="mt-4 mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-2">
-              {SKILLS.map((s) => (
-                <span
-                  key={s}
-                  className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1 font-mono text-[11px] font-semibold tracking-wide text-[var(--text-primary)] transition-colors hover:border-[var(--cam-primary)] hover:text-[var(--cam-primary)]"
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
+            <SkillDrift skills={SKILLS} />
           </Reveal>
         </Container>
       </Section>
@@ -567,12 +525,16 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <CTAButton to={heroCtaHref} variant="inverse-primary" size="lg" trailingArrow>
-                  {heroCta}
-                </CTAButton>
-                <CTAButton to="/pricing" variant="inverse-secondary" size="lg">
-                  See pricing
-                </CTAButton>
+                <MagneticCTA strength={6}>
+                  <CTAButton to={heroCtaHref} variant="inverse-primary" size="lg" trailingArrow>
+                    {heroCta}
+                  </CTAButton>
+                </MagneticCTA>
+                <MagneticCTA strength={4}>
+                  <CTAButton to="/pricing" variant="inverse-secondary" size="lg">
+                    See pricing
+                  </CTAButton>
+                </MagneticCTA>
               </div>
             </div>
           </div>
