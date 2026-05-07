@@ -1,0 +1,62 @@
+{
+  "title": "Twitter Feed — Fanout on Write (Basic)",
+  "subtitle": "Pre-compute every follower's timeline at write time",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "user",
+          "label": "User\nPosts Tweet",
+          "kind": "actor"
+        },
+        {
+          "id": "tweet-svc",
+          "label": "Tweet Service\nValidate (280 chars)\nSnowflake ID gen",
+          "kind": "service"
+        },
+        {
+          "id": "fanout",
+          "label": "Fanout Worker\nFetch follower list\nLPUSH to each follower",
+          "kind": "worker"
+        },
+        {
+          "id": "redis",
+          "label": "Redis Timelines\nKey: timeline:{userId}\nLPUSH tweetId\nLTRIM 0 799",
+          "kind": "datastore"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "tweet-svc",
+      "nodes": [
+        {
+          "id": "tweet-db",
+          "label": "Tweet DB\nMySQL sharded by userId",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "API · POST /api/tweets",
+      "lang": "json",
+      "body": "POST /api/tweets\n{ \"content\": \"Hello world!\", \"userId\": \"user123\" }\n→ { \"tweetId\": \"1234567890\", \"createdAt\": \"...\" }\n\nFanout (one LPUSH per follower):\n  LPUSH timeline:follower1 1234567890\n  LPUSH timeline:follower2 1234567890\n  …  × N followers"
+    },
+    {
+      "kind": "code",
+      "title": "Read path (timeline fetch)",
+      "lang": "redis",
+      "body": "LRANGE timeline:123 0 99\n→ [tweetId1, tweetId2, …, tweetId100]\n\nHydrate from Tweet DB:\n  SELECT * FROM tweets WHERE id IN (...)"
+    },
+    {
+      "kind": "issue",
+      "title": "Why this breaks at scale",
+      "body": "Celebrity problem: @elonmusk has 100M followers\n  → ONE tweet = 100M Redis LPUSH writes\n  → Timeline service overwhelmed for seconds–minutes\n  → Followers see delayed or missing tweets\n\nWasted storage: 10M inactive users still get timeline writes\n\nNeeded: hybrid fanout (see Advanced)"
+    }
+  ]
+}

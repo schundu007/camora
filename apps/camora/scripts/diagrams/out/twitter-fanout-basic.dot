@@ -1,0 +1,38 @@
+digraph G {
+  bgcolor="#0E1117";
+  rankdir=LR;
+  ranksep=0.55;
+  nodesep=0.45;
+  splines=ortho;
+  fontname="Inter, Helvetica";
+  labelloc="t";
+  label=<<FONT POINT-SIZE="20" COLOR="#E6E9F0"><B>Twitter Feed — Fanout on Write (Basic)</B></FONT><BR/><FONT POINT-SIZE="13" COLOR="#9AA4B8">Pre-compute every follower's timeline at write time</FONT>>;
+
+  node [fontname="Inter, Helvetica", fontsize=12, style="filled,rounded", penwidth=1.5, margin="0.18,0.14"];
+  edge [fontname="Inter, Helvetica", fontsize=11, color="#5C6680", fontcolor="#9AA4B8", penwidth=1.6, arrowsize=0.8];
+
+  // main flow lane
+  { rank=same;
+    "user" [label=<<B>User</B><BR/><FONT POINT-SIZE="11">Posts Tweet</FONT>>, shape=box, fillcolor="#F59E0B", color="#B45309", fontcolor="#1A1208"];
+    "tweet-svc" [label=<<B>Tweet Service</B><BR/><FONT POINT-SIZE="11">Validate (280 chars)</FONT><BR/><FONT POINT-SIZE="11">Snowflake ID gen</FONT>>, shape=box, fillcolor="#3B82F6", color="#1E40AF", fontcolor="#F8FAFF"];
+    "fanout" [label=<<B>Fanout Worker</B><BR/><FONT POINT-SIZE="11">Fetch follower list</FONT><BR/><FONT POINT-SIZE="11">LPUSH to each follower</FONT>>, shape=box, fillcolor="#A855F7", color="#6B21A8", fontcolor="#FAF5FF"];
+    "redis" [label=<<B>Redis Timelines</B><BR/><FONT POINT-SIZE="11">Key: timeline:{userId}</FONT><BR/><FONT POINT-SIZE="11">LPUSH tweetId</FONT><BR/><FONT POINT-SIZE="11">LTRIM 0 799</FONT>>, shape=cylinder, fillcolor="#10B981", color="#065F46", fontcolor="#F0FDF8"];
+  }
+  "user" -> "tweet-svc";
+  "tweet-svc" -> "fanout";
+  "fanout" -> "redis";
+
+  // side branch off "tweet-svc"
+  "tweet-db" [label=<<B>Tweet DB</B><BR/><FONT POINT-SIZE="11">MySQL sharded by userId</FONT>>, shape=cylinder, fillcolor="#10B981", color="#065F46", fontcolor="#F0FDF8"];
+  "tweet-svc" -> "tweet-db" [style=dashed];
+
+  // info panels
+  { rank=sink;
+    "__panel_0" [shape=plain, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="#0F1923" STYLE="rounded"><TR><TD CELLPADDING="0"><TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD ALIGN="LEFT" BGCOLOR="#0B5394" CELLPADDING="8"><FONT FACE="Inter, Helvetica" POINT-SIZE="13" COLOR="#FFFFFF"><B>API · POST /api/tweets</B></FONT></TD></TR><TR><TD ALIGN="LEFT" CELLPADDING="10"><FONT FACE="JetBrains Mono, Menlo, Consolas" POINT-SIZE="11" COLOR="#E6E9F0">POST /api/tweets<BR ALIGN="LEFT"/>{ &quot;content&quot;: &quot;Hello world!&quot;, &quot;userId&quot;: &quot;user123&quot; }<BR ALIGN="LEFT"/>→ { &quot;tweetId&quot;: &quot;1234567890&quot;, &quot;createdAt&quot;: &quot;...&quot; }<BR ALIGN="LEFT"/><BR ALIGN="LEFT"/>Fanout (one LPUSH per follower):<BR ALIGN="LEFT"/>&nbsp;&nbsp;LPUSH timeline:follower1 1234567890<BR ALIGN="LEFT"/>&nbsp;&nbsp;LPUSH timeline:follower2 1234567890<BR ALIGN="LEFT"/>&nbsp;&nbsp;…  × N followers<BR ALIGN="LEFT"/></FONT></TD></TR></TABLE></TD></TR></TABLE>>];
+    "__panel_1" [shape=plain, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="#0F1923" STYLE="rounded"><TR><TD CELLPADDING="0"><TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD ALIGN="LEFT" BGCOLOR="#0B5394" CELLPADDING="8"><FONT FACE="Inter, Helvetica" POINT-SIZE="13" COLOR="#FFFFFF"><B>Read path (timeline fetch)</B></FONT></TD></TR><TR><TD ALIGN="LEFT" CELLPADDING="10"><FONT FACE="JetBrains Mono, Menlo, Consolas" POINT-SIZE="11" COLOR="#E6E9F0">LRANGE timeline:123 0 99<BR ALIGN="LEFT"/>→ [tweetId1, tweetId2, …, tweetId100]<BR ALIGN="LEFT"/><BR ALIGN="LEFT"/>Hydrate from Tweet DB:<BR ALIGN="LEFT"/>&nbsp;&nbsp;SELECT * FROM tweets WHERE id IN (...)<BR ALIGN="LEFT"/></FONT></TD></TR></TABLE></TD></TR></TABLE>>];
+    "__panel_2" [shape=plain, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="#0F1923" STYLE="rounded"><TR><TD CELLPADDING="0"><TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD ALIGN="LEFT" BGCOLOR="#7F1D1D" CELLPADDING="8"><FONT FACE="Inter, Helvetica" POINT-SIZE="13" COLOR="#FFFFFF"><B>Why this breaks at scale</B></FONT></TD></TR><TR><TD ALIGN="LEFT" CELLPADDING="10"><FONT FACE="Inter, Helvetica" POINT-SIZE="12" COLOR="#E6E9F0">Celebrity problem: @elonmusk has 100M followers<BR ALIGN="LEFT"/>&nbsp;&nbsp;→ ONE tweet = 100M Redis LPUSH writes<BR ALIGN="LEFT"/>&nbsp;&nbsp;→ Timeline service overwhelmed for seconds–minutes<BR ALIGN="LEFT"/>&nbsp;&nbsp;→ Followers see delayed or missing tweets<BR ALIGN="LEFT"/><BR ALIGN="LEFT"/>Wasted storage: 10M inactive users still get timeline writes<BR ALIGN="LEFT"/><BR ALIGN="LEFT"/>Needed: hybrid fanout (see Advanced)<BR ALIGN="LEFT"/></FONT></TD></TR></TABLE></TD></TR></TABLE>>];
+  }
+  "user" -> "__panel_0" [style=invis, weight=0];
+  "user" -> "__panel_1" [style=invis, weight=0];
+  "user" -> "__panel_2" [style=invis, weight=0];
+}

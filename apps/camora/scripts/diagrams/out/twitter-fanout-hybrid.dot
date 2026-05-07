@@ -1,0 +1,40 @@
+digraph G {
+  bgcolor="#0E1117";
+  rankdir=LR;
+  ranksep=0.55;
+  nodesep=0.45;
+  splines=ortho;
+  fontname="Inter, Helvetica";
+  labelloc="t";
+  label=<<FONT POINT-SIZE="20" COLOR="#E6E9F0"><B>Twitter Feed — Hybrid Fanout (Advanced)</B></FONT><BR/><FONT POINT-SIZE="13" COLOR="#9AA4B8">Push for regular users, pull-on-read for celebrities</FONT>>;
+
+  node [fontname="Inter, Helvetica", fontsize=12, style="filled,rounded", penwidth=1.5, margin="0.18,0.14"];
+  edge [fontname="Inter, Helvetica", fontsize=11, color="#5C6680", fontcolor="#9AA4B8", penwidth=1.6, arrowsize=0.8];
+
+  // main flow lane
+  { rank=same;
+    "user" [label=<<B>User</B><BR/><FONT POINT-SIZE="11">Posts Tweet</FONT>>, shape=box, fillcolor="#F59E0B", color="#B45309", fontcolor="#1A1208"];
+    "tweet-svc" [label=<<B>Tweet Service</B><BR/><FONT POINT-SIZE="11">Store tweet</FONT><BR/><FONT POINT-SIZE="11">Check follower count</FONT>>, shape=box, fillcolor="#3B82F6", color="#1E40AF", fontcolor="#F8FAFF"];
+    "branch" [label=Followers &gt; 10K?, shape=diamond, fillcolor="#EAB308", color="#854D0E", fontcolor="#1A1208"];
+    "fanout" [label=<<B>Fanout Worker</B><BR/><FONT POINT-SIZE="11">Fetch follower IDs</FONT><BR/><FONT POINT-SIZE="11">LPUSH to each timeline</FONT>>, shape=box, fillcolor="#A855F7", color="#6B21A8", fontcolor="#FAF5FF"];
+    "timeline" [label=<<B>Timeline Service (read)</B><BR/><FONT POINT-SIZE="11">1. LRANGE timeline:{user} 0 99</FONT><BR/><FONT POINT-SIZE="11">2. Fetch celebrity tweets</FONT><BR/><FONT POINT-SIZE="11">3. Merge + sort by timestamp</FONT>>, shape=box, fillcolor="#3B82F6", color="#1E40AF", fontcolor="#F8FAFF"];
+  }
+  "user" -> "tweet-svc";
+  "tweet-svc" -> "branch";
+  "branch" -> "fanout";
+  "fanout" -> "timeline";
+
+  // side branch off "branch"
+  "celeb-store" [label=<<B>Celebrity Tweet Store</B><BR/><FONT POINT-SIZE="11">Store in celebrity cache only</FONT><BR/><FONT POINT-SIZE="11">(no fanout on write)</FONT>>, shape=cylinder, fillcolor="#10B981", color="#065F46", fontcolor="#F0FDF8"];
+  "branch" -> "celeb-store" [style=dashed];
+
+  "celeb-store" -> "timeline" [label="fetched on demand", style=dashed];
+
+  // info panels
+  { rank=sink;
+    "__panel_0" [shape=plain, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="#0F1923" STYLE="rounded"><TR><TD CELLPADDING="0"><TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD ALIGN="LEFT" BGCOLOR="#0B5394" CELLPADDING="8"><FONT FACE="Inter, Helvetica" POINT-SIZE="13" COLOR="#FFFFFF"><B>Redis cache keys</B></FONT></TD></TR><TR><TD ALIGN="LEFT" CELLPADDING="10"><FONT FACE="JetBrains Mono, Menlo, Consolas" POINT-SIZE="11" COLOR="#E6E9F0"># Regular user timeline (fanout on write)<BR ALIGN="LEFT"/>timeline:user123  → [tweetId9, tweetId8, …, tweetId1]<BR ALIGN="LEFT"/><BR ALIGN="LEFT"/># Celebrity cache (no fanout)<BR ALIGN="LEFT"/>celeb:tweets:elonmusk  → sorted set (score = timestamp)<BR ALIGN="LEFT"/><BR ALIGN="LEFT"/># Follower threshold check<BR ALIGN="LEFT"/>GET follower_count:userId  → &quot;18500&quot;  (celebrity!)<BR ALIGN="LEFT"/></FONT></TD></TR></TABLE></TD></TR></TABLE>>];
+    "__panel_1" [shape=plain, label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" BGCOLOR="#0F1923" STYLE="rounded"><TR><TD CELLPADDING="0"><TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD ALIGN="LEFT" BGCOLOR="#92400E" CELLPADDING="8"><FONT FACE="Inter, Helvetica" POINT-SIZE="13" COLOR="#FFFFFF"><B>Tradeoffs</B></FONT></TD></TR><TR><TD ALIGN="LEFT" CELLPADDING="6"><FONT FACE="Inter, Helvetica" POINT-SIZE="11" COLOR="#FBBF24">+ </FONT><FONT FACE="Inter, Helvetica" POINT-SIZE="11" COLOR="#E6E9F0">Eliminates celebrity write amplification</FONT></TD></TR><TR><TD ALIGN="LEFT" CELLPADDING="6"><FONT FACE="Inter, Helvetica" POINT-SIZE="11" COLOR="#FBBF24">+ </FONT><FONT FACE="Inter, Helvetica" POINT-SIZE="11" COLOR="#E6E9F0">Regular users: O(1) read (just LRANGE)</FONT></TD></TR><TR><TD ALIGN="LEFT" CELLPADDING="6"><FONT FACE="Inter, Helvetica" POINT-SIZE="11" COLOR="#FBBF24">+ </FONT><FONT FACE="Inter, Helvetica" POINT-SIZE="11" COLOR="#E6E9F0">Celebrities: far fewer total writes</FONT></TD></TR><TR><TD ALIGN="LEFT" CELLPADDING="6"><FONT FACE="Inter, Helvetica" POINT-SIZE="11" COLOR="#F87171">− </FONT><FONT FACE="Inter, Helvetica" POINT-SIZE="11" COLOR="#E6E9F0">Read path more complex (must merge two sources)</FONT></TD></TR><TR><TD ALIGN="LEFT" CELLPADDING="6"><FONT FACE="Inter, Helvetica" POINT-SIZE="11" COLOR="#F87171">− </FONT><FONT FACE="Inter, Helvetica" POINT-SIZE="11" COLOR="#E6E9F0">Slight latency increase for reads (celebrity fetch)</FONT></TD></TR><TR><TD ALIGN="LEFT" CELLPADDING="6"><FONT FACE="Inter, Helvetica" POINT-SIZE="11" COLOR="#F87171">− </FONT><FONT FACE="Inter, Helvetica" POINT-SIZE="11" COLOR="#E6E9F0">Threshold boundary (9.9K vs 10K followers) can be inconsistent</FONT></TD></TR></TABLE></TD></TR></TABLE>>];
+  }
+  "user" -> "__panel_0" [style=invis, weight=0];
+  "user" -> "__panel_1" [style=invis, weight=0];
+}
