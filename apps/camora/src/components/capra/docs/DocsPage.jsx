@@ -685,6 +685,7 @@ export default function DocsPage({ onBack }) {
               headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
               body: JSON.stringify({ question, cloudProvider: provider, detailLevel: diagramDetailLevel }),
             });
+            if (res.status === 429) break; // rate limited — stop trying candidates
             const data = await res.json();
             if (data.success && !cancelled) {
               const imgUrl = data.image_url ? (data.image_url.startsWith('http') ? data.image_url : `${API_URL}${data.image_url}`) : null;
