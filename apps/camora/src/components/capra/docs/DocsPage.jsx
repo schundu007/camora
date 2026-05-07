@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile';
 import { useAppShell } from '../layout/AppShellContext';
@@ -295,7 +295,7 @@ export default function DocsPage({ onBack }) {
     setShowAllContent(false);
   };
 
-  const setSelectedTopic = (topic) => {
+  const setSelectedTopic = useCallback((topic) => {
     setSelectedTopicState(topic);
     // Reset Ask AI state when switching topics
     setAiQuestion('');
@@ -315,7 +315,7 @@ export default function DocsPage({ onBack }) {
         }));
       } catch { /* quota — ignore */ }
     }
-  };
+  }, [activePage]);
 
   // Diagram generation state
   const [generatingDiagram, setGeneratingDiagram] = useState(false);
@@ -449,6 +449,8 @@ export default function DocsPage({ onBack }) {
     const completed = topics.filter(t => completedTopics[t.id]).length;
     return { total, completed, percent: total > 0 ? Math.round((completed / total) * 100) : 0 };
   };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const progressInfo = useMemo(getProgress, [activePage, heavyData, completedTopics]);
 
   // Generate architecture diagram
   // Per-call AbortController so a fast topic-switch mid-generation
@@ -613,7 +615,12 @@ export default function DocsPage({ onBack }) {
       });
   };
 
-  const filteredTopics = getFilteredTopics();
+  // Stable array — only recomputes when deps actually change. Without useMemo,
+  // spread arrays like [...systemDesignTopics, ...systemDesigns] create a new
+  // reference on every render, causing TopicDetail to re-render unnecessarily
+  // and cascading into the OnThisPage scroll-spy loop (error #300).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const filteredTopics = useMemo(getFilteredTopics, [activePage, heavyData, searchQuery, sortOrder, jobContext]);
 
   // Get page title and color
   const getPageConfig = () => {
@@ -634,7 +641,7 @@ export default function DocsPage({ onBack }) {
     }
   };
 
-  const pageConfig = getPageConfig();
+  const pageConfig = useMemo(getPageConfig, [activePage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Find selected topic details
   const getSelectedTopicDetails = () => {
@@ -655,7 +662,9 @@ export default function DocsPage({ onBack }) {
     return null;
   };
 
-  const topicDetails = getSelectedTopicDetails();
+  // Stable reference — only re-searches when the selected topic or loaded data changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const topicDetails = useMemo(getSelectedTopicDetails, [selectedTopic, heavyData]);
 
   // Reset diagram when topic changes — check local cache, then auto-lookup from backend cache
   useEffect(() => {
@@ -832,7 +841,7 @@ export default function DocsPage({ onBack }) {
                     <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} aria-label="Loading topic detail" />
                   </div>
                 }>
-                  <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} progressInfo={getProgress()} isLocked={contentAccess.isTopicLocked(activePage, selectedTopic)} contentAccess={contentAccess} />
+                  <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} progressInfo={progressInfo} isLocked={contentAccess.isTopicLocked(activePage, selectedTopic)} contentAccess={contentAccess} />
                 </Suspense>
               ) : (
                 <>
