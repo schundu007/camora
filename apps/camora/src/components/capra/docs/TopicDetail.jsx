@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
@@ -546,18 +546,21 @@ export default function TopicDetail({
     }
   };
 
-  // Mark topic as read when viewing (only if not locked).
-  // contentAccess MUST be in deps — its markTopicRead identity is
-  // stable, but `contentAccess` itself is a fresh object literal each
-  // render. Critically, on first mount the auth context may not yet
-  // be ready, so contentAccess can be null; without it in deps the
-  // effect never re-runs once it becomes defined and the topic read
-  // is silently never recorded for users with slow auth init.
+  // Ref-based deduplication so markTopicRead fires at most once per
+  // (page, topic) pair regardless of how many times the effect runs.
+  // contentAccess is read from a ref to avoid adding it to deps — it
+  // previously caused error #300 because the hook returned a new plain
+  // object literal every render, making this effect fire every render.
+  const contentAccessRef = useRef(contentAccess);
+  useEffect(() => { contentAccessRef.current = contentAccess; });
+  const lastReadRef = useRef(null);
   useEffect(() => {
-    if (!isLocked && contentAccess && activePage && selectedTopic) {
-      contentAccess.markTopicRead(activePage, selectedTopic);
+    const key = `${activePage}::${selectedTopic}`;
+    if (!isLocked && contentAccessRef.current && activePage && selectedTopic && lastReadRef.current !== key) {
+      lastReadRef.current = key;
+      contentAccessRef.current.markTopicRead(activePage, selectedTopic);
     }
-  }, [selectedTopic, activePage, isLocked, contentAccess]);
+  }, [selectedTopic, activePage, isLocked]);
 
   // The Databases page merges databaseTopics (SD-shaped) with sqlTopics
   // (coding-shaped). Detect each topic's shape so the right render branch

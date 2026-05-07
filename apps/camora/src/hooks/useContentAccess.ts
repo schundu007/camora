@@ -134,7 +134,10 @@ export function useContentAccess() {
     }
   }, [token, isPaidUser]);
 
-  return {
+  // Stable object reference — recreates only when the underlying callbacks change,
+  // not on every render. This prevents effects in consumers (e.g. TopicDetail's
+  // markTopicRead effect) from firing on every render cycle.
+  return useMemo(() => ({
     isPaidUser,
     subscriptionLoading,
     canReadTopic,
@@ -146,5 +149,15 @@ export function useContentAccess() {
     isCategoryLoaded,
     FREE_LIMITS,
     getFreeLimitForCategory,
-  };
+  }), [
+    isPaidUser,
+    subscriptionLoading,
+    canReadTopic,
+    isTopicLocked,
+    isTopicRead,
+    markTopicRead,
+    getReadCount,
+    getReadTopicIds,
+    isCategoryLoaded,
+  ]);
 }
