@@ -489,18 +489,21 @@ export default function TopicDetail({
   // already wrapped, so this only matters for fields that bypass it.
   const fmtCloud = useCloudFormatter();
 
-  if (!topicDetails) return null;
-
   // Layered-design fallback: when a topic data file doesn't carry an inline
   // `layeredDesign` array, fall through to the build-time generated map
   // populated by apps/frontend/scripts/extract-layered-design.mjs (Phase 1
   // of the diagram pipeline). TopicDiagram uses topicId + the same
   // shape via the pre-baked PNG, so the runtime path is invisible.
-  const effectiveLayeredDesign = (Array.isArray(topicDetails.layeredDesign) && topicDetails.layeredDesign.length)
-    ? topicDetails.layeredDesign
-    : (selectedTopic && GENERATED_LAYERED_DESIGN[selectedTopic])
-      ? GENERATED_LAYERED_DESIGN[selectedTopic]
-      : null;
+  // NOTE: null-guarded here because the early return was moved below all hooks
+  // to avoid React rules-of-hooks violation (hooks at lines 553–703 must run
+  // unconditionally regardless of topicDetails).
+  const effectiveLayeredDesign = topicDetails
+    ? (Array.isArray(topicDetails.layeredDesign) && topicDetails.layeredDesign.length)
+      ? topicDetails.layeredDesign
+      : (selectedTopic && GENERATED_LAYERED_DESIGN[selectedTopic])
+        ? GENERATED_LAYERED_DESIGN[selectedTopic]
+        : null
+    : null;
 
   const CAPRA_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -701,6 +704,9 @@ export default function TopicDetail({
     () => tocSections.map((s) => ({ id: s.id, label: s.label })),
     [tocSections],
   );
+
+  // All hooks have been called — safe to exit early now.
+  if (!topicDetails) return null;
 
   return (
     <div className="landing-root animate-fade-in flex">
