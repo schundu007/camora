@@ -1,0 +1,49 @@
+{
+  "title": "Docker Buildx — Multi-Platform Builds, Cache Backends, Attestations",
+  "subtitle": "How BuildKit compiles source into multi-arch images with persistent cache",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "Build Pipeline",
+      "nodes": [
+        { "id": "source", "label": "Build Context\n. or URL\n.dockerignore filters", "kind": "actor" },
+        { "id": "buildkit", "label": "BuildKit Daemon\nDAG-based solver\nParallel stage exec", "kind": "service" },
+        { "id": "cache", "label": "Cache Backend\nregistry / gha / local / s3\ncache-from + cache-to", "kind": "cache" }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "buildkit",
+      "cluster": "Output",
+      "nodes": [
+        { "id": "manifest", "label": "Image Index\nlinux/amd64 manifest\nlinux/arm64 manifest\nSBOM + provenance", "kind": "datastore" }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Multi-platform build with registry cache",
+      "lang": "plain",
+      "body": "# Create a multi-platform builder\ndocker buildx create --name multi --driver docker-container --use\n\n# Build for amd64 + arm64, push to registry\ndocker buildx build \\\n  --platform linux/amd64,linux/arm64 \\\n  --cache-from type=registry,ref=ghcr.io/myorg/myapp:cache \\\n  --cache-to   type=registry,ref=ghcr.io/myorg/myapp:cache,mode=max \\\n  --attest type=sbom \\\n  --attest type=provenance,mode=max \\\n  -t ghcr.io/myorg/myapp:v1.2.3 \\\n  --push .\n\n# GitHub Actions cache backend (no registry needed)\ndocker buildx build \\\n  --cache-from type=gha \\\n  --cache-to   type=gha,mode=max \\\n  --platform linux/amd64,linux/arm64 \\\n  -t myapp:latest --push ."
+    },
+    {
+      "kind": "issue",
+      "title": "Critical buildx gotchas",
+      "body": "--load and multi-platform are mutually exclusive.\n--load writes to the local Docker image store, which can only hold\none platform. Use --push for multi-arch, or build single-platform\nlocally and use --load for that.\n\ncache-to mode=max vs mode=min:\n  max: caches ALL intermediate layers (every RUN, COPY). Best cache-hit\n       rate but larger cache storage.\n  min: caches only the final image layers. Smaller but fewer hits.\n\nBuilders are not shared between contexts. 'docker buildx ls' shows\nbuilders per context. CI jobs each create their own unless you\nexplicitly configure a remote buildkitd.\n\nThe default 'docker' driver does NOT support --push or --platform\nwith multiple values — you must create a 'docker-container' driver."
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Cache backend selection",
+      "pros": [
+        "type=gha: zero extra infra — works in GitHub Actions; survives across jobs within a workflow",
+        "type=registry: portable across any CI system; shares cache between branches via tag naming"
+      ],
+      "cons": [
+        "type=gha: limited to GitHub Actions; 10 GB cap per repo; purged after 7 days of inactivity",
+        "type=registry: requires a registry write credential; adds push/pull overhead on every build"
+      ]
+    }
+  ]
+}
