@@ -1,0 +1,55 @@
+{
+  "title": "Docker Compose — Multi-Container Apps",
+  "subtitle": "One YAML file defines all services, networks, volumes, and dependencies",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "docker compose up",
+      "nodes": [
+        { "id": "compose-cli", "label": "docker compose up\nReads compose.yaml\nOrchestrates startup order", "kind": "client" },
+        { "id": "network", "label": "app_default network\nAuto-created bridge\nDNS: service name = hostname", "kind": "gateway" }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "network",
+      "cluster": "Services",
+      "nodes": [
+        { "id": "web-svc", "label": "web service\nimage: myapp:latest\nports: 3000:3000\ndepends_on: [db, redis]", "kind": "service" },
+        { "id": "db-svc", "label": "db service\nimage: postgres:16\nvolumes: pgdata:/var/lib/...\nhealthcheck: pg_isready", "kind": "datastore" },
+        { "id": "redis-svc", "label": "redis service\nimage: redis:7-alpine\ncommand: redis-server --save", "kind": "cache" }
+      ]
+    }
+  ],
+  "edges": [
+    { "from": "web-svc", "to": "db-svc", "label": "postgres://db:5432", "style": "dashed" },
+    { "from": "web-svc", "to": "redis-svc", "label": "redis://redis:6379", "style": "dashed" }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "compose.yaml — production-ready template",
+      "lang": "plain",
+      "body": "services:\n  web:\n    build: .\n    ports: [\"3000:3000\"]\n    environment:\n      DATABASE_URL: postgres://postgres:secret@db:5432/app\n      REDIS_URL: redis://redis:6379\n    depends_on:\n      db: { condition: service_healthy }\n      redis: { condition: service_started }\n    restart: unless-stopped\n\n  db:\n    image: postgres:16-alpine\n    environment: { POSTGRES_PASSWORD: secret, POSTGRES_DB: app }\n    volumes: [pgdata:/var/lib/postgresql/data]\n    healthcheck:\n      test: [\"CMD\", \"pg_isready\", \"-U\", \"postgres\"]\n      interval: 5s\n      retries: 5\n\n  redis:\n    image: redis:7-alpine\n    volumes: [redisdata:/data]\n\nvolumes:\n  pgdata:\n  redisdata:"
+    },
+    {
+      "kind": "code",
+      "title": "Essential compose commands",
+      "lang": "plain",
+      "body": "docker compose up -d          Start all services (detached)\ndocker compose up --build     Rebuild images before starting\ndocker compose down           Stop + remove containers + networks\ndocker compose down -v        Also remove named volumes\ndocker compose ps             Show running services + ports\ndocker compose logs -f web    Stream logs for one service\ndocker compose exec web sh    Exec into running service container\ndocker compose run web bash   One-off container from service config\ndocker compose pull           Pull latest images for all services\ndocker compose config         Validate + print merged compose.yaml"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Docker Compose vs Kubernetes",
+      "pros": [
+        "Compose: single YAML, zero cluster overhead, perfect for local dev + small prod deployments",
+        "Kubernetes: auto-scaling, self-healing, rolling deploys, multi-node — built for production at scale"
+      ],
+      "cons": [
+        "Compose: no auto-scaling, no rolling deploys, no multi-host networking out of the box (Swarm needed)",
+        "Kubernetes: steep learning curve, cluster management overhead, overkill for single-host or < 5 services"
+      ]
+    }
+  ]
+}

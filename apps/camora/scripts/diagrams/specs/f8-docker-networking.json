@@ -1,0 +1,53 @@
+{
+  "title": "Docker Networking — Bridge, Host, Overlay, Port Publishing",
+  "subtitle": "How containers get IP addresses, talk to each other, and expose ports to the host",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "Same Host — User-defined Bridge",
+      "nodes": [
+        { "id": "web", "label": "web container\n172.18.0.2\nExposes :3000", "kind": "service" },
+        { "id": "bridge", "label": "docker0 / my-net\nLinux bridge\nEmbedded DNS server", "kind": "gateway" },
+        { "id": "db", "label": "db container\n172.18.0.3\nReachable as 'db'", "kind": "datastore" }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "bridge",
+      "cluster": "Host Network Stack",
+      "nodes": [
+        { "id": "host-port", "label": "Host :8080\niptables DNAT rule\ndocker run -p 8080:3000", "kind": "actor" }
+      ]
+    }
+  ],
+  "edges": [
+    { "from": "host-port", "to": "web", "label": "DNAT → :3000", "style": "dashed" }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Network modes at a glance",
+      "lang": "plain",
+      "body": "bridge (default)   Container gets its own IP on docker0\n                   Isolated from host; containers talk via bridge\n                   Port publish: -p host:container adds iptables DNAT rule\n\nhost               Container shares host network namespace\n                   No isolation; max performance; no -p needed\n                   Risk: port conflicts, no network isolation\n\nnone               No network interface except loopback\n                   Fully isolated; used for batch/offline jobs\n\noverlay            Multi-host networking (Docker Swarm)\n                   VXLAN tunnel between hosts; containers on any\n                   node reach each other by service name\n\nmacvlan            Container gets its own MAC + IP on physical LAN\n                   Appears as a physical device to the network\n                   Useful for legacy apps expecting a real IP"
+    },
+    {
+      "kind": "code",
+      "title": "Container DNS — how 'db' resolves to an IP",
+      "lang": "plain",
+      "body": "User-defined bridge networks include Docker's embedded DNS:\n\n  docker network create my-net\n  docker run --name db --network my-net postgres\n  docker run --name web --network my-net myapp\n\n  Inside web: curl http://db:5432  ← resolves via Docker DNS\n  Docker DNS reads the container name → returns its bridge IP\n\nDefault bridge (docker0) does NOT support DNS by name.\nAlways create a user-defined network for multi-container apps."
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Port publishing: -p vs --network host",
+      "pros": [
+        "-p 8080:3000: explicit mapping, can run multiple containers on different host ports, security boundary maintained",
+        "--network host: zero overhead (no NAT/iptables), best for high-throughput services or when latency matters"
+      ],
+      "cons": [
+        "-p 8080:3000: iptables rules add ~10-30μs per packet; can't bind to host port 80 without root or CAP_NET_BIND_SERVICE",
+        "--network host: no isolation — a compromised container can reach all host ports; port conflicts possible"
+      ]
+    }
+  ]
+}
