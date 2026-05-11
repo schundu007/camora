@@ -23121,7 +23121,7 @@ Registry — stores and distributes images. Docker Hub is the default public reg
 
 Solid arrows = synchronous requests (docker run starts a container immediately).
 Dashed arrows = pull operations (daemon fetches image layers from registry as needed).`,
-        image: 'https://docs.docker.com/get-started/docker-overview/images/docker-architecture.webp',
+        image: '/diagrams/devops/docker-architecture-official.webp',
       },
       {
         title: 'Docker architecture — client, daemon, images, containers, registry',
