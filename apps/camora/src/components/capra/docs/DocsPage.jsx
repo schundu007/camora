@@ -101,7 +101,7 @@ export default function DocsPage({ onBack }) {
   const [activePage, setActivePageState] = useState(initialState.page);
   const [sqlPlaygroundOpen, setSqlPlaygroundOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortOrder, setSortOrder] = useState('a-z');
+  const [sortOrder, setSortOrder] = useState('default');
   const [selectedTopic, setSelectedTopicState] = useState(initialState.topic);
 
   // Heavy topic data is dynamically imported per category. This object holds
@@ -602,7 +602,6 @@ export default function DocsPage({ onBack }) {
       .filter(topic => topic.title.toLowerCase().includes(searchQuery.toLowerCase()))
       .sort((a, b) => {
         if (roleFilteredIds) {
-          // When role-filtered, sort by relevance (mapping order) instead of alphabetical
           const aIdx = [...roleFilteredIds].indexOf(a.id);
           const bIdx = [...roleFilteredIds].indexOf(b.id);
           if (sortOrder === 'a-z' && aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
@@ -611,7 +610,7 @@ export default function DocsPage({ onBack }) {
         if (sortOrder === 'z-a') return b.title.localeCompare(a.title);
         if (sortOrder === 'most') return b.questions - a.questions;
         if (sortOrder === 'least') return a.questions - b.questions;
-        return 0;
+        return 0; // 'default' — preserves data-defined order
       });
   };
 
@@ -1582,6 +1581,7 @@ export default function DocsPage({ onBack }) {
                         onChange={(e) => setSortOrder(e.target.value)}
                         className="px-4 py-2 rounded text-sm text-[var(--text-muted)] border border-[var(--border)] bg-[var(--bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] cursor-pointer landing-body"
                       >
+                        <option value="default">Default</option>
                         <option value="a-z">A - Z</option>
                         <option value="z-a">Z - A</option>
                         <option value="most">Most Questions</option>
