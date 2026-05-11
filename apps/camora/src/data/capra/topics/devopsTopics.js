@@ -74,22 +74,22 @@ export const devopsTopicCategoryMap = {
   'puppet-chef-salt':               'config',
   'immutable-infrastructure':       'config',
   'drift-remediation':              'config',
-  // Containers & Images
+  // Containers & Images — Foundation → Build → Run → Network/Storage → Compose/Distribute → Security
+  'container-fundamentals':         'containers',
   'docker-overview':                'containers',
+  'docker-buildkit':                'containers',
+  'docker-buildx':                  'containers',
+  'image-hardening':                'containers',
+  'buildpacks-jib-ko':              'containers',
+  'docker-cli':                     'containers',
+  'docker-daemon':                  'containers',
+  'docker-resource-limits':         'containers',
   'docker-networking':              'containers',
   'docker-volumes':                 'containers',
   'docker-compose':                 'containers',
-  'docker-security':                'containers',
   'docker-registry':                'containers',
-  'docker-resource-limits':         'containers',
-  'docker-buildx':                  'containers',
   'docker-swarm':                   'containers',
-  'docker-daemon':                  'containers',
-  'docker-cli':                     'containers',
-  'container-fundamentals':         'containers',
-  'docker-buildkit':                'containers',
-  'image-hardening':                'containers',
-  'buildpacks-jib-ko':              'containers',
+  'docker-security':                'containers',
   'container-security':             'containers',
   // Orchestration & Kubernetes
   'kubernetes-architecture':        'orchestration',
@@ -23110,6 +23110,176 @@ These are answers an incident-RCA-fluent platform / SRE engineer should give wit
   },
 
   {
+    id: 'container-fundamentals',
+    title: 'Container Fundamentals — Namespaces, Cgroups, OCI',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Containers are not lightweight VMs — they are Linux processes scoped by namespaces, capped by cgroups, and confined by capabilities + seccomp + LSM (AppArmor / SELinux). The OCI specs (image-spec, runtime-spec, distribution-spec) standardized what was once "Docker only" so runc, crun, youki, containerd, CRI-O, Docker, and Podman can all interoperate.',
+    visualizations: [
+      {
+        title: 'The kernel primitives — namespaces and cgroups v2',
+        description: `A container is a regular Linux process whose view of the system is narrowed by namespaces and whose resource consumption is bounded by cgroups. Nothing more, nothing less.
+
+Linux namespaces — the seven flavors that matter for containers:
+
+1. PID namespace. Container sees its own PID 1 and its descendants; cannot see or signal host processes. Created via clone(CLONE_NEWPID). The first process in the namespace becomes PID 1 — which is why "exec a shell as PID 1" surprises engineers (no zombie reaping unless they handle SIGCHLD, no signal default handlers).
+
+2. Mount namespace. Container has its own mount table. The container's root filesystem is a pivot_root into a directory that contains the unpacked image layers (overlayfs). Bind mounts for /etc/resolv.conf, /etc/hostname, etc., are explicit.
+
+3. Network namespace. Container has its own loopback, network interfaces, routing table, iptables rules, sockets. Connected to host via veth pair + bridge (Docker default), or via CNI plugins (Kubernetes).
+
+4. UTS namespace. Container has its own hostname and domainname.
+
+5. IPC namespace. Container has its own System V IPC objects and POSIX message queues.
+
+6. User namespace. Container can have its own UID/GID mapping — root inside (UID 0) maps to an unprivileged UID outside. The kernel feature that makes rootless containers safe(r). Podman + Docker (with userns-remap) use it; default Docker historically did not.
+
+7. Time namespace (Linux 5.6, 2020). Container can have its own CLOCK_MONOTONIC and CLOCK_BOOTTIME offsets. Useful for checkpoint/restore (CRIU).
+
+cgroups v2 (unified hierarchy, default in modern distros — RHEL 9, Ubuntu 22.04+, Debian 11+, Fedora 31+):
+- cpu controller — cpu.max sets quota + period, cpu.weight sets relative weight (1-10000, default 100). Replaces v1's cpu.cfs_quota_us / cpu.shares.
+- memory controller — memory.max (hard limit, OOM-kill on breach), memory.high (soft limit, throttle), memory.low (reclaim protection).
+- io controller — io.max (per-device IOPS / bandwidth caps), io.weight.
+- pids controller — pids.max caps process count (fork-bomb mitigation).
+- hugetlb, rdma, misc controllers for specialized workloads.
+
+cgroups v2 is mandatory for modern features — Pod Security Standards "restricted" profile, ephemeral containers, Kubernetes 1.28+ swap support, systemd-level controller delegation. v1 still works but is deprecated.
+
+Capabilities — splitting root into 38 fine-grained privileges (CAP_NET_ADMIN, CAP_SYS_ADMIN, CAP_NET_BIND_SERVICE, etc.). Default container runtime drops most: a Docker container has only 14 capabilities by default. Add what you need with --cap-add; drop everything with --cap-drop=ALL and add back specifically.
+
+seccomp — kernel syscall filter. Default Docker / containerd profile blocks ~44 of ~330 syscalls (keyctl, ptrace, mount, kexec_load, ...). Custom profiles via --security-opt seccomp=profile.json. Kubernetes Pod Security Standard restricted requires seccompProfile: { type: RuntimeDefault } at minimum.
+
+LSM (Linux Security Modules) — AppArmor (Ubuntu / Debian default) or SELinux (RHEL / Fedora default). Mandatory access control on top of DAC. Docker ships docker-default AppArmor profile; containerd + CRI-O auto-label container processes container_t under SELinux.
+
+The defense-in-depth ladder, from container escape easiest to hardest: shared host process namespace > shared mount > full capabilities + privileged > default capabilities only > capabilities dropped + read-only rootfs > custom seccomp + AppArmor / SELinux + non-root + user namespace. Production container hardening means walking up that ladder.`,
+        image: '/diagrams/devops/f1-container-fundamentals.png',
+      },
+      {
+        title: 'OCI specs and the runtime stack — image-spec, runtime-spec, distribution-spec',
+        description: `The Open Container Initiative (OCI, founded 2015 under the Linux Foundation by Docker, CoreOS, Google, Red Hat, others) publishes three specs that define what a "container" is portably:
+
+image-spec — the on-disk and on-registry format of a container image:
+- A manifest (JSON) listing layers + config blob by SHA256 digest.
+- Layers are tar.gz blobs, content-addressed.
+- Config (JSON) describes the rootfs diff_ids, env, entrypoint, cmd, working dir, exposed ports, labels.
+- Index (multi-arch manifest) lists per-platform manifests by os + architecture.
+
+runtime-spec — what an "OCI bundle" is on disk and how a runtime executes it:
+- A bundle = config.json + rootfs/ directory.
+- config.json declares process to run, namespaces to create, mounts, capabilities, seccomp profile, cgroups settings, hooks (prestart, createRuntime, createContainer, startContainer, poststart, poststop).
+- The runtime (runc, crun, youki) reads config.json, sets up the namespaces / cgroups / mounts / etc., execs the process.
+
+distribution-spec — the registry HTTP API. Pull: GET /v2/<name>/manifests/<reference>, GET /v2/<name>/blobs/<digest>. Push: chunked blob upload, then manifest PUT. Implemented by Docker Hub, ghcr.io, ECR, GCR, Artifact Registry, Quay, Harbor.
+
+The runtime stack for a Kubernetes node:
+
+Container runtimes (low-level, OCI-runtime-spec):
+- runc — Go reference implementation by Docker, donated to OCI. Default in Docker, containerd, CRI-O.
+- crun — C implementation, faster startup (~2x), lower memory. Default in Podman; option in CRI-O.
+- youki — Rust implementation, focus on safety + performance. Newer, growing adoption.
+
+Container engines (high-level, OCI-image + distribution):
+- containerd — graduated CNCF project, originated at Docker, now used by Docker Engine, Kubernetes, AWS Fargate, GKE, AKS. CRI plugin makes it Kubernetes-compatible.
+- CRI-O — alternative for Kubernetes, born at Red Hat, default in OpenShift.
+- Docker Engine — bundles dockerd + containerd + runc + CLI.
+
+Container CLIs:
+- docker — the original; talks to dockerd over Unix socket.
+- nerdctl — Docker-compatible CLI for containerd directly.
+- podman — daemonless, rootless-by-default; drop-in for docker. Red Hat-led.
+- crictl — Kubernetes-focused CLI for any CRI runtime; debugging tool.
+
+Kubernetes Container Runtime Interface (CRI) sits between kubelet and the engine: kubelet → CRI gRPC → containerd / CRI-O → runc → kernel. Dockershim (the kubelet-to-Docker shim) was removed in Kubernetes 1.24 (2022).
+
+Docker vs Podman:
+- Docker: client-server (dockerd daemon), historically requires root, mature ecosystem, Docker Compose, BuildKit, Swarm.
+- Podman: daemonless (each podman command is a process), rootless by default, systemd-friendly (podman generate systemd), pod abstraction matching K8s.
+
+Both produce OCI-compliant images that run anywhere.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Container Fundamentals.',
+        question: 'Quick-fire interview answers — Container Fundamentals.',
+        answer: `Rapid-fire facts.
+
+Q: One-line definition of a Linux container?
+A: A regular process scoped by namespaces, capped by cgroups, and confined by capabilities + seccomp + LSM.
+
+Q: Which namespaces matter?
+A: PID, mount, network, UTS, IPC, user, time. Seven of them. PID + mount + network are the load-bearing trio.
+
+Q: cgroups v1 vs v2?
+A: v2 unified hierarchy, default in RHEL 9 / Ubuntu 22.04+ / Debian 11+. Required for Pod Security Standards restricted, K8s 1.28+ swap, systemd delegation.
+
+Q: How does a container's root filesystem get assembled?
+A: Image layers (each a tar.gz) are stacked via overlayfs into a merged rootfs. The runtime pivot_roots into it.
+
+Q: User namespace, in one line?
+A: Maps container UID 0 to an unprivileged host UID, so "root inside" is not root outside. Foundation of rootless containers.
+
+Q: Default capability set on Docker?
+A: 14 by default. Production drops --cap-drop=ALL and adds only what's needed.
+
+Q: seccomp default?
+A: Docker / containerd default profile blocks ~44 of ~330 syscalls. PSS restricted requires at least RuntimeDefault.
+
+Q: AppArmor vs SELinux?
+A: AppArmor on Ubuntu / Debian (path-based), SELinux on RHEL / Fedora (label-based, container_t). Both LSMs.
+
+Q: What is OCI?
+A: Open Container Initiative, 2015, Linux Foundation. Three specs: image-spec, runtime-spec, distribution-spec.
+
+Q: runc vs crun vs youki?
+A: All implement OCI runtime-spec. runc — Go, reference. crun — C, ~2x faster startup. youki — Rust, newer.
+
+Q: containerd vs CRI-O?
+A: containerd — CNCF graduated, used by Docker, EKS, GKE, AKS, Fargate. CRI-O — Red Hat-led, K8s-only, OpenShift default.
+
+Q: What happened to dockershim?
+A: Removed in Kubernetes 1.24 (May 2022). Modern clusters use containerd or CRI-O directly via CRI.
+
+Q: Docker vs Podman?
+A: Docker — daemon, client-server, historically root-only. Podman — daemonless, rootless by default, systemd-friendly. Drop-in CLI.
+
+Q: nerdctl?
+A: Docker-compatible CLI for containerd. Useful when you want Docker UX on a K8s node without the Docker daemon.
+
+Q: crictl?
+A: CRI debugging CLI for K8s nodes.
+
+Q: Image manifest vs config?
+A: Manifest references layers + config by SHA256 digest. Config holds rootfs diff_ids, env, entrypoint, cmd, exposed ports.
+
+Q: Multi-arch image?
+A: Index manifest referencing per-architecture manifests by os + arch.
+
+Q: Why is privileged: true dangerous?
+A: Disables capability drops, enables host device access, mounts /sys read-write. Effectively root on the host.
+
+Q: Rootless container?
+A: Container running as unprivileged user on host, using user namespace + slirp4netns or pasta for networking.
+
+Q: PID 1 in a container?
+A: First process in the PID namespace. Must reap zombies (or use tini / dumb-init). Many init-naive programs misbehave as PID 1.
+
+Q: Pod Security Standard restricted?
+A: runAsNonRoot, drop ALL capabilities (only NET_BIND_SERVICE allowed), seccompProfile RuntimeDefault, no privilege escalation, read-only root if possible.
+
+These are answers a container-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://opencontainers.org/',
+      'https://github.com/opencontainers/runtime-spec/blob/main/spec.md',
+      'https://kubernetes.io/docs/concepts/security/pod-security-standards/',
+      'https://docs.kernel.org/admin-guide/cgroup-v2.html',
+      'https://man7.org/linux/man-pages/man7/namespaces.7.html',
+      'https://github.com/containerd/containerd',
+    ],
+  },
+
+  {
     id: 'docker-overview',
     title: 'Docker Overview — Architecture, Objects & Core Commands',
     icon: 'package',
@@ -23277,6 +23447,1027 @@ These are answers a Docker-fluent engineer should give without preparation.`,
       'https://docs.docker.com/engine/storage/',
       'https://docs.docker.com/engine/network/',
       'https://docs.docker.com/reference/cli/docker/',
+    ],
+  },
+
+  {
+    id: 'docker-buildkit',
+    title: 'Docker BuildKit and Modern Container Builds',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'BuildKit (default backend in Docker 23+, 2023) replaced the legacy Docker builder with a parallel DAG executor, content-addressed cache, build secrets, and multi-platform via QEMU. Plus the alternative builder ecosystem — Kaniko, buildah, img, ko, Bazel rules_oci — for daemonless or non-Dockerfile workflows.',
+    visualizations: [
+      {
+        title: 'BuildKit architecture — frontend, LLB, executor, key features',
+        description: `BuildKit (moby/buildkit, default Docker backend in 23.0, January 2023) is a complete rewrite of the Docker builder. Three layers:
+
+Frontend. Parses a build definition into LLB (low-level build) graph. The default frontend is dockerfile.v0. A Dockerfile starting with # syntax=docker/dockerfile:1.7 pulls that frontend image at build time, getting newer features (RUN --mount, RUN --network=none, COPY --link, heredoc syntax) without upgrading the BuildKit daemon.
+
+LLB. Intermediate representation — a DAG of operations. Each node: source (image / git / local), exec (run a command), file (copy / chmod / mkdir), merge (combine layers). Content-addressed: each node's output is hashed; identical inputs = identical outputs = cache hit. LLB enables the parallelism: independent stages of a multi-stage Dockerfile run concurrently.
+
+Executor. Walks the LLB DAG, runs operations. Pluggable: runc executor (default), Kubernetes executor (run builds as K8s pods).
+
+Key features over the legacy builder:
+
+1. Parallel layer builds. Multi-stage Dockerfile? Stages with no dependency order build in parallel. 2-5x speedup typical.
+
+2. RUN --mount=type=cache. Persistent cache directory across builds, scoped by ID:
+
+\`\`\`dockerfile
+# syntax=docker/dockerfile:1.7
+FROM golang:1.23 AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \\
+    --mount=type=cache,target=/root/.cache/go-build \\
+    go mod download
+COPY . .
+RUN --mount=type=cache,target=/go/pkg/mod \\
+    --mount=type=cache,target=/root/.cache/go-build \\
+    go build -o /app ./cmd/api
+\`\`\`
+
+Module cache and build cache survive across builds — second build seconds, not minutes.
+
+3. RUN --mount=type=secret. Pass secrets without leaking into image layers:
+
+\`\`\`bash
+docker build --secret id=npmrc,src=$HOME/.npmrc -t my-app .
+\`\`\`
+
+\`\`\`dockerfile
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci
+\`\`\`
+
+The .npmrc is mounted only during the RUN, never committed to a layer.
+
+4. RUN --mount=type=ssh. Forward SSH agent for git+ssh:// dependencies without baking keys.
+
+5. COPY --link. Layer-rebase: COPY operates on its own independent layer that doesn't invalidate when prior layers change.
+
+6. Multi-platform builds (buildx + QEMU). Cross-build linux/amd64 + linux/arm64 from a single host:
+
+\`\`\`bash
+docker buildx create --name multi --use
+docker buildx build --platform linux/amd64,linux/arm64 \\
+  -t ghcr.io/myorg/api:v1.2.3 --push .
+\`\`\`
+
+7. Build cache export / import. --cache-to and --cache-from let CI export the cache to a registry and the next build import it. Critical for ephemeral CI runners.
+
+\`\`\`bash
+docker buildx build \\
+  --cache-from type=registry,ref=ghcr.io/myorg/api:buildcache \\
+  --cache-to type=registry,ref=ghcr.io/myorg/api:buildcache,mode=max \\
+  -t ghcr.io/myorg/api:v1.2.3 --push .
+\`\`\`
+
+8. Heredoc syntax (1.4+):
+
+\`\`\`dockerfile
+RUN <<EOF
+set -eux
+apt-get update
+apt-get install -y --no-install-recommends curl ca-certificates
+rm -rf /var/lib/apt/lists/*
+EOF
+\`\`\`
+
+Layer-cache rule. Order from least-changing to most-changing. Copy package.json + lockfile first; install deps; only then copy source.
+
+Dockerfile best practices:
+- Multi-stage. Separating build deps from runtime is the most impactful single optimization. Common before/after: Node 1.2GB -> 180MB. Go 1.1GB -> 12MB (scratch).
+- Pin versions. FROM node:20-alpine@sha256:... for reproducibility.
+- Use .dockerignore.
+- USER non-root before CMD.
+- Avoid ADD; use COPY.
+- Don't ARG NPM_TOKEN; use --mount=type=secret.
+- ENTRYPOINT exec form (["..."]), not shell form (signals work, no shell wrapping).
+
+Alternative builders:
+- Kaniko (Google) — daemonless, runs as Pod in K8s. No privileged daemon needed. Common in GitLab CI / Tekton.
+- buildah (Red Hat) — daemonless, scriptable or Dockerfile-based. Builds OCI images.
+- img — standalone, daemonless, unprivileged. By Jess Frazelle.
+- Bazel rules_oci — Bazel rules producing deterministic OCI images without a Dockerfile or daemon.
+- ko (Go-specific) — single-binary OCI images, very fast iteration.`,
+        image: '/diagrams/devops/f2-docker-buildkit.png',
+      },
+      {
+        title: 'Dockerfile instructions reference — every instruction explained',
+        description: `A Dockerfile is a text file of instructions that Docker executes top-to-bottom to build an image. Each instruction that modifies the filesystem creates a new read-only layer.
+
+FROM — Required first instruction. Sets the base image for all subsequent instructions.
+  FROM node:20-alpine                  # named base
+  FROM node:20-alpine AS build         # named stage for multi-stage builds
+  FROM scratch                         # empty base (for statically-linked binaries)
+  FROM --platform=linux/arm64 node:20  # target a specific architecture
+
+ARG — Build-time variable. NOT stored in the final image. Can be passed via docker build --build-arg KEY=val.
+  ARG NODE_ENV=production
+  ARG VERSION          # no default — must be passed or build fails
+
+ENV — Runtime environment variable. Persists into the final image and all containers launched from it.
+  ENV APP_HOME=/app LOG_LEVEL=info
+  ENV PATH=$PATH:$APP_HOME/bin
+
+WORKDIR — Set the working directory for RUN / COPY / ADD / CMD / ENTRYPOINT. Created if it doesn't exist.
+  WORKDIR /app
+
+COPY — Copy files from the build context (or another stage) into the image.
+  COPY package*.json ./                      # copy lockfile
+  COPY --from=build /app/dist /app/dist      # multi-stage: from build stage
+  COPY --chown=node:node . .                 # set ownership
+  COPY --chmod=755 entrypoint.sh /           # set permissions
+  COPY --link --from=build /app/dist ./dist  # layer-rebase (BuildKit)
+
+ADD — Like COPY but also: auto-extracts local tar archives, supports remote URLs, supports git repos.
+  ADD archive.tar.gz /extract/    # extracts into /extract/
+  Best practice: prefer COPY for local files; use ADD only for archives.
+
+RUN — Execute a shell command in a new layer. Shell form: RUN cmd. Exec form: RUN ["cmd", "arg"].
+  RUN apt-get update && apt-get install -y curl ca-certificates && rm -rf /var/lib/apt/lists/*
+  RUN --mount=type=cache,target=/var/cache/apt apt-get install -y gcc  # BuildKit cache mount
+  RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci           # BuildKit secret mount
+
+  Layer-cache rule: chain related commands with && to keep them in one layer and minimize image size.
+
+EXPOSE — Document that the container listens on a port. Does NOT actually publish the port.
+  EXPOSE 3000/tcp
+  Ports must be published at runtime: docker run -p 8080:3000 myapp
+
+USER — Set the user (and optionally group) for subsequent RUN / CMD / ENTRYPOINT.
+  RUN useradd -m appuser
+  USER appuser                    # drop root before CMD — security best practice
+  USER 1001:1001                  # by UID:GID
+
+VOLUME — Declare a mount point. The host path is determined at runtime, not in the Dockerfile.
+  VOLUME ["/var/log", "/var/db"]  # creates anonymous volumes if not explicitly mounted
+
+LABEL — Add key-value metadata to the image.
+  LABEL org.opencontainers.image.version="1.0.0"
+  LABEL maintainer="ops@example.com"
+
+HEALTHCHECK — Define a command to test container health. The daemon runs it on an interval.
+  HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD curl -f http://localhost:3000/health || exit 1
+
+ENTRYPOINT — The executable the container runs as. Exec form strongly preferred (signals go directly to app).
+  ENTRYPOINT ["node", "dist/index.js"]         # exec form — correct
+  ENTRYPOINT node dist/index.js                # shell form — SIGTERM goes to /bin/sh, not node
+
+CMD — Default arguments passed to ENTRYPOINT. Overridden by docker run arguments.
+  CMD ["--port", "3000"]          # default flags to ENTRYPOINT
+  CMD ["node", "server.js"]       # standalone: exec form, runs when no ENTRYPOINT set
+
+ENTRYPOINT + CMD together:
+  ENTRYPOINT ["node"]
+  CMD ["server.js"]               # docker run myapp → "node server.js"
+                                  # docker run myapp app.js → "node app.js"
+
+STOPSIGNAL — Override the OS signal sent to stop the container (default SIGTERM).
+  STOPSIGNAL SIGINT
+
+ONBUILD — Instruction deferred until this image is used as a base in another Dockerfile.
+  ONBUILD COPY . /app
+  ONBUILD RUN npm ci
+  Useful for base images shared across many projects.
+
+Best practices summary:
+1. Order from least-changing to most-changing (lockfiles before source).
+2. Multi-stage builds: separate build dependencies from the production image.
+3. Pin base image tags (or SHA digests) for reproducibility.
+4. Use .dockerignore to exclude node_modules, .git, .env, dist.
+5. Never use ARG for secrets — use RUN --mount=type=secret.
+6. Always USER non-root before CMD.
+7. ENTRYPOINT exec form only — shell form breaks signal handling.`,
+        image: '/diagrams/devops/f7-dockerfile-reference.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker BuildKit.',
+        question: 'Quick-fire interview answers — Docker BuildKit.',
+        answer: `Rapid-fire facts.
+
+Q: BuildKit in one line?
+A: Docker's modern build backend (default since 23.0, January 2023). Parallel DAG executor with content-addressed cache, build secrets, multi-platform support.
+
+Q: What does the # syntax= directive do?
+A: Pulls a specific Dockerfile frontend image at build time. Gets new features without upgrading the BuildKit daemon.
+
+Q: What is LLB?
+A: BuildKit's low-level builder — a DAG of source / exec / file / merge ops. Content-addressed; caching is per-LLB-node.
+
+Q: RUN --mount=type=cache?
+A: Persistent cache directory across builds, scoped by ID. Speeds up dep installs (npm, go mod, pip, cargo).
+
+Q: RUN --mount=type=secret?
+A: Mount a secret file only for the duration of a RUN. Doesn't end up in any layer.
+
+Q: COPY --link?
+A: Independent layer that doesn't invalidate when prior layers change. Big win for large multi-stage builds.
+
+Q: Multi-platform build?
+A: docker buildx build --platform linux/amd64,linux/arm64. Uses QEMU emulation or native nodes.
+
+Q: --cache-to / --cache-from?
+A: Export / import build cache. Registry / S3 / local backends. Critical for ephemeral CI runners.
+
+Q: Most impactful Dockerfile optimization?
+A: Multi-stage. Separate build (compilers, dev deps) from runtime (minimal). Often 5-50x size reduction.
+
+Q: Layer cache rule?
+A: Order from least-changing to most-changing. Copy package.json + lockfile first; install deps; only then copy source.
+
+Q: Why pin base image by digest?
+A: FROM node:20@sha256:abc... is reproducible and tamper-evident.
+
+Q: USER root vs non-root?
+A: Production should USER non-root before CMD.
+
+Q: ENTRYPOINT exec form vs shell form?
+A: Exec ["..."] makes the binary PID 1 — signals work. Shell form runs under /bin/sh -c — signals get swallowed.
+
+Q: HEALTHCHECK in Kubernetes context?
+A: K8s ignores Dockerfile HEALTHCHECK; uses its own probes.
+
+Q: Kaniko in one line?
+A: Daemonless image builder by Google. Runs as Pod in K8s — no privileged daemon needed. Common in GitLab CI / Tekton.
+
+Q: buildah?
+A: Daemonless image builder from Red Hat / Podman ecosystem.
+
+Q: Bazel rules_oci?
+A: Bazel rules that produce OCI images deterministically without a Dockerfile or daemon. Replaces older rules_docker.
+
+Q: ko?
+A: Go-specific. Builds an OCI image containing one Go binary, no Dockerfile, no daemon.
+
+Q: When prefer Kaniko / buildah / img over BuildKit?
+A: Multi-tenant CI, restricted Kubernetes clusters, security policies that don't allow privileged Docker daemon.
+
+Q: Reproducible builds?
+A: SOURCE_DATE_EPOCH + buildx --output rewrite-timestamp=true. Required for SLSA-3+.
+
+Q: Most common build mistake?
+A: COPY . . before installing deps — invalidates dep cache on every source change.
+
+Q: Build context size?
+A: docker build sends entire context to the daemon. .dockerignore is mandatory.
+
+These are answers a container-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/build/buildkit/',
+      'https://docs.docker.com/build/dockerfile/release-notes/',
+      'https://github.com/moby/buildkit',
+      'https://github.com/GoogleContainerTools/kaniko',
+      'https://buildah.io/',
+      'https://ko.build/',
+    ],
+  },
+
+  {
+    id: 'docker-buildx',
+    title: 'Docker Buildx — Multi-Platform Builds & BuildKit',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Docker Buildx extends the Docker CLI with BuildKit — a next-generation builder that executes Dockerfile stages as a DAG, caches at layer granularity, and produces multi-architecture images in one push. It is the standard tool for production CI/CD pipelines.',
+    visualizations: [
+      {
+        title: 'BuildKit pipeline — multi-platform build with cache backends',
+        description: `BuildKit replaces the classic builder with a DAG-based solver that can run stages in parallel and cache at the instruction level.
+
+Key concepts:
+
+Builder instances (docker buildx create):
+  docker-container driver — starts BuildKit as a container; supports --platform, --push, --load, --cache-to
+  docker driver (default) — legacy builder inside dockerd; does NOT support multi-platform or registry cache export
+  remote driver — connects to an external buildkitd (e.g. on a Kubernetes cluster)
+
+Multi-platform builds:
+  --platform linux/amd64,linux/arm64 produces an OCI Image Index (aka multi-arch manifest list).
+  docker pull on an M-series Mac pulls arm64; CI (x86) pulls amd64 — automatically.
+  Requires binfmt_misc QEMU emulation on the build host OR a native node builder (--append).
+
+Cache backends:
+  type=registry     — exports cache layers to a registry tag; portable across any CI
+  type=gha          — GitHub Actions Cache API; no external infra; purged after 7 days idle
+  type=local        — writes to a local directory; fastest for single-host CI
+  type=s3 / azblob  — cloud blob stores; good for self-hosted runners
+
+mode=max vs mode=min (for cache-to):
+  max: caches ALL intermediate layers including every RUN/COPY intermediate. Best cache-hit rate.
+  min: caches only the final stage layers. Smaller storage, fewer cache hits.
+
+Build secrets (never baked into layers):
+  --secret id=npmrc,src=$HOME/.npmrc
+  In Dockerfile: RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm install
+
+SSH agent forwarding:
+  --ssh default=$SSH_AUTH_SOCK
+  In Dockerfile: RUN --mount=type=ssh git clone git@github.com:org/private-repo
+
+Attestations (supply chain security):
+  --attest type=sbom          → generates CycloneDX/SPDX SBOM attached to image
+  --attest type=provenance,mode=max → SLSA provenance metadata
+  docker buildx imagetools inspect myapp:v1 — verify attestations in registry`,
+        image: '/diagrams/devops/f14-docker-buildx.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Buildx.',
+        description: `Rapid-fire facts.
+
+Q: What is the difference between docker build and docker buildx build?
+A: docker build uses the legacy builder inside dockerd. docker buildx build uses BuildKit, which adds DAG-based parallel execution, multi-platform support, cache export backends, secrets, and attestations.
+
+Q: Why can't you use --load and --platform linux/amd64,linux/arm64 together?
+A: --load writes to the local Docker image store which only supports one platform at a time. Use --push for multi-arch, or build with a single platform for --load.
+
+Q: What is mode=max in cache-to?
+A: Exports ALL intermediate layers including every RUN/COPY step as cache. mode=min only exports the final stage. mode=max gets better cache hit rates at the cost of more storage.
+
+Q: How do you pass a secret to a build without it appearing in docker history?
+A: --secret id=mykey,src=./key.txt and RUN --mount=type=secret,id=mykey ... in the Dockerfile. The mount is temporary — it never writes to any image layer.
+
+Q: What is an OCI Image Index?
+A: A manifest list that references per-platform image manifests. A docker pull picks the right one automatically based on the pulling host's OS/arch.
+
+Q: How does QEMU multi-platform building work?
+A: binfmt_misc registers QEMU user-space emulators for foreign architectures. The build host runs arm64 binaries under emulation. Slower than native but requires no additional nodes.
+
+Q: What does --attest type=provenance do?
+A: Attaches SLSA provenance metadata to the image in the registry — build inputs, source repo, builder identity. Enables supply-chain attestation verification with cosign or docker buildx imagetools.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/reference/cli/docker/buildx/',
+      'https://docs.docker.com/reference/cli/docker/buildx/build/',
+      'https://docs.docker.com/build/cache/backends/',
+    ],
+  },
+
+  {
+    id: 'image-hardening',
+    title: 'Container Image Hardening — Distroless, Chainguard, Wolfi',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'The smaller the image, the smaller the attack surface — and the smaller the CVE backlog. Distroless (Google), Wolfi (Chainguard) and Chainguard Images set the bar in 2026: minimal, non-root, signed by default, daily rebuilt, near-zero CVE counts. Plus the scanner ecosystem (Trivy, Grype, Snyk, Docker Scout) and the remediation workflow.',
+    visualizations: [
+      {
+        title: 'The minimal-base spectrum and the hardening checklist',
+        description: `Base image choice is the single biggest determinant of CVE exposure and image size. The spectrum, smallest to largest:
+
+scratch. The empty image. Zero bytes of OS. Only works for fully static binaries (Go with CGO_ENABLED=0, Rust with musl target). Image size = your binary. CVE count = exactly the CVEs in your binary. Tradeoff: no shell, no package manager, no libc. Debugging means a sidecar.
+
+Distroless (Google, gcr.io/distroless). "Just enough OS" — language runtime + libc + ca-certificates, no shell, no package manager:
+- gcr.io/distroless/static-debian12 — for static binaries, ~2 MB.
+- gcr.io/distroless/base-debian12 — adds glibc + tzdata, ~20 MB.
+- gcr.io/distroless/cc-debian12 — adds libgcc + libstdc++, ~25 MB.
+- gcr.io/distroless/java21-debian12, python3-debian12, nodejs20-debian12.
+
+Distroless images come in :nonroot variants (USER 65532) and :debug variants (with busybox shell, only for debugging — never deploy :debug to prod).
+
+Wolfi (Chainguard, 2022). A Linux undistribution — package repository (apk-based, like Alpine) with a glibc-based libc instead of musl, designed for containers. Daily-rebuilt packages, every CVE fixed within hours of disclosure.
+
+Chainguard Images. Prebuilt artifacts on Wolfi. cgr.io/chainguard/* — minimal, non-root, signed by Cosign keylessly, daily rebuilt, often near-zero CVE count:
+- cgr.io/chainguard/static — like distroless static, plus glibc compatibility.
+- cgr.io/chainguard/python:latest — daily fixes.
+- cgr.io/chainguard/node:latest, /jdk:latest, /jre, /maven, /gradle.
+- cgr.io/chainguard/nginx, /redis, /postgres, /mariadb.
+
+apko + melange. Chainguard's build tools. apko declares an image as a YAML list of apk packages — produces an OCI image without a Dockerfile, fully reproducible, SBOM-included, signed.
+
+Alpine (alpine:3.19, ~7 MB). Minimal Linux with apk. musl libc instead of glibc — many subtle compat issues. Smaller than Debian-slim but the musl tax is real.
+
+Debian slim (debian:12-slim, ~80 MB), Ubuntu (ubuntu:22.04, ~75 MB). Full distros pared down. Familiar, glibc-compatible, large CVE surface.
+
+Picking a base in 2026:
+- Static Go / Rust binary: scratch or chainguard/static.
+- Dynamically linked C/C++: distroless/cc or chainguard/static.
+- Java: chainguard/jre or distroless/java21.
+- Python: chainguard/python (best CVE story) or distroless/python3.
+- Node: chainguard/node or distroless/nodejs20.
+- Need a shell + package manager: wolfi-base or alpine.
+
+Stop using ubuntu:latest, debian:latest, python:3.12 (full), node:20 (full), or alpine:latest as runtime bases.
+
+Hardening checklist (production-grade):
+
+1. Non-root. USER nonroot or USER 65532:65532. PSS restricted requires runAsNonRoot: true.
+
+2. Read-only root filesystem. securityContext: { readOnlyRootFilesystem: true }.
+
+3. Drop all capabilities. capabilities: { drop: ["ALL"] }.
+
+4. No privilege escalation. allowPrivilegeEscalation: false.
+
+5. seccomp default. seccompProfile: { type: RuntimeDefault }.
+
+6. Minimal contents. Distroless / Chainguard. No shell, no package manager.
+
+7. Signed. Cosign-sign images on build. Verify at admission with sigstore policy-controller or Kyverno.
+
+8. SBOM attached. CycloneDX or SPDX. Generated by Syft, BuildKit, apko.
+
+9. Provenance attestation. SLSA build provenance.
+
+10. Daily rebuild. CVEs land daily. With Chainguard / distroless dailies, base bumps pull through CVE fixes automatically via Renovate.
+
+The scanner ecosystem (2026):
+- Trivy (Aqua Security, OSS, de facto standard). CVEs, misconfig, secrets, licenses.
+- Grype (Anchore, OSS). Pure CVE scanner. Pairs with Syft for SBOM.
+- Snyk Container. Commercial; rich remediation suggestions.
+- Docker Scout. Built into Docker Desktop / Hub. Free tier viable.
+- Anchore Enterprise / Engine. Older; policy-engine-driven.
+
+The remediation workflow:
+1. Scan in CI on every build. Fail on critical fixable CVEs.
+2. Scan in registry continuously. Harbor, ECR Enhanced Scanning, ghcr.io / Snyk integration.
+3. Scan in cluster. Trivy Operator, Falco, Kyverno report on running images.
+4. Dashboard + ownership. Per-team dashboards (Snyk, Wiz, Aqua, Sysdig, Prisma Cloud).
+5. Base image bump automation. Renovate / Dependabot watches base image tags.
+
+The Chainguard advantage in 2026: cgr.io/chainguard/* images often scan to 0 CVE — not because Chainguard hides CVEs but because their build pipeline patches packages within hours of disclosure. Migration from python:3.12-slim (typical 50-200 CVEs) to chainguard/python:latest (typical 0-5 CVEs) is the highest-leverage hardening move available in 2026.`,
+        image: '/diagrams/devops/f3-image-hardening.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Image Hardening.',
+        question: 'Quick-fire interview answers — Image Hardening.',
+        answer: `Rapid-fire facts.
+
+Q: Why does base image choice matter so much?
+A: Single biggest determinant of CVE count and image size. Switching python:3.12-slim to chainguard/python often drops scan from 100+ CVEs to near zero.
+
+Q: What is distroless?
+A: Google's gcr.io/distroless/* — language runtime + libc + ca-certificates only. No shell, no package manager.
+
+Q: Wolfi in one line?
+A: Chainguard's Linux undistribution. apk-based like Alpine but glibc-based. Daily-rebuilt packages, CVE fixes within hours.
+
+Q: Chainguard Images?
+A: Prebuilt OCI images on top of Wolfi. cgr.io/chainguard/*. Minimal, non-root, Cosign-signed keylessly, daily rebuilt, near-zero CVE count.
+
+Q: apko / melange?
+A: Chainguard's build tooling. apko produces OCI images from a YAML list of apk packages, no Dockerfile.
+
+Q: scratch vs distroless?
+A: scratch is empty — only works for fully static binaries. distroless includes libc + ca-certs + language runtime.
+
+Q: Why no shell in production images?
+A: Reduces attack surface — RCE without a shell can't pivot easily.
+
+Q: musl vs glibc tax?
+A: Alpine uses musl. DNS resolution edge cases, locale handling, threading. Wolfi switched to glibc to eliminate this.
+
+Q: Run as non-root, in K8s?
+A: securityContext.runAsNonRoot: true, runAsUser: 65532. PSS restricted requires it.
+
+Q: Read-only root filesystem?
+A: securityContext.readOnlyRootFilesystem: true. Foils malware that needs to drop binaries.
+
+Q: Drop all capabilities?
+A: capabilities.drop: ["ALL"]. Add only specific ones if absolutely needed.
+
+Q: Signed image, in one line?
+A: Cosign signature attached to image as OCI artifact. cosign sign at build, cosign verify at admission.
+
+Q: SBOM in 2026?
+A: CycloneDX or SPDX. Generated by Syft, BuildKit (--provenance), apko.
+
+Q: SLSA provenance?
+A: Describes builder, source repo, commit, build parameters. SLSA-3 requires non-falsifiable provenance.
+
+Q: Trivy in one line?
+A: Aqua's OSS scanner — CVEs, misconfig, secrets, licenses. The de facto standard in 2026.
+
+Q: Trivy vs Grype?
+A: Trivy is broader. Grype is CVE-focused, often faster, pairs with Syft.
+
+Q: Docker Scout?
+A: Docker's built-in scanner. CVE ranking + base-image upgrade recommendations.
+
+Q: Snyk Container?
+A: Commercial, slick UI, strong remediation suggestions.
+
+Q: Should builds fail on every CVE?
+A: No — fail on HIGH / CRITICAL with a fix available. Unfixable CVEs can't be acted on.
+
+Q: Reachable vulnerabilities?
+A: VEX (OpenVEX) documents declaring whether CVEs are actually exploitable. Reduces false positives.
+
+Q: How to keep base images fresh?
+A: Renovate / Dependabot watches the registry, opens PRs on new tags.
+
+Q: Pod Security Standard restricted?
+A: runAsNonRoot, drop ALL capabilities (NET_BIND_SERVICE allowed), seccompProfile RuntimeDefault, no privilege escalation, no host* mounts.
+
+Q: Most common image-hardening mistake?
+A: Using python:3.12 / node:20 / openjdk:21 / ubuntu:latest as runtime base.
+
+These are answers a container-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://github.com/GoogleContainerTools/distroless',
+      'https://www.chainguard.dev/chainguard-images',
+      'https://wolfi.dev/',
+      'https://github.com/chainguard-dev/apko',
+      'https://aquasecurity.github.io/trivy/',
+      'https://docs.sigstore.dev/cosign/overview/',
+    ],
+  },
+
+  {
+    id: 'buildpacks-jib-ko',
+    title: 'Buildpacks, Jib, ko — Source-to-Image Without Dockerfiles',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Three production-grade ways to ship a container without writing or maintaining a Dockerfile. Cloud Native Buildpacks (Heroku-origin, CNCF) for opinionated platforms; Jib (Google) for Java without a Docker daemon; ko (Google) for single-binary Go services.',
+    visualizations: [
+      {
+        title: 'Cloud Native Buildpacks, Jib, and ko',
+        description: `Cloud Native Buildpacks (CNB, CNCF Incubating, joined 2018) are descended from Heroku's 2011 buildpacks, redesigned around the OCI image spec.
+
+A buildpack is a unit of build logic for a single language or framework. The build system runs each buildpack against your source; whichever buildpacks "detect" your project execute. Output: an OCI image, no Dockerfile.
+
+Components:
+- pack CLI — the official builder. pack build my-app --builder paketobuildpacks/builder-jammy-base.
+- Buildpacks — paketobuildpacks/nodejs, /python, /java, /go; heroku/nodejs, /python, /java.
+- Builder — curated set of buildpacks plus base images. paketobuildpacks/builder-jammy-base, gcr.io/buildpacks/builder, heroku/builder:24.
+- Stack — the OS images. Build image (with toolchains) + run image.
+
+The killer feature: layered rebase. Buildpacks emit each language layer as a separate OCI layer. When the run-image base is updated for a CVE fix, pack rebase my-app rewrites only the base layers — your app layers are untouched. Hours instead of recompiling from source.
+
+Where buildpacks shine: PaaS / opinionated platforms (Cloud Foundry, Heroku, Tanzu, Cloud Run with --source, IBM Code Engine), polyglot orgs centralizing image policy, mass CVE rebases.
+
+Where they underdeliver: heavy custom build needs (specific compiler flags, system packages), low-control orgs, tiny scratch / static images.
+
+Jib (Google, 2018). Maven and Gradle plugin.
+
+\`\`\`bash
+./mvnw compile com.google.cloud.tools:jib-maven-plugin:build \\
+  -Dimage=ghcr.io/myorg/payments:v1.2.3
+\`\`\`
+
+What Jib does:
+- No Docker daemon. Talks the registry distribution-spec API directly.
+- No Dockerfile. Pulls base image (default gcr.io/distroless/java21-debian12), splits the Java app into layers (dependencies, resources, classes), pushes to registry.
+- Reproducible. Layers are deterministic — same source = same digest.
+- Fast. Skips dependency layer rebuild when pom.xml / build.gradle hasn't changed.
+
+Why Jib wins for Java:
+- Most Java services are 90% deps, 10% app code. Jib's layer split optimizes for "your code changed, deps didn't."
+- No Docker installed on developer or CI machines.
+- Native integration with Maven / Gradle lifecycle.
+- Default base is distroless, security-by-default.
+
+ko (Google, 2018; CNCF Sandbox). Go-specific.
+
+\`\`\`bash
+ko build ./cmd/api
+# Produces and pushes ghcr.io/myorg/api@sha256:... to KO_DOCKER_REPO
+
+ko build --bare --tags=v1.2.3 ./cmd/api
+\`\`\`
+
+What ko does:
+- No Dockerfile. Reads main package, runs go build, layers the resulting binary into base image.
+- Default base: cgr.io/chainguard/static or gcr.io/distroless/static. Tiny, non-root.
+- No Docker daemon. Pushes to registry directly.
+- SBOM-attached. Default-on as of ko v0.13.
+- Fast iteration.
+
+Tight integration with Kubernetes manifests. ko apply -f deployment.yaml replaces ko://github.com/myorg/api strings with the just-built image digest, then kubectl applies. Single-command source-to-cluster.
+
+When to pick which:
+- Java service: Jib. No reason to write a Dockerfile.
+- Single-binary Go service: ko.
+- Mixed-language org with platform team owning image policy: CNB.
+- Heavy customization, system packages, multi-stage: still Dockerfile + BuildKit.
+
+Other Dockerfile-alternative tools:
+- Bazel rules_oci — Bazel-native OCI image builds; reproducible, deterministic, language-agnostic.
+- Nix dockerTools.buildLayeredImage — declarative image construction from Nix expressions.
+- s2i (OpenShift Source-to-Image) — Red Hat's predecessor to buildpacks.
+- apko (Chainguard) — declarative OCI image builds from a YAML package list.`,
+        image: '/diagrams/devops/f4-buildpacks.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Buildpacks, Jib, ko.',
+        question: 'Quick-fire interview answers — Buildpacks, Jib, ko.',
+        answer: `Rapid-fire facts.
+
+Q: Cloud Native Buildpacks in one line?
+A: CNCF Incubating spec descended from Heroku buildpacks; pack CLI runs language-specific buildpacks against source to produce OCI images, no Dockerfile.
+
+Q: pack CLI?
+A: pack build my-app --builder paketobuildpacks/builder-jammy-base produces an image.
+
+Q: Builder vs buildpack?
+A: Buildpack = single-language build module. Builder = bundle of buildpacks + base build/run images.
+
+Q: Paketo vs Heroku buildpacks?
+A: Paketo is Cloud Foundry / VMware's buildpack family. Heroku's buildpacks are Heroku's. Both implement CNB spec.
+
+Q: pack rebase?
+A: Rewrites just the base-image layers of an existing image. Use when run image gets a CVE fix.
+
+Q: Where do buildpacks shine?
+A: PaaS-style platforms (Cloud Run --source, Heroku, Tanzu), polyglot orgs centralizing image policy, mass CVE rebases.
+
+Q: Where do buildpacks lose?
+A: Heavy customization, tiny scratch images, full developer control over layers.
+
+Q: Jib in one line?
+A: Google Maven / Gradle plugin that builds Java container images from source — no Docker daemon, no Dockerfile, deterministic, distroless by default.
+
+Q: How does Jib avoid the Docker daemon?
+A: Talks the OCI registry distribution-spec HTTP API directly.
+
+Q: Jib's layer split?
+A: Dependencies, resources, classes — separate layers. Code change rebuilds the classes layer only.
+
+Q: Why Jib for Java?
+A: Native Maven / Gradle integration, no Docker needed in CI, distroless default, deterministic image digests.
+
+Q: ko in one line?
+A: Google CNCF Sandbox tool that turns a Go module path into a tiny, non-root OCI image and pushes it.
+
+Q: ko's default base?
+A: cgr.io/chainguard/static or gcr.io/distroless/static. Minimal, non-root, ~2 MB plus your binary.
+
+Q: ko apply -f?
+A: Replaces ko://github.com/myorg/api strings in K8s YAML with just-built image digests, then kubectl applies. Single-command source-to-cluster.
+
+Q: Where is ko used heavily?
+A: Knative, Tekton, Sigstore, many Kubernetes Sigs projects.
+
+Q: When pick ko over Dockerfile + BuildKit?
+A: Single-binary Go service, no system packages needed, daemonless build.
+
+Q: When pick Jib over Dockerfile + BuildKit?
+A: Java service in a Maven / Gradle build, no Docker daemon in CI, want default-distroless.
+
+Q: When pick CNB over Dockerfile?
+A: Platform team owns image policy across many languages; want centralized base + mass rebase.
+
+Q: Bazel rules_oci?
+A: Bazel rules for deterministic OCI image builds — language-agnostic, no daemon, monorepo-grade reproducibility.
+
+Q: Nix dockerTools?
+A: Nix expression for OCI images. Reproducible, deterministic, layered for caching.
+
+Q: apko vs CNB?
+A: apko is Chainguard's declarative OCI image builder from YAML package lists. CNB is for application source to image.
+
+Q: Common reason to keep using Dockerfile + BuildKit?
+A: Complex multi-stage builds, custom system packages, fine-grained layer control, mixed-language with shared system deps.
+
+Q: How do these tools handle SBOMs in 2026?
+A: All produce SBOMs by default — Jib via plugins, ko since v0.13, CNB via the spec, apko built in.
+
+Q: Most common interview question?
+A: "Why Jib / ko instead of Dockerfile?" Daemonless, no Dockerfile to maintain, deterministic, default-distroless, native integration with the language build system.
+
+These are answers a container-fluent platform engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://buildpacks.io/',
+      'https://paketo.io/',
+      'https://github.com/GoogleContainerTools/jib',
+      'https://ko.build/',
+      'https://github.com/bazel-contrib/rules_oci',
+      'https://github.com/chainguard-dev/apko',
+    ],
+  },
+
+  {
+    id: 'docker-cli',
+    title: 'Docker CLI — Essential Commands & Run Flags',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Mastering the Docker CLI means knowing which flags actually control container behavior, how to inspect running state, and how to manage disk usage. These are the commands and flags that come up in every DevOps interview and day-to-day container operation.',
+    visualizations: [
+      {
+        title: 'Docker CLI — container lifecycle, inspection, disk management',
+        description: `Container lifecycle commands:
+
+docker run key flags:
+  -d                        detach (run in background)
+  --name <name>             assign a name; enables DNS on user-defined networks
+  --rm                      remove container + anonymous volumes on exit (incompatible with --restart)
+  --restart unless-stopped  restart on crash and after daemon restart; ignores manual docker stop
+  --restart on-failure:3    restart only on non-zero exit, max 3 attempts; stops on config errors
+  -p 127.0.0.1:8080:8080   publish port; bind to localhost only (omitting IP binds 0.0.0.0)
+  -e VAR=value              set environment variable
+  -v /host/path:/ctr/path   bind mount; :ro for read-only
+  --mount type=volume,...   explicit mount syntax; preferred over -v for clarity
+  -u 1000:1000              run as specific UID:GID
+  --read-only               read-only rootfs; pair with --tmpfs /tmp for writable scratch
+  --init                    run tini as PID 1; proper signal forwarding and zombie reaping
+
+docker stop vs docker kill:
+  stop — sends SIGTERM; waits --time seconds (default 10); then sends SIGKILL (graceful)
+  kill — sends SIGKILL immediately by default (no grace period)
+  Use stop except when the container is frozen or in an infinite loop
+
+docker exec -it <name> sh   — get a shell inside a running container
+  Runs in the container's existing namespaces — same network, filesystem, PID namespace
+  Fails with 'container not running' if the container has exited
+
+Inspection commands:
+  docker inspect <name>     — full JSON: IP, mounts, env, labels, state, resource limits
+  docker inspect <name> | jq '.[0].NetworkSettings.Networks'   — extract network config
+  docker logs <name> --tail 100 --follow  — stream last 100 lines + follow
+  docker stats              — live cgroup metrics: CPU%, MEM, NET I/O, BLOCK I/O
+  docker stats --no-stream  — one-shot snapshot of all running containers
+  docker top <name>         — processes running inside the container (ps output)
+  docker port <name>        — show host-side port mappings
+  docker diff <name>        — files changed vs image (A=added, C=changed, D=deleted)
+
+File operations:
+  docker cp <name>:/app/log ./log    — copy from container to host
+  docker cp ./config <name>:/app/    — copy from host to container
+  Works on stopped containers too
+
+Image inspection:
+  docker image history myapp:v1 --no-trunc  — all layers + commands + sizes
+  docker inspect myapp:v1 | jq '.[0].RootFS.Layers | length'  — layer count
+
+Disk management (docker system):
+  docker system df          — usage breakdown: images, containers, volumes, build cache
+  docker system df -v       — verbose: per-image and per-container breakdown
+  docker system prune       — removes: stopped containers, dangling images, unused networks, build cache
+  docker system prune -a    — also removes ALL unused images (not just dangling)
+  docker system prune -a --volumes  — also removes unnamed volumes (CAREFUL: data loss)
+  Named volumes are NEVER removed by prune — only explicit 'docker volume rm'
+
+docker system events — real-time event stream:
+  Tracks: container create/start/stop/die, image pull/tag/push, network connect/disconnect
+  Filter: docker events --filter type=container --filter event=die`,
+        image: '/diagrams/devops/f17-docker-cli.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker CLI.',
+        description: `Rapid-fire facts.
+
+Q: What is the difference between docker stop and docker kill?
+A: docker stop sends SIGTERM, waits the grace period (default 10s), then sends SIGKILL. docker kill sends SIGKILL immediately. Use stop for graceful shutdown; kill for frozen processes.
+
+Q: What is the difference between docker exec and docker run?
+A: exec runs a command inside an already-running container's namespaces. run starts a brand new container from an image. exec on a stopped container fails; run always creates a fresh instance.
+
+Q: What does --rm do and why can't you use it with --restart?
+A: --rm auto-removes the container on exit. --restart would try to restart it after exit, but the container was already deleted — they are mutually exclusive.
+
+Q: What does docker system prune -a --volumes remove?
+A: Stopped containers, all unused images (not just dangling), unused networks, build cache, and anonymous (unnamed) volumes. Named volumes are never touched without explicit docker volume rm.
+
+Q: How do you see the actual memory limit inside a container?
+A: cat /sys/fs/cgroup/memory.max — docker stats and the free command inside the container show HOST memory, not the container limit. This is a well-known cgroup quirk.
+
+Q: What flag restricts published ports to localhost only?
+A: -p 127.0.0.1:8080:8080. Without specifying the host IP, Docker binds to 0.0.0.0 (all interfaces), bypassing firewall rules and potentially exposing the port to the network.
+
+Q: What does docker inspect show that docker stats does not?
+A: Static configuration: mounts, environment variables, network config, labels, restart policy, image digest, port bindings. Stats shows live runtime metrics: CPU%, memory usage, network and block I/O rates.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/reference/cli/docker/container/run/',
+      'https://docs.docker.com/reference/cli/docker/system/',
+      'https://docs.docker.com/reference/cli/docker/',
+    ],
+  },
+
+  {
+    id: 'docker-daemon',
+    title: 'Docker Daemon — dockerd, Storage Drivers & Daemon Config',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'The Docker daemon (dockerd) is the long-running process that manages all Docker objects. It delegates container lifecycle to containerd, which calls runc for process execution. Understanding daemon.json, storage drivers, logging drivers, and TLS configuration is essential for production Docker deployments.',
+    visualizations: [
+      {
+        title: 'Docker daemon architecture — dockerd, containerd, runc, subsystems',
+        description: `Docker Engine is a stack of three processes:
+
+dockerd — the high-level daemon:
+  Exposes the Docker REST API (Unix socket /var/run/docker.sock by default, or TCP :2375/:2376)
+  Handles image management, networking, volumes, build, swarm
+  Delegates container lifecycle operations to containerd via gRPC
+
+containerd — the container runtime supervisor:
+  Manages container state (create/start/stop/delete)
+  Pulls and unpacks OCI images into the snapshotter
+  Fires hooks (OCI spec): createRuntime, createContainer, startContainer, poststop
+  Exposes its own socket at /run/containerd/containerd.sock
+
+runc / crun — OCI runtime:
+  Called by containerd shim for each container start
+  Sets up namespaces, cgroups, rootfs, and executes the process
+  Exits after container starts — it is NOT the process supervisor
+
+daemon.json location: /etc/docker/daemon.json  (Linux)
+After editing, reload with: systemctl reload docker
+Conflicts between daemon.json and systemd ExecStart= flags cause dockerd to fail.
+
+Storage drivers (snapshotter for image layers):
+  overlay2 — recommended for all modern Linux (kernel 4.0+)
+    Uses overlayfs; four directories per layer: lowerdir/upperdir/workdir/merged
+    XFS can enforce per-container size with pquota+overlay2.size
+  fuse-overlayfs — for rootless Docker on older kernels without native overlayfs
+  btrfs / zfs — native CoW filesystems; use only if the host already runs btrfs/zfs
+  windowsfilter — Windows only
+
+Logging drivers:
+  json-file (default) — logs to /var/lib/docker/containers/<id>/<id>-json.log
+    Always configure max-size and max-file to prevent disk exhaustion
+    docker logs command works with this driver
+  journald — forwards to systemd journal; use journalctl to read
+  fluentd / awslogs / gcplogs — ship directly to external systems
+    WARNING: docker logs DOES NOT WORK with these drivers
+    The command returns: 'configured logging driver does not support reading'
+
+TLS for remote API (when exposing :2376):
+  tlscacert — CA that signed client certs
+  tlscert / tlskey — server certificate
+  tlsverify: true — mutual TLS (reject clients without valid cert)
+  Without TLS, anyone with network access to :2375 has full Docker control
+
+live-restore: true — containers keep running if dockerd restarts (e.g. during upgrade)
+  Off by default. Critical for production to prevent unnecessary container restarts.
+
+User namespace remapping (userns-remap: "default"):
+  Maps container UID 0 to a high host UID (e.g. 100000).
+  Container root cannot write to host files owned by real root.
+  Breaks bind-mount permissions unless data dirs are chowned to the mapped UID.`,
+        image: '/diagrams/devops/f16-docker-daemon.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Daemon.',
+        description: `Rapid-fire facts.
+
+Q: What is the difference between dockerd and containerd?
+A: dockerd is the high-level Docker API server handling images, networks, builds, swarm. containerd is the container lifecycle runtime it delegates to. runc is the OCI process launcher called by containerd for each start. containerd runs as a separate daemon and can operate without dockerd (e.g. in Kubernetes with containerd-shim).
+
+Q: What happens if daemon.json and a systemd ExecStart= flag set the same option?
+A: dockerd refuses to start. The error appears in journalctl -u docker. Fix by removing the duplicate from one location.
+
+Q: Why should you always set max-size and max-file in daemon.json?
+A: The default json-file logging driver writes unbounded JSON logs to /var/lib/docker/containers/. On production hosts this will eventually fill the disk. max-size=10m, max-file=3 keeps at most 30MB per container.
+
+Q: What is live-restore and why enable it?
+A: With live-restore: true, containers continue running when dockerd is restarted or crashes. Without it, all containers stop on daemon restart, causing unplanned outages during daemon upgrades.
+
+Q: When does docker logs not work?
+A: When the container uses a non-json-file logging driver (fluentd, awslogs, gcplogs, syslog). Logs were shipped directly to the external system. 'docker logs' returns an error — query the external system instead.
+
+Q: What is the security risk of /var/run/docker.sock?
+A: Any process (or container) with access to the socket has full Docker API access — equivalent to root on the host. Mounting it into a container for CI (e.g. Docker-in-Docker alternatives) is a privilege escalation path. Mitigate with socket proxies (e.g. dockersocket) or rootless Docker.
+
+Q: What does overlay2 storage driver store on disk?
+A: Each image layer is stored as four directories: lowerdir (read-only parent layers), upperdir (writable container layer), workdir (atomic operations), merged (unified mount point shown to the container).`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/reference/cli/dockerd/',
+      'https://docs.docker.com/engine/daemon/logs/',
+      'https://docs.docker.com/engine/storage/drivers/overlayfs-driver/',
+    ],
+  },
+
+  {
+    id: 'docker-resource-limits',
+    title: 'Docker Resource Limits — CPU, Memory, OOM & cgroups',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Docker uses Linux cgroups v2 to enforce per-container CPU quotas, memory hard limits, swap access, and PID counts. Understanding these controls — and their gotchas — prevents containers from starving neighbors or crashing hosts under memory pressure.',
+    visualizations: [
+      {
+        title: 'cgroups v2 resource controls — CPU, memory, PIDs, and OOM',
+        description: `Docker resource limits translate directly into Linux cgroup v2 controller settings. Here is what each flag actually configures.
+
+CPU controls:
+
+--cpus <decimal>
+  Sets the CFS (Completely Fair Scheduler) quota. --cpus 1.5 = --cpu-period 100000 --cpu-quota 150000.
+  The container gets 150ms out of every 100ms period = 1.5 cores worth of CPU time.
+  This is a HARD limit — the container is throttled when it hits the quota regardless of host load.
+
+--cpu-shares <integer>  (default: 1024)
+  A SOFT weight, only enforced under CPU contention. --cpu-shares 512 gets half the CPU of a default container when the host is busy. When the host is idle, any container can use 100% of CPU.
+
+--cpuset-cpus "0,2" or "0-3"
+  Pins the container to specific CPU cores. Useful for NUMA-aware workloads or isolating latency-sensitive containers.
+
+Memory controls:
+
+-m / --memory <size>  (minimum: 6 MB)
+  Hard limit. When a container exceeds this, the Linux OOM killer terminates the most memory-hungry process inside the container.
+
+--memory-swap <size>
+  Total RAM + swap combined. Math:
+    --memory-swap == --memory:  zero swap access (OOM at RAM limit)
+    --memory-swap unset:        container can use swap equal to its RAM limit
+    --memory-swap > --memory:   (value - memory) = available swap
+    --memory-swap=-1:           unlimited swap (uses all host swap)
+
+--memory-reservation <size>
+  Soft limit. Must be less than --memory. Under memory pressure, the kernel tries to reclaim down to this value.
+
+--oom-kill-disable
+  Prevents OOM kill for this container. DANGEROUS without -m set — the host can run out of memory trying to honor this.
+
+OOM killer priority:
+  Docker daemon has a lower OOM score than containers. Under memory pressure, the kernel kills containers before the daemon. Container OOM scores are not adjusted — they compete normally with each other.
+
+PID limit:
+
+--pids-limit <n>
+  Caps the number of processes/threads the container can spawn. Default: unlimited.
+  Fork bombs are stopped dead by --pids-limit 200 or 500.
+
+Inspecting actual limits from inside a container:
+  cat /sys/fs/cgroup/memory.max        # actual memory hard limit
+  cat /sys/fs/cgroup/cpu.max           # "quota period" e.g. "150000 100000"
+  cat /sys/fs/cgroup/pids.max          # PID limit
+
+WARNING: free, top, and /proc/meminfo inside a container show HOST memory stats, not container-limited values. This is a well-known cgroup quirk — the procfs interface was designed before cgroups. Always use the /sys/fs/cgroup/ path for accurate container limits.
+
+docker stats — runtime view from outside:
+  docker stats mycontainer
+  Shows: CPU %, MEM USAGE / LIMIT, MEM %, NET I/O, BLOCK I/O, PIDs
+  This reads from the actual cgroup values, so it is accurate.
+
+Resource limits in Docker Compose:
+  services:
+    web:
+      deploy:
+        resources:
+          limits:
+            cpus: "1.5"
+            memory: 512m
+          reservations:
+            cpus: "0.5"
+            memory: 256m
+
+  deploy.resources is the standard way. Older style (mem_limit, cpus) is deprecated.`,
+        image: '/diagrams/devops/f13-docker-resource-limits.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Resource Limits.',
+        description: `Rapid-fire facts.
+
+Q: What does --cpus 1.5 actually configure under the hood?
+A: Sets the CFS scheduler quota to 150,000 µs per 100,000 µs period — meaning the container gets 1.5 CPUs worth of time. Equivalent to --cpu-period 100000 --cpu-quota 150000.
+
+Q: What is the difference between --cpus and --cpu-shares?
+A: --cpus is a hard limit — the container is throttled regardless of host load. --cpu-shares is a soft weight (default 1024) — only matters when the host CPU is contested. Under idle load, any container can use 100% CPU regardless of shares.
+
+Q: Minimum memory limit for a Docker container?
+A: 6 MB. Smaller values are rejected.
+
+Q: What happens when a container hits its -m memory limit?
+A: The Linux OOM killer terminates the most memory-hungry process inside the container. If a restart policy is set, Docker restarts the container.
+
+Q: --memory-swap equal to --memory — what does that mean?
+A: Zero swap access. The container OOM kills at the RAM limit with no swap grace period. Recommended for databases to prevent slow swap thrash.
+
+Q: What is the danger of --oom-kill-disable?
+A: Without -m set alongside it, the host can run out of memory trying to honor it. Always pair with a hard memory limit.
+
+Q: Why does free inside a container show wrong memory numbers?
+A: /proc/meminfo and free report host-wide memory — the procfs interface predates cgroups. Read /sys/fs/cgroup/memory.max for the actual container limit.
+
+Q: How do you check actual resource limits from inside a container?
+A: cat /sys/fs/cgroup/memory.max (memory), cat /sys/fs/cgroup/cpu.max (CPU quota/period), cat /sys/fs/cgroup/pids.max (PID limit).
+
+Q: What is docker stats?
+A: Real-time resource usage per container, reading from cgroup values directly. Shows CPU%, MEM USAGE/LIMIT, NET I/O, BLOCK I/O, PIDs. Accurate unlike free/top inside the container.
+
+Q: How do you prevent fork bomb attacks on a container?
+A: --pids-limit 200 (or a reasonable ceiling). Default is unlimited.
+
+Q: How do you set resource limits in Docker Compose?
+A: Under deploy.resources.limits with cpus and memory keys. The older-style top-level mem_limit / cpus is deprecated.
+
+Q: What does OOM score mean in Docker?
+A: It's a kernel value (lower = less likely to be killed). Docker lowers the daemon's OOM score so the daemon survives host memory pressure. Container processes compete at normal OOM scores.
+
+These are answers a container-resource-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/engine/containers/resource_constraints/',
+      'https://docs.kernel.org/admin-guide/cgroup-v2.html',
+      'https://docs.docker.com/compose/compose-file/deploy/',
     ],
   },
 
@@ -23693,130 +24884,6 @@ These are answers a Docker-Compose-fluent engineer should give without preparati
   },
 
   {
-    id: 'docker-security',
-    title: 'Docker Security — Rootless, Capabilities, Seccomp & Image Signing',
-    icon: 'package',
-    color: '#ec4899',
-    questions: 5,
-    description: 'Container security is defense-in-depth: minimal base images reduce the CVE surface, dropping Linux capabilities limits what a compromised container can do, seccomp profiles block unnecessary syscalls, and rootless mode ensures a container escape yields unprivileged host access rather than root.',
-    visualizations: [
-      {
-        title: 'Container security layers — image, runtime, and kernel hardening',
-        description: `Docker security operates at four distinct layers. A breach at any layer is contained by the layers below it.
-
-Layer 1 — Image security (before the container even runs):
-
-Minimal base images. Every package in the base image is a potential CVE. Use:
-  distroless (Google) — no shell, no package manager, only runtime libs. gcr.io/distroless/nodejs20-debian12
-  Alpine Linux     — musl libc + busybox, ~5MB base, small attack surface
-  scratch          — truly empty; only for statically-linked binaries (Go, Rust)
-
-Multi-stage builds separate build tools from the runtime image — the compiler, test frameworks, and dev deps never ship to production.
-
-Image scanning — find CVEs before pushing:
-  trivy image myapp:v1.2.3       # Aqua Security, widely used in CI
-  grype myapp:v1.2.3             # Anchore
-  docker scout cves myapp:v1.2.3 # Docker's built-in scanner
-  snyk container test myapp:v1.2.3
-
-Image signing with cosign (SLSA provenance):
-  cosign sign --key cosign.key ghcr.io/myorg/myapp:v1.2.3
-  cosign verify --key cosign.pub ghcr.io/myorg/myapp:v1.2.3
-  Keyless signing via OIDC token (GitHub Actions, no private key needed):
-    cosign sign ghcr.io/myorg/myapp@sha256:...
-
-Layer 2 — Runtime capabilities (Linux capabilities):
-
-Default Docker container has 14 of 38+ capabilities active. Most dangerous:
-  CAP_NET_ADMIN    — modify host routing tables, firewall rules
-  CAP_SYS_ADMIN    — mount filesystems, ptrace, kernel module loading (near-root)
-  CAP_SYS_PTRACE   — trace any process
-  CAP_DAC_OVERRIDE — bypass file permission checks
-
-Hardened capability set:
-  docker run --cap-drop ALL --cap-add NET_BIND_SERVICE myapp
-  # Only grant NET_BIND_SERVICE if you need to bind port < 1024
-
-privileged: true disables ALL capability dropping and gives access to host devices — equivalent to root on the host. Never use in production.
-
---no-new-privileges — prevents setuid/setgid binaries from gaining elevated privileges. Should always be set.
---read-only — mounts root filesystem as read-only. Combine with tmpfs for writable dirs:
-  docker run --read-only --tmpfs /tmp myapp
-
-Layer 3 — Seccomp (syscall filtering):
-
-Default Docker/containerd seccomp profile blocks ~44 of ~300+ Linux syscalls including: keyctl, ptrace, mount, kexec_load, unshare, add_key.
-
-Custom seccomp profile:
-  docker run --security-opt seccomp=profile.json myapp
-
-Layer 4 — Rootless Docker:
-
-Rootless mode runs the entire Docker daemon as an unprivileged user. The container's root (UID 0) maps to a high host UID (e.g. 100000+) via user namespaces. A full container escape yields only unprivileged host access.
-
-Limitations of rootless mode:
-  - Some network modes unavailable (macvlan, ipvlan)
-  - AppArmor profiles may not load
-  - Overlay storage driver requires kernel 5.11+ (or use fuse-overlayfs)
-  - Expose ports < 1024 requires CAP_NET_BIND_SERVICE or sysctl net.ipv4.ip_unprivileged_port_start=0
-
-Security checklist for production containers:
-  USER non-root (in Dockerfile, before CMD)
-  --cap-drop ALL + add only needed caps
-  --no-new-privileges
-  --read-only + --tmpfs for writable paths
-  seccomp profile (at minimum: RuntimeDefault)
-  Scan image in CI (trivy/grype)
-  Pin base image to SHA digest (not a mutable tag)
-  No secrets in ENV or image layers (use --mount=type=secret)`,
-        image: '/diagrams/devops/f11-docker-security.png',
-      },
-      {
-        title: 'Quick-fire interview answers — Docker Security.',
-        description: `Rapid-fire facts.
-
-Q: What is the default number of Linux capabilities in a Docker container?
-A: 14 out of 38+. Most dangerous ones: CAP_NET_ADMIN (routing), CAP_SYS_ADMIN (near-root), CAP_DAC_OVERRIDE (bypass file permissions).
-
-Q: How do you drop all capabilities and add back only what's needed?
-A: docker run --cap-drop ALL --cap-add NET_BIND_SERVICE myapp
-
-Q: What does --no-new-privileges do?
-A: Prevents setuid/setgid binaries inside the container from gaining elevated privileges. Should always be set for untrusted workloads.
-
-Q: What does privileged: true actually do?
-A: Disables ALL capability dropping, mounts /sys read-write, allows host device access. Functionally equivalent to root on the host. Never use in production.
-
-Q: What is seccomp and what does Docker's default profile do?
-A: Seccomp is a Linux syscall filter. Docker's default profile blocks ~44 syscalls (ptrace, mount, keyctl, kexec_load, etc.) out of 300+. Kubernetes PSS restricted requires seccompProfile: RuntimeDefault at minimum.
-
-Q: What is rootless Docker?
-A: The Docker daemon runs as an unprivileged user. Container UID 0 maps to a high host UID via user namespaces. A container escape only yields unprivileged host access, not root.
-
-Q: Why use distroless images?
-A: No shell, no package manager, no OS utilities — drastically fewer CVEs. A compromised container cannot install tools or read unrelated files. gcr.io/distroless/nodejs20 is ~30MB vs node:20-alpine at ~180MB.
-
-Q: How do you sign a container image for SLSA provenance?
-A: cosign sign with a private key or keyless via OIDC token (GitHub Actions). Provides cryptographic proof of who built the image and when.
-
-Q: Where should secrets NOT go in a Dockerfile?
-A: Not in ENV or ARG — both are visible in docker history and image metadata. Not in COPY files unless .dockerignore excludes them. Use RUN --mount=type=secret,id=mysecret to mount secrets only during build, never committed to a layer.
-
-Q: What is the recommended security checklist for production containers?
-A: USER non-root, --cap-drop ALL, --no-new-privileges, --read-only rootfs, seccomp profile, image scanning in CI, SHA digest pinning for base images, no secrets in ENV.
-
-These are answers a container-security-fluent engineer should give without preparation.`,
-      },
-    ],
-    references: [
-      'https://docs.docker.com/engine/security/',
-      'https://docs.docker.com/engine/security/seccomp/',
-      'https://github.com/google/distroless',
-      'https://github.com/sigstore/cosign',
-    ],
-  },
-
-  {
     id: 'docker-registry',
     title: 'Docker Registries — Push, Pull, Tags & Multi-arch Manifests',
     icon: 'package',
@@ -23939,216 +25006,6 @@ These are answers a container-registry-fluent engineer should give without prepa
   },
 
   {
-    id: 'docker-resource-limits',
-    title: 'Docker Resource Limits — CPU, Memory, OOM & cgroups',
-    icon: 'package',
-    color: '#ec4899',
-    questions: 5,
-    description: 'Docker uses Linux cgroups v2 to enforce per-container CPU quotas, memory hard limits, swap access, and PID counts. Understanding these controls — and their gotchas — prevents containers from starving neighbors or crashing hosts under memory pressure.',
-    visualizations: [
-      {
-        title: 'cgroups v2 resource controls — CPU, memory, PIDs, and OOM',
-        description: `Docker resource limits translate directly into Linux cgroup v2 controller settings. Here is what each flag actually configures.
-
-CPU controls:
-
---cpus <decimal>
-  Sets the CFS (Completely Fair Scheduler) quota. --cpus 1.5 = --cpu-period 100000 --cpu-quota 150000.
-  The container gets 150ms out of every 100ms period = 1.5 cores worth of CPU time.
-  This is a HARD limit — the container is throttled when it hits the quota regardless of host load.
-
---cpu-shares <integer>  (default: 1024)
-  A SOFT weight, only enforced under CPU contention. --cpu-shares 512 gets half the CPU of a default container when the host is busy. When the host is idle, any container can use 100% of CPU.
-
---cpuset-cpus "0,2" or "0-3"
-  Pins the container to specific CPU cores. Useful for NUMA-aware workloads or isolating latency-sensitive containers.
-
-Memory controls:
-
--m / --memory <size>  (minimum: 6 MB)
-  Hard limit. When a container exceeds this, the Linux OOM killer terminates the most memory-hungry process inside the container.
-
---memory-swap <size>
-  Total RAM + swap combined. Math:
-    --memory-swap == --memory:  zero swap access (OOM at RAM limit)
-    --memory-swap unset:        container can use swap equal to its RAM limit
-    --memory-swap > --memory:   (value - memory) = available swap
-    --memory-swap=-1:           unlimited swap (uses all host swap)
-
---memory-reservation <size>
-  Soft limit. Must be less than --memory. Under memory pressure, the kernel tries to reclaim down to this value.
-
---oom-kill-disable
-  Prevents OOM kill for this container. DANGEROUS without -m set — the host can run out of memory trying to honor this.
-
-OOM killer priority:
-  Docker daemon has a lower OOM score than containers. Under memory pressure, the kernel kills containers before the daemon. Container OOM scores are not adjusted — they compete normally with each other.
-
-PID limit:
-
---pids-limit <n>
-  Caps the number of processes/threads the container can spawn. Default: unlimited.
-  Fork bombs are stopped dead by --pids-limit 200 or 500.
-
-Inspecting actual limits from inside a container:
-  cat /sys/fs/cgroup/memory.max        # actual memory hard limit
-  cat /sys/fs/cgroup/cpu.max           # "quota period" e.g. "150000 100000"
-  cat /sys/fs/cgroup/pids.max          # PID limit
-
-WARNING: free, top, and /proc/meminfo inside a container show HOST memory stats, not container-limited values. This is a well-known cgroup quirk — the procfs interface was designed before cgroups. Always use the /sys/fs/cgroup/ path for accurate container limits.
-
-docker stats — runtime view from outside:
-  docker stats mycontainer
-  Shows: CPU %, MEM USAGE / LIMIT, MEM %, NET I/O, BLOCK I/O, PIDs
-  This reads from the actual cgroup values, so it is accurate.
-
-Resource limits in Docker Compose:
-  services:
-    web:
-      deploy:
-        resources:
-          limits:
-            cpus: "1.5"
-            memory: 512m
-          reservations:
-            cpus: "0.5"
-            memory: 256m
-
-  deploy.resources is the standard way. Older style (mem_limit, cpus) is deprecated.`,
-        image: '/diagrams/devops/f13-docker-resource-limits.png',
-      },
-      {
-        title: 'Quick-fire interview answers — Docker Resource Limits.',
-        description: `Rapid-fire facts.
-
-Q: What does --cpus 1.5 actually configure under the hood?
-A: Sets the CFS scheduler quota to 150,000 µs per 100,000 µs period — meaning the container gets 1.5 CPUs worth of time. Equivalent to --cpu-period 100000 --cpu-quota 150000.
-
-Q: What is the difference between --cpus and --cpu-shares?
-A: --cpus is a hard limit — the container is throttled regardless of host load. --cpu-shares is a soft weight (default 1024) — only matters when the host CPU is contested. Under idle load, any container can use 100% CPU regardless of shares.
-
-Q: Minimum memory limit for a Docker container?
-A: 6 MB. Smaller values are rejected.
-
-Q: What happens when a container hits its -m memory limit?
-A: The Linux OOM killer terminates the most memory-hungry process inside the container. If a restart policy is set, Docker restarts the container.
-
-Q: --memory-swap equal to --memory — what does that mean?
-A: Zero swap access. The container OOM kills at the RAM limit with no swap grace period. Recommended for databases to prevent slow swap thrash.
-
-Q: What is the danger of --oom-kill-disable?
-A: Without -m set alongside it, the host can run out of memory trying to honor it. Always pair with a hard memory limit.
-
-Q: Why does free inside a container show wrong memory numbers?
-A: /proc/meminfo and free report host-wide memory — the procfs interface predates cgroups. Read /sys/fs/cgroup/memory.max for the actual container limit.
-
-Q: How do you check actual resource limits from inside a container?
-A: cat /sys/fs/cgroup/memory.max (memory), cat /sys/fs/cgroup/cpu.max (CPU quota/period), cat /sys/fs/cgroup/pids.max (PID limit).
-
-Q: What is docker stats?
-A: Real-time resource usage per container, reading from cgroup values directly. Shows CPU%, MEM USAGE/LIMIT, NET I/O, BLOCK I/O, PIDs. Accurate unlike free/top inside the container.
-
-Q: How do you prevent fork bomb attacks on a container?
-A: --pids-limit 200 (or a reasonable ceiling). Default is unlimited.
-
-Q: How do you set resource limits in Docker Compose?
-A: Under deploy.resources.limits with cpus and memory keys. The older-style top-level mem_limit / cpus is deprecated.
-
-Q: What does OOM score mean in Docker?
-A: It's a kernel value (lower = less likely to be killed). Docker lowers the daemon's OOM score so the daemon survives host memory pressure. Container processes compete at normal OOM scores.
-
-These are answers a container-resource-fluent engineer should give without preparation.`,
-      },
-    ],
-    references: [
-      'https://docs.docker.com/engine/containers/resource_constraints/',
-      'https://docs.kernel.org/admin-guide/cgroup-v2.html',
-      'https://docs.docker.com/compose/compose-file/deploy/',
-    ],
-  },
-
-  {
-    id: 'docker-buildx',
-    title: 'Docker Buildx — Multi-Platform Builds & BuildKit',
-    icon: 'package',
-    color: '#ec4899',
-    questions: 5,
-    description: 'Docker Buildx extends the Docker CLI with BuildKit — a next-generation builder that executes Dockerfile stages as a DAG, caches at layer granularity, and produces multi-architecture images in one push. It is the standard tool for production CI/CD pipelines.',
-    visualizations: [
-      {
-        title: 'BuildKit pipeline — multi-platform build with cache backends',
-        description: `BuildKit replaces the classic builder with a DAG-based solver that can run stages in parallel and cache at the instruction level.
-
-Key concepts:
-
-Builder instances (docker buildx create):
-  docker-container driver — starts BuildKit as a container; supports --platform, --push, --load, --cache-to
-  docker driver (default) — legacy builder inside dockerd; does NOT support multi-platform or registry cache export
-  remote driver — connects to an external buildkitd (e.g. on a Kubernetes cluster)
-
-Multi-platform builds:
-  --platform linux/amd64,linux/arm64 produces an OCI Image Index (aka multi-arch manifest list).
-  docker pull on an M-series Mac pulls arm64; CI (x86) pulls amd64 — automatically.
-  Requires binfmt_misc QEMU emulation on the build host OR a native node builder (--append).
-
-Cache backends:
-  type=registry     — exports cache layers to a registry tag; portable across any CI
-  type=gha          — GitHub Actions Cache API; no external infra; purged after 7 days idle
-  type=local        — writes to a local directory; fastest for single-host CI
-  type=s3 / azblob  — cloud blob stores; good for self-hosted runners
-
-mode=max vs mode=min (for cache-to):
-  max: caches ALL intermediate layers including every RUN/COPY intermediate. Best cache-hit rate.
-  min: caches only the final stage layers. Smaller storage, fewer cache hits.
-
-Build secrets (never baked into layers):
-  --secret id=npmrc,src=$HOME/.npmrc
-  In Dockerfile: RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm install
-
-SSH agent forwarding:
-  --ssh default=$SSH_AUTH_SOCK
-  In Dockerfile: RUN --mount=type=ssh git clone git@github.com:org/private-repo
-
-Attestations (supply chain security):
-  --attest type=sbom          → generates CycloneDX/SPDX SBOM attached to image
-  --attest type=provenance,mode=max → SLSA provenance metadata
-  docker buildx imagetools inspect myapp:v1 — verify attestations in registry`,
-        image: '/diagrams/devops/f14-docker-buildx.png',
-      },
-      {
-        title: 'Quick-fire interview answers — Docker Buildx.',
-        description: `Rapid-fire facts.
-
-Q: What is the difference between docker build and docker buildx build?
-A: docker build uses the legacy builder inside dockerd. docker buildx build uses BuildKit, which adds DAG-based parallel execution, multi-platform support, cache export backends, secrets, and attestations.
-
-Q: Why can't you use --load and --platform linux/amd64,linux/arm64 together?
-A: --load writes to the local Docker image store which only supports one platform at a time. Use --push for multi-arch, or build with a single platform for --load.
-
-Q: What is mode=max in cache-to?
-A: Exports ALL intermediate layers including every RUN/COPY step as cache. mode=min only exports the final stage. mode=max gets better cache hit rates at the cost of more storage.
-
-Q: How do you pass a secret to a build without it appearing in docker history?
-A: --secret id=mykey,src=./key.txt and RUN --mount=type=secret,id=mykey ... in the Dockerfile. The mount is temporary — it never writes to any image layer.
-
-Q: What is an OCI Image Index?
-A: A manifest list that references per-platform image manifests. A docker pull picks the right one automatically based on the pulling host's OS/arch.
-
-Q: How does QEMU multi-platform building work?
-A: binfmt_misc registers QEMU user-space emulators for foreign architectures. The build host runs arm64 binaries under emulation. Slower than native but requires no additional nodes.
-
-Q: What does --attest type=provenance do?
-A: Attaches SLSA provenance metadata to the image in the registry — build inputs, source repo, builder identity. Enables supply-chain attestation verification with cosign or docker buildx imagetools.`,
-      },
-    ],
-    references: [
-      'https://docs.docker.com/reference/cli/docker/buildx/',
-      'https://docs.docker.com/reference/cli/docker/buildx/build/',
-      'https://docs.docker.com/build/cache/backends/',
-    ],
-  },
-
-  {
     id: 'docker-swarm',
     title: 'Docker Swarm — Cluster Orchestration & Rolling Deploys',
     icon: 'package',
@@ -24240,983 +25097,126 @@ A: TCP 2377 (cluster management), TCP/UDP 7946 (node communication), UDP 4789 (V
   },
 
   {
-    id: 'docker-daemon',
-    title: 'Docker Daemon — dockerd, Storage Drivers & Daemon Config',
+    id: 'docker-security',
+    title: 'Docker Security — Rootless, Capabilities, Seccomp & Image Signing',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
-    description: 'The Docker daemon (dockerd) is the long-running process that manages all Docker objects. It delegates container lifecycle to containerd, which calls runc for process execution. Understanding daemon.json, storage drivers, logging drivers, and TLS configuration is essential for production Docker deployments.',
+    description: 'Container security is defense-in-depth: minimal base images reduce the CVE surface, dropping Linux capabilities limits what a compromised container can do, seccomp profiles block unnecessary syscalls, and rootless mode ensures a container escape yields unprivileged host access rather than root.',
     visualizations: [
       {
-        title: 'Docker daemon architecture — dockerd, containerd, runc, subsystems',
-        description: `Docker Engine is a stack of three processes:
+        title: 'Container security layers — image, runtime, and kernel hardening',
+        description: `Docker security operates at four distinct layers. A breach at any layer is contained by the layers below it.
 
-dockerd — the high-level daemon:
-  Exposes the Docker REST API (Unix socket /var/run/docker.sock by default, or TCP :2375/:2376)
-  Handles image management, networking, volumes, build, swarm
-  Delegates container lifecycle operations to containerd via gRPC
+Layer 1 — Image security (before the container even runs):
 
-containerd — the container runtime supervisor:
-  Manages container state (create/start/stop/delete)
-  Pulls and unpacks OCI images into the snapshotter
-  Fires hooks (OCI spec): createRuntime, createContainer, startContainer, poststop
-  Exposes its own socket at /run/containerd/containerd.sock
+Minimal base images. Every package in the base image is a potential CVE. Use:
+  distroless (Google) — no shell, no package manager, only runtime libs. gcr.io/distroless/nodejs20-debian12
+  Alpine Linux     — musl libc + busybox, ~5MB base, small attack surface
+  scratch          — truly empty; only for statically-linked binaries (Go, Rust)
 
-runc / crun — OCI runtime:
-  Called by containerd shim for each container start
-  Sets up namespaces, cgroups, rootfs, and executes the process
-  Exits after container starts — it is NOT the process supervisor
+Multi-stage builds separate build tools from the runtime image — the compiler, test frameworks, and dev deps never ship to production.
 
-daemon.json location: /etc/docker/daemon.json  (Linux)
-After editing, reload with: systemctl reload docker
-Conflicts between daemon.json and systemd ExecStart= flags cause dockerd to fail.
+Image scanning — find CVEs before pushing:
+  trivy image myapp:v1.2.3       # Aqua Security, widely used in CI
+  grype myapp:v1.2.3             # Anchore
+  docker scout cves myapp:v1.2.3 # Docker's built-in scanner
+  snyk container test myapp:v1.2.3
 
-Storage drivers (snapshotter for image layers):
-  overlay2 — recommended for all modern Linux (kernel 4.0+)
-    Uses overlayfs; four directories per layer: lowerdir/upperdir/workdir/merged
-    XFS can enforce per-container size with pquota+overlay2.size
-  fuse-overlayfs — for rootless Docker on older kernels without native overlayfs
-  btrfs / zfs — native CoW filesystems; use only if the host already runs btrfs/zfs
-  windowsfilter — Windows only
+Image signing with cosign (SLSA provenance):
+  cosign sign --key cosign.key ghcr.io/myorg/myapp:v1.2.3
+  cosign verify --key cosign.pub ghcr.io/myorg/myapp:v1.2.3
+  Keyless signing via OIDC token (GitHub Actions, no private key needed):
+    cosign sign ghcr.io/myorg/myapp@sha256:...
 
-Logging drivers:
-  json-file (default) — logs to /var/lib/docker/containers/<id>/<id>-json.log
-    Always configure max-size and max-file to prevent disk exhaustion
-    docker logs command works with this driver
-  journald — forwards to systemd journal; use journalctl to read
-  fluentd / awslogs / gcplogs — ship directly to external systems
-    WARNING: docker logs DOES NOT WORK with these drivers
-    The command returns: 'configured logging driver does not support reading'
+Layer 2 — Runtime capabilities (Linux capabilities):
 
-TLS for remote API (when exposing :2376):
-  tlscacert — CA that signed client certs
-  tlscert / tlskey — server certificate
-  tlsverify: true — mutual TLS (reject clients without valid cert)
-  Without TLS, anyone with network access to :2375 has full Docker control
+Default Docker container has 14 of 38+ capabilities active. Most dangerous:
+  CAP_NET_ADMIN    — modify host routing tables, firewall rules
+  CAP_SYS_ADMIN    — mount filesystems, ptrace, kernel module loading (near-root)
+  CAP_SYS_PTRACE   — trace any process
+  CAP_DAC_OVERRIDE — bypass file permission checks
 
-live-restore: true — containers keep running if dockerd restarts (e.g. during upgrade)
-  Off by default. Critical for production to prevent unnecessary container restarts.
+Hardened capability set:
+  docker run --cap-drop ALL --cap-add NET_BIND_SERVICE myapp
+  # Only grant NET_BIND_SERVICE if you need to bind port < 1024
 
-User namespace remapping (userns-remap: "default"):
-  Maps container UID 0 to a high host UID (e.g. 100000).
-  Container root cannot write to host files owned by real root.
-  Breaks bind-mount permissions unless data dirs are chowned to the mapped UID.`,
-        image: '/diagrams/devops/f16-docker-daemon.png',
+privileged: true disables ALL capability dropping and gives access to host devices — equivalent to root on the host. Never use in production.
+
+--no-new-privileges — prevents setuid/setgid binaries from gaining elevated privileges. Should always be set.
+--read-only — mounts root filesystem as read-only. Combine with tmpfs for writable dirs:
+  docker run --read-only --tmpfs /tmp myapp
+
+Layer 3 — Seccomp (syscall filtering):
+
+Default Docker/containerd seccomp profile blocks ~44 of ~300+ Linux syscalls including: keyctl, ptrace, mount, kexec_load, unshare, add_key.
+
+Custom seccomp profile:
+  docker run --security-opt seccomp=profile.json myapp
+
+Layer 4 — Rootless Docker:
+
+Rootless mode runs the entire Docker daemon as an unprivileged user. The container's root (UID 0) maps to a high host UID (e.g. 100000+) via user namespaces. A full container escape yields only unprivileged host access.
+
+Limitations of rootless mode:
+  - Some network modes unavailable (macvlan, ipvlan)
+  - AppArmor profiles may not load
+  - Overlay storage driver requires kernel 5.11+ (or use fuse-overlayfs)
+  - Expose ports < 1024 requires CAP_NET_BIND_SERVICE or sysctl net.ipv4.ip_unprivileged_port_start=0
+
+Security checklist for production containers:
+  USER non-root (in Dockerfile, before CMD)
+  --cap-drop ALL + add only needed caps
+  --no-new-privileges
+  --read-only + --tmpfs for writable paths
+  seccomp profile (at minimum: RuntimeDefault)
+  Scan image in CI (trivy/grype)
+  Pin base image to SHA digest (not a mutable tag)
+  No secrets in ENV or image layers (use --mount=type=secret)`,
+        image: '/diagrams/devops/f11-docker-security.png',
       },
       {
-        title: 'Quick-fire interview answers — Docker Daemon.',
+        title: 'Quick-fire interview answers — Docker Security.',
         description: `Rapid-fire facts.
 
-Q: What is the difference between dockerd and containerd?
-A: dockerd is the high-level Docker API server handling images, networks, builds, swarm. containerd is the container lifecycle runtime it delegates to. runc is the OCI process launcher called by containerd for each start. containerd runs as a separate daemon and can operate without dockerd (e.g. in Kubernetes with containerd-shim).
+Q: What is the default number of Linux capabilities in a Docker container?
+A: 14 out of 38+. Most dangerous ones: CAP_NET_ADMIN (routing), CAP_SYS_ADMIN (near-root), CAP_DAC_OVERRIDE (bypass file permissions).
 
-Q: What happens if daemon.json and a systemd ExecStart= flag set the same option?
-A: dockerd refuses to start. The error appears in journalctl -u docker. Fix by removing the duplicate from one location.
+Q: How do you drop all capabilities and add back only what's needed?
+A: docker run --cap-drop ALL --cap-add NET_BIND_SERVICE myapp
 
-Q: Why should you always set max-size and max-file in daemon.json?
-A: The default json-file logging driver writes unbounded JSON logs to /var/lib/docker/containers/. On production hosts this will eventually fill the disk. max-size=10m, max-file=3 keeps at most 30MB per container.
+Q: What does --no-new-privileges do?
+A: Prevents setuid/setgid binaries inside the container from gaining elevated privileges. Should always be set for untrusted workloads.
 
-Q: What is live-restore and why enable it?
-A: With live-restore: true, containers continue running when dockerd is restarted or crashes. Without it, all containers stop on daemon restart, causing unplanned outages during daemon upgrades.
+Q: What does privileged: true actually do?
+A: Disables ALL capability dropping, mounts /sys read-write, allows host device access. Functionally equivalent to root on the host. Never use in production.
 
-Q: When does docker logs not work?
-A: When the container uses a non-json-file logging driver (fluentd, awslogs, gcplogs, syslog). Logs were shipped directly to the external system. 'docker logs' returns an error — query the external system instead.
+Q: What is seccomp and what does Docker's default profile do?
+A: Seccomp is a Linux syscall filter. Docker's default profile blocks ~44 syscalls (ptrace, mount, keyctl, kexec_load, etc.) out of 300+. Kubernetes PSS restricted requires seccompProfile: RuntimeDefault at minimum.
 
-Q: What is the security risk of /var/run/docker.sock?
-A: Any process (or container) with access to the socket has full Docker API access — equivalent to root on the host. Mounting it into a container for CI (e.g. Docker-in-Docker alternatives) is a privilege escalation path. Mitigate with socket proxies (e.g. dockersocket) or rootless Docker.
+Q: What is rootless Docker?
+A: The Docker daemon runs as an unprivileged user. Container UID 0 maps to a high host UID via user namespaces. A container escape only yields unprivileged host access, not root.
 
-Q: What does overlay2 storage driver store on disk?
-A: Each image layer is stored as four directories: lowerdir (read-only parent layers), upperdir (writable container layer), workdir (atomic operations), merged (unified mount point shown to the container).`,
+Q: Why use distroless images?
+A: No shell, no package manager, no OS utilities — drastically fewer CVEs. A compromised container cannot install tools or read unrelated files. gcr.io/distroless/nodejs20 is ~30MB vs node:20-alpine at ~180MB.
+
+Q: How do you sign a container image for SLSA provenance?
+A: cosign sign with a private key or keyless via OIDC token (GitHub Actions). Provides cryptographic proof of who built the image and when.
+
+Q: Where should secrets NOT go in a Dockerfile?
+A: Not in ENV or ARG — both are visible in docker history and image metadata. Not in COPY files unless .dockerignore excludes them. Use RUN --mount=type=secret,id=mysecret to mount secrets only during build, never committed to a layer.
+
+Q: What is the recommended security checklist for production containers?
+A: USER non-root, --cap-drop ALL, --no-new-privileges, --read-only rootfs, seccomp profile, image scanning in CI, SHA digest pinning for base images, no secrets in ENV.
+
+These are answers a container-security-fluent engineer should give without preparation.`,
       },
     ],
     references: [
-      'https://docs.docker.com/reference/cli/dockerd/',
-      'https://docs.docker.com/engine/daemon/logs/',
-      'https://docs.docker.com/engine/storage/drivers/overlayfs-driver/',
-    ],
-  },
-
-  {
-    id: 'docker-cli',
-    title: 'Docker CLI — Essential Commands & Run Flags',
-    icon: 'package',
-    color: '#ec4899',
-    questions: 5,
-    description: 'Mastering the Docker CLI means knowing which flags actually control container behavior, how to inspect running state, and how to manage disk usage. These are the commands and flags that come up in every DevOps interview and day-to-day container operation.',
-    visualizations: [
-      {
-        title: 'Docker CLI — container lifecycle, inspection, disk management',
-        description: `Container lifecycle commands:
-
-docker run key flags:
-  -d                        detach (run in background)
-  --name <name>             assign a name; enables DNS on user-defined networks
-  --rm                      remove container + anonymous volumes on exit (incompatible with --restart)
-  --restart unless-stopped  restart on crash and after daemon restart; ignores manual docker stop
-  --restart on-failure:3    restart only on non-zero exit, max 3 attempts; stops on config errors
-  -p 127.0.0.1:8080:8080   publish port; bind to localhost only (omitting IP binds 0.0.0.0)
-  -e VAR=value              set environment variable
-  -v /host/path:/ctr/path   bind mount; :ro for read-only
-  --mount type=volume,...   explicit mount syntax; preferred over -v for clarity
-  -u 1000:1000              run as specific UID:GID
-  --read-only               read-only rootfs; pair with --tmpfs /tmp for writable scratch
-  --init                    run tini as PID 1; proper signal forwarding and zombie reaping
-
-docker stop vs docker kill:
-  stop — sends SIGTERM; waits --time seconds (default 10); then sends SIGKILL (graceful)
-  kill — sends SIGKILL immediately by default (no grace period)
-  Use stop except when the container is frozen or in an infinite loop
-
-docker exec -it <name> sh   — get a shell inside a running container
-  Runs in the container's existing namespaces — same network, filesystem, PID namespace
-  Fails with 'container not running' if the container has exited
-
-Inspection commands:
-  docker inspect <name>     — full JSON: IP, mounts, env, labels, state, resource limits
-  docker inspect <name> | jq '.[0].NetworkSettings.Networks'   — extract network config
-  docker logs <name> --tail 100 --follow  — stream last 100 lines + follow
-  docker stats              — live cgroup metrics: CPU%, MEM, NET I/O, BLOCK I/O
-  docker stats --no-stream  — one-shot snapshot of all running containers
-  docker top <name>         — processes running inside the container (ps output)
-  docker port <name>        — show host-side port mappings
-  docker diff <name>        — files changed vs image (A=added, C=changed, D=deleted)
-
-File operations:
-  docker cp <name>:/app/log ./log    — copy from container to host
-  docker cp ./config <name>:/app/    — copy from host to container
-  Works on stopped containers too
-
-Image inspection:
-  docker image history myapp:v1 --no-trunc  — all layers + commands + sizes
-  docker inspect myapp:v1 | jq '.[0].RootFS.Layers | length'  — layer count
-
-Disk management (docker system):
-  docker system df          — usage breakdown: images, containers, volumes, build cache
-  docker system df -v       — verbose: per-image and per-container breakdown
-  docker system prune       — removes: stopped containers, dangling images, unused networks, build cache
-  docker system prune -a    — also removes ALL unused images (not just dangling)
-  docker system prune -a --volumes  — also removes unnamed volumes (CAREFUL: data loss)
-  Named volumes are NEVER removed by prune — only explicit 'docker volume rm'
-
-docker system events — real-time event stream:
-  Tracks: container create/start/stop/die, image pull/tag/push, network connect/disconnect
-  Filter: docker events --filter type=container --filter event=die`,
-        image: '/diagrams/devops/f17-docker-cli.png',
-      },
-      {
-        title: 'Quick-fire interview answers — Docker CLI.',
-        description: `Rapid-fire facts.
-
-Q: What is the difference between docker stop and docker kill?
-A: docker stop sends SIGTERM, waits the grace period (default 10s), then sends SIGKILL. docker kill sends SIGKILL immediately. Use stop for graceful shutdown; kill for frozen processes.
-
-Q: What is the difference between docker exec and docker run?
-A: exec runs a command inside an already-running container's namespaces. run starts a brand new container from an image. exec on a stopped container fails; run always creates a fresh instance.
-
-Q: What does --rm do and why can't you use it with --restart?
-A: --rm auto-removes the container on exit. --restart would try to restart it after exit, but the container was already deleted — they are mutually exclusive.
-
-Q: What does docker system prune -a --volumes remove?
-A: Stopped containers, all unused images (not just dangling), unused networks, build cache, and anonymous (unnamed) volumes. Named volumes are never touched without explicit docker volume rm.
-
-Q: How do you see the actual memory limit inside a container?
-A: cat /sys/fs/cgroup/memory.max — docker stats and the free command inside the container show HOST memory, not the container limit. This is a well-known cgroup quirk.
-
-Q: What flag restricts published ports to localhost only?
-A: -p 127.0.0.1:8080:8080. Without specifying the host IP, Docker binds to 0.0.0.0 (all interfaces), bypassing firewall rules and potentially exposing the port to the network.
-
-Q: What does docker inspect show that docker stats does not?
-A: Static configuration: mounts, environment variables, network config, labels, restart policy, image digest, port bindings. Stats shows live runtime metrics: CPU%, memory usage, network and block I/O rates.`,
-      },
-    ],
-    references: [
-      'https://docs.docker.com/reference/cli/docker/container/run/',
-      'https://docs.docker.com/reference/cli/docker/system/',
-      'https://docs.docker.com/reference/cli/docker/',
-    ],
-  },
-
-  {
-    id: 'container-fundamentals',
-    title: 'Container Fundamentals — Namespaces, Cgroups, OCI',
-    icon: 'package',
-    color: '#ec4899',
-    questions: 5,
-    description: 'Containers are not lightweight VMs — they are Linux processes scoped by namespaces, capped by cgroups, and confined by capabilities + seccomp + LSM (AppArmor / SELinux). The OCI specs (image-spec, runtime-spec, distribution-spec) standardized what was once "Docker only" so runc, crun, youki, containerd, CRI-O, Docker, and Podman can all interoperate.',
-    visualizations: [
-      {
-        title: 'The kernel primitives — namespaces and cgroups v2',
-        description: `A container is a regular Linux process whose view of the system is narrowed by namespaces and whose resource consumption is bounded by cgroups. Nothing more, nothing less.
-
-Linux namespaces — the seven flavors that matter for containers:
-
-1. PID namespace. Container sees its own PID 1 and its descendants; cannot see or signal host processes. Created via clone(CLONE_NEWPID). The first process in the namespace becomes PID 1 — which is why "exec a shell as PID 1" surprises engineers (no zombie reaping unless they handle SIGCHLD, no signal default handlers).
-
-2. Mount namespace. Container has its own mount table. The container's root filesystem is a pivot_root into a directory that contains the unpacked image layers (overlayfs). Bind mounts for /etc/resolv.conf, /etc/hostname, etc., are explicit.
-
-3. Network namespace. Container has its own loopback, network interfaces, routing table, iptables rules, sockets. Connected to host via veth pair + bridge (Docker default), or via CNI plugins (Kubernetes).
-
-4. UTS namespace. Container has its own hostname and domainname.
-
-5. IPC namespace. Container has its own System V IPC objects and POSIX message queues.
-
-6. User namespace. Container can have its own UID/GID mapping — root inside (UID 0) maps to an unprivileged UID outside. The kernel feature that makes rootless containers safe(r). Podman + Docker (with userns-remap) use it; default Docker historically did not.
-
-7. Time namespace (Linux 5.6, 2020). Container can have its own CLOCK_MONOTONIC and CLOCK_BOOTTIME offsets. Useful for checkpoint/restore (CRIU).
-
-cgroups v2 (unified hierarchy, default in modern distros — RHEL 9, Ubuntu 22.04+, Debian 11+, Fedora 31+):
-- cpu controller — cpu.max sets quota + period, cpu.weight sets relative weight (1-10000, default 100). Replaces v1's cpu.cfs_quota_us / cpu.shares.
-- memory controller — memory.max (hard limit, OOM-kill on breach), memory.high (soft limit, throttle), memory.low (reclaim protection).
-- io controller — io.max (per-device IOPS / bandwidth caps), io.weight.
-- pids controller — pids.max caps process count (fork-bomb mitigation).
-- hugetlb, rdma, misc controllers for specialized workloads.
-
-cgroups v2 is mandatory for modern features — Pod Security Standards "restricted" profile, ephemeral containers, Kubernetes 1.28+ swap support, systemd-level controller delegation. v1 still works but is deprecated.
-
-Capabilities — splitting root into 38 fine-grained privileges (CAP_NET_ADMIN, CAP_SYS_ADMIN, CAP_NET_BIND_SERVICE, etc.). Default container runtime drops most: a Docker container has only 14 capabilities by default. Add what you need with --cap-add; drop everything with --cap-drop=ALL and add back specifically.
-
-seccomp — kernel syscall filter. Default Docker / containerd profile blocks ~44 of ~330 syscalls (keyctl, ptrace, mount, kexec_load, ...). Custom profiles via --security-opt seccomp=profile.json. Kubernetes Pod Security Standard restricted requires seccompProfile: { type: RuntimeDefault } at minimum.
-
-LSM (Linux Security Modules) — AppArmor (Ubuntu / Debian default) or SELinux (RHEL / Fedora default). Mandatory access control on top of DAC. Docker ships docker-default AppArmor profile; containerd + CRI-O auto-label container processes container_t under SELinux.
-
-The defense-in-depth ladder, from container escape easiest to hardest: shared host process namespace > shared mount > full capabilities + privileged > default capabilities only > capabilities dropped + read-only rootfs > custom seccomp + AppArmor / SELinux + non-root + user namespace. Production container hardening means walking up that ladder.`,
-        image: '/diagrams/devops/f1-container-fundamentals.png',
-      },
-      {
-        title: 'OCI specs and the runtime stack — image-spec, runtime-spec, distribution-spec',
-        description: `The Open Container Initiative (OCI, founded 2015 under the Linux Foundation by Docker, CoreOS, Google, Red Hat, others) publishes three specs that define what a "container" is portably:
-
-image-spec — the on-disk and on-registry format of a container image:
-- A manifest (JSON) listing layers + config blob by SHA256 digest.
-- Layers are tar.gz blobs, content-addressed.
-- Config (JSON) describes the rootfs diff_ids, env, entrypoint, cmd, working dir, exposed ports, labels.
-- Index (multi-arch manifest) lists per-platform manifests by os + architecture.
-
-runtime-spec — what an "OCI bundle" is on disk and how a runtime executes it:
-- A bundle = config.json + rootfs/ directory.
-- config.json declares process to run, namespaces to create, mounts, capabilities, seccomp profile, cgroups settings, hooks (prestart, createRuntime, createContainer, startContainer, poststart, poststop).
-- The runtime (runc, crun, youki) reads config.json, sets up the namespaces / cgroups / mounts / etc., execs the process.
-
-distribution-spec — the registry HTTP API. Pull: GET /v2/<name>/manifests/<reference>, GET /v2/<name>/blobs/<digest>. Push: chunked blob upload, then manifest PUT. Implemented by Docker Hub, ghcr.io, ECR, GCR, Artifact Registry, Quay, Harbor.
-
-The runtime stack for a Kubernetes node:
-
-Container runtimes (low-level, OCI-runtime-spec):
-- runc — Go reference implementation by Docker, donated to OCI. Default in Docker, containerd, CRI-O.
-- crun — C implementation, faster startup (~2x), lower memory. Default in Podman; option in CRI-O.
-- youki — Rust implementation, focus on safety + performance. Newer, growing adoption.
-
-Container engines (high-level, OCI-image + distribution):
-- containerd — graduated CNCF project, originated at Docker, now used by Docker Engine, Kubernetes, AWS Fargate, GKE, AKS. CRI plugin makes it Kubernetes-compatible.
-- CRI-O — alternative for Kubernetes, born at Red Hat, default in OpenShift.
-- Docker Engine — bundles dockerd + containerd + runc + CLI.
-
-Container CLIs:
-- docker — the original; talks to dockerd over Unix socket.
-- nerdctl — Docker-compatible CLI for containerd directly.
-- podman — daemonless, rootless-by-default; drop-in for docker. Red Hat-led.
-- crictl — Kubernetes-focused CLI for any CRI runtime; debugging tool.
-
-Kubernetes Container Runtime Interface (CRI) sits between kubelet and the engine: kubelet → CRI gRPC → containerd / CRI-O → runc → kernel. Dockershim (the kubelet-to-Docker shim) was removed in Kubernetes 1.24 (2022).
-
-Docker vs Podman:
-- Docker: client-server (dockerd daemon), historically requires root, mature ecosystem, Docker Compose, BuildKit, Swarm.
-- Podman: daemonless (each podman command is a process), rootless by default, systemd-friendly (podman generate systemd), pod abstraction matching K8s.
-
-Both produce OCI-compliant images that run anywhere.`,
-      },
-      {
-        title: 'Quick-fire interview answers — Container Fundamentals.',
-        question: 'Quick-fire interview answers — Container Fundamentals.',
-        answer: `Rapid-fire facts.
-
-Q: One-line definition of a Linux container?
-A: A regular process scoped by namespaces, capped by cgroups, and confined by capabilities + seccomp + LSM.
-
-Q: Which namespaces matter?
-A: PID, mount, network, UTS, IPC, user, time. Seven of them. PID + mount + network are the load-bearing trio.
-
-Q: cgroups v1 vs v2?
-A: v2 unified hierarchy, default in RHEL 9 / Ubuntu 22.04+ / Debian 11+. Required for Pod Security Standards restricted, K8s 1.28+ swap, systemd delegation.
-
-Q: How does a container's root filesystem get assembled?
-A: Image layers (each a tar.gz) are stacked via overlayfs into a merged rootfs. The runtime pivot_roots into it.
-
-Q: User namespace, in one line?
-A: Maps container UID 0 to an unprivileged host UID, so "root inside" is not root outside. Foundation of rootless containers.
-
-Q: Default capability set on Docker?
-A: 14 by default. Production drops --cap-drop=ALL and adds only what's needed.
-
-Q: seccomp default?
-A: Docker / containerd default profile blocks ~44 of ~330 syscalls. PSS restricted requires at least RuntimeDefault.
-
-Q: AppArmor vs SELinux?
-A: AppArmor on Ubuntu / Debian (path-based), SELinux on RHEL / Fedora (label-based, container_t). Both LSMs.
-
-Q: What is OCI?
-A: Open Container Initiative, 2015, Linux Foundation. Three specs: image-spec, runtime-spec, distribution-spec.
-
-Q: runc vs crun vs youki?
-A: All implement OCI runtime-spec. runc — Go, reference. crun — C, ~2x faster startup. youki — Rust, newer.
-
-Q: containerd vs CRI-O?
-A: containerd — CNCF graduated, used by Docker, EKS, GKE, AKS, Fargate. CRI-O — Red Hat-led, K8s-only, OpenShift default.
-
-Q: What happened to dockershim?
-A: Removed in Kubernetes 1.24 (May 2022). Modern clusters use containerd or CRI-O directly via CRI.
-
-Q: Docker vs Podman?
-A: Docker — daemon, client-server, historically root-only. Podman — daemonless, rootless by default, systemd-friendly. Drop-in CLI.
-
-Q: nerdctl?
-A: Docker-compatible CLI for containerd. Useful when you want Docker UX on a K8s node without the Docker daemon.
-
-Q: crictl?
-A: CRI debugging CLI for K8s nodes.
-
-Q: Image manifest vs config?
-A: Manifest references layers + config by SHA256 digest. Config holds rootfs diff_ids, env, entrypoint, cmd, exposed ports.
-
-Q: Multi-arch image?
-A: Index manifest referencing per-architecture manifests by os + arch.
-
-Q: Why is privileged: true dangerous?
-A: Disables capability drops, enables host device access, mounts /sys read-write. Effectively root on the host.
-
-Q: Rootless container?
-A: Container running as unprivileged user on host, using user namespace + slirp4netns or pasta for networking.
-
-Q: PID 1 in a container?
-A: First process in the PID namespace. Must reap zombies (or use tini / dumb-init). Many init-naive programs misbehave as PID 1.
-
-Q: Pod Security Standard restricted?
-A: runAsNonRoot, drop ALL capabilities (only NET_BIND_SERVICE allowed), seccompProfile RuntimeDefault, no privilege escalation, read-only root if possible.
-
-These are answers a container-fluent platform engineer should give without preparation.`,
-      },
-    ],
-    references: [
-      'https://opencontainers.org/',
-      'https://github.com/opencontainers/runtime-spec/blob/main/spec.md',
-      'https://kubernetes.io/docs/concepts/security/pod-security-standards/',
-      'https://docs.kernel.org/admin-guide/cgroup-v2.html',
-      'https://man7.org/linux/man-pages/man7/namespaces.7.html',
-      'https://github.com/containerd/containerd',
-    ],
-  },
-
-  {
-    id: 'docker-buildkit',
-    title: 'Docker BuildKit and Modern Container Builds',
-    icon: 'package',
-    color: '#ec4899',
-    questions: 5,
-    description: 'BuildKit (default backend in Docker 23+, 2023) replaced the legacy Docker builder with a parallel DAG executor, content-addressed cache, build secrets, and multi-platform via QEMU. Plus the alternative builder ecosystem — Kaniko, buildah, img, ko, Bazel rules_oci — for daemonless or non-Dockerfile workflows.',
-    visualizations: [
-      {
-        title: 'BuildKit architecture — frontend, LLB, executor, key features',
-        description: `BuildKit (moby/buildkit, default Docker backend in 23.0, January 2023) is a complete rewrite of the Docker builder. Three layers:
-
-Frontend. Parses a build definition into LLB (low-level build) graph. The default frontend is dockerfile.v0. A Dockerfile starting with # syntax=docker/dockerfile:1.7 pulls that frontend image at build time, getting newer features (RUN --mount, RUN --network=none, COPY --link, heredoc syntax) without upgrading the BuildKit daemon.
-
-LLB. Intermediate representation — a DAG of operations. Each node: source (image / git / local), exec (run a command), file (copy / chmod / mkdir), merge (combine layers). Content-addressed: each node's output is hashed; identical inputs = identical outputs = cache hit. LLB enables the parallelism: independent stages of a multi-stage Dockerfile run concurrently.
-
-Executor. Walks the LLB DAG, runs operations. Pluggable: runc executor (default), Kubernetes executor (run builds as K8s pods).
-
-Key features over the legacy builder:
-
-1. Parallel layer builds. Multi-stage Dockerfile? Stages with no dependency order build in parallel. 2-5x speedup typical.
-
-2. RUN --mount=type=cache. Persistent cache directory across builds, scoped by ID:
-
-\`\`\`dockerfile
-# syntax=docker/dockerfile:1.7
-FROM golang:1.23 AS build
-WORKDIR /src
-COPY go.mod go.sum ./
-RUN --mount=type=cache,target=/go/pkg/mod \\
-    --mount=type=cache,target=/root/.cache/go-build \\
-    go mod download
-COPY . .
-RUN --mount=type=cache,target=/go/pkg/mod \\
-    --mount=type=cache,target=/root/.cache/go-build \\
-    go build -o /app ./cmd/api
-\`\`\`
-
-Module cache and build cache survive across builds — second build seconds, not minutes.
-
-3. RUN --mount=type=secret. Pass secrets without leaking into image layers:
-
-\`\`\`bash
-docker build --secret id=npmrc,src=$HOME/.npmrc -t my-app .
-\`\`\`
-
-\`\`\`dockerfile
-RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci
-\`\`\`
-
-The .npmrc is mounted only during the RUN, never committed to a layer.
-
-4. RUN --mount=type=ssh. Forward SSH agent for git+ssh:// dependencies without baking keys.
-
-5. COPY --link. Layer-rebase: COPY operates on its own independent layer that doesn't invalidate when prior layers change.
-
-6. Multi-platform builds (buildx + QEMU). Cross-build linux/amd64 + linux/arm64 from a single host:
-
-\`\`\`bash
-docker buildx create --name multi --use
-docker buildx build --platform linux/amd64,linux/arm64 \\
-  -t ghcr.io/myorg/api:v1.2.3 --push .
-\`\`\`
-
-7. Build cache export / import. --cache-to and --cache-from let CI export the cache to a registry and the next build import it. Critical for ephemeral CI runners.
-
-\`\`\`bash
-docker buildx build \\
-  --cache-from type=registry,ref=ghcr.io/myorg/api:buildcache \\
-  --cache-to type=registry,ref=ghcr.io/myorg/api:buildcache,mode=max \\
-  -t ghcr.io/myorg/api:v1.2.3 --push .
-\`\`\`
-
-8. Heredoc syntax (1.4+):
-
-\`\`\`dockerfile
-RUN <<EOF
-set -eux
-apt-get update
-apt-get install -y --no-install-recommends curl ca-certificates
-rm -rf /var/lib/apt/lists/*
-EOF
-\`\`\`
-
-Layer-cache rule. Order from least-changing to most-changing. Copy package.json + lockfile first; install deps; only then copy source.
-
-Dockerfile best practices:
-- Multi-stage. Separating build deps from runtime is the most impactful single optimization. Common before/after: Node 1.2GB -> 180MB. Go 1.1GB -> 12MB (scratch).
-- Pin versions. FROM node:20-alpine@sha256:... for reproducibility.
-- Use .dockerignore.
-- USER non-root before CMD.
-- Avoid ADD; use COPY.
-- Don't ARG NPM_TOKEN; use --mount=type=secret.
-- ENTRYPOINT exec form (["..."]), not shell form (signals work, no shell wrapping).
-
-Alternative builders:
-- Kaniko (Google) — daemonless, runs as Pod in K8s. No privileged daemon needed. Common in GitLab CI / Tekton.
-- buildah (Red Hat) — daemonless, scriptable or Dockerfile-based. Builds OCI images.
-- img — standalone, daemonless, unprivileged. By Jess Frazelle.
-- Bazel rules_oci — Bazel rules producing deterministic OCI images without a Dockerfile or daemon.
-- ko (Go-specific) — single-binary OCI images, very fast iteration.`,
-        image: '/diagrams/devops/f2-docker-buildkit.png',
-      },
-      {
-        title: 'Dockerfile instructions reference — every instruction explained',
-        description: `A Dockerfile is a text file of instructions that Docker executes top-to-bottom to build an image. Each instruction that modifies the filesystem creates a new read-only layer.
-
-FROM — Required first instruction. Sets the base image for all subsequent instructions.
-  FROM node:20-alpine                  # named base
-  FROM node:20-alpine AS build         # named stage for multi-stage builds
-  FROM scratch                         # empty base (for statically-linked binaries)
-  FROM --platform=linux/arm64 node:20  # target a specific architecture
-
-ARG — Build-time variable. NOT stored in the final image. Can be passed via docker build --build-arg KEY=val.
-  ARG NODE_ENV=production
-  ARG VERSION          # no default — must be passed or build fails
-
-ENV — Runtime environment variable. Persists into the final image and all containers launched from it.
-  ENV APP_HOME=/app LOG_LEVEL=info
-  ENV PATH=$PATH:$APP_HOME/bin
-
-WORKDIR — Set the working directory for RUN / COPY / ADD / CMD / ENTRYPOINT. Created if it doesn't exist.
-  WORKDIR /app
-
-COPY — Copy files from the build context (or another stage) into the image.
-  COPY package*.json ./                      # copy lockfile
-  COPY --from=build /app/dist /app/dist      # multi-stage: from build stage
-  COPY --chown=node:node . .                 # set ownership
-  COPY --chmod=755 entrypoint.sh /           # set permissions
-  COPY --link --from=build /app/dist ./dist  # layer-rebase (BuildKit)
-
-ADD — Like COPY but also: auto-extracts local tar archives, supports remote URLs, supports git repos.
-  ADD archive.tar.gz /extract/    # extracts into /extract/
-  Best practice: prefer COPY for local files; use ADD only for archives.
-
-RUN — Execute a shell command in a new layer. Shell form: RUN cmd. Exec form: RUN ["cmd", "arg"].
-  RUN apt-get update && apt-get install -y curl ca-certificates && rm -rf /var/lib/apt/lists/*
-  RUN --mount=type=cache,target=/var/cache/apt apt-get install -y gcc  # BuildKit cache mount
-  RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci           # BuildKit secret mount
-
-  Layer-cache rule: chain related commands with && to keep them in one layer and minimize image size.
-
-EXPOSE — Document that the container listens on a port. Does NOT actually publish the port.
-  EXPOSE 3000/tcp
-  Ports must be published at runtime: docker run -p 8080:3000 myapp
-
-USER — Set the user (and optionally group) for subsequent RUN / CMD / ENTRYPOINT.
-  RUN useradd -m appuser
-  USER appuser                    # drop root before CMD — security best practice
-  USER 1001:1001                  # by UID:GID
-
-VOLUME — Declare a mount point. The host path is determined at runtime, not in the Dockerfile.
-  VOLUME ["/var/log", "/var/db"]  # creates anonymous volumes if not explicitly mounted
-
-LABEL — Add key-value metadata to the image.
-  LABEL org.opencontainers.image.version="1.0.0"
-  LABEL maintainer="ops@example.com"
-
-HEALTHCHECK — Define a command to test container health. The daemon runs it on an interval.
-  HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD curl -f http://localhost:3000/health || exit 1
-
-ENTRYPOINT — The executable the container runs as. Exec form strongly preferred (signals go directly to app).
-  ENTRYPOINT ["node", "dist/index.js"]         # exec form — correct
-  ENTRYPOINT node dist/index.js                # shell form — SIGTERM goes to /bin/sh, not node
-
-CMD — Default arguments passed to ENTRYPOINT. Overridden by docker run arguments.
-  CMD ["--port", "3000"]          # default flags to ENTRYPOINT
-  CMD ["node", "server.js"]       # standalone: exec form, runs when no ENTRYPOINT set
-
-ENTRYPOINT + CMD together:
-  ENTRYPOINT ["node"]
-  CMD ["server.js"]               # docker run myapp → "node server.js"
-                                  # docker run myapp app.js → "node app.js"
-
-STOPSIGNAL — Override the OS signal sent to stop the container (default SIGTERM).
-  STOPSIGNAL SIGINT
-
-ONBUILD — Instruction deferred until this image is used as a base in another Dockerfile.
-  ONBUILD COPY . /app
-  ONBUILD RUN npm ci
-  Useful for base images shared across many projects.
-
-Best practices summary:
-1. Order from least-changing to most-changing (lockfiles before source).
-2. Multi-stage builds: separate build dependencies from the production image.
-3. Pin base image tags (or SHA digests) for reproducibility.
-4. Use .dockerignore to exclude node_modules, .git, .env, dist.
-5. Never use ARG for secrets — use RUN --mount=type=secret.
-6. Always USER non-root before CMD.
-7. ENTRYPOINT exec form only — shell form breaks signal handling.`,
-        image: '/diagrams/devops/f7-dockerfile-reference.png',
-      },
-      {
-        title: 'Quick-fire interview answers — Docker BuildKit.',
-        question: 'Quick-fire interview answers — Docker BuildKit.',
-        answer: `Rapid-fire facts.
-
-Q: BuildKit in one line?
-A: Docker's modern build backend (default since 23.0, January 2023). Parallel DAG executor with content-addressed cache, build secrets, multi-platform support.
-
-Q: What does the # syntax= directive do?
-A: Pulls a specific Dockerfile frontend image at build time. Gets new features without upgrading the BuildKit daemon.
-
-Q: What is LLB?
-A: BuildKit's low-level builder — a DAG of source / exec / file / merge ops. Content-addressed; caching is per-LLB-node.
-
-Q: RUN --mount=type=cache?
-A: Persistent cache directory across builds, scoped by ID. Speeds up dep installs (npm, go mod, pip, cargo).
-
-Q: RUN --mount=type=secret?
-A: Mount a secret file only for the duration of a RUN. Doesn't end up in any layer.
-
-Q: COPY --link?
-A: Independent layer that doesn't invalidate when prior layers change. Big win for large multi-stage builds.
-
-Q: Multi-platform build?
-A: docker buildx build --platform linux/amd64,linux/arm64. Uses QEMU emulation or native nodes.
-
-Q: --cache-to / --cache-from?
-A: Export / import build cache. Registry / S3 / local backends. Critical for ephemeral CI runners.
-
-Q: Most impactful Dockerfile optimization?
-A: Multi-stage. Separate build (compilers, dev deps) from runtime (minimal). Often 5-50x size reduction.
-
-Q: Layer cache rule?
-A: Order from least-changing to most-changing. Copy package.json + lockfile first; install deps; only then copy source.
-
-Q: Why pin base image by digest?
-A: FROM node:20@sha256:abc... is reproducible and tamper-evident.
-
-Q: USER root vs non-root?
-A: Production should USER non-root before CMD.
-
-Q: ENTRYPOINT exec form vs shell form?
-A: Exec ["..."] makes the binary PID 1 — signals work. Shell form runs under /bin/sh -c — signals get swallowed.
-
-Q: HEALTHCHECK in Kubernetes context?
-A: K8s ignores Dockerfile HEALTHCHECK; uses its own probes.
-
-Q: Kaniko in one line?
-A: Daemonless image builder by Google. Runs as Pod in K8s — no privileged daemon needed. Common in GitLab CI / Tekton.
-
-Q: buildah?
-A: Daemonless image builder from Red Hat / Podman ecosystem.
-
-Q: Bazel rules_oci?
-A: Bazel rules that produce OCI images deterministically without a Dockerfile or daemon. Replaces older rules_docker.
-
-Q: ko?
-A: Go-specific. Builds an OCI image containing one Go binary, no Dockerfile, no daemon.
-
-Q: When prefer Kaniko / buildah / img over BuildKit?
-A: Multi-tenant CI, restricted Kubernetes clusters, security policies that don't allow privileged Docker daemon.
-
-Q: Reproducible builds?
-A: SOURCE_DATE_EPOCH + buildx --output rewrite-timestamp=true. Required for SLSA-3+.
-
-Q: Most common build mistake?
-A: COPY . . before installing deps — invalidates dep cache on every source change.
-
-Q: Build context size?
-A: docker build sends entire context to the daemon. .dockerignore is mandatory.
-
-These are answers a container-fluent platform engineer should give without preparation.`,
-      },
-    ],
-    references: [
-      'https://docs.docker.com/build/buildkit/',
-      'https://docs.docker.com/build/dockerfile/release-notes/',
-      'https://github.com/moby/buildkit',
-      'https://github.com/GoogleContainerTools/kaniko',
-      'https://buildah.io/',
-      'https://ko.build/',
-    ],
-  },
-
-  {
-    id: 'image-hardening',
-    title: 'Container Image Hardening — Distroless, Chainguard, Wolfi',
-    icon: 'package',
-    color: '#ec4899',
-    questions: 5,
-    description: 'The smaller the image, the smaller the attack surface — and the smaller the CVE backlog. Distroless (Google), Wolfi (Chainguard) and Chainguard Images set the bar in 2026: minimal, non-root, signed by default, daily rebuilt, near-zero CVE counts. Plus the scanner ecosystem (Trivy, Grype, Snyk, Docker Scout) and the remediation workflow.',
-    visualizations: [
-      {
-        title: 'The minimal-base spectrum and the hardening checklist',
-        description: `Base image choice is the single biggest determinant of CVE exposure and image size. The spectrum, smallest to largest:
-
-scratch. The empty image. Zero bytes of OS. Only works for fully static binaries (Go with CGO_ENABLED=0, Rust with musl target). Image size = your binary. CVE count = exactly the CVEs in your binary. Tradeoff: no shell, no package manager, no libc. Debugging means a sidecar.
-
-Distroless (Google, gcr.io/distroless). "Just enough OS" — language runtime + libc + ca-certificates, no shell, no package manager:
-- gcr.io/distroless/static-debian12 — for static binaries, ~2 MB.
-- gcr.io/distroless/base-debian12 — adds glibc + tzdata, ~20 MB.
-- gcr.io/distroless/cc-debian12 — adds libgcc + libstdc++, ~25 MB.
-- gcr.io/distroless/java21-debian12, python3-debian12, nodejs20-debian12.
-
-Distroless images come in :nonroot variants (USER 65532) and :debug variants (with busybox shell, only for debugging — never deploy :debug to prod).
-
-Wolfi (Chainguard, 2022). A Linux undistribution — package repository (apk-based, like Alpine) with a glibc-based libc instead of musl, designed for containers. Daily-rebuilt packages, every CVE fixed within hours of disclosure.
-
-Chainguard Images. Prebuilt artifacts on Wolfi. cgr.io/chainguard/* — minimal, non-root, signed by Cosign keylessly, daily rebuilt, often near-zero CVE count:
-- cgr.io/chainguard/static — like distroless static, plus glibc compatibility.
-- cgr.io/chainguard/python:latest — daily fixes.
-- cgr.io/chainguard/node:latest, /jdk:latest, /jre, /maven, /gradle.
-- cgr.io/chainguard/nginx, /redis, /postgres, /mariadb.
-
-apko + melange. Chainguard's build tools. apko declares an image as a YAML list of apk packages — produces an OCI image without a Dockerfile, fully reproducible, SBOM-included, signed.
-
-Alpine (alpine:3.19, ~7 MB). Minimal Linux with apk. musl libc instead of glibc — many subtle compat issues. Smaller than Debian-slim but the musl tax is real.
-
-Debian slim (debian:12-slim, ~80 MB), Ubuntu (ubuntu:22.04, ~75 MB). Full distros pared down. Familiar, glibc-compatible, large CVE surface.
-
-Picking a base in 2026:
-- Static Go / Rust binary: scratch or chainguard/static.
-- Dynamically linked C/C++: distroless/cc or chainguard/static.
-- Java: chainguard/jre or distroless/java21.
-- Python: chainguard/python (best CVE story) or distroless/python3.
-- Node: chainguard/node or distroless/nodejs20.
-- Need a shell + package manager: wolfi-base or alpine.
-
-Stop using ubuntu:latest, debian:latest, python:3.12 (full), node:20 (full), or alpine:latest as runtime bases.
-
-Hardening checklist (production-grade):
-
-1. Non-root. USER nonroot or USER 65532:65532. PSS restricted requires runAsNonRoot: true.
-
-2. Read-only root filesystem. securityContext: { readOnlyRootFilesystem: true }.
-
-3. Drop all capabilities. capabilities: { drop: ["ALL"] }.
-
-4. No privilege escalation. allowPrivilegeEscalation: false.
-
-5. seccomp default. seccompProfile: { type: RuntimeDefault }.
-
-6. Minimal contents. Distroless / Chainguard. No shell, no package manager.
-
-7. Signed. Cosign-sign images on build. Verify at admission with sigstore policy-controller or Kyverno.
-
-8. SBOM attached. CycloneDX or SPDX. Generated by Syft, BuildKit, apko.
-
-9. Provenance attestation. SLSA build provenance.
-
-10. Daily rebuild. CVEs land daily. With Chainguard / distroless dailies, base bumps pull through CVE fixes automatically via Renovate.
-
-The scanner ecosystem (2026):
-- Trivy (Aqua Security, OSS, de facto standard). CVEs, misconfig, secrets, licenses.
-- Grype (Anchore, OSS). Pure CVE scanner. Pairs with Syft for SBOM.
-- Snyk Container. Commercial; rich remediation suggestions.
-- Docker Scout. Built into Docker Desktop / Hub. Free tier viable.
-- Anchore Enterprise / Engine. Older; policy-engine-driven.
-
-The remediation workflow:
-1. Scan in CI on every build. Fail on critical fixable CVEs.
-2. Scan in registry continuously. Harbor, ECR Enhanced Scanning, ghcr.io / Snyk integration.
-3. Scan in cluster. Trivy Operator, Falco, Kyverno report on running images.
-4. Dashboard + ownership. Per-team dashboards (Snyk, Wiz, Aqua, Sysdig, Prisma Cloud).
-5. Base image bump automation. Renovate / Dependabot watches base image tags.
-
-The Chainguard advantage in 2026: cgr.io/chainguard/* images often scan to 0 CVE — not because Chainguard hides CVEs but because their build pipeline patches packages within hours of disclosure. Migration from python:3.12-slim (typical 50-200 CVEs) to chainguard/python:latest (typical 0-5 CVEs) is the highest-leverage hardening move available in 2026.`,
-        image: '/diagrams/devops/f3-image-hardening.png',
-      },
-      {
-        title: 'Quick-fire interview answers — Image Hardening.',
-        question: 'Quick-fire interview answers — Image Hardening.',
-        answer: `Rapid-fire facts.
-
-Q: Why does base image choice matter so much?
-A: Single biggest determinant of CVE count and image size. Switching python:3.12-slim to chainguard/python often drops scan from 100+ CVEs to near zero.
-
-Q: What is distroless?
-A: Google's gcr.io/distroless/* — language runtime + libc + ca-certificates only. No shell, no package manager.
-
-Q: Wolfi in one line?
-A: Chainguard's Linux undistribution. apk-based like Alpine but glibc-based. Daily-rebuilt packages, CVE fixes within hours.
-
-Q: Chainguard Images?
-A: Prebuilt OCI images on top of Wolfi. cgr.io/chainguard/*. Minimal, non-root, Cosign-signed keylessly, daily rebuilt, near-zero CVE count.
-
-Q: apko / melange?
-A: Chainguard's build tooling. apko produces OCI images from a YAML list of apk packages, no Dockerfile.
-
-Q: scratch vs distroless?
-A: scratch is empty — only works for fully static binaries. distroless includes libc + ca-certs + language runtime.
-
-Q: Why no shell in production images?
-A: Reduces attack surface — RCE without a shell can't pivot easily.
-
-Q: musl vs glibc tax?
-A: Alpine uses musl. DNS resolution edge cases, locale handling, threading. Wolfi switched to glibc to eliminate this.
-
-Q: Run as non-root, in K8s?
-A: securityContext.runAsNonRoot: true, runAsUser: 65532. PSS restricted requires it.
-
-Q: Read-only root filesystem?
-A: securityContext.readOnlyRootFilesystem: true. Foils malware that needs to drop binaries.
-
-Q: Drop all capabilities?
-A: capabilities.drop: ["ALL"]. Add only specific ones if absolutely needed.
-
-Q: Signed image, in one line?
-A: Cosign signature attached to image as OCI artifact. cosign sign at build, cosign verify at admission.
-
-Q: SBOM in 2026?
-A: CycloneDX or SPDX. Generated by Syft, BuildKit (--provenance), apko.
-
-Q: SLSA provenance?
-A: Describes builder, source repo, commit, build parameters. SLSA-3 requires non-falsifiable provenance.
-
-Q: Trivy in one line?
-A: Aqua's OSS scanner — CVEs, misconfig, secrets, licenses. The de facto standard in 2026.
-
-Q: Trivy vs Grype?
-A: Trivy is broader. Grype is CVE-focused, often faster, pairs with Syft.
-
-Q: Docker Scout?
-A: Docker's built-in scanner. CVE ranking + base-image upgrade recommendations.
-
-Q: Snyk Container?
-A: Commercial, slick UI, strong remediation suggestions.
-
-Q: Should builds fail on every CVE?
-A: No — fail on HIGH / CRITICAL with a fix available. Unfixable CVEs can't be acted on.
-
-Q: Reachable vulnerabilities?
-A: VEX (OpenVEX) documents declaring whether CVEs are actually exploitable. Reduces false positives.
-
-Q: How to keep base images fresh?
-A: Renovate / Dependabot watches the registry, opens PRs on new tags.
-
-Q: Pod Security Standard restricted?
-A: runAsNonRoot, drop ALL capabilities (NET_BIND_SERVICE allowed), seccompProfile RuntimeDefault, no privilege escalation, no host* mounts.
-
-Q: Most common image-hardening mistake?
-A: Using python:3.12 / node:20 / openjdk:21 / ubuntu:latest as runtime base.
-
-These are answers a container-fluent platform engineer should give without preparation.`,
-      },
-    ],
-    references: [
-      'https://github.com/GoogleContainerTools/distroless',
-      'https://www.chainguard.dev/chainguard-images',
-      'https://wolfi.dev/',
-      'https://github.com/chainguard-dev/apko',
-      'https://aquasecurity.github.io/trivy/',
-      'https://docs.sigstore.dev/cosign/overview/',
-    ],
-  },
-
-  {
-    id: 'buildpacks-jib-ko',
-    title: 'Buildpacks, Jib, ko — Source-to-Image Without Dockerfiles',
-    icon: 'package',
-    color: '#ec4899',
-    questions: 5,
-    description: 'Three production-grade ways to ship a container without writing or maintaining a Dockerfile. Cloud Native Buildpacks (Heroku-origin, CNCF) for opinionated platforms; Jib (Google) for Java without a Docker daemon; ko (Google) for single-binary Go services.',
-    visualizations: [
-      {
-        title: 'Cloud Native Buildpacks, Jib, and ko',
-        description: `Cloud Native Buildpacks (CNB, CNCF Incubating, joined 2018) are descended from Heroku's 2011 buildpacks, redesigned around the OCI image spec.
-
-A buildpack is a unit of build logic for a single language or framework. The build system runs each buildpack against your source; whichever buildpacks "detect" your project execute. Output: an OCI image, no Dockerfile.
-
-Components:
-- pack CLI — the official builder. pack build my-app --builder paketobuildpacks/builder-jammy-base.
-- Buildpacks — paketobuildpacks/nodejs, /python, /java, /go; heroku/nodejs, /python, /java.
-- Builder — curated set of buildpacks plus base images. paketobuildpacks/builder-jammy-base, gcr.io/buildpacks/builder, heroku/builder:24.
-- Stack — the OS images. Build image (with toolchains) + run image.
-
-The killer feature: layered rebase. Buildpacks emit each language layer as a separate OCI layer. When the run-image base is updated for a CVE fix, pack rebase my-app rewrites only the base layers — your app layers are untouched. Hours instead of recompiling from source.
-
-Where buildpacks shine: PaaS / opinionated platforms (Cloud Foundry, Heroku, Tanzu, Cloud Run with --source, IBM Code Engine), polyglot orgs centralizing image policy, mass CVE rebases.
-
-Where they underdeliver: heavy custom build needs (specific compiler flags, system packages), low-control orgs, tiny scratch / static images.
-
-Jib (Google, 2018). Maven and Gradle plugin.
-
-\`\`\`bash
-./mvnw compile com.google.cloud.tools:jib-maven-plugin:build \\
-  -Dimage=ghcr.io/myorg/payments:v1.2.3
-\`\`\`
-
-What Jib does:
-- No Docker daemon. Talks the registry distribution-spec API directly.
-- No Dockerfile. Pulls base image (default gcr.io/distroless/java21-debian12), splits the Java app into layers (dependencies, resources, classes), pushes to registry.
-- Reproducible. Layers are deterministic — same source = same digest.
-- Fast. Skips dependency layer rebuild when pom.xml / build.gradle hasn't changed.
-
-Why Jib wins for Java:
-- Most Java services are 90% deps, 10% app code. Jib's layer split optimizes for "your code changed, deps didn't."
-- No Docker installed on developer or CI machines.
-- Native integration with Maven / Gradle lifecycle.
-- Default base is distroless, security-by-default.
-
-ko (Google, 2018; CNCF Sandbox). Go-specific.
-
-\`\`\`bash
-ko build ./cmd/api
-# Produces and pushes ghcr.io/myorg/api@sha256:... to KO_DOCKER_REPO
-
-ko build --bare --tags=v1.2.3 ./cmd/api
-\`\`\`
-
-What ko does:
-- No Dockerfile. Reads main package, runs go build, layers the resulting binary into base image.
-- Default base: cgr.io/chainguard/static or gcr.io/distroless/static. Tiny, non-root.
-- No Docker daemon. Pushes to registry directly.
-- SBOM-attached. Default-on as of ko v0.13.
-- Fast iteration.
-
-Tight integration with Kubernetes manifests. ko apply -f deployment.yaml replaces ko://github.com/myorg/api strings with the just-built image digest, then kubectl applies. Single-command source-to-cluster.
-
-When to pick which:
-- Java service: Jib. No reason to write a Dockerfile.
-- Single-binary Go service: ko.
-- Mixed-language org with platform team owning image policy: CNB.
-- Heavy customization, system packages, multi-stage: still Dockerfile + BuildKit.
-
-Other Dockerfile-alternative tools:
-- Bazel rules_oci — Bazel-native OCI image builds; reproducible, deterministic, language-agnostic.
-- Nix dockerTools.buildLayeredImage — declarative image construction from Nix expressions.
-- s2i (OpenShift Source-to-Image) — Red Hat's predecessor to buildpacks.
-- apko (Chainguard) — declarative OCI image builds from a YAML package list.`,
-        image: '/diagrams/devops/f4-buildpacks.png',
-      },
-      {
-        title: 'Quick-fire interview answers — Buildpacks, Jib, ko.',
-        question: 'Quick-fire interview answers — Buildpacks, Jib, ko.',
-        answer: `Rapid-fire facts.
-
-Q: Cloud Native Buildpacks in one line?
-A: CNCF Incubating spec descended from Heroku buildpacks; pack CLI runs language-specific buildpacks against source to produce OCI images, no Dockerfile.
-
-Q: pack CLI?
-A: pack build my-app --builder paketobuildpacks/builder-jammy-base produces an image.
-
-Q: Builder vs buildpack?
-A: Buildpack = single-language build module. Builder = bundle of buildpacks + base build/run images.
-
-Q: Paketo vs Heroku buildpacks?
-A: Paketo is Cloud Foundry / VMware's buildpack family. Heroku's buildpacks are Heroku's. Both implement CNB spec.
-
-Q: pack rebase?
-A: Rewrites just the base-image layers of an existing image. Use when run image gets a CVE fix.
-
-Q: Where do buildpacks shine?
-A: PaaS-style platforms (Cloud Run --source, Heroku, Tanzu), polyglot orgs centralizing image policy, mass CVE rebases.
-
-Q: Where do buildpacks lose?
-A: Heavy customization, tiny scratch images, full developer control over layers.
-
-Q: Jib in one line?
-A: Google Maven / Gradle plugin that builds Java container images from source — no Docker daemon, no Dockerfile, deterministic, distroless by default.
-
-Q: How does Jib avoid the Docker daemon?
-A: Talks the OCI registry distribution-spec HTTP API directly.
-
-Q: Jib's layer split?
-A: Dependencies, resources, classes — separate layers. Code change rebuilds the classes layer only.
-
-Q: Why Jib for Java?
-A: Native Maven / Gradle integration, no Docker needed in CI, distroless default, deterministic image digests.
-
-Q: ko in one line?
-A: Google CNCF Sandbox tool that turns a Go module path into a tiny, non-root OCI image and pushes it.
-
-Q: ko's default base?
-A: cgr.io/chainguard/static or gcr.io/distroless/static. Minimal, non-root, ~2 MB plus your binary.
-
-Q: ko apply -f?
-A: Replaces ko://github.com/myorg/api strings in K8s YAML with just-built image digests, then kubectl applies. Single-command source-to-cluster.
-
-Q: Where is ko used heavily?
-A: Knative, Tekton, Sigstore, many Kubernetes Sigs projects.
-
-Q: When pick ko over Dockerfile + BuildKit?
-A: Single-binary Go service, no system packages needed, daemonless build.
-
-Q: When pick Jib over Dockerfile + BuildKit?
-A: Java service in a Maven / Gradle build, no Docker daemon in CI, want default-distroless.
-
-Q: When pick CNB over Dockerfile?
-A: Platform team owns image policy across many languages; want centralized base + mass rebase.
-
-Q: Bazel rules_oci?
-A: Bazel rules for deterministic OCI image builds — language-agnostic, no daemon, monorepo-grade reproducibility.
-
-Q: Nix dockerTools?
-A: Nix expression for OCI images. Reproducible, deterministic, layered for caching.
-
-Q: apko vs CNB?
-A: apko is Chainguard's declarative OCI image builder from YAML package lists. CNB is for application source to image.
-
-Q: Common reason to keep using Dockerfile + BuildKit?
-A: Complex multi-stage builds, custom system packages, fine-grained layer control, mixed-language with shared system deps.
-
-Q: How do these tools handle SBOMs in 2026?
-A: All produce SBOMs by default — Jib via plugins, ko since v0.13, CNB via the spec, apko built in.
-
-Q: Most common interview question?
-A: "Why Jib / ko instead of Dockerfile?" Daemonless, no Dockerfile to maintain, deterministic, default-distroless, native integration with the language build system.
-
-These are answers a container-fluent platform engineer should give without preparation.`,
-      },
-    ],
-    references: [
-      'https://buildpacks.io/',
-      'https://paketo.io/',
-      'https://github.com/GoogleContainerTools/jib',
-      'https://ko.build/',
-      'https://github.com/bazel-contrib/rules_oci',
-      'https://github.com/chainguard-dev/apko',
+      'https://docs.docker.com/engine/security/',
+      'https://docs.docker.com/engine/security/seccomp/',
+      'https://github.com/google/distroless',
+      'https://github.com/sigstore/cosign',
     ],
   },
 
