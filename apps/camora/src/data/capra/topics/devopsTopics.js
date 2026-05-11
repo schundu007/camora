@@ -23282,78 +23282,126 @@ These are answers a Docker-fluent engineer should give without preparation.`,
     description: 'Docker gives every container its own network namespace by default. Containers on the same user-defined bridge network discover each other by name via Docker\'s embedded DNS. Port publishing creates iptables DNAT rules so host traffic reaches the container. Overlay networks extend this to multi-host clusters.',
     visualizations: [
       {
-        title: 'Docker network modes — bridge, host, overlay, macvlan',
-        description: `Docker networking works by creating Linux virtual network devices and namespace plumbing around containers.
+        title: 'Docker network modes — bridge, host, overlay, macvlan, ipvlan',
+        description: `Docker has six built-in network drivers on Linux. Each creates a different kind of isolation and connectivity.
 
-Default bridge (docker0):
-When you run a container without specifying a network, Docker attaches it to the docker0 bridge. The container gets a private IP in the 172.17.0.0/16 range. Two containers on docker0 can reach each other by IP, but NOT by name — Docker's DNS is not enabled on the default bridge.
+Six network drivers:
+  bridge    Default. Software bridge, same-host container isolation.
+  host      Removes network isolation — container shares host network namespace.
+  none      Complete isolation from host and other containers.
+  overlay   Connects multiple Docker daemons across hosts (requires Swarm or --attachable).
+  macvlan   Each container gets its own MAC address — appears as a physical device on LAN.
+  ipvlan    Containers share the host's MAC; assign their own IPs on host's subnet.
 
-User-defined bridge (recommended):
-  docker network create my-net
-  docker run --name web --network my-net nginx
-  docker run --name db  --network my-net postgres
+Default bridge (docker0) vs user-defined bridge — critical distinction:
 
-Containers on the same user-defined bridge resolve each other by container name through Docker's embedded DNS resolver (127.0.0.11). "web" can reach "db" at postgres://db:5432.
+  Default bridge                        User-defined bridge
+  ──────────────────────────────────── ─────────────────────────────────────
+  DNS by IP only (no name resolution)  DNS by container name (127.0.0.11)
+  All containers share it              Scoped; only attached containers talk
+  Cannot hot-attach/detach             docker network connect/disconnect live
+  --link required for aliases          aliases: supported natively
+  Shared config, daemon restart needed Per-network config at create time
 
-Port publishing (-p):
+Embedded DNS server:
+  IP: 127.0.0.11 (always, even in IPv6-only containers)
+  Scope: user-defined networks only — default bridge gets a copy of host /etc/resolv.conf
+  Forward: external lookups forwarded to host's DNS servers
+
+Default bridge IP pool (Docker auto-assigns subnets in order):
+  172.17.0.0/16, 172.18.0.0/16, 172.19.0.0/16, 172.20.0.0/14,
+  172.24.0.0/14, 172.28.0.0/14, 192.168.0.0/16
+
+Hard limit: Bridge and overlay networks become unstable at 1,000 containers per network (Linux kernel limitation). Plan separate networks for large deployments.
+
+Port publishing internals:
   docker run -p 8080:3000 myapp
+  → Docker adds an iptables DNAT rule: 0.0.0.0:8080 → container_ip:3000
+  docker run -p 127.0.0.1:8080:3000 myapp
+  → Binds only on loopback; external clients cannot reach it
 
-Docker adds an iptables DNAT rule: traffic hitting host port 8080 is forwarded to the container's port 3000. The host can also be specified: -p 127.0.0.1:8080:3000 binds only on localhost.
+UFW/firewalld gotcha: Docker bypasses UFW. Traffic is handled in the iptables nat table before reaching the INPUT chain that UFW controls. A port published via -p is accessible even if UFW blocks it. To restrict: use explicit host-IP binding (-p 127.0.0.1:...) or set daemon's iptables: false (breaks masquerade — containers lose external connectivity).
 
 host network mode:
   docker run --network host nginx
+  Container shares host network namespace. -p flags are ignored (produces a warning).
+  Linux only — Docker Desktop Mac/Windows requires opt-in (Docker Desktop 4.34+).
+  Not compatible with Enhanced Container Isolation.
 
-Container shares the host's network namespace completely. No isolation, no NAT overhead. nginx binds directly to host port 80. Best for performance-critical services; bad for security.
-
-none:
-  docker run --network none alpine
-
-Container has only a loopback interface. Completely isolated from the network. Useful for batch jobs that process files without needing network access.
-
-overlay (Swarm / multi-host):
-VXLAN tunnels between Docker hosts. Containers on any Swarm node can reach each other by service name. Used internally by Kubernetes CNI plugins as well.
+overlay (multi-host):
+  Uses VXLAN (Virtual Extensible LAN) for data plane encapsulation.
+  Required open ports between Swarm hosts:
+    2377/TCP  — Swarm control plane (configurable)
+    4789/UDP  — overlay VXLAN data traffic (configurable)
+    7946/TCP+UDP — node-to-node gossip (NOT configurable)
+  Encryption: --opt encrypted adds IPsec at the VXLAN level (performance penalty).
+  Windows limitation: overlay encryption not supported; Windows ↔ Linux traffic unencrypted.
+  --attachable flag required for standalone containers (not just Swarm services) to connect.
 
 macvlan:
-Assigns the container a real MAC address and IP on the physical network. The container appears as a physical device on the LAN. Useful for legacy apps that require an actual IP on the corporate network.
+  Container gets its own MAC + IP on the physical LAN.
+  Critical gotcha: containers on macvlan CANNOT communicate with the host directly — Linux kernel restriction.
+  Not supported in rootless mode or Docker Desktop (Mac/Windows).
+  Cloud providers typically block macvlan (promiscuous mode required on physical NIC).
+  Minimum kernel: Linux 3.9 (4.0+ recommended).
 
-Inspecting networks:
-  docker network ls                    # list all networks
-  docker network inspect my-net        # see IPs, connected containers
-  docker network connect my-net web    # attach running container to network
-  docker network disconnect my-net web # detach
-  docker network prune                 # remove unused networks`,
+ipvlan:
+  Shares parent interface's MAC — all containers use host's MAC address.
+  L2 mode (default): containers must be on the same subnet as parent interface.
+  L3 mode: different subnets can communicate; gateways are ignored; broadcasts/multicast dropped.
+  Minimum kernel: Linux 4.2+.
+
+Network commands:
+  docker network ls
+  docker network create --driver bridge --subnet 10.0.0.0/24 my-net
+  docker network inspect my-net
+  docker network connect my-net running-container       # hot-attach
+  docker network disconnect my-net running-container    # hot-detach
+  docker network prune                                  # remove unused networks`,
         image: '/diagrams/devops/f8-docker-networking.png',
       },
       {
         title: 'Quick-fire interview answers — Docker Networking.',
         description: `Rapid-fire facts.
 
+Q: What is Docker's embedded DNS IP?
+A: 127.0.0.11 — always this IP, works even inside IPv6-only containers.
+
 Q: Why can't two containers on the default bridge talk by name?
-A: Docker's embedded DNS is only enabled on user-defined bridge networks, not docker0. Use docker network create + --network to get name resolution.
+A: Docker's embedded DNS only works on user-defined networks. Default bridge (docker0) containers get a copy of the host's /etc/resolv.conf — no container-name resolution. Always create a user-defined bridge for multi-container apps.
 
 Q: What does docker run -p 8080:3000 actually do?
-A: Adds an iptables DNAT rule: packets arriving on host port 8080 are rewritten to the container's IP:3000. Docker manages the rule lifecycle.
+A: Docker installs an iptables DNAT rule: traffic arriving on host port 8080 is rewritten to the container's IP:3000. Docker manages the rule lifecycle — created on container start, removed on stop.
+
+Q: Does Docker respect UFW firewall rules?
+A: No. Docker inserts iptables rules in the nat table, which runs before UFW's INPUT/OUTPUT chains. A port published with -p is reachable even if UFW blocks it. Use host-IP binding (-p 127.0.0.1:8080:3000) to restrict access.
+
+Q: How many containers can share one bridge/overlay network?
+A: Hard limit of 1,000. Above that, Docker warns the network "becomes unstable and inter-container communications may break." Split into multiple networks for large deployments.
+
+Q: What three ports must be open between Swarm nodes for overlay networking?
+A: 2377/TCP (control plane), 4789/UDP (VXLAN data), 7946/TCP+UDP (node gossip). Port 7946 is not configurable.
+
+Q: What is the difference between macvlan and ipvlan?
+A: macvlan: each container gets its own MAC address — appears as a physical device on the LAN. ipvlan: containers share the host's MAC but get their own IPs. Cloud providers usually block macvlan (requires promiscuous mode); ipvlan works around that.
+
+Q: Critical macvlan gotcha?
+A: Containers on a macvlan network cannot communicate with the host directly — Linux kernel restriction. Also: not supported in rootless mode or Docker Desktop Mac/Windows.
+
+Q: host network mode on Docker Desktop Mac/Windows?
+A: Not natively supported (requires opt-in in Docker Desktop 4.34+). -p flags are ignored and produce a warning when --network host is used. Linux only for production use.
 
 Q: Difference between bridge and host network mode?
-A: Bridge: container has its own network namespace, isolated IP, requires port publishing to expose to host. Host: shares the host's network namespace, no isolation, no -p needed, no NAT overhead.
+A: Bridge: own network namespace, isolated IP, requires port publishing, NAT overhead. Host: shares host network namespace, no -p needed, no NAT, no isolation. Linux-only.
 
-Q: How does container DNS work?
-A: Docker runs an embedded DNS server at 127.0.0.11 inside containers on user-defined networks. The resolver maps container names to their bridge IPs automatically.
-
-Q: What is an overlay network?
-A: Multi-host networking using VXLAN tunnels. Used by Docker Swarm so containers on different physical hosts can communicate by service name. Required for distributed deployments.
-
-Q: How do you connect two containers that are on different networks?
-A: docker network connect second-net container-name — a container can be attached to multiple networks simultaneously.
-
-Q: What is macvlan?
-A: Network driver that gives a container its own MAC address and IP on the physical LAN. The container appears as a real device on the network. Useful for legacy apps needing a real network IP.
-
-Q: How do you expose a container port only on localhost?
-A: docker run -p 127.0.0.1:8080:3000 — the host IP prefix binds only to loopback, not 0.0.0.0.
+Q: How do you restrict a published port to localhost only?
+A: docker run -p 127.0.0.1:8080:3000 — the host-IP prefix binds only on loopback; 0.0.0.0 is default which binds all interfaces.
 
 Q: What network does Docker Compose create by default?
-A: A user-defined bridge named <project>_default. All services in the compose file are attached to it and can reach each other by service name.
+A: A user-defined bridge named <project>_default. All services attach automatically and resolve each other by service name.
+
+Q: Can you hot-attach a running container to a new network?
+A: Yes on user-defined bridges: docker network connect my-net container. Not possible on the default bridge without stopping/recreating.
 
 These are answers a Docker-networking-fluent engineer should give without preparation.`,
       },
@@ -23374,48 +23422,86 @@ These are answers a Docker-networking-fluent engineer should give without prepar
     description: 'Container filesystems are assembled from read-only image layers stacked via overlayfs, with a thin writable layer on top that is deleted when the container is removed. Named volumes and bind mounts provide durable storage that survives container deletion.',
     visualizations: [
       {
-        title: 'overlayfs layer stack — images, writable layer, and mounts',
-        description: `Docker uses overlayfs (the default storage driver on modern Linux) to assemble a container's filesystem from stacked layers.
+        title: 'overlayfs internals — four directories, copy_up, whiteouts, and gotchas',
+        description: `overlay2 is Docker's default storage driver. Understanding it precisely is the difference between a good and a great interview answer.
 
-How overlayfs works:
-Image layers sit below as read-only branches. Docker stacks them in Dockerfile instruction order:
-  lowerdir[0] = ubuntu:22.04 base layer          (120 MB, shared)
-  lowerdir[1] = RUN apt-get install nginx layer  (40 MB, shared)
-  lowerdir[2] = COPY ./html /var/www/html layer  (2 MB, shared)
-  upperdir    = container writable diff layer    (0 MB initially)
-  merged      = unified view the container sees
+Four directories that make up every container filesystem:
+  lowerdir  — read-only image layer(s), stacked bottom-to-top
+  upperdir  — writable container diff layer (starts empty)
+  workdir   — internal OverlayFS scratch space (kernel-required, not directly accessed)
+  merged    — the unified view the container's processes actually see
 
-A read goes down through layers top-to-bottom, returning the first match. A write copies the target file up into the writable layer first (copy-on-write), then modifies it there. The underlying image layers are never touched.
+How layers are stored on disk (each layer is a directory):
+  diff/      — the actual file contents of this layer
+  link       — shortened identifier (symlink target in l/ directory)
+  lower      — reference to parent layer(s)
+  merged/    — mount point for the unified view
+  work/      — workdir for OverlayFS kernel internals
 
-This means 100 containers running the same nginx image share the same read-only layers — only 100 tiny writable layers are added. Massive disk savings.
+Layer limit: overlay2 supports up to 128 lower layers natively. This is why deeply-chained docker builds and docker commit chains hit a ceiling.
 
-Container writable layer lifecycle:
-The writable layer is created when the container starts and destroyed when docker rm runs. Any data written inside the container that is NOT in a volume or bind mount is lost on rm.
+Requirements:
+  Linux kernel 4.0+ (or RHEL 3.10.0-514+)
+  XFS backing filesystem must have d_type=true (ftype=1)
+  Verify: xfs_info /var/lib/docker | grep ftype
+  Format: mkfs.xfs -n ftype=1 /dev/sdX
+
+Docker Engine 29.0+ fresh installs use the containerd image store with snapshotters instead of the classic overlay2 driver.
+
+Copy-on-write (copy_up) — exact sequence:
+1. Read request for a file → overlayfs searches layers top-down; returns first match.
+2. Write request for a file that lives in a read-only lowerdir layer:
+   a. Copy the ENTIRE file to upperdir (copy_up operation).
+   b. Modify the copy in upperdir.
+   c. Subsequent writes to the same file go directly to upperdir — no second copy_up.
+
+Critical copy_up gotcha: "OverlayFS works at the file level, not the block level. copy_up copies the entire file even if only a small part is being modified." A 1GB log file written inside a container gets fully copied to upperdir on the first write. Write-intensive workloads (databases) suffer measurable performance overhead — use volumes instead.
+
+Metadata gotcha: Changing file permissions or ownership (chmod/chown) also triggers copy_up — duplicates the file to upperdir even without modifying content.
+
+File deletion mechanism — whiteout files:
+Deleting a file in a container does NOT delete the underlying image layer (read-only). Instead:
+  File deletion → overlayfs creates a whiteout file in upperdir. The original is still in lowerdir but the whiteout makes it invisible.
+  Directory deletion → overlayfs creates an opaque directory in upperdir.
+
+rename(2) gotcha: Calling rename() on a directory only works when both source and destination are in the upperdir (top layer). Cross-layer directory renames return EXDEV ("cross-device link not permitted"). Applications must handle EXDEV and fall back to copy-then-unlink.
+
+POSIX fd inconsistency: If process opens fd1=open("foo", O_RDONLY) then fd2=open("foo", O_RDWR), the O_RDWR open triggers a copy_up. After copy_up, fd1 and fd2 refer to DIFFERENT files (lowerdir vs upperdir). The yum-plugin-ovl package pre-touches files to avoid this.
+
+Page cache sharing: Multiple containers reading the same file share a single kernel page cache entry. Makes overlay2 memory-efficient for high-density PaaS deployments.
+
+docker ps -s output explained:
+  size         — disk used by this container's writable layer only
+  virtual size — read-only image data + writable layer
+  WARNING: Do NOT sum virtual sizes. Image layers are shared between containers. Summing over-counts dramatically.
 
 Named volumes:
-  docker volume create mydata
-  docker run -v mydata:/app/data myapp
+  Host path: /var/lib/docker/volumes/<name>/_data
+  Bind propagation: rprivate (recursive private) — NOT configurable for volumes
+  Empty volume + existing container directory → files propagated INTO the volume on first mount
+  Non-empty volume + existing container directory → container files are OBSCURED (hidden but not deleted)
+  Anonymous volumes (no name given) are destroyed by docker run --rm. Named volumes survive.
 
-Docker stores the volume data in /var/lib/docker/volumes/mydata/_data on the host. The volume outlives the container — docker rm does not remove it. Volumes are the recommended way to persist database data, uploads, and state.
+Bind mounts — --mount vs -v:
+  -v /host/path:/container/path  → auto-creates missing host directory as root-owned
+  --mount type=bind,...          → ERRORS if source path doesn't exist on host
+  Use bind-create-src option with --mount to enable auto-creation
 
-  docker volume ls              # list volumes
-  docker volume inspect mydata  # see mountpoint, driver, labels
-  docker volume rm mydata       # fails if in use
-  docker volume prune           # remove all unused volumes
+SELinux label options (-v only):
+  :z  — shared label: content accessible by multiple containers
+  :Z  — private label: content unshared; private to this container
+  DANGER: Never use :Z on system directories like /home or /usr — permanently relabels the host directory, potentially making the host unbootable.
 
-Bind mounts:
-  docker run -v $(pwd)/src:/app/src myapp
-  docker run --mount type=bind,source=$(pwd)/src,target=/app/src myapp
+tmpfs mounts:
+  Default max size: 50% of host RAM (when unset)
+  Default mode: 1777 (world-writable with sticky bit)
+  Caveat: data MAY be written to swap if host has swap enabled
+  Not available on Docker Desktop Mac/Windows
+  Cannot be shared between containers (unlike named volumes)
+  Permission reset gotcha: chmod on a tmpfs mount may reset after container restart
 
-Host path is mounted directly into the container. Changes on either side are immediately visible on the other. The primary use case is local development — edit code on the host, container sees changes instantly.
-
-tmpfs mounts (RAM):
-  docker run --tmpfs /tmp:size=100m,mode=1777 myapp
-
-Data lives in memory only. Fastest possible I/O. Data is gone when the container stops. Use for sensitive data that must not touch disk (e.g., secrets passed as files) or for high-frequency temp files.
-
-Backup and restore pattern:
-  # Backup named volume to tar
+Backup and restore named volume:
+  # Backup
   docker run --rm -v mydata:/data -v $(pwd):/backup alpine \
     tar czf /backup/mydata.tar.gz -C /data .
 
@@ -23428,32 +23514,44 @@ Backup and restore pattern:
         title: 'Quick-fire interview answers — Docker Storage.',
         description: `Rapid-fire facts.
 
-Q: What happens to data written inside a container when it's removed?
-A: It's lost. The writable overlayfs layer is deleted with docker rm. Use volumes or bind mounts for anything that needs to persist.
+Q: What are the four overlay2 directories and what does each do?
+A: lowerdir (read-only image layers), upperdir (writable container diff), workdir (kernel scratch, internal), merged (unified view the container sees).
 
-Q: What is overlayfs?
-A: A Linux union filesystem that stacks read-only image layers under a writable container layer. Reads go down the stack; writes copy-on-write into the top writable layer.
+Q: What is copy_up and what is its critical performance gotcha?
+A: On the first write to a file from a read-only layer, overlayfs copies the ENTIRE file to upperdir before modifying it. File-level, not block-level — a 1GB file is fully copied even for a 1-byte change. Databases in containers suffer measurable overhead. Use volumes for write-intensive data.
 
-Q: Named volume vs bind mount — when to use each?
-A: Named volume for production data (portable, Docker-managed, easy backup). Bind mount for local dev (real-time code sync between host and container).
+Q: Does changing file permissions trigger copy_up?
+A: Yes. chmod/chown on a read-only layer file also triggers a full copy_up — the file is duplicated to upperdir even without content changes.
 
-Q: Where does Docker store named volume data?
-A: /var/lib/docker/volumes/<name>/_data on the host by default.
+Q: How does file deletion work in overlayfs?
+A: Deleting a file creates a whiteout file in upperdir; overlayfs hides the original from the merged view. The image layer is never modified. Deleting a directory creates an opaque directory in upperdir.
 
-Q: Does docker rm delete volumes?
-A: No. Named volumes survive container deletion. Use docker rm -v or docker volume rm explicitly. docker volume prune removes all unused volumes.
+Q: What is the rename(2) gotcha in overlayfs?
+A: Renaming a directory only works when both source and destination are in the upperdir. Cross-layer directory renames return EXDEV ("cross-device link not permitted"). Applications must fall back to copy-then-unlink.
 
-Q: What is copy-on-write in Docker?
-A: When a container writes to a file that exists in a read-only image layer, overlayfs copies the file up into the writable layer first, then applies the write there. The image layer is never modified.
+Q: What does docker ps -s show and what's the trap?
+A: size = this container's writable layer. virtual size = image + writable. Never sum virtual sizes across containers — image layers are shared, summing them massively over-counts actual disk usage.
 
-Q: How do 100 containers share the same image without 100x disk usage?
-A: overlayfs shares the read-only image layers across all containers. Only the thin per-container writable layers are duplicated.
+Q: overlay2 layer limit?
+A: 128 lower layers maximum. Deep docker build chains or docker commit chains can hit this ceiling.
 
-Q: What is tmpfs?
-A: An in-memory mount. Data never touches disk. Fastest I/O possible. Disappears when the container stops. Used for secrets-as-files or high-frequency temp data.
+Q: What happens when you mount a named volume over a container directory that already has files?
+A: If the volume is empty, container files are copied INTO the volume (population). If the volume is non-empty, the pre-existing container files are obscured (not deleted, just hidden by the volume mount).
 
-Q: How do you back up a named volume?
-A: Spin up a helper container that mounts the volume and a host directory, then tar the volume contents into the host directory.
+Q: --mount vs -v for bind mounts — key difference?
+A: -v auto-creates the host directory if missing (as root-owned). --mount errors if the source path doesn't exist. Prefer --mount in production for explicit failure.
+
+Q: SELinux :Z label danger?
+A: Using :Z on system directories (/home, /usr) permanently relabels the host directory with a private container label, potentially making the host OS inoperable.
+
+Q: tmpfs default size and persistence gotcha?
+A: Default max size = 50% of host RAM. Data may still hit disk if the host has swap enabled. Not available on Docker Desktop Mac/Windows. Cannot be shared between containers.
+
+Q: Does docker rm delete named volumes?
+A: No. Use docker rm -v (removes anonymous volumes only), docker volume rm <name>, or docker volume prune. Named volumes survive container deletion by design.
+
+Q: Why use volumes instead of writing inside a container for databases?
+A: Container writable layer uses copy-on-write storage driver overhead. Volumes provide raw filesystem performance (no CoW abstraction). Also: data persists across container recreation.
 
 These are answers a Docker-storage-fluent engineer should give without preparation.`,
       },
@@ -23475,52 +23573,69 @@ These are answers a Docker-storage-fluent engineer should give without preparati
     visualizations: [
       {
         title: 'Docker Compose architecture — services, networks, volumes, dependencies',
-        description: `Docker Compose reads a compose.yaml file and translates it into Docker API calls to create networks, volumes, and containers in the correct order.
+        description: `Docker Compose reads compose.yaml and translates it into Docker API calls to create networks, volumes, and containers in the correct startup order.
+
+Default network: Compose automatically creates a user-defined bridge named <project>_default. All services attach and resolve each other by SERVICE NAME via Docker's embedded DNS (127.0.0.11). Container IP addresses are dynamic — not persisted across restarts or recreations.
+
+Critical port semantics gotcha: With ports: "8001:5432" on a postgres service, OTHER services inside the compose network must connect on port 5432 (the container port), NOT 8001 (the host port). Only external clients use 8001.
+
+Service reconnection requirement: When a service is updated and recreated, its IP address changes. The old connection is invalidated. Applications MUST reconnect using the service name — not a cached IP.
 
 compose.yaml structure:
-  services: — the containers to run (each becomes a docker run)
-  networks: — custom networks (default: one bridge network per project)
-  volumes:  — named volumes
-  configs:  — config files injected into services
-  secrets:  — secrets injected into services (Swarm/production)
+  services:  containers to run (each maps to docker run arguments)
+  networks:  custom networks; default: one bridge per project
+  volumes:   named volumes declared here, referenced in services
+  configs:   config files injected as files into services
+  secrets:   secrets (production/Swarm feature)
 
-Service definition maps 1:1 to docker run options:
-  image: / build:    → which image or Dockerfile to use
-  ports:             → -p host:container
-  environment:       → -e KEY=VALUE
-  volumes:           → -v name:path or /host:path
-  depends_on:        → startup ordering (with condition: service_healthy)
-  restart:           → unless-stopped / always / on-failure
-  networks:          → which networks to attach
-  healthcheck:       → docker HEALTHCHECK instruction equivalent
-  command:           → override CMD
-  entrypoint:        → override ENTRYPOINT
-
-depends_on with health checks — the right way:
+depends_on conditions — the correct way:
   depends_on:
     db:
-      condition: service_healthy   # waits for healthcheck to pass, not just start
-    redis:
-      condition: service_started   # just waits for container to start
+      condition: service_healthy   # waits for HEALTHCHECK to pass
+    cache:
+      condition: service_started   # waits only for container start (not ready)
+    migrate:
+      condition: service_completed_successfully  # for one-shot init jobs
 
-Without condition: service_healthy, the web service starts the moment the db container starts — before postgres is ready to accept connections. Always add healthchecks to databases.
+condition: service_started is the default and is almost always wrong for databases. The container starts before postgres is ready to accept connections. Always pair databases with a healthcheck + condition: service_healthy.
+
+network_mode options for a service:
+  host            — shares host network stack; service DNS resolution fails with this mode
+  none            — all networking disabled
+  service:<name>  — share network namespace with another service container
+  container:<id>  — share with a specific container ID
+
+Custom and external networks:
+  networks:
+    internal-net:
+      internal: true    # no external connectivity, no default gateway
+    shared-net:
+      external: true    # must already exist; docker compose up fails if missing
+
+  external: true networks are how multiple Compose projects communicate — they share a pre-existing network. If the network is missing at compose up time, it fails with "Network not found".
+
+  Services on different networks cannot communicate unless they share at least one common network.
 
 Multiple compose files (overrides):
   docker compose -f compose.yaml -f compose.override.yaml up
-
-Base file defines the production config. Override adds dev-only ports, volume mounts, debug env vars. compose.override.yaml is automatically merged if it exists.
+  compose.override.yaml is automatically merged if present in the same directory.
+  Production base file + dev override adds ports, volume mounts, debug env vars.
 
 Profiles — conditional services:
   services:
     docs:
       profiles: [dev]        # only starts with --profile dev
+  docker compose --profile dev up
+  Production docker compose up skips profiled services.
 
-docker compose --profile dev up starts docs too. Production docker compose up skips it.
+extra_hosts — custom /etc/hosts entries:
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  host-gateway special value: resolves to host IP (Linux: bridge IP; Mac/Windows: host.docker.internal)
 
 Scaling:
   docker compose up --scale worker=4   # run 4 worker replicas
-
-For true production scaling with load balancing, upgrade to Docker Swarm (docker stack deploy) or Kubernetes.`,
+  For load-balanced scaling, use Docker Swarm (docker stack deploy) or Kubernetes.`,
         image: '/diagrams/devops/f10-docker-compose.png',
       },
       {

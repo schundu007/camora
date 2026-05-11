@@ -2757,28 +2757,26 @@ export default function TopicDetail({
         return (
         <div className="space-y-6 w-full">
 
-          {/* ── Topic stats banner — one-glance agenda + key counts ── */}
+          {/* ── Topic stats banner — single compact row ── */}
           <div
-            className="rounded-lg overflow-hidden"
+            className="rounded-lg px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5"
             style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderLeft: '3px solid var(--cam-gold-leaf, #c9a55d)' }}
           >
-            <div className="px-5 py-4">
-              <div className="text-[10px] uppercase tracking-[0.18em] landing-mono text-[var(--text-muted)] mb-1.5">
-                Topic agenda
-              </div>
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
-                {agenda.map((a, i) => (
-                  <div key={a.id} className="flex items-center gap-1.5 text-[12px] landing-body text-[var(--text-secondary)]">
-                    <span className="text-[10px] font-bold landing-mono tabular-nums text-[var(--cam-gold-leaf,_#c9a55d)]">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <span>{a.label}</span>
-                  </div>
-                ))}
-              </div>
+            <span className="text-[10px] uppercase tracking-[0.18em] landing-mono text-[var(--text-muted)] shrink-0">
+              Agenda
+            </span>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 flex-1">
+              {agenda.map((a, i) => (
+                <div key={a.id} className="flex items-center gap-1 text-[11px] landing-body text-[var(--text-secondary)]">
+                  <span className="text-[10px] font-bold landing-mono tabular-nums text-[var(--cam-gold-leaf,_#c9a55d)]">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span>{a.label}</span>
+                </div>
+              ))}
             </div>
-            <div className="border-t border-[var(--border)] bg-[var(--bg-elevated)]/40 px-5 py-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px] landing-mono uppercase tracking-[0.12em] text-[var(--text-muted)]">
-              {topicDetails.keyQuestions?.length ? <span>{topicDetails.keyQuestions.length} questions</span> : null}
+            <div className="flex items-center gap-x-3 text-[10px] landing-mono uppercase tracking-[0.12em] text-[var(--text-muted)] shrink-0">
+              {topicDetails.keyQuestions?.length ? <span>{topicDetails.keyQuestions.length} q&amp;a</span> : null}
               {topicDetails.visualizations?.length ? <span>{topicDetails.visualizations.length} diagram{topicDetails.visualizations.length > 1 ? 's' : ''}</span> : null}
               {topicDetails.keyConcepts?.length ? <span>{topicDetails.keyConcepts.length} concepts</span> : null}
               {topicDetails.references?.length ? <span>{topicDetails.references.length} sources</span> : null}
