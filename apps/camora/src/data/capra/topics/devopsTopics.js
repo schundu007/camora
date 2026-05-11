@@ -82,6 +82,10 @@ export const devopsTopicCategoryMap = {
   'docker-security':                'containers',
   'docker-registry':                'containers',
   'docker-resource-limits':         'containers',
+  'docker-buildx':                  'containers',
+  'docker-swarm':                   'containers',
+  'docker-daemon':                  'containers',
+  'docker-cli':                     'containers',
   'container-fundamentals':         'containers',
   'docker-buildkit':                'containers',
   'image-hardening':                'containers',
@@ -24060,6 +24064,375 @@ These are answers a container-resource-fluent engineer should give without prepa
       'https://docs.docker.com/engine/containers/resource_constraints/',
       'https://docs.kernel.org/admin-guide/cgroup-v2.html',
       'https://docs.docker.com/compose/compose-file/deploy/',
+    ],
+  },
+
+  {
+    id: 'docker-buildx',
+    title: 'Docker Buildx — Multi-Platform Builds & BuildKit',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Docker Buildx extends the Docker CLI with BuildKit — a next-generation builder that executes Dockerfile stages as a DAG, caches at layer granularity, and produces multi-architecture images in one push. It is the standard tool for production CI/CD pipelines.',
+    visualizations: [
+      {
+        title: 'BuildKit pipeline — multi-platform build with cache backends',
+        description: `BuildKit replaces the classic builder with a DAG-based solver that can run stages in parallel and cache at the instruction level.
+
+Key concepts:
+
+Builder instances (docker buildx create):
+  docker-container driver — starts BuildKit as a container; supports --platform, --push, --load, --cache-to
+  docker driver (default) — legacy builder inside dockerd; does NOT support multi-platform or registry cache export
+  remote driver — connects to an external buildkitd (e.g. on a Kubernetes cluster)
+
+Multi-platform builds:
+  --platform linux/amd64,linux/arm64 produces an OCI Image Index (aka multi-arch manifest list).
+  docker pull on an M-series Mac pulls arm64; CI (x86) pulls amd64 — automatically.
+  Requires binfmt_misc QEMU emulation on the build host OR a native node builder (--append).
+
+Cache backends:
+  type=registry     — exports cache layers to a registry tag; portable across any CI
+  type=gha          — GitHub Actions Cache API; no external infra; purged after 7 days idle
+  type=local        — writes to a local directory; fastest for single-host CI
+  type=s3 / azblob  — cloud blob stores; good for self-hosted runners
+
+mode=max vs mode=min (for cache-to):
+  max: caches ALL intermediate layers including every RUN/COPY intermediate. Best cache-hit rate.
+  min: caches only the final stage layers. Smaller storage, fewer cache hits.
+
+Build secrets (never baked into layers):
+  --secret id=npmrc,src=$HOME/.npmrc
+  In Dockerfile: RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm install
+
+SSH agent forwarding:
+  --ssh default=$SSH_AUTH_SOCK
+  In Dockerfile: RUN --mount=type=ssh git clone git@github.com:org/private-repo
+
+Attestations (supply chain security):
+  --attest type=sbom          → generates CycloneDX/SPDX SBOM attached to image
+  --attest type=provenance,mode=max → SLSA provenance metadata
+  docker buildx imagetools inspect myapp:v1 — verify attestations in registry`,
+        image: '/diagrams/devops/f14-docker-buildx.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Buildx.',
+        description: `Rapid-fire facts.
+
+Q: What is the difference between docker build and docker buildx build?
+A: docker build uses the legacy builder inside dockerd. docker buildx build uses BuildKit, which adds DAG-based parallel execution, multi-platform support, cache export backends, secrets, and attestations.
+
+Q: Why can't you use --load and --platform linux/amd64,linux/arm64 together?
+A: --load writes to the local Docker image store which only supports one platform at a time. Use --push for multi-arch, or build with a single platform for --load.
+
+Q: What is mode=max in cache-to?
+A: Exports ALL intermediate layers including every RUN/COPY step as cache. mode=min only exports the final stage. mode=max gets better cache hit rates at the cost of more storage.
+
+Q: How do you pass a secret to a build without it appearing in docker history?
+A: --secret id=mykey,src=./key.txt and RUN --mount=type=secret,id=mykey ... in the Dockerfile. The mount is temporary — it never writes to any image layer.
+
+Q: What is an OCI Image Index?
+A: A manifest list that references per-platform image manifests. A docker pull picks the right one automatically based on the pulling host's OS/arch.
+
+Q: How does QEMU multi-platform building work?
+A: binfmt_misc registers QEMU user-space emulators for foreign architectures. The build host runs arm64 binaries under emulation. Slower than native but requires no additional nodes.
+
+Q: What does --attest type=provenance do?
+A: Attaches SLSA provenance metadata to the image in the registry — build inputs, source repo, builder identity. Enables supply-chain attestation verification with cosign or docker buildx imagetools.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/reference/cli/docker/buildx/',
+      'https://docs.docker.com/reference/cli/docker/buildx/build/',
+      'https://docs.docker.com/build/cache/backends/',
+    ],
+  },
+
+  {
+    id: 'docker-swarm',
+    title: 'Docker Swarm — Cluster Orchestration & Rolling Deploys',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Docker Swarm turns a group of Docker hosts into a single cluster managed through the standard Docker API. It uses Raft consensus for manager HA, overlay networks for cross-host communication, and a routing mesh that load-balances published ports on every node — no separate load balancer needed for simple deployments.',
+    visualizations: [
+      {
+        title: 'Swarm architecture — Raft managers, worker nodes, routing mesh',
+        description: `Swarm mode bakes clustering directly into the Docker Engine.
+
+Manager vs worker roles:
+  Managers: maintain cluster state via Raft consensus, schedule tasks, expose the API on :2377
+  Workers: pull and run container tasks; do not participate in scheduling decisions
+  A manager can also run tasks (default) or be set to drain (manager-only)
+
+Raft quorum rules (N managers need (N/2)+1 to elect a leader):
+  1 manager  — no HA; daemon restart = scheduling paused
+  3 managers — tolerates 1 failure
+  5 managers — tolerates 2 failures (most common production setup)
+  Always use ODD numbers; even numbers give no extra fault tolerance
+
+Service types:
+  replicated  — runs N copies across eligible workers; default
+  global       — runs exactly 1 copy on every node matching placement constraints
+  replicated-job / global-job — run to completion (exit 0), not indefinitely
+
+Update lifecycle (docker service update):
+  --update-parallelism N  — how many replicas update simultaneously
+  --update-delay          — pause between batches
+  --update-order start-first vs stop-first
+    start-first: new task starts + passes healthcheck BEFORE old stops → zero downtime
+    stop-first:  old task stops first → brief gap; use when resources are tight
+  --update-failure-action pause | rollback | continue
+    pause: halts rollout on failure and waits for operator (default)
+    rollback: automatically reverts to previous spec on failure
+
+Rollback config mirrors update config:
+  docker service rollback web — manual rollback to previous service spec
+
+Routing mesh (ingress mode):
+  Published port is open on 0.0.0.0:<port> on EVERY node.
+  Traffic is IPVS load-balanced to any healthy task, regardless of which node receives it.
+  Source IP is SNATted by IPVS — client IP not preserved.
+
+Host mode publishing:
+  Only listens on nodes where a task is actually running.
+  Client IP preserved (no SNAT). Each node can only run one task per port.
+  Use for applications that require the real client IP.
+
+Secrets and configs in Swarm:
+  docker secret create db_pass ./password.txt
+  Secrets are stored encrypted in Raft; mounted at /run/secrets/<name> as tmpfs.
+  Configs are similar but not encrypted — for non-sensitive files.
+  Service containers only get secrets explicitly granted to them.`,
+        image: '/diagrams/devops/f15-docker-swarm.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Swarm.',
+        description: `Rapid-fire facts.
+
+Q: What is the minimum manager count for a fault-tolerant Swarm?
+A: 3 managers. With 3, the cluster tolerates 1 manager failure while maintaining quorum (2/3).
+
+Q: What happens if a Swarm loses quorum?
+A: No new tasks can be scheduled and the API returns 'swarm does not have a leader'. Existing running containers continue until they are stopped or fail. Recovery: docker swarm init --force-new-cluster on a surviving manager.
+
+Q: What is the difference between replicated and global service mode?
+A: Replicated runs a fixed number of tasks distributed across eligible nodes. Global runs exactly one task on every eligible node — useful for log shippers, monitoring agents, or node-local services.
+
+Q: How does the routing mesh work?
+A: IPVS listens on the published port on every node. Incoming traffic is forwarded to a healthy task regardless of which node it arrived at. The tradeoff is that the real client IP is SNATted.
+
+Q: What is start-first update order and when should you use it?
+A: start-first launches the new task and waits for it to pass its healthcheck before stopping the old one. Use it for zero-downtime rolling deploys — requires enough node capacity to run N+parallelism tasks simultaneously.
+
+Q: How do secrets work in Swarm vs Compose?
+A: Swarm encrypts secrets in the Raft log and mounts them as tmpfs at /run/secrets. In docker compose (non-Swarm), secrets are bind-mounted from host files — not encrypted. True encryption only works in Swarm mode.
+
+Q: What ports does Swarm require open between nodes?
+A: TCP 2377 (cluster management), TCP/UDP 7946 (node communication), UDP 4789 (VXLAN overlay data plane).`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/engine/swarm/',
+      'https://docs.docker.com/reference/cli/docker/service/create/',
+      'https://docs.docker.com/engine/swarm/networking/',
+    ],
+  },
+
+  {
+    id: 'docker-daemon',
+    title: 'Docker Daemon — dockerd, Storage Drivers & Daemon Config',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'The Docker daemon (dockerd) is the long-running process that manages all Docker objects. It delegates container lifecycle to containerd, which calls runc for process execution. Understanding daemon.json, storage drivers, logging drivers, and TLS configuration is essential for production Docker deployments.',
+    visualizations: [
+      {
+        title: 'Docker daemon architecture — dockerd, containerd, runc, subsystems',
+        description: `Docker Engine is a stack of three processes:
+
+dockerd — the high-level daemon:
+  Exposes the Docker REST API (Unix socket /var/run/docker.sock by default, or TCP :2375/:2376)
+  Handles image management, networking, volumes, build, swarm
+  Delegates container lifecycle operations to containerd via gRPC
+
+containerd — the container runtime supervisor:
+  Manages container state (create/start/stop/delete)
+  Pulls and unpacks OCI images into the snapshotter
+  Fires hooks (OCI spec): createRuntime, createContainer, startContainer, poststop
+  Exposes its own socket at /run/containerd/containerd.sock
+
+runc / crun — OCI runtime:
+  Called by containerd shim for each container start
+  Sets up namespaces, cgroups, rootfs, and executes the process
+  Exits after container starts — it is NOT the process supervisor
+
+daemon.json location: /etc/docker/daemon.json  (Linux)
+After editing, reload with: systemctl reload docker
+Conflicts between daemon.json and systemd ExecStart= flags cause dockerd to fail.
+
+Storage drivers (snapshotter for image layers):
+  overlay2 — recommended for all modern Linux (kernel 4.0+)
+    Uses overlayfs; four directories per layer: lowerdir/upperdir/workdir/merged
+    XFS can enforce per-container size with pquota+overlay2.size
+  fuse-overlayfs — for rootless Docker on older kernels without native overlayfs
+  btrfs / zfs — native CoW filesystems; use only if the host already runs btrfs/zfs
+  windowsfilter — Windows only
+
+Logging drivers:
+  json-file (default) — logs to /var/lib/docker/containers/<id>/<id>-json.log
+    Always configure max-size and max-file to prevent disk exhaustion
+    docker logs command works with this driver
+  journald — forwards to systemd journal; use journalctl to read
+  fluentd / awslogs / gcplogs — ship directly to external systems
+    WARNING: docker logs DOES NOT WORK with these drivers
+    The command returns: 'configured logging driver does not support reading'
+
+TLS for remote API (when exposing :2376):
+  tlscacert — CA that signed client certs
+  tlscert / tlskey — server certificate
+  tlsverify: true — mutual TLS (reject clients without valid cert)
+  Without TLS, anyone with network access to :2375 has full Docker control
+
+live-restore: true — containers keep running if dockerd restarts (e.g. during upgrade)
+  Off by default. Critical for production to prevent unnecessary container restarts.
+
+User namespace remapping (userns-remap: "default"):
+  Maps container UID 0 to a high host UID (e.g. 100000).
+  Container root cannot write to host files owned by real root.
+  Breaks bind-mount permissions unless data dirs are chowned to the mapped UID.`,
+        image: '/diagrams/devops/f16-docker-daemon.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Daemon.',
+        description: `Rapid-fire facts.
+
+Q: What is the difference between dockerd and containerd?
+A: dockerd is the high-level Docker API server handling images, networks, builds, swarm. containerd is the container lifecycle runtime it delegates to. runc is the OCI process launcher called by containerd for each start. containerd runs as a separate daemon and can operate without dockerd (e.g. in Kubernetes with containerd-shim).
+
+Q: What happens if daemon.json and a systemd ExecStart= flag set the same option?
+A: dockerd refuses to start. The error appears in journalctl -u docker. Fix by removing the duplicate from one location.
+
+Q: Why should you always set max-size and max-file in daemon.json?
+A: The default json-file logging driver writes unbounded JSON logs to /var/lib/docker/containers/. On production hosts this will eventually fill the disk. max-size=10m, max-file=3 keeps at most 30MB per container.
+
+Q: What is live-restore and why enable it?
+A: With live-restore: true, containers continue running when dockerd is restarted or crashes. Without it, all containers stop on daemon restart, causing unplanned outages during daemon upgrades.
+
+Q: When does docker logs not work?
+A: When the container uses a non-json-file logging driver (fluentd, awslogs, gcplogs, syslog). Logs were shipped directly to the external system. 'docker logs' returns an error — query the external system instead.
+
+Q: What is the security risk of /var/run/docker.sock?
+A: Any process (or container) with access to the socket has full Docker API access — equivalent to root on the host. Mounting it into a container for CI (e.g. Docker-in-Docker alternatives) is a privilege escalation path. Mitigate with socket proxies (e.g. dockersocket) or rootless Docker.
+
+Q: What does overlay2 storage driver store on disk?
+A: Each image layer is stored as four directories: lowerdir (read-only parent layers), upperdir (writable container layer), workdir (atomic operations), merged (unified mount point shown to the container).`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/reference/cli/dockerd/',
+      'https://docs.docker.com/engine/daemon/logs/',
+      'https://docs.docker.com/engine/storage/drivers/overlayfs-driver/',
+    ],
+  },
+
+  {
+    id: 'docker-cli',
+    title: 'Docker CLI — Essential Commands & Run Flags',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Mastering the Docker CLI means knowing which flags actually control container behavior, how to inspect running state, and how to manage disk usage. These are the commands and flags that come up in every DevOps interview and day-to-day container operation.',
+    visualizations: [
+      {
+        title: 'Docker CLI — container lifecycle, inspection, disk management',
+        description: `Container lifecycle commands:
+
+docker run key flags:
+  -d                        detach (run in background)
+  --name <name>             assign a name; enables DNS on user-defined networks
+  --rm                      remove container + anonymous volumes on exit (incompatible with --restart)
+  --restart unless-stopped  restart on crash and after daemon restart; ignores manual docker stop
+  --restart on-failure:3    restart only on non-zero exit, max 3 attempts; stops on config errors
+  -p 127.0.0.1:8080:8080   publish port; bind to localhost only (omitting IP binds 0.0.0.0)
+  -e VAR=value              set environment variable
+  -v /host/path:/ctr/path   bind mount; :ro for read-only
+  --mount type=volume,...   explicit mount syntax; preferred over -v for clarity
+  -u 1000:1000              run as specific UID:GID
+  --read-only               read-only rootfs; pair with --tmpfs /tmp for writable scratch
+  --init                    run tini as PID 1; proper signal forwarding and zombie reaping
+
+docker stop vs docker kill:
+  stop — sends SIGTERM; waits --time seconds (default 10); then sends SIGKILL (graceful)
+  kill — sends SIGKILL immediately by default (no grace period)
+  Use stop except when the container is frozen or in an infinite loop
+
+docker exec -it <name> sh   — get a shell inside a running container
+  Runs in the container's existing namespaces — same network, filesystem, PID namespace
+  Fails with 'container not running' if the container has exited
+
+Inspection commands:
+  docker inspect <name>     — full JSON: IP, mounts, env, labels, state, resource limits
+  docker inspect <name> | jq '.[0].NetworkSettings.Networks'   — extract network config
+  docker logs <name> --tail 100 --follow  — stream last 100 lines + follow
+  docker stats              — live cgroup metrics: CPU%, MEM, NET I/O, BLOCK I/O
+  docker stats --no-stream  — one-shot snapshot of all running containers
+  docker top <name>         — processes running inside the container (ps output)
+  docker port <name>        — show host-side port mappings
+  docker diff <name>        — files changed vs image (A=added, C=changed, D=deleted)
+
+File operations:
+  docker cp <name>:/app/log ./log    — copy from container to host
+  docker cp ./config <name>:/app/    — copy from host to container
+  Works on stopped containers too
+
+Image inspection:
+  docker image history myapp:v1 --no-trunc  — all layers + commands + sizes
+  docker inspect myapp:v1 | jq '.[0].RootFS.Layers | length'  — layer count
+
+Disk management (docker system):
+  docker system df          — usage breakdown: images, containers, volumes, build cache
+  docker system df -v       — verbose: per-image and per-container breakdown
+  docker system prune       — removes: stopped containers, dangling images, unused networks, build cache
+  docker system prune -a    — also removes ALL unused images (not just dangling)
+  docker system prune -a --volumes  — also removes unnamed volumes (CAREFUL: data loss)
+  Named volumes are NEVER removed by prune — only explicit 'docker volume rm'
+
+docker system events — real-time event stream:
+  Tracks: container create/start/stop/die, image pull/tag/push, network connect/disconnect
+  Filter: docker events --filter type=container --filter event=die`,
+        image: '/diagrams/devops/f17-docker-cli.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker CLI.',
+        description: `Rapid-fire facts.
+
+Q: What is the difference between docker stop and docker kill?
+A: docker stop sends SIGTERM, waits the grace period (default 10s), then sends SIGKILL. docker kill sends SIGKILL immediately. Use stop for graceful shutdown; kill for frozen processes.
+
+Q: What is the difference between docker exec and docker run?
+A: exec runs a command inside an already-running container's namespaces. run starts a brand new container from an image. exec on a stopped container fails; run always creates a fresh instance.
+
+Q: What does --rm do and why can't you use it with --restart?
+A: --rm auto-removes the container on exit. --restart would try to restart it after exit, but the container was already deleted — they are mutually exclusive.
+
+Q: What does docker system prune -a --volumes remove?
+A: Stopped containers, all unused images (not just dangling), unused networks, build cache, and anonymous (unnamed) volumes. Named volumes are never touched without explicit docker volume rm.
+
+Q: How do you see the actual memory limit inside a container?
+A: cat /sys/fs/cgroup/memory.max — docker stats and the free command inside the container show HOST memory, not the container limit. This is a well-known cgroup quirk.
+
+Q: What flag restricts published ports to localhost only?
+A: -p 127.0.0.1:8080:8080. Without specifying the host IP, Docker binds to 0.0.0.0 (all interfaces), bypassing firewall rules and potentially exposing the port to the network.
+
+Q: What does docker inspect show that docker stats does not?
+A: Static configuration: mounts, environment variables, network config, labels, restart policy, image digest, port bindings. Stats shows live runtime metrics: CPU%, memory usage, network and block I/O rates.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/reference/cli/docker/container/run/',
+      'https://docs.docker.com/reference/cli/docker/system/',
+      'https://docs.docker.com/reference/cli/docker/',
     ],
   },
 

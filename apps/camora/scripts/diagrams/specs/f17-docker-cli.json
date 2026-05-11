@@ -1,0 +1,49 @@
+{
+  "title": "Docker CLI — Run Lifecycle, System Commands, Inspection",
+  "subtitle": "The most interview-critical Docker CLI commands and their flags",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "Container Lifecycle",
+      "nodes": [
+        { "id": "run", "label": "docker run\nPull image if missing\nCreate + start container\nAttach / detach (-d)", "kind": "actor" },
+        { "id": "exec", "label": "docker exec\nRun cmd in running container\n-it for interactive shell\nSame namespaces", "kind": "service" },
+        { "id": "stop", "label": "docker stop / kill\nSIGTERM → 10s grace → SIGKILL\nkill -s SIGKILL skips grace", "kind": "worker" }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "run",
+      "cluster": "Observability",
+      "nodes": [
+        { "id": "inspect", "label": "docker inspect\nFull JSON — IPs, mounts, env\ndocker logs --tail --follow\ndocker stats (live cgroup)", "kind": "cache" }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Essential CLI patterns",
+      "lang": "plain",
+      "body": "# Run with restart + resource limits + read-only FS\ndocker run -d --name api \\\n  --restart unless-stopped \\\n  --memory 512m --cpus 1.5 \\\n  --read-only --tmpfs /tmp \\\n  --cap-drop ALL --cap-add NET_BIND_SERVICE \\\n  -p 127.0.0.1:8080:8080 \\\n  myapp:v1.2.3\n\n# Debug a running container\ndocker exec -it api sh\ndocker logs api --tail 100 --follow\ndocker inspect api | jq '.[0].NetworkSettings.Networks'\n\n# Live resource usage\ndocker stats              # all containers\ndocker stats api --no-stream   # one-shot snapshot\n\n# Disk usage audit\ndocker system df -v       # detailed breakdown\ndocker system prune -af --volumes   # nuclear cleanup\n\n# Copy files in/out without a volume\ndocker cp api:/app/logs/error.log ./error.log\ndocker cp ./config.json api:/app/config.json\n\n# Inspect image layers\ndocker image history myapp:v1.2.3 --no-trunc\ndocker inspect myapp:v1.2.3 | jq '.[0].RootFS.Layers | length'"
+    },
+    {
+      "kind": "issue",
+      "title": "CLI traps interviewers test",
+      "body": "docker stop vs docker kill:\n  stop sends SIGTERM, waits --time seconds (default 10), then SIGKILL.\n  kill sends SIGKILL immediately by default — no graceful shutdown.\n  Prefer stop unless the container is frozen/unresponsive.\n\ndocker run --rm vs named container:\n  --rm auto-removes the container on exit. Named containers ('-n foo')\n  persist and can be restarted. '--rm' is incompatible with '--restart'.\n\ndocker exec vs docker run:\n  exec runs inside a running container's existing namespaces.\n  run starts a NEW container from the image — a completely separate process.\n  'docker exec' on a crashed container returns: 'Error — container not running'.\n\ndocker logs only works with json-file or journald log drivers.\nWith fluentd/awslogs drivers, docker logs returns an error — logs\nwere already shipped to the external system.\n\ndocker system prune removes:\n  stopped containers, dangling images, unused networks, build cache.\n  --volumes ALSO removes unnamed (anonymous) volumes — dangerous.\n  Named volumes are NEVER removed without explicit 'docker volume rm'."
+    },
+    {
+      "kind": "tradeoff",
+      "title": "restart policies",
+      "pros": [
+        "unless-stopped: restarts after crashes AND after daemon restart — best for production services",
+        "on-failure:3: restarts only on non-zero exit up to 3 times — prevents infinite loops on config errors"
+      ],
+      "cons": [
+        "always: also restarts containers you manually stopped with 'docker stop' after daemon restart — often surprising",
+        "no (default): container never restarts; process crashes mean permanent downtime without an external supervisor"
+      ]
+    }
+  ]
+}

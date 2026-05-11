@@ -1,0 +1,49 @@
+{
+  "title": "Docker Daemon — Architecture, Storage Drivers, Logging, TLS",
+  "subtitle": "How dockerd delegates to containerd and pluggable subsystems",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "Docker Engine",
+      "nodes": [
+        { "id": "dockerd", "label": "dockerd\nHTTP REST API :2375\nTLS: :2376\nUnix socket: /var/run/docker.sock", "kind": "service" },
+        { "id": "containerd", "label": "containerd\nContainer lifecycle\nImage pulling\nSnapshotter (overlay2)", "kind": "service" },
+        { "id": "runc", "label": "runc / crun\nOCI runtime\nnamespace + cgroup setup\nProcess exec", "kind": "worker" }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "dockerd",
+      "cluster": "Pluggable Subsystems",
+      "nodes": [
+        { "id": "plugins", "label": "Storage: overlay2\nLogging: json-file / fluentd\nNetwork: bridge / overlay\nRegistry mirrors", "kind": "cache" }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "/etc/docker/daemon.json — production-hardened config",
+      "lang": "json",
+      "body": "{\n  \"storage-driver\": \"overlay2\",\n  \"log-driver\": \"json-file\",\n  \"log-opts\": {\n    \"max-size\": \"10m\",\n    \"max-file\": \"3\"\n  },\n  \"registry-mirrors\": [\"https://mirror.example.com\"],\n  \"insecure-registries\": [],\n  \"tls\": true,\n  \"tlscacert\": \"/etc/docker/ca.pem\",\n  \"tlscert\":   \"/etc/docker/server-cert.pem\",\n  \"tlskey\":    \"/etc/docker/server-key.pem\",\n  \"tlsverify\": true,\n  \"userns-remap\": \"default\",\n  \"no-new-privileges\": true,\n  \"live-restore\": true,\n  \"default-ulimits\": {\n    \"nofile\": { \"Name\": \"nofile\", \"Hard\": 64000, \"Soft\": 64000 }\n  },\n  \"experimental\": false\n}"
+    },
+    {
+      "kind": "issue",
+      "title": "Daemon security and operational gotchas",
+      "body": "Docker socket = root equivalent.\n/var/run/docker.sock gives full daemon control — mounting it into a\ncontainer (e.g. for CI) is a privileged escalation vector. Use\nauthz plugins or a rootless daemon for multi-tenant hosts.\n\nlive-restore: true — containers keep running if dockerd restarts\nor crashes. Essential for production; prevents accidental outages\nduring daemon upgrades. Off by default.\n\njson-file without log rotation: the default log driver writes\nunbounded JSON to disk. Prod hosts fill up. Always set max-size\nand max-file in daemon.json or per-container --log-opt.\n\nuserns-remap: maps container root (UID 0) to a high host UID\n(e.g. 100000). Container root writes appear as UID 100000 on host.\nBreaks volume permissions unless you chown data dirs to the\nmapped UID. Test before enabling in prod.\n\nconflicting daemon.json vs CLI flags: dockerd fails to start if\nthe same option is set in both daemon.json and a systemd\nExecStart= flag. Check: journalctl -u docker.service"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Logging drivers",
+      "pros": [
+        "json-file (default): works everywhere, no infrastructure needed; docker logs command works",
+        "fluentd / awslogs / gcplogs: streams directly to centralized log system; no disk fill risk on host"
+      ],
+      "cons": [
+        "json-file: fills disk without rotation; docker logs N/A for very old logs after rotation",
+        "Non-json-file drivers: docker logs command returns 'Error — configured logging driver does not support reading'"
+      ]
+    }
+  ]
+}

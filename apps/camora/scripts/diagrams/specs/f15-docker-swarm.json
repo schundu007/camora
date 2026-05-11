@@ -1,0 +1,49 @@
+{
+  "title": "Docker Swarm — Orchestration, Routing Mesh, Rolling Updates",
+  "subtitle": "How Swarm manages services across a cluster of Docker hosts",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "Manager Nodes (Raft Quorum)",
+      "nodes": [
+        { "id": "manager1", "label": "Manager (Leader)\nRaft consensus\nTask scheduling\nAPI endpoint :2377", "kind": "service" },
+        { "id": "manager2", "label": "Manager (Follower)\nStandby leader\nNeeds (N/2)+1 for quorum\nCertificate rotation", "kind": "service" }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "manager1",
+      "cluster": "Worker Nodes",
+      "nodes": [
+        { "id": "worker1", "label": "Worker Node\nRuns tasks (containers)\nIngress overlay network\nRouting mesh port 0.0.0.0", "kind": "worker" },
+        { "id": "worker2", "label": "Worker Node\nService replicas\nLoad-balanced via VIP\nLocal DNS: tasks.<svc>", "kind": "worker" }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Swarm init and service deployment",
+      "lang": "plain",
+      "body": "# Bootstrap swarm on first manager\ndocker swarm init --advertise-addr 192.168.1.10\n\n# Get join token for workers / managers\ndocker swarm join-token worker\ndocker swarm join-token manager\n\n# Deploy a replicated service\ndocker service create \\\n  --name web \\\n  --replicas 3 \\\n  --publish published=80,target=8080 \\\n  --update-parallelism 1 \\\n  --update-delay 10s \\\n  --update-order start-first \\\n  --rollback-parallelism 1 \\\n  --restart-condition on-failure \\\n  --constraint 'node.role==worker' \\\n  --limit-memory 512m \\\n  nginx:alpine\n\n# Deploy a Compose stack to Swarm\ndocker stack deploy -c compose.prod.yaml myapp\n\n# Force rolling update (e.g. after config change)\ndocker service update --force web\n\n# Drain a node for maintenance\ndocker node update --availability drain node2"
+    },
+    {
+      "kind": "issue",
+      "title": "Quorum and Raft gotchas",
+      "body": "Swarm uses Raft distributed consensus. Manager count MUST be odd.\n  1 manager: no HA, any restart loses scheduling.\n  3 managers: tolerates 1 failure (quorum = 2).\n  5 managers: tolerates 2 failures (quorum = 3).\n  7+ managers: rarely worth it — more Raft overhead.\n\nLost quorum symptoms: 'Error response from daemon: rpc error: code = Unknown\ndesc = The swarm does not have a leader.' — no new tasks can be scheduled.\nRecovery: docker swarm init --force-new-cluster on a surviving manager.\n\nRouting mesh: publishing a port (mode=ingress) listens on 0.0.0.0:<port>\non EVERY node. Traffic is load-balanced to any healthy task regardless\nof which node receives the request.\n\nmode=host publishes only on nodes where a task is running. Use when\nyou need client IP preserved (no SNAT from routing mesh)."
+    },
+    {
+      "kind": "tradeoff",
+      "title": "update-order: start-first vs stop-first",
+      "pros": [
+        "start-first: new task starts and passes health check BEFORE old task stops — zero downtime rolling deploy",
+        "start-first: immediate rollback if new task fails health check; old task never terminates"
+      ],
+      "cons": [
+        "stop-first (default): old task stops before new one starts — brief downtime but uses fewer resources during deploy",
+        "start-first requires headroom: you temporarily run replicas+parallelism tasks — nodes must have capacity"
+      ]
+    }
+  ]
+}
