@@ -1,0 +1,106 @@
+{
+  "title": "Dockerfile Instructions — Build-Stage Flow",
+  "subtitle": "Order determines cache invalidation — least-changing instructions first",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "Stage Setup",
+      "nodes": [
+        {
+          "id": "from",
+          "label": "FROM node:20-alpine\nBase image (first instruction)\nAS <name> for multi-stage",
+          "kind": "actor"
+        },
+        {
+          "id": "arg",
+          "label": "ARG / ENV\nARG: build-time only, not in image\nENV: runtime, persists in image",
+          "kind": "service"
+        },
+        {
+          "id": "workdir",
+          "label": "WORKDIR /app\nSet working directory\nCreated automatically if missing",
+          "kind": "service"
+        }
+      ]
+    },
+    {
+      "lane": "main",
+      "cluster": "Dependencies (cache-stable)",
+      "nodes": [
+        {
+          "id": "copy-lock",
+          "label": "COPY package*.json ./\nCopy lockfile FIRST\nChanges rarely → warm cache",
+          "kind": "service"
+        },
+        {
+          "id": "run-install",
+          "label": "RUN npm ci\nInstall deps (new layer)\n--mount=type=cache for BuildKit",
+          "kind": "worker"
+        }
+      ]
+    },
+    {
+      "lane": "main",
+      "cluster": "Source (changes often)",
+      "nodes": [
+        {
+          "id": "copy-src",
+          "label": "COPY . .\nCopy source code\nInvalidates layers below here",
+          "kind": "service"
+        },
+        {
+          "id": "run-build",
+          "label": "RUN npm run build\nCompile / transpile\nOutputs to /app/dist",
+          "kind": "worker"
+        }
+      ]
+    },
+    {
+      "lane": "main",
+      "cluster": "Runtime Config",
+      "nodes": [
+        {
+          "id": "expose",
+          "label": "EXPOSE 3000\nDocument port (metadata only)\nPublish with -p at runtime",
+          "kind": "service"
+        },
+        {
+          "id": "user",
+          "label": "USER node\nDrop root before CMD\nSecurity best practice",
+          "kind": "service"
+        },
+        {
+          "id": "cmd",
+          "label": "CMD [\"node\", \"dist/index.js\"]\nDefault command (overridable)\nExec form → signals to PID 1",
+          "kind": "actor"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Multi-stage: build → slim production image",
+      "lang": "plain",
+      "body": "FROM node:20-alpine AS build\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nRUN npm run build\n\nFROM node:20-alpine AS prod   # fresh base, no build tools\nWORKDIR /app\nCOPY --from=build /app/dist ./dist\nCOPY --from=build /app/node_modules ./node_modules\nEXPOSE 3000\nUSER node\nCMD [\"node\", \"dist/index.js\"]\n\nResult: 1.2 GB dev image → ~180 MB prod image"
+    },
+    {
+      "kind": "issue",
+      "title": "Layer cache trap — wrong COPY order",
+      "body": "Wrong: COPY . . before RUN npm ci\n  → Any source change invalidates npm install cache\n  → Full cold install on every trivial edit (~90s)\n\nRight: COPY package*.json ./ first\n  → npm ci cached unless lockfile changes (~5s warm)\n  → COPY . . only invalidates the app layer\n\nRule: copy manifests / lockfiles before source"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "CMD vs ENTRYPOINT",
+      "pros": [
+        "ENTRYPOINT exec form: container IS the executable, docker run myapp --flag works",
+        "CMD provides default args that docker run arguments can override cleanly"
+      ],
+      "cons": [
+        "ENTRYPOINT shell form (/bin/sh -c): shell becomes PID 1, SIGTERM never reaches app",
+        "Both together: ENTRYPOINT sets executable, CMD sets default args — confusing for newcomers"
+      ]
+    }
+  ]
+}

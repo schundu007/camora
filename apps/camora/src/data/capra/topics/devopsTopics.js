@@ -75,6 +75,7 @@ export const devopsTopicCategoryMap = {
   'immutable-infrastructure':       'config',
   'drift-remediation':              'config',
   // Containers & Images
+  'docker-overview':                'containers',
   'container-fundamentals':         'containers',
   'docker-buildkit':                'containers',
   'image-hardening':                'containers',
@@ -23099,6 +23100,162 @@ These are answers an incident-RCA-fluent platform / SRE engineer should give wit
   },
 
   {
+    id: 'docker-overview',
+    title: 'Docker Overview — Architecture, Objects & Core Commands',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Docker is an open platform for building, shipping, and running applications in containers. It uses a client-server architecture — the Docker client talks to the Docker daemon, which manages images, containers, networks, and volumes. Docker Hub is the default public registry for sharing images.',
+    visualizations: [
+      {
+        title: 'Docker architecture — client, daemon, images, containers, registry',
+        description: `Docker uses a client-server architecture. The three main pieces:
+
+Docker Client (docker CLI). The primary way users interact with Docker. When you run commands like docker run, docker build, or docker pull, the client sends these requests to the Docker daemon via a REST API over a UNIX socket (/var/run/docker.sock) or a network interface.
+
+Docker Daemon (dockerd). The long-running server process that does the actual work — building images, starting/stopping containers, managing networks and volumes. The daemon listens for API requests and can communicate with other daemons to manage distributed services.
+
+Docker Registry. Stores Docker images. Docker Hub is the default public registry; anyone can pull public images or push their own. Private registries (GitHub Container Registry, AWS ECR, Google Artifact Registry) are used for proprietary images. docker pull fetches an image from the registry; docker push uploads one.
+
+The request flow for docker run nginx:
+
+1. CLI sends "run nginx" to daemon over UNIX socket
+2. Daemon checks local image cache for nginx:latest
+3. If not cached → daemon pulls image layers from Docker Hub
+4. Daemon unpacks image layers via overlayfs into a merged rootfs
+5. Daemon creates Linux namespaces (PID, net, mount, UTS, IPC) to isolate the container
+6. Daemon applies cgroup limits (CPU, memory, PIDs) to bound resource usage
+7. Daemon execs nginx as PID 1 inside the container
+
+Docker objects:
+
+Images. Read-only blueprints for containers. Built from a Dockerfile — each instruction (FROM, RUN, COPY, etc.) creates a new content-addressed layer. Only changed layers rebuild; unchanged layers are cache hits. A multi-arch image index references per-platform manifests (linux/amd64, linux/arm64, etc.).
+
+Containers. Runnable instances of an image. Isolated at the OS level using Linux namespaces and cgroups. Containers can be created, started, stopped, moved, and deleted. Each container has its own writable layer on top of the read-only image layers — changes don't affect the underlying image.
+
+Volumes. Persistent storage that lives outside the container's writable layer. Volumes survive container deletion. Bind mounts map a host directory into the container; named volumes are managed by Docker and stored in /var/lib/docker/volumes/.
+
+Networks. Docker creates a default bridge network. Containers on the same bridge network can communicate by container name. docker network create lets you define custom bridge, overlay (Swarm / multi-host), or host networks.
+
+Docker Desktop. Bundles the daemon, CLI, Docker Compose, Kubernetes, and a GUI into a single application for Mac, Windows, and Linux. The recommended install path for local development.`,
+        image: '/diagrams/devops/f6-docker-overview.png',
+      },
+      {
+        title: 'Docker objects deep-dive — images, layers, containers, volumes, networks',
+        description: `Images in depth.
+
+An image is a read-only template built from a Dockerfile. Each instruction in the Dockerfile adds a layer:
+
+Dockerfile:
+  FROM ubuntu:22.04          # pulls base layer (ubuntu rootfs)
+  RUN apt-get update -y      # new layer: apt cache metadata
+  RUN apt-get install -y curl # new layer: curl binary + libs
+  COPY ./app /app            # new layer: your application files
+  CMD ["./app/server"]       # metadata only (no new layer)
+
+Layer mechanics. Each layer is a content-addressed tar archive (SHA256 digest). When you change only your application source (COPY ./app), Docker reuses all the earlier layers from cache and only rebuilds the changed layer forward. This is why order matters: put rarely-changing instructions first.
+
+overlayfs. Docker stacks image layers using overlayfs (the default storage driver on modern Linux). The lowest layers are read-only image layers; the topmost layer is the container's writable "diff" layer. Reads go down through the stack; writes land in the writable layer (copy-on-write).
+
+Containers in depth.
+
+A container is an image instance plus an isolated runtime environment:
+- New writable overlayfs layer on top of the image layers
+- New PID namespace (process tree isolated from host)
+- New network namespace (own IP address, routing table, iptables)
+- New mount namespace (own filesystem view, pivot_root into image rootfs)
+- cgroup limits (CPU quota, memory max, pids.max)
+
+Containers are ephemeral by default — the writable layer is deleted when the container is removed. Use volumes for persistent data.
+
+Key container lifecycle commands:
+  docker run      — create + start (most common)
+  docker create   — create (not started)
+  docker start    — start existing container
+  docker stop     — send SIGTERM, wait 10s, then SIGKILL
+  docker kill     — send SIGKILL immediately
+  docker rm       — delete stopped container
+  docker exec     — run additional process inside running container
+  docker logs     — stream stdout/stderr of container
+
+Volumes and bind mounts.
+  Named volume:   docker run -v mydata:/data nginx
+  Bind mount:     docker run -v /host/path:/container/path nginx
+  tmpfs:          docker run --tmpfs /tmp nginx  (RAM, no disk write)
+
+Named volumes outlive containers; bind mounts give the container direct access to host files (useful for dev; avoid in prod).
+
+Networking modes.
+  bridge (default)  — container gets its own IP on docker0 bridge
+  host              — container shares host network stack (no isolation; max perf)
+  none              — no networking (fully isolated)
+  overlay           — multi-host networking (Docker Swarm / Kubernetes)
+  macvlan           — assigns a MAC address; appears as a physical device on the network
+
+Container-to-container communication on the same user-defined bridge network uses DNS resolution by container name: the payment service can reach the database at postgres://db:5432 if both are on the same network and the DB container is named "db".`,
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Overview.',
+        question: 'Quick-fire interview answers — Docker Overview.',
+        answer: `Rapid-fire facts.
+
+Q: Docker in one sentence?
+A: Open platform that packages applications and dependencies into isolated containers using Linux namespaces and cgroups, with a client-server architecture (CLI → daemon → registry).
+
+Q: What is the Docker daemon?
+A: dockerd — the server process that manages images, containers, networks, and volumes. Listens for REST API requests over /var/run/docker.sock.
+
+Q: How does docker run work end-to-end?
+A: CLI → daemon → check local image cache → pull missing layers from registry → unpack via overlayfs → create namespaces + cgroups → exec ENTRYPOINT/CMD as PID 1.
+
+Q: Image vs container?
+A: Image = read-only blueprint (layered tars). Container = running instance of an image with an added writable layer, own namespaces, own network.
+
+Q: What is overlayfs?
+A: Linux filesystem that stacks read-only image layers under a writable container layer. Reads go down through layers; writes land in the top writable layer (copy-on-write).
+
+Q: Named volume vs bind mount?
+A: Named volume — managed by Docker, persists beyond container, stored in /var/lib/docker/volumes/. Bind mount — maps a host path directly into the container.
+
+Q: Docker Hub?
+A: Default public registry. docker pull nginx fetches from Docker Hub. Private alternatives: GHCR, ECR, GCR, Artifact Registry, Harbor.
+
+Q: docker stop vs docker kill?
+A: stop sends SIGTERM, waits 10s grace period, then SIGKILL. kill sends SIGKILL immediately. Prefer stop so the app can shut down cleanly.
+
+Q: Default network mode?
+A: bridge. Container gets its own IP on the docker0 bridge. User-defined bridges add DNS resolution by container name.
+
+Q: How do containers communicate on the same host?
+A: Place them on the same user-defined bridge network. They can reach each other by container name (Docker's embedded DNS resolves it).
+
+Q: What does Docker Desktop include?
+A: daemon + CLI + Docker Compose + Kubernetes (single-node) + BuildKit + credential helpers + GUI.
+
+Q: Difference between COPY and ADD in Dockerfile?
+A: COPY copies local files. ADD also handles tar auto-extraction and remote URLs. Prefer COPY unless you specifically need ADD's extra features.
+
+Q: What is .dockerignore?
+A: File listing paths to exclude from the build context sent to the daemon. Speeds up builds and prevents secrets from leaking into the image.
+
+Q: How do you see a container's logs?
+A: docker logs <container>. Add -f to stream, --tail N for last N lines.
+
+Q: How do you exec into a running container?
+A: docker exec -it <container> sh (or bash if available).
+
+These are answers a Docker-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/get-started/docker-overview/',
+      'https://docs.docker.com/engine/storage/',
+      'https://docs.docker.com/engine/network/',
+      'https://docs.docker.com/reference/cli/docker/',
+    ],
+  },
+
+  {
     id: 'container-fundamentals',
     title: 'Container Fundamentals — Namespaces, Cgroups, OCI',
     icon: 'package',
@@ -23370,6 +23527,95 @@ Alternative builders:
 - Bazel rules_oci — Bazel rules producing deterministic OCI images without a Dockerfile or daemon.
 - ko (Go-specific) — single-binary OCI images, very fast iteration.`,
         image: '/diagrams/devops/f2-docker-buildkit.png',
+      },
+      {
+        title: 'Dockerfile instructions reference — every instruction explained',
+        description: `A Dockerfile is a text file of instructions that Docker executes top-to-bottom to build an image. Each instruction that modifies the filesystem creates a new read-only layer.
+
+FROM — Required first instruction. Sets the base image for all subsequent instructions.
+  FROM node:20-alpine                  # named base
+  FROM node:20-alpine AS build         # named stage for multi-stage builds
+  FROM scratch                         # empty base (for statically-linked binaries)
+  FROM --platform=linux/arm64 node:20  # target a specific architecture
+
+ARG — Build-time variable. NOT stored in the final image. Can be passed via docker build --build-arg KEY=val.
+  ARG NODE_ENV=production
+  ARG VERSION          # no default — must be passed or build fails
+
+ENV — Runtime environment variable. Persists into the final image and all containers launched from it.
+  ENV APP_HOME=/app LOG_LEVEL=info
+  ENV PATH=$PATH:$APP_HOME/bin
+
+WORKDIR — Set the working directory for RUN / COPY / ADD / CMD / ENTRYPOINT. Created if it doesn't exist.
+  WORKDIR /app
+
+COPY — Copy files from the build context (or another stage) into the image.
+  COPY package*.json ./                      # copy lockfile
+  COPY --from=build /app/dist /app/dist      # multi-stage: from build stage
+  COPY --chown=node:node . .                 # set ownership
+  COPY --chmod=755 entrypoint.sh /           # set permissions
+  COPY --link --from=build /app/dist ./dist  # layer-rebase (BuildKit)
+
+ADD — Like COPY but also: auto-extracts local tar archives, supports remote URLs, supports git repos.
+  ADD archive.tar.gz /extract/    # extracts into /extract/
+  Best practice: prefer COPY for local files; use ADD only for archives.
+
+RUN — Execute a shell command in a new layer. Shell form: RUN cmd. Exec form: RUN ["cmd", "arg"].
+  RUN apt-get update && apt-get install -y curl ca-certificates && rm -rf /var/lib/apt/lists/*
+  RUN --mount=type=cache,target=/var/cache/apt apt-get install -y gcc  # BuildKit cache mount
+  RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci           # BuildKit secret mount
+
+  Layer-cache rule: chain related commands with && to keep them in one layer and minimize image size.
+
+EXPOSE — Document that the container listens on a port. Does NOT actually publish the port.
+  EXPOSE 3000/tcp
+  Ports must be published at runtime: docker run -p 8080:3000 myapp
+
+USER — Set the user (and optionally group) for subsequent RUN / CMD / ENTRYPOINT.
+  RUN useradd -m appuser
+  USER appuser                    # drop root before CMD — security best practice
+  USER 1001:1001                  # by UID:GID
+
+VOLUME — Declare a mount point. The host path is determined at runtime, not in the Dockerfile.
+  VOLUME ["/var/log", "/var/db"]  # creates anonymous volumes if not explicitly mounted
+
+LABEL — Add key-value metadata to the image.
+  LABEL org.opencontainers.image.version="1.0.0"
+  LABEL maintainer="ops@example.com"
+
+HEALTHCHECK — Define a command to test container health. The daemon runs it on an interval.
+  HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD curl -f http://localhost:3000/health || exit 1
+
+ENTRYPOINT — The executable the container runs as. Exec form strongly preferred (signals go directly to app).
+  ENTRYPOINT ["node", "dist/index.js"]         # exec form — correct
+  ENTRYPOINT node dist/index.js                # shell form — SIGTERM goes to /bin/sh, not node
+
+CMD — Default arguments passed to ENTRYPOINT. Overridden by docker run arguments.
+  CMD ["--port", "3000"]          # default flags to ENTRYPOINT
+  CMD ["node", "server.js"]       # standalone: exec form, runs when no ENTRYPOINT set
+
+ENTRYPOINT + CMD together:
+  ENTRYPOINT ["node"]
+  CMD ["server.js"]               # docker run myapp → "node server.js"
+                                  # docker run myapp app.js → "node app.js"
+
+STOPSIGNAL — Override the OS signal sent to stop the container (default SIGTERM).
+  STOPSIGNAL SIGINT
+
+ONBUILD — Instruction deferred until this image is used as a base in another Dockerfile.
+  ONBUILD COPY . /app
+  ONBUILD RUN npm ci
+  Useful for base images shared across many projects.
+
+Best practices summary:
+1. Order from least-changing to most-changing (lockfiles before source).
+2. Multi-stage builds: separate build dependencies from the production image.
+3. Pin base image tags (or SHA digests) for reproducibility.
+4. Use .dockerignore to exclude node_modules, .git, .env, dist.
+5. Never use ARG for secrets — use RUN --mount=type=secret.
+6. Always USER non-root before CMD.
+7. ENTRYPOINT exec form only — shell form breaks signal handling.`,
+        image: '/diagrams/devops/f7-dockerfile-reference.png',
       },
       {
         title: 'Quick-fire interview answers — Docker BuildKit.',

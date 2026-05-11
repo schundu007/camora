@@ -1,0 +1,74 @@
+{
+  "title": "Docker Architecture — Client · Daemon · Registry",
+  "subtitle": "docker run / build / pull route through dockerd to images, containers, and registries",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "Client",
+      "nodes": [
+        {
+          "id": "docker-cli",
+          "label": "Docker CLI\ndocker run / build / pull / push",
+          "kind": "client"
+        },
+        {
+          "id": "daemon",
+          "label": "Docker Daemon (dockerd)\nREST API on UNIX socket\nManages all Docker objects",
+          "kind": "service"
+        },
+        {
+          "id": "images",
+          "label": "Images\nRead-only layer stack\nBuilt from Dockerfile",
+          "kind": "datastore"
+        },
+        {
+          "id": "containers",
+          "label": "Containers\nRunnable image instances\nIsolated via namespaces + cgroups",
+          "kind": "worker"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "daemon",
+      "cluster": "Registry",
+      "nodes": [
+        {
+          "id": "registry",
+          "label": "Registry\nDocker Hub / GHCR / ECR\nStores and distributes images",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    { "from": "registry", "to": "images", "label": "docker pull", "style": "dashed" }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "docker run — what actually happens",
+      "lang": "plain",
+      "body": "1. CLI sends request to daemon via UNIX socket (/var/run/docker.sock)\n2. Daemon checks local image cache\n3. If image missing → pulls layers from registry\n4. Daemon unpacks layers via overlayfs into container rootfs\n5. Creates namespaces (PID / net / mount / UTS / IPC)\n6. Applies cgroup limits (CPU / memory / pids)\n7. Execs the ENTRYPOINT/CMD process as PID 1"
+    },
+    {
+      "kind": "code",
+      "title": "docker build — layer creation",
+      "lang": "plain",
+      "body": "1. CLI sends Dockerfile + build context (tar) to daemon\n2. Each FROM pulls (or reuses cached) base image\n3. Each RUN / COPY / ADD creates a new read-only layer\n4. Layers are content-addressed (SHA256 of content)\n5. Identical layer = cache hit → skip rebuild\n6. Final layer stack becomes a new image ID\n7. docker push uploads new/changed layers to registry"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Docker daemon vs Podman (daemonless)",
+      "pros": [
+        "Docker: single daemon = simple socket API, mature BuildKit, Docker Compose, Desktop",
+        "Podman: no daemon = no single root SPOF, rootless by default, systemd-friendly"
+      ],
+      "cons": [
+        "Docker daemon runs as root — compromise = full host access",
+        "Podman: some Compose compatibility gaps, less BuildKit feature parity"
+      ]
+    }
+  ]
+}
