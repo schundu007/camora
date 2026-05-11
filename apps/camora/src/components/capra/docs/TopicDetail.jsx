@@ -2757,36 +2757,10 @@ export default function TopicDetail({
         return (
         <div className="space-y-6 w-full">
 
-          {/* ── Topic stats banner — single compact row ── */}
-          <div
-            className="rounded-lg px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5"
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderLeft: '3px solid var(--cam-gold-leaf, #c9a55d)' }}
-          >
-            <span className="text-[10px] uppercase tracking-[0.18em] landing-mono text-[var(--text-muted)] shrink-0">
-              Agenda
-            </span>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 flex-1">
-              {agenda.map((a, i) => (
-                <div key={a.id} className="flex items-center gap-1 text-[11px] landing-body text-[var(--text-secondary)]">
-                  <span className="text-[10px] font-bold landing-mono tabular-nums text-[var(--cam-gold-leaf,_#c9a55d)]">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span>{a.label}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center gap-x-3 text-[10px] landing-mono uppercase tracking-[0.12em] text-[var(--text-muted)] shrink-0">
-              {topicDetails.keyQuestions?.length ? <span>{topicDetails.keyQuestions.length} q&amp;a</span> : null}
-              {topicDetails.visualizations?.length ? <span>{topicDetails.visualizations.length} diagram{topicDetails.visualizations.length > 1 ? 's' : ''}</span> : null}
-              {topicDetails.keyConcepts?.length ? <span>{topicDetails.keyConcepts.length} concepts</span> : null}
-              {topicDetails.references?.length ? <span>{topicDetails.references.length} sources</span> : null}
-            </div>
-          </div>
 
           {/* ── 1 / Overview ── */}
           {topicDetails.introduction && (
             <section id="overview" className="scroll-mt-24">
-              <SlideEyebrow id="overview" />
               <ContentHeading title="Overview" />
               <div className="pt-3">
                 <SlideCard>
@@ -2799,22 +2773,10 @@ export default function TopicDetail({
           {/* ── 2 / Visual Explanation — PNG diagrams ── */}
           {topicDetails.visualizations && topicDetails.visualizations.length > 0 && (
             <section id="visual" className="scroll-mt-24">
-              <SlideEyebrow id="visual" />
-              <ContentHeading title="Visual Explanation" actions={<GlassPill>{topicDetails.visualizations.length} diagram{topicDetails.visualizations.length > 1 ? 's' : ''}</GlassPill>} />
               <div className="pt-3 space-y-4">
                 {topicDetails.visualizations.map((viz, vi) => (
                   <figure key={vi} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
                     <figcaption className="viz-caption">
-                      {/* Eyebrow gives the reader an at-a-glance progress
-                          marker through the diagram set, mirroring the
-                          PPT-slide numbering convention used elsewhere
-                          on the page. Stays inline-block so it sits
-                          flush above the title. */}
-                      <span className="viz-caption-eyebrow">
-                        {topicDetails.visualizations.length > 1
-                          ? `Diagram ${vi + 1} / ${topicDetails.visualizations.length}`
-                          : 'Diagram'}
-                      </span>
                       <h4 className="viz-caption-title">{viz.title}</h4>
                       {viz.description && (
                         <div className="viz-caption-body">
@@ -2841,8 +2803,7 @@ export default function TopicDetail({
           {/* ── 3 / When to Use — checklist ── */}
           {topicDetails.whenToUse && topicDetails.whenToUse.length > 0 && (
             <section id="when-to-use" className="scroll-mt-24">
-              <SlideEyebrow id="when-to-use" />
-              <ContentHeading title="When to Use" actions={<GlassPill>{topicDetails.whenToUse.length}</GlassPill>} />
+              <ContentHeading title="When to Use" />
               <div className="pt-3">
                 <SlideCard>
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2.5">
@@ -2863,8 +2824,7 @@ export default function TopicDetail({
           {/* ── 4 / Key Concepts — two-column term + definition cards ── */}
           {topicDetails.keyConcepts && topicDetails.keyConcepts.length > 0 && (
             <section id="key-concepts" className="scroll-mt-24">
-              <SlideEyebrow id="key-concepts" />
-              <ContentHeading title="Key Concepts" actions={<GlassPill>{topicDetails.keyConcepts.length}</GlassPill>} />
+              <ContentHeading title="Key Concepts" />
               <div className="pt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {topicDetails.keyConcepts.map((kc, i) => (
                   <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
@@ -2893,8 +2853,7 @@ export default function TopicDetail({
           {/* ── 5 / Approach — numbered timeline ── */}
           {topicDetails.approach && topicDetails.approach.length > 0 && (
             <section id="approach" className="scroll-mt-24">
-              <SlideEyebrow id="approach" />
-              <ContentHeading title="Step-by-Step Approach" actions={<GlassPill>{topicDetails.approach.length} steps</GlassPill>} />
+              <ContentHeading title="Step-by-Step Approach" />
               <div className="pt-3">
                 <SlideCard>
                   <ol className="relative space-y-4">
@@ -2916,8 +2875,7 @@ export default function TopicDetail({
           {/* ── 6 / Common Pitfalls — red callout cards ── */}
           {topicDetails.pitfalls && topicDetails.pitfalls.length > 0 && (
             <section id="pitfalls" className="scroll-mt-24">
-              <SlideEyebrow id="pitfalls" />
-              <ContentHeading title="Common Pitfalls" actions={<GlassPill>{topicDetails.pitfalls.length}</GlassPill>} />
+              <ContentHeading title="Common Pitfalls" />
               <div className="pt-3 grid grid-cols-1 md:grid-cols-2 gap-2.5">
                 {topicDetails.pitfalls.map((item, i) => (
                   <div key={i} className="flex items-start gap-2.5 p-3 rounded-lg landing-body" style={{ background: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
@@ -2934,8 +2892,7 @@ export default function TopicDetail({
           {/* ── 7 / Questions & Answers — collapsible deck-style cards ── */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
             <section id="key-questions" className="scroll-mt-24">
-              <SlideEyebrow id="key-questions" />
-              <ContentHeading title="Questions & Answers" actions={<GlassPill>{topicDetails.keyQuestions.length} questions</GlassPill>} />
+              <ContentHeading title="Questions & Answers" />
               <div className="pt-3 space-y-2.5">
                 {topicDetails.keyQuestions.map((item, index) => {
                   const questionKey = `sre-${index}`;
@@ -2978,8 +2935,7 @@ export default function TopicDetail({
           {/* ── 8 / References — citation footer ── */}
           {topicDetails.references && topicDetails.references.length > 0 && (
             <section id="references" className="scroll-mt-24">
-              <SlideEyebrow id="references" />
-              <ContentHeading title="Primary Sources" actions={<GlassPill>{topicDetails.references.length}</GlassPill>} />
+              <ContentHeading title="References" />
               <div className="pt-3">
                 <SlideCard>
                   <ul className="space-y-1.5">

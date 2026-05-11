@@ -1,0 +1,49 @@
+{
+  "title": "Docker Resource Limits — CPU, Memory, OOM, cgroups",
+  "subtitle": "How Docker uses Linux cgroups to bound what a container can consume",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "cgroup v2 Controllers",
+      "nodes": [
+        { "id": "cpu", "label": "CPU Controller\n--cpus 1.5\nCFS quota/period\n--cpu-shares (soft weight)", "kind": "service" },
+        { "id": "memory", "label": "Memory Controller\n-m / --memory (hard)\n--memory-reservation (soft)\n--memory-swap", "kind": "service" },
+        { "id": "pids", "label": "PIDs Controller\n--pids-limit\nFork-bomb mitigation\nDefault: unlimited", "kind": "worker" }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "memory",
+      "cluster": "OOM Handling",
+      "nodes": [
+        { "id": "oom", "label": "OOM Killer\nKernel terminates process\nDocker restarts if restart policy set\nDaemon itself protected", "kind": "cache" }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "CPU and memory limits in practice",
+      "lang": "plain",
+      "body": "# Hard memory limit — OOM kill if exceeded\ndocker run -m 512m myapp\n\n# Memory + swap: 512MB RAM + 256MB swap (total 768MB)\ndocker run -m 512m --memory-swap 768m myapp\n\n# No swap access\ndocker run -m 512m --memory-swap 512m myapp\n\n# CPU: 1.5 cores worth of CPU time\ndocker run --cpus 1.5 myapp\n\n# Pin to specific CPU cores\ndocker run --cpuset-cpus \"0,2\" myapp\n\n# Soft CPU weight (only matters under contention)\ndocker run --cpu-shares 512 myapp   # half weight of default (1024)\n\n# Fork-bomb protection\ndocker run --pids-limit 200 myapp"
+    },
+    {
+      "kind": "issue",
+      "title": "Critical memory gotchas",
+      "body": "free / top inside a container show HOST memory, not container limits.\nThis is a longstanding Linux cgroup quirk — the /proc filesystem\nreports host-wide values. Tools like 'free' are misleading inside containers.\nUse: cat /sys/fs/cgroup/memory.max to see the actual limit.\n\n--oom-kill-disable WITHOUT -m set → host can run out of memory.\nOnly use --oom-kill-disable when -m is also set.\n\nDocker daemon has a lower OOM score than containers.\nUnder memory pressure, kernel kills containers before the daemon."
+    },
+    {
+      "kind": "tradeoff",
+      "title": "--memory-swap semantics",
+      "pros": [
+        "--memory-swap=-1: unlimited swap; container can use all host swap — good for bursty workloads",
+        "Unset --memory-swap with -m set: container gets equal swap to RAM (e.g. -m 512m → 512MB swap)"
+      ],
+      "cons": [
+        "--memory-swap equal to --memory: zero swap access; OOM kill happens at RAM limit with no grace period",
+        "Swap adds latency; database containers should set --memory-swap equal to --memory to force OOM over swap thrash"
+      ]
+    }
+  ]
+}

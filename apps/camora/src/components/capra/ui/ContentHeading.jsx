@@ -23,6 +23,7 @@ export default function ContentHeading({
   accent,
   actions,
   children,
+  eyebrow,
   className = '',
 }) {
   return (
@@ -38,6 +39,18 @@ export default function ContentHeading({
           className="w-1 h-4 rounded-full flex-shrink-0"
           style={{ background: accent }}
         />
+      )}
+      {eyebrow && (
+        <span
+          className="text-[10px] font-bold landing-mono tabular-nums tracking-[0.18em] px-2 py-0.5 rounded flex-shrink-0"
+          style={{
+            background: 'rgba(255,255,255,0.08)',
+            border: '1px solid rgba(255,255,255,0.16)',
+            color: 'var(--cam-gold-leaf, #c9a55d)',
+          }}
+        >
+          {eyebrow}
+        </span>
       )}
       <h3 className="text-[15px] font-bold text-white landing-display tracking-tight min-w-0 leading-snug">
         {title}

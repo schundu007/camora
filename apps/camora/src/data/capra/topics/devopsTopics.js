@@ -79,6 +79,9 @@ export const devopsTopicCategoryMap = {
   'docker-networking':              'containers',
   'docker-volumes':                 'containers',
   'docker-compose':                 'containers',
+  'docker-security':                'containers',
+  'docker-registry':                'containers',
+  'docker-resource-limits':         'containers',
   'container-fundamentals':         'containers',
   'docker-buildkit':                'containers',
   'image-hardening':                'containers',
@@ -23682,6 +23685,381 @@ These are answers a Docker-Compose-fluent engineer should give without preparati
       'https://docs.docker.com/compose/',
       'https://docs.docker.com/compose/compose-file/',
       'https://docs.docker.com/compose/how-tos/multiple-compose-files/',
+    ],
+  },
+
+  {
+    id: 'docker-security',
+    title: 'Docker Security — Rootless, Capabilities, Seccomp & Image Signing',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Container security is defense-in-depth: minimal base images reduce the CVE surface, dropping Linux capabilities limits what a compromised container can do, seccomp profiles block unnecessary syscalls, and rootless mode ensures a container escape yields unprivileged host access rather than root.',
+    visualizations: [
+      {
+        title: 'Container security layers — image, runtime, and kernel hardening',
+        description: `Docker security operates at four distinct layers. A breach at any layer is contained by the layers below it.
+
+Layer 1 — Image security (before the container even runs):
+
+Minimal base images. Every package in the base image is a potential CVE. Use:
+  distroless (Google) — no shell, no package manager, only runtime libs. gcr.io/distroless/nodejs20-debian12
+  Alpine Linux     — musl libc + busybox, ~5MB base, small attack surface
+  scratch          — truly empty; only for statically-linked binaries (Go, Rust)
+
+Multi-stage builds separate build tools from the runtime image — the compiler, test frameworks, and dev deps never ship to production.
+
+Image scanning — find CVEs before pushing:
+  trivy image myapp:v1.2.3       # Aqua Security, widely used in CI
+  grype myapp:v1.2.3             # Anchore
+  docker scout cves myapp:v1.2.3 # Docker's built-in scanner
+  snyk container test myapp:v1.2.3
+
+Image signing with cosign (SLSA provenance):
+  cosign sign --key cosign.key ghcr.io/myorg/myapp:v1.2.3
+  cosign verify --key cosign.pub ghcr.io/myorg/myapp:v1.2.3
+  Keyless signing via OIDC token (GitHub Actions, no private key needed):
+    cosign sign ghcr.io/myorg/myapp@sha256:...
+
+Layer 2 — Runtime capabilities (Linux capabilities):
+
+Default Docker container has 14 of 38+ capabilities active. Most dangerous:
+  CAP_NET_ADMIN    — modify host routing tables, firewall rules
+  CAP_SYS_ADMIN    — mount filesystems, ptrace, kernel module loading (near-root)
+  CAP_SYS_PTRACE   — trace any process
+  CAP_DAC_OVERRIDE — bypass file permission checks
+
+Hardened capability set:
+  docker run --cap-drop ALL --cap-add NET_BIND_SERVICE myapp
+  # Only grant NET_BIND_SERVICE if you need to bind port < 1024
+
+privileged: true disables ALL capability dropping and gives access to host devices — equivalent to root on the host. Never use in production.
+
+--no-new-privileges — prevents setuid/setgid binaries from gaining elevated privileges. Should always be set.
+--read-only — mounts root filesystem as read-only. Combine with tmpfs for writable dirs:
+  docker run --read-only --tmpfs /tmp myapp
+
+Layer 3 — Seccomp (syscall filtering):
+
+Default Docker/containerd seccomp profile blocks ~44 of ~300+ Linux syscalls including: keyctl, ptrace, mount, kexec_load, unshare, add_key.
+
+Custom seccomp profile:
+  docker run --security-opt seccomp=profile.json myapp
+
+Layer 4 — Rootless Docker:
+
+Rootless mode runs the entire Docker daemon as an unprivileged user. The container's root (UID 0) maps to a high host UID (e.g. 100000+) via user namespaces. A full container escape yields only unprivileged host access.
+
+Limitations of rootless mode:
+  - Some network modes unavailable (macvlan, ipvlan)
+  - AppArmor profiles may not load
+  - Overlay storage driver requires kernel 5.11+ (or use fuse-overlayfs)
+  - Expose ports < 1024 requires CAP_NET_BIND_SERVICE or sysctl net.ipv4.ip_unprivileged_port_start=0
+
+Security checklist for production containers:
+  USER non-root (in Dockerfile, before CMD)
+  --cap-drop ALL + add only needed caps
+  --no-new-privileges
+  --read-only + --tmpfs for writable paths
+  seccomp profile (at minimum: RuntimeDefault)
+  Scan image in CI (trivy/grype)
+  Pin base image to SHA digest (not a mutable tag)
+  No secrets in ENV or image layers (use --mount=type=secret)`,
+        image: '/diagrams/devops/f11-docker-security.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Security.',
+        description: `Rapid-fire facts.
+
+Q: What is the default number of Linux capabilities in a Docker container?
+A: 14 out of 38+. Most dangerous ones: CAP_NET_ADMIN (routing), CAP_SYS_ADMIN (near-root), CAP_DAC_OVERRIDE (bypass file permissions).
+
+Q: How do you drop all capabilities and add back only what's needed?
+A: docker run --cap-drop ALL --cap-add NET_BIND_SERVICE myapp
+
+Q: What does --no-new-privileges do?
+A: Prevents setuid/setgid binaries inside the container from gaining elevated privileges. Should always be set for untrusted workloads.
+
+Q: What does privileged: true actually do?
+A: Disables ALL capability dropping, mounts /sys read-write, allows host device access. Functionally equivalent to root on the host. Never use in production.
+
+Q: What is seccomp and what does Docker's default profile do?
+A: Seccomp is a Linux syscall filter. Docker's default profile blocks ~44 syscalls (ptrace, mount, keyctl, kexec_load, etc.) out of 300+. Kubernetes PSS restricted requires seccompProfile: RuntimeDefault at minimum.
+
+Q: What is rootless Docker?
+A: The Docker daemon runs as an unprivileged user. Container UID 0 maps to a high host UID via user namespaces. A container escape only yields unprivileged host access, not root.
+
+Q: Why use distroless images?
+A: No shell, no package manager, no OS utilities — drastically fewer CVEs. A compromised container cannot install tools or read unrelated files. gcr.io/distroless/nodejs20 is ~30MB vs node:20-alpine at ~180MB.
+
+Q: How do you sign a container image for SLSA provenance?
+A: cosign sign with a private key or keyless via OIDC token (GitHub Actions). Provides cryptographic proof of who built the image and when.
+
+Q: Where should secrets NOT go in a Dockerfile?
+A: Not in ENV or ARG — both are visible in docker history and image metadata. Not in COPY files unless .dockerignore excludes them. Use RUN --mount=type=secret,id=mysecret to mount secrets only during build, never committed to a layer.
+
+Q: What is the recommended security checklist for production containers?
+A: USER non-root, --cap-drop ALL, --no-new-privileges, --read-only rootfs, seccomp profile, image scanning in CI, SHA digest pinning for base images, no secrets in ENV.
+
+These are answers a container-security-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/engine/security/',
+      'https://docs.docker.com/engine/security/seccomp/',
+      'https://github.com/google/distroless',
+      'https://github.com/sigstore/cosign',
+    ],
+  },
+
+  {
+    id: 'docker-registry',
+    title: 'Docker Registries — Push, Pull, Tags & Multi-arch Manifests',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'A registry stores and distributes container images as content-addressed layer blobs and manifests. Understanding image tagging, registry authentication, multi-architecture manifests, and the difference between mutable tags and immutable SHA digests is essential for production workflows.',
+    visualizations: [
+      {
+        title: 'Image lifecycle — build, tag, push, pull, manifest',
+        description: `A container image is not a single file — it is a manifest pointing to a set of content-addressed layer blobs stored in a registry.
+
+Registry API (OCI Distribution Spec):
+  GET  /v2/<name>/manifests/<reference>  → fetch manifest by tag or digest
+  GET  /v2/<name>/blobs/<digest>         → fetch a layer tar.gz by SHA256
+  POST /v2/<name>/blobs/uploads/         → initiate blob upload
+  PUT  /v2/<name>/manifests/<reference>  → push manifest
+
+Only new/changed layers are uploaded — docker push computes which layer digests the registry already has and skips them.
+
+Image naming format:
+  [registry/][namespace/]repository[:tag][@digest]
+
+  nginx                                          → docker.io/library/nginx:latest
+  myapp:v1.2.3                                   → docker.io/<user>/myapp:v1.2.3
+  ghcr.io/myorg/myapp:v1.2.3                     → GitHub Container Registry
+  123456789.dkr.ecr.us-east-1.amazonaws.com/app  → AWS ECR
+  gcr.io/myproject/myapp                         → Google Container Registry (legacy)
+  us-docker.pkg.dev/myproject/repo/myapp         → Google Artifact Registry (current)
+
+Tagging strategy:
+  latest   — mutable; always points to the most recent build. NEVER pin to latest in production.
+  v1.2.3   — SemVer tag. Still mutable — can be overwritten with docker push.
+  sha256:abc123...  — immutable digest. Cryptographically guaranteed to be the exact image.
+
+To pin by digest (most secure):
+  FROM node:20-alpine@sha256:3b7b4b4c...
+  docker run node:20-alpine@sha256:3b7b4b4c...
+
+docker inspect — check what's local:
+  docker inspect myapp:v1.2.3 | jq '.[0].RepoDigests'
+
+Multi-architecture images (OCI Image Index):
+A multi-arch "fat manifest" (Image Index) contains a list of per-platform manifests:
+  {
+    "schemaVersion": 2,
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "manifests": [
+      { "platform": { "os": "linux", "architecture": "amd64" }, "digest": "sha256:..." },
+      { "platform": { "os": "linux", "architecture": "arm64" }, "digest": "sha256:..." }
+    ]
+  }
+
+docker pull on an M2 Mac automatically selects the arm64 manifest. CI on x86 gets amd64. No separate tags needed.
+
+Build multi-arch with BuildKit:
+  docker buildx create --name multi --use --bootstrap
+  docker buildx build \
+    --platform linux/amd64,linux/arm64 \
+    -t ghcr.io/myorg/myapp:v1.2.3 \
+    --push .
+
+QEMU emulation is used for cross-architecture builds on a single host. For production CI, use native arm64 runners for faster builds.
+
+Registry authentication:
+  Docker Hub:    docker login -u <user> --password-stdin
+  GHCR:          echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin
+  AWS ECR:       aws ecr get-login-password | docker login --username AWS --password-stdin <ecr-url>
+  GCP AR:        gcloud auth configure-docker us-docker.pkg.dev
+  Self-hosted:   docker login registry.internal:5000
+
+docker logout removes stored credentials from ~/.docker/config.json. In CI, prefer OIDC-based auth (no long-lived credentials).
+
+Harbor — self-hosted enterprise registry:
+  Vulnerability scanning (Trivy integration), image replication, RBAC, garbage collection, webhook triggers. Used when data residency or compliance requires on-premises storage.`,
+        image: '/diagrams/devops/f12-docker-registry.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Registries.',
+        description: `Rapid-fire facts.
+
+Q: What is the OCI Distribution Spec?
+A: Standardized HTTP API for storing and retrieving container images: manifest fetch, blob fetch, blob upload, manifest push. Implemented by Docker Hub, GHCR, ECR, GCR, Artifact Registry, Harbor.
+
+Q: What is a container image manifest?
+A: A JSON document listing the image's layer blobs by SHA256 digest plus a config blob (env, entrypoint, cmd, exposed ports, labels). The manifest itself has a digest — that's the image's immutable ID.
+
+Q: Difference between a tag and a digest?
+A: Tag (v1.2.3, latest) is a mutable pointer — can be overwritten with a new push. Digest (sha256:abc...) is the cryptographic hash of the manifest — immutable. Pin by digest in production for reproducibility.
+
+Q: Why should you never use latest in production?
+A: It's mutable. A new push overwrites it. Two docker pull commands at different times may produce different images. Breaks reproducibility and makes incident investigation harder.
+
+Q: What is a multi-arch manifest (Image Index)?
+A: An OCI Image Index is a manifest that lists per-platform manifests (linux/amd64, linux/arm64, etc.). docker pull automatically selects the right platform. Built with docker buildx build --platform.
+
+Q: What happens when you docker push an image that shares layers with an existing image?
+A: Docker computes which layer digests already exist in the registry and skips uploading them. Only new/changed layers are transferred.
+
+Q: How does ECR authentication work?
+A: aws ecr get-login-password generates a temporary password (12h validity). Pipe it to docker login. In CI, use OIDC with IAM role assumption — no long-lived credentials.
+
+Q: What is Harbor?
+A: Open-source self-hosted registry with vulnerability scanning (Trivy), image replication, RBAC, and webhook support. Used when data residency or compliance prevents using cloud registries.
+
+Q: How do you inspect which digest an image tag currently points to?
+A: docker inspect myapp:v1.2.3 | jq '.[0].RepoDigests' or docker buildx imagetools inspect ghcr.io/myorg/myapp:v1.2.3.
+
+Q: GHCR vs Docker Hub for team use?
+A: GHCR: free for public, free for private with GitHub Actions, tied to GitHub org permissions. Docker Hub: rate-limited (100/6h unauthenticated, 200/6h free), requires separate credentials.
+
+These are answers a container-registry-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://github.com/opencontainers/distribution-spec',
+      'https://docs.docker.com/build/buildx/multiplatform/',
+      'https://goharbor.io/',
+      'https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry',
+    ],
+  },
+
+  {
+    id: 'docker-resource-limits',
+    title: 'Docker Resource Limits — CPU, Memory, OOM & cgroups',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Docker uses Linux cgroups v2 to enforce per-container CPU quotas, memory hard limits, swap access, and PID counts. Understanding these controls — and their gotchas — prevents containers from starving neighbors or crashing hosts under memory pressure.',
+    visualizations: [
+      {
+        title: 'cgroups v2 resource controls — CPU, memory, PIDs, and OOM',
+        description: `Docker resource limits translate directly into Linux cgroup v2 controller settings. Here is what each flag actually configures.
+
+CPU controls:
+
+--cpus <decimal>
+  Sets the CFS (Completely Fair Scheduler) quota. --cpus 1.5 = --cpu-period 100000 --cpu-quota 150000.
+  The container gets 150ms out of every 100ms period = 1.5 cores worth of CPU time.
+  This is a HARD limit — the container is throttled when it hits the quota regardless of host load.
+
+--cpu-shares <integer>  (default: 1024)
+  A SOFT weight, only enforced under CPU contention. --cpu-shares 512 gets half the CPU of a default container when the host is busy. When the host is idle, any container can use 100% of CPU.
+
+--cpuset-cpus "0,2" or "0-3"
+  Pins the container to specific CPU cores. Useful for NUMA-aware workloads or isolating latency-sensitive containers.
+
+Memory controls:
+
+-m / --memory <size>  (minimum: 6 MB)
+  Hard limit. When a container exceeds this, the Linux OOM killer terminates the most memory-hungry process inside the container.
+
+--memory-swap <size>
+  Total RAM + swap combined. Math:
+    --memory-swap == --memory:  zero swap access (OOM at RAM limit)
+    --memory-swap unset:        container can use swap equal to its RAM limit
+    --memory-swap > --memory:   (value - memory) = available swap
+    --memory-swap=-1:           unlimited swap (uses all host swap)
+
+--memory-reservation <size>
+  Soft limit. Must be less than --memory. Under memory pressure, the kernel tries to reclaim down to this value.
+
+--oom-kill-disable
+  Prevents OOM kill for this container. DANGEROUS without -m set — the host can run out of memory trying to honor this.
+
+OOM killer priority:
+  Docker daemon has a lower OOM score than containers. Under memory pressure, the kernel kills containers before the daemon. Container OOM scores are not adjusted — they compete normally with each other.
+
+PID limit:
+
+--pids-limit <n>
+  Caps the number of processes/threads the container can spawn. Default: unlimited.
+  Fork bombs are stopped dead by --pids-limit 200 or 500.
+
+Inspecting actual limits from inside a container:
+  cat /sys/fs/cgroup/memory.max        # actual memory hard limit
+  cat /sys/fs/cgroup/cpu.max           # "quota period" e.g. "150000 100000"
+  cat /sys/fs/cgroup/pids.max          # PID limit
+
+WARNING: free, top, and /proc/meminfo inside a container show HOST memory stats, not container-limited values. This is a well-known cgroup quirk — the procfs interface was designed before cgroups. Always use the /sys/fs/cgroup/ path for accurate container limits.
+
+docker stats — runtime view from outside:
+  docker stats mycontainer
+  Shows: CPU %, MEM USAGE / LIMIT, MEM %, NET I/O, BLOCK I/O, PIDs
+  This reads from the actual cgroup values, so it is accurate.
+
+Resource limits in Docker Compose:
+  services:
+    web:
+      deploy:
+        resources:
+          limits:
+            cpus: "1.5"
+            memory: 512m
+          reservations:
+            cpus: "0.5"
+            memory: 256m
+
+  deploy.resources is the standard way. Older style (mem_limit, cpus) is deprecated.`,
+        image: '/diagrams/devops/f13-docker-resource-limits.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Resource Limits.',
+        description: `Rapid-fire facts.
+
+Q: What does --cpus 1.5 actually configure under the hood?
+A: Sets the CFS scheduler quota to 150,000 µs per 100,000 µs period — meaning the container gets 1.5 CPUs worth of time. Equivalent to --cpu-period 100000 --cpu-quota 150000.
+
+Q: What is the difference between --cpus and --cpu-shares?
+A: --cpus is a hard limit — the container is throttled regardless of host load. --cpu-shares is a soft weight (default 1024) — only matters when the host CPU is contested. Under idle load, any container can use 100% CPU regardless of shares.
+
+Q: Minimum memory limit for a Docker container?
+A: 6 MB. Smaller values are rejected.
+
+Q: What happens when a container hits its -m memory limit?
+A: The Linux OOM killer terminates the most memory-hungry process inside the container. If a restart policy is set, Docker restarts the container.
+
+Q: --memory-swap equal to --memory — what does that mean?
+A: Zero swap access. The container OOM kills at the RAM limit with no swap grace period. Recommended for databases to prevent slow swap thrash.
+
+Q: What is the danger of --oom-kill-disable?
+A: Without -m set alongside it, the host can run out of memory trying to honor it. Always pair with a hard memory limit.
+
+Q: Why does free inside a container show wrong memory numbers?
+A: /proc/meminfo and free report host-wide memory — the procfs interface predates cgroups. Read /sys/fs/cgroup/memory.max for the actual container limit.
+
+Q: How do you check actual resource limits from inside a container?
+A: cat /sys/fs/cgroup/memory.max (memory), cat /sys/fs/cgroup/cpu.max (CPU quota/period), cat /sys/fs/cgroup/pids.max (PID limit).
+
+Q: What is docker stats?
+A: Real-time resource usage per container, reading from cgroup values directly. Shows CPU%, MEM USAGE/LIMIT, NET I/O, BLOCK I/O, PIDs. Accurate unlike free/top inside the container.
+
+Q: How do you prevent fork bomb attacks on a container?
+A: --pids-limit 200 (or a reasonable ceiling). Default is unlimited.
+
+Q: How do you set resource limits in Docker Compose?
+A: Under deploy.resources.limits with cpus and memory keys. The older-style top-level mem_limit / cpus is deprecated.
+
+Q: What does OOM score mean in Docker?
+A: It's a kernel value (lower = less likely to be killed). Docker lowers the daemon's OOM score so the daemon survives host memory pressure. Container processes compete at normal OOM scores.
+
+These are answers a container-resource-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/engine/containers/resource_constraints/',
+      'https://docs.kernel.org/admin-guide/cgroup-v2.html',
+      'https://docs.docker.com/compose/compose-file/deploy/',
     ],
   },
 
