@@ -76,6 +76,9 @@ export const devopsTopicCategoryMap = {
   'drift-remediation':              'config',
   // Containers & Images
   'docker-overview':                'containers',
+  'docker-networking':              'containers',
+  'docker-volumes':                 'containers',
+  'docker-compose':                 'containers',
   'container-fundamentals':         'containers',
   'docker-buildkit':                'containers',
   'image-hardening':                'containers',
@@ -23212,8 +23215,7 @@ Container-to-container communication on the same user-defined bridge network use
       },
       {
         title: 'Quick-fire interview answers — Docker Overview.',
-        question: 'Quick-fire interview answers — Docker Overview.',
-        answer: `Rapid-fire facts.
+        description: `Rapid-fire facts.
 
 Q: Docker in one sentence?
 A: Open platform that packages applications and dependencies into isolated containers using Linux namespaces and cgroups, with a client-server architecture (CLI → daemon → registry).
@@ -23268,6 +23270,303 @@ These are answers a Docker-fluent engineer should give without preparation.`,
       'https://docs.docker.com/engine/storage/',
       'https://docs.docker.com/engine/network/',
       'https://docs.docker.com/reference/cli/docker/',
+    ],
+  },
+
+  {
+    id: 'docker-networking',
+    title: 'Docker Networking — Bridge, Host, Overlay & Port Publishing',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Docker gives every container its own network namespace by default. Containers on the same user-defined bridge network discover each other by name via Docker\'s embedded DNS. Port publishing creates iptables DNAT rules so host traffic reaches the container. Overlay networks extend this to multi-host clusters.',
+    visualizations: [
+      {
+        title: 'Docker network modes — bridge, host, overlay, macvlan',
+        description: `Docker networking works by creating Linux virtual network devices and namespace plumbing around containers.
+
+Default bridge (docker0):
+When you run a container without specifying a network, Docker attaches it to the docker0 bridge. The container gets a private IP in the 172.17.0.0/16 range. Two containers on docker0 can reach each other by IP, but NOT by name — Docker's DNS is not enabled on the default bridge.
+
+User-defined bridge (recommended):
+  docker network create my-net
+  docker run --name web --network my-net nginx
+  docker run --name db  --network my-net postgres
+
+Containers on the same user-defined bridge resolve each other by container name through Docker's embedded DNS resolver (127.0.0.11). "web" can reach "db" at postgres://db:5432.
+
+Port publishing (-p):
+  docker run -p 8080:3000 myapp
+
+Docker adds an iptables DNAT rule: traffic hitting host port 8080 is forwarded to the container's port 3000. The host can also be specified: -p 127.0.0.1:8080:3000 binds only on localhost.
+
+host network mode:
+  docker run --network host nginx
+
+Container shares the host's network namespace completely. No isolation, no NAT overhead. nginx binds directly to host port 80. Best for performance-critical services; bad for security.
+
+none:
+  docker run --network none alpine
+
+Container has only a loopback interface. Completely isolated from the network. Useful for batch jobs that process files without needing network access.
+
+overlay (Swarm / multi-host):
+VXLAN tunnels between Docker hosts. Containers on any Swarm node can reach each other by service name. Used internally by Kubernetes CNI plugins as well.
+
+macvlan:
+Assigns the container a real MAC address and IP on the physical network. The container appears as a physical device on the LAN. Useful for legacy apps that require an actual IP on the corporate network.
+
+Inspecting networks:
+  docker network ls                    # list all networks
+  docker network inspect my-net        # see IPs, connected containers
+  docker network connect my-net web    # attach running container to network
+  docker network disconnect my-net web # detach
+  docker network prune                 # remove unused networks`,
+        image: '/diagrams/devops/f8-docker-networking.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Networking.',
+        description: `Rapid-fire facts.
+
+Q: Why can't two containers on the default bridge talk by name?
+A: Docker's embedded DNS is only enabled on user-defined bridge networks, not docker0. Use docker network create + --network to get name resolution.
+
+Q: What does docker run -p 8080:3000 actually do?
+A: Adds an iptables DNAT rule: packets arriving on host port 8080 are rewritten to the container's IP:3000. Docker manages the rule lifecycle.
+
+Q: Difference between bridge and host network mode?
+A: Bridge: container has its own network namespace, isolated IP, requires port publishing to expose to host. Host: shares the host's network namespace, no isolation, no -p needed, no NAT overhead.
+
+Q: How does container DNS work?
+A: Docker runs an embedded DNS server at 127.0.0.11 inside containers on user-defined networks. The resolver maps container names to their bridge IPs automatically.
+
+Q: What is an overlay network?
+A: Multi-host networking using VXLAN tunnels. Used by Docker Swarm so containers on different physical hosts can communicate by service name. Required for distributed deployments.
+
+Q: How do you connect two containers that are on different networks?
+A: docker network connect second-net container-name — a container can be attached to multiple networks simultaneously.
+
+Q: What is macvlan?
+A: Network driver that gives a container its own MAC address and IP on the physical LAN. The container appears as a real device on the network. Useful for legacy apps needing a real network IP.
+
+Q: How do you expose a container port only on localhost?
+A: docker run -p 127.0.0.1:8080:3000 — the host IP prefix binds only to loopback, not 0.0.0.0.
+
+Q: What network does Docker Compose create by default?
+A: A user-defined bridge named <project>_default. All services in the compose file are attached to it and can reach each other by service name.
+
+These are answers a Docker-networking-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/engine/network/',
+      'https://docs.docker.com/engine/network/drivers/bridge/',
+      'https://docs.docker.com/engine/network/drivers/overlay/',
+    ],
+  },
+
+  {
+    id: 'docker-volumes',
+    title: 'Docker Storage — Volumes, Bind Mounts & overlayfs',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Container filesystems are assembled from read-only image layers stacked via overlayfs, with a thin writable layer on top that is deleted when the container is removed. Named volumes and bind mounts provide durable storage that survives container deletion.',
+    visualizations: [
+      {
+        title: 'overlayfs layer stack — images, writable layer, and mounts',
+        description: `Docker uses overlayfs (the default storage driver on modern Linux) to assemble a container's filesystem from stacked layers.
+
+How overlayfs works:
+Image layers sit below as read-only branches. Docker stacks them in Dockerfile instruction order:
+  lowerdir[0] = ubuntu:22.04 base layer          (120 MB, shared)
+  lowerdir[1] = RUN apt-get install nginx layer  (40 MB, shared)
+  lowerdir[2] = COPY ./html /var/www/html layer  (2 MB, shared)
+  upperdir    = container writable diff layer    (0 MB initially)
+  merged      = unified view the container sees
+
+A read goes down through layers top-to-bottom, returning the first match. A write copies the target file up into the writable layer first (copy-on-write), then modifies it there. The underlying image layers are never touched.
+
+This means 100 containers running the same nginx image share the same read-only layers — only 100 tiny writable layers are added. Massive disk savings.
+
+Container writable layer lifecycle:
+The writable layer is created when the container starts and destroyed when docker rm runs. Any data written inside the container that is NOT in a volume or bind mount is lost on rm.
+
+Named volumes:
+  docker volume create mydata
+  docker run -v mydata:/app/data myapp
+
+Docker stores the volume data in /var/lib/docker/volumes/mydata/_data on the host. The volume outlives the container — docker rm does not remove it. Volumes are the recommended way to persist database data, uploads, and state.
+
+  docker volume ls              # list volumes
+  docker volume inspect mydata  # see mountpoint, driver, labels
+  docker volume rm mydata       # fails if in use
+  docker volume prune           # remove all unused volumes
+
+Bind mounts:
+  docker run -v $(pwd)/src:/app/src myapp
+  docker run --mount type=bind,source=$(pwd)/src,target=/app/src myapp
+
+Host path is mounted directly into the container. Changes on either side are immediately visible on the other. The primary use case is local development — edit code on the host, container sees changes instantly.
+
+tmpfs mounts (RAM):
+  docker run --tmpfs /tmp:size=100m,mode=1777 myapp
+
+Data lives in memory only. Fastest possible I/O. Data is gone when the container stops. Use for sensitive data that must not touch disk (e.g., secrets passed as files) or for high-frequency temp files.
+
+Backup and restore pattern:
+  # Backup named volume to tar
+  docker run --rm -v mydata:/data -v $(pwd):/backup alpine \
+    tar czf /backup/mydata.tar.gz -C /data .
+
+  # Restore
+  docker run --rm -v mydata:/data -v $(pwd):/backup alpine \
+    tar xzf /backup/mydata.tar.gz -C /data`,
+        image: '/diagrams/devops/f9-docker-volumes.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Storage.',
+        description: `Rapid-fire facts.
+
+Q: What happens to data written inside a container when it's removed?
+A: It's lost. The writable overlayfs layer is deleted with docker rm. Use volumes or bind mounts for anything that needs to persist.
+
+Q: What is overlayfs?
+A: A Linux union filesystem that stacks read-only image layers under a writable container layer. Reads go down the stack; writes copy-on-write into the top writable layer.
+
+Q: Named volume vs bind mount — when to use each?
+A: Named volume for production data (portable, Docker-managed, easy backup). Bind mount for local dev (real-time code sync between host and container).
+
+Q: Where does Docker store named volume data?
+A: /var/lib/docker/volumes/<name>/_data on the host by default.
+
+Q: Does docker rm delete volumes?
+A: No. Named volumes survive container deletion. Use docker rm -v or docker volume rm explicitly. docker volume prune removes all unused volumes.
+
+Q: What is copy-on-write in Docker?
+A: When a container writes to a file that exists in a read-only image layer, overlayfs copies the file up into the writable layer first, then applies the write there. The image layer is never modified.
+
+Q: How do 100 containers share the same image without 100x disk usage?
+A: overlayfs shares the read-only image layers across all containers. Only the thin per-container writable layers are duplicated.
+
+Q: What is tmpfs?
+A: An in-memory mount. Data never touches disk. Fastest I/O possible. Disappears when the container stops. Used for secrets-as-files or high-frequency temp data.
+
+Q: How do you back up a named volume?
+A: Spin up a helper container that mounts the volume and a host directory, then tar the volume contents into the host directory.
+
+These are answers a Docker-storage-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/engine/storage/',
+      'https://docs.docker.com/engine/storage/volumes/',
+      'https://docs.docker.com/engine/storage/bind-mounts/',
+    ],
+  },
+
+  {
+    id: 'docker-compose',
+    title: 'Docker Compose — Multi-Container Apps',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Docker Compose defines and runs multi-container applications from a single YAML file. One command — docker compose up — creates the network, starts all services in dependency order, and wires them together. It\'s the standard local development tool and viable for small production deployments.',
+    visualizations: [
+      {
+        title: 'Docker Compose architecture — services, networks, volumes, dependencies',
+        description: `Docker Compose reads a compose.yaml file and translates it into Docker API calls to create networks, volumes, and containers in the correct order.
+
+compose.yaml structure:
+  services: — the containers to run (each becomes a docker run)
+  networks: — custom networks (default: one bridge network per project)
+  volumes:  — named volumes
+  configs:  — config files injected into services
+  secrets:  — secrets injected into services (Swarm/production)
+
+Service definition maps 1:1 to docker run options:
+  image: / build:    → which image or Dockerfile to use
+  ports:             → -p host:container
+  environment:       → -e KEY=VALUE
+  volumes:           → -v name:path or /host:path
+  depends_on:        → startup ordering (with condition: service_healthy)
+  restart:           → unless-stopped / always / on-failure
+  networks:          → which networks to attach
+  healthcheck:       → docker HEALTHCHECK instruction equivalent
+  command:           → override CMD
+  entrypoint:        → override ENTRYPOINT
+
+depends_on with health checks — the right way:
+  depends_on:
+    db:
+      condition: service_healthy   # waits for healthcheck to pass, not just start
+    redis:
+      condition: service_started   # just waits for container to start
+
+Without condition: service_healthy, the web service starts the moment the db container starts — before postgres is ready to accept connections. Always add healthchecks to databases.
+
+Multiple compose files (overrides):
+  docker compose -f compose.yaml -f compose.override.yaml up
+
+Base file defines the production config. Override adds dev-only ports, volume mounts, debug env vars. compose.override.yaml is automatically merged if it exists.
+
+Profiles — conditional services:
+  services:
+    docs:
+      profiles: [dev]        # only starts with --profile dev
+
+docker compose --profile dev up starts docs too. Production docker compose up skips it.
+
+Scaling:
+  docker compose up --scale worker=4   # run 4 worker replicas
+
+For true production scaling with load balancing, upgrade to Docker Swarm (docker stack deploy) or Kubernetes.`,
+        image: '/diagrams/devops/f10-docker-compose.png',
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Compose.',
+        description: `Rapid-fire facts.
+
+Q: What does docker compose up do?
+A: Reads compose.yaml, creates a project network and any declared volumes, starts all services in dependency order, streams logs to stdout.
+
+Q: What is the difference between docker compose up and docker compose up --build?
+A: --build forces a rebuild of images defined with build: before starting. Without it, Compose uses cached images if they exist.
+
+Q: How does depends_on work?
+A: Controls startup order. condition: service_started waits for container start. condition: service_healthy waits for the healthcheck to pass — critical for databases. It does NOT restart web if db dies later.
+
+Q: What network does Compose create?
+A: A user-defined bridge named <project>_default. All services are automatically attached. They resolve each other by service name via Docker's embedded DNS.
+
+Q: How do you run a one-off command against a service?
+A: docker compose run web python manage.py migrate — starts a new container using the service config, runs the command, then exits.
+
+Q: docker compose run vs docker compose exec?
+A: run starts a new container. exec runs a command in an already-running container.
+
+Q: How do you update a single service without restarting everything?
+A: docker compose up -d --no-deps --build web — rebuilds and restarts only the web service.
+
+Q: What is compose.override.yaml?
+A: Automatically merged with compose.yaml when both exist. Used to layer dev-only config (extra ports, volume mounts, debug env vars) on top of a production base file.
+
+Q: Compose vs Kubernetes?
+A: Compose: single host, simple YAML, zero cluster overhead — great for dev and small prod. Kubernetes: multi-node, auto-scaling, self-healing, rolling deploys — required at scale.
+
+Q: How do you see what's running and on which ports?
+A: docker compose ps
+
+Q: How do you cleanly tear everything down including volumes?
+A: docker compose down -v — stops containers, removes networks, removes named volumes.
+
+These are answers a Docker-Compose-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/compose/',
+      'https://docs.docker.com/compose/compose-file/',
+      'https://docs.docker.com/compose/how-tos/multiple-compose-files/',
     ],
   },
 

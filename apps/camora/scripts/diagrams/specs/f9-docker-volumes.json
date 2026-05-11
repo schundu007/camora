@@ -1,0 +1,50 @@
+{
+  "title": "Docker Storage — Volumes, Bind Mounts, overlayfs",
+  "subtitle": "How container filesystems are assembled and where data survives container deletion",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "Container Filesystem (overlayfs)",
+      "nodes": [
+        { "id": "writable", "label": "Writable Layer\nContainer diff (ephemeral)\nDeleted on docker rm", "kind": "worker" },
+        { "id": "img-layers", "label": "Image Layers (read-only)\nFROM ubuntu → RUN apt → COPY\nShared across containers", "kind": "datastore" }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "writable",
+      "cluster": "Persistent Storage",
+      "nodes": [
+        { "id": "named-vol", "label": "Named Volume\n/var/lib/docker/volumes/\nSurvives docker rm", "kind": "datastore" },
+        { "id": "bind-mount", "label": "Bind Mount\nHost path → container path\nDirect host filesystem access", "kind": "cache" }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Volume commands",
+      "lang": "plain",
+      "body": "Named volume (managed by Docker):\n  docker volume create pgdata\n  docker run -v pgdata:/var/lib/postgresql/data postgres\n  docker volume ls\n  docker volume inspect pgdata\n  docker volume rm pgdata     # fails if container still using it\n  docker volume prune         # remove all unused volumes\n\nBind mount (host directory):\n  docker run -v /host/src:/app/src node   # absolute path\n  docker run -v $(pwd):/app node          # current dir (dev workflow)\n\ntmpfs (RAM, no disk write):\n  docker run --tmpfs /tmp:size=100m nginx  # ephemeral, in-memory"
+    },
+    {
+      "kind": "code",
+      "title": "overlayfs — how image layers stack",
+      "lang": "plain",
+      "body": "Image layers (read-only, bottom to top):\n  layer 0: ubuntu:22.04 base (120 MB)\n  layer 1: RUN apt-get install nginx (40 MB)\n  layer 2: COPY ./html /var/www/html (2 MB)\n\nContainer adds:\n  layer 3: writable diff layer (starts empty)\n\noverlayfs merges them into one unified view.\nRead: searches top-down; returns first match.\nWrite: copy-on-write — file copied to writable layer before modification.\n\nEach container gets its own writable layer → same image,\nmany containers, only one copy of read-only layers on disk."
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Named volume vs bind mount",
+      "pros": [
+        "Named volume: Docker manages location, portable across hosts, easy backup/restore with docker run --volumes-from",
+        "Bind mount: real-time code sync for dev, easy to inspect files from host, no volume creation needed"
+      ],
+      "cons": [
+        "Named volume: opaque location (/var/lib/docker/volumes/), harder to directly edit files from host",
+        "Bind mount: ties container to host filesystem layout, permission mismatches (host UID ≠ container UID) common"
+      ]
+    }
+  ]
+}
