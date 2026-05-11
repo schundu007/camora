@@ -23108,6 +23108,22 @@ These are answers an incident-RCA-fluent platform / SRE engineer should give wit
     description: 'Docker is an open platform for building, shipping, and running applications in containers. It uses a client-server architecture — the Docker client talks to the Docker daemon, which manages images, containers, networks, and volumes. Docker Hub is the default public registry for sharing images.',
     visualizations: [
       {
+        title: 'Official Docker architecture diagram — client, daemon, registry',
+        description: `The official Docker architecture diagram from the Docker documentation.
+
+Three zones:
+
+Client — the Docker CLI. docker run, docker build, and docker pull are the three core commands. All communicate with the Docker daemon via REST API over a UNIX socket.
+
+Docker Host — the machine running the Docker daemon (dockerd). The daemon manages Images (stored locally) and Containers (running instances). docker build creates images locally; docker pull fetches them from the registry into the local image store.
+
+Registry — stores and distributes images. Docker Hub is the default public registry. Images available include nginx, ubuntu, postgres, and thousands of community images. Registries also support Extensions and Plugins for additional tooling (JFrog, Portainer, VMware, etc.).
+
+Solid arrows = synchronous requests (docker run starts a container immediately).
+Dashed arrows = pull operations (daemon fetches image layers from registry as needed).`,
+        image: 'https://docs.docker.com/get-started/docker-overview/images/docker-architecture.webp',
+      },
+      {
         title: 'Docker architecture — client, daemon, images, containers, registry',
         description: `Docker uses a client-server architecture. The three main pieces:
 
