@@ -1,0 +1,50 @@
+{
+  "title": "Docker Security — Rootless, Capabilities, Seccomp, Image Signing",
+  "subtitle": "Defense-in-depth: reduce attack surface at every layer of the container stack",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "Image Security",
+      "nodes": [
+        { "id": "base-image", "label": "Minimal Base Image\ndistroless / alpine / scratch\nFewer packages = fewer CVEs", "kind": "actor" },
+        { "id": "scan", "label": "Image Scanning\nTrivy / Grype / Snyk\nCVE detection before push", "kind": "service" },
+        { "id": "sign", "label": "Image Signing\ncosign keyless (OIDC)\nSBOM attestation", "kind": "service" }
+      ]
+    },
+    {
+      "lane": "main",
+      "cluster": "Runtime Security",
+      "nodes": [
+        { "id": "rootless", "label": "Rootless Container\nUSER non-root\nno CAP_SYS_ADMIN", "kind": "service" },
+        { "id": "caps", "label": "Capabilities\n--cap-drop ALL\n--cap-add only what's needed", "kind": "worker" },
+        { "id": "seccomp", "label": "Seccomp Profile\nblocks ~44 syscalls default\ncustom profile for hardening", "kind": "worker" }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Hardened Dockerfile pattern",
+      "lang": "plain",
+      "body": "FROM node:20-alpine AS build\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci --only=production\nCOPY . .\n\nFROM gcr.io/distroless/nodejs20-debian12\nWORKDIR /app\nCOPY --from=build /app .\nUSER nonroot          # distroless ships a 'nonroot' user (UID 65532)\nEXPOSE 3000\nCMD [\"server.js\"]"
+    },
+    {
+      "kind": "issue",
+      "title": "Capability escape — most common container breakout vector",
+      "body": "Default Docker container has 14 capabilities.\nCAP_NET_ADMIN lets container modify host routing tables.\nCAP_SYS_ADMIN is near-root — can mount filesystems, ptrace.\nprivileged: true disables ALL capability dropping — same as root on host.\n\nHardened runtime flags:\n  --cap-drop ALL\n  --cap-add NET_BIND_SERVICE   # only if port < 1024 needed\n  --read-only                  # read-only root filesystem\n  --no-new-privileges          # blocks setuid/setgid escalation\n  --security-opt seccomp=profile.json\n  --security-opt no-new-privileges"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Rootless Docker vs root Docker",
+      "pros": [
+        "Rootless: daemon runs as unprivileged user; container breakout = unprivileged access, not root",
+        "Rootless: user namespace maps container root (UID 0) to a high host UID (e.g. 100000)"
+      ],
+      "cons": [
+        "Rootless: some features unavailable — AppArmor profiles, overlay storage on older kernels, some network modes",
+        "Root Docker: full feature set; acceptable with --cap-drop ALL + seccomp + read-only rootfs defense-in-depth"
+      ]
+    }
+  ]
+}

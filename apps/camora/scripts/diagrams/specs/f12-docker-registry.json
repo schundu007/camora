@@ -1,0 +1,53 @@
+{
+  "title": "Docker Registries — Push, Pull, Tags, Multi-arch Manifests",
+  "subtitle": "How images are stored, versioned, distributed, and verified across environments",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "Build → Tag → Push",
+      "nodes": [
+        { "id": "build", "label": "docker build\nCreates image layers\nContent-addressed SHA256", "kind": "actor" },
+        { "id": "tag", "label": "docker tag\nmyapp:latest\nmyapp:v1.2.3  (immutable)", "kind": "service" },
+        { "id": "push", "label": "docker push\nUploads new layers only\nSends manifest to registry", "kind": "service" }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "push",
+      "cluster": "Registry",
+      "nodes": [
+        { "id": "registry", "label": "Container Registry\nDocker Hub / GHCR / ECR\nStores manifests + layer blobs", "kind": "datastore" }
+      ]
+    }
+  ],
+  "edges": [
+    { "from": "registry", "to": "tag", "label": "docker pull", "style": "dashed" }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Tagging and pushing to multiple registries",
+      "lang": "plain",
+      "body": "# Build once, tag for multiple registries\ndocker build -t myapp:v1.2.3 .\ndocker tag myapp:v1.2.3 ghcr.io/myorg/myapp:v1.2.3\ndocker tag myapp:v1.2.3 123456.dkr.ecr.us-east-1.amazonaws.com/myapp:v1.2.3\n\n# Push to GHCR\necho $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin\ndocker push ghcr.io/myorg/myapp:v1.2.3\n\n# Push to ECR (authenticate first)\naws ecr get-login-password | docker login --username AWS \\\n  --password-stdin 123456.dkr.ecr.us-east-1.amazonaws.com\ndocker push 123456.dkr.ecr.us-east-1.amazonaws.com/myapp:v1.2.3"
+    },
+    {
+      "kind": "code",
+      "title": "Multi-arch manifest — build for amd64 + arm64 in one push",
+      "lang": "plain",
+      "body": "docker buildx create --name multi --use\ndocker buildx build \\\n  --platform linux/amd64,linux/arm64 \\\n  -t ghcr.io/myorg/myapp:v1.2.3 \\\n  --push .\n\nWhat gets pushed:\n  Image index (multi-arch manifest) → references:\n    linux/amd64 manifest → layers for amd64\n    linux/arm64 manifest → layers for arm64\n\ndocker pull on an M2 Mac → pulls arm64 layers automatically\ndocker pull on CI (amd64) → pulls amd64 layers automatically"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "latest tag vs immutable tags",
+      "pros": [
+        "Immutable tag (v1.2.3 or SHA): reproducible builds, easy rollback, audit trail for security",
+        "SHA digest pinning (image@sha256:abc): cryptographically guaranteed — tag can be overwritten, digest cannot"
+      ],
+      "cons": [
+        "latest tag: convenient for dev; dangerous in production — silent image changes on next pull break reproducibility",
+        "SHA pinning: verbose in Dockerfiles; requires automation to update dependencies (Renovate, Dependabot)"
+      ]
+    }
+  ]
+}
