@@ -63,5 +63,11 @@ COPY . .
 
 RUN mkdir -p /data/embeddings
 
+# Pre-download resemblyzer weights at build time so first-request inference
+# is instant. Without this, VoiceEncoder() downloads on the first enroll
+# call, blocks the async event loop for several seconds (CPU-bound + network),
+# and causes /speaker/status to time out while /speaker/enroll returns 500.
+RUN python -c "from resemblyzer import VoiceEncoder; VoiceEncoder(); print('resemblyzer weights cached')"
+
 EXPOSE 8001
 CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8001}

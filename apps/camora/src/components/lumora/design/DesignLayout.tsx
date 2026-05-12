@@ -400,7 +400,11 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               const brace = jsonText.indexOf('{');
               if (brace >= 0) jsonText = jsonText.substring(brace);
               const obj = JSON.parse(jsonText);
-              if (obj.systemDesign) setResult(obj);
+              if (obj?.systemDesign) { setResult(obj); return; }
+              // Flat JSON (old format without systemDesign wrapper)
+              if (obj?.overview || obj?.requirements || obj?.architecture) {
+                setResult({ systemDesign: obj } as DesignResult);
+              }
             } catch {
               // Can't parse
             }
@@ -421,9 +425,27 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 setErrorMsg('No response received. Please try again.');
                 return null;
               }
+              // Try tag format first
               const tagMap = extractTagMap(raw);
-              const result = parseTagsToDesign(tagMap);
-              if (result) return result;
+              const tagResult = parseTagsToDesign(tagMap);
+              if (tagResult) return tagResult;
+              // Try JSON — handles stale cached responses in old JSON format
+              try {
+                let jsonText = raw.trim();
+                if (jsonText.startsWith('```')) {
+                  const nl = jsonText.indexOf('\n');
+                  const last = jsonText.lastIndexOf('```');
+                  jsonText = jsonText.substring(nl + 1, last > nl ? last : undefined).trim();
+                }
+                const brace = jsonText.indexOf('{');
+                if (brace >= 0) jsonText = jsonText.substring(brace);
+                const obj = JSON.parse(jsonText);
+                if (obj?.systemDesign) return obj as DesignResult;
+                // Flat JSON (old format: { overview, requirements, ... } without systemDesign wrapper)
+                if (obj?.overview || obj?.requirements || obj?.architecture) {
+                  return { systemDesign: obj } as DesignResult;
+                }
+              } catch { /* not JSON */ }
               setErrorMsg('Response received but could not be parsed. Please try again.');
               return null;
             });
