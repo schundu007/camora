@@ -4,6 +4,7 @@ Handles voice enrollment, status checks, profile deletion, and
 speaker verification using resemblyzer voice embeddings.
 """
 
+import asyncio
 import base64
 import io
 import os
@@ -11,6 +12,7 @@ import secrets
 import subprocess
 import tempfile
 import wave
+from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -112,6 +114,12 @@ def _embed_audio(audio_bytes: bytes, suffix: str = ".webm") -> np.ndarray:
         os.unlink(wav_path)
 
 
+async def _embed_audio_async(audio_bytes: bytes, suffix: str = ".webm") -> np.ndarray:
+    """Offload blocking CPU + ffmpeg work to a thread so FastAPI's event loop stays free."""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, partial(_embed_audio, audio_bytes, suffix))
+
+
 def _cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
     """Compute cosine similarity between two vectors."""
     denom = np.linalg.norm(a) * np.linalg.norm(b)
@@ -153,7 +161,7 @@ async def speaker_enroll(
         suffix = "." + fname.rsplit(".", 1)[-1] if "." in fname else ".webm"
         print(f"[Speaker] Enrolling user {user_id}, file={fname}, size={len(audio_bytes)}, suffix={suffix}")
 
-        embedding = _embed_audio(audio_bytes, suffix=suffix)
+        embedding = await _embed_audio_async(audio_bytes, suffix=suffix)
 
         # Atomic write — np.save is open + write_header + write_body + close,
         # which is non-atomic. Two concurrent enrolls (same user double-clicks
@@ -232,10 +240,11 @@ async def speaker_diarize(
         suffix = "." + fname.rsplit(".", 1)[-1] if "." in fname else ".webm"
         print(f"[Diarize] user={user_id}, file={fname}, size={len(audio_bytes)}")
 
-        # Convert to WAV
-        wav_path = _convert_to_wav(audio_bytes, suffix=suffix)
+        # Convert to WAV — run in thread so ffmpeg+preprocess_wav don't block the event loop
+        loop = asyncio.get_event_loop()
+        wav_path = await loop.run_in_executor(None, partial(_convert_to_wav, audio_bytes, suffix))
         try:
-            wav = preprocess_wav(wav_path)
+            wav = await loop.run_in_executor(None, preprocess_wav, wav_path)
             if len(wav) == 0:
                 import wave as wave_mod
                 with wave_mod.open(wav_path, 'rb') as wf:
@@ -405,7 +414,7 @@ async def speaker_verify(
         stored_embedding = np.load(str(path), allow_pickle=False)
         fname = file.filename or "audio.webm"
         suffix = "." + fname.rsplit(".", 1)[-1] if "." in fname else ".webm"
-        current_embedding = _embed_audio(audio_bytes, suffix=suffix)
+        current_embedding = await _embed_audio_async(audio_bytes, suffix=suffix)
         similarity = _cosine_similarity(stored_embedding, current_embedding)
 
         return {
