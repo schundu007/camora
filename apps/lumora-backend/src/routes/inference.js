@@ -56,11 +56,20 @@ function getQuestionType(answer) {
 // ---------------------------------------------------------------------------
 router.post('/conversations/:conversationId/stream', authenticate, checkUsage('questions'), async (req, res) => {
   const { conversationId } = req.params;
-  const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', mode = 'general', design_kind: designKind = null } = req.body;
+  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', mode = 'general', design_kind: designKind = null } = req.body;
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
     return res.status(400).json({ error: 'question is required' });
+  }
+
+  // Server-side guard: systemContext is user-assembled (resume + JD + study docs).
+  // Large uploads can exceed the 200k-token API ceiling; truncate with a warning
+  // rather than letting the request reach the API and fail with a 400.
+  const MAX_SYSTEM_CONTEXT_CHARS = 120_000;
+  if (typeof systemContext === 'string' && systemContext.length > MAX_SYSTEM_CONTEXT_CHARS) {
+    console.warn(`[inference] systemContext truncated ${systemContext.length} → ${MAX_SYSTEM_CONTEXT_CHARS} chars for user ${user.id}`);
+    systemContext = systemContext.slice(0, MAX_SYSTEM_CONTEXT_CHARS);
   }
 
   try {
@@ -262,7 +271,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 // POST /stream — stream (auto-creates conversation)
 // ---------------------------------------------------------------------------
 router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
-  const { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null } = req.body;
+  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null } = req.body;
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -270,6 +279,12 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
   }
   if (question.length > 50000) {
     return res.status(400).json({ error: 'Question too long. Max 50,000 characters.' });
+  }
+
+  const MAX_SYSTEM_CONTEXT_CHARS = 120_000;
+  if (typeof systemContext === 'string' && systemContext.length > MAX_SYSTEM_CONTEXT_CHARS) {
+    console.warn(`[inference] systemContext truncated ${systemContext.length} → ${MAX_SYSTEM_CONTEXT_CHARS} chars for user ${user.id}`);
+    systemContext = systemContext.slice(0, MAX_SYSTEM_CONTEXT_CHARS);
   }
 
   try {

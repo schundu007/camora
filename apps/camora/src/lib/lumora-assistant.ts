@@ -127,6 +127,7 @@ export function getAssistantFromPrepKit(): LumoraAssistant | null {
 
     const studyDocs: LumoraStudyDoc[] = Array.isArray(doc.studyDocs)
       ? doc.studyDocs.filter(d => d && typeof d.content === 'string' && d.content.trim())
+          .map(d => ({ ...d, content: d.content.slice(0, 20_000) }))
       : [];
     if (!studyDocs.length && typeof doc.studyMaterials === 'string' && doc.studyMaterials.trim()) {
       studyDocs.push({ name: doc.studyMaterialsFile || 'Study material', content: doc.studyMaterials });
@@ -210,22 +211,33 @@ function detectCompany(input: {
   return undefined;
 }
 
+// Hard limits to stay comfortably under the 200k-token Anthropic API ceiling.
+// Each token is ~4 chars; a 30k-token context budget for user content leaves
+// ample room for the system prompt template, retrieval chunks, and history.
+const MAX_RESUME_CHARS = 25_000;
+const MAX_JD_CHARS = 20_000;
+const MAX_PER_DOC_CHARS = 20_000;
+const MAX_TOTAL_STUDY_CHARS = 60_000;
+
 export function buildSystemContext(assistant: LumoraAssistant | null): string | undefined {
   if (!assistant) return undefined;
   const parts: string[] = [];
   if (assistant.company || assistant.role) {
     parts.push(`The candidate is interviewing for: ${assistant.role || 'a role'} at ${assistant.company || 'a company'}.`);
   }
-  if (assistant.resume) parts.push(`CANDIDATE RESUME:\n${assistant.resume}`);
-  if (assistant.jobDescription) parts.push(`JOB DESCRIPTION:\n${assistant.jobDescription}`);
+  if (assistant.resume) parts.push(`CANDIDATE RESUME:\n${assistant.resume.slice(0, MAX_RESUME_CHARS)}`);
+  if (assistant.jobDescription) parts.push(`JOB DESCRIPTION:\n${assistant.jobDescription.slice(0, MAX_JD_CHARS)}`);
   if (assistant.studyDocs && assistant.studyDocs.length > 0) {
-    // Each doc is labeled with its filename so Sona can cite the source
-    // ("per the system-design doc you uploaded…") in answers. Trimmed
-    // per-doc to keep the system prompt under context limits — prompt
-    // cache absorbs the cost on repeated turns.
-    const studyBlock = assistant.studyDocs
-      .map(d => `=== STUDY MATERIAL: ${d.name} ===\n${d.content}`)
-      .join('\n\n');
+    let totalChars = 0;
+    const cappedDocs: string[] = [];
+    for (const d of assistant.studyDocs) {
+      if (totalChars >= MAX_TOTAL_STUDY_CHARS) break;
+      const remaining = MAX_TOTAL_STUDY_CHARS - totalChars;
+      const content = d.content.slice(0, Math.min(MAX_PER_DOC_CHARS, remaining));
+      cappedDocs.push(`=== STUDY MATERIAL: ${d.name} ===\n${content}`);
+      totalChars += content.length;
+    }
+    const studyBlock = cappedDocs.join('\n\n');
     parts.push(
       `STUDY MATERIALS UPLOADED BY THE CANDIDATE (${assistant.studyDocs.length} document${assistant.studyDocs.length === 1 ? '' : 's'}). Use these as authoritative reference material when relevant — quote, cite by filename, and prefer them over your priors when they overlap.\n\n${studyBlock}`
     );
