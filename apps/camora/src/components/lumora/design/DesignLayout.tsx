@@ -128,7 +128,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   // Cloud platform sent on every Sona design request so the LLM names
   // services for the chosen cloud (Cosmos DB / Firestore / etc.). Single
   // source of truth — same hook that powers diagram cloud-filtering.
-  const [cloudProvider] = useCloudProvider();
+  const [cloudProvider, setCloudProvider] = useCloudProvider();
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DesignResult | null>(null);
   const [streamingText, setStreamingText] = useState('');
@@ -270,6 +270,11 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     useInterviewStore.getState().setLastFromCache(null);
 
     const chunks: string[] = [];
+    // Stores data.raw from onAnswer so onComplete's safety net can parse it
+    // even when chunks is empty (cache hits send no token events).
+    let lastRawAnswer = '';
+    // Prevents onComplete from overwriting onError's specific message.
+    let onErrorFired = false;
 
     try {
       await streamResponse({
@@ -349,6 +354,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           useInterviewStore.getState().setLastFromCache(Boolean(data.fromCache));
           const parsed = data.parsed;
           const raw = data.raw || '';
+          lastRawAnswer = raw;
 
           // Case 1: JSON object with systemDesign
           if (parsed && !Array.isArray(parsed) && parsed.systemDesign) {
@@ -375,9 +381,10 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             const result = parseTagsToDesign(byType);
             if (result) setResult(result);
           }
-          // Case 3: Try raw JSON or raw tags from chunks
+          // Case 3: Try raw JSON or raw tags. Use data.raw first so cache
+          // hits (which emit no token events) still get parsed correctly.
           else {
-            const rawText = chunks.join('');
+            const rawText = raw || chunks.join('');
             // Try tags first
             const tagMap = extractTagMap(rawText);
             const tagResult = parseTagsToDesign(tagMap);
@@ -402,11 +409,14 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         onComplete: () => {
           setIsLoading(false);
           setStatus('ready', 'Design complete');
-          // Safety net: if onAnswer never fired (connection drop), parse streamed tokens directly
+          // Safety net: if onAnswer never fired (connection drop), parse streamed tokens directly.
+          // Guard: don't overwrite an error message already set by onError (e.g. 400 prompt-too-long
+          // fires onError then onComplete 200ms later with empty chunks → would clobber specific msg).
           setTimeout(() => {
+            if (onErrorFired) return;
             setResult(prev => {
               if (prev) return prev;
-              const raw = chunks.join('');
+              const raw = lastRawAnswer || chunks.join('');
               if (!raw.trim()) {
                 setErrorMsg('No response received. Please try again.');
                 return null;
@@ -420,6 +430,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           }, 200);
         },
         onError: (data) => {
+          onErrorFired = true;
           setIsLoading(false);
           setErrorMsg(data.msg || 'Failed to generate design. Please try again.');
           setStatus('error', data.msg);
@@ -835,17 +846,32 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 <span>{errorMsg}</span>
               </div>
             )}
-            <button
-              onClick={() => handleSubmit()}
-              disabled={!problemText.trim() || isLoading}
-              className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}
-            >
-              {isLoading ? (
-                <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
-              ) : (
-                <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>Design</>
-              )}
-            </button>
+            <div className="flex items-center gap-2">
+              <select
+                value={cloudProvider}
+                onChange={(e) => setCloudProvider(e.target.value as 'auto' | 'aws' | 'azure' | 'gcp')}
+                className="text-xs font-mono rounded-lg px-2 py-2.5 shrink-0"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+                title="Cloud provider for design + diagram"
+              >
+                <option value="auto">Auto</option>
+                <option value="aws">AWS</option>
+                <option value="azure">Azure</option>
+                <option value="gcp">GCP</option>
+              </select>
+              <button
+                onClick={() => handleSubmit()}
+                disabled={!problemText.trim() || isLoading}
+                className="flex-1 py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}
+              >
+                {isLoading ? (
+                  <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
+                ) : (
+                  <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>Design</>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Architecture Diagram - in left panel below input.
@@ -861,7 +887,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 </svg>
                 <h4 className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider">Architecture</h4>
               </div>
-              <ArchitectureDiagram question={question} className="diagram-left-panel" />
+              <ArchitectureDiagram question={question} className="diagram-left-panel" autoGenerate={true} />
             </div>
           )}
         </div>

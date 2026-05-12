@@ -26,9 +26,13 @@ interface ArchitectureDiagramProps {
    *  override (e.g. "design a CDN" → infrastructure even if hint=system).
    *  Default 'system' matches the historical behavior. */
   designKind?: DesignKind;
+  /** When true, owners skip the manual "Generate" button — diagram is
+   *  auto-triggered as soon as a cache miss is detected. Also hides the
+   *  cloud selector (caller owns the picker). */
+  autoGenerate?: boolean;
 }
 
-export function ArchitectureDiagram({ question, className = '', designKind = 'system' }: ArchitectureDiagramProps) {
+export function ArchitectureDiagram({ question, className = '', designKind = 'system', autoGenerate = false }: ArchitectureDiagramProps) {
   const { token, user } = useAuth();
   // Only owners/admins may trigger fresh generation. Regular users consume
   // pre-generated diagrams from the cache. Backend enforces this via 403
@@ -115,8 +119,8 @@ export function ArchitectureDiagram({ question, className = '', designKind = 'sy
     return () => { cancelled = true; };
   }, [question, token, cloudProvider, resetView]);
 
-  // Step 2: Explicit generation (only when user clicks Generate)
-  const handleGenerate = async () => {
+  // Step 2: Explicit generation (only when user clicks Generate or autoGenerate fires)
+  const handleGenerate = useCallback(async () => {
     if (!question || !token || generating) return;
     setGenerating(true);
     setError(null);
@@ -143,21 +147,30 @@ export function ArchitectureDiagram({ question, className = '', designKind = 'sy
       setError(err.message || 'Network error');
     }
     setGenerating(false);
-  };
+  }, [question, token, generating, cloudProvider, designKind, resetView]);
+
+  // Auto-trigger generation for owners when caller sets autoGenerate=true
+  useEffect(() => {
+    if (autoGenerate && noCache && !loading && !generating && canGenerate) {
+      handleGenerate();
+    }
+  }, [autoGenerate, noCache, loading, generating, canGenerate, handleGenerate]);
 
   return (
     <div className={className}>
       {/* Controls */}
       <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <select value={cloudProvider} onChange={(e) => setCloudProvider(e.target.value as 'auto' | 'aws' | 'azure' | 'gcp')}
-            className="text-xs font-mono bg-transparent border border-[var(--border)] rounded px-1.5 py-0.5 text-[var(--text-muted)]">
-            <option value="auto">Auto</option>
-            <option value="aws">AWS</option>
-            <option value="azure">Azure</option>
-            <option value="gcp">GCP</option>
-          </select>
-        </div>
+        {!autoGenerate && (
+          <div className="flex items-center gap-2">
+            <select value={cloudProvider} onChange={(e) => setCloudProvider(e.target.value as 'auto' | 'aws' | 'azure' | 'gcp')}
+              className="text-xs font-mono bg-transparent border border-[var(--border)] rounded px-1.5 py-0.5 text-[var(--text-muted)]">
+              <option value="auto">Auto</option>
+              <option value="aws">AWS</option>
+              <option value="azure">Azure</option>
+              <option value="gcp">GCP</option>
+            </select>
+          </div>
+        )}
         {imageUrl && !loading && (
           <div className="flex items-center gap-1">
             <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">+</button>
