@@ -58,6 +58,7 @@ import { loadTopicsForPage } from '../../../data/capra/topics/loader.js';
 // "Something broke" page. Re-introduce only after the underlying
 // render-loop cause is found and fixed.
 import TopicDetail from './TopicDetail.jsx';
+import DevopsChallengesPage from './DevopsChallengesPage.jsx';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -156,6 +157,7 @@ export default function DocsPage({ onBack }) {
   const devopsCategories = heavyData.devopsCategories || [];
   const devopsTopicCategoryMap = heavyData.devopsTopicCategoryMap || {};
   const devopsTopics = heavyData.devopsTopics || [];
+  const devopsChallenges = heavyData.devopsChallenges || [];
 
   // Job context for role-filtered mode (passed from JobPrepPage or job URL analysis)
   const [jobContext, setJobContext] = useState(() => {
@@ -834,6 +836,11 @@ export default function DocsPage({ onBack }) {
                     </button>
                   </div>
                 </div>
+              ) : selectedTopic === 'devops-coding-challenges' ? (
+                <DevopsChallengesPage
+                  challenges={devopsChallenges}
+                  onBack={() => setSelectedTopic(null)}
+                />
               ) : selectedTopic ? (
                 <Suspense fallback={
                   <div className="flex items-center justify-center py-16">

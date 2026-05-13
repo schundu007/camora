@@ -25,6 +25,7 @@ export const devopsCategories = [
   { id: 'datadevops',       name: 'Database & Data DevOps',            icon: 'database',      color: '#a855f7' },
   { id: 'mlops',            name: 'MLOps & LLMOps',                    icon: 'cpu',           color: '#84cc16' },
   { id: 'aiops',            name: 'AIOps',                             icon: 'zap',           color: '#d946ef' },
+  { id: 'challenges',      name: 'Coding Challenges',                 icon: 'code',          color: '#f59e0b' },
 ];
 
 export const devopsTopicCategoryMap = {
@@ -141,6 +142,8 @@ export const devopsTopicCategoryMap = {
   'anomaly-detection-ml':           'aiops',
   'alert-correlation-grouping':     'aiops',
   'incident-rca-ml':                'aiops',
+  // Coding Challenges
+  'devops-coding-challenges':       'challenges',
 };
 
 // Topic content lives below — each topic uses the same schema as SRE topics:
@@ -29912,4 +29915,13 @@ These are answers an incident-RCA-fluent platform / SRE engineer should give wit
     ],
   },
 
+  {
+    id: 'devops-coding-challenges',
+    title: 'DevOps Coding Challenges',
+    icon: 'code',
+    color: '#f59e0b',
+    questions: 172,
+    description: '172 hands-on DevOps coding problems from HackerRank — Docker, Kubernetes, Ansible, Terraform, Linux, Git, AWS, Puppet, and Chef.',
+    isChallengesHub: true,
+  },
 ];

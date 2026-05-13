@@ -24,6 +24,7 @@ const CapraPrepare = lazy(() => import('./pages/capra/PreparePage'));
 const CapraOnboarding = lazy(() => import('./pages/capra/OnboardingPage'));
 const CapraLanding = lazy(() => import('./pages/capra/CapraLandingPage'));
 const PrepPlanPage = lazy(() => import('./pages/capra/PrepPlanPage'));
+const HRLibraryPage = lazy(() => import('./pages/capra/HRLibraryPage'));
 const JobsPage = lazy(() => import('./pages/JobsPage'));
 const JobPrepPage = lazy(() => import('./pages/JobPrepPage'));
 const SignupPage = lazy(() => import('./pages/SignupPage'));
@@ -261,6 +262,7 @@ function RouteTitle() {
       ['/capra/prepare', 'Prepare — Camora'],
       ['/capra/practice', 'Practice — Camora'],
       ['/capra/plan', 'Study Plan — Camora'],
+      ['/capra/library', 'Problem Library — Camora'],
       ['/capra/onboarding', 'Get Started — Camora'],
       ['/jobs', 'Jobs — Camora'],
       ['/profile', 'Profile — Camora'],
@@ -371,6 +373,7 @@ export function App() {
           <Route path="/capra/prepare/resume" element={<ShellRoute><ResumePage /></ShellRoute>} />
           <Route path="/capra/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />
           <Route path="/capra/plan" element={<ShellRoute><PrepPlanPage /></ShellRoute>} />
+          <Route path="/capra/library" element={<ShellRoute><HRLibraryPage /></ShellRoute>} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
           <Route path="/capra/achievements" element={<Navigate to="/profile?tab=achievements" replace />} />
