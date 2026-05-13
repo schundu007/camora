@@ -29920,8 +29920,8 @@ These are answers an incident-RCA-fluent platform / SRE engineer should give wit
     title: 'DevOps Coding Challenges',
     icon: 'code',
     color: '#f59e0b',
-    questions: 172,
-    description: '172 hands-on DevOps coding problems from HackerRank — Docker, Kubernetes, Ansible, Terraform, Linux, Git, AWS, Puppet, and Chef.',
+    questions: 366,
+    description: '366 hands-on DevOps coding problems from HackerRank — Docker, Kubernetes, Ansible, Terraform, Linux, Git, AWS, Puppet, and Chef.',
     isChallengesHub: true,
   },
 ];
