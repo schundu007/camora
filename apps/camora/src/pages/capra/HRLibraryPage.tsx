@@ -17,6 +17,7 @@ interface Problem {
   tags: string[];
   points: number;
   duration_min: number;
+  question_body?: string;
 }
 
 interface LibraryResponse {
@@ -436,8 +437,14 @@ export default function HRLibraryPage() {
 
   function openProblem(p: Problem) {
     const parts = [p.name];
-    if (p.preview?.trim()) parts.push(p.preview.trim());
-    if (p.summary?.trim() && p.summary !== p.preview) parts.push(p.summary.trim());
+    if (p.question_body?.trim()) {
+      // Full HackerRank question body available — use it directly
+      parts.push(p.question_body.trim());
+    } else {
+      // Fallback: preview + summary for problems without scraped body
+      if (p.preview?.trim()) parts.push(p.preview.trim());
+      if (p.summary?.trim() && p.summary !== p.preview) parts.push(p.summary.trim());
+    }
     navigate(`/capra/coding?problem=${encodeURIComponent(parts.join('\n\n'))}&autosolve=0`);
   }
 
