@@ -139,6 +139,8 @@ interface CodingLayoutProps {
   isLoading?: boolean;
   onBack: () => void;
   initialProblem?: string;
+  /** Pre-fill the URL input and auto-fetch the problem on mount (e.g. from ?url= query param) */
+  initialUrl?: string;
   /** When true, hides internal header and uses flex-1 instead of h-screen (for embedding in LumoraShell) */
   embedded?: boolean;
   /** Ref that parent sets to receive voice transcriptions as problem input */
@@ -171,7 +173,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embedded, onVoiceProblemRef }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -666,6 +668,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     }
   }, [initialProblem]);
 
+  // Auto-fetch when ?url= query param is present (e.g. opened from HackerRank/LeetCode)
+  const autoUrlFetchDone = useRef(false);
+  useEffect(() => {
+    if (!initialUrl || !token || autoUrlFetchDone.current) return;
+    autoUrlFetchDone.current = true;
+    setInputMode('url');
+    setProblemUrl(initialUrl);
+    handleFetchFromUrl(initialUrl);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialUrl, token]);
+
   // ── Actions ─────────────────────────────────────────────────────────────
 
   const [isTranslating, setIsTranslating] = useState(false);
@@ -780,8 +793,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onVoiceProblemRef]);
 
-  const handleFetchFromUrl = async () => {
-    if (!problemUrl.trim()) { setError('Please enter a URL'); return; }
+  const handleFetchFromUrl = async (overrideUrl?: string) => {
+    const urlToFetch = overrideUrl ?? problemUrl;
+    if (!urlToFetch.trim()) { setError('Please enter a URL'); return; }
     if (!token) { setError('Not authenticated'); return; }
     setIsProcessing(true);
     setError(null);
@@ -790,7 +804,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, embe
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ url: problemUrl }),
+        body: JSON.stringify({ url: urlToFetch }),
       });
       if (!resp.ok) {
         const body = await resp.json().catch(() => ({}));

@@ -11,6 +11,7 @@ function CodingPageContent() {
   const { handleCodingSubmit, isStreaming } = useStreamingInterview();
 
   const initialProblem = searchParams.get('problem') || '';
+  const initialUrl = searchParams.get('url') || '';
 
   return (
     <CodingLayout
@@ -18,6 +19,7 @@ function CodingPageContent() {
       isLoading={isStreaming}
       onBack={() => navigate('/lumora')}
       initialProblem={initialProblem}
+      initialUrl={initialUrl}
     />
   );
 }
