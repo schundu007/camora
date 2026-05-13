@@ -69,6 +69,18 @@ const DURATION_LABELS: Record<string, string> = {
   extended: 'Extended (60m+)',
 };
 
+const TAB_GROUPS: Record<string, string[]> = {
+  all:    [],
+  mcq:    ['mcq', 'multiple_mcq'],
+  coding: ['code', 'database', 'fullstack', 'coderepo_task', 'sudorank',
+           'code_review', 'prompt_engineering', 'approx', 'complete'],
+  design: ['design', 'whiteboard', 'diagram', 'textAns'],
+};
+
+const TAB_LABELS: Record<string, string> = {
+  all: 'All', mcq: 'MCQ', coding: 'Coding', design: 'Design',
+};
+
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
 function IconSkill() {
@@ -366,6 +378,8 @@ export default function HRLibraryPage() {
   const [metaTotal, setMetaTotal]   = useState<number | null>(null);
   const [metaSkills, setMetaSkills] = useState<string[]>([]);
   const [metaRoles, setMetaRoles]   = useState<string[]>([]);
+  const [metaTypes, setMetaTypes]   = useState<string[]>([]);
+  const metaDebounceRef             = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const q              = searchParams.get('q')          || '';
   const selectedRoles  = searchParams.get('role')       ? searchParams.get('role')!.split(',')       : [];
@@ -374,29 +388,56 @@ export default function HRLibraryPage() {
   const selectedSkills = searchParams.get('skills')     ? searchParams.get('skills')!.split(',')     : [];
   const selectedDurs   = searchParams.get('duration')   ? searchParams.get('duration')!.split(',')   : [];
   const page           = parseInt(searchParams.get('page') || '1');
+  const activeTab      = searchParams.get('tab') || 'all';
+
+  // Types sent to the API: explicit type selection OR the active tab's type group
+  const tabTypes       = TAB_GROUPS[activeTab] ?? [];
+  const effectiveTypes = selectedTypes.length > 0 ? selectedTypes : tabTypes;
+
+  // Type dropdown options: narrowed to the active tab's group, further filtered by cascaded meta
+  const typeOptions = activeTab !== 'all'
+    ? TAB_GROUPS[activeTab].filter(t => metaTypes.length === 0 || metaTypes.includes(t))
+    : (metaTypes.length > 0 ? metaTypes : ALL_TYPES);
 
   const [searchInput, setSearchInput] = useState(q);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Reactive meta fetch — re-fires when any filter changes, returns narrowed options
   useEffect(() => {
-    fetch(`${API}/api/library/meta`)
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(d => {
-        setMetaTotal(d.total ?? null);
-        setMetaSkills(d.skills ?? []);
-        setMetaRoles(d.roles ?? []);
-      })
-      .catch(() => {});
-  }, []);
+    if (metaDebounceRef.current) clearTimeout(metaDebounceRef.current);
+    metaDebounceRef.current = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (q)                      params.set('q',          q);
+      if (selectedRoles.length)   params.set('role',       selectedRoles.join(','));
+      if (effectiveTypes.length)  params.set('type',       effectiveTypes.join(','));
+      if (selectedDiffs.length)   params.set('difficulty', selectedDiffs.join(','));
+      if (selectedSkills.length)  params.set('skills',     selectedSkills.join(','));
+      if (selectedDurs.length)    params.set('duration',   selectedDurs.join(','));
+      fetch(`${API}/api/library/meta?${params}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          if (!d) return;
+          setMetaTotal(d.total ?? null);
+          setMetaSkills(d.skills ?? []);
+          setMetaRoles(d.roles ?? []);
+          setMetaTypes(d.types ?? []);
+        })
+        .catch(() => {});
+    }, 200);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q,
+      selectedRoles.join(','), effectiveTypes.join(','), selectedDiffs.join(','),
+      selectedSkills.join(','), selectedDurs.join(',')]);
+
 
   useEffect(() => {
     const params = new URLSearchParams();
-    if (q)                     params.set('q',          q);
-    if (selectedRoles.length)  params.set('role',       selectedRoles.join(','));
-    if (selectedTypes.length)  params.set('type',       selectedTypes.join(','));
-    if (selectedDiffs.length)  params.set('difficulty', selectedDiffs.join(','));
-    if (selectedSkills.length) params.set('skills',     selectedSkills.join(','));
-    if (selectedDurs.length)   params.set('duration',   selectedDurs.join(','));
+    if (q)                      params.set('q',          q);
+    if (selectedRoles.length)   params.set('role',       selectedRoles.join(','));
+    if (effectiveTypes.length)  params.set('type',       effectiveTypes.join(','));
+    if (selectedDiffs.length)   params.set('difficulty', selectedDiffs.join(','));
+    if (selectedSkills.length)  params.set('skills',     selectedSkills.join(','));
+    if (selectedDurs.length)    params.set('duration',   selectedDurs.join(','));
     params.set('page',  String(page));
     params.set('limit', String(PAGE_LIMIT));
 
@@ -411,8 +452,18 @@ export default function HRLibraryPage() {
       .catch(() => { setProblems([]); setTotal(0); })
       .finally(() => setLoading(false));
   }, [q,
-    selectedRoles.join(','), selectedTypes.join(','), selectedDiffs.join(','),
+    selectedRoles.join(','), effectiveTypes.join(','), selectedDiffs.join(','),
     selectedSkills.join(','), selectedDurs.join(','), page]);
+
+  function setActiveTab(tab: string) {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (tab === 'all') next.delete('tab'); else next.set('tab', tab);
+      next.delete('type');
+      next.delete('page');
+      return next;
+    });
+  }
 
   function updateParam(key: string, value: string | null) {
     setSearchParams(prev => {
@@ -511,6 +562,35 @@ export default function HRLibraryPage() {
           />
         </div>
 
+        {/* ── Tab bar ──────────────────────────────────────────────────────── */}
+        <div style={{
+          display: 'flex', gap: 0,
+          borderBottom: '1px solid var(--border)',
+          marginBottom: 14,
+        }}>
+          {(['all', 'mcq', 'coding', 'design'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                padding: '8px 18px',
+                background: 'none',
+                border: 'none',
+                borderBottom: `2px solid ${activeTab === tab ? 'var(--cam-gold-leaf, #d4af37)' : 'transparent'}`,
+                color: activeTab === tab ? 'var(--text-primary)' : 'var(--text-muted)',
+                fontSize: 13,
+                fontWeight: activeTab === tab ? 700 : 500,
+                cursor: 'pointer',
+                transition: 'color 0.12s, border-color 0.12s',
+                whiteSpace: 'nowrap',
+                marginBottom: -1,
+              }}
+            >
+              {TAB_LABELS[tab]}
+            </button>
+          ))}
+        </div>
+
         {/* Filter row — pill filters left, count + sort right */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -531,7 +611,7 @@ export default function HRLibraryPage() {
               />
             )}
             <FilterDropdown
-              label="Type" options={ALL_TYPES} selected={selectedTypes}
+              label="Type" options={typeOptions} selected={selectedTypes}
               onToggle={v => toggleList('type', v, selectedTypes)}
               renderLabel={v => <span style={{ fontWeight: 500 }}>{TYPE_LABELS[v] || v}</span>}
             />
