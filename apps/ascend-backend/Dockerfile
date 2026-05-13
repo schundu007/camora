@@ -55,6 +55,7 @@ RUN fc-cache -fv || true
 # App source last — the most-changed layer, smallest cache invalidation cost.
 COPY src/ ./src/
 COPY scripts/ ./scripts/
+COPY data/ ./data/
 
 ENV PATH="/app/.venv/bin:${PATH}"
 

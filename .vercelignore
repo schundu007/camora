@@ -1,0 +1,6 @@
+apps/camora/scripts/hr_problems/
+apps/camora/scripts/diagrams/out/
+apps/desktop/
+apps/mobile/
+node_modules/
+.claude/
