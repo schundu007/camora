@@ -286,4 +286,20 @@ export const prepAPI = {
     ),
 };
 
+export const profileAPI = {
+  getResume: (token: string) =>
+    fetchAPI<{ resume_text: string; technical_context: string }>(
+      '/api/v1/auth/profile/resume',
+      {},
+      token,
+    ),
+
+  updateResume: (token: string, payload: { resume_text?: string; technical_context?: string }) =>
+    fetchAPI<{ resume_text: string; technical_context: string }>(
+      '/api/v1/auth/profile/resume',
+      { method: 'PUT', body: JSON.stringify(payload) },
+      token,
+    ),
+};
+
 export { APIError };
