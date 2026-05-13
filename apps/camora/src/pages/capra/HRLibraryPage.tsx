@@ -68,6 +68,13 @@ const DIFF_STYLES: Record<string, { color: string; bg: string; border: string }>
 const PAGE_LIMIT = 30;
 const ALL_TYPES = ['code', 'mcq', 'database', 'fullstack', 'coderepo_task', 'multiple_mcq', 'sudorank', 'whiteboard', 'code_review', 'prompt_engineering'];
 
+const DURATION_LABELS: Record<string, string> = {
+  quick:    'Quick (≤10m)',
+  short:    'Short (11–30m)',
+  long:     'Long (31–60m)',
+  extended: 'Extended (60m+)',
+};
+
 // ─── FilterDropdown ───────────────────────────────────────────────────────────
 
 function FilterDropdown({
@@ -76,14 +83,17 @@ function FilterDropdown({
   selected,
   onToggle,
   renderLabel,
+  searchable,
 }: {
   label: string;
   options: string[];
   selected: string[];
   onToggle: (v: string | null) => void;
   renderLabel?: (v: string) => React.ReactNode;
+  searchable?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -95,11 +105,14 @@ function FilterDropdown({
   }, []);
 
   const count = selected.length;
+  const visible = searchable && search
+    ? options.filter(o => o.toLowerCase().includes(search.toLowerCase()))
+    : options;
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => { setOpen(o => !o); setSearch(''); }}
         style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -132,12 +145,31 @@ function FilterDropdown({
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 50,
-          minWidth: 200, background: 'var(--bg-elevated)',
+          minWidth: 220, background: 'var(--bg-elevated)',
           border: '1px solid var(--border)', borderRadius: 10,
           boxShadow: 'var(--shadow-lg)', overflow: 'hidden',
         }}>
+          {searchable && (
+            <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)' }}>
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{
+                  width: '100%', padding: '5px 8px', borderRadius: 5,
+                  border: '1px solid var(--border)', background: 'var(--bg-surface)',
+                  color: 'var(--text-primary)', fontSize: 12, outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+          )}
           <div style={{ maxHeight: 240, overflowY: 'auto', padding: '4px 0' }}>
-            {options.map(opt => (
+            {visible.length === 0 ? (
+              <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)' }}>No matches</div>
+            ) : visible.map(opt => (
               <label key={opt} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '7px 14px', cursor: 'pointer', fontSize: 13,
@@ -271,10 +303,13 @@ export default function HRLibraryPage() {
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [metaTotal, setMetaTotal] = useState<number | null>(null);
+  const [metaSkills, setMetaSkills] = useState<string[]>([]);
 
   const q = searchParams.get('q') || '';
   const selectedTypes = searchParams.get('type') ? searchParams.get('type')!.split(',') : [];
   const selectedDiffs = searchParams.get('difficulty') ? searchParams.get('difficulty')!.split(',') : [];
+  const selectedSkills = searchParams.get('skills') ? searchParams.get('skills')!.split(',') : [];
+  const selectedDurations = searchParams.get('duration') ? searchParams.get('duration')!.split(',') : [];
   const page = parseInt(searchParams.get('page') || '1');
 
   const [searchInput, setSearchInput] = useState(q);
@@ -283,7 +318,10 @@ export default function HRLibraryPage() {
   useEffect(() => {
     fetch(`${API}/api/library/meta`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(d => setMetaTotal(d.total))
+      .then(d => {
+        setMetaTotal(d.total ?? null);
+        setMetaSkills(d.skills ?? []);
+      })
       .catch(() => {});
   }, []);
 
@@ -292,6 +330,8 @@ export default function HRLibraryPage() {
     if (q) params.set('q', q);
     if (selectedTypes.length) params.set('type', selectedTypes.join(','));
     if (selectedDiffs.length) params.set('difficulty', selectedDiffs.join(','));
+    if (selectedSkills.length) params.set('skills', selectedSkills.join(','));
+    if (selectedDurations.length) params.set('duration', selectedDurations.join(','));
     params.set('page', String(page));
     params.set('limit', String(PAGE_LIMIT));
 
@@ -305,7 +345,7 @@ export default function HRLibraryPage() {
       })
       .catch(() => { setProblems([]); setTotal(0); })
       .finally(() => setLoading(false));
-  }, [q, selectedTypes.join(','), selectedDiffs.join(','), page]);
+  }, [q, selectedTypes.join(','), selectedDiffs.join(','), selectedSkills.join(','), selectedDurations.join(','), page]);
 
   function updateParam(key: string, value: string | null) {
     setSearchParams(prev => {
@@ -335,7 +375,7 @@ export default function HRLibraryPage() {
     navigate(`/capra/coding?problem=${encodeURIComponent(parts.join('\n\n'))}&autosolve=0`);
   }
 
-  const activeCount = selectedTypes.length + selectedDiffs.length + (q ? 1 : 0);
+  const activeCount = selectedTypes.length + selectedDiffs.length + selectedSkills.length + selectedDurations.length + (q ? 1 : 0);
 
   return (
     <div style={{ background: 'var(--bg-app)', minHeight: '100%', color: 'var(--text-primary)' }}>
@@ -398,6 +438,26 @@ export default function HRLibraryPage() {
                 {TYPE_LABELS[v] || v}
               </span>
             )}
+          />
+
+          {/* Skills */}
+          {metaSkills.length > 0 && (
+            <FilterDropdown
+              label="Skills"
+              options={metaSkills}
+              selected={selectedSkills}
+              onToggle={v => toggleList('skills', v, selectedSkills)}
+              searchable
+            />
+          )}
+
+          {/* Duration */}
+          <FilterDropdown
+            label="Duration"
+            options={['quick', 'short', 'long', 'extended']}
+            selected={selectedDurations}
+            onToggle={v => toggleList('duration', v, selectedDurations)}
+            renderLabel={v => <span>{DURATION_LABELS[v] ?? v}</span>}
           />
 
           {activeCount > 0 && (
