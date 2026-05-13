@@ -300,6 +300,22 @@ export const profileAPI = {
       { method: 'PUT', body: JSON.stringify(payload) },
       token,
     ),
+
+  uploadResumeFile: async (token: string, file: File): Promise<{ resume_text: string; technical_context: string }> => {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch(`${API_URL}/api/v1/auth/profile/resume/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
+      body: form,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || 'Upload failed');
+    }
+    return res.json();
+  },
 };
 
 export { APIError };
