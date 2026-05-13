@@ -219,7 +219,7 @@ export default function HRLibraryPage() {
   // Load meta once
   useEffect(() => {
     fetch(`${API}/api/library/meta`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(setMeta)
       .catch(console.error);
   }, []);
@@ -235,11 +235,11 @@ export default function HRLibraryPage() {
 
     setLoading(true);
     fetch(`${API}/api/library?${params}`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data: LibraryResponse) => {
-        setProblems(data.problems);
-        setTotal(data.total);
-        setPages(data.pages);
+        setProblems(data.problems || []);
+        setTotal(data.total ?? 0);
+        setPages(data.pages ?? 1);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
