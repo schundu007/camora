@@ -1,6 +1,5 @@
 # syntax=docker/dockerfile:1
-# build-marker: 2026-04-28T22:00:00Z (forces Railway to invalidate stale snapshot
-# after the language-runtime slimdown — drops ~2 GB of rarely-used languages)
+# build-marker: 2026-05-13T00:10:00Z (adds git for bash/git coding problems)
 #
 # Custom Dockerfile (replaces nixpacks.toml). See ascend-backend/Dockerfile
 # for the full rationale — short version: Nixpacks bakes every Railway service
@@ -36,7 +35,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       # Audio + diagnostics
-      ffmpeg curl ca-certificates bash \
+      ffmpeg curl ca-certificates bash git \
       # Always-needed core
       python3 python3-venv \
       ruby \

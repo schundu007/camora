@@ -572,10 +572,22 @@ end
 `;
 }
 
+function buildBashRunner(code, testInput) {
+  const args = testInput
+    .trim()
+    .split('\n')
+    .map(l => l.trim().replace(/^\[/, '').replace(/\]$/, ''))
+    .filter(Boolean);
+
+  const quotedArgs = args.map(a => `'${a.replace(/'/g, `'\\''`)}'`).join(' ');
+  return `#!/bin/bash\nset -- ${quotedArgs}\n${code}`;
+}
+
 const BUILDERS = {
   python: buildPythonRunner,
   javascript: buildJavascriptRunner,
   ruby: buildRubyRunner,
+  bash: buildBashRunner,
 };
 
 // ---------------------------------------------------------------------------
