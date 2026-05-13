@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MicrophoneSelector } from '@/components/lumora/audio/MicrophoneSelector';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { CalibrationButton } from '@/components/lumora/audio/CalibrationButton';
 import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
 import { useInterviewStore } from '@/stores/interview-store';
+import { useAuth } from '@/contexts/AuthContext';
+import { profileAPI } from '@/lib/api-client';
 
 interface LumoraSettingsProps {
   isOpen: boolean;
@@ -24,6 +26,53 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
   const [platform, setPlatform] = useState('general');
   const { voiceMode, setVoiceMode, setAutoEnrollPending, setVoiceFilterEnabled } = useInterviewStore();
   const { selectedDeviceId } = useAudioDevices();
+  const { token } = useAuth();
+
+  const [resumeText, setResumeText] = useState('');
+  const [technicalContext, setTechnicalContext] = useState('');
+  const [resumeSaving, setResumeSaving] = useState(false);
+  const [resumeSaved, setResumeSaved] = useState(false);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load resume & technical context when modal opens
+  useEffect(() => {
+    if (!isOpen || !token) return;
+    profileAPI.getResume(token).then(data => {
+      setResumeText(data.resume_text || '');
+      setTechnicalContext(data.technical_context || '');
+    }).catch(() => {});
+  }, [isOpen, token]);
+
+  const handleResumeSave = async () => {
+    if (!token) return;
+    setResumeSaving(true);
+    setResumeError(null);
+    try {
+      await profileAPI.updateResume(token, {
+        resume_text: resumeText,
+        technical_context: technicalContext,
+      });
+      setResumeSaved(true);
+      setTimeout(() => setResumeSaved(false), 2500);
+    } catch {
+      setResumeError('Failed to save. Try again.');
+    } finally {
+      setResumeSaving(false);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      if (text) setResumeText(text);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   // Close on Escape — without this users had no keyboard escape and the
   // backdrop click was the only way out.
@@ -165,6 +214,78 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                     </p>
                   </div>
                 )}
+              </div>
+            </section>
+
+            {/* ── Resume & Context ── */}
+            <section>
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ fontFamily: "var(--font-sans)", color: 'var(--text-muted)' }}>
+                Resume & Context
+              </h3>
+              <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
+                Sona uses your resume to personalize answers with your real experience. Paste plain text or upload a .txt file.
+              </p>
+
+              <div className="space-y-4">
+                {/* Resume textarea */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold" style={{ color: 'var(--text-secondary)', fontFamily: "var(--font-sans)" }}>
+                      Resume
+                    </label>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-[11px] px-2.5 py-1 rounded-lg transition-colors"
+                      style={{ color: 'var(--cam-primary)', background: 'var(--accent-subtle)', border: '1px solid var(--cam-primary)' }}
+                    >
+                      Upload .txt
+                    </button>
+                    <input ref={fileInputRef} type="file" accept=".txt" className="hidden" onChange={handleFileUpload} />
+                  </div>
+                  <textarea
+                    value={resumeText}
+                    onChange={e => setResumeText(e.target.value)}
+                    placeholder="Paste your resume here (plain text)..."
+                    rows={7}
+                    className="w-full text-xs rounded-xl px-3 py-2.5 resize-none focus:outline-none font-code"
+                    style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)', lineHeight: 1.6 }}
+                  />
+                </div>
+
+                {/* Technical context textarea */}
+                <div>
+                  <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--text-secondary)', fontFamily: "var(--font-sans)" }}>
+                    Technical Context <span className="font-normal" style={{ color: 'var(--text-muted)' }}>(optional)</span>
+                  </label>
+                  <textarea
+                    value={technicalContext}
+                    onChange={e => setTechnicalContext(e.target.value)}
+                    placeholder="e.g. Senior backend engineer, 6 years Python/Go, strong in distributed systems, interviewing for Staff SWE at Google..."
+                    rows={3}
+                    className="w-full text-xs rounded-xl px-3 py-2.5 resize-none focus:outline-none font-code"
+                    style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)', lineHeight: 1.6 }}
+                  />
+                </div>
+
+                {/* Save row */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleResumeSave}
+                    disabled={resumeSaving}
+                    className="px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50 transition-[background-color,opacity]"
+                    style={{ background: 'var(--cam-primary)', color: '#fff' }}
+                  >
+                    {resumeSaving ? 'Saving…' : resumeSaved ? '✓ Saved' : 'Save'}
+                  </button>
+                  {resumeText && (
+                    <span className="text-[11px] font-code" style={{ color: 'var(--text-muted)' }}>
+                      {resumeText.length.toLocaleString()} chars
+                    </span>
+                  )}
+                  {resumeError && (
+                    <span className="text-[11px]" style={{ color: 'var(--error, #ef4444)' }}>{resumeError}</span>
+                  )}
+                </div>
               </div>
             </section>
 
