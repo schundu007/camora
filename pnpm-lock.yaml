@@ -243,6 +243,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.91.1
         version: 0.91.1(zod@4.4.2)
+      '@google/generative-ai':
+        specifier: ^0.24.1
+        version: 0.24.1
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -270,12 +273,18 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.0
         version: 9.0.3
+      mammoth:
+        specifier: ^1.12.0
+        version: 1.12.0
       multer:
         specifier: ^2.1.0
         version: 2.1.1
       openai:
         specifier: ^6.34.0
         version: 6.35.0(ws@8.20.0)(zod@4.4.2)
+      pdf-parse:
+        specifier: ^2.4.0
+        version: 2.4.5
       pg:
         specifier: ^8.11.0
         version: 8.20.0
@@ -1552,6 +1561,10 @@ packages:
 
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@google/generative-ai@0.24.1':
+    resolution: {integrity: sha512-MqO+MLfM6kjxcKoy0p1wRzG3b4ZZXtPI+z2IE26UogS2Cm/XHO+7gGRBh6gcJsOiIVoH93UwKvW4HdgiOZCy9Q==}
+    engines: {node: '>=18.0.0'}
 
   '@hapi/address@5.1.1':
     resolution: {integrity: sha512-A+po2d/dVoY7cYajycYI43ZbYMXukuopIsqCjh5QzsBCipDtdofHntljDlpccMjIfTy6UOkg+5KPriwYch2bXA==}
@@ -9706,6 +9719,8 @@ snapshots:
       tabbable: 6.4.0
 
   '@floating-ui/utils@0.2.11': {}
+
+  '@google/generative-ai@0.24.1': {}
 
   '@hapi/address@5.1.1':
     dependencies:

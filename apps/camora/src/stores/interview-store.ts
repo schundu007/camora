@@ -49,6 +49,7 @@ interface InterviewState {
   // Settings
   useSearch: boolean;
   responseFormat: 'auto' | 'concise' | 'detailed' | 'star';
+  preferredModel: string; // '' = default Claude; 'gpt-4o' / 'gpt-4o-mini' / 'gemini-1.5-flash' etc.
 
   // Voice enrollment
   voiceMode: 'filter-candidate' | 'record-interviewer';
@@ -146,6 +147,7 @@ interface InterviewState {
   clearHistory: () => void;
   setUseSearch: (useSearch: boolean) => void;
   setResponseFormat: (format: 'auto' | 'concise' | 'detailed' | 'star') => void;
+  setPreferredModel: (model: string) => void;
   setVoiceMode: (mode: 'filter-candidate' | 'record-interviewer') => void;
   setVoiceEnrolled: (enrolled: boolean) => void;
   ensureVoiceEnrolledAt: () => void;
@@ -185,6 +187,7 @@ const initialState = {
   history: [],
   useSearch: false,
   responseFormat: 'auto' as const,
+  preferredModel: '',
   voiceMode: 'filter-candidate' as const,
   voiceEnrolled: false,
   voiceEnrolledAt: null as number | null,
@@ -325,6 +328,8 @@ export const useInterviewStore = create<InterviewState>()(
   setLastFromCache: (fromCache) => set({ lastFromCache: fromCache }),
   setLiveSolveContext: (ctx) => set({ liveSolveContext: ctx }),
 
+  setPreferredModel: (preferredModel) => set({ preferredModel }),
+
   reset: () => set(initialState),
     }),
     {
@@ -333,6 +338,7 @@ export const useInterviewStore = create<InterviewState>()(
       partialize: (state) => ({
         useSearch: state.useSearch,
         responseFormat: state.responseFormat,
+        preferredModel: state.preferredModel,
         threshold: state.threshold,
         conversationId: state.conversationId,
         history: state.history,

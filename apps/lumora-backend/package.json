@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",
+    "@google/generative-ai": "^0.24.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.0",
     "dotenv": "^17.4.2",

@@ -14,6 +14,7 @@ import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage, recordUsageCount } from '../middleware/usageLimits.js';
 import { checkDailyFreeLimit } from '../services/quota.js';
 import { streamResponse, MODEL } from '../services/claude.js';
+import { streamResponseAny } from '../services/provider-stream.js';
 import { recordUsage as recordAiHours } from '../services/aiHoursMeter.js';
 import { buildAnswerCacheKey, cacheGet, cacheSet, logCacheEvent } from '../services/answerCache.js';
 import { retrieve, formatRetrievedContext } from '../services/retrieval.js';
@@ -56,7 +57,7 @@ function getQuestionType(answer) {
 // ---------------------------------------------------------------------------
 router.post('/conversations/:conversationId/stream', authenticate, checkUsage('questions'), async (req, res) => {
   const { conversationId } = req.params;
-  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', mode = 'general', design_kind: designKind = null, response_format: responseFormat = null } = req.body;
+  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', mode = 'general', design_kind: designKind = null, response_format: responseFormat = null, model: preferredModel = null } = req.body;
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -158,8 +159,8 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       try { abortController.abort(); } catch {}
     });
 
-    // Stream tokens
-    for await (const evt of streamResponse(question, history, {
+    // Stream tokens — dispatches to Claude/OpenAI/Gemini based on preferredModel prefix
+    for await (const evt of streamResponseAny(question, history, {
       useSearch: effectiveUseSearch,
       resumeContext: user.resume_text || null,
       technicalContext: user.technical_context || null,
@@ -170,6 +171,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       cloudProvider,
       designKind,
       plan: userPlan,
+      model: preferredModel || null,
       signal: abortController.signal,
     })) {
       if (clientDisconnected) break;
@@ -272,7 +274,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 // POST /stream — stream (auto-creates conversation)
 // ---------------------------------------------------------------------------
 router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
-  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null, response_format: responseFormat = null } = req.body;
+  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null, response_format: responseFormat = null, model: preferredModel = null } = req.body;
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -483,10 +485,10 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
     }
 
     // Stream tokens (empty history for new conversation).
-    // Pass abortController.signal so the Anthropic call halts when the
+    // Pass abortController.signal so the upstream call halts when the
     // client disconnects — without this, navigating away mid-answer
     // keeps tokens billing to completion.
-    for await (const evt of streamResponse(question, [], {
+    for await (const evt of streamResponseAny(question, [], {
       useSearch: effectiveUseSearch,
       resumeContext: user.resume_text || null,
       technicalContext: user.technical_context || null,
@@ -497,6 +499,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       cloudProvider,
       designKind,
       plan: userPlan,
+      model: preferredModel || null,
       signal: abortController.signal,
     })) {
       if (clientDisconnected) break;

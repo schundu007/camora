@@ -238,7 +238,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
                   : { color: 'var(--text-muted)', background: 'transparent' }}
                 title={{ auto: 'Auto (default)', concise: 'Concise bullets', detailed: 'Detailed answer', star: 'STAR format' }[fmt]}
               >
-                {fmt === 'auto' ? 'Auto' : fmt === 'concise' ? '⚡' : fmt === 'detailed' ? '📖' : '⭐'}
+                {fmt === 'auto' ? 'Auto' : fmt === 'concise' ? 'Brief' : fmt === 'detailed' ? 'Full' : 'STAR'}
               </button>
             ))}
           </div>

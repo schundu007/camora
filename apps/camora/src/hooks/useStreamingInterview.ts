@@ -37,6 +37,7 @@ export function useStreamingInterview() {
     addHistoryEntry,
     useSearch,
     responseFormat,
+    preferredModel,
     startAnswerTimer,
     stopAnswerTimer,
     isStreaming,
@@ -104,6 +105,7 @@ export function useStreamingInterview() {
         useSearch,
         systemContext: getSystemContext(),
         responseFormat: responseFormat !== 'concise' ? responseFormat : undefined,
+        model: preferredModel || undefined,
         token,
         signal: controller.signal,
         onStreamStart: (data: any) => {
@@ -152,7 +154,7 @@ export function useStreamingInterview() {
       setIsStreaming(false);
       stopAnswerTimer();
     }
-  }, [token, useSearch, responseFormat, resetForNewQuestion, setQuestion, setIsStreaming,
+  }, [token, useSearch, responseFormat, preferredModel, resetForNewQuestion, setQuestion, setIsStreaming,
       setStatus, startAnswerTimer, setIsDesignQuestion, setIsCodingQuestion,
       setConversationId, appendStreamChunk, setParsedBlocks, addHistoryEntry,
       stopAnswerTimer, setError, setActiveCitations]);
