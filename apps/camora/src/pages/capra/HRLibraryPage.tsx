@@ -436,14 +436,26 @@ export default function HRLibraryPage() {
   }
 
   function openProblem(p: Problem) {
-    const parts = [p.name];
+    const parts: string[] = [p.name];
     if (p.question_body?.trim()) {
-      // Full HackerRank question body available — use it directly
       parts.push(p.question_body.trim());
     } else {
-      // Fallback: preview + summary for problems without scraped body
-      if (p.preview?.trim()) parts.push(p.preview.trim());
-      if (p.summary?.trim() && p.summary !== p.preview) parts.push(p.summary.trim());
+      const typeLabel  = TYPE_LABELS[p.type] || p.type;
+      const skillsList = (p.skills_full?.length ? p.skills_full : p.skills).join(', ');
+      const meta: string[] = [];
+      if (p.difficulty)                        meta.push(`Difficulty: ${p.difficulty}`);
+      meta.push(`Type: ${typeLabel}`);
+      if (skillsList)                          meta.push(`Skills: ${skillsList}`);
+      if (p.duration_min != null && p.duration_min > 0) meta.push(`Expected time: ${p.duration_min} mins`);
+      if (meta.length) parts.push(meta.join(' | '));
+
+      if (p.preview?.trim()) {
+        const prev = p.preview.trim();
+        parts.push(prev.length >= 78 ? prev + '…' : prev);
+      }
+      if (p.summary?.trim() && p.summary !== p.preview) {
+        parts.push(`This question assesses: ${p.summary.trim()}`);
+      }
     }
     navigate(`/capra/coding?problem=${encodeURIComponent(parts.join('\n\n'))}&autosolve=0`);
   }
