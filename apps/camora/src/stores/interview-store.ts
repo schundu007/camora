@@ -48,6 +48,7 @@ interface InterviewState {
 
   // Settings
   useSearch: boolean;
+  responseFormat: 'auto' | 'concise' | 'detailed' | 'star';
 
   // Voice enrollment
   voiceMode: 'filter-candidate' | 'record-interviewer';
@@ -144,6 +145,7 @@ interface InterviewState {
   removeHistoryEntry: (index: number) => void;
   clearHistory: () => void;
   setUseSearch: (useSearch: boolean) => void;
+  setResponseFormat: (format: 'auto' | 'concise' | 'detailed' | 'star') => void;
   setVoiceMode: (mode: 'filter-candidate' | 'record-interviewer') => void;
   setVoiceEnrolled: (enrolled: boolean) => void;
   ensureVoiceEnrolledAt: () => void;
@@ -182,6 +184,7 @@ const initialState = {
   answerDuration: 0,
   history: [],
   useSearch: false,
+  responseFormat: 'auto' as const,
   voiceMode: 'filter-candidate' as const,
   voiceEnrolled: false,
   voiceEnrolledAt: null as number | null,
@@ -282,6 +285,7 @@ export const useInterviewStore = create<InterviewState>()(
   clearHistory: () => set({ history: [] }),
 
   setUseSearch: (useSearch) => set({ useSearch }),
+  setResponseFormat: (responseFormat) => set({ responseFormat }),
 
   setVoiceMode: (mode) => set({ voiceMode: mode }),
 
@@ -328,6 +332,7 @@ export const useInterviewStore = create<InterviewState>()(
       version: 2, // bump version to discard old localStorage with stale history
       partialize: (state) => ({
         useSearch: state.useSearch,
+        responseFormat: state.responseFormat,
         threshold: state.threshold,
         conversationId: state.conversationId,
         history: state.history,

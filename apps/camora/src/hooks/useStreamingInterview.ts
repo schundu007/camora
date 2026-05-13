@@ -36,6 +36,7 @@ export function useStreamingInterview() {
     setStatus,
     addHistoryEntry,
     useSearch,
+    responseFormat,
     startAnswerTimer,
     stopAnswerTimer,
     isStreaming,
@@ -85,7 +86,9 @@ export function useStreamingInterview() {
 
     const finalQuestion = forceDesign
       ? `[SYSTEM DESIGN] ${trimmedQuestion}`
-      : trimmedQuestion;
+      : responseFormat === 'concise'
+        ? `[SHORT] ${trimmedQuestion}`
+        : trimmedQuestion;
 
     // Track the event
     const category = forceDesign ? 'system_design' : 'general';
@@ -100,6 +103,7 @@ export function useStreamingInterview() {
         question: finalQuestion,
         useSearch,
         systemContext: getSystemContext(),
+        responseFormat: responseFormat !== 'concise' ? responseFormat : undefined,
         token,
         signal: controller.signal,
         onStreamStart: (data: any) => {
@@ -148,7 +152,7 @@ export function useStreamingInterview() {
       setIsStreaming(false);
       stopAnswerTimer();
     }
-  }, [token, useSearch, resetForNewQuestion, setQuestion, setIsStreaming,
+  }, [token, useSearch, responseFormat, resetForNewQuestion, setQuestion, setIsStreaming,
       setStatus, startAnswerTimer, setIsDesignQuestion, setIsCodingQuestion,
       setConversationId, appendStreamChunk, setParsedBlocks, addHistoryEntry,
       stopAnswerTimer, setError, setActiveCitations]);

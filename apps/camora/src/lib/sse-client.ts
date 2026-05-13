@@ -52,6 +52,7 @@ export interface StreamOptions {
   useSearch?: boolean;
   systemContext?: string;
   detailLevel?: 'basic' | 'full';
+  responseFormat?: 'auto' | 'concise' | 'detailed' | 'star';
   /** Cloud platform the candidate is interviewing for — picked once via
    *  useCloudProvider, sent on every Sona request so design answers name
    *  services for the chosen cloud (Cosmos DB / Firestore / etc.). */
@@ -99,6 +100,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     useSearch = false,
     systemContext,
     detailLevel,
+    responseFormat,
     cloudProvider,
     model,
     bypassCache,
@@ -148,6 +150,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
         use_search: useSearch,
         ...(systemContext ? { system_context: systemContext } : {}),
         ...(detailLevel ? { detail_level: detailLevel } : {}),
+        ...(responseFormat && responseFormat !== 'auto' ? { response_format: responseFormat } : {}),
         ...(cloudProvider ? { cloud_provider: cloudProvider } : {}),
         ...(model ? { model } : {}),
         ...(bypassCache ? { bypass_cache: true } : {}),
