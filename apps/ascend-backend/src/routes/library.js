@@ -27,10 +27,14 @@ async function getLibrary() {
   const data = JSON.parse(raw);
   _cache = data.problems;
 
-  // Build meta — skills sorted by frequency
-  const skillFreq = {};
-  for (const p of _cache) for (const s of p.skills) skillFreq[s] = (skillFreq[s] || 0) + 1;
-  const skills = Object.entries(skillFreq)
+  // Build meta — use skills_full (HackerRank-style labels with level suffixes)
+  const sfFreq = {};
+  for (const p of _cache) {
+    for (const s of (p.skills_full && p.skills_full.length ? p.skills_full : p.skills)) {
+      sfFreq[s] = (sfFreq[s] || 0) + 1;
+    }
+  }
+  const skills = Object.entries(sfFreq)
     .sort((a, b) => b[1] - a[1])
     .map(([s]) => s);
 
@@ -63,8 +67,8 @@ router.get('/meta', async (req, res) => {
  * ?q=search
  * &type=code,mcq
  * &difficulty=Easy,Medium
- * &skills=Python,Java        (multi-skill, comma-separated, match ANY)
- * &duration=quick,short      (quick ≤10m, short 11-30m, long 31-60m, extended >60m)
+ * &skills=Python (Basic),Java (Basic)  (match ANY, against skills_full)
+ * &duration=quick,short                (quick ≤10m, short 11-30m, long 31-60m, extended >60m)
  * &page=1&limit=30
  */
 router.get('/', async (req, res) => {
@@ -87,15 +91,22 @@ router.get('/', async (req, res) => {
         (p.summary && p.summary.toLowerCase().includes(q)) ||
         (p.preview && p.preview.toLowerCase().includes(q)) ||
         p.skills.some(s => s.toLowerCase().includes(q)) ||
+        (p.skills_full || []).some(s => s.toLowerCase().includes(q)) ||
         p.tags.some(t => t.toLowerCase().includes(q))
       );
     }
 
     if (types.length)     filtered = filtered.filter(p => types.includes(p.type));
     if (diffs.length)     filtered = filtered.filter(p => diffs.includes(p.difficulty));
-    if (skills.length)    filtered = filtered.filter(p =>
-      p.skills.some(ps => skills.some(f => ps.toLowerCase().includes(f)))
-    );
+    if (skills.length) {
+      filtered = filtered.filter(p => {
+        const allSkills = [
+          ...(p.skills_full && p.skills_full.length ? p.skills_full : p.skills),
+          ...p.skills,
+        ].map(s => s.toLowerCase());
+        return skills.some(f => allSkills.some(ps => ps.includes(f)));
+      });
+    }
     if (durations.length) filtered = filtered.filter(p =>
       durations.some(d => DURATION_BUCKETS[d]?.(p))
     );

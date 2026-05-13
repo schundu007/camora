@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -13,6 +13,7 @@ interface Problem {
   type: string;
   difficulty: 'Easy' | 'Medium' | 'Hard' | null;
   skills: string[];
+  skills_full: string[];
   tags: string[];
   points: number;
   duration_min: number;
@@ -29,34 +30,27 @@ interface LibraryResponse {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TYPE_LABELS: Record<string, string> = {
-  mcq: 'MCQ',
-  multiple_mcq: 'Multi-MCQ',
-  code: 'Coding',
-  database: 'Database',
-  fullstack: 'Full Stack',
-  coderepo_task: 'Code Repo',
-  sudorank: 'SudoRank',
-  whiteboard: 'Whiteboard',
-  code_review: 'Code Review',
-  prompt_engineering: 'Prompt Eng',
-  approx: 'Approx',
-  complete: 'Completion',
-  design: 'Design',
-  textAns: 'Written',
-  diagram: 'Diagram',
+  mcq:               'MCQ',
+  multiple_mcq:      'Multi-MCQ',
+  code:              'Coding',
+  database:          'Database',
+  fullstack:         'Full Stack',
+  coderepo_task:     'Code Repo',
+  sudorank:          'SudoRank',
+  whiteboard:        'Whiteboard',
+  code_review:       'Code Review',
+  prompt_engineering:'Prompt Eng',
+  approx:            'Approx',
+  complete:          'Completion',
+  design:            'Design',
+  textAns:           'Written',
+  diagram:           'Diagram',
 };
 
-const TYPE_COLORS: Record<string, string> = {
-  code:              '#4d8ce8',
-  database:          '#10b981',
-  fullstack:         '#a78bfa',
-  coderepo_task:     '#60a5fa',
-  mcq:               '#c9a227',
-  multiple_mcq:      '#c9a227',
-  sudorank:          '#f87171',
-  whiteboard:        '#fbbf24',
-  code_review:       '#93c5fd',
-  prompt_engineering:'#c084fc',
+const DIFF_COLOR: Record<string, string> = {
+  Easy:   '#22c55e',
+  Medium: '#f59e0b',
+  Hard:   '#ef4444',
 };
 
 const DIFF_STYLES: Record<string, { color: string; bg: string; border: string }> = {
@@ -66,7 +60,12 @@ const DIFF_STYLES: Record<string, { color: string; bg: string; border: string }>
 };
 
 const PAGE_LIMIT = 30;
-const ALL_TYPES = ['code', 'mcq', 'database', 'fullstack', 'coderepo_task', 'multiple_mcq', 'sudorank', 'whiteboard', 'code_review', 'prompt_engineering'];
+
+const ALL_TYPES = [
+  'code', 'mcq', 'database', 'fullstack', 'coderepo_task',
+  'multiple_mcq', 'sudorank', 'whiteboard', 'code_review', 'prompt_engineering',
+  'approx', 'complete', 'design', 'textAns', 'diagram',
+];
 
 const DURATION_LABELS: Record<string, string> = {
   quick:    'Quick (≤10m)',
@@ -75,15 +74,45 @@ const DURATION_LABELS: Record<string, string> = {
   extended: 'Extended (60m+)',
 };
 
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+function IconSkill() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ flexShrink: 0 }}>
+      <circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function IconCode() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ flexShrink: 0 }}>
+      <polyline points="5,4 1,8 5,12" strokeLinecap="round" strokeLinejoin="round"/>
+      <polyline points="11,4 15,8 11,12" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function IconClock() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ flexShrink: 0 }}>
+      <circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function IconStar() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ flexShrink: 0 }}>
+      <polygon points="8,2 10,6 14,6.5 11,9.5 11.8,14 8,12 4.2,14 5,9.5 2,6.5 6,6"/>
+    </svg>
+  );
+}
+
 // ─── FilterDropdown ───────────────────────────────────────────────────────────
 
 function FilterDropdown({
-  label,
-  options,
-  selected,
-  onToggle,
-  renderLabel,
-  searchable,
+  label, options, selected, onToggle, renderLabel, searchable,
 }: {
   label: string;
   options: string[];
@@ -114,66 +143,64 @@ function FilterDropdown({
       <button
         onClick={() => { setOpen(o => !o); setSearch(''); }}
         style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          padding: '6px 12px',
-          borderRadius: 7,
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: '5px 13px', borderRadius: 20,
           border: `1px solid ${count > 0 ? 'var(--border-focus)' : 'var(--border)'}`,
-          background: count > 0 ? 'rgba(89,133,182,0.12)' : 'var(--bg-surface)',
+          background: count > 0 ? 'rgba(89,133,182,0.12)' : 'var(--bg-elevated)',
           color: count > 0 ? 'var(--text-primary)' : 'var(--text-secondary)',
-          fontSize: 13,
-          fontWeight: 500,
-          cursor: 'pointer',
-          whiteSpace: 'nowrap',
+          fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
         }}
       >
         {label}
         {count > 0 && (
           <span style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 18, height: 18, borderRadius: '50%',
-            background: 'var(--cam-gold-leaf)', color: '#000',
-            fontSize: 10, fontWeight: 700,
+            width: 17, height: 17, borderRadius: '50%',
+            background: 'var(--cam-gold-leaf)', color: '#000', fontSize: 10, fontWeight: 700,
           }}>{count}</span>
         )}
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: open ? 'rotate(180deg)' : 'none', opacity: 0.5 }}>
-          <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
+          style={{ transform: open ? 'rotate(180deg)' : 'none', opacity: 0.5, flexShrink: 0 }}>
+          <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>
 
       {open && (
         <div style={{
-          position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 50,
-          minWidth: 220, background: 'var(--bg-elevated)',
+          position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 60,
+          minWidth: 230, background: 'var(--bg-elevated)',
           border: '1px solid var(--border)', borderRadius: 10,
-          boxShadow: 'var(--shadow-lg)', overflow: 'hidden',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.35)', overflow: 'hidden',
         }}>
           {searchable && (
             <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)' }}>
-              <input
-                autoFocus
-                type="text"
-                placeholder="Search…"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                style={{
-                  width: '100%', padding: '5px 8px', borderRadius: 5,
-                  border: '1px solid var(--border)', background: 'var(--bg-surface)',
-                  color: 'var(--text-primary)', fontSize: 12, outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-              />
+              <div style={{ position: 'relative' }}>
+                <svg style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }}
+                  width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="7" cy="7" r="5"/><path d="M12 12l3 3" strokeLinecap="round"/>
+                </svg>
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder={`Search ${label}…`}
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  style={{
+                    width: '100%', padding: '5px 8px 5px 26px', borderRadius: 6,
+                    border: '1px solid var(--border)', background: 'var(--bg-surface)',
+                    color: 'var(--text-primary)', fontSize: 12, outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+              </div>
             </div>
           )}
-          <div style={{ maxHeight: 240, overflowY: 'auto', padding: '4px 0' }}>
+          <div style={{ maxHeight: 260, overflowY: 'auto', padding: '4px 0' }}>
             {visible.length === 0 ? (
               <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)' }}>No matches</div>
             ) : visible.map(opt => (
               <label key={opt} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
-                padding: '7px 14px', cursor: 'pointer', fontSize: 13,
-                color: 'var(--text-secondary)',
+                padding: '7px 14px', cursor: 'pointer', fontSize: 13, color: 'var(--text-secondary)',
               }}>
                 <input
                   type="checkbox"
@@ -199,12 +226,15 @@ function FilterDropdown({
   );
 }
 
-// ─── Row ─────────────────────────────────────────────────────────────────────
+// ─── ProblemCard — HackerRank card layout ─────────────────────────────────────
 
-function ProblemRow({ problem, index, onClick }: { problem: Problem; index: number; onClick: () => void }) {
+function ProblemCard({ problem, onClick }: { problem: Problem; onClick: () => void }) {
   const [hovered, setHovered] = useState(false);
-  const typeColor = TYPE_COLORS[problem.type] || 'var(--text-muted)';
-  const diffStyle = problem.difficulty ? DIFF_STYLES[problem.difficulty] : null;
+  const displaySkills = problem.skills_full?.length ? problem.skills_full : problem.skills;
+  const firstSkill    = displaySkills[0] ?? null;
+  const typeLabel     = TYPE_LABELS[problem.type] || problem.type;
+  const diffStyle     = problem.difficulty ? DIFF_STYLES[problem.difficulty] : null;
+  const description   = problem.preview?.trim() || problem.summary?.trim() || '';
 
   return (
     <div
@@ -212,81 +242,110 @@ function ProblemRow({ problem, index, onClick }: { problem: Problem; index: numb
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        display: 'grid',
-        gridTemplateColumns: '40px 1fr 90px 90px 56px',
-        alignItems: 'center',
-        padding: '11px 16px',
+        display: 'flex', alignItems: 'flex-start', gap: 16,
+        padding: '16px 0', borderBottom: '1px solid var(--border)',
         cursor: 'pointer',
-        background: hovered ? 'var(--bg-elevated)' : index % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-elevated)',
-        borderBottom: '1px solid var(--border)',
+        background: hovered ? 'rgba(255,255,255,0.015)' : 'transparent',
         transition: 'background 0.1s',
-        gap: 8,
       }}
     >
-      {/* Index */}
-      <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
-        {index + 1}
-      </span>
-
-      {/* Name + skills */}
-      <div style={{ minWidth: 0 }}>
-        <div style={{
-          fontSize: 14, fontWeight: 600, color: hovered ? 'var(--cam-gold-leaf)' : 'var(--text-primary)',
-          transition: 'color 0.1s',
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-          marginBottom: 3,
-        }}>
-          {problem.name}
-        </div>
-        {problem.skills.length > 0 && (
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'nowrap', overflow: 'hidden' }}>
-            {problem.skills.slice(0, 3).map(s => (
-              <span key={s} style={{
-                fontSize: 11, padding: '1px 6px', borderRadius: 3,
-                background: 'rgba(255,255,255,0.06)', color: 'var(--text-muted)',
-                border: '1px solid var(--border)', whiteSpace: 'nowrap',
-              }}>{s}</span>
-            ))}
-            {problem.skills.length > 3 && (
-              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>+{problem.skills.length - 3}</span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Difficulty */}
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        {diffStyle ? (
+      {/* Left: main content */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Line 1: name + type pill + difficulty */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
           <span style={{
-            fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 9999,
-            color: diffStyle.color, background: diffStyle.bg, border: `1px solid ${diffStyle.border}`,
-            whiteSpace: 'nowrap',
+            fontSize: 14, fontWeight: 700,
+            color: hovered ? 'var(--cam-gold-leaf)' : 'var(--text-primary)',
+            transition: 'color 0.12s',
           }}>
-            {problem.difficulty}
+            {problem.name}
           </span>
-        ) : (
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>—</span>
+          {/* Dark pill — like HackerRank's plan badge, we show question type */}
+          <span style={{
+            padding: '2px 9px', borderRadius: 4,
+            background: 'rgba(255,255,255,0.07)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-secondary)',
+            fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
+          }}>
+            {typeLabel}
+          </span>
+          {/* Difficulty as plain colored text — exactly like HackerRank */}
+          {diffStyle && (
+            <span style={{ fontSize: 12, fontWeight: 600, color: diffStyle.color }}>
+              {problem.difficulty}
+            </span>
+          )}
+        </div>
+
+        {/* Line 2: description (2-line clamp) */}
+        {description && (
+          <p style={{
+            margin: '0 0 10px', fontSize: 13, color: 'var(--text-muted)',
+            lineHeight: 1.6,
+            display: '-webkit-box', WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical', overflow: 'hidden',
+          }}>
+            {description}
+          </p>
         )}
+
+        {/* Line 3: metadata icons row — matches HackerRank exactly */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 12, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+          {firstSkill && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <IconSkill /> {firstSkill}
+            </span>
+          )}
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <IconCode /> {typeLabel}
+          </span>
+          {problem.duration_min != null && problem.duration_min > 0 && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <IconClock /> {problem.duration_min} mins
+            </span>
+          )}
+          {problem.points > 0 && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <IconStar /> {problem.points} score
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Type */}
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <span style={{
-          fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 4,
-          color: typeColor,
-          background: `${typeColor}18`,
-          border: `1px solid ${typeColor}40`,
+      {/* Right: Solve button — always visible, like HackerRank's "Upgrade" */}
+      <div style={{ flexShrink: 0, paddingTop: 2 }}>
+        <button style={{
+          padding: '6px 16px', borderRadius: 6,
+          border: `1px solid ${hovered ? 'var(--cam-gold-leaf)' : 'var(--border)'}`,
+          background: hovered ? 'rgba(201,162,39,0.1)' : 'transparent',
+          color: hovered ? 'var(--cam-gold-leaf)' : 'var(--text-muted)',
+          fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
           whiteSpace: 'nowrap',
         }}>
-          {TYPE_LABELS[problem.type] || problem.type}
-        </span>
+          Solve →
+        </button>
       </div>
+    </div>
+  );
+}
 
-      {/* Duration */}
-      <div style={{ textAlign: 'right' }}>
-        <span style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-          {problem.duration_min ? `${problem.duration_min}m` : '—'}
-        </span>
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+function SkeletonCard({ i }: { i: number }) {
+  return (
+    <div style={{ padding: '16px 0', borderBottom: '1px solid var(--border)', opacity: 0.3 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+        <div style={{ width: `${140 + (i % 5) * 30}px`, height: 14, background: 'var(--bg-elevated)', borderRadius: 4 }}/>
+        <div style={{ width: 60, height: 14, background: 'var(--bg-elevated)', borderRadius: 4 }}/>
+        <div style={{ width: 38, height: 14, background: 'var(--bg-elevated)', borderRadius: 4 }}/>
+      </div>
+      <div style={{ width: '72%', height: 12, background: 'var(--bg-elevated)', borderRadius: 4, marginBottom: 5 }}/>
+      <div style={{ width: '52%', height: 12, background: 'var(--bg-elevated)', borderRadius: 4, marginBottom: 10 }}/>
+      <div style={{ display: 'flex', gap: 16 }}>
+        {[90, 60, 55, 58].map((w, j) => (
+          <div key={j} style={{ width: w, height: 11, background: 'var(--bg-elevated)', borderRadius: 4 }}/>
+        ))}
       </div>
     </div>
   );
@@ -298,19 +357,19 @@ export default function HRLibraryPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [pages, setPages] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [metaTotal, setMetaTotal] = useState<number | null>(null);
-  const [metaSkills, setMetaSkills] = useState<string[]>([]);
+  const [problems, setProblems]       = useState<Problem[]>([]);
+  const [total, setTotal]             = useState(0);
+  const [pages, setPages]             = useState(1);
+  const [loading, setLoading]         = useState(false);
+  const [metaTotal, setMetaTotal]     = useState<number | null>(null);
+  const [metaSkills, setMetaSkills]   = useState<string[]>([]);
 
-  const q = searchParams.get('q') || '';
-  const selectedTypes = searchParams.get('type') ? searchParams.get('type')!.split(',') : [];
-  const selectedDiffs = searchParams.get('difficulty') ? searchParams.get('difficulty')!.split(',') : [];
-  const selectedSkills = searchParams.get('skills') ? searchParams.get('skills')!.split(',') : [];
-  const selectedDurations = searchParams.get('duration') ? searchParams.get('duration')!.split(',') : [];
-  const page = parseInt(searchParams.get('page') || '1');
+  const q              = searchParams.get('q')          || '';
+  const selectedTypes  = searchParams.get('type')       ? searchParams.get('type')!.split(',')       : [];
+  const selectedDiffs  = searchParams.get('difficulty') ? searchParams.get('difficulty')!.split(',') : [];
+  const selectedSkills = searchParams.get('skills')     ? searchParams.get('skills')!.split(',')     : [];
+  const selectedDurs   = searchParams.get('duration')   ? searchParams.get('duration')!.split(',')   : [];
+  const page           = parseInt(searchParams.get('page') || '1');
 
   const [searchInput, setSearchInput] = useState(q);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -318,21 +377,18 @@ export default function HRLibraryPage() {
   useEffect(() => {
     fetch(`${API}/api/library/meta`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(d => {
-        setMetaTotal(d.total ?? null);
-        setMetaSkills(d.skills ?? []);
-      })
+      .then(d => { setMetaTotal(d.total ?? null); setMetaSkills(d.skills ?? []); })
       .catch(() => {});
   }, []);
 
   useEffect(() => {
     const params = new URLSearchParams();
-    if (q) params.set('q', q);
-    if (selectedTypes.length) params.set('type', selectedTypes.join(','));
-    if (selectedDiffs.length) params.set('difficulty', selectedDiffs.join(','));
-    if (selectedSkills.length) params.set('skills', selectedSkills.join(','));
-    if (selectedDurations.length) params.set('duration', selectedDurations.join(','));
-    params.set('page', String(page));
+    if (q)                     params.set('q',          q);
+    if (selectedTypes.length)  params.set('type',       selectedTypes.join(','));
+    if (selectedDiffs.length)  params.set('difficulty', selectedDiffs.join(','));
+    if (selectedSkills.length) params.set('skills',     selectedSkills.join(','));
+    if (selectedDurs.length)   params.set('duration',   selectedDurs.join(','));
+    params.set('page',  String(page));
     params.set('limit', String(PAGE_LIMIT));
 
     setLoading(true);
@@ -345,7 +401,7 @@ export default function HRLibraryPage() {
       })
       .catch(() => { setProblems([]); setTotal(0); })
       .finally(() => setLoading(false));
-  }, [q, selectedTypes.join(','), selectedDiffs.join(','), selectedSkills.join(','), selectedDurations.join(','), page]);
+  }, [q, selectedTypes.join(','), selectedDiffs.join(','), selectedSkills.join(','), selectedDurs.join(','), page]);
 
   function updateParam(key: string, value: string | null) {
     setSearchParams(prev => {
@@ -370,187 +426,161 @@ export default function HRLibraryPage() {
 
   function openProblem(p: Problem) {
     const parts = [p.name];
-    if (p.preview && p.preview.trim()) parts.push(p.preview.trim());
-    if (p.summary && p.summary.trim() && p.summary !== p.preview) parts.push(p.summary.trim());
+    if (p.preview?.trim()) parts.push(p.preview.trim());
+    if (p.summary?.trim() && p.summary !== p.preview) parts.push(p.summary.trim());
     navigate(`/capra/coding?problem=${encodeURIComponent(parts.join('\n\n'))}&autosolve=0`);
   }
 
-  const activeCount = selectedTypes.length + selectedDiffs.length + selectedSkills.length + selectedDurations.length + (q ? 1 : 0);
+  const activeCount = selectedTypes.length + selectedDiffs.length + selectedSkills.length + selectedDurs.length + (q ? 1 : 0);
 
   return (
     <div style={{ background: 'var(--bg-app)', minHeight: '100%', color: 'var(--text-primary)' }}>
-      {/* Page header */}
-      <div style={{ padding: '24px 28px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 4 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Problem Library</h1>
-          {metaTotal !== null && (
-            <span style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-              {metaTotal.toLocaleString()} problems
-            </span>
-          )}
-        </div>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 20px' }}>
-          HackerRank assessment library — MCQ, coding, database, full-stack &amp; more
-        </p>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 28px 56px' }}>
 
-        {/* Filter bar */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 }}>
-          {/* Search */}
-          <div style={{ position: 'relative', flex: '0 0 240px' }}>
-            <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', opacity: 0.35 }}
-              width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="7" cy="7" r="5" /><path d="M12 12l3 3" strokeLinecap="round"/>
-            </svg>
-            <input
-              type="text"
-              placeholder="Search problems…"
-              value={searchInput}
-              onChange={e => handleSearch(e.target.value)}
-              style={{
-                width: '100%', paddingLeft: 30, paddingRight: 10, paddingTop: 6, paddingBottom: 6,
-                background: 'var(--bg-surface)', border: '1px solid var(--border)',
-                borderRadius: 7, fontSize: 13, color: 'var(--text-primary)', outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
+        {/* ── Page title ───────────────────────────────────────────────── */}
+        <h1 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 22px', letterSpacing: '-0.3px' }}>
+          Problem Library
+        </h1>
 
-          {/* Difficulty */}
-          <FilterDropdown
-            label="Difficulty"
-            options={['Easy', 'Medium', 'Hard']}
-            selected={selectedDiffs}
-            onToggle={v => toggleList('difficulty', v, selectedDiffs)}
-            renderLabel={v => {
-              const s = DIFF_STYLES[v];
-              return <span style={{ color: s?.color ?? 'inherit', fontWeight: 600 }}>{v}</span>;
+        {/* ── Full-width search bar ─────────────────────────────────────── */}
+        <div style={{ position: 'relative', marginBottom: 14 }}>
+          <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }}
+            width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="7" cy="7" r="5"/><path d="M12 12l3 3" strokeLinecap="round"/>
+          </svg>
+          <input
+            type="text"
+            placeholder="Search problems…"
+            value={searchInput}
+            onChange={e => handleSearch(e.target.value)}
+            style={{
+              width: '100%', paddingLeft: 40, paddingRight: 16, paddingTop: 10, paddingBottom: 10,
+              background: 'var(--bg-surface)', border: '1px solid var(--border)',
+              borderRadius: 8, fontSize: 14, color: 'var(--text-primary)', outline: 'none',
+              boxSizing: 'border-box', transition: 'border-color 0.15s',
             }}
+            onFocus={e => { e.currentTarget.style.borderColor = 'var(--border-focus)'; }}
+            onBlur={e  => { e.currentTarget.style.borderColor = 'var(--border)'; }}
           />
+        </div>
 
-          {/* Type */}
-          <FilterDropdown
-            label="Type"
-            options={ALL_TYPES}
-            selected={selectedTypes}
-            onToggle={v => toggleList('type', v, selectedTypes)}
-            renderLabel={v => (
-              <span style={{ color: TYPE_COLORS[v] || 'var(--text-secondary)', fontWeight: 600 }}>
-                {TYPE_LABELS[v] || v}
-              </span>
+        {/* ── Filter row: pills left, count+sort right ──────────────────── */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: 8, marginBottom: 4, flexWrap: 'wrap',
+        }}>
+          {/* Filter pills */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            {metaSkills.length > 0 && (
+              <FilterDropdown
+                label="Skill" options={metaSkills} selected={selectedSkills}
+                onToggle={v => toggleList('skills', v, selectedSkills)} searchable
+              />
             )}
-          />
-
-          {/* Skills */}
-          {metaSkills.length > 0 && (
             <FilterDropdown
-              label="Skills"
-              options={metaSkills}
-              selected={selectedSkills}
-              onToggle={v => toggleList('skills', v, selectedSkills)}
-              searchable
+              label="Type" options={ALL_TYPES} selected={selectedTypes}
+              onToggle={v => toggleList('type', v, selectedTypes)}
+              renderLabel={v => <span style={{ fontWeight: 500 }}>{TYPE_LABELS[v] || v}</span>}
             />
-          )}
-
-          {/* Duration */}
-          <FilterDropdown
-            label="Duration"
-            options={['quick', 'short', 'long', 'extended']}
-            selected={selectedDurations}
-            onToggle={v => toggleList('duration', v, selectedDurations)}
-            renderLabel={v => <span>{DURATION_LABELS[v] ?? v}</span>}
-          />
-
-          {activeCount > 0 && (
-            <button onClick={() => { setSearchInput(''); setSearchParams({}); }} style={{
-              fontSize: 12, color: 'var(--text-muted)', background: 'none',
-              border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: '4px 0',
-            }}>
-              Clear ({activeCount})
-            </button>
-          )}
-
-          <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>
-            {loading ? 'Loading…' : `${total.toLocaleString()} result${total !== 1 ? 's' : ''}`}
-          </span>
-        </div>
-      </div>
-
-      {/* Table header */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '40px 1fr 90px 90px 56px',
-        gap: 8,
-        padding: '7px 16px',
-        borderTop: '1px solid var(--border)',
-        borderBottom: '1px solid var(--border)',
-        background: 'var(--bg-base)',
-      }}>
-        {['#', 'Problem', 'Difficulty', 'Type', 'Time'].map((h, i) => (
-          <span key={h} style={{
-            fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
-            textTransform: 'uppercase', letterSpacing: '0.06em',
-            textAlign: i === 0 ? 'center' : i >= 2 ? 'center' : 'left',
-          }}>{h}</span>
-        ))}
-      </div>
-
-      {/* Rows */}
-      <div>
-        {loading ? (
-          Array.from({ length: PAGE_LIMIT }).map((_, i) => (
-            <div key={i} style={{
-              height: 52, borderBottom: '1px solid var(--border)',
-              background: i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-elevated)',
-              opacity: 0.4,
-            }} />
-          ))
-        ) : problems.length === 0 ? (
-          <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>No problems found</div>
-            <div style={{ fontSize: 13 }}>Try adjusting your search or filters</div>
+            <FilterDropdown
+              label="Difficulty" options={['Easy', 'Medium', 'Hard']} selected={selectedDiffs}
+              onToggle={v => toggleList('difficulty', v, selectedDiffs)}
+              renderLabel={v => <span style={{ color: DIFF_COLOR[v] ?? 'inherit', fontWeight: 600 }}>{v}</span>}
+            />
+            <FilterDropdown
+              label="Duration" options={['quick', 'short', 'long', 'extended']} selected={selectedDurs}
+              onToggle={v => toggleList('duration', v, selectedDurs)}
+              renderLabel={v => <span>{DURATION_LABELS[v] ?? v}</span>}
+            />
+            {activeCount > 0 && (
+              <button
+                onClick={() => { setSearchInput(''); setSearchParams({}); }}
+                title="Clear all filters"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 30, height: 30, borderRadius: '50%',
+                  border: '1px solid var(--border)', background: 'var(--bg-elevated)',
+                  color: 'var(--text-muted)', cursor: 'pointer',
+                }}
+              >
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                  <line x1="1" y1="1" x2="11" y2="11"/><line x1="11" y1="1" x2="1" y2="11"/>
+                </svg>
+              </button>
+            )}
           </div>
-        ) : (
-          problems.map((p, i) => (
-            <ProblemRow
-              key={p.id}
-              problem={p}
-              index={(page - 1) * PAGE_LIMIT + i}
-              onClick={() => openProblem(p)}
-            />
-          ))
-        )}
-      </div>
 
-      {/* Pagination */}
-      {pages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, padding: '20px 0 32px', flexWrap: 'wrap' }}>
-          <button disabled={page <= 1} onClick={() => updateParam('page', String(page - 1))}
-            style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--border)',
-              background: 'var(--bg-surface)', color: page <= 1 ? 'var(--text-muted)' : 'var(--text-primary)',
-              cursor: page <= 1 ? 'not-allowed' : 'pointer', fontSize: 13 }}>
-            ← Prev
-          </button>
-          {(() => {
-            const start = Math.max(1, page - 3);
-            const end = Math.min(pages, start + 6);
-            return Array.from({ length: end - start + 1 }, (_, i) => start + i).map(p2 => (
-              <button key={p2} onClick={() => updateParam('page', String(p2))} style={{
-                padding: '5px 10px', borderRadius: 6,
-                border: `1px solid ${p2 === page ? 'var(--border-focus)' : 'var(--border)'}`,
-                background: p2 === page ? 'rgba(89,133,182,0.15)' : 'var(--bg-surface)',
-                color: p2 === page ? 'var(--text-primary)' : 'var(--text-muted)',
-                cursor: 'pointer', fontSize: 13, fontWeight: p2 === page ? 700 : 400,
-              }}>{p2}</button>
-            ));
-          })()}
-          <button disabled={page >= pages} onClick={() => updateParam('page', String(page + 1))}
-            style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--border)',
-              background: 'var(--bg-surface)', color: page >= pages ? 'var(--text-muted)' : 'var(--text-primary)',
-              cursor: page >= pages ? 'not-allowed' : 'pointer', fontSize: 13 }}>
-            Next →
-          </button>
+          {/* Right: question count | sort */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+            {loading ? (
+              <span>Loading…</span>
+            ) : (
+              <>
+                <span>
+                  <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{total.toLocaleString()}</strong>
+                  {' '}Question{total !== 1 ? 's' : ''}
+                  {metaTotal !== null && total !== metaTotal && (
+                    <span> of {metaTotal.toLocaleString()}</span>
+                  )}
+                </span>
+                <span style={{ opacity: 0.3 }}>|</span>
+                <span>Sort by <strong style={{ color: 'var(--text-secondary)' }}>Relevance</strong></span>
+              </>
+            )}
+          </div>
         </div>
-      )}
+
+        {/* ── Divider before list ───────────────────────────────────────── */}
+        <div style={{ borderTop: '1px solid var(--border)', marginTop: 16, marginBottom: 0 }}/>
+
+        {/* ── Problem list ─────────────────────────────────────────────── */}
+        <div>
+          {loading ? (
+            Array.from({ length: PAGE_LIMIT }).map((_, i) => <SkeletonCard key={i} i={i} />)
+          ) : problems.length === 0 ? (
+            <div style={{ padding: '70px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>No problems found</div>
+              <div style={{ fontSize: 13 }}>Try adjusting your search or filters</div>
+            </div>
+          ) : (
+            problems.map(p => (
+              <ProblemCard key={p.id} problem={p} onClick={() => openProblem(p)} />
+            ))
+          )}
+        </div>
+
+        {/* ── Pagination ───────────────────────────────────────────────── */}
+        {pages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 6, paddingTop: 28, flexWrap: 'wrap' }}>
+            <button disabled={page <= 1} onClick={() => updateParam('page', String(page - 1))}
+              style={{ padding: '5px 14px', borderRadius: 6, border: '1px solid var(--border)',
+                background: 'var(--bg-surface)', color: page <= 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                cursor: page <= 1 ? 'not-allowed' : 'pointer', fontSize: 13 }}>
+              ← Prev
+            </button>
+            {(() => {
+              const start = Math.max(1, page - 3);
+              const end   = Math.min(pages, start + 6);
+              return Array.from({ length: end - start + 1 }, (_, i) => start + i).map(p2 => (
+                <button key={p2} onClick={() => updateParam('page', String(p2))} style={{
+                  padding: '5px 10px', borderRadius: 6,
+                  border: `1px solid ${p2 === page ? 'var(--border-focus)' : 'var(--border)'}`,
+                  background: p2 === page ? 'rgba(89,133,182,0.15)' : 'var(--bg-surface)',
+                  color: p2 === page ? 'var(--text-primary)' : 'var(--text-muted)',
+                  cursor: 'pointer', fontSize: 13, fontWeight: p2 === page ? 700 : 400,
+                }}>{p2}</button>
+              ));
+            })()}
+            <button disabled={page >= pages} onClick={() => updateParam('page', String(page + 1))}
+              style={{ padding: '5px 14px', borderRadius: 6, border: '1px solid var(--border)',
+                background: 'var(--bg-surface)', color: page >= pages ? 'var(--text-muted)' : 'var(--text-primary)',
+                cursor: page >= pages ? 'not-allowed' : 'pointer', fontSize: 13 }}>
+              Next →
+            </button>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
