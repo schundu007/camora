@@ -180,33 +180,35 @@ export default function DevopsChallengeDetail({ challenge, onBack }) {
         <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>
           {challenge.score} pts
         </span>
-        <a
-          href={challenge.hackerrankUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 5,
-            marginLeft: 4,
-            padding: '5px 14px',
-            borderRadius: 8,
-            fontSize: 13,
-            fontWeight: 600,
-            color: '#fff',
-            background: '#00EA64',
-            textDecoration: 'none',
-            transition: 'opacity 0.15s',
-            flexShrink: 0,
-          }}
-          onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-        >
-          Practice on HackerRank
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M2.5 10.5L10.5 2.5M10.5 2.5H5M10.5 2.5V8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </a>
+        {challenge.hackerrankUrl && (
+          <a
+            href={challenge.hackerrankUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              marginLeft: 4,
+              padding: '5px 14px',
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#fff',
+              background: '#00EA64',
+              textDecoration: 'none',
+              transition: 'opacity 0.15s',
+              flexShrink: 0,
+            }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+          >
+            Practice on HackerRank
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M2.5 10.5L10.5 2.5M10.5 2.5H5M10.5 2.5V8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </a>
+        )}
       </div>
 
       <SectionDivider />
