@@ -142,6 +142,13 @@ const icons = {
       <path d="M4 2l4 4-4 4" />
     </svg>
   ),
+  library: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="2" width="3" height="12" rx="1" />
+      <rect x="6" y="2" width="3" height="12" rx="1" />
+      <path d="M11 2l3 11.5" />
+    </svg>
+  ),
 };
 
 /* ─── Navigation sections ────────────────────────────────────── */
@@ -172,6 +179,7 @@ const sections: NavSection[] = [
     title: 'Practice',
     items: [
       { label: 'Practice', path: '/capra/practice', icon: icons.play },
+      { label: 'Problem Library', path: '/capra/library', icon: icons.library },
       { label: 'Blind 75', path: '/handbook', icon: icons.star },
       { label: 'Achievements', path: '/profile?tab=achievements', icon: icons.trophy },
     ],

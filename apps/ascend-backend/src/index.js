@@ -43,6 +43,7 @@ import interviewCountdownRouter from './routes/interviewCountdown.js';
 import gamificationRouter from './routes/gamification.js';
 import scoreCardsRouter from './routes/scoreCards.js';
 import challengeRouter from './routes/challenge.js';
+import libraryRouter from './routes/library.js';
 // Jobs router copied from lumora-backend so the lumorab.cariara.com service
 // (which currently runs ascend code) can answer /api/v1/jobs requests from
 // the frontend's /jobs page. Falls back to 503 if JOBS_DATABASE_URL is unset.
@@ -1170,6 +1171,7 @@ app.use('/api/gamification', apiLimiter, gamificationRouter);
 // Score cards, certificates, public profiles
 app.use('/api/score-cards', apiLimiter, scoreCardsRouter);
 app.use('/api/challenge', apiLimiter, challengeRouter);
+app.use('/api/library', apiLimiter, libraryRouter);
 
 // Job URL analysis (scrape + AI analysis) — auth required, AI rate limit
 app.use('/api/job-analyze', authenticate, aiLimiter, jobAnalyzeRouter);
