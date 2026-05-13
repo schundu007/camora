@@ -56,6 +56,7 @@ function parseQuestion(raw: string): ParsedQuestion {
 
 async function streamExplanation(
   prompt: string,
+  questionName: string,
   token: string | null,
   onChunk: (text: string) => void,
   onDone: () => void,
@@ -63,14 +64,14 @@ async function streamExplanation(
   abortSignal: AbortSignal
 ) {
   try {
-    const res = await fetch(`${CAPRA_API}/api/solve/stream`, {
+    const res = await fetch(`${CAPRA_API}/api/solve/followup`, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ problem: prompt, language: 'text' }),
+      body: JSON.stringify({ question: prompt, problem: questionName }),
       signal: abortSignal,
     });
 
@@ -172,7 +173,7 @@ export default function MCQPage() {
     ].join('\n');
 
     streamExplanation(
-      prompt, token,
+      prompt, parsed.name, token,
       (chunk) => setExplanation(prev => prev + chunk),
       ()      => setStreaming(false),
       (msg)   => { setError(msg); setStreaming(false); },
