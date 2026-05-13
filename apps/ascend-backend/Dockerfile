@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# build-marker: 2026-04-26T18:00:00Z (forces Railway to invalidate stale Nixpacks snapshot)
+# build-marker: 2026-05-12T23:59:00Z (forces Railway to invalidate stale Nixpacks snapshot)
 # Custom Dockerfile (replaces nixpacks.toml). Reason: Nixpacks bakes every
 # Railway service variable into the image as ARG/ENV — including JWT_SECRET,
 # STRIPE_SECRET_KEY, OPENAI_API_KEY, etc. — which lands those values in the
@@ -21,6 +21,7 @@ RUN apt-get update \
       ca-certificates curl bash \
       python3 python3-venv \
       graphviz \
+      git \
       gcc \
       golang \
       rustc cargo \
