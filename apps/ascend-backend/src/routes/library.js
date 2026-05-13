@@ -102,11 +102,59 @@ async function getLibrary() {
 
 getLibrary().catch(err => console.error('[library] Failed to load hr_library.json:', err.message));
 
-/** GET /api/library/meta */
+/** GET /api/library/meta — accepts filter params to narrow options for cascading dropdowns */
 router.get('/meta', async (req, res) => {
   try {
-    await getLibrary();
-    res.json(_meta);
+    const problems = await getLibrary();
+
+    const q         = (req.query.q         || '').trim().toLowerCase();
+    const rolesF    = req.query.role       ? req.query.role.split(',').map(r => r.trim())                : [];
+    const types     = req.query.type       ? req.query.type.split(',').map(t => t.trim())                : [];
+    const diffs     = req.query.difficulty ? req.query.difficulty.split(',').map(d => d.trim())          : [];
+    const skills    = req.query.skills     ? req.query.skills.split(',').map(s => s.trim().toLowerCase()): [];
+    const durations = req.query.duration   ? req.query.duration.split(',').map(d => d.trim())            : [];
+
+    const hasFilters = q || rolesF.length || types.length || diffs.length || skills.length || durations.length;
+    if (!hasFilters) return res.json(_meta);
+
+    let filtered = problems;
+    if (q) filtered = filtered.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      (p.summary  && p.summary.toLowerCase().includes(q)) ||
+      (p.preview  && p.preview.toLowerCase().includes(q)) ||
+      p.skills.some(s => s.toLowerCase().includes(q)) ||
+      (p.skills_full || []).some(s => s.toLowerCase().includes(q)) ||
+      p.tags.some(t => t.toLowerCase().includes(q))
+    );
+    if (rolesF.length)    filtered = filtered.filter(p => rolesF.some(r => p._roles.includes(r)));
+    if (types.length)     filtered = filtered.filter(p => types.includes(p.type));
+    if (diffs.length)     filtered = filtered.filter(p => diffs.includes(p.difficulty));
+    if (skills.length)    filtered = filtered.filter(p => {
+      const all = [...(p.skills_full?.length ? p.skills_full : p.skills), ...p.skills].map(s => s.toLowerCase());
+      return skills.some(f => all.some(ps => ps.includes(f)));
+    });
+    if (durations.length) filtered = filtered.filter(p => durations.some(d => DURATION_BUCKETS[d]?.(p)));
+
+    const sfFreq = {};
+    for (const p of filtered)
+      for (const s of (p.skills_full?.length ? p.skills_full : p.skills))
+        sfFreq[s] = (sfFreq[s] || 0) + 1;
+    const filteredSkills = Object.entries(sfFreq).sort((a, b) => b[1] - a[1]).map(([s]) => s);
+
+    const roleFreq = {};
+    for (const p of filtered) for (const r of p._roles) roleFreq[r] = (roleFreq[r] || 0) + 1;
+    const filteredRoles = Object.entries(roleFreq).sort((a, b) => b[1] - a[1]).map(([r]) => r);
+
+    const filteredTypes = [...new Set(filtered.map(p => p.type).filter(Boolean))].sort();
+
+    res.json({
+      skills:       filteredSkills,
+      roles:        filteredRoles,
+      types:        filteredTypes,
+      difficulties: ['Easy', 'Medium', 'Hard'],
+      durations:    ['quick', 'short', 'long', 'extended'],
+      total:        filtered.length,
+    });
   } catch (err) {
     console.error('[library] meta error:', err.message);
     res.status(500).json({ error: 'Failed to load library metadata' });
