@@ -62,16 +62,32 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target?.result as string;
-      if (text) setResumeText(text);
-    };
-    reader.readAsText(file);
+    if (!file || !token) return;
     e.target.value = '';
+
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === 'txt') {
+      // Read plain text client-side
+      const text = await file.text();
+      if (text) setResumeText(text);
+      return;
+    }
+
+    // PDF / DOCX — send to backend for extraction
+    setResumeSaving(true);
+    setResumeError(null);
+    try {
+      const data = await profileAPI.uploadResumeFile(token, file);
+      setResumeText(data.resume_text);
+      setResumeSaved(true);
+      setTimeout(() => setResumeSaved(false), 2500);
+    } catch (err: any) {
+      setResumeError(err.message || 'Failed to parse file');
+    } finally {
+      setResumeSaving(false);
+    }
   };
 
   // Close on Escape — without this users had no keyboard escape and the
@@ -235,12 +251,13 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                     </label>
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="text-[11px] px-2.5 py-1 rounded-lg transition-colors"
+                      disabled={resumeSaving}
+                      className="text-[11px] px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
                       style={{ color: 'var(--cam-primary)', background: 'var(--accent-subtle)', border: '1px solid var(--cam-primary)' }}
                     >
-                      Upload .txt
+                      {resumeSaving ? 'Parsing…' : 'Upload file'}
                     </button>
-                    <input ref={fileInputRef} type="file" accept=".txt" className="hidden" onChange={handleFileUpload} />
+                    <input ref={fileInputRef} type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={handleFileUpload} />
                   </div>
                   <textarea
                     value={resumeText}

@@ -12,9 +12,25 @@
  *   PUT    /profile        — update bio / social links
  */
 import { Router } from 'express';
+import multer from 'multer';
+import path from 'path';
+import pdfParse from 'pdf-parse';
+import mammoth from 'mammoth';
 import { createToken } from '../lib/shared-auth.js';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
+
+const resumeUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter(_req, file, cb) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!['.txt', '.pdf', '.docx'].includes(ext)) {
+      return cb(new Error(`Unsupported file type: ${ext}. Allowed: .txt, .pdf, .docx`));
+    }
+    cb(null, true);
+  },
+});
 
 const router = Router();
 
@@ -189,6 +205,41 @@ router.put('/profile/resume', authenticate, async (req, res) => {
   } catch (err) {
     console.error('PUT /profile/resume error:', err);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /profile/resume/upload — upload .txt/.pdf/.docx, extract text, save
+// ---------------------------------------------------------------------------
+router.post('/profile/resume/upload', authenticate, resumeUpload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    let resumeText = '';
+
+    if (ext === '.txt') {
+      resumeText = req.file.buffer.toString('utf-8');
+    } else if (ext === '.pdf') {
+      const data = await pdfParse(req.file.buffer);
+      resumeText = data.text;
+    } else if (ext === '.docx') {
+      const result = await mammoth.extractRawText({ buffer: req.file.buffer });
+      resumeText = result.value;
+    }
+
+    resumeText = resumeText.trim();
+    if (!resumeText) return res.status(422).json({ error: 'Could not extract text from file' });
+
+    const result = await query(
+      `UPDATE users SET resume_text = $1 WHERE id = $2 RETURNING resume_text, technical_context`,
+      [resumeText, req.user.id],
+    );
+    const user = result.rows[0];
+    return res.json({ resume_text: user.resume_text || '', technical_context: user.technical_context || '' });
+  } catch (err) {
+    console.error('POST /profile/resume/upload error:', err);
+    return res.status(500).json({ error: 'Failed to parse file' });
   }
 });
 
