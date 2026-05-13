@@ -24,7 +24,7 @@ const PLATFORMS = [
 
 export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
   const [platform, setPlatform] = useState('general');
-  const { voiceMode, setVoiceMode, setAutoEnrollPending, setVoiceFilterEnabled } = useInterviewStore();
+  const { voiceMode, setVoiceMode, setAutoEnrollPending, setVoiceFilterEnabled, preferredModel, setPreferredModel } = useInterviewStore();
   const { selectedDeviceId } = useAudioDevices();
   const { token } = useAuth();
 
@@ -303,6 +303,45 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
                     <span className="text-[11px]" style={{ color: 'var(--error, #ef4444)' }}>{resumeError}</span>
                   )}
                 </div>
+              </div>
+            </section>
+
+            {/* ── AI Model ── */}
+            <section>
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ fontFamily: "var(--font-sans)", color: 'var(--text-muted)' }}>
+                AI Model
+              </h3>
+              <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
+                Choose which AI powers Sona. Claude is default; GPT-4o and Gemini are alternatives.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {([
+                  { id: '', label: 'Claude (Default)', sub: 'Sonnet 4.6 · Anthropic' },
+                  { id: 'gpt-4o', label: 'GPT-4o', sub: 'OpenAI · Flagship' },
+                  { id: 'gpt-4o-mini', label: 'GPT-4o Mini', sub: 'OpenAI · Fast & cheap' },
+                  { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', sub: 'Google · Fastest' },
+                ] as { id: string; label: string; sub: string }[]).map(m => (
+                  <button
+                    key={m.id}
+                    onClick={() => setPreferredModel(m.id)}
+                    className="p-4 rounded-xl text-left transition-[background-color,border-color]"
+                    style={{
+                      background: preferredModel === m.id ? 'var(--accent-subtle)' : 'var(--bg-surface)',
+                      border: preferredModel === m.id ? '2px solid var(--cam-primary)' : '1.5px solid var(--border)',
+                    }}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <div className="mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0"
+                        style={{ borderColor: preferredModel === m.id ? 'var(--cam-primary)' : 'var(--text-dimmed)' }}>
+                        {preferredModel === m.id && <div className="w-2 h-2 rounded-full" style={{ background: 'var(--cam-primary)' }} />}
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>{m.label}</div>
+                        <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{m.sub}</div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
               </div>
             </section>
 
