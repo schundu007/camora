@@ -448,7 +448,6 @@ export default function HRLibraryPage() {
       if (skillsList)                          meta.push(`Skills: ${skillsList}`);
       if (p.duration_min != null && p.duration_min > 0) meta.push(`Expected time: ${p.duration_min} mins`);
       if (meta.length) parts.push(meta.join(' | '));
-
       if (p.preview?.trim()) {
         const prev = p.preview.trim();
         parts.push(prev.length >= 78 ? prev + '…' : prev);
@@ -457,7 +456,24 @@ export default function HRLibraryPage() {
         parts.push(`This question assesses: ${p.summary.trim()}`);
       }
     }
-    navigate(`/capra/coding?problem=${encodeURIComponent(parts.join('\n\n'))}&autosolve=0`);
+
+    const encoded = encodeURIComponent(parts.join('\n\n'));
+
+    const isMCQ    = p.type === 'mcq' || p.type === 'multiple_mcq' || p.type === 'textAns';
+    const isDesign = p.type === 'design' || p.type === 'whiteboard' || p.type === 'diagram';
+
+    if (isMCQ) {
+      const metaJson = encodeURIComponent(JSON.stringify({
+        type: p.type,
+        difficulty: p.difficulty,
+        skills: p.skills_full?.length ? p.skills_full : p.skills,
+      }));
+      navigate(`/capra/quiz?problem=${encoded}&meta=${metaJson}`);
+    } else if (isDesign) {
+      navigate(`/capra/design?problem=${encoded}&autosolve=0`);
+    } else {
+      navigate(`/capra/coding?problem=${encoded}&autosolve=0`);
+    }
   }
 
   const activeCount = selectedRoles.length + selectedTypes.length + selectedDiffs.length +
