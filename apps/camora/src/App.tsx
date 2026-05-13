@@ -25,6 +25,7 @@ const CapraOnboarding = lazy(() => import('./pages/capra/OnboardingPage'));
 const CapraLanding = lazy(() => import('./pages/capra/CapraLandingPage'));
 const PrepPlanPage = lazy(() => import('./pages/capra/PrepPlanPage'));
 const HRLibraryPage = lazy(() => import('./pages/capra/HRLibraryPage'));
+const MCQPage       = lazy(() => import('./pages/capra/MCQPage'));
 const JobsPage = lazy(() => import('./pages/JobsPage'));
 const JobPrepPage = lazy(() => import('./pages/JobPrepPage'));
 const SignupPage = lazy(() => import('./pages/SignupPage'));
@@ -374,6 +375,7 @@ export function App() {
           <Route path="/capra/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />
           <Route path="/capra/plan" element={<ShellRoute><PrepPlanPage /></ShellRoute>} />
           <Route path="/capra/library" element={<ShellRoute><HRLibraryPage /></ShellRoute>} />
+          <Route path="/capra/quiz"    element={<ShellRoute><MCQPage /></ShellRoute>} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
           <Route path="/capra/achievements" element={<Navigate to="/profile?tab=achievements" replace />} />
