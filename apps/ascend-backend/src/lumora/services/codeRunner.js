@@ -562,10 +562,25 @@ end
 `;
 }
 
+// Bash: inject test-input lines as positional parameters via `set --`
+// Each newline-separated input line becomes $1, $2, … in the user's script.
+// Strip JSON array brackets so [2,7,11,15] → 2,7,11,15 (bash array-string).
+function buildBashRunner(code, testInput) {
+  const args = testInput
+    .trim()
+    .split('\n')
+    .map(l => l.trim().replace(/^\[/, '').replace(/\]$/, ''))
+    .filter(Boolean);
+
+  const quotedArgs = args.map(a => `'${a.replace(/'/g, `'\\''`)}'`).join(' ');
+  return `#!/bin/bash\nset -- ${quotedArgs}\n${code}`;
+}
+
 const BUILDERS = {
   python: buildPythonRunner,
   javascript: buildJavascriptRunner,
   ruby: buildRubyRunner,
+  bash: buildBashRunner,
 };
 
 // ---------------------------------------------------------------------------
