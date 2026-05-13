@@ -478,6 +478,7 @@ export async function* streamResponse(question, history, options = {}) {
     systemContext = null,
     retrievedContext = null,
     detailLevel = null,
+    responseFormat = null,
     plan = 'free',
     // Cloud platform the candidate is interviewing for — drives service-name
     // choice in design answers (Cosmos DB vs DynamoDB vs Firestore). Sent
@@ -648,13 +649,39 @@ IMPORTANT CODE FORMATTING RULE:
     systemPrompt = buildInterviewDesignPrompt(resume, technical, detailLevel, cloudProvider, resolvedKind);
     maxTokens = MAX_TOKENS_DESIGN;
   } else {
-    systemPrompt = buildGeneralPrompt(resume, technical) + `
+    const basePrompt = buildGeneralPrompt(resume, technical) + `
 
 IMPORTANT CODE FORMATTING RULE:
 - If your answer includes ANY code, it MUST be in triple backtick code blocks with language identifier.
 - Example: \`\`\`python\\ncode here\\n\`\`\`
 - NEVER mix code with regular text. Always use separate code blocks.`;
-    maxTokens = MAX_TOKENS_QUICK;
+
+    if (responseFormat === 'detailed') {
+      systemPrompt = basePrompt + `
+
+RESPONSE FORMAT OVERRIDE — DETAILED MODE:
+The user has requested a comprehensive, detailed answer. Override the brevity rules:
+- No bullet-point cap. Use as many bullets as needed for completeness.
+- Expand each point with examples, edge cases, and depth.
+- For BEHAVIORAL: Give the full STAR narrative with context and nuance, not just 1-line bullets.
+- For TECHNICAL: Explain the "why" behind each point, include trade-offs and real-world considerations.
+- Aim for thorough understanding, not speed.`;
+      maxTokens = MAX_TOKENS_DESIGN;
+    } else if (responseFormat === 'star') {
+      systemPrompt = basePrompt + `
+
+RESPONSE FORMAT OVERRIDE — STAR MODE:
+Regardless of question type, structure the answer using the STAR framework:
+- SITUATION: 1-2 sentences — context, company, team, problem
+- TASK: 1 sentence — your specific responsibility or goal
+- ACTION: 3-5 bullets — concrete steps you took (first person, specific technologies/metrics)
+- RESULT: 1-2 sentences — quantifiable outcome and impact
+For technical questions, map STAR to the technical context (Situation = the problem, Task = the constraint, Action = the approach, Result = the outcome/trade-offs).`;
+      maxTokens = MAX_TOKENS_QUICK;
+    } else {
+      systemPrompt = basePrompt;
+      maxTokens = MAX_TOKENS_QUICK;
+    }
   }
 
   // Use clean question (without [SHORT] prefix) for the actual API call

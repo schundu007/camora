@@ -56,7 +56,7 @@ function getQuestionType(answer) {
 // ---------------------------------------------------------------------------
 router.post('/conversations/:conversationId/stream', authenticate, checkUsage('questions'), async (req, res) => {
   const { conversationId } = req.params;
-  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', mode = 'general', design_kind: designKind = null } = req.body;
+  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', mode = 'general', design_kind: designKind = null, response_format: responseFormat = null } = req.body;
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -166,6 +166,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       systemContext: systemContext || null,
       retrievedContext,
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
+      responseFormat: ['detailed', 'star'].includes(responseFormat) ? responseFormat : null,
       cloudProvider,
       designKind,
       plan: userPlan,
@@ -271,7 +272,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 // POST /stream — stream (auto-creates conversation)
 // ---------------------------------------------------------------------------
 router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
-  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null } = req.body;
+  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null, response_format: responseFormat = null } = req.body;
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -492,6 +493,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       systemContext: systemContext || null,
       retrievedContext,
       detailLevel: detailLevel === 'basic' || detailLevel === 'full' ? detailLevel : null,
+      responseFormat: ['detailed', 'star'].includes(responseFormat) ? responseFormat : null,
       cloudProvider,
       designKind,
       plan: userPlan,

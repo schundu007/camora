@@ -37,7 +37,7 @@ const TABS: { id: TabType; label: string }[] = [
 export function Header({ inputValue, onInputChange, onSubmit, onTranscription, showInputBar = true, activeTab, onTabChange, onToggleSidebar, sidebarOpen }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { status, useSearch, setUseSearch, clearHistory } = useInterviewStore();
+  const { status, useSearch, setUseSearch, clearHistory, responseFormat, setResponseFormat } = useInterviewStore();
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -223,6 +223,25 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
           <span className="text-[10px] font-mono font-medium tracking-wide truncate max-w-[90px]" style={{ color: 'var(--text-muted)' }}>
             {status.message}
           </span>
+        </div>
+
+        {/* Format picker — compact segmented control */}
+        <div className="flex items-center px-1.5 h-full shrink-0" style={{ borderLeft: '1px solid var(--border)' }}>
+          <div className="flex items-center rounded-md overflow-hidden" style={{ border: '1px solid var(--border)', background: 'var(--bg-app)' }}>
+            {(['auto', 'concise', 'detailed', 'star'] as const).map((fmt) => (
+              <button
+                key={fmt}
+                onClick={() => setResponseFormat(fmt)}
+                className="px-2 py-1 text-[10px] font-bold uppercase tracking-wide transition-[background-color,color]"
+                style={responseFormat === fmt
+                  ? { background: 'var(--cam-primary)', color: '#fff' }
+                  : { color: 'var(--text-muted)', background: 'transparent' }}
+                title={{ auto: 'Auto (default)', concise: 'Concise bullets', detailed: 'Detailed answer', star: 'STAR format' }[fmt]}
+              >
+                {fmt === 'auto' ? 'Auto' : fmt === 'concise' ? '⚡' : fmt === 'detailed' ? '📖' : '⭐'}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Actions — icon-only, subtle */}
