@@ -32,7 +32,7 @@ import { useContentAccess } from '../../../hooks/useContentAccess';
 import ResumeOptimizer from '../features/ResumeOptimizer';
 // Lightweight categories that stay statically imported — these total ~1.1 MB
 // combined and don't justify the orchestration overhead of the loader.
-import { systemDesignCategories, systemDesignCategoryMap } from '../../../data/capra/topics/systemDesignTopics.js';
+import { systemDesignCategories, systemDesignCategoryMap } from '../../../data/capra/topics/systemDesignTopicsMeta.js';
 import { concurrencyTopics } from '../../../data/capra/topics/concurrencyTopics.js';
 import { systemDesignPatternCategories, systemDesignPatternCategoryMap, systemDesignPatterns } from '../../../data/capra/topics/systemDesignPatterns.js';
 import { microservicesCategories, microservicesCategoryMap, microservicesPatterns } from '../../../data/capra/topics/microservicesPatterns.js';
