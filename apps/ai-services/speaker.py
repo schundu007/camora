@@ -198,7 +198,8 @@ async def speaker_delete(request: Request):
     """Remove a user's stored voice profile."""
     try:
         body = await request.json()
-        user_id = body.get("user_id")
+        raw_id = body.get("user_id")
+        user_id = str(raw_id).strip() if raw_id is not None else ""
         if not user_id:
             raise HTTPException(status_code=400, detail="user_id is required")
 

@@ -268,6 +268,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
 
   return (
     <div className={isLight ? 'flex flex-row items-center gap-2 shrink-0 flex-wrap' : 'flex items-center gap-1 shrink-0'}>
+      {error && <span className="text-xs max-w-[180px] truncate" style={{ color: 'var(--danger)' }} title={error}>{error}</span>}
       <button
         onClick={handleToggleFilter}
         disabled={disabled}
