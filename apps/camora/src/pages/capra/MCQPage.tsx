@@ -117,7 +117,7 @@ export default function MCQPage() {
   const { token }                 = useAuth();
   const abortRef                  = useRef<AbortController | null>(null);
 
-  const raw  = decodeURIComponent(searchParams.get('problem') || '');
+  const raw  = searchParams.get('problem') || '';
   const meta = searchParams.get('meta') || '';  // JSON with type/difficulty/skills
   const parsed                    = parseQuestion(raw);
 
@@ -126,7 +126,7 @@ export default function MCQPage() {
   let skills: string[] = [];
   let type: string = 'mcq';
   try {
-    const m = JSON.parse(decodeURIComponent(meta));
+    const m = JSON.parse(meta);
     difficulty = m.difficulty ?? null;
     skills     = m.skills    ?? [];
     type       = m.type      ?? 'mcq';

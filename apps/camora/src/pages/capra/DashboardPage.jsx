@@ -293,7 +293,7 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
     const modeParam = urlParams.get('mode');
 
     if (problemParam) {
-      const decodedProblem = decodeURIComponent(problemParam);
+      const decodedProblem = problemParam;
       if (modeParam === 'system-design' || appModeFromPath === 'system-design') {
         setAscendMode('system-design');
       } else if (modeParam === 'behavioral' || appModeFromPath === 'behavioral') {
@@ -311,7 +311,7 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
     }
 
     if (fetchUrlParam) {
-      const decodedUrl = decodeURIComponent(fetchUrlParam);
+      const decodedUrl = fetchUrlParam;
       window.history.replaceState({}, '', window.location.pathname);
       setAscendMode('coding');
       (async () => {
