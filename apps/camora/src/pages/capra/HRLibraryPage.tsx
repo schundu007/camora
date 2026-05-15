@@ -239,7 +239,8 @@ function ProblemCard({ problem, onClick }: { problem: Problem; onClick: () => vo
   const firstSkill    = displaySkills[0] ?? null;
   const typeLabel     = TYPE_LABELS[problem.type] || problem.type;
   const diffColor     = problem.difficulty ? DIFF_COLOR[problem.difficulty] : null;
-  const description   = problem.preview?.trim() || problem.summary?.trim() || '';
+  const cleanPreview  = (s?: string) => { const t = s?.trim() ?? ''; return /^problem statement:?\s*$/i.test(t) ? '' : t; };
+  const description   = cleanPreview(problem.preview) || cleanPreview(problem.summary) || '';
 
   return (
     <div
