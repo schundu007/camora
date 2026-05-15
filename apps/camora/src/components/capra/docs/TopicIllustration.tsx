@@ -60,27 +60,12 @@ export default function TopicIllustration({ name, className = '', style }: Topic
       style={wrapperStyle}
       title={credit}
     >
-      {/* 1. Grayscale, slightly darkened source. */}
       <img
         src={photo.file}
         alt=""
         loading="lazy"
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ filter: 'grayscale(100%) contrast(1.05) brightness(0.85)' }}
-      />
-      {/* 2. Multiply navy — paints the darks brand-navy. */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0"
-        style={{ background: 'var(--cam-primary)', mixBlendMode: 'multiply' }}
-      />
-      {/* 3. Screen lighter navy — lifts the highlights to a soft cream-navy
-              instead of leaving them muddy gray. The result reads as a
-              single-tone brand mood image rather than a neutralized photo. */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0"
-        style={{ background: 'var(--cam-primary-lt)', mixBlendMode: 'screen', opacity: 0.35 }}
+        style={{ filter: 'contrast(1.05) brightness(0.9)' }}
       />
       {/* 4. Subtle bottom gradient so the card title below has a soft
               transition rather than a hard horizontal line. */}
