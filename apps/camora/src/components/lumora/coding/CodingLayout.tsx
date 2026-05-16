@@ -257,8 +257,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const handleRegenerate = useCallback(() => {
     const text = problemText.trim();
     if (!text || isLoading || isStreaming) return;
-    onSubmit(text, language, { bypassCache: true });
-  }, [problemText, language, isLoading, isStreaming, onSubmit]);
+    onSubmit(text, language, { bypassCache: true, ...(starterCode ? { starterCode } : {}) });
+  }, [problemText, language, starterCode, isLoading, isStreaming, onSubmit]);
 
   // Auto-switch to the Solution tab when a stream error fires. The
   // error card lives in the Solution tab — without this, a user who

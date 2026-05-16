@@ -592,6 +592,7 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
   }
 
   const lang = language.toLowerCase();
+  console.log(`[solve] lang=${lang} bypass=${!!bypassCache} starter=${starterCode ? starterCode.slice(0, 60).replace(/\n/g, '↵') : 'null'}`);
   if (!SUPPORTED_LANGUAGES.includes(lang)) {
     return res.status(400).json({
       error: `Unsupported language: ${language}. Supported: ${SUPPORTED_LANGUAGES.join(', ')}`,
