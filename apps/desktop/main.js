@@ -205,10 +205,11 @@ app.whenReady().then(async () => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.reloadIgnoringCache();
   });
 
-  // Cmd+Shift+H — silently capture the HackerRank browser window and push
-  // it to the renderer for auto-solving. Fires even when HackerRank has
-  // keyboard focus so the user never has to leave their interview window.
-  globalShortcut.register('CommandOrControl+Shift+H', async () => {
+  // F9 — silently capture the HackerRank browser window and push it to the
+  // renderer for auto-solving. F9 is unclaimed by Chrome/Safari/macOS so it
+  // never triggers a browser action while the user is in their interview window.
+  // Cmd+Shift+H was the prior choice but it navigates Chrome to the home page.
+  const hrRegistered = globalShortcut.register('F9', async () => {
     if (!mainWindow || mainWindow.isDestroyed()) return;
     try {
       const dataUrl = await captureWindowByName('hackerrank');
@@ -224,6 +225,7 @@ app.whenReady().then(async () => {
       mainWindow.webContents.send('hackerrank-capture-result', { error: err?.message || 'Capture failed' });
     }
   });
+  if (!hrRegistered) console.warn('[shortcut] F9 registration failed — may be claimed by OS or another app');
 });
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
