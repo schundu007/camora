@@ -230,7 +230,11 @@ const SUPPORTED_LANGUAGES = [
  * Build the coding system prompt for a given language.
  * Directly ported from Python `build_coding_system_prompt()`.
  */
-function buildCodingSystemPrompt(language, systemContext, starterCode) {
+function buildCodingSystemPrompt(language, systemContext, starterCode, forceSingle = false) {
+  // Bash problems on HackerRank always supply a starter template (function
+  // stub + wrapper call). Even when OCR misses it, multiple "approaches"
+  // for bash don't make sense — there's one right implementation.
+  const singleSolution = forceSingle || !!starterCode || language === 'bash';
   const contextBlock = systemContext
     ? `\n##############################################################################
 # CANDIDATE CONTEXT
@@ -404,11 +408,11 @@ CODE STYLE REQUIREMENTS:
 Target language: ${language}
 
 ##############################################################################
-# ${starterCode ? 'CRITICAL: EXACTLY 1 SOLUTION REQUIRED (starter code present)' : 'CRITICAL: EXACTLY 3 SOLUTIONS REQUIRED'}
+# ${singleSolution ? 'CRITICAL: EXACTLY 1 SOLUTION REQUIRED' : 'CRITICAL: EXACTLY 3 SOLUTIONS REQUIRED'}
 ##############################################################################
-${starterCode
-  ? `You MUST return a "solutions" array with EXACTLY 1 object — the single correct implementation that satisfies the starter code template above.
-Do NOT return multiple approaches. The starter code fixes the structure; there is only one right way to implement it.`
+${singleSolution
+  ? `You MUST return a "solutions" array with EXACTLY 1 object — the single correct implementation.
+Do NOT return multiple approaches.`
   : `You MUST return a "solutions" array with EXACTLY 3 objects.
 Do NOT return a single "code" field. Use "solutions" array ONLY.
 
@@ -481,19 +485,19 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
 }
 
 Rules:
-- ${starterCode ? 'You MUST provide exactly 1 solution matching the starter code template' : 'You MUST provide exactly 3 solutions with DIFFERENT approaches (e.g. brute force -> optimized -> most optimal)'}
+- ${singleSolution ? 'You MUST provide exactly 1 solution' : 'You MUST provide exactly 3 solutions with DIFFERENT approaches (e.g. brute force -> optimized -> most optimal)'}
 - Each solution MUST have complete, runnable code — not pseudocode
 - Each solution MUST have a patternTag from the canonical list above (pick the single most accurate one)
 - Each solution MUST have a narration field — first-person spoken script the candidate will READ OUT LOUD during the interview (4-6 sentences, natural speech, no markdown)
 - Each solution MUST have a trace field — 4-10 step-by-step dry-run entries showing variable state as the algorithm runs on examples[0]. Each step: { step: number, action: short verb phrase, state: key variables formatted as 'name=value' joined with commas }. No code in state, just names and values. Shows the candidate how to talk through the first test case at a whiteboard.
 - Do NOT add comments in the code
 - Do NOT add main blocks or hard-coded test calls
-- ${starterCode ? 'The pitch should explain the chosen approach and complexity' : 'The pitch should compare the 3 approaches conversationally'}
+- ${singleSolution ? 'The pitch should explain the chosen approach and complexity' : 'The pitch should compare the 3 approaches conversationally'}
 - Generate COMPLETE, RUNNABLE code that includes all necessary imports for each solution
 - Examples must have exact input/output pairs
-- ${starterCode ? 'The 1 solution must produce correct output for the given examples' : 'ALL 3 solutions must produce correct output for the given examples'}
+- ${singleSolution ? 'The 1 solution must produce correct output for the given examples' : 'ALL 3 solutions must produce correct output for the given examples'}
 - Use the LATEST modern patterns and APIs for ${language}
-- ${starterCode ? '' : 'Order solutions from simplest (brute force) to most optimal'}`;
+- ${singleSolution ? '' : 'Order solutions from simplest (brute force) to most optimal'}`;
 }
 
 // ---------------------------------------------------------------------------
