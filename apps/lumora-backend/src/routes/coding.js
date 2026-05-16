@@ -305,81 +305,18 @@ ${starterCode ? `\n#############################################################
 # RULE #3: CODE STRUCTURE
 ##############################################################################
 ${starterCode
-  ? `STARTER CODE IS PRESENT — RULE #3 IS FULLY OVERRIDDEN BY RULE #2.6 ABOVE.
+  ? `STARTER CODE IS PRESENT.
 
-═══════════════════════════════════════════════════════════════════
-BASH-SPECIFIC FACTS — apply to ALL bash starter code problems
-═══════════════════════════════════════════════════════════════════
+STEP 1 — Read the problem description and examples carefully. Determine EXACTLY what to compute.
+STEP 2 — Fill in the function body that produces that output for the given inputs.
+STEP 3 — Mentally verify: trace the code on example[0], confirm output matches expected.
 
-CANONICAL STDIN-READING PATTERN (HackerRank style):
-  my_array=()
-  while IFS= read -r line || [[ -n \$line ]]; do
-      line=\${line%\$'\\r'}
-      [[ -z \$line ]] && continue
-      my_array+=("\$line")
-  done < "\${1:-/dev/stdin}"
-
-  • Reads one LINE per slot, handles Windows \\r\\n and missing final newline
-  • "\${1:-/dev/stdin}" = use first arg as file, fall back to stdin
-  • If the starter already uses readarray, PRESERVE it verbatim — the platform chose it
-  • my_array[0] = "First 2 3rd 4" ← ENTIRE LINE as one string, not individual words
-
-ITERATING WORDS in a line (IFS word-split):
-  for v in "\$@"; do          ← inside a function, $@ = each array element (whole line)
-    for word in \$v; do       ← unquoted \$v splits into words — "First","2","3rd","4"
-      echo "\$word"
-    done
-  done
-
-REGEX + ARITHMETIC — USE if/then, NOT && chains:
-  ✓ CORRECT (HackerRank style):
-      if [[ \$v =~ ^-?[0-9]+\$ ]]; then
-          sum=\$(( sum + v ))
-      fi
-  ✗ WRONG (causes Out: 0 under set -e):
-      [[ \$v =~ ^-?[0-9]+\$ ]] && (( sum += v ))
-  WHY: [[ ]] returns exit 1 on no-match; (( )) returns exit 1 when result is 0.
-       HackerRank runs bash with set -e — any exit 1 aborts the script instantly.
-       if/then NEVER propagates exit codes — safe by design.
-  Use sum=\$(( sum + v )) assignment form, NOT (( sum += v )) standalone.
-
-• \$0 = script filename — never use it as data
-• \$@ at SCRIPT level = empty for stdin problems; use \$@ only inside functions
-• "\${my_array[@]}" passes ALL elements ← ALWAYS USE THIS
-• "\${my_array[0]}" passes ONLY FIRST ← ALMOST ALWAYS WRONG; correct to [@]
-• "\${#my_array[@]}" = count of lines
-═══════════════════════════════════════════════════════════════════
-
-TWO CASES — determine which applies, then follow it exactly:
-
-CASE A — Starter HAS an empty function stub:
-  → Fill in the function body ONLY.
-  → PRESERVE shebang, input-reading, function signature, wrapper call, exit verbatim.
-  → Inside the function, $@ iterates whole lines; inner loop with unquoted var splits words.
-  → Use if/then for regex+arithmetic — NEVER && chains.
-
-CASE B — Starter has NO function stub (just boilerplate + exit):
-  → ADD logic INLINE between input-reading and exit. Do NOT create a new function.
-  Correct:  #!/usr/bin/env bash
-            my_array=()
-            while IFS= read -r line || [[ -n \$line ]]; do
-                line=\${line%\$'\\r'}
-                [[ -z \$line ]] && continue
-                my_array+=("\$line")
-            done < "\${1:-/dev/stdin}"
-            echo "\${#my_array[@]}"   ← inline logic, no function
-            exit 0
-
-ABSOLUTE RULES for both cases:
-  ✓ Shebang — always first line, always preserved
-  ✓ Input-reading lines — preserved verbatim (readarray OR while loop, whichever starter uses)
-  ✓ Function names — EXACTLY as in starter
-  ✓ Exit statements — preserved
-  ✓ Use if/then for ALL regex and arithmetic conditions
-  ✗ NEVER output function definition without surrounding script
-  ✗ NEVER re-read stdin
-  ✗ NEVER use $0 as data
-  ✗ NEVER use && to chain [[ ]] with (( )) — use if/then instead`
+BASH RULES (5 only):
+1. PRESERVE verbatim: shebang, readarray/input lines, CR-strip line, function signature, wrapper call, exit 0
+2. ONLY fill in the function body — do not change anything outside it
+3. Inside the function use: \${my_array[@]} for all elements, \${#my_array[@]} for count, "\$@" to iterate the passed args, \$word (unquoted) to word-split a line
+4. Conditions: ALWAYS use if [[ ... ]]; then ... fi — NEVER [[ ]] && (( )) (HackerRank set -e aborts on exit 1)
+5. Arithmetic: var=\$(( expr )) only — never standalone (( var += n ))`
   : `CRITICAL CODE STRUCTURE RULES for ${language}:
 - Write a function, class method, or the idiomatic entry point for ${language}
 - Do NOT include a main block or hard-coded example inputs in the code
