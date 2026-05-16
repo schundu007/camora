@@ -657,6 +657,7 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
     route: 'solve',
     language: lang,
     model: getModelForUser(req),
+    starterCode: starterCode || null,
   });
   // bypass_cache=true skips the lookup but the fresh answer still gets
   // written, so the next vanilla /solve hits. Used by the frontend
