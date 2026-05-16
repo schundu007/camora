@@ -204,6 +204,26 @@ app.whenReady().then(async () => {
   globalShortcut.register('CommandOrControl+Shift+R', () => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.reloadIgnoringCache();
   });
+
+  // Cmd+Shift+H — silently capture the HackerRank browser window and push
+  // it to the renderer for auto-solving. Fires even when HackerRank has
+  // keyboard focus so the user never has to leave their interview window.
+  globalShortcut.register('CommandOrControl+Shift+H', async () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    try {
+      const dataUrl = await captureWindowByName('hackerrank');
+      if (!dataUrl) {
+        mainWindow.webContents.send('hackerrank-capture-result', {
+          error: 'No HackerRank window found. Make sure HackerRank is open in your browser.',
+        });
+        return;
+      }
+      mainWindow.webContents.send('hackerrank-capture-result', { dataUrl });
+    } catch (err) {
+      console.error('[hackerrank-capture] failed:', err);
+      mainWindow.webContents.send('hackerrank-capture-result', { error: err?.message || 'Capture failed' });
+    }
+  });
 });
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
@@ -246,6 +266,43 @@ app.on('second-instance', () => {
   if (mainWindow.isMinimized()) mainWindow.restore();
   if (!mainWindow.isVisible()) mainWindow.show();
   mainWindow.focus();
+});
+
+// ── Silent window capture by name ───────────────────────────────────────
+// Used by the global Cmd+Shift+H shortcut to silently grab the HackerRank
+// browser window without any user cursor movement or click.
+async function captureWindowByName(searchTerm) {
+  const sources = await desktopCapturer.getSources({
+    types: ['window'],
+    thumbnailSize: { width: 5120, height: 2880 },
+  });
+  const term = (searchTerm || 'hackerrank').toLowerCase();
+  const target = sources.find(s => s.name.toLowerCase().includes(term));
+  if (!target) return null;
+
+  const thumbnail = target.thumbnail;
+  if (!thumbnail || thumbnail.isEmpty()) return null;
+
+  const MAX_BASE64 = 4_800_000;
+  const base64Size = (raw) => Math.ceil(raw.length / 3) * 4;
+  let buf = thumbnail.toPNG();
+
+  if (base64Size(buf) > MAX_BASE64) {
+    let img = nativeImage.createFromBuffer(buf);
+    img = img.resize({ width: Math.min(img.getSize().width, 1920), quality: 'best' });
+    buf = img.toPNG();
+    if (base64Size(buf) > MAX_BASE64) {
+      buf = img.toJPEG(85);
+      return `data:image/jpeg;base64,${buf.toString('base64')}`;
+    }
+  }
+  return `data:image/png;base64,${buf.toString('base64')}`;
+}
+
+// On-demand IPC: renderer can call this directly (e.g. when user pastes a
+// HackerRank URL and we want to capture without the keyboard shortcut).
+ipcMain.handle('capture-window-by-name', async (_e, searchTerm) => {
+  return captureWindowByName(searchTerm || 'hackerrank');
 });
 
 // ── IPC: macOS-native window capture (NO MODAL) ────────────────────────

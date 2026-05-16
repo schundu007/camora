@@ -29,4 +29,15 @@ contextBridge.exposeInMainWorld('camo', {
   savePdf: (opts) => ipcRenderer.invoke('save-pdf', opts),
   // saveDocx({ sections: [{heading, blocks: [{type, text}]}], filename?, title? }) → same
   saveDocx: (opts) => ipcRenderer.invoke('save-docx', opts),
+
+  // Silent HackerRank window capture — triggered by Cmd+Shift+H global shortcut.
+  // Main process pushes { dataUrl } or { error } to the renderer; register a
+  // callback here to receive it. Multiple components can register; all fire.
+  captureHackerrankWindow: () => ipcRenderer.invoke('capture-window-by-name', 'hackerrank'),
+  onHackerrankCapture: (callback) => {
+    ipcRenderer.on('hackerrank-capture-result', (_event, data) => callback(data));
+  },
+  offHackerrankCapture: () => {
+    ipcRenderer.removeAllListeners('hackerrank-capture-result');
+  },
 });

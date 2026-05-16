@@ -146,6 +146,10 @@ interface CodingLayoutProps {
   embedded?: boolean;
   /** Ref that parent sets to receive voice transcriptions as problem input */
   onVoiceProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
+  /** DataURL from Cmd+Shift+H auto-capture of HackerRank window. Processed automatically. */
+  pendingHackerrankCapture?: string | null;
+  /** Called once the capture has been consumed so parent can clear it. */
+  onHackerrankCaptureConsumed?: () => void;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
@@ -174,7 +178,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -680,6 +684,25 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     handleFetchFromUrl(initialUrl);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUrl, token]);
+
+  // Cmd+Shift+H global shortcut (Electron desktop): auto-process HackerRank
+  // window screenshot pushed from main process. Zero cursor movement required.
+  useEffect(() => {
+    if (!pendingHackerrankCapture) return;
+    onHackerrankCaptureConsumed?.();
+    (async () => {
+      try {
+        const blob = await (await fetch(pendingHackerrankCapture)).blob();
+        const file = new File([blob], 'hackerrank-capture.png', { type: blob.type || 'image/png' });
+        setInputMode('image');
+        setImagePreview(pendingHackerrankCapture);
+        await extractAndMaybeGenerate(file, true);
+      } catch (err: any) {
+        setError(err.message || 'Failed to process HackerRank screenshot.');
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingHackerrankCapture]);
 
   // ── Actions ─────────────────────────────────────────────────────────────
 
