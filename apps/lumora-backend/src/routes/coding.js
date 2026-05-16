@@ -307,15 +307,28 @@ ${starterCode ? `\n#############################################################
 ${starterCode
   ? `STARTER CODE IS PRESENT.
 
-STEP 1 — Read the problem description and examples carefully. Determine EXACTLY what to compute.
+STEP 1 — Read the problem description AND examples. Determine EXACTLY what to compute (count what? sum what? output what format?).
 STEP 2 — Fill in the function body that produces that output for the given inputs.
-STEP 3 — Mentally verify: trace the code on example[0], confirm output matches expected.
+STEP 3 — Mentally trace on example[0]: confirm your output matches expected.
 
-BASH RULES (5 only):
+BASH RULES:
 1. PRESERVE verbatim: shebang, readarray/input lines, CR-strip line, function signature, wrapper call, exit 0
-2. ONLY fill in the function body — do not change anything outside it
-3. Inside the function use: \${my_array[@]} for all elements, \${#my_array[@]} for count, "\$@" to iterate the passed args, \$word (unquoted) to word-split a line
-4. Conditions: ALWAYS use if [[ ... ]]; then ... fi — NEVER [[ ]] && (( )) (HackerRank set -e aborts on exit 1)
+2. ONLY fill in the function body — nothing outside it
+3. CRITICAL DISTINCTION — read carefully:
+   • \${#my_array[@]} = number of LINES in the array (1 if input is one line, N if N lines)
+   • To count WORDS/TOKENS (space-separated values on a line): use word-split loop:
+       local count=0
+       for elem in "\$@"; do for word in \$elem; do count=\$(( count + 1 )); done; done
+       echo "\$count"
+   • To SUM integers across all words:
+       local sum=0
+       for elem in "\$@"; do for word in \$elem; do
+         if [[ \$word =~ ^-?[0-9]+\$ ]]; then sum=\$(( sum + word )); fi
+       done; done
+       echo "\$sum"
+   • To COUNT array elements (each line = one element): echo \${#my_array[@]}
+   Match the pattern to what the problem asks for.
+4. Conditions: ALWAYS use if [[ ... ]]; then ... fi — NEVER [[ ]] && (( )) (set -e aborts on exit 1)
 5. Arithmetic: var=\$(( expr )) only — never standalone (( var += n ))`
   : `CRITICAL CODE STRUCTURE RULES for ${language}:
 - Write a function, class method, or the idiomatic entry point for ${language}
