@@ -191,7 +191,7 @@ export function LumoraShellPage() {
   const codingProblemRef = useRef<((text: string) => void) | null>(null);
   const designProblemRef = useRef<((text: string) => void) | null>(null);
 
-  const handleCodingSubmitRouted = useCallback((problem: string, language?: string, options?: { bypassCache?: boolean }) => {
+  const handleCodingSubmitRouted = useCallback((problem: string, language?: string, options?: { bypassCache?: boolean; starterCode?: string }) => {
     return handleCodingSubmit(problem, language as any, options);
   }, [handleCodingSubmit]);
 

@@ -136,7 +136,7 @@ interface TestResult {
 }
 
 interface CodingLayoutProps {
-  onSubmit: (problem: string, language: string, options?: { bypassCache?: boolean }) => void;
+  onSubmit: (problem: string, language: string, options?: { bypassCache?: boolean; starterCode?: string }) => void;
   isLoading?: boolean;
   onBack: () => void;
   initialProblem?: string;
@@ -193,6 +193,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [starterCode, setStarterCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [testCases, setTestCases] = useState<Array<{ input: string; expected: string }>>([{ input: '', expected: '' }]);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
@@ -756,7 +757,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setCollapsedCards(new Set());
     setActiveSolutionIdx(0);
     setIsOutputCollapsed(true); // Collapse test panel — auto-expands when new tests arrive
-    onSubmit(problemText.trim(), language);
+    onSubmit(problemText.trim(), language, starterCode ? { starterCode } : undefined);
   };
 
   // Register voice problem handler for parent shell. Uses stable internal
@@ -798,6 +799,18 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     const urlToFetch = overrideUrl ?? problemUrl;
     if (!urlToFetch.trim()) { setError('Please enter a URL'); return; }
     if (!token) { setError('Not authenticated'); return; }
+
+    // HackerRank codepair/contest sessions are auth-gated SPAs — can't scrape from backend.
+    // Route to IMAGE tab and prompt user to take a screenshot instead.
+    if (/hackerrank\.com\/(codepair|contests)\//i.test(urlToFetch)) {
+      setInputMode('image');
+      await dialogAlert({
+        title: 'HackerRank detected',
+        message: 'HackerRank interview sessions are auth-gated and cannot be scraped. Take a screenshot of the problem + code editor, then drop it in the Image tab — Lumora will extract the full problem, read the starter code structure, and generate an exact matching solution.',
+      });
+      return;
+    }
+
     setIsProcessing(true);
     setError(null);
     try {
@@ -816,6 +829,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       const data = await resp.json();
       const text = String(data.problem || '').trim();
       setProblemText(text);
+      setStarterCode(null);
       setInputMode('paste');
       // Auto-generate after fetch — URL tab is one-click solve, same UX
       // contract as IMAGE: input in, answer out, no extra button.
@@ -862,7 +876,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).detail || 'Failed to extract');
       const data = await resp.json();
       const text = String(data.problem || '').trim();
+      const extractedStarterCode = data.starter_code || null;
       setProblemText(text);
+      setStarterCode(extractedStarterCode);
       setInputMode('paste');
       if (autoGenerate && text) {
         // Mirror handleGenerateSolution's reset-then-submit pattern.
@@ -879,7 +895,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         setActiveSolutionIdx(0);
         setIsOutputCollapsed(true);
         setProblemTab('solution');
-        onSubmit(text, language);
+        onSubmit(text, language, extractedStarterCode ? { starterCode: extractedStarterCode } : undefined);
       }
     } catch (err: any) {
       setError(err.message);
@@ -1171,7 +1187,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       {inputMode === 'paste' && (
                         <textarea id="problem-text"
                           value={problemText}
-                          onChange={(e) => setProblemText(e.target.value)}
+                          onChange={(e) => { setProblemText(e.target.value); setStarterCode(null); }}
                           onDrop={handleDrop}
                           onDragOver={(e) => e.preventDefault()}
                           placeholder="Paste your coding problem here...&#10;&#10;Example: Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target."

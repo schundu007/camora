@@ -295,6 +295,7 @@ export interface CodingStreamOptions {
       cache so the next plain solve hits. Used by the "Regenerate"
       button on the solution card. */
   bypassCache?: boolean;
+  starterCode?: string;
   signal?: AbortSignal;
   onStreamStart?: (data: StreamStartEvent) => void;
   onCitations?: (citations: Citation[]) => void;
@@ -317,6 +318,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
     systemContext,
     model,
     bypassCache,
+    starterCode,
     signal: externalSignal,
     onStreamStart,
     onCitations,
@@ -351,6 +353,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
         ...(systemContext ? { system_context: systemContext } : {}),
         ...(model ? { model } : {}),
         ...(bypassCache ? { bypass_cache: true } : {}),
+        ...(starterCode ? { starter_code: starterCode } : {}),
       }),
       credentials: 'include',
       signal: abortController.signal,

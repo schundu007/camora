@@ -159,7 +159,7 @@ export function useStreamingInterview() {
       setConversationId, appendStreamChunk, setParsedBlocks, addHistoryEntry,
       stopAnswerTimer, setError, setActiveCitations]);
 
-  const handleCodingSubmit = useCallback(async (problem: string, language: string, options?: { bypassCache?: boolean }) => {
+  const handleCodingSubmit = useCallback(async (problem: string, language: string, options?: { bypassCache?: boolean; starterCode?: string }) => {
     const validation = validateInput(problem);
     if (!validation.valid) {
       setError(validation.error || 'Invalid input');
@@ -196,6 +196,7 @@ export function useStreamingInterview() {
         token,
         systemContext: getSystemContext(),
         bypassCache: options?.bypassCache,
+        starterCode: options?.starterCode,
         signal: controller.signal,
         onStreamStart: (data: any) => {
           setIsCodingQuestion(true);
