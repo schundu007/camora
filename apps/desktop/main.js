@@ -594,6 +594,68 @@ ipcMain.handle('hide-solution-overlay', () => {
   if (_overlayWindow && !_overlayWindow.isDestroyed()) _overlayWindow.close();
 });
 
+// ── Stealth mode — neutralize HackerRank mouse/focus tracking ───────────────
+// Injects JS into the active Chrome/Brave tab via AppleScript that:
+//   1. Overrides addEventListener to block future mouseleave/blur/visibilitychange registrations
+//   2. Adds capture-phase listeners that stopImmediatePropagation on those events BEFORE
+//      any existing HackerRank handlers fire — handles listeners already registered at page load
+//   3. Overrides document.hidden / visibilityState / hasFocus so JS checks return "visible"
+//
+// Requires Chrome Developer → "Allow JavaScript from Apple Events" (one-time toggle).
+// Single quotes used throughout JS payload so it embeds cleanly in AppleScript double-quoted string.
+ipcMain.handle('inject-tracking-neutralizer', async () => {
+  if (process.platform !== 'darwin') {
+    return { ok: false, error: 'Stealth mode requires macOS.' };
+  }
+
+  // JS payload — deliberately uses only single quotes so it is safe inside an
+  // AppleScript double-quoted string without any extra escaping.
+  const js = [
+    "(function(){",
+    "if(window.__camoraStealthActive)return;",
+    "window.__camoraStealthActive=true;",
+    // Block future addEventListener registrations for these event types on document/window/body
+    "var orig=EventTarget.prototype.addEventListener;",
+    "var BLOCKED={mouseleave:1,mouseout:1,blur:1,visibilitychange:1,focusout:1};",
+    "EventTarget.prototype.addEventListener=function(t,l,o){",
+    "  if(BLOCKED[t]&&(this===document||this===window||this===document.body))return;",
+    "  return orig.call(this,t,l,o);",
+    "};",
+    // Intercept events that were already registered by stopping them in capture phase
+    "['mouseleave','mouseout','blur','visibilitychange','focusout'].forEach(function(ev){",
+    "  document.addEventListener(ev,function(e){e.stopImmediatePropagation();},true);",
+    "  window.addEventListener(ev,function(e){e.stopImmediatePropagation();},true);",
+    "});",
+    // Override visibility / focus APIs so HackerRank polls see 'visible'
+    "try{Object.defineProperty(document,'hidden',{get:function(){return false},configurable:true});}catch(e){}",
+    "try{Object.defineProperty(document,'visibilityState',{get:function(){return 'visible'},configurable:true});}catch(e){}",
+    "try{Object.defineProperty(document,'hasFocus',{value:function(){return true},configurable:true,writable:true});}catch(e){}",
+    "console.log('[Camora Stealth] activated');",
+    "})();",
+  ].join('');
+
+  const STEALTH_BROWSERS = ['Google Chrome', 'Brave Browser', 'Arc', 'Microsoft Edge'];
+  for (const browser of STEALTH_BROWSERS) {
+    try {
+      await runAppleScript(`tell application "${browser}"
+  execute front window's active tab javascript "${js}"
+end tell`);
+      console.log(`[stealth] injected into ${browser}`);
+      return { ok: true, browser };
+    } catch (err) {
+      const msg = String(err?.message || err);
+      // Browser not running — try next
+      if (/not running|Application isn/i.test(msg)) continue;
+      // "Allow JavaScript from Apple Events" not enabled in Developer menu
+      if (/AppleEvent|not allowed|JavaScript|1002|privileged/i.test(msg)) {
+        return { ok: false, needsDevMenu: true, browser, error: msg };
+      }
+      console.warn(`[stealth] ${browser} injection failed:`, msg);
+    }
+  }
+  return { ok: false, error: 'No supported browser found. Open Chrome or Brave with HackerRank active.' };
+});
+
 // Renderer tells us which coding platform to watch.
 ipcMain.handle('set-coding-platform', (_event, platform) => {
   _codingPlatform = platform || 'none';

@@ -50,6 +50,9 @@ contextBridge.exposeInMainWorld('camo', {
   // Mouse events pass through so HackerRank never detects a mouseleave.
   showSolutionOverlay: (opts) => ipcRenderer.invoke('show-solution-overlay', opts),
   hideSolutionOverlay: () => ipcRenderer.invoke('hide-solution-overlay'),
+  // Stealth mode — injects JS into Chrome to neutralize HackerRank's mouse/focus tracking.
+  // Returns { ok, browser? } on success, { ok: false, needsDevMenu?, error } on failure.
+  injectTrackingNeutralizer: () => ipcRenderer.invoke('inject-tracking-neutralizer'),
 
   // Desktop screenshot watcher — fires when user takes a macOS screenshot
   // (Cmd+Shift+3/4) while HackerRank is on screen. Renderer calls extractAndMaybeGenerate
