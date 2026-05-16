@@ -304,8 +304,18 @@ const BROWSERS = ['Google Chrome', 'Brave Browser', 'Microsoft Edge'];
 async function getActiveBrowserInfo() {
   for (const browser of BROWSERS) {
     try {
-      const url = await runAppleScript(`tell application "${browser}" to URL of active tab of front window`);
-      if (url) return { browser, url };
+      // Fetch URL and window title in one AppleScript call
+      const result = await runAppleScript(`
+tell application "${browser}"
+  set u to URL of active tab of front window
+  set t to name of front window
+  return u & "|||" & t
+end tell`);
+      if (!result) continue;
+      const sep = result.indexOf('|||');
+      const url = sep >= 0 ? result.slice(0, sep).trim() : result.trim();
+      const windowTitle = sep >= 0 ? result.slice(sep + 3).trim() : '';
+      if (url) return { browser, url, windowTitle };
     } catch {}
   }
   return null;
@@ -320,21 +330,77 @@ let _lastHrUrl = null;
 let _hrPollTimer = null;
 
 async function doHackerrankScrape() {
-  // Step 1: verify HackerRank is the active tab (AppleScript URL read — no JS exec needed)
   const info = await getActiveBrowserInfo();
   if (!info) return { ok: false, error: 'No browser window found. Open Chrome/Brave with HackerRank.' };
-  const { url } = info;
-  console.log('[hr-auto] active browser URL:', url);
+  const { url, windowTitle } = info;
+  console.log('[hr-auto] active browser URL:', url, '| window title:', windowTitle);
   if (!url.includes('hackerrank.com')) {
     return { ok: false, error: `Active tab is not HackerRank.\nCurrent URL: ${url}` };
   }
-  // Step 2: screenshot the browser window — no Chrome JS permissions needed.
-  // captureWindowByName uses Z-order fallback so it finds the browser window
-  // even when its title doesn't contain "hackerrank".
-  const dataUrl = await captureWindowByName('hackerrank');
-  if (!dataUrl) return { ok: false, error: 'Could not capture browser window. Make sure the HackerRank tab is visible (not minimised).' };
+  const dataUrl = await captureExactBrowserWindow(windowTitle);
+  if (!dataUrl) return { ok: false, error: 'Could not capture the HackerRank browser window. Make sure it is visible (not minimised or behind other windows).' };
   _lastHrUrl = url;
   return { ok: true, dataUrl, url };
+}
+
+// Capture a specific browser window by matching its EXACT title from AppleScript.
+// Never falls back to non-browser windows (no VS Code / Terminal / other apps).
+async function captureExactBrowserWindow(windowTitle) {
+  const sources = await desktopCapturer.getSources({
+    types: ['window'],
+    thumbnailSize: { width: 2560, height: 1600 },
+  });
+  console.log('[capture] windows:', sources.map(s => s.name));
+
+  let target = null;
+
+  // Strategy 1: source name starts with AppleScript window title (e.g. "Interview | Bash: Pattern Matching")
+  // desktopCapturer appends " - Google Chrome" so we use startsWith rather than strict equality
+  if (windowTitle) {
+    target = sources.find(s => s.name.startsWith(windowTitle) || windowTitle.startsWith(s.name));
+  }
+
+  // Strategy 2: "hackerrank" anywhere in title (main HR pages, not codepair)
+  if (!target) {
+    target = sources.find(s => s.name.toLowerCase().includes('hackerrank'));
+  }
+
+  // Strategy 3: codepair title format — "Interview | ..." in a browser window
+  if (!target) {
+    target = sources.find(s =>
+      /^interview\s*\|/i.test(s.name) &&
+      /Google Chrome|Brave|Firefox|Safari|Microsoft Edge|Arc/i.test(s.name)
+    );
+  }
+
+  // Strategy 4: any browser window not Camora (but NOT a catch-all — must be a known browser)
+  if (!target) {
+    target = sources.find(s =>
+      /Google Chrome|Brave Browser|Firefox|Safari|Microsoft Edge|Arc/i.test(s.name) &&
+      !/Camora/i.test(s.name)
+    );
+  }
+
+  // No further fallback — better to fail loudly than capture VS Code / Terminal
+  console.log('[capture] selected:', target?.name ?? 'none');
+  if (!target) return null;
+
+  const thumbnail = target.thumbnail;
+  if (!thumbnail || thumbnail.isEmpty()) return null;
+
+  const MAX_BASE64 = 4_800_000;
+  const base64Size = (raw) => Math.ceil(raw.length / 3) * 4;
+  let buf = thumbnail.toPNG();
+  if (base64Size(buf) > MAX_BASE64) {
+    let img = nativeImage.createFromBuffer(buf);
+    img = img.resize({ width: Math.min(img.getSize().width, 1920), quality: 'best' });
+    buf = img.toPNG();
+    if (base64Size(buf) > MAX_BASE64) {
+      buf = img.toJPEG(85);
+      return `data:image/jpeg;base64,${buf.toString('base64')}`;
+    }
+  }
+  return `data:image/png;base64,${buf.toString('base64')}`;
 }
 
 function startHackerrankAutoDetect() {
@@ -405,9 +471,12 @@ async function captureWindowByName(searchTerm) {
   // Strategy 1: window title contains "hackerrank" (works on main HackerRank pages)
   let target = sources.find(s => s.name.toLowerCase().includes(term));
 
-  // Strategy 2: HackerRank codepair/interview pages show title like "Interview | ..."
-  // desktopCapturer returns windows front-to-back (Z-order), so when F9 fires while
-  // user is on HackerRank, the first browser window is the HackerRank window.
+  // Strategy 2: codepair title format "Interview | ..."
+  if (!target) {
+    target = sources.find(s => /^interview\s*\|/i.test(s.name));
+  }
+
+  // Strategy 3: any known browser window (not Camora) — Z-order means front = HackerRank when F9 fires
   if (!target) {
     target = sources.find(s =>
       /Google Chrome|Safari|Firefox|Brave Browser|Microsoft Edge|Arc/i.test(s.name) &&
@@ -415,11 +484,7 @@ async function captureWindowByName(searchTerm) {
     );
   }
 
-  // Strategy 3: first non-Camora window as last resort
-  if (!target) {
-    target = sources.find(s => !/Camora/i.test(s.name));
-  }
-
+  // No catch-all — better to fail than capture VS Code / Terminal / other apps
   console.log('[capture] selected window:', target?.name ?? 'none');
   if (!target) return null;
 
