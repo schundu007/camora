@@ -1,0 +1,81 @@
+name: Build Desktop
+
+on:
+  push:
+    tags:
+      - 'desktop-v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to upload artifacts to (e.g. desktop-v2.1.0)'
+        required: true
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: apps/desktop
+        run: npm install
+
+      - name: Build arm64 DMG
+        working-directory: apps/desktop
+        run: npm run build:dmg
+
+      - name: Build x64 (Intel) DMG
+        working-directory: apps/desktop
+        run: npm run build:dmg-x64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac-dmgs
+          path: apps/desktop/build/Camora-*.dmg
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: apps/desktop
+        run: npm install
+
+      - name: Build Windows installer
+        working-directory: apps/desktop
+        run: npm run build:win
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win-installer
+          path: apps/desktop/build/Camora-*-Setup.exe
+
+  publish:
+    needs: [build-mac, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: dist
+
+      - name: List artifacts
+        run: ls -lh dist/
+
+      - name: Upload to GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          files: dist/**
+          fail_on_unmatched_files: true
