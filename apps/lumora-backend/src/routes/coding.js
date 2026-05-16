@@ -230,7 +230,7 @@ const SUPPORTED_LANGUAGES = [
  * Build the coding system prompt for a given language.
  * Directly ported from Python `build_coding_system_prompt()`.
  */
-function buildCodingSystemPrompt(language, systemContext) {
+function buildCodingSystemPrompt(language, systemContext, starterCode) {
   const contextBlock = systemContext
     ? `\n##############################################################################
 # CANDIDATE CONTEXT
@@ -295,6 +295,7 @@ Your code must be EXTREMELY CONCISE:
 Detect and complete partial/starter code from the problem. When you detect
 partial code with markers like "complete the function", "TODO", or empty body,
 you MUST complete the given template, NOT rewrite from scratch.
+${starterCode ? `\n##############################################################################\n# STARTER CODE — THIS IS THE EXACT TEMPLATE FROM THE PLATFORM\n##############################################################################\nThe interview platform provides this exact starter code. Your solution MUST use\nthis as the base. DO NOT change function names, wrapper calls, input-reading\nlines, or surrounding boilerplate. ONLY fill in the missing implementation\ninside the function body.\n\n\`\`\`${language}\n${starterCode}\n\`\`\`\n\nAll 3 solutions must follow this exact structure.\n` : ''}
 
 ##############################################################################
 # RULE #3: CODE STRUCTURE - FUNCTION-BASED, NO HARD-CODED MAIN
@@ -534,7 +535,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res, n
 });
 
 router.post('/solve', authenticate, checkUsage('questions'), async (req, res) => {
-  const { problem, language, conversationHistory, system_context: systemContext, bypass_cache: bypassCache } = req.body;
+  const { problem, language, conversationHistory, system_context: systemContext, bypass_cache: bypassCache, starter_code: starterCode } = req.body;
 
   // ── Validate ────────────────────────────────────────────────────────────
   if (!problem || typeof problem !== 'string') {
@@ -714,7 +715,7 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
   let terminalFailure = null; // { msg, category } when all passes give up
   let passTag = 'primary_stream';
 
-  const systemPrompt = buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined);
+  const systemPrompt = buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined);
   // Anthropic prompt cache — wraps the large coding system prompt as a
   // single ephemeral cache block. Subsequent /solve calls within the
   // 5-min TTL skip ~3-4k input tokens of re-tokenization, cutting
@@ -1302,24 +1303,23 @@ router.post('/extract-from-image', authenticate, imageUpload.single('image'), as
       ? req.file.mimetype
       : 'image/jpeg';
     let data = req.file.buffer.toString('base64');
-    // Auto-downscale if the upload exceeds Anthropic's 5 MB base64 cap.
     ({ mediaType, data } = await ensureImageWithinAnthropicLimit(data, mediaType));
     const kind = (req.body?.kind === 'design') ? 'design' : 'coding';
     const isDesign = kind === 'design';
     const subject = isDesign ? 'SYSTEM DESIGN interview question' : 'CODING interview problem';
-    const prompt = `You are an OCR engine. Output ONE OF EXACTLY TWO things and nothing else:
 
-  1. The literal text of the ${subject} as it appears in the image. Preserve formatting: code blocks, examples, constraints, math notation, line breaks. Do NOT solve it. Do NOT add headers like "Problem:" or "Here is...". Do NOT translate or paraphrase. Just transcribe.
-  2. The exact token NO_PROBLEM_FOUND (no other characters) if the image does not contain readable problem text.
+    const prompt = `You are an OCR engine analyzing a ${subject} screenshot. Return ONLY valid JSON with exactly these two fields and nothing else:
 
-CRITICAL RULES — violations break the product:
-  • NEVER describe what's in the image ("I can see...", "The image shows..." → ALWAYS return NO_PROBLEM_FOUND instead).
-  • NEVER apologize, explain limitations, or comment on image quality.
-  • NEVER summarize. Transcribe verbatim.
-  • If you can read even a partial problem, transcribe what's there.
-  • If the image is dark / blurry / cropped to an unrelated context → NO_PROBLEM_FOUND.
+{
+  "problem": "<verbatim problem statement — title, description, constraints, examples. Preserve all formatting and line breaks. Return the string NO_PROBLEM_FOUND if no problem text is visible>",
+  "starter_code": "<verbatim starter/template code from the code editor panel, preserving exact indentation, function names, and structure. This is the exact boilerplate the candidate must fill in. Return null if no code editor panel is visible in the image>"
+}
 
-Begin output now. No preamble.`;
+Critical rules:
+- "problem": transcribe verbatim from the problem description area (usually left panel or top section). Never solve it. Never paraphrase.
+- "starter_code": transcribe verbatim from any visible code editor (usually right panel). This includes function stubs, input-reading lines, and wrapper calls — everything in the editor. null if no editor visible.
+- Return ONLY valid JSON. No preamble, no explanation, no markdown fences.
+- NEVER describe the image ("I can see...", "The screenshot shows...") — output JSON only.`;
 
     const msg = await anthropicClient.messages.create({
       model: 'claude-sonnet-4-6',
@@ -1333,14 +1333,28 @@ Begin output now. No preamble.`;
       }],
     });
 
-    let problem = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+    const rawText = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+
+    let problem = 'NO_PROBLEM_FOUND';
+    let starterCode = null;
+    try {
+      // Strip markdown fences if model wrapped in ```json ... ```
+      const jsonText = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+      const parsed = JSON.parse(jsonText);
+      problem = (parsed.problem || 'NO_PROBLEM_FOUND').trim();
+      starterCode = parsed.starter_code || null;
+    } catch {
+      // Fallback: Claude returned raw text instead of JSON
+      problem = rawText;
+    }
+
     if (/^(i (can|see|notice|cannot|don[''']?t)\b|the (screenshot|image|window) (shows|appears|seems|is)|it (looks|seems|appears)|sorry|unfortunately|i'?m unable)/i.test(problem)) {
       problem = 'NO_PROBLEM_FOUND';
     }
     if (!problem || problem === 'NO_PROBLEM_FOUND') {
       return res.status(422).json({ detail: 'Could not extract a problem from this image. Try a clearer screenshot showing the problem statement.' });
     }
-    res.json({ problem, kind });
+    res.json({ problem, starter_code: starterCode, kind });
   } catch (err) {
     console.error('extract-from-image error:', err?.message || err);
     res.status(500).json({ detail: err?.message || 'Image extraction failed' });
