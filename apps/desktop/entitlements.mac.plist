@@ -6,11 +6,14 @@
     <true/>
     <key>com.apple.security.network.client</key>
     <true/>
-    <!-- Apple Events / Screen capture: needed by Electron's
-         desktopCapturer + setDisplayMediaRequestHandler so the
-         interviewer-audio loopback path works on macOS 14+. Without
-         these, getDisplayMedia silently returns a dead stream and the
-         user sees no error. -->
+    <!-- Required for HackerRank auto-detect: lets Camora send Apple Events
+         (AppleScript) to Google Chrome to read the active tab URL and
+         inject JS for DOM scraping. Without this, all osascript calls to
+         Chrome are silently blocked by macOS TCC regardless of the
+         Automation permission dialog. -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+    <!-- Screen capture for desktopCapturer + setDisplayMediaRequestHandler -->
     <key>com.apple.security.scripting-targets</key>
     <dict>
         <key>com.apple.systemevents</key>
