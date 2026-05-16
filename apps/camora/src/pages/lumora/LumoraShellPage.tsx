@@ -42,6 +42,7 @@ export function LumoraShellPage() {
   const [copilotQuestion, setCopilotQuestion] = useState<string | undefined>();
   const [copilotFullscreen, setCopilotFullscreen] = useState(false);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
+  const [pendingHackerrankCapture, setPendingHackerrankCapture] = useState<string | null>(null);
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
   const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, threshold: vadThreshold } = useInterviewStore();
   // Persist the Settings-tip dismissal so it's a true one-time hint,
@@ -159,6 +160,21 @@ export function LumoraShellPage() {
     };
     document.title = titles[activeTab] || 'Camora';
   }, [activeTab]);
+
+  // Cmd+Shift+H global shortcut (Electron): silently capture the HackerRank
+  // browser window → navigate to Coding tab → auto-solve. Zero cursor movement.
+  useEffect(() => {
+    const camo = (window as any).camo;
+    if (!camo?.onHackerrankCapture) return;
+    camo.onHackerrankCapture((data: { dataUrl?: string; error?: string }) => {
+      if (data.dataUrl) {
+        navigate('/lumora/coding');
+        setPendingHackerrankCapture(data.dataUrl);
+      }
+    });
+    return () => { camo.offHackerrankCapture?.(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -453,6 +469,8 @@ export function LumoraShellPage() {
                         onBack={() => navigate('/lumora')}
                         initialProblem={activeTab === 'coding' ? new URLSearchParams(location.search).get('problem') || '' : ''}
                         onVoiceProblemRef={codingProblemRef}
+                        pendingHackerrankCapture={pendingHackerrankCapture}
+                        onHackerrankCaptureConsumed={() => setPendingHackerrankCapture(null)}
                       />
                     </div>
                     {/* Sona Q&A sidebar — independent state, follow-up
