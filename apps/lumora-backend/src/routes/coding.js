@@ -1410,12 +1410,14 @@ Critical rules:
     if (!problem || problem === 'NO_PROBLEM_FOUND') {
       return res.status(422).json({ detail: 'Could not extract a problem from this image. Try a clearer screenshot showing the problem statement.' });
     }
-    // Prefer Claude's vision-based language detection (sees syntax, not just shebangs).
-    // Fall back to regex-based pattern matching for cases where Claude returns null.
-    const visionLang = parsed?.detected_language?.toLowerCase()?.trim() || null;
+    // Prefer Claude's vision-based language detection, but validate it against
+    // the supported list — the model sometimes hallucinates 'dockerfile', 'makefile',
+    // 'plaintext', etc. from non-code content visible in the screenshot.
+    const rawVisionLang = parsed?.detected_language?.toLowerCase()?.trim() || null;
+    const visionLang = rawVisionLang && SUPPORTED_LANGUAGES.includes(rawVisionLang) ? rawVisionLang : null;
     const regexLang = detectLangFromCode(starterCode);
     const detectedLanguage = visionLang || regexLang;
-    console.log(`[extract-from-image] lang_vision=${visionLang} lang_regex=${regexLang} final=${detectedLanguage}`);
+    console.log(`[extract-from-image] lang_vision_raw=${rawVisionLang} lang_vision_valid=${visionLang} lang_regex=${regexLang} final=${detectedLanguage}`);
     res.json({ problem, starter_code: starterCode, kind, detected_language: detectedLanguage });
   } catch (err) {
     console.error('extract-from-image error:', err?.message || err);
