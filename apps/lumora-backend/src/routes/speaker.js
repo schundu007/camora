@@ -92,12 +92,15 @@ router.post('/enroll', upload.any(), async (req, res) => {
       body,
       signal: AbortSignal.timeout(30000),
     });
-    const data = await upstream.json();
-    console.log(`[Speaker] Response: ${upstream.status}`, JSON.stringify(data));
-    return res.status(upstream.status).json(data);
+    const raw = await upstream.text();
+    console.log(`[Speaker] Response ${upstream.status}: ${raw.slice(0, 500)}`);
+    let data;
+    try { data = JSON.parse(raw); } catch { data = { error: raw.slice(0, 200) || 'ai-services error' }; }
+    return res.status(upstream.ok ? 200 : upstream.status).json(data);
   } catch (err) {
-    console.error('[Speaker] Enroll error:', err);
-    return res.status(500).json({ error: 'Speaker enrollment failed' });
+    console.error('[Speaker] Enroll error:', err.name, err.message);
+    const msg = err.name === 'TimeoutError' ? 'Speaker enrollment timed out — try a shorter clip' : 'Speaker enrollment failed';
+    return res.status(500).json({ error: msg });
   } finally {
     // Per-request cleanup. Previous version readdir'd tmpdir and
     // unlinked every `enroll-*.{webm,wav}` — concurrent enrollments
