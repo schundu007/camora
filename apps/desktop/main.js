@@ -523,65 +523,145 @@ function buildOverlayHtml(code, language) {
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{background:transparent;overflow:hidden}
+  html,body{background:transparent;overflow:hidden;height:100%}
   .panel{
     position:fixed;top:0;left:0;right:0;bottom:0;
-    background:rgba(6,8,16,0.88);
-    border:1px solid rgba(0,71,171,0.6);
+    background:rgba(4,6,14,0.93);
+    border:1px solid rgba(0,71,171,0.7);
     border-radius:10px;
     display:flex;flex-direction:column;
     font-family:'Menlo','Monaco','Courier New',monospace;
+    backdrop-filter:blur(2px);
   }
   .header{
-    padding:6px 12px;
-    background:rgba(0,71,171,0.25);
+    -webkit-app-region:drag;
+    cursor:move;
+    padding:7px 10px 7px 12px;
+    background:rgba(0,71,171,0.30);
     border-radius:10px 10px 0 0;
-    font-size:11px;color:#7ab3ff;letter-spacing:.04em;
+    border-bottom:1px solid rgba(0,71,171,0.4);
+    font-size:11px;color:#7ab3ff;letter-spacing:.05em;
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:space-between;
+    user-select:none;
+  }
+  .close-btn{
+    -webkit-app-region:no-drag;
+    cursor:pointer;
+    width:18px;height:18px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.18);
+    display:flex;align-items:center;justify-content:center;
+    color:rgba(255,255,255,0.6);
+    font-size:12px;line-height:1;
+    transition:background 0.15s;
     flex-shrink:0;
   }
+  .close-btn:hover{background:rgba(239,68,68,0.7);color:#fff;border-color:transparent}
   pre{
+    -webkit-app-region:no-drag;
     flex:1;overflow:auto;padding:12px 14px;
-    font-size:12px;line-height:1.55;
+    font-size:12.5px;line-height:1.6;
     color:#c8e6c9;white-space:pre-wrap;word-break:break-all;
+    cursor:text;user-select:text;
   }
 </style></head><body>
 <div class="panel">
-  <div class="header">CAMORA · ${(language||'').toUpperCase()} SOLUTION</div>
+  <div class="header">
+    <span>CAMORA &middot; ${(language||'').toUpperCase()} SOLUTION &nbsp;&#8942;&nbsp; drag to move</span>
+    <div class="close-btn" onclick="window.close()" title="Close">&#x2715;</div>
+  </div>
   <pre>${escaped}</pre>
 </div>
 </body></html>`;
 }
 
-ipcMain.handle('show-solution-overlay', (_event, { code, language }) => {
-  const { width, height } = electronScreen.getPrimaryDisplay().workAreaSize;
-  const W = Math.min(580, Math.round(width * 0.38));
-  const H = Math.min(700, Math.round(height * 0.75));
-  const x = width - W - 12;
-  const y = Math.round((height - H) / 2);
+// Get the screen-coordinate bounds of the front Chrome/Brave window via AppleScript.
+// Returns {x, y, width, height} or null on failure.
+async function getActiveBrowserBounds() {
+  for (const browser of BROWSERS) {
+    try {
+      const raw = await runAppleScript(`tell application "${browser}"
+  set b to bounds of front window
+  return ((item 1 of b) as text) & "," & ((item 2 of b) as text) & "," & ((item 3 of b) as text) & "," & ((item 4 of b) as text)
+end tell`);
+      const parts = raw.trim().split(',').map(Number);
+      if (parts.length === 4 && parts.every(n => !isNaN(n))) {
+        const [x1, y1, x2, y2] = parts;
+        return { x: x1, y: y1, width: x2 - x1, height: y2 - y1, browser };
+      }
+    } catch {}
+  }
+  return null;
+}
+
+ipcMain.handle('show-solution-overlay', async (_event, { code, language, stealthActive }) => {
+  // Try to position overlay on top of the active browser window.
+  // Fall back to right-edge of primary display if browser bounds unavailable.
+  let x, y, W, H;
+  const display = electronScreen.getPrimaryDisplay();
+  const { width: sw, height: sh } = display.workAreaSize;
+  const scaleFactor = display.scaleFactor || 1;
+
+  try {
+    const cb = await getActiveBrowserBounds();
+    if (cb) {
+      // Position overlay over the LEFT half of Chrome (problem description area)
+      // so the code editor on the right stays fully visible and usable.
+      // macOS AppleScript bounds are in LOGICAL pixels — Electron uses logical pixels too.
+      const TAB_BAR_H = 72; // approximate Chrome tab bar + address bar height
+      W = Math.round(cb.width * 0.44);
+      H = Math.min(sh - 40, cb.height - TAB_BAR_H - 10);
+      x = cb.x + 8;
+      y = cb.y + TAB_BAR_H;
+      console.log(`[overlay] positioning on ${cb.browser} at (${x},${y}) ${W}x${H}`);
+    } else {
+      throw new Error('no browser bounds');
+    }
+  } catch {
+    W = Math.min(560, Math.round(sw * 0.38));
+    H = Math.min(700, Math.round(sh * 0.78));
+    x = sw - W - 16;
+    y = Math.round((sh - H) / 2);
+    console.log(`[overlay] fallback position (${x},${y}) ${W}x${H}`);
+  }
 
   if (!_overlayWindow || _overlayWindow.isDestroyed()) {
     _overlayWindow = new BrowserWindow({
       width: W, height: H, x, y,
       transparent: true, frame: false,
       alwaysOnTop: true, skipTaskbar: true,
-      hasShadow: false, focusable: false,
+      hasShadow: true, focusable: false,
       webPreferences: { nodeIntegration: false, contextIsolation: true },
     });
-    _overlayWindow.setIgnoreMouseEvents(true, { forward: true });
     _overlayWindow.setAlwaysOnTop(true, 'screen-saver');
     _overlayWindow.on('closed', () => { _overlayWindow = null; });
+  } else {
+    // Reposition on code update so it tracks Chrome if Chrome moved
+    _overlayWindow.setBounds({ x, y, width: W, height: H });
+  }
+
+  // When stealth is active, HackerRank's mouseleave/blur handlers are neutralized,
+  // so the overlay can be interactive (draggable). Without stealth, pass events
+  // through so Chrome doesn't see a mouseleave from the overlay.
+  if (stealthActive) {
+    _overlayWindow.setIgnoreMouseEvents(false);
+    _overlayWindow.setFocusable(false); // still no keyboard focus steal
+  } else {
+    _overlayWindow.setIgnoreMouseEvents(true, { forward: true });
   }
 
   const html = buildOverlayHtml(code, language);
   _overlayWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
 
-  // Auto-hide after 90 s so it doesn't linger forever.
+  // Auto-hide after 10 minutes.
   if (_overlayHideTimer) clearTimeout(_overlayHideTimer);
   _overlayHideTimer = setTimeout(() => {
     if (_overlayWindow && !_overlayWindow.isDestroyed()) _overlayWindow.close();
-  }, 90000);
+  }, 600000);
 
-  console.log('[overlay] shown', W, 'x', H, 'at', x, y);
+  console.log('[overlay] shown', W, 'x', H, 'at', x, y, stealthActive ? '(interactive)' : '(passthrough)');
 });
 
 ipcMain.handle('hide-solution-overlay', () => {
