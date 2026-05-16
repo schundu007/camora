@@ -22,7 +22,7 @@ const {
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const { execFile } = require('child_process');
+const { execFile, spawn } = require('child_process');
 const {
   Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType,
   Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType,
@@ -194,6 +194,9 @@ app.whenReady().then(async () => {
 
   createWindow();
 
+  // Start auto-detecting HackerRank in the browser (macOS only via AppleScript)
+  startHackerrankAutoDetect(mainWindow);
+
   globalShortcut.register('CommandOrControl+B', () => {
     if (!mainWindow) return;
     mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
@@ -254,7 +257,10 @@ app.on('activate', () => {
   mainWindow.focus();
 });
 app.on('before-quit', () => { isQuitting = true; });
-app.on('will-quit', () => globalShortcut.unregisterAll());
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
+  if (_hrPollTimer) clearInterval(_hrPollTimer);
+});
 
 app.on('second-instance', () => {
   // Same not-ready guard as `activate`: a second-launch attempt can race
@@ -270,16 +276,128 @@ app.on('second-instance', () => {
   mainWindow.focus();
 });
 
+// ── HackerRank auto-detect via AppleScript DOM scraping (macOS only) ────────
+// Every 5 s we check the active Chrome/Brave URL. When a HackerRank codepair
+// or contest URL appears (first time or on navigation to a new question) we
+// inject JS into the live Chrome tab to extract the problem description,
+// selected language, and the starter code from the CodeMirror editor — all
+// without requiring any keypress or cursor movement from the user.
+
+function runAppleScript(script) {
+  return new Promise((resolve, reject) => {
+    const proc = spawn('osascript', ['-']);
+    let out = '';
+    let err = '';
+    proc.stdout.on('data', d => { out += d.toString(); });
+    proc.stderr.on('data', d => { err += d.toString(); });
+    proc.on('close', code => {
+      if (code === 0) resolve(out.trim());
+      else reject(new Error(err.trim() || `osascript exited ${code}`));
+    });
+    proc.stdin.write(script);
+    proc.stdin.end();
+  });
+}
+
+const BROWSERS = ['Google Chrome', 'Brave Browser', 'Microsoft Edge'];
+
+async function getActiveBrowserInfo() {
+  for (const browser of BROWSERS) {
+    try {
+      const url = await runAppleScript(`tell application "${browser}" to URL of active tab of front window`);
+      if (url) return { browser, url };
+    } catch {}
+  }
+  return null;
+}
+
+async function scrapeHackerrankPage(browser) {
+  // Extract problem text, language, and CodeMirror editor content.
+  // JS is base64-encoded to avoid AppleScript quoting nightmares.
+  const jsCode = `(function(){try{
+    var d=document.querySelector('.description-container')||document.querySelector('[class*="problem-statement"]')||document.querySelector('[class*="problem-body"]')||document.querySelector('[class*="question-description"]')||document.querySelector('aside');
+    var problem=d?d.innerText.trim():'';
+    if(problem.length<50){var cols=document.querySelectorAll('[class*="col-xs"]');for(var i=0;i<cols.length;i++){var t=cols[i].innerText.trim();if(t.length>200&&t.length<15000){problem=t;break;}}}
+    var language='';
+    var le=document.querySelector('[class*="language-selector"] button')||document.querySelector('[class*="language"] .title')||document.querySelector('.Select-value-label')||document.querySelector('[class*="language"] select');
+    if(le){language=le.tagName==='SELECT'?(le.options[le.selectedIndex]||{}).text||'':le.textContent.trim();}
+    var starterCode='';
+    var ce=document.querySelector('.CodeMirror');
+    if(ce&&ce.CodeMirror)starterCode=ce.CodeMirror.getValue();
+    if(!starterCode){try{if(typeof monaco!=='undefined'){var ms=monaco.editor.getModels();if(ms&&ms.length>0)starterCode=ms[0].getValue();}}catch(e2){}}
+    return JSON.stringify({problem:problem,language:language,starterCode:starterCode});
+  }catch(e){return JSON.stringify({error:e.message});}})()`;
+
+  const b64 = Buffer.from(jsCode).toString('base64');
+  const result = await runAppleScript(
+    `tell application "${browser}" to tell active tab of front window to execute javascript "eval(atob('${b64}'))"`
+  );
+  return JSON.parse(result);
+}
+
+let _lastHrUrl = null;
+let _hrPollTimer = null;
+
+function startHackerrankAutoDetect(win) {
+  if (process.platform !== 'darwin') return;
+
+  const poll = async () => {
+    try {
+      const info = await getActiveBrowserInfo();
+      if (!info) return;
+      const { browser, url } = info;
+      if (!url.includes('hackerrank.com/codepair') && !url.includes('hackerrank.com/contests')) return;
+      if (url === _lastHrUrl) return; // already processed
+      _lastHrUrl = url;
+      console.log('[hr-auto] new HackerRank URL detected, scraping…', url);
+      // Brief pause so the page DOM settles after navigation
+      await new Promise(r => setTimeout(r, 1800));
+      const scraped = await scrapeHackerrankPage(browser);
+      if (scraped.error) { console.error('[hr-auto] scrape error:', scraped.error); return; }
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('hackerrank-capture-result', { scraped });
+      }
+    } catch (err) {
+      // Chrome not running, permissions not granted, etc. — silently skip.
+      console.debug('[hr-auto] poll skipped:', err.message);
+    }
+  };
+
+  _hrPollTimer = setInterval(poll, 5000);
+  // Run once immediately so detection fires quickly on app launch
+  setTimeout(poll, 2000);
+}
+
 // ── Silent window capture by name ───────────────────────────────────────
-// Used by the global Cmd+Shift+H shortcut to silently grab the HackerRank
+// Used by the global F9 shortcut to silently grab the HackerRank
 // browser window without any user cursor movement or click.
 async function captureWindowByName(searchTerm) {
   const sources = await desktopCapturer.getSources({
     types: ['window'],
     thumbnailSize: { width: 5120, height: 2880 },
   });
+  console.log('[capture] available windows:', sources.map(s => s.name));
+
   const term = (searchTerm || 'hackerrank').toLowerCase();
-  const target = sources.find(s => s.name.toLowerCase().includes(term));
+  // Strategy 1: window title contains "hackerrank" (works on main HackerRank pages)
+  let target = sources.find(s => s.name.toLowerCase().includes(term));
+
+  // Strategy 2: HackerRank codepair/interview pages show title like "Interview | ..."
+  // desktopCapturer returns windows front-to-back (Z-order), so when F9 fires while
+  // user is on HackerRank, the first browser window is the HackerRank window.
+  if (!target) {
+    target = sources.find(s =>
+      /Google Chrome|Safari|Firefox|Brave Browser|Microsoft Edge|Arc/i.test(s.name) &&
+      !/Camora/i.test(s.name)
+    );
+  }
+
+  // Strategy 3: first non-Camora window as last resort
+  if (!target) {
+    target = sources.find(s => !/Camora/i.test(s.name));
+  }
+
+  console.log('[capture] selected window:', target?.name ?? 'none');
   if (!target) return null;
 
   const thumbnail = target.thumbnail;

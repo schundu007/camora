@@ -43,6 +43,8 @@ export function LumoraShellPage() {
   const [copilotFullscreen, setCopilotFullscreen] = useState(false);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const [pendingHackerrankCapture, setPendingHackerrankCapture] = useState<string | null>(null);
+  type HackerrankScraped = { problem: string; language: string; starterCode: string };
+  const [pendingHackerrankScraped, setPendingHackerrankScraped] = useState<HackerrankScraped | null>(null);
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
   const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, threshold: vadThreshold } = useInterviewStore();
   // Persist the Settings-tip dismissal so it's a true one-time hint,
@@ -166,8 +168,11 @@ export function LumoraShellPage() {
   useEffect(() => {
     const camo = (window as any).camo;
     if (!camo?.onHackerrankCapture) return;
-    camo.onHackerrankCapture((data: { dataUrl?: string; error?: string }) => {
-      if (data.dataUrl) {
+    camo.onHackerrankCapture((data: { dataUrl?: string; scraped?: HackerrankScraped; error?: string }) => {
+      if (data.scraped) {
+        navigate('/lumora/coding');
+        setPendingHackerrankScraped(data.scraped);
+      } else if (data.dataUrl) {
         navigate('/lumora/coding');
         setPendingHackerrankCapture(data.dataUrl);
       }
@@ -471,6 +476,8 @@ export function LumoraShellPage() {
                         onVoiceProblemRef={codingProblemRef}
                         pendingHackerrankCapture={pendingHackerrankCapture}
                         onHackerrankCaptureConsumed={() => setPendingHackerrankCapture(null)}
+                        pendingHackerrankScraped={pendingHackerrankScraped}
+                        onHackerrankScrapedConsumed={() => setPendingHackerrankScraped(null)}
                       />
                     </div>
                     {/* Sona Q&A sidebar — independent state, follow-up
