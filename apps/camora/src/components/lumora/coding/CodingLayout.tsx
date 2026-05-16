@@ -221,6 +221,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Screen Recording permission status — checked once on mount (desktop only).
   // 'granted' | 'denied' | 'restricted' | 'not-determined' | null (non-desktop)
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
+  const [isStealthActive, setIsStealthActive] = useState(false);
   useEffect(() => {
     const camo = (window as any).camo;
     if (!camo?.getMediaAccessStatus || !codingPlatform || codingPlatform === 'none') return;
@@ -938,6 +939,25 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     }
   };
 
+  const handleStealthMode = async () => {
+    const camo = (window as any).camo;
+    if (!camo?.injectTrackingNeutralizer) {
+      await dialogAlert({ title: 'Desktop only', message: 'Stealth mode requires the Camora desktop app.' });
+      return;
+    }
+    const result = await camo.injectTrackingNeutralizer();
+    if (result.ok) {
+      setIsStealthActive(true);
+    } else if (result.needsDevMenu) {
+      await dialogAlert({
+        title: 'One-time setup needed',
+        message: `Enable "Allow JavaScript from Apple Events" in ${result.browser || 'Chrome'}:\n\n1. Open ${result.browser || 'Chrome'}\n2. Menu bar → View → Developer (or More Tools)\n3. Click "Allow JavaScript from Apple Events"\n4. Click Stealth again`,
+      });
+    } else {
+      await dialogAlert({ title: 'Stealth failed', message: result.error || 'Could not inject into browser tab.' });
+    }
+  };
+
   const handleFetchFromUrl = async (overrideUrl?: string) => {
     const urlToFetch = overrideUrl ?? problemUrl;
     if (!urlToFetch.trim()) { setError('Please enter a URL'); return; }
@@ -1322,17 +1342,40 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         </>
                       )}
                     </div>
-                    {/* Allow manual collapse/expand even in autopilot mode */}
-                    <button
-                      onClick={() => setIsInputCollapsed(!isInputCollapsed)}
-                      className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-                      style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}
-                      aria-label={isInputCollapsed ? 'Expand' : 'Collapse'}
-                    >
-                      <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* Stealth mode — neutralizes HackerRank mouse/focus tracking via Chrome JS injection */}
+                      {(window as any).camo?.injectTrackingNeutralizer && (
+                        <button
+                          onClick={handleStealthMode}
+                          title={isStealthActive ? 'Stealth active — mouse tracking blocked' : 'Stealth mode — block HackerRank mouse tracking'}
+                          className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-90 active:scale-[0.97]"
+                          style={isStealthActive
+                            ? { background: '#00ea64', color: '#000' }
+                            : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
+                          }
+                        >
+                          {/* Eye with slash icon */}
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                            {isStealthActive
+                              ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
+                              : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                            }
+                          </svg>
+                          {isStealthActive ? 'Stealth ON' : 'Stealth'}
+                        </button>
+                      )}
+                      {/* Allow manual collapse/expand even in autopilot mode */}
+                      <button
+                        onClick={() => setIsInputCollapsed(!isInputCollapsed)}
+                        className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                        style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}
+                        aria-label={isInputCollapsed ? 'Expand' : 'Collapse'}
+                      >
+                        <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   /* Manual mode: show Text / URL / Image picker as before */
