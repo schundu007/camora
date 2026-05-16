@@ -6,6 +6,7 @@ import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import FollowupAsk from '@/components/lumora/coding/FollowupAsk';
 import { LANGUAGES, getLanguageById } from '@/data/languages';
+import { dialogAlert } from '@/components/shared/Dialog';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -808,7 +809,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       });
       if (!resp.ok) {
         const body = await resp.json().catch(() => ({}));
-        throw new Error(body.error || body.detail || `Failed to fetch (${resp.status})`);
+        const msg = body.error || body.detail || `Failed to fetch (${resp.status})`;
+        await dialogAlert({ title: 'Could not fetch problem', message: msg });
+        return;
       }
       const data = await resp.json();
       const text = String(data.problem || '').trim();
@@ -833,7 +836,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         onSubmit(text, language);
       }
     } catch (err: any) {
-      setError(err.message);
+      await dialogAlert({ title: 'Could not fetch problem', message: err.message || 'An unexpected error occurred.' });
     } finally {
       setIsProcessing(false);
     }
@@ -1180,10 +1183,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       {inputMode === 'url' && (
                         <div className="flex gap-2">
                           <input type="url" id="problem-url" name="problem-url" value={problemUrl} onChange={(e) => setProblemUrl(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && !isProcessing && problemUrl.trim()) handleFetchFromUrl(); }}
                             placeholder="https://leetcode.com/problems/two-sum/"
                             className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm placeholder:text-[var(--text-dimmed)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
                             style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
-                          <button onClick={handleFetchFromUrl} disabled={isProcessing || !problemUrl.trim()}
+                          <button type="button" onClick={handleFetchFromUrl} disabled={isProcessing || !problemUrl.trim()}
                             className="px-4 py-2 bg-[var(--accent)] text-white text-xs font-semibold rounded-lg hover:bg-[var(--accent-hover)] disabled:opacity-50 transition-colors">
                             {isProcessing ? 'Loading...' : 'Fetch'}
                           </button>
