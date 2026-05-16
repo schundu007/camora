@@ -27,7 +27,7 @@ codesign --force --deep --sign - --entitlements "$ENTITLEMENTS" "$APP_PATH"
 codesign --verify --verbose=2 "$APP_PATH"
 
 echo "→ Verifying entitlements baked in"
-codesign -d --entitlements - "$APP_PATH" 2>&1 | grep -E "audio-input|network.client" || {
+codesign -d --entitlements - "$APP_PATH" 2>&1 | grep -E "audio-input|network.client|apple-events" || {
   echo "✗ entitlements missing after resign" >&2
   exit 1
 }
