@@ -151,6 +151,9 @@ interface CodingLayoutProps {
   pendingHackerrankCapture?: string | null;
   /** Called once the capture has been consumed so parent can clear it. */
   onHackerrankCaptureConsumed?: () => void;
+  /** Active coding platform from tool-picker ('hackerrank'|'leetcode'|'coderpad'|'none').
+   *  When set (non-empty, non-'none'), hides manual input modes and shows autopilot status. */
+  codingPlatform?: string;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
@@ -179,7 +182,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, codingPlatform }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -206,7 +209,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [collapsedCards, setCollapsedCards] = useState<Set<string>>(new Set());
   const [showFixPrompt, setShowFixPrompt] = useState(false);
   const [fixError, setFixError] = useState('');
-  const [isInputCollapsed, setIsInputCollapsed] = useState(false);
+  // Auto-collapse input panel in autopilot mode (platform selected) so solution fills the screen.
+  const [isInputCollapsed, setIsInputCollapsed] = useState(() => !!(codingPlatform && codingPlatform !== 'none'));
   const [activeSolutionIdx, setActiveSolutionIdx] = useState(0);
 
   // Timer state
@@ -1189,53 +1193,86 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           <div className="flex-1 overflow-y-auto">
             {problemTab === 'description' && (
               <div>
-                {/* Input Tab Header — same pattern + placement as DesignLayout:
-                    navy band + 2px gold underline + pill toolbar on left,
-                    collapse chevron on right. Replaces the old "Problem Input
-                    PASTE" expandable header so Coding mirrors Design's layout. */}
-                <div
-                  className="flex items-center justify-between px-3 py-2"
-                  style={{
-                    background: 'var(--cam-hero-strip)',
-                    borderBottom: '1px solid var(--cam-gold-leaf)',
-                  }}
-                >
+                {/* Autopilot mode: when a coding platform is selected the user
+                    never needs to manually input a problem. Replace the entire
+                    Text/URL/Image picker with a single monitoring status bar. */}
+                {codingPlatform && codingPlatform !== 'none' ? (
                   <div
-                    className="flex items-center gap-1 px-1 py-1"
-                    style={{
-                      background: 'rgba(255,255,255,0.06)',
-                      border: '1px solid rgba(255,255,255,0.16)',
-                      borderRadius: 999,
-                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
-                    }}
+                    className="flex items-center justify-between px-3 py-2"
+                    style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
                   >
-                    {(['paste', 'url', 'image'] as const).map(mode => (
-                      <button key={mode} onClick={() => { setInputMode(mode); setIsInputCollapsed(false); }}
-                        className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
-                        style={
-                          inputMode === mode
-                            ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
-                            : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
-                        }
-                      >{mode === 'paste' ? 'Text' : mode === 'url' ? 'URL' : 'Image'}</button>
-                    ))}
+                    <div className="flex items-center gap-2">
+                      {/* Pulsing green dot — indicates active monitoring */}
+                      {!problemText && (
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#00ea64' }} />
+                          <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#00ea64' }} />
+                        </span>
+                      )}
+                      <span className="text-[11px] font-semibold" style={{ color: problemText ? 'var(--cam-gold-leaf)' : '#00ea64' }}>
+                        {problemText
+                          ? `Problem loaded — solution generating`
+                          : `Monitoring ${({ hackerrank: 'HackerRank', leetcode: 'LeetCode', coderpad: 'CoderPad' } as Record<string,string>)[codingPlatform] ?? codingPlatform} — problem appears automatically`}
+                      </span>
+                    </div>
+                    {/* Allow manual collapse/expand even in autopilot mode */}
+                    <button
+                      onClick={() => setIsInputCollapsed(!isInputCollapsed)}
+                      className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                      style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}
+                      aria-label={isInputCollapsed ? 'Expand' : 'Collapse'}
+                    >
+                      <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setIsInputCollapsed(!isInputCollapsed)}
-                    className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                ) : (
+                  /* Manual mode: show Text / URL / Image picker as before */
+                  <div
+                    className="flex items-center justify-between px-3 py-2"
                     style={{
-                      color: '#FFFFFF',
-                      border: '1px solid rgba(255,255,255,0.16)',
-                      borderRadius: 999,
-                      background: 'rgba(255,255,255,0.06)',
+                      background: 'var(--cam-hero-strip)',
+                      borderBottom: '1px solid var(--cam-gold-leaf)',
                     }}
-                    aria-label={isInputCollapsed ? 'Expand input' : 'Collapse input'}
                   >
-                    <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                </div>
+                    <div
+                      className="flex items-center gap-1 px-1 py-1"
+                      style={{
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.16)',
+                        borderRadius: 999,
+                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
+                      }}
+                    >
+                      {(['paste', 'url', 'image'] as const).map(mode => (
+                        <button key={mode} onClick={() => { setInputMode(mode); setIsInputCollapsed(false); }}
+                          className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
+                          style={
+                            inputMode === mode
+                              ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
+                              : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
+                          }
+                        >{mode === 'paste' ? 'Text' : mode === 'url' ? 'URL' : 'Image'}</button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setIsInputCollapsed(!isInputCollapsed)}
+                      className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                      style={{
+                        color: '#FFFFFF',
+                        border: '1px solid rgba(255,255,255,0.16)',
+                        borderRadius: 999,
+                        background: 'rgba(255,255,255,0.06)',
+                      }}
+                      aria-label={isInputCollapsed ? 'Expand input' : 'Collapse input'}
+                    >
+                      <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
 
                 <div className="p-3 md:p-4 space-y-3">
                   {/* Collapsible Content */}
