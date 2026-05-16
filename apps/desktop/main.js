@@ -342,6 +342,8 @@ function startHackerrankAutoDetect() {
 
   const poll = async () => {
     try {
+      // Skip if Screen Recording not granted — avoids spamming empty captures
+      if (systemPreferences.getMediaAccessStatus('screen') !== 'granted') return;
       const info = await getActiveBrowserInfo();
       if (!info) return;
       const { url } = info;
@@ -371,6 +373,17 @@ function startHackerrankAutoDetect() {
 
 // Manual on-demand trigger — renderer calls this when user clicks "Fetch HackerRank"
 ipcMain.handle('hackerrank-manual-fetch', async () => {
+  // Screen Recording permission is required before desktopCapturer will return
+  // non-empty thumbnails. Check it first so the user gets a clear error rather
+  // than a confusing "could not capture" message.
+  const screenStatus = systemPreferences.getMediaAccessStatus('screen');
+  if (screenStatus !== 'granted') {
+    return {
+      ok: false,
+      needsScreenPermission: true,
+      error: `Camora needs Screen Recording permission to capture the HackerRank window (current status: ${screenStatus}).\n\nSystem Settings → Privacy & Security → Screen & Camera Recording → enable Camora.\n\nRestart Camora after granting permission.`,
+    };
+  }
   try {
     return await doHackerrankScrape();
   } catch (err) {

@@ -830,7 +830,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     try {
       const result = await camo.fetchHackerrankNow();
       if (!result.ok) {
-        await dialogAlert({ title: 'HackerRank fetch failed', message: result.error || 'Unknown error.\n\nMake sure Chrome/Brave is open on the HackerRank tab and that you approved the "Camora wants to control Google Chrome" permission dialog.' });
+        await dialogAlert({ title: 'HackerRank fetch failed', message: result.error || 'Unknown error. Make sure Chrome/Brave is open on the HackerRank tab.' });
+        if (result.needsScreenPermission) camo.openSystemPrivacy?.('screen');
         return;
       }
       // result.dataUrl is a screenshot — run through the existing Claude Vision OCR pipeline
