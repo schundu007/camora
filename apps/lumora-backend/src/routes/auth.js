@@ -15,7 +15,6 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
 import { createRequire } from 'module';
-const pdfParse = createRequire(import.meta.url)('pdf-parse');
 import mammoth from 'mammoth';
 import { createToken } from '../lib/shared-auth.js';
 import { query } from '../lib/shared-db.js';
@@ -222,6 +221,7 @@ router.post('/profile/resume/upload', authenticate, resumeUpload.single('file'),
     if (ext === '.txt') {
       resumeText = req.file.buffer.toString('utf-8');
     } else if (ext === '.pdf') {
+      const pdfParse = createRequire(import.meta.url)('pdf-parse');
       const data = await pdfParse(req.file.buffer);
       resumeText = data.text;
     } else if (ext === '.docx') {
