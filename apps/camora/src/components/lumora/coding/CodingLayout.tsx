@@ -782,6 +782,19 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Solution overlay: when code is ready, push it to the floating overlay so the
+  // user can read it without moving the mouse away from HackerRank.
+  useEffect(() => {
+    const camo = (window as any).camo;
+    if (!camo?.showSolutionOverlay) return;
+    const defaultCode = getDefaultCode(language);
+    if (!code || code === defaultCode) {
+      camo.hideSolutionOverlay?.();
+      return;
+    }
+    camo.showSolutionOverlay({ code, language });
+  }, [code, language]);
+
 
   // ── Actions ─────────────────────────────────────────────────────────────
 

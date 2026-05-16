@@ -17,7 +17,7 @@
 const {
   app, BrowserWindow, globalShortcut, systemPreferences,
   session, shell, ipcMain, desktopCapturer, dialog, nativeImage,
-  Menu, MenuItem, clipboard,
+  Menu, MenuItem, clipboard, screen: electronScreen,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -202,7 +202,13 @@ app.whenReady().then(async () => {
 
   globalShortcut.register('CommandOrControl+B', () => {
     if (!mainWindow) return;
-    mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
+    if (mainWindow.isVisible()) {
+      mainWindow.hide();
+      // Also hide overlay so it doesn't linger while Camora is hidden
+      if (_overlayWindow && !_overlayWindow.isDestroyed()) _overlayWindow.close();
+    } else {
+      mainWindow.show();
+    }
   });
   globalShortcut.register('CommandOrControl+R', () => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.reloadIgnoringCache();
@@ -508,6 +514,85 @@ function startDesktopScreenshotWatcher() {
     }
   }, 1000);
 }
+
+// ── Solution overlay (click-through floating code panel) ─────────────────────
+// Shows generated code as a transparent overlay that floats on top of the
+// HackerRank browser window. setIgnoreMouseEvents passes ALL mouse events
+// through to the browser underneath — HackerRank never sees a mouseleave.
+let _overlayWindow = null;
+let _overlayHideTimer = null;
+
+function buildOverlayHtml(code, language) {
+  const escaped = (code || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:transparent;overflow:hidden}
+  .panel{
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(6,8,16,0.88);
+    border:1px solid rgba(0,71,171,0.6);
+    border-radius:10px;
+    display:flex;flex-direction:column;
+    font-family:'Menlo','Monaco','Courier New',monospace;
+  }
+  .header{
+    padding:6px 12px;
+    background:rgba(0,71,171,0.25);
+    border-radius:10px 10px 0 0;
+    font-size:11px;color:#7ab3ff;letter-spacing:.04em;
+    flex-shrink:0;
+  }
+  pre{
+    flex:1;overflow:auto;padding:12px 14px;
+    font-size:12px;line-height:1.55;
+    color:#c8e6c9;white-space:pre-wrap;word-break:break-all;
+  }
+</style></head><body>
+<div class="panel">
+  <div class="header">CAMORA · ${(language||'').toUpperCase()} SOLUTION</div>
+  <pre>${escaped}</pre>
+</div>
+</body></html>`;
+}
+
+ipcMain.handle('show-solution-overlay', (_event, { code, language }) => {
+  const { width, height } = electronScreen.getPrimaryDisplay().workAreaSize;
+  const W = Math.min(580, Math.round(width * 0.38));
+  const H = Math.min(700, Math.round(height * 0.75));
+  const x = width - W - 12;
+  const y = Math.round((height - H) / 2);
+
+  if (!_overlayWindow || _overlayWindow.isDestroyed()) {
+    _overlayWindow = new BrowserWindow({
+      width: W, height: H, x, y,
+      transparent: true, frame: false,
+      alwaysOnTop: true, skipTaskbar: true,
+      hasShadow: false, focusable: false,
+      webPreferences: { nodeIntegration: false, contextIsolation: true },
+    });
+    _overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+    _overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+    _overlayWindow.on('closed', () => { _overlayWindow = null; });
+  }
+
+  const html = buildOverlayHtml(code, language);
+  _overlayWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+
+  // Auto-hide after 90 s so it doesn't linger forever.
+  if (_overlayHideTimer) clearTimeout(_overlayHideTimer);
+  _overlayHideTimer = setTimeout(() => {
+    if (_overlayWindow && !_overlayWindow.isDestroyed()) _overlayWindow.close();
+  }, 90000);
+
+  console.log('[overlay] shown', W, 'x', H, 'at', x, y);
+});
+
+ipcMain.handle('hide-solution-overlay', () => {
+  if (_overlayHideTimer) { clearTimeout(_overlayHideTimer); _overlayHideTimer = null; }
+  if (_overlayWindow && !_overlayWindow.isDestroyed()) _overlayWindow.close();
+});
 
 // Renderer tells us which coding platform to watch.
 ipcMain.handle('set-coding-platform', (_event, platform) => {
