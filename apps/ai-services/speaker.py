@@ -6,6 +6,7 @@ speaker verification using resemblyzer voice embeddings.
 
 import asyncio
 import base64
+import gc
 import io
 import os
 import secrets
@@ -16,17 +17,38 @@ from functools import partial
 from pathlib import Path
 
 import numpy as np
+import torch
 from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import JSONResponse
 from resemblyzer import VoiceEncoder, preprocess_wav
+
+# Reduce PyTorch thread count so CPU inference doesn't spike memory via
+# OpenMP/MKL thread-local buffers. 1 thread = lower peak RSS on Railway.
+torch.set_num_threads(1)
+torch.set_num_interop_threads(1)
 
 router = APIRouter()
 
 EMBEDDINGS_DIR = Path("/data/embeddings")
 EMBEDDINGS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Lazy-load the encoder so the module can be imported without GPU/model issues
-_encoder = None
+# Lazy-load the encoder. We deliberately do NOT keep a global reference after
+# compute so the PyTorch model's memory is eligible for GC between requests.
+# The model loads in ~0.08s so the overhead is acceptable.
+_encoder: VoiceEncoder | None = None
+_encoder_lock = asyncio.Lock()
+
+
+async def _get_encoder_async() -> VoiceEncoder:
+    """Load encoder once; keep it warm. Protected against concurrent init."""
+    global _encoder
+    if _encoder is not None:
+        return _encoder
+    async with _encoder_lock:
+        if _encoder is None:
+            loop = asyncio.get_event_loop()
+            _encoder = await loop.run_in_executor(None, VoiceEncoder)
+    return _encoder
 
 
 def _get_encoder() -> VoiceEncoder:
@@ -34,6 +56,14 @@ def _get_encoder() -> VoiceEncoder:
     if _encoder is None:
         _encoder = VoiceEncoder()
     return _encoder
+
+
+def _free_encoder_memory():
+    """Release cached audio buffers from torch allocator after a heavy call."""
+    try:
+        gc.collect()
+    except Exception:
+        pass
 
 
 _USER_ID_RE = __import__("re").compile(r"^[A-Za-z0-9_-]{1,128}$")
@@ -179,6 +209,7 @@ async def speaker_enroll(
         with open(tmp, "wb") as f:
             np.save(f, embedding)
         os.replace(tmp, final)
+        _free_encoder_memory()
         return {"success": True, "message": "Voice enrolled successfully"}
     except HTTPException:
         raise
@@ -210,6 +241,8 @@ async def speaker_delete(request: Request):
     except HTTPException:
         raise
     except Exception as exc:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(exc))
 
 
@@ -368,6 +401,7 @@ async def speaker_diarize(
                     audio_b64 = base64.b64encode(buf.getvalue()).decode("ascii")
 
         print(f"[Diarize] {len(merged)} segments, interviewer={interviewer_ratio:.0%}, transcribe={should_transcribe}, sliced={audio_b64 is not None}")
+        _free_encoder_memory()
         return {
             "should_transcribe": should_transcribe,
             "segments": merged,

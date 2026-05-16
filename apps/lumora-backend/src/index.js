@@ -348,7 +348,7 @@ import usercodeRouter from './routes/usercode.js';
 
 // Per-IP rate limiting — previously only ascend had limits. Transcribe/speaker/
 // diagram were wide open to abuse before this.
-import { authLimiter, apiLimiter, aiLimiter } from './middleware/rateLimiter.js';
+import { authLimiter, apiLimiter, aiLimiter, codingLimiter } from './middleware/rateLimiter.js';
 import { authenticate } from './middleware/authenticate.js';
 import { requirePaidSubscription } from './middleware/requirePaidSubscription.js';
 
@@ -372,7 +372,7 @@ app.use('/api/v1/inference', aiLimiter, authenticate, requirePaidSubscription, i
 // Backwards compat: /api/v1/stream → forward to inference router's /stream handler
 app.post('/api/v1/stream', aiLimiter, authenticate, requirePaidSubscription,
   (req, res, next) => { req.url = '/stream'; inferenceRouter(req, res, next); });
-app.use('/api/v1/coding', aiLimiter, authenticate, requirePaidSubscription, codingRouter);
+app.use('/api/v1/coding', codingLimiter, authenticate, requirePaidSubscription, codingRouter);
 // Per-user code kit indexing (RAG Phase 6). Server-to-server hook from
 // ascend-backend's run.js after a successful Practice run. Free-tier
 // users can also build their kit, so this skips requirePaidSubscription;

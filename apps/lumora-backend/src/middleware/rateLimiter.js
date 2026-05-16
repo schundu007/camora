@@ -50,3 +50,12 @@ export const paymentLimiter = createLimiter({
   max: 20,
   message: 'Too many payment requests, please try again later',
 });
+
+// Coding-specific limiter: fix/execute/translate cycle naturally needs
+// 3-5 calls per minute in a debug loop. 60/min gives headroom without
+// removing cost protection entirely.
+export const codingLimiter = createLimiter({
+  windowMs: 60 * 1000,
+  max: 60,
+  message: 'Too many coding requests, please wait a moment',
+});
