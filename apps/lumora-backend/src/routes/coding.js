@@ -327,8 +327,12 @@ BASH-SPECIFIC FACTS — apply to ALL bash starter code problems
       done
     done
 
-• (( arithmetic )) returns exit-code 1 when result is 0 — ALWAYS append || true:
-    (( sum += word )) || true         ← prevents script abort under set -e
+• EVERY line with [[ ]] AND/OR (( )) MUST end with || true — BOTH return exit 1
+  which aborts the script under HackerRank's bash (runs with set -e implicitly):
+    [[ "$word" =~ ^-?[0-9]+\$ ]] && (( sum += word )) || true
+    ─── regex no-match = exit 1 ───┘  ── result 0 = exit 1 ┘  ─ resets to 0 ┘
+  WITHOUT || true: the FIRST non-matching element aborts the whole script → Out: 0
+  NEVER write [[ ... ]] && (( ... )) without || true at the very end of the line
 
 • $0 = SCRIPT FILENAME — never use it as data
 • $@ at script level = positional args to the script = EMPTY for stdin problems
@@ -364,7 +368,7 @@ ABSOLUTE RULES for both cases:
   ✗ NEVER output function definition without surrounding script
   ✗ NEVER re-read stdin
   ✗ NEVER use $0 as data
-  ✗ NEVER forget || true after (( arithmetic ))`
+  ✗ NEVER write [[ ]] && (( )) without || true — ALWAYS end the whole line with || true`
   : `CRITICAL CODE STRUCTURE RULES for ${language}:
 - Write a function, class method, or the idiomatic entry point for ${language}
 - Do NOT include a main block or hard-coded example inputs in the code
