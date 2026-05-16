@@ -14,7 +14,8 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
-import pdfParse from 'pdf-parse';
+import { createRequire } from 'module';
+const pdfParse = createRequire(import.meta.url)('pdf-parse');
 import mammoth from 'mammoth';
 import { createToken } from '../lib/shared-auth.js';
 import { query } from '../lib/shared-db.js';
