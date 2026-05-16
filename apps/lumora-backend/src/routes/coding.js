@@ -295,7 +295,7 @@ Your code must be EXTREMELY CONCISE:
 Detect and complete partial/starter code from the problem. When you detect
 partial code with markers like "complete the function", "TODO", or empty body,
 you MUST complete the given template, NOT rewrite from scratch.
-${starterCode ? `\n##############################################################################\n# STARTER CODE — THIS IS THE EXACT TEMPLATE FROM THE PLATFORM\n##############################################################################\nThe interview platform provides this exact starter code. Your solution MUST use\nthis as the base. DO NOT change function names, wrapper calls, input-reading\nlines, or surrounding boilerplate. ONLY fill in the missing implementation\ninside the function body.\n\n\`\`\`${language}\n${starterCode}\n\`\`\`\n\nAll 3 solutions must follow this exact structure.\n` : ''}
+${starterCode ? `\n##############################################################################\n# STARTER CODE — THIS IS THE EXACT TEMPLATE FROM THE PLATFORM\n##############################################################################\nThe interview platform provides this exact starter code. Your solution MUST use\nthis as the base. DO NOT change function names, wrapper calls, input-reading\nlines, or surrounding boilerplate. ONLY fill in the missing implementation.\n\n\`\`\`${language}\n${starterCode}\n\`\`\`\n\nYour single solution must follow this exact structure — return only 1 solution in the solutions array.\n` : ''}
 
 ##############################################################################
 # RULE #3: CODE STRUCTURE
@@ -310,17 +310,29 @@ CASE A — Starter code HAS an empty function stub (e.g. "def solve():\n    pass
   → PRESERVE EVERYTHING ELSE VERBATIM: shebang, imports, input-reading, wrapper calls, exit.
   → Output the COMPLETE script with your implementation inside the stub.
 
-CASE B — Starter code has NO function stub (only input-reading boilerplate + exit):
-  Example: #!/usr/bin/env bash / readarray -t my_array </dev/stdin / exit 0
-  → You must INSERT your complete implementation INTO the script:
-    1. Keep the shebang line exactly as-is (line 1)
-    2. Keep ALL input-reading lines exactly as-is (readarray, scanf, sys.stdin, etc.)
-    3. ADD your function definition(s) AFTER the input-reading section
-    4. ADD the function call using the already-read variable
-       (e.g. count_elements "\${my_array[@]}" or echo "\${#my_array[@]}")
-    5. Keep exit 0 (or similar) at the end
-  → Output the COMPLETE script — do NOT output just the function in isolation.
-  → The function MUST be called — defining it without calling it produces no output.
+CASE B — Starter code has NO function stub (just input-reading boilerplate + exit):
+  ADD your logic INLINE between the input-reading lines and exit. Do NOT create a new function.
+
+  ─── BASH EXAMPLE ───────────────────────────────────────────────────────────
+  Starter:         #!/usr/bin/env bash
+                   readarray -t my_array </dev/stdin
+                   exit 0
+
+  Correct output:  #!/usr/bin/env bash
+                   readarray -t my_array </dev/stdin
+                   echo "\${#my_array[@]}"   ← add logic HERE, inline
+                   exit 0
+
+  BASH CRITICAL FACTS — READ BEFORE WRITING ANY BASH CODE:
+  • readarray -t my_array </dev/stdin fills the GLOBAL bash array "my_array"
+  • "\${my_array[@]}"  = all elements expanded
+  • "\${#my_array[@]}" = number of elements (COUNT)
+  • $0 = SCRIPT FILENAME — NEVER pass $0 as data or call anything with $0
+  • $@ = positional args to the SCRIPT — for stdin-based problems $@ IS EMPTY
+  • stdin is already consumed by readarray — NEVER re-read it inside a function
+  → For any array operation: use \${my_array[@]} or \${#my_array[@]} directly inline
+  → If you must define a helper function: call it with "\${my_array[@]}", NEVER with $0
+  ────────────────────────────────────────────────────────────────────────────
 
 ABSOLUTE RULES for both cases:
   ✓ Shebang lines (#!/usr/bin/env bash etc.) — always first line, always preserved
@@ -328,7 +340,9 @@ ABSOLUTE RULES for both cases:
   ✓ Function names — must EXACTLY match what the problem describes or what the tests call
   ✓ Exit statements — always preserved
   ✗ NEVER output just a function definition without the full surrounding script context
-  ✗ NEVER re-read stdin if the starter code already reads it`
+  ✗ NEVER re-read stdin if the starter code already reads it
+  ✗ NEVER use $0 as data — it is the script filename
+  ✗ NEVER call a function with $0 or $@ for stdin-based problems`
   : `CRITICAL CODE STRUCTURE RULES for ${language}:
 - Write a function, class method, or the idiomatic entry point for ${language}
 - Do NOT include a main block or hard-coded example inputs in the code
@@ -357,9 +371,12 @@ CODE STYLE REQUIREMENTS:
 Target language: ${language}
 
 ##############################################################################
-# CRITICAL: EXACTLY 3 SOLUTIONS REQUIRED
+# ${starterCode ? 'CRITICAL: EXACTLY 1 SOLUTION REQUIRED (starter code present)' : 'CRITICAL: EXACTLY 3 SOLUTIONS REQUIRED'}
 ##############################################################################
-You MUST return a "solutions" array with EXACTLY 3 objects.
+${starterCode
+  ? `You MUST return a "solutions" array with EXACTLY 1 object — the single correct implementation that satisfies the starter code template above.
+Do NOT return multiple approaches. The starter code fixes the structure; there is only one right way to implement it.`
+  : `You MUST return a "solutions" array with EXACTLY 3 objects.
 Do NOT return a single "code" field. Use "solutions" array ONLY.
 
 The 3 solutions MUST be WIDELY RECOGNIZED approaches that engineers
@@ -374,7 +391,7 @@ For math problems: Brute Force, Mathematical Formula, Bit Manipulation
 
 Order: Solution 1 = Brute Force / Naive (simplest, easiest to explain)
        Solution 2 = Standard Optimized (what most candidates should know)
-       Solution 3 = Most Optimal / Clever (what top candidates present)
+       Solution 3 = Most Optimal / Clever (what top candidates present)`}
 
 Respond with valid JSON in EXACTLY this format (no text before/after):
 {
@@ -431,19 +448,19 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
 }
 
 Rules:
-- You MUST provide exactly 3 solutions with DIFFERENT approaches (e.g. brute force -> optimized -> most optimal)
+- ${starterCode ? 'You MUST provide exactly 1 solution matching the starter code template' : 'You MUST provide exactly 3 solutions with DIFFERENT approaches (e.g. brute force -> optimized -> most optimal)'}
 - Each solution MUST have complete, runnable code — not pseudocode
 - Each solution MUST have a patternTag from the canonical list above (pick the single most accurate one)
 - Each solution MUST have a narration field — first-person spoken script the candidate will READ OUT LOUD during the interview (4-6 sentences, natural speech, no markdown)
 - Each solution MUST have a trace field — 4-10 step-by-step dry-run entries showing variable state as the algorithm runs on examples[0]. Each step: { step: number, action: short verb phrase, state: key variables formatted as 'name=value' joined with commas }. No code in state, just names and values. Shows the candidate how to talk through the first test case at a whiteboard.
 - Do NOT add comments in the code
 - Do NOT add main blocks or hard-coded test calls
-- The pitch should compare the 3 approaches conversationally
+- ${starterCode ? 'The pitch should explain the chosen approach and complexity' : 'The pitch should compare the 3 approaches conversationally'}
 - Generate COMPLETE, RUNNABLE code that includes all necessary imports for each solution
 - Examples must have exact input/output pairs
-- ALL 3 solutions must produce correct output for the given examples
+- ${starterCode ? 'The 1 solution must produce correct output for the given examples' : 'ALL 3 solutions must produce correct output for the given examples'}
 - Use the LATEST modern patterns and APIs for ${language}
-- Order solutions from simplest (brute force) to most optimal`;
+- ${starterCode ? '' : 'Order solutions from simplest (brute force) to most optimal'}`;
 }
 
 // ---------------------------------------------------------------------------
