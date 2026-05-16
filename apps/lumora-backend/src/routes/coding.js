@@ -298,15 +298,25 @@ you MUST complete the given template, NOT rewrite from scratch.
 ${starterCode ? `\n##############################################################################\n# STARTER CODE — THIS IS THE EXACT TEMPLATE FROM THE PLATFORM\n##############################################################################\nThe interview platform provides this exact starter code. Your solution MUST use\nthis as the base. DO NOT change function names, wrapper calls, input-reading\nlines, or surrounding boilerplate. ONLY fill in the missing implementation\ninside the function body.\n\n\`\`\`${language}\n${starterCode}\n\`\`\`\n\nAll 3 solutions must follow this exact structure.\n` : ''}
 
 ##############################################################################
-# RULE #3: CODE STRUCTURE - FUNCTION-BASED, NO HARD-CODED MAIN
+# RULE #3: CODE STRUCTURE
 ##############################################################################
-CRITICAL CODE STRUCTURE RULES for ${language}:
+${starterCode
+  ? `STARTER CODE IS PRESENT — RULE #3 IS FULLY OVERRIDDEN BY RULE #2.6 ABOVE.
+The starter code IS the complete code skeleton. Your ONLY job is to fill in the
+empty function body. PRESERVE EVERYTHING ELSE VERBATIM:
+  ✓ Shebang lines (#!/usr/bin/env bash etc.)
+  ✓ Input-reading boilerplate (readarray, scanf, sys.stdin, etc.)
+  ✓ Function declarations and their EXACT names
+  ✓ Function calls at the bottom
+  ✓ Exit statements
+DO NOT restructure, rename, or reorganise anything outside the function body.`
+  : `CRITICAL CODE STRUCTURE RULES for ${language}:
 - Write a function, class method, or the idiomatic entry point for ${language}
 - Do NOT include a main block or hard-coded example inputs in the code
 - The test runner or user will call your function with arguments
 - The "examples" field in JSON handles test cases — NOT the code itself
 - For config/infra languages (Terraform, Kubernetes, Docker, SQL, etc.),
-  write the complete config/query directly
+  write the complete config/query directly`}
 
 ##############################################################################
 # RULE #4: PLAIN TEXT IN EXPLANATIONS - NO CODE BLOCKS
@@ -1294,6 +1304,23 @@ const imageUpload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 });
 
+function detectLangFromCode(code) {
+  if (!code) return null;
+  if (/^#!\s*\/usr\/bin\/env\s+bash|^#!\s*\/bin\/bash|^#!\s*\/bin\/sh\b/m.test(code)) return 'bash';
+  if (/^#!\s*\/usr\/bin\/env\s+python|^#!\s*\/usr\/bin\/python/m.test(code)) return 'python';
+  if (/^#!\s*\/usr\/bin\/env\s+ruby|^#!\s*\/usr\/bin\/ruby/m.test(code)) return 'ruby';
+  if (/^#!\s*\/usr\/bin\/env\s+perl/m.test(code)) return 'perl';
+  if (/^#!\s*\/usr\/bin\/env\s+node/m.test(code)) return 'javascript';
+  if (/\bpublic\s+class\b/.test(code) && /\bSystem\.out\b/.test(code)) return 'java';
+  if (/#include\s*<(iostream|vector|string|algorithm)>/.test(code)) return 'cpp';
+  if (/#include\s*<(stdio|stdlib)\.h>/.test(code) && !/class\b/.test(code)) return 'c';
+  if (/^package\s+main\b/m.test(code) && /\bfmt\b/.test(code)) return 'go';
+  if (/^<\?php/m.test(code)) return 'php';
+  if (/^fn\s+main\s*\(\)/m.test(code) || /^\s*use\s+std::/m.test(code)) return 'rust';
+  if (/^fun\s+main\s*\(/m.test(code) || /\bprintln!\(/.test(code)) return 'kotlin';
+  return null;
+}
+
 router.post('/extract-from-image', authenticate, imageUpload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -1308,18 +1335,20 @@ router.post('/extract-from-image', authenticate, imageUpload.single('image'), as
     const isDesign = kind === 'design';
     const subject = isDesign ? 'SYSTEM DESIGN interview question' : 'CODING interview problem';
 
-    const prompt = `You are an OCR engine analyzing a ${subject} screenshot. Return ONLY valid JSON with exactly these two fields and nothing else:
+    const prompt = `You are an OCR engine analyzing a ${subject} screenshot from a coding interview platform (HackerRank, LeetCode, CoderPad, etc.). Return ONLY valid JSON with exactly these three fields and nothing else:
 
 {
-  "problem": "<verbatim problem statement — title, description, constraints, examples. Preserve all formatting and line breaks. Return the string NO_PROBLEM_FOUND if no problem text is visible>",
-  "starter_code": "<verbatim starter/template code from the code editor panel, preserving exact indentation, function names, and structure. This is the exact boilerplate the candidate must fill in. Return null if no code editor panel is visible in the image>"
+  "problem": "<verbatim problem statement — title, description, constraints, input/output format, examples. Preserve all formatting and line breaks. Return the string NO_PROBLEM_FOUND if no problem text is visible>",
+  "starter_code": "<verbatim starter/template code from the code editor panel, preserving exact indentation, function names, shebang lines, input-reading boilerplate, and wrapper calls — EVERYTHING visible in the editor. This is the exact code skeleton the candidate must fill in. Return null if no code editor is visible>",
+  "detected_language": "<programming language detected from the code editor — e.g. 'python', 'java', 'cpp', 'javascript', 'bash', 'go', 'ruby', 'rust', 'typescript', 'kotlin', 'scala', 'swift'. Identify from syntax, keywords, shebang, import style. Return null if no code visible>"
 }
 
 Critical rules:
-- "problem": transcribe verbatim from the problem description area (usually left panel or top section). Never solve it. Never paraphrase.
-- "starter_code": transcribe verbatim from any visible code editor (usually right panel). This includes function stubs, input-reading lines, and wrapper calls — everything in the editor. null if no editor visible.
+- "problem": left panel or top section. Transcribe verbatim — title, description, constraints, examples. Never solve or paraphrase.
+- "starter_code": right panel or bottom editor. Copy EVERY line in the editor verbatim — shebang, imports, class declarations, function stubs with their EXACT names, input-reading (scanf/readline/input/sys.stdin), print statements, wrapper calls at the bottom. null only if no editor is visible at all.
+- "detected_language": look at the code syntax, not just shebangs — Python is recognizable from def/import/if __name__, Java from public class/System.out, etc.
 - Return ONLY valid JSON. No preamble, no explanation, no markdown fences.
-- NEVER describe the image ("I can see...", "The screenshot shows...") — output JSON only.`;
+- NEVER describe the image — output JSON only.`;
 
     const msg = await anthropicClient.messages.create({
       model: 'claude-sonnet-4-6',
@@ -1337,10 +1366,11 @@ Critical rules:
 
     let problem = 'NO_PROBLEM_FOUND';
     let starterCode = null;
+    let parsed = null;
     try {
       // Strip markdown fences if model wrapped in ```json ... ```
       const jsonText = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-      const parsed = JSON.parse(jsonText);
+      parsed = JSON.parse(jsonText);
       problem = (parsed.problem || 'NO_PROBLEM_FOUND').trim();
       starterCode = parsed.starter_code || null;
     } catch {
@@ -1354,7 +1384,13 @@ Critical rules:
     if (!problem || problem === 'NO_PROBLEM_FOUND') {
       return res.status(422).json({ detail: 'Could not extract a problem from this image. Try a clearer screenshot showing the problem statement.' });
     }
-    res.json({ problem, starter_code: starterCode, kind });
+    // Prefer Claude's vision-based language detection (sees syntax, not just shebangs).
+    // Fall back to regex-based pattern matching for cases where Claude returns null.
+    const visionLang = parsed?.detected_language?.toLowerCase()?.trim() || null;
+    const regexLang = detectLangFromCode(starterCode);
+    const detectedLanguage = visionLang || regexLang;
+    console.log(`[extract-from-image] lang_vision=${visionLang} lang_regex=${regexLang} final=${detectedLanguage}`);
+    res.json({ problem, starter_code: starterCode, kind, detected_language: detectedLanguage });
   } catch (err) {
     console.error('extract-from-image error:', err?.message || err);
     res.status(500).json({ detail: err?.message || 'Image extraction failed' });

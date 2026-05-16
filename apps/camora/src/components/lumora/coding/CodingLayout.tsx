@@ -211,6 +211,22 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [fixError, setFixError] = useState('');
   // Auto-collapse input panel in autopilot mode (platform selected) so solution fills the screen.
   const [isInputCollapsed, setIsInputCollapsed] = useState(() => !!(codingPlatform && codingPlatform !== 'none'));
+
+  // Screen Recording permission status — checked once on mount (desktop only).
+  // 'granted' | 'denied' | 'restricted' | 'not-determined' | null (non-desktop)
+  const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
+  useEffect(() => {
+    const camo = (window as any).camo;
+    if (!camo?.getMediaAccessStatus || !codingPlatform || codingPlatform === 'none') return;
+    let cancelled = false;
+    const check = async () => {
+      const status = await camo.getMediaAccessStatus('screen').catch(() => null);
+      if (!cancelled) setScreenPermStatus(status);
+    };
+    check();
+    const interval = setInterval(check, 10000); // re-check every 10s in case user grants mid-session
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [codingPlatform]);
   const [activeSolutionIdx, setActiveSolutionIdx] = useState(0);
 
   // Timer state
@@ -1201,19 +1217,39 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                     className="flex items-center justify-between px-3 py-2"
                     style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
                   >
-                    <div className="flex items-center gap-2">
-                      {/* Pulsing green dot — indicates active monitoring */}
-                      {!problemText && (
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#00ea64' }} />
-                          <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#00ea64' }} />
+                    <div className="flex items-center gap-2 min-w-0">
+                      {screenPermStatus && screenPermStatus !== 'granted' ? (
+                        /* Screen Recording not granted — detection will never fire */
+                        <>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                          <span className="text-[11px] font-semibold truncate" style={{ color: '#f59e0b' }}>
+                            Screen Recording not granted — auto-detect paused
+                          </span>
+                          <button
+                            onClick={() => (window as any).camo?.openSystemPrivacy?.('screen')}
+                            className="px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-80"
+                            style={{ background: '#f59e0b', color: '#000' }}
+                          >
+                            Fix in Settings
+                          </button>
+                        </>
+                      ) : problemText ? (
+                        /* Problem captured, solution on its way */
+                        <span className="text-[11px] font-semibold" style={{ color: 'var(--cam-gold-leaf)' }}>
+                          Problem loaded — solution generating
                         </span>
+                      ) : (
+                        /* Actively monitoring */
+                        <>
+                          <span className="relative flex h-2 w-2 shrink-0">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#00ea64' }} />
+                            <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#00ea64' }} />
+                          </span>
+                          <span className="text-[11px] font-semibold" style={{ color: '#00ea64' }}>
+                            {`Monitoring ${({ hackerrank: 'HackerRank', leetcode: 'LeetCode', coderpad: 'CoderPad' } as Record<string,string>)[codingPlatform] ?? codingPlatform} — problem appears automatically`}
+                          </span>
+                        </>
                       )}
-                      <span className="text-[11px] font-semibold" style={{ color: problemText ? 'var(--cam-gold-leaf)' : '#00ea64' }}>
-                        {problemText
-                          ? `Problem loaded — solution generating`
-                          : `Monitoring ${({ hackerrank: 'HackerRank', leetcode: 'LeetCode', coderpad: 'CoderPad' } as Record<string,string>)[codingPlatform] ?? codingPlatform} — problem appears automatically`}
-                      </span>
                     </div>
                     {/* Allow manual collapse/expand even in autopilot mode */}
                     <button
