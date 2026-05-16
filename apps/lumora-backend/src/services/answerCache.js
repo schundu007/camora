@@ -114,8 +114,8 @@ export function buildAnswerCacheKey(parts) {
     sk: parts.starterCode ? crypto.createHash('sha1').update(String(parts.starterCode)).digest('hex').slice(0, 12) : null,
   });
   const h = crypto.createHash('sha256').update(normalized).digest('hex');
-  // v3: added sk (starter code hash) — busts v2 entries that were cached without it.
-  return `lumora:answer:v3:${h}`;
+  // v4: bash always generates 1 solution — busts v3 entries with 3-solution bash answers.
+  return `lumora:answer:v4:${h}`;
 }
 
 export async function cacheGet(key) {
