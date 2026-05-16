@@ -719,6 +719,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         await extractAndMaybeGenerate(file, true);
       } catch (err: any) {
         setError(err.message || 'Failed to process HackerRank screenshot.');
+        // Reset dedup in main process so the next poll retries this URL.
+        (window as any).camo?.resetLastCaptureUrl?.();
       }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps

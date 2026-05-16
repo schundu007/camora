@@ -43,4 +43,6 @@ contextBridge.exposeInMainWorld('camo', {
   offHackerrankCapture: () => {
     ipcRenderer.removeAllListeners('hackerrank-capture-result');
   },
+  // Notify main that OCR failed so the next poll retries the same URL.
+  resetLastCaptureUrl: () => ipcRenderer.invoke('reset-last-capture-url'),
 });
