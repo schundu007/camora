@@ -1215,10 +1215,30 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: 'URL is required' });
 
+    // Known JS-rendered / auth-gated platforms that will never scrape cleanly.
+    // Return a helpful message immediately instead of burning 10s on a timeout.
+    const knownSpa = [
+      /hackerrank\.com\/codepair\//i,
+      /hackerrank\.com\/contests\//i,
+      /coderpad\.io\//i,
+      /replit\.com\//i,
+      /codingame\.com\//i,
+    ];
+    if (knownSpa.some(re => re.test(url))) {
+      return res.status(400).json({
+        error: 'Live coding sessions and authenticated platforms can\'t be scraped. Paste the problem text in the Text tab, or use the Image tab to screenshot it.',
+      });
+    }
+
     // LeetCode SPAs need the GraphQL path — raw fetch returns no content.
-    const lcProblem = await fetchLeetcodeProblem(url).catch((e) => {
-      throw new Error(`LeetCode fetch failed: ${e.message}`);
-    });
+    // Failures here fall through to the generic fetch below (e.g. premium problems
+    // that aren't accessible via GraphQL may still have a readable HTML page).
+    let lcProblem = null;
+    try {
+      lcProblem = await fetchLeetcodeProblem(url);
+    } catch (e) {
+      console.warn('fetchLeetcodeProblem failed, falling back to raw fetch:', e.message);
+    }
     if (lcProblem) {
       return res.json({ problem: lcProblem, source: url });
     }
