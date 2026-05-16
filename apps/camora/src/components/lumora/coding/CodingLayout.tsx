@@ -64,22 +64,6 @@ function extractTestCases(content: string): Array<{ input: string; expected: str
   return testCases;
 }
 
-function mapHackerrankLanguage(hrLang: string): string {
-  const map: Record<string, string> = {
-    'python': 'python', 'python 3': 'python', 'python3': 'python', 'pypy 3': 'python', 'pypy3': 'python',
-    'javascript': 'javascript', 'node.js': 'nodejs',
-    'java': 'java', 'java 8': 'java', 'java 11': 'java',
-    'c++': 'cpp', 'c++ 14': 'cpp', 'c++ 17': 'cpp', 'cpp': 'cpp',
-    'c': 'c',
-    'bash': 'bash', 'shell': 'bash',
-    'sql': 'sql', 'mysql': 'mysql',
-    'go': 'go', 'golang': 'go',
-    'ruby': 'ruby', 'swift': 'swift', 'kotlin': 'kotlin',
-    'scala': 'scala', 'perl': 'perl', 'haskell': 'haskell',
-    'typescript': 'typescript', 'php': 'php', 'rust': 'rust',
-  };
-  return map[(hrLang || '').toLowerCase().trim()] || 'python';
-}
 
 function getDefaultCode(lang: string): string {
   const found = getLanguageById(lang);
@@ -167,10 +151,6 @@ interface CodingLayoutProps {
   pendingHackerrankCapture?: string | null;
   /** Called once the capture has been consumed so parent can clear it. */
   onHackerrankCaptureConsumed?: () => void;
-  /** Structured data scraped directly from the HackerRank DOM (zero-keypress path). */
-  pendingHackerrankScraped?: { problem: string; language: string; starterCode: string } | null;
-  /** Called once the scraped payload has been consumed so parent can clear it. */
-  onHackerrankScrapedConsumed?: () => void;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
@@ -199,7 +179,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankScraped, onHackerrankScrapedConsumed }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -724,33 +704,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingHackerrankCapture]);
 
-  // Auto-detect (Electron desktop): DOM-scraped HackerRank data — no OCR, no keypress.
-  // Fired automatically when Camora detects a HackerRank codepair URL in Chrome.
-  useEffect(() => {
-    if (!pendingHackerrankScraped) return;
-    onHackerrankScrapedConsumed?.();
-    const { problem, language: hrLang, starterCode: hrCode } = pendingHackerrankScraped;
-    const langId = mapHackerrankLanguage(hrLang);
-    setLanguage(langId);
-    if (problem) {
-      setProblemText(problem);
-      const cases = extractTestCasesFromProblem(problem);
-      setTestCases(cases.length > 0 ? cases : [{ input: '', expected: '' }]);
-    }
-    if (hrCode) {
-      setStarterCode(hrCode);
-      setCode(hrCode);
-    } else {
-      setCode(getDefaultCode(langId));
-    }
-    setInputMode('paste');
-    setIsInputCollapsed(true);
-    if (problem) {
-      setProblemTab('solution');
-      onSubmit(problem, langId, hrCode ? { starterCode: hrCode } : undefined);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingHackerrankScraped]);
 
   // ── Actions ─────────────────────────────────────────────────────────────
 
@@ -880,22 +833,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         await dialogAlert({ title: 'HackerRank fetch failed', message: result.error || 'Unknown error.\n\nMake sure Chrome/Brave is open on the HackerRank tab and that you approved the "Camora wants to control Google Chrome" permission dialog.' });
         return;
       }
-      const { problem, language: hrLang, starterCode: hrCode } = result.data;
-      const langId = mapHackerrankLanguage(hrLang || '');
-      setLanguage(langId);
-      if (problem) {
-        setProblemText(problem);
-        const cases = extractTestCasesFromProblem(problem);
-        setTestCases(cases.length > 0 ? cases : [{ input: '', expected: '' }]);
-      }
-      if (hrCode) { setStarterCode(hrCode); setCode(hrCode); }
-      else { setCode(getDefaultCode(langId)); }
-      setInputMode('paste');
-      setIsInputCollapsed(true);
-      if (problem) {
-        setProblemTab('solution');
-        onSubmit(problem, langId, hrCode ? { starterCode: hrCode } : undefined);
-      }
+      // result.dataUrl is a screenshot — run through the existing Claude Vision OCR pipeline
+      const blob = await (await fetch(result.dataUrl)).blob();
+      const file = new File([blob], 'hackerrank-capture.png', { type: blob.type || 'image/png' });
+      setInputMode('image');
+      setImagePreview(result.dataUrl);
+      await extractAndMaybeGenerate(file, true);
     } catch (err: any) {
       await dialogAlert({ title: 'HackerRank fetch error', message: err.message || 'Unknown error' });
     } finally {
