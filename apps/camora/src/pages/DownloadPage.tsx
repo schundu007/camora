@@ -255,7 +255,7 @@ function FadeInSection({ children, className, delay = 0 }: { children: React.Rea
 export default function DownloadPage() {
   const navigate = useNavigate();
   const [detectedOS, setDetectedOS] = useState<OSType>('mac-arm');
-  const [appVersion, setAppVersion] = useState('1.0.0');
+  const [appVersion, setAppVersion] = useState('2.1.0');
   const { subscription, subscriptionLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
