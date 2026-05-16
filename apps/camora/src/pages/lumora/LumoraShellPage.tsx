@@ -533,6 +533,7 @@ export function LumoraShellPage() {
                         onVoiceProblemRef={codingProblemRef}
                         pendingHackerrankCapture={pendingHackerrankCapture}
                         onHackerrankCaptureConsumed={() => setPendingHackerrankCapture(null)}
+                        codingPlatform={codingPlatform}
                       />
                     </div>
                     {/* Sona Q&A sidebar — independent state, follow-up
