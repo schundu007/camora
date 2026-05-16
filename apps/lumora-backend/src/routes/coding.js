@@ -1382,6 +1382,7 @@ Critical rules:
     });
 
     const rawText = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+    console.log(`[extract-from-image] imgBytes=${req.file.buffer.length} rawText=${rawText.slice(0, 400)}`);
 
     let problem = 'NO_PROBLEM_FOUND';
     let starterCode = null;

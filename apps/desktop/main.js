@@ -459,6 +459,12 @@ ipcMain.handle('set-coding-platform', (_event, platform) => {
   console.log('[hr-auto] coding platform set to:', _codingPlatform);
 });
 
+// OCR failed in renderer — reset dedup so next poll retries the same URL.
+ipcMain.handle('reset-last-capture-url', () => {
+  _lastHrUrl = null;
+  console.log('[hr-auto] capture URL reset — will retry on next poll');
+});
+
 // Manual on-demand trigger — renderer calls this when user clicks "Fetch HackerRank"
 ipcMain.handle('hackerrank-manual-fetch', async () => {
   // Screen Recording permission is required before desktopCapturer will return
