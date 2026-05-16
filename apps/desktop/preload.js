@@ -46,6 +46,11 @@ contextBridge.exposeInMainWorld('camo', {
   // Notify main that OCR failed so the next poll retries the same URL.
   resetLastCaptureUrl: () => ipcRenderer.invoke('reset-last-capture-url'),
 
+  // Solution overlay — click-through floating panel shown on top of HackerRank.
+  // Mouse events pass through so HackerRank never detects a mouseleave.
+  showSolutionOverlay: (opts) => ipcRenderer.invoke('show-solution-overlay', opts),
+  hideSolutionOverlay: () => ipcRenderer.invoke('hide-solution-overlay'),
+
   // Desktop screenshot watcher — fires when user takes a macOS screenshot
   // (Cmd+Shift+3/4) while HackerRank is on screen. Renderer calls extractAndMaybeGenerate
   // on the received dataUrl, same as the F9 / auto-detect pipeline.
