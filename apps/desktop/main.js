@@ -456,42 +456,57 @@ function startHackerrankAutoDetect() {
 }
 
 // ── Desktop screenshot watcher ──────────────────────────────────────────────
-// Watches ~/Desktop for macOS screenshots (Cmd+Shift+3/4/5 → "Screenshot …").
-// When a new screenshot file appears, reads it and sends it to the renderer
-// for OCR+auto-solve — same pipeline as the F9 shortcut, but the user
-// controls the exact frame (problem description + starter code all visible).
+// Polls ~/Desktop every 1 s for new macOS screenshots (Cmd+Shift+3/4).
+// fs.watch is unreliable on macOS for files created by system processes
+// (screencapture daemon), so we diff the directory listing instead.
+// When a new "Screenshot *.png" appears, reads it and sends to renderer.
 let _lastDesktopScreenshot = null;
+let _desktopKnownFiles = new Set();
 
 function startDesktopScreenshotWatcher() {
   const desktopPath = path.join(os.homedir(), 'Desktop');
+
+  // Seed the known-files set with whatever is already on the Desktop so we
+  // don't fire on screenshots that predate this launch.
   try {
-    fs.watch(desktopPath, (eventType, filename) => {
-      if (!filename || eventType !== 'rename') return;
-      if (!/^Screenshot.*\.(png|jpg|jpeg)$/i.test(filename)) return;
-      const filepath = path.join(desktopPath, filename);
-      if (filepath === _lastDesktopScreenshot) return;
-      // Wait 900 ms for macOS to finish writing the file before reading it.
-      setTimeout(() => {
-        try {
-          if (!fs.existsSync(filepath)) return; // rename = delete, skip
-          const buf = fs.readFileSync(filepath);
-          if (buf.length < 50000) return; // ignore tiny non-screenshot files
-          _lastDesktopScreenshot = filepath;
-          const ext = filename.toLowerCase().endsWith('.jpg') || filename.toLowerCase().endsWith('.jpeg') ? 'jpeg' : 'png';
-          const dataUrl = `data:image/${ext};base64,${buf.toString('base64')}`;
-          console.log('[screenshot-watcher] new screenshot detected:', filename, `(${Math.round(buf.length / 1024)} KB)`);
-          if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send('screenshot-watcher-new', { dataUrl, filename });
-          }
-        } catch (err) {
-          console.warn('[screenshot-watcher] read error:', err.message);
-        }
-      }, 900);
-    });
-    console.log('[screenshot-watcher] watching', desktopPath);
+    const existing = fs.readdirSync(desktopPath)
+      .filter(f => /^Screenshot.*\.(png|jpg|jpeg)$/i.test(f));
+    existing.forEach(f => _desktopKnownFiles.add(f));
+    console.log(`[screenshot-watcher] seeded ${_desktopKnownFiles.size} existing screenshots, polling ${desktopPath}`);
   } catch (err) {
-    console.warn('[screenshot-watcher] could not watch Desktop:', err.message);
+    console.warn('[screenshot-watcher] could not read Desktop:', err.message);
+    return;
   }
+
+  setInterval(() => {
+    try {
+      const files = fs.readdirSync(desktopPath)
+        .filter(f => /^Screenshot.*\.(png|jpg|jpeg)$/i.test(f));
+      for (const filename of files) {
+        if (_desktopKnownFiles.has(filename)) continue;
+        _desktopKnownFiles.add(filename);
+        const filepath = path.join(desktopPath, filename);
+        // Wait 1 s for macOS to finish writing before reading.
+        setTimeout(() => {
+          try {
+            const buf = fs.readFileSync(filepath);
+            if (buf.length < 50000) return; // skip tiny/corrupt files
+            _lastDesktopScreenshot = filepath;
+            const isJpeg = /\.(jpg|jpeg)$/i.test(filename);
+            const dataUrl = `data:image/${isJpeg ? 'jpeg' : 'png'};base64,${buf.toString('base64')}`;
+            console.log('[screenshot-watcher] new screenshot:', filename, `(${Math.round(buf.length / 1024)} KB)`);
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.send('screenshot-watcher-new', { dataUrl, filename });
+            }
+          } catch (e) {
+            console.warn('[screenshot-watcher] read error:', e.message);
+          }
+        }, 1000);
+      }
+    } catch (e) {
+      console.warn('[screenshot-watcher] poll error:', e.message);
+    }
+  }, 1000);
 }
 
 // Renderer tells us which coding platform to watch.
