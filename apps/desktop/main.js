@@ -299,7 +299,7 @@ function runAppleScript(script) {
   });
 }
 
-const BROWSERS = ['Google Chrome', 'Brave Browser', 'Microsoft Edge'];
+const BROWSERS = ['Google Chrome', 'Brave Browser', 'Microsoft Edge', 'Arc'];
 
 async function getActiveBrowserInfo() {
   for (const browser of BROWSERS) {
@@ -413,7 +413,10 @@ function startHackerrankAutoDetect() {
       const info = await getActiveBrowserInfo();
       if (!info) return;
       const { url } = info;
-      if (!url.includes('hackerrank.com/codepair') && !url.includes('hackerrank.com/contests')) return;
+      // Match any HackerRank page that could be a coding interview.
+      // Exclude profile/settings/dashboard so we don't fire on navigation chrome.
+      if (!url.includes('hackerrank.com')) return;
+      if (/hackerrank\.com\/(dashboard|settings|profile|notifications|jobs|companies|login|signup)/.test(url)) return;
       if (url === _lastHrUrl) return; // already processed successfully — don't re-fire
       console.log('[hr-auto] HackerRank detected, scraping:', url);
       // Settle time so the page DOM is ready after navigation
@@ -433,8 +436,8 @@ function startHackerrankAutoDetect() {
     }
   };
 
-  _hrPollTimer = setInterval(poll, 5000);
-  setTimeout(poll, 2500);
+  _hrPollTimer = setInterval(poll, 3000);
+  setTimeout(poll, 1500);
 }
 
 // Manual on-demand trigger — renderer calls this when user clicks "Fetch HackerRank"

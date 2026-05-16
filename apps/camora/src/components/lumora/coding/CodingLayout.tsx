@@ -1269,11 +1269,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                             </button>
                           </div>
                           {(window as any).camo?.fetchHackerrankNow && (
-                            <button type="button" onClick={handleHackerrankFetch} disabled={isProcessing}
-                              className="w-full py-2 text-xs font-semibold rounded-lg border transition-colors disabled:opacity-50"
-                              style={{ borderColor: '#00ea64', color: '#00ea64', background: 'transparent' }}>
-                              {isProcessing ? 'Fetching…' : 'Fetch from HackerRank tab'}
-                            </button>
+                            <p className="text-center text-xs opacity-50 py-1">
+                              HackerRank detected automatically — no action needed
+                            </p>
                           )}
                         </div>
                       )}
