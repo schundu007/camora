@@ -793,8 +793,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       camo.hideSolutionOverlay?.();
       return;
     }
-    camo.showSolutionOverlay({ code, language });
-  }, [code, language]);
+    camo.showSolutionOverlay({ code, language, stealthActive: isStealthActive });
+  }, [code, language, isStealthActive]);
 
   // Auto-reinject stealth when a new HackerRank problem is detected (page reloads, clearing
   // the previous injection) and on a 30s heartbeat while stealth is active.
