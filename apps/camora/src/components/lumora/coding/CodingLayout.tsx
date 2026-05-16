@@ -933,8 +933,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       const data = await resp.json();
       const text = String(data.problem || '').trim();
       const extractedStarterCode = data.starter_code || null;
+      const detectedLang: string | null = data.detected_language || null;
+      const effectiveLang = detectedLang || language;
       setProblemText(text);
       setStarterCode(extractedStarterCode);
+      if (detectedLang) setLanguage(detectedLang);
       setInputMode('paste');
       if (autoGenerate && text) {
         // Mirror handleGenerateSolution's reset-then-submit pattern.
@@ -946,19 +949,19 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         clearStreamChunks();
         setParsedBlocks([]);
         setJsonSolution(null);
-        setCode(getDefaultCode(language));
+        setCode(getDefaultCode(effectiveLang));
         setCollapsedCards(new Set());
         setActiveSolutionIdx(0);
         setIsOutputCollapsed(true);
         setProblemTab('solution');
-        onSubmit(text, language, extractedStarterCode ? { starterCode: extractedStarterCode } : undefined);
+        onSubmit(text, effectiveLang, extractedStarterCode ? { starterCode: extractedStarterCode } : undefined);
       }
     } catch (err: any) {
       setError(err.message);
     } finally {
       setIsProcessing(false);
     }
-  }, [token, language, clearStreamChunks, onSubmit]);
+  }, [token, language, setLanguage, clearStreamChunks, onSubmit]);
 
   // Drop/select an image → preview + auto-extract + auto-generate solution.
   // No more manual click chain: image in, answer out.
