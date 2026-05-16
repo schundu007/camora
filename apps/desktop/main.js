@@ -330,11 +330,6 @@ end tell`);
   return null;
 }
 
-// JS injection via AppleScript is intentionally NOT used — Chrome requires
-// "Allow JavaScript from Apple Events" in Developer menu which users shouldn't
-// need to change. Instead we capture a screenshot of the browser window and
-// route it through the existing Claude Vision OCR pipeline.
-
 let _lastHrUrl = null;
 let _hrPollTimer = null;
 // Active coding platform — set by renderer via 'set-coding-platform' IPC.
@@ -595,43 +590,81 @@ ipcMain.handle('hide-solution-overlay', () => {
 });
 
 // ── Stealth mode — neutralize HackerRank mouse/focus tracking ───────────────
-// Injects JS into the active Chrome/Brave tab via AppleScript that:
-//   1. Overrides addEventListener to block future mouseleave/blur/visibilitychange registrations
-//   2. Adds capture-phase listeners that stopImmediatePropagation on those events BEFORE
-//      any existing HackerRank handlers fire — handles listeners already registered at page load
-//   3. Overrides document.hidden / visibilityState / hasFocus so JS checks return "visible"
+// Injects JS into the active Chrome/Brave tab via AppleScript.
 //
+// Why the two-pronged approach (window-capture + healing):
+//   • visibilitychange / mouseleave target 'document' — window capture listeners
+//     fire BEFORE document listeners, so stopImmediatePropagation works regardless
+//     of when HackerRank registered its handler.
+//   • blur targets 'window' itself — registration order determines firing order,
+//     so HR's handler (registered during page load) fires before ours. We can't
+//     suppress it, but we can "heal" immediately by dispatching a focus event back,
+//     resetting whatever timer HR started.
+//   • Poll-based detection (document.hasFocus() / document.hidden checks in a
+//     setInterval) is handled by overriding those getters/methods.
+//   • Periodic mousemove heartbeat fakes "mouse is in the window" for coordinate checks.
+//
+// No __camoraStealthActive guard — allows re-injection after page navigations.
 // Requires Chrome Developer → "Allow JavaScript from Apple Events" (one-time toggle).
-// Single quotes used throughout JS payload so it embeds cleanly in AppleScript double-quoted string.
+// Single quotes only in JS payload so it embeds cleanly in AppleScript double-quoted string.
 ipcMain.handle('inject-tracking-neutralizer', async () => {
   if (process.platform !== 'darwin') {
     return { ok: false, error: 'Stealth mode requires macOS.' };
   }
 
-  // JS payload — deliberately uses only single quotes so it is safe inside an
-  // AppleScript double-quoted string without any extra escaping.
   const js = [
-    "(function(){",
-    "if(window.__camoraStealthActive)return;",
-    "window.__camoraStealthActive=true;",
-    // Block future addEventListener registrations for these event types on document/window/body
-    "var orig=EventTarget.prototype.addEventListener;",
-    "var BLOCKED={mouseleave:1,mouseout:1,blur:1,visibilitychange:1,focusout:1};",
-    "EventTarget.prototype.addEventListener=function(t,l,o){",
-    "  if(BLOCKED[t]&&(this===document||this===window||this===document.body))return;",
-    "  return orig.call(this,t,l,o);",
-    "};",
-    // Intercept events that were already registered by stopping them in capture phase
-    "['mouseleave','mouseout','blur','visibilitychange','focusout'].forEach(function(ev){",
-    "  document.addEventListener(ev,function(e){e.stopImmediatePropagation();},true);",
-    "  window.addEventListener(ev,function(e){e.stopImmediatePropagation();},true);",
-    "});",
-    // Override visibility / focus APIs so HackerRank polls see 'visible'
-    "try{Object.defineProperty(document,'hidden',{get:function(){return false},configurable:true});}catch(e){}",
-    "try{Object.defineProperty(document,'visibilityState',{get:function(){return 'visible'},configurable:true});}catch(e){}",
-    "try{Object.defineProperty(document,'hasFocus',{value:function(){return true},configurable:true,writable:true});}catch(e){}",
-    "console.log('[Camora Stealth] activated');",
-    "})();",
+    '(function(){',
+    // Override addEventListener — block future HR registrations for detection events.
+    // Use 'o' (original) to add OUR listeners below so our override doesn't block us.
+    'var o=EventTarget.prototype.addEventListener;',
+    'var B={mouseleave:1,mouseout:1,blur:1,visibilitychange:1,focusout:1};',
+    'EventTarget.prototype.addEventListener=function(t,f,v){',
+    '  if(B[t]&&(this===window||this===document||this===document.body||this===document.documentElement))return;',
+    '  return o.apply(this,arguments);',
+    '};',
+
+    // Override poll-based detection APIs
+    'try{Object.defineProperty(document,\'hidden\',{get:function(){return false},configurable:true})}catch(e){}',
+    'try{Object.defineProperty(document,\'visibilityState\',{get:function(){return \'visible\'},configurable:true})}catch(e){}',
+    'try{document.hasFocus=function(){return true}}catch(e){}',
+
+    // visibilitychange targets 'document' — window capture fires BEFORE document listeners.
+    // stopImmediatePropagation here prevents ALL document-level visibilitychange handlers.
+    'o.call(window,\'visibilitychange\',function(e){e.stopImmediatePropagation()},true);',
+
+    // mouseleave / mouseout target document or body — window capture fires first.
+    'o.call(window,\'mouseleave\',function(e){e.stopImmediatePropagation()},true);',
+    'o.call(window,\'mouseout\',function(e){e.stopImmediatePropagation()},true);',
+
+    // focusout bubbles up to window — stop it before it reaches document handlers.
+    'o.call(window,\'focusout\',function(e){e.stopImmediatePropagation()},true);',
+
+    // blur targets window itself — registration order means HR fires first, so heal instead.
+    // Immediately dispatch 'focus' so HackerRank\'s state machine sees focus restored.
+    'o.call(window,\'blur\',function(){',
+    '  setTimeout(function(){',
+    '    try{window.dispatchEvent(new FocusEvent(\'focus\',{bubbles:false}))}catch(x){}',
+    '    try{document.dispatchEvent(new Event(\'visibilitychange\'))}catch(x){}',
+    '  },0);',
+    '},true);',
+
+    // Periodic mousemove heartbeat — fakes mouse-in-window for coordinate-based checks.
+    // Guard prevents duplicate intervals on re-injection.
+    'if(window.__camoraHB){clearInterval(window.__camoraHB)}',
+    'window.__camoraHB=setInterval(function(){',
+    '  try{',
+    '    document.dispatchEvent(new MouseEvent(\'mousemove\',{',
+    '      bubbles:true,cancelable:true,',
+    '      clientX:550+Math.round(Math.random()*20),',
+    '      clientY:350+Math.round(Math.random()*20),',
+    '      view:window',
+    '    }));',
+    '  }catch(e){}',
+    '},1500);',
+
+    'window.__camoraStealthActive=true;',
+    'console.log(\'[Camora Stealth] v2 active\');',
+    '})();',
   ].join('');
 
   const STEALTH_BROWSERS = ['Google Chrome', 'Brave Browser', 'Arc', 'Microsoft Edge'];
@@ -644,9 +677,7 @@ end tell`);
       return { ok: true, browser };
     } catch (err) {
       const msg = String(err?.message || err);
-      // Browser not running — try next
       if (/not running|Application isn/i.test(msg)) continue;
-      // "Allow JavaScript from Apple Events" not enabled in Developer menu
       if (/AppleEvent|not allowed|JavaScript|1002|privileged/i.test(msg)) {
         return { ok: false, needsDevMenu: true, browser, error: msg };
       }

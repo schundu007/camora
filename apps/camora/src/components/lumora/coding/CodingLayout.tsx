@@ -796,6 +796,18 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     camo.showSolutionOverlay({ code, language });
   }, [code, language]);
 
+  // Auto-reinject stealth when a new HackerRank problem is detected (page reloads, clearing
+  // the previous injection) and on a 30s heartbeat while stealth is active.
+  useEffect(() => {
+    const camo = (window as any).camo;
+    if (!isStealthActive || !camo?.injectTrackingNeutralizer) return;
+    // Silent reinject — don't show dialogs on auto-reinject failures.
+    const silentReinject = () => camo.injectTrackingNeutralizer().catch(() => null);
+    silentReinject();
+    const interval = setInterval(silentReinject, 30000);
+    return () => clearInterval(interval);
+  }, [isStealthActive, pendingHackerrankCapture]);
+
 
   // ── Actions ─────────────────────────────────────────────────────────────
 
@@ -1406,21 +1418,42 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         >{mode === 'paste' ? 'Text' : mode === 'url' ? 'URL' : 'Image'}</button>
                       ))}
                     </div>
-                    <button
-                      onClick={() => setIsInputCollapsed(!isInputCollapsed)}
-                      className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-                      style={{
-                        color: '#FFFFFF',
-                        border: '1px solid rgba(255,255,255,0.16)',
-                        borderRadius: 999,
-                        background: 'rgba(255,255,255,0.06)',
-                      }}
-                      aria-label={isInputCollapsed ? 'Expand input' : 'Collapse input'}
-                    >
-                      <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      {(window as any).camo?.injectTrackingNeutralizer && (
+                        <button
+                          onClick={handleStealthMode}
+                          title={isStealthActive ? 'Stealth active' : 'Block HackerRank mouse tracking'}
+                          className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors hover:opacity-90"
+                          style={isStealthActive
+                            ? { background: '#00ea64', color: '#000' }
+                            : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
+                          }
+                        >
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                            {isStealthActive
+                              ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
+                              : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                            }
+                          </svg>
+                          {isStealthActive ? 'Stealth ON' : 'Stealth'}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setIsInputCollapsed(!isInputCollapsed)}
+                        className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                        style={{
+                          color: '#FFFFFF',
+                          border: '1px solid rgba(255,255,255,0.16)',
+                          borderRadius: 999,
+                          background: 'rgba(255,255,255,0.06)',
+                        }}
+                        aria-label={isInputCollapsed ? 'Expand input' : 'Collapse input'}
+                      >
+                        <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 )}
 
