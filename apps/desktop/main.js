@@ -197,6 +197,9 @@ app.whenReady().then(async () => {
   // Start auto-detecting HackerRank in the browser (macOS only via AppleScript)
   startHackerrankAutoDetect();
 
+  // Watch ~/Desktop for new macOS screenshots (Cmd+Shift+3/4).
+  if (process.platform === 'darwin') startDesktopScreenshotWatcher();
+
   globalShortcut.register('CommandOrControl+B', () => {
     if (!mainWindow) return;
     mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
@@ -450,6 +453,45 @@ function startHackerrankAutoDetect() {
 
   _hrPollTimer = setInterval(poll, 3000);
   setTimeout(poll, 1500);
+}
+
+// ── Desktop screenshot watcher ──────────────────────────────────────────────
+// Watches ~/Desktop for macOS screenshots (Cmd+Shift+3/4/5 → "Screenshot …").
+// When a new screenshot file appears, reads it and sends it to the renderer
+// for OCR+auto-solve — same pipeline as the F9 shortcut, but the user
+// controls the exact frame (problem description + starter code all visible).
+let _lastDesktopScreenshot = null;
+
+function startDesktopScreenshotWatcher() {
+  const desktopPath = path.join(os.homedir(), 'Desktop');
+  try {
+    fs.watch(desktopPath, (eventType, filename) => {
+      if (!filename || eventType !== 'rename') return;
+      if (!/^Screenshot.*\.(png|jpg|jpeg)$/i.test(filename)) return;
+      const filepath = path.join(desktopPath, filename);
+      if (filepath === _lastDesktopScreenshot) return;
+      // Wait 900 ms for macOS to finish writing the file before reading it.
+      setTimeout(() => {
+        try {
+          if (!fs.existsSync(filepath)) return; // rename = delete, skip
+          const buf = fs.readFileSync(filepath);
+          if (buf.length < 50000) return; // ignore tiny non-screenshot files
+          _lastDesktopScreenshot = filepath;
+          const ext = filename.toLowerCase().endsWith('.jpg') || filename.toLowerCase().endsWith('.jpeg') ? 'jpeg' : 'png';
+          const dataUrl = `data:image/${ext};base64,${buf.toString('base64')}`;
+          console.log('[screenshot-watcher] new screenshot detected:', filename, `(${Math.round(buf.length / 1024)} KB)`);
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('screenshot-watcher-new', { dataUrl, filename });
+          }
+        } catch (err) {
+          console.warn('[screenshot-watcher] read error:', err.message);
+        }
+      }, 900);
+    });
+    console.log('[screenshot-watcher] watching', desktopPath);
+  } catch (err) {
+    console.warn('[screenshot-watcher] could not watch Desktop:', err.message);
+  }
 }
 
 // Renderer tells us which coding platform to watch.

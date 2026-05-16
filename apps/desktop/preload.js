@@ -45,4 +45,14 @@ contextBridge.exposeInMainWorld('camo', {
   },
   // Notify main that OCR failed so the next poll retries the same URL.
   resetLastCaptureUrl: () => ipcRenderer.invoke('reset-last-capture-url'),
+
+  // Desktop screenshot watcher — fires when user takes a macOS screenshot
+  // (Cmd+Shift+3/4) while HackerRank is on screen. Renderer calls extractAndMaybeGenerate
+  // on the received dataUrl, same as the F9 / auto-detect pipeline.
+  onScreenshotWatcher: (callback) => {
+    ipcRenderer.on('screenshot-watcher-new', (_event, data) => callback(data));
+  },
+  offScreenshotWatcher: () => {
+    ipcRenderer.removeAllListeners('screenshot-watcher-new');
+  },
 });

@@ -760,6 +760,28 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingHackerrankCapture]);
 
+  // Desktop screenshot watcher (Electron): user presses Cmd+Shift+4, saves a
+  // screenshot of the HackerRank problem + code editor to ~/Desktop, and Lumora
+  // auto-picks it up, OCRs it, and generates a solution — zero clicks needed.
+  useEffect(() => {
+    const camo = (window as any).camo;
+    if (!camo?.onScreenshotWatcher) return;
+    const handler = async ({ dataUrl, filename }: { dataUrl: string; filename: string }) => {
+      try {
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], filename, { type: blob.type || 'image/png' });
+        setInputMode('image');
+        setImagePreview(dataUrl);
+        await extractAndMaybeGenerate(file, true);
+      } catch (err: any) {
+        setError(err.message || 'Failed to process screenshot.');
+      }
+    };
+    camo.onScreenshotWatcher(handler);
+    return () => camo.offScreenshotWatcher?.();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   // ── Actions ─────────────────────────────────────────────────────────────
 
