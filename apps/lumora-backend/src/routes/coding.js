@@ -165,7 +165,7 @@ function truncateForLog(text, max = 2048) {
 function getModelForUser(req) {
   const plan = req.user?.plan_type || 'free';
   if (plan === 'free' || !plan) return 'claude-haiku-4-5-20251001';
-  return process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
+  return process.env.CLAUDE_MODEL || 'claude-opus-4-7';
 }
 
 /**
@@ -303,57 +303,62 @@ ${starterCode ? `\n#############################################################
 ${starterCode
   ? `STARTER CODE IS PRESENT — RULE #3 IS FULLY OVERRIDDEN BY RULE #2.6 ABOVE.
 
-TWO CASES — read carefully to determine which applies:
+═══════════════════════════════════════════════════════════════════
+BASH-SPECIFIC FACTS — apply to ALL bash starter code problems
+═══════════════════════════════════════════════════════════════════
+• readarray -t my_array </dev/stdin reads one LINE per array slot
+  my_array[0] = "First 2 3rd 4"  ← entire line as ONE string, NOT individual words
+  my_array[1] = "Hello World"    ← another whole line
 
-CASE A — Starter code HAS an empty function stub (e.g. "def solve():\n    pass" or "function() {}"):
-  → Your ONLY job is to fill in the function body.
-  → PRESERVE EVERYTHING ELSE VERBATIM: shebang, imports, input-reading, wrapper calls, exit.
-  → Output the COMPLETE script with your implementation inside the stub.
-
-CASE B — Starter code has NO function stub (just input-reading boilerplate + exit):
-  ADD your logic INLINE between the input-reading lines and exit. Do NOT create a new function.
-
-  ─── BASH EXAMPLE ───────────────────────────────────────────────────────────
-  Starter:         #!/usr/bin/env bash
-                   readarray -t my_array </dev/stdin
-                   exit 0
-
-  Correct output:  #!/usr/bin/env bash
-                   readarray -t my_array </dev/stdin
-                   echo "\${#my_array[@]}"   ← add logic HERE, inline
-                   exit 0
-
-  BASH CRITICAL FACTS — READ BEFORE WRITING ANY BASH CODE:
-  • readarray -t my_array </dev/stdin fills the GLOBAL bash array "my_array"
-  • "\${my_array[@]}"  = all elements expanded
-  • "\${#my_array[@]}" = number of elements (COUNT)
-  • $0 = SCRIPT FILENAME — NEVER pass $0 as data or call anything with $0
-  • $@ = positional args to the SCRIPT — for stdin-based problems $@ IS EMPTY
-  • stdin is already consumed by readarray — NEVER re-read it inside a function
-
-  WORD SPLITTING — CRITICAL:
-  • readarray reads one LINE per element — my_array[0]="First 2 3rd 4" is ONE STRING
-  • To process individual words on each line use UNQUOTED \$line (enables word splitting):
-      for line in "\${my_array[@]}"; do
-        for word in \$line; do   ← unquoted: bash splits on spaces/tabs
-          [[ "\$word" =~ ^-?[0-9]+\$ ]] && (( sum += word )) || true
-        done
+• To iterate WORDS within a line: use UNQUOTED variable (enables IFS word-split)
+    for line in "\${my_array[@]}"; do
+      for word in \$line; do          ← unquoted \$line splits on spaces/tabs
+        echo "\$word"                  ← "First", "2", "3rd", "4" — one word at a time
       done
-  • NEVER quote the loop variable when you need word splitting: for w in \$line NOT "\$line"
-  • (( arithmetic )) returns exit-code 1 when result is 0 — always append || true
-    to prevent the script from aborting under set -e:
-      (( sum += word )) || true
-  ────────────────────────────────────────────────────────────────────────────
+    done
+
+• When a bash function receives array elements as positional args:
+    func "\${my_array[@]}"
+  Inside func, $1="First 2 3rd 4" (whole line), NOT individual words.
+  To process words inside the function:
+    for line in "\$@"; do
+      for word in \$line; do          ← unquoted \$line splits the line into words
+        ...
+      done
+    done
+
+• (( arithmetic )) returns exit-code 1 when result is 0 — ALWAYS append || true:
+    (( sum += word )) || true         ← prevents script abort under set -e
+
+• $0 = SCRIPT FILENAME — never use it as data
+• $@ at script level = positional args to the script = EMPTY for stdin problems
+• stdin consumed by readarray — never re-read it
+• "\${#my_array[@]}" = count of lines (not words)
+═══════════════════════════════════════════════════════════════════
+
+TWO CASES — determine which applies, then follow it exactly:
+
+CASE A — Starter HAS an empty function stub:
+  → Fill in the function body ONLY.
+  → PRESERVE shebang, imports, input-reading, function signature, wrapper call, exit.
+  → If the function receives "\${my_array[@]}", each $arg is a WHOLE LINE — word-split it.
+
+CASE B — Starter has NO function stub (just boilerplate + exit):
+  → ADD logic INLINE between input-reading and exit. Do NOT create a new function.
+  Correct:  #!/usr/bin/env bash
+            readarray -t my_array </dev/stdin
+            echo "\${#my_array[@]}"   ← inline, no function
+            exit 0
 
 ABSOLUTE RULES for both cases:
-  ✓ Shebang lines (#!/usr/bin/env bash etc.) — always first line, always preserved
-  ✓ Input-reading boilerplate — always preserved verbatim
-  ✓ Function names — must EXACTLY match what the problem describes or what the tests call
-  ✓ Exit statements — always preserved
-  ✗ NEVER output just a function definition without the full surrounding script context
-  ✗ NEVER re-read stdin if the starter code already reads it
-  ✗ NEVER use $0 as data — it is the script filename
-  ✗ NEVER call a function with $0 or $@ for stdin-based problems`
+  ✓ Shebang — always first line, always preserved
+  ✓ Input-reading lines — preserved verbatim
+  ✓ Function names — EXACTLY as in starter
+  ✓ Exit statements — preserved
+  ✗ NEVER output function definition without surrounding script
+  ✗ NEVER re-read stdin
+  ✗ NEVER use $0 as data
+  ✗ NEVER forget || true after (( arithmetic ))`
   : `CRITICAL CODE STRUCTURE RULES for ${language}:
 - Write a function, class method, or the idiomatic entry point for ${language}
 - Do NOT include a main block or hard-coded example inputs in the code
