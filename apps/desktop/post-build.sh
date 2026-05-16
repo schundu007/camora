@@ -7,11 +7,17 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-APP_PATH="build/mac-arm64/Camora.app"
+ARCH="${1:-arm64}"
 ENTITLEMENTS="$(pwd)/entitlements.mac.plist"
 
+# electron-builder places the app at mac-<arch>/ when arch is specified,
+# but falls back to mac/ for default single-arch builds
+APP_PATH="build/mac-${ARCH}/Camora.app"
 if [[ ! -d "$APP_PATH" ]]; then
-  echo "✗ $APP_PATH not found — did electron-builder fail?" >&2
+  APP_PATH="build/mac/Camora.app"
+fi
+if [[ ! -d "$APP_PATH" ]]; then
+  echo "✗ Camora.app not found in build/mac-${ARCH}/ or build/mac/ — did electron-builder fail?" >&2
   exit 1
 fi
 
@@ -28,10 +34,10 @@ codesign -d --entitlements - "$APP_PATH" 2>&1 | grep -E "audio-input|network.cli
 
 echo ""
 VERSION="$(node -p "require('./package.json').version")"
-echo "✓ Build complete: build/Camora-${VERSION}-arm64.dmg"
+echo "✓ Build complete: build/Camora-${VERSION}-${ARCH}.dmg"
 echo ""
 echo "Install with:"
-echo "  hdiutil attach build/Camora-${VERSION}-arm64.dmg -nobrowse -quiet"
+echo "  hdiutil attach build/Camora-${VERSION}-${ARCH}.dmg -nobrowse -quiet"
 echo "  ditto /Volumes/Camora/Camora.app /Applications/Camora.app"
 echo "  hdiutil detach /Volumes/Camora -quiet"
 echo "  codesign --force --deep --sign - --entitlements $ENTITLEMENTS /Applications/Camora.app"

@@ -8,7 +8,8 @@
     "start": "electron .",
     "build:dmg": "rm -rf build && electron-builder --mac --arm64 && bash ./post-build.sh arm64",
     "build:dmg-x64": "electron-builder --mac --x64 && bash ./post-build.sh x64",
-    "build:win": "electron-builder --win --x64"
+    "build:win": "electron-builder --win --x64",
+    "build:win-zip": "electron-builder --win --x64 -c.win.target.0.target=zip -c.win.artifactName=Camora-2.1.0-win-x64.zip"
   },
   "dependencies": {
     "docx": "^9.0.3"
@@ -48,10 +49,16 @@
     },
     "win": {
       "target": [
-        { "target": "zip", "arch": ["x64"] }
+        { "target": "nsis", "arch": ["x64"] }
       ],
       "icon": "icon.icns",
-      "artifactName": "Camora-${version}-win-x64.zip"
+      "artifactName": "Camora-${version}-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     },
     "dmg": {
       "title": "Camora",
