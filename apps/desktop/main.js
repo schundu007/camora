@@ -311,45 +311,30 @@ async function getActiveBrowserInfo() {
   return null;
 }
 
-async function scrapeHackerrankPage(browser) {
-  // Extract problem text, language, and CodeMirror editor content.
-  // JS is base64-encoded to avoid AppleScript quoting nightmares.
-  const jsCode = `(function(){try{
-    var d=document.querySelector('.description-container')||document.querySelector('[class*="problem-statement"]')||document.querySelector('[class*="problem-body"]')||document.querySelector('[class*="question-description"]')||document.querySelector('aside');
-    var problem=d?d.innerText.trim():'';
-    if(problem.length<50){var cols=document.querySelectorAll('[class*="col-xs"]');for(var i=0;i<cols.length;i++){var t=cols[i].innerText.trim();if(t.length>200&&t.length<15000){problem=t;break;}}}
-    var language='';
-    var le=document.querySelector('[class*="language-selector"] button')||document.querySelector('[class*="language"] .title')||document.querySelector('.Select-value-label')||document.querySelector('[class*="language"] select');
-    if(le){language=le.tagName==='SELECT'?(le.options[le.selectedIndex]||{}).text||'':le.textContent.trim();}
-    var starterCode='';
-    var ce=document.querySelector('.CodeMirror');
-    if(ce&&ce.CodeMirror)starterCode=ce.CodeMirror.getValue();
-    if(!starterCode){try{if(typeof monaco!=='undefined'){var ms=monaco.editor.getModels();if(ms&&ms.length>0)starterCode=ms[0].getValue();}}catch(e2){}}
-    return JSON.stringify({problem:problem,language:language,starterCode:starterCode});
-  }catch(e){return JSON.stringify({error:e.message});}})()`;
-
-  const b64 = Buffer.from(jsCode).toString('base64');
-  const result = await runAppleScript(
-    `tell application "${browser}" to tell active tab of front window to execute javascript "eval(atob('${b64}'))"`
-  );
-  return JSON.parse(result);
-}
+// JS injection via AppleScript is intentionally NOT used — Chrome requires
+// "Allow JavaScript from Apple Events" in Developer menu which users shouldn't
+// need to change. Instead we capture a screenshot of the browser window and
+// route it through the existing Claude Vision OCR pipeline.
 
 let _lastHrUrl = null;
 let _hrPollTimer = null;
 
 async function doHackerrankScrape() {
+  // Step 1: verify HackerRank is the active tab (AppleScript URL read — no JS exec needed)
   const info = await getActiveBrowserInfo();
   if (!info) return { ok: false, error: 'No browser window found. Open Chrome/Brave with HackerRank.' };
-  const { browser, url } = info;
+  const { url } = info;
   console.log('[hr-auto] active browser URL:', url);
   if (!url.includes('hackerrank.com')) {
-    return { ok: false, error: `Active tab is not HackerRank.\nURL: ${url}` };
+    return { ok: false, error: `Active tab is not HackerRank.\nCurrent URL: ${url}` };
   }
-  const scraped = await scrapeHackerrankPage(browser);
-  if (scraped.error) return { ok: false, error: `DOM scrape failed: ${scraped.error}` };
+  // Step 2: screenshot the browser window — no Chrome JS permissions needed.
+  // captureWindowByName uses Z-order fallback so it finds the browser window
+  // even when its title doesn't contain "hackerrank".
+  const dataUrl = await captureWindowByName('hackerrank');
+  if (!dataUrl) return { ok: false, error: 'Could not capture browser window. Make sure the HackerRank tab is visible (not minimised).' };
   _lastHrUrl = url;
-  return { ok: true, data: scraped, url };
+  return { ok: true, dataUrl, url };
 }
 
 function startHackerrankAutoDetect() {
@@ -372,7 +357,7 @@ function startHackerrankAutoDetect() {
       }
       // _lastHrUrl is set inside doHackerrankScrape on success
       if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('hackerrank-capture-result', { scraped: result.data });
+        mainWindow.webContents.send('hackerrank-capture-result', { dataUrl: result.dataUrl });
       }
     } catch (err) {
       console.debug('[hr-auto] poll error:', err.message);
