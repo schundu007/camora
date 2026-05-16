@@ -866,19 +866,60 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onVoiceProblemRef]);
 
+  const handleHackerrankFetch = async () => {
+    const camo = (window as any).camo;
+    if (!camo?.fetchHackerrankNow) {
+      await dialogAlert({ title: 'Desktop only', message: 'HackerRank auto-fetch requires the Camora desktop app.' });
+      return;
+    }
+    setIsProcessing(true);
+    setError(null);
+    try {
+      const result = await camo.fetchHackerrankNow();
+      if (!result.ok) {
+        await dialogAlert({ title: 'HackerRank fetch failed', message: result.error || 'Unknown error.\n\nMake sure Chrome/Brave is open on the HackerRank tab and that you approved the "Camora wants to control Google Chrome" permission dialog.' });
+        return;
+      }
+      const { problem, language: hrLang, starterCode: hrCode } = result.data;
+      const langId = mapHackerrankLanguage(hrLang || '');
+      setLanguage(langId);
+      if (problem) {
+        setProblemText(problem);
+        const cases = extractTestCasesFromProblem(problem);
+        setTestCases(cases.length > 0 ? cases : [{ input: '', expected: '' }]);
+      }
+      if (hrCode) { setStarterCode(hrCode); setCode(hrCode); }
+      else { setCode(getDefaultCode(langId)); }
+      setInputMode('paste');
+      setIsInputCollapsed(true);
+      if (problem) {
+        setProblemTab('solution');
+        onSubmit(problem, langId, hrCode ? { starterCode: hrCode } : undefined);
+      }
+    } catch (err: any) {
+      await dialogAlert({ title: 'HackerRank fetch error', message: err.message || 'Unknown error' });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleFetchFromUrl = async (overrideUrl?: string) => {
     const urlToFetch = overrideUrl ?? problemUrl;
     if (!urlToFetch.trim()) { setError('Please enter a URL'); return; }
     if (!token) { setError('Not authenticated'); return; }
 
-    // HackerRank codepair/contest sessions are auth-gated SPAs — can't scrape from backend.
-    // Route to IMAGE tab and prompt user to take a screenshot instead.
+    // HackerRank codepair/contest: use desktop DOM scraper if available, else fallback to image.
     if (/hackerrank\.com\/(codepair|contests)\//i.test(urlToFetch)) {
-      setInputMode('image');
-      await dialogAlert({
-        title: 'HackerRank detected',
-        message: 'HackerRank interview sessions are auth-gated and cannot be scraped. Take a screenshot of the problem + code editor, then drop it in the Image tab — Lumora will extract the full problem, read the starter code structure, and generate an exact matching solution.',
-      });
+      const camo = (window as any).camo;
+      if (camo?.fetchHackerrankNow) {
+        await handleHackerrankFetch();
+      } else {
+        setInputMode('image');
+        await dialogAlert({
+          title: 'HackerRank detected',
+          message: 'HackerRank interview sessions are auth-gated and cannot be scraped from the backend. Take a screenshot of the problem + code editor, then drop it in the Image tab — Lumora will extract the full problem, read the starter code structure, and generate an exact matching solution.',
+        });
+      }
       return;
     }
 
@@ -1268,16 +1309,25 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       )}
 
                       {inputMode === 'url' && (
-                        <div className="flex gap-2">
-                          <input type="url" id="problem-url" name="problem-url" value={problemUrl} onChange={(e) => setProblemUrl(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' && !isProcessing && problemUrl.trim()) handleFetchFromUrl(); }}
-                            placeholder="https://leetcode.com/problems/two-sum/"
-                            className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm placeholder:text-[var(--text-dimmed)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
-                            style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
-                          <button type="button" onClick={handleFetchFromUrl} disabled={isProcessing || !problemUrl.trim()}
-                            className="px-4 py-2 bg-[var(--accent)] text-white text-xs font-semibold rounded-lg hover:bg-[var(--accent-hover)] disabled:opacity-50 transition-colors">
-                            {isProcessing ? 'Loading...' : 'Fetch'}
-                          </button>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex gap-2">
+                            <input type="url" id="problem-url" name="problem-url" value={problemUrl} onChange={(e) => setProblemUrl(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === 'Enter' && !isProcessing && problemUrl.trim()) handleFetchFromUrl(); }}
+                              placeholder="https://leetcode.com/problems/two-sum/"
+                              className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm placeholder:text-[var(--text-dimmed)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
+                              style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
+                            <button type="button" onClick={handleFetchFromUrl} disabled={isProcessing || !problemUrl.trim()}
+                              className="px-4 py-2 bg-[var(--accent)] text-white text-xs font-semibold rounded-lg hover:bg-[var(--accent-hover)] disabled:opacity-50 transition-colors">
+                              {isProcessing ? 'Loading...' : 'Fetch'}
+                            </button>
+                          </div>
+                          {(window as any).camo?.fetchHackerrankNow && (
+                            <button type="button" onClick={handleHackerrankFetch} disabled={isProcessing}
+                              className="w-full py-2 text-xs font-semibold rounded-lg border transition-colors disabled:opacity-50"
+                              style={{ borderColor: '#00ea64', color: '#00ea64', background: 'transparent' }}>
+                              {isProcessing ? 'Fetching…' : 'Fetch from HackerRank tab'}
+                            </button>
+                          )}
                         </div>
                       )}
 

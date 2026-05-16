@@ -195,7 +195,7 @@ app.whenReady().then(async () => {
   createWindow();
 
   // Start auto-detecting HackerRank in the browser (macOS only via AppleScript)
-  startHackerrankAutoDetect(mainWindow);
+  startHackerrankAutoDetect();
 
   globalShortcut.register('CommandOrControl+B', () => {
     if (!mainWindow) return;
@@ -338,35 +338,60 @@ async function scrapeHackerrankPage(browser) {
 let _lastHrUrl = null;
 let _hrPollTimer = null;
 
-function startHackerrankAutoDetect(win) {
+async function doHackerrankScrape() {
+  const info = await getActiveBrowserInfo();
+  if (!info) return { ok: false, error: 'No browser window found. Open Chrome/Brave with HackerRank.' };
+  const { browser, url } = info;
+  console.log('[hr-auto] active browser URL:', url);
+  if (!url.includes('hackerrank.com')) {
+    return { ok: false, error: `Active tab is not HackerRank.\nURL: ${url}` };
+  }
+  const scraped = await scrapeHackerrankPage(browser);
+  if (scraped.error) return { ok: false, error: `DOM scrape failed: ${scraped.error}` };
+  _lastHrUrl = url;
+  return { ok: true, data: scraped, url };
+}
+
+function startHackerrankAutoDetect() {
   if (process.platform !== 'darwin') return;
 
   const poll = async () => {
     try {
       const info = await getActiveBrowserInfo();
       if (!info) return;
-      const { browser, url } = info;
+      const { url } = info;
       if (!url.includes('hackerrank.com/codepair') && !url.includes('hackerrank.com/contests')) return;
-      if (url === _lastHrUrl) return; // already processed
-      _lastHrUrl = url;
-      console.log('[hr-auto] new HackerRank URL detected, scraping…', url);
-      // Brief pause so the page DOM settles after navigation
-      await new Promise(r => setTimeout(r, 1800));
-      const scraped = await scrapeHackerrankPage(browser);
-      if (scraped.error) { console.error('[hr-auto] scrape error:', scraped.error); return; }
-      if (win && !win.isDestroyed()) {
-        win.webContents.send('hackerrank-capture-result', { scraped });
+      if (url === _lastHrUrl) return; // already processed successfully — don't re-fire
+      console.log('[hr-auto] HackerRank detected, scraping:', url);
+      // Settle time so the page DOM is ready after navigation
+      await new Promise(r => setTimeout(r, 2000));
+      const result = await doHackerrankScrape();
+      if (!result.ok) {
+        console.error('[hr-auto] scrape failed:', result.error);
+        return; // _lastHrUrl NOT set — will retry next poll
+      }
+      // _lastHrUrl is set inside doHackerrankScrape on success
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('hackerrank-capture-result', { scraped: result.data });
       }
     } catch (err) {
-      // Chrome not running, permissions not granted, etc. — silently skip.
-      console.debug('[hr-auto] poll skipped:', err.message);
+      console.debug('[hr-auto] poll error:', err.message);
+      // _lastHrUrl NOT set — will retry next poll
     }
   };
 
   _hrPollTimer = setInterval(poll, 5000);
-  // Run once immediately so detection fires quickly on app launch
-  setTimeout(poll, 2000);
+  setTimeout(poll, 2500);
 }
+
+// Manual on-demand trigger — renderer calls this when user clicks "Fetch HackerRank"
+ipcMain.handle('hackerrank-manual-fetch', async () => {
+  try {
+    return await doHackerrankScrape();
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
 
 // ── Silent window capture by name ───────────────────────────────────────
 // Used by the global F9 shortcut to silently grab the HackerRank
