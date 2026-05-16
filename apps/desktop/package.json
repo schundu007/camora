@@ -6,7 +6,9 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build:dmg": "rm -rf build && electron-builder --mac --arm64 && bash ./post-build.sh"
+    "build:dmg": "rm -rf build && electron-builder --mac --arm64 && bash ./post-build.sh arm64",
+    "build:dmg-x64": "electron-builder --mac --x64 && bash ./post-build.sh x64",
+    "build:win": "electron-builder --win --x64"
   },
   "dependencies": {
     "docx": "^9.0.3"
@@ -30,7 +32,7 @@
       "category": "public.app-category.productivity",
       "icon": "icon.icns",
       "target": [
-        { "target": "dmg", "arch": ["arm64"] }
+        { "target": "dmg", "arch": ["arm64", "x64"] }
       ],
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
@@ -43,6 +45,13 @@
         "NSScreenCaptureUsageDescription": "Camora records the interviewer's audio from your meeting window so it can be transcribed and answered.",
         "NSAudioCaptureUsageDescription": "Camora captures system audio output so the interviewer's voice can be transcribed during live sessions."
       }
+    },
+    "win": {
+      "target": [
+        { "target": "zip", "arch": ["x64"] }
+      ],
+      "icon": "icon.icns",
+      "artifactName": "Camora-${version}-win-x64.zip"
     },
     "dmg": {
       "title": "Camora",
