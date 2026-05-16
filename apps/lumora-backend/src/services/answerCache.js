@@ -108,13 +108,14 @@ export function buildAnswerCacheKey(parts) {
     md: parts.model || null,
     rt: parts.route || null, // 'stream' | 'solve' — different shapes
     lg: parts.language || null,
+    // Starter code changes the expected solution structure completely (CASE A vs CASE B,
+    // different function signatures, shebang/readarray boilerplate). Must be part of the
+    // key or a no-starter solve gets served for a starter-code problem and produces wrong output.
+    sk: parts.starterCode ? crypto.createHash('sha1').update(String(parts.starterCode)).digest('hex').slice(0, 12) : null,
   });
   const h = crypto.createHash('sha256').update(normalized).digest('hex');
-  // Versioned prefix lets us bump when the normalization or payload
-  // shape changes. Bumped v1→v2 alongside the new normalizer so old
-  // entries (which used the looser "lowercase+collapse" key) don't
-  // shadow the cleaner v2 keys.
-  return `lumora:answer:v2:${h}`;
+  // v3: added sk (starter code hash) — busts v2 entries that were cached without it.
+  return `lumora:answer:v3:${h}`;
 }
 
 export async function cacheGet(key) {
