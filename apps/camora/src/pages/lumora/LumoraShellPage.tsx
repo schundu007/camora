@@ -43,6 +43,25 @@ export function LumoraShellPage() {
   const [copilotFullscreen, setCopilotFullscreen] = useState(false);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const [pendingHackerrankCapture, setPendingHackerrankCapture] = useState<string | null>(null);
+
+  // Tool selection — persisted per device so users don't repick every session.
+  const [meetingPlatform, setMeetingPlatform] = useState<string>(() => {
+    try { return localStorage.getItem('lumora_meeting_platform') || 'zoom'; } catch { return 'zoom'; }
+  });
+  const [codingPlatform, setCodingPlatform] = useState<string>(() => {
+    try { return localStorage.getItem('lumora_coding_platform') || 'hackerrank'; } catch { return 'hackerrank'; }
+  });
+
+  // Sync coding platform to desktop main process and persist to localStorage.
+  // Run immediately on mount to push the persisted value into main.js,
+  // then again whenever the user changes the dropdown.
+  useEffect(() => {
+    try { localStorage.setItem('lumora_coding_platform', codingPlatform); } catch {}
+    (window as any).camo?.setCodingPlatform?.(codingPlatform);
+  }, [codingPlatform]);
+  useEffect(() => {
+    try { localStorage.setItem('lumora_meeting_platform', meetingPlatform); } catch {}
+  }, [meetingPlatform]);
   const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
   const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, threshold: vadThreshold } = useInterviewStore();
   // Persist the Settings-tip dismissal so it's a true one-time hint,
@@ -401,6 +420,49 @@ export function LumoraShellPage() {
               we don't render a duplicate here; mobile users still get it
               from the hamburger sheet below. */}
           <div className="flex items-center gap-2 shrink-0">
+
+            {/* Tool pickers — always visible so users know what Lumora is
+                watching. Meeting platform is cosmetic; coding platform drives
+                auto-capture. Hidden on mobile (hamburger handles config). */}
+            <div className="hidden md:flex items-center gap-1.5">
+              {/* Meeting platform */}
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+                <select
+                  value={meetingPlatform}
+                  onChange={e => setMeetingPlatform(e.target.value)}
+                  className="bg-transparent border-none outline-none cursor-pointer text-[11px] font-semibold"
+                  style={{ color: 'var(--text-muted)', appearance: 'none', WebkitAppearance: 'none' }}
+                  title="Meeting platform"
+                  aria-label="Meeting platform"
+                >
+                  <option value="zoom">Zoom</option>
+                  <option value="teams">Teams</option>
+                  <option value="meet">Google Meet</option>
+                  <option value="other">Other</option>
+                </select>
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+
+              {/* Coding platform — drives desktop auto-capture */}
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold" style={{ background: codingPlatform !== 'none' ? 'rgba(0,234,100,0.10)' : 'var(--bg-elevated)', border: `1px solid ${codingPlatform !== 'none' ? '#00ea64' : 'var(--border)'}`, color: codingPlatform !== 'none' ? '#00ea64' : 'var(--text-muted)' }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <select
+                  value={codingPlatform}
+                  onChange={e => setCodingPlatform(e.target.value)}
+                  className="bg-transparent border-none outline-none cursor-pointer text-[11px] font-semibold"
+                  style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
+                  title="Coding platform — Camora auto-detects this tab"
+                  aria-label="Coding platform"
+                >
+                  <option value="none">No Coding Tool</option>
+                  <option value="hackerrank">HackerRank</option>
+                  <option value="leetcode">LeetCode</option>
+                  <option value="coderpad">CoderPad</option>
+                </select>
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+            </div>
             {/* Invisible button removed per user request — Cmd+B keyboard
                 shortcut and the LumoraIconRail "Go Invisible" menu item
                 still trigger the same setBlanked(true) flow. */}

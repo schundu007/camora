@@ -328,14 +328,27 @@ end tell`);
 
 let _lastHrUrl = null;
 let _hrPollTimer = null;
+// Active coding platform — set by renderer via 'set-coding-platform' IPC.
+// Drives which URLs trigger auto-capture.
+let _codingPlatform = 'hackerrank'; // default on: most users are using HackerRank
+
+const PLATFORM_URL_MATCH = {
+  hackerrank: (url) => url.includes('hackerrank.com') &&
+    !/hackerrank\.com\/(dashboard|settings|profile|notifications|jobs|companies|login|signup)/.test(url),
+  leetcode: (url) => url.includes('leetcode.com/problems/'),
+  coderpad: (url) => url.includes('coderpad.io/'),
+};
 
 async function doHackerrankScrape() {
   const info = await getActiveBrowserInfo();
   if (!info) return { ok: false, error: 'No browser window found. Open Chrome/Brave with HackerRank.' };
   const { url, windowTitle } = info;
   console.log('[hr-auto] active browser URL:', url, '| window title:', windowTitle);
-  if (!url.includes('hackerrank.com')) {
-    return { ok: false, error: `Active tab is not HackerRank.\nCurrent URL: ${url}` };
+  const activePlatform = _codingPlatform !== 'none' ? _codingPlatform : 'hackerrank';
+  const matchFn = PLATFORM_URL_MATCH[activePlatform];
+  if (!matchFn?.(url)) {
+    const names = { hackerrank: 'HackerRank', leetcode: 'LeetCode', coderpad: 'CoderPad' };
+    return { ok: false, error: `Active tab is not ${names[activePlatform] || 'the selected platform'}.\nCurrent URL: ${url}` };
   }
   const dataUrl = await captureExactBrowserWindow(windowTitle);
   if (!dataUrl) return { ok: false, error: 'Could not capture the HackerRank browser window. Make sure it is visible (not minimised or behind other windows).' };
@@ -408,15 +421,14 @@ function startHackerrankAutoDetect() {
 
   const poll = async () => {
     try {
-      // Skip if Screen Recording not granted — avoids spamming empty captures
+      // Skip if no platform selected or Screen Recording not granted
+      if (_codingPlatform === 'none') return;
       if (systemPreferences.getMediaAccessStatus('screen') !== 'granted') return;
       const info = await getActiveBrowserInfo();
       if (!info) return;
       const { url } = info;
-      // Match any HackerRank page that could be a coding interview.
-      // Exclude profile/settings/dashboard so we don't fire on navigation chrome.
-      if (!url.includes('hackerrank.com')) return;
-      if (/hackerrank\.com\/(dashboard|settings|profile|notifications|jobs|companies|login|signup)/.test(url)) return;
+      const matchFn = PLATFORM_URL_MATCH[_codingPlatform];
+      if (!matchFn || !matchFn(url)) return;
       if (url === _lastHrUrl) return; // already processed successfully — don't re-fire
       console.log('[hr-auto] HackerRank detected, scraping:', url);
       // Settle time so the page DOM is ready after navigation
@@ -439,6 +451,13 @@ function startHackerrankAutoDetect() {
   _hrPollTimer = setInterval(poll, 3000);
   setTimeout(poll, 1500);
 }
+
+// Renderer tells us which coding platform to watch.
+ipcMain.handle('set-coding-platform', (_event, platform) => {
+  _codingPlatform = platform || 'none';
+  _lastHrUrl = null; // reset dedup so first detection on new platform fires immediately
+  console.log('[hr-auto] coding platform set to:', _codingPlatform);
+});
 
 // Manual on-demand trigger — renderer calls this when user clicks "Fetch HackerRank"
 ipcMain.handle('hackerrank-manual-fetch', async () => {

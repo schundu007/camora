@@ -32,6 +32,9 @@ contextBridge.exposeInMainWorld('camo', {
 
   // Manual on-demand HackerRank scrape — returns { ok, data?, error? }
   fetchHackerrankNow: () => ipcRenderer.invoke('hackerrank-manual-fetch'),
+  // Tell main process which coding platform to watch for auto-capture.
+  // platform: 'hackerrank' | 'leetcode' | 'coderpad' | 'none'
+  setCodingPlatform: (platform) => ipcRenderer.invoke('set-coding-platform', platform),
   // Auto-detect push events from main process (polling or F9 screenshot)
   captureHackerrankWindow: () => ipcRenderer.invoke('capture-window-by-name', 'hackerrank'),
   onHackerrankCapture: (callback) => {
