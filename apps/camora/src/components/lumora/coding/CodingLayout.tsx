@@ -212,6 +212,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Auto-collapse input panel in autopilot mode (platform selected) so solution fills the screen.
   const [isInputCollapsed, setIsInputCollapsed] = useState(() => !!(codingPlatform && codingPlatform !== 'none'));
 
+  // Silent auto-fix loop: after solution generation, auto-run fires. If tests
+  // fail we silently call fix → re-run up to 3 times before surfacing the
+  // manual Fix button. The user never sees intermediate failures.
+  const autoGenRef = useRef<{ active: boolean; attempts: number }>({ active: false, attempts: 0 });
+  const handleAutoFixRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
+
   // Screen Recording permission status — checked once on mount (desktop only).
   // 'granted' | 'denied' | 'restricted' | 'not-determined' | null (non-desktop)
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
@@ -447,13 +453,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     }
   }, [token, code, language, testCases]);
 
-  const handleAutoFix = useCallback(async () => {
+  const handleAutoFix = useCallback(async (silent = false) => {
     if (!token) {
-      setOutput(prev => prev + '\nAuto-fix: not authenticated');
+      if (!silent) setOutput(prev => prev + '\nAuto-fix: not authenticated');
       return;
     }
     setShowFixPrompt(false);
-    setOutput('Auto-fixing code...');
+    if (!silent) setOutput('Auto-fixing code...');
     try {
       const resp = await fetch(`${API_BASE_URL}/api/v1/coding/fix`, {
         credentials: 'include',
@@ -463,19 +469,27 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       });
       if (!resp.ok) {
         const errData = await resp.json().catch(() => ({}));
-        throw new Error(errData.detail || `Fix failed: ${resp.status}`);
+        if (!silent) throw new Error(errData.detail || `Fix failed: ${resp.status}`);
+        return;
       }
       const data = await resp.json();
       if (data.code) {
         setCode(data.code);
-        setOutput('Code fixed! Click Run to test again.' + (data.explanation ? `\n\nFix: ${data.explanation}` : ''));
+        if (!silent) setOutput('Code fixed! Click Run to test again.' + (data.explanation ? `\n\nFix: ${data.explanation}` : ''));
+        if (silent) {
+          // Re-run automatically — wait one tick for setCode to propagate
+          setTimeout(() => handleRun(), 80);
+        }
       } else {
-        setOutput('Auto-fix returned no code. Try editing manually.');
+        if (!silent) setOutput('Auto-fix returned no code. Try editing manually.');
       }
     } catch (err: any) {
-      setOutput(`Auto-fix failed: ${err.message || 'Unknown error'}. Try editing the code manually.`);
+      if (!silent) setOutput(`Auto-fix failed: ${err.message || 'Unknown error'}. Try editing the code manually.`);
     }
-  }, [token, code, language, fixError, problemText]);
+  }, [token, code, language, fixError, problemText, handleRun]);
+
+  // Keep ref current so the auto-fix effect can call it without stale closures
+  useEffect(() => { handleAutoFixRef.current = handleAutoFix; }, [handleAutoFix]);
 
   // ── Keyboard Shortcuts ─────────────────────────────────────────────────
 
@@ -505,6 +519,26 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   useEffect(() => {
     if (isStreaming) setProblemTab('solution');
   }, [isStreaming]);
+
+  // Mark auto-gen active when a new solution starts streaming so the silent
+  // fix loop knows to intercept test failures instead of surfacing the button.
+  useEffect(() => {
+    if (isStreaming) autoGenRef.current = { active: true, attempts: 0 };
+  }, [isStreaming]);
+
+  // Silent auto-fix: when auto-run finds failures after generation, fix
+  // silently and re-run. Surface the manual button only after 3 attempts.
+  useEffect(() => {
+    if (!showFixPrompt) return;
+    if (!autoGenRef.current.active) return;
+    if (autoGenRef.current.attempts >= 3) {
+      autoGenRef.current.active = false; // give up, show manual fix button
+      return;
+    }
+    autoGenRef.current.attempts++;
+    handleAutoFixRef.current?.(true); // silent=true
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showFixPrompt]);
 
   // ── Auto-run after solution completes ───────────────────────────────────
   // User asked for "instant working answers — don't ask me to add test
