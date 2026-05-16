@@ -334,6 +334,12 @@ BASH-SPECIFIC FACTS — apply to ALL bash starter code problems
 • $@ at script level = positional args to the script = EMPTY for stdin problems
 • stdin consumed by readarray — never re-read it
 • "\${#my_array[@]}" = count of lines (not words)
+
+CRITICAL — array indexing in wrapper calls:
+• "\${my_array[@]}" passes ALL elements to the function ← ALWAYS USE THIS
+• "\${my_array[0]}" passes ONLY the FIRST element ← ALMOST ALWAYS WRONG
+• If the starter code has "\${my_array[0]}" in the wrapper call, CORRECT it to
+  "\${my_array[@]}" — single-element processing is never the intent for array problems
 ═══════════════════════════════════════════════════════════════════
 
 TWO CASES — determine which applies, then follow it exactly:
