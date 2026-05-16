@@ -330,8 +330,19 @@ CASE B — Starter code has NO function stub (just input-reading boilerplate + e
   • $0 = SCRIPT FILENAME — NEVER pass $0 as data or call anything with $0
   • $@ = positional args to the SCRIPT — for stdin-based problems $@ IS EMPTY
   • stdin is already consumed by readarray — NEVER re-read it inside a function
-  → For any array operation: use \${my_array[@]} or \${#my_array[@]} directly inline
-  → If you must define a helper function: call it with "\${my_array[@]}", NEVER with $0
+
+  WORD SPLITTING — CRITICAL:
+  • readarray reads one LINE per element — my_array[0]="First 2 3rd 4" is ONE STRING
+  • To process individual words on each line use UNQUOTED \$line (enables word splitting):
+      for line in "\${my_array[@]}"; do
+        for word in \$line; do   ← unquoted: bash splits on spaces/tabs
+          [[ "\$word" =~ ^-?[0-9]+\$ ]] && (( sum += word )) || true
+        done
+      done
+  • NEVER quote the loop variable when you need word splitting: for w in \$line NOT "\$line"
+  • (( arithmetic )) returns exit-code 1 when result is 0 — always append || true
+    to prevent the script from aborting under set -e:
+      (( sum += word )) || true
   ────────────────────────────────────────────────────────────────────────────
 
 ABSOLUTE RULES for both cases:
