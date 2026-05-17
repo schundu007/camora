@@ -345,6 +345,7 @@ import prepRouter from './routes/prep.js';
 import companyContextRouter from './routes/companyContext.js';
 import audioPrefsRouter from './routes/audioPreferences.js';
 import usercodeRouter from './routes/usercode.js';
+import githubRouter from './routes/github.js';
 
 // Per-IP rate limiting — previously only ascend had limits. Transcribe/speaker/
 // diagram were wide open to abuse before this.
@@ -397,6 +398,7 @@ app.use('/api/v1/analytics', apiLimiter, analyticsRouter); // analytics may incl
 app.use('/api/v1/usage', apiLimiter, authenticate, usageRouter);
 app.use('/api/v1/jobs', apiLimiter, jobsRouter); // jobs feed is public-readable
 app.use('/api/v1/stories', apiLimiter, storiesRouter); // stories feed is public-readable
+app.use('/api/v1/github', apiLimiter, authenticate, requirePaidSubscription, githubRouter);
 
 // Global error handler — generic message to client, full details to logs.
 app.use((err, req, res, next) => {
