@@ -559,6 +559,36 @@ function startDesktopScreenshotWatcher() {
 // through to the browser underneath — HackerRank never sees a mouseleave.
 let _overlayWindow = null;
 let _overlayHideTimer = null;
+let _overlayCursorPoll = null;
+// Height of the draggable header in logical px — must match .header CSS.
+// (7px pad-top + ~18px content + 7px pad-bot + 1px border = ~33px; use 38 for safety)
+const OVERLAY_HEADER_H = 38;
+
+function startOverlayCursorPoll() {
+  if (_overlayCursorPoll) clearInterval(_overlayCursorPoll);
+  _overlayCursorPoll = setInterval(() => {
+    if (!_overlayWindow || _overlayWindow.isDestroyed()) {
+      clearInterval(_overlayCursorPoll);
+      _overlayCursorPoll = null;
+      return;
+    }
+    const cursor = electronScreen.getCursorScreenPoint();
+    const b = _overlayWindow.getBounds();
+    const overHeader = cursor.x >= b.x && cursor.x <= b.x + b.width &&
+                       cursor.y >= b.y && cursor.y <= b.y + OVERLAY_HEADER_H;
+    if (overHeader) {
+      _overlayWindow.setFocusable(true);
+      _overlayWindow.setIgnoreMouseEvents(false);
+    } else {
+      _overlayWindow.setFocusable(false);
+      _overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+    }
+  }, 33); // ~30 fps — enough for responsive drag without spinning
+}
+
+function stopOverlayCursorPoll() {
+  if (_overlayCursorPoll) { clearInterval(_overlayCursorPoll); _overlayCursorPoll = null; }
+}
 
 function buildOverlayHtml(code, language) {
   const escaped = (code || '')
@@ -613,15 +643,10 @@ function buildOverlayHtml(code, language) {
 <div class="panel">
   <div class="header">
     <span>CAMORA &middot; ${(language||'').toUpperCase()} SOLUTION &nbsp;&#8942;&nbsp; drag to move</span>
-    <div class="close-btn" onclick="window.close()" title="Close">&#x2715;</div>
+    <div class="close-btn" onclick="window.overlayAPI?.closeOverlay()" title="Close">&#x2715;</div>
   </div>
   <pre>${escaped}</pre>
 </div>
-<script>
-  const hdr = document.querySelector('.header');
-  hdr.addEventListener('mouseenter', () => window.overlayAPI?.setInteractive(true));
-  hdr.addEventListener('mouseleave', () => window.overlayAPI?.setInteractive(false));
-</script>
 </body></html>`;
 }
 
@@ -667,11 +692,9 @@ ipcMain.handle('show-solution-overlay', async (_event, { code, language, stealth
     y = Math.max(oy, Math.min(y, oy + sh - H));
     console.log(`[overlay] on ${cb.browser} display(${ox},${oy}) at (${x},${y}) ${W}x${H}`);
   } catch {
-    // Fallback: same display as the Camora main window.
-    const mw = mainWindow && !mainWindow.isDestroyed() ? mainWindow : null;
-    const fallbackDisplay = mw
-      ? electronScreen.getDisplayNearestPoint(mw.getBounds())
-      : electronScreen.getPrimaryDisplay();
+    // Fallback: use the display the cursor is on (most likely where HackerRank is),
+    // not Camora's window (which may be on a different monitor).
+    const fallbackDisplay = electronScreen.getDisplayNearestPoint(electronScreen.getCursorScreenPoint());
     const { width: sw, height: sh } = fallbackDisplay.workAreaSize;
     const ox = fallbackDisplay.workArea.x;
     const oy = fallbackDisplay.workArea.y;
@@ -679,7 +702,7 @@ ipcMain.handle('show-solution-overlay', async (_event, { code, language, stealth
     H = Math.min(700, Math.round(sh * 0.78));
     x = ox + sw - W - 16;
     y = oy + Math.round((sh - H) / 2);
-    console.log(`[overlay] fallback on Camora display at (${x},${y}) ${W}x${H}`);
+    console.log(`[overlay] fallback on cursor display at (${x},${y}) ${W}x${H}`);
   }
 
   if (!_overlayWindow || _overlayWindow.isDestroyed()) {
@@ -694,13 +717,9 @@ ipcMain.handle('show-solution-overlay', async (_event, { code, language, stealth
       },
     });
     _overlayWindow.setAlwaysOnTop(true, 'screen-saver');
-    // Default: pass all events through. The preload toggles this off only
-    // when the cursor is over the drag handle (header), so -webkit-app-region
-    // drag fires without blocking Chrome events over the code area.
     _overlayWindow.setIgnoreMouseEvents(true, { forward: true });
-    _overlayWindow.on('closed', () => { _overlayWindow = null; });
+    _overlayWindow.on('closed', () => { _overlayWindow = null; stopOverlayCursorPoll(); });
   } else {
-    // Reposition on code update so it tracks Chrome if Chrome moved
     _overlayWindow.setBounds({ x, y, width: W, height: H });
     _overlayWindow.setIgnoreMouseEvents(true, { forward: true });
   }
@@ -708,22 +727,35 @@ ipcMain.handle('show-solution-overlay', async (_event, { code, language, stealth
   const html = buildOverlayHtml(code, language);
   _overlayWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
 
+  // Main-process cursor polling: tracks whether cursor is over the header and
+  // toggles setIgnoreMouseEvents accordingly — no renderer→IPC round-trip latency,
+  // so drag and close button are immediately responsive.
+  startOverlayCursorPoll();
+
   // Auto-hide after 10 minutes.
   if (_overlayHideTimer) clearTimeout(_overlayHideTimer);
   _overlayHideTimer = setTimeout(() => {
     if (_overlayWindow && !_overlayWindow.isDestroyed()) _overlayWindow.close();
   }, 600000);
 
-  console.log('[overlay] shown', W, 'x', H, 'at', x, y, stealthActive ? '(interactive)' : '(passthrough)');
+  console.log('[overlay] shown', W, 'x', H, 'at', x, y);
 });
 
 ipcMain.handle('hide-solution-overlay', () => {
+  stopOverlayCursorPoll();
   if (_overlayHideTimer) { clearTimeout(_overlayHideTimer); _overlayHideTimer = null; }
   if (_overlayWindow && !_overlayWindow.isDestroyed()) _overlayWindow.close();
 });
 
-// Preload in overlay-preload.js sends this when cursor enters/leaves the drag header.
-// Toggling per-region: header = interactive (drag fires), code area = pass-through.
+// Close button in overlay sends this instead of window.close() to avoid
+// contextIsolation surprises with data: URL pages.
+ipcMain.on('overlay-close', () => {
+  stopOverlayCursorPoll();
+  if (_overlayHideTimer) { clearTimeout(_overlayHideTimer); _overlayHideTimer = null; }
+  if (_overlayWindow && !_overlayWindow.isDestroyed()) _overlayWindow.close();
+});
+
+// Kept for compatibility but polling supersedes it — no longer the primary path.
 ipcMain.on('overlay-interactive', (_event, on) => {
   if (_overlayWindow && !_overlayWindow.isDestroyed()) {
     if (on) {
