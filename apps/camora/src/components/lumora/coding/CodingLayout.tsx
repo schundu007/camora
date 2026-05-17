@@ -1353,6 +1353,21 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
+                      {/* In-app silent screenshot — no Cmd+Shift+4 required; watcher auto-processes */}
+                      {(window as any).camo?.takeScreenshot && (
+                        <button
+                          onClick={() => (window as any).camo.takeScreenshot()}
+                          title="Snap screen — silently captures and extracts the problem"
+                          className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-90 active:scale-[0.97]"
+                          style={{ background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }}
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                          </svg>
+                          Snap
+                        </button>
+                      )}
                       {/* Stealth mode — neutralizes HackerRank mouse/focus tracking via Chrome JS injection */}
                       {(window as any).camo?.injectTrackingNeutralizer && (
                         <button
@@ -1417,6 +1432,20 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       ))}
                     </div>
                     <div className="flex items-center gap-1.5">
+                      {(window as any).camo?.takeScreenshot && (
+                        <button
+                          onClick={() => (window as any).camo.takeScreenshot()}
+                          title="Snap screen — silently captures and extracts the problem"
+                          className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors hover:opacity-90"
+                          style={{ background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }}
+                        >
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                          </svg>
+                          Snap
+                        </button>
+                      )}
                       {(window as any).camo?.injectTrackingNeutralizer && (
                         <button
                           onClick={handleStealthMode}

@@ -54,6 +54,11 @@ contextBridge.exposeInMainWorld('camo', {
   // Returns { ok, browser? } on success, { ok: false, needsDevMenu?, error } on failure.
   injectTrackingNeutralizer: () => ipcRenderer.invoke('inject-tracking-neutralizer'),
 
+  // In-app silent screenshot — captures the full screen via screencapture -x
+  // and drops it on ~/Desktop so the watcher fires automatically. No macOS
+  // Cmd+Shift+4 or focus change required. Returns { ok, error? }.
+  takeScreenshot: () => ipcRenderer.invoke('take-screenshot'),
+
   // Desktop screenshot watcher — fires when user takes a macOS screenshot
   // (Cmd+Shift+3/4) while HackerRank is on screen. Renderer calls extractAndMaybeGenerate
   // on the received dataUrl, same as the F9 / auto-detect pipeline.
