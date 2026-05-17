@@ -7,6 +7,7 @@ import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import FollowupAsk from '@/components/lumora/coding/FollowupAsk';
 import { LANGUAGES, getLanguageById } from '@/data/languages';
 import { dialogAlert } from '@/components/shared/Dialog';
+import { getActiveAssistant } from '@/lib/lumora-assistant';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -781,6 +782,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     camo.onScreenshotWatcher(handler);
     return () => camo.offScreenshotWatcher?.();
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Session folder: route screenshots to ~/Documents/Camora/{company}/screenshots/
+  // so captures are isolated per interview and never confused with Desktop clutter.
+  // Cleared on unmount so the watcher reverts to ~/Desktop between sessions.
+  useEffect(() => {
+    const camo = (window as any).camo;
+    if (!camo?.setSessionFolder) return;
+    const company = getActiveAssistant()?.company || getActiveAssistant()?.name || '';
+    camo.setSessionFolder(company || null);
+    return () => { camo.setSessionFolder(null); };
   }, []);
 
   // Solution overlay: when code is ready, push it to the floating overlay so the
