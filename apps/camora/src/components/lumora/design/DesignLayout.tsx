@@ -259,6 +259,45 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  const handleSnap = useCallback(async () => {
+    const camo = (window as any).camo;
+    if (!camo?.takeScreenshot) return;
+    const perm = await camo.getMediaAccessStatus?.('screen').catch(() => null);
+    if (perm && perm !== 'granted') {
+      camo.openSystemPrivacy?.('ScreenCapture');
+      return;
+    }
+    setSnapState('capturing');
+    try {
+      const result = await camo.takeScreenshot();
+      if (!result?.ok) throw new Error(result?.error || 'Capture failed');
+      setSnapState('done');
+      setTimeout(() => setSnapState('idle'), 2500);
+    } catch {
+      setSnapState('error');
+      setTimeout(() => setSnapState('idle'), 3000);
+    }
+  }, []);
+
+  const handleStealthMode = async () => {
+    const camo = (window as any).camo;
+    if (!camo?.injectTrackingNeutralizer) {
+      await dialogAlert({ title: 'Desktop only', message: 'Stealth mode requires the Camora desktop app.' });
+      return;
+    }
+    const result = await camo.injectTrackingNeutralizer();
+    if (result.ok) {
+      setIsStealthActive(true);
+    } else if (result.needsDevMenu) {
+      await dialogAlert({
+        title: 'One-time setup needed',
+        message: `Enable "Allow JavaScript from Apple Events" in ${result.browser || 'Chrome'}:\n\n1. Open ${result.browser || 'Chrome'}\n2. Menu bar → View → Developer (or More Tools)\n3. Click "Allow JavaScript from Apple Events"\n4. Click Stealth again`,
+      });
+    } else {
+      await dialogAlert({ title: 'Stealth failed', message: result.error || 'Could not inject into browser tab.' });
+    }
+  };
+
   const handleSubmit = useCallback(async (overrideText?: string, options?: { bypassCache?: boolean }) => {
     const text = overrideText || problemText;
     if (!text.trim() || !token || isLoading) return;
