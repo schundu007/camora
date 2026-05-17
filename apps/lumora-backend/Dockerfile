@@ -52,8 +52,12 @@ RUN apt-get update \
 WORKDIR /app
 
 # Install JS deps first so source-only changes don't bust this layer.
+# sharp ships its Linux binary via optionalDependencies (@img/sharp-linux-x64 /
+# arm64). We install everything first (--omit=optional for speed), then do a
+# targeted sharp install that re-enables optional so its native binary lands.
 COPY package.json ./
 RUN npm install --no-audit --no-fund --omit=optional \
+ && npm install sharp --no-audit --no-fund \
  && npm cache clean --force
 
 # App source last — most-changed layer, smallest cache invalidation cost.

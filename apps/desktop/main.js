@@ -518,9 +518,27 @@ function startDesktopScreenshotWatcher() {
             const buf = fs.readFileSync(filepath);
             if (buf.length < 50000) return; // skip tiny/corrupt files
             _lastDesktopScreenshot = filepath;
-            const isJpeg = /\.(jpg|jpeg)$/i.test(filename);
-            const dataUrl = `data:image/${isJpeg ? 'jpeg' : 'png'};base64,${buf.toString('base64')}`;
-            console.log('[screenshot-watcher] new screenshot:', filename, `(${Math.round(buf.length / 1024)} KB)`);
+
+            // Anthropic vision rejects base64 > 5 MB. Retina screens produce
+            // 4–8 MB PNGs. Resize before sending, same logic as capture-interactive.
+            const MAX_BASE64 = 4_800_000;
+            const base64Size = (b) => Math.ceil(b.length / 3) * 4;
+            let finalBuf = buf;
+            let mime = /\.(jpg|jpeg)$/i.test(filename) ? 'jpeg' : 'png';
+            if (base64Size(buf) > MAX_BASE64) {
+              let img = nativeImage.createFromBuffer(buf);
+              const targetW = Math.min(img.getSize().width, 1920);
+              img = img.resize({ width: targetW, quality: 'best' });
+              finalBuf = img.toPNG();
+              if (base64Size(finalBuf) > MAX_BASE64) {
+                finalBuf = img.toJPEG(85);
+                mime = 'jpeg';
+              }
+              console.info(`[screenshot-watcher] resized to ${img.getSize().width}px ${mime}, ${finalBuf.length} bytes`);
+            }
+
+            const dataUrl = `data:image/${mime};base64,${finalBuf.toString('base64')}`;
+            console.log('[screenshot-watcher] new screenshot:', filename, `(${Math.round(buf.length / 1024)} KB raw)`);
             if (mainWindow && !mainWindow.isDestroyed()) {
               mainWindow.webContents.send('screenshot-watcher-new', { dataUrl, filename });
             }
