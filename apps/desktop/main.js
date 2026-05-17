@@ -463,16 +463,20 @@ function startHackerrankAutoDetect() {
 // When a new "Screenshot *.png" appears, reads it and sends to renderer.
 let _lastDesktopScreenshot = null;
 let _desktopKnownFiles = new Set();
+// null = fall back to ~/Desktop; set via 'set-session-folder' IPC when a
+// company interview session is active so captures are stored per-interview.
+let _sessionFolder = null;
+let _watchedFolder = null; // tracks which folder is currently being polled
 
 function startDesktopScreenshotWatcher() {
   const desktopPath = path.join(os.homedir(), 'Desktop');
 
-  // Seed the known-files set with whatever is already on the Desktop so we
-  // don't fire on screenshots that predate this launch.
+  // Seed Desktop so we don't fire on pre-existing screenshots at launch.
   try {
     const existing = fs.readdirSync(desktopPath)
       .filter(f => /^Screenshot.*\.(png|jpg|jpeg)$/i.test(f));
     existing.forEach(f => _desktopKnownFiles.add(f));
+    _watchedFolder = desktopPath;
     console.log(`[screenshot-watcher] seeded ${_desktopKnownFiles.size} existing screenshots, polling ${desktopPath}`);
   } catch (err) {
     console.warn('[screenshot-watcher] could not read Desktop:', err.message);
@@ -481,13 +485,34 @@ function startDesktopScreenshotWatcher() {
 
   setInterval(() => {
     try {
-      const files = fs.readdirSync(desktopPath)
-        .filter(f => /^Screenshot.*\.(png|jpg|jpeg)$/i.test(f));
+      const watchFolder = _sessionFolder || desktopPath;
+
+      // Re-seed when the active folder changes (new session started / cleared).
+      if (watchFolder !== _watchedFolder) {
+        _watchedFolder = watchFolder;
+        _desktopKnownFiles = new Set();
+        try {
+          fs.mkdirSync(watchFolder, { recursive: true });
+          const existing = fs.readdirSync(watchFolder)
+            .filter(f => /\.(png|jpg|jpeg)$/i.test(f));
+          existing.forEach(f => _desktopKnownFiles.add(f));
+          console.log(`[screenshot-watcher] switched to ${watchFolder}, seeded ${_desktopKnownFiles.size} files`);
+        } catch {}
+      }
+
+      // Session folder: accept any image (we control what lands there).
+      // Desktop fallback: only "Screenshot …" files created by macOS / our Snap.
+      const isSession = watchFolder !== desktopPath;
+      const files = fs.readdirSync(watchFolder)
+        .filter(f => isSession
+          ? /\.(png|jpg|jpeg)$/i.test(f)
+          : /^Screenshot.*\.(png|jpg|jpeg)$/i.test(f));
+
       for (const filename of files) {
         if (_desktopKnownFiles.has(filename)) continue;
         _desktopKnownFiles.add(filename);
-        const filepath = path.join(desktopPath, filename);
-        // Wait 1 s for macOS to finish writing before reading.
+        const filepath = path.join(watchFolder, filename);
+        // Wait 1 s for screencapture to finish writing before reading.
         setTimeout(() => {
           try {
             const buf = fs.readFileSync(filepath);
@@ -962,16 +987,45 @@ ipcMain.handle('relaunch-app', () => {
   app.exit(0);
 });
 
+// ── IPC: per-interview session folder ──────────────────────────────────────
+// Called by the renderer when company context becomes known (e.g. NVIDIA).
+// Creates ~/Documents/Camora/{company}/screenshots/ and redirects the watcher
+// there so only screenshots from the active interview are processed.
+// Pass null/'' to clear the session and fall back to ~/Desktop.
+ipcMain.handle('set-session-folder', (_event, company) => {
+  if (!company || typeof company !== 'string' || !company.trim()) {
+    _sessionFolder = null;
+    console.log('[screenshot-watcher] session folder cleared, reverting to ~/Desktop');
+    return { ok: true, folder: null };
+  }
+  const safe = company.trim().replace(/[\\/:*?"<>|]/g, '_').slice(0, 60);
+  const folder = path.join(os.homedir(), 'Documents', 'Camora', safe, 'screenshots');
+  try {
+    fs.mkdirSync(folder, { recursive: true });
+    _sessionFolder = folder;
+    console.log('[screenshot-watcher] session folder set:', folder);
+    return { ok: true, folder };
+  } catch (err) {
+    console.error('[set-session-folder] failed:', err.message);
+    return { ok: false, error: err.message };
+  }
+});
+
 // ── IPC: in-app screenshot trigger ─────────────────────────────────────────
-// Runs screencapture -x (silent, no UI, no sound) on the full screen and drops
-// the file on ~/Desktop under a "Screenshot camora-…" name so the existing
-// desktop watcher picks it up automatically and pushes it to the renderer for
-// Claude Vision OCR + problem extraction. No focus change required.
+// Runs screencapture -x (silent, no UI, no sound) on the full screen and saves
+// to the active session folder (~/Documents/Camora/{company}/screenshots/) or
+// ~/Desktop as fallback. The watcher picks it up automatically for OCR + solve.
 ipcMain.handle('take-screenshot', async () => {
   if (process.platform !== 'darwin') return { ok: false, error: 'macOS only' };
   try {
-    const filename = `Screenshot camora-${Date.now()}.png`;
-    const dest = path.join(os.homedir(), 'Desktop', filename);
+    const watchFolder = _sessionFolder || path.join(os.homedir(), 'Desktop');
+    if (_sessionFolder) fs.mkdirSync(_sessionFolder, { recursive: true });
+    // Session folder: plain name (all images accepted by watcher).
+    // Desktop fallback: "Screenshot …" prefix so the watcher regex matches.
+    const filename = _sessionFolder
+      ? `screenshot-${Date.now()}.png`
+      : `Screenshot camora-${Date.now()}.png`;
+    const dest = path.join(watchFolder, filename);
     await new Promise((resolve) => {
       execFile('/usr/sbin/screencapture', ['-x', dest], () => resolve());
     });

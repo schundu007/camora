@@ -54,8 +54,13 @@ contextBridge.exposeInMainWorld('camo', {
   // Returns { ok, browser? } on success, { ok: false, needsDevMenu?, error } on failure.
   injectTrackingNeutralizer: () => ipcRenderer.invoke('inject-tracking-neutralizer'),
 
+  // Per-interview session folder — routes screenshots to
+  // ~/Documents/Camora/{company}/screenshots/ so captures are isolated per
+  // interview. Pass the company name string; pass null to revert to ~/Desktop.
+  setSessionFolder: (company) => ipcRenderer.invoke('set-session-folder', company),
+
   // In-app silent screenshot — captures the full screen via screencapture -x
-  // and drops it on ~/Desktop so the watcher fires automatically. No macOS
+  // and saves to the active session folder (or ~/Desktop as fallback). No macOS
   // Cmd+Shift+4 or focus change required. Returns { ok, error? }.
   takeScreenshot: () => ipcRenderer.invoke('take-screenshot'),
 
