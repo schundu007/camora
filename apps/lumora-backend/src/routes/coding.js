@@ -47,10 +47,10 @@ async function ensureImageWithinAnthropicLimit(rawBase64, mediaType) {
 
   const sharp = await loadSharp();
   if (!sharp) {
-    // Sharp not available on this build — pass through and let
-    // Anthropic decide. Most desktop screenshots compress under the
-    // limit on the client (electron's nativeImage already shrinks).
-    return { mediaType, data: rawBase64 };
+    // Sharp unavailable — throwing here is intentional. Passing the oversized
+    // image through always produces a 400 from Anthropic ("exceeds 5 MB").
+    // A clear 413 from us is more actionable than a cryptic Anthropic error.
+    throw Object.assign(new Error('Image too large (>5 MB) and server-side resize is unavailable. Use a smaller screenshot or the Snap button in the desktop app.'), { statusCode: 413 });
   }
 
   let buf = Buffer.from(rawBase64, 'base64');
@@ -1421,7 +1421,8 @@ Critical rules:
     res.json({ problem, starter_code: starterCode, kind, detected_language: detectedLanguage });
   } catch (err) {
     console.error('extract-from-image error:', err?.message || err);
-    res.status(500).json({ detail: err?.message || 'Image extraction failed' });
+    const status = err?.statusCode || 500;
+    res.status(status).json({ detail: err?.message || 'Image extraction failed' });
   }
 });
 
