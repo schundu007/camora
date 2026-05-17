@@ -1289,22 +1289,20 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 stream as part of the reset. */}
             <button
               onClick={handleNewProblem}
-              className="ml-auto shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md transition-colors"
+              className="ml-auto shrink-0 flex items-center justify-center w-7 h-7 rounded-md transition-colors"
               style={{
-                color: 'rgba(255,255,255,0.92)',
-                background: 'rgba(255,255,255,0.10)',
-                border: '1px solid rgba(255,255,255,0.22)',
-                fontFamily: 'var(--font-mono)',
+                color: 'rgba(255,255,255,0.85)',
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.18)',
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; }}
-              title="Reset everything so you can ask a fresh problem in this same window — no refresh needed."
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+              title="New Problem — reset everything for a fresh question"
             >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="1 4 1 10 7 10" />
                 <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
               </svg>
-              New Problem
             </button>
           </div>
 
@@ -1348,7 +1346,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#00ea64' }} />
                             <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#00ea64' }} />
                           </span>
-                          <span className="text-[11px] font-semibold" style={{ color: '#00ea64' }}>
+                          <span className="text-[11px] font-semibold truncate" style={{ color: '#00ea64' }}>
                             {`Monitoring ${({ hackerrank: 'HackerRank', leetcode: 'LeetCode', coderpad: 'CoderPad' } as Record<string,string>)[codingPlatform] ?? codingPlatform} — problem appears automatically`}
                           </span>
                         </>
