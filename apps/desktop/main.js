@@ -647,8 +647,9 @@ ipcMain.handle('show-solution-overlay', async (_event, { code, language, stealth
   // through so Chrome doesn't see a mouseleave from the overlay.
   if (stealthActive) {
     _overlayWindow.setIgnoreMouseEvents(false);
-    _overlayWindow.setFocusable(false); // still no keyboard focus steal
+    _overlayWindow.setFocusable(true); // macOS requires focusable:true for -webkit-app-region drag to fire
   } else {
+    _overlayWindow.setFocusable(false);
     _overlayWindow.setIgnoreMouseEvents(true, { forward: true });
   }
 

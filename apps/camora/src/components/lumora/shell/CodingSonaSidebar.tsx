@@ -403,7 +403,11 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
                   Independent of the bottom-bar mic; never collides. */}
               <SonaMicButton
                 disabled={streaming}
-                onText={(t) => setInput((prev) => prev ? `${prev.trimEnd()} ${t}` : t)}
+                onText={(t) => {
+                  const full = input ? `${input.trimEnd()} ${t}` : t;
+                  setInput(full);
+                  send(full);
+                }}
               />
               <span
                 className="hidden md:inline text-[10px] leading-tight self-center"
