@@ -3,9 +3,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { streamResponse } from '@/lib/sse-client';
 import { useCloudProvider } from '@/hooks/useCloudProvider';
-import { getSystemContext } from '@/lib/lumora-assistant';
+import { getSystemContext, getActiveAssistant } from '@/lib/lumora-assistant';
 import { ArchitectureDiagram } from '@/components/lumora/interview/ArchitectureDiagram';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
+import { dialogAlert } from '@/components/shared/Dialog';
 import {
   type DesignResult,
   parseTagsToDesign,
@@ -148,6 +149,11 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [timerRunning, setTimerRunning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Desktop snap + stealth
+  const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'done' | 'error'>('idle');
+  const [isStealthActive, setIsStealthActive] = useState(false);
+  const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
 
   const startTimer = useCallback((minutes: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -581,6 +587,58 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       solvedAt: Date.now(),
     });
   }, [sd, problemText]);
+
+  // Screen recording permission check — needed to gate Snap button
+  useEffect(() => {
+    const camo = (window as any).camo;
+    if (!camo?.getMediaAccessStatus) return;
+    let cancelled = false;
+    const check = async () => {
+      const status = await camo.getMediaAccessStatus('screen').catch(() => null);
+      if (!cancelled) setScreenPermStatus(status);
+    };
+    check();
+    const interval = setInterval(check, 10000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  // Route screenshots to ~/Documents/Camora/{company}/screenshots/ for interview isolation
+  useEffect(() => {
+    const camo = (window as any).camo;
+    if (!camo?.setSessionFolder) return;
+    const company = getActiveAssistant()?.company || getActiveAssistant()?.name || '';
+    camo.setSessionFolder(company || null);
+    return () => { camo.setSessionFolder(null); };
+  }, []);
+
+  // Re-inject stealth every 30s while active so it survives page reloads in Chrome
+  useEffect(() => {
+    const camo = (window as any).camo;
+    if (!isStealthActive || !camo?.injectTrackingNeutralizer) return;
+    const silentReinject = () => camo.injectTrackingNeutralizer().catch(() => null);
+    silentReinject();
+    const interval = setInterval(silentReinject, 30000);
+    return () => clearInterval(interval);
+  }, [isStealthActive]);
+
+  // Listen for Cmd+Shift+3/4 screenshots while the app is in the foreground
+  // and auto-extract + generate the design answer from the captured image.
+  useEffect(() => {
+    const camo = (window as any).camo;
+    if (!camo?.onScreenshotWatcher) return;
+    const handler = async ({ dataUrl, filename }: { dataUrl: string; filename: string }) => {
+      try {
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], filename, { type: blob.type || 'image/png' });
+        await handleImageUpload(file);
+      } catch (err: any) {
+        setErrorMsg(err.message || 'Failed to process screenshot.');
+      }
+    };
+    camo.onScreenshotWatcher(handler);
+    return () => camo.offScreenshotWatcher?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div
