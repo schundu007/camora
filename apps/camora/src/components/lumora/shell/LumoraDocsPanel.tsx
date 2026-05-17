@@ -229,11 +229,9 @@ function tryParseJsonValue(s: string): any {
   const trimmed = s.trim();
   if (!trimmed) return null;
   if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) return null;
-  try {
-    return JSON.parse(trimmed);
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(trimmed); } catch {}
+  try { return JSON.parse(escapeJsonStringControls(trimmed)); } catch {}
+  return null;
 }
 
 /** Defensive text coercion — guarantees a renderable React child even when
