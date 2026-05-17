@@ -962,6 +962,26 @@ ipcMain.handle('relaunch-app', () => {
   app.exit(0);
 });
 
+// ── IPC: in-app screenshot trigger ─────────────────────────────────────────
+// Runs screencapture -x (silent, no UI, no sound) on the full screen and drops
+// the file on ~/Desktop under a "Screenshot camora-…" name so the existing
+// desktop watcher picks it up automatically and pushes it to the renderer for
+// Claude Vision OCR + problem extraction. No focus change required.
+ipcMain.handle('take-screenshot', async () => {
+  if (process.platform !== 'darwin') return { ok: false, error: 'macOS only' };
+  try {
+    const filename = `Screenshot camora-${Date.now()}.png`;
+    const dest = path.join(os.homedir(), 'Desktop', filename);
+    await new Promise((resolve) => {
+      execFile('/usr/sbin/screencapture', ['-x', dest], () => resolve());
+    });
+    return { ok: true };
+  } catch (err) {
+    console.error('[take-screenshot] failed:', err);
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
 // ── IPC: download — real PDF via Chromium printToPDF ───────────────────
 // Renderer sends fully-styled HTML; we render it in a hidden BrowserWindow,
 // call printToPDF, then write to the chosen path via the native save dialog.
