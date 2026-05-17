@@ -30,7 +30,7 @@ export function resolveProvider(modelId) {
  * Stream a response from whichever provider owns `options.model`.
  * Drop-in replacement for `streamResponse` from claude.js.
  */
-export function* streamResponseAny(question, history, options = {}) {
+export async function* streamResponseAny(question, history, options = {}) {
   const provider = resolveProvider(options.model || null);
   switch (provider) {
     case 'openai':

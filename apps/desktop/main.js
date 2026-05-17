@@ -574,6 +574,11 @@ function buildOverlayHtml(code, language) {
   </div>
   <pre>${escaped}</pre>
 </div>
+<script>
+  const hdr = document.querySelector('.header');
+  hdr.addEventListener('mouseenter', () => window.overlayAPI?.setInteractive(true));
+  hdr.addEventListener('mouseleave', () => window.overlayAPI?.setInteractive(false));
+</script>
 </body></html>`;
 }
 
@@ -597,34 +602,41 @@ end tell`);
 }
 
 ipcMain.handle('show-solution-overlay', async (_event, { code, language, stealthActive }) => {
-  // Try to position overlay on top of the active browser window.
-  // Fall back to right-edge of primary display if browser bounds unavailable.
   let x, y, W, H;
-  const display = electronScreen.getPrimaryDisplay();
-  const { width: sw, height: sh } = display.workAreaSize;
-  const scaleFactor = display.scaleFactor || 1;
 
   try {
     const cb = await getActiveBrowserBounds();
-    if (cb) {
-      // Position overlay over the LEFT half of Chrome (problem description area)
-      // so the code editor on the right stays fully visible and usable.
-      // macOS AppleScript bounds are in LOGICAL pixels — Electron uses logical pixels too.
-      const TAB_BAR_H = 72; // approximate Chrome tab bar + address bar height
-      W = Math.round(cb.width * 0.44);
-      H = Math.min(sh - 40, cb.height - TAB_BAR_H - 10);
-      x = cb.x + 8;
-      y = cb.y + TAB_BAR_H;
-      console.log(`[overlay] positioning on ${cb.browser} at (${x},${y}) ${W}x${H}`);
-    } else {
-      throw new Error('no browser bounds');
-    }
+    if (!cb) throw new Error('no browser bounds');
+
+    // Find which display Chrome is on so the overlay lands on the same screen.
+    const targetDisplay = electronScreen.getDisplayNearestPoint({ x: cb.x + Math.round(cb.width / 2), y: cb.y + Math.round(cb.height / 2) });
+    const { width: sw, height: sh } = targetDisplay.workAreaSize;
+    const ox = targetDisplay.workArea.x;
+    const oy = targetDisplay.workArea.y;
+
+    const TAB_BAR_H = 72;
+    W = Math.round(cb.width * 0.44);
+    H = Math.min(sh - 40, cb.height - TAB_BAR_H - 10);
+    x = cb.x + 8;
+    y = cb.y + TAB_BAR_H;
+    // Clamp to the target display's work area so the window never escapes it.
+    x = Math.max(ox, Math.min(x, ox + sw - W));
+    y = Math.max(oy, Math.min(y, oy + sh - H));
+    console.log(`[overlay] on ${cb.browser} display(${ox},${oy}) at (${x},${y}) ${W}x${H}`);
   } catch {
+    // Fallback: same display as the Camora main window.
+    const mw = mainWindow && !mainWindow.isDestroyed() ? mainWindow : null;
+    const fallbackDisplay = mw
+      ? electronScreen.getDisplayNearestPoint(mw.getBounds())
+      : electronScreen.getPrimaryDisplay();
+    const { width: sw, height: sh } = fallbackDisplay.workAreaSize;
+    const ox = fallbackDisplay.workArea.x;
+    const oy = fallbackDisplay.workArea.y;
     W = Math.min(560, Math.round(sw * 0.38));
     H = Math.min(700, Math.round(sh * 0.78));
-    x = sw - W - 16;
-    y = Math.round((sh - H) / 2);
-    console.log(`[overlay] fallback position (${x},${y}) ${W}x${H}`);
+    x = ox + sw - W - 16;
+    y = oy + Math.round((sh - H) / 2);
+    console.log(`[overlay] fallback on Camora display at (${x},${y}) ${W}x${H}`);
   }
 
   if (!_overlayWindow || _overlayWindow.isDestroyed()) {
@@ -633,23 +645,20 @@ ipcMain.handle('show-solution-overlay', async (_event, { code, language, stealth
       transparent: true, frame: false,
       alwaysOnTop: true, skipTaskbar: true,
       hasShadow: true, focusable: false,
-      webPreferences: { nodeIntegration: false, contextIsolation: true },
+      webPreferences: {
+        nodeIntegration: false, contextIsolation: true,
+        preload: path.join(__dirname, 'overlay-preload.js'),
+      },
     });
     _overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+    // Default: pass all events through. The preload toggles this off only
+    // when the cursor is over the drag handle (header), so -webkit-app-region
+    // drag fires without blocking Chrome events over the code area.
+    _overlayWindow.setIgnoreMouseEvents(true, { forward: true });
     _overlayWindow.on('closed', () => { _overlayWindow = null; });
   } else {
     // Reposition on code update so it tracks Chrome if Chrome moved
     _overlayWindow.setBounds({ x, y, width: W, height: H });
-  }
-
-  // When stealth is active, HackerRank's mouseleave/blur handlers are neutralized,
-  // so the overlay can be interactive (draggable). Without stealth, pass events
-  // through so Chrome doesn't see a mouseleave from the overlay.
-  if (stealthActive) {
-    _overlayWindow.setIgnoreMouseEvents(false);
-    _overlayWindow.setFocusable(true); // macOS requires focusable:true for -webkit-app-region drag to fire
-  } else {
-    _overlayWindow.setFocusable(false);
     _overlayWindow.setIgnoreMouseEvents(true, { forward: true });
   }
 
@@ -668,6 +677,20 @@ ipcMain.handle('show-solution-overlay', async (_event, { code, language, stealth
 ipcMain.handle('hide-solution-overlay', () => {
   if (_overlayHideTimer) { clearTimeout(_overlayHideTimer); _overlayHideTimer = null; }
   if (_overlayWindow && !_overlayWindow.isDestroyed()) _overlayWindow.close();
+});
+
+// Preload in overlay-preload.js sends this when cursor enters/leaves the drag header.
+// Toggling per-region: header = interactive (drag fires), code area = pass-through.
+ipcMain.on('overlay-interactive', (_event, on) => {
+  if (_overlayWindow && !_overlayWindow.isDestroyed()) {
+    if (on) {
+      _overlayWindow.setFocusable(true);
+      _overlayWindow.setIgnoreMouseEvents(false);
+    } else {
+      _overlayWindow.setFocusable(false);
+      _overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+    }
+  }
 });
 
 // ── Stealth mode — neutralize HackerRank mouse/focus tracking ───────────────

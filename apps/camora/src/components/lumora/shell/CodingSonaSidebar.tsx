@@ -416,20 +416,6 @@ export function CodingSonaSidebar({ surface, open, onClose }: CodingSonaSidebarP
                 <kbd className="font-mono">Enter</kbd> to send <span aria-hidden="true">·</span>{' '}
                 <kbd className="font-mono">Shift+Enter</kbd> for newline
               </span>
-              <button
-                onClick={() => send(input)}
-                disabled={!input.trim() || streaming}
-                className="ml-auto flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] px-3 h-8 rounded-md disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)] focus-visible:ring-[var(--cam-primary)]"
-                style={{
-                  background: 'var(--cam-primary)',
-                  color: '#FFFFFF',
-                  border: '1px solid var(--cam-primary-dk)',
-                  transition: 'background-color 0.15s ease-out, opacity 0.15s ease-out',
-                }}
-              >
-                <Icon name="send" size={11} aria-hidden="true" />
-                Ask Sona
-              </button>
             </div>
           </div>
         </>
