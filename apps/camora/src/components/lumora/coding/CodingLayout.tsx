@@ -983,6 +983,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     }
   };
 
+  // Ref so handleSnap can call acceptImage without a forward-reference TDZ.
+  // acceptImage is declared ~150 lines below handleSnap; putting it in the
+  // useCallback deps array would access the const before initialization.
+  const acceptImageRef = useRef<((file: File) => void) | null>(null);
+
   const handleSnap = useCallback(async () => {
     const camo = (window as any).camo;
 
@@ -1029,7 +1034,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         canvas.toBlob(b => b ? res(b) : rej(new Error('canvas.toBlob failed')), 'image/png')
       );
       const file = new File([blob], 'snap.png', { type: 'image/png' });
-      acceptImage(file);
+      acceptImageRef.current?.(file);
       setSnapState('done');
       setTimeout(() => setSnapState('idle'), 2500);
     } catch (err: any) {
@@ -1040,7 +1045,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         setSnapState('idle');
       }
     }
-  }, [acceptImage]);
+  }, []);
 
   const handleFetchFromUrl = async (overrideUrl?: string) => {
     const urlToFetch = overrideUrl ?? problemUrl;
@@ -1169,6 +1174,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setError(null);
     void extractAndMaybeGenerate(file, true);
   }, [extractAndMaybeGenerate]);
+  // Keep ref in sync so handleSnap (defined above) always calls the latest version
+  acceptImageRef.current = acceptImage;
 
   const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
