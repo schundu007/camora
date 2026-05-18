@@ -242,7 +242,6 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
 
       mediaRecorder.start();
       setState(prev => ({ ...prev, isRecording: true, error: null }));
-      return true;
 
       // Set max recording duration timer as a safety fallback
       if (maxRecordingDuration > 0) {
@@ -340,6 +339,7 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
       };
 
       monitorAudioLevel();
+      return true;
     } catch (error: any) {
       setState(prev => ({
         ...prev,
