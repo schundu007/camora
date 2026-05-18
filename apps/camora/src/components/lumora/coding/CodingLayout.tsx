@@ -12,6 +12,25 @@ import { getActiveAssistant } from '@/lib/lumora-assistant';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
+function detectLanguage(text: string): string {
+  const t = text.toLowerCase();
+  if (/def\s+\w+\s*\(|class\s+\w+:|import\s+\w+|print\s*\(|\.py\b/.test(text)) return 'python';
+  if (/function\s+\w+\s*\(|const\s+\w+\s*=|let\s+\w+\s*=|var\s+\w+\s*=|=>\s*{/.test(text)) return 'javascript';
+  if (/public\s+class\s+\w+|public\s+static\s+void\s+main|System\.out\.print/.test(text)) return 'java';
+  if (/#include\s*<|int\s+main\s*\(/.test(text)) return /vector<|cout\s*<</.test(text) ? 'cpp' : 'c';
+  if (/func\s+\w+\s*\(.*\)\s*(->|\{)|package\s+main/.test(text)) return 'go';
+  if (/pub\s+fn\s+\w+|let\s+mut\s+\w+/.test(text)) return 'rust';
+  if (/#!/.test(text) && /bash|sh\b/.test(t)) return 'bash';
+  if (/SELECT\s|INSERT\s|UPDATE\s|CREATE\s+TABLE/i.test(text)) return 'sql';
+  if (/\bpython\b/.test(t)) return 'python';
+  if (/\bbash\b|\bshell\b/.test(t)) return 'bash';
+  if (/\bjava\b/.test(t) && !/javascript/.test(t)) return 'java';
+  if (/\bjavascript\b|\bjs\b/.test(t)) return 'javascript';
+  if (/\btypescript\b|\bts\b/.test(t)) return 'typescript';
+  if (/\bc\+\+\b|\bcpp\b/.test(t)) return 'cpp';
+  return 'python';
+}
+
 type ProblemTab = 'description' | 'solution';
 type OutputTab = 'testcases' | 'output';
 type InputMode = 'paste' | 'url' | 'image';
@@ -192,7 +211,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const t = useTheme(globalTheme === 'dark');
 
   // Core state
-  const [language, setLanguage] = useState('python');
+  const [language, setLanguage] = useState('auto');
   const [problemTab, setProblemTab] = useState<ProblemTab>('description');
   const [outputTab, setOutputTab] = useState<OutputTab>('testcases');
   const [inputMode, setInputMode] = useState<InputMode>('paste');
@@ -913,11 +932,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     clearStreamChunks();
     setParsedBlocks([]);
     setJsonSolution(null);
-    setCode(getDefaultCode(language));
+    const effectiveLang = language === 'auto' ? detectLanguage(problemText) : language;
+    setCode(getDefaultCode(effectiveLang));
     setCollapsedCards(new Set());
     setActiveSolutionIdx(0);
     setIsOutputCollapsed(true); // Collapse test panel — auto-expands when new tests arrive
-    onSubmit(problemText.trim(), language, starterCode ? { starterCode } : undefined);
+    onSubmit(problemText.trim(), effectiveLang, starterCode ? { starterCode } : undefined);
   };
 
   // Register voice problem handler for parent shell. Uses stable internal
@@ -1248,7 +1268,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       `}</style>
       {/* ═══ HEADER — hidden when embedded in LumoraShell ═══ */}
       {!embedded && (
-      <header className="flex items-center justify-between h-11 px-3 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+      <header className="flex items-center justify-between h-11 px-3 shrink-0 relative z-20" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold rounded transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }}>
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2231,7 +2251,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             <div className="flex items-center gap-2">
               <select id="language-select" name="language" value={language} onChange={(e) => handleLanguageChange(e.target.value)}
                 disabled={isTranslating}
-                className="rounded-md px-2 py-1 text-xs font-mono focus:outline-none cursor-pointer disabled:opacity-60" style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}>
+                className="rounded-md px-2 py-1 text-xs font-mono focus:outline-none cursor-pointer disabled:opacity-60"
+                style={{ background: language === 'auto' ? 'var(--cam-primary)' : t.inputBg, border: `1px solid ${language === 'auto' ? 'var(--cam-primary)' : t.inputBorder}`, color: language === 'auto' ? '#fff' : t.inputText }}>
+                <option value="auto">Auto-detect</option>
                 {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
               {isTranslating && (

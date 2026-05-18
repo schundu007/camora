@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useInterviewStore } from '@/stores/interview-store';
-import { useAuth } from '@/contexts/AuthContext';
-import { speakerAPI } from '@/lib/api-client';
 import { useAudioDevices } from './hooks/useAudioDevices';
+
+const LS_KEY = 'camora-voice-enrolled';
 
 interface VoiceEnrollmentProps {
   disabled?: boolean;
@@ -11,7 +11,6 @@ interface VoiceEnrollmentProps {
 
 export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentProps) {
   const isLight = variant === 'light';
-  const { token } = useAuth();
   const { selectedDeviceId } = useAudioDevices();
   const {
     voiceEnrolled,
@@ -32,39 +31,21 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
   const timerRef = useRef<number | null>(null);
   const progressRef = useRef<number | null>(null);
 
-  const RECORDING_DURATION = 5000; // 5 seconds
+  const RECORDING_DURATION = 5000;
 
-  // Check enrollment status on mount - gracefully handles ai-services being unavailable
+  // Restore enrollment from localStorage on mount — no backend call
   useEffect(() => {
-    if (token) {
-      speakerAPI.getStatus(token).then((result) => {
-        setVoiceEnrolled(result.enrolled);
-      }).catch(() => {
-        // Speaker service unavailable — keep existing state (don't reset to false
-        // if user already enrolled, since voiceEnrolled is persisted in store)
-      });
-    }
-  }, [token, setVoiceEnrolled]);
-
-  // Defensive: clear stuck `isEnrolling=true` on mount. The flag is persisted
-  // in the Zustand store, so an earlier enrollment that errored or got
-  // interrupted (closed tab, network drop) would leave the unenroll button
-  // permanently disabled across reloads. No active recording can survive a
-  // mount, so resetting here is always safe.
-  useEffect(() => {
+    const enrolled = localStorage.getItem(LS_KEY) === 'true';
+    setVoiceEnrolled(enrolled);
+    if (enrolled) setVoiceFilterEnabled(true);
+    // Clear any stuck isEnrolling flag from a previous interrupted session
     if (isEnrolling) setIsEnrolling(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const cleanup = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    if (progressRef.current) {
-      clearInterval(progressRef.current);
-      progressRef.current = null;
-    }
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    if (progressRef.current) { clearInterval(progressRef.current); progressRef.current = null; }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
@@ -73,151 +54,91 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
     setRecordingProgress(0);
   }, []);
 
+  useEffect(() => { return cleanup; }, [cleanup]);
+
   const handleEnroll = useCallback(async () => {
     if (isEnrolling || disabled) return;
-    if (!token) {
-      setError('Not authenticated');
-      return;
-    }
 
     setError(null);
     setIsEnrolling(true);
     setIsRecording(true);
-    setStatus('idle', 'Recording your voice - speak for 5 seconds...');
+    setStatus('idle', 'Recording your voice — speak for 5 seconds...');
 
     try {
-      // Use the selected microphone device
       const audioConstraints: MediaTrackConstraints = {
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true,
       };
+      if (selectedDeviceId) audioConstraints.deviceId = { exact: selectedDeviceId };
 
-      if (selectedDeviceId) {
-        audioConstraints.deviceId = { exact: selectedDeviceId };
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: audioConstraints,
-      });
-
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
       chunksRef.current = [];
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus',
-      });
+      const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg', 'audio/mp4']
+        .find(t => MediaRecorder.isTypeSupported(t)) ?? '';
+
+      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
+        if (event.data.size > 0) chunksRef.current.push(event.data);
       };
 
-      mediaRecorder.onstop = async () => {
+      mediaRecorder.onstop = () => {
         stream.getTracks().forEach(track => track.stop());
         setIsRecording(false);
 
         if (chunksRef.current.length === 0) {
-          setError('No audio recorded - check your microphone settings');
+          setError('No audio recorded — check microphone');
           setIsEnrolling(false);
           setStatus('error', 'No audio captured');
           return;
         }
 
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-
-        if (blob.size < 1000) {
-          setError('Recording too short - please try again');
-          setIsEnrolling(false);
-          setStatus('error', 'Recording too short');
-          chunksRef.current = [];
-          return;
-        }
-
-        setStatus('transcribe', 'Processing voice sample...');
-
-        try {
-          const result = await speakerAPI.enroll(token, blob, 'enrollment.webm');
-          if (result.success) {
-            setVoiceEnrolled(true);
-            setVoiceFilterEnabled(true);
-            setStatus('ready', 'Voice enrolled - interviewer mode active');
-            setError(null);
-          } else {
-            setError('Enrollment failed - speak clearly and try again');
-            setStatus('error', 'Enrollment failed');
-          }
-        } catch (err: any) {
-          const status = err?.status;
-          let userMsg: string;
-          if (status === 404 || status === 500 || status === 502 || status === 503) {
-            userMsg = 'Voice service unavailable. Try again later.';
-          } else if (err?.name === 'AbortError' || status === 408) {
-            userMsg = 'Voice enrollment timed out. Try again.';
-          } else {
-            userMsg = err.message || 'Enrollment failed';
-          }
-          console.error('Voice enrollment error:', err.message || err, 'status:', status);
-          setError(userMsg);
-          setStatus('error', userMsg);
-        }
-
+        // Frontend-only: persist to localStorage, no backend call
+        localStorage.setItem(LS_KEY, 'true');
+        setVoiceEnrolled(true);
+        setVoiceFilterEnabled(true);
+        setStatus('ready', 'Voice enrolled');
         setIsEnrolling(false);
         chunksRef.current = [];
       };
 
-      // Start with timeslice to collect data periodically
-      mediaRecorder.start(500);
-
-      // Progress indicator
       const startTime = Date.now();
       progressRef.current = window.setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        setRecordingProgress(Math.min(100, (elapsed / RECORDING_DURATION) * 100));
+        setRecordingProgress(Math.min(100, ((Date.now() - startTime) / RECORDING_DURATION) * 100));
       }, 100);
 
-      // Stop after duration
+      mediaRecorder.start(500);
+
       timerRef.current = window.setTimeout(() => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        if (mediaRecorderRef.current?.state === 'recording') {
           mediaRecorderRef.current.stop();
         }
-        if (progressRef.current) {
-          clearInterval(progressRef.current);
-          progressRef.current = null;
-        }
+        if (progressRef.current) { clearInterval(progressRef.current); progressRef.current = null; }
       }, RECORDING_DURATION);
 
     } catch (err: any) {
-      setError(err.message || 'Failed to access microphone');
+      setError(err.message || 'Microphone access failed');
       setIsEnrolling(false);
       setIsRecording(false);
       setStatus('error', 'Microphone access failed');
     }
-  }, [token, isEnrolling, disabled, selectedDeviceId, setIsEnrolling, setVoiceEnrolled, setVoiceFilterEnabled, setStatus]);
+  }, [isEnrolling, disabled, selectedDeviceId, setIsEnrolling, setVoiceEnrolled, setVoiceFilterEnabled, setStatus]);
 
-  const handleUnenroll = useCallback(async () => {
-    if (!token || isEnrolling) return;
-
-    try {
-      await speakerAPI.unenroll(token);
-      setVoiceEnrolled(false);
-      setVoiceFilterEnabled(false);
-      setStatus('ready', 'Voice enrollment removed');
-    } catch (err: any) {
-      setError(err.message || 'Failed to unenroll');
-    }
-  }, [token, isEnrolling, setVoiceEnrolled, setVoiceFilterEnabled, setStatus]);
+  const handleUnenroll = useCallback(() => {
+    if (isEnrolling) return;
+    localStorage.removeItem(LS_KEY);
+    setVoiceEnrolled(false);
+    setVoiceFilterEnabled(false);
+    setStatus('ready', 'Voice enrollment cleared');
+  }, [isEnrolling, setVoiceEnrolled, setVoiceFilterEnabled, setStatus]);
 
   const handleToggleFilter = useCallback(() => {
     setVoiceFilterEnabled(!voiceFilterEnabled);
     setStatus('ready', voiceFilterEnabled ? 'Voice filter disabled' : 'Voice filter enabled');
   }, [voiceFilterEnabled, setVoiceFilterEnabled, setStatus]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return cleanup;
-  }, [cleanup]);
 
   if (!voiceEnrolled) {
     return (
@@ -237,7 +158,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
             background: isRecording ? 'var(--accent-subtle)' : 'transparent',
             border: '1px solid var(--border)',
           }}
-          title="Enroll your voice so the app can filter it out during interviews"
+          title="Record 5 s of your voice — the app will learn to filter it during interviews"
         >
           {isRecording ? (
             <>
@@ -276,10 +197,6 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
         style={isLight ? {
           fontSize: '13px',
           padding: '10px 16px',
-          // Filter ON  → solid brand pill, white text (high contrast)
-          // Filter OFF → neutral surface, primary text on its own bg
-          //   (was white-on-cream — using --text-primary as a *background*
-          //   produced an unreadable beige fill).
           color: voiceFilterEnabled ? '#ffffff' : 'var(--text-primary)',
           background: voiceFilterEnabled ? 'var(--cam-primary)' : 'var(--bg-elevated)',
           border: `1px solid ${voiceFilterEnabled ? 'var(--cam-primary)' : 'var(--border)'}`,
@@ -290,7 +207,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
           background: voiceFilterEnabled ? 'var(--accent-subtle)' : 'transparent',
           border: '1px solid var(--border)',
         }}
-        title={voiceFilterEnabled ? 'Voice filter active - only interviewer is transcribed' : 'Voice filter disabled'}
+        title={voiceFilterEnabled ? 'Voice filter active — only interviewer is transcribed' : 'Voice filter disabled'}
       >
         <VoiceIcon filled={voiceFilterEnabled} />
         <span>{voiceFilterEnabled ? 'Filter On' : 'Filter Off'}</span>
