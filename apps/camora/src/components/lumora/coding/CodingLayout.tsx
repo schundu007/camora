@@ -985,23 +985,62 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   const handleSnap = useCallback(async () => {
     const camo = (window as any).camo;
-    if (!camo?.takeScreenshot) return;
-    const perm = await camo.getMediaAccessStatus?.('screen').catch(() => null);
-    if (perm && perm !== 'granted') {
-      camo.openSystemPrivacy?.('ScreenCapture');
+
+    if (camo?.takeScreenshot) {
+      // Desktop (Electron) path
+      const perm = await camo.getMediaAccessStatus?.('screen').catch(() => null);
+      if (perm && perm !== 'granted') {
+        camo.openSystemPrivacy?.('ScreenCapture');
+        return;
+      }
+      setSnapState('capturing');
+      try {
+        const result = await camo.takeScreenshot();
+        if (!result?.ok) throw new Error(result?.error || 'Capture failed');
+        setSnapState('done');
+        setTimeout(() => setSnapState('idle'), 2500);
+      } catch {
+        setSnapState('error');
+        setTimeout(() => setSnapState('idle'), 3000);
+      }
+      return;
+    }
+
+    // Browser path — capture screen frame and feed into image pipeline
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      setSnapState('error');
+      setTimeout(() => setSnapState('idle'), 3000);
       return;
     }
     setSnapState('capturing');
     try {
-      const result = await camo.takeScreenshot();
-      if (!result?.ok) throw new Error(result?.error || 'Capture failed');
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false } as DisplayMediaStreamOptions);
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      await new Promise<void>(res => { video.onloadedmetadata = () => res(); });
+      await video.play();
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d')!.drawImage(video, 0, 0);
+      stream.getTracks().forEach(t => t.stop());
+      video.srcObject = null;
+      const blob = await new Promise<Blob>((res, rej) =>
+        canvas.toBlob(b => b ? res(b) : rej(new Error('canvas.toBlob failed')), 'image/png')
+      );
+      const file = new File([blob], 'snap.png', { type: 'image/png' });
+      acceptImage(file);
       setSnapState('done');
       setTimeout(() => setSnapState('idle'), 2500);
-    } catch {
-      setSnapState('error');
-      setTimeout(() => setSnapState('idle'), 3000);
+    } catch (err: any) {
+      if (err?.name !== 'NotAllowedError') {
+        setSnapState('error');
+        setTimeout(() => setSnapState('idle'), 3000);
+      } else {
+        setSnapState('idle');
+      }
     }
-  }, []);
+  }, [acceptImage]);
 
   const handleFetchFromUrl = async (overrideUrl?: string) => {
     const urlToFetch = overrideUrl ?? problemUrl;
@@ -1386,9 +1425,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {/* In-app silent screenshot — no Cmd+Shift+4 required; watcher auto-processes */}
-                      {(window as any).camo?.takeScreenshot && (
-                        <button
+                      {/* Snap — getDisplayMedia in browser, Electron API on desktop */}
+                      <button
                           onClick={handleSnap}
                           disabled={snapState === 'capturing'}
                           title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen — silently captures and extracts the problem'}
@@ -1409,10 +1447,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           }
                           {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
                         </button>
-                      )}
-                      {/* Stealth mode — neutralizes HackerRank mouse/focus tracking via Chrome JS injection */}
-                      {(window as any).camo?.injectTrackingNeutralizer && (
-                        <button
+                      {/* Stealth — injects tracking neutralizer on desktop; shows desktop-only alert in browser */}
+                      <button
                           onClick={handleStealthMode}
                           title={isStealthActive ? 'Stealth active — mouse tracking blocked' : 'Stealth mode — block HackerRank mouse tracking'}
                           className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-90 active:scale-[0.97]"
@@ -1421,7 +1457,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                             : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
                           }
                         >
-                          {/* Eye with slash icon */}
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                             {isStealthActive
                               ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
@@ -1430,6 +1465,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           </svg>
                           {isStealthActive ? 'Stealth ON' : 'Stealth'}
                         </button>
+                      {/* AudioCapture only shown here in embedded mode; non-embedded uses the header instance */}
+                      {embedded && (
+                        <AudioCapture
+                          onTranscription={(text) => {
+                            const trimmed = text.trim();
+                            if (!trimmed) return;
+                            setProblemText(trimmed);
+                            setTimeout(() => onSubmit(trimmed, language), 500);
+                          }}
+                          autoStart={false}
+                        />
                       )}
                       {/* Allow manual collapse/expand even in autopilot mode */}
                       <button
@@ -1474,8 +1520,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       ))}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      {(window as any).camo?.takeScreenshot && (
-                        <button
+                      <button
                           onClick={handleSnap}
                           disabled={snapState === 'capturing'}
                           title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen — silently captures and extracts the problem'}
@@ -1496,9 +1541,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           }
                           {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
                         </button>
-                      )}
-                      {(window as any).camo?.injectTrackingNeutralizer && (
-                        <button
+                      <button
                           onClick={handleStealthMode}
                           title={isStealthActive ? 'Stealth active' : 'Block HackerRank mouse tracking'}
                           className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors hover:opacity-90"
@@ -1515,6 +1558,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           </svg>
                           {isStealthActive ? 'Stealth ON' : 'Stealth'}
                         </button>
+                      {embedded && (
+                        <AudioCapture
+                          onTranscription={(text) => {
+                            const trimmed = text.trim();
+                            if (!trimmed) return;
+                            setProblemText(trimmed);
+                            setTimeout(() => onSubmit(trimmed, language), 500);
+                          }}
+                          autoStart={false}
+                        />
                       )}
                       <button
                         onClick={() => setIsInputCollapsed(!isInputCollapsed)}
