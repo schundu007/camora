@@ -304,6 +304,19 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const lastFromCache = useInterviewStore(s => s.lastFromCache);
   const voiceEnrolled = useInterviewStore(s => s.voiceEnrolled);
 
+  // Stable refs for language + problem text — used by resolveLanguage so
+  // it always reads the latest value without being in any deps array.
+  // Declared here (before handleRegenerate) to avoid TDZ: handleRegenerate
+  // references resolveLanguage in its deps array which is evaluated
+  // immediately when useCallback runs, so resolveLanguage must exist first.
+  const languageRef = useRef(language);
+  const problemTextRef = useRef(problemText);
+  const resolveLanguage = useCallback((text?: string) => {
+    const lang = languageRef.current;
+    if (lang !== 'auto') return lang;
+    return detectLanguage(text ?? problemTextRef.current);
+  }, []);
+
   // Regenerate — re-submit the same problem with bypass_cache=true so
   // the backend skips the answer cache lookup and produces a fresh
   // solution. The fresh result still writes to the cache so the next
@@ -957,16 +970,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // during a null window fell through to Sona instead of filling the
   // problem field. Anchoring to refs eliminates the race entirely.
   const onSubmitRef = useRef(onSubmit);
-  const languageRef = useRef(language);
-  const problemTextRef = useRef(problemText);
   useEffect(() => { onSubmitRef.current = onSubmit; }, [onSubmit]);
   useEffect(() => { languageRef.current = language; }, [language]);
   useEffect(() => { problemTextRef.current = problemText; }, [problemText]);
-  const resolveLanguage = useCallback((text?: string) => {
-    const lang = languageRef.current;
-    if (lang !== 'auto') return lang;
-    return detectLanguage(text ?? problemTextRef.current);
-  }, []);
 
   useEffect(() => {
     if (!onVoiceProblemRef) return;
