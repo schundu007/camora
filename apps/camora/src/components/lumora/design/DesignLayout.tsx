@@ -886,7 +886,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               overflow-x-auto so phones can scroll the toolbar
               horizontally rather than wrapping into two rows. */}
           <div
-            className="flex items-center justify-between gap-2 px-3 py-2 overflow-x-auto no-scrollbar"
+            className="flex items-center flex-wrap gap-2 px-3 py-2"
             style={{
               background: 'var(--cam-hero-strip)',
               borderBottom: '1px solid var(--cam-gold-leaf)',
