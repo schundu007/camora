@@ -261,23 +261,64 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
 
   const handleSnap = useCallback(async () => {
     const camo = (window as any).camo;
-    if (!camo?.takeScreenshot) return;
-    const perm = await camo.getMediaAccessStatus?.('screen').catch(() => null);
-    if (perm && perm !== 'granted') {
-      camo.openSystemPrivacy?.('ScreenCapture');
+
+    if (camo?.takeScreenshot) {
+      // Desktop (Electron) path
+      const perm = await camo.getMediaAccessStatus?.('screen').catch(() => null);
+      if (perm && perm !== 'granted') {
+        camo.openSystemPrivacy?.('ScreenCapture');
+        return;
+      }
+      setSnapState('capturing');
+      try {
+        const result = await camo.takeScreenshot();
+        if (!result?.ok) throw new Error(result?.error || 'Capture failed');
+        setSnapState('done');
+        setTimeout(() => setSnapState('idle'), 2500);
+      } catch {
+        setSnapState('error');
+        setTimeout(() => setSnapState('idle'), 3000);
+      }
+      return;
+    }
+
+    // Browser path — use getDisplayMedia to capture a screen frame
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      setSnapState('error');
+      setTimeout(() => setSnapState('idle'), 3000);
       return;
     }
     setSnapState('capturing');
     try {
-      const result = await camo.takeScreenshot();
-      if (!result?.ok) throw new Error(result?.error || 'Capture failed');
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false } as DisplayMediaStreamOptions);
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      await new Promise<void>(res => { video.onloadedmetadata = () => res(); });
+      await video.play();
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d')!.drawImage(video, 0, 0);
+      stream.getTracks().forEach(t => t.stop());
+      video.srcObject = null;
+      const blob = await new Promise<Blob>((res, rej) =>
+        canvas.toBlob(b => b ? res(b) : rej(new Error('canvas.toBlob failed')), 'image/png')
+      );
+      const file = new File([blob], 'snap.png', { type: 'image/png' });
+      setInputTab('image');
+      handleImageUpload(file);
       setSnapState('done');
       setTimeout(() => setSnapState('idle'), 2500);
-    } catch {
-      setSnapState('error');
-      setTimeout(() => setSnapState('idle'), 3000);
+    } catch (err: any) {
+      // NotAllowedError = user cancelled the picker — reset silently
+      if (err?.name !== 'NotAllowedError') {
+        setSnapState('error');
+        setTimeout(() => setSnapState('idle'), 3000);
+      } else {
+        setSnapState('idle');
+      }
     }
-  }, []);
+  }, [handleImageUpload]);
 
   const handleStealthMode = async () => {
     const camo = (window as any).camo;
@@ -857,9 +898,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 </button>
               ))}
             </div>
-            {/* Snap — desktop only */}
-            {(window as any).camo?.takeScreenshot && (
-              <button
+            {/* Snap — uses getDisplayMedia in browser, Electron API on desktop */}
+            <button
                 onClick={handleSnap}
                 disabled={snapState === 'capturing'}
                 title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen — silently captures and extracts the design problem'}
@@ -890,11 +930,9 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 )}
                 {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
               </button>
-            )}
 
-            {/* Stealth — desktop only */}
-            {(window as any).camo?.injectTrackingNeutralizer && (
-              <button
+            {/* Stealth — injects tracking neutralizer on desktop; shows desktop-only alert in browser */}
+            <button
                 onClick={handleStealthMode}
                 title={isStealthActive ? 'Stealth active — mouse tracking blocked' : 'Stealth mode — block mouse tracking on design platform'}
                 className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-90 active:scale-[0.97]"
@@ -919,7 +957,6 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 </svg>
                 {isStealthActive ? 'Stealth ON' : 'Stealth'}
               </button>
-            )}
 
             <button
               onClick={() => setInputCollapsed(!inputCollapsed)}

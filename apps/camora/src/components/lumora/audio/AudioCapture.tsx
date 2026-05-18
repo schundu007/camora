@@ -783,16 +783,17 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     // continuousMode and the recording state desynced from the UI
     // (orange mic dot in OS menu bar without the AUTO pill lighting
     // up gold). Using `prev` keeps state in sync regardless of timing.
+    let shouldStartRecording = false;
     setContinuousMode(prev => {
       const newMode = !prev;
       if (newMode) {
         userPausedRef.current = false;
         if (recordingModeRef.current === 'idle') {
           setRecordingMode('auto');
-          startRecording();
           setIsRecording(true);
           startListenTimer();
           setStatus('listen', 'Live - listening...');
+          shouldStartRecording = true;
         } else {
           // Manual recording in flight — don't disturb it. AUTO
           // resumes when manual completes.
@@ -810,6 +811,20 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       }
       return newMode;
     });
+    // Start recording outside the updater so it isn't called twice in
+    // StrictMode. Roll back all state if it fails (e.g. mic permission
+    // denied in browser) so the AUTO pill doesn't stay lit with no mic.
+    if (shouldStartRecording) {
+      startRecording().then(ok => {
+        if (!ok) {
+          setContinuousMode(false);
+          setRecordingMode('idle');
+          setIsRecording(false);
+          stopListenTimer();
+          setStatus('ready', 'Mic access denied — check browser settings');
+        }
+      });
+    }
   }, [startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus, setRecordingMode]);
 
   // Keyboard shortcuts — Backquote toggles AUTO, Escape stops AUTO.

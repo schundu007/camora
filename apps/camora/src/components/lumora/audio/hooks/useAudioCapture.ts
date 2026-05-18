@@ -99,10 +99,10 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
     return cleanup;
   }, [cleanup]);
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(async (): Promise<boolean> => {
     if (!state.isSupported) {
       setState(prev => ({ ...prev, error: 'Audio recording not supported' }));
-      return;
+      return false;
     }
 
     try {
@@ -242,6 +242,7 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
 
       mediaRecorder.start();
       setState(prev => ({ ...prev, isRecording: true, error: null }));
+      return true;
 
       // Set max recording duration timer as a safety fallback
       if (maxRecordingDuration > 0) {
@@ -345,6 +346,12 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
         error: error.message || 'Failed to start recording',
         isRecording: false,
       }));
+      onRecorderError?.(
+        error.name === 'NotAllowedError'
+          ? 'Mic permission denied — check browser settings'
+          : error.message || 'Failed to start recording'
+      );
+      return false;
     }
   }, [state.isSupported, cleanup, onAudioData, onAudioLevel, onRecordingStop, onRecorderError, silenceThreshold, silenceDuration, minSpeechDuration, maxRecordingDuration, deviceId]);
 
