@@ -842,12 +842,6 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         return;
       }
 
-      if (e.code === SHORTCUTS.TOGGLE_MIC_CODE && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        e.preventDefault();
-        handleModeToggle();
-        return;
-      }
-
       if (SHORTCUTS.STOP_MIC.includes(e.key) && storeIsRecording && recordingModeRef.current === 'auto') {
         e.preventDefault();
         handleModeToggle();
@@ -858,20 +852,20 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [continuousMode, handleModeToggle, storeIsRecording]);
 
-  // Silent Auto toggle: Cmd/Ctrl+Shift+A works from anywhere on the
-  // Lumora page, including textareas, Monaco, or any other editable
-  // surface. The whole point of this shortcut is being usable
-  // mid-interview without raising suspicion — gating it on the focus
-  // target broke that promise (it stopped working whenever the user
-  // had clicked into the problem textarea, which is most of the
-  // time). Cmd+Shift+A is reserved by the OS and not used by typing,
-  // so there's no editing conflict to defend against. Listening at
-  // the document level in capture phase so the editor can't swallow
-  // the event before we see it.
+  // Global AUTO shortcuts — capture phase so they fire from anywhere:
+  // textareas, Monaco, contenteditable, the behavioral companion input.
+  // Two bindings: Cmd/Ctrl+Shift+A (silent/hidden) and Backquote (~/`)
+  // which the user uses mid-interview. Neither conflicts with normal
+  // typing since Cmd+Shift+A is OS-reserved and ` is not a useful
+  // character to type in any interview panel.
   useEffect(() => {
     const handleAutoShortcut = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey) || !e.shiftKey) return;
-      if (e.key !== 'A' && e.key !== 'a' && e.code !== 'KeyA') return;
+      // Cmd/Ctrl+Shift+A
+      const isCmdShiftA = (e.metaKey || e.ctrlKey) && e.shiftKey &&
+        (e.key === 'A' || e.key === 'a' || e.code === 'KeyA');
+      // Backquote (` / ~) without modifier
+      const isBackquote = e.code === 'Backquote' && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey;
+      if (!isCmdShiftA && !isBackquote) return;
       e.preventDefault();
       e.stopPropagation();
       handleModeToggle();
