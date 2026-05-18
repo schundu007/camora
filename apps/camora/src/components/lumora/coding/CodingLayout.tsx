@@ -312,8 +312,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const handleRegenerate = useCallback(() => {
     const text = problemText.trim();
     if (!text || isLoading || isStreaming) return;
-    onSubmit(text, language, { bypassCache: true, ...(starterCode ? { starterCode } : {}) });
-  }, [problemText, language, starterCode, isLoading, isStreaming, onSubmit]);
+    onSubmit(text, resolveLanguage(text), { bypassCache: true, ...(starterCode ? { starterCode } : {}) });
+  }, [problemText, language, starterCode, isLoading, isStreaming, onSubmit, resolveLanguage]);
 
   // Auto-switch to the Solution tab when a stream error fires. The
   // error card lives in the Solution tab — without this, a user who
@@ -958,8 +958,15 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // problem field. Anchoring to refs eliminates the race entirely.
   const onSubmitRef = useRef(onSubmit);
   const languageRef = useRef(language);
+  const problemTextRef = useRef(problemText);
   useEffect(() => { onSubmitRef.current = onSubmit; }, [onSubmit]);
   useEffect(() => { languageRef.current = language; }, [language]);
+  useEffect(() => { problemTextRef.current = problemText; }, [problemText]);
+  const resolveLanguage = useCallback((text?: string) => {
+    const lang = languageRef.current;
+    if (lang !== 'auto') return lang;
+    return detectLanguage(text ?? problemTextRef.current);
+  }, []);
 
   useEffect(() => {
     if (!onVoiceProblemRef) return;
@@ -976,8 +983,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       clearStreamChunks();
       setParsedBlocks([]);
       setJsonSolution(null);
-      setCode(getDefaultCode(languageRef.current));
-      onSubmitRef.current(text.trim(), languageRef.current);
+      const rl = resolveLanguage(text);
+      setCode(getDefaultCode(rl));
+      onSubmitRef.current(text.trim(), rl);
     };
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1145,12 +1153,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         clearStreamChunks();
         setParsedBlocks([]);
         setJsonSolution(null);
-        setCode(getDefaultCode(language));
+        setCode(getDefaultCode(resolveLanguage(text)));
         setCollapsedCards(new Set());
         setActiveSolutionIdx(0);
         setIsOutputCollapsed(true);
         setProblemTab('solution');
-        onSubmit(text, language);
+        onSubmit(text, resolveLanguage(text));
       }
     } catch (err: any) {
       await dialogAlert({ title: 'Could not fetch problem', message: err.message || 'An unexpected error occurred.' });
@@ -1352,7 +1360,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               // the LLM so they don't have to click "Coding" after every
               // dictation.
               setProblemText(trimmed);
-              setTimeout(() => onSubmit(trimmed, language), 500);
+              setTimeout(() => onSubmit(trimmed, resolveLanguage(trimmed)), 500);
             }}
             autoStart={false}
           />
@@ -1531,7 +1539,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                               const trimmed = text.trim();
                               if (!trimmed) return;
                               setProblemText(trimmed);
-                              setTimeout(() => onSubmit(trimmed, language), 500);
+                              setTimeout(() => onSubmit(trimmed, resolveLanguage(trimmed)), 500);
                             }
                           }}
                           autoStart={false}
@@ -1652,7 +1660,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                               const trimmed = text.trim();
                               if (!trimmed) return;
                               setProblemText(trimmed);
-                              setTimeout(() => onSubmit(trimmed, language), 500);
+                              setTimeout(() => onSubmit(trimmed, resolveLanguage(trimmed)), 500);
                             }
                           }}
                           autoStart={false}
