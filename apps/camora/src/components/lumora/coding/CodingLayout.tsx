@@ -1473,24 +1473,26 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           }
                           {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
                         </button>
-                      {/* Stealth — injects tracking neutralizer on desktop; shows desktop-only alert in browser */}
-                      <button
-                          onClick={handleStealthMode}
-                          title={isStealthActive ? 'Stealth active — mouse tracking blocked' : 'Stealth mode — block HackerRank mouse tracking'}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-90 active:scale-[0.97]"
-                          style={isStealthActive
-                            ? { background: '#00ea64', color: '#000' }
-                            : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
-                          }
-                        >
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                            {isStealthActive
-                              ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
-                              : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                      {/* Stealth — desktop-only (injects tracking neutralizer via Electron) */}
+                      {!!(window as any).camo?.isDesktop && (
+                        <button
+                            onClick={handleStealthMode}
+                            title={isStealthActive ? 'Stealth active — mouse tracking blocked' : 'Stealth mode — block HackerRank mouse tracking'}
+                            className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-90 active:scale-[0.97]"
+                            style={isStealthActive
+                              ? { background: '#00ea64', color: '#000' }
+                              : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
                             }
-                          </svg>
-                          {isStealthActive ? 'Stealth ON' : 'Stealth'}
-                        </button>
+                          >
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                              {isStealthActive
+                                ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
+                                : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                              }
+                            </svg>
+                            {isStealthActive ? 'Stealth ON' : 'Stealth'}
+                          </button>
+                      )}
                       {/* AudioCapture + voice enrollment popup — embedded toolbar only */}
                       {embedded && (
                         <AudioCapture
@@ -1601,23 +1603,25 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           }
                           {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
                         </button>
-                      <button
-                          onClick={handleStealthMode}
-                          title={isStealthActive ? 'Stealth active' : 'Block HackerRank mouse tracking'}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors hover:opacity-90"
-                          style={isStealthActive
-                            ? { background: '#00ea64', color: '#000' }
-                            : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
-                          }
-                        >
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                            {isStealthActive
-                              ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
-                              : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                      {!!(window as any).camo?.isDesktop && (
+                        <button
+                            onClick={handleStealthMode}
+                            title={isStealthActive ? 'Stealth active' : 'Block HackerRank mouse tracking'}
+                            className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors hover:opacity-90"
+                            style={isStealthActive
+                              ? { background: '#00ea64', color: '#000' }
+                              : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
                             }
-                          </svg>
-                          {isStealthActive ? 'Stealth ON' : 'Stealth'}
-                        </button>
+                          >
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                              {isStealthActive
+                                ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
+                                : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                              }
+                            </svg>
+                            {isStealthActive ? 'Stealth ON' : 'Stealth'}
+                          </button>
+                      )}
                       {embedded && (
                         <AudioCapture
                           onTranscription={(text, opts) => {
