@@ -1553,7 +1553,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 ) : (
                   /* Manual mode: show Text / URL / Image picker as before */
                   <div
-                    className="flex items-center justify-between px-3 py-2"
+                    className="flex items-center flex-wrap gap-2 px-3 py-2"
                     style={{
                       background: 'var(--cam-hero-strip)',
                       borderBottom: '1px solid var(--cam-gold-leaf)',
