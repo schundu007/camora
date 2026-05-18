@@ -3,6 +3,7 @@ import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme as useGlobalTheme } from '@/hooks/useTheme';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
+import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import FollowupAsk from '@/components/lumora/coding/FollowupAsk';
 import { LANGUAGES, getLanguageById } from '@/data/languages';
@@ -155,6 +156,8 @@ interface CodingLayoutProps {
   /** Active coding platform from tool-picker ('hackerrank'|'leetcode'|'coderpad'|'none').
    *  When set (non-empty, non-'none'), hides manual input modes and shows autopilot status. */
   codingPlatform?: string;
+  /** When embedded, caller supplies this to route voice through dispatchTranscript for Sona Q&A */
+  onEmbeddedTranscription?: (text: string, opts?: { manual?: boolean }) => void;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
@@ -183,7 +186,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, codingPlatform }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, codingPlatform, onEmbeddedTranscription }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -224,6 +227,21 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
   const [isStealthActive, setIsStealthActive] = useState(false);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'done' | 'error'>('idle');
+
+  // Voice enrollment popup (embedded toolbar only)
+  const [showEnrollPopup, setShowEnrollPopup] = useState(false);
+  const enrollPopupRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!showEnrollPopup) return;
+    const handler = (e: MouseEvent) => {
+      if (enrollPopupRef.current && !enrollPopupRef.current.contains(e.target as Node)) {
+        setShowEnrollPopup(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showEnrollPopup]);
+
   useEffect(() => {
     const camo = (window as any).camo;
     if (!camo?.getMediaAccessStatus || !codingPlatform || codingPlatform === 'none') return;
@@ -257,6 +275,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Store
   const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache } = useInterviewStore();
   const lastFromCache = useInterviewStore(s => s.lastFromCache);
+  const voiceEnrolled = useInterviewStore(s => s.voiceEnrolled);
 
   // Regenerate — re-submit the same problem with bypass_cache=true so
   // the backend skips the answer cache lookup and produces a fresh
@@ -1472,17 +1491,51 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           </svg>
                           {isStealthActive ? 'Stealth ON' : 'Stealth'}
                         </button>
-                      {/* AudioCapture only shown here in embedded mode; non-embedded uses the header instance */}
+                      {/* AudioCapture + voice enrollment popup — embedded toolbar only */}
                       {embedded && (
                         <AudioCapture
-                          onTranscription={(text) => {
-                            const trimmed = text.trim();
-                            if (!trimmed) return;
-                            setProblemText(trimmed);
-                            setTimeout(() => onSubmit(trimmed, language), 500);
+                          onTranscription={(text, opts) => {
+                            if (onEmbeddedTranscription) {
+                              onEmbeddedTranscription(text, opts);
+                            } else {
+                              const trimmed = text.trim();
+                              if (!trimmed) return;
+                              setProblemText(trimmed);
+                              setTimeout(() => onSubmit(trimmed, language), 500);
+                            }
                           }}
                           autoStart={false}
                         />
+                      )}
+                      {embedded && (
+                        <div className="relative" ref={enrollPopupRef}>
+                          <button
+                            onClick={() => setShowEnrollPopup(p => !p)}
+                            title={voiceEnrolled ? 'Voice enrolled — click to manage' : 'Enroll my voice'}
+                            className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                            style={{
+                              color: voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.5)',
+                              border: `1px solid ${voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.18)'}`,
+                              borderRadius: 999,
+                              background: 'rgba(255,255,255,0.06)',
+                            }}
+                          >
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                              <line x1="12" y1="19" x2="12" y2="23"/>
+                              <line x1="8" y1="23" x2="16" y2="23"/>
+                            </svg>
+                          </button>
+                          {showEnrollPopup && (
+                            <div
+                              className="absolute bottom-10 right-0 z-50 rounded-xl p-3 shadow-xl"
+                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', minWidth: 240 }}
+                            >
+                              <VoiceEnrollment variant="dark" />
+                            </div>
+                          )}
+                        </div>
                       )}
                       {/* Allow manual collapse/expand even in autopilot mode */}
                       <button
@@ -1567,14 +1620,48 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         </button>
                       {embedded && (
                         <AudioCapture
-                          onTranscription={(text) => {
-                            const trimmed = text.trim();
-                            if (!trimmed) return;
-                            setProblemText(trimmed);
-                            setTimeout(() => onSubmit(trimmed, language), 500);
+                          onTranscription={(text, opts) => {
+                            if (onEmbeddedTranscription) {
+                              onEmbeddedTranscription(text, opts);
+                            } else {
+                              const trimmed = text.trim();
+                              if (!trimmed) return;
+                              setProblemText(trimmed);
+                              setTimeout(() => onSubmit(trimmed, language), 500);
+                            }
                           }}
                           autoStart={false}
                         />
+                      )}
+                      {embedded && (
+                        <div className="relative" ref={enrollPopupRef}>
+                          <button
+                            onClick={() => setShowEnrollPopup(p => !p)}
+                            title={voiceEnrolled ? 'Voice enrolled — click to manage' : 'Enroll my voice'}
+                            className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                            style={{
+                              color: voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.5)',
+                              border: `1px solid ${voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.18)'}`,
+                              borderRadius: 999,
+                              background: 'rgba(255,255,255,0.06)',
+                            }}
+                          >
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                              <line x1="12" y1="19" x2="12" y2="23"/>
+                              <line x1="8" y1="23" x2="16" y2="23"/>
+                            </svg>
+                          </button>
+                          {showEnrollPopup && (
+                            <div
+                              className="absolute bottom-10 right-0 z-50 rounded-xl p-3 shadow-xl"
+                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', minWidth: 240 }}
+                            >
+                              <VoiceEnrollment variant="dark" />
+                            </div>
+                          )}
+                        </div>
                       )}
                       <button
                         onClick={() => setIsInputCollapsed(!isInputCollapsed)}

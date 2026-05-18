@@ -6,6 +6,7 @@ import { useCloudProvider } from '@/hooks/useCloudProvider';
 import { getSystemContext, getActiveAssistant } from '@/lib/lumora-assistant';
 import { ArchitectureDiagram } from '@/components/lumora/interview/ArchitectureDiagram';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
+import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { dialogAlert } from '@/components/shared/Dialog';
 import {
   type DesignResult,
@@ -109,10 +110,12 @@ interface DesignLayoutProps {
   embedded?: boolean;
   /** Ref that parent sets to receive voice transcriptions as problem input */
   onVoiceProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
+  /** When embedded, caller supplies this to route voice through dispatchTranscript for Sona Q&A */
+  onEmbeddedTranscription?: (text: string, opts?: { manual?: boolean }) => void;
 }
 
 
-export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemRef }: DesignLayoutProps) {
+export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemRef, onEmbeddedTranscription }: DesignLayoutProps) {
   // Bind the local Lumora design theme to the global light/dark choice.
   // Always follow the user's global theme — embedded panes inherit light/dark
   // from the rest of the app instead of forcing dark.
@@ -121,6 +124,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const { token } = useAuth();
   const { setStatus } = useInterviewStore();
   const lastFromCache = useInterviewStore(s => s.lastFromCache);
+  const voiceEnrolled = useInterviewStore(s => s.voiceEnrolled);
 
   const [problemText, setProblemText] = useState(initialProblem || '');
   const autoSubmittedRef = useRef(false);
@@ -154,6 +158,20 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'done' | 'error'>('idle');
   const [isStealthActive, setIsStealthActive] = useState(false);
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
+
+  // Voice enrollment popup (embedded toolbar only)
+  const [showEnrollPopup, setShowEnrollPopup] = useState(false);
+  const enrollPopupRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!showEnrollPopup) return;
+    const handler = (e: MouseEvent) => {
+      if (enrollPopupRef.current && !enrollPopupRef.current.contains(e.target as Node)) {
+        setShowEnrollPopup(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showEnrollPopup]);
 
   const startTimer = useCallback((minutes: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -958,17 +976,51 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 {isStealthActive ? 'Stealth ON' : 'Stealth'}
               </button>
 
-            {/* AudioCapture only shown here in embedded mode; non-embedded uses the header instance */}
+            {/* AudioCapture + voice enrollment popup — embedded toolbar only */}
             {embedded && (
               <AudioCapture
-                onTranscription={(text) => {
-                  const trimmed = text.trim();
-                  if (!trimmed) return;
-                  setProblemText(trimmed);
-                  pendingVoiceSubmit.current = true;
+                onTranscription={(text, opts) => {
+                  if (onEmbeddedTranscription) {
+                    onEmbeddedTranscription(text, opts);
+                  } else {
+                    const trimmed = text.trim();
+                    if (!trimmed) return;
+                    setProblemText(trimmed);
+                    pendingVoiceSubmit.current = true;
+                  }
                 }}
                 autoStart={false}
               />
+            )}
+            {embedded && (
+              <div className="relative" ref={enrollPopupRef}>
+                <button
+                  onClick={() => setShowEnrollPopup(p => !p)}
+                  title={voiceEnrolled ? 'Voice enrolled — click to manage' : 'Enroll my voice'}
+                  className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                  style={{
+                    color: voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.5)',
+                    border: `1px solid ${voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.18)'}`,
+                    borderRadius: 999,
+                    background: 'rgba(255,255,255,0.06)',
+                  }}
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="23"/>
+                    <line x1="8" y1="23" x2="16" y2="23"/>
+                  </svg>
+                </button>
+                {showEnrollPopup && (
+                  <div
+                    className="absolute bottom-10 right-0 z-50 rounded-xl p-3 shadow-xl"
+                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', minWidth: 240 }}
+                  >
+                    <VoiceEnrollment variant="dark" />
+                  </div>
+                )}
+              </div>
             )}
 
             <button
