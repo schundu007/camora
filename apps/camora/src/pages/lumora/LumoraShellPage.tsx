@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { LumoraBottomBar } from '../../components/lumora/shell/LumoraBottomBar';
 import { CodingSonaSidebar, CodingSonaSidebarToggle } from '../../components/lumora/shell/CodingSonaSidebar';
 import { AICompanionPanel } from '../../components/lumora/shell/AICompanionPanel';
 import { dispatchTranscript } from '../../lib/voice-router';
@@ -534,6 +533,7 @@ export function LumoraShellPage() {
                         pendingHackerrankCapture={pendingHackerrankCapture}
                         onHackerrankCaptureConsumed={() => setPendingHackerrankCapture(null)}
                         codingPlatform={codingPlatform}
+                        onEmbeddedTranscription={handleTranscription}
                       />
                     </div>
                     {/* Sona Q&A sidebar — independent state, follow-up
@@ -545,13 +545,6 @@ export function LumoraShellPage() {
                       open={sonaSidebarOpen}
                       onClose={() => setSonaSidebarOpen(false)}
                     />
-                  </div>
-                  {/* Bottom audio bar — single mic surface, problem-only. */}
-                  <div
-                    className="shrink-0 px-3 py-2"
-                    style={{ background: 'var(--bg-app)', borderTop: '1px solid var(--border)' }}
-                  >
-                    <LumoraBottomBar surface="coding" onTranscription={handleTranscription} />
                   </div>
                 </Suspense>
               </ErrorBoundary>
@@ -570,6 +563,7 @@ export function LumoraShellPage() {
                         onBack={() => navigate('/lumora')}
                         initialProblem={activeTab === 'design' ? new URLSearchParams(location.search).get('problem') || '' : ''}
                         onVoiceProblemRef={designProblemRef}
+                        onEmbeddedTranscription={handleTranscription}
                       />
                     </div>
                     <CodingSonaSidebar
@@ -577,12 +571,6 @@ export function LumoraShellPage() {
                       open={sonaSidebarOpen}
                       onClose={() => setSonaSidebarOpen(false)}
                     />
-                  </div>
-                  <div
-                    className="shrink-0 px-3 py-2"
-                    style={{ background: 'var(--bg-app)', borderTop: '1px solid var(--border)' }}
-                  >
-                    <LumoraBottomBar surface="design" onTranscription={handleTranscription} />
                   </div>
                 </Suspense>
               </ErrorBoundary>
