@@ -566,18 +566,16 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     // just to break the silent-failure mode.
     onRecorderError: (msg) => setStatus('warn', `Mic: ${msg} — recovering...`),
     silenceThreshold: Math.max(threshold, 0.003),
-    // Auto mode: 1500 ms of trailing silence ends a chunk. The previous
-    // 800 ms was too aggressive — natural mid-sentence breath / pause
-    // breaks ("Tell me about a time… [breath]… I handled conflict")
-    // were tripping the silence stop, fragmenting one question into
-    // 2-3 transcription cycles, each of which lost ~200 ms of audio
-    // across the restart. 1500 ms holds through a normal pause but
-    // still feels live (Sona starts answering ~1.5 s after the
-    // interviewer finishes).
+    // Auto mode: 2500 ms of trailing silence ends a chunk. Background
+    // noise from the interviewer briefly trips speechStartTimeRef; if
+    // the window is too short (was 1500 ms) the recording stops before
+    // the user has a chance to start their answer. 2500 ms covers the
+    // natural "interviewer finishes → user gathers thoughts → speaks"
+    // gap while still feeling live for back-to-back questions.
     // Manual mode: 3 s silence window — long enough to ride through
     // natural mid-thought pauses but short enough that the recording
     // closes itself when the user is genuinely done speaking.
-    silenceDuration: continuousMode ? 1500 : 3000,
+    silenceDuration: continuousMode ? 2500 : 3000,
     minSpeechDuration: 300,
     // Auto mode: 30 s ceiling. The prior 5 s ceiling force-fragmented
     // every behavioral question (which routinely run 20-45 s) and made
