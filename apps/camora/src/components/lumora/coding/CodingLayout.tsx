@@ -249,17 +249,25 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   // Voice enrollment popup (embedded toolbar only)
   const [showEnrollPopup, setShowEnrollPopup] = useState(false);
+  const [enrollPopupPos, setEnrollPopupPos] = useState<{ top: number; right: number } | null>(null);
+  const enrollBtnRef = useRef<HTMLButtonElement>(null);
   const enrollPopupRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!showEnrollPopup) return;
     const handler = (e: MouseEvent) => {
-      if (enrollPopupRef.current && !enrollPopupRef.current.contains(e.target as Node)) {
+      const t = e.target as Node;
+      if (!enrollPopupRef.current?.contains(t) && !enrollBtnRef.current?.contains(t)) {
         setShowEnrollPopup(false);
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [showEnrollPopup]);
+  const openEnrollPopup = () => {
+    const r = enrollBtnRef.current?.getBoundingClientRect();
+    if (r) setEnrollPopupPos({ top: r.bottom + 8, right: window.innerWidth - r.right });
+    setShowEnrollPopup(v => !v);
+  };
 
   useEffect(() => {
     const camo = (window as any).camo;
@@ -1530,9 +1538,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         />
                       )}
                       {embedded && (
-                        <div className="relative" ref={enrollPopupRef}>
+                        <div className="relative">
                           <button
-                            onClick={() => setShowEnrollPopup(p => !p)}
+                            ref={enrollBtnRef}
+                            onClick={openEnrollPopup}
                             title={voiceEnrolled ? 'Voice enrolled — click to manage' : 'Enroll my voice'}
                             className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
                             style={{
@@ -1549,14 +1558,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                               <line x1="8" y1="23" x2="16" y2="23"/>
                             </svg>
                           </button>
-                          {showEnrollPopup && (
-                            <div
-                              className="absolute bottom-10 right-0 z-50 rounded-xl p-3 shadow-xl"
-                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', minWidth: 240 }}
-                            >
-                              <VoiceEnrollment variant="dark" />
-                            </div>
-                          )}
                         </div>
                       )}
                       {/* Allow manual collapse/expand even in autopilot mode */}
@@ -1658,9 +1659,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         />
                       )}
                       {embedded && (
-                        <div className="relative" ref={enrollPopupRef}>
+                        <div className="relative">
                           <button
-                            onClick={() => setShowEnrollPopup(p => !p)}
+                            ref={enrollBtnRef}
+                            onClick={openEnrollPopup}
                             title={voiceEnrolled ? 'Voice enrolled — click to manage' : 'Enroll my voice'}
                             className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
                             style={{
@@ -1677,14 +1679,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                               <line x1="8" y1="23" x2="16" y2="23"/>
                             </svg>
                           </button>
-                          {showEnrollPopup && (
-                            <div
-                              className="absolute bottom-10 right-0 z-50 rounded-xl p-3 shadow-xl"
-                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', minWidth: 240 }}
-                            >
-                              <VoiceEnrollment variant="dark" />
-                            </div>
-                          )}
                         </div>
                       )}
                       <button
@@ -2456,6 +2450,27 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           </div>
         </div>
       </div>
+
+      {/* Voice enrollment popup — rendered fixed to escape overflow-auto clipping */}
+      {showEnrollPopup && enrollPopupPos && (
+        <div
+          ref={enrollPopupRef}
+          style={{
+            position: 'fixed',
+            top: enrollPopupPos.top,
+            right: enrollPopupPos.right,
+            zIndex: 9999,
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border)',
+            minWidth: 240,
+            borderRadius: 12,
+            padding: 12,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          }}
+        >
+          <VoiceEnrollment variant="dark" />
+        </div>
+      )}
     </div>
   );
 }
