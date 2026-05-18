@@ -466,7 +466,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ code, language, test_cases: validTestCases }),
+        body: JSON.stringify({ code, language: resolveLanguage(), test_cases: validTestCases }),
       });
 
       if (!response.ok) {
@@ -527,7 +527,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ code, language, error: fixError, problem: problemText }),
+        body: JSON.stringify({ code, language: resolveLanguage(), error: fixError, problem: problemText }),
       });
       if (!resp.ok) {
         const errData = await resp.json().catch(() => ({}));
@@ -1195,7 +1195,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       const text = String(data.problem || '').trim();
       const extractedStarterCode = data.starter_code || null;
       const detectedLang: string | null = data.detected_language || null;
-      const effectiveLang = detectedLang || language;
+      const effectiveLang = detectedLang || resolveLanguage(text);
       setProblemText(text);
       setStarterCode(extractedStarterCode);
       if (detectedLang) setLanguage(detectedLang);
