@@ -23,7 +23,7 @@ const PLATFORMS = [
 ];
 
 export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
-  const [platform, setPlatform] = useState('general');
+  const [platform, setPlatform] = useState('teams');
   const { voiceMode, setVoiceMode, setAutoEnrollPending, setVoiceFilterEnabled, preferredModel, setPreferredModel } = useInterviewStore();
   const { selectedDeviceId } = useAudioDevices();
   const { token } = useAuth();
