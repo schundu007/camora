@@ -958,6 +958,19 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 {isStealthActive ? 'Stealth ON' : 'Stealth'}
               </button>
 
+            {/* AudioCapture only shown here in embedded mode; non-embedded uses the header instance */}
+            {embedded && (
+              <AudioCapture
+                onTranscription={(text) => {
+                  const trimmed = text.trim();
+                  if (!trimmed) return;
+                  setProblemText(trimmed);
+                  pendingVoiceSubmit.current = true;
+                }}
+                autoStart={false}
+              />
+            )}
+
             <button
               onClick={() => setInputCollapsed(!inputCollapsed)}
               className="shrink-0 flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
