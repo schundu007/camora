@@ -555,11 +555,11 @@ export function AudioCapture({ onTranscription, autoStart = true, active, compac
     }
 
     if (stoppedMode === 'auto' && continuousModeRef.current && !userPausedRef.current) {
-      // 50 ms: just enough for onstop to fire and deliver the previous
-      // blob before cleanup() runs on the next startRecording() call.
-      // Keeping this as short as possible minimises the dead zone during
-      // which new speech is missed (was 250 ms — too wide, causing the
-      // first words of the next question to be dropped).
+      // 100 ms: gives the old recorder's onstop event time to fire and
+      // deliver the blob before startRecording() creates the new recorder.
+      // useAudioCapture now keeps the MediaStream alive across VAD cycles
+      // (stream reuse), so startRecording() takes the fast path and the
+      // actual dead zone is only these 100 ms — not 100 ms + getUserMedia.
       setTimeout(async () => {
         // Re-check inside the timeout: the user may have flipped Auto
         // off, paused, or pressed MIC (mode→manual) during the gap.

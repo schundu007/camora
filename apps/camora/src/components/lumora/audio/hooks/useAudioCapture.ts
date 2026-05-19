@@ -8,7 +8,7 @@ function micDebug(...args: unknown[]) {
   try {
     if (typeof localStorage === 'undefined') return;
     if (localStorage.getItem('lumora_mic_debug') !== 'on') return;
-     
+
     console.log('[mic]', ...args);
   } catch { /* ignore */ }
 }
@@ -69,10 +69,18 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
   const manualStopRef = useRef(false); // When true, always send audio (skip VAD check)
   const animationFrameRef = useRef<number | null>(null);
   const maxRecordingTimerRef = useRef<number | null>(null);
+  // When true, the next onstop fires but silently discards audio (used by
+  // cancelRecording to release the mic immediately without sending a partial
+  // chunk to the backend — e.g. when the user switches tabs while AUTO is on).
+  const cancelledRef = useRef(false);
+  // Tracks the deferred cleanup timeout scheduled by stopRecording so
+  // a rapid re-start can cancel it before it fires and kills the new recorder.
+  const stopCleanupTimerRef = useRef<number | null>(null);
 
   const cleanup = useCallback(() => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
@@ -106,68 +114,132 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
     }
 
     try {
-      cleanup();
+      // Cancel any deferred cleanup from a rapid stop → re-start sequence
+      // (stopRecording schedules cleanup 500 ms later; that delayed call
+      // would otherwise null our brand-new recorder's refs mid-flight).
+      if (stopCleanupTimerRef.current) {
+        clearTimeout(stopCleanupTimerRef.current);
+        stopCleanupTimerRef.current = null;
+      }
+      // Reset the cancel flag here (not in onstop) so that a stale recorder's
+      // onstop firing after this new startRecording has begun cannot accidentally
+      // read a flag that belongs to the new recording lifecycle.
+      cancelledRef.current = false;
+
+      // Partial teardown: stop old recorder and RAF loop, but do NOT stop
+      // the stream or AudioContext. If the stream is still alive, the fast
+      // path below reuses it — eliminating the ~300 ms getUserMedia dead zone
+      // during which the first words of the next question are lost.
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+      }
+      if (maxRecordingTimerRef.current) {
+        clearTimeout(maxRecordingTimerRef.current);
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      mediaRecorderRef.current = null;
       speechStartTimeRef.current = null;
-      // Defensive: clear any stale silence-timer ref left over from
-      // a previous recording. cleanup() above clears the timer ID, but
-      // doesn't null the ref. Without this, the new recording's
-      // !silenceTimerRef.current guard inside monitorAudioLevel never
-      // lets a fresh silence timer arm — recordings would roll to the
-      // maxRecordingDuration ceiling instead of stopping on VAD silence.
       silenceTimerRef.current = null;
 
-      const audioConstraints: MediaTrackConstraints = {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-      };
+      // ── Stream reuse check ────────────────────────────────────────────
+      // If the existing MediaStream track is still live and the AudioContext
+      // is open, skip getUserMedia and create a new MediaRecorder on the
+      // existing stream. Dead zone drops from ~300–500 ms to ~10 ms.
+      const existingTrack = streamRef.current?.getAudioTracks()[0];
+      let streamIsLive =
+        !!existingTrack &&
+        existingTrack.readyState === 'live' &&
+        !!audioContextRef.current &&
+        audioContextRef.current.state !== 'closed' &&
+        !!analyserRef.current;
 
-      // Use specific device if provided. `ideal` (not `exact`) so a
-      // stale/missing saved device falls back to the system default
-      // instead of throwing OverconstrainedError — that error used to
-      // re-trigger the auto-start effect on every render and produced
-      // the AudioContext-error spam in the console.
-      if (deviceId) {
-        audioConstraints.deviceId = { ideal: deviceId };
+      // Force a full re-acquire if a different device was requested.
+      if (streamIsLive && deviceId) {
+        const currentDeviceId = existingTrack!.getSettings().deviceId;
+        if (currentDeviceId && currentDeviceId !== deviceId) {
+          streamIsLive = false;
+        }
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: audioConstraints,
-      });
-      streamRef.current = stream;
+      if (streamIsLive) {
+        // ── Fast path ────────────────────────────────────────────────────
+        micDebug('startRecording fast-path (stream reuse, no getUserMedia)');
+        if (audioContextRef.current!.state === 'suspended') {
+          try { await audioContextRef.current!.resume(); } catch { /* ignore */ }
+        }
+      } else {
+        // ── Slow path: full teardown + fresh getUserMedia ─────────────────
+        micDebug('startRecording slow-path (getUserMedia)');
+        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+          audioContextRef.current.close();
+        }
+        audioContextRef.current = null;
+        analyserRef.current = null;
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(t => t.stop());
+        }
+        streamRef.current = null;
 
-      // If the system audio input is unplugged or revoked, the track
-      // ends silently. Surface it instead of leaving the recorder in a
-      // ghost state.
-      const track = stream.getAudioTracks()[0];
-      if (track) {
-        track.onended = () => {
-          micDebug('track ended (device unplug / permission revoked)');
-          onRecorderError?.('Mic input ended — please reconnect or re-grant access.');
-          setState(prev => ({ ...prev, isRecording: false, audioLevel: 0 }));
+        const audioConstraints: MediaTrackConstraints = {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
         };
+
+        // Use specific device if provided. `ideal` (not `exact`) so a
+        // stale/missing saved device falls back to the system default
+        // instead of throwing OverconstrainedError — that error used to
+        // re-trigger the auto-start effect on every render and produced
+        // the AudioContext-error spam in the console.
+        if (deviceId) {
+          audioConstraints.deviceId = { ideal: deviceId };
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: audioConstraints,
+        });
+        streamRef.current = stream;
+
+        // If the system audio input is unplugged or revoked, the track
+        // ends silently. Surface it instead of leaving the recorder in a
+        // ghost state.
+        const track = stream.getAudioTracks()[0];
+        if (track) {
+          track.onended = () => {
+            micDebug('track ended (device unplug / permission revoked)');
+            onRecorderError?.('Mic input ended — please reconnect or re-grant access.');
+            setState(prev => ({ ...prev, isRecording: false, audioLevel: 0 }));
+          };
+        }
+
+        // Set up audio analysis
+        const audioContext = new AudioContext();
+        audioContextRef.current = audioContext;
+        // Some browsers create the context in `suspended` until a user
+        // gesture or visibility resume. Resume immediately so the RAF
+        // analyser actually pumps frames.
+        if (audioContext.state === 'suspended') {
+          try { await audioContext.resume(); } catch { /* ignore */ }
+        }
+
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        analyserRef.current = analyser;
       }
 
-      // Set up audio analysis
-      const audioContext = new AudioContext();
-      audioContextRef.current = audioContext;
-      // Some browsers create the context in `suspended` until a user
-      // gesture or visibility resume. Resume immediately so the RAF
-      // analyser actually pumps frames.
-      if (audioContext.state === 'suspended') {
-        try { await audioContext.resume(); } catch { /* ignore */ }
-      }
-
-      const source = audioContext.createMediaStreamSource(stream);
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      source.connect(analyser);
-      analyserRef.current = analyser;
-
+      // ── Create MediaRecorder on (reused or new) stream ────────────────
       // Set up MediaRecorder. Each recorder closes over its OWN chunk
       // array — see the comment above the (removed) chunksRef. That
       // makes a stale recorder's onstop safe to fire after a new
-      // startRecording() has already run cleanup; the old recorder still
+      // startRecording() has already run; the old recorder still
       // owns its own data.
       const localChunks: Blob[] = [];
       // Pick the first supported mime — webm/opus is what Chromium +
@@ -180,7 +252,7 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
         (m) => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported?.(m)
       );
       const mediaRecorder = new MediaRecorder(
-        stream,
+        streamRef.current!,
         supportedMime ? { mimeType: supportedMime } : undefined,
       );
       mediaRecorderRef.current = mediaRecorder;
@@ -190,7 +262,7 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
       // this closure still has the correct moment for VAD-vs-min-speech
       // length checks.
       const startedAt = Date.now();
-      micDebug('recorder created', { startedAt, deviceId });
+      micDebug('recorder created', { startedAt, deviceId, reusedStream: streamIsLive });
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -208,6 +280,15 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
       };
 
       mediaRecorder.onstop = () => {
+        // cancelRecording sets this flag before calling cleanup so we can
+        // discard the partial chunk without sending it to the backend.
+        // The flag is reset at the TOP of the next startRecording() call,
+        // not here — resetting it here would allow a second stale recorder's
+        // onstop (firing asynchronously after cleanup) to escape the discard.
+        if (cancelledRef.current) {
+          onRecordingStop?.();
+          return;
+        }
         const blob = new Blob(localChunks, { type: 'audio/webm' });
         const wasManual = manualStopRef.current;
         // The shared speechStartTimeRef can be null already if a sibling
@@ -255,18 +336,11 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
             mediaRecorderRef.current.stop();
             setState(prev => ({ ...prev, isRecording: false, audioLevel: 0 }));
             onRecordingStop?.();
-            // Cleanup
+            // Stop the RAF loop only — stream and AudioContext stay alive
+            // for the next recording cycle (fast-path reuse).
             if (animationFrameRef.current) {
               cancelAnimationFrame(animationFrameRef.current);
               animationFrameRef.current = null;
-            }
-            if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-              audioContextRef.current.close();
-              audioContextRef.current = null;
-            }
-            if (streamRef.current) {
-              streamRef.current.getTracks().forEach(track => track.stop());
-              streamRef.current = null;
             }
           }
         }, maxRecordingDuration);
@@ -318,18 +392,12 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
               mediaRecorderRef.current.stop();
               setState(prev => ({ ...prev, isRecording: false, audioLevel: 0 }));
               onRecordingStop?.();
-              // Clean up audio resources after VAD stops
+              // Stop the RAF analyser loop only — stream and AudioContext
+              // intentionally stay alive so the next startRecording() takes
+              // the fast path (no getUserMedia, near-zero dead zone).
               if (animationFrameRef.current) {
                 cancelAnimationFrame(animationFrameRef.current);
                 animationFrameRef.current = null;
-              }
-              if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-                audioContextRef.current.close();
-                audioContextRef.current = null;
-              }
-              if (streamRef.current) {
-                streamRef.current.getTracks().forEach(track => track.stop());
-                streamRef.current = null;
               }
             }
           }, silenceDuration);
@@ -361,8 +429,23 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
       mediaRecorderRef.current.stop(); // triggers async onstop → creates blob → calls onAudioData
     }
     setState(prev => ({ ...prev, isRecording: false }));
-    // Delay cleanup to let onstop fire and process the audio blob first
-    setTimeout(() => cleanup(), 500);
+    // Delay cleanup to let onstop fire and process the audio blob first.
+    // The timer ID is stored so startRecording() can cancel it if the user
+    // rapidly toggles off → on before the 500 ms elapses.
+    if (stopCleanupTimerRef.current) clearTimeout(stopCleanupTimerRef.current);
+    stopCleanupTimerRef.current = window.setTimeout(() => {
+      stopCleanupTimerRef.current = null;
+      cleanup();
+    }, 500);
+  }, [cleanup]);
+
+  // Immediately release the mic without sending any audio. Used when the
+  // user's tab becomes inactive (e.g. switching from Coding to Behavioral)
+  // so the new tab's AudioCapture can claim the mic without fighting.
+  const cancelRecording = useCallback(() => {
+    cancelledRef.current = true;
+    cleanup();
+    setState(prev => ({ ...prev, isRecording: false, audioLevel: 0 }));
   }, [cleanup]);
 
   // Health probe used by the Auto-mode heartbeat. Ground truth — the
@@ -394,6 +477,7 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
     ...state,
     startRecording,
     stopRecording,
+    cancelRecording,
     isRecorderHealthy,
     resumeContext,
   };
