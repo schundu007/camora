@@ -46,7 +46,10 @@ contextBridge.exposeInMainWorld('camo', {
   // Notify main that OCR failed so the next poll retries the same URL.
   resetLastCaptureUrl: () => ipcRenderer.invoke('reset-last-capture-url'),
 
-  // Stealth mode — injects JS into Chrome to neutralize HackerRank's mouse/focus tracking.
+  // App-level stealth — setContentProtection(on) makes the Camora window
+  // invisible to screen recording and screen share.
+  setStealthMode: (on) => ipcRenderer.invoke('set-stealth-mode', on),
+  // Chrome tracking neutralizer — injects JS into HackerRank to block mouse/focus detection.
   // Returns { ok, browser? } on success, { ok: false, needsDevMenu?, error } on failure.
   injectTrackingNeutralizer: () => ipcRenderer.invoke('inject-tracking-neutralizer'),
 

@@ -897,6 +897,16 @@ ipcMain.handle('relaunch-app', () => {
   app.exit(0);
 });
 
+// ── IPC: app-level stealth (content protection) ────────────────────────────
+// setContentProtection(true) makes the Camora window invisible to screen
+// recording and screen share — the window appears black in any capture.
+// on=true → stealth active; on=false → back to normal.
+ipcMain.handle('set-stealth-mode', (_event, on) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.setContentProtection(!!on);
+  }
+});
+
 // ── IPC: per-interview session folder ──────────────────────────────────────
 // Called by the renderer when company context becomes known (e.g. NVIDIA).
 // Creates ~/Documents/Camora/{company}/screenshots/ and redirects the watcher

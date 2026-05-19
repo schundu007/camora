@@ -868,17 +868,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     return () => { camo.setSessionFolder(null); };
   }, []);
 
-  // Auto-reinject stealth when a new HackerRank problem is detected (page reloads, clearing
-  // the previous injection) and on a 30s heartbeat while stealth is active.
+  // Turn off content protection when leaving the coding page so the app
+  // doesn't stay invisible after the user navigates away.
   useEffect(() => {
-    const camo = (window as any).camo;
-    if (!isStealthActive || !camo?.injectTrackingNeutralizer) return;
-    // Silent reinject — don't show dialogs on auto-reinject failures.
-    const silentReinject = () => camo.injectTrackingNeutralizer().catch(() => null);
-    silentReinject();
-    const interval = setInterval(silentReinject, 30000);
-    return () => clearInterval(interval);
-  }, [isStealthActive, pendingHackerrankCapture]);
+    return () => {
+      const camo = (window as any).camo;
+      if (camo?.setStealthMode) camo.setStealthMode(false);
+    };
+  }, []);
 
 
   // ── Actions ─────────────────────────────────────────────────────────────
@@ -1027,21 +1024,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   const handleStealthMode = async () => {
     const camo = (window as any).camo;
-    if (!camo?.injectTrackingNeutralizer) {
+    if (!camo?.setStealthMode) {
       await dialogAlert({ title: 'Desktop only', message: 'Stealth mode requires the Camora desktop app.' });
       return;
     }
-    const result = await camo.injectTrackingNeutralizer();
-    if (result.ok) {
-      setIsStealthActive(true);
-    } else if (result.needsDevMenu) {
-      await dialogAlert({
-        title: 'One-time setup needed',
-        message: `Enable "Allow JavaScript from Apple Events" in ${result.browser || 'Chrome'}:\n\n1. Open ${result.browser || 'Chrome'}\n2. Menu bar → View → Developer (or More Tools)\n3. Click "Allow JavaScript from Apple Events"\n4. Click Stealth again`,
-      });
-    } else {
-      await dialogAlert({ title: 'Stealth failed', message: result.error || 'Could not inject into browser tab.' });
-    }
+    const next = !isStealthActive;
+    await camo.setStealthMode(next);
+    setIsStealthActive(next);
   };
 
   // Ref so handleSnap can call acceptImage without a forward-reference TDZ.
