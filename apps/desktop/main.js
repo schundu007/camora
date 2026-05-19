@@ -334,7 +334,7 @@ let _lastHrUrl = null;
 let _hrPollTimer = null;
 // Active coding platform — set by renderer via 'set-coding-platform' IPC.
 // Drives which URLs trigger auto-capture.
-let _codingPlatform = 'hackerrank'; // default on: most users are using HackerRank
+let _codingPlatform = 'auto';
 
 const PLATFORM_URL_MATCH = {
   hackerrank: (url) => url.includes('hackerrank.com') &&
@@ -431,8 +431,14 @@ function startHackerrankAutoDetect() {
       const info = await getActiveBrowserInfo();
       if (!info) return;
       const { url } = info;
-      const matchFn = PLATFORM_URL_MATCH[_codingPlatform];
-      if (!matchFn || !matchFn(url)) return;
+      let matched = false;
+      if (_codingPlatform === 'auto') {
+        matched = Object.values(PLATFORM_URL_MATCH).some(fn => fn(url));
+      } else {
+        const matchFn = PLATFORM_URL_MATCH[_codingPlatform];
+        matched = !!(matchFn && matchFn(url));
+      }
+      if (!matched) return;
       if (url === _lastHrUrl) return; // already processed successfully — don't re-fire
       console.log('[hr-auto] HackerRank detected, scraping:', url);
       // Settle time so the page DOM is ready after navigation
@@ -561,8 +567,9 @@ let _overlayWindow = null;
 let _overlayHideTimer = null;
 let _overlayCursorPoll = null;
 // Height of the draggable header in logical px — must match .header CSS.
-// (7px pad-top + ~18px content + 7px pad-bot + 1px border = ~33px; use 38 for safety)
-const OVERLAY_HEADER_H = 38;
+// Pad generously: cursor poll runs at 33 ms, so a tight value drops clicks
+// on Retina displays where subpixel rounding shifts the bounds slightly.
+const OVERLAY_HEADER_H = 52;
 
 function startOverlayCursorPoll() {
   if (_overlayCursorPoll) clearInterval(_overlayCursorPoll);
@@ -576,7 +583,10 @@ function startOverlayCursorPoll() {
     const b = _overlayWindow.getBounds();
     const overHeader = cursor.x >= b.x && cursor.x <= b.x + b.width &&
                        cursor.y >= b.y && cursor.y <= b.y + OVERLAY_HEADER_H;
-    if (overHeader) {
+    // Also allow mouse events in the bottom-right 20px corner (resize handle)
+    const overResize = cursor.x >= b.x + b.width - 20 && cursor.x <= b.x + b.width &&
+                       cursor.y >= b.y + b.height - 20 && cursor.y <= b.y + b.height;
+    if (overHeader || overResize) {
       _overlayWindow.setFocusable(true);
       _overlayWindow.setIgnoreMouseEvents(false);
     } else {
@@ -599,20 +609,20 @@ function buildOverlayHtml(code, language) {
   html,body{background:transparent;overflow:hidden;height:100%}
   .panel{
     position:fixed;top:0;left:0;right:0;bottom:0;
-    background:rgba(4,6,14,0.93);
-    border:1px solid rgba(0,71,171,0.7);
+    background:rgba(4,6,14,0.72);
+    border:1px solid rgba(0,71,171,0.55);
     border-radius:10px;
     display:flex;flex-direction:column;
     font-family:'Menlo','Monaco','Courier New',monospace;
-    backdrop-filter:blur(2px);
+    backdrop-filter:blur(6px);
   }
   .header{
     -webkit-app-region:drag;
     cursor:move;
-    padding:7px 10px 7px 12px;
-    background:rgba(0,71,171,0.30);
+    padding:10px 10px 10px 12px;
+    background:rgba(0,71,171,0.22);
     border-radius:10px 10px 0 0;
-    border-bottom:1px solid rgba(0,71,171,0.4);
+    border-bottom:1px solid rgba(0,71,171,0.35);
     font-size:11px;color:#7ab3ff;letter-spacing:.05em;
     flex-shrink:0;
     display:flex;align-items:center;justify-content:space-between;
@@ -621,17 +631,17 @@ function buildOverlayHtml(code, language) {
   .close-btn{
     -webkit-app-region:no-drag;
     cursor:pointer;
-    width:18px;height:18px;
+    width:22px;height:22px;
     border-radius:50%;
-    background:rgba(255,255,255,0.12);
-    border:1px solid rgba(255,255,255,0.18);
+    background:rgba(255,255,255,0.14);
+    border:1px solid rgba(255,255,255,0.22);
     display:flex;align-items:center;justify-content:center;
-    color:rgba(255,255,255,0.6);
-    font-size:12px;line-height:1;
+    color:rgba(255,255,255,0.7);
+    font-size:13px;line-height:1;
     transition:background 0.15s;
     flex-shrink:0;
   }
-  .close-btn:hover{background:rgba(239,68,68,0.7);color:#fff;border-color:transparent}
+  .close-btn:hover{background:rgba(239,68,68,0.8);color:#fff;border-color:transparent}
   pre{
     -webkit-app-region:no-drag;
     flex:1;overflow:auto;padding:12px 14px;
@@ -639,14 +649,29 @@ function buildOverlayHtml(code, language) {
     color:#c8e6c9;white-space:pre-wrap;word-break:break-all;
     cursor:text;user-select:text;
   }
+  .resize-handle{
+    -webkit-app-region:no-drag;
+    position:absolute;bottom:0;right:0;
+    width:14px;height:14px;
+    cursor:se-resize;
+    opacity:0.35;
+  }
 </style></head><body>
 <div class="panel">
   <div class="header">
-    <span>CAMORA &middot; ${(language||'').toUpperCase()} SOLUTION &nbsp;&#8942;&nbsp; drag to move</span>
-    <div class="close-btn" onclick="window.overlayAPI?.closeOverlay()" title="Close">&#x2715;</div>
+    <span>CAMORA &middot; ${(language||'').toUpperCase()} &nbsp;&middot;&nbsp; drag header to move</span>
+    <div class="close-btn" id="closeBtn" title="Close overlay (Esc)">&#x2715;</div>
   </div>
   <pre>${escaped}</pre>
+  <svg class="resize-handle" viewBox="0 0 14 14" fill="rgba(255,255,255,0.5)">
+    <path d="M0 14L14 0M5 14L14 5M10 14L14 10"/>
+  </svg>
 </div>
+<script>
+  function doClose(){ window.overlayAPI?.closeOverlay(); }
+  document.getElementById('closeBtn').addEventListener('click', doClose);
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') doClose(); });
+</script>
 </body></html>`;
 }
 
@@ -709,6 +734,7 @@ ipcMain.handle('show-solution-overlay', async (_event, { code, language, stealth
     _overlayWindow = new BrowserWindow({
       width: W, height: H, x, y,
       transparent: true, frame: false,
+      resizable: true,
       alwaysOnTop: true, skipTaskbar: true,
       hasShadow: true, focusable: false,
       webPreferences: {
@@ -868,7 +894,7 @@ end tell`);
 
 // Renderer tells us which coding platform to watch.
 ipcMain.handle('set-coding-platform', (_event, platform) => {
-  _codingPlatform = platform || 'none';
+  _codingPlatform = platform || 'auto';
   _lastHrUrl = null; // reset dedup so first detection on new platform fires immediately
   console.log('[hr-auto] coding platform set to:', _codingPlatform);
 });
