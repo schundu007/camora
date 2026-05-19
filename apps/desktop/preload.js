@@ -46,6 +46,10 @@ contextBridge.exposeInMainWorld('camo', {
   // Notify main that OCR failed so the next poll retries the same URL.
   resetLastCaptureUrl: () => ipcRenderer.invoke('reset-last-capture-url'),
 
+  // Snap active browser window — captures the front Chrome/Brave/Edge window
+  // and returns { ok, dataUrl } for OCR. Targets only the interview platform,
+  // not the full screen.
+  snapActiveBrowser: () => ipcRenderer.invoke('snap-active-browser'),
   // App-level stealth — setContentProtection(on) makes the Camora window
   // invisible to screen recording and screen share.
   setStealthMode: (on) => ipcRenderer.invoke('set-stealth-mode', on),

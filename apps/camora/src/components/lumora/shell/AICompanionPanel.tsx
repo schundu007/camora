@@ -654,8 +654,9 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   const handleSnap = useCallback(async () => {
     const camo = (window as any).camo;
 
-    if (camo?.takeScreenshot) {
-      // Desktop (Electron) path — native screencapture
+    if (camo?.snapActiveBrowser) {
+      // Desktop (Electron) path — capture the active browser window only,
+      // then OCR and auto-submit to Sona (same pipeline as the browser path).
       const perm = await camo.getMediaAccessStatus?.('screen').catch(() => null);
       if (perm && perm !== 'granted') {
         camo.openSystemPrivacy?.('ScreenCapture');
@@ -663,8 +664,23 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
       }
       setSnapState('capturing');
       try {
-        const result = await camo.takeScreenshot();
+        const result = await camo.snapActiveBrowser();
         if (!result?.ok) throw new Error(result?.error || 'Capture failed');
+        // OCR via the shared extract-from-image endpoint
+        const blob = await (await fetch(result.dataUrl)).blob();
+        const formData = new FormData();
+        formData.append('image', new File([blob], 'snap.png', { type: blob.type || 'image/png' }));
+        const resp = await fetch(`${API_URL}/api/v1/coding/extract-from-image`, {
+          credentials: 'include',
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData,
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          const text = String(data.problem || '').trim();
+          if (text) ask(text);
+        }
         setSnapState('done');
         setTimeout(() => setSnapState('idle'), 2500);
       } catch {
