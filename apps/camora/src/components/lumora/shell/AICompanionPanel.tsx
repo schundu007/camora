@@ -369,6 +369,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   // citations only surface once the final message is committed.
   const pendingCitationsRef = useRef<Citation[]>([]);
   const [input, setInput] = useState('');
+  const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'done' | 'error'>('idle');
   const [minimized, setMinimized] = useState(true);
   const [maximized, setMaximized] = useState(false);
   // Cap initial size to the actual viewport so the floating copilot
@@ -646,6 +647,83 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     if (input.trim()) { ask(input); setInput(''); }
   }, [input, ask]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const API_URL = (import.meta as any).env?.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+
+  const handleSnap = useCallback(async () => {
+    const camo = (window as any).camo;
+
+    if (camo?.takeScreenshot) {
+      // Desktop (Electron) path — native screencapture
+      const perm = await camo.getMediaAccessStatus?.('screen').catch(() => null);
+      if (perm && perm !== 'granted') {
+        camo.openSystemPrivacy?.('ScreenCapture');
+        return;
+      }
+      setSnapState('capturing');
+      try {
+        const result = await camo.takeScreenshot();
+        if (!result?.ok) throw new Error(result?.error || 'Capture failed');
+        setSnapState('done');
+        setTimeout(() => setSnapState('idle'), 2500);
+      } catch {
+        setSnapState('error');
+        setTimeout(() => setSnapState('idle'), 3000);
+      }
+      return;
+    }
+
+    // Browser path — capture a screen frame, OCR it, inject text into input
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      setSnapState('error');
+      setTimeout(() => setSnapState('idle'), 3000);
+      return;
+    }
+    setSnapState('capturing');
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false } as DisplayMediaStreamOptions);
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      await new Promise<void>(res => { video.onloadedmetadata = () => res(); });
+      await video.play();
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d')!.drawImage(video, 0, 0);
+      stream.getTracks().forEach(t => t.stop());
+      video.srcObject = null;
+      const blob = await new Promise<Blob>((res, rej) =>
+        canvas.toBlob(b => b ? res(b) : rej(new Error('canvas.toBlob failed')), 'image/png')
+      );
+      // OCR via the shared extract-from-image endpoint
+      const formData = new FormData();
+      formData.append('image', new File([blob], 'snap.png', { type: 'image/png' }));
+      const resp = await fetch(`${API_URL}/api/v1/coding/extract-from-image`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        const text = String(data.problem || '').trim();
+        if (text) {
+          // Auto-submit directly so Sona answers immediately
+          ask(text);
+        }
+      }
+      setSnapState('done');
+      setTimeout(() => setSnapState('idle'), 2500);
+    } catch (err: any) {
+      if (err?.name !== 'NotAllowedError') {
+        setSnapState('error');
+        setTimeout(() => setSnapState('idle'), 3000);
+      } else {
+        setSnapState('idle');
+      }
+    }
+  }, [token, ask, API_URL]);
+
   // Stable ref so AudioCapture's onTranscription dep doesn't rebuild on every
   // `streaming` flip — mid-recording callback swaps caused dropped chunks.
   const askRef = useRef(ask);
@@ -698,26 +776,29 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
     }
   }, [streaming]);
 
-  // Stable handler for continuous-mic transcriptions (no deps → never rebuilds).
+  // Stable handler for continuous-mic transcriptions.
   // `opts.manual === true` means the user explicitly pressed the mic button.
-  // In that case we MUST bypass isQuestion() — the user's intent is direct,
-  // and the heuristic was silently dropping perfectly valid manual presses
-  // (e.g. utterances starting with "I" or "we", or short phrases).
+  // In embedded behavioral mode, bypass isQuestion() entirely — the user is
+  // in an active interview and wants Sona to answer the interviewer's
+  // questions even when they don't hit the heuristic's starters (e.g.
+  // "Take me through…", "And what did you…", etc.). The isLikelyRealSpeech
+  // gate inside AudioCapture already filters noise and Whisper hallucinations,
+  // so auto-answering everything transcribed in behavioral mode is safe.
   const handleAutoTranscription = useCallback((text: string, opts?: { manual?: boolean }) => {
     if (typeof text !== 'string' || !text.trim()) {
       console.warn('[Sona] handleAutoTranscription received non-string:', text);
       return;
     }
-    if (opts?.manual) {
+    if (opts?.manual || embedded) {
       askRef.current?.(text);
       return;
     }
-    // Auto path: gate on isQuestion so monologues / acknowledgments don't fire Sona.
+    // Non-embedded (floating Sona): gate on isQuestion so monologues / acknowledgments don't fire.
     if (!isQuestion(text)) {
       return;
     }
     askRef.current?.(text);
-  }, []);
+  }, [embedded]);
 
   // Keep the registry-bound ref in sync with the latest handler.
   // handleAutoTranscription has [] deps so it never rebuilds, but
@@ -1352,10 +1433,10 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
             aria-label="Audio controls"
           >
             <div
-              className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl"
-              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full shrink-0"
+              style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)' }}
             >
-              <AudioCapture onTranscription={handleAutoTranscription} />
+              <AudioCapture onTranscription={handleAutoTranscription} compact active={embedded} />
             </div>
             <VoiceEnrollment disabled={false} variant="light" />
             <button
@@ -1373,73 +1454,42 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
           </div>
         )}
         {embedded && !voiceBannerDismissed && (() => {
-          // Tone is amber when stale even if filter is on — the user
-          // should see the nudge before the next interview, not after.
           const tone = !voiceEnrolled ? 'red' : (!voiceFilterEnabled || enrollmentStale) ? 'amber' : 'green';
-          const bg = tone === 'red' ? 'rgba(220,38,38,0.08)' : tone === 'amber' ? 'rgba(245,158,11,0.10)' : 'rgba(16,185,129,0.08)';
-          const border = tone === 'red' ? 'rgba(220,38,38,0.35)' : tone === 'amber' ? 'rgba(245,158,11,0.40)' : 'rgba(16,185,129,0.35)';
-          const stroke = tone === 'red' ? '#dc2626' : tone === 'amber' ? '#d97706' : '#10b981';
-          const title = !voiceEnrolled ? 'Enroll your voice to filter it out' :
-                        !voiceFilterEnabled ? 'Your voice is being transcribed' :
-                        enrollmentStale ? `Refresh your voice profile (${enrollmentAgeDays}d old)` :
-                        'Filter on — only the interviewer is heard';
-          const hint = !voiceEnrolled ? 'Sona will answer YOUR voice until you enroll.' :
-                       !voiceFilterEnabled ? 'Turn Filter On so Sona only answers the interviewer.' :
-                       enrollmentStale ? 'Voice prints drift with mic / room changes — re-enroll to keep filtering accurate.' :
-                       'Sona ignores you and replies only to the interviewer.';
-          // Single-row layout: status (left) | mic + AUTO (centered) |
-          // enrollment buttons (right). The mic stays optically centered
-          // because both side cells are flex-1 and the middle is shrink-0.
-          // On phones (<sm) the side cells stack into a column so the mic
-          // pill never gets squeezed into a single tile-wide strip.
+          const chipColor = tone === 'red' ? '#ef4444' : tone === 'amber' ? '#f59e0b' : '#10b981';
+          const chipBg = tone === 'red' ? 'rgba(239,68,68,0.12)' : tone === 'amber' ? 'rgba(245,158,11,0.12)' : 'rgba(16,185,129,0.12)';
+          const chipBorder = tone === 'red' ? 'rgba(239,68,68,0.40)' : tone === 'amber' ? 'rgba(245,158,11,0.40)' : 'rgba(16,185,129,0.40)';
+          const statusLabel = !voiceEnrolled ? 'Not enrolled'
+            : !voiceFilterEnabled ? 'Filter off'
+            : enrollmentStale ? `Profile stale (${enrollmentAgeDays}d)`
+            : 'Voice filtered';
           return (
-            <div
-              className="w-full grid grid-cols-[auto_auto] sm:grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3 px-3 py-2 rounded-xl"
-              style={{ background: bg, border: `1px solid ${border}` }}
-            >
-              {/* LEFT — status icon + title. Hint paragraph only renders
-                  on ≥sm so phones don't lose ~40 vertical px to a
-                  one-line subtitle that pushes the mic + enroll button
-                  off screen. */}
-              <div className="flex items-center gap-2 min-w-0 justify-self-start col-span-2 sm:col-span-1">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                  <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
-                  <path d="M19 10v2a7 7 0 01-14 0v-2" />
-                  <line x1="12" y1="19" x2="12" y2="23" />
-                  <line x1="8" y1="23" x2="16" y2="23" />
+            <div className="w-full flex flex-wrap items-center gap-1.5 py-0.5">
+              {/* Status chip */}
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 select-none"
+                style={{ background: chipBg, border: `1px solid ${chipBorder}`, color: chipColor }}>
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: chipColor }} />
+                {statusLabel}
+              </span>
+              {/* AUTO / mic chip — navy-gold to match toolbar */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full shrink-0"
+                style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)' }}>
+                <AudioCapture onTranscription={handleAutoTranscription} compact active={embedded} />
+              </div>
+              {/* Enrollment action chips */}
+              <VoiceEnrollment disabled={false} variant="light" />
+              {/* Minimize */}
+              <button
+                type="button"
+                onClick={dismissVoiceBanner}
+                className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-black/10 dark:hover:bg-white/10 ml-auto"
+                style={{ color: 'var(--text-muted)' }}
+                aria-label="Minimize"
+                title="Minimize"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 9l6 6 6-6" />
                 </svg>
-                <div className="min-w-0">
-                  <p className="text-[12px] md:text-[11px] font-bold leading-tight truncate" style={{ color: 'var(--text-primary)' }}>{title}</p>
-                  <p className="hidden sm:block text-[10px] leading-tight truncate" style={{ color: 'var(--text-muted)' }}>{hint}</p>
-                </div>
-              </div>
-              {/* MIDDLE — MIC + AUTO controls. Owns its own pill chrome
-                  so it reads as the primary action even on a tinted
-                  banner background. */}
-              <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl shrink-0 justify-self-start sm:justify-self-center"
-                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                <AudioCapture onTranscription={handleAutoTranscription} />
-              </div>
-              {/* RIGHT — Filter On / Remove Enrollment buttons + X
-                  dismiss. The VoiceEnrollment "light" variant lays the
-                  enroll buttons out in a row so they sit on a single
-                  line beside the mic. The X persists the dismissal
-                  in localStorage so the banner is a one-time nudge. */}
-              <div className="flex items-center justify-end justify-self-end gap-1">
-                <VoiceEnrollment disabled={false} variant="light" />
-                <button
-                  type="button"
-                  onClick={dismissVoiceBanner}
-                  className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-black/10 dark:hover:bg-white/10"
-                  style={{ color: 'var(--text-muted)' }}
-                  aria-label="Minimize voice-filter status"
-                  title="Minimize"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </button>
-              </div>
+              </button>
             </div>
           );
         })()}
@@ -1447,6 +1497,29 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
             keyboard shows up at a comfortable size and the placeholder
             doesn't trigger Safari's text-zoom (it kicks in below 16px). */}
         <div className="flex items-center gap-2 px-3 h-12 md:h-9 rounded-xl w-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          {/* Snap button — capture screen and auto-send to Sona */}
+          <button
+            type="button"
+            onClick={handleSnap}
+            disabled={snapState === 'capturing'}
+            title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen'}
+            className="shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold transition-all hover:opacity-90 active:scale-[0.97]"
+            style={snapState === 'done'
+              ? { background: '#00ea64', color: '#000', border: '1px solid #00ea64' }
+              : snapState === 'error'
+              ? { background: '#ef4444', color: '#fff', border: '1px solid #ef4444' }
+              : { background: 'var(--bg-surface)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+          >
+            {snapState === 'capturing'
+              ? <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              : snapState === 'done'
+              ? <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              : snapState === 'error'
+              ? <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              : <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            }
+            {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
+          </button>
           <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && input.trim()) handleSubmit(); }}
             placeholder="Type a question..."
