@@ -257,11 +257,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'done' | 'error'>('idle');
   // Extracted code from the last image snap — drives quick-action chips.
   const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
-  // Quick Ask result panel — lightweight prose answer without touching the solution
-  const [quickAskResult, setQuickAskResult] = useState('');
-  const [isQuickAsking, setIsQuickAsking] = useState(false);
-  const [quickAskLabel, setQuickAskLabel] = useState('');
-  const quickAskAbortRef = useRef<AbortController | null>(null);
+  // Analysis tabs — Explain / Issues / Deep Dive generated from the active solution code
+  const [analysisTab, setAnalysisTab] = useState<'code' | 'explain' | 'issues' | 'deepdive'>('code');
+  const [analysisCache, setAnalysisCache] = useState<Record<string, string>>({});
+  const [analysisLoading, setAnalysisLoading] = useState<string | null>(null);
+  const analysisAbortRef = useRef<AbortController | null>(null);
 
   // Voice enrollment popup (embedded toolbar only)
   const [showEnrollPopup, setShowEnrollPopup] = useState(false);
@@ -341,6 +341,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const handleRegenerate = useCallback(() => {
     const text = problemText.trim();
     if (!text || isLoading || isStreaming) return;
+    setAnalysisCache({});
+    setAnalysisTab('code');
     onSubmit(text, resolveLanguage(text), { bypassCache: true, ...(starterCode ? { starterCode } : {}) });
   }, [problemText, language, starterCode, isLoading, isStreaming, onSubmit, resolveLanguage]);
 
@@ -954,6 +956,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     clearStreamChunks();
     setParsedBlocks([]);
     setJsonSolution(null);
+    setAnalysisCache({});
+    setAnalysisTab('code');
     const effectiveLang = language === 'auto' ? detectLanguage(problemText) : language;
     setCode(getDefaultCode(effectiveLang));
     setCollapsedCards(new Set());
@@ -1196,38 +1200,37 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     onSubmit(combined, language, { bypassCache: true });
   }, [snapChipCode, code, problemText, language, clearStreamChunks, setParsedBlocks, setStreamError, onSubmit, getDefaultCode]);
 
-  // Quick Ask — lightweight prose answer streamed into a dismissable panel.
-  // Does NOT touch the solution, editor, or test state. Only called when
-  // snapChipCode is null (i.e. we already have a solution and the user wants
-  // a follow-up explanation, not a full re-solve).
-  const handleQuickAsk = useCallback(async (chip: { label: string; prompt: string }) => {
-    const defaultCode = getDefaultCode(language);
-    const editorHasCode = code.trim() && code.trim() !== defaultCode.trim();
-    const codeContext = editorHasCode
-      ? `\`\`\`${language}\n${code.trim()}\n\`\`\``
-      : problemText;
-    if (!codeContext?.trim()) return;
-    quickAskAbortRef.current?.abort();
+  // Analysis tabs — stream Explain / Issues / Deep Dive from the active solution code.
+  const handleAnalysis = useCallback(async (tab: 'explain' | 'issues' | 'deepdive') => {
+    const sd = jsonSolution;
+    const solCode = sd?.solutions?.[activeSolutionIdx]?.code
+      || sd?.solutions?.[0]?.code
+      || sd?.code
+      || code;
+    if (!solCode?.trim() || !token) return;
+    const cacheKey = `${activeSolutionIdx}_${tab}`;
+    if (analysisCache[cacheKey]) { setAnalysisTab(tab); return; }
+    analysisAbortRef.current?.abort();
     const abort = new AbortController();
-    quickAskAbortRef.current = abort;
-    setQuickAskLabel(chip.label);
-    setQuickAskResult('');
-    setIsQuickAsking(true);
-    setProblemTab('solution');
-    const question = `${chip.prompt}\n\n${codeContext}`;
+    analysisAbortRef.current = abort;
+    setAnalysisTab(tab);
+    setAnalysisLoading(tab);
+    const lang = resolveLanguage();
+    const prompts: Record<string, string> = {
+      explain: `Analyze this ${lang} solution and provide:\n1. One sentence summary of what it does.\n2. Step-by-step numbered walkthrough of the algorithm.\n3. The key insight that makes this approach work.\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
+      issues: `Review this ${lang} code and list all bugs, edge cases, and quality issues. For each issue:\n- Severity: CRITICAL / HIGH / MEDIUM / LOW\n- Location: line or function name\n- Problem: what is wrong\n- Fix: corrected code snippet\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
+      deepdive: `Generate 3 deep-dive interview questions about this ${lang} solution. For each question provide a thorough answer. Focus on: why this approach, edge cases, and how to extend it.\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
+    };
+    let accumulated = '';
     try {
       const resp = await fetch(`${API_BASE_URL}/api/v1/inference/stream`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ question, mode: 'general', bypass_cache: true }),
+        body: JSON.stringify({ question: prompts[tab], mode: 'general', bypass_cache: true }),
         signal: abort.signal,
       });
-      if (!resp.ok || !resp.body) {
-        const err = await resp.json().catch(() => ({}));
-        setQuickAskResult(`Error: ${(err as any).error || 'Request failed'}`);
-        return;
-      }
+      if (!resp.ok || !resp.body) throw new Error('Request failed');
       const reader = resp.body.getReader();
       const dec = new TextDecoder();
       let buf = '';
@@ -1241,18 +1244,18 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           if (line.startsWith('data: ')) {
             try {
               const d = JSON.parse(line.slice(6));
-              if (d.t) setQuickAskResult(prev => prev + d.t); // token event
-              else if (d.raw) setQuickAskResult(d.raw); // answer event fallback
+              if (d.t) { accumulated += d.t; setAnalysisCache(prev => ({ ...prev, [cacheKey]: accumulated })); }
+              else if (d.raw) { accumulated = d.raw; setAnalysisCache(prev => ({ ...prev, [cacheKey]: accumulated })); }
             } catch {}
           }
         }
       }
     } catch (err: any) {
-      if (err?.name !== 'AbortError') setQuickAskResult(`Error: ${err.message}`);
+      if (err?.name !== 'AbortError') setAnalysisCache(prev => ({ ...prev, [cacheKey]: `Error: ${err.message}` }));
     } finally {
-      setIsQuickAsking(false);
+      setAnalysisLoading(null);
     }
-  }, [code, problemText, language, token, getDefaultCode]);
+  }, [jsonSolution, activeSolutionIdx, analysisCache, code, token, resolveLanguage]);
 
   const extractAndMaybeGenerate = useCallback(async (file: File, autoGenerate: boolean) => {
     if (!token) { setError('Not authenticated'); return; }
@@ -1688,29 +1691,25 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         </button>
                       </div>
                     </div>
-                    {/* ── Quick-action chips (autopilot mode) — always visible ── */}
-                    {!isLoading && (
+                    {/* ── Snap chips (autopilot mode) — only when snap code is set ── */}
+                    {!isLoading && snapChipCode && (
                       <div className="flex flex-wrap items-center gap-1.5 px-3 py-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                         <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
-                          style={{ color: snapChipCode ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.32)' }}>
-                          {snapChipCode ? 'Snap:' : 'Quick ask:'}
+                          style={{ color: 'var(--cam-gold-leaf)' }}>
+                          Snap:
                         </span>
                         {SNAP_CHIPS.map(chip => (
-                          <button key={chip.label} onClick={() => snapChipCode ? handleSnapChip(chip.prompt) : handleQuickAsk(chip)}
+                          <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
                             className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
-                            style={snapChipCode
-                              ? { background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }
-                              : { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.60)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                            style={{ background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }}>
                             {chip.label}
                           </button>
                         ))}
-                        {snapChipCode && (
-                          <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
-                            className="ml-auto shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
-                            style={{ color: 'rgba(255,255,255,0.35)' }}>
-                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          </button>
-                        )}
+                        <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
+                          className="ml-auto shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
+                          style={{ color: 'rgba(255,255,255,0.35)' }}>
+                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1848,29 +1847,25 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         </button>
                       </div>
                     </div>
-                    {/* ── Quick-action chips (manual mode) — always visible ── */}
-                    {!isLoading && (
+                    {/* ── Snap chips (manual mode) — only when snap code is set ── */}
+                    {!isLoading && snapChipCode && (
                       <div className="flex flex-wrap items-center gap-1.5 px-3 py-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                         <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
-                          style={{ color: snapChipCode ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.32)' }}>
-                          {snapChipCode ? 'Snap:' : 'Quick ask:'}
+                          style={{ color: 'var(--cam-gold-leaf)' }}>
+                          Snap:
                         </span>
                         {SNAP_CHIPS.map(chip => (
-                          <button key={chip.label} onClick={() => snapChipCode ? handleSnapChip(chip.prompt) : handleQuickAsk(chip)}
+                          <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
                             className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
-                            style={snapChipCode
-                              ? { background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }
-                              : { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.60)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                            style={{ background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }}>
                             {chip.label}
                           </button>
                         ))}
-                        {snapChipCode && (
-                          <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
-                            className="ml-auto shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
-                            style={{ color: 'rgba(255,255,255,0.35)' }}>
-                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          </button>
-                        )}
+                        <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
+                          className="ml-auto shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
+                          style={{ color: 'rgba(255,255,255,0.35)' }}>
+                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1966,23 +1961,49 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             {/* ═══ SOLUTION TAB — AI-Inspired Modern Display ═══ */}
             {problemTab === 'solution' && (
               <div className="p-2 md:p-3">
-                {/* Quick Ask result panel — dismissable prose answer */}
-                {(isQuickAsking || quickAskResult) && (
+                {/* ── Analysis tabs (Code | Explain | Issues | Deep Dive) ── */}
+                {sd && !isStreaming && (
+                  <div className="flex items-center gap-0.5 mb-3 p-1 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                    {(['code', 'explain', 'issues', 'deepdive'] as const).map(tab => {
+                      const labels: Record<string, string> = { code: 'Code', explain: 'Explain', issues: 'Issues', deepdive: 'Deep Dive' };
+                      const active = analysisTab === tab;
+                      const loading = analysisLoading === tab;
+                      return (
+                        <button
+                          key={tab}
+                          onClick={() => tab === 'code' ? setAnalysisTab('code') : handleAnalysis(tab)}
+                          className="flex items-center gap-1.5 flex-1 justify-center py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors"
+                          style={active
+                            ? { background: 'var(--cam-hero-strip)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--cam-gold-leaf)' }
+                            : { color: 'var(--text-muted)', border: '1px solid transparent' }}
+                        >
+                          {loading && <div className="w-2.5 h-2.5 border border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />}
+                          {labels[tab]}
+                          {!loading && analysisCache[`${activeSolutionIdx}_${tab}`] && tab !== 'code' && (
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary)' }} />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {/* Analysis content for active tab */}
+                {sd && analysisTab !== 'code' && (
                   <div className="mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-elevated)' }}>
-                    <div className="flex items-center justify-between px-3 py-2" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid rgba(255,213,0,0.18)' }}>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf-lt)' }}>Quick Ask</span>
-                        <span className="text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.55)' }}>{quickAskLabel}</span>
-                        {isQuickAsking && <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />}
-                      </div>
-                      <button onClick={() => { quickAskAbortRef.current?.abort(); setQuickAskResult(''); setIsQuickAsking(false); }}
-                        className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-                        style={{ color: 'rgba(255,255,255,0.45)' }}>
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                      </button>
+                    <div className="flex items-center gap-2 px-3 py-2 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid rgba(255,213,0,0.18)' }}>
+                      <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
+                        {({ explain: 'Explain', issues: 'Issues', deepdive: 'Deep Dive' } as Record<string, string>)[analysisTab]}
+                      </span>
+                      {analysisLoading === analysisTab && <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin ml-1" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />}
                     </div>
-                    <div className="px-3 py-2.5 text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>
-                      {quickAskResult || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Thinking…</span>}
+                    <div className="p-3 text-[12px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>
+                      {(() => {
+                        const key = `${activeSolutionIdx}_${analysisTab}`;
+                        const content = analysisCache[key];
+                        if (content) return content;
+                        if (analysisLoading === analysisTab) return <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Generating…</span>;
+                        return <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Click the tab above to generate.</span>;
+                      })()}
                     </div>
                   </div>
                 )}
@@ -2115,7 +2136,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 })()}
 
                 {/* JSON Solution — Modern Cards */}
-                {sd && (
+                {analysisTab === 'code' && sd && (
                   <div className="space-y-3 solution-cards-appear">
 
                     {/* ── SOLUTION TABS (when multiple solutions) ── */}

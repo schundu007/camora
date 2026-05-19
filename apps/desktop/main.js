@@ -309,9 +309,49 @@ function runAppleScript(script) {
 const BROWSERS = ['Google Chrome', 'Brave Browser', 'Microsoft Edge', 'Arc'];
 
 async function getActiveBrowserInfo() {
+  // First pass: search all windows of all browsers for a platform-matching URL.
+  // This prevents accidentally snapping a "focus-stolen" non-platform window
+  // when the user has multiple browser windows across monitors.
+  const platformPatterns = [
+    /hackerrank\.com\/challenges\//,
+    /hackerrank\.com\/contests\//,
+    /leetcode\.com\/problems\//,
+    /coderpad\.io\//,
+    /codepair\./,
+  ];
+
   for (const browser of BROWSERS) {
     try {
-      // Fetch URL and window title in one AppleScript call
+      // Get ALL windows (not just front) and check each tab's URL
+      const result = await runAppleScript(`
+tell application "${browser}"
+  set output to ""
+  set winCount to count of windows
+  repeat with w from 1 to winCount
+    try
+      set u to URL of active tab of window w
+      set t to name of window w
+      set output to output & u & "|||" & t & "|||WINSEP|||"
+    end try
+  end repeat
+  return output
+end tell`);
+      if (!result) continue;
+      const entries = result.split('|||WINSEP|||').filter(Boolean);
+      for (const entry of entries) {
+        const sep = entry.indexOf('|||');
+        const url = sep >= 0 ? entry.slice(0, sep).trim() : entry.trim();
+        const windowTitle = sep >= 0 ? entry.slice(sep + 3).trim() : '';
+        if (url && platformPatterns.some(p => p.test(url))) {
+          return { browser, url, windowTitle };
+        }
+      }
+    } catch {}
+  }
+
+  // Second pass: fall back to the front window of the first available browser.
+  for (const browser of BROWSERS) {
+    try {
       const result = await runAppleScript(`
 tell application "${browser}"
   set u to URL of active tab of front window
