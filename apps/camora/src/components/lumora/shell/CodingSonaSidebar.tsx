@@ -104,7 +104,7 @@ export function CodingSonaSidebar({ surface, open, onClose, listenTrigger }: Cod
   // Listen for interviewer questions routed here by voice-router after
   // a solution is on screen. Same pattern as behavioral tab's
   // lumora:behavioral-question → AICompanionPanel.
-  const sendRef = useRef(send);
+  const sendRef = useRef<((raw: string) => Promise<void>) | null>(null);
   useEffect(() => { sendRef.current = send; }, [send]);
   useEffect(() => {
     const handler = (e: Event) => {
