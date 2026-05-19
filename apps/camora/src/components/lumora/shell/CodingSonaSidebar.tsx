@@ -74,11 +74,6 @@ export function CodingSonaSidebar({ surface, open, onClose, listenTrigger }: Cod
   const [streamText, setStreamText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [micStartTrigger, setMicStartTrigger] = useState(0);
-  // AUTO mode: starts listening as soon as the sidebar opens and auto-restarts
-  // after each Sona answer completes.
-  const [autoListen, setAutoListen] = useState(true);
-  // Tracks whether we should restart the mic on next idle tick (after streaming ends)
-  const autoRestartPendingRef = useRef(false);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -98,31 +93,27 @@ export function CodingSonaSidebar({ surface, open, onClose, listenTrigger }: Cod
     if (open) setTimeout(() => inputRef.current?.focus(), 80);
   }, [open]);
 
-  // Auto-start mic when sidebar opens in AUTO mode.
-  useEffect(() => {
-    if (!open || !autoListen) return;
-    const t = setTimeout(() => setMicStartTrigger(n => n + 1), 600);
-    return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
   // When listenTrigger fires from the parent (coding generation complete),
-  // also bump the mic start.
+  // bump the mic start so the user can immediately ask a follow-up.
   useEffect(() => {
     if (!listenTrigger || !open) return;
     const t = setTimeout(() => setMicStartTrigger(n => n + 1), 500);
     return () => clearTimeout(t);
   }, [listenTrigger, open]);
 
-  // After Sona finishes streaming, restart the mic if AUTO is on.
+  // Listen for interviewer questions routed here by voice-router after
+  // a solution is on screen. Same pattern as behavioral tab's
+  // lumora:behavioral-question → AICompanionPanel.
+  const sendRef = useRef(send);
+  useEffect(() => { sendRef.current = send; }, [send]);
   useEffect(() => {
-    if (!streaming && autoRestartPendingRef.current && autoListen && open) {
-      autoRestartPendingRef.current = false;
-      const t = setTimeout(() => setMicStartTrigger(n => n + 1), 400);
-      return () => clearTimeout(t);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [streaming]);
+    const handler = (e: Event) => {
+      const text = (e as CustomEvent<{ text: string }>).detail?.text;
+      if (text) sendRef.current(text);
+    };
+    window.addEventListener('lumora:coding-question', handler);
+    return () => window.removeEventListener('lumora:coding-question', handler);
+  }, []);
 
   // Cleanup any in-flight stream on unmount
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -204,8 +195,6 @@ export function CodingSonaSidebar({ surface, open, onClose, listenTrigger }: Cod
           }]);
           setStreamText('');
           setStreaming(false);
-          // Signal auto-restart effect (fires on next streaming→false transition)
-          if (autoListen) autoRestartPendingRef.current = true;
         },
         onError: (data: any) => {
           const msg = data?.msg || data?.message || data?.detail || data?.error || 'Stream error';
@@ -285,18 +274,6 @@ export function CodingSonaSidebar({ surface, open, onClose, listenTrigger }: Cod
               · {surface === 'coding' ? 'about your code' : 'about your design'}
             </span>
             <div className="ml-auto flex items-center gap-1.5">
-              {/* AUTO chip — toggles continuous listen mode */}
-              <button
-                onClick={() => setAutoListen(v => !v)}
-                className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.12em] px-2.5 h-6 rounded-full transition-colors"
-                style={autoListen
-                  ? { background: 'var(--cam-primary)', color: '#fff', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -1px 0 var(--cam-gold-leaf)' }
-                  : { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.55)', border: '1px solid rgba(255,255,255,0.16)' }}
-                title={autoListen ? 'Auto-listen ON — click to disable' : 'Auto-listen OFF — click to enable'}
-              >
-                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                AUTO
-              </button>
               {messages.length > 0 && (
                 <button
                   onClick={clearHistory}
@@ -440,43 +417,19 @@ export function CodingSonaSidebar({ surface, open, onClose, listenTrigger }: Cod
               }}
             />
             <div className="flex items-end gap-3 min-h-[2rem]">
-              {autoListen ? (
-                /* AUTO mode — VAD-powered, no manual stop */
-                <SonaMicButton
-                  autoMode
-                  disabled={streaming}
-                  startTrigger={micStartTrigger}
-                  onText={(t) => {
-                    const full = input ? `${input.trimEnd()} ${t}` : t;
-                    setInput('');
-                    send(full);
-                  }}
-                  onDone={() => {
-                    // If Sona is still streaming, auto-restart will fire
-                    // once streaming ends (via the autoRestartPendingRef effect).
-                    // If already idle, restart immediately.
-                    if (!streaming) setMicStartTrigger(n => n + 1);
-                    else autoRestartPendingRef.current = true;
-                  }}
-                />
-              ) : (
-                /* Manual mode — click to start / stop */
-                <>
-                  <SonaMicButton
-                    disabled={streaming}
-                    startTrigger={micStartTrigger}
-                    onText={(t) => {
-                      const full = input ? `${input.trimEnd()} ${t}` : t;
-                      setInput(full);
-                      send(full);
-                    }}
-                  />
-                  <span className="hidden md:inline text-[10px] leading-tight self-center" style={{ color: 'var(--text-muted)' }}>
-                    <kbd className="font-mono">Enter</kbd> to send <span aria-hidden="true">·</span>{' '}
-                    <kbd className="font-mono">Shift+Enter</kbd> for newline
-                  </span>
-                </>
-              )}
+              <SonaMicButton
+                disabled={streaming}
+                startTrigger={micStartTrigger}
+                onText={(t) => {
+                  const full = input ? `${input.trimEnd()} ${t}` : t;
+                  setInput(full);
+                  send(full);
+                }}
+              />
+              <span className="hidden md:inline text-[10px] leading-tight self-center" style={{ color: 'var(--text-muted)' }}>
+                <kbd className="font-mono">Enter</kbd> to send <span aria-hidden="true">·</span>{' '}
+                <kbd className="font-mono">Shift+Enter</kbd> for newline
+              </span>
             </div>
           </div>
         </>
