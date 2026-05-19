@@ -106,7 +106,9 @@ export function AudioCapture({ onTranscription, autoStart = true, active, compac
   // click would then turn it off — a confusing UX inversion).
   const [continuousMode, setContinuousMode] = useState<boolean>(() => {
     if (!autoStart) return false;
-    try { return localStorage.getItem('lumora_sona_auto') === 'on'; } catch { return false; }
+    // Default ON — auto-listen as soon as the panel opens. Only opt-out
+    // if the user has explicitly toggled AUTO off in a previous session.
+    try { return localStorage.getItem('lumora_sona_auto') !== 'off'; } catch { return true; }
   });
   const startRecordingRef = useRef<(() => Promise<boolean>) | null>(null);
   const continuousModeRef = useRef(continuousMode);
