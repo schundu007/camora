@@ -1088,18 +1088,18 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
             reference for behavioral answers. */}
         {embedded && (
           <div className="flex items-center gap-1.5 mr-1">
-            {/* Snap — capture screen and auto-send to Sona */}
+            {/* Snap — navy-gold pill, matching the voice chip style */}
             <button
               type="button"
               onClick={handleSnap}
               disabled={snapState === 'capturing'}
               title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen'}
-              className="shrink-0 flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold transition-all hover:opacity-80 active:scale-[0.97]"
+              className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold transition-all hover:opacity-80 active:scale-[0.97]"
               style={snapState === 'done'
                 ? { background: '#00ea64', color: '#000', border: '1px solid #00ea64' }
                 : snapState === 'error'
-                ? { background: '#ef4444', color: '#fff', border: '1px solid transparent' }
-                : { background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)' }}
+                ? { background: '#ef4444', color: '#fff', border: '1px solid #ef4444' }
+                : { background: 'var(--cam-hero-strip)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)' }}
             >
               {snapState === 'capturing'
                 ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
@@ -1111,16 +1111,16 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
               }
               {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
             </button>
-            {/* Stealth — desktop only, hide from screen recording */}
+            {/* Stealth — desktop only, navy-gold pill */}
             {!!(window as any).camo?.setStealthMode && (
               <button
                 type="button"
                 onClick={handleStealthMode}
                 title={isStealthActive ? 'Stealth ON — tap to disable' : 'Hide Camora from screen recording'}
-                className="shrink-0 flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold transition-all hover:opacity-80 active:scale-[0.97]"
+                className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold transition-all hover:opacity-80 active:scale-[0.97]"
                 style={isStealthActive
-                  ? { background: 'var(--cam-primary)', color: '#fff', border: '1px solid var(--cam-primary)' }
-                  : { background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)' }}
+                  ? { background: 'var(--cam-primary)', color: '#fff', border: '1px solid var(--cam-primary)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)' }
+                  : { background: 'var(--cam-hero-strip)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)' }}
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   {isStealthActive
