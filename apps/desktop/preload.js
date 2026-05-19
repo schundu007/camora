@@ -46,10 +46,6 @@ contextBridge.exposeInMainWorld('camo', {
   // Notify main that OCR failed so the next poll retries the same URL.
   resetLastCaptureUrl: () => ipcRenderer.invoke('reset-last-capture-url'),
 
-  // Solution overlay — click-through floating panel shown on top of HackerRank.
-  // Mouse events pass through so HackerRank never detects a mouseleave.
-  showSolutionOverlay: (opts) => ipcRenderer.invoke('show-solution-overlay', opts),
-  hideSolutionOverlay: () => ipcRenderer.invoke('hide-solution-overlay'),
   // Stealth mode — injects JS into Chrome to neutralize HackerRank's mouse/focus tracking.
   // Returns { ok, browser? } on success, { ok: false, needsDevMenu?, error } on failure.
   injectTrackingNeutralizer: () => ipcRenderer.invoke('inject-tracking-neutralizer'),

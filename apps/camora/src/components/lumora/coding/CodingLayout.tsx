@@ -12,6 +12,13 @@ import { getActiveAssistant } from '@/lib/lumora-assistant';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
+const SNAP_CHIPS = [
+  { label: 'Find Issues', prompt: 'Find all bugs, security vulnerabilities, and issues in this code. For each issue explain what is wrong and provide a specific fix with corrected code.' },
+  { label: 'Explain', prompt: 'Explain what this code does step by step. Describe the purpose of each key section.' },
+  { label: 'Optimize', prompt: 'Suggest concrete performance and quality improvements for this code with specific examples.' },
+  { label: 'Write Tests', prompt: 'Write comprehensive unit tests covering happy paths, edge cases, and error conditions for this code.' },
+] as const;
+
 function detectLanguage(text: string): string {
   const t = text.toLowerCase();
   if (/def\s+\w+\s*\(|class\s+\w+:|import\s+\w+|print\s*\(|\.py\b/.test(text)) return 'python';
@@ -177,6 +184,9 @@ interface CodingLayoutProps {
   codingPlatform?: string;
   /** When embedded, caller supplies this to route voice through dispatchTranscript for Sona Q&A */
   onEmbeddedTranscription?: (text: string, opts?: { manual?: boolean }) => void;
+  /** When false, AudioCapture releases the mic immediately and ignores keyboard shortcuts.
+   *  Used by LumoraShellPage so coding's mic doesn't conflict with behavioral's. */
+  isTabActive?: boolean;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
@@ -205,7 +215,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, codingPlatform, onEmbeddedTranscription }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, codingPlatform, onEmbeddedTranscription, isTabActive }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -246,6 +256,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
   const [isStealthActive, setIsStealthActive] = useState(false);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'done' | 'error'>('idle');
+  // Extracted code from the last image snap — drives quick-action chips.
+  const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
 
   // Voice enrollment popup (embedded toolbar only)
   const [showEnrollPopup, setShowEnrollPopup] = useState(false);
@@ -368,6 +380,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     clearStreamChunks();
     setParsedBlocks([]);
     setLastFromCache(null);
+    setSnapChipCode(null);
     useInterviewStore.getState().setLiveSolveContext(null);
   }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, language]);
 
@@ -855,19 +868,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     return () => { camo.setSessionFolder(null); };
   }, []);
 
-  // Solution overlay: when code is ready, push it to the floating overlay so the
-  // user can read it without moving the mouse away from HackerRank.
-  useEffect(() => {
-    const camo = (window as any).camo;
-    if (!camo?.showSolutionOverlay) return;
-    const defaultCode = getDefaultCode(language);
-    if (!code || code === defaultCode) {
-      camo.hideSolutionOverlay?.();
-      return;
-    }
-    camo.showSolutionOverlay({ code, language, stealthActive: isStealthActive });
-  }, [code, language, isStealthActive]);
-
   // Auto-reinject stealth when a new HackerRank problem is detected (page reloads, clearing
   // the previous injection) and on a 30s heartbeat while stealth is active.
   useEffect(() => {
@@ -1176,6 +1176,33 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Extract → set problem text → optionally chain into solution generation.
   // Takes an explicit file (not state) so it can be called the moment an
   // image is dropped/picked, before setImageFile React-renders.
+  const handleSnapChip = useCallback((prompt: string) => {
+    // Source priority: snapped screen code > editor code (if non-default) > problem text
+    const defaultCode = getDefaultCode(language);
+    const editorHasCode = code.trim() && code.trim() !== defaultCode.trim();
+    const source = snapChipCode
+      || (editorHasCode ? `\`\`\`${language}\n${code.trim()}\n\`\`\`` : null)
+      || problemText;
+    if (!source?.trim()) return;
+    if (snapChipCode) setSnapChipCode(null);
+    const combined = `${prompt}\n\n${source}`;
+    setProblemText(combined);
+    setStreamError(null);
+    setTestResults([]);
+    setTestCases([{ input: '', expected: '' }]);
+    setOutput('');
+    setShowFixPrompt(false);
+    clearStreamChunks();
+    setParsedBlocks([]);
+    setJsonSolution(null);
+    setCode(defaultCode);
+    setCollapsedCards(new Set());
+    setActiveSolutionIdx(0);
+    setIsOutputCollapsed(true);
+    setProblemTab('solution');
+    onSubmit(combined, language, { bypassCache: true });
+  }, [snapChipCode, code, problemText, language, clearStreamChunks, setParsedBlocks, setStreamError, onSubmit, getDefaultCode]);
+
   const extractAndMaybeGenerate = useCallback(async (file: File, autoGenerate: boolean) => {
     if (!token) { setError('Not authenticated'); return; }
     setIsProcessing(true);
@@ -1197,6 +1224,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       const detectedLang: string | null = data.detected_language || null;
       const effectiveLang = detectedLang || resolveLanguage(text);
       setProblemText(text);
+      setSnapChipCode(text); // power quick-action chips after snap
       setStarterCode(extractedStarterCode);
       if (detectedLang) setLanguage(detectedLang);
       setInputMode('paste');
@@ -1369,6 +1397,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               setTimeout(() => onSubmit(trimmed, resolveLanguage(trimmed)), 500);
             }}
             autoStart={false}
+            active={isTabActive}
+            compact
           />
         </div>
       </header>
@@ -1454,50 +1484,69 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                     never needs to manually input a problem. Replace the entire
                     Text/URL/Image picker with a single monitoring status bar. */}
                 {codingPlatform && codingPlatform !== 'none' ? (
+                  /* Autopilot mode — two-row layout matching Image #16:
+                     Row 1: monitoring status (dot + platform logo)
+                     Row 2: Snap | Stealth | mic controls | collapse       */
                   <div
-                    className="flex items-center justify-between px-3 py-2"
+                    className="flex flex-col"
                     style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
                   >
-                    <div className="flex items-center gap-2 min-w-0">
+                    {/* ── Row 1: monitoring status ── */}
+                    <div className="flex items-center gap-2 px-3 pt-2 pb-1.5 min-w-0">
                       {screenPermStatus && screenPermStatus !== 'granted' ? (
-                        /* Screen Recording not granted — detection will never fire */
                         <>
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                          <span className="text-[11px] font-semibold truncate" style={{ color: '#f59e0b' }}>
-                            Screen Recording not granted — auto-detect paused
-                          </span>
+                          <span className="text-[11px] font-semibold truncate" style={{ color: '#f59e0b' }}>Screen Recording not granted — auto-detect paused</span>
                           <button
                             onClick={() => (window as any).camo?.openSystemPrivacy?.('screen')}
                             className="px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-80"
                             style={{ background: '#f59e0b', color: '#000' }}
-                          >
-                            Fix in Settings
-                          </button>
+                          >Fix in Settings</button>
                         </>
                       ) : problemText ? (
-                        /* Problem captured, solution on its way */
-                        <span className="text-[11px] font-semibold" style={{ color: 'var(--cam-gold-leaf)' }}>
-                          Problem loaded — solution generating
-                        </span>
+                        <>
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
+                          <span className="text-[11px] font-semibold" style={{ color: 'var(--cam-gold-leaf)' }}>Problem loaded — generating</span>
+                        </>
                       ) : (
-                        /* Actively monitoring */
                         <>
                           <span className="relative flex h-2 w-2 shrink-0">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#00ea64' }} />
                             <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#00ea64' }} />
                           </span>
-                          <span className="text-[11px] font-semibold truncate" style={{ color: '#00ea64' }}>
-                            {`Monitoring ${({ hackerrank: 'HackerRank', leetcode: 'LeetCode', coderpad: 'CoderPad' } as Record<string,string>)[codingPlatform] ?? codingPlatform} — problem appears automatically`}
-                          </span>
+                          {codingPlatform === 'hackerrank' && (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-label="HackerRank">
+                              <path d="M4 3L10 12L4 21" stroke="#1ba94c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M20 3L14 12L20 21" stroke="#1ba94c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <line x1="10" y1="12" x2="14" y2="12" stroke="#1ba94c" strokeWidth="2.5" strokeLinecap="round"/>
+                            </svg>
+                          )}
+                          {codingPlatform === 'leetcode' && (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-label="LeetCode">
+                              <path d="M5 4h9l5 5v11a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z" stroke="#ffa116" strokeWidth="2" strokeLinejoin="round"/>
+                              <path d="M14 4v5h5M8 13h8" stroke="#ffa116" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                          )}
+                          {codingPlatform === 'coderpad' && (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-label="CoderPad">
+                              <path d="M17 8H7a5 5 0 000 10h10" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round"/>
+                              <circle cx="17" cy="13" r="3" stroke="#6366f1" strokeWidth="2"/>
+                            </svg>
+                          )}
+                          {!['hackerrank','leetcode','coderpad'].includes(codingPlatform) && (
+                            <span className="text-[11px] font-semibold" style={{ color: '#00ea64' }}>{codingPlatform}</span>
+                          )}
                         </>
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {/* Snap — getDisplayMedia in browser, Electron API on desktop */}
-                      <button
+
+                    {/* ── Row 2: Snap | Stealth | mic controls | collapse ── */}
+                    <div className="flex items-center justify-between px-3 pb-2">
+                      <div className="flex items-center gap-1.5">
+                        <button
                           onClick={handleSnap}
                           disabled={snapState === 'capturing'}
-                          title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen — silently captures and extracts the problem'}
+                          title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen'}
                           className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-all hover:opacity-90 active:scale-[0.97]"
                           style={snapState === 'done'
                             ? { background: '#00ea64', color: '#000', border: '1px solid #00ea64' }
@@ -1515,11 +1564,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           }
                           {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
                         </button>
-                      {/* Stealth — desktop-only (injects tracking neutralizer via Electron) */}
-                      {!!(window as any).camo?.isDesktop && (
-                        <button
+                        {!!(window as any).camo?.isDesktop && (
+                          <button
                             onClick={handleStealthMode}
-                            title={isStealthActive ? 'Stealth active — mouse tracking blocked' : 'Stealth mode — block HackerRank mouse tracking'}
+                            title={isStealthActive ? 'Stealth active — mouse tracking blocked' : 'Block mouse tracking'}
                             className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-90 active:scale-[0.97]"
                             style={isStealthActive
                               ? { background: '#00ea64', color: '#000' }
@@ -1532,117 +1580,154 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                                 : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
                               }
                             </svg>
-                            {isStealthActive ? 'Stealth ON' : 'Stealth'}
+                            Stealth
                           </button>
-                      )}
-                      {/* AudioCapture + voice enrollment popup — embedded toolbar only */}
-                      {embedded && (
-                        <AudioCapture
-                          onTranscription={(text, opts) => {
-                            if (onEmbeddedTranscription) {
-                              onEmbeddedTranscription(text, opts);
-                            } else {
-                              const trimmed = text.trim();
-                              if (!trimmed) return;
-                              setProblemText(trimmed);
-                              setTimeout(() => onSubmit(trimmed, resolveLanguage(trimmed)), 500);
-                            }
-                          }}
-                          autoStart={false}
-                        />
-                      )}
-                      {embedded && (
-                        <div className="relative">
-                          <button
-                            ref={enrollBtnRef}
-                            onClick={openEnrollPopup}
-                            title={voiceEnrolled ? 'Voice enrolled — click to manage' : 'Enroll my voice'}
-                            className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-                            style={{
-                              color: voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.5)',
-                              border: `1px solid ${voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.18)'}`,
-                              borderRadius: 999,
-                              background: 'rgba(255,255,255,0.06)',
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {embedded && (
+                          <AudioCapture
+                            onTranscription={(text, opts) => {
+                              if (onEmbeddedTranscription) {
+                                onEmbeddedTranscription(text, opts);
+                              } else {
+                                const trimmed = text.trim();
+                                if (!trimmed) return;
+                                setProblemText(trimmed);
+                                setTimeout(() => onSubmit(trimmed, resolveLanguage(trimmed)), 500);
+                              }
                             }}
-                          >
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                              <line x1="12" y1="19" x2="12" y2="23"/>
-                              <line x1="8" y1="23" x2="16" y2="23"/>
-                            </svg>
-                          </button>
-                        </div>
-                      )}
-                      {/* Allow manual collapse/expand even in autopilot mode */}
-                      <button
-                        onClick={() => setIsInputCollapsed(!isInputCollapsed)}
-                        className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-                        style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}
-                        aria-label={isInputCollapsed ? 'Expand' : 'Collapse'}
-                      >
-                        <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
+                            autoStart={false}
+                            active={isTabActive}
+                            compact
+                          />
+                        )}
+                        {embedded && (
+                          <div className="relative">
+                            <button
+                              ref={enrollBtnRef}
+                              onClick={openEnrollPopup}
+                              title={voiceEnrolled ? 'Voice enrolled — click to manage' : 'Enroll my voice'}
+                              className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                              style={{
+                                color: voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.5)',
+                                border: `1px solid ${voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.18)'}`,
+                                borderRadius: 999,
+                                background: 'rgba(255,255,255,0.06)',
+                              }}
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="23"/>
+                                <line x1="8" y1="23" x2="16" y2="23"/>
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => setIsInputCollapsed(!isInputCollapsed)}
+                          className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                          style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}
+                          aria-label={isInputCollapsed ? 'Expand' : 'Collapse'}
+                        >
+                          <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
+                    {/* ── Quick-action chips (autopilot mode) — always visible ── */}
+                    {!isLoading && (
+                      <div className="flex flex-wrap items-center gap-1.5 px-3 py-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                        <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
+                          style={{ color: snapChipCode ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.32)' }}>
+                          {snapChipCode ? 'Snap:' : 'Quick ask:'}
+                        </span>
+                        {SNAP_CHIPS.map(chip => (
+                          <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
+                            className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
+                            style={snapChipCode
+                              ? { background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }
+                              : { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.60)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                            {chip.label}
+                          </button>
+                        ))}
+                        {snapChipCode && (
+                          <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
+                            className="ml-auto shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
+                            style={{ color: 'rgba(255,255,255,0.35)' }}>
+                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  /* Manual mode: show Text / URL / Image picker as before */
+                  /* Manual mode — two-row layout (Image #15 design):
+                     Row 1: TEXT / URL / IMAGE pill tabs + Snap
+                     Row 2: Stealth + mic controls + collapse              */
                   <div
-                    className="flex items-center flex-wrap gap-2 px-3 py-2"
+                    className="flex flex-col"
                     style={{
                       background: 'var(--cam-hero-strip)',
                       borderBottom: '1px solid var(--cam-gold-leaf)',
                     }}
                   >
-                    <div
-                      className="flex items-center gap-1 px-1 py-1"
-                      style={{
-                        background: 'rgba(255,255,255,0.06)',
-                        border: '1px solid rgba(255,255,255,0.16)',
-                        borderRadius: 999,
-                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
-                      }}
-                    >
-                      {(['paste', 'url', 'image'] as const).map(mode => (
-                        <button key={mode} onClick={() => { setInputMode(mode); setIsInputCollapsed(false); }}
-                          className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
-                          style={
-                            inputMode === mode
-                              ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
-                              : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
-                          }
-                        >{mode === 'paste' ? 'Text' : mode === 'url' ? 'URL' : 'Image'}</button>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-1.5">
+                    {/* ── Row 1: input-type selector + Snap ── */}
+                    <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
+                      <div
+                        className="flex items-center gap-1 px-1 py-1 shrink-0"
+                        style={{
+                          background: 'rgba(255,255,255,0.06)',
+                          border: '1px solid rgba(255,255,255,0.16)',
+                          borderRadius: 999,
+                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
+                        }}
+                      >
+                        {(['paste', 'url', 'image'] as const).map(mode => (
+                          <button key={mode} onClick={() => { setInputMode(mode); setIsInputCollapsed(false); }}
+                            className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
+                            style={
+                              inputMode === mode
+                                ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
+                                : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
+                            }
+                          >{mode === 'paste' ? 'Text' : mode === 'url' ? 'URL' : 'Image'}</button>
+                        ))}
+                      </div>
                       <button
-                          onClick={handleSnap}
-                          disabled={snapState === 'capturing'}
-                          title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen — silently captures and extracts the problem'}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-all hover:opacity-90"
-                          style={snapState === 'done'
-                            ? { background: '#00ea64', color: '#000', border: '1px solid #00ea64' }
-                            : snapState === 'error'
-                            ? { background: '#ef4444', color: '#fff', border: '1px solid #ef4444' }
-                            : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }}
-                        >
-                          {snapState === 'capturing'
-                            ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                            : snapState === 'done'
-                            ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            : snapState === 'error'
-                            ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                          }
-                          {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
-                        </button>
-                      {!!(window as any).camo?.isDesktop && (
-                        <button
+                        onClick={handleSnap}
+                        disabled={snapState === 'capturing'}
+                        title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen'}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-all hover:opacity-90 active:scale-[0.97]"
+                        style={snapState === 'done'
+                          ? { background: '#00ea64', color: '#000', border: '1px solid #00ea64' }
+                          : snapState === 'error'
+                          ? { background: '#ef4444', color: '#fff', border: '1px solid #ef4444' }
+                          : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }}
+                      >
+                        {snapState === 'capturing'
+                          ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                          : snapState === 'done'
+                          ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          : snapState === 'error'
+                          ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        }
+                        {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
+                      </button>
+                    </div>
+
+                    {/* ── Row 2: Stealth + mic controls + collapse ── */}
+                    <div className="flex items-center justify-between px-3 pb-2">
+                      {/* Left: Stealth (desktop only) */}
+                      <div className="flex items-center gap-1.5">
+                        {!!(window as any).camo?.isDesktop && (
+                          <button
                             onClick={handleStealthMode}
                             title={isStealthActive ? 'Stealth active' : 'Block HackerRank mouse tracking'}
-                            className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors hover:opacity-90"
+                            className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors hover:opacity-90 active:scale-[0.97]"
                             style={isStealthActive
                               ? { background: '#00ea64', color: '#000' }
                               : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
@@ -1654,63 +1739,89 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                                 : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
                               }
                             </svg>
-                            {isStealthActive ? 'Stealth ON' : 'Stealth'}
+                            Stealth
                           </button>
-                      )}
-                      {embedded && (
-                        <AudioCapture
-                          onTranscription={(text, opts) => {
-                            if (onEmbeddedTranscription) {
-                              onEmbeddedTranscription(text, opts);
-                            } else {
-                              const trimmed = text.trim();
-                              if (!trimmed) return;
-                              setProblemText(trimmed);
-                              setTimeout(() => onSubmit(trimmed, resolveLanguage(trimmed)), 500);
-                            }
-                          }}
-                          autoStart={false}
-                        />
-                      )}
-                      {embedded && (
-                        <div className="relative">
-                          <button
-                            ref={enrollBtnRef}
-                            onClick={openEnrollPopup}
-                            title={voiceEnrolled ? 'Voice enrolled — click to manage' : 'Enroll my voice'}
-                            className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-                            style={{
-                              color: voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.5)',
-                              border: `1px solid ${voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.18)'}`,
-                              borderRadius: 999,
-                              background: 'rgba(255,255,255,0.06)',
+                        )}
+                      </div>
+                      {/* Right: mic controls + collapse */}
+                      <div className="flex items-center gap-1.5">
+                        {embedded && (
+                          <AudioCapture
+                            onTranscription={(text, opts) => {
+                              if (onEmbeddedTranscription) {
+                                onEmbeddedTranscription(text, opts);
+                              } else {
+                                const trimmed = text.trim();
+                                if (!trimmed) return;
+                                setProblemText(trimmed);
+                                setTimeout(() => onSubmit(trimmed, resolveLanguage(trimmed)), 500);
+                              }
                             }}
-                          >
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                              <line x1="12" y1="19" x2="12" y2="23"/>
-                              <line x1="8" y1="23" x2="16" y2="23"/>
-                            </svg>
-                          </button>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => setIsInputCollapsed(!isInputCollapsed)}
-                        className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-                        style={{
-                          color: '#FFFFFF',
-                          border: '1px solid rgba(255,255,255,0.16)',
-                          borderRadius: 999,
-                          background: 'rgba(255,255,255,0.06)',
-                        }}
-                        aria-label={isInputCollapsed ? 'Expand input' : 'Collapse input'}
-                      >
-                        <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
+                            autoStart={false}
+                            active={isTabActive}
+                            compact
+                          />
+                        )}
+                        {embedded && (
+                          <div className="relative">
+                            <button
+                              ref={enrollBtnRef}
+                              onClick={openEnrollPopup}
+                              title={voiceEnrolled ? 'Voice enrolled — click to manage' : 'Enroll my voice'}
+                              className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                              style={{
+                                color: voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.5)',
+                                border: `1px solid ${voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.18)'}`,
+                                borderRadius: 999,
+                                background: 'rgba(255,255,255,0.06)',
+                              }}
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="23"/>
+                                <line x1="8" y1="23" x2="16" y2="23"/>
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => setIsInputCollapsed(!isInputCollapsed)}
+                          className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                          style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}
+                          aria-label={isInputCollapsed ? 'Expand input' : 'Collapse input'}
+                        >
+                          <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
+                    {/* ── Quick-action chips (manual mode) — always visible ── */}
+                    {!isLoading && (
+                      <div className="flex flex-wrap items-center gap-1.5 px-3 py-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                        <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
+                          style={{ color: snapChipCode ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.32)' }}>
+                          {snapChipCode ? 'Snap:' : 'Quick ask:'}
+                        </span>
+                        {SNAP_CHIPS.map(chip => (
+                          <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
+                            className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
+                            style={snapChipCode
+                              ? { background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }
+                              : { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.60)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                            {chip.label}
+                          </button>
+                        ))}
+                        {snapChipCode && (
+                          <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
+                            className="ml-auto shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
+                            style={{ color: 'rgba(255,255,255,0.35)' }}>
+                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -2000,11 +2111,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           <div className="p-3 space-y-2">
                             {activeSol.approach && <p className="text-xs leading-relaxed" style={{ color: t.textMuted }}>{activeSol.approach}</p>}
                             {activeSol.explanations?.length > 0 && (
-                              <div className="space-y-1 pt-1" style={{ borderTop: `1px solid ${t.cardBorder}` }}>
+                              <div className="space-y-2 pt-1" style={{ borderTop: `1px solid ${t.cardBorder}` }}>
                                 {activeSol.explanations.map((ex: any, j: number) => (
-                                  <div key={j} className="flex items-start gap-2 text-[10px] md:text-[11px]">
-                                    <code className="font-mono px-1 py-0.5 rounded shrink-0" style={{ color: t.codeText, background: t.codeBg }}>{ex.code}</code>
-                                    <span style={{ color: t.textMuted }}>{ex.explanation}</span>
+                                  <div key={j} className="flex flex-col gap-0.5 text-[10px] md:text-[11px]">
+                                    {ex.code && <code className="font-mono px-1.5 py-1 rounded block overflow-x-auto whitespace-pre max-w-full" style={{ color: t.codeText, background: t.codeBg }}>{ex.code}</code>}
+                                    {ex.explanation && <span className="leading-relaxed pl-0.5" style={{ color: t.textMuted }}>{ex.explanation}</span>}
                                   </div>
                                 ))}
                               </div>
@@ -2193,12 +2304,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         </div>
                         <div className="divide-y" style={{ borderColor: t.cardBorder }}>
                           {sd.explanations.map((ex: any, i: number) => (
-                            <div key={i} className="flex items-start gap-2 px-3 py-2 transition-colors">
-                              <span className="flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold font-mono shrink-0 mt-0.5" style={{ background: t.badgeBg, color: t.badgeText }}>L{ex.line}</span>
-                              <div className="min-w-0">
-                                {ex.code && <code className="text-[10px] font-mono block truncate" style={{ color: t.codeText }}>{ex.code}</code>}
-                                <span className="text-[10px] md:text-xs leading-relaxed" style={{ color: t.textMuted }}>{ex.explanation}</span>
+                            <div key={i} className="flex flex-col gap-1 px-3 py-2 transition-colors">
+                              <div className="flex items-center gap-2">
+                                <span className="flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold font-mono shrink-0" style={{ background: t.badgeBg, color: t.badgeText }}>L{ex.line}</span>
+                                {ex.code && <code className="text-[10px] font-mono overflow-x-auto whitespace-pre flex-1 min-w-0 block" style={{ color: t.codeText }}>{ex.code}</code>}
                               </div>
+                              {ex.explanation && <span className="text-[10px] md:text-xs leading-relaxed pl-7" style={{ color: t.textMuted }}>{ex.explanation}</span>}
                             </div>
                           ))}
                         </div>
