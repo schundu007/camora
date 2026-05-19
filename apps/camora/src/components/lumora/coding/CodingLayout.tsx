@@ -258,6 +258,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'done' | 'error'>('idle');
   // Extracted code from the last image snap — drives quick-action chips.
   const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
+  // Quick Ask result panel — lightweight prose answer without touching the solution
+  const [quickAskResult, setQuickAskResult] = useState('');
+  const [isQuickAsking, setIsQuickAsking] = useState(false);
+  const [quickAskLabel, setQuickAskLabel] = useState('');
+  const quickAskAbortRef = useRef<AbortController | null>(null);
 
   // Voice enrollment popup (embedded toolbar only)
   const [showEnrollPopup, setShowEnrollPopup] = useState(false);
@@ -1192,6 +1197,64 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     onSubmit(combined, language, { bypassCache: true });
   }, [snapChipCode, code, problemText, language, clearStreamChunks, setParsedBlocks, setStreamError, onSubmit, getDefaultCode]);
 
+  // Quick Ask — lightweight prose answer streamed into a dismissable panel.
+  // Does NOT touch the solution, editor, or test state. Only called when
+  // snapChipCode is null (i.e. we already have a solution and the user wants
+  // a follow-up explanation, not a full re-solve).
+  const handleQuickAsk = useCallback(async (chip: { label: string; prompt: string }) => {
+    const defaultCode = getDefaultCode(language);
+    const editorHasCode = code.trim() && code.trim() !== defaultCode.trim();
+    const codeContext = editorHasCode
+      ? `\`\`\`${language}\n${code.trim()}\n\`\`\``
+      : problemText;
+    if (!codeContext?.trim()) return;
+    quickAskAbortRef.current?.abort();
+    const abort = new AbortController();
+    quickAskAbortRef.current = abort;
+    setQuickAskLabel(chip.label);
+    setQuickAskResult('');
+    setIsQuickAsking(true);
+    setProblemTab('solution');
+    const question = `${chip.prompt}\n\n${codeContext}`;
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/v1/inference/stream`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ question, mode: 'general', bypass_cache: true }),
+        signal: abort.signal,
+      });
+      if (!resp.ok || !resp.body) {
+        const err = await resp.json().catch(() => ({}));
+        setQuickAskResult(`Error: ${(err as any).error || 'Request failed'}`);
+        return;
+      }
+      const reader = resp.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? '';
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const d = JSON.parse(line.slice(6));
+              if (d.t) setQuickAskResult(prev => prev + d.t); // token event
+              else if (d.raw) setQuickAskResult(d.raw); // answer event fallback
+            } catch {}
+          }
+        }
+      }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') setQuickAskResult(`Error: ${err.message}`);
+    } finally {
+      setIsQuickAsking(false);
+    }
+  }, [code, problemText, language, token, getDefaultCode]);
+
   const extractAndMaybeGenerate = useCallback(async (file: File, autoGenerate: boolean) => {
     if (!token) { setError('Not authenticated'); return; }
     setIsProcessing(true);
@@ -1634,7 +1697,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           {snapChipCode ? 'Snap:' : 'Quick ask:'}
                         </span>
                         {SNAP_CHIPS.map(chip => (
-                          <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
+                          <button key={chip.label} onClick={() => snapChipCode ? handleSnapChip(chip.prompt) : handleQuickAsk(chip)}
                             className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
                             style={snapChipCode
                               ? { background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }
@@ -1794,7 +1857,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           {snapChipCode ? 'Snap:' : 'Quick ask:'}
                         </span>
                         {SNAP_CHIPS.map(chip => (
-                          <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
+                          <button key={chip.label} onClick={() => snapChipCode ? handleSnapChip(chip.prompt) : handleQuickAsk(chip)}
                             className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
                             style={snapChipCode
                               ? { background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }
@@ -1904,6 +1967,26 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             {/* ═══ SOLUTION TAB — AI-Inspired Modern Display ═══ */}
             {problemTab === 'solution' && (
               <div className="p-2 md:p-3">
+                {/* Quick Ask result panel — dismissable prose answer */}
+                {(isQuickAsking || quickAskResult) && (
+                  <div className="mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-elevated)' }}>
+                    <div className="flex items-center justify-between px-3 py-2" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid rgba(255,213,0,0.18)' }}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf-lt)' }}>Quick Ask</span>
+                        <span className="text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.55)' }}>{quickAskLabel}</span>
+                        {isQuickAsking && <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />}
+                      </div>
+                      <button onClick={() => { quickAskAbortRef.current?.abort(); setQuickAskResult(''); setIsQuickAsking(false); }}
+                        className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+                        style={{ color: 'rgba(255,255,255,0.45)' }}>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                    <div className="px-3 py-2.5 text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>
+                      {quickAskResult || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Thinking…</span>}
+                    </div>
+                  </div>
+                )}
                 {/* Cache status row — surfaces whether the current
                     solution came from the answer cache (Redis) and
                     offers a one-click Regenerate that bypasses the

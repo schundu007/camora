@@ -360,29 +360,48 @@ async function doHackerrankScrape() {
 
 // Capture a specific browser window by matching its EXACT title from AppleScript.
 // Never falls back to non-browser windows (no VS Code / Terminal / other apps).
+// Prefers windows on the same monitor as the Camora app window.
 async function captureExactBrowserWindow(windowTitle) {
   const sources = await desktopCapturer.getSources({
     types: ['window'],
     thumbnailSize: { width: 2560, height: 1600 },
   });
-  console.log('[capture] windows:', sources.map(s => s.name));
+
+  // Determine which display Camora is on so we can prefer same-monitor sources.
+  // desktopCapturer sources carry display_id (CGDirectDisplayID as string on macOS).
+  // electronScreen display IDs are numbers — convert to string for comparison.
+  const camoraDisplay = mainWindow && !mainWindow.isDestroyed()
+    ? electronScreen.getDisplayMatching(mainWindow.getBounds())
+    : null;
+  const camoraDisplayId = camoraDisplay ? String(camoraDisplay.id) : null;
+
+  // Sort so same-monitor sources float to the top; cross-monitor sources kept as fallback.
+  const sorted = camoraDisplayId
+    ? [...sources].sort((a, b) => {
+        const aMatch = a.display_id === camoraDisplayId ? 0 : 1;
+        const bMatch = b.display_id === camoraDisplayId ? 0 : 1;
+        return aMatch - bMatch;
+      })
+    : sources;
+
+  console.log('[capture] windows (same-monitor first):', sorted.map(s => `${s.name}[${s.display_id}]`));
 
   let target = null;
 
   // Strategy 1: source name starts with AppleScript window title (e.g. "Interview | Bash: Pattern Matching")
   // desktopCapturer appends " - Google Chrome" so we use startsWith rather than strict equality
   if (windowTitle) {
-    target = sources.find(s => s.name.startsWith(windowTitle) || windowTitle.startsWith(s.name));
+    target = sorted.find(s => s.name.startsWith(windowTitle) || windowTitle.startsWith(s.name));
   }
 
   // Strategy 2: "hackerrank" anywhere in title (main HR pages, not codepair)
   if (!target) {
-    target = sources.find(s => s.name.toLowerCase().includes('hackerrank'));
+    target = sorted.find(s => s.name.toLowerCase().includes('hackerrank'));
   }
 
   // Strategy 3: codepair title format — "Interview | ..." in a browser window
   if (!target) {
-    target = sources.find(s =>
+    target = sorted.find(s =>
       /^interview\s*\|/i.test(s.name) &&
       /Google Chrome|Brave|Firefox|Safari|Microsoft Edge|Arc/i.test(s.name)
     );
@@ -390,14 +409,14 @@ async function captureExactBrowserWindow(windowTitle) {
 
   // Strategy 4: any browser window not Camora (but NOT a catch-all — must be a known browser)
   if (!target) {
-    target = sources.find(s =>
+    target = sorted.find(s =>
       /Google Chrome|Brave Browser|Firefox|Safari|Microsoft Edge|Arc/i.test(s.name) &&
       !/Camora/i.test(s.name)
     );
   }
 
   // No further fallback — better to fail loudly than capture VS Code / Terminal
-  console.log('[capture] selected:', target?.name ?? 'none');
+  console.log('[capture] selected:', target?.name ?? 'none', target?.display_id ? `[display ${target.display_id}]` : '');
   if (!target) return null;
 
   const thumbnail = target.thumbnail;
