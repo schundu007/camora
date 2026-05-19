@@ -403,7 +403,14 @@ async function captureExactBrowserWindow(windowTitle) {
   if (!target) return null;
 
   const thumbnail = target.thumbnail;
-  if (!thumbnail || thumbnail.isEmpty()) return null;
+  if (!thumbnail || thumbnail.isEmpty()) {
+    const cgWindowId = target.id.split(':')[1] ?? null;
+    if (cgWindowId) {
+      const fallbackUrl = await captureWindowByIdFallback(cgWindowId);
+      if (fallbackUrl) return fallbackUrl;
+    }
+    return null;
+  }
 
   const MAX_BASE64 = 4_800_000;
   const base64Size = (raw) => Math.ceil(raw.length / 3) * 4;
@@ -418,6 +425,41 @@ async function captureExactBrowserWindow(windowTitle) {
     }
   }
   return `data:image/png;base64,${buf.toString('base64')}`;
+}
+
+async function captureWindowByIdFallback(cgWindowId) {
+  const tmpFile = path.join(os.tmpdir(), `camora-win-${cgWindowId}-${Date.now()}.png`);
+  return new Promise((resolve) => {
+    execFile('/usr/sbin/screencapture', ['-l', cgWindowId, '-o', '-x', tmpFile], (err) => {
+      if (err) {
+        try { fs.unlinkSync(tmpFile); } catch {}
+        resolve(null);
+        return;
+      }
+      try {
+        const buf = fs.readFileSync(tmpFile);
+        try { fs.unlinkSync(tmpFile); } catch {}
+        if (buf.length < 5000) { resolve(null); return; } // blank/empty file guard
+        const MAX_BASE64 = 4_800_000;
+        const base64Size = (b) => Math.ceil(b.length / 3) * 4;
+        let finalBuf = buf;
+        let mime = 'png';
+        if (base64Size(buf) > MAX_BASE64) {
+          let img = nativeImage.createFromBuffer(buf);
+          img = img.resize({ width: Math.min(img.getSize().width, 1920), quality: 'best' });
+          finalBuf = img.toPNG();
+          if (base64Size(finalBuf) > MAX_BASE64) {
+            finalBuf = img.toJPEG(85);
+            mime = 'jpeg';
+          }
+        }
+        resolve(`data:image/${mime};base64,${finalBuf.toString('base64')}`);
+      } catch {
+        try { fs.unlinkSync(tmpFile); } catch {}
+        resolve(null);
+      }
+    });
+  });
 }
 
 function startHackerrankAutoDetect() {
@@ -957,7 +999,14 @@ async function captureWindowByName(searchTerm) {
   if (!target) return null;
 
   const thumbnail = target.thumbnail;
-  if (!thumbnail || thumbnail.isEmpty()) return null;
+  if (!thumbnail || thumbnail.isEmpty()) {
+    const cgWindowId = target.id.split(':')[1] ?? null;
+    if (cgWindowId) {
+      const fallbackUrl = await captureWindowByIdFallback(cgWindowId);
+      if (fallbackUrl) return fallbackUrl;
+    }
+    return null;
+  }
 
   const MAX_BASE64 = 4_800_000;
   const base64Size = (raw) => Math.ceil(raw.length / 3) * 4;
