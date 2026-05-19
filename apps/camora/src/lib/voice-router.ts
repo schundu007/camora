@@ -12,6 +12,8 @@
    does not change which sink receives the transcript. */
 
 import { sonaRegistry } from './sona-registry';
+import { isQuestion } from './questionDetector';
+import { useInterviewStore } from '../stores/interview-store';
 
 type ProblemRef = React.MutableRefObject<((text: string) => void) | null>;
 
@@ -37,6 +39,16 @@ export function dispatchTranscript({
   if (!trimmed) return;
 
   if (activeTab === 'coding' || activeTab === 'design') {
+    // After a solution is loaded: route interviewer questions to Sona
+    // (same pattern as behavioral tab). Manual presses always go to
+    // the problem field regardless.
+    const hasSolution = !!useInterviewStore.getState().liveSolveContext;
+    if (hasSolution && !opts?.manual && isQuestion(trimmed)) {
+      log(`${activeTab} → sona (question after solve)`, trimmed.slice(0, 60));
+      window.dispatchEvent(new CustomEvent('lumora:coding-question', { detail: { text: trimmed } }));
+      return;
+    }
+
     const ref = activeTab === 'coding' ? codingProblemRef : designProblemRef;
     const setter = ref?.current;
     if (setter) {
