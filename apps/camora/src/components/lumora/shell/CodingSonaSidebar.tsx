@@ -101,20 +101,6 @@ export function CodingSonaSidebar({ surface, open, onClose, listenTrigger }: Cod
     return () => clearTimeout(t);
   }, [listenTrigger, open]);
 
-  // Listen for interviewer questions routed here by voice-router after
-  // a solution is on screen. Same pattern as behavioral tab's
-  // lumora:behavioral-question → AICompanionPanel.
-  const sendRef = useRef<((raw: string) => Promise<void>) | null>(null);
-  useEffect(() => { sendRef.current = send; }, [send]);
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const text = (e as CustomEvent<{ text: string }>).detail?.text;
-      if (text) sendRef.current(text);
-    };
-    window.addEventListener('lumora:coding-question', handler);
-    return () => window.removeEventListener('lumora:coding-question', handler);
-  }, []);
-
   // Cleanup any in-flight stream on unmount
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -216,6 +202,21 @@ export function CodingSonaSidebar({ surface, open, onClose, listenTrigger }: Cod
       setInput(originalQuestion);
     }
   }, [token, streaming, buildContext]);
+
+  // Listen for interviewer questions routed here by voice-router after
+  // a solution is on screen. Declared AFTER `send` to avoid TDZ —
+  // both useRef(send) and [send] in the dep array would reference `send`
+  // before its useCallback declaration if placed earlier.
+  const sendRef = useRef<typeof send | null>(null);
+  useEffect(() => { sendRef.current = send; }, [send]);
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const text = (e as CustomEvent<{ text: string }>).detail?.text;
+      if (text) sendRef.current?.(text);
+    };
+    window.addEventListener('lumora:coding-question', handler);
+    return () => window.removeEventListener('lumora:coding-question', handler);
+  }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
