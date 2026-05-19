@@ -77,9 +77,19 @@ interface AudioCaptureProps {
   // bypassed. Manual press = direct user action; auto = system guess.
   onTranscription?: (text: string, opts?: { manual?: boolean }) => void;
   autoStart?: boolean;
+  // When false: suppresses all keyboard shortcuts and immediately releases
+  // the mic if it was recording. When it flips back to true, AUTO resumes
+  // if continuousMode was on. Used by coding/design tabs so they don't
+  // compete for the mic when the user switches to behavioral or home.
+  active?: boolean;
+  // When true, renders without the outer navy box (background/border/shadow)
+  // so the control integrates flat into whatever toolbar embeds it.
+  // Coding/Design toolbars are already navy — the box-in-a-box creates
+  // an unwanted "overlay" look.
+  compact?: boolean;
 }
 
-export function AudioCapture({ onTranscription, autoStart = true }: AudioCaptureProps) {
+export function AudioCapture({ onTranscription, autoStart = true, active, compact }: AudioCaptureProps) {
   // Use centralized auth
   const { token } = useAuth();
 
@@ -88,14 +98,26 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   // Persist so the user sets Auto ON/OFF once before the interview and
   // never has to click (audible!) during the call. Stored under a
   // dedicated key; read synchronously at mount so there is no flicker.
+  //
+  // When autoStart=false (coding/design embedded AudioCaptures): always
+  // start as OFF regardless of the saved preference. These tabs must not
+  // auto-grab the mic on mount, and restoring a saved 'on' state would
+  // show a lit-gold AUTO button that isn't actually recording (the button
+  // click would then turn it off — a confusing UX inversion).
   const [continuousMode, setContinuousMode] = useState<boolean>(() => {
+    if (!autoStart) return false;
     try { return localStorage.getItem('lumora_sona_auto') === 'on'; } catch { return false; }
   });
-  const startRecordingRef = useRef<(() => void) | null>(null);
+  const startRecordingRef = useRef<(() => Promise<boolean>) | null>(null);
   const continuousModeRef = useRef(continuousMode);
+  // Only behavioral instances (autoStart=true) own the lumora_sona_auto key.
+  // Coding/design instances (autoStart=false) must never write it — not on
+  // mount AND not on toggle — otherwise turning AUTO off in a coding tab
+  // clobbers the behavioral preference the user set earlier.
   useEffect(() => {
+    if (!autoStart) return;
     try { localStorage.setItem('lumora_sona_auto', continuousMode ? 'on' : 'off'); } catch {}
-  }, [continuousMode]);
+  }, [continuousMode, autoStart]);
 
   // Recording mode is the SOLE source of truth for who owns the
   // MediaRecorder. AUTO and MIC each have their own intent and their
@@ -508,11 +530,19 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       // a clean shot at the network without a sibling AUTO chunk
       // racing it.
       if (continuousModeRef.current && !userPausedRef.current) {
-        setTimeout(() => {
+        setTimeout(async () => {
           if (!continuousModeRef.current || userPausedRef.current) return;
           if (recordingModeRef.current !== 'idle') return;
           setRecordingMode('auto');
-          startRecordingRef.current?.();
+          const ok = await (startRecordingRef.current?.() ?? Promise.resolve(false));
+          if (!ok) {
+            setRecordingMode('idle');
+            setIsRecording(false);
+            stopListenTimer();
+            setStatus('warn', 'Mic unavailable — will retry');
+            dlog('auto_resume_after_manual_failed');
+            return;
+          }
           setIsRecording(true);
           startListenTimer();
           setStatus('listen', 'Live - listening...');
@@ -525,14 +555,14 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     }
 
     if (stoppedMode === 'auto' && continuousModeRef.current && !userPausedRef.current) {
-      // 250 ms gives the browser time to finalize the previous blob
-      // dispatch (onstop → ondataavailable) before we tear down audio
-      // resources for the next recording.
-      setTimeout(() => {
+      // 50 ms: just enough for onstop to fire and deliver the previous
+      // blob before cleanup() runs on the next startRecording() call.
+      // Keeping this as short as possible minimises the dead zone during
+      // which new speech is missed (was 250 ms — too wide, causing the
+      // first words of the next question to be dropped).
+      setTimeout(async () => {
         // Re-check inside the timeout: the user may have flipped Auto
-        // off, paused, or pressed MIC (mode→manual) during the 250 ms
-        // window. Without this gate, AUTO would re-arm and steal the
-        // recorder back from a manual recording in flight.
+        // off, paused, or pressed MIC (mode→manual) during the gap.
         if (!continuousModeRef.current || userPausedRef.current) {
           dlog('restart_aborted', { continuous: continuousModeRef.current, paused: userPausedRef.current });
           return;
@@ -543,11 +573,22 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         }
         dlog('restart_after_chunk');
         setRecordingMode('auto');
-        startRecordingRef.current?.();
+        const ok = await (startRecordingRef.current?.() ?? Promise.resolve(false));
+        if (!ok) {
+          // getUserMedia failed — fall back to idle so the heartbeat
+          // can recover cleanly instead of being stuck on a ghost
+          // isRecording=true with no actual recorder running.
+          setRecordingMode('idle');
+          setIsRecording(false);
+          stopListenTimer();
+          setStatus('warn', 'Mic unavailable — will retry');
+          dlog('restart_failed');
+          return;
+        }
         setIsRecording(true);
         startListenTimer();
         setStatus('listen', 'Live - listening...');
-      }, 250);
+      }, 50);
     }
   }, [setIsRecording, stopListenTimer, startListenTimer, setStatus, setRecordingMode]);
 
@@ -556,6 +597,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     audioLevel,
     startRecording,
     stopRecording,
+    cancelRecording,
   } = useAudioCapture({
     onAudioData: handleAudioData,
     onAudioLevel: handleAudioLevel,
@@ -596,6 +638,58 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   useEffect(() => {
     continuousModeRef.current = continuousMode;
   }, [continuousMode]);
+
+  // Stable ref for active prop — used inside keyboard listeners so they
+  // always read the current value without needing to re-bind on every change.
+  const activeRef = useRef(active !== false);
+  useEffect(() => { activeRef.current = active !== false; }, [active]);
+
+  // Pause / resume when the owning tab becomes inactive / active.
+  // active === undefined means "always active" (default for AICompanionPanel
+  // and other always-visible AudioCaptures). Only coding/design pass false.
+  const prevActiveRef = useRef(active !== false);
+  useEffect(() => {
+    if (active === undefined) return; // not controlled — skip
+    const isNowActive = active !== false;
+    const wasActive = prevActiveRef.current;
+    prevActiveRef.current = isNowActive;
+    if (wasActive === isNowActive) return;
+
+    if (!isNowActive) {
+      // Tab went inactive — immediately release the mic without sending audio.
+      // This frees the MediaRecorder so the incoming tab's AudioCapture can
+      // claim getUserMedia without fighting a concurrent MediaRecorder.
+      if (recordingModeRef.current !== 'idle') {
+        setRecordingMode('idle');
+        setIsRecording(false);
+        stopListenTimer();
+        cancelRecording();
+        setAudioLevel(0);
+        dlog('tab_inactive_cancelled');
+      }
+    } else {
+      // Tab became active — resume AUTO if it was running before.
+      // Give the previous tab's AudioCapture 150 ms to finish releasing the
+      // mic before we try to claim it, avoiding a double getUserMedia race.
+      if (continuousModeRef.current && recordingModeRef.current === 'idle' && !isStartingRef.current) {
+        isStartingRef.current = true;
+        window.setTimeout(() => {
+          if (!continuousModeRef.current || recordingModeRef.current !== 'idle') {
+            isStartingRef.current = false;
+            return;
+          }
+          setRecordingMode('auto');
+          startRecordingRef.current?.();
+          setIsRecording(true);
+          startListenTimer();
+          setStatus('listen', 'Live - listening...');
+          window.setTimeout(() => { isStartingRef.current = false; }, 1000);
+          dlog('tab_active_resumed');
+        }, 150);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
 
   // Auto-start recording on mount when token is available
   useEffect(() => {
@@ -649,18 +743,30 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
         if (recordingModeRef.current === 'manual') return;
         isStartingRef.current = true;
         dlog('heartbeat_recover', { stalledMs });
-        try {
-          setRecordingMode('auto');
-          startRecordingRef.current?.();
-          setIsRecording(true);
-          startListenTimer();
-          setStatus('listen', 'Live - listening...');
-        } finally {
-          // Release the lock after a beat so we don't re-fire on the
-          // next tick before getUserMedia resolves.
-          window.setTimeout(() => { isStartingRef.current = false; }, 1500);
-        }
-        lastHealthyAtRef.current = Date.now();
+        // Async: await the result so we only mark healthy on success.
+        // If startRecording fails, lastHealthyAtRef stays stale and the
+        // heartbeat fires again in another 4 s — creating a proper retry
+        // loop instead of a 4 s blind window on every failed attempt.
+        (async () => {
+          try {
+            setRecordingMode('auto');
+            const ok = await (startRecordingRef.current?.() ?? Promise.resolve(false));
+            if (ok) {
+              setIsRecording(true);
+              startListenTimer();
+              setStatus('listen', 'Live - listening...');
+              lastHealthyAtRef.current = Date.now();
+            } else {
+              setRecordingMode('idle');
+              setIsRecording(false);
+              stopListenTimer();
+              dlog('heartbeat_recover_failed');
+              // lastHealthyAtRef intentionally NOT bumped → retries in 4 s
+            }
+          } finally {
+            window.setTimeout(() => { isStartingRef.current = false; }, 1500);
+          }
+        })();
       }
     }, 1500);
     return () => clearInterval(interval);
@@ -689,16 +795,25 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
       }
       if (isStartingRef.current) return;
       isStartingRef.current = true;
-      try {
-        setRecordingMode('auto');
-        startRecordingRef.current?.();
-        setIsRecording(true);
-        startListenTimer();
-        setStatus('listen', 'Live - listening...');
-      } finally {
-        window.setTimeout(() => { isStartingRef.current = false; }, 1500);
-      }
-      lastHealthyAtRef.current = Date.now();
+      (async () => {
+        try {
+          setRecordingMode('auto');
+          const ok = await (startRecordingRef.current?.() ?? Promise.resolve(false));
+          if (ok) {
+            setIsRecording(true);
+            startListenTimer();
+            setStatus('listen', 'Live - listening...');
+            lastHealthyAtRef.current = Date.now();
+          } else {
+            setRecordingMode('idle');
+            setIsRecording(false);
+            stopListenTimer();
+            dlog('visibility_recover_failed');
+          }
+        } finally {
+          window.setTimeout(() => { isStartingRef.current = false; }, 1500);
+        }
+      })();
     };
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
@@ -858,8 +973,14 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
   // which the user uses mid-interview. Neither conflicts with normal
   // typing since Cmd+Shift+A is OS-reserved and ` is not a useful
   // character to type in any interview panel.
+  //
+  // When `active === false` (coding/design tab hidden), suppress the
+  // shortcut entirely so it doesn't toggle a background AudioCapture.
+  // We use activeRef (a ref) so this effect never re-binds just because
+  // the active prop changed — the ref is always up to date.
   useEffect(() => {
     const handleAutoShortcut = (e: KeyboardEvent) => {
+      if (!activeRef.current) return; // ignore when owning tab is inactive
       // Cmd/Ctrl+Shift+A
       const isCmdShiftA = (e.metaKey || e.ctrlKey) && e.shiftKey &&
         (e.key === 'A' || e.key === 'a' || e.code === 'KeyA');
@@ -903,6 +1024,7 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
     continuousMode={continuousMode}
     audioLevel={audioLevel}
     handleModeToggle={handleModeToggle}
+    compact={compact}
   />;
 }
 
@@ -910,39 +1032,38 @@ export function AudioCapture({ onTranscription, autoStart = true }: AudioCapture
  * AUTO-only mic control. Per user request the manual one-shot mic
  * button is removed; the only entry point is the AUTO toggle which
  * starts/stops continuous listening. The audio meter sits beside it.
+ *
+ * compact=false (default): renders in a navy box with border — used in
+ *   the global LumoraTopBar where it floats on its own.
+ * compact=true: renders flat with no wrapper background/border — used
+ *   when embedded in the coding/design toolbar strips that are already
+ *   styled navy; the box-in-a-box otherwise looks like a popup overlay.
  */
 function UnifiedMicButton({
   continuousMode, audioLevel,
-  handleModeToggle,
+  handleModeToggle, compact,
 }: {
   continuousMode: boolean;
   audioLevel: number;
   handleModeToggle: () => void;
+  compact?: boolean;
 }) {
   const isAutoOn = continuousMode;
 
-  return (
-    <div
-      className="flex items-center gap-2 shrink-0 pl-2 pr-2.5 py-1 rounded-lg"
-      style={{
-        background: 'var(--cam-hero-strip)',
-        border: '1px solid var(--cam-primary-dk)',
-        boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)',
-      }}
-      aria-label="Audio controls"
-    >
-      <span
-        className="hidden md:inline font-mono text-[9px] font-bold tracking-[0.18em] uppercase shrink-0"
-        style={{ color: 'rgba(255,255,255,0.85)' }}
-        aria-hidden="true"
-      >
-        MIC
-      </span>
+  const inner = (
+    <>
+      {/* MIC label — hidden in compact mode (toolbar already has enough labels) */}
+      {!compact && (
+        <span
+          className="hidden md:inline font-mono text-[9px] font-bold tracking-[0.18em] uppercase shrink-0"
+          style={{ color: 'rgba(255,255,255,0.85)' }}
+          aria-hidden="true"
+        >
+          MIC
+        </span>
+      )}
 
-      {/* AUTO toggle — sole control. Click or ⌘⇧A toggles continuous
-          listening on/off. Active state lights up gold-leaf with a
-          pulsing halo so the user always knows whether the mic is
-          listening, since there's no separate "live" indicator. */}
+      {/* AUTO toggle */}
       <button
         type="button"
         onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
@@ -950,13 +1071,13 @@ function UnifiedMicButton({
         style={{
           color: isAutoOn ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
           background: isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
-          border: `1px solid ${isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.20)'}`,
+          border: `1px solid ${isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.18)'}`,
           fontFamily: 'var(--font-mono)',
           boxShadow: isAutoOn ? '0 0 0 2px rgba(201,162,39,0.45)' : 'none',
         }}
         title={isAutoOn
-          ? 'AUTO is ON — Sona listens continuously. Click or press ⌘⇧A to stop.'
-          : 'Turn on AUTO — Sona listens continuously and answers each question. Click or press ⌘⇧A.'}
+          ? 'AUTO is ON — Sona listens continuously. Click or press ` to stop.'
+          : 'Turn on AUTO — Sona listens continuously and answers each question. Click or press `.'}
         aria-pressed={isAutoOn}
       >
         {isAutoOn ? (
@@ -970,7 +1091,7 @@ function UnifiedMicButton({
       {/* Audio-level meter */}
       <div
         className="flex items-end gap-[3px] shrink-0 px-1 py-0.5 rounded"
-        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)' }}
+        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)' }}
         aria-hidden="true"
       >
         {[0, 1, 2, 3, 4].map((i) => {
@@ -981,7 +1102,7 @@ function UnifiedMicButton({
               className="w-[3px] rounded-full transition-all duration-75"
               style={{
                 height: `${8 + i * 2}px`,
-                background: lit ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.45)',
+                background: lit ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.25)',
                 opacity: lit ? 1 : 0.6,
               }}
             />
@@ -995,6 +1116,29 @@ function UnifiedMicButton({
           50% { opacity: 1; }
         }
       `}</style>
+    </>
+  );
+
+  if (compact) {
+    // Flat — no wrapper box; the parent toolbar provides the container.
+    return (
+      <div className="flex items-center gap-2 shrink-0" aria-label="Audio controls">
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="flex items-center gap-2 shrink-0 pl-2 pr-2.5 py-1 rounded-lg"
+      style={{
+        background: 'var(--cam-hero-strip)',
+        border: '1px solid var(--cam-primary-dk)',
+        boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)',
+      }}
+      aria-label="Audio controls"
+    >
+      {inner}
     </div>
   );
 }
