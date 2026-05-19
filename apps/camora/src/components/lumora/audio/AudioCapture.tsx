@@ -104,22 +104,16 @@ export function AudioCapture({ onTranscription, autoStart = true, active, compac
   // auto-grab the mic on mount, and restoring a saved 'on' state would
   // show a lit-gold AUTO button that isn't actually recording (the button
   // click would then turn it off — a confusing UX inversion).
+  // Behavioral (autoStart=true) instances always start with AUTO ON — Sona
+  // listens the moment the panel opens, no button press needed. The AUTO
+  // button still works as an in-session toggle but we no longer persist the
+  // 'off' state; next launch always starts listening again.
   const [continuousMode, setContinuousMode] = useState<boolean>(() => {
     if (!autoStart) return false;
-    // Default ON — auto-listen as soon as the panel opens. Only opt-out
-    // if the user has explicitly toggled AUTO off in a previous session.
-    try { return localStorage.getItem('lumora_sona_auto') !== 'off'; } catch { return true; }
+    return true;
   });
   const startRecordingRef = useRef<(() => Promise<boolean>) | null>(null);
   const continuousModeRef = useRef(continuousMode);
-  // Only behavioral instances (autoStart=true) own the lumora_sona_auto key.
-  // Coding/design instances (autoStart=false) must never write it — not on
-  // mount AND not on toggle — otherwise turning AUTO off in a coding tab
-  // clobbers the behavioral preference the user set earlier.
-  useEffect(() => {
-    if (!autoStart) return;
-    try { localStorage.setItem('lumora_sona_auto', continuousMode ? 'on' : 'off'); } catch {}
-  }, [continuousMode, autoStart]);
 
   // Recording mode is the SOLE source of truth for who owns the
   // MediaRecorder. AUTO and MIC each have their own intent and their
