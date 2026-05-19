@@ -636,6 +636,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
           setStreamText('');
           setStreaming(false);
         },
+        onComplete: () => { setStreaming(false); },
       });
     } catch {
       setMessages(prev => [...prev, { role: 'ai', text: 'Connection failed. Try again.', time: new Date() }]);
