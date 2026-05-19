@@ -5,7 +5,6 @@ import { useTheme as useGlobalTheme } from '@/hooks/useTheme';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
-import FollowupAsk from '@/components/lumora/coding/FollowupAsk';
 import { LANGUAGES, getLanguageById } from '@/data/languages';
 import { dialogAlert } from '@/components/shared/Dialog';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
@@ -2354,16 +2353,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       </div>
                     )}
 
-                    {/* ── FOLLOW-UP Q&A (context-scoped, no leaving the tab) ── */}
-                    {problemText.trim() && token && (
-                      <FollowupAsk
-                        problem={problemText}
-                        activeSolutionName={sd.solutions?.[activeSolutionIdx]?.name}
-                        activeSolutionCode={sd.solutions?.[activeSolutionIdx]?.code}
-                        token={token}
-                      />
-                    )}
-
                     {/* ── LINE-BY-LINE WALKTHROUGH ── */}
                     {sd.explanations?.length > 0 && (
                       <div className="rounded-xl overflow-hidden shadow-sm" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
@@ -2714,7 +2703,6 @@ function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick
     { type: 'WALKTHROUGH', title: 'Walkthrough', color: 'accent' },
     { type: 'EDGECASES', title: 'Edge Cases', color: 'warning' },
     { type: 'TESTCASES', title: 'Test Cases', color: 'accent' },
-    { type: 'FOLLOWUP', title: 'Follow-up Q&A', color: 'accent' },
   ];
 
   const colorMap: Record<string, { header: string; border: string; bg: string; text: string }> = {
