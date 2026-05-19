@@ -897,6 +897,27 @@ ipcMain.handle('relaunch-app', () => {
   app.exit(0);
 });
 
+// ── IPC: snap active browser window ────────────────────────────────────────
+// Captures the front Chrome/Brave/Edge/Arc window and returns a dataUrl.
+// Used by behavioral Snap so it targets the interview platform window
+// (HackerRank, Zoom, Teams, etc.) instead of the full screen.
+ipcMain.handle('snap-active-browser', async () => {
+  if (process.platform !== 'darwin') return { ok: false, error: 'macOS only' };
+  const screenStatus = systemPreferences.getMediaAccessStatus('screen');
+  if (screenStatus !== 'granted') {
+    return { ok: false, needsScreenPermission: true, error: 'Screen Recording permission required.' };
+  }
+  try {
+    const info = await getActiveBrowserInfo();
+    if (!info) return { ok: false, error: 'No browser window found. Make sure Chrome/Brave/Edge is open.' };
+    const dataUrl = await captureExactBrowserWindow(info.windowTitle);
+    if (!dataUrl) return { ok: false, error: 'Could not capture the browser window. Make sure it is visible and not minimised.' };
+    return { ok: true, dataUrl };
+  } catch (err) {
+    return { ok: false, error: err?.message || 'Capture failed' };
+  }
+});
+
 // ── IPC: app-level stealth (content protection) ────────────────────────────
 // setContentProtection(true) makes the Camora window invisible to screen
 // recording and screen share — the window appears black in any capture.
