@@ -21,6 +21,13 @@ import { SectionCopyBtn } from './section-helpers';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
+const SNAP_CHIPS = [
+  { label: 'Find Issues', prompt: 'Analyze this system design and identify all bottlenecks, single points of failure, scalability gaps, and design flaws. For each issue explain what is wrong and provide a concrete fix.' },
+  { label: 'Explain', prompt: 'Explain this system design step by step. Describe what each component does, how they interact, and why they are designed this way.' },
+  { label: 'Improve', prompt: 'Suggest prioritized, concrete improvements to make this design more scalable, reliable, and cost-effective. Be specific about what to change and why.' },
+  { label: 'Estimate Scale', prompt: 'Estimate the scale this design can handle. Calculate storage requirements, throughput limits, latency bounds, and compute needs with specific numbers.' },
+] as const;
+
 /* Some responses (especially cached ones from earlier prompt
    versions) glue the entire structured response — REQUIREMENTS,
    SCALEMATH, DEEPDESIGN, EDGECASES, TRADEOFFS, FOLLOWUP — into
@@ -112,10 +119,12 @@ interface DesignLayoutProps {
   onVoiceProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
   /** When embedded, caller supplies this to route voice through dispatchTranscript for Sona Q&A */
   onEmbeddedTranscription?: (text: string, opts?: { manual?: boolean }) => void;
+  /** When false, AudioCapture releases the mic immediately and ignores keyboard shortcuts. */
+  isTabActive?: boolean;
 }
 
 
-export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemRef, onEmbeddedTranscription }: DesignLayoutProps) {
+export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemRef, onEmbeddedTranscription, isTabActive }: DesignLayoutProps) {
   // Bind the local Lumora design theme to the global light/dark choice.
   // Always follow the user's global theme — embedded panes inherit light/dark
   // from the rest of the app instead of forcing dark.
@@ -158,6 +167,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'done' | 'error'>('idle');
   const [isStealthActive, setIsStealthActive] = useState(false);
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
+  // Extracted code from the last image snap — drives quick-action chips.
+  const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
 
   // Voice enrollment popup (embedded toolbar only)
   const [showEnrollPopup, setShowEnrollPopup] = useState(false);
@@ -243,6 +254,15 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     document.addEventListener('mouseup', onMouseUp);
   }, [leftWidth]);
 
+  const handleSnapChip = useCallback((prompt: string) => {
+    // Source priority: snapped screen content > problem text input
+    const source = snapChipCode || problemText;
+    if (!source?.trim()) return;
+    if (snapChipCode) setSnapChipCode(null);
+    handleSubmit(`${prompt}\n\n${source}`, { bypassCache: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapChipCode, problemText]);
+
   const handleImageUpload = useCallback(async (file: File) => {
     // Show preview
     const reader = new FileReader();
@@ -272,6 +292,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       if (data.problem) {
         const text = String(data.problem).trim();
         setProblemText(text);
+        setSnapChipCode(text); // power quick-action chips after snap
         setInputTab('text');
         setErrorMsg(null);
         // Auto-generate the design solution — image in, answer out.
@@ -348,21 +369,13 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
 
   const handleStealthMode = async () => {
     const camo = (window as any).camo;
-    if (!camo?.injectTrackingNeutralizer) {
+    if (!camo?.setStealthMode) {
       await dialogAlert({ title: 'Desktop only', message: 'Stealth mode requires the Camora desktop app.' });
       return;
     }
-    const result = await camo.injectTrackingNeutralizer();
-    if (result.ok) {
-      setIsStealthActive(true);
-    } else if (result.needsDevMenu) {
-      await dialogAlert({
-        title: 'One-time setup needed',
-        message: `Enable "Allow JavaScript from Apple Events" in ${result.browser || 'Chrome'}:\n\n1. Open ${result.browser || 'Chrome'}\n2. Menu bar → View → Developer (or More Tools)\n3. Click "Allow JavaScript from Apple Events"\n4. Click Stealth again`,
-      });
-    } else {
-      await dialogAlert({ title: 'Stealth failed', message: result.error || 'Could not inject into browser tab.' });
-    }
+    const next = !isStealthActive;
+    await camo.setStealthMode(next);
+    setIsStealthActive(next);
   };
 
   const handleSubmit = useCallback(async (overrideText?: string, options?: { bypassCache?: boolean }) => {
@@ -717,15 +730,13 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     return () => { camo.setSessionFolder(null); };
   }, []);
 
-  // Re-inject stealth every 30s while active so it survives page reloads in Chrome
+  // Turn off content protection when leaving the design page.
   useEffect(() => {
-    const camo = (window as any).camo;
-    if (!isStealthActive || !camo?.injectTrackingNeutralizer) return;
-    const silentReinject = () => camo.injectTrackingNeutralizer().catch(() => null);
-    silentReinject();
-    const interval = setInterval(silentReinject, 30000);
-    return () => clearInterval(interval);
-  }, [isStealthActive]);
+    return () => {
+      const camo = (window as any).camo;
+      if (camo?.setStealthMode) camo.setStealthMode(false);
+    };
+  }, []);
 
   // Listen for Cmd+Shift+3/4 screenshots while the app is in the foreground
   // and auto-extract + generate the design answer from the captured image.
@@ -871,15 +882,12 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             onTranscription={(text) => {
               const trimmed = text.trim();
               if (!trimmed) return;
-              // On the Design tab any spoken utterance is treated as a
-              // problem statement — the candidate doesn't need to phrase
-              // it like a question. Always fill the box AND auto-fire
-              // the LLM so they don't have to click "Design" after every
-              // dictation.
               setProblemText(trimmed);
               pendingVoiceSubmit.current = true;
             }}
             autoStart={false}
+            active={isTabActive}
+            compact
           />
         </div>
       </header>
@@ -889,46 +897,46 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden" ref={mainRef}>
         {/* Left: Problem Input - full width on mobile */}
         <div className="w-full md:shrink-0 flex flex-col min-w-0 border-b md:border-b-0 md:border-r design-left-panel max-h-[45dvh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%`, borderColor: t.cardBorder, background: t.surfaceBg }}>
-          {/* Input Tab Header — LeetCode-style sharp pill toolbar. Same
-              grammar as the Lumora top bar + the Coding tabs bar.
-              overflow-x-auto so phones can scroll the toolbar
-              horizontally rather than wrapping into two rows. */}
+          {/* Input toolbar — two-row layout matching Coding tab:
+              Row 1: TEXT / URL / IMAGE pill tabs + Snap
+              Row 2: Stealth + mic controls + collapse              */}
           <div
-            className="flex items-center flex-wrap gap-2 px-3 py-2"
+            className="flex flex-col"
             style={{
               background: 'var(--cam-hero-strip)',
               borderBottom: '1px solid var(--cam-gold-leaf)',
             }}
           >
-            <div
-              className="flex items-center gap-1 px-1 py-1 shrink-0"
-              style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.16)',
-                borderRadius: 999,
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
-              }}
-            >
-              {(['text', 'url', 'image'] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => { setInputTab(tab); setInputCollapsed(false); }}
-                  className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
-                  style={
-                    inputTab === tab
-                      ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
-                      : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
-                  }
-                >
-                  {tab === 'text' ? 'Text' : tab === 'url' ? 'URL' : 'Image'}
-                </button>
-              ))}
-            </div>
-            {/* Snap — uses getDisplayMedia in browser, Electron API on desktop */}
-            <button
+            {/* ── Row 1: input-type tabs + Snap ── */}
+            <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
+              <div
+                className="flex items-center gap-1 px-1 py-1 shrink-0"
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.16)',
+                  borderRadius: 999,
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
+                }}
+              >
+                {(['text', 'url', 'image'] as const).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => { setInputTab(tab); setInputCollapsed(false); }}
+                    className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
+                    style={
+                      inputTab === tab
+                        ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
+                        : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
+                    }
+                  >
+                    {tab === 'text' ? 'Text' : tab === 'url' ? 'URL' : 'Image'}
+                  </button>
+                ))}
+              </div>
+              <button
                 onClick={handleSnap}
                 disabled={snapState === 'capturing'}
-                title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen — silently captures and extracts the design problem'}
+                title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen'}
                 className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-all hover:opacity-90 active:scale-[0.97]"
                 style={snapState === 'done'
                   ? { background: '#00ea64', color: '#000', border: '1px solid #00ea64' }
@@ -936,110 +944,119 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   ? { background: '#ef4444', color: '#fff', border: '1px solid #ef4444' }
                   : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }}
               >
-                {snapState === 'capturing' ? (
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-                  </svg>
-                ) : snapState === 'done' ? (
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                ) : snapState === 'error' ? (
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                ) : (
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                    <circle cx="12" cy="13" r="4" />
-                  </svg>
-                )}
+                {snapState === 'capturing'
+                  ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  : snapState === 'done'
+                  ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  : snapState === 'error'
+                  ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                }
                 {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
               </button>
+            </div>
 
-            {/* Stealth — desktop-only (injects tracking neutralizer via Electron) */}
-            {!!(window as any).camo?.isDesktop && (
-              <button
-                  onClick={handleStealthMode}
-                  title={isStealthActive ? 'Stealth active — mouse tracking blocked' : 'Stealth mode — block mouse tracking on design platform'}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-90 active:scale-[0.97]"
-                  style={isStealthActive
-                    ? { background: '#00ea64', color: '#000' }
-                    : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
-                  }
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                    {isStealthActive ? (
-                      <>
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </>
-                    ) : (
-                      <>
-                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
-                        <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
-                        <line x1="1" y1="1" x2="23" y2="23" />
-                      </>
-                    )}
-                  </svg>
-                  {isStealthActive ? 'Stealth ON' : 'Stealth'}
-                </button>
-            )}
-
-            {/* AudioCapture + voice enrollment popup — embedded toolbar only */}
-            {embedded && (
-              <AudioCapture
-                onTranscription={(text, opts) => {
-                  if (onEmbeddedTranscription) {
-                    onEmbeddedTranscription(text, opts);
-                  } else {
-                    const trimmed = text.trim();
-                    if (!trimmed) return;
-                    setProblemText(trimmed);
-                    pendingVoiceSubmit.current = true;
-                  }
-                }}
-                autoStart={false}
-              />
-            )}
-            {embedded && (
-              <div className="relative">
+            {/* ── Row 2: Stealth + mic controls + collapse ── */}
+            <div className="flex items-center justify-between px-3 pb-2">
+              <div className="flex items-center gap-1.5">
+                {!!(window as any).camo?.isDesktop && (
+                  <button
+                    onClick={handleStealthMode}
+                    title={isStealthActive ? 'Stealth active — mouse tracking blocked' : 'Block mouse tracking'}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-90 active:scale-[0.97]"
+                    style={isStealthActive
+                      ? { background: '#00ea64', color: '#000' }
+                      : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
+                    }
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                      {isStealthActive
+                        ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
+                        : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                      }
+                    </svg>
+                    {isStealthActive ? 'Stealth ON' : 'Stealth'}
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                {embedded && (
+                  <AudioCapture
+                    onTranscription={(text, opts) => {
+                      if (onEmbeddedTranscription) {
+                        onEmbeddedTranscription(text, opts);
+                      } else {
+                        const trimmed = text.trim();
+                        if (!trimmed) return;
+                        setProblemText(trimmed);
+                        pendingVoiceSubmit.current = true;
+                      }
+                    }}
+                    autoStart={false}
+                    active={isTabActive}
+                    compact
+                  />
+                )}
+                {embedded && (
+                  <div className="relative">
+                    <button
+                      ref={enrollBtnRef}
+                      onClick={openEnrollPopup}
+                      title={voiceEnrolled ? 'Voice enrolled — click to manage' : 'Enroll my voice'}
+                      className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                      style={{
+                        color: voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.5)',
+                        border: `1px solid ${voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.18)'}`,
+                        borderRadius: 999,
+                        background: 'rgba(255,255,255,0.06)',
+                      }}
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                      </svg>
+                    </button>
+                  </div>
+                )}
                 <button
-                  ref={enrollBtnRef}
-                  onClick={openEnrollPopup}
-                  title={voiceEnrolled ? 'Voice enrolled — click to manage' : 'Enroll my voice'}
-                  className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-                  style={{
-                    color: voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.5)',
-                    border: `1px solid ${voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.18)'}`,
-                    borderRadius: 999,
-                    background: 'rgba(255,255,255,0.06)',
-                  }}
+                  onClick={() => setInputCollapsed(!inputCollapsed)}
+                  className="shrink-0 flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                  style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}
+                  aria-label={inputCollapsed ? 'Expand input' : 'Collapse input'}
                 >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                    <line x1="12" y1="19" x2="12" y2="23"/>
-                    <line x1="8" y1="23" x2="16" y2="23"/>
+                  <svg className={`w-3 h-3 transition-transform ${inputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
               </div>
+            </div>
+            {/* ── Quick-action chips — always visible ── */}
+            {!isLoading && (
+              <div className="flex flex-wrap items-center gap-1.5 px-3 py-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
+                  style={{ color: snapChipCode ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.32)' }}>
+                  {snapChipCode ? 'Snap:' : 'Quick ask:'}
+                </span>
+                {SNAP_CHIPS.map(chip => (
+                  <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
+                    className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
+                    style={snapChipCode
+                      ? { background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }
+                      : { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.60)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                    {chip.label}
+                  </button>
+                ))}
+                {snapChipCode && (
+                  <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
+                    className="ml-auto shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
+                    style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                )}
+              </div>
             )}
-
-            <button
-              onClick={() => setInputCollapsed(!inputCollapsed)}
-              className="shrink-0 flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-              style={{
-                color: '#FFFFFF',
-                border: '1px solid rgba(255,255,255,0.16)',
-                borderRadius: 999,
-                background: 'rgba(255,255,255,0.06)',
-              }}
-            >
-              <svg className={`w-3 h-3 transition-transform ${inputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
           </div>
 
           {/* Input area - collapsible */}
