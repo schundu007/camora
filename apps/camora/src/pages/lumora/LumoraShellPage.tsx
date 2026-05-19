@@ -33,7 +33,6 @@ export function LumoraShellPage() {
   const navigate = useNavigate();
   const location = useLocation();
   // inputValue removed — copilot now manages its own state
-  const [blanked, setBlanked] = useState(false);
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const { theme: currentTheme, toggle: toggleTheme } = useTheme();
   const [sessionsOpen, setSessionsOpen] = useState(false);
@@ -45,10 +44,10 @@ export function LumoraShellPage() {
 
   // Tool selection — persisted per device so users don't repick every session.
   const [meetingPlatform, setMeetingPlatform] = useState<string>(() => {
-    try { return localStorage.getItem('lumora_meeting_platform') || 'zoom'; } catch { return 'zoom'; }
+    try { return localStorage.getItem('lumora_meeting_platform') || 'teams'; } catch { return 'teams'; }
   });
   const [codingPlatform, setCodingPlatform] = useState<string>(() => {
-    try { return localStorage.getItem('lumora_coding_platform') || 'hackerrank'; } catch { return 'hackerrank'; }
+    try { return localStorage.getItem('lumora_coding_platform') || 'auto'; } catch { return 'auto'; }
   });
 
   // Sync coding platform to desktop main process and persist to localStorage.
@@ -85,6 +84,13 @@ export function LumoraShellPage() {
     try { localStorage.setItem('lumora_sona_sidebar_open', sonaSidebarOpen ? 'on' : 'off'); } catch {}
   }, [sonaSidebarOpen]);
 
+  // Incremented each time a coding generation stream ends so the Sona
+  // sidebar auto-opens and its mic auto-starts to capture interviewer follow-ups.
+  // NOTE: declared here as state but the effect that reads activeTab is placed
+  // AFTER the activeTab const below to avoid TDZ (const has a dead zone).
+  const [sonaListenTrigger, setSonaListenTrigger] = useState(0);
+  const prevIsStreamingRef = useRef(false);
+
   // Track which tabs have been activated (for lazy mounting)
   const [mountedTabs, setMountedTabs] = useState<Set<LumoraTab>>(new Set(['interview']));
 
@@ -106,6 +112,16 @@ export function LumoraShellPage() {
     location.pathname.includes('/credits') ? 'credits' : 'interview';
 
   const showSettingsHint = !settingsDismissed && typeof vadThreshold === 'number' && vadThreshold <= 0.015 && (activeTab === 'coding' || activeTab === 'design');
+
+  // activeTab is now in scope — safe to reference in deps array.
+  useEffect(() => {
+    const prev = prevIsStreamingRef.current;
+    prevIsStreamingRef.current = isStreaming;
+    if (prev && !isStreaming && activeTab === 'coding' && useInterviewStore.getState().liveSolveContext) {
+      setSonaSidebarOpen(true);
+      setSonaListenTrigger(n => n + 1);
+    }
+  }, [isStreaming, activeTab]);
 
   // Lazy-mount tabs on first activation
   useEffect(() => {
@@ -201,11 +217,6 @@ export function LumoraShellPage() {
       const el = e.target as HTMLElement;
       const inEditor = el.closest('.monaco-editor') || el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement;
 
-      // Cmd+B: blank screen
-      if (isMod && e.key === 'b' && !inEditor) {
-        e.preventDefault();
-        setBlanked(prev => !prev);
-      }
       // Cmd+S: toggle search
       if (isMod && e.key === 's' && !el.closest('.monaco-editor')) {
         e.preventDefault();
@@ -265,15 +276,6 @@ export function LumoraShellPage() {
         until the user finishes setup, then stays out of the way. */}
     {(activeTab === 'interview' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <AudioSetupWizard />}
     {(activeTab === 'interview' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <SilentStreamBanner />}
-    {/* Invisible mode overlay — covers everything but audio keeps running underneath */}
-    {blanked && (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center cursor-pointer select-none" style={{ background: '#000000' }} onClick={() => setBlanked(false)}>
-        <div className="text-center">
-          <div className="opacity-5 mb-4"><CamoraLogo size={24} /></div>
-          <p className="text-[10px] opacity-10 text-white">Press ⌘B or click to return</p>
-        </div>
-      </div>
-    )}
     <div
       className="fixed inset-0 w-full flex overflow-hidden"
       style={{
@@ -344,24 +346,31 @@ export function LumoraShellPage() {
           <button
             type="button"
             onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
-            className="flex items-center gap-1 px-2 py-1.5 rounded-md text-[12px] font-semibold transition-[background-color,color] hover:bg-[var(--bg-elevated)] active:scale-[0.98] shrink-0"
-            style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:opacity-80 active:scale-[0.97] shrink-0"
+            style={{
+              background: 'var(--cam-hero-strip)',
+              border: '1px solid var(--cam-primary-dk)',
+              color: 'rgba(255,255,255,0.85)',
+              boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)',
+            }}
             title="Back"
             aria-label="Back"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 18l-6-6 6-6" />
             </svg>
             <span className="hidden sm:inline">Back</span>
           </button>
 
-          {/* Cross-section quick links — saves a round-trip through the
-              landing page when jumping between Lumora and the prep / pricing
-              / jobs surfaces. Hidden on small screens; mobile users get the
-              same destinations from the hamburger sheet. */}
-          <div className="hidden md:flex items-center gap-1 shrink-0">
-            <Link to="/capra/prepare" className="px-2 py-1.5 rounded-md text-[12px] font-semibold transition-[background-color,color] hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }}>Prepare</Link>
-            <Link to="/pricing" className="px-2 py-1.5 rounded-md text-[12px] font-semibold transition-[background-color,color] hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--text-muted)' }}>Pricing</Link>
+          {/* Cross-section quick links */}
+          <div className="hidden md:flex items-center gap-1 p-0.5 rounded-md shrink-0"
+            style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)' }}>
+            <Link to="/capra/prepare"
+              className="px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color] hover:bg-white/10"
+              style={{ color: 'rgba(255,255,255,0.80)' }}>Prepare</Link>
+            <Link to="/pricing"
+              className="px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color] hover:bg-white/10"
+              style={{ color: 'rgba(255,255,255,0.80)' }}>Pricing</Link>
           </div>
 
           {/* LEFT spacer — pushes the tab pills toward the centre of the
@@ -424,14 +433,15 @@ export function LumoraShellPage() {
                 watching. Meeting platform is cosmetic; coding platform drives
                 auto-capture. Hidden on mobile (hamburger handles config). */}
             <div className="hidden md:flex items-center gap-1.5">
-              {/* Meeting platform */}
-              <div className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+              {/* Meeting platform — navy-gold pill */}
+              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-bold"
+                style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)', color: 'rgba(255,255,255,0.85)' }}>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                 <select
                   value={meetingPlatform}
                   onChange={e => setMeetingPlatform(e.target.value)}
-                  className="bg-transparent border-none outline-none cursor-pointer text-[11px] font-semibold"
-                  style={{ color: 'var(--text-muted)', appearance: 'none', WebkitAppearance: 'none' }}
+                  className="bg-transparent border-none outline-none cursor-pointer text-[11px] font-bold"
+                  style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
                   title="Meeting platform"
                   aria-label="Meeting platform"
                 >
@@ -443,18 +453,22 @@ export function LumoraShellPage() {
                 <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
               </div>
 
-              {/* Coding platform — drives desktop auto-capture */}
-              <div className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold" style={{ background: codingPlatform !== 'none' ? 'rgba(0,234,100,0.10)' : 'var(--bg-elevated)', border: `1px solid ${codingPlatform !== 'none' ? '#00ea64' : 'var(--border)'}`, color: codingPlatform !== 'none' ? '#00ea64' : 'var(--text-muted)' }}>
+              {/* Coding platform — gold when active, navy otherwise */}
+              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-bold"
+                style={codingPlatform !== 'none'
+                  ? { background: 'var(--cam-gold-leaf)', border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 0 0 2px rgba(201,162,39,0.30)' }
+                  : { background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)', color: 'rgba(255,255,255,0.65)' }}>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
                 <select
                   value={codingPlatform}
                   onChange={e => setCodingPlatform(e.target.value)}
-                  className="bg-transparent border-none outline-none cursor-pointer text-[11px] font-semibold"
+                  className="bg-transparent border-none outline-none cursor-pointer text-[11px] font-bold"
                   style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
                   title="Coding platform — Camora auto-detects this tab"
                   aria-label="Coding platform"
                 >
-                  <option value="none">No Coding Tool</option>
+                  <option value="auto">Auto-detect</option>
+                  <option value="none">Disabled</option>
                   <option value="hackerrank">HackerRank</option>
                   <option value="leetcode">LeetCode</option>
                   <option value="coderpad">CoderPad</option>
@@ -462,10 +476,6 @@ export function LumoraShellPage() {
                 <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
               </div>
             </div>
-            {/* Invisible button removed per user request — Cmd+B keyboard
-                shortcut and the LumoraIconRail "Go Invisible" menu item
-                still trigger the same setBlanked(true) flow. */}
-
             {/* Mobile hamburger — pinned right, matches SiteNav and TopBar.
                 Opens a dropdown with secondary Lumora destinations and
                 utilities (theme, audio check). */}
@@ -534,6 +544,7 @@ export function LumoraShellPage() {
                         onHackerrankCaptureConsumed={() => setPendingHackerrankCapture(null)}
                         codingPlatform={codingPlatform}
                         onEmbeddedTranscription={handleTranscription}
+                        isTabActive={activeTab === 'coding'}
                       />
                     </div>
                     {/* Sona Q&A sidebar — independent state, follow-up
@@ -564,6 +575,7 @@ export function LumoraShellPage() {
                         initialProblem={activeTab === 'design' ? new URLSearchParams(location.search).get('problem') || '' : ''}
                         onVoiceProblemRef={designProblemRef}
                         onEmbeddedTranscription={handleTranscription}
+                        isTabActive={activeTab === 'design'}
                       />
                     </div>
                     <CodingSonaSidebar
