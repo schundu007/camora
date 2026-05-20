@@ -18,6 +18,16 @@ const SNAP_CHIPS = [
   { label: 'Write Tests', prompt: 'Write comprehensive unit tests covering happy paths, edge cases, and error conditions for this code.' },
 ] as const;
 
+// Returns true when the pasted text is itself a code template with placeholder
+// bodies (return [], pass, NotImplementedError, TODO). Used to auto-promote
+// problemText → starterCode so the backend completes-in-place rather than
+// generating a standalone function that loses the surrounding boilerplate.
+function isCodeTemplate(text: string): boolean {
+  const hasStructure = /\bdef\s+\w+\s*\(|\bclass\s+\w+[:(]|void\s+\w+\s*\(|public\s+\w+\s+\w+\s*\(|function\s+\w+\s*\(/.test(text);
+  if (!hasStructure) return false;
+  return /\breturn\s+\[\]\s*$|\breturn\s+\{\}\s*$|\bpass\s*$|raise\s+NotImplementedError|\/\/\s*TODO|\bTODO\b|\/\*\s*TODO/m.test(text);
+}
+
 function detectLanguage(text: string): string {
   const t = text.toLowerCase();
   if (/def\s+\w+\s*\(|class\s+\w+:|import\s+\w+|print\s*\(|\.py\b/.test(text)) return 'python';
@@ -347,7 +357,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     if (!text || isLoading || isStreaming) return;
     setAnalysisCache({});
     setAnalysisTab('code');
-    onSubmit(text, resolveLanguage(text), { bypassCache: true, ...(starterCode ? { starterCode } : {}) });
+    const effectiveStarterCode = starterCode || (isCodeTemplate(text) ? text : null);
+    onSubmit(text, resolveLanguage(text), { bypassCache: true, ...(effectiveStarterCode ? { starterCode: effectiveStarterCode } : {}) });
   }, [problemText, language, starterCode, isLoading, isStreaming, onSubmit, resolveLanguage]);
 
   // Auto-switch to the Solution tab when a stream error fires. The
@@ -994,7 +1005,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setCollapsedCards(new Set());
     setActiveSolutionIdx(0);
     setIsOutputCollapsed(true); // Collapse test panel — auto-expands when new tests arrive
-    onSubmit(problemText.trim(), effectiveLang, starterCode ? { starterCode } : undefined);
+    // If the user pasted a code file with placeholder bodies (return [], pass,
+    // TODO) but didn't go through OCR/extract, promote problemText to starterCode
+    // so the backend completes-in-place and preserves the surrounding boilerplate.
+    const effectiveStarterCode = starterCode || (isCodeTemplate(problemText) ? problemText : null);
+    onSubmit(problemText.trim(), effectiveLang, effectiveStarterCode ? { starterCode: effectiveStarterCode } : undefined);
   };
 
   // Register voice problem handler for parent shell. Uses stable internal
