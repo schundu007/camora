@@ -28,6 +28,7 @@ import { HistoryAnswerViewer, TabLoading } from './lumora-shell/history-viewer';
 // Lazy load heavy layouts — only mounted on first tab activation
 const CodingLayout = lazy(() => import('../../components/lumora/coding/CodingLayout').then(m => ({ default: m.CodingLayout })));
 const DesignLayout = lazy(() => import('../../components/lumora/design/DesignLayout').then(m => ({ default: m.DesignLayout })));
+const CoFixLayout = lazy(() => import('../../components/lumora/cofix/CoFixLayout').then(m => ({ default: m.CoFixLayout })));
 
 export function LumoraShellPage() {
   const navigate = useNavigate();
@@ -104,6 +105,7 @@ export function LumoraShellPage() {
   const activeTab: LumoraTab =
     location.pathname.includes('/coding') ? 'coding' :
     location.pathname.includes('/design') ? 'design' :
+    location.pathname.includes('/fix') ? 'cofix' :
     location.pathname.includes('/behavioral') ? 'behavioral' :
     location.pathname.includes('/prepkit') ? 'prepkit' :
     location.pathname.includes('/calendar') ? 'calendar' :
@@ -168,7 +170,7 @@ export function LumoraShellPage() {
 
   // Trigger Monaco editor resize when switching to coding/design tab
   useEffect(() => {
-    if (activeTab === 'coding' || activeTab === 'design') {
+    if (activeTab === 'coding' || activeTab === 'design' || activeTab === 'cofix') {
       // Monaco needs a resize event to recalculate layout after display:none → flex
       const timer = setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
       return () => clearTimeout(timer);
@@ -189,6 +191,7 @@ export function LumoraShellPage() {
       interview: 'Live Interview | Camora',
       coding: 'Coding Interview | Camora',
       design: 'Design Interview | Camora',
+      cofix: 'CoFix | Camora',
       behavioral: 'Behavioral Interview | Camora',
       prepkit: 'Prep Kit | Camora',
       calendar: 'Calendar | Camora',
@@ -542,7 +545,7 @@ export function LumoraShellPage() {
                         onSubmit={handleCodingSubmitRouted}
                         isLoading={isStreaming}
                         onBack={() => navigate('/lumora')}
-                        initialProblem={activeTab === 'coding' ? new URLSearchParams(location.search).get('problem') || '' : ''}
+                        initialProblem={activeTab === 'coding' ? (location.state as any)?.cofixCode || new URLSearchParams(location.search).get('problem') || '' : ''}
                         onVoiceProblemRef={codingProblemRef}
                         pendingHackerrankCapture={pendingHackerrankCapture}
                         onHackerrankCaptureConsumed={() => setPendingHackerrankCapture(null)}
@@ -590,6 +593,17 @@ export function LumoraShellPage() {
                       onClose={() => setSonaSidebarOpen(false)}
                     />
                   </div>
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
+
+          {/* CoFix tab — lazy mounted */}
+          {mountedTabs.has('cofix') && (
+            <div style={{ display: activeTab === 'cofix' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
+              <ErrorBoundary>
+                <Suspense fallback={<TabLoading label="CoFix" />}>
+                  <CoFixLayout />
                 </Suspense>
               </ErrorBoundary>
             </div>
