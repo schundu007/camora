@@ -123,6 +123,9 @@ interface InterviewState {
     solvedAt: number;
   } | null;
 
+  // Stealth mode — hides live answers on-screen during interview
+  isStealthActive: boolean;
+
   // Actions
   setConversationId: (id: string | null) => void;
   setQuestion: (question: string | null) => void;
@@ -160,6 +163,7 @@ interface InterviewState {
   setActiveCitations: (citations: Citation[]) => void;
   setLastFromCache: (fromCache: boolean | null) => void;
   setLiveSolveContext: (ctx: InterviewState['liveSolveContext']) => void;
+  setIsStealthActive: (v: boolean) => void;
   reset: () => void;
 }
 
@@ -209,6 +213,7 @@ const initialState = {
   activeCitations: [] as Citation[],
   lastFromCache: null as boolean | null,
   liveSolveContext: null as InterviewState['liveSolveContext'],
+  isStealthActive: false,
 };
 
 export const useInterviewStore = create<InterviewState>()(
@@ -329,6 +334,8 @@ export const useInterviewStore = create<InterviewState>()(
   setLiveSolveContext: (ctx) => set({ liveSolveContext: ctx }),
 
   setPreferredModel: (preferredModel) => set({ preferredModel }),
+
+  setIsStealthActive: (v) => set({ isStealthActive: v }),
 
   reset: () => set(initialState),
     }),
