@@ -10,6 +10,11 @@ import { useAuth } from '@/contexts/AuthContext';
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
 function detectLanguage(text: string): string {
+  if (/^FROM\s+\S+/m.test(text)) return 'dockerfile';
+  if (/^services:\s*$/m.test(text) && /image:|build:/.test(text)) return 'docker-compose';
+  if (/^resource\s+"[\w_]+"\s+"[\w_]+"\s*\{/m.test(text) || /^provider\s+"[\w_]+"\s*\{/m.test(text)) return 'terraform';
+  if (/^---\s*$|^\s[\w_-]+:\s/m.test(text) && !/def\s+\w+|class\s+\w+/.test(text)) return 'yaml';
+  if (/^#!.*\b(bash|sh)\b|^\s*(echo|export|source|chmod)\s/.test(text)) return 'bash';
   if (/def\s+\w+\s*\(|class\s+\w+:|import\s+\w+|print\s*\(/.test(text)) return 'python';
   if (/function\s+\w+\s*\(|const\s+\w+\s*=|let\s+\w+\s*=|=>\s*{/.test(text)) return 'javascript';
   if (/public\s+class\s+\w+|System\.out\.print/.test(text)) return 'java';
@@ -19,15 +24,30 @@ function detectLanguage(text: string): string {
   return 'python';
 }
 
+// Maps CoFix language IDs → Monaco editor language tokens
+const MONACO_LANG: Record<string, string> = {
+  bash: 'shell',
+  'docker-compose': 'yaml',
+  terraform: 'hcl',
+};
+function toMonacoLang(lang: string): string {
+  return MONACO_LANG[lang] ?? lang;
+}
+
 const LANGUAGES = [
   { id: 'auto', label: 'Auto-detect' },
-  { id: 'python', label: 'Python' },
+  { id: 'python', label: 'Python 3' },
   { id: 'javascript', label: 'JavaScript' },
   { id: 'typescript', label: 'TypeScript' },
   { id: 'java', label: 'Java' },
   { id: 'cpp', label: 'C++' },
   { id: 'go', label: 'Go' },
   { id: 'rust', label: 'Rust' },
+  { id: 'bash', label: 'Bash' },
+  { id: 'dockerfile', label: 'Dockerfile' },
+  { id: 'yaml', label: 'YAML' },
+  { id: 'docker-compose', label: 'Docker Compose' },
+  { id: 'terraform', label: 'Terraform' },
 ];
 
 export function CoFixLayout() {
@@ -166,7 +186,7 @@ export function CoFixLayout() {
             <SharedCodeEditor
               code={inputCode}
               onChange={setInputCode}
-              language={effectiveLang}
+              language={toMonacoLang(effectiveLang)}
               readOnly={false}
               height="100%"
               showLineNumbers
@@ -255,7 +275,7 @@ export function CoFixLayout() {
               )}
               <Editor
                 value={fixedCode}
-                language={effectiveLang}
+                language={toMonacoLang(effectiveLang)}
                 theme="vs-dark"
                 options={{
                   readOnly: true,
