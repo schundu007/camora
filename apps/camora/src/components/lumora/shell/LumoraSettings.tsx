@@ -374,9 +374,9 @@ export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
 }
 
 /* ── Setting Card ── */
-function SettingCard({ icon, title, description, children }: {
+const SettingCard = ({ icon, title, description, children }: {
   icon: React.ReactNode; title: string; description: string; children?: React.ReactNode;
-}) {
+}) => {
   return (
     <div className="p-4 rounded-xl transition-[box-shadow,transform] hover:shadow-sm" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--bg-elevated)', color: 'var(--cam-primary)' }}>
@@ -390,9 +390,9 @@ function SettingCard({ icon, title, description, children }: {
 }
 
 /* ── Voice Mode Card ── */
-function VoiceModeCard({ active, onClick, icon, title, description, badge, disabled }: {
+const VoiceModeCard = ({ active, onClick, icon, title, description, badge, disabled }: {
   active: boolean; onClick: () => void; icon: React.ReactNode; title: string; description: string; badge?: string; disabled?: boolean;
-}) {
+}) => {
   return (
     <button
       onClick={disabled ? undefined : onClick}

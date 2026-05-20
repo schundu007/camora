@@ -31,7 +31,7 @@ interface ScreenshotStripProps {
 /** Shared pill chrome — matches the LumoraShellPage tab nav exactly. */
 const pillBase = 'flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color,opacity] active:scale-[0.97]';
 
-export function ScreenshotStrip({ surface, screenshots, onSnapped, onRemove, inputMode, onInputModeChange, showInputModeSelector, onTranscription, isTabActive }: ScreenshotStripProps) {
+export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inputMode, onInputModeChange, showInputModeSelector, onTranscription, isTabActive }: ScreenshotStripProps) => {
   const { token } = useAuth();
   const isStealthActive = useInterviewStore(s => s.isStealthActive);
   const setIsStealthActive = useInterviewStore(s => s.setIsStealthActive);

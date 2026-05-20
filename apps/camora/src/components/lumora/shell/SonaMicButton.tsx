@@ -53,7 +53,7 @@ function usePrefersReducedMotion(): boolean {
   return reduced;
 }
 
-export function SonaMicButton({ onText, onDone, disabled = false, startTrigger, autoMode = false }: SonaMicButtonProps) {
+export const SonaMicButton = ({ onText, onDone, disabled = false, startTrigger, autoMode = false }: SonaMicButtonProps) => {
   const { token } = useAuth();
   const reducedMotion = usePrefersReducedMotion();
 

@@ -69,7 +69,7 @@ export function CalibrationButton({ deviceId, disabled, variant = 'dark' }: Cali
   );
 }
 
-function Spinner() {
+const Spinner = () => {
   return (
     <svg
       className="w-3 h-3 animate-spin mr-1"

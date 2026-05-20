@@ -34,13 +34,13 @@ type Ctx = {
 
 const InterviewerAudioContext = createContext<Ctx | null>(null);
 
-export function InterviewerAudioProvider({
+export const InterviewerAudioProvider = ({
   onTranscription,
   children,
 }: {
   onTranscription?: (text: string) => void;
   children: React.ReactNode;
-}) {
+}) => {
   const { token } = useAuth();
   const { setInterviewerAudio, setStatus, voiceEnrolled, voiceFilterEnabled } = useInterviewStore();
   const onTranscriptionRef = useRef(onTranscription);
@@ -204,7 +204,7 @@ export function useInterviewerAudio(): Ctx {
  * continuous proof that audio is actually flowing — not just a
  * static "ON" indicator that can be lying.
  */
-export function InterviewerAudioPill() {
+export const InterviewerAudioPill = () => {
   const { active, isSupported, level, error, start, stop } = useInterviewerAudio();
   const [connecting, setConnecting] = useState(false);
 

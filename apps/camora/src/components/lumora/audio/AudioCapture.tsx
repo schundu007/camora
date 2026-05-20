@@ -1035,7 +1035,7 @@ export function AudioCapture({ onTranscription, autoStart = true, active, compac
  *   when embedded in the coding/design toolbar strips that are already
  *   styled navy; the box-in-a-box otherwise looks like a popup overlay.
  */
-function UnifiedMicButton({
+const UnifiedMicButton = ({
   continuousMode, audioLevel,
   handleModeToggle, compact,
 }: {
@@ -1043,7 +1043,7 @@ function UnifiedMicButton({
   audioLevel: number;
   handleModeToggle: () => void;
   compact?: boolean;
-}) {
+}) => {
   const isAutoOn = continuousMode;
 
   const inner = (

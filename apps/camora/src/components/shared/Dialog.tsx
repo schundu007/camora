@@ -125,11 +125,11 @@ export function DialogProvider({ children }: { children: ReactNode }) {
   );
 }
 
-function DialogOverlay({ pending, confirmBtnRef, onClose }: {
+const DialogOverlay = ({ pending, confirmBtnRef, onClose }: {
   pending: Pending;
   confirmBtnRef: React.MutableRefObject<HTMLButtonElement | null>;
   onClose: (accepted: boolean) => void;
-}) {
+}) => {
   const opts = pending.opts;
   const isConfirm = pending.kind === 'confirm';
   const tone = opts.tone || (isConfirm ? 'default' : 'default');

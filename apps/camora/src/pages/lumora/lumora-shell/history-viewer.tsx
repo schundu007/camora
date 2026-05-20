@@ -7,13 +7,13 @@ import { AnswerBlocks } from '../../../components/lumora/interview/AnswerBlocks'
 import { DESIGN_BLOCK_TYPES, CODING_BLOCK_TYPES } from '../../../lib/constants';
 import type { ParsedBlock } from '../../../types';
 
-export function HistoryAnswerViewer({
+export const HistoryAnswerViewer = ({
   entry,
   onClose,
 }: {
   entry: { question: string; blocks: ParsedBlock[]; timestamp: Date | string };
   onClose: () => void;
-}) {
+}) => {
   // Normalize legacy coding entries where `blocks` was stored as the raw
   // { json: {...}, format: 'ascend_json' } payload from the coding backend
   // instead of a ParsedBlock[]. Convert on-the-fly so those sessions still
@@ -86,7 +86,7 @@ export function HistoryAnswerViewer({
   );
 }
 
-export function TabLoading({ label }: { label: string }) {
+export const TabLoading = ({ label }: { label: string }) => {
   return (
     <div className="flex-1 flex items-center justify-center" style={{ background: 'var(--bg-surface)' }}>
       <div className="flex items-center gap-3">

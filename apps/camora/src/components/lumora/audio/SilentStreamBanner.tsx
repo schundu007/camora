@@ -22,7 +22,7 @@ const STALE_AFTER_MS = 5 * 60 * 1000;     // 5 minutes
 const SPEECH_THRESHOLD = 0.012;
 const SAMPLE_INTERVAL_MS = 5000;          // sample the level every 5s — cheap
 
-export function SilentStreamBanner() {
+export const SilentStreamBanner = () => {
   const { active, level, start, stop } = useInterviewerAudio();
   const [silentForMs, setSilentForMs] = useState(0);
   const [dismissed, setDismissed] = useState(false);
