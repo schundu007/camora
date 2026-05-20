@@ -119,7 +119,7 @@ const MinimizedPill = ({ onExpand }: { onExpand: () => void }) => {
 
 /* ── Main popup ───────────────────────────────────────────── */
 
-export function FollowUpPopup() {
+export const FollowUpPopup = () => {
   const {
     question, isStreaming, streamText, parsedBlocks,
     popupVisible, popupMinimized,

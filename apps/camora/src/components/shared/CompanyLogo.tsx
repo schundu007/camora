@@ -52,7 +52,7 @@ interface CompanyLogoProps {
   className?: string;
 }
 
-export function CompanyLogo({ topicId, size = 32, className = '' }: CompanyLogoProps) {
+export const CompanyLogo = ({ topicId, size = 32, className = '' }: CompanyLogoProps) => {
   const logoSrc = LOGO_MAP[topicId.toLowerCase()];
   if (!logoSrc) return null;
 
@@ -75,7 +75,7 @@ export function CompanyLogo({ topicId, size = 32, className = '' }: CompanyLogoP
   );
 }
 
-export function getCompanyLogoSrc(topicId: string): string | null {
+export const getCompanyLogoSrc = (topicId: string): string | null  => {
   return LOGO_MAP[topicId.toLowerCase()] || null;
 }
 

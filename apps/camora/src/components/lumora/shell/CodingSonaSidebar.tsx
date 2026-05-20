@@ -48,7 +48,7 @@ interface CodingSonaSidebarProps {
 
 const STORAGE_PREFIX = 'lumora_sona_sidebar_';
 
-function loadHistory(surface: string): ChatMessage[] {
+const loadHistory = (surface: string): ChatMessage[]  => {
   try {
     const raw = localStorage.getItem(STORAGE_PREFIX + surface);
     if (!raw) return [];
@@ -58,13 +58,13 @@ function loadHistory(surface: string): ChatMessage[] {
   } catch { return []; }
 }
 
-function saveHistory(surface: string, msgs: ChatMessage[]) {
+const saveHistory = (surface: string, msgs: ChatMessage[]) => {
   try {
     localStorage.setItem(STORAGE_PREFIX + surface, JSON.stringify(msgs.slice(-50)));
   } catch { /* ignore quota errors */ }
 }
 
-export function CodingSonaSidebar({ surface, open, onClose, listenTrigger }: CodingSonaSidebarProps) {
+export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: CodingSonaSidebarProps) => {
   const { token } = useAuth();
   const liveSolveContext = useInterviewStore(s => s.liveSolveContext);
 
@@ -445,7 +445,7 @@ export function CodingSonaSidebar({ surface, open, onClose, listenTrigger }: Cod
    halo — so Sona's affordance reads identically across every tab.
    When a solve is on screen we add a small gold "context ready"
    dot at the top-right corner. */
-export function CodingSonaSidebarToggle({ open, onToggle, hasSolve }: { open: boolean; onToggle: () => void; hasSolve: boolean }) {
+export const CodingSonaSidebarToggle = ({ open, onToggle, hasSolve }: { open: boolean; onToggle: () => void; hasSolve: boolean }) => {
   if (open) return null;
   return (
     <button

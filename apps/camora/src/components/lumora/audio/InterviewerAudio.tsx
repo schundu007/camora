@@ -176,7 +176,7 @@ export const InterviewerAudioProvider = ({
   );
 }
 
-export function useInterviewerAudio(): Ctx {
+export const useInterviewerAudio = (): Ctx  => {
   const ctx = useContext(InterviewerAudioContext);
   if (!ctx) {
     // Fall back to a stub so components rendered outside the provider

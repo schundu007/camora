@@ -30,7 +30,7 @@ const SHORTCUTS = {
 // every state transition (start, speech, silence, stop, restart,
 // error, heartbeat-recover, visibility-recover) shows up in the
 // console with a single grep target: `[mic]`.
-function dlog(event: string, data?: Record<string, unknown>) {
+const dlog = (event: string, data?: Record<string, unknown>) => {
   try {
     if (typeof localStorage === 'undefined') return;
     if (localStorage.getItem('lumora_mic_debug') !== 'on') return;
@@ -54,7 +54,7 @@ function dlog(event: string, data?: Record<string, unknown>) {
 // legitimate "what?" follow-up) are recoverable — the user just speaks
 // a fuller sentence. False positives (passing through "lanja") wreck
 // the QUESTIONS panel and waste an LLM call.
-function isLikelyRealSpeech(raw: string): boolean {
+const isLikelyRealSpeech = (raw: string): boolean  => {
   // Defensive: if a non-string slips through (Whisper backend edge
   // case — see the matching guard in lumora-backend transcription.js),
   // reject. Whisper has never legitimately produced "[object Object]"
@@ -89,7 +89,7 @@ interface AudioCaptureProps {
   compact?: boolean;
 }
 
-export function AudioCapture({ onTranscription, autoStart = true, active, compact }: AudioCaptureProps) {
+export const AudioCapture = ({ onTranscription, autoStart = true, active, compact }: AudioCaptureProps) => {
   // Use centralized auth
   const { token } = useAuth();
 

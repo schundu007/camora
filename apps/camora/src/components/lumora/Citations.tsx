@@ -26,7 +26,7 @@ interface CitationsProps {
 }
 
 /** Human-readable label for the docKind field on user-tier citations. */
-function docKindLabel(docKind: string | null): string {
+const docKindLabel = (docKind: string | null): string  => {
   if (!docKind) return 'Uploaded document';
   const k = docKind.toLowerCase();
   if (k.includes('jd') || k.includes('job')) return 'Job description';
@@ -154,7 +154,7 @@ const CitationRow = ({ c, index }: { c: Citation; index: number }) => {
   );
 }
 
-export function Citations({ citations }: CitationsProps) {
+export const Citations = ({ citations }: CitationsProps) => {
   const [open, setOpen] = useState(false);
 
   if (citations.length === 0) return null;

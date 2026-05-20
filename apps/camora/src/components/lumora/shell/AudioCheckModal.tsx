@@ -23,7 +23,7 @@ interface Props {
   onClose: () => void;
 }
 
-export function AudioCheckModal({ isOpen, onClose }: Props) {
+export const AudioCheckModal = ({ isOpen, onClose }: Props) => {
   const interviewerActive = useInterviewStore((s) => s.interviewerAudio.active);
   const [permission, setPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown');
   const [inputs, setInputs] = useState<AudioInputDevice[]>([]);

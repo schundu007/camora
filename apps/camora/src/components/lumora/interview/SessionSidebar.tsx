@@ -13,7 +13,7 @@ interface SessionSidebarProps {
 // palette memory). Coding submits arrive prefixed with [LANGUAGE];
 // design submits with [SYSTEM DESIGN]; everything else is behavioral.
 type QuestionCategory = 'behavioral' | 'coding' | 'design';
-function categorize(q: string): QuestionCategory {
+const categorize = (q: string): QuestionCategory  => {
   const t = (q || '').trim();
   if (/^\[SYSTEM DESIGN\]/i.test(t)) return 'design';
   if (/^\[[A-Z+#.\-]{2,16}\]/.test(t)) return 'coding';
@@ -25,7 +25,7 @@ const CATEGORY_LABEL: Record<QuestionCategory, string> = {
   design: 'DSGN',
 };
 
-function groupByDate(history: { question: string; timestamp: Date }[]) {
+const groupByDate = (history: { question: string; timestamp: Date }[]) => {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterday = new Date(today.getTime() - 86400000);
@@ -53,7 +53,7 @@ function groupByDate(history: { question: string; timestamp: Date }[]) {
   return groups.filter(g => g.items.length > 0);
 }
 
-export function SessionSidebar({ isOpen, onClose, onSelectEntry }: SessionSidebarProps) {
+export const SessionSidebar = ({ isOpen, onClose, onSelectEntry }: SessionSidebarProps) => {
   const { history, clearHistory, removeHistoryEntry } = useInterviewStore();
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 

@@ -14,7 +14,7 @@ interface ParsedBlock {
 }
 
 // Parse blocks from streaming content
-function parseStreamingBlocks(content: string): Record<string, ParsedBlock> {
+const parseStreamingBlocks = (content: string): Record<string, ParsedBlock>  => {
   const blocks: Record<string, ParsedBlock> = {};
 
   // Match complete blocks [TYPE]...[/TYPE]
@@ -46,7 +46,7 @@ function parseStreamingBlocks(content: string): Record<string, ParsedBlock> {
   return blocks;
 }
 
-export function StreamingAnswer({ chunks, isDesign, isCoding }: StreamingAnswerProps) {
+export const StreamingAnswer = ({ chunks, isDesign, isCoding }: StreamingAnswerProps) => {
   const content = chunks.join('');
 
   const blocks = useMemo(() => parseStreamingBlocks(content), [content]);

@@ -5,7 +5,7 @@ import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
 import { PaywallGate } from '../../components/shared/ui/PaywallGate';
 import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 
-function CodingPageContent() {
+const CodingPageContent = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { handleCodingSubmit, isStreaming } = useStreamingInterview();
@@ -24,7 +24,7 @@ function CodingPageContent() {
   );
 }
 
-export function CodingPage() {
+export const CodingPage = () => {
   useEffect(() => {
     document.title = 'Coding Interview | Camora';
     return () => { document.title = 'Camora'; };

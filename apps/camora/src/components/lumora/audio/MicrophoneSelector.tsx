@@ -5,7 +5,7 @@ interface MicrophoneSelectorProps {
   onDeviceChange?: (deviceId: string) => void;
 }
 
-export function MicrophoneSelector({ disabled, onDeviceChange }: MicrophoneSelectorProps) {
+export const MicrophoneSelector = ({ disabled, onDeviceChange }: MicrophoneSelectorProps) => {
   const {
     devices,
     selectedDeviceId,
@@ -57,7 +57,7 @@ export function MicrophoneSelector({ disabled, onDeviceChange }: MicrophoneSelec
   );
 }
 
-function formatDeviceName(name: string): string {
+const formatDeviceName = (name: string): string  => {
   if (!name || name === 'default') return 'Default Mic';
 
   // Shorten common device names for display

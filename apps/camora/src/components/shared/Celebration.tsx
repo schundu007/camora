@@ -29,11 +29,11 @@ type CelebrationCtx = {
 
 const Ctx = createContext<CelebrationCtx>({ celebrate: () => {} });
 
-export function useCelebration() {
+export const useCelebration = () => {
   return useContext(Ctx);
 }
 
-export function CelebrationProvider({ children }: { children: ReactNode }) {
+export const CelebrationProvider = ({ children }: { children: ReactNode }) => {
   const [active, setActive] = useState<CelebrationOpts | null>(null);
   const [visible, setVisible] = useState(false);
 

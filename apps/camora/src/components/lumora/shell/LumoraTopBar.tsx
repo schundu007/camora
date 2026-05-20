@@ -7,7 +7,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { HourMeterChip } from '@/components/shared/ui/HourMeterChip';
 import { ContextBadge } from './ContextBadge';
 
-function ThemeToggleButton() {
+const ThemeToggleButton = () => {
   const { theme, toggle } = useTheme();
   // Use CSS variables so the button reads correctly on whatever background
   // the theme is using. Previous version was hardcoded white-on-white,
@@ -55,7 +55,7 @@ interface LumoraTopBarProps {
   inline?: boolean;
 }
 
-export function LumoraTopBar({ onTranscription, inline = false }: LumoraTopBarProps) {
+export const LumoraTopBar = ({ onTranscription, inline = false }: LumoraTopBarProps) => {
   const { status } = useInterviewStore();
   const [showSettings, setShowSettings] = useState(false);
 

@@ -51,7 +51,7 @@ const EMPTY_DOC: DocState = {
 
 /** Fold a legacy single-string studyMaterials field into the studyDocs
  *  array so users who uploaded one doc on v8 don't lose it on first read. */
-function migrateStudyDocs(doc: any): DocState {
+const migrateStudyDocs = (doc: any): DocState  => {
   if (!doc) return { ...EMPTY_DOC };
   const studyDocs: StudyDoc[] = Array.isArray(doc.studyDocs) ? doc.studyDocs : [];
   if (!studyDocs.length && typeof doc.studyMaterials === 'string' && doc.studyMaterials.trim()) {
@@ -84,7 +84,7 @@ const SIDEBAR_SECTIONS = [
 ];
 
 /** Strip markdown fences and leading "json" tag; shared helper. */
-function stripFences(raw: string): string {
+const stripFences = (raw: string): string  => {
   return raw
     .replace(/^```(?:json)?\s*/gim, '')
     .replace(/```\s*$/gm, '')
@@ -97,7 +97,7 @@ function stripFences(raw: string): string {
  *  Backend wraps failed JSON parsing in { rawContent: string } — unwrap it
  *  here and, if parsing fails, fall back to a readable { summary: text }
  *  so the UI never renders a RAW CONTENT dump with ```json fences. */
-function formatPrepContent(content: any): any {
+const formatPrepContent = (content: any): any  => {
   if (!content) return { summary: 'No content generated' };
   if (typeof content === 'object' && !Array.isArray(content)) {
     // Backend wraps unparsed AI output in rawContent — try to extract the real JSON.
@@ -134,7 +134,7 @@ function formatPrepContent(content: any): any {
 }
 
 /** Repair truncated JSON using delimiter stack — closes in correct nesting order */
-function repairJSON(s: string): any {
+const repairJSON = (s: string): any  => {
   let str = s.trim();
   const start = str.indexOf('{');
   if (start < 0) return null;
@@ -173,7 +173,7 @@ function repairJSON(s: string): any {
 
 /** Escape literal newlines/tabs inside JSON string values so JSON.parse
  *  tolerates model outputs that forget to escape control chars. */
-function escapeJsonStringControls(s: string): string {
+const escapeJsonStringControls = (s: string): string  => {
   let out = '';
   let inStr = false, esc = false;
   for (let i = 0; i < s.length; i++) {
@@ -192,7 +192,7 @@ function escapeJsonStringControls(s: string): string {
 }
 
 /** Aggressively extract a JSON object from any string */
-function extractJSON(raw: string): any {
+const extractJSON = (raw: string): any  => {
   if (!raw || typeof raw !== 'string') return null;
   const s = stripFences(raw);
   // Try direct parse
@@ -217,14 +217,14 @@ function extractJSON(raw: string): any {
 }
 
 /** Format a key from camelCase to readable label. */
-function fmtKey(k: string): string {
+const fmtKey = (k: string): string  => {
   return k.replace(/([A-Z])/g, ' $1').trim().replace(/^./, (c) => c.toUpperCase());
 }
 
 /** Best-effort JSON parse — returns parsed value if the string is valid JSON,
  *  null otherwise. Used to heal stringified-object values that snuck through
  *  schema validation or are coming back from stale localStorage. */
-function tryParseJsonValue(s: string): any {
+const tryParseJsonValue = (s: string): any  => {
   if (typeof s !== 'string') return null;
   const trimmed = s.trim();
   if (!trimmed) return null;
@@ -238,7 +238,7 @@ function tryParseJsonValue(s: string): any {
  *  the model returns an object/array where we expected a string. Without
  *  this guard, React throws "Objects are not valid as a React child" and
  *  the whole panel goes blank. */
-function safeText(v: any): string {
+const safeText = (v: any): string  => {
   if (v === null || v === undefined) return '';
   if (typeof v === 'string') return v;
   if (typeof v === 'number' || typeof v === 'boolean') return String(v);
@@ -439,7 +439,7 @@ const ComplexityBadge = ({ kind, value }: { kind: 'time' | 'space'; value: strin
 }
 
 /** Map any caller-supplied language token onto a hljs-recognised id. */
-function resolveHljsLanguage(input?: string): { id: string | null; label: string } {
+const resolveHljsLanguage = (input?: string): { id: string | null; label: string } => {
   const raw = (input || '').trim().toLowerCase();
   if (!raw || raw === 'code' || raw === 'plaintext' || raw === 'text') {
     return { id: null, label: raw || 'code' };
@@ -1660,7 +1660,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
   return <div className="space-y-4">{els}</div>;
 }
 
-function loadPrepData(): PrepData {
+const loadPrepData = (): PrepData  => {
   try {
     const r = localStorage.getItem(STORAGE_KEY);
     if (!r) return INITIAL_STATE;
@@ -1679,7 +1679,7 @@ function loadPrepData(): PrepData {
     return data;
   } catch { return INITIAL_STATE; }
 }
-function savePrepData(s: PrepData) {
+const savePrepData = (s: PrepData) => {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
 }
 
@@ -2313,7 +2313,7 @@ const FormattedJD = ({ text }: { text: string }) => {
   );
 }
 
-export function LumoraDocsPanel({ onClose: _onClose }: { onClose?: () => void }) {
+export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void }) => {
   const { token } = useAuth();
   // Cloud-platform choice for prep-section generation. Sent to the backend
   // so the LLM names services correctly (Cosmos DB vs DynamoDB) instead of
