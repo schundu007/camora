@@ -348,6 +348,65 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     return detectLanguage(text ?? problemTextRef.current);
   }, []);
 
+  // Analysis tabs — declared here (before the useEffect at ~line 666 that lists it
+  // as a dependency) to prevent TDZ: Rolldown converts const to actual const, so the
+  // deps-array reference must come AFTER the const is initialized.
+  const handleAnalysis = useCallback(async (tab: 'explain' | 'issues' | 'deepdive') => {
+    const sd = jsonSolution;
+    const solCode = sd?.solutions?.[activeSolutionIdx]?.code
+      || sd?.solutions?.[0]?.code
+      || sd?.code
+      || code;
+    if (!solCode?.trim() || !token) return;
+    const cacheKey = `${activeSolutionIdx}_${tab}`;
+    if (analysisCache[cacheKey]) { setAnalysisTab(tab); return; }
+    analysisAbortRef.current?.abort();
+    const abort = new AbortController();
+    analysisAbortRef.current = abort;
+    setAnalysisTab(tab);
+    setAnalysisLoading(tab);
+    const lang = resolveLanguage();
+    const prompts: Record<string, string> = {
+      explain: `Analyze this ${lang} solution and provide:\n1. One sentence summary of what it does.\n2. Step-by-step numbered walkthrough of the algorithm.\n3. The key insight that makes this approach work.\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
+      issues: `Review this ${lang} code and list all bugs, edge cases, and quality issues. For each issue:\n- Severity: CRITICAL / HIGH / MEDIUM / LOW\n- Location: line or function name\n- Problem: what is wrong\n- Fix: corrected code snippet\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
+      deepdive: `Generate 3 deep-dive interview questions about this ${lang} solution. For each question provide a thorough answer. Focus on: why this approach, edge cases, and how to extend it.\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
+    };
+    let accumulated = '';
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/v1/inference/stream`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ question: prompts[tab], mode: 'general', bypass_cache: true }),
+        signal: abort.signal,
+      });
+      if (!resp.ok || !resp.body) throw new Error('Request failed');
+      const reader = resp.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? '';
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const d = JSON.parse(line.slice(6));
+              if (d.t) { accumulated += d.t; setAnalysisCache(prev => ({ ...prev, [cacheKey]: accumulated })); }
+              else if (d.raw) { accumulated = d.raw; setAnalysisCache(prev => ({ ...prev, [cacheKey]: accumulated })); }
+            } catch {}
+          }
+        }
+      }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') setAnalysisCache(prev => ({ ...prev, [cacheKey]: `Error: ${err.message}` }));
+    } finally {
+      setAnalysisLoading(null);
+    }
+  }, [jsonSolution, activeSolutionIdx, analysisCache, code, token, resolveLanguage]);
+
   // Regenerate — re-submit the same problem with bypass_cache=true so
   // the backend skips the answer cache lookup and produces a fresh
   // solution. The fresh result still writes to the cache so the next
@@ -1258,63 +1317,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setProblemTab('solution');
     onSubmit(combined, language, { bypassCache: true });
   }, [snapChipCode, code, problemText, language, clearStreamChunks, setParsedBlocks, setStreamError, onSubmit, getDefaultCode]);
-
-  // Analysis tabs — stream Explain / Issues / Deep Dive from the active solution code.
-  const handleAnalysis = useCallback(async (tab: 'explain' | 'issues' | 'deepdive') => {
-    const sd = jsonSolution;
-    const solCode = sd?.solutions?.[activeSolutionIdx]?.code
-      || sd?.solutions?.[0]?.code
-      || sd?.code
-      || code;
-    if (!solCode?.trim() || !token) return;
-    const cacheKey = `${activeSolutionIdx}_${tab}`;
-    if (analysisCache[cacheKey]) { setAnalysisTab(tab); return; }
-    analysisAbortRef.current?.abort();
-    const abort = new AbortController();
-    analysisAbortRef.current = abort;
-    setAnalysisTab(tab);
-    setAnalysisLoading(tab);
-    const lang = resolveLanguage();
-    const prompts: Record<string, string> = {
-      explain: `Analyze this ${lang} solution and provide:\n1. One sentence summary of what it does.\n2. Step-by-step numbered walkthrough of the algorithm.\n3. The key insight that makes this approach work.\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
-      issues: `Review this ${lang} code and list all bugs, edge cases, and quality issues. For each issue:\n- Severity: CRITICAL / HIGH / MEDIUM / LOW\n- Location: line or function name\n- Problem: what is wrong\n- Fix: corrected code snippet\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
-      deepdive: `Generate 3 deep-dive interview questions about this ${lang} solution. For each question provide a thorough answer. Focus on: why this approach, edge cases, and how to extend it.\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
-    };
-    let accumulated = '';
-    try {
-      const resp = await fetch(`${API_BASE_URL}/api/v1/inference/stream`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ question: prompts[tab], mode: 'general', bypass_cache: true }),
-        signal: abort.signal,
-      });
-      if (!resp.ok || !resp.body) throw new Error('Request failed');
-      const reader = resp.body.getReader();
-      const dec = new TextDecoder();
-      let buf = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const lines = buf.split('\n');
-        buf = lines.pop() ?? '';
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const d = JSON.parse(line.slice(6));
-              if (d.t) { accumulated += d.t; setAnalysisCache(prev => ({ ...prev, [cacheKey]: accumulated })); }
-              else if (d.raw) { accumulated = d.raw; setAnalysisCache(prev => ({ ...prev, [cacheKey]: accumulated })); }
-            } catch {}
-          }
-        }
-      }
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') setAnalysisCache(prev => ({ ...prev, [cacheKey]: `Error: ${err.message}` }));
-    } finally {
-      setAnalysisLoading(null);
-    }
-  }, [jsonSolution, activeSolutionIdx, analysisCache, code, token, resolveLanguage]);
 
   const extractAndMaybeGenerate = useCallback(async (file: File, autoGenerate: boolean) => {
     if (!token) { setError('Not authenticated'); return; }
