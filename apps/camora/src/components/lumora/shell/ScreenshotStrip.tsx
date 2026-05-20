@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { dialogAlert } from '@/components/shared/Dialog';
@@ -27,6 +27,10 @@ export function ScreenshotStrip({ surface, screenshots, onSnapped, onRemove }: S
   const setIsStealthActive = useInterviewStore(s => s.setIsStealthActive);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
   const [pendingIds, setPendingIds] = useState<string[]>([]);
+
+  // Bug 3: stale closure ref for onSnapped callback
+  const onSnappedRef = useRef(onSnapped);
+  useEffect(() => { onSnappedRef.current = onSnapped; }, [onSnapped]);
 
   const handleStealthMode = useCallback(async () => {
     const camo = (window as any).camo;
@@ -57,14 +61,19 @@ export function ScreenshotStrip({ surface, screenshots, onSnapped, onRemove }: S
       } else {
         const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         const track = stream.getVideoTracks()[0];
-        const imageCapture = new (window as any).ImageCapture(track);
-        const bitmap = await imageCapture.grabFrame();
-        track.stop();
-        const canvas = document.createElement('canvas');
-        canvas.width = bitmap.width;
-        canvas.height = bitmap.height;
-        canvas.getContext('2d')!.drawImage(bitmap, 0, 0);
-        dataUrl = canvas.toDataURL('image/png');
+        try {
+          const imageCapture = new (window as any).ImageCapture(track);
+          const bitmap = await imageCapture.grabFrame();
+          const canvas = document.createElement('canvas');
+          canvas.width = bitmap.width;
+          canvas.height = bitmap.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('canvas 2d context unavailable');
+          ctx.drawImage(bitmap, 0, 0);
+          dataUrl = canvas.toDataURL('image/png');
+        } finally {
+          track.stop();
+        }
       }
       // Show loading spinner for this snap
       const tempEntry: ScreenshotEntry = { id, dataUrl, text: '' };
@@ -81,17 +90,19 @@ export function ScreenshotStrip({ surface, screenshots, onSnapped, onRemove }: S
           headers: { Authorization: `Bearer ${token}` },
           body: formData,
         });
+        if (!resp.ok) throw new Error(`OCR failed: ${resp.status}`);
         const data = await resp.json();
         const text = data.text || data.problem_text || '';
-        onSnapped({ ...tempEntry, text });
+        onSnappedRef.current({ ...tempEntry, text });
       } catch {
-        onSnapped({ ...tempEntry, text: '' });
+        onSnappedRef.current({ ...tempEntry, text: '' });
       } finally {
         setPendingIds(prev => prev.filter(pid => pid !== id));
       }
     } catch {
       setSnapState('error');
       setTimeout(() => setSnapState('idle'), 3000);
+      setPendingIds(prev => prev.filter(pid => pid !== id));
     }
   }, [token, onSnapped]);
 
