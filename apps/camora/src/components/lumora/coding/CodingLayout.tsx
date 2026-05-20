@@ -272,7 +272,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // 'granted' | 'denied' | 'restricted' | 'not-determined' | null (non-desktop)
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
   const isStealthActive = useInterviewStore(s => s.isStealthActive);
-  const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'done' | 'error'>('idle');
   // Extracted code from the last image snap — drives quick-action chips.
   const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
   // Analysis tabs — Explain / Issues / Deep Dive generated from the active solution code
@@ -1177,69 +1176,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   };
 
 
-  // Ref so handleSnap can call acceptImage without a forward-reference TDZ.
-  // acceptImage is declared ~150 lines below handleSnap; putting it in the
+  // Ref so acceptImage can be called without a forward-reference TDZ.
+  // acceptImage is declared ~150 lines below; putting it in the
   // useCallback deps array would access the const before initialization.
   const acceptImageRef = useRef<((file: File) => void) | null>(null);
-
-  const handleSnap = useCallback(async () => {
-    const camo = (window as any).camo;
-
-    if (camo?.takeScreenshot) {
-      // Desktop (Electron) path
-      const perm = await camo.getMediaAccessStatus?.('screen').catch(() => null);
-      if (perm && perm !== 'granted') {
-        camo.openSystemPrivacy?.('ScreenCapture');
-        return;
-      }
-      setSnapState('capturing');
-      try {
-        const result = await camo.takeScreenshot();
-        if (!result?.ok) throw new Error(result?.error || 'Capture failed');
-        setSnapState('done');
-        setTimeout(() => setSnapState('idle'), 2500);
-      } catch {
-        setSnapState('error');
-        setTimeout(() => setSnapState('idle'), 3000);
-      }
-      return;
-    }
-
-    // Browser path — capture screen frame and feed into image pipeline
-    if (!navigator.mediaDevices?.getDisplayMedia) {
-      setSnapState('error');
-      setTimeout(() => setSnapState('idle'), 3000);
-      return;
-    }
-    setSnapState('capturing');
-    try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false } as DisplayMediaStreamOptions);
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      await new Promise<void>(res => { video.onloadedmetadata = () => res(); });
-      await video.play();
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d')!.drawImage(video, 0, 0);
-      stream.getTracks().forEach(t => t.stop());
-      video.srcObject = null;
-      const blob = await new Promise<Blob>((res, rej) =>
-        canvas.toBlob(b => b ? res(b) : rej(new Error('canvas.toBlob failed')), 'image/png')
-      );
-      const file = new File([blob], 'snap.png', { type: 'image/png' });
-      acceptImageRef.current?.(file);
-      setSnapState('done');
-      setTimeout(() => setSnapState('idle'), 2500);
-    } catch (err: any) {
-      if (err?.name !== 'NotAllowedError') {
-        setSnapState('error');
-        setTimeout(() => setSnapState('idle'), 3000);
-      } else {
-        setSnapState('idle');
-      }
-    }
-  }, []);
 
   const handleFetchFromUrl = async (overrideUrl?: string) => {
     const urlToFetch = overrideUrl ?? problemUrl;
