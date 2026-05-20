@@ -272,7 +272,9 @@ YOUR CODE WILL BE RUN. If it crashes or gives wrong output, you have FAILED.
 # RULE #1: MINIMAL CODE - AS FEW LINES AS POSSIBLE
 ##############################################################################
 Your code must be EXTREMELY CONCISE:
-- TARGET: 10-30 lines for most problems, 40 lines MAX for complex problems
+${starterCode
+  ? `- Return the COMPLETE filled-in file — no line-count limit; preserve all surrounding boilerplate, class definitions, imports, and test harness EXACTLY as given`
+  : `- TARGET: 10-30 lines for most problems, 40 lines MAX for complex problems`}
 - Use the LATEST modern idioms and built-in features of ${language}
 - Combine operations where possible
 - NO helper functions unless absolutely required for recursion/DP
