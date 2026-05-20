@@ -352,6 +352,7 @@ export function App() {
           <Route path="/lumora/assistants" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/profile" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/credits" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/fix" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
 
           {/* ── /app/* → /lumora/* — legacy aliases collapsed to redirects ── */}
           <Route path="/app" element={<Navigate to="/lumora" replace />} />
