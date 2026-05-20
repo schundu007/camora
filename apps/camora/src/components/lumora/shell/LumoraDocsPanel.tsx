@@ -2288,13 +2288,23 @@ function FormattedJD({ text }: { text: string }) {
                   );
                 }
                 return (
-                  <p
-                    key={j}
-                    className="text-[13px] leading-[1.65] pl-8"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
-                    {item}
-                  </p>
+                  <div key={j} className="flex items-start gap-2 pl-8">
+                    <span
+                      className="flex-shrink-0 mt-[6px]"
+                      style={{
+                        width: 5,
+                        height: 5,
+                        background: 'var(--cam-gold-leaf)',
+                        borderRadius: '50%',
+                      }}
+                    />
+                    <p
+                      className="text-[13px] leading-[1.65]"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      {item}
+                    </p>
+                  </div>
                 );
               })}
             </div>
