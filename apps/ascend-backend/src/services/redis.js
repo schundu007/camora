@@ -71,14 +71,18 @@ export async function cacheGet(key) {
   try {
     if (redisClient && isConnected) {
       const value = await redisClient.get(key);
-      return value ? JSON.parse(value) : null;
+      // Key found in Redis — return it. Key missing in Redis — fall through
+      // to memory so nonces stored before Redis connected are still found.
+      if (value !== null && value !== undefined) return JSON.parse(value);
     }
   } catch (err) {
     safeLog('Redis get error:', err.message);
   }
 
-  // Fallback to memory cache
-  return memoryCache.get(key) || null;
+  // Fallback: memory cache (covers Redis-down AND startup race where nonce
+  // was stored in memory before the Redis connection event fired).
+  const mem = memoryCache.get(key);
+  return mem !== undefined ? mem : null;
 }
 
 /**
