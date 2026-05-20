@@ -2290,7 +2290,7 @@ function FormattedJD({ text }: { text: string }) {
                 return (
                   <p
                     key={j}
-                    className="text-[13px] leading-[1.65]"
+                    className="text-[13px] leading-[1.65] pl-8"
                     style={{ color: 'var(--text-primary)' }}
                   >
                     {item}
