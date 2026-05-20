@@ -1125,8 +1125,13 @@ IMPORTANT:
       return res.json(parsed);
     } catch {
       const codeMatch = content.match(/```(?:\w+)?\s*([\s\S]*?)\s*```/);
-      const fixedCode = codeMatch ? codeMatch[1] : content;
-      return res.json({ code: fixedCode.trim(), explanation: '' });
+      const extracted = (codeMatch ? codeMatch[1] : content).trim();
+      // The fence may itself contain JSON (Claude sometimes wraps JSON in ```json)
+      try {
+        const inner = JSON.parse(extracted);
+        if (inner && inner.code) return res.json(inner);
+      } catch { /* not JSON — treat as raw code */ }
+      return res.json({ code: extracted, explanation: '' });
     }
   } catch (err) {
     console.error('Auto-fix error:', err);
