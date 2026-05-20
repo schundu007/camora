@@ -1419,45 +1419,153 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   // ── Analysis content renderers (const, not module-level, to avoid TDZ in bundler) ──
 
+  const SEV_COLORS: Record<string, { bg: string; border: string; text: string }> = {
+    CRITICAL: { bg: 'rgba(239,68,68,0.12)', border: '#ef4444', text: '#ef4444' },
+    HIGH:     { bg: 'rgba(249,115,22,0.12)', border: '#f97316', text: '#f97316' },
+    MEDIUM:   { bg: 'rgba(234,179,8,0.12)',  border: '#eab308', text: '#ca8a04' },
+    LOW:      { bg: 'rgba(34,197,94,0.12)',  border: '#22c55e', text: '#16a34a' },
+  };
+
   const renderInline = (text: string): React.ReactNode => {
-    const SEV: Record<string, string> = { CRITICAL: '#ef4444', HIGH: '#f97316', MEDIUM: '#eab308', LOW: '#22c55e' };
-    const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\b(?:CRITICAL|HIGH|MEDIUM|LOW)\b)/g);
+    const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\b(?:CRITICAL|HIGH|MEDIUM|LOW)\b)/g);
     return parts.map((p, i) => {
       if (p.startsWith('`') && p.endsWith('`') && p.length > 2)
-        return <code key={i} style={{ background: 'var(--bg-primary)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--border)', borderRadius: 3, padding: '0 4px', fontFamily: 'var(--font-mono)', fontSize: 11 }}>{p.slice(1, -1)}</code>;
+        return <code key={i} style={{ background: 'rgba(38,97,156,0.15)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid rgba(38,97,156,0.35)', borderRadius: 3, padding: '1px 5px', fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 0 }}>{p.slice(1, -1)}</code>;
       if (p.startsWith('**') && p.endsWith('**') && p.length > 4)
-        return <strong key={i}>{p.slice(2, -2)}</strong>;
-      if (SEV[p])
-        return <strong key={i} style={{ color: SEV[p] }}>{p}</strong>;
+        return <strong key={i} style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{p.slice(2, -2)}</strong>;
+      if (p.startsWith('*') && p.endsWith('*') && p.length > 2)
+        return <em key={i} style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>{p.slice(1, -1)}</em>;
+      if (SEV_COLORS[p]) {
+        const s = SEV_COLORS[p];
+        return <span key={i} style={{ display: 'inline-flex', alignItems: 'center', background: s.bg, border: `1px solid ${s.border}`, color: s.text, borderRadius: 4, padding: '0 6px', fontSize: 10, fontWeight: 700, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', lineHeight: '18px', verticalAlign: 'middle' }}>{p}</span>;
+      }
       return p;
     });
   };
 
   const renderAnalysisContent = (content: string): React.ReactNode => {
-    const segments = content.split(/(```[\w]*\n[\s\S]*?```)/g);
+    const segments = content.split(/(```[\w-]*\n[\s\S]*?```)/g);
+    let questionCounter = 0;
     return (
-      <div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {segments.map((seg, si) => {
-          const cm = seg.match(/^```([\w]*)\n([\s\S]*)```$/);
+          // ── Fenced code block ────────────────────────────────────────────
+          const cm = seg.match(/^```([\w-]*)\n([\s\S]*)```$/);
           if (cm) {
             const lang = cm[1];
-            const code = cm[2].replace(/\n$/, '');
+            const codeText = cm[2].replace(/\n$/, '');
             return (
-              <div key={si} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden', margin: '8px 0' }}>
-                {lang && <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', padding: '2px 10px', fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase' as const }}>{lang}</div>}
-                <pre style={{ padding: '8px 10px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', whiteSpace: 'pre' as const, overflowX: 'auto' as const, margin: 0 }}>{code}</pre>
+              <div key={si} style={{ borderRadius: 8, overflow: 'hidden', margin: '6px 0', border: '1px solid rgba(38,97,156,0.4)', boxShadow: '0 2px 8px rgba(3,19,46,0.3)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', padding: '3px 10px' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--cam-gold-leaf-lt)' }}>{lang || 'code'}</span>
+                </div>
+                <pre style={{ padding: '10px 12px', fontSize: 11, fontFamily: 'var(--font-mono)', color: '#CBD5E1', background: '#03132E', whiteSpace: 'pre' as const, overflowX: 'auto' as const, margin: 0, lineHeight: 1.6 }}>{codeText}</pre>
               </div>
             );
           }
+          // ── Text segment — line-by-line ──────────────────────────────────
           return (
-            <div key={si}>
+            <div key={si} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {seg.split('\n').map((line, li) => {
-                const h2 = line.match(/^##\s+(.*)/); if (h2) return <div key={li} style={{ fontWeight: 700, fontSize: 13, color: 'var(--cam-gold-leaf-lt)', marginTop: 10, marginBottom: 4 }}>{h2[1]}</div>;
-                const h1 = line.match(/^#\s+(.*)/); if (h1) return <div key={li} style={{ fontWeight: 700, fontSize: 14, color: 'var(--cam-gold-leaf-lt)', marginTop: 10, marginBottom: 4 }}>{h1[1]}</div>;
-                const bl = line.match(/^[-*]\s+(.*)/); if (bl) return <div key={li} style={{ display: 'flex', gap: 8, margin: '2px 0', paddingLeft: 4 }}><span style={{ color: 'var(--cam-primary)', flexShrink: 0, marginTop: 1 }}>•</span><span>{renderInline(bl[1])}</span></div>;
-                const nl = line.match(/^(\d+)\.\s+(.*)/); if (nl) return <div key={li} style={{ display: 'flex', gap: 8, margin: '2px 0', paddingLeft: 4 }}><span style={{ color: 'var(--cam-primary)', flexShrink: 0, fontWeight: 600, minWidth: 20 }}>{nl[1]}.</span><span>{renderInline(nl[2])}</span></div>;
-                if (!line.trim()) return <div key={li} style={{ height: 6 }} />;
-                return <div key={li} style={{ margin: '2px 0' }}>{renderInline(line)}</div>;
+                const trimmed = line.trim();
+
+                // Horizontal rule
+                if (/^---+$/.test(trimmed))
+                  return <div key={li} style={{ margin: '10px 0', borderTop: '1px solid var(--cam-gold-leaf)', opacity: 0.25 }} />;
+
+                // [BRACKET LABEL] — section chip
+                const bracketLabel = trimmed.match(/^\[([A-Z][A-Z\s/_-]{1,30})\]$/);
+                if (bracketLabel)
+                  return (
+                    <div key={li} style={{ display: 'inline-flex', marginTop: 10, marginBottom: 4 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf)', borderRadius: 5, padding: '2px 10px', fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', color: 'var(--cam-gold-leaf-lt)' }}>
+                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--cam-gold-leaf)', flexShrink: 0 }} />
+                        {bracketLabel[1]}
+                      </span>
+                    </div>
+                  );
+
+                // ### H3
+                const h3 = trimmed.match(/^###\s+(.*)/);
+                if (h3)
+                  return <div key={li} style={{ fontWeight: 600, fontSize: 11.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 8, marginBottom: 2, paddingLeft: 8, borderLeft: '2px solid var(--cam-gold-leaf)' }}>{renderInline(h3[1])}</div>;
+
+                // ## H2
+                const h2 = trimmed.match(/^##\s+(.*)/);
+                if (h2)
+                  return <div key={li} style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 12, marginBottom: 3, paddingLeft: 10, borderLeft: '3px solid var(--cam-gold-leaf)' }}>{renderInline(h2[1])}</div>;
+
+                // # H1
+                const h1 = trimmed.match(/^#\s+(.*)/);
+                if (h1)
+                  return <div key={li} style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 14, marginBottom: 4, paddingLeft: 10, borderLeft: '3px solid var(--cam-gold-leaf)' }}>{renderInline(h1[1])}</div>;
+
+                // Question N: ... pattern
+                const qMatch = trimmed.match(/^Question\s+(\d+)[:.]\s*(.*)/i);
+                if (qMatch) {
+                  questionCounter++;
+                  return (
+                    <div key={li} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 14, marginBottom: 4 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 20, height: 20, borderRadius: '50%', background: 'var(--cam-primary)', color: '#fff', fontSize: 9.5, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0, marginTop: 1 }}>{qMatch[1]}</span>
+                      <span style={{ fontWeight: 600, fontSize: 12.5, color: 'var(--cam-gold-leaf-lt)', lineHeight: 1.4, flex: 1 }}>{renderInline(qMatch[2])}</span>
+                    </div>
+                  );
+                }
+
+                // Answer: label
+                const answerMatch = trimmed.match(/^Answer[:.]\s*(.*)/i);
+                if (answerMatch)
+                  return (
+                    <div key={li} style={{ marginLeft: 28, marginTop: 2, paddingLeft: 10, borderLeft: '2px solid rgba(38,97,156,0.4)' }}>
+                      {answerMatch[1] ? <span style={{ color: 'var(--text-primary)', fontSize: 11.5 }}>{renderInline(answerMatch[1])}</span> : <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--cam-primary)', letterSpacing: '0.06em' }}>Answer</span>}
+                    </div>
+                  );
+
+                // Severity line: "- Severity: CRITICAL"
+                const sevLine = trimmed.match(/^[-•]?\s*Severity[:\s]+(\w+)/i);
+                if (sevLine) {
+                  const key = sevLine[1].toUpperCase() as keyof typeof SEV_COLORS;
+                  const s = SEV_COLORS[key];
+                  return s ? (
+                    <div key={li} style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '4px 0 2px', paddingLeft: 4 }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Severity</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', background: s.bg, border: `1px solid ${s.border}`, color: s.text, borderRadius: 4, padding: '0 7px', fontSize: 10, fontWeight: 700, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', lineHeight: '18px' }}>{key}</span>
+                    </div>
+                  ) : <div key={li} style={{ margin: '2px 0' }}>{renderInline(line)}</div>;
+                }
+
+                // Bullet
+                const bl = trimmed.match(/^[-*•]\s+(.*)/);
+                if (bl)
+                  return (
+                    <div key={li} style={{ display: 'flex', gap: 8, margin: '3px 0', paddingLeft: 6 }}>
+                      <span style={{ color: 'var(--cam-primary)', flexShrink: 0, marginTop: 3, width: 5, height: 5, borderRadius: '50%', background: 'var(--cam-primary)', display: 'inline-block' }} />
+                      <span style={{ fontSize: 11.5, lineHeight: 1.55, color: 'var(--text-primary)' }}>{renderInline(bl[1])}</span>
+                    </div>
+                  );
+
+                // Numbered list
+                const nl = trimmed.match(/^(\d+)\.\s+(.*)/);
+                if (nl)
+                  return (
+                    <div key={li} style={{ display: 'flex', gap: 8, margin: '3px 0', paddingLeft: 6 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 4, background: 'rgba(38,97,156,0.2)', border: '1px solid rgba(38,97,156,0.4)', color: 'var(--cam-primary-lt)', fontSize: 9.5, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0, marginTop: 1 }}>{nl[1]}</span>
+                      <span style={{ fontSize: 11.5, lineHeight: 1.55, color: 'var(--text-primary)' }}>{renderInline(nl[2])}</span>
+                    </div>
+                  );
+
+                // Location / Fix / Problem field lines (Issues tab)
+                const fieldMatch = trimmed.match(/^[-•]?\s*(Location|Problem|Fix|Note)[:\s]+(.*)/i);
+                if (fieldMatch)
+                  return (
+                    <div key={li} style={{ display: 'flex', gap: 6, margin: '2px 0', paddingLeft: 6 }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--cam-primary)', flexShrink: 0, paddingTop: 1, minWidth: 52 }}>{fieldMatch[1]}</span>
+                      <span style={{ fontSize: 11.5, lineHeight: 1.5, color: 'var(--text-primary)' }}>{renderInline(fieldMatch[2])}</span>
+                    </div>
+                  );
+
+                if (!trimmed) return <div key={li} style={{ height: 5 }} />;
+                return <div key={li} style={{ margin: '2px 0', fontSize: 11.5, lineHeight: 1.6, color: 'var(--text-primary)' }}>{renderInline(line)}</div>;
               })}
             </div>
           );
@@ -2110,19 +2218,29 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 )}
                 {/* Analysis content for active tab */}
                 {sd && analysisTab !== 'code' && (
-                  <div className="mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-elevated)' }}>
-                    <div className="flex items-center gap-2 px-3 py-2 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid rgba(255,213,0,0.18)' }}>
-                      <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
-                        {({ explain: 'Explain', issues: 'Issues', deepdive: 'Deep Dive' } as Record<string, string>)[analysisTab]}
-                      </span>
-                      {analysisLoading === analysisTab && <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin ml-1" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />}
+                  <div className="mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid var(--cam-gold-leaf)', background: 'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(38,97,156,0.07), transparent 70%), var(--bg-elevated)', boxShadow: '0 4px 20px rgba(3,19,46,0.18)' }}>
+                    {/* Header strip */}
+                    <div className="flex items-center justify-between px-3 py-2 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+                      <div className="flex items-center gap-2">
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cam-gold-leaf)', display: 'inline-block' }} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>
+                          {({ explain: 'Explain', issues: 'Issues', deepdive: 'Deep Dive' } as Record<string, string>)[analysisTab]}
+                        </span>
+                      </div>
+                      {analysisLoading === analysisTab && <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />}
                     </div>
-                    <div className="p-3 text-[12px] leading-relaxed" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>
+                    {/* Content */}
+                    <div className="p-4" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)', fontSize: 12 }}>
                       {(() => {
                         const key = `${activeSolutionIdx}_${analysisTab}`;
                         const content = analysisCache[key];
                         if (content) return renderAnalysisContent(content);
-                        return <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Generating…</span>;
+                        return (
+                          <div className="flex items-center gap-2 py-2" style={{ color: 'var(--text-muted)' }}>
+                            <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--cam-primary)', borderTopColor: 'transparent' }} />
+                            <span style={{ fontSize: 11, fontStyle: 'italic' }}>Generating analysis…</span>
+                          </div>
+                        );
                       })()}
                     </div>
                   </div>
