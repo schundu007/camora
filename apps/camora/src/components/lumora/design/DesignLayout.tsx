@@ -121,10 +121,12 @@ interface DesignLayoutProps {
   onEmbeddedTranscription?: (text: string, opts?: { manual?: boolean }) => void;
   /** When false, AudioCapture releases the mic immediately and ignores keyboard shortcuts. */
   isTabActive?: boolean;
+  /** Ref that parent sets to receive screenshot OCR text — appended to problem textarea. */
+  onScreenshotAppendRef?: React.MutableRefObject<((text: string) => void) | null>;
 }
 
 
-export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemRef, onEmbeddedTranscription, isTabActive }: DesignLayoutProps) {
+export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemRef, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef }: DesignLayoutProps) {
   // Bind the local Lumora design theme to the global light/dark choice.
   // Always follow the user's global theme — embedded panes inherit light/dark
   // from the rest of the app instead of forcing dark.
@@ -163,9 +165,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const [timerRunning, setTimerRunning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Desktop snap + stealth
-  const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'done' | 'error'>('idle');
-  const [isStealthActive, setIsStealthActive] = useState(false);
+  // Desktop stealth (read from store — set by ScreenshotStrip in parent shell)
+  const isStealthActive = useInterviewStore(s => s.isStealthActive);
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
   // Extracted code from the last image snap — drives quick-action chips.
   const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
@@ -306,77 +307,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  const handleSnap = useCallback(async () => {
-    const camo = (window as any).camo;
 
-    if (camo?.takeScreenshot) {
-      // Desktop (Electron) path
-      const perm = await camo.getMediaAccessStatus?.('screen').catch(() => null);
-      if (perm && perm !== 'granted') {
-        camo.openSystemPrivacy?.('ScreenCapture');
-        return;
-      }
-      setSnapState('capturing');
-      try {
-        const result = await camo.takeScreenshot();
-        if (!result?.ok) throw new Error(result?.error || 'Capture failed');
-        setSnapState('done');
-        setTimeout(() => setSnapState('idle'), 2500);
-      } catch {
-        setSnapState('error');
-        setTimeout(() => setSnapState('idle'), 3000);
-      }
-      return;
-    }
-
-    // Browser path — use getDisplayMedia to capture a screen frame
-    if (!navigator.mediaDevices?.getDisplayMedia) {
-      setSnapState('error');
-      setTimeout(() => setSnapState('idle'), 3000);
-      return;
-    }
-    setSnapState('capturing');
-    try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false } as DisplayMediaStreamOptions);
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      await new Promise<void>(res => { video.onloadedmetadata = () => res(); });
-      await video.play();
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d')!.drawImage(video, 0, 0);
-      stream.getTracks().forEach(t => t.stop());
-      video.srcObject = null;
-      const blob = await new Promise<Blob>((res, rej) =>
-        canvas.toBlob(b => b ? res(b) : rej(new Error('canvas.toBlob failed')), 'image/png')
-      );
-      const file = new File([blob], 'snap.png', { type: 'image/png' });
-      setInputTab('image');
-      handleImageUpload(file);
-      setSnapState('done');
-      setTimeout(() => setSnapState('idle'), 2500);
-    } catch (err: any) {
-      // NotAllowedError = user cancelled the picker — reset silently
-      if (err?.name !== 'NotAllowedError') {
-        setSnapState('error');
-        setTimeout(() => setSnapState('idle'), 3000);
-      } else {
-        setSnapState('idle');
-      }
-    }
-  }, [handleImageUpload]);
-
-  const handleStealthMode = async () => {
-    const camo = (window as any).camo;
-    if (!camo?.setStealthMode) {
-      await dialogAlert({ title: 'Desktop only', message: 'Stealth mode requires the Camora desktop app.' });
-      return;
-    }
-    const next = !isStealthActive;
-    await camo.setStealthMode(next);
-    setIsStealthActive(next);
-  };
 
   const handleSubmit = useCallback(async (overrideText?: string, options?: { bypassCache?: boolean }) => {
     const text = overrideText || problemText;
@@ -620,8 +551,18 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       handleSubmitRef.current(text);
     };
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
-     
+
   }, [onVoiceProblemRef]);
+
+  useEffect(() => {
+    if (!onScreenshotAppendRef) return;
+    onScreenshotAppendRef.current = (text: string) => {
+      setProblemText(prev => prev ? `${prev}\n\n--- Page Break ---\n\n${text}` : text);
+      setInputTab('text');
+      setInputCollapsed(false);
+    };
+    return () => { onScreenshotAppendRef.current = null; };
+  }, [onScreenshotAppendRef]);
 
   // Auto-submit after voice input sets problemText
   useEffect(() => {
@@ -922,7 +863,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <button
                     key={tab}
                     onClick={() => { setInputTab(tab); setInputCollapsed(false); }}
-                    className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
+                    className="px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color,transform] active:scale-[0.98]"
                     style={
                       inputTab === tab
                         ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
@@ -933,52 +874,10 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   </button>
                 ))}
               </div>
-              <button
-                onClick={handleSnap}
-                disabled={snapState === 'capturing'}
-                title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen'}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-all hover:opacity-90 active:scale-[0.97]"
-                style={snapState === 'done'
-                  ? { background: '#00ea64', color: '#000', border: '1px solid #00ea64' }
-                  : snapState === 'error'
-                  ? { background: '#ef4444', color: '#fff', border: '1px solid #ef4444' }
-                  : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }}
-              >
-                {snapState === 'capturing'
-                  ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                  : snapState === 'done'
-                  ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  : snapState === 'error'
-                  ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                }
-                {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
-              </button>
             </div>
 
-            {/* ── Row 2: Stealth + mic controls + collapse ── */}
-            <div className="flex items-center justify-between px-3 pb-2">
-              <div className="flex items-center gap-1.5">
-                {!!(window as any).camo?.isDesktop && (
-                  <button
-                    onClick={handleStealthMode}
-                    title={isStealthActive ? 'Stealth active — mouse tracking blocked' : 'Block mouse tracking'}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-90 active:scale-[0.97]"
-                    style={isStealthActive
-                      ? { background: '#00ea64', color: '#000' }
-                      : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
-                    }
-                  >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                      {isStealthActive
-                        ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
-                        : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
-                      }
-                    </svg>
-                    {isStealthActive ? 'Stealth ON' : 'Stealth'}
-                  </button>
-                )}
-              </div>
+            {/* ── Row 2: mic controls + collapse ── */}
+            <div className="flex items-center justify-end px-3 pb-2">
               <div className="flex items-center gap-1.5">
                 {embedded && (
                   <AudioCapture
