@@ -7,12 +7,15 @@ import { logger } from '../middleware/requestLogger.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
 import { authenticate, requireAdmin } from '../middleware/authenticate.js';
 import { initUser } from '../config/database.js';
+import { cacheGet, cacheSet, cacheDel } from '../services/redis.js';
 
-// CSRF nonce cookie for OAuth state — short TTL, signed-cookie-free
-// (we just compare values), httpOnly so JS can't exfiltrate, sameSite=lax
-// so it survives the Google round-trip back to our callback.
+// CSRF nonce: stored in Redis (primary) and cookie (fallback).
+// Redis-primary avoids browsers dropping the cookie during OAuth bounces
+// (Chrome Bounce Tracking Mitigation / Safari ITP treat the backend as a
+// short-lived bounce domain and may block the cookie on the return leg).
 const OAUTH_STATE_COOKIE = 'cariara_oauth_state';
 const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000; // 10 min — covers slow user
+const OAUTH_STATE_MAX_AGE_SEC = 600;
 
 function safeEq(a, b) {
   const ab = Buffer.from(String(a || ''));
@@ -43,7 +46,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL
  * attacker could craft a login URL that returns control to our callback
  * with their own Google identity (login CSRF).
  */
-router.get('/google/login', (req, res) => {
+router.get('/google/login', async (req, res) => {
   if (!GOOGLE_CLIENT_ID) {
     return res.status(503).json({ error: 'Google OAuth not configured' });
   }
@@ -52,8 +55,14 @@ router.get('/google/login', (req, res) => {
   let returnTo = String(req.query.redirect || '/').slice(0, 200);
   if (!returnTo.startsWith('/') || returnTo.startsWith('//')) returnTo = '/';
 
-  // Generate CSRF nonce + bind to cookie
+  // Generate CSRF nonce — stored in Redis (primary) and cookie (fallback)
   const nonce = randomBytes(24).toString('base64url');
+
+  // Redis-primary: survives browser cookie-blocking in OAuth bounce chains
+  try {
+    await cacheSet(`oauth_nonce:${nonce}`, '1', OAUTH_STATE_MAX_AGE_SEC);
+  } catch { /* Redis unavailable — cookie-only fallback */ }
+
   res.cookie(OAUTH_STATE_COOKIE, nonce, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -114,12 +123,28 @@ router.get('/google/callback', async (req, res) => {
     res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' });
     return res.redirect(`${FRONTEND_URL}?error=oauth_state_legacy`);
   }
-  const cookieNonce = req.cookies?.[OAUTH_STATE_COOKIE];
-  if (!nonce || !cookieNonce || !safeEq(nonce, cookieNonce)) {
-    res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' });
-    logger.warn({ ip: req.ip }, '[oauth] state nonce mismatch — possible CSRF attempt');
-    return res.redirect(`${FRONTEND_URL}?error=oauth_state_invalid`);
+  // Validate nonce: Redis primary (browser-cookie-independent), cookie fallback
+  let nonceValid = false;
+  if (nonce) {
+    try {
+      const stored = await cacheGet(`oauth_nonce:${nonce}`);
+      if (stored !== null) {
+        await cacheDel(`oauth_nonce:${nonce}`); // one-time use
+        nonceValid = true;
+      }
+    } catch { /* Redis unavailable — fall through to cookie */ }
   }
+  if (!nonceValid) {
+    // Cookie fallback: used when Redis is down or nonce wasn't stored yet
+    const cookieNonce = req.cookies?.[OAUTH_STATE_COOKIE];
+    if (!nonce || !cookieNonce || !safeEq(nonce, cookieNonce)) {
+      res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' });
+      logger.warn({ ip: req.ip }, '[oauth] state nonce mismatch — possible CSRF attempt');
+      return res.redirect(`${FRONTEND_URL}?error=oauth_state_invalid`);
+    }
+    nonceValid = true;
+  }
+  res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' });
   // Reject states older than the cookie's stated max age. issuedAt=0
   // means we accepted a legacy two-segment state — skip the age check
   // for backwards compatibility.
@@ -128,9 +153,6 @@ router.get('/google/callback', async (req, res) => {
     logger.warn({ ip: req.ip, ageMs: Date.now() - issuedAt }, '[oauth] state expired');
     return res.redirect(`${FRONTEND_URL}?error=oauth_state_expired`);
   }
-  // One-time use: clear cookie now that we've validated it
-  res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' });
-
   let returnTo = returnToFromState;
   // Prevent open redirect (e.g., //../evil.com or //evil.com)
   if (!returnTo.startsWith('/') || returnTo.includes('://') || returnTo.startsWith('//') || returnTo.includes('\\')) returnTo = '/';
