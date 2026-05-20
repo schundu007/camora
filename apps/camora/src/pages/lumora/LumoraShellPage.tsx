@@ -405,6 +405,7 @@ export function LumoraShellPage() {
               { id: 'coding', label: 'Coding', path: '/lumora/coding' },
               { id: 'design', label: 'Design', path: '/lumora/design' },
               { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral' },
+              { id: 'cofix', label: 'CoFix', path: '/lumora/fix' },
             ].map(tab => {
               const isActive = activeTab === tab.id;
               return (
