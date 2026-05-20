@@ -138,27 +138,22 @@ export function CoFixLayout() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Language selector strip */}
-      <div className="flex items-center justify-end gap-2 px-4 py-2 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
-        <span className="text-[11px] text-[var(--text-muted)]">Language</span>
-        <select
-          value={language}
-          onChange={e => setLanguage(e.target.value)}
-          className="text-[11px] bg-[var(--bg-primary)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-        >
-          {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
-        </select>
-      </div>
-
-      {/* Split pane */}
+      {/* Split pane — language lives in left header, no extra strip */}
       <div className="flex flex-1 min-h-0">
 
         {/* LEFT — broken code input */}
         <div className="flex flex-col flex-1 border-r border-[var(--border)]">
-          <div className="px-4 py-2 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
             <span className="text-[10px] font-semibold tracking-wider text-[var(--text-muted)] uppercase">
               Broken Code
             </span>
+            <select
+              value={language}
+              onChange={e => setLanguage(e.target.value)}
+              className="text-[11px] bg-[var(--bg-primary)] border border-[var(--border)] rounded px-2 py-0.5 text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+            >
+              {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
+            </select>
           </div>
 
           {lineCount > 500 && (
@@ -206,25 +201,28 @@ export function CoFixLayout() {
               {fixedCode ? '✓ Fixed Code' : 'Fixed Code'}
             </span>
             {fixedCode && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={handleRun}
                   disabled={isRunning}
-                  className="text-[11px] px-2 py-1 rounded bg-[#0047AB] text-white border border-[#0047AB] hover:bg-[#0038a0] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  title="Run code"
+                  className="text-[11px] px-2 py-1 rounded bg-[#0047AB] text-white hover:bg-[#0038a0] disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                 >
-                  {isRunning ? 'Running…' : '▶ Run'}
+                  {isRunning ? '…' : '▶ Run'}
                 </button>
                 <button
                   onClick={handleCopy}
+                  title="Copy fixed code"
                   className="text-[11px] px-2 py-1 rounded bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   Copy
                 </button>
                 <button
                   onClick={handleSendToCoding}
+                  title="Send to Coding tab"
                   className="text-[11px] px-2 py-1 rounded bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                 >
-                  Send to Coding →
+                  → Coding
                 </button>
               </div>
             )}
@@ -300,22 +298,27 @@ export function CoFixLayout() {
           )}
 
           {/* Run output strip */}
-          {runOutput !== null && (
-            <div className="border-t border-[var(--border)] bg-[var(--bg-primary)]">
-              <div className="flex items-center justify-between px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
-                <span className="text-[10px] font-semibold tracking-wider text-[var(--text-muted)] uppercase">Output</span>
-                <button
-                  onClick={() => setRunOutput(null)}
-                  className="text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-                >
-                  ✕
-                </button>
+          {runOutput !== null && (() => {
+            const isErr = runOutput.startsWith('Error:') || runOutput.startsWith('Traceback') || /^error:/i.test(runOutput);
+            return (
+              <div className="border-t border-[var(--border)] bg-[var(--bg-primary)]">
+                <div className="flex items-center justify-between px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
+                  <span className={`text-[10px] font-semibold tracking-wider uppercase ${isErr ? 'text-red-400' : 'text-[var(--text-muted)]'}`}>
+                    {isErr ? '✕ Error' : '✓ Output'}
+                  </span>
+                  <button
+                    onClick={() => setRunOutput(null)}
+                    className="text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <pre className={`px-4 py-3 text-[12px] font-mono whitespace-pre-wrap max-h-40 overflow-y-auto ${isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}>
+                  {runOutput}
+                </pre>
               </div>
-              <pre className="px-4 py-3 text-[12px] font-mono text-[var(--text-primary)] whitespace-pre-wrap max-h-40 overflow-y-auto">
-                {runOutput}
-              </pre>
-            </div>
-          )}
+            );
+          })()}
         </div>
       </div>
     </div>
