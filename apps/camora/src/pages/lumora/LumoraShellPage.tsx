@@ -24,6 +24,8 @@ import { dialogConfirm } from '../../components/shared/Dialog';
 import { isQuestion } from '../../lib/questionDetector';
 import { LumoraProfilePage, AssistantsPage } from './lumora-shell/profile-and-assistants';
 import { HistoryAnswerViewer, TabLoading } from './lumora-shell/history-viewer';
+import { ScreenshotStrip, type ScreenshotEntry } from '../../components/lumora/shell/ScreenshotStrip';
+import CompanyContextPicker from '../../components/lumora/shell/CompanyContextPicker';
 
 // Lazy load heavy layouts — only mounted on first tab activation
 const CodingLayout = lazy(() => import('../../components/lumora/coding/CodingLayout').then(m => ({ default: m.CodingLayout })));
@@ -43,6 +45,13 @@ export function LumoraShellPage() {
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const [pendingHackerrankCapture, setPendingHackerrankCapture] = useState<string | null>(null);
   const [pendingHackerrankText, setPendingHackerrankText] = useState<string | null>(null);
+
+  // Global screenshot strip state
+  const [screenshots, setScreenshots] = useState<ScreenshotEntry[]>([]);
+  // Per-layout refs: set by each layout to receive screenshot OCR text
+  const codingScreenshotRef = useRef<((text: string) => void) | null>(null);
+  const designScreenshotRef = useRef<((text: string) => void) | null>(null);
+  const cofixScreenshotRef = useRef<((text: string) => void) | null>(null);
 
   // Tool selection — persisted per device so users don't repick every session.
   const [meetingPlatform, setMeetingPlatform] = useState<string>(() => {
@@ -276,6 +285,22 @@ export function LumoraShellPage() {
     handleSubmit(text);
   }, [handleSubmit, activeTab]);
 
+  const handleSnapped = useCallback((entry: ScreenshotEntry) => {
+    setScreenshots(prev => {
+      const existing = prev.findIndex(s => s.id === entry.id);
+      if (existing >= 0) { const next = [...prev]; next[existing] = entry; return next; }
+      return [...prev, entry];
+    });
+    if (!entry.text) return;
+    if (activeTab === 'coding') codingScreenshotRef.current?.(entry.text);
+    else if (activeTab === 'design') designScreenshotRef.current?.(entry.text);
+    else if (activeTab === 'cofix') cofixScreenshotRef.current?.(entry.text);
+  }, [activeTab]);
+
+  const handleRemoveScreenshot = useCallback((id: string) => {
+    setScreenshots(prev => prev.filter(s => s.id !== id));
+  }, []);
+
   return (
     <InterviewerAudioProvider onTranscription={handleTranscription}>
     {/* Audio setup wizard — only mounted on live-interview tabs where
@@ -437,6 +462,11 @@ export function LumoraShellPage() {
               from the hamburger sheet below. */}
           <div className="flex items-center gap-2 shrink-0">
 
+            {/* Company context — visible on all Lumora AI tabs */}
+            <div className="hidden md:block">
+              <CompanyContextPicker />
+            </div>
+
             {/* Tool pickers — always visible so users know what Lumora is
                 watching. Meeting platform is cosmetic; coding platform drives
                 auto-capture. Hidden on mobile (hamburger handles config). */}
@@ -521,6 +551,16 @@ export function LumoraShellPage() {
           </div>
         )}
 
+        {/* Global screenshot strip — shown on AI tabs only */}
+        {(activeTab === 'coding' || activeTab === 'design' || activeTab === 'behavioral' || activeTab === 'cofix') && (
+          <ScreenshotStrip
+            surface={activeTab as 'coding' | 'design' | 'behavioral' | 'cofix'}
+            screenshots={screenshots}
+            onSnapped={handleSnapped}
+            onRemove={handleRemoveScreenshot}
+          />
+        )}
+
         {/* Tab content — display toggling preserves state */}
         <div className="flex-1 min-h-0 overflow-hidden relative">
           {/* Interview tab */}
@@ -555,6 +595,8 @@ export function LumoraShellPage() {
                         codingPlatform={codingPlatform}
                         onEmbeddedTranscription={handleTranscription}
                         isTabActive={activeTab === 'coding'}
+                        onScreenshotAppendRef={codingScreenshotRef}
+                        onNewProblemCallback={() => setScreenshots([])}
                       />
                     </div>
                     {/* Sona Q&A sidebar — independent state, follow-up
@@ -586,6 +628,7 @@ export function LumoraShellPage() {
                         onVoiceProblemRef={designProblemRef}
                         onEmbeddedTranscription={handleTranscription}
                         isTabActive={activeTab === 'design'}
+                        onScreenshotAppendRef={designScreenshotRef}
                       />
                     </div>
                     <CodingSonaSidebar
@@ -604,7 +647,7 @@ export function LumoraShellPage() {
             <div style={{ display: activeTab === 'cofix' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
               <ErrorBoundary>
                 <Suspense fallback={<TabLoading label="CoFix" />}>
-                  <CoFixLayout />
+                  <CoFixLayout onScreenshotAppendRef={cofixScreenshotRef} />
                 </Suspense>
               </ErrorBoundary>
             </div>
