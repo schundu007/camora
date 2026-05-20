@@ -518,6 +518,14 @@ export async function streamCoFixResponse(options: CoFixStreamOptions): Promise<
       const { done, value } = await reader.read();
 
       if (done) {
+        // Flush any partial frame left in buffer (final chunk may lack trailing \n)
+        if (buffer.trim()) {
+          if (buffer.startsWith('event:')) {
+            currentEvent = buffer.slice(6).trim();
+          } else if (buffer.startsWith('data:')) {
+            currentData += (currentData ? '\n' : '') + buffer.slice(5).trim();
+          }
+        }
         if (currentEvent && currentData) {
           try {
             const data = JSON.parse(currentData);
@@ -546,6 +554,7 @@ export async function streamCoFixResponse(options: CoFixStreamOptions): Promise<
               if (currentEvent === 'token') onToken?.(data.chunk || '');
               else if (currentEvent === 'answer') onAnswer?.(data as CoFixAnswer);
               else if (currentEvent === 'error') onError?.({ msg: data.message });
+              // 'done' event is a no-op here; onComplete fires on connection close to avoid double-fire
             } catch (e) {
               console.error('CoFix SSE parse error:', currentEvent, (e as Error).message);
             }
