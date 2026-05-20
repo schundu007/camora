@@ -1135,6 +1135,105 @@ IMPORTANT:
 });
 
 // ---------------------------------------------------------------------------
+// POST /cofix/stream — CoFix: fix broken code, stream structured change annotations
+// ---------------------------------------------------------------------------
+
+router.post('/cofix/stream', authenticate, async (req, res) => {
+  const { code, hint, language } = req.body;
+
+  if (!code || code.trim().length < 5) {
+    return res.status(400).json({ error: 'Missing or too-short code' });
+  }
+
+  const lang = (language || 'python').toLowerCase();
+  const model = getModelForUser(req);
+  const hintSection = hint ? `\nUSER HINT: ${hint.trim()}\n` : '';
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+
+  function sendEvent(event, data) {
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  }
+
+  try {
+    const stream = await anthropicClient.messages.stream({
+      model,
+      max_tokens: 4096,
+      messages: [
+        {
+          role: 'user',
+          content: `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}
+
+CODE:
+\`\`\`${lang}
+${code}
+\`\`\`
+
+Return ONLY a JSON object (no markdown fences) with this exact structure:
+{
+  "fixed_code": "complete fixed code as a string",
+  "changes": [
+    {
+      "line": <1-indexed line number in fixed_code>,
+      "badge": <sequential integer starting at 1>,
+      "type": "fix" | "added",
+      "label": "2-4 word label",
+      "note": "One sentence explaining why."
+    }
+  ],
+  "complexity": { "time": "O(...)", "space": "O(...)" },
+  "hackerrank_compatible": true | false
+}
+
+RULES:
+- Fix ONLY what is broken or missing — preserve all existing logic exactly
+- Respect existing code style and naming conventions
+- line numbers refer to the FIXED code, not the original
+- type "fix" = correcting an existing line; type "added" = newly inserted line
+- hackerrank_compatible: true only if the function has a clean return-based signature with no stdin/input() boilerplate
+- If code has no issues, return changes: [] and fixed_code equal to the input
+- Return the COMPLETE fixed code, not a partial snippet
+- Do NOT add comments inside the code (changes[] documents everything)`,
+        },
+      ],
+    });
+
+    let fullText = '';
+    for await (const chunk of stream) {
+      if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+        fullText += chunk.delta.text;
+        sendEvent('token', { chunk: chunk.delta.text });
+      }
+    }
+
+    // Parse accumulated JSON
+    let parsed;
+    try {
+      const jsonMatch = fullText.match(/```json\s*([\s\S]*?)\s*```/) ||
+                        fullText.match(/```\s*([\s\S]*?)\s*```/);
+      const jsonStr = jsonMatch ? jsonMatch[1] : fullText.trim();
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      sendEvent('error', { message: 'Failed to parse CoFix response — try again' });
+      return res.end();
+    }
+
+    sendEvent('answer', parsed);
+    sendEvent('done', {});
+    res.end();
+  } catch (err) {
+    console.error('CoFix stream error:', err);
+    sendEvent('error', { message: err.message || 'CoFix failed' });
+    res.end();
+  }
+});
+
+// ---------------------------------------------------------------------------
 // POST /translate — Translate a single solution to another language
 // ---------------------------------------------------------------------------
 
