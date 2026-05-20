@@ -200,6 +200,10 @@ interface CodingLayoutProps {
   /** When false, AudioCapture releases the mic immediately and ignores keyboard shortcuts.
    *  Used by LumoraShellPage so coding's mic doesn't conflict with behavioral's. */
   isTabActive?: boolean;
+  /** Ref that parent sets to receive screenshot OCR text — appended to problem textarea. */
+  onScreenshotAppendRef?: React.MutableRefObject<((text: string) => void) | null>;
+  /** Called when user clicks New Problem — parent uses this to clear the screenshot strip. */
+  onNewProblemCallback?: () => void;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
@@ -228,7 +232,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, codingPlatform, onEmbeddedTranscription, isTabActive }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -267,7 +271,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Screen Recording permission status — checked once on mount (desktop only).
   // 'granted' | 'denied' | 'restricted' | 'not-determined' | null (non-desktop)
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
-  const [isStealthActive, setIsStealthActive] = useState(false);
+  const isStealthActive = useInterviewStore(s => s.isStealthActive);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'done' | 'error'>('idle');
   // Extracted code from the last image snap — drives quick-action chips.
   const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
@@ -463,7 +467,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setLastFromCache(null);
     setSnapChipCode(null);
     useInterviewStore.getState().setLiveSolveContext(null);
-  }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, language]);
+    onNewProblemCallback?.();
+  }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, language, onNewProblemCallback]);
 
   // ── Timer Logic ──────────────────────────────────────────────────────────
 
@@ -1092,7 +1097,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     // TODO) but didn't go through OCR/extract, promote problemText to starterCode
     // so the backend completes-in-place and preserves the surrounding boilerplate.
     const effectiveStarterCode = starterCode || (isCodeTemplate(problemText) ? problemText : null);
-    onSubmit(problemText.trim(), effectiveLang, effectiveStarterCode ? { starterCode: effectiveStarterCode } : undefined);
+    const company = getActiveAssistant()?.company || getActiveAssistant()?.name || '';
+    const problemWithContext = company ? `[Company: ${company}]\n\n${problemText.trim()}` : problemText.trim();
+    onSubmit(problemWithContext, effectiveLang, effectiveStarterCode ? { starterCode: effectiveStarterCode } : undefined);
   };
 
   // Register voice problem handler for parent shell. Uses stable internal
@@ -1131,6 +1138,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onVoiceProblemRef]);
 
+  useEffect(() => {
+    if (!onScreenshotAppendRef) return;
+    onScreenshotAppendRef.current = (text: string) => {
+      setProblemText(prev => prev ? `${prev}\n\n--- Page Break ---\n\n${text}` : text);
+      setInputMode('paste');
+      setIsInputCollapsed(false);
+    };
+    return () => { onScreenshotAppendRef.current = null; };
+  }, [onScreenshotAppendRef]);
+
   const handleHackerrankFetch = async () => {
     const camo = (window as any).camo;
     if (!camo?.fetchHackerrankNow) {
@@ -1159,16 +1176,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     }
   };
 
-  const handleStealthMode = async () => {
-    const camo = (window as any).camo;
-    if (!camo?.setStealthMode) {
-      await dialogAlert({ title: 'Desktop only', message: 'Stealth mode requires the Camora desktop app.' });
-      return;
-    }
-    const next = !isStealthActive;
-    await camo.setStealthMode(next);
-    setIsStealthActive(next);
-  };
 
   // Ref so handleSnap can call acceptImage without a forward-reference TDZ.
   // acceptImage is declared ~150 lines below handleSnap; putting it in the
@@ -1823,50 +1830,30 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       )}
                     </div>
 
-                    {/* ── Row 2: Snap | Stealth | mic controls | collapse ── */}
-                    <div className="flex items-center justify-between px-3 pb-2">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={handleSnap}
-                          disabled={snapState === 'capturing'}
-                          title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen'}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-all hover:opacity-90 active:scale-[0.97]"
-                          style={snapState === 'done'
-                            ? { background: '#00ea64', color: '#000', border: '1px solid #00ea64' }
-                            : snapState === 'error'
-                            ? { background: '#ef4444', color: '#fff', border: '1px solid #ef4444' }
-                            : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }}
-                        >
-                          {snapState === 'capturing'
-                            ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                            : snapState === 'done'
-                            ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            : snapState === 'error'
-                            ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                          }
-                          {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
-                        </button>
-                        {!!(window as any).camo?.isDesktop && (
+                    {/* ── Input mode picker — visible in autopilot too ── */}
+                    <div className="flex items-center gap-1 px-3 pb-1.5">
+                      <div
+                        className="flex items-center gap-0.5 px-0.5 py-0.5"
+                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999 }}
+                      >
+                        {(['paste', 'url', 'image'] as const).map(mode => (
                           <button
-                            onClick={handleStealthMode}
-                            title={isStealthActive ? 'Stealth active — mouse tracking blocked' : 'Block mouse tracking'}
-                            className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-90 active:scale-[0.97]"
-                            style={isStealthActive
-                              ? { background: '#00ea64', color: '#000' }
-                              : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
+                            key={mode}
+                            onClick={() => { setInputMode(mode); setIsInputCollapsed(false); }}
+                            className="px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color] active:scale-[0.98]"
+                            style={inputMode === mode
+                              ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', borderRadius: 999 }
+                              : { color: 'rgba(255,255,255,0.70)', borderRadius: 999 }
                             }
                           >
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                              {isStealthActive
-                                ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
-                                : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
-                              }
-                            </svg>
-                            Stealth
+                            {mode === 'paste' ? 'Text' : mode === 'url' ? 'URL' : 'Image'}
                           </button>
-                        )}
+                        ))}
                       </div>
+                    </div>
+
+                    {/* ── Row 2: mic controls | collapse ── */}
+                    <div className="flex items-center justify-between px-3 pb-2">
                       <div className="flex items-center gap-1.5">
                         {embedded && (
                           <AudioCapture
@@ -1966,7 +1953,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       >
                         {(['paste', 'url', 'image'] as const).map(mode => (
                           <button key={mode} onClick={() => { setInputMode(mode); setIsInputCollapsed(false); }}
-                            className="px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
+                            className="px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color,transform] active:scale-[0.98]"
                             style={
                               inputMode === mode
                                 ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
@@ -1975,54 +1962,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           >{mode === 'paste' ? 'Text' : mode === 'url' ? 'URL' : 'Image'}</button>
                         ))}
                       </div>
-                      <button
-                        onClick={handleSnap}
-                        disabled={snapState === 'capturing'}
-                        title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen'}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-all hover:opacity-90 active:scale-[0.97]"
-                        style={snapState === 'done'
-                          ? { background: '#00ea64', color: '#000', border: '1px solid #00ea64' }
-                          : snapState === 'error'
-                          ? { background: '#ef4444', color: '#fff', border: '1px solid #ef4444' }
-                          : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }}
-                      >
-                        {snapState === 'capturing'
-                          ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                          : snapState === 'done'
-                          ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                          : snapState === 'error'
-                          ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                        }
-                        {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
-                      </button>
                     </div>
 
-                    {/* ── Row 2: Stealth + mic controls + collapse ── */}
-                    <div className="flex items-center justify-between px-3 pb-2">
-                      {/* Left: Stealth (desktop only) */}
-                      <div className="flex items-center gap-1.5">
-                        {!!(window as any).camo?.isDesktop && (
-                          <button
-                            onClick={handleStealthMode}
-                            title={isStealthActive ? 'Stealth active' : 'Block HackerRank mouse tracking'}
-                            className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors hover:opacity-90 active:scale-[0.97]"
-                            style={isStealthActive
-                              ? { background: '#00ea64', color: '#000' }
-                              : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
-                            }
-                          >
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                              {isStealthActive
-                                ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
-                                : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
-                              }
-                            </svg>
-                            Stealth
-                          </button>
-                        )}
-                      </div>
-                      {/* Right: mic controls + collapse */}
+                    {/* ── Row 2: mic controls + collapse ── */}
+                    <div className="flex items-center justify-end px-3 pb-2">
                       <div className="flex items-center gap-1.5">
                         {embedded && (
                           <AudioCapture
