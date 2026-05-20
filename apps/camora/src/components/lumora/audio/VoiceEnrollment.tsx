@@ -150,7 +150,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
           style={isLight ? {
             fontSize: '13px',
             color: '#ffffff',
-            background: isRecording ? 'var(--danger)' : 'var(--cam-primary)',
+            background: isRecording ? 'var(--danger)' : 'var(--cam-primary-dk)',
             border: '1px solid var(--border)',
           } : {
             fontSize: '11px',
@@ -198,8 +198,8 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
           fontSize: '13px',
           padding: '10px 16px',
           color: voiceFilterEnabled ? '#ffffff' : 'var(--text-primary)',
-          background: voiceFilterEnabled ? 'var(--cam-primary)' : 'var(--bg-elevated)',
-          border: `1px solid ${voiceFilterEnabled ? 'var(--cam-primary)' : 'var(--border)'}`,
+          background: voiceFilterEnabled ? 'var(--cam-primary-dk)' : 'var(--bg-elevated)',
+          border: `1px solid ${voiceFilterEnabled ? 'var(--cam-primary-dk)' : 'var(--border)'}`,
         } : {
           fontSize: '11px',
           padding: '4px 8px',
@@ -236,7 +236,7 @@ export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentP
   );
 }
 
-function VoiceIcon({ filled = false }: { filled?: boolean }) {
+const VoiceIcon = ({ filled = false }: { filled?: boolean }) => {
   return (
     <svg className="w-3.5 h-3.5" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
@@ -246,7 +246,7 @@ function VoiceIcon({ filled = false }: { filled?: boolean }) {
   );
 }
 
-function RecordingIcon() {
+const RecordingIcon = () => {
   return (
     <svg className="w-3.5 h-3.5 animate-pulse text-[var(--danger)]" fill="currentColor" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="8" />
@@ -254,7 +254,7 @@ function RecordingIcon() {
   );
 }
 
-function Spinner() {
+const Spinner = () => {
   return (
     <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -263,7 +263,7 @@ function Spinner() {
   );
 }
 
-function XIcon() {
+const XIcon = () => {
   return (
     <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M6 18L18 6M6 6l12 12" />
