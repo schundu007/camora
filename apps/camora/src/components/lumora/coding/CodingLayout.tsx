@@ -555,12 +555,23 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
     const validTestCases = testCases.filter(tc => tc.input.trim());
 
+    // If the code has its own embedded test runner (if __name__ == '__main__',
+    // Java main, Node.js top-level calls), the builder would strip __main__ and
+    // try to call the solution function with extracted text inputs — which breaks
+    // for problems that use complex objects, not stdin. Force direct execution so
+    // the code's own assertions/prints are what the user sees.
+    const hasSelfContainedRunner =
+      /if\s+__name__\s*==\s*['"]__main__['"]/.test(code) ||   // Python
+      /public\s+static\s+void\s+main\s*\(\s*String/.test(code) || // Java
+      /^func\s+main\s*\(\s*\)/m.test(code);                   // Go
+    const testCasesToSend = hasSelfContainedRunner ? [] : validTestCases;
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/coding/execute`, {
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ code, language: resolveLanguage(), test_cases: validTestCases }),
+        body: JSON.stringify({ code, language: resolveLanguage(), test_cases: testCasesToSend }),
       });
 
       if (!response.ok) {
