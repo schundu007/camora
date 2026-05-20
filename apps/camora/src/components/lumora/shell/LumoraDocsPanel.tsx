@@ -2278,13 +2278,30 @@ function FormattedJD({ text }: { text: string }) {
                 const isNumberedHeading = /^\d+[\.\)]\s/.test(item);
                 if (isNumberedHeading) {
                   return (
-                    <p
+                    <div
                       key={j}
-                      className="text-[13.5px] leading-[1.65] font-semibold mt-2 first:mt-0"
-                      style={{ color: 'var(--cam-gold-leaf-text)' }}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-md mt-2 first:mt-0"
+                      style={{
+                        background: 'rgba(0,71,171,0.18)',
+                        border: '1px solid rgba(0,71,171,0.35)',
+                      }}
                     >
-                      {item}
-                    </p>
+                      <span
+                        className="flex-shrink-0"
+                        style={{
+                          width: 6,
+                          height: 6,
+                          background: 'var(--cam-gold-leaf)',
+                          borderRadius: '50%',
+                        }}
+                      />
+                      <p
+                        className="text-[13px] leading-[1.6] font-semibold"
+                        style={{ color: 'var(--cam-gold-leaf-text)' }}
+                      >
+                        {item}
+                      </p>
+                    </div>
                   );
                 }
                 return (
