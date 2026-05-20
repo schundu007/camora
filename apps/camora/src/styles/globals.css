@@ -1918,3 +1918,7 @@ figure:has(> .viz-caption) {
   .docs-page section h3 { font-size: 17px; padding-left: 14px; }
   .docs-page p, .docs-page li { font-size: 14.5px; line-height: 1.65; }
 }
+
+/* ── CoFix Monaco editor line decorations ── */
+.cofix-line-fix { background-color: rgba(245, 158, 11, 0.12) !important; }
+.cofix-line-added { background-color: rgba(34, 197, 94, 0.12) !important; }
