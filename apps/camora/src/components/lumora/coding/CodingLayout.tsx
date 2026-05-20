@@ -178,6 +178,10 @@ interface CodingLayoutProps {
   pendingHackerrankCapture?: string | null;
   /** Called once the capture has been consumed so parent can clear it. */
   onHackerrankCaptureConsumed?: () => void;
+  /** Full problem text extracted directly from the browser DOM (bypasses OCR). */
+  pendingHackerrankText?: string | null;
+  /** Called once the text has been consumed so parent can clear it. */
+  onHackerrankTextConsumed?: () => void;
   /** Active coding platform from tool-picker ('hackerrank'|'leetcode'|'coderpad'|'none').
    *  When set (non-empty, non-'none'), hides manual input modes and shows autopilot status. */
   codingPlatform?: string;
@@ -214,7 +218,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, codingPlatform, onEmbeddedTranscription, isTabActive }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, codingPlatform, onEmbeddedTranscription, isTabActive }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -840,6 +844,33 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingHackerrankCapture]);
+
+  // DOM text path (Electron): main process extracted the full problem text directly
+  // from the browser DOM — no OCR needed. Skips the image pipeline entirely.
+  useEffect(() => {
+    if (!pendingHackerrankText) return;
+    onHackerrankTextConsumed?.();
+    const trimmed = pendingHackerrankText.trim();
+    setProblemText(trimmed);
+    setSnapChipCode(trimmed);
+    setInputMode('paste');
+    setStreamError(null);
+    setTestResults([]);
+    setTestCases([]);
+    setOutput('');
+    setShowFixPrompt(false);
+    clearStreamChunks();
+    setParsedBlocks([]);
+    setJsonSolution(null);
+    setCollapsedCards(new Set());
+    setActiveSolutionIdx(0);
+    setIsOutputCollapsed(true);
+    setProblemTab('solution');
+    const effectiveLang = language === 'auto' ? detectLanguage(trimmed) : language;
+    setCode(getDefaultCode(effectiveLang));
+    onSubmit(trimmed, effectiveLang);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingHackerrankText]);
 
   // Desktop screenshot watcher (Electron): user presses Cmd+Shift+4, saves a
   // screenshot of the HackerRank problem + code editor to ~/Desktop, and Lumora

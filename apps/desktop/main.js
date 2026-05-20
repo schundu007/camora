@@ -381,10 +381,41 @@ const PLATFORM_URL_MATCH = {
   coderpad: (url) => url.includes('coderpad.io/'),
 };
 
+// Injects a JS IIFE into the active browser tab via AppleScript and returns
+// the full problem text from the DOM — bypasses viewport limits and HackerRank's
+// copy-paste restrictions entirely. Falls back to null on any failure.
+async function extractProblemTextFromBrowser(browser, url) {
+  let jsCode;
+  if (url.includes('hackerrank.com')) {
+    jsCode = `(function(){var ss=['.challenge-description-body .hackdown-content','.challenge-description-body','.problem-statement'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
+  } else if (url.includes('leetcode.com')) {
+    jsCode = `(function(){var ss=['[data-track-load="description_content"]','.elfjS','.description__24sA'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
+  } else if (url.includes('coderpad.io')) {
+    jsCode = `(function(){var ss=['.instructions-pane','[class*="instructions"]'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
+  } else {
+    return null;
+  }
+  // Escape " so the JS can be safely embedded inside an AppleScript "..." string.
+  const escapedJs = jsCode.replace(/"/g, '\\"');
+  try {
+    const raw = await runAppleScript(`
+tell application "${browser}"
+  set r to execute active tab of front window javascript "${escapedJs}"
+  if r is missing value then return ""
+  return r as string
+end tell`);
+    const text = (raw || '').trim();
+    return text.length > 50 ? text : null;
+  } catch (err) {
+    console.log('[dom-extract] AppleScript JS injection failed:', err.message);
+    return null;
+  }
+}
+
 async function doHackerrankScrape() {
   const info = await getActiveBrowserInfo();
   if (!info) return { ok: false, error: 'No browser window found. Open Chrome/Brave with HackerRank.' };
-  const { url, windowTitle } = info;
+  const { url, windowTitle, browser } = info;
   console.log('[hr-auto] active browser URL:', url, '| window title:', windowTitle);
   const activePlatform = _codingPlatform !== 'none' ? _codingPlatform : 'hackerrank';
   const matchFn = PLATFORM_URL_MATCH[activePlatform];
@@ -392,6 +423,16 @@ async function doHackerrankScrape() {
     const names = { hackerrank: 'HackerRank', leetcode: 'LeetCode', coderpad: 'CoderPad' };
     return { ok: false, error: `Active tab is not ${names[activePlatform] || 'the selected platform'}.\nCurrent URL: ${url}` };
   }
+  // Try DOM text extraction first — gets the full problem regardless of scroll
+  // position and bypasses HackerRank's copy-paste restrictions.
+  const text = await extractProblemTextFromBrowser(browser, url);
+  if (text) {
+    console.log('[hr-auto] DOM text extraction succeeded, skipping screenshot OCR');
+    _lastHrUrl = url;
+    return { ok: true, text, url };
+  }
+  // Fall back to screenshot → OCR pipeline.
+  console.log('[hr-auto] DOM text extraction failed, falling back to screenshot');
   const dataUrl = await captureExactBrowserWindow(windowTitle);
   if (!dataUrl) return { ok: false, error: 'Could not capture the HackerRank browser window. Make sure it is visible (not minimised or behind other windows).' };
   _lastHrUrl = url;

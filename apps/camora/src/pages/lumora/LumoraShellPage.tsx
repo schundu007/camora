@@ -41,6 +41,7 @@ export function LumoraShellPage() {
   const [copilotFullscreen, setCopilotFullscreen] = useState(false);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const [pendingHackerrankCapture, setPendingHackerrankCapture] = useState<string | null>(null);
+  const [pendingHackerrankText, setPendingHackerrankText] = useState<string | null>(null);
 
   // Tool selection — persisted per device so users don't repick every session.
   const [meetingPlatform, setMeetingPlatform] = useState<string>(() => {
@@ -200,8 +201,11 @@ export function LumoraShellPage() {
   useEffect(() => {
     const camo = (window as any).camo;
     if (!camo?.onHackerrankCapture) return;
-    camo.onHackerrankCapture((data: { dataUrl?: string; error?: string }) => {
-      if (data.dataUrl) {
+    camo.onHackerrankCapture((data: { dataUrl?: string; text?: string; error?: string }) => {
+      if (data.text) {
+        navigate('/lumora/coding');
+        setPendingHackerrankText(data.text);
+      } else if (data.dataUrl) {
         navigate('/lumora/coding');
         setPendingHackerrankCapture(data.dataUrl);
       }
@@ -542,6 +546,8 @@ export function LumoraShellPage() {
                         onVoiceProblemRef={codingProblemRef}
                         pendingHackerrankCapture={pendingHackerrankCapture}
                         onHackerrankCaptureConsumed={() => setPendingHackerrankCapture(null)}
+                        pendingHackerrankText={pendingHackerrankText}
+                        onHackerrankTextConsumed={() => setPendingHackerrankText(null)}
                         codingPlatform={codingPlatform}
                         onEmbeddedTranscription={handleTranscription}
                         isTabActive={activeTab === 'coding'}
