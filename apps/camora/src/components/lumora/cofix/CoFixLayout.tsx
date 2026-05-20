@@ -156,29 +156,93 @@ export function CoFixLayout() {
     navigate('/lumora/coding', { state: { cofixCode: fixedCode } });
   }, [fixedCode, navigate]);
 
+  const isErr = runOutput !== null && (runOutput.startsWith('Error:') || runOutput.startsWith('Traceback') || /^error:/i.test(runOutput));
+
   return (
     <div className="flex flex-col h-full">
-      {/* Split pane — language lives in left header, no extra strip */}
+
+      {/* ── Enterprise toolbar — full width, never clips ── */}
+      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-secondary)] shrink-0">
+        {/* Language */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-semibold tracking-wider uppercase text-[var(--text-muted)]">Lang</span>
+          <select
+            value={language}
+            onChange={e => setLanguage(e.target.value)}
+            className="text-[11px] bg-[var(--bg-primary)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-primary)] focus:outline-none focus:border-[#0047AB] cursor-pointer"
+          >
+            {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
+          </select>
+        </div>
+
+        {/* Divider */}
+        <div className="w-px h-5 bg-[var(--border)]" />
+
+        {/* Status badge */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {isLoading && (
+            <span className="flex items-center gap-1.5 text-[11px] text-[#0047AB]">
+              <span className="w-3 h-3 border-2 border-[#0047AB] border-t-transparent rounded-full animate-spin shrink-0" />
+              Analyzing…
+            </span>
+          )}
+          {!isLoading && fixedCode && changes.length > 0 && (
+            <span className="flex items-center gap-1.5 text-[11px] text-amber-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+              {changes.length} fix{changes.length !== 1 ? 'es' : ''} applied
+            </span>
+          )}
+          {!isLoading && fixedCode && changes.length === 0 && (
+            <span className="flex items-center gap-1.5 text-[11px] text-emerald-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+              No issues found
+            </span>
+          )}
+          {!isLoading && !fixedCode && (
+            <span className="text-[11px] text-[var(--text-muted)]">Paste broken code on the left, then click Fix</span>
+          )}
+        </div>
+
+        {/* Action buttons — always at right edge, never hidden */}
+        {fixedCode && (
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleRun}
+              disabled={isRunning}
+              className="flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-lg bg-[#0047AB] text-white hover:bg-[#0038a0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isRunning
+                ? <><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />Running</>
+                : <>▶ Run</>}
+            </button>
+            <button
+              onClick={handleCopy}
+              className="text-[12px] px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-primary)] bg-[var(--bg-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
+            >
+              Copy
+            </button>
+            <button
+              onClick={handleSendToCoding}
+              className="text-[12px] px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] bg-[var(--bg-primary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors whitespace-nowrap"
+            >
+              → Coding
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Split pane ── */}
       <div className="flex flex-1 min-h-0">
 
         {/* LEFT — broken code input */}
-        <div className="flex flex-col flex-1 border-r border-[var(--border)]">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
-            <span className="text-[10px] font-semibold tracking-wider text-[var(--text-muted)] uppercase">
-              Broken Code
-            </span>
-            <select
-              value={language}
-              onChange={e => setLanguage(e.target.value)}
-              className="text-[11px] bg-[var(--bg-primary)] border border-[var(--border)] rounded px-2 py-0.5 text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-            >
-              {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
-            </select>
+        <div className="flex flex-col w-1/2 border-r border-[var(--border)]">
+          <div className="px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
+            <span className="text-[10px] font-semibold tracking-wider text-[var(--text-muted)] uppercase">Input — Broken Code</span>
           </div>
 
           {lineCount > 500 && (
-            <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 text-[11px] text-amber-400">
-              CoFix works best on focused snippets — large pastes may produce less precise results.
+            <div className="px-4 py-1.5 bg-amber-500/10 border-b border-amber-500/20 text-[11px] text-amber-400">
+              Large paste — CoFix works best on focused snippets.
             </div>
           )}
 
@@ -193,17 +257,17 @@ export function CoFixLayout() {
             />
           </div>
 
-          <div className="border-t border-[var(--border)] p-3 bg-[var(--bg-secondary)]">
+          <div className="border-t border-[var(--border)] px-3 pt-2 pb-1 bg-[var(--bg-secondary)]">
             <textarea
               value={hint}
               onChange={e => setHint(e.target.value)}
-              placeholder="Describe the issue or what's missing (optional)"
+              placeholder="Optional: describe what's wrong or what you expect"
               rows={2}
-              className="w-full resize-none bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full resize-none bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#0047AB]"
             />
           </div>
 
-          <div className="p-3 border-t border-[var(--border)] bg-[var(--bg-secondary)]">
+          <div className="px-3 pb-3 pt-2 bg-[var(--bg-secondary)]">
             <button
               onClick={handleFix}
               disabled={inputCode.trim().length < 5 || isLoading}
@@ -214,63 +278,32 @@ export function CoFixLayout() {
           </div>
         </div>
 
-        {/* RIGHT — fixed code + annotations */}
-        <div className="flex flex-col flex-1">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
+        {/* RIGHT — fixed code output */}
+        <div className="flex flex-col w-1/2">
+          <div className="px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
             <span className={`text-[10px] font-semibold tracking-wider uppercase ${fixedCode ? 'text-emerald-400' : 'text-[var(--text-muted)]'}`}>
-              {fixedCode ? '✓ Fixed Code' : 'Fixed Code'}
+              {fixedCode ? '✓ Fixed Code' : 'Output — Fixed Code'}
             </span>
-            {fixedCode && (
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  onClick={handleRun}
-                  disabled={isRunning}
-                  title="Run code"
-                  className="text-[11px] px-2 py-1 rounded bg-[#0047AB] text-white hover:bg-[#0038a0] disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
-                >
-                  {isRunning ? '…' : '▶ Run'}
-                </button>
-                <button
-                  onClick={handleCopy}
-                  title="Copy fixed code"
-                  className="text-[11px] px-2 py-1 rounded bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-                >
-                  Copy
-                </button>
-                <button
-                  onClick={handleSendToCoding}
-                  title="Send to Coding tab"
-                  className="text-[11px] px-2 py-1 rounded bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-                >
-                  → Coding
-                </button>
-              </div>
-            )}
           </div>
 
           <div className="flex flex-1 min-h-0">
             {/* Monaco editor — read-only with line decorations */}
             <div className="flex-1 min-w-0 relative">
               {isLoading && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-[var(--bg-primary)]/80 backdrop-blur-sm">
-                  <div className="w-5 h-5 border-2 border-[#0047AB] border-t-transparent rounded-full animate-spin" />
-                  <span className="text-[12px] text-[var(--text-muted)]">Analyzing…</span>
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[var(--bg-primary)]/90 backdrop-blur-sm">
+                  <div className="w-8 h-8 border-2 border-[#0047AB] border-t-transparent rounded-full animate-spin" />
+                  <span className="text-[13px] font-medium text-[var(--text-muted)]">Analyzing and fixing…</span>
                 </div>
               )}
               {error && !isLoading && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[var(--bg-primary)]">
-                  <p className="text-[12px] text-red-400">{error}</p>
+                  <p className="text-[12px] text-red-400 text-center px-6">{error}</p>
                   <button
                     onClick={handleFix}
-                    className="text-[11px] px-3 py-1.5 rounded bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
+                    className="text-[12px] px-4 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[#0047AB] transition-colors"
                   >
                     Retry
                   </button>
-                </div>
-              )}
-              {fixedCode && changes.length === 0 && !isLoading && (
-                <div className="absolute top-3 left-3 right-3 z-10 px-3 py-2 rounded bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-400">
-                  No issues found — code looks correct.
                 </div>
               )}
               <Editor
@@ -297,48 +330,37 @@ export function CoFixLayout() {
 
           {/* Complexity strip */}
           {complexity && (
-            <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--border)] bg-[var(--bg-secondary)] text-[11px] flex-wrap">
+            <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--border)] bg-[var(--bg-secondary)] text-[11px] flex-wrap shrink-0">
               <span className="text-[var(--text-muted)]">
-                Time: <span className="text-[var(--text-primary)]">{complexity.time}</span>
+                Time: <span className="text-[var(--text-primary)] font-mono">{complexity.time}</span>
               </span>
               <span className="text-[var(--text-muted)]">
-                Space: <span className="text-[var(--text-primary)]">{complexity.space}</span>
+                Space: <span className="text-[var(--text-primary)] font-mono">{complexity.space}</span>
               </span>
               {hackerrankCompatible !== null && (
                 <span className={hackerrankCompatible ? 'text-emerald-400' : 'text-amber-400'}>
-                  {hackerrankCompatible
-                    ? '✓ HackerRank Compatible'
-                    : '⚠ Contains I/O boilerplate — strip before submitting'}
+                  {hackerrankCompatible ? '✓ HackerRank Compatible' : '⚠ Strip I/O boilerplate before submitting'}
                 </span>
               )}
-              <span className="ml-auto text-[var(--text-muted)]">
-                {changes.length} change{changes.length !== 1 ? 's' : ''}
-              </span>
             </div>
           )}
 
-          {/* Run output strip */}
-          {runOutput !== null && (() => {
-            const isErr = runOutput.startsWith('Error:') || runOutput.startsWith('Traceback') || /^error:/i.test(runOutput);
-            return (
-              <div className="border-t border-[var(--border)] bg-[var(--bg-primary)]">
-                <div className="flex items-center justify-between px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
-                  <span className={`text-[10px] font-semibold tracking-wider uppercase ${isErr ? 'text-red-400' : 'text-[var(--text-muted)]'}`}>
-                    {isErr ? '✕ Error' : '✓ Output'}
-                  </span>
-                  <button
-                    onClick={() => setRunOutput(null)}
-                    className="text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <pre className={`px-4 py-3 text-[12px] font-mono whitespace-pre-wrap max-h-40 overflow-y-auto ${isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}>
-                  {runOutput}
-                </pre>
+          {/* Run output */}
+          {runOutput !== null && (
+            <div className="border-t border-[var(--border)] shrink-0" style={{ background: isErr ? 'rgba(239,68,68,0.05)' : 'var(--bg-primary)' }}>
+              <div className="flex items-center justify-between px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
+                <span className={`text-[10px] font-bold tracking-wider uppercase ${isErr ? 'text-red-400' : 'text-emerald-400'}`}>
+                  {isErr ? '✕ Runtime Error' : '✓ Output'}
+                </span>
+                <button onClick={() => setRunOutput(null)} className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+                  ✕
+                </button>
               </div>
-            );
-          })()}
+              <pre className={`px-4 py-3 text-[12px] font-mono whitespace-pre-wrap max-h-44 overflow-y-auto ${isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}>
+                {runOutput}
+              </pre>
+            </div>
+          )}
         </div>
       </div>
     </div>
