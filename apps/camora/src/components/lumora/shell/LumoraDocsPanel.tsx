@@ -256,7 +256,7 @@ function safeText(v: any): string {
 /** Recursively render any value: string, array (of strings or objects), or object.
  *  This is the catch-all that prevents `[object Object]` from ever leaking
  *  into the UI when nested arrays contain objects. */
-function ValueRenderer({ val, depth = 0 }: { val: any; depth?: number }): JSX.Element | null {
+const ValueRenderer = ({ val, depth = 0 }: { val: any; depth?: number }): JSX.Element | null => {
   if (val === null || val === undefined) return null;
 
   if (typeof val === 'string') {
@@ -318,7 +318,7 @@ function ValueRenderer({ val, depth = 0 }: { val: any; depth?: number }): JSX.El
 }
 
 /** Generic renderer for any key-value pair — wraps ValueRenderer in a labeled card. */
-function GenericField({ label, val }: { label: string; val: any }) {
+const GenericField = ({ label, val }: { label: string; val: any }) => {
   return (
     <div className="rounded-lg p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
       <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-primary)' }}>{fmtKey(label)}</div>
@@ -382,7 +382,7 @@ const LC = {
 
 /** Navy-gold card surface. Gold accent for caution sections (edge/mistake/tradeoff),
  *  navy for everything else. Both are subtle — hierarchy comes from labels, not color. */
-function paperCard(accent: string) {
+const paperCard = (accent: string) => {
   const isGold = accent === LC.gold;
   const rgb = isGold ? '201,162,39' : '38,97,156';
   return {
@@ -393,7 +393,7 @@ function paperCard(accent: string) {
 }
 
 /** Difficulty pill — Easy/Medium/Hard with LC's exact colors. */
-function DifficultyPill({ value }: { value: string }) {
+const DifficultyPill = ({ value }: { value: string }) => {
   const v = String(value).toLowerCase();
   const senior = ['senior', 'staff', 'principal'].some((s) => v.includes(s));
   const tone = v.includes('hard') || senior
@@ -412,7 +412,7 @@ function DifficultyPill({ value }: { value: string }) {
 }
 
 /** Tag chip — navy pill for category/topic/value. */
-function TagChip({ label, color = LC.navy }: { label: string; color?: string }) {
+const TagChip = ({ label, color = LC.navy }: { label: string; color?: string }) => {
   return (
     <span
       className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded"
@@ -424,7 +424,7 @@ function TagChip({ label, color = LC.navy }: { label: string; color?: string }) 
 }
 
 /** Complexity badge — O(n), O(log n) — LC's time/space pill, dark mono on any theme. */
-function ComplexityBadge({ kind, value }: { kind: 'time' | 'space'; value: string }) {
+const ComplexityBadge = ({ kind, value }: { kind: 'time' | 'space'; value: string }) => {
   return (
     <span
       className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded"
@@ -471,7 +471,7 @@ function resolveHljsLanguage(input?: string): { id: string | null; label: string
 }
 
 /** Code block — VSCode-dark editor look with a file-tab header + hljs highlighting. */
-function CodeBlock({ code, language = 'code' }: { code: string; language?: string }) {
+const CodeBlock = ({ code, language = 'code' }: { code: string; language?: string }) => {
   const codeRef = useRef<HTMLElement>(null);
   const { id: hljsLang, label } = resolveHljsLanguage(language);
 
@@ -520,7 +520,7 @@ function CodeBlock({ code, language = 'code' }: { code: string; language?: strin
 }
 
 /** Example block — navy-tinted card with mono Input/Output/Explanation. */
-function ExampleBlock({ example, index }: { example: any; index: number }) {
+const ExampleBlock = ({ example, index }: { example: any; index: number }) => {
   if (!example || typeof example !== 'object') return null;
   return (
     <div
@@ -560,7 +560,7 @@ function ExampleBlock({ example, index }: { example: any; index: number }) {
 }
 
 /** Approach card — navy-accented header, complexity pills, code editor. */
-function ApproachCard({ approach, index }: { approach: any; index: number }) {
+const ApproachCard = ({ approach, index }: { approach: any; index: number }) => {
   if (!approach || typeof approach !== 'object') return null;
   return (
     <div className="rounded-xl overflow-hidden" style={{ background: `${LC.approach}06`, border: `1px solid ${LC.approach}33` }}>
@@ -611,7 +611,7 @@ function ApproachCard({ approach, index }: { approach: any; index: number }) {
 }
 
 /** Section heading — navy or gold hexagon dot + label + fading rule. */
-function SectionHeading({ label, color = LC.navy }: { label: string; color?: string }) {
+const SectionHeading = ({ label, color = LC.navy }: { label: string; color?: string }) => {
   return (
     <div className="flex items-center gap-2.5 mb-2.5">
       <span
@@ -634,7 +634,7 @@ function SectionHeading({ label, color = LC.navy }: { label: string; color?: str
 /** Rich content renderer for prep sections — accepts string or object.
  *  Renders known fields with custom layouts, then catches ALL remaining fields generically.
  *  Nothing is ever silently dropped. */
-function PrepContentRenderer({ content }: { content: any }) {
+const PrepContentRenderer = ({ content }: { content: any }) => {
   let data: any = null;
   if (content && typeof content === 'object' && !Array.isArray(content)) {
     data = content;
@@ -1683,11 +1683,11 @@ function savePrepData(s: PrepData) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
 }
 
-function UploadZone({ label, required, value, fileName, onUpload, onPaste: _onPaste, onClickOverride }: {
+const UploadZone = ({ label, required, value, fileName, onUpload, onPaste: _onPaste, onClickOverride }: {
   label: string; required?: boolean; value: string; fileName?: string;
   onUpload: (file: File) => void; onPaste: (text: string) => void;
   onClickOverride?: () => void;
-}) {
+}) => {
   const ref = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -1735,7 +1735,7 @@ function UploadZone({ label, required, value, fileName, onUpload, onPaste: _onPa
 
 const LUMORA_API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
-function GitHubRepoFetcher({ onDocs }: { onDocs: (docs: StudyDoc[]) => void }) {
+const GitHubRepoFetcher = ({ onDocs }: { onDocs: (docs: StudyDoc[]) => void }) => {
   const { token } = useAuth();
   const [url, setUrl] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
@@ -1801,11 +1801,11 @@ function GitHubRepoFetcher({ onDocs }: { onDocs: (docs: StudyDoc[]) => void }) {
 /** Multi-document dropzone for Study Materials. Accepts multiple files at
  *  once (drag-drop or file picker), shows a chip per uploaded doc, and
  *  lets the user delete individual entries. */
-function MultiUploadZone({ docs, onAdd, onRemove }: {
+const MultiUploadZone = ({ docs, onAdd, onRemove }: {
   docs: StudyDoc[];
   onAdd: (files: File[]) => void;
   onRemove: (index: number) => void;
-}) {
+}) => {
   const ref = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -1879,7 +1879,7 @@ function MultiUploadZone({ docs, onAdd, onRemove }: {
 }
 
 /** Parse JD text into structured sections and render beautifully */
-function FormattedJD({ text }: { text: string }) {
+const FormattedJD = ({ text }: { text: string }) => {
   if (!text?.trim()) return <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No job description added yet.</p>;
 
   // Detect section headers — lines that look like titles (short, no bullet, often Title Case)
