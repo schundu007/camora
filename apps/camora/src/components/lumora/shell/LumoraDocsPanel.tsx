@@ -332,72 +332,63 @@ function GenericField({ label, val }: { label: string; val: any }) {
 // visual language comes through regardless of the active app theme.
 // ─────────────────────────────────────────────────────────────────────────
 
-/** LC + Camora palette — landing-page tones blended with LC's section colors.
- *  Cream `paper` is the book-style page; each content type gets a tinted
- *  card on top of it instead of a grey wall. Avoid theme tokens on purpose. */
+/** Camora palette — navy-gold two-role system.
+ *  Navy (#26619C) = structural/informational. Gold (#C9A227) = caution/highlight.
+ *  No rainbow. Section type is communicated by label, not hue. */
 const LC = {
-  // Difficulty (LC's exact tones)
-  easy:   { fg: '#00B8A3', bg: 'rgba(0,184,163,0.10)',  border: 'rgba(0,184,163,0.40)' },
-  medium: { fg: '#FFB800', bg: 'rgba(255,184,0,0.10)',  border: 'rgba(255,184,0,0.40)' },
-  hard:   { fg: '#FF375F', bg: 'rgba(255,55,95,0.10)',  border: 'rgba(255,55,95,0.40)' },
+  // Difficulty pills — semantic meaning, kept intentional
+  easy:   { fg: '#34D399', bg: 'rgba(52,211,153,0.08)',  border: 'rgba(52,211,153,0.22)' },
+  medium: { fg: '#C9A227', bg: 'rgba(201,162,39,0.10)',  border: 'rgba(201,162,39,0.30)' },
+  hard:   { fg: '#EF4444', bg: 'rgba(239,68,68,0.08)',   border: 'rgba(239,68,68,0.22)' },
 
-  // Section accents — LC-inspired, paired with Camora navy/gold for brand fit
-  navy:        '#26619C',   // Camora primary
-  gold:        '#C9A227',   // Camora gold-leaf
-  problem:     '#0EA5E9',   // LC blue (description tab)
-  examples:    '#00B8A3',   // LC teal
-  approach:    '#A855F7',   // LC purple
-  edge:        '#FF375F',   // LC red
-  mistake:     '#F59E0B',   // LC amber
-  followup:    '#0EA5E9',
-  // System-design specific accents
-  requirements:  '#0EA5E9',  // blue
-  capacity:      '#A855F7',  // purple
-  architecture:  '#00B8A3',  // teal
-  database:      '#F59E0B',  // amber
-  api:           '#16A34A',  // green
-  tradeoffs:     '#EC4899',  // pink/red
-  scalability:   '#6366F1',  // indigo
-  clarify:       '#0EA5E9',  // blue (same as problem family)
+  // Brand tokens
+  navy:        '#26619C',
+  gold:        '#C9A227',
 
-  // STAR
+  // All section accents → navy (informational) or gold (caution/watch-out)
+  problem:      '#26619C',
+  examples:     '#26619C',
+  approach:     '#26619C',
+  edge:         '#C9A227',  // watch-out → gold
+  mistake:      '#C9A227',  // watch-out → gold
+  followup:     '#26619C',
+  requirements: '#26619C',
+  capacity:     '#26619C',
+  architecture: '#26619C',
+  database:     '#26619C',
+  api:          '#26619C',
+  tradeoffs:    '#C9A227',  // trade-off emphasis → gold
+  scalability:  '#26619C',
+  clarify:      '#26619C',
+
+  // STAR — action (the doing) → gold, rest → navy
   star: {
-    situation: '#00B8A3',
-    task:      '#0EA5E9',
-    action:    '#F59E0B',
-    result:    '#16A34A',
+    situation: '#26619C',
+    task:      '#26619C',
+    action:    '#C9A227',
+    result:    '#26619C',
   },
 
-  // Code editor (VSCode-dark — pops on any theme)
+  // Code editor — VSCode dark, universally readable
   codeBg:    '#1E1E1E',
   codeFg:    '#D4D4D4',
   codeHdr:   '#2D2D2D',
   codeMuted: '#9CA3AF',
 
-  // LC-landing-style paper. Uses the active theme's bg-surface so cards
-  // are clean white in light mode and dark navy in dark mode — not a
-  // hardcoded white tint that disappears the cream text on dark theme.
   paper:       'var(--bg-surface)',
   paperBorder: 'rgba(38,97,156,0.22)',
   pageRule:    'rgba(38,97,156,0.22)',
-  // Bright section-color accents — LC landing uses solid, saturated heads:
-  //   Start Exploring (teal), Questions Community Contests (blue),
-  //   Companies & Candidates (amber). We mirror that cadence.
 };
 
-/** Tinted card surface — strong enough to read on white-paper or dark-paper
- *  without going invisible. Accent tint sits over `bg-surface` so dark-theme
- *  cards retain a defined plane and body text doesn't disappear.
- *
- *  Two-layer background:
- *   1. accent at 22→10% gradient (stronger than the old 6→2% washout)
- *   2. var(--bg-surface) underneath = solid card plane in either theme
- *  Border at 55% opacity gives a clear edge. */
+/** Navy-gold card surface. Gold accent for caution sections (edge/mistake/tradeoff),
+ *  navy for everything else. Both are subtle — hierarchy comes from labels, not color. */
 function paperCard(accent: string) {
+  const isGold = accent === LC.gold;
+  const rgb = isGold ? '201,162,39' : '38,97,156';
   return {
-    background: `linear-gradient(180deg, ${accent}24 0%, ${accent}10 100%), var(--bg-surface)`,
-    border: `1px solid ${accent}55`,
-    boxShadow: `0 1px 0 ${accent}1A, 0 2px 8px -3px rgba(0,0,0,0.08)`,
+    background: `linear-gradient(180deg, rgba(${rgb},0.07) 0%, rgba(${rgb},0.03) 100%), var(--bg-surface)`,
+    border: `1px solid rgba(${rgb},0.22)`,
+    boxShadow: `0 1px 0 rgba(${rgb},0.08), 0 2px 8px -3px rgba(0,0,0,0.06)`,
   };
 }
 
@@ -420,12 +411,12 @@ function DifficultyPill({ value }: { value: string }) {
   );
 }
 
-/** Tag chip — subtle pill for category/topic/value. */
-function TagChip({ label, color = LC.problem }: { label: string; color?: string }) {
+/** Tag chip — navy pill for category/topic/value. */
+function TagChip({ label, color = LC.navy }: { label: string; color?: string }) {
   return (
     <span
       className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded"
-      style={{ background: `${color}1A`, color, border: `1px solid ${color}40` }}
+      style={{ background: `${color}14`, color, border: `1px solid ${color}35` }}
     >
       {label}
     </span>
@@ -509,18 +500,11 @@ function CodeBlock({ code, language = 'code' }: { code: string; language?: strin
     <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${LC.codeHdr}` }}>
       <div
         className="px-3 py-2 flex items-center justify-between"
-        style={{ background: LC.codeHdr, borderBottom: `1px solid ${LC.codeHdr}` }}
+        style={{ background: LC.codeHdr, borderBottom: `1px solid rgba(255,255,255,0.06)` }}
       >
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1">
-            <span className="w-2 h-2 rounded-full" style={{ background: '#FF5F56' }} />
-            <span className="w-2 h-2 rounded-full" style={{ background: '#FFBD2E' }} />
-            <span className="w-2 h-2 rounded-full" style={{ background: '#27C93F' }} />
-          </div>
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: LC.codeMuted }}>
-            {label}
-          </span>
-        </div>
+        <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: LC.codeMuted }}>
+          {label}
+        </span>
         <span className="text-[10px] font-mono" style={{ color: LC.codeMuted }}>{code.split('\n').length} LOC</span>
       </div>
       <pre
@@ -535,7 +519,7 @@ function CodeBlock({ code, language = 'code' }: { code: string; language?: strin
   );
 }
 
-/** LC-style example block — green-tinted card with mono Input/Output/Explanation. */
+/** Example block — navy-tinted card with mono Input/Output/Explanation. */
 function ExampleBlock({ example, index }: { example: any; index: number }) {
   if (!example || typeof example !== 'object') return null;
   return (
@@ -575,7 +559,7 @@ function ExampleBlock({ example, index }: { example: any; index: number }) {
   );
 }
 
-/** LC-style approach card — purple-accented header, complexity pills, code editor. */
+/** Approach card — navy-accented header, complexity pills, code editor. */
 function ApproachCard({ approach, index }: { approach: any; index: number }) {
   if (!approach || typeof approach !== 'object') return null;
   return (
@@ -626,26 +610,23 @@ function ApproachCard({ approach, index }: { approach: any; index: number }) {
   );
 }
 
-/** LC-landing-style section heading — bold colored typography like their
- *  homepage section heads ("Start Exploring", "Companies & Candidates").
- *  Left hexagon dot + uppercase title in the section's accent color. */
-function SectionHeading({ label, color = LC.problem }: { label: string; color?: string }) {
+/** Section heading — navy or gold hexagon dot + label + fading rule. */
+function SectionHeading({ label, color = LC.navy }: { label: string; color?: string }) {
   return (
     <div className="flex items-center gap-2.5 mb-2.5">
-      {/* Hexagon-ish dot — LC's iconography uses geometric badges */}
       <span
         className="block flex-shrink-0"
         style={{
-          width: 10,
-          height: 10,
+          width: 8,
+          height: 8,
           background: color,
           clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
         }}
       />
-      <h4 className="text-[13px] font-extrabold tracking-tight" style={{ color }}>
+      <h4 className="text-[12px] font-bold uppercase tracking-widest" style={{ color }}>
         {label}
       </h4>
-      <span className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${color}50 0%, transparent 100%)` }} />
+      <span className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${color}40 0%, transparent 100%)` }} />
     </div>
   );
 }
