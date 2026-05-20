@@ -2273,38 +2273,28 @@ function FormattedJD({ text }: { text: string }) {
                 </span>
               </div>
             )}
-            <div className="px-5 pl-7 py-4 flex flex-col gap-2">
+            <div className="px-5 pl-7 py-4 flex flex-col gap-1.5">
               {sec.items.map((item, j) => {
-                if (i === 0 && !sec.title) {
+                const isNumberedHeading = /^\d+[\.\)]\s/.test(item);
+                if (isNumberedHeading) {
                   return (
                     <p
                       key={j}
-                      className="text-[14.5px] leading-[1.7]"
-                      style={{ color: 'var(--text-primary)' }}
+                      className="text-[13.5px] leading-[1.65] font-semibold mt-2 first:mt-0"
+                      style={{ color: 'var(--cam-gold-leaf-text)' }}
                     >
                       {item}
                     </p>
                   );
                 }
                 return (
-                  <div key={j} className="flex gap-2.5 items-start">
-                    <span
-                      className="block flex-shrink-0 mt-1.5"
-                      style={{
-                        width: 6,
-                        height: 6,
-                        background: 'var(--cam-gold-leaf)',
-                        clipPath:
-                          'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-                      }}
-                    />
-                    <span
-                      className="text-[13px] leading-[1.6]"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
-                      {item}
-                    </span>
-                  </div>
+                  <p
+                    key={j}
+                    className="text-[13px] leading-[1.65]"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {item}
+                  </p>
                 );
               })}
             </div>
