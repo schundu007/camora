@@ -437,3 +437,131 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
  * Helper to create a streaming response in a React-friendly way.
  * Returns an object with the current state and a function to abort.
  */
+
+// ── CoFix ─────────────────────────────────────────────────────────────────
+
+export interface CoFixChange {
+  line: number;
+  badge: number;
+  type: 'fix' | 'added';
+  label: string;
+  note: string;
+}
+
+export interface CoFixAnswer {
+  fixed_code: string;
+  changes: CoFixChange[];
+  complexity: { time: string; space: string };
+  hackerrank_compatible: boolean;
+}
+
+export interface CoFixStreamOptions {
+  code: string;
+  hint?: string;
+  language: string;
+  token: string;
+  signal?: AbortSignal;
+  onToken?: (chunk: string) => void;
+  onAnswer?: (data: CoFixAnswer) => void;
+  onError?: (err: { msg: string }) => void;
+  onComplete?: () => void;
+}
+
+export async function streamCoFixResponse(options: CoFixStreamOptions): Promise<AbortController> {
+  const { code, hint, language, token, signal: externalSignal, onToken, onAnswer, onError, onComplete } = options;
+
+  const abortController = new AbortController();
+  if (externalSignal) {
+    if (externalSignal.aborted) {
+      abortController.abort();
+    } else {
+      externalSignal.addEventListener('abort', () => abortController.abort(), { once: true });
+    }
+  }
+
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  try {
+    const response = await fetchWithConnectRetry(`${API_URL}/api/v1/coding/cofix/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'text/event-stream',
+      },
+      body: JSON.stringify({
+        code,
+        language,
+        ...(hint ? { hint } : {}),
+      }),
+      credentials: 'include',
+      signal: abortController.signal,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'CoFix stream failed' }));
+      onError?.({ msg: error.error || error.detail || `HTTP error ${response.status}` });
+      return abortController;
+    }
+
+    reader = response.body?.getReader();
+    if (!reader) {
+      onError?.({ msg: 'No response body' });
+      return abortController;
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let currentEvent = '';
+    let currentData = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        if (currentEvent && currentData) {
+          try {
+            const data = JSON.parse(currentData);
+            if (currentEvent === 'answer') onAnswer?.(data as CoFixAnswer);
+            else if (currentEvent === 'error') onError?.({ msg: data.message });
+          } catch { /* incomplete frame */ }
+        }
+        onComplete?.();
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('event:')) {
+          currentEvent = line.slice(6).trim();
+          currentData = '';
+        } else if (line.startsWith('data:')) {
+          currentData += (currentData ? '\n' : '') + line.slice(5).trim();
+        } else if (line.trim() === '') {
+          if (currentEvent && currentData) {
+            try {
+              const data = JSON.parse(currentData);
+              if (currentEvent === 'token') onToken?.(data.chunk || '');
+              else if (currentEvent === 'answer') onAnswer?.(data as CoFixAnswer);
+              else if (currentEvent === 'error') onError?.({ msg: data.message });
+            } catch (e) {
+              console.error('CoFix SSE parse error:', currentEvent, (e as Error).message);
+            }
+          }
+          currentEvent = '';
+          currentData = '';
+        }
+      }
+    }
+  } catch (error: any) {
+    if (error.name !== 'AbortError') {
+      onError?.({ msg: error.message || 'CoFix stream error' });
+    }
+  } finally {
+    try { await reader?.cancel(); } catch { /* already released */ }
+  }
+
+  return abortController;
+}
