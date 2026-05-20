@@ -144,4 +144,20 @@ describe('POST /api/v1/coding/cofix/stream', () => {
     const callArgs = mockStream.mock.calls[0][0];
     expect(callArgs.messages[0].content).toContain('typo in return');
   });
+
+  it('returns 400 for unsupported language', async () => {
+    const res = await request(app)
+      .post('/api/v1/coding/cofix/stream')
+      .send({ code: 'def solution(n):\n  return n', language: 'brainfuck' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/unsupported language/i);
+  });
+
+  it('returns 400 when code exceeds 50000 chars', async () => {
+    const res = await request(app)
+      .post('/api/v1/coding/cofix/stream')
+      .send({ code: 'x'.repeat(50001), language: 'python' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/too large/i);
+  });
 });
