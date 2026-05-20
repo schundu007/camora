@@ -9,7 +9,7 @@ interface VoiceEnrollmentProps {
   variant?: 'dark' | 'light';
 }
 
-export function VoiceEnrollment({ disabled, variant = 'dark' }: VoiceEnrollmentProps) {
+export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentProps) => {
   const isLight = variant === 'light';
   const { selectedDeviceId } = useAudioDevices();
   const {

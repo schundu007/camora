@@ -47,13 +47,13 @@ interface DeviceInfo {
 
 const SESSION_KEY = 'lumora_audio_wizard_dismissed';
 
-export function AudioSetupWizard({
+export const AudioSetupWizard = ({
   forceOpen,
   onClose,
 }: {
   forceOpen?: boolean;
   onClose?: () => void;
-}) {
+}) => {
   const interviewer = useInterviewerAudio();
   const { token } = useAuth();
   const setInterviewerAudio = useInterviewStore((s) => s.setInterviewerAudio);
@@ -966,7 +966,7 @@ const Section = ({
   );
 }
 
-function MethodCard({
+const MethodCard = ({
   value, current, onPick, title, desc, badge, disabled, disabledNote,
 }: {
   value: CaptureMethod;
@@ -977,7 +977,7 @@ function MethodCard({
   badge?: string;
   disabled?: boolean;
   disabledNote?: string;
-}) {
+}) => {
   const selected = value === current;
   return (
     <button
@@ -1013,7 +1013,7 @@ function MethodCard({
   );
 }
 
-function LevelMeter({ level, label, active }: { level: number; label: string; active: boolean }) {
+const LevelMeter = ({ level, label, active }: { level: number; label: string; active: boolean }) => {
   return (
     <div className="mt-2">
       <div className="flex items-center justify-between mb-1">
@@ -1041,7 +1041,7 @@ function LevelMeter({ level, label, active }: { level: number; label: string; ac
 }
 
 /* ── Tiny WAV encoder for the sound test ─────────────────────────── */
-function audioBufferToWavBlob(buffer: AudioBuffer): Blob {
+const audioBufferToWavBlob = (buffer: AudioBuffer): Blob  => {
   const numChannels = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;
   const length = buffer.length * numChannels * 2 + 44;

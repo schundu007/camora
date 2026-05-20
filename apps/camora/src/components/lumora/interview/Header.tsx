@@ -36,7 +36,7 @@ const TABS: { id: TabType; label: string }[] = [
   { id: 'cofix', label: 'CoFix' },
 ];
 
-export function Header({ inputValue, onInputChange, onSubmit, onTranscription, showInputBar = true, activeTab, onTabChange, onToggleSidebar, sidebarOpen }: HeaderProps) {
+export const Header = ({ inputValue, onInputChange, onSubmit, onTranscription, showInputBar = true, activeTab, onTabChange, onToggleSidebar, sidebarOpen }: HeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { status, useSearch, setUseSearch, clearHistory, responseFormat, setResponseFormat } = useInterviewStore();

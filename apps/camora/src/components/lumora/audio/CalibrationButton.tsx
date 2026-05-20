@@ -7,7 +7,7 @@ interface CalibrationButtonProps {
   variant?: 'dark' | 'light';
 }
 
-export function CalibrationButton({ deviceId, disabled, variant = 'dark' }: CalibrationButtonProps) {
+export const CalibrationButton = ({ deviceId, disabled, variant = 'dark' }: CalibrationButtonProps) => {
   const isLight = variant === 'light';
   const { setThreshold, setStatus, vadThreshold } = useInterviewStore();
 

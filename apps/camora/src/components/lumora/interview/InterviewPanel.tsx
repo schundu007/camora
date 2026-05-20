@@ -10,7 +10,7 @@ import { DatabricksThumb, type DatabricksColor } from '@/components/shared/Datab
 // keep one accent color and differentiate categories by label text
 // only, NOT by hue (no green/yellow/red Easy/Medium/Hard).
 type QuestionCategory = 'behavioral' | 'coding' | 'design';
-function categorize(q: string, isCodingFlag = false, isDesignFlag = false): QuestionCategory {
+const categorize = (q: string, isCodingFlag = false, isDesignFlag = false): QuestionCategory  => {
   if (isDesignFlag) return 'design';
   if (isCodingFlag) return 'coding';
   const t = (q || '').trim();
@@ -59,7 +59,7 @@ interface InterviewPanelProps {
   onSwitchToDesign?: (problem?: string) => void;
 }
 
-export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: InterviewPanelProps) {
+export const InterviewPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: InterviewPanelProps) => {
   const {
     question,
     isStreaming,

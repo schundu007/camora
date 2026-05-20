@@ -14,7 +14,7 @@ import { getActiveAssistant, type LumoraAssistant } from '@/lib/lumora-assistant
 
 const CTX_EVENT = 'lumora:context-updated';
 
-function useActiveAssistant(): LumoraAssistant | null {
+const useActiveAssistant = (): LumoraAssistant | null  => {
   const read = useCallback(() => getActiveAssistant(), []);
   const [assistant, setAssistant] = useState<LumoraAssistant | null>(read);
 
@@ -31,7 +31,7 @@ function useActiveAssistant(): LumoraAssistant | null {
   return assistant;
 }
 
-export function dispatchContextUpdated() {
+export const dispatchContextUpdated = () => {
   try {
     window.dispatchEvent(new CustomEvent(CTX_EVENT));
   } catch {}
@@ -41,7 +41,7 @@ interface ContextBadgeProps {
   variant?: 'dark' | 'light';
 }
 
-export function ContextBadge({ variant = 'dark' }: ContextBadgeProps) {
+export const ContextBadge = ({ variant = 'dark' }: ContextBadgeProps) => {
   const assistant = useActiveAssistant();
 
   const hasResume = !!assistant?.resume?.trim();

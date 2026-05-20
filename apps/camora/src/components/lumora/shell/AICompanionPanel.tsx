@@ -141,7 +141,7 @@ const SonaAvatar = ({ size = 24, active = false }: { size?: number; active?: boo
 
 
 /* ═══ Assistant Panel ═══ */
-export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = false }: AICompanionPanelProps & { initialQuestion?: string; embedded?: boolean }) {
+export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = false }: AICompanionPanelProps & { initialQuestion?: string; embedded?: boolean }) => {
   const { token } = useAuth();
 
   // Load active assistant context (resume + JD) — shared helper, same shape as Coding + Design windows
@@ -1428,7 +1428,7 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   );
 }
 
-export function AICompanionToggle({ onClick, hasActivity }: { onClick: () => void; hasActivity: boolean }) {
+export const AICompanionToggle = ({ onClick, hasActivity }: { onClick: () => void; hasActivity: boolean }) => {
   return (
     <button
       onClick={onClick}

@@ -33,13 +33,13 @@ type Pending = PendingConfirm | PendingAlert;
 let _confirmImpl: ((opts: ConfirmOpts) => Promise<boolean>) | null = null;
 let _alertImpl: ((opts: AlertOpts) => Promise<void>) | null = null;
 
-export function dialogConfirm(opts: ConfirmOpts | string): Promise<boolean> {
+export const dialogConfirm = (opts: ConfirmOpts | string): Promise<boolean>  => {
   const o: ConfirmOpts = typeof opts === 'string' ? { message: opts } : opts;
   if (_confirmImpl) return _confirmImpl(o);
   // Fallback to native if the provider hasn't mounted yet
   return Promise.resolve(window.confirm(o.message));
 }
-export function dialogAlert(opts: AlertOpts | string): Promise<void> {
+export const dialogAlert = (opts: AlertOpts | string): Promise<void>  => {
   const o: AlertOpts = typeof opts === 'string' ? { message: opts } : opts;
   if (_alertImpl) return _alertImpl(o);
   window.alert(o.message);
@@ -52,14 +52,14 @@ interface DialogContextValue {
 }
 const DialogContext = createContext<DialogContextValue | null>(null);
 
-export function useDialog(): DialogContextValue {
+export const useDialog = (): DialogContextValue  => {
   const ctx = useContext(DialogContext);
   if (ctx) return ctx;
   // Fallback — lets components work before provider mounts or in tests
   return { confirm: dialogConfirm, alert: dialogAlert };
 }
 
-export function DialogProvider({ children }: { children: ReactNode }) {
+export const DialogProvider = ({ children }: { children: ReactNode }) => {
   const [pending, setPending] = useState<Pending | null>(null);
   const confirmBtnRef = useRef<HTMLButtonElement | null>(null);
 

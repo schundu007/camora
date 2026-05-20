@@ -18,7 +18,7 @@ export interface InlineStyles {
   allowLinks?: boolean;
 }
 
-export function renderInlineSafe(s: string, opts: InlineStyles = {}): React.ReactNode[] {
+export const renderInlineSafe = (s: string, opts: InlineStyles = {}): React.ReactNode[]  => {
   if (!s) return [];
   const nodes: React.ReactNode[] = [];
   let i = 0;

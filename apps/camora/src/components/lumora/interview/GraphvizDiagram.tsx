@@ -27,7 +27,7 @@ const svgCache = new Map<string, string>();
  * Once the LLM prompts are updated to emit DOT instead of mermaid, the
  * Mermaid component + dependency can be removed.
  */
-export function GraphvizDiagram({ content, engine = 'dot', className = '' }: GraphvizDiagramProps) {
+export const GraphvizDiagram = ({ content, engine = 'dot', className = '' }: GraphvizDiagramProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [rendering, setRendering] = useState(true);

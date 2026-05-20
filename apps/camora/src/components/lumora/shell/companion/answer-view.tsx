@@ -68,7 +68,7 @@ const LcStripHeader = ({ icon, label, hint, count, right }: {
 const ARCHETYPES = ['Conflict', 'Leadership', 'Failure', 'Ambiguity', 'Influence', 'Innovation', 'Collaboration', 'Growth', 'Career', 'Fit'] as const;
 export type Archetype = typeof ARCHETYPES[number];
 
-function extractArchetype(text: string): { archetype: Archetype | null; stripped: string } {
+const extractArchetype = (text: string): { archetype: Archetype | null; stripped: string } => {
   if (!text) return { archetype: null, stripped: text };
   const m = text.match(/^\s*ARCHETYPE\s*:\s*([A-Za-z\/ -]+)\s*\n/);
   if (!m) return { archetype: null, stripped: text };
@@ -94,7 +94,7 @@ const ARCHETYPE_HINT: Record<Archetype, string> = {
 const STAR_LABELS = ['SITUATION', 'TASK', 'ACTION', 'RESULT'] as const;
 type StarLabel = typeof STAR_LABELS[number];
 
-function parseStar(text: string): { sections: { label: StarLabel; body: string }[] } | null {
+const parseStar = (text: string): { sections: { label: StarLabel; body: string }[] } | null => {
   if (!text) return null;
   const lines = text.split('\n');
   const found: { label: StarLabel; startLine: number }[] = [];
@@ -247,7 +247,7 @@ const ArchetypeBadge = ({ archetype }: { archetype: Archetype }) => {
 /* ── Rebuttals parser — pulls "REBUTTALS:" block off the end of behavioral answer ── */
 interface Rebuttal { probe: string; handling: string; }
 
-function extractRebuttals(text: string): { rebuttals: Rebuttal[]; stripped: string } {
+const extractRebuttals = (text: string): { rebuttals: Rebuttal[]; stripped: string } => {
   if (!text) return { rebuttals: [], stripped: text };
   const m = text.match(/\n\s*REBUTTALS\s*:\s*\n([\s\S]*?)$/i);
   if (!m) return { rebuttals: [], stripped: text };
@@ -315,7 +315,7 @@ const RebuttalsPanel = ({ items }: { items: Rebuttal[] }) => {
 }
 
 /* ── StoryBankPanel — lists resume-parsed stories in the left column ── */
-export function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraStory[]; activeArchetype: Archetype | null }) {
+export const StoryBankPanel = ({ stories, activeArchetype }: { stories?: LumoraStory[]; activeArchetype: Archetype | null }) => {
   if (!stories || stories.length === 0) return null;
   // Sort: matching-archetype stories first
   const sorted = [...stories].sort((a, b) => {
@@ -654,7 +654,7 @@ const RichText = ({ text }: { text: string }) => {
 }
 
 /* ── AnswerView — picks STAR cards for behavioral, RichText otherwise ── */
-export function AnswerView({ text, streaming }: { text: string; streaming?: boolean }) {
+export const AnswerView = ({ text, streaming }: { text: string; streaming?: boolean }) => {
   const { archetype, stripped: afterArch } = useMemo(() => extractArchetype(text), [text]);
   const { rebuttals, stripped } = useMemo(() => extractRebuttals(afterArch), [afterArch]);
   const star = useMemo(() => parseStar(stripped), [stripped]);
@@ -686,6 +686,6 @@ export function AnswerView({ text, streaming }: { text: string; streaming?: bool
 
 /** Surface the archetype detected in `text`, for callers that want to drive
  *  story-bank highlighting in parallel with the AnswerView render. */
-export function getArchetype(text: string): Archetype | null {
+export const getArchetype = (text: string): Archetype | null  => {
   return extractArchetype(text).archetype;
 }

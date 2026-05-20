@@ -13,7 +13,7 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.co
 const DIRECTION = 'TB';
 const DETAIL = 'detailed';
 
-function getCacheKey(question: string, provider: string, designKind: string = 'system') {
+const getCacheKey = (question: string, provider: string, designKind: string = 'system') => {
   return `${question}::${provider}::${DIRECTION}::${DETAIL}::${designKind}`;
 }
 
@@ -32,7 +32,7 @@ interface ArchitectureDiagramProps {
   autoGenerate?: boolean;
 }
 
-export function ArchitectureDiagram({ question, className = '', designKind = 'system', autoGenerate = false }: ArchitectureDiagramProps) {
+export const ArchitectureDiagram = ({ question, className = '', designKind = 'system', autoGenerate = false }: ArchitectureDiagramProps) => {
   const { token, user } = useAuth();
   // Only owners/admins may trigger fresh generation. Regular users consume
   // pre-generated diagrams from the cache. Backend enforces this via 403

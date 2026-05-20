@@ -4,7 +4,7 @@ import { DesignLayout } from '../../components/lumora/design/DesignLayout';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
 import { PaywallGate } from '../../components/shared/ui/PaywallGate';
 
-function DesignPageContent() {
+const DesignPageContent = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -18,7 +18,7 @@ function DesignPageContent() {
   );
 }
 
-export function DesignPage() {
+export const DesignPage = () => {
   useEffect(() => {
     document.title = 'Design Interview | Camora';
     return () => { document.title = 'Camora'; };

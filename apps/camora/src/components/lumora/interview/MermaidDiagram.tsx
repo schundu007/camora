@@ -5,7 +5,7 @@ interface MermaidDiagramProps {
   className?: string;
 }
 
-function cleanForMermaid(raw: string): string {
+const cleanForMermaid = (raw: string): string  => {
   let d = raw.trim();
   d = d.replace(/^```(?:mermaid)?\s*/i, '').replace(/```\s*$/, '');
   d = d.replace(/<br\s*\/?>/gi, ' ');
@@ -47,7 +47,7 @@ async function getMermaid() {
   return mermaidLoading;
 }
 
-export function MermaidDiagram({ content, className = '' }: MermaidDiagramProps) {
+export const MermaidDiagram = ({ content, className = '' }: MermaidDiagramProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [rendering, setRendering] = useState(true);

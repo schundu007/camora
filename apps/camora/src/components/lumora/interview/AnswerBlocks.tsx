@@ -12,7 +12,7 @@ import SharedDiagram from '@/components/shared/diagrams/SharedDiagram';
  *  toward DOT only when the body matches the unambiguous DOT shape so a
  *  LLM that still emits Mermaid `graph TD ...` keeps falling through to
  *  MermaidDiagram. */
-function looksLikeDot(content: string): boolean {
+const looksLikeDot = (content: string): boolean  => {
   const head = content.trim().slice(0, 40).toLowerCase();
   if (!head) return false;
   // Strip ``` fences if the LLM wrapped the source.
@@ -29,7 +29,7 @@ interface AnswerBlocksProps {
   question?: string;
 }
 
-export function AnswerBlocks({ blocks, isDesign, isCoding, question }: AnswerBlocksProps) {
+export const AnswerBlocks = ({ blocks, isDesign, isCoding, question }: AnswerBlocksProps) => {
   if (isDesign) {
     return <SystemDesignView blocks={blocks} question={question} />;
   }
@@ -879,7 +879,7 @@ const Shimmer = () => {
 }
 
 // Helpers
-function parseFollowups(content: string): { question: string; answer: string }[] {
+const parseFollowups = (content: string): { question: string; answer: string }[] => {
   const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
   const pairs: { question: string; answer: string }[] = [];
   let currentQ: string | null = null;

@@ -27,7 +27,7 @@ interface LumoraBottomBarProps {
   surface?: 'coding' | 'design';
 }
 
-export function LumoraBottomBar({ onTranscription }: LumoraBottomBarProps) {
+export const LumoraBottomBar = ({ onTranscription }: LumoraBottomBarProps) => {
   const voiceEnrolled = useInterviewStore(s => s.voiceEnrolled);
   const voiceFilterEnabled = useInterviewStore(s => s.voiceFilterEnabled);
   const voiceEnrolledAt = useInterviewStore(s => s.voiceEnrolledAt);
@@ -97,8 +97,8 @@ export function LumoraBottomBar({ onTranscription }: LumoraBottomBarProps) {
         aria-label="Audio controls"
       >
         <div
-          className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl"
-          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full shrink-0"
+          style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)' }}
         >
           <AudioCapture onTranscription={onTranscription} />
         </div>

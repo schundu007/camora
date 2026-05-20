@@ -22,7 +22,7 @@ const PLATFORMS = [
   { value: 'codility', label: 'Codility' },
 ];
 
-export function LumoraSettings({ isOpen, onClose }: LumoraSettingsProps) {
+export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
   const [platform, setPlatform] = useState('teams');
   const { voiceMode, setVoiceMode, setAutoEnrollPending, setVoiceFilterEnabled, preferredModel, setPreferredModel } = useInterviewStore();
   const { selectedDeviceId } = useAudioDevices();
