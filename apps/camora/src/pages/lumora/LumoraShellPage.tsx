@@ -53,6 +53,16 @@ export function LumoraShellPage() {
   const designScreenshotRef = useRef<((text: string) => void) | null>(null);
   const cofixScreenshotRef = useRef<((text: string) => void) | null>(null);
 
+  // Input mode state lifted to shell so the global strip can own the pills
+  const [codingInputMode, setCodingInputMode] = useState<'paste' | 'url' | 'image'>('paste');
+  const [designInputMode, setDesignInputMode] = useState<'text' | 'url' | 'image'>('text');
+  const handleInputModeChange = useCallback((mode: string) => {
+    if (activeTab === 'coding') setCodingInputMode(mode as 'paste' | 'url' | 'image');
+    else if (activeTab === 'design') setDesignInputMode(mode as 'text' | 'url' | 'image');
+  // activeTab is a const derived from location — safe dep
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
   // Tool selection — persisted per device so users don't repick every session.
   const [meetingPlatform, setMeetingPlatform] = useState<string>(() => {
     try { return localStorage.getItem('lumora_meeting_platform') || 'teams'; } catch { return 'teams'; }
@@ -558,6 +568,11 @@ export function LumoraShellPage() {
             screenshots={screenshots}
             onSnapped={handleSnapped}
             onRemove={handleRemoveScreenshot}
+            inputMode={activeTab === 'coding' ? codingInputMode : activeTab === 'design' ? designInputMode : undefined}
+            onInputModeChange={handleInputModeChange}
+            showInputModeSelector={activeTab === 'coding' || activeTab === 'design'}
+            onTranscription={handleTranscription}
+            isTabActive={true}
           />
         )}
 
@@ -597,6 +612,8 @@ export function LumoraShellPage() {
                         isTabActive={activeTab === 'coding'}
                         onScreenshotAppendRef={codingScreenshotRef}
                         onNewProblemCallback={() => setScreenshots([])}
+                        externalInputMode={codingInputMode}
+                        onExternalInputModeChange={(m) => setCodingInputMode(m as 'paste' | 'url' | 'image')}
                       />
                     </div>
                     {/* Sona Q&A sidebar — independent state, follow-up
@@ -629,6 +646,8 @@ export function LumoraShellPage() {
                         onEmbeddedTranscription={handleTranscription}
                         isTabActive={activeTab === 'design'}
                         onScreenshotAppendRef={designScreenshotRef}
+                        externalInputTab={designInputMode}
+                        onExternalInputTabChange={(m) => setDesignInputMode(m as 'text' | 'url' | 'image')}
                       />
                     </div>
                     <CodingSonaSidebar

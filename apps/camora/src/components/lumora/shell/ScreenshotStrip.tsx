@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInterviewStore } from '@/stores/interview-store';
 import { dialogAlert } from '@/components/shared/Dialog';
+import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
+import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -16,12 +18,20 @@ interface ScreenshotStripProps {
   screenshots: ScreenshotEntry[];
   onSnapped: (entry: ScreenshotEntry) => void;
   onRemove: (id: string) => void;
+  /** Current input mode ('paste'|'url'|'image' for coding; 'text'|'url'|'image' for design) */
+  inputMode?: string;
+  onInputModeChange?: (mode: string) => void;
+  /** Show TEXT/URL/IMAGE pills — true on coding and design tabs */
+  showInputModeSelector?: boolean;
+  /** Forwarded to AudioCapture for all AI tabs */
+  onTranscription?: (text: string, opts?: { manual?: boolean }) => void;
+  isTabActive?: boolean;
 }
 
 /** Shared pill chrome — matches the LumoraShellPage tab nav exactly. */
 const pillBase = 'flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color,opacity] active:scale-[0.97]';
 
-export function ScreenshotStrip({ surface, screenshots, onSnapped, onRemove }: ScreenshotStripProps) {
+export function ScreenshotStrip({ surface, screenshots, onSnapped, onRemove, inputMode, onInputModeChange, showInputModeSelector, onTranscription, isTabActive }: ScreenshotStripProps) {
   const { token } = useAuth();
   const isStealthActive = useInterviewStore(s => s.isStealthActive);
   const setIsStealthActive = useInterviewStore(s => s.setIsStealthActive);
@@ -108,6 +118,10 @@ export function ScreenshotStrip({ surface, screenshots, onSnapped, onRemove }: S
 
   const showSnap = surface !== 'behavioral';
 
+  // Input mode labels — 'paste' and 'text' both map to "Text"
+  const inputModes = surface === 'design' ? (['text', 'url', 'image'] as const) : (['paste', 'url', 'image'] as const);
+  const modeLabel = (m: string) => m === 'paste' || m === 'text' ? 'Text' : m === 'url' ? 'URL' : 'Image';
+
   return (
     <div
       className="flex items-center gap-1.5 px-3 py-1.5 shrink-0 overflow-x-auto no-scrollbar"
@@ -183,8 +197,43 @@ export function ScreenshotStrip({ surface, screenshots, onSnapped, onRemove }: S
         </span>
       )}
 
+      {/* Input mode selector — TEXT / URL / IMAGE (coding + design tabs only) */}
+      {showInputModeSelector && onInputModeChange && (
+        <div
+          className="flex items-center gap-0.5 px-0.5 py-0.5 shrink-0"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999 }}
+        >
+          {inputModes.map(mode => (
+            <button
+              key={mode}
+              onClick={() => onInputModeChange(mode)}
+              className="px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color] active:scale-[0.98]"
+              style={inputMode === mode
+                ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', borderRadius: 999 }
+                : { color: 'rgba(255,255,255,0.70)', borderRadius: 999 }
+              }
+            >
+              {modeLabel(mode)}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* AudioCapture — all AI tabs */}
+      {onTranscription && (
+        <div
+          className="flex items-center gap-1.5 px-2 py-1 rounded-lg shrink-0"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)' }}
+        >
+          <AudioCapture onTranscription={onTranscription} autoStart={false} active={isTabActive} compact />
+        </div>
+      )}
+
+      {/* Voice enrollment — all AI tabs */}
+      {onTranscription && <VoiceEnrollment disabled={false} variant="light" />}
 
       {/* Stealth — desktop only */}
       {!!(window as any).camo?.isDesktop && (

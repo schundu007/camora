@@ -3,7 +3,6 @@ import { useInterviewStore } from '@/stores/interview-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme as useGlobalTheme } from '@/hooks/useTheme';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
-import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import { LANGUAGES, getLanguageById } from '@/data/languages';
 import { dialogAlert } from '@/components/shared/Dialog';
@@ -204,6 +203,10 @@ interface CodingLayoutProps {
   onScreenshotAppendRef?: React.MutableRefObject<((text: string) => void) | null>;
   /** Called when user clicks New Problem — parent uses this to clear the screenshot strip. */
   onNewProblemCallback?: () => void;
+  /** Input mode controlled from global strip in LumoraShellPage. When provided, internal
+   *  auto-switches (URL detected, image pasted) are propagated back via onExternalInputModeChange. */
+  externalInputMode?: 'paste' | 'url' | 'image';
+  onExternalInputModeChange?: (mode: 'paste' | 'url' | 'image') => void;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
@@ -232,7 +235,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -241,7 +244,15 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [language, setLanguage] = useState('auto');
   const [problemTab, setProblemTab] = useState<ProblemTab>('description');
   const [outputTab, setOutputTab] = useState<OutputTab>('testcases');
-  const [inputMode, setInputMode] = useState<InputMode>('paste');
+  const [inputMode, _setInputModeLocal] = useState<InputMode>(externalInputMode ?? 'paste');
+  // Sync external (global strip pill click) → internal without triggering a loop
+  useEffect(() => {
+    if (externalInputMode !== undefined) _setInputModeLocal(externalInputMode);
+  }, [externalInputMode]);
+  const setInputMode = useCallback((mode: InputMode) => {
+    _setInputModeLocal(mode);
+    onExternalInputModeChange?.(mode);
+  }, [onExternalInputModeChange]);
   const [problemText, setProblemText] = useState(initialProblem || '');
   const [problemUrl, setProblemUrl] = useState('');
   const [code, setCode] = useState(getDefaultCode('python'));
@@ -281,28 +292,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const analysisAbortRef = useRef<AbortController | null>(null);
   const autoAnalysisFiredForRef = useRef<number>(-1);
 
-  // Voice enrollment popup (embedded toolbar only)
-  const [showEnrollPopup, setShowEnrollPopup] = useState(false);
-  const [enrollPopupPos, setEnrollPopupPos] = useState<{ top: number; right: number } | null>(null);
-  const enrollBtnRef = useRef<HTMLButtonElement>(null);
-  const enrollPopupRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!showEnrollPopup) return;
-    const handler = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (!enrollPopupRef.current?.contains(t) && !enrollBtnRef.current?.contains(t)) {
-        setShowEnrollPopup(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showEnrollPopup]);
-  const openEnrollPopup = () => {
-    const r = enrollBtnRef.current?.getBoundingClientRect();
-    if (r) setEnrollPopupPos({ top: r.bottom + 8, right: window.innerWidth - r.right });
-    setShowEnrollPopup(v => !v);
-  };
-
   useEffect(() => {
     const camo = (window as any).camo;
     if (!camo?.getMediaAccessStatus || !codingPlatform || codingPlatform === 'none') return;
@@ -336,7 +325,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Store
   const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache } = useInterviewStore();
   const lastFromCache = useInterviewStore(s => s.lastFromCache);
-  const voiceEnrolled = useInterviewStore(s => s.voiceEnrolled);
 
   // Stable refs for language + problem text — used by resolveLanguage so
   // it always reads the latest value without being in any deps array.
@@ -1770,82 +1758,18 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       )}
                     </div>
 
-                    {/* ── Input mode picker — visible in autopilot too ── */}
-                    <div className="flex items-center gap-1 px-3 pb-1.5">
-                      <div
-                        className="flex items-center gap-0.5 px-0.5 py-0.5"
-                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999 }}
+                    {/* ── Collapse input panel ── */}
+                    <div className="flex items-center justify-end px-3 pb-2">
+                      <button
+                        onClick={() => setIsInputCollapsed(!isInputCollapsed)}
+                        className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                        style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}
+                        aria-label={isInputCollapsed ? 'Expand input' : 'Collapse input'}
                       >
-                        {(['paste', 'url', 'image'] as const).map(mode => (
-                          <button
-                            key={mode}
-                            onClick={() => { setInputMode(mode); setIsInputCollapsed(false); }}
-                            className="px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color] active:scale-[0.98]"
-                            style={inputMode === mode
-                              ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', borderRadius: 999 }
-                              : { color: 'rgba(255,255,255,0.70)', borderRadius: 999 }
-                            }
-                          >
-                            {mode === 'paste' ? 'Text' : mode === 'url' ? 'URL' : 'Image'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* ── Row 2: mic controls | collapse ── */}
-                    <div className="flex items-center justify-between px-3 pb-2">
-                      <div className="flex items-center gap-1.5">
-                        {embedded && (
-                          <AudioCapture
-                            onTranscription={(text, opts) => {
-                              if (onEmbeddedTranscription) {
-                                onEmbeddedTranscription(text, opts);
-                              } else {
-                                const trimmed = text.trim();
-                                if (!trimmed) return;
-                                setProblemText(trimmed);
-                                setTimeout(() => onSubmit(trimmed, resolveLanguage(trimmed)), 500);
-                              }
-                            }}
-                            autoStart={false}
-                            active={isTabActive}
-                            compact
-                          />
-                        )}
-                        {embedded && (
-                          <div className="relative">
-                            <button
-                              ref={enrollBtnRef}
-                              onClick={openEnrollPopup}
-                              title={voiceEnrolled ? 'Voice enrolled — click to manage' : 'Enroll my voice'}
-                              className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-                              style={{
-                                color: voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.5)',
-                                border: `1px solid ${voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.18)'}`,
-                                borderRadius: 999,
-                                background: 'rgba(255,255,255,0.06)',
-                              }}
-                            >
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                                <line x1="12" y1="19" x2="12" y2="23"/>
-                                <line x1="8" y1="23" x2="16" y2="23"/>
-                              </svg>
-                            </button>
-                          </div>
-                        )}
-                        <button
-                          onClick={() => setIsInputCollapsed(!isInputCollapsed)}
-                          className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-                          style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}
-                          aria-label={isInputCollapsed ? 'Expand' : 'Collapse'}
-                        >
-                          <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                      </div>
+                        <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
                     </div>
                     {/* ── Snap chips (autopilot mode) — only when snap code is set ── */}
                     {!isLoading && snapChipCode && (
@@ -1880,84 +1804,18 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       borderBottom: '1px solid var(--cam-gold-leaf)',
                     }}
                   >
-                    {/* ── Row 1: input-type selector + Snap ── */}
-                    <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
-                      <div
-                        className="flex items-center gap-1 px-1 py-1 shrink-0"
-                        style={{
-                          background: 'rgba(255,255,255,0.06)',
-                          border: '1px solid rgba(255,255,255,0.16)',
-                          borderRadius: 999,
-                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
-                        }}
+                    {/* ── Collapse input panel ── */}
+                    <div className="flex items-center justify-end px-3 py-1.5">
+                      <button
+                        onClick={() => setIsInputCollapsed(!isInputCollapsed)}
+                        className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                        style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}
+                        aria-label={isInputCollapsed ? 'Expand input' : 'Collapse input'}
                       >
-                        {(['paste', 'url', 'image'] as const).map(mode => (
-                          <button key={mode} onClick={() => { setInputMode(mode); setIsInputCollapsed(false); }}
-                            className="px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color,transform] active:scale-[0.98]"
-                            style={
-                              inputMode === mode
-                                ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
-                                : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
-                            }
-                          >{mode === 'paste' ? 'Text' : mode === 'url' ? 'URL' : 'Image'}</button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* ── Row 2: mic controls + collapse ── */}
-                    <div className="flex items-center justify-end px-3 pb-2">
-                      <div className="flex items-center gap-1.5">
-                        {embedded && (
-                          <AudioCapture
-                            onTranscription={(text, opts) => {
-                              if (onEmbeddedTranscription) {
-                                onEmbeddedTranscription(text, opts);
-                              } else {
-                                const trimmed = text.trim();
-                                if (!trimmed) return;
-                                setProblemText(trimmed);
-                                setTimeout(() => onSubmit(trimmed, resolveLanguage(trimmed)), 500);
-                              }
-                            }}
-                            autoStart={false}
-                            active={isTabActive}
-                            compact
-                          />
-                        )}
-                        {embedded && (
-                          <div className="relative">
-                            <button
-                              ref={enrollBtnRef}
-                              onClick={openEnrollPopup}
-                              title={voiceEnrolled ? 'Voice enrolled — click to manage' : 'Enroll my voice'}
-                              className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-                              style={{
-                                color: voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.5)',
-                                border: `1px solid ${voiceEnrolled ? '#00ea64' : 'rgba(255,255,255,0.18)'}`,
-                                borderRadius: 999,
-                                background: 'rgba(255,255,255,0.06)',
-                              }}
-                            >
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                                <line x1="12" y1="19" x2="12" y2="23"/>
-                                <line x1="8" y1="23" x2="16" y2="23"/>
-                              </svg>
-                            </button>
-                          </div>
-                        )}
-                        <button
-                          onClick={() => setIsInputCollapsed(!isInputCollapsed)}
-                          className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-                          style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}
-                          aria-label={isInputCollapsed ? 'Expand input' : 'Collapse input'}
-                        >
-                          <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                      </div>
+                        <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
                     </div>
                     {/* ── Snap chips (manual mode) — only when snap code is set ── */}
                     {!isLoading && snapChipCode && (
@@ -2779,26 +2637,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         </div>
       </div>
 
-      {/* Voice enrollment popup — rendered fixed to escape overflow-auto clipping */}
-      {showEnrollPopup && enrollPopupPos && (
-        <div
-          ref={enrollPopupRef}
-          style={{
-            position: 'fixed',
-            top: enrollPopupPos.top,
-            right: enrollPopupPos.right,
-            zIndex: 9999,
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border)',
-            minWidth: 240,
-            borderRadius: 12,
-            padding: 12,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-          }}
-        >
-          <VoiceEnrollment variant="dark" />
-        </div>
-      )}
     </div>
   );
 }
