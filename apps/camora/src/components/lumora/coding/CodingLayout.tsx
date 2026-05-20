@@ -47,55 +47,6 @@ function detectLanguage(text: string): string {
   return 'python';
 }
 
-// Render inline spans: bold, inline code, severity labels
-function renderInline(text: string): React.ReactNode {
-  const SEV: Record<string, string> = { CRITICAL: '#ef4444', HIGH: '#f97316', MEDIUM: '#eab308', LOW: '#22c55e' };
-  const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\b(?:CRITICAL|HIGH|MEDIUM|LOW)\b)/g);
-  return parts.map((p, i) => {
-    if (p.startsWith('`') && p.endsWith('`') && p.length > 2)
-      return <code key={i} style={{ background: 'var(--bg-primary)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--border)', borderRadius: 3, padding: '0 4px', fontFamily: 'var(--font-mono)', fontSize: 11 }}>{p.slice(1, -1)}</code>;
-    if (p.startsWith('**') && p.endsWith('**') && p.length > 4)
-      return <strong key={i}>{p.slice(2, -2)}</strong>;
-    if (SEV[p])
-      return <strong key={i} style={{ color: SEV[p] }}>{p}</strong>;
-    return p;
-  });
-}
-
-// Parse and render streamed analysis content (handles code fences, headers, bullets)
-function renderAnalysisContent(content: string): React.ReactNode {
-  const segments = content.split(/(```[\w]*\n[\s\S]*?```)/g);
-  return (
-    <div>
-      {segments.map((seg, si) => {
-        const cm = seg.match(/^```([\w]*)\n([\s\S]*)```$/);
-        if (cm) {
-          const lang = cm[1];
-          const code = cm[2].replace(/\n$/, '');
-          return (
-            <div key={si} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden', margin: '8px 0' }}>
-              {lang && <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', padding: '2px 10px', fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase' as const }}>{lang}</div>}
-              <pre style={{ padding: '8px 10px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', whiteSpace: 'pre' as const, overflowX: 'auto' as const, margin: 0 }}>{code}</pre>
-            </div>
-          );
-        }
-        return (
-          <div key={si}>
-            {seg.split('\n').map((line, li) => {
-              const h2 = line.match(/^##\s+(.*)/); if (h2) return <div key={li} style={{ fontWeight: 700, fontSize: 13, color: 'var(--cam-gold-leaf-lt)', marginTop: 10, marginBottom: 4 }}>{h2[1]}</div>;
-              const h1 = line.match(/^#\s+(.*)/); if (h1) return <div key={li} style={{ fontWeight: 700, fontSize: 14, color: 'var(--cam-gold-leaf-lt)', marginTop: 10, marginBottom: 4 }}>{h1[1]}</div>;
-              const bl = line.match(/^[-*]\s+(.*)/); if (bl) return <div key={li} style={{ display: 'flex', gap: 8, margin: '2px 0', paddingLeft: 4 }}><span style={{ color: 'var(--cam-primary)', flexShrink: 0, marginTop: 1 }}>•</span><span>{renderInline(bl[1])}</span></div>;
-              const nl = line.match(/^(\d+)\.\s+(.*)/); if (nl) return <div key={li} style={{ display: 'flex', gap: 8, margin: '2px 0', paddingLeft: 4 }}><span style={{ color: 'var(--cam-primary)', flexShrink: 0, fontWeight: 600, minWidth: 20 }}>{nl[1]}.</span><span>{renderInline(nl[2])}</span></div>;
-              if (!line.trim()) return <div key={li} style={{ height: 6 }} />;
-              return <div key={li} style={{ margin: '2px 0' }}>{renderInline(line)}</div>;
-            })}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 type ProblemTab = 'description' | 'solution';
 type OutputTab = 'testcases' | 'output';
 type InputMode = 'paste' | 'url' | 'image';
@@ -1452,6 +1403,55 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Passed/failed counts
   const passedCount = testResults.filter(r => r.passed).length;
   const totalTests = testResults.length;
+
+  // ── Analysis content renderers (const, not module-level, to avoid TDZ in bundler) ──
+
+  const renderInline = (text: string): React.ReactNode => {
+    const SEV: Record<string, string> = { CRITICAL: '#ef4444', HIGH: '#f97316', MEDIUM: '#eab308', LOW: '#22c55e' };
+    const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\b(?:CRITICAL|HIGH|MEDIUM|LOW)\b)/g);
+    return parts.map((p, i) => {
+      if (p.startsWith('`') && p.endsWith('`') && p.length > 2)
+        return <code key={i} style={{ background: 'var(--bg-primary)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--border)', borderRadius: 3, padding: '0 4px', fontFamily: 'var(--font-mono)', fontSize: 11 }}>{p.slice(1, -1)}</code>;
+      if (p.startsWith('**') && p.endsWith('**') && p.length > 4)
+        return <strong key={i}>{p.slice(2, -2)}</strong>;
+      if (SEV[p])
+        return <strong key={i} style={{ color: SEV[p] }}>{p}</strong>;
+      return p;
+    });
+  };
+
+  const renderAnalysisContent = (content: string): React.ReactNode => {
+    const segments = content.split(/(```[\w]*\n[\s\S]*?```)/g);
+    return (
+      <div>
+        {segments.map((seg, si) => {
+          const cm = seg.match(/^```([\w]*)\n([\s\S]*)```$/);
+          if (cm) {
+            const lang = cm[1];
+            const code = cm[2].replace(/\n$/, '');
+            return (
+              <div key={si} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden', margin: '8px 0' }}>
+                {lang && <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', padding: '2px 10px', fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase' as const }}>{lang}</div>}
+                <pre style={{ padding: '8px 10px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', whiteSpace: 'pre' as const, overflowX: 'auto' as const, margin: 0 }}>{code}</pre>
+              </div>
+            );
+          }
+          return (
+            <div key={si}>
+              {seg.split('\n').map((line, li) => {
+                const h2 = line.match(/^##\s+(.*)/); if (h2) return <div key={li} style={{ fontWeight: 700, fontSize: 13, color: 'var(--cam-gold-leaf-lt)', marginTop: 10, marginBottom: 4 }}>{h2[1]}</div>;
+                const h1 = line.match(/^#\s+(.*)/); if (h1) return <div key={li} style={{ fontWeight: 700, fontSize: 14, color: 'var(--cam-gold-leaf-lt)', marginTop: 10, marginBottom: 4 }}>{h1[1]}</div>;
+                const bl = line.match(/^[-*]\s+(.*)/); if (bl) return <div key={li} style={{ display: 'flex', gap: 8, margin: '2px 0', paddingLeft: 4 }}><span style={{ color: 'var(--cam-primary)', flexShrink: 0, marginTop: 1 }}>•</span><span>{renderInline(bl[1])}</span></div>;
+                const nl = line.match(/^(\d+)\.\s+(.*)/); if (nl) return <div key={li} style={{ display: 'flex', gap: 8, margin: '2px 0', paddingLeft: 4 }}><span style={{ color: 'var(--cam-primary)', flexShrink: 0, fontWeight: 600, minWidth: 20 }}>{nl[1]}.</span><span>{renderInline(nl[2])}</span></div>;
+                if (!line.trim()) return <div key={li} style={{ height: 6 }} />;
+                return <div key={li} style={{ margin: '2px 0' }}>{renderInline(line)}</div>;
+              })}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   // ── Render ──────────────────────────────────────────────────────────────
 
