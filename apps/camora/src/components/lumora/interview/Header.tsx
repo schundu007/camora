@@ -350,7 +350,7 @@ export function Header({ inputValue, onInputChange, onSubmit, onTranscription, s
   );
 }
 
-function UserBadge() {
+const UserBadge = () => {
   const { user, logout } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
 
@@ -400,7 +400,7 @@ function UserBadge() {
   );
 }
 
-function SearchIcon() {
+const SearchIcon = () => {
   return (
     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -408,7 +408,7 @@ function SearchIcon() {
   );
 }
 
-function ResetIcon() {
+const ResetIcon = () => {
   return (
     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -416,7 +416,7 @@ function ResetIcon() {
   );
 }
 
-function ExpandIcon({ expanded }: { expanded: boolean }) {
+const ExpandIcon = ({ expanded }: { expanded: boolean }) => {
   return expanded ? (
     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 14h6v6M20 10h-6V4M4 14l6-6M20 10l-6 6" />

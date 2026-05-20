@@ -26,7 +26,7 @@ const CATEGORY_LABEL: Record<QuestionCategory, string> = {
   coding: 'CODING',
   design: 'DESIGN',
 };
-function CategoryPill({ category }: { category: QuestionCategory }) {
+const CategoryPill = ({ category }: { category: QuestionCategory }) => {
   return (
     <span
       className="font-mono text-[9px] font-bold tracking-[0.18em] px-2 py-0.5 rounded shrink-0 uppercase"
@@ -41,7 +41,7 @@ function CategoryPill({ category }: { category: QuestionCategory }) {
     </span>
   );
 }
-function QNumber({ n }: { n: number }) {
+const QNumber = ({ n }: { n: number }) => {
   return (
     <span
       className="font-mono text-[11px] font-bold tabular-nums shrink-0"
@@ -80,7 +80,12 @@ export function InterviewPanel({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
   // Home tab = dashboard by default. Past sessions live on /lumora/sessions,
   // not here. Only switch off the dashboard while a question is actively
   // being asked / answered.
-  const showEmptyState = !question && !isStreaming && parsedBlocks.length === 0;
+  // Also show dashboard when the active Q&A is coding/design — those have
+  // their own dedicated tabs; Home tab should always show the dashboard.
+  const showEmptyState =
+    (!question && !isStreaming && parsedBlocks.length === 0) ||
+    isCodingQuestion ||
+    isDesignQuestion;
 
   return (
     <main
@@ -198,16 +203,16 @@ const PROMPT_COLOR: Record<keyof typeof PROMPT_GLYPH, DatabricksColor> = {
   design: 'navy-lt',
   behavioral: 'gold',
 };
-function PromptThumb({ type }: { type: 'coding' | 'design' | 'behavioral' }) {
+const PromptThumb = ({ type }: { type: 'coding' | 'design' | 'behavioral' }) => {
   return <DatabricksThumb color={PROMPT_COLOR[type]} size={64} icon={PROMPT_GLYPH[type]} />;
 }
 
 /* ─── Lumora Dashboard ─────────────────────────────── */
-function EmptyState({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
+const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   onAskQuestion?: (question: string) => void;
   onSwitchToCoding?: (problem?: string) => void;
   onSwitchToDesign?: (problem?: string) => void;
-}) {
+}) => {
   const { user } = useAuth();
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {

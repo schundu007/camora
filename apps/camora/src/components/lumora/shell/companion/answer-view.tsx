@@ -26,13 +26,13 @@ const FONT_ANSWER = "var(--font-answer)";
        sub-card in the answer (code blocks, rebuttals, archetype badge,
        STAR sections). Navy hero-strip + 2px gold-leaf underline + white
        uppercase title is the unified active grammar. */
-function LcStripHeader({ icon, label, hint, count, right }: {
+const LcStripHeader = ({ icon, label, hint, count, right }: {
   icon?: React.ReactNode;
   label: string;
   hint?: string;
   count?: number | string;
   right?: React.ReactNode;
-}) {
+}) => {
   return (
     <div
       className="flex items-center gap-2 px-3 py-2"
@@ -125,7 +125,7 @@ function parseStar(text: string): { sections: { label: StarLabel; body: string }
    prose with bullets/bold — no code blocks needed. Set on the
    --font-answer (Source Sans 3) family at 14 px so the cards read
    like a textbook section. */
-function StarBody({ text }: { text: string }) {
+const StarBody = ({ text }: { text: string }) => {
   if (!text) return null;
   const STAR_BOLD: React.CSSProperties = { color: TEXT_PRIMARY, fontWeight: 700 };
   const STAR_CODE: React.CSSProperties = { background: 'var(--bg-elevated)', color: 'var(--cam-primary-dk)', padding: '1px 6px', borderRadius: 4, fontSize: 12.5, fontFamily: 'var(--font-mono)', border: '1px solid var(--border)' };
@@ -164,7 +164,7 @@ function StarBody({ text }: { text: string }) {
 }
 
 /* ── StarAnswer — renders a behavioral STAR answer as 4 scannable cards ── */
-function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; body: string }[]; streaming?: boolean }) {
+const StarAnswer = ({ sections, streaming }: { sections: { label: StarLabel; body: string }[]; streaming?: boolean }) => {
   const labelCopy: Record<StarLabel, { short: string; hint: string }> = {
     SITUATION: { short: 'Situation', hint: 'Set the scene' },
     TASK: { short: 'Task', hint: 'Your responsibility' },
@@ -219,7 +219,7 @@ function StarAnswer({ sections, streaming }: { sections: { label: StarLabel; bod
 }
 
 /* ── ArchetypeBadge — question-type pill shown above behavioral answers ── */
-function ArchetypeBadge({ archetype }: { archetype: Archetype }) {
+const ArchetypeBadge = ({ archetype }: { archetype: Archetype }) => {
   return (
     <div
       className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg"
@@ -262,7 +262,7 @@ function extractRebuttals(text: string): { rebuttals: Rebuttal[]; stripped: stri
   return { rebuttals, stripped: text.slice(0, m.index).trimEnd() };
 }
 
-function RebuttalsPanel({ items }: { items: Rebuttal[] }) {
+const RebuttalsPanel = ({ items }: { items: Rebuttal[] }) => {
   if (items.length === 0) return null;
   return (
     <div
@@ -372,7 +372,7 @@ export function StoryBankPanel({ stories, activeArchetype }: { stories?: LumoraS
 /* ── RichText — renders markdown with proper code blocks. Scaled up to a
    readable 14 px / 1.65 textbook treatment with stronger heading
    hierarchy and LeetCode-style inline labels. */
-function RichText({ text }: { text: string }) {
+const RichText = ({ text }: { text: string }) => {
   if (!text) return null;
 
   // Split into blocks: fenced code blocks vs regular text.

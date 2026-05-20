@@ -13,7 +13,7 @@ import { cleanText } from '@/lib/text-utils';
 
 /* ── Decorative waveform bars ─────────────────────────────── */
 
-function AudioWaveform({ active }: { active: boolean }) {
+const AudioWaveform = ({ active }: { active: boolean }) => {
   const bars = 24;
   const barHeights = useMemo(() => Array.from({ length: bars }, () => Math.random()), [active]);
   const barOpacities = useMemo(() => Array.from({ length: bars }, () => Math.random()), [active]);
@@ -42,7 +42,7 @@ function AudioWaveform({ active }: { active: boolean }) {
 
 /* ── SAY THIS card ────────────────────────────────────────── */
 
-function SayThisCard({ text }: { text: string | null }) {
+const SayThisCard = ({ text }: { text: string | null }) => {
   const handleCopy = useCallback(() => {
     if (text) navigator.clipboard.writeText(text);
   }, [text]);
@@ -92,7 +92,7 @@ function SayThisCard({ text }: { text: string | null }) {
 
 /* ── Minimized pill ───────────────────────────────────────── */
 
-function MinimizedPill({ onExpand }: { onExpand: () => void }) {
+const MinimizedPill = ({ onExpand }: { onExpand: () => void }) => {
   return createPortal(
     <motion.button
       initial={{ opacity: 0, scale: 0.9 }}

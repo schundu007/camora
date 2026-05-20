@@ -48,7 +48,7 @@ type AnswerMode = 'short' | 'detailed';
      size   — px square dimension
      active — a thin outer ring pulses while Sona is streaming */
 let SONA_AVATAR_SEED = 0;
-function SonaAvatar({ size = 24, active = false }: { size?: number; active?: boolean }) {
+const SonaAvatar = ({ size = 24, active = false }: { size?: number; active?: boolean }) => {
   // Stable per-mount id for the SVG <defs>. useRef survives across
   // re-renders and React's allowed memo discards; useMemo would
   // re-compute and increment the counter, orphaning gradient

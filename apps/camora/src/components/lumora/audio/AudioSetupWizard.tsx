@@ -942,11 +942,11 @@ export function AudioSetupWizard({
 
 /* ── Sub-components ──────────────────────────────────────────────── */
 
-function Section({
+const Section = ({
   num, title, subtitle, children,
 }: {
   num: number; title: string; subtitle?: string; children: React.ReactNode;
-}) {
+}) => {
   return (
     <div>
       <div className="flex items-baseline gap-2 mb-1.5">

@@ -47,7 +47,7 @@ export function AnswerBlocks({ blocks, isDesign, isCoding, question }: AnswerBlo
   );
 }
 
-function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
+const Block = ({ block, delay }: { block: ParsedBlock; delay: number }) => {
   const codeRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -234,7 +234,7 @@ function Block({ block, delay }: { block: ParsedBlock; delay: number }) {
   }
 }
 
-function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
+const CodingView = ({ blocks }: { blocks: ParsedBlock[] }) => {
   const codeRef = useRef<HTMLElement>(null);
   const byType: Record<string, ParsedBlock> = {};
   blocks.forEach(b => { byType[b.type] = b; });
@@ -336,7 +336,7 @@ function CodingView({ blocks }: { blocks: ParsedBlock[] }) {
   );
 }
 
-function ComplexityList({ content }: { content: string }) {
+const ComplexityList = ({ content }: { content: string }) => {
   const lines = content.split('\n').map(l => cleanText(l)).filter(Boolean);
 
   return (
@@ -364,7 +364,7 @@ function ComplexityList({ content }: { content: string }) {
   );
 }
 
-function WalkthroughList({ content }: { content: string }) {
+const WalkthroughList = ({ content }: { content: string }) => {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
 
   return (
@@ -388,7 +388,7 @@ function WalkthroughList({ content }: { content: string }) {
   );
 }
 
-function TestCasesList({ content }: { content: string }) {
+const TestCasesList = ({ content }: { content: string }) => {
   const lines = content.split('\n').map(l => cleanText(l)).filter(Boolean);
 
   return (
@@ -416,7 +416,7 @@ function TestCasesList({ content }: { content: string }) {
   );
 }
 
-function SystemDesignView({ blocks, question }: { blocks: ParsedBlock[]; question?: string }) {
+const SystemDesignView = ({ blocks, question }: { blocks: ParsedBlock[]; question?: string }) => {
   const byType: Record<string, ParsedBlock> = {};
   blocks.forEach(b => { byType[b.type] = b; });
 
@@ -495,7 +495,7 @@ function SystemDesignView({ blocks, question }: { blocks: ParsedBlock[]; questio
   );
 }
 
-function GridCard({
+const GridCard = ({
   title,
   titleColor,
   children,
@@ -511,7 +511,7 @@ function GridCard({
   collapsible?: boolean;
   defaultCollapsed?: boolean;
   compact?: boolean;
-}) {
+}) => {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const hasFullHeight = className.includes('h-full');
   return (
@@ -578,7 +578,7 @@ function GridCard({
   );
 }
 
-function ArchitectureCard({ question }: { question: string }) {
+const ArchitectureCard = ({ question }: { question: string }) => {
   return (
     <div className="border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden min-w-0 flex flex-col h-full rounded-lg" style={{ minHeight: '600px' }}>
       <div
@@ -602,7 +602,7 @@ function ArchitectureCard({ question }: { question: string }) {
   );
 }
 
-function EmptyBlock() {
+const EmptyBlock = () => {
   return (
     <div className="flex items-center gap-2 py-3 text-[var(--text-muted)]">
       <svg className="w-4 h-4 shrink-0 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -613,7 +613,7 @@ function EmptyBlock() {
   );
 }
 
-function RequirementsList({ content, type }: { content: string; type: 'functional' | 'nonfunctional' }) {
+const RequirementsList = ({ content, type }: { content: string; type: 'functional' | 'nonfunctional' }) => {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
   const items: string[] = [];
   let mode: string | null = null;
@@ -645,7 +645,7 @@ function RequirementsList({ content, type }: { content: string; type: 'functiona
   );
 }
 
-function ScaleMathList({ content }: { content: string }) {
+const ScaleMathList = ({ content }: { content: string }) => {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
   const metrics: { label: string; value: string }[] = [];
   const other: string[] = [];
@@ -699,7 +699,7 @@ function ScaleMathList({ content }: { content: string }) {
   );
 }
 
-function DeepDesignList({ content }: { content: string }) {
+const DeepDesignList = ({ content }: { content: string }) => {
   const lines = content.split('\n').map(l => cleanText(l)).filter(Boolean);
 
   if (lines.length === 0) return <div className="text-[13px] text-[var(--text-muted)] italic">No layer design data</div>;
@@ -753,7 +753,7 @@ function DeepDesignList({ content }: { content: string }) {
   );
 }
 
-function EdgeCasesList({ content }: { content: string }) {
+const EdgeCasesList = ({ content }: { content: string }) => {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
   return (
     <div className="space-y-2.5">
@@ -775,7 +775,7 @@ function EdgeCasesList({ content }: { content: string }) {
   );
 }
 
-function TradeoffsList({ content }: { content: string }) {
+const TradeoffsList = ({ content }: { content: string }) => {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
 
   if (lines.length === 0) return <div className="text-[13px] text-[var(--text-muted)] italic">No trade-offs data</div>;
@@ -845,7 +845,7 @@ function TradeoffsList({ content }: { content: string }) {
   );
 }
 
-function FollowupList({ content }: { content: string }) {
+const FollowupList = ({ content }: { content: string }) => {
   const pairs = parseFollowups(content);
   if (pairs.length === 0) return <Shimmer />;
 
@@ -868,7 +868,7 @@ function FollowupList({ content }: { content: string }) {
   );
 }
 
-function Shimmer() {
+const Shimmer = () => {
   return (
     <div className="space-y-2">
       <div className="h-2 w-full rounded shimmer" />

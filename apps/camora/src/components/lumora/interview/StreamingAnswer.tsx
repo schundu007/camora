@@ -63,7 +63,7 @@ export function StreamingAnswer({ chunks, isDesign, isCoding }: StreamingAnswerP
   return <StreamingQAView blocks={blocks} />;
 }
 
-function StreamingQAView({ blocks }: { blocks: Record<string, ParsedBlock> }) {
+const StreamingQAView = ({ blocks }: { blocks: Record<string, ParsedBlock> }) => {
   return (
     <div className="flex flex-col gap-2">
       {/* Headline */}
@@ -111,7 +111,7 @@ function StreamingQAView({ blocks }: { blocks: Record<string, ParsedBlock> }) {
   );
 }
 
-function StreamingAnswerList({ content, isComplete }: { content: string; isComplete: boolean }) {
+const StreamingAnswerList = ({ content, isComplete }: { content: string; isComplete: boolean }) => {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[•\-*]\s*/, '')).filter(Boolean);
 
   if (lines.length === 0) return <ShimmerBlock lines={3} />;
@@ -144,7 +144,7 @@ function StreamingAnswerList({ content, isComplete }: { content: string; isCompl
   );
 }
 
-function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }) {
+const StreamingCodingView = ({ blocks }: { blocks: Record<string, ParsedBlock> }) => {
   const lang = (blocks.CODE as any)?.lang || blocks.CODE?.content.match(/lang=(\w+)/)?.[1] || 'python';
 
   return (
@@ -225,7 +225,7 @@ function StreamingCodingView({ blocks }: { blocks: Record<string, ParsedBlock> }
   );
 }
 
-function StreamingCodingCard({
+const StreamingCodingCard = ({
   title,
   titleColor,
   block,
@@ -233,7 +233,7 @@ function StreamingCodingCard({
   title: string;
   titleColor: string;
   block?: ParsedBlock;
-}) {
+}) => {
   return (
     <div className="rounded-lg border border-border bg-bg2 overflow-hidden">
       {/* LeetCode-style header: navy gradient, gold underline, white title */}
@@ -268,7 +268,7 @@ function StreamingCodingCard({
   );
 }
 
-function StreamingComplexityList({ content, isComplete }: { content: string; isComplete: boolean }) {
+const StreamingComplexityList = ({ content, isComplete }: { content: string; isComplete: boolean }) => {
   const lines = content.split('\n').map(l => cleanText(l)).filter(Boolean);
 
   if (lines.length === 0) return <ShimmerBlock lines={2} />;
@@ -299,7 +299,7 @@ function StreamingComplexityList({ content, isComplete }: { content: string; isC
   );
 }
 
-function StreamingTestCasesList({ content, isComplete }: { content: string; isComplete: boolean }) {
+const StreamingTestCasesList = ({ content, isComplete }: { content: string; isComplete: boolean }) => {
   const lines = content.split('\n').map(l => cleanText(l)).filter(Boolean);
 
   if (lines.length === 0) return <ShimmerBlock lines={3} />;
@@ -329,7 +329,7 @@ function StreamingTestCasesList({ content, isComplete }: { content: string; isCo
   );
 }
 
-function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }) {
+const StreamingDesignView = ({ blocks }: { blocks: Record<string, ParsedBlock> }) => {
   return (
     <div className="flex flex-col gap-2">
       {/* Approach Headline */}
@@ -415,7 +415,7 @@ function StreamingDesignView({ blocks }: { blocks: Record<string, ParsedBlock> }
   );
 }
 
-function StreamingGridCard({
+const StreamingGridCard = ({
   title,
   titleColor,
   block,
@@ -427,7 +427,7 @@ function StreamingGridCard({
   block?: ParsedBlock;
   type: string;
   className?: string;
-}) {
+}) => {
   let content = null;
 
   if (block) {
@@ -465,7 +465,7 @@ function StreamingGridCard({
   );
 }
 
-function RequirementsList({ content, reqType, isComplete }: { content: string; reqType: string; isComplete: boolean }) {
+const RequirementsList = ({ content, reqType, isComplete }: { content: string; reqType: string; isComplete: boolean }) => {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
   const items: string[] = [];
   let mode: string | null = null;
@@ -494,7 +494,7 @@ function RequirementsList({ content, reqType, isComplete }: { content: string; r
   );
 }
 
-function ScaleMathList({ content, isComplete }: { content: string; isComplete: boolean }) {
+const ScaleMathList = ({ content, isComplete }: { content: string; isComplete: boolean }) => {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
   const metrics: { label: string; value: string }[] = [];
   const other: string[] = [];
@@ -532,7 +532,7 @@ function ScaleMathList({ content, isComplete }: { content: string; isComplete: b
   );
 }
 
-function DeepDesignList({ content, isComplete }: { content: string; isComplete: boolean }) {
+const DeepDesignList = ({ content, isComplete }: { content: string; isComplete: boolean }) => {
   const lines = content.split('\n').map(l => cleanText(l)).filter(Boolean);
 
   if (lines.length === 0) return <ShimmerBlock lines={4} />;
@@ -575,7 +575,7 @@ function DeepDesignList({ content, isComplete }: { content: string; isComplete: 
   );
 }
 
-function EdgeCasesList({ content, isComplete }: { content: string; isComplete: boolean }) {
+const EdgeCasesList = ({ content, isComplete }: { content: string; isComplete: boolean }) => {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
 
   if (lines.length === 0) return <ShimmerBlock lines={3} />;
@@ -601,7 +601,7 @@ function EdgeCasesList({ content, isComplete }: { content: string; isComplete: b
   );
 }
 
-function TradeoffsList({ content, isComplete }: { content: string; isComplete: boolean }) {
+const TradeoffsList = ({ content, isComplete }: { content: string; isComplete: boolean }) => {
   const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
 
   if (lines.length === 0) return <ShimmerBlock lines={3} />;
@@ -672,7 +672,7 @@ function TradeoffsList({ content, isComplete }: { content: string; isComplete: b
   );
 }
 
-function StreamingFollowupList({ content, isComplete }: { content: string; isComplete: boolean }) {
+const StreamingFollowupList = ({ content, isComplete }: { content: string; isComplete: boolean }) => {
   const lines = content.split('\n').map(l => cleanText(l)).filter(Boolean);
   const pairs: { question: string; answer: string }[] = [];
   let currentQ: string | null = null;
@@ -728,11 +728,11 @@ function StreamingFollowupList({ content, isComplete }: { content: string; isCom
   );
 }
 
-function Shimmer({ width = 'w-full' }: { width?: string }) {
+const Shimmer = ({ width = 'w-full' }: { width?: string }) => {
   return <div className={`h-3 ${width} rounded shimmer`} />;
 }
 
-function ShimmerBlock({ lines }: { lines: number }) {
+const ShimmerBlock = ({ lines }: { lines: number }) => {
   return (
     <div className="space-y-1.5">
       {Array.from({ length: lines }).map((_, i) => (
@@ -742,7 +742,7 @@ function ShimmerBlock({ lines }: { lines: number }) {
   );
 }
 
-function Cursor() {
+const Cursor = () => {
   return <span className="inline-block w-1.5 h-3 bg-[var(--accent)]/60 ml-0.5 animate-pulse" />;
 }
 
