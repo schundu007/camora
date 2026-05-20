@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT } from '@/lib/companyContext';
-import CompanyContextPicker from './CompanyContextPicker';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { dialogConfirm } from '@/components/shared/Dialog';
@@ -369,8 +368,6 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   // citations only surface once the final message is committed.
   const pendingCitationsRef = useRef<Citation[]>([]);
   const [input, setInput] = useState('');
-  const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'done' | 'error'>('idle');
-  const [isStealthActive, setIsStealthActive] = useState(false);
   const [minimized, setMinimized] = useState(true);
   const [maximized, setMaximized] = useState(false);
   // Cap initial size to the actual viewport so the floating copilot
@@ -652,103 +649,6 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const API_URL = (import.meta as any).env?.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
-  const handleSnap = useCallback(async () => {
-    const camo = (window as any).camo;
-
-    if (camo?.snapActiveBrowser) {
-      // Desktop (Electron) path — capture the active browser window only,
-      // then OCR and auto-submit to Sona (same pipeline as the browser path).
-      const perm = await camo.getMediaAccessStatus?.('screen').catch(() => null);
-      if (perm && perm !== 'granted') {
-        camo.openSystemPrivacy?.('ScreenCapture');
-        return;
-      }
-      setSnapState('capturing');
-      try {
-        const result = await camo.snapActiveBrowser();
-        if (!result?.ok) throw new Error(result?.error || 'Capture failed');
-        // OCR via the shared extract-from-image endpoint
-        const blob = await (await fetch(result.dataUrl)).blob();
-        const formData = new FormData();
-        formData.append('image', new File([blob], 'snap.png', { type: blob.type || 'image/png' }));
-        const resp = await fetch(`${API_URL}/api/v1/coding/extract-from-image`, {
-          credentials: 'include',
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formData,
-        });
-        if (resp.ok) {
-          const data = await resp.json();
-          const text = String(data.problem || '').trim();
-          if (text) ask(text);
-        }
-        setSnapState('done');
-        setTimeout(() => setSnapState('idle'), 2500);
-      } catch {
-        setSnapState('error');
-        setTimeout(() => setSnapState('idle'), 3000);
-      }
-      return;
-    }
-
-    // Browser path — capture a screen frame, OCR it, inject text into input
-    if (!navigator.mediaDevices?.getDisplayMedia) {
-      setSnapState('error');
-      setTimeout(() => setSnapState('idle'), 3000);
-      return;
-    }
-    setSnapState('capturing');
-    try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false } as DisplayMediaStreamOptions);
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      await new Promise<void>(res => { video.onloadedmetadata = () => res(); });
-      await video.play();
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d')!.drawImage(video, 0, 0);
-      stream.getTracks().forEach(t => t.stop());
-      video.srcObject = null;
-      const blob = await new Promise<Blob>((res, rej) =>
-        canvas.toBlob(b => b ? res(b) : rej(new Error('canvas.toBlob failed')), 'image/png')
-      );
-      // OCR via the shared extract-from-image endpoint
-      const formData = new FormData();
-      formData.append('image', new File([blob], 'snap.png', { type: 'image/png' }));
-      const resp = await fetch(`${API_URL}/api/v1/coding/extract-from-image`, {
-        credentials: 'include',
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData,
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        const text = String(data.problem || '').trim();
-        if (text) {
-          // Auto-submit directly so Sona answers immediately
-          ask(text);
-        }
-      }
-      setSnapState('done');
-      setTimeout(() => setSnapState('idle'), 2500);
-    } catch (err: any) {
-      if (err?.name !== 'NotAllowedError') {
-        setSnapState('error');
-        setTimeout(() => setSnapState('idle'), 3000);
-      } else {
-        setSnapState('idle');
-      }
-    }
-  }, [token, ask, API_URL]);
-
-  const handleStealthMode = useCallback(async () => {
-    const camo = (window as any).camo;
-    if (!camo?.setStealthMode) return; // web — no-op (desktop only)
-    const next = !isStealthActive;
-    await camo.setStealthMode(next);
-    setIsStealthActive(next);
-  }, [isStealthActive]);
 
   // Stable ref so AudioCapture's onTranscription dep doesn't rebuild on every
   // `streaming` flip — mid-recording callback swaps caused dropped chunks.
@@ -1097,59 +997,6 @@ export function AICompanionPanel({ isOpen, onClose, initialQuestion, embedded = 
           </div>
         </div>
 
-        {/* Right: company-context picker (embedded/behavioral only) +
-            minimize/maximize (floating only). The picker writes its
-            selected company prep into the active assistant's studyDocs
-            so buildSystemContext picks it up on the next stream — Sona
-            then leans on that company's material as authoritative
-            reference for behavioral answers. */}
-        {embedded && (
-          <div className="flex items-center gap-1.5 mr-1">
-            {/* Snap — navy-gold pill, matching the voice chip style */}
-            <button
-              type="button"
-              onClick={handleSnap}
-              disabled={snapState === 'capturing'}
-              title={snapState === 'error' ? 'Snap failed — check Screen Recording in System Settings' : 'Snap screen'}
-              className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold transition-all hover:opacity-80 active:scale-[0.97]"
-              style={snapState === 'done'
-                ? { background: '#00ea64', color: '#000', border: '1px solid #00ea64' }
-                : snapState === 'error'
-                ? { background: '#ef4444', color: '#fff', border: '1px solid #ef4444' }
-                : { background: 'var(--cam-hero-strip)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)' }}
-            >
-              {snapState === 'capturing'
-                ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                : snapState === 'done'
-                ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                : snapState === 'error'
-                ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-              }
-              {snapState === 'capturing' ? 'Capturing…' : snapState === 'done' ? 'Got it' : snapState === 'error' ? 'Failed' : 'Snap'}
-            </button>
-            {/* Stealth — desktop only, navy-gold pill */}
-            {!!(window as any).camo?.setStealthMode && (
-              <button
-                type="button"
-                onClick={handleStealthMode}
-                title={isStealthActive ? 'Stealth ON — tap to disable' : 'Hide Camora from screen recording'}
-                className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold transition-all hover:opacity-80 active:scale-[0.97]"
-                style={isStealthActive
-                  ? { background: 'var(--cam-primary)', color: '#fff', border: '1px solid var(--cam-primary)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)' }
-                  : { background: 'var(--cam-hero-strip)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)' }}
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  {isStealthActive
-                    ? <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
-                    : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}
-                </svg>
-                {isStealthActive ? 'Stealth ON' : 'Stealth'}
-              </button>
-            )}
-            <CompanyContextPicker />
-          </div>
-        )}
         {!embedded && (
           <div className="flex items-center gap-0.5">
             <button onClick={() => setMinimized(true)}
