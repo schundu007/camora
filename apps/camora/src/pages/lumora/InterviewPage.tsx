@@ -8,12 +8,10 @@ import { useStreamingInterview } from '../../hooks/useStreamingInterview';
 import { isQuestion } from '../../lib/questionDetector';
 import { useInterviewStore } from '../../stores/interview-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
-import CamoraLogo from '../../components/shared/CamoraLogo';
 
-export function InterviewPage() {
+export const InterviewPage = () => {
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState('');
-  const [blanked, setBlanked] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
   const { handleSubmit } = useStreamingInterview();
@@ -29,22 +27,9 @@ export function InterviewPage() {
     return () => { document.title = 'Camora'; };
   }, []);
 
-  // Emergency blank: Cmd+B
+  // Cmd+K to focus composer
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // In the desktop build, main.js registers Cmd+B as a global
-      // shortcut that hides/shows the whole window. If we ALSO toggle
-      // `blanked` here, both fire — the window comes back showing the
-      // in-page blank overlay, requiring a second press to clear it.
-      const camo = (window as { camo?: { isDesktop?: boolean } }).camo;
-      if (camo?.isDesktop) return;
-      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
-        const el = e.target as HTMLElement;
-        if (el.closest('.monaco-editor') || el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return;
-        e.preventDefault();
-        setBlanked(prev => !prev);
-      }
-      // Cmd+K to focus composer
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         if (isExpanded) textareaRef.current?.focus();
@@ -123,14 +108,6 @@ export function InterviewPage() {
     pendingQuestionRef.current = null;
     submitDeduped(queued);
   }, [isStreaming, submitDeduped]);
-
-  if (blanked) {
-    return (
-      <div className="h-dvh w-full flex items-center justify-center cursor-pointer" style={{ background: '#000' }} onClick={() => setBlanked(false)}>
-        <div className="opacity-10"><CamoraLogo size={24} /></div>
-      </div>
-    );
-  }
 
   const showEmptyState = !question && !isStreaming && parsedBlocks.length === 0 && history.length === 0;
 
