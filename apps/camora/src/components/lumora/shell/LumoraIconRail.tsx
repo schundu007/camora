@@ -27,7 +27,7 @@ const MORE_ITEMS = [
   { id: 'credits', label: 'Credits', path: '/lumora/credits' },
 ];
 
-export function LumoraIconRail({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions }: LumoraIconRailProps) {
+export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions }: LumoraIconRailProps) => {
   const [accountOpen, setAccountOpen] = useState(false);
 
   const isActive = (id: string) => {

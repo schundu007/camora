@@ -36,7 +36,7 @@ function docKindLabel(docKind: string | null): string {
 }
 
 /** Render a single citation row. */
-function CitationRow({ c, index }: { c: Citation; index: number }) {
+const CitationRow = ({ c, index }: { c: Citation; index: number }) => {
   const isKb = c.tier === 'kb';
   const isCode = c.tier === 'code';
 

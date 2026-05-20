@@ -10,7 +10,7 @@ import { dialogConfirm, dialogAlert } from '../../../components/shared/Dialog';
 import type { LumoraStory } from '../../../lib/lumora-assistant';
 
 /* ── Format plain text into readable HTML ── */
-export function FormatTextPreview({ text, label }: { text: string; label: string }) {
+export const FormatTextPreview = ({ text, label }: { text: string; label: string }) => {
   if (!text) return null;
   const raw = text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/\s*\|\s*/g, '\n').replace(/\t+/g, '\n');
   const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
@@ -75,7 +75,7 @@ export function FormatTextPreview({ text, label }: { text: string; label: string
 }
 
 /* ── Editable text field with preview toggle ── */
-export function TextFieldWithPreview({ value, onChange, placeholder, label }: { value: string; onChange: (v: string) => void; placeholder: string; label: string }) {
+export const TextFieldWithPreview = ({ value, onChange, placeholder, label }: { value: string; onChange: (v: string) => void; placeholder: string; label: string }) => {
   const [previewing, setPreviewing] = useState(false);
   const iS: React.CSSProperties = { border: '1px solid var(--border)', outline: 'none', background: 'var(--bg-surface)' };
   return previewing && value ? (
@@ -124,7 +124,7 @@ async function extractTextFromFile(file: File): Promise<string> {
 }
 
 /* ── Lumora Profile Page ── */
-export function LumoraProfilePage() {
+export const LumoraProfilePage = () => {
   const { user, subscription, logout } = useAuth();
   const plan = subscription?.plan || 'free';
   const planLabel = plan === 'free' ? 'Free' : plan.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -254,7 +254,7 @@ const AI_MODELS = [
   { value: 'o3-mini', label: 'o3-mini', provider: 'OpenAI', color: '#10B981' },
 ];
 
-export function AssistantsPage() {
+export const AssistantsPage = () => {
   const { token } = useAuth();
   const LUMORA_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
   const [assistants, setAssistants] = useState<Assistant[]>(() => {

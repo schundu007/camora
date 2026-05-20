@@ -20,7 +20,7 @@ import {
  * Wears the docs design system chrome (navy strip, gold-leaf border,
  * glassy pill capsules) to match the rest of Lumora.
  */
-export default function CompanyContextPicker() {
+const CompanyContextPicker = () => {
   const [open, setOpen] = useState(false);
   const [preps, setPreps] = useState<CompanyPrepListItem[]>(() => listCompanyPreps());
   const [activeKey, setActiveKey] = useState<string | null>(() => getActiveCompanyKey());
@@ -316,4 +316,6 @@ export default function CompanyContextPicker() {
       )}
     </>
   );
-}
+};
+
+export default CompanyContextPicker;

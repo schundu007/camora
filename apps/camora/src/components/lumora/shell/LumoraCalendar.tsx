@@ -11,7 +11,7 @@ const C = {
   accentBg: 'var(--accent-subtle)', border: 'var(--border)',
 };
 
-export function LumoraCalendar({ onClose }: { onClose: () => void }) {
+export const LumoraCalendar = ({ onClose }: { onClose: () => void }) => {
   const { user } = useAuth();
   const [view, setView] = useState<'week' | 'month'>('week');
 
