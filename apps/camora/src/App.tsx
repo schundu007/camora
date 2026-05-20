@@ -71,7 +71,7 @@ const AdminLumoraDesignPage = lazy(() => import('./pages/docs/admin/AdminLumoraD
 const FlyerPage = lazy(() => import('./pages/FlyerPage'));
 const MobileAuthPage = lazy(() => import('./pages/MobileAuthPage'));
 
-function Loading() {
+const Loading = () => {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center gap-4"
@@ -82,7 +82,7 @@ function Loading() {
   );
 }
 
-function LoginPage() {
+const LoginPage = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) return <Loading />;
@@ -164,7 +164,7 @@ function LoginPage() {
  * <Navigate> would have dropped those params silently. Route them to the
  * mode's canonical path with the query intact.
  */
-function CapraRootRedirect() {
+const CapraRootRedirect = () => {
   const { search } = useLocation();
   const params = new URLSearchParams(search);
   const mode = params.get('mode');
@@ -179,7 +179,7 @@ function CapraRootRedirect() {
   return <Navigate to={tail ? `${target}?${tail}` : target} replace />;
 }
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, onboardingCompleted } = useAuth();
   const location = useLocation();
 
@@ -203,7 +203,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function ShellRoute({ children }: { children: React.ReactNode }) {
+const ShellRoute = ({ children }: { children: React.ReactNode }) => {
   return (
     <ProtectedRoute>
       <RootShell>{children}</RootShell>
@@ -211,7 +211,7 @@ function ShellRoute({ children }: { children: React.ReactNode }) {
   );
 }
 
-function PaidRoute({ children, feature = 'Lumora Live Interview' }: { children: React.ReactNode; feature?: string }) {
+const PaidRoute = ({ children, feature = 'Lumora Live Interview' }: { children: React.ReactNode; feature?: string }) => {
   return (
     <ProtectedRoute>
       <PaywallGate feature={feature}>{children}</PaywallGate>
@@ -225,7 +225,7 @@ function PaidRoute({ children, feature = 'Lumora Live Interview' }: { children: 
  * names, deployment topology, refund procedures. Was an unauth public
  * surface before PR-3.
  */
-function OwnerRoute({ children }: { children: React.ReactNode }) {
+const OwnerRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
   if (isLoading) return <Loading />;
@@ -238,13 +238,13 @@ function OwnerRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function ScrollToTop() {
+const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
 }
 
-function PageTracker() {
+const PageTracker = () => {
   usePageTracker();
   return null;
 }
@@ -255,7 +255,7 @@ function PageTracker() {
  * may still override with a more specific title in their own useEffect
  * — this only sets a fallback if they don't.
  */
-function RouteTitle() {
+const RouteTitle = () => {
   const { pathname } = useLocation();
   useEffect(() => {
     const fallbacks: Array<[string, string]> = [
@@ -279,7 +279,7 @@ function RouteTitle() {
   return null;
 }
 
-export function App() {
+export const App = () => {
   return (
     <AuthProvider>
       <DialogProvider>

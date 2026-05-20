@@ -32,7 +32,7 @@ const CodingLayout = lazy(() => import('../../components/lumora/coding/CodingLay
 const DesignLayout = lazy(() => import('../../components/lumora/design/DesignLayout').then(m => ({ default: m.DesignLayout })));
 const CoFixLayout = lazy(() => import('../../components/lumora/cofix/CoFixLayout').then(m => ({ default: m.CoFixLayout })));
 
-export function LumoraShellPage() {
+export const LumoraShellPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   // inputValue removed — copilot now manages its own state
