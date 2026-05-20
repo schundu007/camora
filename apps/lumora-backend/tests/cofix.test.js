@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 
+// Mock openai before app imports — transcription.js calls `new OpenAI()` at
+// module-load time, which would crash the test suite without this stub.
+vi.mock('openai', () => ({
+  default: class { constructor() {} },
+}));
+
 // ---------------------------------------------------------------------------
 // Mock @anthropic-ai/sdk before any app imports.
 // The SDK is used via getAnthropicClient() in lib/_shared/llm.js.

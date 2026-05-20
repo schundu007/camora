@@ -1138,16 +1138,23 @@ IMPORTANT:
 // POST /cofix/stream — CoFix: fix broken code, stream structured change annotations
 // ---------------------------------------------------------------------------
 
-router.post('/cofix/stream', authenticate, async (req, res) => {
+router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, res) => {
   const { code, hint, language } = req.body;
 
   if (!code || code.trim().length < 5) {
     return res.status(400).json({ error: 'Missing or too-short code' });
   }
+  if (code.trim().length > 50000) {
+    return res.status(400).json({ error: 'Code too large — maximum 50,000 characters' });
+  }
 
   const lang = (language || 'python').toLowerCase();
+  if (language && !SUPPORTED_LANGUAGES.includes(lang)) {
+    return res.status(400).json({ error: `Unsupported language: ${language}` });
+  }
+
   const model = getModelForUser(req);
-  const hintSection = hint ? `\nUSER HINT: ${hint.trim()}\n` : '';
+  const hintSection = hint ? `\nUSER HINT: ${hint.trim().slice(0, 500)}\n` : '';
 
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
