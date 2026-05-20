@@ -839,8 +839,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         {/* Left: Problem Input - full width on mobile */}
         <div className="w-full md:shrink-0 flex flex-col min-w-0 border-b md:border-b-0 md:border-r design-left-panel max-h-[45dvh] md:max-h-none overflow-auto" style={{ ['--left-w' as any]: `${leftWidth}%`, borderColor: t.cardBorder, background: t.surfaceBg }}>
           {/* Input toolbar — two-row layout matching Coding tab:
-              Row 1: TEXT / URL / IMAGE pill tabs + Snap
-              Row 2: Stealth + mic controls + collapse              */}
+              Row 1: TEXT / URL / IMAGE pill tabs
+              Row 2: mic controls + collapse              */}
           <div
             className="flex flex-col"
             style={{
@@ -848,7 +848,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               borderBottom: '1px solid var(--cam-gold-leaf)',
             }}
           >
-            {/* ── Row 1: input-type tabs + Snap ── */}
+            {/* ── Row 1: input-type tabs ── */}
             <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
               <div
                 className="flex items-center gap-1 px-1 py-1 shrink-0"
