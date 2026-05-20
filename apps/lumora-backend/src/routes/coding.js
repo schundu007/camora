@@ -1149,7 +1149,7 @@ router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, 
   }
 
   const lang = (language || 'python').toLowerCase();
-  if (language && !SUPPORTED_LANGUAGES.includes(lang)) {
+  if (!SUPPORTED_LANGUAGES.includes(lang)) {
     return res.status(400).json({ error: `Unsupported language: ${language}` });
   }
 
@@ -1232,6 +1232,16 @@ RULES:
 
     sendEvent('answer', parsed);
     sendEvent('done', {});
+
+    // Record usage so the daily cap counter actually increments.
+    // Mirrors the pattern in /solve (line ~1020). Fire-and-forget — a DB
+    // hiccup must never break the already-delivered SSE response.
+    try {
+      await recordCodingUsage(req.user.id, lang, 0, 0, 0);
+    } catch (err) {
+      console.error('[cofix] Failed to record usage:', err.message);
+    }
+
     res.end();
   } catch (err) {
     console.error('CoFix stream error:', err);
