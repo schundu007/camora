@@ -256,7 +256,8 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
         width: open ? 360 : 0,
         background: 'var(--bg-surface)',
         borderColor: 'var(--border)',
-        transition: 'width 0.2s ease-out',
+        transition: 'width 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        willChange: 'width',
       }}
       aria-hidden={!open}
     >

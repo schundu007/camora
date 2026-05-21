@@ -307,6 +307,8 @@ export const LumoraShellPage = () => {
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
       return;
     }
+    // Interview tab: gate on isQuestion() so background noise doesn't fire the LLM.
+    if (!opts?.manual && !isQuestion(trimmed)) return;
     handleSubmit(text);
   }, [handleSubmit, activeTab]);
 
@@ -423,24 +425,18 @@ export const LumoraShellPage = () => {
           <div className="hidden md:flex items-center gap-1 p-0.5 rounded-md shrink-0"
             style={{ background: 'var(--lumora-chrome-bg)', border: '1px solid var(--lumora-chrome-border)', boxShadow: 'var(--lumora-chrome-shadow)' }}>
             <Link to="/capra/prepare"
-              className="px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color]"
+              className="lumora-chrome-link px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color]"
               style={{ color: 'var(--lumora-chrome-text)' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--lumora-chrome-hover)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
             >Prepare</Link>
             <Link to="/pricing"
-              className="px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color]"
+              className="lumora-chrome-link px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color]"
               style={{ color: 'var(--lumora-chrome-text)' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--lumora-chrome-hover)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
             >Pricing</Link>
             {/* Separator */}
             <div className="w-px h-4 mx-0.5" style={{ background: 'var(--lumora-chrome-border)' }} />
             {/* Meeting platform */}
-            <div className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold cursor-pointer transition-[background-color]"
+            <div className="lumora-chrome-link flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold cursor-pointer transition-[background-color]"
               style={{ color: 'var(--lumora-chrome-text)' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--lumora-chrome-hover)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
               <select
@@ -514,12 +510,11 @@ export const LumoraShellPage = () => {
                 <Link
                   key={tab.id}
                   to={tab.path}
-                  className="px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-[background-color,color,transform]"
+                  data-active={isActive ? 'true' : 'false'}
+                  className="lumora-tab-pill px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-[background-color,color,transform]"
                   style={isActive
                     ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }
                     : { color: 'var(--lumora-chrome-text)' }}
-                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'var(--lumora-chrome-hover)'; }}
-                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
                 >
                   {tab.label}
                 </Link>
