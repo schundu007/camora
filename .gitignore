@@ -23,3 +23,7 @@ apps/desktop/.local-cert/
 # Repo-root tool caches (project-scoped equivalents are tracked under apps/*)
 /.serena/
 /.trunk/
+
+# HackerRank sync — local secrets, never commit
+scripts/hackerrank-sync/.hackerrank-cookies.json
+scripts/hackerrank-sync/hackerrank-descriptions.json
