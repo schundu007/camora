@@ -197,6 +197,15 @@
          range stays in true navy from edge to edge so every strip
          looks navy regardless of viewport width. */
       linear-gradient(95deg, #051C40 0%, #0B2A5A 30%, var(--cam-primary-dk) 50%, #0B2A5A 70%, #051C40 100%);
+
+    /* Lumora topbar chrome — pill containers (tab strip, Back, quick-links).
+       Light mode: subtle navy tint so pills read as contained without the
+       full dark-navy hero-strip weight against a light topbar background. */
+    --lumora-chrome-bg:     rgba(0,71,171,0.07);
+    --lumora-chrome-border: rgba(26,79,134,0.22);
+    --lumora-chrome-shadow: inset 0 -2px 0 var(--cam-gold-leaf-dk);
+    --lumora-chrome-text:   rgba(26,79,134,0.82);
+    --lumora-chrome-hover:  rgba(0,71,171,0.11);
   }
 
   /* ──────────────────────────────────────────────────────────
@@ -287,6 +296,13 @@
     --nav-text: var(--text-primary);
     --nav-text-muted: var(--text-muted);
     --nav-hover: var(--bg-elevated);
+
+    /* Lumora topbar chrome — dark mode uses the full hero-strip gradient. */
+    --lumora-chrome-bg:     var(--cam-hero-strip);
+    --lumora-chrome-border: var(--cam-primary-dk);
+    --lumora-chrome-shadow: inset 0 -2px 0 var(--cam-gold-leaf);
+    --lumora-chrome-text:   rgba(255,255,255,0.85);
+    --lumora-chrome-hover:  rgba(255,255,255,0.10);
 
     color-scheme: dark;
   }
