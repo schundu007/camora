@@ -24,11 +24,11 @@ export default function AudioSetupDocsPage() {
       <section id="overview" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">How Camora hears the interview</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          Camora captures two streams during a live interview:
+          Camora captures two streams during a live session:
         </p>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li><strong>Your microphone</strong> — picks up your own voice. Used for self-prompting and post-call review.</li>
-          <li><strong>The interviewer's voice</strong> — captured separately so the AI assistant can answer the questions you're being asked.</li>
+          <li><strong>The speaker's voice</strong> — captured separately so Sona can answer the questions you're being asked.</li>
         </ul>
         <p className="text-[15px] leading-relaxed mt-3" style={{ color: 'var(--text-secondary)' }}>
           The first time you open the interview screen, the audio setup wizard runs automatically.
@@ -37,7 +37,7 @@ export default function AudioSetupDocsPage() {
           devices.
         </p>
         <DocsCallout variant="tip">
-          Use headphones during the interview. With speakers, the interviewer's voice leaks into your mic and Camora's echo cancellation strips it before we can analyze it.
+          Use headphones during the session. With speakers, the speaker's voice leaks into your mic and Camora's echo cancellation strips it before we can analyze it.
         </DocsCallout>
       </section>
 
@@ -93,7 +93,7 @@ export default function AudioSetupDocsPage() {
         </p>
         <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li>Install the desktop app from <a href="/docs/desktop" className="font-bold" style={{ color: 'var(--accent)' }}>/docs/desktop</a>.</li>
-          <li>Open Camora and start a live interview.</li>
+          <li>Open Camora and start a live session.</li>
           <li>The wizard picks <strong>Desktop loopback</strong> automatically. Click <strong>Connect</strong>.</li>
           <li>On macOS 13+, the wizard surfaces a Screen Recording permission card with one-click
             <strong> Open System Settings</strong> and <strong>Restart Camora</strong> buttons. Grant
@@ -104,14 +104,14 @@ export default function AudioSetupDocsPage() {
       <section id="browser-tab" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Browser tab share</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          Works in Chrome, Edge, and other Chromium browsers. The interviewer must be in a browser tab — native Zoom or Teams desktop clients can't have their audio captured this way.
+          Works in Chrome, Edge, and other Chromium browsers. The other participant must be in a browser tab — native Zoom or Teams desktop clients can't have their audio captured this way.
         </p>
         <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li>Open the interview platform <strong>in a Chrome tab</strong> (Zoom Web, Google Meet, Teams Web). Join the meeting.</li>
           <li>Open Camora in a second tab. The setup wizard appears.</li>
           <li>In the wizard, pick the <strong>Share a browser tab</strong> method card and click <strong>Connect</strong>.</li>
           <li>In the browser picker: pick the <strong>Chrome Tab</strong> tab at the top, select the meeting tab, and <strong>check &quot;Share tab audio&quot;</strong> at the bottom-left. The checkbox is the most common point of failure.</li>
-          <li>The level meter rises when the interviewer speaks. Close the wizard &mdash; Camora has saved the choice.</li>
+          <li>The level meter rises when the speaker talks. Close the wizard &mdash; Camora has saved the choice.</li>
         </ol>
         <DocsCallout variant="warning">
           If you pick &quot;Window&quot; or &quot;Entire screen&quot; instead of &quot;Chrome Tab&quot;, the audio checkbox is not offered and capture fails silently. Always pick &quot;Chrome Tab&quot;.
@@ -135,7 +135,7 @@ export default function AudioSetupDocsPage() {
           <li>Have someone speak — the level meter rises. Done.</li>
         </ol>
         <DocsCallout variant="tip">
-          The Multi-Output trick is what makes you still hear the interviewer through your headphones while BlackHole captures a copy.
+          The Multi-Output trick lets you still hear the speaker through your headphones while BlackHole captures a copy.
         </DocsCallout>
 
         <h3 className="text-lg font-bold mt-6 mb-2">Windows — VoiceMeeter Banana (free)</h3>
@@ -157,15 +157,15 @@ export default function AudioSetupDocsPage() {
         <h2 className="text-2xl font-bold mb-3">Room mic (Bluetooth speaker / phone-on-speaker)</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
           Use this when there&apos;s no system audio to capture &mdash; in-person interviews, the
-          interviewer is on a phone played through a JBL / Bluetooth speaker, or you&apos;re
+          speaker is on a phone played through a JBL / Bluetooth speaker, or you&apos;re
           listening on a laptop speaker rather than headphones. Camora captures the room with your
           mic and uses voice filtering to drop your own voice from the stream, so Sona only sees
-          the interviewer.
+          the speaker.
         </p>
         <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li>In the setup wizard, pick the <strong>Room mic / any speaker</strong> method card.</li>
           <li>The wizard will require <strong>voice enrollment</strong> first if you haven&apos;t
-            already done it &mdash; without it, Sona would treat your voice as the interviewer.
+            already done it &mdash; without it, Sona would treat your voice as the speaker.
             Read the prompt aloud once (~5 seconds). See
             <a href="/docs/voice-filtering" className="font-bold ml-1" style={{ color: 'var(--accent)' }}>Voice filtering</a> for
             details.</li>
@@ -173,8 +173,8 @@ export default function AudioSetupDocsPage() {
             done.</li>
         </ol>
         <DocsCallout variant="warning">
-          Room mic only works reliably when the interviewer&apos;s voice is clearly louder than
-          ambient noise. Quiet rooms, decent speakers, single interviewer &mdash; works well.
+          Room mic only works reliably when the speaker&apos;s voice is clearly louder than
+          ambient noise. Quiet rooms, decent speakers, single speaker &mdash; works well.
           Cafe / open-office / panel-with-quiet-panelists &mdash; quality drops fast.
         </DocsCallout>
       </section>
@@ -182,10 +182,10 @@ export default function AudioSetupDocsPage() {
       <section id="mic-only" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Mic-only fallback</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          When no other path works (Safari, Firefox, locked-down work laptop), Camora falls back to your microphone alone. Server-side speaker diarization tries to filter out your voice from the stream so only the interviewer's questions reach the AI.
+          When no other path works (Safari, Firefox, locked-down work laptop), Camora falls back to your microphone alone. Server-side speaker diarization tries to filter out your voice from the stream so only the questions reach the AI.
         </p>
         <DocsCallout variant="warning">
-          This path is lossy — the interviewer's voice has to bleed back into your mic, which means you must be on speakers (not headphones) and the room must be quiet. Use one of the other methods if at all possible.
+          This path is lossy — the speaker's voice has to bleed back into your mic, which means you must be on speakers (not headphones) and the room must be quiet. Use one of the other methods if at all possible.
         </DocsCallout>
       </section>
 
@@ -206,7 +206,7 @@ export default function AudioSetupDocsPage() {
 
         <h3 className="text-lg font-bold mt-4 mb-2">The level meter is flat — I can't hear bars rising</h3>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-          <li>The interviewer might just be silent — wait for them to talk.</li>
+          <li>The other person might just be silent — wait for them to talk.</li>
           <li>For tab share: did you pick <strong>Chrome Tab</strong> (not &quot;Window&quot; or &quot;Entire Screen&quot;)? Did you check <strong>Share tab audio</strong>?</li>
           <li>For virtual loopback: is your meeting client's <em>output</em> set to the virtual device, not its input?</li>
           <li>The wizard surfaces method-mismatch warnings &mdash; if you tried Desktop loopback in a regular browser, it&apos;ll tell you. Switch to a method that fits your environment.</li>

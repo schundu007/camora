@@ -3,20 +3,20 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { CodingSonaSidebar, CodingSonaSidebarToggle } from '../../components/lumora/shell/CodingSonaSidebar';
 import { AICompanionPanel } from '../../components/lumora/shell/AICompanionPanel';
 import { dispatchTranscript } from '../../lib/voice-router';
-import { InterviewPanel } from '../../components/lumora/interview/InterviewPanel';
-import { SessionSidebar } from '../../components/lumora/interview/SessionSidebar';
+import { SessionPanel } from '../../components/lumora/session/SessionPanel';
+import { SessionSidebar } from '../../components/lumora/session/SessionSidebar';
 import { LumoraDocsPanel } from '../../components/lumora/shell/LumoraDocsPanel';
 import { LumoraCalendar } from '../../components/lumora/shell/LumoraCalendar';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
-import { useStreamingInterview } from '../../hooks/useStreamingInterview';
-import { useInterviewStore } from '../../stores/interview-store';
+import { useStreamingSession } from '../../hooks/useStreamingSession';
+import { useSessionStore } from '../../stores/session-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
 import CamoraLogo from '../../components/shared/CamoraLogo';
 // UserDropdown moved to sidebar
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
 import { requestAudioSetup } from '../../lib/audio-preferences';
-import { InterviewerAudioProvider } from '../../components/lumora/audio/InterviewerAudio';
+import { SpeakerAudioProvider } from '../../components/lumora/audio/SpeakerAudio';
 import { AudioSetupWizard } from '../../components/lumora/audio/AudioSetupWizard';
 import { SilentStreamBanner } from '../../components/lumora/audio/SilentStreamBanner';
 import { useTheme } from '../../hooks/useTheme';
@@ -78,8 +78,8 @@ export const LumoraShellPage = () => {
   useEffect(() => {
     try { localStorage.setItem('lumora_meeting_platform', meetingPlatform); } catch {}
   }, [meetingPlatform]);
-  const { handleSubmit, handleCodingSubmit } = useStreamingInterview();
-  const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, threshold: vadThreshold } = useInterviewStore();
+  const { handleSubmit, handleCodingSubmit } = useStreamingSession();
+  const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, threshold: vadThreshold } = useSessionStore();
   // Persist the Settings-tip dismissal so it's a true one-time hint,
   // not a banner that re-appears on every page load and re-eats
   // ~40 vertical px on phones. Once dismissed, never shown again on
@@ -148,7 +148,7 @@ export const LumoraShellPage = () => {
   useEffect(() => {
     const prev = prevIsStreamingRef.current;
     prevIsStreamingRef.current = isStreaming;
-    if (prev && !isStreaming && activeTab === 'coding' && useInterviewStore.getState().liveSolveContext) {
+    if (prev && !isStreaming && activeTab === 'coding' && useSessionStore.getState().liveSolveContext) {
       setSonaSidebarOpen(true);
       setSonaListenTrigger(n => n + 1);
     }
@@ -224,7 +224,7 @@ export const LumoraShellPage = () => {
   // "Pricing — Camora".
   useEffect(() => {
     const titles: Record<string, string> = {
-      interview: 'Live Interview | Camora',
+      interview: 'Live Session | Camora',
       coding: 'Coding Interview | Camora',
       design: 'Design Interview | Camora',
       cofix: 'CoFix | Camora',
@@ -305,7 +305,7 @@ export const LumoraShellPage = () => {
     }
     if (tab === 'behavioral') {
       // Behavioral fullscreen renders the embedded AICompanionPanel — the
-      // InterviewPage UI is hidden, so routing through useStreamingInterview
+      // LivePage UI is hidden, so routing through useStreamingSession
       // would stream the answer to a surface no one can see. Forward the
       // interviewer's question to the panel via a custom event instead.
       // Gate on isQuestion() so background chatter doesn't fire Sona,
@@ -337,7 +337,7 @@ export const LumoraShellPage = () => {
   }, []);
 
   return (
-    <InterviewerAudioProvider onTranscription={handleTranscription}>
+    <SpeakerAudioProvider onTranscription={handleTranscription}>
     {/* Audio setup wizard — only mounted on live-interview tabs where
         we actually need audio. The wizard auto-opens on first session
         until the user finishes setup, then stays out of the way. */}
@@ -509,9 +509,9 @@ export const LumoraShellPage = () => {
           >
             {[
               { id: 'interview', label: 'Home', path: '/lumora', title: 'Interview assistant home' },
-              { id: 'coding', label: 'Coding', path: '/lumora/coding', title: 'Coding interview assistant' },
+              { id: 'coding', label: 'Coding', path: '/lumora/coding', title: 'Coding session assistant' },
               { id: 'design', label: 'Design', path: '/lumora/design', title: 'System design assistant' },
-              { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral', title: 'Behavioral interview assistant' },
+              { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral', title: 'Behavioral session assistant' },
               { id: 'cofix', label: 'CoFix', path: '/lumora/fix', title: 'Fix & debug code' },
             ].map(tab => {
               const isActive = activeTab === tab.id;
@@ -609,7 +609,7 @@ export const LumoraShellPage = () => {
           {/* Interview tab */}
           <div style={{ display: activeTab === 'interview' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
             <ErrorBoundary>
-              <InterviewPanel
+              <SessionPanel
                 onAskQuestion={(q) => navigate(q ? `/lumora/behavioral?q=${encodeURIComponent(q)}` : '/lumora/behavioral')}
                 onSwitchToCoding={(p) => navigate(p ? `/lumora/coding?problem=${encodeURIComponent(p)}` : '/lumora/coding')}
                 onSwitchToDesign={(p) => navigate(p ? `/lumora/design?problem=${encodeURIComponent(p)}` : '/lumora/design')}
@@ -750,7 +750,7 @@ export const LumoraShellPage = () => {
                 <div className="max-w-3xl mx-auto px-6 py-8 w-full relative">
                   <h2 className="text-4xl font-extrabold mb-2 text-white" style={{ textShadow: '0 0 28px rgba(255,255,255,0.14)' }}>Sessions</h2>
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                    Your interview session history — <span className="font-bold" style={{ color: 'var(--cam-gold-leaf-lt)', textShadow: '0 0 14px rgba(217,181,67,0.45)' }}>{history.length}</span> saved.
+                    Your session history — <span className="font-bold" style={{ color: 'var(--cam-gold-leaf-lt)', textShadow: '0 0 14px rgba(217,181,67,0.45)' }}>{history.length}</span> saved.
                   </p>
                 </div>
               </div>
@@ -949,7 +949,7 @@ export const LumoraShellPage = () => {
         <CodingSonaSidebarToggle
           open={sonaSidebarOpen}
           onToggle={() => setSonaSidebarOpen(true)}
-          hasSolve={!!useInterviewStore.getState().liveSolveContext}
+          hasSolve={!!useSessionStore.getState().liveSolveContext}
         />
       )}
 
@@ -1054,7 +1054,7 @@ export const LumoraShellPage = () => {
       )}
 
     </div>
-    </InterviewerAudioProvider>
+    </SpeakerAudioProvider>
   );
 }
 

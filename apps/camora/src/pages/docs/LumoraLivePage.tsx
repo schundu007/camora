@@ -11,11 +11,11 @@ const bodyColor = { color: 'var(--text-secondary)' };
 export default function LumoraLivePage() {
   return (
     <DocsPageLayout
-      title="Live Interview"
+      title="Live Session"
       description="How to set up and use Camora during a real interview — audio capture, the four answer surfaces, hotkeys, sessions, and troubleshooting."
       path="/docs/lumora-live"
       eyebrow="USER GUIDE"
-      breadcrumbs={[{ label: 'Live Interview' }]}
+      breadcrumbs={[{ label: 'Live Session' }]}
       onThisPage={[
         { id: 'what-it-does', label: 'What it does' },
         { id: 'before', label: 'Before the call' },
@@ -40,7 +40,7 @@ export default function LumoraLivePage() {
           Four answer surfaces, each tuned for a different interview type:
         </p>
         <ul className="list-disc pl-6 space-y-1.5 text-[14.5px] mb-2" style={bodyColor}>
-          <li><strong>Home</strong> &mdash; the live interview surface. Sona answers questions in real
+          <li><strong>Home</strong> &mdash; the live session surface. Sona answers questions in real
             time as the interviewer asks them.</li>
           <li><strong>Coding</strong> &mdash; multi-language playground with three approaches (brute /
             optimized / most optimal), narration, complexity analysis, auto-run, and a follow-up Sona

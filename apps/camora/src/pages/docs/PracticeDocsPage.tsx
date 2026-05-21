@@ -6,7 +6,7 @@ export default function PracticeDocsPage() {
   return (
     <DocsPageLayout
       title="Practice"
-      description="Timed mock interviews — three modes (Quick Fire, Deep Dive, Mock), per-company filtering, AI grading on a 5-dimension rubric."
+      description="Timed practice sessions — three modes (Quick Fire, Deep Dive, Mock), per-company filtering, AI grading on a 5-dimension rubric."
       path="/docs/practice"
       eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Practice' }]}

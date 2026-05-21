@@ -42,7 +42,7 @@ const cacheDiagramImages = async (content) => {
 
 // Section definitions with unique icons and colors
 const ALL_SECTIONS = [
-  { id: 'pitch', name: 'Elevator Pitch', description: '2-3 minute interview pitch', icon: 'rocket', color: 'var(--text-muted)' },
+  { id: 'pitch', name: 'Elevator Pitch', description: '2-3 minute intro pitch', icon: 'rocket', color: 'var(--text-muted)' },
   { id: 'hr', name: 'HR Questions', description: 'Salary, culture, availability', icon: 'users', color: 'var(--text-muted)' },
   { id: 'hiring-manager', name: 'Hiring Manager', description: 'Role-specific questions', icon: 'briefcase', color: 'var(--accent)' },
   { id: 'rrk', name: 'RRK (Google)', description: 'Role Related Knowledge round', companyFilter: 'google', icon: 'academic', color: 'var(--accent)' },
@@ -168,7 +168,7 @@ function cleanupContent(content) {
 
 // Load company data from localStorage
 function loadCompanyData() {
-  const stored = localStorage.getItem('interviewPrepCompanies');
+  const stored = localStorage.getItem('prepCompanies');
   if (stored) {
     try {
       return JSON.parse(stored);
@@ -178,8 +178,8 @@ function loadCompanyData() {
   }
 
   // Check for legacy data and migrate
-  const legacyInputs = localStorage.getItem('interviewPrepInputs');
-  const legacyGenerated = localStorage.getItem('interviewPrepGenerated');
+  const legacyInputs = localStorage.getItem('prepInputs');
+  const legacyGenerated = localStorage.getItem('prepGenerated');
 
   if (legacyInputs || legacyGenerated) {
     // Migrate legacy data to new format with "Default" company
@@ -195,9 +195,9 @@ function loadCompanyData() {
     };
 
     // Save migrated data and clean up legacy
-    localStorage.setItem('interviewPrepCompanies', JSON.stringify(migratedData));
-    localStorage.removeItem('interviewPrepInputs');
-    localStorage.removeItem('interviewPrepGenerated');
+    localStorage.setItem('prepCompanies', JSON.stringify(migratedData));
+    localStorage.removeItem('prepInputs');
+    localStorage.removeItem('prepGenerated');
 
     return migratedData;
   }
@@ -212,7 +212,7 @@ function loadCompanyData() {
 
 // Save company data to localStorage
 function saveCompanyData(companyData) {
-  localStorage.setItem('interviewPrepCompanies', JSON.stringify(companyData));
+  localStorage.setItem('prepCompanies', JSON.stringify(companyData));
 }
 
 // Get auth token for cloud sync (reads SSO cookie)
@@ -740,7 +740,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
   const handleDeleteCompany = async (companyName) => {
     const ok = await dialogConfirm({
       title: `Delete "${companyName}"?`,
-      message: 'Removes this company and all its interview prep data.',
+      message: 'Removes this company and all its prep data.',
       confirmLabel: 'Delete',
       tone: 'danger',
     });
@@ -1242,7 +1242,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
           {!embedded && <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-              <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">Interview Prep</h2>
+              <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">Prep</h2>
             </div>
             <div className="flex items-center gap-2">
               {!isDedicatedWindow && (
@@ -1646,7 +1646,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
               <p className="text-sm">Add a company to start</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>preparing for interviews</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>preparing</p>
             </div>
           </div>
         )}
@@ -1666,7 +1666,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
             <span className="text-sm font-medium" style={{ color: 'var(--content-text)' }}>
-              {activeCompany || 'Interview Prep'}
+              {activeCompany || 'Prep'}
             </span>
           </div>
         )}

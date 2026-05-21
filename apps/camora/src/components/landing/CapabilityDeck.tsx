@@ -11,12 +11,12 @@ const SCENES: SceneId[] = ['live', 'company', 'code', 'design', 'prep', 'score']
 const SCENE_MS = 5600;
 
 const SCENE_LABEL: Record<SceneId, { eyebrow: string; title: string; hint: string }> = {
-  live:    { eyebrow: 'Live interview assistant',    title: 'Voice → AI, in 0.3s',            hint: 'Transcribe, reason, answer — while you talk.' },
+  live:    { eyebrow: 'Live session assistant',    title: 'Voice → AI, in 0.3s',            hint: 'Transcribe, reason, answer — while you talk.' },
   company: { eyebrow: 'Company-specific prep',       title: 'The whole loop, per company',    hint: 'HR · Hiring Manager · Coding · Design · Behavioral.' },
   code:    { eyebrow: 'Coding — 3 approaches',       title: 'Brute · Optimal · Space-tight',  hint: '50+ languages. Follow-ups included.' },
   design:  { eyebrow: 'Multi-cloud architecture',    title: 'AWS · GCP · Azure',              hint: 'Same design, every cloud, rendered live.' },
   prep:    { eyebrow: 'Complete design problem',     title: 'Every card, every angle',        hint: 'Requirements → capacity → API → data.' },
-  score:   { eyebrow: 'AI-scored mock interviews',   title: 'Grade every dimension',          hint: 'Communication · Accuracy · Code quality.' },
+  score:   { eyebrow: 'AI-scored practice sessions',   title: 'Grade every dimension',          hint: 'Communication · Accuracy · Code quality.' },
 };
 
 export default function CapabilityDeck() {

@@ -34,7 +34,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
   const steps = [
     {
       title: 'Welcome to Ascend',
-      subtitle: 'Your AI-Powered Interview Prep Assistant',
+      subtitle: 'Your Study Assistant',
       icon: (
         <div
           className="w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-pulse-glow bg-[var(--accent)]"
@@ -127,7 +127,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
       ),
     },
     {
-      title: 'Company Interview Prep',
+      title: 'Company Prep',
       subtitle: 'Targeted preparation for specific companies',
       icon: (
         <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 bg-[var(--accent-subtle)]">
@@ -139,11 +139,11 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
       content: (
         <div className="space-y-4">
           <p className="text-[var(--text-muted)] landing-body">
-            Create personalized interview prep materials for any company. Get AI-generated:
+            Create personalized prep materials for any company. Get AI-generated:
           </p>
           <div className="space-y-2">
             {[
-              'Company-specific interview questions',
+              'Company-specific practice questions',
               'Culture and values alignment tips',
               'Technical topics to focus on',
               'Behavioral STAR stories',
@@ -177,7 +177,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
       content: (
         <div className="space-y-4">
           <p className="text-[var(--text-muted)] landing-body">
-            Each credit allows you to create one company interview preparation package.
+            Each credit creates one company prep package.
           </p>
           <div className="grid grid-cols-3 gap-3">
             <div
@@ -208,7 +208,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
     },
     {
       title: "You're All Set!",
-      subtitle: 'Start your interview prep journey',
+      subtitle: 'Start your learning journey',
       icon: (
         <div className="w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-float bg-[var(--accent)]" style={{ boxShadow: '0 0 30px var(--accent-subtle)' }}>
           <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

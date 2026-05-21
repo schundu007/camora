@@ -56,7 +56,7 @@ const APPA: Step[] = [
   {
     key: 'practice', label: 'Practice', href: '/capra/practice',
     headline: '3,500+ problems with AI feedback',
-    desc: 'Real interview problems, multi-approach solutions, timed mock interviews scored on every dimension.',
+    desc: 'Real interview problems, multi-approach solutions, timed practice sessions scored on every dimension.',
     Anim: PracticeAnim,
     icon: Glyph(<><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></>),
   },
@@ -100,7 +100,7 @@ const FEATURES = [
   {
     label: 'Mock Interviews',
     title: 'AI-scored practice sessions',
-    desc: 'Timed mock interviews with instant feedback. Scored on communication, accuracy, and code quality.',
+    desc: 'Timed practice sessions with instant feedback. Scored on communication, accuracy, and code quality.',
     Anim: FeatureMockInterviewAnim,
   },
 ];
@@ -288,7 +288,7 @@ export default function LandingPage() {
               align="center"
               eyebrow="The process"
               title={<>Your path to <span className="text-[var(--cam-primary)]">the offer.</span></>}
-              lead="Four surfaces, one continuous workflow: from the first job description to the live interview."
+              lead="Four surfaces, one continuous workflow: from the first job description to the live session."
             />
           </Reveal>
 
@@ -395,7 +395,7 @@ export default function LandingPage() {
             <SectionHeading
               eyebrow="Only on Camora"
               title="Features that set us apart."
-              lead="Live transcription. Architecture diagrams. AI-scored mocks. Built so the live interview goes the way you rehearsed."
+              lead="Live transcription. Architecture diagrams. AI-scored mocks. Built so the live session goes the way you rehearsed."
             />
           </Reveal>
 

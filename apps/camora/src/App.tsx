@@ -13,7 +13,7 @@ import { CelebrationProvider } from './components/shared/Celebration';
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 
-// ── Lumora pages (live interview) ───────────────────────
+// ── Lumora pages (live session) ───────────────────────
 const LumoraShellPage = lazy(() => import('./pages/lumora/LumoraShellPage'));
 
 // ── Capra pages (preparation) ───────────────────────────
@@ -36,7 +36,7 @@ const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'));
 const BrandPage = lazy(() => import('./pages/BrandPage'));
 const Blind75Page = lazy(() => import('./pages/Blind75Page'));
 const Blind75PracticePage = lazy(() => import('./pages/Blind75PracticePage'));
-const InterviewQuestionsPage = lazy(() => import('./pages/InterviewQuestionsPage'));
+const CompanyQuestionsPage = lazy(() => import('./pages/CompanyQuestionsPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const DownloadPage = lazy(() => import('./pages/DownloadPage'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
@@ -210,7 +210,7 @@ const ShellRoute = ({ children }: { children: React.ReactNode }) => {
   );
 }
 
-const PaidRoute = ({ children, feature = 'Lumora Live Interview' }: { children: React.ReactNode; feature?: string }) => {
+const PaidRoute = ({ children, feature = 'Lumora Live Session' }: { children: React.ReactNode; feature?: string }) => {
   return (
     <ProtectedRoute>
       <PaywallGate feature={feature}>{children}</PaywallGate>
@@ -339,7 +339,7 @@ export const App = () => {
           <Route path="/jobs" element={<ShellRoute><JobsPage /></ShellRoute>} />
           <Route path="/jobs/:id/prepare" element={<ShellRoute><JobPrepPage /></ShellRoute>} />
 
-          {/* ── Lumora: Live Interview (PAID — own layout, no shell) ── */}
+          {/* ── Lumora: Live Session (PAID — own layout, no shell) ── */}
           <Route path="/lumora" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/coding" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/design" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
@@ -400,8 +400,8 @@ export const App = () => {
           {/* ── Analytics ─────────────────────────────── */}
           <Route path="/analytics" element={<ShellRoute><AnalyticsPage /></ShellRoute>} />
 
-          {/* ── Company Interview Questions ─────────────── */}
-          <Route path="/interview-questions/:company" element={<InterviewQuestionsPage />} />
+          {/* ── Company Questions ─────────────── */}
+          <Route path="/company-questions/:company" element={<CompanyQuestionsPage />} />
 
           {/* ── Public Score Cards & Profiles ────────────── */}
           <Route path="/share/:token" element={<PublicScoreCardPage />} />

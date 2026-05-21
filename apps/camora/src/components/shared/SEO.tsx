@@ -9,8 +9,8 @@ interface SEOProps {
 }
 
 const DEFAULTS = {
-  title: 'Camora – Apply, Prepare, Practice & Attend | Your AI Interview Companion',
-  description: 'Ace every technical interview with AI-powered prep. System design, coding, behavioral — all formats. Real-time AI co-pilot during live interviews.',
+  title: 'Camora – Apply, Prepare, Practice & Attend | Your Learning Companion',
+  description: 'Ace every technical challenge with AI-powered prep. System design, coding, behavioral — all formats. Real-time AI during live sessions.',
   image: 'https://camora.cariara.com/images/og-cover.png',
   url: 'https://camora.cariara.com',
 };

@@ -247,7 +247,7 @@ function ContributionsTab() {
         <div className="px-5 py-4">
           <div className="flex items-center justify-between mb-6">
             <p className="text-sm text-[var(--text-muted)] max-w-md">
-              Share real interview questions you've encountered to help the community and earn 30% off your next payment per approved contribution.
+              Share real practice questions you've encountered to help the community and earn 30% off your next payment per approved contribution.
             </p>
             <Link to="/capra/practice" className="text-xs px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] transition-colors font-medium whitespace-nowrap">
               Contribute a Question

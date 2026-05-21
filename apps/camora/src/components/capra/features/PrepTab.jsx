@@ -156,7 +156,7 @@ export default function PrepTab({ isOpen, onClose }) {
               background: activeTab === 'prep' ? 'var(--bg-elevated)' : 'transparent',
             }}
           >
-            Interview Prep Sites
+            Prep Sites
           </button>
         </div>
 

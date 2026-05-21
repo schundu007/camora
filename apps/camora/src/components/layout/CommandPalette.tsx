@@ -26,7 +26,7 @@ const PAGES: SearchResult[] = [
   { id: 'page-dashboard', title: 'Dashboard', path: '/capra/prepare', category: 'Pages', icon: 'home' },
   { id: 'page-practice', title: 'Practice', path: '/capra/practice', category: 'Pages', icon: 'play' },
   { id: 'page-jobs', title: 'Jobs', path: '/jobs', category: 'Pages', icon: 'briefcase' },
-  { id: 'page-live', title: 'Live Interview', path: '/lumora', category: 'Pages', icon: 'mic' },
+  { id: 'page-live', title: 'Live Session', path: '/lumora', category: 'Pages', icon: 'mic' },
   { id: 'page-pricing', title: 'Pricing', path: '/pricing', category: 'Pages', icon: 'tag' },
   { id: 'page-blind75', title: 'Blind 75', path: '/handbook', category: 'Pages', icon: 'list' },
   { id: 'page-achievements', title: 'Achievements', path: '/profile?tab=achievements', category: 'Pages', icon: 'trophy' },

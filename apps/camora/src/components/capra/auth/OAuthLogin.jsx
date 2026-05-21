@@ -34,13 +34,13 @@ export default function OAuthLogin() {
         { label: 'Apply',    href: '/jobs',            icon: 'briefcase',  desc: 'Find your role',     bg: 'var(--bg-elevated)', bgEnd: 'var(--bg-surface)', border: 'var(--accent)',     borderEnd: 'var(--accent)',     badge: 'var(--accent)',     iconColor: 'var(--accent)',     glowColor: '38,97,156' },
         { label: 'Prepare',  href: '/capra/prepare',   icon: 'book',       desc: 'Study & review',     bg: 'var(--bg-elevated)', bgEnd: 'var(--bg-surface)', border: 'var(--cam-primary-lt)', borderEnd: 'var(--cam-primary)', badge: 'var(--cam-primary-lt)', iconColor: 'var(--cam-primary-lt)', glowColor: '60,122,171' },
         { label: 'Practice', href: '/capra/practice',  icon: 'code',       desc: 'Solve problems',     bg: 'var(--bg-elevated)', bgEnd: 'var(--bg-surface)', border: 'var(--accent)',     borderEnd: 'var(--accent)',     badge: 'var(--accent)',     iconColor: 'var(--accent)',     glowColor: '38,97,156' },
-        { label: 'Attend',   href: '/lumora',          icon: 'microphone', desc: 'Ace the interview',  bg: 'var(--bg-elevated)', bgEnd: 'var(--bg-surface)', border: 'var(--warning-text)', borderEnd: 'var(--warning)', badge: 'var(--warning)',    iconColor: 'var(--warning-text)', glowColor: '201,162,39' },
+        { label: 'Attend',   href: '/lumora',          icon: 'microphone', desc: 'Ace it',  bg: 'var(--bg-elevated)', bgEnd: 'var(--bg-surface)', border: 'var(--warning-text)', borderEnd: 'var(--warning)', badge: 'var(--warning)',    iconColor: 'var(--warning-text)', glowColor: '201,162,39' },
       ]
     : [
         { label: 'Apply',    href: '/jobs',            icon: 'briefcase',  desc: 'Find your role',     bg: 'var(--bg-surface)', bgEnd: 'var(--bg-elevated)', border: 'var(--cam-primary-lt)', borderEnd: 'var(--accent)',     badge: 'var(--accent)',     iconColor: 'var(--accent)',     glowColor: '38,97,156' },
         { label: 'Prepare',  href: '/capra/prepare',   icon: 'book',       desc: 'Study & review',     bg: 'var(--bg-surface)', bgEnd: 'var(--bg-elevated)', border: 'var(--cam-primary-lt)', borderEnd: 'var(--cam-primary)', badge: 'var(--cam-primary)', iconColor: 'var(--accent)',     glowColor: '38,97,156' },
         { label: 'Practice', href: '/capra/practice',  icon: 'code',       desc: 'Solve problems',     bg: 'var(--bg-surface)', bgEnd: 'var(--bg-elevated)', border: 'var(--accent)',         borderEnd: 'var(--accent)',     badge: 'var(--accent)',     iconColor: 'var(--accent)',     glowColor: '38,97,156' },
-        { label: 'Attend',   href: '/lumora',          icon: 'microphone', desc: 'Ace the interview',  bg: 'var(--bg-surface)', bgEnd: 'var(--bg-elevated)', border: 'var(--warning-text)',   borderEnd: 'var(--warning)',    badge: 'var(--warning)',    iconColor: 'var(--warning-text)', glowColor: '201,162,39' },
+        { label: 'Attend',   href: '/lumora',          icon: 'microphone', desc: 'Ace it',  bg: 'var(--bg-surface)', bgEnd: 'var(--bg-elevated)', border: 'var(--warning-text)',   borderEnd: 'var(--warning)',    badge: 'var(--warning)',    iconColor: 'var(--warning-text)', glowColor: '201,162,39' },
       ];
 
   return (
@@ -51,7 +51,7 @@ export default function OAuthLogin() {
       <section className="flex flex-col items-center justify-center text-center px-6 pt-12 pb-12 md:pt-16 md:pb-16">
         <div className={`inline-flex items-center gap-2 px-4 py-1.5 border border-[rgba(38,97,156,0.3)] bg-[rgba(38,97,156,0.08)] rounded-full mb-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <span className="w-2 h-2 bg-[var(--accent)] rounded-full animate-pulse" />
-          <span className="text-xs landing-mono text-[var(--accent)] tracking-wide">AI-Powered Interview Prep</span>
+          <span className="text-xs landing-mono text-[var(--accent)] tracking-wide">Smart Prep</span>
         </div>
 
         <h1 className={`landing-display font-extrabold leading-tight tracking-tight max-w-4xl transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
@@ -60,7 +60,7 @@ export default function OAuthLogin() {
         </h1>
 
         <p className={`mt-4 text-base md:text-lg text-[var(--text-muted)] max-w-2xl leading-relaxed landing-body transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-          AI-powered coding solutions, system design, and live interview assistance. 20+ languages. Invisible to screen share.
+          AI-powered coding solutions, system design, and live session assistance. 20+ languages. Invisible to screen share.
         </p>
 
         <div className={`mt-7 flex flex-col sm:flex-row items-center gap-3 transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
@@ -124,7 +124,7 @@ export default function OAuthLogin() {
 
           <div className="grid md:grid-cols-3 gap-2.5">
             {[
-              { icon: 'microphone', title: 'Live Interview', desc: 'Real-time AI answers during interviews. Completely invisible to screen share.', tags: ['Voice Capture', 'Stealth Mode', 'Streaming'], color: 'blue', href: '/lumora' },
+              { icon: 'microphone', title: 'Live Session', desc: 'Real-time AI answers during sessions. Completely invisible to screen share.', tags: ['Voice Capture', 'Stealth Mode', 'Streaming'], color: 'blue', href: '/lumora' },
               { icon: 'code', title: 'Coding Engine', desc: '20+ languages with explanations, auto-fix, and complexity analysis.', tags: ['Multi-Language', 'Auto-Fix', 'Complexity'], color: 'cyan', href: '/capra/prepare/coding' },
               { icon: 'systemDesign', title: 'System Design', desc: 'Architecture diagrams, scalability analysis, and tech justifications.', tags: ['Diagrams', 'Scale Math', 'Tradeoffs'], color: 'violet', href: '/capra/design' },
             ].map((f) => (

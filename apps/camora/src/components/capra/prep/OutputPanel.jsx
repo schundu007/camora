@@ -854,7 +854,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         {/* Questions */}
                         {safeArray(tech.questions).length > 0 && (
                           <div className="mb-4">
-                            <div className="prep-section-divider">Interview Questions</div>
+                            <div className="prep-section-divider">Practice Questions</div>
                             {safeArray(tech.questions).filter(q => q && typeof q === 'object').map((q, j) => (
                               <div key={j} className="prep-question-item">
                                 <p className="prep-question-text">{q?.question || ''}</p>
@@ -1037,10 +1037,10 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                   </div>
                 )}
 
-                {/* Interview Tips */}
+                {/* Study Tips */}
                 {safeArray(displayContent.interviewTips).length > 0 && (
                   <div className="p-3 rounded" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                    <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--accent)' }}>Interview Tips</p>
+                    <p className="font-semibold text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--accent)' }}>Study Tips</p>
                     {safeArray(displayContent.interviewTips).filter(tip => tip != null).map((tip, i) => (
                       <p key={i} className="text-sm">• {String(tip)}</p>
                     ))}

@@ -56,7 +56,7 @@ export default function DesktopDocsPage() {
 
       <DocsSection id="features" title="What you get">
         <p className="text-[15px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-          All Camora features &mdash; live interview, coding helper, system design, prep &mdash; work
+          All Camora features &mdash; live session, coding helper, system design, prep &mdash; work
           identically to the web app, because the desktop shell loads the same frontend at
           camora.cariara.com. The differences are OS-level capabilities the browser can&apos;t reach:
           system audio loopback, native screenshots, real document export, and a global show/hide

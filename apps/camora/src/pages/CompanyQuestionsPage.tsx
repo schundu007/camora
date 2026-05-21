@@ -1,0 +1,215 @@
+import { useParams, Link } from 'react-router-dom';
+import { useEffect, useMemo } from 'react';
+import SiteNav from '@/components/shared/SiteNav';
+import SiteFooter from '@/components/shared/SiteFooter';
+import { COMPANY_SEO_DATA, COMPANY_SLUGS } from '@/data/capra/companies/companyData';
+
+const TYPE_COLORS: Record<string, { bg: string; text: string; label: string }> = {
+  coding: { bg: 'bg-[var(--cat-primary-bg)]', text: 'text-[var(--cat-primary)]', label: 'Coding' },
+  'system-design': { bg: 'bg-[var(--cat-primary-bg)]', text: 'text-[var(--cat-primary)]', label: 'System Design' },
+  behavioral: { bg: 'bg-[var(--cat-primary-bg)]', text: 'text-[var(--cat-primary)]', label: 'Behavioral' },
+};
+
+const DIFF_COLORS: Record<string, { bg: string; text: string }> = {
+  Easy: { bg: 'bg-[var(--easy-bg)]', text: 'text-[var(--easy)]' },
+  Medium: { bg: 'bg-[var(--medium-bg)]', text: 'text-[var(--medium)]' },
+  Hard: { bg: 'bg-[var(--hard-bg)]', text: 'text-[var(--hard)]' },
+};
+
+function getRelatedCompanies(currentSlug: string, count = 4): string[] {
+  const others = COMPANY_SLUGS.filter((s) => s !== currentSlug);
+  const shuffled = others.sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
+
+export default function CompanyQuestionsPage() {
+  const { company: slug } = useParams<{ company: string }>();
+  const company = slug ? COMPANY_SEO_DATA[slug] : undefined;
+  const related = useMemo(() => getRelatedCompanies(slug ?? ''), [slug]);
+
+  useEffect(() => {
+    if (!company) return;
+    document.title = `${company.name} Practice Questions 2026 | Camora`;
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) {
+      meta.setAttribute(
+        'content',
+        `Practice ${company.name} practice questions. ${company.description} Prepare with real coding, system design, and behavioral questions.`,
+      );
+    } else {
+      const newMeta = document.createElement('meta');
+      newMeta.name = 'description';
+      newMeta.content = `Practice ${company.name} practice questions. ${company.description}`;
+      document.head.appendChild(newMeta);
+    }
+    return () => {
+      document.title = 'Camora';
+    };
+  }, [company]);
+
+  if (!company) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-surface)]">
+        <SiteNav variant="light" />
+        <div className="pt-20 text-center">
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Company not found</h1>
+          <p className="mt-2 text-[var(--text-muted)]">We don't have interview data for this company yet.</p>
+          <Link to="/" className="mt-4 inline-block text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium">
+            Go home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-app)' }}>
+      <SiteNav variant="light" />
+
+      {/* ── Hero — LeetCode dark navy band ───────────────── */}
+      <section className="relative pt-24 pb-24 px-4 overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+        <div className="relative lg:max-w-[85%] mx-auto text-center">
+          <img src={company.logo} alt={`${company.name} logo`} className="w-16 h-16 rounded-xl object-contain mx-auto bg-white p-2" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            {company.name} <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Practice Questions</span>
+          </h1>
+          <p className="mt-2 text-lg" style={{ color: 'rgba(255,255,255,0.85)' }}>{company.tagline}</p>
+
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>
+              {company.difficulty}
+            </span>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.1)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)' }}>
+              {company.avgSalary}
+            </span>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.1)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)' }}>
+              {company.interviewRounds} rounds
+            </span>
+          </div>
+        </div>
+        <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" className="absolute left-0 bottom-0 w-full pointer-events-none" style={{ height: '6vh', display: 'block' }}>
+          <polygon fill="var(--bg-app)" points="0,0 100,100 0,100" />
+        </svg>
+      </section>
+
+      {/* ── Main content ─────────────────────────────────── */}
+      <main className="flex-1 lg:max-w-[85%] w-full mx-auto px-4 py-10 space-y-12">
+
+        {/* Description */}
+        <section>
+          <p className="text-[var(--text-secondary)] leading-relaxed">{company.description}</p>
+        </section>
+
+        {/* Interview Process */}
+        <section>
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Interview Process</h2>
+          <ol className="space-y-3">
+            {company.interviewProcess.map((step, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[rgba(38,97,156,0.08)] text-[var(--accent)] text-xs font-bold flex items-center justify-center">
+                  {i + 1}
+                </span>
+                <span className="text-[var(--text-secondary)] pt-0.5">{step}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {/* Sample Questions */}
+        <section>
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Sample Practice Questions</h2>
+          <div className="space-y-3">
+            {company.sampleQuestions.map((question, i) => {
+              const typeStyle = TYPE_COLORS[question.type] ?? TYPE_COLORS.coding;
+              const qDiffColor = DIFF_COLORS[question.difficulty] ?? DIFF_COLORS.Medium;
+              const isBlurred = i >= 3;
+
+              return (
+                <div
+                  key={i}
+                  className={`relative bg-[var(--bg-surface)] border-0 rounded-xl p-5 ${isBlurred ? 'select-none' : ''}`}
+                >
+                  {isBlurred && (
+                    <div className="absolute inset-0 backdrop-blur-sm bg-[var(--bg-surface)]/60 rounded-xl z-10 flex items-center justify-center">
+                      <Link
+                        to="/signup"
+                        className="px-5 py-2.5 bg-[var(--accent)] text-white text-sm font-semibold rounded-lg hover:bg-[var(--accent-hover)] transition-colors shadow-sm"
+                      >
+                        Sign up to see all questions
+                      </Link>
+                    </div>
+                  )}
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${typeStyle.bg} ${typeStyle.text}`}>
+                      {typeStyle.label}
+                    </span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${qDiffColor.bg} ${qDiffColor.text}`}>
+                      {question.difficulty}
+                    </span>
+                  </div>
+                  <p className="text-[var(--text-primary)] font-medium">{question.q}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Tips */}
+        <section>
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Study Tips</h2>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {company.tips.map((tip, i) => (
+              <div key={i} className="bg-[var(--bg-surface)] border-0 rounded-xl p-5">
+                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[rgba(38,97,156,0.08)] text-[var(--accent)] text-sm font-bold mb-3">
+                  {i + 1}
+                </span>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{tip}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="text-center bg-[var(--bg-surface)] border-0 rounded-2xl p-8">
+          <h2 className="text-xl font-bold text-[var(--text-primary)]">
+            Start preparing for {company.name} interviews
+          </h2>
+          <p className="mt-2 text-[var(--text-muted)] text-sm">
+            Practice with AI-powered practice sessions, coding problems, and system design exercises.
+          </p>
+          <Link
+            to="/signup"
+            className="mt-5 inline-flex items-center px-6 py-3 bg-[var(--accent)] text-white font-semibold rounded-lg hover:bg-[var(--accent-hover)] transition-colors shadow-sm"
+          >
+            Get started free
+          </Link>
+        </section>
+
+        {/* Related Companies */}
+        <section>
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Explore Other Companies</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {related.map((relSlug) => {
+              const rel = COMPANY_SEO_DATA[relSlug];
+              if (!rel) return null;
+              return (
+                <Link
+                  key={relSlug}
+                  to={`/interview-questions/${relSlug}`}
+                  className="bg-[var(--bg-surface)] border-0 rounded-xl p-4 text-center transition-[transform,box-shadow] duration-150 active:scale-[0.98]"
+                >
+                  <img src={rel.logo} alt={rel.name} className="w-10 h-10 rounded-lg object-contain mx-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  <p className="mt-1.5 text-sm font-semibold text-[var(--text-primary)]">{rel.name}</p>
+                  <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{rel.difficulty} &middot; {rel.interviewRounds} rounds</p>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      </main>
+
+      <SiteFooter variant="light" />
+    </div>
+  );
+}

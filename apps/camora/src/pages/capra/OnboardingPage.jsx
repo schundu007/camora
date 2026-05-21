@@ -450,7 +450,7 @@ export default function OnboardingPage() {
                     Upload your resume
                   </h1>
                   <p className="text-[var(--text-secondary)]">
-                    We'll use this to personalize your interview prep
+                    We'll use this to personalize your prep
                   </p>
                 </div>
 

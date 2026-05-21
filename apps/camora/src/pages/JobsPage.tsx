@@ -613,7 +613,7 @@ export default function JobsPage() {
                   </button>
                 </div>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 12px', lineHeight: 1.5 }}>
-                  Paste any job listing URL (Workday, Greenhouse, Lever, LinkedIn, etc.) and we'll analyze it to create a personalized interview prep plan.
+                  Paste any job listing URL (Workday, Greenhouse, Lever, LinkedIn, etc.) and we'll analyze it to create a personalized prep plan.
                 </p>
 
                 {/* URL input row */}

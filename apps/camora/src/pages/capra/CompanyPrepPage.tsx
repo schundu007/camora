@@ -43,7 +43,7 @@ const COMPANIES: Record<string, CompanyData> = {
     stats: { avgSalary: '$189K - $350K', rounds: '5-7', difficulty: 'Hard', duration: '6-8 weeks' },
     sections: [
       {
-        title: 'Coding Interview Questions',
+        title: 'Coding Practice Questions',
         icon: 'code',
         questions: [
           { q: 'Design an algorithm to find the shortest path in a weighted graph', difficulty: 'Hard', topic: 'Graphs' },
@@ -371,7 +371,7 @@ export default function CompanyPrepPage() {
 
     const genericSections = [
       {
-        title: 'Coding Interview Questions',
+        title: 'Coding Practice Questions',
         icon: 'code' as const,
         color: 'var(--success)',
         description: 'Practice data structures, algorithms, and problem-solving patterns commonly asked in technical interviews.',
@@ -393,7 +393,7 @@ export default function CompanyPrepPage() {
         topics: ['Scalability Fundamentals', 'Database Design', 'Caching Strategies', 'API Design', 'Load Balancing'],
       },
       {
-        title: 'Behavioral Interview Questions',
+        title: 'Behavioral Practice Questions',
         icon: 'behavioral' as const,
         color: 'var(--warning)',
         description: 'Prepare compelling STAR-format stories for leadership, teamwork, and problem-solving questions.',
@@ -428,10 +428,10 @@ export default function CompanyPrepPage() {
                 </div>
                 <div>
                   <h1 className="practice-display" style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
-                    {displayName} Interview Prep
+                    {displayName} Prep
                   </h1>
                   <p className="practice-body" style={{ fontSize: 15, color: 'var(--text-muted)', margin: '4px 0 0' }}>
-                    Prepare for your interview with curated coding, system design, and behavioral topics.
+                    Prepare with curated coding, system design, and behavioral topics.
                   </p>
                 </div>
               </div>
@@ -542,7 +542,7 @@ export default function CompanyPrepPage() {
           <nav className="practice-body" style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', color: 'rgba(255,255,255,0.7)' }}>
             <Link to="/" className="breadcrumb-link" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Home</Link>
             <span>/</span>
-            <Link to="/capra/practice" className="breadcrumb-link" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Interview Questions</Link>
+            <Link to="/capra/practice" className="breadcrumb-link" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Practice Questions</Link>
             <span>/</span>
             <span style={{ color: 'var(--cam-gold-leaf-lt)', fontWeight: 600 }}>{companyData.name}</span>
           </nav>
@@ -579,7 +579,7 @@ export default function CompanyPrepPage() {
                     lineHeight: 1.2,
                   }}
                 >
-                  {companyData.name} <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Interview Questions</span>
+                  {companyData.name} <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Practice Questions</span>
                 </h1>
                 <p className="practice-body" style={{ fontSize: 15, color: 'rgba(255,255,255,0.85)', margin: 0, lineHeight: 1.6, maxWidth: 640 }}>
                   {companyData.description}
@@ -792,7 +792,7 @@ export default function CompanyPrepPage() {
               Start preparing for {companyData.name} interviews
             </h2>
             <p className="practice-body" style={{ fontSize: 15, color: 'var(--text-muted)', margin: '0 0 24px', lineHeight: 1.6 }}>
-              Practice with AI-powered mock interviews, get real-time feedback, and track your progress.
+              Practice with AI-powered practice sessions, get real-time feedback, and track your progress.
             </p>
             <Link
               to="/lumora"

@@ -655,7 +655,7 @@ export default function TopicDetail({
       // 14. Code, Questions, Tips
       if (topicDetails.codeExamples && typeof topicDetails.codeExamples === 'object' && !Array.isArray(topicDetails.codeExamples)) s.push({ id: 'code-examples', label: 'Implementation Code' });
       if (topicDetails.keyQuestions?.length) s.push({ id: 'key-questions', label: 'Key Questions', children: topicDetails.keyQuestions.slice(0, 5).map(q => trunc(q.question, 30)) });
-      if (topicDetails.tips) s.push({ id: 'tips', label: 'Interview Tips' });
+      if (topicDetails.tips) s.push({ id: 'tips', label: 'Study Tips' });
     }
 
     // ── DSA / Coding ──
@@ -1668,7 +1668,7 @@ export default function TopicDetail({
             </div>
           )}
 
-          {/* 11. Tips & Interview Tips — final checklist */}
+          {/* 11. Tips & Study Tips — final checklist */}
           {(topicDetails.tips || topicDetails.interviewTips) && (
             <div id="tips" className="scroll-mt-24 mt-14 first:mt-0">
               <ContentHeading title="Tips & Interview Checklist" actions={<GlassPill>PRO</GlassPill>} />
@@ -2550,10 +2550,10 @@ export default function TopicDetail({
                 </div>
               )}
 
-              {/* 16. Interview Tips — very last SD card */}
+              {/* 16. Study Tips — very last SD card */}
               {topicDetails.tips && (
                 <div className="">
-                  <ContentHeading title="Interview Tips" />
+                  <ContentHeading title="Study Tips" />
                   <div className="grid gap-1 p-3">
                     {topicDetails.tips.map((tip, i) => (
                       <div key={i} className="px-3 py-2 flex items-center gap-2 hover:bg-[var(--bg-elevated)] transition-colors rounded">

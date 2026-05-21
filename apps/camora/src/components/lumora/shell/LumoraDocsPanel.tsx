@@ -29,7 +29,7 @@ interface DocState {
   prepMaterials: string;
   prepMaterialsFile?: string;
   // Multi-document study material list. Sona reads every entry as
-  // additional context during live interviews.
+  // additional context during live sessions.
   studyDocs: StudyDoc[];
   // Legacy single-string field — read once by migrateStudyDocs() and
   // folded into studyDocs, then kept undefined.
@@ -2706,7 +2706,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
     const generated = SIDEBAR_SECTIONS
       .filter((s) => s.id !== 'input' && s.id !== 'jd-view' && state.sections[s.id])
       .map((s) => ({ id: s.id, label: s.label, content: state.sections[s.id] }));
-    return { title: `${company} — Interview Prep`, sections: sectionsToPrepSections(generated) };
+    return { title: `${company} — Prep`, sections: sectionsToPrepSections(generated) };
   }, [prepData.activeCompany, state.sections]);
 
   const [downloading, setDownloading] = useState<'pdf' | 'docx' | null>(null);
@@ -2781,7 +2781,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
         {/* LeetCode-style sidebar header */}
         <div className="px-3 py-3" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[10px] font-bold uppercase tracking-wider text-white" style={{ fontFamily: "var(--font-sans)" }}>Interview Prep</h2>
+            <h2 className="text-[10px] font-bold uppercase tracking-wider text-white" style={{ fontFamily: "var(--font-sans)" }}>Prep</h2>
             {/* Mobile-only collapse button so users can dismiss the
                 sidebar without picking a different section. Hidden on
                 ≥sm where the sidebar is permanent chrome. */}

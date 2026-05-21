@@ -22,7 +22,7 @@ export default function TopupsDocsPage() {
       <section id="how-hours-work" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">How AI hours work</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          AI hours are Camora's unit of LLM consumption. Every interaction that uses AI — live interview
+          AI hours are Camora's unit of LLM consumption. Every interaction that uses AI — live session
           transcription, Sona answers, prep doc generation, system design generation, coding helper —
           consumes seconds against your pool.
         </p>

@@ -24,7 +24,7 @@ export default function LumoraCodingDocsPage() {
         { id: 'sona-sidebar', label: 'Sona follow-up sidebar' },
         { id: 'timer', label: 'Timer' },
         { id: 'limits', label: 'Daily limits' },
-        { id: 'tips', label: 'Tips for live interviews' },
+        { id: 'tips', label: 'Tips for live sessions' },
       ]}
     >
       <section id="what-it-does" className="mb-12 scroll-mt-24">
@@ -158,7 +158,7 @@ export default function LumoraCodingDocsPage() {
       </section>
 
       <section id="tips" className="mb-10 scroll-mt-24">
-        <h2 className={sectionH2}>Tips for live interviews</h2>
+        <h2 className={sectionH2}>Tips for live sessions</h2>
         <ul className="list-disc pl-6 space-y-2 text-[15px] mb-3" style={bodyColor}>
           <li>Submit the question early &mdash; the moment you&apos;ve heard the full problem, click
             Solve so the answer is ready by the time you start coding.</li>
@@ -170,9 +170,9 @@ export default function LumoraCodingDocsPage() {
             pick the solution whose complexity badge matches.</li>
         </ul>
         <p className={bodyP} style={bodyColor}>
-          Live interview setup, audio capture, and Cmd+B safety are documented in
+          Live session setup, audio capture, and Cmd+B safety are documented in
           <Link to="/docs/lumora-live" className="text-[var(--accent)] underline ml-1">
-            Live Interview
+            Live Session
           </Link>.
         </p>
       </section>

@@ -44,7 +44,7 @@ export default function NotFoundPage() {
               className="inline-flex items-center justify-center gap-2 px-6 py-2.5 text-[13px] font-medium transition-colors rounded-full"
               style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.35)' }}
             >
-              Live Interview
+              Live Session
             </Link>
           </div>
         </div>

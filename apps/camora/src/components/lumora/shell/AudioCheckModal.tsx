@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadAudioPrefs, patchAudioPrefs } from '@/lib/audio-preferences';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSessionStore } from '@/stores/session-store';
 
 /* ── AudioCheckModal ─────────────────────────────────────────
    Full audio configuration panel for Lumora. Reachable from the
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export const AudioCheckModal = ({ isOpen, onClose }: Props) => {
-  const interviewerActive = useInterviewStore((s) => s.interviewerAudio.active);
+  const speakerActive = useSessionStore((s) => s.speakerAudio.active);
   const [permission, setPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown');
   const [inputs, setInputs] = useState<AudioInputDevice[]>([]);
   const [outputs, setOutputs] = useState<AudioOutputDevice[]>([]);
@@ -153,18 +153,18 @@ export const AudioCheckModal = ({ isOpen, onClose }: Props) => {
   }, [isOpen, enumerate, stopStream]);
 
   // Start/restart mic when selected device or processing toggles change.
-  // Skip the test stream entirely when the live interviewer-audio
+  // Skip the test stream entirely when the live speaker-audio
   // capture is active — opening a second getUserMedia on the same
-  // physical mic mid-interview can corrupt buffers on Chrome/macOS
+  // physical mic mid-session can corrupt buffers on Chrome/macOS
   // and silently fail on iOS Safari. The user can still pick a new
   // device (it persists), they just won't see a level meter until
-  // they pause the interview.
+  // they pause the session.
   useEffect(() => {
     if (!isOpen || !selectedInput) return;
-    if (interviewerActive) return;
+    if (speakerActive) return;
     startMic(selectedInput);
     return () => { stopStream(); };
-  }, [isOpen, interviewerActive, selectedInput, echoCancel, noiseSuppress, autoGain, startMic, stopStream]);
+  }, [isOpen, speakerActive, selectedInput, echoCancel, noiseSuppress, autoGain, startMic, stopStream]);
 
   // Persist mic + speaker choices to the canonical prefs store so the
   // wizard, live AudioCapture, and this modal stay in sync.
@@ -293,13 +293,13 @@ export const AudioCheckModal = ({ isOpen, onClose }: Props) => {
         {/* Body — scrollable */}
         <div className="flex-1 overflow-auto p-5 space-y-5">
           {/* Active-capture warning. The modal cannot open its own
-              getUserMedia stream while the live interviewer audio
+              getUserMedia stream while the live speaker audio
               capture is running — concurrent streams on the same
               device can corrupt buffers on Chrome/macOS and silently
               fail on iOS Safari. We let the user change device
               selection (which persists), but suppress the test stream
               until they stop the live capture. */}
-          {interviewerActive && (
+          {speakerActive && (
             <div
               className="px-3 py-2.5 rounded-md text-[12px] flex items-start gap-2"
               style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.45)', color: 'var(--text-primary)' }}
@@ -429,8 +429,8 @@ export const AudioCheckModal = ({ isOpen, onClose }: Props) => {
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={toggleRecording}
-                disabled={permission === 'denied' || interviewerActive}
-                title={interviewerActive ? 'Stop the live interview from the topbar to use the recording test.' : undefined}
+                disabled={permission === 'denied' || speakerActive}
+                title={speakerActive ? 'Stop the live session from the topbar to use the recording test.' : undefined}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold rounded-md transition-colors disabled:opacity-40"
                 style={recState === 'recording'
                   ? { color: '#FFFFFF', background: 'var(--danger)', border: '1px solid var(--danger)' }
