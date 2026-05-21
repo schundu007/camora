@@ -1,0 +1,16 @@
+{
+  "name": "coderpad-sync",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "sync": "node sync.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "playwright": "^1.44.0"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.0"
+  }
+}
