@@ -86,7 +86,7 @@ function dedupeByLanguage(codeItems) {
 async function runCodePhase(allItems, state, dryRun) {
   console.log('\n── Phase 1: Code Questions ──────────────────────────');
 
-  const rawCode = allItems.filter((i) => i.type === 'CODE');
+  const rawCode = allItems.filter((i) => i.type === 'CODE' || i.type === 'SOLO');
   console.log(`  ${rawCode.length} CODE items (before language dedup)`);
 
   const deduped = dedupeByLanguage(rawCode);
