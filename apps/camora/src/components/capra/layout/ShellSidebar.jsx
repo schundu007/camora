@@ -65,16 +65,15 @@ export default function ShellSidebar() {
       {/* Logo */}
       <div className={`border-b border-[var(--border)] flex items-center ${isCollapsed ? 'justify-center px-2 py-4' : 'justify-between px-5 py-4'}`}>
         {isCollapsed ? (
-          <Link to="/" className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center hover:scale-105 transition-transform">
-            <Icon name="ascend" size={16} className="text-white" />
+          <Link to="/" className="hover:scale-105 transition-transform" aria-label="Camora — home">
+            <img src="/camora_favicon.png" alt="Camora" width={32} height={32} style={{ borderRadius: 7, display: 'block' }} />
           </Link>
         ) : (
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center">
-              <Icon name="ascend" size={16} className="text-white" />
-            </div>
+          <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity" aria-label="Camora — home">
+            <img src="/camora_favicon.png" alt="Camora" width={32} height={32} style={{ borderRadius: 7, display: 'block', flexShrink: 0 }} />
             <div>
-              <span className="block text-[9px] font-mono uppercase tracking-[0.2em] text-[var(--accent)] -mt-0.5">Apply · Prepare · Practice · Attend</span>
+              <span className="block text-[15px] font-bold tracking-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Camora</span>
+              <span className="block text-[8.5px] font-mono uppercase tracking-[0.18em] -mt-0.5" style={{ color: 'var(--accent)' }}>Apply · Prepare · Practice · Attend</span>
             </div>
           </Link>
         )}

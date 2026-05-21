@@ -1035,34 +1035,6 @@ export default function DocsPage({ onBack }) {
                                   <div className="h-full rounded-full transition-colors duration-1000" style={{ width: `${Math.max(cat.progress, 2)}%`, background: 'var(--accent)' }} />
                                 </div>
 
-                                {/* Category description — always rendered so cards with
-                                    no topics yet (DSA / LLD / Projects on a fresh
-                                    install) still tell the user what the category is
-                                    about. Without this the empty cards in the
-                                    screenshot are blank below the progress bar. */}
-                                {cat.description && (
-                                  <p className="mt-2.5 text-[12.5px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                                    {cat.description}
-                                  </p>
-                                )}
-
-                                {cat.topics.length > 0 && (
-                                  <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
-                                    <ul className="space-y-1">
-                                      {cat.topics.slice(0, 3).map(t => (
-                                        <li key={t.id} className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-                                          <span className="w-1 h-1 rounded-full shrink-0" style={{ background: 'var(--text-dimmed)' }} />
-                                          <span className="truncate">{t.title}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                    {cat.topics.length > 3 && (
-                                      <p className="text-[11px] font-bold mt-2 uppercase tracking-widest" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
-                                        +{cat.topics.length - 3} more
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
                               </div>
                             </Link>
                             );
