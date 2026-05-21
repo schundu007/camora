@@ -57,7 +57,7 @@ export function HomeScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.greeting}>{greet(user?.name)}</Text>
-        <Text style={styles.sub}>Your interview sessions</Text>
+        <Text style={styles.sub}>Your sessions</Text>
 
         {/* Start session CTA */}
         <Pressable

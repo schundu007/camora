@@ -410,7 +410,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
 
   const getStatusText = () => {
     switch (listeningState) {
-      case 'listening': return 'Waiting for interviewer...';
+      case 'listening': return 'Waiting...';
       case 'recording': return 'Recording question...';
       case 'transcribing': return 'Transcribing...';
       case 'answering': return 'Generating answer...';

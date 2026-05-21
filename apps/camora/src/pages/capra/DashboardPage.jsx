@@ -937,7 +937,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
   const modeConfig = {
     coding: { label: 'Coding', color: 'var(--accent)' },
     'system-design': { label: 'System Design', color: 'var(--accent)' },
-    behavioral: { label: 'Interview Prep', color: 'var(--text-muted)' },
+    behavioral: { label: 'Prep', color: 'var(--text-muted)' },
   };
   const currentMode = modeConfig[ascendMode] || modeConfig.coding;
 

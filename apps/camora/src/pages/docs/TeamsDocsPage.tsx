@@ -25,7 +25,7 @@ export default function TeamsDocsPage() {
         <h2 className="text-2xl font-bold mb-4">Overview</h2>
         <p className="text-[15px] leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
           A Camora team is a single billing scope that shares a pool of AI hours across multiple
-          users. The team owner pays the subscription; members get full access to live interview,
+          users. The team owner pays the subscription; members get full access to live session,
           coding helper, and prep generation while the pool has hours remaining.
         </p>
         <DocsCallout variant="tip">

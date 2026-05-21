@@ -147,7 +147,7 @@ export default function AdminLumoraLivePage() {
 
         <h3 id="hld-request-flow" className={sectionH3}>End-to-end request flow</h3>
         <p className={bodyP} style={bodyColor}>
-          The hot path during a live interview is a continuous loop of <em>capture → transcribe →
+          The hot path during a live session is a continuous loop of <em>capture → transcribe →
           decide-to-answer → stream</em>. Each iteration takes between 0.8 s (cache-warm) and 3 s
           (cold), which is short enough that the candidate sees the answer flowing in while the
           interviewer is still talking.
@@ -390,7 +390,7 @@ export default function AdminLumoraLivePage() {
           ship the question text in the request, so it parses the SSE protocol itself: split on{' '}
           <code style={inlineCodeStyle}>\n</code>, accumulate <code style={inlineCodeStyle}>event:</code>{' '}
           and <code style={inlineCodeStyle}>data:</code> lines, fire the named callback on a blank-line
-          boundary. The Zustand store (<code style={inlineCodeStyle}>src/stores/interview-store.ts</code>){' '}
+          boundary. The Zustand store (<code style={inlineCodeStyle}>src/stores/session-store.ts</code>){' '}
           maintains both a <code style={inlineCodeStyle}>streamChunks: string[]</code> array (for
           progressive parsing of <code style={inlineCodeStyle}>[HEADLINE] / [ANSWER] / [CODE]</code>{' '}
           tagged sections) and a flat <code style={inlineCodeStyle}>streamText</code> accumulator

@@ -63,7 +63,7 @@ export default function SignupPage() {
           <div className="mt-6 pt-5" style={{ borderTop: '1px solid var(--border)' }}>
             <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Free account includes</p>
             <div className="space-y-2">
-              {['3 live interview sessions', 'Browse all 415+ prep topics', 'Mock interview practice'].map(item => (
+              {['3 live sessions', 'Browse all 415+ prep topics', 'Practice sessions'].map(item => (
                 <div key={item} className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                   <svg className="w-4 h-4 text-[var(--accent)] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />

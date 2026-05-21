@@ -6,7 +6,7 @@ export default function GettingStartedPage() {
   return (
     <DocsPageLayout
       title="Getting started"
-      description="Sign up, complete onboarding, and run your first interview prep session in under 5 minutes."
+      description="Sign up, complete onboarding, and run your first prep session in under 5 minutes."
       path="/docs/getting-started"
       eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Getting started' }]}
@@ -53,7 +53,7 @@ export default function GettingStartedPage() {
         <DocsCallout variant="tip">
           You can change roles and resume at any time under
           <Link to="/profile" className="text-[var(--accent)] underline ml-1">Profile</Link>. Target
-          company and interview date aren&apos;t collected at sign-up &mdash; you&apos;ll set them
+          company and goal date aren&apos;t collected at sign-up &mdash; you&apos;ll set them
           per-job inside Job Prep / Company Prep when you need them.
         </DocsCallout>
       </section>
@@ -76,13 +76,13 @@ export default function GettingStartedPage() {
           <div className="rounded-lg p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
             <h3 className="text-base font-bold mb-1">Practice</h3>
             <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-              Timed mock interviews (Quick Fire / Deep Dive / Mock), per-company filtering, AI
+              Timed practice sessions (Quick Fire / Deep Dive / Mock), per-company filtering, AI
               graded on a 5-dimension rubric.
               <Link to="/capra/practice" className="text-[var(--accent)] underline ml-1">Open Practice</Link>.
             </p>
           </div>
           <div className="rounded-lg p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-            <h3 className="text-base font-bold mb-1">Live Interview</h3>
+            <h3 className="text-base font-bold mb-1">Live Session</h3>
             <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
               Real-time AI assistance during a Zoom / Meet / Teams interview. Paid tiers.
               <Link to="/lumora" className="text-[var(--accent)] underline ml-1">Open Lumora</Link>.
@@ -118,8 +118,8 @@ export default function GettingStartedPage() {
         <h2 className="text-2xl font-bold mb-3">Next steps</h2>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li><Link to="/docs/prepare" className="text-[var(--accent)] underline">Prepare</Link> &mdash; what&apos;s in the topic library.</li>
-          <li><Link to="/docs/practice" className="text-[var(--accent)] underline">Practice</Link> &mdash; timed mock interviews and AI grading.</li>
-          <li><Link to="/docs/lumora-live" className="text-[var(--accent)] underline">Live Interview</Link> &mdash; connecting audio for a live session.</li>
+          <li><Link to="/docs/practice" className="text-[var(--accent)] underline">Practice</Link> &mdash; timed practice sessions and AI grading.</li>
+          <li><Link to="/docs/lumora-live" className="text-[var(--accent)] underline">Live Session</Link> &mdash; connecting audio for a live session.</li>
           <li><Link to="/pricing" className="text-[var(--accent)] underline">Pricing</Link> &mdash; pick a plan with more AI hours.</li>
         </ul>
       </section>

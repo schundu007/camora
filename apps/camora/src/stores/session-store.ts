@@ -1,0 +1,393 @@
+/**
+ * Zustand store for live session state.
+ */
+
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { ParsedBlock, Citation } from '@/types';
+
+interface HistoryEntry {
+  question: string;
+  blocks: ParsedBlock[];
+  timestamp: Date;
+  messageId?: string;
+  conversationId?: string;
+}
+
+interface SessionState {
+  // Current conversation
+  conversationId: string | null;
+  question: string | null;
+  isStreaming: boolean;
+  isDesignQuestion: boolean;
+  isCodingQuestion: boolean;
+  streamChunks: string[];  // kept for backward compat reads
+  streamText: string;      // efficient string accumulator
+  parsedBlocks: ParsedBlock[];
+  error: string | null;
+
+  // Status
+  status: {
+    state: 'idle' | 'ready' | 'listen' | 'transcribe' | 'search' | 'write' | 'error' | 'warn';
+    message: string;
+  };
+
+  // Audio
+  audioLevel: number;
+  threshold: number;
+  isRecording: boolean;
+
+  // Timers (in milliseconds)
+  listenStartTime: number | null;
+  listenDuration: number;
+  answerStartTime: number | null;
+  answerDuration: number;
+
+  // History
+  history: HistoryEntry[];
+
+  // Settings
+  useSearch: boolean;
+  responseFormat: 'auto' | 'concise' | 'detailed' | 'star';
+  preferredModel: string; // '' = default Claude; 'gpt-4o' / 'gpt-4o-mini' / 'gemini-1.5-flash' etc.
+
+  // Voice enrollment
+  voiceMode: 'filter-candidate' | 'record-speaker';
+  voiceEnrolled: boolean;
+  voiceEnrolledAt: number | null; // ms epoch — used to nudge re-enroll after ~7d
+  voiceFilterEnabled: boolean;
+  isEnrolling: boolean;
+  autoEnrollPending: boolean; // true when record-speaker is waiting for first audio chunk
+
+  // Claude model preferences. Per-surface (coding/behavioral/design/prep)
+  // so the user can pick "Haiku for coding speed, Sonnet for design depth"
+  // independently. Empty string = use Camora's recommended default for
+  // that surface (see DEFAULT_MODELS in lib/claude-models.ts). The chosen
+  // ID rides with every /solve and /stream request — backend honors it
+  // and falls back to env/default if unset.
+  modelOverrides: {
+    coding: string;
+    behavioral: string;
+    design: string;
+    prep: string;
+  };
+
+  // Speaker audio (tab/system audio capture — the dedicated speaker
+  // stream). Distinct from the user's own mic. When `active` is false,
+  // Lumora cannot hear the speaker at all.
+  speakerAudio: {
+    active: boolean;
+    level: number;
+    error: string | null;
+    everConnected: boolean; // true after first successful connect this session
+  };
+
+  // Voice routing state for Coding/Design tabs. The same mic feeds two
+  // sinks during a session:
+  //   'problem'  — the next utterance is treated as the problem statement
+  //                (fills the textarea + auto-fires the solver)
+  //   'followup' — the next utterance is a follow-up question for Sona
+  //                (routed to the AI companion's ask())
+  // Auto-flips: 'problem' → 'followup' when the solver fires.
+  // 'followup' → 'problem' when the user clicks New Problem / Reset.
+  // Behavioral and session tabs ignore this — Sona owns audio there.
+  voiceRoute: 'problem' | 'followup';
+
+  // Citations from the RAG retrieval step for the active streaming answer.
+  // Populated by the `citations` SSE event (emitted before the first token)
+  // and cleared when a new question starts. Empty array = no citations for
+  // this answer (retrieval returned nothing or RAG is disabled).
+  activeCitations: Citation[];
+
+  // Whether the most recent answer event arrived as a cache hit. Surfaces
+  // a "Loaded from cache" badge in Coding / Design / Sona answer
+  // headers, paired with a "Regenerate" button that re-runs the
+  // request with bypass_cache=true. null means we haven't seen an
+  // answer yet this session (or the user just clicked New Problem).
+  lastFromCache: boolean | null;
+
+  // Live solve context — the coding/design problem the user just
+  // solved on the active surface, plus enough of the solution for
+  // Sona to ground follow-up Q&A in the same code path. CodingLayout
+  // / DesignLayout write here when a solution lands; New Problem /
+  // Reset clear it. AICompanionPanel reads it when sending a
+  // question to Sona so the model knows "the user just solved THIS,
+  // and is now asking about it" instead of starting from scratch.
+  liveSolveContext: {
+    surface: 'coding' | 'design';
+    problem: string;
+    approach: string;
+    complexity: string;
+    code: string;
+    language: string;
+    solvedAt: number;
+  } | null;
+
+  // Stealth mode — hides live answers on-screen during interview
+  isStealthActive: boolean;
+
+  // Sona response verbosity — shared across AICompanionPanel and ScreenshotStrip
+  answerMode: 'short' | 'detailed';
+
+  // Sona panel actions — registered by AICompanionPanel, consumed by ScreenshotStrip
+  sonaExport: (() => void) | null;
+  sonaClear: (() => void) | null;
+  sonaClose: (() => void) | null;
+  sonaHasMessages: boolean;
+
+  // Actions
+  setConversationId: (id: string | null) => void;
+  setQuestion: (question: string | null) => void;
+  setIsStreaming: (isStreaming: boolean) => void;
+  setIsDesignQuestion: (isDesign: boolean) => void;
+  setIsCodingQuestion: (isCoding: boolean) => void;
+  appendStreamChunk: (chunk: string) => void;
+  clearStreamChunks: () => void;
+  setParsedBlocks: (blocks: ParsedBlock[]) => void;
+  setError: (error: string | null) => void;
+  setStatus: (state: SessionState['status']['state'], message: string) => void;
+  setAudioLevel: (level: number) => void;
+  setThreshold: (threshold: number) => void;
+  setIsRecording: (isRecording: boolean) => void;
+  startListenTimer: () => void;
+  stopListenTimer: () => void;
+  startAnswerTimer: () => void;
+  stopAnswerTimer: () => void;
+  addHistoryEntry: (entry: HistoryEntry) => void;
+  updateLastHistoryMessageId: (messageId: string, conversationId: string) => void;
+  removeHistoryEntry: (index: number) => void;
+  clearHistory: () => void;
+  setUseSearch: (useSearch: boolean) => void;
+  setResponseFormat: (format: 'auto' | 'concise' | 'detailed' | 'star') => void;
+  setPreferredModel: (model: string) => void;
+  setVoiceMode: (mode: 'filter-candidate' | 'record-speaker') => void;
+  setVoiceEnrolled: (enrolled: boolean) => void;
+  ensureVoiceEnrolledAt: () => void;
+  setVoiceFilterEnabled: (enabled: boolean) => void;
+  setModelOverride: (surface: 'coding' | 'behavioral' | 'design' | 'prep', modelId: string) => void;
+  setIsEnrolling: (enrolling: boolean) => void;
+  setAutoEnrollPending: (pending: boolean) => void;
+  setSpeakerAudio: (patch: Partial<SessionState['speakerAudio']>) => void;
+  setVoiceRoute: (route: 'problem' | 'followup') => void;
+  setActiveCitations: (citations: Citation[]) => void;
+  setLastFromCache: (fromCache: boolean | null) => void;
+  setLiveSolveContext: (ctx: SessionState['liveSolveContext']) => void;
+  setIsStealthActive: (v: boolean) => void;
+  setAnswerMode: (mode: 'short' | 'detailed') => void;
+  setSonaActions: (actions: { export: (() => void) | null; clear: (() => void) | null; close: (() => void) | null; hasMessages: boolean }) => void;
+  reset: () => void;
+}
+
+const initialState = {
+  conversationId: null,
+  question: null,
+  isStreaming: false,
+  isDesignQuestion: false,
+  isCodingQuestion: false,
+  streamChunks: [],
+  streamText: '',
+  parsedBlocks: [],
+  error: null,
+  status: {
+    state: 'idle' as const,
+    message: 'Ready to assist',
+  },
+  audioLevel: 0,
+  threshold: 0.015, // Higher threshold to avoid false voice detection from background noise
+  isRecording: false,
+  listenStartTime: null,
+  listenDuration: 0,
+  answerStartTime: null,
+  answerDuration: 0,
+  history: [],
+  useSearch: false,
+  responseFormat: 'auto' as const,
+  preferredModel: '',
+  voiceMode: 'filter-candidate' as const,
+  voiceEnrolled: false,
+  voiceEnrolledAt: null as number | null,
+  // Default OFF — turning the filter on without enrollment makes
+  // AudioCapture fail closed (it can't filter what it hasn't sampled).
+  // The auto-enroll flow flips this to true on a successful first chunk.
+  voiceFilterEnabled: false,
+  // Empty strings → backend uses Camora's recommended default per surface.
+  modelOverrides: { coding: '', behavioral: '', design: '', prep: '' },
+  isEnrolling: false,
+  autoEnrollPending: false,
+  speakerAudio: {
+    active: false,
+    level: 0,
+    error: null as string | null,
+    everConnected: false,
+  },
+  voiceRoute: 'problem' as const,
+  activeCitations: [] as Citation[],
+  lastFromCache: null as boolean | null,
+  liveSolveContext: null as SessionState['liveSolveContext'],
+  isStealthActive: false,
+  answerMode: 'short' as const,
+  sonaExport: null as (() => void) | null,
+  sonaClear: null as (() => void) | null,
+  sonaClose: null as (() => void) | null,
+  sonaHasMessages: false,
+};
+
+export const useSessionStore = create<SessionState>()(
+  persist(
+    (set) => ({
+      ...initialState,
+
+      setConversationId: (id) => set({ conversationId: id }),
+
+  setQuestion: (question) => set({ question }),
+
+  setIsStreaming: (isStreaming) => set({ isStreaming }),
+
+  setIsDesignQuestion: (isDesign) => set({ isDesignQuestion: isDesign }),
+
+  setIsCodingQuestion: (isCoding) => set({ isCodingQuestion: isCoding }),
+
+  appendStreamChunk: (chunk) =>
+    set((state) => ({
+      streamText: state.streamText + chunk,
+    })),
+
+  clearStreamChunks: () => set({ streamChunks: [], streamText: '' }),
+
+  setParsedBlocks: (blocks) => set({ parsedBlocks: blocks }),
+
+  setError: (error) => set({ error }),
+
+  setStatus: (state, message) =>
+    set({
+      status: { state, message },
+    }),
+
+  setAudioLevel: (level) => set({ audioLevel: level }),
+
+  setThreshold: (threshold) => set({ threshold }),
+
+  setIsRecording: (isRecording) => set({ isRecording }),
+
+  startListenTimer: () => set({ listenStartTime: Date.now(), listenDuration: 0 }),
+
+  stopListenTimer: () =>
+    set((state) => ({
+      listenDuration: state.listenStartTime ? Date.now() - state.listenStartTime : 0,
+      listenStartTime: null,
+    })),
+
+  startAnswerTimer: () => set({ answerStartTime: Date.now(), answerDuration: 0 }),
+
+  stopAnswerTimer: () =>
+    set((state) => ({
+      answerDuration: state.answerStartTime ? Date.now() - state.answerStartTime : 0,
+      answerStartTime: null,
+    })),
+
+  addHistoryEntry: (entry) =>
+    set((state) => {
+      const updated = [...state.history, entry];
+      // Cap at 30 entries to prevent localStorage quota issues
+      return { history: updated.length > 30 ? updated.slice(-30) : updated };
+    }),
+
+  updateLastHistoryMessageId: (messageId, conversationId) =>
+    set((state) => {
+      if (state.history.length === 0) return state;
+      const updated = [...state.history];
+      updated[updated.length - 1] = { ...updated[updated.length - 1], messageId, conversationId };
+      return { history: updated };
+    }),
+
+  removeHistoryEntry: (index) =>
+    set((state) => ({
+      history: state.history.filter((_, i) => i !== index),
+    })),
+
+  clearHistory: () => set({ history: [] }),
+
+  setUseSearch: (useSearch) => set({ useSearch }),
+  setResponseFormat: (responseFormat) => set({ responseFormat }),
+
+  setVoiceMode: (mode) => set({ voiceMode: mode }),
+
+  setVoiceEnrolled: (enrolled) =>
+    set(() => ({
+      voiceEnrolled: enrolled,
+      // Stamp the time on enroll so we can surface a "refresh enrollment"
+      // nudge after ~7d (Resemblyzer embeddings drift with mic / room
+      // changes — re-enrollment fixes the leak symptom). Clear when the
+      // user explicitly unenrolls so a fresh enroll starts a fresh clock.
+      voiceEnrolledAt: enrolled ? Date.now() : null,
+    })),
+
+  // Backfill for users who enrolled before the timestamp existed —
+  // start their 7d clock from "first time we noticed", not from a
+  // bogus epoch-zero that would mark every legacy user as stale.
+  ensureVoiceEnrolledAt: () =>
+    set((state) =>
+      state.voiceEnrolled && !state.voiceEnrolledAt
+        ? { voiceEnrolledAt: Date.now() }
+        : {},
+    ),
+
+  setVoiceFilterEnabled: (enabled) => set({ voiceFilterEnabled: enabled }),
+  setModelOverride: (surface, modelId) =>
+    set((state) => ({ modelOverrides: { ...state.modelOverrides, [surface]: modelId } })),
+
+  setIsEnrolling: (enrolling) => set({ isEnrolling: enrolling }),
+
+  setAutoEnrollPending: (pending) => set({ autoEnrollPending: pending }),
+
+  setSpeakerAudio: (patch) =>
+    set((state) => ({ speakerAudio: { ...state.speakerAudio, ...patch } })),
+
+  setVoiceRoute: (route) => set({ voiceRoute: route }),
+  setActiveCitations: (citations) => set({ activeCitations: citations }),
+  setLastFromCache: (fromCache) => set({ lastFromCache: fromCache }),
+  setLiveSolveContext: (ctx) => set({ liveSolveContext: ctx }),
+
+  setPreferredModel: (preferredModel) => set({ preferredModel }),
+
+  setIsStealthActive: (v) => set({ isStealthActive: v }),
+  setAnswerMode: (mode) => set({ answerMode: mode }),
+  setSonaActions: ({ export: exp, clear, close, hasMessages }) => set({
+    sonaExport: exp,
+    sonaClear: clear,
+    sonaClose: close,
+    sonaHasMessages: hasMessages,
+  }),
+
+  reset: () => set(initialState),
+    }),
+    {
+      name: 'lumora-session-store',
+      version: 3,
+      partialize: (state) => ({
+        useSearch: state.useSearch,
+        responseFormat: state.responseFormat,
+        preferredModel: state.preferredModel,
+        threshold: state.threshold,
+        history: state.history,
+        voiceMode: state.voiceMode,
+        voiceEnrolled: state.voiceEnrolled,
+        voiceEnrolledAt: state.voiceEnrolledAt,
+        voiceFilterEnabled: state.voiceFilterEnabled,
+        modelOverrides: state.modelOverrides,
+      }),
+      migrate: (old: any) => ({
+        useSearch: old?.useSearch ?? false,
+        responseFormat: old?.responseFormat ?? 'auto',
+        preferredModel: old?.preferredModel ?? '',
+        threshold: old?.threshold ?? 0.015,
+        history: old?.history ?? [],
+        voiceMode: old?.voiceMode ?? 'filter-candidate',
+        voiceEnrolled: old?.voiceEnrolled ?? false,
+        voiceEnrolledAt: old?.voiceEnrolledAt ?? null,
+        voiceFilterEnabled: old?.voiceFilterEnabled ?? false,
+        modelOverrides: old?.modelOverrides ?? { coding: '', behavioral: '', design: '', prep: '' },
+      }),
+    }
+  )
+);

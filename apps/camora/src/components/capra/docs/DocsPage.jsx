@@ -69,7 +69,7 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.co
 
 /**
  * Documentation Page with Sidebar Navigation and Topic Details
- * Original educational content for interview preparation
+ * Original educational content for preparation
  */
 export default function DocsPage({ onBack }) {
   const { isMobile } = useIsMobile();
@@ -142,7 +142,7 @@ export default function DocsPage({ onBack }) {
   const projectCategories = heavyData.projectCategories || [];
   const projectCategoryMap = heavyData.projectCategoryMap || {};
   const projectTopics = heavyData.projectTopics || [];
-  // SRE — primary-source-grounded interview prep, lazy-loaded via the
+  // SRE — primary-source-grounded prep, lazy-loaded via the
   // `sre` chunk in loader.js. Topics live in sreTopics.js; diagrams at
   // /diagrams/sre/*.png.
   const sreCategories = heavyData.sreCategories || [];
@@ -868,7 +868,7 @@ export default function DocsPage({ onBack }) {
                               PREPARE
                             </p>
                             <h1 className="font-bold tracking-tight text-3xl md:text-5xl lg:text-6xl mb-3 text-white" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.05 }}>
-                              {user?.name ? <>Welcome back, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>{user.name.split(' ')[0]}</span>.</> : <>Your interview prep, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>organized.</span></>}
+                              {user?.name ? <>Welcome back, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>{user.name.split(' ')[0]}</span>.</> : <>Your prep, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>organized.</span></>}
                             </h1>
                             <p className="text-base md:text-lg max-w-2xl" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.55 }}>
                               {overviewTotalTopics}+ topics across {overviewCategories.length} categories — coding, system design, behavioral, low-level design, and more.
@@ -959,7 +959,7 @@ export default function DocsPage({ onBack }) {
                               >
                                 <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>PRACTICE</span>
                                 <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Run a timed mock</h3>
-                                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>AI-scored mock interview with instant feedback.</p>
+                                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>AI-scored practice session with instant feedback.</p>
                               </Link>
                             </div>
                           </div>
@@ -1159,7 +1159,7 @@ export default function DocsPage({ onBack }) {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { title: 'Before the Interview', items: interviewCheatsheet.before, icon: 'clipboard', hexColor: 'navy',    step: 'Prep' },
+                            { title: 'Before Your Session', items: interviewCheatsheet.before, icon: 'clipboard', hexColor: 'navy',    step: 'Prep' },
                             { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play',      hexColor: 'gold',    step: 'Execute' },
                             { title: 'After the Interview',  items: interviewCheatsheet.after,  icon: 'check',     hexColor: 'navy-dk', step: 'Follow up' },
                           ].map((card) => (

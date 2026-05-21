@@ -187,7 +187,7 @@ const sections: NavSection[] = [
   {
     title: 'Attend',
     items: [
-      { label: 'Live Interview', path: '/lumora', icon: icons.mic },
+      { label: 'Live Session', path: '/lumora', icon: icons.mic },
     ],
   },
   {

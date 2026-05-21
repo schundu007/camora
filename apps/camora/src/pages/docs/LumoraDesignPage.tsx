@@ -24,7 +24,7 @@ export default function LumoraDesignDocsPage() {
         { id: 'diagram', label: 'The architecture diagram' },
         { id: 'detail-level', label: 'Detail level' },
         { id: 'sona-sidebar', label: 'Sona follow-up sidebar' },
-        { id: 'tips', label: 'Tips for live interviews' },
+        { id: 'tips', label: 'Tips for live sessions' },
       ]}
     >
       <section id="what-it-does" className="mb-12 scroll-mt-24">
@@ -147,7 +147,7 @@ export default function LumoraDesignDocsPage() {
       </section>
 
       <section id="tips" className="mb-10 scroll-mt-24">
-        <h2 className={sectionH2}>Tips for live interviews</h2>
+        <h2 className={sectionH2}>Tips for live sessions</h2>
         <ul className="list-disc pl-6 space-y-2 text-[15px] mb-3" style={bodyColor}>
           <li>Submit the moment you&apos;ve heard the question. The architecture diagram needs a
             few seconds to render &mdash; early submission means it&apos;s ready when you start
@@ -163,9 +163,9 @@ export default function LumoraDesignDocsPage() {
             answer instead of re-asking the whole question.</li>
         </ul>
         <p className={bodyP} style={bodyColor}>
-          Live interview setup, audio capture, and Cmd+B safety are documented in
+          Live session setup, audio capture, and Cmd+B safety are documented in
           <Link to="/docs/lumora-live" className="text-[var(--accent)] underline ml-1">
-            Live Interview
+            Live Session
           </Link>.
         </p>
       </section>

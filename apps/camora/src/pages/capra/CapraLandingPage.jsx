@@ -6,7 +6,7 @@ export default function CapraLandingPage() {
   const { loading } = useAuth();
 
   useEffect(() => {
-    document.title = 'Interview Prep | Camora';
+    document.title = 'Prep | Camora';
     return () => { document.title = 'Camora'; };
   }, []);
 

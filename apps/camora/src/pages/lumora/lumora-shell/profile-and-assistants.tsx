@@ -193,7 +193,7 @@ export const LumoraProfilePage = () => {
             <div className="flex items-center justify-between px-4 py-3">
               <div>
                 <span className="text-xs font-medium block" style={{ color: 'var(--text-primary)' }}>Answer Mode</span>
-                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Short for live interviews, detailed for practice</span>
+                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Short for live sessions, detailed for practice</span>
               </div>
               <select className="text-xs px-3 py-1.5 rounded-lg" style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
                 <option>Short</option>
@@ -340,7 +340,7 @@ export const AssistantsPage = () => {
       <div className="flex items-center justify-between mb-2">
         <span className="hidden" />
       </div>
-      <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Add your resume and job description so AI personalizes answers to your background during live interviews.</p>
+      <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Add your resume and job description so AI personalizes answers to your background during live sessions.</p>
       {showCreate && (
         <div className="mb-6 p-5 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <div className="grid grid-cols-3 gap-3 mb-3">

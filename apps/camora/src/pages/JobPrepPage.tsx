@@ -30,7 +30,7 @@ const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 const PREP_SECTIONS = [
-  { key: 'pitch', label: 'Elevator Pitch', description: 'A personalized 2-3 minute interview pitch', icon: '🎯' },
+  { key: 'pitch', label: 'Elevator Pitch', description: 'A personalized 2-3 minute intro pitch', icon: '🎯' },
   { key: 'hr', label: 'HR Questions', description: 'Salary negotiation, availability, culture fit', icon: '🤝' },
   { key: 'hiring-manager', label: 'Hiring Manager Questions', description: 'Role-specific technical and behavioral questions', icon: '👔' },
   { key: 'coding', label: 'Coding Questions', description: 'Likely coding problems based on the tech stack', icon: '💻' },
@@ -258,7 +258,7 @@ export default function JobPrepPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // AI Interview Prep state
+  // AI Prep state
   const [generating, setGenerating] = useState(false);
   const [generatedSections, setGeneratedSections] = useState<Record<string, any>>({});
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -339,7 +339,7 @@ export default function JobPrepPage() {
                 }));
               }
             } catch (parseErr: any) {
-              if (parseErr.message && parseErr.message !== 'Failed to generate interview prep material. Please try again.') {
+              if (parseErr.message && parseErr.message !== 'Failed to generate prep material. Please try again.') {
                 throw parseErr; // Re-throw real errors, not JSON parse errors
               }
             }
@@ -347,7 +347,7 @@ export default function JobPrepPage() {
         }
       }
     } catch (err: any) {
-      setPrepError(err.message || 'Failed to generate interview prep material. Please try again.');
+      setPrepError(err.message || 'Failed to generate prep material. Please try again.');
     } finally {
       setGenerating(false);
     }
@@ -738,7 +738,7 @@ export default function JobPrepPage() {
             ))}
           </section>
 
-          {/* ── JD based Interview Preparation ── */}
+          {/* ── JD based Prep ── */}
           <section style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
             <div className="flex items-start justify-between mb-3">
               <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, fontFamily: "var(--font-sans)", display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1114,7 +1114,7 @@ export default function JobPrepPage() {
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
               </div>
               <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1">Upgrade to Generate Prep Material</h3>
-              <p className="text-sm text-[var(--text-muted)]">AI-powered interview prep tailored to this specific job</p>
+              <p className="text-sm text-[var(--text-muted)]">smart prep tailored to this specific job</p>
             </div>
             <div className="mb-6">
               <SharedPricingCards variant="compact" showFree={false} />
@@ -1527,7 +1527,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
             )}
             {t.interviewQuestions && Array.isArray(t.interviewQuestions) && (
               <div>
-                <h4 style={S.h4}>Likely Interview Questions</h4>
+                <h4 style={S.h4}>Likely Practice Questions</h4>
                 {t.interviewQuestions.map((q: any, j: number) => (
                   <div key={j} style={{ marginBottom: '12px', marginLeft: '20px' }}>
                     <p style={{ ...S.p, fontWeight: 600, margin: '0 0 4px' }}>{typeof q === 'string' ? q : q.question}</p>

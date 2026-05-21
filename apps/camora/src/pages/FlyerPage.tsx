@@ -153,7 +153,7 @@ export default function FlyerPage() {
                   maxWidth: isLandscape ? 480 : '100%',
                 }}
               >
-                Real-time AI during live interviews. 1,400+ curated prep topics. Multi-language coding playground.
+                Real-time AI during live sessions. 1,400+ curated prep topics. Multi-language coding playground.
                 Built by engineers who failed enough interviews to want better tools.
               </p>
             </div>

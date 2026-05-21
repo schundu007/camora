@@ -6,7 +6,7 @@ export default function PrepareDocsPage() {
   return (
     <DocsPageLayout
       title="Prepare"
-      description="Browse 1,400+ interview prep topics across 9 categories, generate company-specific prep, and use the SQL Playground and Resume Optimizer."
+      description="Browse 1,400+ prep topics across 9 categories, generate company-specific prep, and use the SQL Playground and Resume Optimizer."
       path="/docs/prepare"
       eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Prepare' }]}

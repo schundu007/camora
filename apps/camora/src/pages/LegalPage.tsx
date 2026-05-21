@@ -35,7 +35,7 @@ const DOCS: Record<string, LegalDoc> = {
     title: 'Terms of Service',
     eyebrow: 'Legal · Terms',
     intro:
-      'These Terms of Service govern your access to and use of Camora — including the Lumora live-interview AI co-pilot, Capra preparation surfaces, and any related Cariara, Inc. products. By creating an account or using the service you agree to these terms.',
+      'These Terms of Service govern your access to and use of Camora — including the Lumora live-session AI, Capra preparation surfaces, and any related Cariara, Inc. products. By creating an account or using the service you agree to these terms.',
     effective: 'Effective date: January 1, 2026',
     sections: [
       {
@@ -48,7 +48,7 @@ const DOCS: Record<string, LegalDoc> = {
       {
         heading: '2. Acceptable use',
         body: [
-          'You agree not to use Camora to generate, distribute, or facilitate content that is unlawful, infringing, or harmful. AI-assisted answers during live interviews are provided for educational and preparatory purposes — you remain responsible for honest representation of your capabilities to your interviewer.',
+          'You agree not to use Camora to generate, distribute, or facilitate content that is unlawful, infringing, or harmful. AI-assisted answers during live sessions are provided for educational and preparatory purposes — you remain responsible for honest representation of your capabilities.',
           'You may not reverse-engineer, scrape, or attempt to extract the underlying models, prompts, or proprietary curriculum.',
         ],
       },
@@ -86,7 +86,7 @@ const DOCS: Record<string, LegalDoc> = {
     title: 'Privacy Policy',
     eyebrow: 'Legal · Privacy',
     intro:
-      'This Privacy Policy explains what information Cariara, Inc. collects when you use Camora, why we collect it, how we use it, and the controls you have over your data. We treat the audio captured during live interviews with particular care.',
+      'This Privacy Policy explains what information Cariara, Inc. collects when you use Camora, why we collect it, how we use it, and the controls you have over your data. We treat the audio captured during live sessions with particular care.',
     effective: 'Effective date: January 1, 2026',
     sections: [
       {

@@ -1671,7 +1671,7 @@ export default function Blind75Page() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--accent)', margin: 0 }}>Before the Interview</h3>
+                <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--accent)', margin: 0 }}>Before Your Session</h3>
                 <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 500, marginLeft: 'auto' }}>
                   {interviewCheatsheet.before.length} items
                 </span>
