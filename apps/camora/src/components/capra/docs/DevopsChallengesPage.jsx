@@ -427,7 +427,7 @@ export default function DevopsChallengesPage({ challenges = [] }) {
               Interview Q&amp;A
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              355 multiple-choice questions across 10 DevOps domains — AI-generated from real interview topics
+              AI-generated MCQ quiz across 10 DevOps domains — test your knowledge
             </div>
           </div>
           <button

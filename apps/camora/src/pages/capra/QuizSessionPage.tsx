@@ -86,6 +86,18 @@ function QuestionSkeleton() {
   );
 }
 
+// ─── Domain category groupings ───────────────────────────────────────────────
+
+const DOMAIN_CATS: { label: string; value: string; domains: string[] }[] = [
+  { label: 'All Topics', value: '', domains: [] },
+  { label: 'DevOps', value: 'devops', domains: ['docker','kubernetes','ansible','terraform','linux','bash','git','jenkins','helm','prometheus','grafana','elastic stack','chef','puppet','nagios','vault'] },
+  { label: 'Cloud', value: 'cloud', domains: ['aws','azure','gcp'] },
+  { label: 'Languages', value: 'lang', domains: ['python','javascript','java','c#','c++','go','c','ruby','rust','kotlin','swift','typescript','scala','r','php','perl','flutter','dart'] },
+  { label: 'Frontend', value: 'frontend', domains: ['angular 2+','angularjs','react','vue.js','html','css'] },
+  { label: 'Data', value: 'data', domains: ['data science','sql','apache spark','machine learning','elasticsearch','cassandra / nosql','mongodb','redis','dataset analysis'] },
+  { label: 'Backend', value: 'backend', domains: ['django','node.js','spring','express','rest api','cyber security','android'] },
+];
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function QuizSessionPage() {
@@ -164,13 +176,13 @@ export default function QuizSessionPage() {
     }
   }, [countParam, domainParam, diffFilter]);
 
-  // ── Mount ───────────────────────────────────────────────────────────────────
+  // ── Mount / filter change ───────────────────────────────────────────────────
   useEffect(() => {
     const pool = buildPool();
     setMetaPool(pool);
     fetchQuestions(pool);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [domainParam, diffFilter, countParam]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   function selectOption(qId: string, letter: string) {
@@ -195,6 +207,26 @@ export default function QuizSessionPage() {
   function handleRetry() {
     fetchQuestions(metaPool);
   }
+
+  function handleNewQuiz(catValue: string, diff: string | null) {
+    const params = new URLSearchParams();
+    params.set('count', String(countParam));
+    if (catValue) {
+      const cat = DOMAIN_CATS.find(c => c.value === catValue);
+      if (cat && cat.domains.length > 0) params.set('domain', cat.domains.join(','));
+    }
+    if (diff) params.set('difficulty', diff);
+    navigate(`/capra/quiz/session?${params.toString()}`);
+  }
+
+  // Derive active category from current domain filters
+  const activeCat = (() => {
+    if (domainFilters.length === 0) return '';
+    for (const cat of DOMAIN_CATS) {
+      if (cat.domains.length > 0 && cat.domains.some(d => domainFilters.includes(d))) return cat.value;
+    }
+    return '';
+  })();
 
   // ── Derived data ─────────────────────────────────────────────────────────────
   const q       = questions[currentIndex];
@@ -579,9 +611,68 @@ export default function QuizSessionPage() {
 
   const qMeta = metaPool.find(p => p.id === q.id);
 
+  const chipBase: React.CSSProperties = {
+    padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+    letterSpacing: '0.03em', border: '1px solid transparent',
+    cursor: 'pointer', whiteSpace: 'nowrap' as const, transition: 'all 0.12s',
+  };
+  const chipActive: React.CSSProperties = {
+    ...chipBase,
+    background: 'var(--cam-gold-leaf, #d4af37)', color: '#000',
+    border: '1px solid var(--cam-gold-leaf, #d4af37)',
+  };
+  const chipInactive: React.CSSProperties = {
+    ...chipBase,
+    background: 'var(--bg-elevated)', color: 'var(--text-secondary)',
+    border: '1px solid var(--border)',
+  };
+
+  const DIFF_OPTS = ['easy', 'medium', 'hard'];
+
   return (
     <div style={{ background: 'var(--bg-app)', minHeight: '100%', color: 'var(--text-primary)' }}>
       <HeaderBar />
+
+      {/* ── Filter bar ─────────────────────────────────────────────────────────── */}
+      <div style={{
+        borderBottom: '1px solid var(--border)',
+        background: 'var(--bg-app)',
+        padding: '10px 24px',
+        display: 'flex', flexDirection: 'column', gap: 8,
+      }}>
+        {/* Domain category chips */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 2 }}>Topic</span>
+          {DOMAIN_CATS.map(cat => (
+            <button
+              key={cat.value}
+              style={activeCat === cat.value ? chipActive : chipInactive}
+              onClick={() => handleNewQuiz(cat.value, diffFilter)}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+        {/* Difficulty chips */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 2 }}>Level</span>
+          <button
+            style={!diffFilter ? chipActive : chipInactive}
+            onClick={() => handleNewQuiz(activeCat, null)}
+          >
+            All
+          </button>
+          {DIFF_OPTS.map(d => (
+            <button
+              key={d}
+              style={diffFilter === d ? chipActive : chipInactive}
+              onClick={() => handleNewQuiz(activeCat, d)}
+            >
+              {d.charAt(0).toUpperCase() + d.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '36px 24px 80px' }}>
 

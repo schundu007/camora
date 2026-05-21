@@ -173,6 +173,8 @@ const sections: NavSection[] = [
       { label: 'Projects', path: '/capra/prepare/projects', icon: icons.folder },
       { label: 'Roadmaps', path: '/capra/prepare/roadmaps', icon: icons.map },
       { label: 'Eng Blogs', path: '/capra/prepare/eng-blogs', icon: icons.book },
+      { label: 'DevOps', path: '/capra/prepare/devops', icon: icons.devops },
+      { label: 'SRE', path: '/capra/prepare/sre', icon: icons.sre },
     ],
   },
   {

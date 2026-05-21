@@ -216,17 +216,21 @@ export default function DevopsChallengeDetail({ challenge, onBack }) {
       {/* Problem description */}
       <section>
         <SectionHeading>Problem</SectionHeading>
-        <p
-          style={{
-            fontSize: 15,
-            color: 'var(--text-secondary)',
-            lineHeight: 1.7,
-            marginTop: 0,
-            marginBottom: 0,
-          }}
-        >
-          {challenge.description}
-        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {(challenge.description || '').split('\n\n').map((para, i) => (
+            <p
+              key={i}
+              style={{
+                fontSize: 15,
+                color: 'var(--text-secondary)',
+                lineHeight: 1.7,
+                margin: 0,
+              }}
+            >
+              {para}
+            </p>
+          ))}
+        </div>
       </section>
 
       <SectionDivider />
