@@ -72,7 +72,14 @@
         "CAMERA"
       ]
     },
+    "updates": {
+      "url": "https://u.expo.dev/d04d0688-d12b-42e3-95ae-77c84856b365"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "plugins": [
+      "expo-updates",
       "expo-secure-store",
       [
         "expo-av",
