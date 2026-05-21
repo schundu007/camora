@@ -1168,9 +1168,9 @@ img { max-width: 100%; height: auto; }
   transition: transform 180ms ease-out, box-shadow 180ms ease-out, border-color 180ms ease-out;
 }
 .session-row:hover {
-  transform: translateY(-1px);
-  border-color: rgba(38,97,156,0.32) !important;
-  box-shadow: 0 8px 22px rgba(38,97,156,0.16);
+  transform: translateY(-2px);
+  border-color: rgba(38,97,156,0.40) !important;
+  box-shadow: 0 10px 28px rgba(38,97,156,0.22);
 }
 /* Delete button in session rows — hover handled via CSS */
 .session-delete-btn:hover {

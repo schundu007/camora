@@ -492,7 +492,7 @@ export const LumoraShellPage = () => {
               affordance as the SHORT/DETAILED toggle for consistency
               across the app. */}
           <div
-            className="hidden md:flex items-center gap-1 p-1 rounded-lg shrink-0"
+            className="hidden md:flex items-center gap-1 p-1.5 rounded-lg shrink-0"
             style={{
               background: 'var(--lumora-chrome-bg)',
               border: '1px solid var(--lumora-chrome-border)',
@@ -738,7 +738,7 @@ export const LumoraShellPage = () => {
                 }}
               >
                 <div className="max-w-3xl mx-auto px-6 py-8 w-full relative">
-                  <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ textShadow: '0 0 20px rgba(255,255,255,0.12)' }}>Sessions</h2>
+                  <h2 className="text-4xl font-extrabold mb-2 text-white" style={{ textShadow: '0 0 28px rgba(255,255,255,0.14)' }}>Sessions</h2>
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
                     Your interview session history — <span className="font-bold" style={{ color: 'var(--cam-gold-leaf-lt)', textShadow: '0 0 14px rgba(217,181,67,0.45)' }}>{history.length}</span> saved.
                   </p>
@@ -766,7 +766,7 @@ export const LumoraShellPage = () => {
                         className="absolute inset-0 rounded-full animate-ping"
                         style={{ background: 'rgba(38,97,156,0.10)' }}
                       />
-                      <svg className="relative w-12 h-12 mx-auto mt-1 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                      <svg className="relative w-16 h-16 mx-auto mt-1 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                         <circle cx="12" cy="12" r="10" />
                         <polyline points="12 6 12 12 16 14" />
                       </svg>
@@ -775,7 +775,7 @@ export const LumoraShellPage = () => {
                     <p className="text-xs mt-1 mb-4" style={{ color: 'var(--text-muted)' }}>Sessions and transcripts will appear here after your first interview.</p>
                     <Link
                       to="/lumora"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-[opacity,transform] hover:opacity-90 active:scale-[0.96]"
                       style={{ background: 'var(--cam-gold-leaf)', color: '#020617' }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -866,7 +866,7 @@ export const LumoraShellPage = () => {
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                 <div className="max-w-2xl mx-auto px-6 py-8 w-full">
-                  <h2 className="text-3xl font-extrabold mb-2 text-white">Credits & <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Usage</span></h2>
+                  <h2 className="text-4xl font-extrabold mb-2 text-white">Credits & <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Usage</span></h2>
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Track your AI usage and remaining credits.</p>
                 </div>
               </div>
