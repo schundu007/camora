@@ -56,12 +56,6 @@ export const LumoraShellPage = () => {
   // Input mode state lifted to shell so the global strip can own the pills
   const [codingInputMode, setCodingInputMode] = useState<'paste' | 'url' | 'image'>('paste');
   const [designInputMode, setDesignInputMode] = useState<'text' | 'url' | 'image'>('text');
-  const handleInputModeChange = useCallback((mode: string) => {
-    if (activeTab === 'coding') setCodingInputMode(mode as 'paste' | 'url' | 'image');
-    else if (activeTab === 'design') setDesignInputMode(mode as 'text' | 'url' | 'image');
-  // activeTab is a const derived from location — safe dep
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
 
   // Tool selection — persisted per device so users don't repick every session.
   const [meetingPlatform, setMeetingPlatform] = useState<string>(() => {
@@ -132,6 +126,12 @@ export const LumoraShellPage = () => {
     location.pathname.includes('/assistants') ? 'assistants' :
     location.pathname.includes('/profile') ? 'profile' :
     location.pathname.includes('/credits') ? 'credits' : 'interview';
+
+  // handleInputModeChange declared AFTER activeTab to avoid TDZ (const has a dead zone)
+  const handleInputModeChange = useCallback((mode: string) => {
+    if (activeTab === 'coding') setCodingInputMode(mode as 'paste' | 'url' | 'image');
+    else if (activeTab === 'design') setDesignInputMode(mode as 'text' | 'url' | 'image');
+  }, [activeTab]);
 
   const showSettingsHint = !settingsDismissed && typeof vadThreshold === 'number' && vadThreshold <= 0.015 && (activeTab === 'coding' || activeTab === 'design');
 
