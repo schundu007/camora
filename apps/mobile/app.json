@@ -12,17 +12,26 @@
       "resizeMode": "contain",
       "backgroundColor": "#0F1115"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "bundleIdentifier": "com.cariara.camora",
       "supportsTablet": false,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Camora records audio when you tap the record button on the Live tab so it can transcribe what's said and surface relevant material from your study library. Recording does not start automatically.",
-        "UIBackgroundModes": ["audio"],
+        "UIBackgroundModes": [
+          "audio"
+        ],
         "ITSAppUsesNonExemptEncryption": false,
-        "NSUserActivityTypes": ["NSUserActivityTypeBrowsingWeb"]
+        "NSUserActivityTypes": [
+          "NSUserActivityTypeBrowsingWeb"
+        ]
       },
-      "associatedDomains": ["applinks:camora.cariara.com", "webcredentials:camora.cariara.com"]
+      "associatedDomains": [
+        "applinks:camora.cariara.com",
+        "webcredentials:camora.cariara.com"
+      ]
     },
     "android": {
       "package": "com.cariara.camora",
@@ -34,8 +43,17 @@
         {
           "action": "VIEW",
           "autoVerify": true,
-          "data": [{ "scheme": "https", "host": "camora.cariara.com", "pathPrefix": "/mobile/auth" }],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "data": [
+            {
+              "scheme": "https",
+              "host": "camora.cariara.com",
+              "pathPrefix": "/mobile/auth"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
       "permissions": [
@@ -43,7 +61,9 @@
         "MODIFY_AUDIO_SETTINGS",
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_MICROPHONE",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "blockedPermissions": [
         "ACCESS_FINE_LOCATION",
@@ -64,7 +84,11 @@
     "extra": {
       "lumoraApiUrl": "https://lumorab.cariara.com",
       "capraApiUrl": "https://caprab.cariara.com",
-      "webAppUrl": "https://camora.cariara.com"
-    }
+      "webAppUrl": "https://camora.cariara.com",
+      "eas": {
+        "projectId": "d04d0688-d12b-42e3-95ae-77c84856b365"
+      }
+    },
+    "owner": "schundus"
   }
 }
