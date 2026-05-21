@@ -735,13 +735,13 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
     return (
       <div className="h-screen flex items-center justify-center bg-[var(--bg-surface)] landing-root">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent)' }}>
-            <svg className="w-6 h-6 text-[var(--text-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'var(--cam-gold-leaf)' }}>
+            <svg className="w-6 h-6 text-[#11141A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
             </svg>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-[var(--accent-subtle)]0 animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-[var(--cam-gold-leaf)] animate-pulse" />
             <span className="text-[var(--text-primary)]">Loading...</span>
           </div>
         </div>
@@ -793,7 +793,7 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
 
         {/* Main Layout */}
         <ErrorBoundary>
-          <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="w-6 h-6 border-2 border-brand-400 border-t-transparent rounded-full animate-spin" /></div>}>
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="w-6 h-6 border-2 border-[var(--cam-primary)] border-t-transparent rounded-full animate-spin" /></div>}>
           <main className="flex-1 overflow-hidden relative z-10">
             {ascendMode === 'behavioral' ? (
               <div className="h-full" style={{ background: 'var(--bg-elevated)' }}>
@@ -1038,7 +1038,7 @@ function LoadingProgress() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="h-1 overflow-hidden bg-[var(--bg-elevated)]">
-        <div className="h-full w-1/3 bg-gradient-to-r from-brand-400 via-brand-500 to-brand-400 rounded-full" style={{ animation: 'progress-indeterminate 1.5s ease-in-out infinite' }} />
+        <div className="h-full w-1/3 bg-gradient-to-r from-[var(--cam-primary)] via-[var(--cam-gold-leaf)] to-[var(--cam-primary)] rounded-full" style={{ animation: 'progress-indeterminate 1.5s ease-in-out infinite' }} />
       </div>
     </div>
   );
@@ -1049,7 +1049,7 @@ function Footer({ isLoading, ascendMode }) {
     <footer className="relative z-10 px-5 py-3 flex items-center justify-between text-xs border-t border-[var(--border)] bg-[var(--bg-elevated)]">
       <div className="flex items-center gap-4">
         <span className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${isLoading ? 'animate-pulse bg-[var(--accent-subtle)]0' : 'bg-[var(--accent-subtle)]0'}`} />
+          <span className={`w-2 h-2 rounded-full ${isLoading ? 'animate-pulse bg-[var(--cam-gold-leaf)]' : 'bg-[#22c55e]'}`} />
           <span className={`text-sm font-medium ${isLoading ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'}`}>
             {isLoading ? 'Processing...' : 'Ready'}
           </span>
@@ -1075,7 +1075,7 @@ function Footer({ isLoading, ascendMode }) {
 function CopyToast() {
   return (
     <div className="fixed left-1/2 transform -translate-x-1/2 z-50 animate-scale-in" style={{ bottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
-      <div className="flex items-center gap-3 px-5 py-3 rounded-lg bg-[var(--accent-subtle)]0 shadow-lg">
+      <div className="flex items-center gap-3 px-5 py-3 rounded-lg shadow-lg" style={{ background: 'var(--bg-surface)', border: '1px solid rgba(201,162,39,0.40)' }}>
         <div className="w-7 h-7 rounded-lg bg-[var(--bg-surface)]/20 flex items-center justify-center backdrop-blur-sm">
           <svg className="w-4 h-4 text-[var(--text-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
         </div>
