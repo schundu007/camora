@@ -2,30 +2,26 @@
  * CoderPad → Camora Problem Library sync
  *
  * Usage:
- *   node sync.js --phase code  --email you@x.com --password xxx
- *   node sync.js --phase mcq   --email you@x.com --password xxx
- *   node sync.js               # both phases, reads .env for credentials
+ *   node sync.js               # both phases, Google OAuth on first run
+ *   node sync.js --phase code  # code questions only
+ *   node sync.js --phase mcq   # MCQ stubs only
  *   node sync.js --phase code --dry-run
  *
- * Credentials can also live in scripts/coderpad-sync/.env:
- *   CODERPAD_EMAIL=...
- *   CODERPAD_PASSWORD=...
+ * Login: opens a browser window on first run; Google OAuth session is saved to
+ * .coderpad-session.json and reused on subsequent runs automatically.
  *
  * NOTE: MCQ choices are NOT returned by the list endpoint. MCQ import stores
- * metadata (title, domain, difficulty) only. Choices require a detail endpoint
- * that has not yet been identified — check DevTools when opening a single MCQ.
+ * metadata (title, domain, difficulty) only.
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { config } from 'dotenv';
 import { loginAndGetContext, fetchAllQuestions } from './scraper.js';
 import { transformCodeQuestion, transformMcqQuestion } from './transform.js';
 import { isDuplicate } from './dedup.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-config({ path: join(__dirname, '.env') });
 
 const PROBLEMS_PATH = join(__dirname, '../../apps/camora/src/data/capra/problems-full.json');
 const MCQ_PATH = join(__dirname, '../../apps/camora/src/data/capra/mcq-problems.json');
@@ -47,8 +43,6 @@ function parseArgs() {
   };
   return {
     phase: flag('--phase') ?? 'both',
-    email: flag('--email') ?? process.env.CODERPAD_EMAIL,
-    password: flag('--password') ?? process.env.CODERPAD_PASSWORD,
     dryRun: args.includes('--dry-run'),
   };
 }
@@ -183,19 +177,12 @@ async function runMcqPhase(allItems, state, dryRun) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const { phase, email, password, dryRun } = parseArgs();
-
-  if (!email || !password) {
-    console.error(
-      'Error: provide --email and --password, or set CODERPAD_EMAIL / CODERPAD_PASSWORD in scripts/coderpad-sync/.env'
-    );
-    process.exit(1);
-  }
+  const { phase, dryRun } = parseArgs();
 
   console.log(`\nCoderPad Sync  phase=${phase}${dryRun ? '  [DRY RUN]' : ''}`);
-  console.log('Opening browser for login (closes automatically after ~10 s)...');
+  console.log('Opening browser (restores saved session or waits for Google OAuth)...');
 
-  const { cookieStr, orgId } = await loginAndGetContext(email, password);
+  const { cookieStr, orgId } = await loginAndGetContext();
   console.log('Login OK.');
 
   console.log('Fetching all questions from CoderPad...');
