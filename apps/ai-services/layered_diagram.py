@@ -62,9 +62,12 @@ def _normalize(s: str) -> str:
 def render_layered(spec: dict, out_path: Path) -> None:
     """Render a stack of layers with components inside each.
 
-    Layout: each layer is a single HTML-table node (shape="none"). A simple
-    sequential edge between consecutive layer nodes produces a centered arrow
-    without the left-boundary misalignment caused by compound cluster edges.
+    Layout: each layer is a single Graphviz node whose label is an HTML
+    table (title row + purpose row + component cells). Sequential layers
+    are connected by simple edges, which Graphviz routes center-bottom →
+    center-top automatically — no cluster+compound-edge tricks needed.
+    This avoids the left-rail misalignment that plagued the old cluster
+    approach with splines=ortho.
     """
     layers = spec.get("layers") or []
     title = spec.get("title", "")
@@ -77,22 +80,17 @@ def render_layered(spec: dict, out_path: Path) -> None:
         "graph",
         bgcolor=BG_GRAPH,
         rankdir="TB",
-        splines="spline",
+        splines="ortho",
         nodesep="0.3",
-        ranksep="0.5",
-        pad="0.5",
+        ranksep="0.28",
+        pad="0.5,0.5",
         fontname=FONT_BODY,
         fontcolor=TEXT_PRIMARY,
-        label=title or "",
+        label=f"<{_html_escape(title)}>" if title else "",
         labelloc="t",
         fontsize="20",
     )
-    # shape="none" lets the HTML table drive all geometry
-    g.attr(
-        "node",
-        shape="none",
-        margin="0",
-    )
+    g.attr("node", shape="none", margin="0")
     g.attr(
         "edge",
         color=GOLD_LEAF,
@@ -102,61 +100,51 @@ def render_layered(spec: dict, out_path: Path) -> None:
     )
 
     for i, layer in enumerate(layers):
-        name    = _html_escape(layer.get("name", f"Layer {i + 1}"))
+        name = _html_escape(layer.get("name", f"Layer {i + 1}"))
         purpose = _html_escape(layer.get("purpose", ""))
-        comps   = layer.get("components") or []
+        comps = layer.get("components") or []
+        n = max(len(comps), 1)
 
-        # ── title row ────────────────────────────────────────────────
+        # Title + purpose rows span all component columns.
         title_row = (
-            f'<TR><TD ALIGN="CENTER" CELLPADDING="10">'
-            f'<FONT FACE="{FONT_HEADING}" POINT-SIZE="13"'
-            f' COLOR="{TEXT_PRIMARY}"><B>{name}</B></FONT>'
-            f'</TD></TR>'
+            f'<TR><TD COLSPAN="{n}" CELLPADDING="10" BORDER="0">'
+            f'<B><FONT FACE="{FONT_HEADING}" POINT-SIZE="13" COLOR="{TEXT_PRIMARY}">'
+            f'{name}</FONT></B></TD></TR>'
         )
-
-        # ── optional purpose row ─────────────────────────────────────
         purpose_row = ""
         if purpose:
             purpose_row = (
-                f'<TR><TD ALIGN="CENTER" CELLPADDING="4">'
-                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="10"'
-                f' COLOR="{TEXT_SECONDARY}">{purpose}</FONT>'
-                f'</TD></TR>'
+                f'<TR><TD COLSPAN="{n}" CELLPADDING="2" BORDER="0">'
+                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="10" COLOR="{TEXT_SECONDARY}">'
+                f'{purpose}</FONT></TD></TR>'
             )
 
-        # ── components row ───────────────────────────────────────────
+        # Component cells — each in its own rounded box cell.
         if comps:
-            cells = "".join(
-                f'<TD ALIGN="CENTER" BGCOLOR="{BG_COMPONENT}"'
-                f' STYLE="ROUNDED" CELLPADDING="8">'
-                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="11"'
-                f' COLOR="{TEXT_PRIMARY}">{_html_escape(c)}</FONT>'
-                f'</TD>'
+            comp_cells = "".join(
+                f'<TD BGCOLOR="{BG_COMPONENT}" STYLE="ROUNDED" BORDER="1"'
+                f' COLOR="{BORDER}" CELLPADDING="7">'
+                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="11" COLOR="{TEXT_PRIMARY}">'
+                f'{_html_escape(c)}</FONT></TD>'
                 for c in comps
             )
-            comp_row = (
-                f'<TR><TD CELLPADDING="8"><TABLE BORDER="0"'
-                f' CELLBORDER="1" CELLSPACING="6"'
-                f' CELLPADDING="0" COLOR="{BORDER}">'
-                f'<TR>{cells}</TR></TABLE></TD></TR>'
-            )
+            comp_row = f'<TR>{comp_cells}</TR>'
         else:
             comp_row = (
-                f'<TR><TD ALIGN="CENTER" CELLPADDING="8">'
-                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="10"'
-                f' COLOR="{TEXT_SECONDARY}">(no components)</FONT>'
-                f'</TD></TR>'
+                f'<TR><TD BORDER="0" CELLPADDING="4">'
+                f'<FONT COLOR="{TEXT_SECONDARY}">(no components)</FONT></TD></TR>'
             )
 
         label = (
-            f'<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0"'
-            f' BGCOLOR="{BG_LAYER}" COLOR="{GOLD_LEAF}"'
-            f' CELLPADDING="0" STYLE="ROUNDED">'
-            f'{title_row}{purpose_row}{comp_row}'
+            f'<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="6"'
+            f' BGCOLOR="{BG_LAYER}" COLOR="{GOLD_LEAF}" CELLPADDING="0"'
+            f' STYLE="ROUNDED">'
+            + title_row + purpose_row + comp_row +
             f'</TABLE>>'
         )
         g.node(f"layer_{i}", label=label)
 
+    # Simple sequential edges — Graphviz routes them center-to-center.
     for i in range(len(layers) - 1):
         g.edge(f"layer_{i}", f"layer_{i + 1}")
 
