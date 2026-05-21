@@ -35,8 +35,6 @@ interface AICompanionPanelProps {
   onClose: () => void;
 }
 
-type AnswerMode = 'short' | 'detailed';
-
 /* ── SonaAvatar — enterprise wordmark ──
    Hexagonal silhouette with a bold brand-color "S" glyph over a deep-navy
    field. Designed to read like a product wordmark — Stripe / Linear /
@@ -407,7 +405,8 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     return typeof window === 'undefined' ? 560 : Math.min(560, Math.max(360, window.innerHeight - 96));
   });
   const [isResizing, setIsResizing] = useState<false | 'w' | 'h' | 'wh' | 'e' | 's' | 'es'>(false);
-  const [answerMode, setAnswerMode] = useState<AnswerMode>('short');
+  const answerMode = useInterviewStore(s => s.answerMode);
+  const setAnswerMode = useInterviewStore(s => s.setAnswerMode);
   const [position, setPosition] = useState(() => savedPrefs ? { x: savedPrefs.x, y: savedPrefs.y } : { x: 0, y: 0 });
 
   // Debounced write-through of size + position
@@ -973,28 +972,6 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               {activeAssistant.company || activeAssistant.role || 'Custom'}
             </span>
           )}
-          <div
-            className="flex items-center rounded-md p-0.5"
-            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}
-          >
-            {(['short', 'detailed'] as AnswerMode[]).map(mode => (
-              <button
-                key={mode}
-                onClick={(e) => { e.stopPropagation(); setAnswerMode(mode); }}
-                className="px-2.5 py-0.5 rounded transition-[background-color,color]"
-                style={{
-                  fontSize: '9px',
-                  fontWeight: 700,
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase',
-                  color: answerMode === mode ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.8)',
-                  background: answerMode === mode ? 'var(--cam-gold-leaf)' : 'transparent',
-                }}
-              >
-                {mode === 'short' ? 'Short' : 'Detailed'}
-              </button>
-            ))}
-          </div>
         </div>
 
         {!embedded && (
