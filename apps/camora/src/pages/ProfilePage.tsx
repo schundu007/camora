@@ -49,7 +49,7 @@ function ActivityHeatmap() {
   return (
     <div className="rounded-2xl p-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Activity</h3>
+        <h3 className="text-base font-bold text-[var(--text-primary)]">Activity</h3>
         <select value={year} onChange={e => setYear(e.target.value)} className="text-xs px-2 py-1 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-muted)]">
           <option value="current">Current</option>
           <option value="2025">2025</option>
@@ -142,7 +142,7 @@ function SubscriptionCard() {
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="px-5 py-3 flex items-center justify-between" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-        <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Subscription</h3>
+        <h3 className="text-base font-bold text-[var(--text-primary)]">Subscription</h3>
         {endDate && sub?.status === 'active' && sub?.cancel_at_period_end && (
           <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ color: 'var(--warning-text)', background: 'var(--bg-elevated)', border: '1px solid var(--warning)' }}>
             Your access to premium content will end on {endDate}
@@ -174,7 +174,7 @@ function ProfileSettings() {
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="px-5 py-3" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-        <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Profile settings</h3>
+        <h3 className="text-base font-bold text-[var(--text-primary)]">Profile settings</h3>
       </div>
       <div className="divide-y divide-[var(--border)]">
         <div className="px-5 py-4 flex items-center justify-between">
@@ -211,7 +211,7 @@ function DeleteAccount() {
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="px-5 py-3" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--danger)' }}>
-        <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--danger)' }}>Delete Account</h3>
+        <h3 className="text-base font-bold" style={{ color: 'var(--danger)' }}>Delete Account</h3>
       </div>
       <div className="px-5 py-4 flex items-center justify-between">
         <span className="text-sm text-[var(--text-muted)]">Once you delete your account, there is no going back.</span>
@@ -242,7 +242,7 @@ function ContributionsTab() {
     <div className="space-y-6">
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="px-5 py-3" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-          <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Problem Contributions</h3>
+          <h3 className="text-base font-bold text-[var(--text-primary)]">Problem Contributions</h3>
         </div>
         <div className="px-5 py-4">
           <div className="flex items-center justify-between mb-6">
@@ -305,7 +305,7 @@ export default function ProfilePage() {
       <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative page-wrap pt-24 pb-16">
-          <h1 className="text-3xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>Your <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Profile</span></h1>
+          <h1 className="text-3xl font-bold text-white">Your <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Profile</span></h1>
           <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>{user?.email || 'Manage account, achievements, and referrals'}</p>
         </div>
         <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" className="absolute left-0 bottom-0 w-full pointer-events-none" style={{ height: '5vh', display: 'block' }}>
@@ -334,7 +334,7 @@ export default function ProfilePage() {
             {/* Account Info */}
             <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
               <div className="px-5 py-3" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-                <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Account Information</h3>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Account Information</h3>
               </div>
               <div className="px-5 py-4 flex items-center justify-between">
                 <span className="text-sm text-[var(--text-primary)]">Email</span>
@@ -362,7 +362,7 @@ export default function ProfilePage() {
             {/* Invite section */}
             <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
               <div className="px-5 py-3" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-                <h3 className="text-base font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>Invite Friends to Get Free Access</h3>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Invite Friends to Get Free Access</h3>
               </div>
               <div className="px-5 py-4">
                 <p className="text-sm text-[var(--text-secondary)] mb-4">
