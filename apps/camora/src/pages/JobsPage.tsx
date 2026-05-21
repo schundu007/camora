@@ -568,7 +568,7 @@ export default function JobsPage() {
              dismissible banner at the top so it doesn't crowd the
              list view.) ── */}
         <div style={{ background: 'transparent' }}>
-          <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+          <div className="page-wrap" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
             {/* Mobile-only fallback CTA. Desktop has the gold "Paste job URL"
                 pill in the hero band; that's hidden on mobile via
                 `hidden sm:flex`, so this stays for narrow viewports. */}
@@ -748,7 +748,7 @@ export default function JobsPage() {
              no horizontal filter toolbar — all filtering moved into
              the left sidebar with collapsible <details> sections.
              Camora's color tokens are preserved per user request. */}
-        <div className="w-full lg:max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '24px', paddingBottom: '40px' }}>
+        <div className="page-wrap" style={{ paddingTop: '24px', paddingBottom: '40px' }}>
           <div className="jobs-layout" style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
 
             {/* ── Sidebar — filter rail ── */}

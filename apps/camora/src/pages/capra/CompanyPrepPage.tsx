@@ -412,7 +412,7 @@ export default function CompanyPrepPage() {
         <div>
           {/* Header */}
           <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
-            <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="page-wrap py-10">
               <div className="flex items-center gap-2 mb-4" style={{ fontSize: 13, color: 'var(--text-muted)' }}>
                 <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Home</Link>
                 <span>/</span>
@@ -439,7 +439,7 @@ export default function CompanyPrepPage() {
           </div>
 
           {/* Content */}
-          <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="page-wrap py-8">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {genericSections.map((section) => (
                 <div key={section.title} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
@@ -537,7 +537,7 @@ export default function CompanyPrepPage() {
       {/* LeetCode navy hero band w/ diagonal cut */}
       <section style={{ position: 'relative', overflow: 'hidden', background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
-        <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ position: 'relative', paddingTop: 32, paddingBottom: 80 }}>
+        <div className="page-wrap" style={{ position: 'relative', paddingTop: 32, paddingBottom: 80 }}>
           {/* Breadcrumb on dark */}
           <nav className="practice-body" style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', color: 'rgba(255,255,255,0.7)' }}>
             <Link to="/" className="breadcrumb-link" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Home</Link>
@@ -598,7 +598,7 @@ export default function CompanyPrepPage() {
 
       {/* ═══════════════════════ Main Content ═══════════════════════ */}
       <main>
-        <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-wrap">
 
           {/* ── Stats Grid ── */}
           <div

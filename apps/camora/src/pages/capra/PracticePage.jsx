@@ -658,7 +658,7 @@ export default function PracticePage() {
         {/* ── View Tabs — LeetCode navy + gold underline ── */}
         <div className="flex items-center gap-4 px-4 sm:px-6 py-2 flex-shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#FFFFFF', margin: 0, letterSpacing: '-0.01em' }}>Practice</h1>
-          <div style={{ display: 'flex', gap: 2, padding: 2, background: 'rgba(255,255,255,0.1)', borderRadius: 8 }}>
+          <div style={{ display: 'flex', gap: 3 }}>
             {[
               { key: 'practice', label: 'Mock Interview', icon: <Icon name="play" size={12} /> },
               { key: 'code-solver', label: 'Code Solver', icon: <Icon name="code" size={12} /> },
@@ -672,8 +672,8 @@ export default function PracticePage() {
                   display: 'flex', alignItems: 'center', gap: 4,
                   padding: '5px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
                   fontSize: 12, fontWeight: 600,
-                  background: activeView === tab.key ? 'var(--cam-gold-leaf)' : 'transparent',
-                  color: activeView === tab.key ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
+                  background: activeView === tab.key ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.12)',
+                  color: activeView === tab.key ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.82)',
                   transition: 'all 0.15s',
                 }}
               >
@@ -729,7 +729,7 @@ export default function PracticePage() {
         {/* ── Mock Interview content — scrollable ── */}
         {activeView === 'practice' && (
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <div className="w-full lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="page-wrap py-6">
 
           {/* ── SETUP PHASE (Mock Interview) ── */}
           {phase === 'setup' && (

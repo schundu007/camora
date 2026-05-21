@@ -264,7 +264,7 @@ export default function AnalyticsPage() {
       {/* LeetCode hero band */}
       <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
-        <div className="relative lg:max-w-[85%] mx-auto px-4 pt-12 pb-16">
+        <div className="relative page-wrap pt-12 pb-16">
           <h1 className="text-3xl font-bold text-white">Admin <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Dashboard</span></h1>
           <p className="mt-1" style={{ color: 'rgba(255,255,255,0.85)' }}>Analytics, user management & emails</p>
         </div>
@@ -272,17 +272,15 @@ export default function AnalyticsPage() {
           <polygon fill="var(--bg-app)" points="0,0 100,100 0,100" />
         </svg>
       </section>
-      <div className="lg:max-w-[85%] mx-auto px-4 py-8">
+      <div className="page-wrap py-8">
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-8 rounded-lg p-1 w-fit" style={{ background: 'var(--bg-elevated)' }}>
+        <div className="tab-group mb-8">
           {(['analytics', 'users', 'emails'] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-5 py-2 rounded-md text-sm font-medium capitalize transition-[background-color,color,transform] active:scale-[0.98] ${
-                tab === t ? 'bg-[var(--accent)] text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-              }`}
+              className={`tab-group-item capitalize${tab === t ? ' tab-group-item-active' : ''}`}
             >
               {t === 'users' ? `Users (${totalUsers})` : t === 'emails' ? `Emails (${emails.length})` : t}
             </button>
@@ -297,9 +295,7 @@ export default function AnalyticsPage() {
                 <button
                   key={d}
                   onClick={() => setDays(d)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-[background-color,color,transform] active:scale-[0.98] ${
-                    days === d ? 'bg-[var(--accent)] text-[var(--text-primary)]' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--border)]'
-                  }`}
+                  className={`chip${days === d ? ' chip-active' : ''}`}
                 >
                   {d === '' ? 'All time' : `Last ${d} days`}
                 </button>

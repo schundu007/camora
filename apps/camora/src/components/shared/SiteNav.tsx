@@ -78,19 +78,18 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           )}
 
           {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-0.5 ml-8">
+          <div className="hidden md:flex items-center gap-1.5 ml-8">
             {NAV_LINKS.map((link) => {
               const active = isActive(link.href);
               return (
                 <Link
                   key={link.label}
                   to={link.href}
-                  className={cn(
-                    'px-3 py-1.5 rounded-full text-[13px] font-semibold transition-colors',
-                    active
-                      ? 'bg-[rgba(0,71,171,0.30)] text-white'
-                      : 'text-white/70 hover:text-white hover:bg-white/5',
-                  )}
+                  className="px-3 py-1.5 rounded-full text-[13px] font-semibold transition-colors"
+                  style={{
+                    background: active ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.12)',
+                    color: active ? '#020617' : 'rgba(255,255,255,0.82)',
+                  }}
                 >
                   {link.label}
                 </Link>

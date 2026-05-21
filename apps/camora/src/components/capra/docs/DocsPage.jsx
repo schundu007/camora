@@ -1251,15 +1251,13 @@ export default function DocsPage({ onBack }) {
 
                       {/* SQL Playground toggle */}
                       {(activePage === 'databases') && (
-                        <div className="flex items-center gap-1 mt-5 p-1 rounded w-fit" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                        <div className="tab-group mt-5">
                           <button onClick={() => setSqlPlaygroundOpen(false)}
-                            className="px-4 py-2 text-sm font-bold rounded transition-colors"
-                            style={!sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#FFFFFF', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
+                            className={`tab-group-item${!sqlPlaygroundOpen ? ' tab-group-item-active' : ''}`}>
                             Topics
                           </button>
                           <button onClick={() => setSqlPlaygroundOpen(true)}
-                            className="px-4 py-2 text-sm font-bold rounded transition-colors"
-                            style={sqlPlaygroundOpen ? { background: 'var(--accent)', color: '#FFFFFF', boxShadow: 'none' } : { color: 'var(--text-secondary)' }}>
+                            className={`tab-group-item${sqlPlaygroundOpen ? ' tab-group-item-active' : ''}`}>
                             SQL Playground
                           </button>
                         </div>
@@ -1323,7 +1321,7 @@ export default function DocsPage({ onBack }) {
                           <button
                             key={tab.key}
                             onClick={() => { setActivePageState(tab.key); setSelectedTopicState(null); setActiveSection(tab.key); }}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors landing-body ${activePage === tab.key ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-elevated)]'}`}
+                            className={`chip chip-sm${activePage === tab.key ? ' chip-active' : ''} flex items-center gap-1.5`}
                           >
                             <Icon name={tab.icon} size={12} />
                             {tab.label}
