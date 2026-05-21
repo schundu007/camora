@@ -2,7 +2,7 @@ import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
-import { ASSISTANT_UPDATED_EVENT } from '@/lib/companyContext';
+import { ASSISTANT_UPDATED_EVENT, setActiveCompanyKey } from '@/lib/companyContext';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { dialogConfirm } from '@/components/shared/Dialog';
@@ -358,6 +358,20 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     URL.revokeObjectURL(url);
   }, [messages, activeAssistant]);
 
+  const clearMessages = useCallback(async () => {
+    if (messages.length === 0) return;
+    const ok = await dialogConfirm({ title: 'Clear chat history?', message: 'This will clear the Sona chat in this panel only.', confirmLabel: 'Clear', tone: 'danger' });
+    if (ok) setMessages([]);
+  }, [messages.length]);
+
+  // Register panel actions into the store so ScreenshotStrip can render
+  // them in the behavioral toolbar without prop-drilling through LumoraShellPage.
+  useEffect(() => {
+    if (!embedded) return;
+    setSonaActions({ export: exportSession, clear: clearMessages, close: onClose, hasMessages: messages.length > 0 });
+    return () => { setSonaActions({ export: null, clear: null, close: null, hasMessages: false }); };
+  }, [embedded, exportSession, clearMessages, onClose, messages.length, setSonaActions]);
+
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState('');
   // Citations accumulator for the in-flight stream. Populated by the
@@ -407,6 +421,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   const [isResizing, setIsResizing] = useState<false | 'w' | 'h' | 'wh' | 'e' | 's' | 'es'>(false);
   const answerMode = useInterviewStore(s => s.answerMode);
   const setAnswerMode = useInterviewStore(s => s.setAnswerMode);
+  const setSonaActions = useInterviewStore(s => s.setSonaActions);
   const [position, setPosition] = useState(() => savedPrefs ? { x: savedPrefs.x, y: savedPrefs.y } : { x: 0, y: 0 });
 
   // Debounced write-through of size + position
@@ -909,14 +924,9 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         }}
         onMouseDown={embedded ? undefined : startDrag}
       >
-        {/* Left: export + clear + close (embedded) or clear + new (floating) */}
+        {/* Left: mobile rail toggle (embedded) or export+clear+new (floating) */}
         <div className="flex items-center gap-0.5">
-          {/* Mobile-only: toggle the Questions/Story Bank drawer. The
-              280px rail is hidden <md so the answer card gets the full
-              viewport width — a phone-sized side rail truncates both
-              the question text and the answer to the point of being
-              unusable. This button surfaces the rail as a slide-over. */}
-          {embedded && (
+          {embedded ? (
             <button
               onClick={() => setMobileRailOpen(v => !v)}
               className="md:hidden p-2 rounded-md transition-colors hover:bg-white/10"
@@ -927,33 +937,21 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
             </button>
-          )}
-          {/* Session export — Markdown for now (works in every editor +
-              converts cleanly to PDF/DOCX via Pandoc or any browser
-              "Save as PDF"). A native PDF/DOCX renderer needs a backend
-              hop and is tracked separately. */}
-          <button
-            onClick={exportSession}
-            disabled={messages.length === 0}
-            className="p-1 rounded-md transition-colors hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ color: 'rgba(255,255,255,0.85)' }}
-            title="Export session (.md)"
-            aria-label="Export session as Markdown"
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-          </button>
-          <button onClick={async () => { if (messages.length === 0) return; const ok = await dialogConfirm({ title: 'Clear chat history?', message: 'This will clear the Sona chat in this panel only.', confirmLabel: 'Clear', tone: 'danger' }); if (ok) setMessages([]); }}
-            className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }} title="Clear history">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
-          </button>
-          {embedded ? (
-            <button onClick={onClose} className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }} title="Close">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
-            </button>
           ) : (
-            <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }} title="New chat">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-            </button>
+            <>
+              <button
+                onClick={exportSession}
+                disabled={messages.length === 0}
+                className="p-1 rounded-md transition-colors hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ color: 'rgba(255,255,255,0.85)' }}
+                title="Export session (.md)"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+              </button>
+              <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }} title="New chat">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+              </button>
+            </>
           )}
         </div>
 
@@ -966,10 +964,19 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
           <span className="text-[11px] font-bold tracking-wide text-white">Sona</span>
           {activeAssistant && (
             <span
-              className="hidden sm:inline text-[8px] font-semibold px-1.5 py-0.5 rounded truncate max-w-[120px]"
-              style={{ background: 'rgba(255,255,255,0.15)', color: 'var(--cam-gold-leaf-lt)' }}
+              className="hidden sm:inline items-center gap-0.5 text-[8px] font-semibold px-1.5 py-0.5 rounded"
+              style={{ background: 'rgba(255,255,255,0.15)', color: 'var(--cam-gold-leaf-lt)', display: 'inline-flex', maxWidth: 140 }}
             >
-              {activeAssistant.company || activeAssistant.role || 'Custom'}
+              <span className="truncate">{activeAssistant.company || activeAssistant.role || 'Custom'}</span>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setActiveCompanyKey(null); }}
+                title="Clear company context"
+                className="ml-0.5 shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+                style={{ lineHeight: 1 }}
+              >
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
             </span>
           )}
         </div>

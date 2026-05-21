@@ -129,6 +129,12 @@ interface InterviewState {
   // Sona response verbosity — shared across AICompanionPanel and ScreenshotStrip
   answerMode: 'short' | 'detailed';
 
+  // Sona panel actions — registered by AICompanionPanel, consumed by ScreenshotStrip
+  sonaExport: (() => void) | null;
+  sonaClear: (() => void) | null;
+  sonaClose: (() => void) | null;
+  sonaHasMessages: boolean;
+
   // Actions
   setConversationId: (id: string | null) => void;
   setQuestion: (question: string | null) => void;
@@ -168,6 +174,7 @@ interface InterviewState {
   setLiveSolveContext: (ctx: InterviewState['liveSolveContext']) => void;
   setIsStealthActive: (v: boolean) => void;
   setAnswerMode: (mode: 'short' | 'detailed') => void;
+  setSonaActions: (actions: { export: (() => void) | null; clear: (() => void) | null; close: (() => void) | null; hasMessages: boolean }) => void;
   reset: () => void;
 }
 
@@ -219,6 +226,10 @@ const initialState = {
   liveSolveContext: null as InterviewState['liveSolveContext'],
   isStealthActive: false,
   answerMode: 'short' as const,
+  sonaExport: null as (() => void) | null,
+  sonaClear: null as (() => void) | null,
+  sonaClose: null as (() => void) | null,
+  sonaHasMessages: false,
 };
 
 export const useInterviewStore = create<InterviewState>()(
@@ -341,6 +352,12 @@ export const useInterviewStore = create<InterviewState>()(
 
   setIsStealthActive: (v) => set({ isStealthActive: v }),
   setAnswerMode: (mode) => set({ answerMode: mode }),
+  setSonaActions: ({ export: exp, clear, close, hasMessages }) => set({
+    sonaExport: exp,
+    sonaClear: clear,
+    sonaClose: close,
+    sonaHasMessages: hasMessages,
+  }),
 
   reset: () => set(initialState),
     }),
