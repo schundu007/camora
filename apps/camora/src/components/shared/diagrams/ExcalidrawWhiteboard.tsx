@@ -111,7 +111,7 @@ export default function ExcalidrawWhiteboard({
   return (
     <div
       className={className}
-      style={{ width: '100%', height: '100%', minHeight: 400, position: 'relative' }}
+      style={{ width: '100%', height: '100%', position: 'relative' }}
     >
       <Excalidraw
         excalidrawAPI={setExcalidrawAPI}
