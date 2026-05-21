@@ -1924,36 +1924,31 @@ export default function TopicDetail({
                     caption="Layered Design"
                     className="mb-3"
                   />
-                  <div className="p-2.5 space-y-0">
-                    {effectiveLayeredDesign.map((layer, i) => {
-                      const LAYER_COLORS = ['var(--accent)'];
-                      const lc = LAYER_COLORS[i % LAYER_COLORS.length];
-                      return (
-                        <div key={i} className="relative">
-                          {i > 0 && (
-                            <div className="flex justify-center -my-1 z-10 relative">
-                              <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M8 0v10M4 6l4 4 4-4" stroke="var(--border)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                            </div>
-                          )}
-                          <div className="rounded border border-[var(--border)] bg-[var(--bg-surface)] transition-colors overflow-hidden">
-                            <div className="px-4 py-3">
-                              <div className="flex items-center gap-2.5 mb-1.5">
-                                <span className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0 text-white text-xs font-bold" style={{ background: lc }}>L{i + 1}</span>
-                                <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{layer.name}</h4>
+                  <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                    {effectiveLayeredDesign.map((layer, i) => (
+                      <div key={i}>
+                        {i > 0 && <div style={{ height: 1, background: 'var(--border)' }} />}
+                        <div className="flex items-start gap-3 px-4 py-3 hover:bg-[var(--bg-elevated)] transition-colors">
+                          <span
+                            className="flex-shrink-0 flex items-center justify-center text-[10px] font-bold mt-0.5"
+                            style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--bg-elevated)', color: 'var(--cam-gold-leaf)', border: '1px solid var(--border)' }}
+                          >
+                            {i + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[13px] font-semibold text-[var(--text-primary)] landing-display">{layer.name}</span>
+                            <p className="text-[12px] text-[var(--text-secondary)] leading-relaxed mt-0.5 landing-body">{layer.purpose}</p>
+                            {layer.components && (
+                              <div className="mt-1.5 flex flex-wrap gap-1">
+                                {layer.components.map((comp, j) => (
+                                  <span key={j} className="text-[10px] font-medium px-1.5 py-0.5 rounded landing-mono" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>{comp}</span>
+                                ))}
                               </div>
-                              <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-9 landing-body">{layer.purpose}</p>
-                              {layer.components && (
-                                <div className="ml-9 mt-2 flex flex-wrap gap-1.5">
-                                  {layer.components.map((comp, j) => (
-                                    <span key={j} className="text-[11px] font-medium px-2 py-0.5 rounded-md landing-mono" style={{ background: `${lc}12`, color: lc, border: `1px solid ${lc}30` }}>{comp}</span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
+                            )}
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
