@@ -191,6 +191,11 @@ interface CodingLayoutProps {
   pendingHackerrankText?: string | null;
   /** Called once the text has been consumed so parent can clear it. */
   onHackerrankTextConsumed?: () => void;
+  /** Starter/template code extracted from the platform's code editor alongside the problem text.
+   *  Passed to the backend so it preserves the exact input-reading boilerplate (readarray, Scanner, etc.). */
+  pendingHackerrankStarterCode?: string | null;
+  /** Called once the starter code has been consumed so parent can clear it. */
+  onHackerrankStarterCodeConsumed?: () => void;
   /** Active coding platform from tool-picker ('hackerrank'|'leetcode'|'coderpad'|'none').
    *  When set (non-empty, non-'none'), hides manual input modes and shows autopilot status. */
   codingPlatform?: string;
@@ -235,7 +240,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -937,6 +942,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     if (!pendingHackerrankText) return;
     onHackerrankTextConsumed?.();
     const trimmed = pendingHackerrankText.trim();
+    // Consume starter code extracted from the platform's code editor alongside the problem.
+    // This ensures the backend preserves input-reading boilerplate (readarray, Scanner, etc.)
+    // instead of generating its own — the root cause of HackerRank format mismatches.
+    const sc = pendingHackerrankStarterCode?.trim() || null;
+    onHackerrankStarterCodeConsumed?.();
+    if (sc) setStarterCode(sc);
     setProblemText(trimmed);
     setSnapChipCode(trimmed);
     setInputMode('paste');
@@ -954,7 +965,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setProblemTab('solution');
     const effectiveLang = language === 'auto' ? detectLanguage(trimmed) : language;
     setCode(getDefaultCode(effectiveLang));
-    onSubmit(trimmed, effectiveLang);
+    onSubmit(trimmed, effectiveLang, sc ? { starterCode: sc } : undefined);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingHackerrankText]);
 
