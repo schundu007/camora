@@ -79,11 +79,11 @@ export const LumoraBottomBar = ({ onTranscription }: LumoraBottomBarProps) => {
   const title = !voiceEnrolled ? 'Enroll your voice to filter it out' :
                 !voiceFilterEnabled ? 'Your voice is being transcribed' :
                 enrollmentStale ? 'Refresh your voice profile' :
-                'Filter on — only the interviewer is heard';
+                'Filter on — only the speaker is heard';
   const hint = !voiceEnrolled ? 'Sona will answer YOUR voice until you enroll.' :
-               !voiceFilterEnabled ? 'Turn Filter On so Sona only answers the interviewer.' :
+               !voiceFilterEnabled ? 'Turn Filter On so Sona only answers the speaker.' :
                enrollmentStale ? 'Voice prints drift over time — re-enroll to keep filtering accurate.' :
-               'Sona ignores you and replies only to the interviewer.';
+               'Sona ignores you and replies only to the speaker.';
 
   // When the banner is minimized, render the mic + voice-enrollment
   // buttons + an expand chevron. Only the warning copy + tinted

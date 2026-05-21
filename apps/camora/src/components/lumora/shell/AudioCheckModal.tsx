@@ -277,7 +277,7 @@ export const AudioCheckModal = ({ isOpen, onClose }: Props) => {
             </div>
             <div>
               <h2 className="text-[15px] font-bold" style={{ color: 'var(--text-primary)' }}>Audio check</h2>
-              <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Pick devices, verify levels, test mic + speaker before your interview.</p>
+              <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Pick devices, verify levels, test mic + speaker before your session.</p>
             </div>
           </div>
           <button
@@ -306,7 +306,7 @@ export const AudioCheckModal = ({ isOpen, onClose }: Props) => {
             >
               <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: '#F59E0B' }} />
               <div>
-                <div className="font-bold">Live interview is recording</div>
+                <div className="font-bold">Live session is recording</div>
                 <div className="mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                   Device changes here are saved and apply immediately, but the level meter and recording test are paused so we don't fight with the live capture. Stop the live capture from the topbar pill if you want to test in real time.
                 </div>
@@ -360,7 +360,7 @@ export const AudioCheckModal = ({ isOpen, onClose }: Props) => {
               {([
                 ['Echo cancellation', echoCancel, setEchoCancel, 'Removes your own voice coming back through the speaker.'],
                 ['Noise suppression', noiseSuppress, setNoiseSuppress, 'Dampens keyboard, fans, and background chatter.'],
-                ['Auto-gain', autoGain, setAutoGain, 'Normalises your voice volume so the interviewer hears you consistently.'],
+                ['Auto-gain', autoGain, setAutoGain, 'Normalises your voice volume so the speaker hears you consistently.'],
               ] as [string, boolean, (b: boolean) => void, string][]).map(([label, val, set, hint]) => (
                 <button
                   key={label}
@@ -450,12 +450,12 @@ export const AudioCheckModal = ({ isOpen, onClose }: Props) => {
 
           {/* Zoom / virtual-audio tip */}
           <section className="rounded-md p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-            <h3 className="text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-primary)' }}>Interview-platform settings</h3>
+            <h3 className="text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-primary)' }}>Platform settings</h3>
             <ul className="text-[12px] space-y-1" style={{ color: 'var(--text-secondary)' }}>
-              <li>• <strong>Zoom / Teams / Meet:</strong> match the mic and speaker above to the same devices in the meeting app's audio settings — otherwise Lumora will transcribe a different stream than the interviewer hears.</li>
+              <li>• <strong>Zoom / Teams / Meet:</strong> match the mic and speaker above to the same devices in the meeting app's audio settings — otherwise Lumora will transcribe a different stream than the speaker hears.</li>
               <li>• <strong>Auto-adjust volume:</strong> turn OFF in Zoom when running Lumora — it fights with our auto-gain and causes level pumping.</li>
               <li>• <strong>Original sound / music mode:</strong> leave OFF — Lumora is tuned for standard speech.</li>
-              <li>• <strong>Headphones recommended:</strong> prevents the interviewer's audio from bleeding back into your mic and confusing the transcript.</li>
+              <li>• <strong>Headphones recommended:</strong> prevents the speaker's audio from bleeding back into your mic and confusing the transcript.</li>
             </ul>
           </section>
 

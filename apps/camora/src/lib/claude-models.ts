@@ -24,7 +24,7 @@ export const CLAUDE_MODELS: ClaudeModelInfo[] = [
   {
     id: 'claude-haiku-4-5-20251001',
     label: 'Haiku 4.5',
-    description: 'Fastest. Best for live interview latency. Default for coding & behavioral.',
+    description: 'Fastest. Best for live session latency. Default for coding & behavioral.',
     tokensPerSecond: 300,
     costTier: 1,
   },

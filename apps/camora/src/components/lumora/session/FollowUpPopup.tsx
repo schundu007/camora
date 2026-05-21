@@ -298,7 +298,7 @@ export const FollowUpPopup = () => {
         {/* ── Interviewer question ──────────────────────── */}
         {question && (
           <div className="mx-3 mb-2 px-3 py-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Interviewer:</span>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Question:</span>
             <p className="text-[13px] leading-snug mt-0.5 italic" style={{ color: 'var(--text-primary)' }}>
               &ldquo;{question.length > 150 ? question.slice(0, 150) + '...' : question}&rdquo;
             </p>

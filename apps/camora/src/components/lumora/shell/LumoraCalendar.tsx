@@ -26,7 +26,7 @@ export const LumoraCalendar = ({ onClose }: { onClose: () => void }) => {
       {/* Header — LeetCode navy + gold underline */}
       <div className="flex items-center justify-between px-4 h-12 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-sans)' }}>Interview Calendar</span>
+          <span className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-sans)' }}>Session Calendar</span>
           {/* View toggle */}
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.1)' }}>
             <button onClick={() => setView('week')}
@@ -72,7 +72,7 @@ export const LumoraCalendar = ({ onClose }: { onClose: () => void }) => {
             Connect Google Calendar
           </p>
           <p className="text-xs text-center mb-4" style={{ color: C.muted, fontFamily: 'var(--font-sans)' }}>
-            Sign in to view your interview schedule
+            Sign in to view your session schedule
           </p>
           <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer"
             className="px-4 py-2 rounded-xl text-xs font-bold transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]" style={{ background: 'var(--cam-primary)', color: '#fff' }}>

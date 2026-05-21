@@ -311,7 +311,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--text-primary)' }}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
           <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Launch Now</span>
         </div>
-        <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>Start fast with ready-to-use interview co-pilots.</p>
+        <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>Start fast with ready-to-use session co-pilots.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {COPILOTS.map(cp => (
             <button

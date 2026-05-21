@@ -123,7 +123,7 @@ export function getAssistantFromPrepKit(): LumoraAssistant | null {
       resume,
       jdFile: doc.jdFile,
       resumeFile: doc.resumeFile,
-    }) || (key && key !== 'My Interview' ? key : undefined);
+    }) || (key && key !== 'My Session' ? key : undefined);
 
     const studyDocs: LumoraStudyDoc[] = Array.isArray(doc.studyDocs)
       ? doc.studyDocs.filter(d => d && typeof d.content === 'string' && d.content.trim())
@@ -204,7 +204,7 @@ function detectCompany(input: {
 
   // 2. Fall back to the user's workspace label if it isn't a generic
   //    placeholder.
-  const generic = ['my interview', 'interview', 'default', 'untitled', 'new', 'test'];
+  const generic = ['my session', 'session', 'default', 'untitled', 'new', 'test'];
   if (input.label && !generic.includes(input.label.trim().toLowerCase())) {
     return input.label;
   }
