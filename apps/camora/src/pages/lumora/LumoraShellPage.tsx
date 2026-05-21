@@ -421,8 +421,9 @@ export const LumoraShellPage = () => {
             <span className="hidden sm:inline">Back</span>
           </button>
 
-          {/* Cross-section quick links + tool pickers */}
-          <div className="hidden md:flex items-center gap-1 p-0.5 rounded-md shrink-0"
+          {/* Cross-section quick links + tool pickers — lg+ only so 5-tab
+              cluster fits cleanly at the md (768px) tablet breakpoint. */}
+          <div className="hidden lg:flex items-center gap-1 p-0.5 rounded-md shrink-0"
             style={{ background: 'var(--lumora-chrome-bg)', border: '1px solid var(--lumora-chrome-border)', boxShadow: 'var(--lumora-chrome-shadow)' }}>
             <Link to="/capra/prepare"
               className="lumora-chrome-link px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color]"
@@ -499,17 +500,18 @@ export const LumoraShellPage = () => {
             }}
           >
             {[
-              { id: 'interview', label: 'Home', path: '/lumora' },
-              { id: 'coding', label: 'Coding', path: '/lumora/coding' },
-              { id: 'design', label: 'Design', path: '/lumora/design' },
-              { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral' },
-              { id: 'cofix', label: 'CoFix', path: '/lumora/fix' },
+              { id: 'interview', label: 'Home', path: '/lumora', title: 'Interview assistant home' },
+              { id: 'coding', label: 'Coding', path: '/lumora/coding', title: 'Coding interview assistant' },
+              { id: 'design', label: 'Design', path: '/lumora/design', title: 'System design assistant' },
+              { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral', title: 'Behavioral interview assistant' },
+              { id: 'cofix', label: 'CoFix', path: '/lumora/fix', title: 'Fix & debug code' },
             ].map(tab => {
               const isActive = activeTab === tab.id;
               return (
                 <Link
                   key={tab.id}
                   to={tab.path}
+                  title={tab.title}
                   data-active={isActive ? 'true' : 'false'}
                   className="lumora-tab-pill px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-[background-color,color,transform]"
                   style={isActive
@@ -570,7 +572,7 @@ export const LumoraShellPage = () => {
             <div className="flex items-center gap-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
               <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                <strong>Tip:</strong> Open Settings (⚙) to select your microphone and calibrate for best voice detection.
+                <strong>Tip:</strong> Mic sensitivity is very low — quiet questions may not be heard. Open Settings (⚙) to adjust.
               </span>
             </div>
             <button onClick={() => setSettingsDismissed(true)} className="text-xs font-bold px-2 py-1 rounded hover:opacity-80" style={{ color: 'var(--accent)' }}>Dismiss</button>
@@ -772,7 +774,7 @@ export const LumoraShellPage = () => {
                       </svg>
                     </div>
                     <p className="text-sm font-medium">No sessions yet</p>
-                    <p className="text-xs mt-1 mb-4">Start an interview to see your history here.</p>
+                    <p className="text-xs mt-1 mb-4">Sessions and transcripts will appear here after your first interview.</p>
                     <Link
                       to="/lumora"
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]"
@@ -997,6 +999,8 @@ export const LumoraShellPage = () => {
             style={{ top: 48, background: 'var(--bg-surface)', boxShadow: '0 12px 28px rgba(0,0,0,0.20)', border: '1px solid var(--border)' }}>
             <div className="py-2 max-h-[70vh] overflow-y-auto">
               {[
+                { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral' },
+                { id: 'cofix',      label: 'CoFix',      path: '/lumora/fix' },
                 { id: 'calendar',   label: 'Calendar',   path: '/lumora/calendar' },
                 { id: 'sessions',   label: 'Sessions',   path: '/lumora/sessions' },
                 { id: 'assistants', label: 'Assistants', path: '/lumora/assistants' },
