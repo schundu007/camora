@@ -33,8 +33,15 @@ export function cleanTags(text: string): string {
   t = t.replace(/\[JD_COVERAGE\]/gi, '\n\n**JD coverage cheat-sheet**\n');
   t = t.replace(/\[\/JD_COVERAGE\]/gi, '');
 
+  // Convert complete CODE blocks → markdown fences so RichText renders them properly.
+  // Must run BEFORE the generic tag strip so [CODE lang=xxx] becomes ```xxx, not empty.
+  t = t.replace(/\[CODE(?:\s+lang=([\w-]+))?\]([\s\S]*?)\[\/CODE\]/gi, (_, lang, code) =>
+    '\n```' + (lang || '') + '\n' + code.trim() + '\n```\n'
+  );
+
   // Generic tag strip — opening + closing forms of every known section.
-  t = t.replace(/\[\/?(?:FOLLOWUP|HEADLINE|ANSWER|CODE|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS|PROBLEM|APPROACH|COMPLEXITY|WALKTHROUGH|TESTCASES|PITCH|JD_COVERAGE)\]/gi, '');
+  // Handles optional lang= attribute on CODE and optional whitespace padding.
+  t = t.replace(/\[\/?\s*(?:FOLLOWUP|HEADLINE|ANSWER|CODE(?:\s+lang=[\w-]+)?|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS|PROBLEM|APPROACH|COMPLEXITY|WALKTHROUGH|TESTCASES|PITCH|JD_COVERAGE)\s*\]/gi, '');
 
   // Fenced JSON — ```json { ... } ``` or plain ``` { ... } ``` — keep inner content.
   t = t.replace(/```(?:json|JSON)?\s*\n?([\s\S]*?)\n?```/g, '$1');
