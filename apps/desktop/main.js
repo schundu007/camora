@@ -192,7 +192,9 @@ app.whenReady().then(async () => {
     return Boolean(trusted && allowed.includes(permission));
   });
 
-  createWindow();
+  // Guard: `activate` may have already created the window if the user
+  // clicked the Dock while the async cache-clear / mic-prompt was running.
+  if (!mainWindow || mainWindow.isDestroyed()) createWindow();
 
   // Start auto-detecting HackerRank in the browser (macOS only via AppleScript)
   startHackerrankAutoDetect();
