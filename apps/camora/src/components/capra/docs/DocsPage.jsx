@@ -1286,7 +1286,7 @@ export default function DocsPage({ onBack }) {
                     ) : null;
 
                     return (
-                    <div className="mb-4 rounded border border-[var(--border)] bg-[var(--accent-subtle)] overflow-hidden">
+                    <div className="mb-4 rounded border border-[var(--border)] bg-[var(--accent-subtle)] overflow-hidden relative z-10">
                       <div className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="w-8 h-8 rounded bg-[var(--accent-subtle)] flex items-center justify-center flex-shrink-0">
@@ -1303,6 +1303,7 @@ export default function DocsPage({ onBack }) {
                           </div>
                         </div>
                         <button
+                          type="button"
                           onClick={clearJobFilter}
                           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-surface)] border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0 landing-body"
                         >
