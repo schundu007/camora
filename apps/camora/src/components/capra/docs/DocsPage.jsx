@@ -2215,7 +2215,7 @@ export default function DocsPage({ onBack }) {
                     <div className="mb-4">
                       <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Framework</span>
                       <h3 className="landing-display font-bold text-lg mt-1 tracking-tight text-[var(--text-primary)] flex items-center gap-2">
-                        System Design Interview
+                        System Design Session
                         <span className="text-[var(--text-muted)] font-normal text-sm landing-body">(45 min)</span>
                       </h3>
                     </div>

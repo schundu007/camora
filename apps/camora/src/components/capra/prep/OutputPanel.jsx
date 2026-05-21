@@ -945,7 +945,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                       if (typeof ctx === 'object' && ctx !== null) {
                         return (
                           <div className="space-y-2 text-sm">
-                            {ctx.interviewFormat && <p><span className="font-semibold">Interview Format:</span> {ctx.interviewFormat}</p>}
+                            {ctx.interviewFormat && <p><span className="font-semibold">Format:</span> {ctx.interviewFormat}</p>}
                             {ctx.culture && <p><span className="font-semibold">Culture:</span> {ctx.culture}</p>}
                             {ctx.culturalFit && <p><span className="font-semibold">Cultural Fit:</span> {ctx.culturalFit}</p>}
                             {safeArray(ctx.whatTheyLookFor).length > 0 && (

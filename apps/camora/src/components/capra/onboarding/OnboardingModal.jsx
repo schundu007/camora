@@ -52,7 +52,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
       content: (
         <div className="space-y-6">
           <p className="text-center text-base text-[var(--text-muted)] landing-body">
-            Ascend helps you prepare for technical interviews with AI-powered assistance
+            Ascend helps you master software engineering with AI-powered assistance
             for coding challenges, system design, and behavioral questions.
           </p>
           <div className="grid grid-cols-3 gap-3">
@@ -92,7 +92,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
     },
     {
       title: 'How It Works',
-      subtitle: 'Three simple steps to ace your interview',
+      subtitle: 'Three simple steps to get started',
       icon: (
         <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 bg-[var(--accent-subtle)]">
           <svg className="w-10 h-10 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -184,7 +184,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
               className="p-4 rounded-lg text-center relative overflow-hidden bg-[var(--accent-subtle)] border border-[var(--border)]"
             >
               <div className="text-2xl font-bold text-[var(--text-primary)] landing-display">$29</div>
-              <div className="text-sm font-medium text-[var(--accent)] landing-body">Interview Ready</div>
+              <div className="text-sm font-medium text-[var(--accent)] landing-body">Ready to Go</div>
               <div className="text-xs mt-2 text-[var(--text-muted)] landing-body">/month</div>
             </div>
             <div
@@ -219,7 +219,7 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
       content: (
         <div className="space-y-6 text-center">
           <p className="text-[var(--text-muted)] landing-body">
-            You're ready to start preparing for your dream job interviews.
+            You're ready to start preparing for your dream role.
             Get credits to unlock company-specific prep materials.
           </p>
           <div className="flex flex-col gap-3">
