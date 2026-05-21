@@ -1,0 +1,14 @@
+{
+  "name": "hackerrank-sync",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "extract": "node extract-cookies.js",
+    "probe": "node probe-api.js",
+    "sync": "node sync.js",
+    "write": "node write-data.js"
+  },
+  "dependencies": {
+    "ws": "^8.17.0"
+  }
+}
