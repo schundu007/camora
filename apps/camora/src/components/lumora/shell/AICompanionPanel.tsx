@@ -369,13 +369,24 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // as uninitialized, so any reference before the declaration line crashes.
   const setSonaActions = useInterviewStore(s => s.setSonaActions);
 
+  // Ref holds the latest unstable callbacks so the useEffect below can
+  // read fresh values without listing them as deps. LumoraShellPage passes
+  // onClose as an inline arrow function, which creates a new reference on
+  // every parent re-render — putting it in the dep array would cause
+  // setSonaActions → store update → parent re-renders → new onClose →
+  // effect re-fires → setSonaActions again → infinite loop (#185).
+  const embeddedActionsRef = useRef({ exportSession, clearMessages, onClose });
+  embeddedActionsRef.current = { exportSession, clearMessages, onClose };
+
   // Register panel actions into the store so ScreenshotStrip can render
   // them in the behavioral toolbar without prop-drilling through LumoraShellPage.
   useEffect(() => {
     if (!embedded) return;
-    setSonaActions({ export: exportSession, clear: clearMessages, close: onClose, hasMessages: messages.length > 0 });
+    const { exportSession: exp, clearMessages: clr, onClose: cls } = embeddedActionsRef.current;
+    setSonaActions({ export: exp, clear: clr, close: cls, hasMessages: messages.length > 0 });
     return () => { setSonaActions({ export: null, clear: null, close: null, hasMessages: false }); };
-  }, [embedded, exportSession, clearMessages, onClose, messages.length, setSonaActions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [embedded, messages.length, setSonaActions]);
 
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState('');
