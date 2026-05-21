@@ -56,7 +56,7 @@ const APPA: Step[] = [
   {
     key: 'practice', label: 'Practice', href: '/capra/practice',
     headline: '3,500+ problems with AI feedback',
-    desc: 'Real interview problems, multi-approach solutions, timed practice sessions scored on every dimension.',
+    desc: 'Real-world problems, multi-approach solutions, timed practice sessions scored on every dimension.',
     Anim: PracticeAnim,
     icon: Glyph(<><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></>),
   },
@@ -81,7 +81,7 @@ const COMPANY_LOGOS = [
 const FEATURES = [
   {
     label: 'Live AI',
-    title: 'Real-time AI during interviews',
+    title: 'Real-time AI during sessions',
     desc: 'Voice transcription captures the question. AI generates instant answers in seconds. No other tool does this.',
     Anim: FeatureLiveAIAnim,
   },
@@ -215,7 +215,7 @@ export default function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
               >
-                1,000+ matched roles, 1,400+ study topics, 3,500+ practice problems, and a live AI copilot answering the interviewer in real time: everything from first application to final offer.
+                1,000+ matched roles, 1,400+ study topics, 3,500+ practice problems, and a live AI copilot AI assistance in real time: everything from first application to final offer.
               </motion.p>
 
               <motion.div
@@ -366,8 +366,8 @@ export default function LandingPage() {
               <Reveal>
                 <SectionHeading
                   eyebrow="Camora · AI copilot"
-                  title={<>One tool.<br /><span className="text-[var(--cam-primary)]">Every interview.</span></>}
-                  lead="Live voice assistance. Coding with three approaches and follow-ups. Multi-cloud architecture on AWS, GCP, Azure. Complete design problems: requirements through API. Company-specific prep for the full loop. Mock-interview scoring across every dimension."
+                  title={<>One tool.<br /><span className="text-[var(--cam-primary)]">Every session.</span></>}
+                  lead="Live voice assistance. Coding with three approaches and follow-ups. Multi-cloud architecture on AWS, GCP, Azure. Complete design problems: requirements through API. Company-specific prep for the full loop. Session scoring across every dimension."
                 />
                 <div className="mt-7 flex items-center gap-4">
                   <CTAButton to="/lumora" variant="primary" size="md" trailingArrow>
@@ -483,7 +483,7 @@ export default function LandingPage() {
             <AudienceCard
               eyebrow="For engineers"
               title="Roles, practice & live AI"
-              body="1,000+ engineering roles matched to your skills, 1,400+ curated study topics with diagrams, and 3,500+ problems with AI feedback. Then live transcription assistance during the interview itself: the moment that decides the offer."
+              body="1,000+ engineering roles matched to your skills, 1,400+ curated study topics with diagrams, and 3,500+ problems with AI feedback. Then live transcription assistance during the session itself: the moment that decides the offer."
               ctaLabel={isAuthenticated ? 'Open dashboard' : 'Start free'}
               ctaHref="/capra/prepare"
             />
