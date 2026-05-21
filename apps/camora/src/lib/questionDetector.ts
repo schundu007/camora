@@ -222,7 +222,7 @@ export function questionReason(raw: string): { isQuestion: boolean; reason: stri
     }
     return { isQuestion: false, reason: 'background / small-talk opener' };
   }
-  if (QUESTION_STARTERS.some((s) => text.startsWith(s))) {
+  if (QUESTION_STARTERS.some((s) => strippedQ.startsWith(s))) {
     return { isQuestion: true, reason: 'question-word opener' };
   }
   if (INTERVIEW_VERBS_ANYWHERE.some((v) => text.includes(v))) {

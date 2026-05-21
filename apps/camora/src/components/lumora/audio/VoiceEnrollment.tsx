@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useInterviewStore } from '@/stores/interview-store';
 import { useAudioDevices } from './hooks/useAudioDevices';
+import { useAuth } from '@/contexts/AuthContext';
+import { speakerAPI } from '@/lib/api-client';
 
 const LS_KEY = 'camora-voice-enrolled';
 // Module-level flag: true once the filter has been enabled in this page session.
@@ -15,6 +17,7 @@ interface VoiceEnrollmentProps {
 
 export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentProps) => {
   const isLight = variant === 'light';
+  const { token } = useAuth();
   const { selectedDeviceId } = useAudioDevices();
   const {
     voiceEnrolled,
@@ -35,6 +38,10 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
   const progressRef = useRef<number | null>(null);
+  const tokenRef = useRef<string | null>(null);
+  const mimeTypeRef = useRef<string>('');
+
+  useEffect(() => { tokenRef.current = token; }, [token]);
 
   const RECORDING_DURATION = 5000;
 
@@ -91,6 +98,7 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
 
       const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg', 'audio/mp4']
         .find(t => MediaRecorder.isTypeSupported(t)) ?? '';
+      mimeTypeRef.current = mimeType;
 
       const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       mediaRecorderRef.current = mediaRecorder;
@@ -110,13 +118,24 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
           return;
         }
 
-        // Frontend-only: persist to localStorage, no backend call
-        localStorage.setItem(LS_KEY, 'true');
-        setVoiceEnrolled(true);
-        setVoiceFilterEnabled(true);
-        setStatus('ready', 'Voice enrolled');
-        setIsEnrolling(false);
+        const audioBlob = new Blob(chunksRef.current, { type: mimeTypeRef.current || 'audio/webm' });
         chunksRef.current = [];
+
+        (async () => {
+          try {
+            await speakerAPI.enroll(tokenRef.current ?? '', audioBlob, 'enrollment.webm');
+          } catch (enrollErr: any) {
+            setError(enrollErr.message || 'Failed to save voice profile');
+            setIsEnrolling(false);
+            setStatus('error', 'Enrollment failed');
+            return;
+          }
+          localStorage.setItem(LS_KEY, 'true');
+          setVoiceEnrolled(true);
+          setVoiceFilterEnabled(true);
+          setStatus('ready', 'Voice enrolled');
+          setIsEnrolling(false);
+        })();
       };
 
       const startTime = Date.now();

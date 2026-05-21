@@ -130,6 +130,12 @@ export const LumoraShellPage = () => {
     location.pathname.includes('/profile') ? 'profile' :
     location.pathname.includes('/credits') ? 'credits' : 'interview';
 
+  // Ref tracks the current activeTab so async callbacks (transcription, snap)
+  // always route to the tab that was active when the event fired, not the tab
+  // captured at useCallback creation time (stale closure).
+  const activeTabRef = useRef<LumoraTab>(activeTab);
+  useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
+
   // handleInputModeChange declared AFTER activeTab to avoid TDZ (const has a dead zone)
   const handleInputModeChange = useCallback((mode: string) => {
     if (activeTab === 'coding') setCodingInputMode(mode as 'paste' | 'url' | 'image');
@@ -234,7 +240,7 @@ export const LumoraShellPage = () => {
   useEffect(() => {
     const camo = (window as any).camo;
     if (!camo?.onHackerrankCapture) return;
-    camo.onHackerrankCapture((data: { dataUrl?: string; dataUrls?: string[]; text?: string; starterCode?: string; error?: string }) => {
+    const handler = camo.onHackerrankCapture((data: { dataUrl?: string; dataUrls?: string[]; text?: string; starterCode?: string; error?: string }) => {
       if (data.text) {
         navigate('/lumora/coding');
         setPendingHackerrankText(data.text);
@@ -247,7 +253,7 @@ export const LumoraShellPage = () => {
         setPendingHackerrankCapture(data.dataUrl);
       }
     });
-    return () => { camo.offHackerrankCapture?.(); };
+    return () => { camo.offHackerrankCapture?.(handler); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -284,19 +290,20 @@ export const LumoraShellPage = () => {
   const handleTranscription = useCallback((text: string, opts?: { manual?: boolean }) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    if (activeTab === 'coding' || activeTab === 'design') {
+    const tab = activeTabRef.current;
+    if (tab === 'coding' || tab === 'design') {
       // Routed: voice-router decides between the problem setter and Sona
       // based on voiceRoute state. Manual presses always go to Sona.
       dispatchTranscript({
         text: trimmed,
         opts,
-        activeTab,
+        activeTab: tab,
         codingProblemRef,
         designProblemRef,
       });
       return;
     }
-    if (activeTab === 'behavioral') {
+    if (tab === 'behavioral') {
       // Behavioral fullscreen renders the embedded AICompanionPanel — the
       // InterviewPage UI is hidden, so routing through useStreamingInterview
       // would stream the answer to a surface no one can see. Forward the
@@ -310,7 +317,7 @@ export const LumoraShellPage = () => {
     // Interview tab: gate on isQuestion() so background noise doesn't fire the LLM.
     if (!opts?.manual && !isQuestion(trimmed)) return;
     handleSubmit(text);
-  }, [handleSubmit, activeTab]);
+  }, [handleSubmit]);
 
   const handleSnapped = useCallback((entry: ScreenshotEntry) => {
     setScreenshots(prev => {
@@ -319,10 +326,11 @@ export const LumoraShellPage = () => {
       return [...prev, entry];
     });
     if (!entry.text) return;
-    if (activeTab === 'coding') codingScreenshotRef.current?.(entry.text);
-    else if (activeTab === 'design') designScreenshotRef.current?.(entry.text);
-    else if (activeTab === 'cofix') cofixScreenshotRef.current?.(entry.text);
-  }, [activeTab]);
+    const tab = activeTabRef.current;
+    if (tab === 'coding') codingScreenshotRef.current?.(entry.text);
+    else if (tab === 'design') designScreenshotRef.current?.(entry.text);
+    else if (tab === 'cofix') cofixScreenshotRef.current?.(entry.text);
+  }, []);
 
   const handleRemoveScreenshot = useCallback((id: string) => {
     setScreenshots(prev => prev.filter(s => s.id !== id));
@@ -648,6 +656,7 @@ export const LumoraShellPage = () => {
                       surface="coding"
                       open={sonaSidebarOpen}
                       onClose={() => setSonaSidebarOpen(false)}
+                      listenTrigger={sonaListenTrigger}
                     />
                   </div>
                 </Suspense>

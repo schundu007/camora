@@ -73,6 +73,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
     systemContext = systemContext.slice(0, MAX_SYSTEM_CONTEXT_CHARS);
   }
 
+  let keepaliveTimer = null;
   try {
     // Check daily free limit for free-tier users
     const userPlan = user.plan_type || 'free';
@@ -154,7 +155,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
     const abortController = new AbortController();
 
     // Keepalive — Railway / Cloudflare proxies drop idle SSE connections after 30s.
-    const keepaliveTimer = setInterval(() => {
+    keepaliveTimer = setInterval(() => {
       if (!clientDisconnected) res.write(': ping\n\n');
     }, 20_000);
 
