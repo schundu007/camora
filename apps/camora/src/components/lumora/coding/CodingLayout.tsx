@@ -1702,64 +1702,22 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                     never needs to manually input a problem. Replace the entire
                     Text/URL/Image picker with a single monitoring status bar. */}
                 {codingPlatform && codingPlatform !== 'none' ? (
-                  /* Autopilot mode — two-row layout matching Image #16:
-                     Row 1: monitoring status (dot + platform logo)
-                     Row 2: Snap | Stealth | mic controls | collapse       */
+                  /* Autopilot mode — platform chip is in ScreenshotStrip above; show only collapse button here */
                   <div
                     className="flex flex-col"
                     style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
                   >
-                    {/* ── Row 1: monitoring status ── */}
-                    <div className="flex items-center gap-2 px-3 pt-2 pb-1.5 min-w-0">
-                      {screenPermStatus && screenPermStatus !== 'granted' ? (
-                        <>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                          <span className="text-[11px] font-semibold truncate" style={{ color: '#f59e0b' }}>Screen Recording not granted — auto-detect paused</span>
-                          <button
-                            onClick={() => (window as any).camo?.openSystemPrivacy?.('screen')}
-                            className="px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-80"
-                            style={{ background: '#f59e0b', color: '#000' }}
-                          >Fix in Settings</button>
-                        </>
-                      ) : problemText ? (
-                        <>
-                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[11px] font-semibold" style={{ color: 'var(--cam-gold-leaf)' }}>Problem loaded — generating</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="relative flex h-2 w-2 shrink-0">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#00ea64' }} />
-                            <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#00ea64' }} />
-                          </span>
-                          {codingPlatform === 'hackerrank' && (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-label="HackerRank">
-                              <path d="M4 3L10 12L4 21" stroke="#1ba94c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M20 3L14 12L20 21" stroke="#1ba94c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                              <line x1="10" y1="12" x2="14" y2="12" stroke="#1ba94c" strokeWidth="2.5" strokeLinecap="round"/>
-                            </svg>
-                          )}
-                          {codingPlatform === 'leetcode' && (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-label="LeetCode">
-                              <path d="M5 4h9l5 5v11a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z" stroke="#ffa116" strokeWidth="2" strokeLinejoin="round"/>
-                              <path d="M14 4v5h5M8 13h8" stroke="#ffa116" strokeWidth="2" strokeLinecap="round"/>
-                            </svg>
-                          )}
-                          {codingPlatform === 'coderpad' && (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-label="CoderPad">
-                              <path d="M17 8H7a5 5 0 000 10h10" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round"/>
-                              <circle cx="17" cy="13" r="3" stroke="#6366f1" strokeWidth="2"/>
-                            </svg>
-                          )}
-                          {!['hackerrank','leetcode','coderpad'].includes(codingPlatform) && (
-                            <span className="text-[11px] font-semibold" style={{ color: '#00ea64' }}>{codingPlatform}</span>
-                          )}
-                        </>
-                      )}
-                    </div>
+                    {/* ── Screen permission warning (desktop only) ── */}
+                    {screenPermStatus && screenPermStatus !== 'granted' && (
+                      <div className="flex items-center gap-2 px-3 pt-2 pb-1.5 min-w-0">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <span className="text-[11px] font-semibold truncate" style={{ color: '#f59e0b' }}>Screen Recording not granted — auto-detect paused</span>
+                        <button onClick={() => (window as any).camo?.openSystemPrivacy?.('screen')} className="px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-80" style={{ background: '#f59e0b', color: '#000' }}>Fix in Settings</button>
+                      </div>
+                    )}
 
                     {/* ── Collapse input panel ── */}
-                    <div className="flex items-center justify-end px-3 pb-2">
+                    <div className="flex items-center justify-end px-3 py-2">
                       <button
                         onClick={() => setIsInputCollapsed(!isInputCollapsed)}
                         className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"

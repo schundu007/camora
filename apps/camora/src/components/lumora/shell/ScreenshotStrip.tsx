@@ -14,7 +14,7 @@ export interface ScreenshotEntry {
 }
 
 interface ScreenshotStripProps {
-  surface: 'coding' | 'design' | 'behavioral' | 'cofix';
+  surface: 'coding' | 'design' | 'behavioral';
   screenshots: ScreenshotEntry[];
   onSnapped: (entry: ScreenshotEntry) => void;
   onRemove: (id: string) => void;
@@ -26,12 +26,14 @@ interface ScreenshotStripProps {
   /** Forwarded to AudioCapture for all AI tabs */
   onTranscription?: (text: string, opts?: { manual?: boolean }) => void;
   isTabActive?: boolean;
+  /** Coding tab only — shows platform chip (hackerrank/leetcode/coderpad) at left of strip */
+  codingPlatform?: string;
 }
 
 /** Shared pill chrome — matches the LumoraShellPage tab nav exactly. */
 const pillBase = 'flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color,opacity] active:scale-[0.97]';
 
-export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inputMode, onInputModeChange, showInputModeSelector, onTranscription, isTabActive }: ScreenshotStripProps) => {
+export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inputMode, onInputModeChange, showInputModeSelector, onTranscription, isTabActive, codingPlatform }: ScreenshotStripProps) => {
   const { token } = useAuth();
   const isStealthActive = useInterviewStore(s => s.isStealthActive);
   const setIsStealthActive = useInterviewStore(s => s.setIsStealthActive);
@@ -131,6 +133,38 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
         minHeight: 36,
       }}
     >
+      {/* Platform identifier — coding tab autopilot mode */}
+      {codingPlatform && codingPlatform !== 'none' && (
+        <div className="flex items-center gap-1.5 shrink-0 pr-2 mr-0.5" style={{ borderRight: '1px solid rgba(255,255,255,0.18)' }}>
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#00ea64' }} />
+            <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#00ea64' }} />
+          </span>
+          {codingPlatform === 'hackerrank' && (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-label="HackerRank">
+              <path d="M4 3L10 12L4 21" stroke="#1ba94c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M20 3L14 12L20 21" stroke="#1ba94c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="10" y1="12" x2="14" y2="12" stroke="#1ba94c" strokeWidth="2.5" strokeLinecap="round"/>
+            </svg>
+          )}
+          {codingPlatform === 'leetcode' && (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-label="LeetCode">
+              <path d="M5 4h9l5 5v11a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z" stroke="#ffa116" strokeWidth="2" strokeLinejoin="round"/>
+              <path d="M14 4v5h5M8 13h8" stroke="#ffa116" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          )}
+          {codingPlatform === 'coderpad' && (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-label="CoderPad">
+              <path d="M17 8H7a5 5 0 000 10h10" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round"/>
+              <circle cx="17" cy="13" r="3" stroke="#6366f1" strokeWidth="2"/>
+            </svg>
+          )}
+          {!['hackerrank', 'leetcode', 'coderpad'].includes(codingPlatform) && (
+            <span className="text-[11px] font-semibold" style={{ color: '#00ea64' }}>{codingPlatform}</span>
+          )}
+        </div>
+      )}
+
       {/* Snap button */}
       {showSnap && (
         <button
