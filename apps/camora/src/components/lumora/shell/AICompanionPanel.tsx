@@ -364,6 +364,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     if (ok) setMessages([]);
   }, [messages.length]);
 
+  // Declared here (before the useEffect below) so the dependency array
+  // can reference it without a TDZ — const/let in function scope is hoisted
+  // as uninitialized, so any reference before the declaration line crashes.
+  const setSonaActions = useInterviewStore(s => s.setSonaActions);
+
   // Register panel actions into the store so ScreenshotStrip can render
   // them in the behavioral toolbar without prop-drilling through LumoraShellPage.
   useEffect(() => {
@@ -421,7 +426,6 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   const [isResizing, setIsResizing] = useState<false | 'w' | 'h' | 'wh' | 'e' | 's' | 'es'>(false);
   const answerMode = useInterviewStore(s => s.answerMode);
   const setAnswerMode = useInterviewStore(s => s.setAnswerMode);
-  const setSonaActions = useInterviewStore(s => s.setSonaActions);
   const [position, setPosition] = useState(() => savedPrefs ? { x: savedPrefs.x, y: savedPrefs.y } : { x: 0, y: 0 });
 
   // Debounced write-through of size + position
