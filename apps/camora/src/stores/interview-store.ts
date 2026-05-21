@@ -126,6 +126,9 @@ interface InterviewState {
   // Stealth mode — hides live answers on-screen during interview
   isStealthActive: boolean;
 
+  // Sona response verbosity — shared across AICompanionPanel and ScreenshotStrip
+  answerMode: 'short' | 'detailed';
+
   // Actions
   setConversationId: (id: string | null) => void;
   setQuestion: (question: string | null) => void;
@@ -164,6 +167,7 @@ interface InterviewState {
   setLastFromCache: (fromCache: boolean | null) => void;
   setLiveSolveContext: (ctx: InterviewState['liveSolveContext']) => void;
   setIsStealthActive: (v: boolean) => void;
+  setAnswerMode: (mode: 'short' | 'detailed') => void;
   reset: () => void;
 }
 
@@ -214,6 +218,7 @@ const initialState = {
   lastFromCache: null as boolean | null,
   liveSolveContext: null as InterviewState['liveSolveContext'],
   isStealthActive: false,
+  answerMode: 'short' as const,
 };
 
 export const useInterviewStore = create<InterviewState>()(
@@ -335,6 +340,7 @@ export const useInterviewStore = create<InterviewState>()(
   setPreferredModel: (preferredModel) => set({ preferredModel }),
 
   setIsStealthActive: (v) => set({ isStealthActive: v }),
+  setAnswerMode: (mode) => set({ answerMode: mode }),
 
   reset: () => set(initialState),
     }),

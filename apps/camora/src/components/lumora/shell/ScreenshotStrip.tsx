@@ -37,6 +37,8 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
   const { token } = useAuth();
   const isStealthActive = useInterviewStore(s => s.isStealthActive);
   const setIsStealthActive = useInterviewStore(s => s.setIsStealthActive);
+  const answerMode = useInterviewStore(s => s.answerMode);
+  const setAnswerMode = useInterviewStore(s => s.setAnswerMode);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
   const [pendingIds, setPendingIds] = useState<string[]>([]);
 
@@ -255,6 +257,38 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* SHORT / DETAILED — behavioral tab only */}
+      {surface === 'behavioral' && (
+        <div
+          className="flex items-center gap-0.5 shrink-0"
+          style={{
+            padding: '2px 3px',
+            background: 'rgba(3,19,46,0.88)',
+            border: '1px solid rgba(201,162,39,0.50)',
+            borderRadius: 8,
+          }}
+        >
+          {(['short', 'detailed'] as const).map(mode => (
+            <button
+              key={mode}
+              onClick={() => setAnswerMode(mode)}
+              className="px-2.5 py-0.5 transition-[background-color,color]"
+              style={{
+                borderRadius: 6,
+                fontSize: '10px',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: answerMode === mode ? '#020617' : 'rgba(255,255,255,0.82)',
+                background: answerMode === mode ? 'var(--cam-gold-leaf)' : 'transparent',
+              }}
+            >
+              {mode === 'short' ? 'Short' : 'Detailed'}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* AudioCapture — all AI tabs */}
       {onTranscription && (
