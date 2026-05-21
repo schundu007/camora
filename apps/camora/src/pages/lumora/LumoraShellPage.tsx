@@ -46,6 +46,7 @@ export const LumoraShellPage = () => {
   const [pendingHackerrankCapture, setPendingHackerrankCapture] = useState<string | null>(null);
   const [pendingHackerrankText, setPendingHackerrankText] = useState<string | null>(null);
   const [pendingHackerrankStarterCode, setPendingHackerrankStarterCode] = useState<string | null>(null);
+  const [pendingHackerrankDataUrls, setPendingHackerrankDataUrls] = useState<string[] | null>(null);
 
   // Global screenshot strip state
   const [screenshots, setScreenshots] = useState<ScreenshotEntry[]>([]);
@@ -224,11 +225,14 @@ export const LumoraShellPage = () => {
   useEffect(() => {
     const camo = (window as any).camo;
     if (!camo?.onHackerrankCapture) return;
-    camo.onHackerrankCapture((data: { dataUrl?: string; text?: string; starterCode?: string; error?: string }) => {
+    camo.onHackerrankCapture((data: { dataUrl?: string; dataUrls?: string[]; text?: string; starterCode?: string; error?: string }) => {
       if (data.text) {
         navigate('/lumora/coding');
         setPendingHackerrankText(data.text);
         if (data.starterCode) setPendingHackerrankStarterCode(data.starterCode);
+      } else if (data.dataUrls) {
+        navigate('/lumora/coding');
+        setPendingHackerrankDataUrls(data.dataUrls);
       } else if (data.dataUrl) {
         navigate('/lumora/coding');
         setPendingHackerrankCapture(data.dataUrl);
@@ -617,6 +621,8 @@ export const LumoraShellPage = () => {
                         onHackerrankTextConsumed={() => setPendingHackerrankText(null)}
                         pendingHackerrankStarterCode={pendingHackerrankStarterCode}
                         onHackerrankStarterCodeConsumed={() => setPendingHackerrankStarterCode(null)}
+                        pendingHackerrankDataUrls={pendingHackerrankDataUrls}
+                        onHackerrankDataUrlsConsumed={() => setPendingHackerrankDataUrls(null)}
                         codingPlatform={codingPlatform}
                         onEmbeddedTranscription={handleTranscription}
                         isTabActive={activeTab === 'coding'}
