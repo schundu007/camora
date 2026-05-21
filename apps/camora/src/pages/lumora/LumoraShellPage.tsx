@@ -404,7 +404,7 @@ export const LumoraShellPage = () => {
             <span className="hidden sm:inline">Back</span>
           </button>
 
-          {/* Cross-section quick links */}
+          {/* Cross-section quick links + tool pickers */}
           <div className="hidden md:flex items-center gap-1 p-0.5 rounded-md shrink-0"
             style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)' }}>
             <Link to="/capra/prepare"
@@ -413,6 +413,49 @@ export const LumoraShellPage = () => {
             <Link to="/pricing"
               className="px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color] hover:bg-white/10"
               style={{ color: 'rgba(255,255,255,0.80)' }}>Pricing</Link>
+            {/* Separator */}
+            <div className="w-px h-4 mx-0.5" style={{ background: 'rgba(255,255,255,0.15)' }} />
+            {/* Meeting platform */}
+            <div className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold cursor-pointer hover:bg-white/10 transition-[background-color]"
+              style={{ color: 'rgba(255,255,255,0.80)' }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+              <select
+                value={meetingPlatform}
+                onChange={e => setMeetingPlatform(e.target.value)}
+                className="bg-transparent border-none outline-none cursor-pointer text-[11px] font-bold"
+                style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
+                title="Meeting platform"
+                aria-label="Meeting platform"
+              >
+                <option value="zoom">Zoom</option>
+                <option value="teams">Teams</option>
+                <option value="meet">Google Meet</option>
+                <option value="other">Other</option>
+              </select>
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            {/* Coding platform */}
+            <div className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold cursor-pointer transition-[background-color]"
+              style={codingPlatform !== 'none'
+                ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', borderRadius: '0.25rem', boxShadow: '0 0 0 2px rgba(201,162,39,0.30)' }
+                : { color: 'rgba(255,255,255,0.80)' }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <select
+                value={codingPlatform}
+                onChange={e => setCodingPlatform(e.target.value)}
+                className="bg-transparent border-none outline-none cursor-pointer text-[11px] font-bold"
+                style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
+                title="Coding platform — Camora auto-detects this tab"
+                aria-label="Coding platform"
+              >
+                <option value="auto">Auto-detect</option>
+                <option value="none">Disabled</option>
+                <option value="hackerrank">HackerRank</option>
+                <option value="leetcode">LeetCode</option>
+                <option value="coderpad">CoderPad</option>
+              </select>
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
           </div>
 
           {/* LEFT spacer — pushes the tab pills toward the centre of the
@@ -477,53 +520,6 @@ export const LumoraShellPage = () => {
               <CompanyContextPicker />
             </div>
 
-            {/* Tool pickers — always visible so users know what Lumora is
-                watching. Meeting platform is cosmetic; coding platform drives
-                auto-capture. Hidden on mobile (hamburger handles config). */}
-            <div className="hidden md:flex items-center gap-1.5">
-              {/* Meeting platform — navy-gold pill */}
-              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-bold"
-                style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)', color: 'rgba(255,255,255,0.85)' }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                <select
-                  value={meetingPlatform}
-                  onChange={e => setMeetingPlatform(e.target.value)}
-                  className="bg-transparent border-none outline-none cursor-pointer text-[11px] font-bold"
-                  style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
-                  title="Meeting platform"
-                  aria-label="Meeting platform"
-                >
-                  <option value="zoom">Zoom</option>
-                  <option value="teams">Teams</option>
-                  <option value="meet">Google Meet</option>
-                  <option value="other">Other</option>
-                </select>
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
-              </div>
-
-              {/* Coding platform — gold when active, navy otherwise */}
-              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-bold"
-                style={codingPlatform !== 'none'
-                  ? { background: 'var(--cam-gold-leaf)', border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 0 0 2px rgba(201,162,39,0.30)' }
-                  : { background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)', color: 'rgba(255,255,255,0.65)' }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-                <select
-                  value={codingPlatform}
-                  onChange={e => setCodingPlatform(e.target.value)}
-                  className="bg-transparent border-none outline-none cursor-pointer text-[11px] font-bold"
-                  style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
-                  title="Coding platform — Camora auto-detects this tab"
-                  aria-label="Coding platform"
-                >
-                  <option value="auto">Auto-detect</option>
-                  <option value="none">Disabled</option>
-                  <option value="hackerrank">HackerRank</option>
-                  <option value="leetcode">LeetCode</option>
-                  <option value="coderpad">CoderPad</option>
-                </select>
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
-              </div>
-            </div>
             {/* Mobile hamburger — pinned right, matches SiteNav and TopBar.
                 Opens a dropdown with secondary Lumora destinations and
                 utilities (theme, audio check). */}
@@ -562,9 +558,9 @@ export const LumoraShellPage = () => {
         )}
 
         {/* Global screenshot strip — shown on AI tabs only */}
-        {(activeTab === 'coding' || activeTab === 'design' || activeTab === 'behavioral' || activeTab === 'cofix') && (
+        {(activeTab === 'coding' || activeTab === 'design' || activeTab === 'behavioral') && (
           <ScreenshotStrip
-            surface={activeTab as 'coding' | 'design' | 'behavioral' | 'cofix'}
+            surface={activeTab as 'coding' | 'design' | 'behavioral'}
             screenshots={screenshots}
             onSnapped={handleSnapped}
             onRemove={handleRemoveScreenshot}
@@ -573,6 +569,7 @@ export const LumoraShellPage = () => {
             showInputModeSelector={activeTab === 'coding' || activeTab === 'design'}
             onTranscription={handleTranscription}
             isTabActive={true}
+            codingPlatform={activeTab === 'coding' ? codingPlatform : undefined}
           />
         )}
 
@@ -666,7 +663,14 @@ export const LumoraShellPage = () => {
             <div style={{ display: activeTab === 'cofix' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
               <ErrorBoundary>
                 <Suspense fallback={<TabLoading label="CoFix" />}>
-                  <CoFixLayout onScreenshotAppendRef={cofixScreenshotRef} />
+                  <CoFixLayout
+                    onScreenshotAppendRef={cofixScreenshotRef}
+                    screenshots={screenshots}
+                    onSnapped={handleSnapped}
+                    onRemove={handleRemoveScreenshot}
+                    onTranscription={handleTranscription}
+                    isTabActive={activeTab === 'cofix'}
+                  />
                 </Suspense>
               </ErrorBoundary>
             </div>
