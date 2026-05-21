@@ -685,7 +685,7 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
       // cached. Charge zero tokens (LLM didn't run) but increment the
       // row count so the day-limit check sees the request.
       try {
-        await recordCodingUsage(userId, lang, 0, 0, 0);
+        await recordCodingUsage(req.user.id, lang, 0, 0, 0);
       } catch (mErr) {
         console.warn('[coding/solve] cached-answer metering failed:', mErr.message);
       }

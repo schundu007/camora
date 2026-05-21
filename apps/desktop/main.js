@@ -695,24 +695,30 @@ function startHackerrankAutoDetect() {
       if (!matched) return;
       if (url === _lastHrUrl) return; // already processed successfully — don't re-fire
       console.log('[hr-auto] HackerRank detected, scraping:', url);
-      // Settle time so the page DOM is ready after navigation
-      await new Promise(r => setTimeout(r, 2000));
-      const result = await doHackerrankScrape();
-      if (!result.ok) {
-        console.error('[hr-auto] scrape failed:', result.error);
-        return; // _lastHrUrl NOT set — will retry next poll
-      }
-      // _lastHrUrl is set inside doHackerrankScrape on success
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        // Send whichever payload doHackerrankScrape produced.
-        // DOM extraction returns { text, url }; single-page screenshot returns { dataUrl, url };
-        // multi-page screenshot returns { dataUrls, url }.
-        mainWindow.webContents.send('hackerrank-capture-result', {
-          dataUrl: result.dataUrl,
-          dataUrls: result.dataUrls,
-          text: result.text,
-          starterCode: result.starterCode,
-        });
+      _scrapeInProgress = true;
+      try {
+        // Settle time so the page DOM is ready after navigation
+        await new Promise(r => setTimeout(r, 2000));
+        const result = await doHackerrankScrape();
+        if (!result.ok) {
+          console.error('[hr-auto] scrape failed:', result.error);
+          return; // _lastHrUrl NOT set — will retry next poll
+        }
+        // _lastHrUrl is set inside doHackerrankScrape on success
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          // Send whichever payload doHackerrankScrape produced.
+          // DOM extraction returns { text, url }; single-page screenshot returns { dataUrl, url };
+          // multi-page screenshot returns { dataUrls, url }.
+          mainWindow.webContents.send('hackerrank-capture-result', {
+            dataUrl: result.dataUrl,
+            dataUrls: result.dataUrls,
+            text: result.text,
+            starterCode: result.starterCode,
+            url: result.url,
+          });
+        }
+      } finally {
+        _scrapeInProgress = false;
       }
     } catch (err) {
       console.debug('[hr-auto] poll error:', err.message);
@@ -1274,7 +1280,7 @@ ipcMain.handle('save-docx', async (_e, { sections, filename, title }) => {
 
   // Word rejects XML control chars (U+0000..U+001F except tab/lf/cr) and
   // U+FFFE/U+FFFF — strip them or the .docx is flagged "corrupted" on open.
-  const xmlSafe = (s) => String(s == null ? '' : s).replace(/[ --￾￿]/g, '');
+  const xmlSafe = (s) => String(s == null ? '' : s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, '');
   const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'];
   const splitTitle = (full) => {
     const s = String(full || '');

@@ -46,7 +46,7 @@ const BACKGROUND_STARTERS = [
   'i ', "i'm ", 'im ', "i've ", 'ive ', "i'll ", 'ill ',
   'i was', 'i am', 'i have', 'i work', 'i worked',
   'my ', 'mine ', 'myself ',
-  'we ', "we're ", 'were ', 'our ', 'ours ',
+  'we ', "we're ", 'our ', 'ours ',
   // Pleasantries and acknowledgments
   'thanks', 'thank you', 'hi ', 'hi,', 'hello', 'hey',
   'nice to meet', 'good to meet', 'pleasure',
@@ -170,10 +170,10 @@ export function isQuestion(raw: string): boolean {
 
   // Too short to be a meaningful question ("ok", "yeah sure", etc.)
   if (text.length < 12) return false;
-  if (text.split(/\s+/).length < 4) return false;
-
-  // Ends with "?" — obvious question
+  // Ends with "?" — obvious question (checked before word count so "Why two pointers?" passes)
   if (text.endsWith('?')) return true;
+
+  if (text.split(/\s+/).length < 4) return false;
 
   // Strip one-word sentence-initial fillers ("And what did you learn?"
   // should match "what" even though it starts with "and ").
@@ -210,9 +210,13 @@ export function questionReason(raw: string): { isQuestion: boolean; reason: stri
   if (!text) return { isQuestion: false, reason: 'empty' };
   if (isWhisperHallucination(text)) return { isQuestion: false, reason: 'whisper hallucination' };
   if (text.length < 12) return { isQuestion: false, reason: 'too short' };
-  if (text.split(/\s+/).length < 4) return { isQuestion: false, reason: 'too few words' };
   if (text.endsWith('?')) return { isQuestion: true, reason: 'ends with ?' };
-  if (BACKGROUND_STARTERS.some((s) => text.startsWith(s))) {
+  if (text.split(/\s+/).length < 4) return { isQuestion: false, reason: 'too few words' };
+  let strippedQ = text;
+  for (const p of FILLER_PREFIXES) {
+    if (strippedQ.startsWith(p)) { strippedQ = strippedQ.slice(p.length); break; }
+  }
+  if (BACKGROUND_STARTERS.some((s) => strippedQ.startsWith(s))) {
     if (INTERVIEW_VERBS_ANYWHERE.some((v) => text.includes(v))) {
       return { isQuestion: true, reason: 'background opener but contains interview verb' };
     }

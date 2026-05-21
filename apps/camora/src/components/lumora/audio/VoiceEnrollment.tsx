@@ -3,6 +3,10 @@ import { useInterviewStore } from '@/stores/interview-store';
 import { useAudioDevices } from './hooks/useAudioDevices';
 
 const LS_KEY = 'camora-voice-enrolled';
+// Module-level flag: true once the filter has been enabled in this page session.
+// Prevents the mount effect from re-enabling the filter on every tab switch
+// after the user has deliberately toggled it off.
+let filterRestoredThisSession = false;
 
 interface VoiceEnrollmentProps {
   disabled?: boolean;
@@ -27,19 +31,25 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
   const [error, setError] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
   const progressRef = useRef<number | null>(null);
 
   const RECORDING_DURATION = 5000;
 
-  // Restore enrollment from localStorage on mount — no backend call
+  // Restore enrollment from localStorage on mount — no backend call.
+  // Only enable the filter once per page session (not on every tab-switch remount)
+  // so a deliberate user toggle of "Filter Off" survives navigation.
   useEffect(() => {
     const enrolled = localStorage.getItem(LS_KEY) === 'true';
     setVoiceEnrolled(enrolled);
-    if (enrolled) setVoiceFilterEnabled(true);
+    if (enrolled && !filterRestoredThisSession) {
+      filterRestoredThisSession = true;
+      setVoiceFilterEnabled(true);
+    }
     // Clear any stuck isEnrolling flag from a previous interrupted session
-    if (isEnrolling) setIsEnrolling(false);
+    if (useInterviewStore.getState().isEnrolling) setIsEnrolling(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -50,6 +60,9 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
       mediaRecorderRef.current.stop();
     }
     mediaRecorderRef.current = null;
+    // Stop mic tracks so the browser mic-in-use indicator clears on unmount.
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
     setIsRecording(false);
     setRecordingProgress(0);
   }, []);
@@ -73,6 +86,7 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
       if (selectedDeviceId) audioConstraints.deviceId = { exact: selectedDeviceId };
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+      streamRef.current = stream;
       chunksRef.current = [];
 
       const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg', 'audio/mp4']
@@ -120,6 +134,9 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
       }, RECORDING_DURATION);
 
     } catch (err: any) {
+      // Ensure mic stream is released if getUserMedia succeeded but MediaRecorder failed.
+      streamRef.current?.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
       setError(err.message || 'Microphone access failed');
       setIsEnrolling(false);
       setIsRecording(false);
