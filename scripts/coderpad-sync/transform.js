@@ -1,44 +1,69 @@
-// CoderPad API field names verified via DevTools — update if they change.
-// GET /api/v1/question_items?page=1&per_page=100&question_type=code
-// Code item:  { id, title, language, puzzle_count, description, tags }
-// MCQ item:   { id, title, language, puzzle_count, description,
-//               choices: [{text, correct}], explanation }
+// CoderPad item structure (verified 2026-05-21):
+// {
+//   id, title, type: "CODE"|"MCQ"|"TEXT"|"SOLO"|"PROJECT",
+//   programmingLanguageId: "Python3"|"JavaScript"|"C++"|"Cross"|...,
+//   domain: { id, name, category: "LANGUAGE"|"FRONTEND"|"BACKEND"|"DATA"|"ADMIN"|"CROSS" },
+//   points: 20|40|60|150|200|300,
+//   difficultyMultiplier: 1|2,
+//   duration: <seconds>,
+// }
+// NOTE: description and MCQ choices are NOT in the list response.
 
-const LANGUAGE_MAP = {
-  'Python 3': 'python',
+const LANG_ID_MAP = {
+  'Python3': 'python',
   'Python': 'python',
   'JavaScript': 'javascript',
   'TypeScript': 'typescript',
+  'NodeJS': 'javascript',
+  'Angular': 'javascript',
+  'VueJS': 'javascript',
+  'React': 'javascript',
   'SQL': 'sql',
   'Java': 'java',
+  'Kotlin': 'kotlin',
+  'Scala': 'scala',
   'C++': 'cpp',
+  'C': 'c',
+  'C#': 'csharp',
   'Go': 'go',
   'Ruby': 'ruby',
-  'C#': 'csharp',
+  'Ruby on Rails': 'ruby',
   'Rust': 'rust',
   'Swift': 'swift',
-  'Kotlin': 'kotlin',
   'PHP': 'php',
-  'Scala': 'scala',
   'R': 'r',
+  'Bash': 'bash',
+  'Cross': 'general',
 };
 
-const CATEGORY_MAP = {
+const DOMAIN_CATEGORY_MAP = {
+  'LANGUAGE': null,   // use programmingLanguageId instead
+  'FRONTEND': 'javascript',
+  'BACKEND': 'general',
+  'DATA': 'python',
+  'ADMIN': 'general',
+  'CROSS': 'general',
+};
+
+const CATEGORY_BY_LANG = {
   python: 'python',
   javascript: 'javascript',
   typescript: 'javascript',
   sql: 'sql',
   java: 'java',
+  kotlin: 'java',
+  scala: 'general',
   cpp: 'dsa',
+  c: 'general',
+  csharp: 'general',
   go: 'go',
   ruby: 'general',
-  csharp: 'general',
   rust: 'general',
   swift: 'general',
-  kotlin: 'general',
   php: 'general',
-  scala: 'general',
   r: 'general',
+  bash: 'general',
+  general: 'general',
 };
 
 export function slugify(title) {
@@ -48,15 +73,32 @@ export function slugify(title) {
     .replace(/^-+|-+$/g, '');
 }
 
-export function mapLanguage(raw) {
-  if (!raw) return 'general';
-  return LANGUAGE_MAP[raw] ?? raw.toLowerCase().replace(/\s+/g, '');
+export function mapLanguage(programmingLanguageId, domain) {
+  if (programmingLanguageId && LANG_ID_MAP[programmingLanguageId]) {
+    return LANG_ID_MAP[programmingLanguageId];
+  }
+  if (programmingLanguageId && programmingLanguageId !== 'Cross') {
+    return programmingLanguageId.toLowerCase().replace(/\s+/g, '');
+  }
+  // Fall back to domain name
+  if (domain?.name && LANG_ID_MAP[domain.name]) {
+    return LANG_ID_MAP[domain.name];
+  }
+  return 'general';
 }
 
-export function extractDifficulty(puzzleCount) {
-  const n = Number(puzzleCount ?? 0);
-  if (n <= 1) return 'easy';
-  if (n === 2) return 'medium';
+export function deriveCategory(language) {
+  return CATEGORY_BY_LANG[language] ?? 'general';
+}
+
+// Difficulty from points:
+//   ≤50  → easy  (MCQ: 20/40 pts)
+//   ≤150 → medium (MCQ: 60 pts, easy CODE: 150 pts)
+//   >150 → hard  (CODE: 200/300 pts)
+export function extractDifficulty(points) {
+  const p = Number(points ?? 0);
+  if (p <= 50) return 'easy';
+  if (p <= 150) return 'medium';
   return 'hard';
 }
 
@@ -65,28 +107,20 @@ export function stripHtml(html) {
   return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-export function deriveCategory(language, tags = []) {
-  if (CATEGORY_MAP[language]) return CATEGORY_MAP[language];
-  const tagHit = tags.find((t) => CATEGORY_MAP[t?.toLowerCase()]);
-  if (tagHit) return CATEGORY_MAP[tagHit.toLowerCase()];
-  return 'general';
-}
-
 export function transformCodeQuestion(raw) {
-  const language = mapLanguage(raw.language);
-  const description = stripHtml(raw.description || raw.prompt || '');
+  const language = mapLanguage(raw.programmingLanguageId, raw.domain);
   return {
     id: `coderpad-${raw.id}`,
     coderpadId: String(raw.id),
     source: 'coderpad',
     slug: slugify(raw.title),
     title: raw.title,
-    topic: deriveCategory(language, raw.tags),
+    topic: deriveCategory(language),
     language,
-    difficulty: extractDifficulty(raw.puzzle_count ?? raw.difficulty_level),
-    description,
-    meta: description.slice(0, 160),
-    tags: Array.isArray(raw.tags) ? raw.tags : [],
+    difficulty: extractDifficulty(raw.points),
+    description: '',   // not in list response
+    meta: '',
+    tags: raw.domain?.keywords ?? [],
     testCases: [],
     paramTypes: {},
     solutions: {},
@@ -94,29 +128,23 @@ export function transformCodeQuestion(raw) {
   };
 }
 
+// MCQ choices are NOT available in the list response.
+// This produces a stub with all metadata; choices must be filled
+// via a detail endpoint if/when one is identified.
 export function transformMcqQuestion(raw) {
-  const choices = Array.isArray(raw.choices)
-    ? raw.choices.map((c, i) => ({
-        id: String.fromCharCode(97 + i),
-        text: typeof c === 'string' ? c : (c.text ?? ''),
-        correct: typeof c === 'object' ? Boolean(c.correct) : false,
-      }))
-    : [];
-
-  const correctIdx = choices.findIndex((c) => c.correct);
-  const correctAnswer = correctIdx >= 0 ? choices[correctIdx].id : 'a';
-
   return {
     id: `mcq-coderpad-${raw.id}`,
     coderpadId: String(raw.id),
     source: 'coderpad',
     title: raw.title,
-    domain: mapLanguage(raw.language) || raw.topic || 'general',
-    difficulty: extractDifficulty(raw.puzzle_count ?? raw.difficulty_level),
-    question: stripHtml(raw.description || raw.prompt || raw.title),
-    choices: choices.map(({ id, text }) => ({ id, text })),
-    correctAnswer,
-    explanation: stripHtml(raw.explanation || raw.rationale || ''),
-    tags: Array.isArray(raw.tags) ? raw.tags : [],
+    domain: raw.domain?.name ?? 'general',
+    domainCategory: raw.domain?.category ?? 'GENERAL',
+    difficulty: extractDifficulty(raw.points),
+    question: '',      // not in list response
+    choices: [],       // not in list response
+    correctAnswer: null,
+    explanation: '',
+    tags: raw.domain?.keywords ?? [],
+    durationSeconds: raw.duration ?? 0,
   };
 }
