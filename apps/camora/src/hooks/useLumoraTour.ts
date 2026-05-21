@@ -22,7 +22,7 @@ export function useLumoraTour() {
 
       tour.addStep({
         id: 'tabs',
-        text: '<strong>Interview Modes</strong><br/>Switch between Interview (system design, behavioral), Coding (full code editor), and Design (architecture diagrams).',
+        text: '<strong>Session Modes</strong><br/>Switch between Session (system design, behavioral), Coding (full code editor), and Design (architecture diagrams).',
         attachTo: { element: '[data-tour="tabs"]', on: 'bottom' },
         buttons: [
           { text: 'Skip', action: tour.complete, classes: 'shepherd-button-secondary' },
@@ -32,7 +32,7 @@ export function useLumoraTour() {
 
       tour.addStep({
         id: 'platform',
-        text: '<strong>Platform</strong><br/>Select your interview platform (Zoom, Google Meet, MS Teams, HackerRank, etc.) for optimized behavior.',
+        text: '<strong>Platform</strong><br/>Select your meeting platform (Zoom, Google Meet, MS Teams, HackerRank, etc.) for optimized behavior.',
         attachTo: { element: '[data-tour="platform"]', on: 'bottom' },
         buttons: [
           { text: 'Back', action: tour.back, classes: 'shepherd-button-secondary' },
@@ -42,7 +42,7 @@ export function useLumoraTour() {
 
       tour.addStep({
         id: 'audio',
-        text: '<strong>Audio Modes</strong><br/><strong>Live:</strong> always listening, auto-transcribes the interviewer.<br/><strong>Manual:</strong> press Record or Cmd+M to capture specific questions.<br/><strong>Calibrate:</strong> adjust mic sensitivity to your environment.',
+        text: '<strong>Audio Modes</strong><br/><strong>Live:</strong> always listening, auto-transcribes the speaker.<br/><strong>Manual:</strong> press Record or Cmd+M to capture specific questions.<br/><strong>Calibrate:</strong> adjust mic sensitivity to your environment.',
         attachTo: { element: '[data-tour="audio"]', on: 'bottom' },
         buttons: [
           { text: 'Back', action: tour.back, classes: 'shepherd-button-secondary' },
@@ -52,7 +52,7 @@ export function useLumoraTour() {
 
       tour.addStep({
         id: 'voice-filter',
-        text: '<strong>Voice Filter (Key Feature)</strong><br/>Click <strong>My Voice</strong> to record 5 seconds of yourself speaking. Camora will learn your voice and <strong>automatically filter it out</strong> — only your <strong>interviewer\'s questions</strong> get transcribed and answered.<br/><br/>Works with both:<br/>- <strong>Microphone:</strong> for in-person or speakerphone interviews<br/>- <strong>Interviewer button:</strong> captures audio from Zoom/Meet/Teams screen share<br/><br/>Two-speaker diarization identifies who is speaking in real-time.',
+        text: '<strong>Voice Filter (Key Feature)</strong><br/>Click <strong>My Voice</strong> to record 5 seconds of yourself speaking. Camora will learn your voice and <strong>automatically filter it out</strong> — only the <strong>speaker\'s questions</strong> get transcribed and answered.<br/><br/>Works with both:<br/>- <strong>Microphone:</strong> for in-person or speakerphone sessions<br/>- <strong>Speaker button:</strong> captures audio from Zoom/Meet/Teams screen share<br/><br/>Two-speaker diarization identifies who is speaking in real-time.',
         attachTo: { element: '[data-tour="audio"]', on: 'bottom' },
         buttons: [
           { text: 'Back', action: tour.back, classes: 'shepherd-button-secondary' },

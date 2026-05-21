@@ -8,7 +8,7 @@ import { DocumentUpload } from '@/components/lumora/documents/DocumentUpload';
 import CamoraLogo from '../../shared/CamoraLogo';
 import { dialogConfirm } from '@/components/shared/Dialog';
 
-export type TabType = 'interview' | 'coding' | 'design' | 'cofix';
+export type TabType = 'session' | 'coding' | 'design' | 'cofix';
 
 interface HeaderProps {
   inputValue: string;
@@ -23,14 +23,14 @@ interface HeaderProps {
 }
 
 const TAB_ROUTES: Record<TabType, string> = {
-  interview: '/lumora',
+  session: '/lumora',
   coding: '/lumora/coding',
   design: '/lumora/design',
   cofix: '/lumora/fix',
 };
 
 const TABS: { id: TabType; label: string }[] = [
-  { id: 'interview', label: 'Interview' },
+  { id: 'session', label: 'Session' },
   { id: 'coding', label: 'Coding' },
   { id: 'design', label: 'Design' },
   { id: 'cofix', label: 'CoFix' },
@@ -49,7 +49,7 @@ export const Header = ({ inputValue, onInputChange, onSubmit, onTranscription, s
     location.pathname?.includes('/coding') ? 'coding' :
     location.pathname?.includes('/design') ? 'design' :
     location.pathname?.includes('/fix') ? 'cofix' :
-    'interview'
+    'session'
   );
 
   const handleTabClick = (tab: TabType) => {
@@ -117,7 +117,7 @@ export const Header = ({ inputValue, onInputChange, onSubmit, onTranscription, s
   };
 
   const TAB_ICONS: Record<TabType, React.ReactNode> = {
-    interview: (
+    session: (
       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
       </svg>
