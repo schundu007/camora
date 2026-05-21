@@ -1207,6 +1207,46 @@ img { max-width: 100%; height: auto; }
   animation: tab-fade-in 220ms cubic-bezier(0.25, 1, 0.5, 1) both;
 }
 
+/* ─── View Transitions: Lumora tab switching ────────────────────────────────
+   The active tab pill gets a view-transition-name so the browser FLIP-morphs
+   it from one position to the next when navigation fires. The result: the gold
+   background slides between tabs rather than snapping. Root crossfade is kept
+   but tightened to 160ms for snappy content swap.                            */
+
+.lumora-tab-pill[data-active="true"] {
+  view-transition-name: lumora-active-tab;
+}
+
+/* FLIP group: browser animates position automatically; we just control timing */
+::view-transition-group(lumora-active-tab) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Old active label fades out quickly; new label fades in with a slight delay
+   so it appears to "arrive" at the destination rather than travel mid-air    */
+::view-transition-old(lumora-active-tab) {
+  animation: 130ms ease-out both vt-tab-fade-out;
+}
+::view-transition-new(lumora-active-tab) {
+  animation: 200ms ease-out 100ms both vt-tab-fade-in;
+}
+
+/* Content panels: faster crossfade than the browser's 250ms default          */
+::view-transition-old(root) {
+  animation: 150ms ease-out both vt-tab-fade-out;
+}
+::view-transition-new(root) {
+  animation: 200ms ease-out both vt-tab-fade-in;
+}
+
+@keyframes vt-tab-fade-out {
+  to { opacity: 0; }
+}
+@keyframes vt-tab-fade-in {
+  from { opacity: 0; }
+}
+
 /* Celebration — centered badge + bottom toast for success moments
    (onboarding done, topic completed, problem solved). Restrained
    enterprise feel — no confetti. */
@@ -1321,6 +1361,7 @@ img { max-width: 100%; height: auto; }
   .tab-fade-in, .sona-breathe, .bg-navy-drift::before,
   .lumora-mobile-sheet, .session-row-enter,
   .celebration-badge, .celebration-toast,
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*),
   /* Newly added in the prepare-page audit: kill the three viewport-wide
      infinite keyframe animations that repaint continuously even off-screen.
      auroraShift, pulse-dot, and shimmer-sweep are decorative, not signal. */
