@@ -19,7 +19,7 @@ const mcqLimiter = rateLimit({
 
 // ── Load MCQ problem metadata once at startup ─────────────────────────────────
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const MCQ_DATA_PATH = resolve(__dirname, '../../../../camora/src/data/capra/mcq-problems.json');
+const MCQ_DATA_PATH = resolve(__dirname, '../../../../apps/camora/src/data/capra/mcq-problems.json');
 
 let mcqProblemsMap = {};
 try {
@@ -224,6 +224,11 @@ router.post('/batch', mcqLimiter, async (req, res, next) => {
         };
       })
     );
+
+    const failed = results.filter(r => r.status === 'rejected');
+    if (failed.length > 0) {
+      console.error(`[MCQ batch] ${failed.length}/${targetIds.length} generations failed. First error:`, failed[0].reason?.message);
+    }
 
     const questions = results
       .filter(r => r.status === 'fulfilled')
