@@ -1182,6 +1182,21 @@ img { max-width: 100%; height: auto; }
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Mobile hamburger dropdown sheet entrance */
+@keyframes lumora-sheet-in {
+  from { opacity: 0; transform: translateY(-10px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.lumora-mobile-sheet {
+  animation: lumora-sheet-in 200ms cubic-bezier(0.25, 1, 0.5, 1) both;
+  transform-origin: top right;
+}
+
+/* Session list item staggered entrance — animation-delay set inline per item */
+.session-row-enter {
+  animation: tab-fade-in 220ms cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
 /* Celebration — centered badge + bottom toast for success moments
    (onboarding done, topic completed, problem solved). Restrained
    enterprise feel — no confetti. */
@@ -1294,6 +1309,7 @@ img { max-width: 100%; height: auto; }
 @media (prefers-reduced-motion: reduce) {
   .card-lift, .press, .ai-float, .ai-slow-spin, .shimmer, .shimmer::after,
   .tab-fade-in, .sona-breathe, .bg-navy-drift::before,
+  .lumora-mobile-sheet, .session-row-enter,
   .celebration-badge, .celebration-toast,
   /* Newly added in the prepare-page audit: kill the three viewport-wide
      infinite keyframe animations that repaint continuously even off-screen.
