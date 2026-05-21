@@ -565,8 +565,10 @@ export default function HRLibraryPage() {
 
         {/* ── Tab bar ──────────────────────────────────────────────────────── */}
         <div style={{
-          display: 'flex', gap: 0,
-          borderBottom: '1px solid var(--border)',
+          display: 'flex', gap: 4,
+          padding: 4,
+          background: 'var(--bg-elevated)',
+          borderRadius: 10,
           marginBottom: 14,
         }}>
           {(['all', 'mcq', 'coding', 'design'] as const).map(tab => (
@@ -574,17 +576,16 @@ export default function HRLibraryPage() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               style={{
-                padding: '8px 18px',
-                background: 'none',
+                padding: '6px 16px',
+                background: activeTab === tab ? 'var(--cam-gold-leaf)' : 'transparent',
                 border: 'none',
-                borderBottom: `2px solid ${activeTab === tab ? 'var(--cam-gold-leaf, #d4af37)' : 'transparent'}`,
-                color: activeTab === tab ? 'var(--text-primary)' : 'var(--text-muted)',
-                fontSize: 13,
+                borderRadius: 7,
+                color: activeTab === tab ? '#000' : 'var(--text-muted)',
+                fontSize: 12,
                 fontWeight: activeTab === tab ? 700 : 500,
                 cursor: 'pointer',
-                transition: 'color 0.12s, border-color 0.12s',
+                transition: 'all 0.12s',
                 whiteSpace: 'nowrap',
-                marginBottom: -1,
               }}
             >
               {TAB_LABELS[tab]}

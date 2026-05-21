@@ -34,22 +34,19 @@ export default function TopicDiagram({
   return (
     <figure
       className={`rounded-xl overflow-hidden ${className}`}
-      style={{ background: 'var(--bg-app)', border: '1px solid var(--border)' }}
+      style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', display: 'block', width: '100%', maxWidth: '100%' }}
     >
       <img
         src={src}
         alt={alt || `${topicId} ${kind} diagram`}
         loading="lazy"
         onError={() => {
-          // Surface missing PNGs in the console so we can grep dev/prod
-          // logs for topics that haven't been baked yet — silent absence
-          // was hiding gaps in the bake script's coverage.
           if (typeof console !== 'undefined') {
             console.warn(`[TopicDiagram] missing PNG: ${src}`);
           }
           setFailed(true);
         }}
-        style={{ display: 'block', width: '100%', height: 'auto' }}
+        style={{ display: 'block', width: '100%', height: 'auto', maxWidth: '100%' }}
       />
       {caption && (
         <figcaption

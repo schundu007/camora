@@ -968,15 +968,15 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       </div>
 
       {/* Center: APPA tabs */}
-      <div className="hidden md:flex items-center gap-1">
+      <div className="hidden md:flex items-center gap-1 p-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.08)' }}>
         {APPA_TABS.map((tab) => (
           <Link
             key={tab.label}
             to={tab.href}
-            className="px-3 py-1.5 text-sm font-medium transition-colors"
+            className="px-3 py-1.5 text-sm font-semibold transition-all rounded-md"
             style={tab.label === activeAppaTab
-              ? { color: 'var(--cam-gold-leaf-lt)', borderBottom: '1px solid var(--cam-gold-leaf)' }
-              : { color: 'rgba(255,255,255,0.85)' }
+              ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }
+              : { color: 'rgba(255,255,255,0.75)' }
             }
           >
             {tab.label}

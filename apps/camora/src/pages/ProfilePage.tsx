@@ -316,15 +316,18 @@ export default function ProfilePage() {
       <div className="mx-auto px-6 pt-8 pb-20 flex-1 w-full" style={{ maxWidth: 'var(--page-max, 1280px)' }}>
 
         {/* Tabs */}
-        <div className="flex items-center gap-6 mb-8 border-b border-[var(--border)]">
+        <div className="flex items-center gap-1 mb-8 p-1 rounded-xl" style={{ background: 'var(--bg-elevated)', width: 'fit-content' }}>
           {TABS.map(t => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`pb-3 text-sm font-semibold transition-colors relative ${activeTab === t.key ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+              className="px-4 py-2 text-sm font-semibold transition-all rounded-lg"
+              style={activeTab === t.key
+                ? { background: 'var(--cam-gold-leaf)', color: '#000' }
+                : { background: 'transparent', color: 'var(--text-muted)' }
+              }
             >
               {t.label}
-              {activeTab === t.key && <div className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full" style={{ background: 'var(--accent)' }} />}
             </button>
           ))}
         </div>
