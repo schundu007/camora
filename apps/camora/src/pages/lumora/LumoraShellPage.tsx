@@ -512,6 +512,7 @@ export const LumoraShellPage = () => {
                   key={tab.id}
                   to={tab.path}
                   title={tab.title}
+                  viewTransition
                   data-active={isActive ? 'true' : 'false'}
                   className="lumora-tab-pill px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-[background-color,color,transform]"
                   style={isActive
@@ -969,6 +970,7 @@ export const LumoraShellPage = () => {
             <Link
               key={tab.id}
               to={tab.path}
+              viewTransition
               className="relative flex flex-col items-center justify-center gap-1 flex-1 py-1 rounded-xl transition-colors"
               style={{
                 color: isActive ? 'var(--cam-gold-leaf)' : 'var(--text-muted)',
@@ -1009,7 +1011,7 @@ export const LumoraShellPage = () => {
                 { id: 'credits',    label: 'Credits',    path: '/lumora/credits' },
                 { id: 'pricing',    label: 'Pricing',    path: '/pricing' },
               ].map(item => (
-                <Link key={item.id} to={item.path} onClick={() => setMobileMoreOpen(false)}
+                <Link key={item.id} to={item.path} viewTransition onClick={() => setMobileMoreOpen(false)}
                   className="flex items-center justify-between px-4 py-3 text-[14px] font-semibold active:bg-black/5"
                   style={{ color: activeTab === item.id ? 'var(--cam-primary)' : 'var(--text-primary)' }}>
                   <span>{item.label}</span>
