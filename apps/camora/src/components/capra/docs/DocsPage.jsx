@@ -1022,6 +1022,11 @@ export default function DocsPage({ onBack }) {
                                     {cat.progress}%
                                   </span>
                                 </div>
+                                {cat.description && (
+                                  <p className="w-full text-[11.5px] truncate" style={{ color: 'var(--text-muted)' }}>
+                                    {cat.description}
+                                  </p>
+                                )}
                               </div>
                             </Link>
                             );
