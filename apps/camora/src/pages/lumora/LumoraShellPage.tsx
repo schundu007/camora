@@ -771,8 +771,8 @@ export const LumoraShellPage = () => {
                         <polyline points="12 6 12 12 16 14" />
                       </svg>
                     </div>
-                    <p className="text-sm font-medium">No sessions yet</p>
-                    <p className="text-xs mt-1 mb-4">Sessions and transcripts will appear here after your first interview.</p>
+                    <p className="text-base font-semibold">No sessions yet</p>
+                    <p className="text-xs mt-1 mb-4" style={{ color: 'var(--text-muted)' }}>Sessions and transcripts will appear here after your first interview.</p>
                     <Link
                       to="/lumora"
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]"
@@ -813,7 +813,7 @@ export const LumoraShellPage = () => {
                             {realIdx + 1}
                           </span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{entry.question}</p>
+                            <p className="text-[13px] font-bold truncate" style={{ color: 'var(--text-primary)' }}>{entry.question}</p>
                             <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{new Date(entry.timestamp).toLocaleString()}</p>
                           </div>
                           <button
