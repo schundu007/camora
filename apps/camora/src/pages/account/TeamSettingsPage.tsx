@@ -457,7 +457,7 @@ export default function TeamSettingsPage() {
       {/* LeetCode hero */}
       <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
-        <div className="relative max-w-4xl mx-auto px-6 pt-16 pb-20">
+        <div className="relative page-wrap pt-16 pb-20" style={{ maxWidth: '56rem' }}>
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--cam-gold-leaf-lt)' }}>ACCOUNT</p>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">Team <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>sharing</span></h1>
           <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
@@ -469,7 +469,7 @@ export default function TeamSettingsPage() {
         </svg>
       </section>
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-8">
+      <main className="flex-1 page-wrap py-8" style={{ maxWidth: '56rem' }}>
 
         {loading && (
           <div className="rounded-xl p-8 flex items-center justify-center" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
