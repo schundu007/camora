@@ -37,6 +37,7 @@ export const LumoraShellPage = () => {
   const location = useLocation();
   // inputValue removed — copilot now manages its own state
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
   const { theme: currentTheme, toggle: toggleTheme } = useTheme();
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [, setCopilotOpen] = useState(false);
@@ -162,6 +163,14 @@ export const LumoraShellPage = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [mobileMoreOpen]);
   useEffect(() => { setMobileMoreOpen(false); }, [location.pathname]);
+  // Return focus to hamburger when mobile menu closes (keyboard a11y)
+  const prevMobileMoreOpen = useRef(false);
+  useEffect(() => {
+    if (prevMobileMoreOpen.current && !mobileMoreOpen) {
+      hamburgerRef.current?.focus();
+    }
+    prevMobileMoreOpen.current = mobileMoreOpen;
+  }, [mobileMoreOpen]);
 
   // Sync behavioral fullscreen to URL:
   //   /lumora/behavioral       → open (starter question if none set)
@@ -539,6 +548,7 @@ export const LumoraShellPage = () => {
                 Opens a dropdown with secondary Lumora destinations and
                 utilities (theme, audio check). */}
             <button
+              ref={hamburgerRef}
               type="button"
               onClick={() => setMobileMoreOpen((v) => !v)}
               className="md:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors"
@@ -784,27 +794,15 @@ export const LumoraShellPage = () => {
                     {history.slice().reverse().map((entry: any, revIdx: number) => {
                       const realIdx = history.length - 1 - revIdx;
                       return (
-                        <div
+                        <button
                           key={realIdx}
-                          role="button"
-                          tabIndex={0}
+                          type="button"
                           onClick={() => { setFocusedEntry(realIdx); navigate('/lumora'); }}
-                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFocusedEntry(realIdx); navigate('/lumora'); } }}
-                          className="flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-[transform,box-shadow,border-color] duration-200"
+                          className="session-row flex items-center gap-3 p-3.5 rounded-xl w-full text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cam-primary)]/40"
                           style={{
                             background:
                               'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(34,211,238,0.02) 100%)',
                             border: '1px solid rgba(38,97,156,0.10)',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-1px)';
-                            e.currentTarget.style.borderColor = 'rgba(38,97,156,0.32)';
-                            e.currentTarget.style.boxShadow = '0 8px 22px rgba(38,97,156,0.16)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.borderColor = 'rgba(38,97,156,0.10)';
-                            e.currentTarget.style.boxShadow = 'none';
                           }}
                         >
                           <span
@@ -838,16 +836,14 @@ export const LumoraShellPage = () => {
                               const ok = await dialogConfirm({ title: 'Delete session?', message: 'This will permanently remove the question and its stored answer from your history.', confirmLabel: 'Delete', tone: 'danger' });
                               if (ok) removeHistoryEntry(realIdx);
                             }}
-                            className="flex items-center justify-center w-8 h-8 rounded-md shrink-0 transition-colors hover:bg-red-50"
+                            className="session-delete-btn flex items-center justify-center w-8 h-8 rounded-md shrink-0 transition-[color,border-color,background-color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)]/40"
                             style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-dimmed)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
                             </svg>
                           </button>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
