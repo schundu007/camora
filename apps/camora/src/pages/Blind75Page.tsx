@@ -1216,7 +1216,7 @@ export default function Blind75Page() {
                       borderRadius: '20px',
                       background: 'var(--accent-subtle)',
                       color: 'var(--accent)',
-                      border: '1px solid rgba(45,140,255,0.3)',
+                      border: '1px solid rgba(38,97,156,0.30)',
                       whiteSpace: 'nowrap',
                     }}>
                       {questionCount} questions
@@ -1488,7 +1488,7 @@ export default function Blind75Page() {
                       to={`/lumora?q=${encodeURIComponent(question)}`}
                       className="b75-action-btn"
                       onClick={(e) => e.stopPropagation()}
-                      style={{ fontSize: '12px', fontWeight: 600, padding: '5px 14px', borderRadius: '8px', border: '1px solid rgba(45,140,255,0.19)', background: 'var(--accent-subtle)', color: 'var(--accent)', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                      style={{ fontSize: '12px', fontWeight: 600, padding: '5px 14px', borderRadius: '8px', border: '1px solid rgba(38,97,156,0.20)', background: 'var(--accent-subtle)', color: 'var(--accent)', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}
                     >
                       Practice with AI
                     </Link>
@@ -1712,7 +1712,7 @@ export default function Blind75Page() {
               <div style={{
                 padding: '16px 20px',
                 background: 'var(--accent-subtle)',
-                borderBottom: '1px solid rgba(45,140,255,0.3)',
+                borderBottom: '1px solid rgba(38,97,156,0.30)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
@@ -1739,7 +1739,7 @@ export default function Blind75Page() {
                   >
                     <div style={{
                       width: '20px', height: '20px', borderRadius: '6px',
-                      border: '2px solid rgba(45,140,255,0.3)', background: 'var(--accent-subtle)', flexShrink: 0, marginTop: '1px',
+                      border: '2px solid rgba(38,97,156,0.30)', background: 'var(--accent-subtle)', flexShrink: 0, marginTop: '1px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       <span style={{ fontSize: '10px', color: 'var(--accent)', fontWeight: 700 }}>{i + 1}</span>
