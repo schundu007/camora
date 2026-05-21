@@ -98,11 +98,11 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             </button>
           )}
 
-          {/* Nav links — desktop only (hide Pricing & Challenge in app shell).
+          {/* Nav links — desktop only (hide Pricing in app shell).
               Active link gets a lapis-tinted pill with a subtle inset
               shadow so it reads as "pressed" rather than just colored. */}
           <nav className="hidden lg:flex items-center gap-1 ml-4">
-            {NAV_LINKS.filter(l => l.href !== '/pricing' && l.href !== '/challenge').map((link) => {
+            {NAV_LINKS.filter(l => l.href !== '/pricing').map((link) => {
               const active = isNavActive(link.href);
               return (
                 <Link
