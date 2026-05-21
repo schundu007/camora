@@ -590,7 +590,12 @@ function startHackerrankAutoDetect() {
       }
       // _lastHrUrl is set inside doHackerrankScrape on success
       if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('hackerrank-capture-result', { dataUrl: result.dataUrl });
+        // Send whichever payload doHackerrankScrape produced.
+        // DOM extraction returns { text, url }; screenshot fallback returns { dataUrl, url }.
+        mainWindow.webContents.send('hackerrank-capture-result', {
+          dataUrl: result.dataUrl,
+          text: result.text,
+        });
       }
     } catch (err) {
       console.debug('[hr-auto] poll error:', err.message);
@@ -1001,6 +1006,19 @@ ipcMain.handle('relaunch-app', () => {
 // Captures the front Chrome/Brave/Edge/Arc window and returns a dataUrl.
 // Used by behavioral Snap so it targets the interview platform window
 // (HackerRank, Zoom, Teams, etc.) instead of the full screen.
+// Return the URL of the active Chrome/Brave/Edge tab — no screenshot, no scraping.
+// Renderer uses this to pre-fill the URL input and auto-fetch the problem.
+ipcMain.handle('get-active-browser-url', async () => {
+  if (process.platform !== 'darwin') return { ok: false, error: 'macOS only' };
+  try {
+    const info = await getActiveBrowserInfo();
+    if (!info) return { ok: false, error: 'No browser window found.' };
+    return { ok: true, url: info.url, browser: info.browser };
+  } catch (err) {
+    return { ok: false, error: err?.message || 'Failed to get browser URL' };
+  }
+});
+
 ipcMain.handle('snap-active-browser', async () => {
   if (process.platform !== 'darwin') return { ok: false, error: 'macOS only' };
   const screenStatus = systemPreferences.getMediaAccessStatus('screen');

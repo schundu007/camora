@@ -46,6 +46,10 @@ contextBridge.exposeInMainWorld('camo', {
   // Notify main that OCR failed so the next poll retries the same URL.
   resetLastCaptureUrl: () => ipcRenderer.invoke('reset-last-capture-url'),
 
+  // Get the URL of the active Chrome/Brave/Edge tab — no screenshot, no scraping.
+  // Returns { ok, url, browser } so the renderer can pre-fill the URL input and auto-fetch.
+  getActiveBrowserUrl: () => ipcRenderer.invoke('get-active-browser-url'),
+
   // Snap active browser window — captures the front Chrome/Brave/Edge window
   // and returns { ok, dataUrl } for OCR. Targets only the interview platform,
   // not the full screen.

@@ -1234,6 +1234,20 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     }
   };
 
+  // When the user switches to URL mode, auto-detect Chrome's active tab URL (desktop only)
+  // and immediately fetch the problem — same one-click-solve UX as IMAGE.
+  useEffect(() => {
+    if (inputMode !== 'url') return;
+    const camo = (window as any).camo;
+    if (!camo?.getActiveBrowserUrl) return;
+    camo.getActiveBrowserUrl().then((result: any) => {
+      if (!result?.ok || !result.url) return;
+      setProblemUrl(result.url);
+      handleFetchFromUrl(result.url);
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputMode]);
+
   // Extract → set problem text → optionally chain into solution generation.
   // Takes an explicit file (not state) so it can be called the moment an
   // image is dropped/picked, before setImageFile React-renders.
