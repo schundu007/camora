@@ -758,7 +758,7 @@ export default function DocsPage({ onBack }) {
               in pixels so a 1920px monitor gets ~320px of comfortable
               margin per side rather than edge-to-edge stretch. Below
               1280px the cap is inert and content fills the column. */}
-          <div className={`flex-1 min-w-0 w-full mx-auto ${isMobile ? 'px-3' : 'px-4 sm:px-6 lg:px-8'}`} style={{ maxWidth: 'var(--page-max, 1280px)' }}>
+          <div className={`flex-1 min-w-0 w-full ${isMobile ? 'px-3' : 'px-4 sm:px-6 lg:px-8'}`}>
             {/* Breadcrumb Bar — secondary bar below TopBar */}
             <div className="sticky z-20 px-3 sm:px-4 py-1.5 sm:py-3 flex items-center justify-between gap-2 bg-[var(--bg-surface)] border-b border-[var(--border)]" style={{ top: 0 }}>
               {/* Back — desktop + mobile. When a topic is selected, returns
@@ -773,8 +773,8 @@ export default function DocsPage({ onBack }) {
                   if (window.history.length > 1) navigate(-1);
                   else navigate('/');
                 }}
-                className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded font-semibold text-xs transition-colors"
-                style={{ color: 'var(--accent)', background: 'var(--accent-subtle)', border: '1px solid rgba(38,97,156,0.25)' }}
+                className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full font-semibold text-xs transition-colors"
+                style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(3,19,46,0.88)', border: '1px solid rgba(201,162,39,0.50)' }}
                 title="Back"
                 aria-label="Back"
               >
