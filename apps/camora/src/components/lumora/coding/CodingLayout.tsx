@@ -1174,23 +1174,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     if (!urlToFetch.trim()) { setError('Please enter a URL'); return; }
     if (!token) { setError('Not authenticated'); return; }
 
-    // HackerRank codepair/contest: use desktop DOM scraper if available, else fallback to image.
-    if (/hackerrank\.com\/(codepair|contests)\//i.test(urlToFetch)) {
-      const camo = (window as any).camo;
-      if (camo?.fetchHackerrankNow) {
-        await handleHackerrankFetch();
-      } else {
-        setInputMode('image');
-        await dialogAlert({
-          title: 'HackerRank detected',
-          message: 'HackerRank interview sessions are auth-gated and cannot be scraped from the backend. Take a screenshot of the problem + code editor, then drop it in the Image tab — Lumora will extract the full problem, read the starter code structure, and generate an exact matching solution.',
-        });
-      }
-      return;
-    }
-
     setIsProcessing(true);
     setError(null);
+
+    // Step 1: try backend scraper (works for LeetCode via GraphQL, static pages via HTML).
+    // Step 2: if backend returns a non-2xx (auth-gated, JS-rendered, codepair, etc.),
+    //         fall back to the desktop OCR pipeline — no dialog, no parallel path.
     try {
       const resp = await fetch(`${API_BASE_URL}/api/v1/coding/fetch-problem`, {
         credentials: 'include',
@@ -1198,37 +1187,55 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ url: urlToFetch }),
       });
+
       if (!resp.ok) {
-        const body = await resp.json().catch(() => ({}));
-        const msg = body.error || body.detail || `Failed to fetch (${resp.status})`;
-        await dialogAlert({ title: 'Could not fetch problem', message: msg });
+        // Backend can't scrape this URL — silently fall back to screenshot OCR.
+        const camo = (window as any).camo;
+        setIsProcessing(false);
+        if (camo?.fetchHackerrankNow) {
+          await handleHackerrankFetch();
+        } else {
+          // Web-only: tell the user to use the Image tab.
+          setInputMode('image');
+          await dialogAlert({
+            title: 'Cannot scrape this URL',
+            message: 'This platform is auth-gated or JS-rendered and cannot be scraped directly. Take a screenshot of the problem + code editor and drop it in the Image tab — Lumora will OCR it and generate a matching solution.',
+          });
+        }
         return;
       }
+
       const data = await resp.json();
       const text = String(data.problem || '').trim();
+      if (!text) {
+        // Empty response — same fallback
+        const camo = (window as any).camo;
+        setIsProcessing(false);
+        if (camo?.fetchHackerrankNow) { await handleHackerrankFetch(); }
+        return;
+      }
       setProblemText(text);
       setStarterCode(null);
       setInputMode('paste');
-      // Auto-generate after fetch — URL tab is one-click solve, same UX
-      // contract as IMAGE: input in, answer out, no extra button.
-      if (text) {
-        setStreamError(null);
-        setTestResults([]);
-        setTestCases([]);
-        setOutput('');
-        setShowFixPrompt(false);
-        clearStreamChunks();
-        setParsedBlocks([]);
-        setJsonSolution(null);
-        setCode(getDefaultCode(resolveLanguage(text)));
-        setCollapsedCards(new Set());
-        setActiveSolutionIdx(0);
-        setIsOutputCollapsed(true);
-        setProblemTab('solution');
-        onSubmit(text, resolveLanguage(text));
-      }
-    } catch (err: any) {
-      await dialogAlert({ title: 'Could not fetch problem', message: err.message || 'An unexpected error occurred.' });
+      setStreamError(null);
+      setTestResults([]);
+      setTestCases([]);
+      setOutput('');
+      setShowFixPrompt(false);
+      clearStreamChunks();
+      setParsedBlocks([]);
+      setJsonSolution(null);
+      setCode(getDefaultCode(resolveLanguage(text)));
+      setCollapsedCards(new Set());
+      setActiveSolutionIdx(0);
+      setIsOutputCollapsed(true);
+      setProblemTab('solution');
+      onSubmit(text, resolveLanguage(text));
+    } catch {
+      // Network error — fall back to OCR on desktop, show nothing on web.
+      const camo = (window as any).camo;
+      setIsProcessing(false);
+      if (camo?.fetchHackerrankNow) { await handleHackerrankFetch(); }
     } finally {
       setIsProcessing(false);
     }
