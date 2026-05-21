@@ -5,6 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { startRecording, stopRecording } from '@/lib/audio';
 import { transcribeAudio, askSona, type SonaAnswer } from '@/lib/sona';
+import { saveSession } from '@/lib/sessions';
 import { SAMPLE_TRANSCRIPT, SAMPLE_ANSWER } from '@/data/demoSample';
 import { colors, radii, spacing } from '@/theme/colors';
 
@@ -136,6 +137,12 @@ export function AudioInterviewScreen() {
       });
       setAnswer(a);
       setPhase('idle');
+      void saveSession({
+        question: text,
+        answer: a.raw ?? '',
+        duration: startedAtRef.current ? Date.now() - startedAtRef.current : 0,
+        createdAt: Date.now(),
+      });
     } catch (e: any) {
       setError(e?.message || 'Something went wrong');
       setPhase('idle');

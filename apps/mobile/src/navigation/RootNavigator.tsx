@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { ActivityIndicator, View, Text } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoginScreen } from '@/screens/auth/LoginScreen';
+import { HomeScreen } from '@/screens/HomeScreen';
 import { PrepScreen } from '@/screens/PrepScreen';
 import { PracticeScreen } from '@/screens/PracticeScreen';
 import { AudioInterviewScreen } from '@/screens/AudioInterviewScreen';
@@ -30,7 +31,7 @@ function TabLabel({ label, focused }: { label: string; focused: boolean }) {
     <Text style={{
       fontSize: 11,
       fontWeight: '600',
-      color: focused ? colors.navySoft : colors.textFaint,
+      color: focused ? colors.gold : colors.textFaint,
       marginBottom: 4,
     }}>{label}</Text>
   );
@@ -48,6 +49,7 @@ function AuthedTabs() {
         tabBarShowLabel: false,
       }}
     >
+      <Tabs.Screen name="Home" component={HomeScreen} options={{ tabBarIcon: ({ focused }) => <TabLabel label="Home" focused={focused} /> }} />
       <Tabs.Screen name="Prep" component={PrepScreen} options={{ tabBarIcon: ({ focused }) => <TabLabel label="Prep" focused={focused} /> }} />
       <Tabs.Screen name="Practice" component={PracticeScreen} options={{ tabBarIcon: ({ focused }) => <TabLabel label="Practice" focused={focused} /> }} />
       <Tabs.Screen name="Live" component={AudioInterviewScreen} options={{ tabBarIcon: ({ focused }) => <TabLabel label="Live" focused={focused} /> }} />
