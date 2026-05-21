@@ -66,7 +66,8 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
             <button
               type="button"
               onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
-              className="hidden sm:flex items-center gap-1 ml-3 px-2.5 py-1.5 rounded-full text-[12px] font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+              className="hidden sm:flex items-center gap-1 ml-3 px-2.5 py-1.5 rounded-full text-[12px] font-semibold transition-colors"
+              style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(3,19,46,0.88)', border: '1px solid rgba(201,162,39,0.50)' }}
               title="Back"
               aria-label="Back"
             >
@@ -78,7 +79,15 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           )}
 
           {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-1.5 ml-8">
+          <div
+            className="hidden md:flex items-center gap-0.5 ml-8"
+            style={{
+              padding: 3,
+              border: '1px solid rgba(201,162,39,0.50)',
+              borderRadius: 999,
+              background: 'rgba(3,19,46,0.88)',
+            }}
+          >
             {NAV_LINKS.map((link) => {
               const active = isActive(link.href);
               return (
@@ -87,7 +96,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
                   to={link.href}
                   className="px-3 py-1.5 rounded-full text-[13px] font-semibold transition-colors"
                   style={{
-                    background: active ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.12)',
+                    background: active ? 'var(--cam-gold-leaf)' : 'transparent',
                     color: active ? '#020617' : 'rgba(255,255,255,0.82)',
                   }}
                 >

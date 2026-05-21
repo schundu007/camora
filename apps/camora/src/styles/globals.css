@@ -652,38 +652,38 @@
 @media (min-width: 640px)  { .page-wrap { padding-left: 1.5rem; padding-right: 1.5rem; } }
 @media (min-width: 1024px) { .page-wrap { padding-left: 2rem;   padding-right: 2rem;   } }
 
-/* ── Segmented tab group (pill/segment style) ───────────────────── */
-/* Use for primary page-level tab navigation (Profile, Analytics, etc.) */
+/* ── Segmented tab group — navy container + gold border + gold active ── */
 .tab-group {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 4px;
+  padding: 3px;
   border-radius: 10px;
-  background: var(--bg-elevated);
+  background: rgba(3,19,46,0.88);
+  border: 1px solid rgba(201,162,39,0.50);
   width: fit-content;
 }
 .tab-group-item {
-  padding: 7px 16px;
+  padding: 6px 16px;
   border-radius: 7px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: rgba(255,255,255,0.82);
   background: transparent;
   border: none;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color 0.15s ease-out, color 0.15s ease-out, box-shadow 0.15s ease-out;
+  transition: color 0.15s ease-out, background-color 0.15s ease-out;
 }
-.tab-group-item:hover:not(.tab-group-item-active) { color: var(--text-primary); }
+.tab-group-item:hover:not(.tab-group-item-active) { color: #ffffff; }
 .tab-group-item-active {
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.10), 0 0 0 1px var(--border);
+  background: var(--cam-gold-leaf);
+  color: #020617;
+  font-weight: 700;
 }
 [data-theme="dark"] .tab-group-item-active {
-  background: var(--bg-elevated);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.30), 0 0 0 1px var(--border);
+  background: var(--cam-gold-leaf);
+  color: #020617;
 }
 
 /* ── Underline tab bar ──────────────────────────────────────────── */

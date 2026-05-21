@@ -565,9 +565,10 @@ export default function HRLibraryPage() {
 
         {/* ── Tab bar ──────────────────────────────────────────────────────── */}
         <div style={{
-          display: 'flex', gap: 4,
-          padding: 4,
-          background: 'var(--bg-elevated)',
+          display: 'flex', gap: 2,
+          padding: 3,
+          background: 'rgba(3,19,46,0.88)',
+          border: '1px solid rgba(201,162,39,0.50)',
           borderRadius: 10,
           marginBottom: 14,
         }}>
@@ -580,9 +581,9 @@ export default function HRLibraryPage() {
                 background: activeTab === tab ? 'var(--cam-gold-leaf)' : 'transparent',
                 border: 'none',
                 borderRadius: 7,
-                color: activeTab === tab ? '#000' : 'var(--text-muted)',
+                color: activeTab === tab ? '#020617' : 'rgba(255,255,255,0.85)',
                 fontSize: 12,
-                fontWeight: activeTab === tab ? 700 : 500,
+                fontWeight: activeTab === tab ? 700 : 600,
                 cursor: 'pointer',
                 transition: 'all 0.12s',
                 whiteSpace: 'nowrap',
