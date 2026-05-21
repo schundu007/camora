@@ -969,16 +969,19 @@ export const LumoraShellPage = () => {
             <Link
               key={tab.id}
               to={tab.path}
-              className="relative flex flex-col items-center justify-center gap-1 flex-1 py-1"
-              style={{ color: isActive ? 'var(--cam-gold-leaf-text, #7A5C0A)' : 'var(--text-muted)' }}
+              className="relative flex flex-col items-center justify-center gap-1 flex-1 py-1 rounded-xl transition-colors"
+              style={{
+                color: isActive ? 'var(--cam-gold-leaf)' : 'var(--text-muted)',
+                background: isActive ? 'rgba(201,162,39,0.10)' : 'transparent',
+              }}
             >
               {tab.icon}
               <span className="text-[10px] font-bold">{tab.label}</span>
               {isActive && (
                 <span
                   aria-hidden="true"
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b"
-                  style={{ background: 'var(--cam-gold-leaf)' }}
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-1 rounded-b"
+                  style={{ background: 'var(--cam-gold-leaf)', boxShadow: '0 0 8px rgba(201,162,39,0.50)' }}
                 />
               )}
             </Link>
