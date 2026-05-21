@@ -110,7 +110,7 @@ export const LumoraShellPage = () => {
   const prevIsStreamingRef = useRef(false);
 
   // Track which tabs have been activated (for lazy mounting)
-  const [mountedTabs, setMountedTabs] = useState<Set<LumoraTab>>(new Set(['interview']));
+  const [mountedTabs, setMountedTabs] = useState<Set<LumoraTab>>(new Set(['session']));
 
   useLumoraTour();
 
@@ -128,7 +128,7 @@ export const LumoraShellPage = () => {
     location.pathname.includes('/sessions') ? 'sessions' :
     location.pathname.includes('/assistants') ? 'assistants' :
     location.pathname.includes('/profile') ? 'profile' :
-    location.pathname.includes('/credits') ? 'credits' : 'interview';
+    location.pathname.includes('/credits') ? 'credits' : 'session';
 
   // Ref tracks the current activeTab so async callbacks (transcription, snap)
   // always route to the tab that was active when the event fired, not the tab
@@ -341,8 +341,8 @@ export const LumoraShellPage = () => {
     {/* Audio setup wizard — only mounted on live-interview tabs where
         we actually need audio. The wizard auto-opens on first session
         until the user finishes setup, then stays out of the way. */}
-    {(activeTab === 'interview' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <AudioSetupWizard />}
-    {(activeTab === 'interview' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <SilentStreamBanner />}
+    {(activeTab === 'session' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <AudioSetupWizard />}
+    {(activeTab === 'session' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <SilentStreamBanner />}
     <div
       className="fixed inset-0 w-full flex overflow-hidden"
       style={{
@@ -370,8 +370,8 @@ export const LumoraShellPage = () => {
         onToggleSessions={() => setSessionsOpen(prev => !prev)}
       />
 
-      {/* Sessions sidebar — only when on interview tab */}
-      {activeTab === 'interview' && sessionsOpen && (
+      {/* Sessions sidebar — only when on session tab */}
+      {activeTab === 'session' && sessionsOpen && (
         <SessionSidebar
           isOpen={true}
           onClose={() => setSessionsOpen(false)}
@@ -508,7 +508,7 @@ export const LumoraShellPage = () => {
             }}
           >
             {[
-              { id: 'interview', label: 'Home', path: '/lumora', title: 'Interview assistant home' },
+              { id: 'session', label: 'Home', path: '/lumora', title: 'Session assistant home' },
               { id: 'coding', label: 'Coding', path: '/lumora/coding', title: 'Coding session assistant' },
               { id: 'design', label: 'Design', path: '/lumora/design', title: 'System design assistant' },
               { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral', title: 'Behavioral session assistant' },
@@ -606,8 +606,8 @@ export const LumoraShellPage = () => {
 
         {/* Tab content — display toggling preserves state */}
         <div className="flex-1 min-h-0 overflow-hidden relative">
-          {/* Interview tab */}
-          <div style={{ display: activeTab === 'interview' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
+          {/* Session tab */}
+          <div style={{ display: activeTab === 'session' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
             <ErrorBoundary>
               <SessionPanel
                 onAskQuestion={(q) => navigate(q ? `/lumora/behavioral?q=${encodeURIComponent(q)}` : '/lumora/behavioral')}
@@ -921,7 +921,7 @@ export const LumoraShellPage = () => {
           )}
 
           {/* History answer viewer — overlays when user clicks a past question on Home */}
-          {focusedEntry !== null && activeTab === 'interview' && history[focusedEntry] && (
+          {focusedEntry !== null && activeTab === 'session' && history[focusedEntry] && (
             <HistoryAnswerViewer
               entry={history[focusedEntry]}
               onClose={() => { setFocusedEntry(null); setCopilotOpen(false); }}
@@ -969,7 +969,7 @@ export const LumoraShellPage = () => {
         }}
       >
         {[
-          { id: 'interview', label: 'Home', path: '/lumora', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
+          { id: 'session', label: 'Home', path: '/lumora', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
           { id: 'coding', label: 'Code', path: '/lumora/coding', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
           { id: 'design', label: 'Design', path: '/lumora/design', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg> },
           { id: 'prepkit', label: 'Prep', path: '/lumora/prepkit', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg> },
