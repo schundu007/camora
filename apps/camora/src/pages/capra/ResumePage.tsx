@@ -26,7 +26,7 @@ export default function ResumePage() {
       />
 
       {/* Optimizer component */}
-      <div className="w-full lg:max-w-[85%] mx-auto px-4 pt-6 pb-16">
+      <div className="page-wrap pt-6 pb-16">
         <ResumeOptimizer
           initialCompany={company}
           initialRole={role}

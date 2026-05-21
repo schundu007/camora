@@ -101,7 +101,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           {/* Nav links — desktop only (hide Pricing in app shell).
               Active link gets a lapis-tinted pill with a subtle inset
               shadow so it reads as "pressed" rather than just colored. */}
-          <nav className="hidden lg:flex items-center gap-1 ml-4">
+          <nav className="hidden lg:flex items-center gap-1.5 ml-4">
             {NAV_LINKS.filter(l => l.href !== '/pricing').map((link) => {
               const active = isNavActive(link.href);
               return (
@@ -110,9 +110,9 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
                   to={link.href}
                   className="px-3.5 py-1.5 text-sm rounded-full transition-[background-color,color] duration-150 active:scale-[0.98] no-underline"
                   style={{
-                    color: active ? '#020617' : '#FFFFFF',
+                    color: active ? '#020617' : 'rgba(255,255,255,0.82)',
                     fontWeight: 700,
-                    background: active ? 'var(--cam-gold-leaf)' : 'transparent',
+                    background: active ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.12)',
                   }}
                 >
                   {link.label}

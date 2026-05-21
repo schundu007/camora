@@ -490,7 +490,7 @@ export default function Blind75Page() {
       {/* ═══════════════════════ Header Section — LeetCode navy band ═══════════════════════ */}
       <section style={{ position: 'relative', overflow: 'hidden', background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
-        <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ position: 'relative', paddingTop: 56, paddingBottom: 64 }}>
+        <div className="page-wrap" style={{ position: 'relative', paddingTop: 56, paddingBottom: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
             <div>
               <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em', lineHeight: 1.2, margin: 0 }}>
@@ -547,7 +547,7 @@ export default function Blind75Page() {
 
       {/* ═══════════════════════ Tab Navigation (sticky) ═══════════════════════ */}
       <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 'var(--nav-h, 56px)', zIndex: 30 }}>
-        <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="page-wrap">
           <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', scrollbarWidth: 'none', padding: '8px 0' }} className="b75-pills-scroll">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.key;
@@ -584,7 +584,7 @@ export default function Blind75Page() {
         <>
           {/* Filter Bar */}
           <div style={{ background: 'var(--bg-app)', borderBottom: '1px solid var(--border)' }}>
-            <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ padding: '12px 0' }}>
+            <div className="page-wrap" style={{ padding: '12px 0' }}>
               {/* Category pills */}
               <div className="b75-pills-scroll" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', scrollbarWidth: 'none' }}>
                 {['All', ...CATEGORIES.map((c) => c.name)].map((name) => {
@@ -648,7 +648,7 @@ export default function Blind75Page() {
           </div>
 
           {/* Problem List */}
-          <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+          <div className="page-wrap" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
             {filteredCategories.map((cat) => {
               const progress = getCategoryProgress(CATEGORIES.find((c) => c.name === cat.name) || cat);
               return (
@@ -1154,7 +1154,7 @@ export default function Blind75Page() {
 
       {/* ───────────── TAB 2: Algorithm Guides ───────────── */}
       {activeTab === 'algorithms' && (
-        <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+        <div className="page-wrap" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {techInterviewTopics.map((topic: any) => {
               const isExpanded = expandedTopic === topic.id;
@@ -1405,7 +1405,7 @@ export default function Blind75Page() {
         };
 
         return (
-        <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+        <div className="page-wrap" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
           {/* Sub-tabs */}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', scrollbarWidth: 'none', flexWrap: 'wrap' }}>
             {BEHAVIORAL_SECTIONS.map((sec) => {
@@ -1650,7 +1650,7 @@ export default function Blind75Page() {
 
       {/* ───────────── TAB 4: Cheatsheet ───────────── */}
       {activeTab === 'cheatsheet' && (
-        <div className="lg:max-w-[85%] mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+        <div className="page-wrap" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {/* Before the Interview */}
             <div style={{

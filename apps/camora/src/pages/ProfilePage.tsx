@@ -304,7 +304,7 @@ export default function ProfilePage() {
       {/* LeetCode hero — navy band w/ diagonal cut */}
       <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
-        <div className="relative mx-auto px-6 pt-24 pb-16" style={{ maxWidth: 'var(--page-max, 1280px)' }}>
+        <div className="relative page-wrap pt-24 pb-16">
           <h1 className="text-3xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>Your <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Profile</span></h1>
           <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>{user?.email || 'Manage account, achievements, and referrals'}</p>
         </div>
@@ -313,19 +313,15 @@ export default function ProfilePage() {
         </svg>
       </section>
 
-      <div className="mx-auto px-6 pt-8 pb-20 flex-1 w-full" style={{ maxWidth: 'var(--page-max, 1280px)' }}>
+      <div className="page-wrap pt-8 pb-20 flex-1 w-full">
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 mb-8 p-1 rounded-xl" style={{ background: 'var(--bg-elevated)', width: 'fit-content' }}>
+        <div className="tab-group mb-8">
           {TABS.map(t => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className="px-4 py-2 text-sm font-semibold transition-all rounded-lg"
-              style={activeTab === t.key
-                ? { background: 'var(--cam-gold-leaf)', color: '#000' }
-                : { background: 'transparent', color: 'var(--text-muted)' }
-              }
+              className={`tab-group-item${activeTab === t.key ? ' tab-group-item-active' : ''}`}
             >
               {t.label}
             </button>
