@@ -3212,7 +3212,7 @@ Event Flow:
 
   {
     id: 'cqrs',
-    title: 'CQRS (Command Query Responsibility Segregation)',
+    title: 'CQRS',
     icon: 'database',
     color: '#8b5cf6',
     questions: 10,

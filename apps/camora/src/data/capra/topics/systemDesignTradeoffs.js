@@ -3449,7 +3449,7 @@ Conway's Law Alignment:
   // ─────────────────────────────────────────────────────────
   {
     id: 'serverless-vs-traditional',
-    title: 'Serverless vs Traditional Infrastructure',
+    title: 'Serverless vs Traditional',
     icon: 'cloud',
     color: '#10b981',
     questions: 7,
@@ -5289,7 +5289,7 @@ Workload Classification:
   // ─────────────────────────────────────────────────────────
   {
     id: 'primary-replica-vs-peer-to-peer',
-    title: 'Primary-Replica vs Peer-to-Peer Replication',
+    title: 'Primary-Replica vs Peer-to-Peer',
     icon: 'share2',
     color: '#f59e0b',
     questions: 7,
