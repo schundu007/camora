@@ -723,7 +723,7 @@ export default function TopicDetail({
           NOT auto-restyled. Use <h2/h3/h4 className="prep-section-heading">
           to opt a specific heading into the navy-strip + hex-glyph
           treatment. */}
-      <div className="prep-content flex-1 min-w-0 pr-6 xl:pr-8">
+      <div className="prep-content flex-1 min-w-0">
       {/* Topic Header — navy-strip + gold-leaf-border + glassy-pill capsules,
           matching the docs design system across every topic surface. */}
       <div className="mb-4">
