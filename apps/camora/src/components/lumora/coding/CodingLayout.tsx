@@ -640,6 +640,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       if (!resp.ok) {
         const errData = await resp.json().catch(() => ({}));
         if (!silent) throw new Error(errData.detail || `Fix failed: ${resp.status}`);
+        // Silent auto-fix failed — restore the Fix button so the user isn't stuck.
+        setShowFixPrompt(true);
         return;
       }
       const data = await resp.json();
@@ -764,7 +766,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       } else if (jsonData.code) {
         setCode(jsonData.code);
       }
-      if (jsonData.language && jsonData.language !== 'auto') setLanguage(jsonData.language);
+      // Only apply backend-detected language when the user hasn't explicitly chosen one.
+      if (jsonData.language && jsonData.language !== 'auto' && language === 'auto') setLanguage(jsonData.language);
       if (jsonData.examples?.length > 0) {
         setTestCases(jsonData.examples.map((ex: any) => ({ input: ex.input || '', expected: ex.expected || '' })));
         setOutputTab('testcases');
@@ -1166,6 +1169,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     if (!token) { setError('Not authenticated'); return; }
     setIsProcessing(true);
     setError(null);
+    const prevProblemText = problemTextRef.current;
     setProblemText('');
     try {
       const results = await Promise.all(urls.map(async (dataUrl, idx) => {
@@ -1183,8 +1187,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         return resp.json();
       }));
       const valid = results.filter(Boolean);
-      if (!valid.length) throw new Error('Could not extract problem from screenshots');
-      const combinedText = valid.map(r => String(r.problem || '').trim()).filter(Boolean).join('\n\n');
+      if (!valid.length) throw new Error('Could not extract problem from screenshots — try a clearer screenshot');
+      const combinedText = valid.map(r => String(r.problem || '').trim()).filter(Boolean).join('\n\n---\n\n');
       const extractedStarterCode = valid.map(r => r.starter_code).find(Boolean) || null;
       const detectedLang: string | null = valid.map(r => r.detected_language).find(Boolean) || null;
       const effectiveLang = detectedLang || resolveLanguage(combinedText);
@@ -1210,6 +1214,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         onSubmit(combinedText, effectiveLang, extractedStarterCode ? { starterCode: extractedStarterCode } : undefined);
       }
     } catch (err: any) {
+      setProblemText(prevProblemText); // restore previous text on OCR failure
       setError(err.message);
     } finally {
       setIsProcessing(false);
@@ -1375,6 +1380,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     if (!token) { setError('Not authenticated'); return; }
     setIsProcessing(true);
     setError(null);
+    const prevProblemText = problemTextRef.current;
     setProblemText('');
     try {
       const formData = new FormData();
@@ -1414,6 +1420,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         onSubmit(text, effectiveLang, extractedStarterCode ? { starterCode: extractedStarterCode } : undefined);
       }
     } catch (err: any) {
+      setProblemText(prevProblemText); // restore previous text on OCR failure
       setError(err.message);
     } finally {
       setIsProcessing(false);
@@ -2451,7 +2458,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 )}
               </button>
               {showFixPrompt && (
-                <button onClick={handleAutoFix}
+                <button onClick={() => handleAutoFix(false)}
                   className="flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-md hover:bg-amber-600 transition-colors shadow-sm"
                   title="Auto-fix failed tests">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
