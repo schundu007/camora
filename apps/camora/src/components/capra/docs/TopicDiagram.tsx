@@ -34,7 +34,7 @@ export default function TopicDiagram({
   return (
     <figure
       className={`rounded-xl overflow-hidden ${className}`}
-      style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', display: 'block', width: '100%', maxWidth: '100%' }}
+      style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', display: 'block', maxWidth: '960px', margin: '0 auto' }}
     >
       <img
         src={src}

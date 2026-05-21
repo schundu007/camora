@@ -1855,7 +1855,7 @@ figure:has(> .viz-caption) {
 .prep-content > section > ol > li,
 .prep-content > ul > li,
 .prep-content > ol > li {
-  font-size: 16px;
+  font-size: 19px;
   line-height: 1.75;
   letter-spacing: -0.003em;
   text-wrap: pretty;
@@ -1875,7 +1875,7 @@ figure:has(> .viz-caption) {
 .prep-content > h2,
 .prep-content > section > h2 {
   position: relative;
-  font-size: 26px;
+  font-size: 31px;
   line-height: 1.18;
   font-weight: 700;
   letter-spacing: -0.016em;
@@ -1931,7 +1931,7 @@ figure:has(> .viz-caption) {
 .prep-content > section > h3,
 .prep-content h3.prep-section-heading {
   position: relative;
-  font-size: 19px;
+  font-size: 23px;
   line-height: 1.32;
   font-weight: 700;
   letter-spacing: -0.010em;
@@ -1959,7 +1959,7 @@ figure:has(> .viz-caption) {
 /* H2 in .prep-content also marked-only when not at the document root */
 .prep-content h2.prep-section-heading {
   position: relative;
-  font-size: 26px;
+  font-size: 31px;
   line-height: 1.18;
   font-weight: 700;
   letter-spacing: -0.016em;
@@ -2004,7 +2004,7 @@ figure:has(> .viz-caption) {
 .prep-content > h4,
 .prep-content > section > h4,
 .prep-content h4.prep-section-heading {
-  font-size: 15px;
+  font-size: 18px;
   line-height: 1.4;
   font-weight: 700;
   letter-spacing: 0.005em;
