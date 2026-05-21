@@ -17,20 +17,22 @@ interface ParsedBlock {
 const parseStreamingBlocks = (content: string): Record<string, ParsedBlock>  => {
   const blocks: Record<string, ParsedBlock> = {};
 
-  // Match complete blocks [TYPE]...[/TYPE]
-  const completeRegex = /\[(\w+)\]([\s\S]*?)\[\/\1\]/g;
+  // Match complete blocks — handles optional lang attribute: [CODE lang=python]...[/CODE]
+  const completeRegex = /\[(\w+)(?:\s+lang=([\w-]+))?\]([\s\S]*?)\[\/\1\]/g;
   let match;
   while ((match = completeRegex.exec(content)) !== null) {
     const type = match[1].toUpperCase();
+    const lang = match[2] || null;
     blocks[type] = {
       type,
-      content: match[2].trim(),
+      content: match[3].trim(),
       isComplete: true,
+      ...(lang ? { lang } : {}),
     };
   }
 
-  // Match incomplete blocks [TYPE]... (no closing tag yet)
-  const incompleteRegex = /\[(\w+)\](?![\s\S]*?\[\/\1\])([\s\S]*)$/;
+  // Match incomplete blocks [TYPE]... or [TYPE lang=xxx]... (no closing tag yet)
+  const incompleteRegex = /\[(\w+)(?:\s+lang=[\w-]+)?\](?![\s\S]*?\[\/\1\])([\s\S]*)$/;
   const incompleteMatch = content.match(incompleteRegex);
   if (incompleteMatch) {
     const type = incompleteMatch[1].toUpperCase();
@@ -145,7 +147,7 @@ const StreamingAnswerList = ({ content, isComplete }: { content: string; isCompl
 }
 
 const StreamingCodingView = ({ blocks }: { blocks: Record<string, ParsedBlock> }) => {
-  const lang = (blocks.CODE as any)?.lang || blocks.CODE?.content.match(/lang=(\w+)/)?.[1] || 'python';
+  const lang = (blocks.CODE as any)?.lang || 'python';
 
   return (
     <div className="flex flex-col gap-2">
