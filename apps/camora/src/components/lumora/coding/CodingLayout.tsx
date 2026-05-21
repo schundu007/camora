@@ -1485,13 +1485,31 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   };
 
   const renderAnalysisContent = (content: string): React.ReactNode => {
-    // Normalize before splitting: convert bracketed CODE blocks to markdown fences
-    // and strip closing section tags ([/APPROACH], [/CODE], etc.) so they never
-    // leak as raw text — the bracketLabel renderer only handles opening [TAG] form.
+    // Normalize section tags before segment splitting.
+    //
+    // The LLM produces code in two patterns:
+    //   A) [CODE lang=x]\ncode\n[/CODE]          — code wrapped inside (correct)
+    //   B) [CODE lang=x]\n[/CODE]\ncode lines    — code placed AFTER closing tag
+    //
+    // Pattern B produces an empty block header + orphaned plain text without this.
+    // Absorb non-bracketed lines following [/CODE] into the preceding code block.
+    // Also strip remaining unpaired [CODE] openers and all closing [/TAG] forms.
     const normalized = content
-      .replace(/\[CODE(?:\s+lang=([\w-]+))?\]([\s\S]*?)\[\/CODE\]/gi,
-        (_: string, lang: string, code: string) => `\n\`\`\`${lang || ''}\n${code.trim()}\n\`\`\`\n`)
-      .replace(/\[\/[A-Z][A-Z0-9_\s-]*\]/g, '');
+      .replace(
+        /\[CODE(?:\s+lang=([\w-]+))?\]\s*([\s\S]*?)\s*\[\/CODE\]((?:\n[^\[\n][^\n]*)*)/gi,
+        (_: string, lang: string | undefined, inner: string, after: string) => {
+          const raw = (inner + after).trim();
+          if (!raw) return '';
+          // Strip first line if the LLM echoed the language name inside the block
+          const lines = raw.split('\n');
+          const code = lines.length > 1 && lines[0].trim().toLowerCase() === (lang || '').toLowerCase()
+            ? lines.slice(1).join('\n').trim()
+            : raw;
+          return code ? `\n\`\`\`${lang || ''}\n${code}\n\`\`\`\n` : '';
+        }
+      )
+      .replace(/\[CODE(?:\s+lang=[\w-]+)?\]/gi, '')  // strip unpaired [CODE...] openers
+      .replace(/\[\/[A-Z][A-Z0-9_\s-]*\]/g, '');     // strip all closing [/TAG] forms
     const segments = normalized.split(/(```[\w-]*\n[\s\S]*?```)/g);
     let questionCounter = 0;
     return (
@@ -1502,6 +1520,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           if (cm) {
             const lang = cm[1];
             const codeText = cm[2].replace(/\n$/, '');
+            if (!codeText.trim()) return null; // skip empty blocks from pattern B mismatch
             return (
               <div key={si} style={{ borderRadius: 8, overflow: 'hidden', margin: '6px 0', border: '1px solid rgba(38,97,156,0.4)', boxShadow: '0 2px 8px rgba(3,19,46,0.3)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', padding: '3px 10px' }}>
