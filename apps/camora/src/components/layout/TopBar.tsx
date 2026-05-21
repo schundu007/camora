@@ -87,7 +87,8 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             <button
               type="button"
               onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
-              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[12px] font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[12px] font-semibold transition-colors"
+              style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(3,19,46,0.88)', border: '1px solid rgba(201,162,39,0.50)' }}
               title="Back"
               aria-label="Back"
             >
@@ -98,10 +99,16 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             </button>
           )}
 
-          {/* Nav links — desktop only (hide Pricing in app shell).
-              Active link gets a lapis-tinted pill with a subtle inset
-              shadow so it reads as "pressed" rather than just colored. */}
-          <nav className="hidden lg:flex items-center gap-1.5 ml-4">
+          {/* Nav links — desktop only (hide Pricing in app shell). */}
+          <nav
+            className="hidden lg:flex items-center gap-0.5 ml-4"
+            style={{
+              padding: 3,
+              border: '1px solid rgba(201,162,39,0.50)',
+              borderRadius: 999,
+              background: 'rgba(3,19,46,0.88)',
+            }}
+          >
             {NAV_LINKS.filter(l => l.href !== '/pricing').map((link) => {
               const active = isNavActive(link.href);
               return (
@@ -110,9 +117,9 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
                   to={link.href}
                   className="px-3.5 py-1.5 text-sm rounded-full transition-[background-color,color] duration-150 active:scale-[0.98] no-underline"
                   style={{
-                    color: active ? '#020617' : 'rgba(255,255,255,0.82)',
+                    color: active ? '#020617' : 'rgba(255,255,255,0.85)',
                     fontWeight: 700,
-                    background: active ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.12)',
+                    background: active ? 'var(--cam-gold-leaf)' : 'transparent',
                   }}
                 >
                   {link.label}
