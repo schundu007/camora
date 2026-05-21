@@ -29931,6 +29931,7 @@ These are answers an incident-RCA-fluent platform / SRE engineer should give wit
     visualizations: [
       {
         title: 'How LLM SRE agents work — the hypothesis loop',
+        image: '/diagrams/devops/z5-llm-sre-agents.png',
         description: `LLM SRE agents differ from alert-correlation AIOps in one fundamental way: they act in a reasoning loop, not a single inference pass.
 
 The hypothesis-testing loop (Datadog Bits AI SRE model):
@@ -30053,6 +30054,7 @@ A: Novel failure modes with no historical data, sparse observability coverage, o
     visualizations: [
       {
         title: 'Why static thresholds fail for capacity and what ML replaces them with',
+        image: '/diagrams/devops/z6-capacity-forecasting.png',
         description: `Static capacity alerts: "alert when CPU > 80%." The problems:
 
 Reactive by design. The alert fires when capacity is already constrained. By the time an engineer responds, queues are backing up.
@@ -30187,6 +30189,7 @@ A: Use 12-month forecast lower bound for committed use discounts (reserved insta
     visualizations: [
       {
         title: 'The open-source AIOps stack — how the pieces fit together',
+        image: '/diagrams/devops/z7-aiops-open-source.png',
         description: `A production-capable open-source AIOps stack uses components from three layers:
 
 Collection and storage layer:
@@ -30347,6 +30350,7 @@ A: Cloud Computing Foundation annual AIOps competition. 2024 track focused on lo
     visualizations: [
       {
         title: 'Chaos Engineering fundamentals — the hypothesis loop',
+        image: '/diagrams/devops/z8-chaos-observability.png',
         description: `Chaos Engineering is the discipline of deliberately injecting failures into a system to find weaknesses before they cause production incidents. The Netflix Chaos Monkey (2011) popularized the concept; the practice has since formalized into a structured experimental method.
 
 The chaos experiment loop:
@@ -30485,6 +30489,7 @@ A: Filed issues per weakness found. P0 (system failed) → immediate remediation
     visualizations: [
       {
         title: 'Kubernetes observability foundation — kube-state-metrics and Prometheus Operator',
+        image: '/diagrams/devops/z9-k8s-aiops.png',
         description: `Kubernetes-native AIOps builds on two observability primitives:
 
 kube-state-metrics (KSM). A service that watches the Kubernetes API and exposes object state as Prometheus metrics. Unlike cAdvisor (which measures resource usage), KSM measures Kubernetes object health.
@@ -30610,6 +30615,7 @@ A: kube_pod_status_unschedulable rate increase. Pods stuck Pending due to insuff
     visualizations: [
       {
         title: 'AIOps maturity model — five levels from reactive to autonomous',
+        image: '/diagrams/devops/z10-aiops-maturity.png',
         description: `Gartner and practitioner communities have converged on a five-level AIOps maturity model. Most organizations are at level 2 when they start an AIOps initiative; level 4 is rare; level 5 is aspirational.
 
 Level 1 — Reactive / Manual. No AIOps tooling. Alerts are individual; on-call manually correlates. MTTR measured in hours. Alert volume is manageable (or engineers are tolerating pain). Readiness to advance: instrument services with Prometheus + structured logging first.

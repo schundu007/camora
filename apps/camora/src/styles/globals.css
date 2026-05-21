@@ -1800,7 +1800,6 @@ figure:has(> .viz-caption) {
 }
 .viz-caption-body {
   margin-top: 0.875rem;
-  max-width: 70ch;
   font-size: 1rem;                 /* 16px */
   line-height: 1.7;
   color: var(--text-primary);
