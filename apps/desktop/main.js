@@ -373,6 +373,9 @@ let _hrPollTimer = null;
 // Active coding platform — set by renderer via 'set-coding-platform' IPC.
 // Drives which URLs trigger auto-capture.
 let _codingPlatform = 'auto';
+// Prevents the auto-detect poll from racing with a manual fetch triggered
+// by the URL chip. The poll checks this before starting a scrape.
+let _scrapeInProgress = false;
 
 const PLATFORM_URL_MATCH = {
   hackerrank: (url) => url.includes('hackerrank.com') &&
@@ -565,8 +568,9 @@ function startHackerrankAutoDetect() {
 
   const poll = async () => {
     try {
-      // Skip if no platform selected or Screen Recording not granted
+      // Skip if no platform selected, Screen Recording not granted, or manual fetch running
       if (_codingPlatform === 'none') return;
+      if (_scrapeInProgress) return;
       if (systemPreferences.getMediaAccessStatus('screen') !== 'granted') return;
       const info = await getActiveBrowserInfo();
       if (!info) return;
@@ -850,10 +854,14 @@ ipcMain.handle('hackerrank-manual-fetch', async () => {
       error: `Camora needs Screen Recording permission to capture the HackerRank window (current status: ${screenStatus}).\n\nSystem Settings → Privacy & Security → Screen & Camera Recording → enable Camora.\n\nRestart Camora after granting permission.`,
     };
   }
+  // Block the auto-detect poll while we scrape so they don't race.
+  _scrapeInProgress = true;
   try {
     return await doHackerrankScrape();
   } catch (err) {
     return { ok: false, error: err.message };
+  } finally {
+    _scrapeInProgress = false;
   }
 });
 
