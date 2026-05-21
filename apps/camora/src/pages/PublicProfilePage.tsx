@@ -108,7 +108,7 @@ export default function PublicProfilePage() {
       <div className="min-h-screen bg-[var(--bg-app)]">
         <SiteNav variant="light" />
         <div className="flex items-center justify-center min-h-screen">
-          <div className="w-12 h-12 border-4 border-[rgba(45,140,255,0.2)] border-t-[var(--accent)] rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-[rgba(38,97,156,0.20)] border-t-[var(--accent)] rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -282,7 +282,7 @@ export default function PublicProfilePage() {
 
         {/* CTA */}
         <div className="border-t border-[var(--border)] pt-10 text-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[rgba(45,140,255,0.08)] text-[var(--accent)] text-xs font-medium rounded-full mb-4">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[rgba(38,97,156,0.08)] text-[var(--accent)] text-xs font-medium rounded-full mb-4">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
             </svg>

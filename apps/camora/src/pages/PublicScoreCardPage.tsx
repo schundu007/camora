@@ -89,7 +89,7 @@ export default function PublicScoreCardPage() {
       <div className="min-h-screen bg-[var(--bg-surface)]">
         <SiteNav variant="light" />
         <div className="flex items-center justify-center min-h-screen">
-          <div className="w-12 h-12 border-4 border-[rgba(45,140,255,0.2)] border-t-[var(--accent)] rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-[rgba(38,97,156,0.20)] border-t-[var(--accent)] rounded-full animate-spin" />
         </div>
       </div>
     );
