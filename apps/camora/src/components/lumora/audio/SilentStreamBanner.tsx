@@ -91,7 +91,7 @@ export const SilentStreamBanner = () => {
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 4h.01M4.93 19h14.14a2 2 0 001.74-3l-7.07-12.25a2 2 0 00-3.48 0L3.19 16a2 2 0 001.74 3z" />
       </svg>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-bold">Interviewer audio has been silent for {minutes || 'several'} min</div>
+        <div className="text-sm font-bold">Speaker audio has been silent for {minutes || 'several'} min</div>
         <div className="text-[12px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
           The capture is technically connected but no voice has been detected. The most common cause is the screen-share picker stopping in the background. Reconnect to be safe.
         </div>

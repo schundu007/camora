@@ -145,7 +145,7 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                 <SettingCard
                   icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>}
                   title="Platform"
-                  description="Interview platform you're using."
+                  description="Meeting platform you're using."
                 >
                   <select
                     value={platform}
@@ -178,7 +178,7 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                 Voice Recognition
               </h3>
               <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
-                Choose how Camora distinguishes your voice from the interviewer.
+                Choose how Camora distinguishes your voice from the speaker.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Mode 1: Filter Candidate */}
@@ -187,7 +187,7 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                   onClick={() => setVoiceMode('filter-candidate')}
                   icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /><line x1="4" y1="4" x2="20" y2="20" /></svg>}
                   title="Filter My Voice"
-                  description="Record your voice pattern, then filter it out during the interview. Only the interviewer's questions get transcribed and answered."
+                  description="Record your voice pattern, then filter it out during the session. Only the speaker's questions get transcribed and answered."
                   badge="Recommended"
                 />
 
@@ -200,8 +200,8 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                     setVoiceFilterEnabled(true);
                   }}
                   icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" /></svg>}
-                  title="Record Interviewer"
-                  description="No setup needed. Start the interview and Camora auto-learns your voice from the first recording, then filters it out so only the interviewer is transcribed."
+                  title="Record Speaker"
+                  description="No setup needed. Start the session and Camora auto-learns your voice from the first recording, then filters it out so only the speaker is transcribed."
                 />
               </div>
 
@@ -226,7 +226,7 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                     </div>
                     <VoiceEnrollment disabled={false} variant="light" />
                     <p className="text-[10px] mt-2" style={{ color: 'var(--text-muted)' }}>
-                      Once enrolled, your voice is filtered out during recording. Only the interviewer's questions are transcribed and answered by AI.
+                      Once enrolled, your voice is filtered out during recording. Only the speaker's questions are transcribed and answered by AI.
                     </p>
                   </div>
                 )}

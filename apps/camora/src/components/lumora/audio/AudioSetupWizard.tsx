@@ -54,7 +54,7 @@ export const AudioSetupWizard = ({
   forceOpen?: boolean;
   onClose?: () => void;
 }) => {
-  const interviewer = useSpeakerAudio();
+  const speaker = useSpeakerAudio();
   const { token } = useAuth();
   const setSpeakerAudio = useSessionStore((s) => s.setSpeakerAudio);
   const everConnected = useSessionStore((s) => s.speakerAudio.everConnected);
@@ -398,7 +398,7 @@ export const AudioSetupWizard = ({
     // (candidate or interviewer) is already running. The wizard's
     // level meter just shows static "0%" in this case; the user can
     // pause the live capture from the topbar to test.
-    if (candidateMicActive || interviewer.active) {
+    if (candidateMicActive || speaker.active) {
       void stopMicMonitor();
       return;
     }
@@ -418,7 +418,7 @@ export const AudioSetupWizard = ({
       clearTimeout(timer);
       void stopMicMonitor();
     };
-  }, [open, permissionGranted, candidateMicActive, interviewer.active, prefs.micDeviceId, startMicMonitor, stopMicMonitor]);
+  }, [open, permissionGranted, candidateMicActive, speaker.active, prefs.micDeviceId, startMicMonitor, stopMicMonitor]);
 
   /* ── Screen Recording TCC status (macOS only, electron-loopback) ── */
   useEffect(() => {
@@ -503,26 +503,26 @@ export const AudioSetupWizard = ({
   const setSpeaker = (id: string) => setPrefs((p) => patchAudioPrefs({ ...p, speakerDeviceId: id }));
   const setVirtualMic = (id: string) => setPrefs((p) => patchAudioPrefs({ ...p, virtualMicDeviceId: id }));
 
-  /* ── connect interviewer audio (delegates to provider) ────────── */
-  const connectInterviewer = useCallback(async () => {
+  /* ── connect speaker audio (delegates to provider) ────────── */
+  const connectSpeaker = useCallback(async () => {
     setSpeakerAudio({ error: null });
-    await interviewer.start();
-  }, [interviewer, setSpeakerAudio]);
+    await speaker.start();
+  }, [speaker, setSpeakerAudio]);
 
   /* ── done ──────────────────────────────────────────────────────── */
   const finish = useCallback(() => {
-    patchAudioPrefs({ ...prefs, setupCompleted: true, lastKnownGood: interviewer.active });
+    patchAudioPrefs({ ...prefs, setupCompleted: true, lastKnownGood: speaker.active });
     dismiss();
-  }, [prefs, interviewer.active, dismiss]);
+  }, [prefs, speaker.active, dismiss]);
 
   if (!open) return null;
 
   /* ── derived UI bits ───────────────────────────────────────────── */
   const env = isElectron() ? 'desktop' : supportsTabShare() ? 'chromium' : 'limited';
   const detectedVirtualMic = findVirtualMic(inputs);
-  const interviewerReady = interviewer.active;
+  const speakerReady = speaker.active;
   const canFinish =
-    prefs.captureMethod === 'mic-only' || interviewerReady;
+    prefs.captureMethod === 'mic-only' || speakerReady;
 
   return (
     <div
@@ -554,7 +554,7 @@ export const AudioSetupWizard = ({
           <div className="flex-1">
             <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Set up audio</h2>
             <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-              Pick your microphone, speakers, and how Camora should hear the interviewer. Works with any device — AirPods, USB mics, audio interfaces, virtual loopback (BlackHole / VoiceMeeter / Loopback).
+              Pick your microphone, speakers, and how Camora should hear the speaker. Works with any device — AirPods, USB mics, audio interfaces, virtual loopback (BlackHole / VoiceMeeter / Loopback).
             </p>
           </div>
           {/* Explicit X close — the bottom-left "Skip for this session" link
@@ -653,7 +653,7 @@ export const AudioSetupWizard = ({
           <Section
             num={2}
             title="Your speakers"
-            subtitle="Where Sona's audio cues play (and what you hear during the call). Use headphones to keep the interviewer's voice from leaking back into your mic."
+            subtitle="Where Sona's audio cues play (and what you hear during the call). Use headphones to keep the speaker's voice from leaking back into your mic."
           >
             <div className="flex gap-2">
               <select
@@ -683,10 +683,10 @@ export const AudioSetupWizard = ({
             )}
           </Section>
 
-          {/* ── Interviewer audio method ────────────────────── */}
+          {/* ── Speaker audio method ────────────────────── */}
           <Section
             num={3}
-            title="How Camora hears the interviewer"
+            title="How Camora hears the speaker"
             subtitle="Pick the method that matches your setup. Auto picks the best option for your environment."
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -730,7 +730,7 @@ export const AudioSetupWizard = ({
                 current={prefs.captureMethod}
                 onPick={setMethod}
                 title="Room mic (any speaker)"
-                desc="Captures the interviewer's voice through your laptop mic. Works with Bluetooth speakers (JBL, Jabra), wired speakers, phone-on-speaker — anything audible."
+                desc="Captures the speaker's voice through your laptop mic. Works with Bluetooth speakers (JBL, Jabra), wired speakers, phone-on-speaker — anything audible."
                 badge={voiceEnrolled && voiceFilterEnabled ? 'voice filter ✓' : 'needs voice enrollment'}
                 disabled={!voiceEnrolled || !voiceFilterEnabled}
                 disabledNote={!voiceEnrolled
@@ -780,9 +780,9 @@ export const AudioSetupWizard = ({
                 style={{ background: 'rgba(38,97,156,0.06)', border: '1px solid rgba(38,97,156,0.30)', color: 'var(--text-primary)' }}>
                 <div className="font-bold mb-1">How room mic works</div>
                 <div style={{ color: 'var(--text-secondary)' }}>
-                  Your laptop mic captures everything in the room — interviewer audio bleeding from any speaker
+                  Your laptop mic captures everything in the room — speaker audio bleeding
                   (JBL, Jabra, AirPods, conference room) plus your own voice. The backend uses your enrolled
-                  voice profile to subtract you, so only the interviewer reaches Sona.
+                  voice profile to subtract you, so only the speaker reaches Sona.
                 </div>
                 {(!voiceEnrolled || !voiceFilterEnabled) && (
                   <div className="mt-2 font-bold" style={{ color: '#dc2626' }}>
@@ -800,7 +800,7 @@ export const AudioSetupWizard = ({
             <Section
               num={4}
               title="Connect and verify"
-              subtitle="Hit connect, then have the interviewer say something. The bars should rise."
+              subtitle="Hit connect, then have the speaker say something. The bars should rise."
             >
               {/* Method-mismatch warning. The user picked a method
                   that requires an environment they aren't in.
@@ -871,39 +871,39 @@ export const AudioSetupWizard = ({
               )}
 
               <div className="flex gap-2 items-center mb-2">
-                {!interviewerReady ? (
+                {!speakerReady ? (
                   <button
-                    onClick={connectInterviewer}
+                    onClick={connectSpeaker}
                     className="px-4 py-2 text-xs font-bold rounded-lg"
                     style={{ background: 'var(--accent)', color: '#fff' }}
                   >
                     {prefs.captureMethod === 'electron-loopback' ? 'Connect system audio'
-                      : prefs.captureMethod === 'tab-share' ? 'Share interviewer tab'
+                      : prefs.captureMethod === 'tab-share' ? 'Share speaker tab'
                       : prefs.captureMethod === 'virtual-mic' ? 'Connect virtual mic'
                       : 'Connect'}
                   </button>
                 ) : (
                   <button
-                    onClick={() => interviewer.stop()}
+                    onClick={() => speaker.stop()}
                     className="px-4 py-2 text-xs font-bold rounded-lg"
                     style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
                   >
                     Stop and reconnect
                   </button>
                 )}
-                <span className="text-[11px] font-mono" style={{ color: interviewerReady ? 'var(--accent)' : 'var(--text-dimmed)' }}>
-                  {interviewerReady
-                    ? interviewer.level > 0.012 ? 'voice detected ✓' : 'connected, waiting…'
+                <span className="text-[11px] font-mono" style={{ color: speakerReady ? 'var(--accent)' : 'var(--text-dimmed)' }}>
+                  {speakerReady
+                    ? speaker.level > 0.012 ? 'voice detected ✓' : 'connected, waiting…'
                     : 'not connected'}
                 </span>
               </div>
-              <LevelMeter level={interviewer.level} label="Interviewer level" active={interviewerReady && interviewer.level > 0.012} />
-              {interviewer.error && (
+              <LevelMeter level={speaker.level} label="Speaker level" active={speakerReady && speaker.level > 0.012} />
+              {speaker.error && (
                 <div
                   className="mt-2 rounded-lg p-2.5 text-xs"
                   style={{ background: 'rgba(220,38,38,0.10)', border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}
                 >
-                  <strong>Connect failed:</strong> {interviewer.error}
+                  <strong>Connect failed:</strong> {speaker.error}
                   {prefs.captureMethod === 'electron-loopback' && (
                     <div className="mt-1.5" style={{ color: '#dc2626' }}>
                       On macOS this usually means Screen Recording permission is denied. Open <strong>System Settings → Privacy &amp; Security → Screen Recording</strong>, enable Camora, and quit + relaunch the app.
@@ -929,7 +929,7 @@ export const AudioSetupWizard = ({
               disabled={!canFinish}
               className="px-4 py-2 text-xs font-bold rounded-lg disabled:opacity-50"
               style={{ background: 'var(--accent)', color: '#fff' }}
-              title={canFinish ? 'Save and start interview' : 'Verify the interviewer level meter is moving first.'}
+              title={canFinish ? 'Save and start session' : 'Verify the speaker level meter is moving first.'}
             >
               {canFinish ? 'Save and continue' : 'Waiting for audio…'}
             </button>

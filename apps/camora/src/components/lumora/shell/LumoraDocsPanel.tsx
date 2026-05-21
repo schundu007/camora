@@ -2524,9 +2524,9 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
     if (prepData.companies.length === 0) {
       setPrepData(prev => ({
         ...prev,
-        companies: ['My Interview'],
-        activeCompany: 'My Interview',
-        data: { ...prev.data, 'My Interview': { ...EMPTY_DOC } },
+        companies: ['My Session'],
+        activeCompany: 'My Session',
+        data: { ...prev.data, 'My Session': { ...EMPTY_DOC } },
       }));
     } else if (!prepData.activeCompany && prepData.companies.length > 0) {
       setPrepData(prev => ({ ...prev, activeCompany: prev.companies[0] }));
@@ -2702,7 +2702,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
 
   /** Build the title + ordered section list for download. */
   const buildDownloadPayload = useCallback(() => {
-    const company = prepData.activeCompany || 'Interview';
+    const company = prepData.activeCompany || 'Company';
     const generated = SIDEBAR_SECTIONS
       .filter((s) => s.id !== 'input' && s.id !== 'jd-view' && state.sections[s.id])
       .map((s) => ({ id: s.id, label: s.label, content: state.sections[s.id] }));
@@ -2844,7 +2844,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
             </p>
           )}
           {/* The new-company input must take priority over the dropdown.
-              Auto-init sets activeCompany = "My Interview" on first mount,
+              Auto-init sets activeCompany = "My Session" on first mount,
               so without this hoist the dropdown branch always wins and
               clicking "+ Add Company" inside the dropdown silently sets
               showNewCompany=true with no visible change. */}

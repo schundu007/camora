@@ -194,7 +194,7 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
             background: isRecording ? 'var(--accent-subtle)' : 'transparent',
             border: '1px solid var(--border)',
           }}
-          title="Record 5 s of your voice — the app will learn to filter it during interviews"
+          title="Record 5 s of your voice — the app will learn to filter it during sessions"
         >
           {isRecording ? (
             <>
@@ -243,7 +243,7 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
           background: voiceFilterEnabled ? 'var(--accent-subtle)' : 'transparent',
           border: '1px solid var(--border)',
         }}
-        title={voiceFilterEnabled ? 'Voice filter active — only interviewer is transcribed' : 'Voice filter disabled'}
+        title={voiceFilterEnabled ? 'Voice filter active — only speaker is transcribed' : 'Voice filter disabled'}
       >
         <VoiceIcon filled={voiceFilterEnabled} />
         <span>{voiceFilterEnabled ? 'Filter On' : 'Filter Off'}</span>

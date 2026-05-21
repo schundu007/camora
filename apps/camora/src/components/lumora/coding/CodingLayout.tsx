@@ -372,7 +372,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     const prompts: Record<string, string> = {
       explain: `Analyze this ${lang} solution and provide:\n1. One sentence summary of what it does.\n2. Step-by-step numbered walkthrough of the algorithm.\n3. The key insight that makes this approach work.\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
       issues: `Review this ${lang} code and list all bugs, edge cases, and quality issues. For each issue:\n- Severity: CRITICAL / HIGH / MEDIUM / LOW\n- Location: line or function name\n- Problem: what is wrong\n- Fix: corrected code snippet\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
-      deepdive: `Generate 3 deep-dive interview questions about this ${lang} solution. For each question provide a thorough answer. Focus on: why this approach, edge cases, and how to extend it.\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
+      deepdive: `Generate 3 deep-dive questions about this ${lang} solution. For each question provide a thorough answer. Focus on: why this approach, edge cases, and how to extend it.\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
     };
     let accumulated = '';
     try {
@@ -2178,7 +2178,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                             <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: t.headerText }}>{activeSol.name}</h4>
                             {activeSol.patternTag && (
                               <span className="text-[9px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5"
-                                title="Canonical interview pattern"
+                                title="Canonical pattern"
                                 style={{ color: '#FFFFFF', background: 'var(--cam-primary)', letterSpacing: '0.04em' }}>
                                 {activeSol.patternTag}
                               </span>
