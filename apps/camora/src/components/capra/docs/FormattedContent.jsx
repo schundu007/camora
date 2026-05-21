@@ -190,19 +190,11 @@ export default function FormattedContent({ content, inline = false }) {
   blocks.forEach((block, blockIdx) => {
     if (block.type === 'code') {
       pushBody(
-        <div
-          key={`code-${blockIdx}`}
-          className="my-2 rounded border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]"
-        >
+        <div key={`code-${blockIdx}`} className="prep-code-block">
           {block.lang && block.lang !== 'code' && (
-            <div className="px-4 py-1.5 text-[10px] uppercase tracking-[0.14em] landing-mono text-[var(--text-muted)] border-b border-[var(--border)]">
-              {block.lang}
-            </div>
+            <div className="prep-code-lang">{block.lang}</div>
           )}
-          <pre
-            className="p-4 text-sm leading-7 overflow-x-auto landing-mono text-[var(--text-primary)]"
-            style={{ whiteSpace: 'pre', tabSize: 2, margin: 0 }}
-          >
+          <pre className="prep-code-pre" style={{ whiteSpace: 'pre', tabSize: 2, margin: 0 }}>
             {block.lines.join('\n')}
           </pre>
         </div>,

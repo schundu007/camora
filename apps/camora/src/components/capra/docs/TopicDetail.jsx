@@ -2770,7 +2770,7 @@ export default function TopicDetail({
             <section id="visual" className="scroll-mt-24">
               <div className="pt-3 space-y-4">
                 {topicDetails.visualizations.map((viz, vi) => (
-                  <figure key={vi} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
+                  <figure key={vi} className="viz-figure">
                     <figcaption className="viz-caption">
                       <h4 className="viz-caption-title">{viz.title}</h4>
                       {viz.description && (
@@ -2780,11 +2780,12 @@ export default function TopicDetail({
                       )}
                     </figcaption>
                     {viz.image && (
-                      <div className="p-4 bg-white">
+                      <div className="px-6 py-4" style={{ background: 'white' }}>
                         <ZoomableImage
                           src={viz.image}
                           alt={viz.title}
-                          maxHeight={640}
+                          maxHeight={320}
+                          imgStyle={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '316px', margin: '0 auto' }}
                           frameStyle={{ background: 'white' }}
                         />
                       </div>

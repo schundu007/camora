@@ -2090,6 +2090,72 @@ figure:has(> .viz-caption) {
   white-space: pre;
 }
 
+/* ── Fenced code blocks from FormattedContent — navy strip + gold border ─ */
+/*
+ * FormattedContent wraps fenced code in <div><pre>, so the bare
+ * `.prep-content > pre` selector above can't reach them. These classes
+ * replicate the same navy-gold chrome for that wrapper shape.
+ */
+.prep-code-block {
+  position: relative;
+  margin: 0.75rem 0;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--cam-gold-leaf) 28%, transparent);
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--cam-gold-leaf) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 25%, transparent);
+}
+.prep-code-block::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--cam-primary) 0%, var(--cam-primary-dk) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+.prep-code-lang {
+  padding: 0.35rem 1rem 0.35rem 1.25rem;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--cam-primary-dk);
+  background: color-mix(in srgb, var(--cam-primary) 6%, var(--bg-elevated));
+  border-bottom: 1px solid color-mix(in srgb, var(--cam-gold-leaf) 25%, transparent);
+}
+[data-theme='dark'] .prep-code-lang {
+  color: var(--cam-gold-leaf-lt);
+  background: color-mix(in srgb, var(--cam-primary) 15%, var(--bg-elevated));
+}
+.prep-code-pre {
+  padding: 14px 16px 14px 22px;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  overflow-x: auto;
+}
+
+/* ── Viz figure cards — gold-leaf border matches docs design system ─── */
+.viz-figure {
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent);
+  overflow: hidden;
+  background: var(--bg-surface);
+  box-shadow:
+    0 0 0 0.5px color-mix(in srgb, var(--cam-gold-leaf) 12%, transparent),
+    0 1px 3px color-mix(in srgb, black 6%, transparent);
+}
+[data-theme='dark'] .viz-figure {
+  border-color: color-mix(in srgb, var(--cam-gold-leaf) 28%, transparent);
+}
+
 /* ── Lists — better spacing + gold leaf bullets ──────────────────── */
 .docs-page ul,
 .docs-page ol,
