@@ -8,6 +8,11 @@ import type { CoFixAnswer, CoFixChange } from '@/lib/sse-client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT } from '@/lib/companyContext';
+import { dialogAlert } from '@/components/shared/Dialog';
+import type { ScreenshotEntry } from '@/components/lumora/shell/ScreenshotStrip';
+import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
+import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
+import { useInterviewStore } from '@/stores/interview-store';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -54,10 +59,23 @@ const LANGUAGES = [
 
 interface CoFixLayoutProps {
   onScreenshotAppendRef?: { current: ((text: string) => void) | null };
+  screenshots?: ScreenshotEntry[];
+  onSnapped?: (entry: ScreenshotEntry) => void;
+  onRemove?: (id: string) => void;
+  onTranscription?: (text: string, opts?: { manual?: boolean }) => void;
+  isTabActive?: boolean;
 }
 
-export function CoFixLayout({ onScreenshotAppendRef }: CoFixLayoutProps) {
+const pillBase = 'flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color,opacity] active:scale-[0.97]';
+
+export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped, onRemove, onTranscription, isTabActive }: CoFixLayoutProps) => {
   const { token } = useAuth();
+  const isStealthActive = useInterviewStore(s => s.isStealthActive);
+  const setIsStealthActive = useInterviewStore(s => s.setIsStealthActive);
+  const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
+  const [pendingSnapIds, setPendingSnapIds] = useState<string[]>([]);
+  const onSnappedRef = useRef(onSnapped);
+  useEffect(() => { onSnappedRef.current = onSnapped; }, [onSnapped]);
   const navigate = useNavigate();
   const monaco = useMonaco();
 
@@ -117,6 +135,66 @@ export function CoFixLayout({ onScreenshotAppendRef }: CoFixLayoutProps) {
       decorationCollectionRef.current = editor.createDecorationsCollection(newDecorations);
     }
   }, [changes, monaco, fixedCode]);
+
+  const handleStealthMode = useCallback(async () => {
+    const camo = (window as any).camo;
+    if (!camo?.setStealthMode) {
+      await dialogAlert({ title: 'Desktop only', message: 'Stealth mode requires the Camora desktop app.' });
+      return;
+    }
+    const next = !isStealthActive;
+    await camo.setStealthMode(next);
+    setIsStealthActive(next);
+  }, [isStealthActive, setIsStealthActive]);
+
+  const handleSnap = useCallback(async () => {
+    if (!onSnappedRef.current) return;
+    const camo = (window as any).camo;
+    const id = `snap-${Date.now()}`;
+    setSnapState('capturing');
+    try {
+      let dataUrl: string;
+      if (camo?.snapActiveBrowser) {
+        const result = await camo.snapActiveBrowser();
+        if (result?.error) throw new Error(result.error);
+        const blob = await fetch(result.dataUrl || result).then(r => r.blob());
+        dataUrl = await new Promise<string>(res => { const reader = new FileReader(); reader.onloadend = () => res(reader.result as string); reader.readAsDataURL(blob); });
+      } else {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        const track = stream.getVideoTracks()[0];
+        try {
+          const imageCapture = new (window as any).ImageCapture(track);
+          const bitmap = await imageCapture.grabFrame();
+          const canvas = document.createElement('canvas');
+          canvas.width = bitmap.width; canvas.height = bitmap.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('no 2d context');
+          ctx.drawImage(bitmap, 0, 0);
+          dataUrl = canvas.toDataURL('image/png');
+        } finally { track.stop(); }
+      }
+      const tempEntry: ScreenshotEntry = { id, dataUrl, text: '' };
+      setPendingSnapIds(prev => [...prev, id]);
+      setSnapState('idle');
+      try {
+        const blob = await fetch(dataUrl).then(r => r.blob());
+        const formData = new FormData();
+        formData.append('image', new File([blob], 'snap.png', { type: 'image/png' }));
+        const resp = await fetch(`${API_URL}/api/v1/coding/extract-from-image`, {
+          method: 'POST', credentials: 'include',
+          headers: { Authorization: `Bearer ${token}` }, body: formData,
+        });
+        if (!resp.ok) throw new Error(`OCR ${resp.status}`);
+        const data = await resp.json();
+        onSnappedRef.current?.({ ...tempEntry, text: data.text || data.problem_text || '' });
+      } catch { onSnappedRef.current?.({ ...tempEntry, text: '' }); }
+      finally { setPendingSnapIds(prev => prev.filter(p => p !== id)); }
+    } catch {
+      setSnapState('error');
+      setTimeout(() => setSnapState('idle'), 3000);
+      setPendingSnapIds(prev => prev.filter(p => p !== id));
+    }
+  }, [token]);
 
   const handleFix = useCallback(async () => {
     if (inputCode.trim().length < 5 || isLoading) return;
@@ -187,10 +265,10 @@ export function CoFixLayout({ onScreenshotAppendRef }: CoFixLayoutProps) {
   return (
     <div className="flex flex-col h-full">
 
-      {/* ── Enterprise toolbar — full width, never clips ── */}
-      <div className="flex items-center gap-3 px-4 py-2.5 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', boxShadow: '0 2px 8px rgba(3,19,46,0.35)' }}>
+      {/* ── Toolbar — single combined row ── */}
+      <div className="flex items-center gap-2 px-3 py-2 shrink-0 overflow-x-auto no-scrollbar" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         {/* Language */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-[10px] font-semibold tracking-wider uppercase text-[var(--text-muted)]">Lang</span>
           <select
             value={language}
@@ -202,19 +280,9 @@ export function CoFixLayout({ onScreenshotAppendRef }: CoFixLayoutProps) {
         </div>
 
         {/* Divider */}
-        <div className="w-px h-5 bg-[var(--border)]" />
+        <div className="w-px h-5 bg-[var(--border)] shrink-0" />
 
-        {/* Company context badge */}
-        {activeAssistant?.company && (
-          <span
-            className="text-[11px] font-bold uppercase tracking-[0.12em] px-2.5 py-1 rounded shrink-0"
-            style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}
-          >
-            {activeAssistant.company}
-          </span>
-        )}
-
-        {/* Status badge */}
+        {/* Status */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {isLoading && (
             <span className="flex items-center gap-1.5 text-[11px] text-[#0047AB]">
@@ -239,31 +307,95 @@ export function CoFixLayout({ onScreenshotAppendRef }: CoFixLayoutProps) {
           )}
         </div>
 
-        {/* Action buttons — always at right edge, never hidden */}
+        {/* Action buttons — only when fixed code is ready */}
         {fixedCode && (
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={handleRun}
               disabled={isRunning}
               className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-lg bg-[#0047AB] text-white hover:bg-[#0038a0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isRunning
-                ? <><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />Running</>
-                : <>▶ Run</>}
+              {isRunning ? <><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />Running</> : <>▶ Run</>}
             </button>
-            <button
-              onClick={handleCopy}
-              className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-primary)] bg-[var(--bg-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
-            >
-              Copy
-            </button>
-            <button
-              onClick={handleSendToCoding}
-              className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] bg-[var(--bg-primary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors whitespace-nowrap"
-            >
-              → Coding
-            </button>
+            <button onClick={handleCopy} className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-primary)] bg-[var(--bg-primary)] hover:bg-[var(--bg-elevated)] transition-colors">Copy</button>
+            <button onClick={handleSendToCoding} className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] bg-[var(--bg-primary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors whitespace-nowrap">→ Coding</button>
           </div>
+        )}
+
+        {/* Divider */}
+        <div className="w-px h-5 shrink-0" style={{ background: 'rgba(255,255,255,0.18)' }} />
+
+        {/* SNAP */}
+        {onSnapped && (
+          <button
+            onClick={handleSnap}
+            disabled={snapState === 'capturing'}
+            title={snapState === 'error' ? 'Snap failed' : 'Snap screen'}
+            className={pillBase}
+            style={snapState === 'error'
+              ? { background: '#ef4444', color: '#fff' }
+              : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.18)' }
+            }
+          >
+            {snapState === 'capturing'
+              ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+              : snapState === 'error'
+              ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>
+            }
+            {snapState === 'error' ? 'Failed' : snapState === 'capturing' ? '…' : 'Snap'}
+          </button>
+        )}
+
+        {/* Pending snap thumbnails */}
+        {pendingSnapIds.map(pid => (
+          <div key={pid} className="w-10 h-7 rounded shrink-0 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)' }}>
+            <div className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+          </div>
+        ))}
+
+        {/* Completed thumbnails */}
+        {screenshots.map((s, i) => (
+          <div key={s.id} className="relative group shrink-0" title={s.text ? `Page ${i + 1}: ${s.text.slice(0, 80)}…` : `Page ${i + 1}`}>
+            <img src={s.dataUrl} alt={`Screenshot ${i + 1}`} className="h-7 w-10 object-cover rounded" style={{ border: '1px solid rgba(255,255,255,0.20)' }} />
+            <span className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>{i + 1}</span>
+            {onRemove && (
+              <button onClick={() => onRemove(s.id)} className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex" style={{ background: '#ef4444', color: '#fff' }} title="Remove">
+                <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            )}
+          </div>
+        ))}
+
+        {/* AudioCapture */}
+        {onTranscription && (
+          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md shrink-0" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)' }}>
+            <AudioCapture onTranscription={onTranscription} autoStart={false} active={isTabActive} compact />
+          </div>
+        )}
+
+        {/* VoiceEnrollment */}
+        {onTranscription && <VoiceEnrollment disabled={false} variant="light" />}
+
+        {/* Stealth — desktop only */}
+        {!!(window as any).camo?.isDesktop && (
+          <button
+            onClick={handleStealthMode}
+            title={isStealthActive ? 'Stealth ON' : 'Block mouse tracking'}
+            className={pillBase}
+            style={isStealthActive
+              ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }
+              : { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
+            }
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              {isStealthActive
+                ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></>
+                : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></>
+              }
+            </svg>
+            {isStealthActive ? 'Stealth ON' : 'Stealth'}
+          </button>
         )}
       </div>
 
