@@ -53,7 +53,7 @@ export default function CompanyQuestionsPage() {
         <SiteNav variant="light" />
         <div className="pt-20 text-center">
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Company not found</h1>
-          <p className="mt-2 text-[var(--text-muted)]">We don't have interview data for this company yet.</p>
+          <p className="mt-2 text-[var(--text-muted)]">We don't have practice data for this company yet.</p>
           <Link to="/" className="mt-4 inline-block text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium">
             Go home
           </Link>
@@ -173,7 +173,7 @@ export default function CompanyQuestionsPage() {
         {/* CTA */}
         <section className="text-center bg-[var(--bg-surface)] border-0 rounded-2xl p-8">
           <h2 className="text-xl font-bold text-[var(--text-primary)]">
-            Start preparing for {company.name} interviews
+            Start preparing for {company.name} challenges
           </h2>
           <p className="mt-2 text-[var(--text-muted)] text-sm">
             Practice with AI-powered practice sessions, coding problems, and system design exercises.
@@ -196,7 +196,7 @@ export default function CompanyQuestionsPage() {
               return (
                 <Link
                   key={relSlug}
-                  to={`/interview-questions/${relSlug}`}
+                  to={`/company-questions/${relSlug}`}
                   className="bg-[var(--bg-surface)] border-0 rounded-xl p-4 text-center transition-[transform,box-shadow] duration-150 active:scale-[0.98]"
                 >
                   <img src={rel.logo} alt={rel.name} className="w-10 h-10 rounded-lg object-contain mx-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
