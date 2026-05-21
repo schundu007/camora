@@ -39,6 +39,10 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
   const setIsStealthActive = useInterviewStore(s => s.setIsStealthActive);
   const answerMode = useInterviewStore(s => s.answerMode);
   const setAnswerMode = useInterviewStore(s => s.setAnswerMode);
+  const sonaExport = useInterviewStore(s => s.sonaExport);
+  const sonaClear = useInterviewStore(s => s.sonaClear);
+  const sonaClose = useInterviewStore(s => s.sonaClose);
+  const sonaHasMessages = useInterviewStore(s => s.sonaHasMessages);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
   const [pendingIds, setPendingIds] = useState<string[]>([]);
 
@@ -287,6 +291,46 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
               {mode === 'short' ? 'Short' : 'Detailed'}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Sona panel actions — behavioral only, lifted from AICompanionPanel header */}
+      {surface === 'behavioral' && (sonaExport || sonaClear || sonaClose) && (
+        <div
+          className="flex items-center gap-0.5 shrink-0"
+          style={{
+            padding: '2px 3px',
+            background: 'rgba(3,19,46,0.88)',
+            border: '1px solid rgba(201,162,39,0.50)',
+            borderRadius: 8,
+          }}
+        >
+          <button
+            onClick={sonaExport ?? undefined}
+            disabled={!sonaHasMessages}
+            title="Export session (.md)"
+            className="p-1.5 rounded-md transition-colors hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed"
+            style={{ color: 'rgba(255,255,255,0.90)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+          </button>
+          <button
+            onClick={sonaClear ?? undefined}
+            disabled={!sonaHasMessages}
+            title="Clear chat history"
+            className="p-1.5 rounded-md transition-colors hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed"
+            style={{ color: 'rgba(255,255,255,0.90)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+          </button>
+          <button
+            onClick={sonaClose ?? undefined}
+            title="Close Sona"
+            className="p-1.5 rounded-md transition-colors hover:bg-white/10"
+            style={{ color: 'rgba(255,255,255,0.90)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
         </div>
       )}
 
