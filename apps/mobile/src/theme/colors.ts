@@ -12,6 +12,10 @@ export const colors = {
   textMuted: '#A1A8B3',
   textFaint: '#6B7280',
 
+  gold: '#C9A227',
+  goldDim: 'rgba(201,162,39,0.18)',
+  goldBorder: 'rgba(201,162,39,0.40)',
+
   success: '#16A34A',
   danger: '#DC2626',
   warn: '#F59E0B',
