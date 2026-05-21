@@ -92,7 +92,11 @@ export default function QuizSessionPage() {
   const [searchParams] = useSearchParams();
   const navigate       = useNavigate();
 
-  const domainFilter = searchParams.get('domain') || null;
+  const domainParam   = searchParams.get('domain') || '';
+  // Support comma-separated domains: ?domain=Docker,Kubernetes,Ansible
+  const domainFilters = domainParam
+    ? domainParam.split(',').map(d => d.trim().toLowerCase()).filter(Boolean)
+    : [];
   const diffFilter   = (searchParams.get('difficulty') || '').toLowerCase() || null;
   const countParam   = Math.min(20, Math.max(1, parseInt(searchParams.get('count') || '10', 10) || 10));
 
@@ -112,8 +116,8 @@ export default function QuizSessionPage() {
       (mcqData as { problems: Record<string, McqProblemMeta> }).problems
     );
     return all.filter(p => {
-      if (domainFilter && p.domain.toLowerCase() !== domainFilter.toLowerCase()) return false;
-      if (diffFilter   && p.difficulty.toLowerCase() !== diffFilter)             return false;
+      if (domainFilters.length > 0 && !domainFilters.includes(p.domain.toLowerCase())) return false;
+      if (diffFilter && p.difficulty.toLowerCase() !== diffFilter) return false;
       return true;
     });
   }
@@ -158,7 +162,7 @@ export default function QuizSessionPage() {
     } finally {
       setLoading(false);
     }
-  }, [countParam, domainFilter, diffFilter]);
+  }, [countParam, domainParam, diffFilter]);
 
   // ── Mount ───────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -239,13 +243,13 @@ export default function QuizSessionPage() {
         )}
 
         {/* Domain chip */}
-        {domainFilter && (
+        {domainFilters.length > 0 && (
           <span style={{
             padding: '2px 10px', borderRadius: 20,
             background: 'rgba(0,71,171,0.18)', border: '1px solid rgba(0,71,171,0.3)',
             color: 'var(--text-secondary)', fontSize: 11, fontWeight: 700, letterSpacing: '0.03em',
           }}>
-            {domainFilter}
+            {domainFilters.length === 1 ? domainFilters[0] : `${domainFilters.length} domains`}
           </span>
         )}
 
