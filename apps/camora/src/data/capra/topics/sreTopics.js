@@ -100,7 +100,7 @@ export const sreTopics = [
   // ─────────────────────────────────────────────────────────────────────
   {
     id: 'sre-what-is-it',
-    title: 'What is SRE? Origins, Definition, vs DevOps',
+    title: 'What is SRE?',
     icon: 'book',
     color: '#3b82f6',
     questions: 4,
@@ -181,7 +181,7 @@ The SRE response is error budgets — convert the dev/SRE tension into a math pr
 
   {
     id: 'sli-slo-sla',
-    title: 'SLI / SLO / SLA — Definitions & the Consequence Test',
+    title: 'SLI / SLO / SLA',
     icon: 'activity',
     color: '#3b82f6',
     questions: 5,
@@ -334,7 +334,7 @@ The SRE runs the measurement; the SRE does not unilaterally set the target. If o
 
   {
     id: 'error-budgets',
-    title: 'Error Budgets — Math, Policy, and the 4-Week Halt Rule',
+    title: 'Error Budgets',
     icon: 'gauge',
     color: '#3b82f6',
     questions: 5,
@@ -493,7 +493,7 @@ Ties to budget: a 14.4× sustained burn would eat the whole 30-day budget in jus
 
   {
     id: 'risk-velocity-tradeoff',
-    title: 'Risk vs Feature Velocity — Why 100% is Wrong',
+    title: 'Risk vs Feature Velocity',
     icon: 'trendingUp',
     color: '#3b82f6',
     questions: 3,
@@ -590,7 +590,7 @@ The goal: product sees that SRE is not arbitrarily blocking launches — SRE is 
 
   {
     id: 'toil-50-percent-cap',
-    title: 'The 50% Toil Cap — What Counts and What Doesn\'t',
+    title: 'The 50% Toil Cap',
     icon: 'zap',
     color: '#3b82f6',
     questions: 4,
@@ -699,7 +699,7 @@ The cost-benefit rule for automation: time saved over the automation\'s lifetime
 
   {
     id: 'critical-user-journeys',
-    title: 'Critical User Journeys (CUJs) and Good/Total SLI Form',
+    title: 'Critical User Journeys',
     icon: 'users',
     color: '#3b82f6',
     questions: 3,
@@ -807,7 +807,7 @@ Implementing quality SLIs is harder than availability — you usually need appli
 
   {
     id: 'aspirational-vs-enforced',
-    title: 'Aspirational vs Enforced SLOs — When to Use Which',
+    title: 'Aspirational vs Enforced SLOs',
     icon: 'gauge',
     color: '#3b82f6',
     questions: 3,
@@ -908,7 +908,7 @@ Concretely: announce in the next reliability review that the SLO is going aspira
   // ─────────────────────────────────────────────────────────────────────
   {
     id: 'high-availability',
-    title: 'High Availability — Redundancy Patterns and the Math',
+    title: 'High Availability',
     icon: 'shield',
     color: '#22c55e',
     questions: 4,
@@ -1023,7 +1023,7 @@ Also useful: the rough rule that each additional 9 costs ~10× the engineering i
 
   {
     id: 'disaster-recovery',
-    title: 'Disaster Recovery — The Four AWS Strategies',
+    title: 'Disaster Recovery',
     icon: 'lifeBuoy',
     color: '#22c55e',
     questions: 4,
@@ -1157,7 +1157,7 @@ Also consider: warm-standby costs roughly 30-50% of full production (you\'re sca
 
   {
     id: 'rto-rpo',
-    title: 'RTO vs RPO — Definitions and Trade-offs',
+    title: 'RTO vs RPO',
     icon: 'clock',
     color: '#22c55e',
     questions: 3,
@@ -1259,7 +1259,7 @@ Also: as called out earlier, RTO=0 for region failure is not RTO=0 for data corr
 
   {
     id: 'multi-cloud-active-active',
-    title: 'Multi-cloud Active-Active — Write Strategies',
+    title: 'Multi-cloud Active-Active',
     icon: 'globe',
     color: '#22c55e',
     questions: 3,
@@ -1363,7 +1363,7 @@ Multi-cloud is a related answer: if your DR strategy depends on AWS being up to 
 
   {
     id: 'scaling-bottlenecks',
-    title: 'Identifying & Removing Scaling Bottlenecks',
+    title: 'Identifying Scaling Bottlenecks',
     icon: 'trendingUp',
     color: '#22c55e',
     questions: 3,
@@ -1486,7 +1486,7 @@ The diagnostic: if your monitoring shows uniform CPU across most shards but one 
 
   {
     id: 'performance-optimization',
-    title: 'Performance Optimization — Latency Budgets, Caching, Deadlines',
+    title: 'Performance Optimization',
     icon: 'zap',
     color: '#22c55e',
     questions: 3,
@@ -1612,7 +1612,7 @@ The detection: use histograms with exponentially-bucketed boundaries (Prometheus
 
   {
     id: 'distributed-consensus',
-    title: 'Distributed Consensus — Paxos, Raft, and When You Need It',
+    title: 'Distributed Consensus',
     icon: 'lock',
     color: '#22c55e',
     questions: 3,
@@ -1726,7 +1726,7 @@ Practical pattern: 5-replica clusters spread across 3 AZs (e.g. 2-2-1). Loss of 
   // ─────────────────────────────────────────────────────────────────────
   {
     id: 'three-pillars',
-    title: 'Three Pillars of Observability — Metrics, Logs, Traces',
+    title: 'Three Pillars of Observability',
     icon: 'activity',
     color: '#06b6d4',
     questions: 3,
@@ -1838,7 +1838,7 @@ Worth knowing: the pillars view is fine as a starting mental model. The "wide ev
 
   {
     id: 'red-use-golden-signals',
-    title: 'RED, USE, and the Four Golden Signals',
+    title: 'RED, USE & Four Golden Signals',
     icon: 'activity',
     color: '#06b6d4',
     questions: 3,
@@ -1986,7 +1986,7 @@ Google SRE Book Ch 6 quote: "It\'s important to distinguish between the latency 
 
   {
     id: 'sli-types',
-    title: 'Choosing the Right SLI — Availability, Latency, Quality, Freshness',
+    title: 'Choosing the Right SLI',
     icon: 'target',
     color: '#06b6d4',
     questions: 3,
@@ -2113,7 +2113,7 @@ Pragmatic guidance: most services don\'t need a quality SLI explicitly. But any 
 
   {
     id: 'modern-observability-stack',
-    title: 'Modern Observability Stack — LGTM, Datadog, Honeycomb',
+    title: 'Modern Observability Stack',
     icon: 'layers',
     color: '#06b6d4',
     questions: 3,
@@ -2244,7 +2244,7 @@ Trade-offs: eBPF requires a recent kernel (4.18+ for most features, 5.x preferre
 
   {
     id: 'logging-best-practices',
-    title: 'Logging Best Practices — Structured, Sampled, Correlated',
+    title: 'Logging Best Practices',
     icon: 'fileText',
     color: '#06b6d4',
     questions: 3,
@@ -2385,7 +2385,7 @@ Final guardrail: budget alerts per service. If service X\'s logs spike 2× overn
 
   {
     id: 'distributed-tracing',
-    title: 'Distributed Tracing — Spans, Sampling, OpenTelemetry',
+    title: 'Distributed Tracing',
     icon: 'gitBranch',
     color: '#06b6d4',
     questions: 3,
@@ -2523,7 +2523,7 @@ What I\'d tell a team setting up tracing: aim for <5% CPU overhead, <2% addition
 
   {
     id: 'alerting-philosophy',
-    title: 'Alerting Philosophy — Page on Symptoms, Not Causes',
+    title: 'Alerting Philosophy',
     icon: 'alertTriangle',
     color: '#06b6d4',
     questions: 3,
@@ -2666,7 +2666,7 @@ The first month is painful — you\'re killing alerts and people are nervous. Th
 
   {
     id: 'dashboards-design',
-    title: 'Dashboards — Hierarchy, Heatmaps, USE/RED Layouts',
+    title: 'Dashboards',
     icon: 'layout',
     color: '#06b6d4',
     questions: 3,
@@ -2831,7 +2831,7 @@ The principle: anything that COULD cause a metric change should be visible on th
 
   {
     id: 'cardinality-cost',
-    title: 'Cardinality, Volume, and the Cost of Observability',
+    title: 'Cardinality & Observability Cost',
     icon: 'database',
     color: '#06b6d4',
     questions: 3,
@@ -3001,7 +3001,7 @@ The hardest part is engineering buy-in: people are attached to the tools they kn
   // ─────────────────────────────────────────────────────────────────────
   {
     id: 'incident-command',
-    title: 'Incident Command — IC, Ops Lead, Comms Lead',
+    title: 'Incident Command',
     icon: 'alertTriangle',
     color: '#ef4444',
     questions: 4,
@@ -3178,7 +3178,7 @@ Quote from SRE Book Ch 14: "The first priority is incident resolution... root-ca
 
   {
     id: 'mttr-mttd-mttf',
-    title: 'Incident Metrics — MTTD, MTTR, MTBF, MTTF',
+    title: 'Incident Metrics',
     icon: 'clock',
     color: '#ef4444',
     questions: 3,
@@ -3336,7 +3336,7 @@ The interview-quality framing: every "we want N nines" claim should come with an
 
   {
     id: 'incident-severity',
-    title: 'Severity Levels — SEV1/2/3/4 Definitions',
+    title: 'Severity Levels',
     icon: 'alertCircle',
     color: '#ef4444',
     questions: 3,
@@ -3501,7 +3501,7 @@ The cultural fix that works: leadership publicly demotes incidents that were ove
 
   {
     id: 'blameless-postmortems',
-    title: 'Blameless Postmortems — Format and Discipline',
+    title: 'Blameless Postmortems',
     icon: 'fileText',
     color: '#ef4444',
     questions: 4,
@@ -3708,7 +3708,7 @@ The general rule: when in doubt, do the postmortem. The cost of writing one for 
 
   {
     id: 'five-whys',
-    title: 'Five Whys — Root Cause vs Contributing Factors',
+    title: 'Five Whys',
     icon: 'helpCircle',
     color: '#ef4444',
     questions: 3,
@@ -3878,7 +3878,7 @@ Quote from the SRE Book Ch 15: "User error" is too convenient an explanation. It
 
   {
     id: 'incident-comms',
-    title: 'Incident Communications — Status Pages and Stakeholder Updates',
+    title: 'Incident Communications',
     icon: 'megaphone',
     color: '#ef4444',
     questions: 3,
@@ -4069,7 +4069,7 @@ The bonus: a third-party status page also lets you communicate during incidents 
 
   {
     id: 'gamedays-chaos',
-    title: 'Game Days, Chaos Engineering, and DiRT',
+    title: 'Game Days & Chaos Engineering',
     icon: 'shield',
     color: '#ef4444',
     questions: 3,
@@ -4252,7 +4252,7 @@ Practical staging: most companies start with chaos engineering (technical, autom
   // ─────────────────────────────────────────────────────────────────────
   {
     id: 'toil-quantified',
-    title: 'Toil — Definition, Measurement, the 50% Cap',
+    title: 'Toil',
     icon: 'zap',
     color: '#f59e0b',
     questions: 3,
@@ -4435,7 +4435,7 @@ Each is a 1-3 month project that returns hundreds of hours/year. The 50% enginee
 
   {
     id: 'iac-terraform-pulumi',
-    title: 'Infrastructure as Code — Terraform, OpenTofu, Pulumi, Crossplane',
+    title: 'Infrastructure as Code',
     icon: 'codepen',
     color: '#f59e0b',
     questions: 3,
@@ -4639,7 +4639,7 @@ The discipline: "everything via code review, modules versioned, state isolated b
 
   {
     id: 'cicd-progressive-delivery',
-    title: 'CI/CD and Progressive Delivery — Canary, Blue/Green, Feature Flags',
+    title: 'CI/CD & Progressive Delivery',
     icon: 'gitMerge',
     color: '#f59e0b',
     questions: 3,
@@ -4851,7 +4851,7 @@ The mistake low-performing teams make: "we\'ll deploy carefully, once a month, w
 
   {
     id: 'gitops',
-    title: 'GitOps — Argo CD, Flux, and the Pull Model',
+    title: 'GitOps',
     icon: 'gitBranch',
     color: '#f59e0b',
     questions: 3,
@@ -5068,7 +5068,7 @@ In 2026, this stack (GitOps + canary + SLO-gated rollback) is the modern standar
 
   {
     id: 'self-healing-systems',
-    title: 'Self-healing — Auto-restart, Auto-scale, Auto-remediate',
+    title: 'Self-healing',
     icon: 'refreshCw',
     color: '#f59e0b',
     questions: 3,
@@ -5296,7 +5296,7 @@ The right framing: autoscaling is a TOOL, not a SUBSTITUTE for capacity planning
   // ─────────────────────────────────────────────────────────────────────
   {
     id: 'capacity-planning-method',
-    title: 'Capacity Planning Method — Forecast, Provision, Reconcile',
+    title: 'Capacity Planning',
     icon: 'trendingUp',
     color: '#8b5cf6',
     questions: 3,
@@ -5469,7 +5469,7 @@ Hidden trap: dependencies. Your service has N+1; does your database? Cache? Mess
 
   {
     id: 'forecasting-models',
-    title: 'Forecasting Models — Linear, Seasonal, ML-based',
+    title: 'Forecasting Models',
     icon: 'lineChart',
     color: '#8b5cf6',
     questions: 3,
@@ -5659,7 +5659,7 @@ The cultural finding: most teams\' forecasts are systematically optimistic about
 
   {
     id: 'load-testing',
-    title: 'Load Testing — Methodology, Tools, Production Mirror',
+    title: 'Load Testing',
     icon: 'activity',
     color: '#8b5cf6',
     questions: 3,
@@ -5873,7 +5873,7 @@ The stress test\'s value isn\'t in "passing" — it\'s in identifying the cascad
 
   {
     id: 'autoscaling-strategies',
-    title: 'Autoscaling Strategies — HPA, VPA, KEDA, Karpenter, Predictive',
+    title: 'Autoscaling Strategies',
     icon: 'maximize',
     color: '#8b5cf6',
     questions: 3,
@@ -6095,7 +6095,7 @@ When NOT to use predictive:
 
   {
     id: 'cost-vs-reliability',
-    title: 'Cost vs Reliability — The Diminishing Returns Curve',
+    title: 'Cost vs Reliability',
     icon: 'dollarSign',
     color: '#8b5cf6',
     questions: 3,
@@ -6313,7 +6313,7 @@ Cultural shift: from "cloud cost is finance\'s problem" to "cloud cost is part o
 
   {
     id: 'database-capacity',
-    title: 'Database Capacity — Connections, Replication, Sharding',
+    title: 'Database Capacity',
     icon: 'database',
     color: '#8b5cf6',
     questions: 3,
@@ -6545,7 +6545,7 @@ The discipline: failover should be a practiced, automated, tested procedure, not
   // ─────────────────────────────────────────────────────────────────────
   {
     id: 'circuit-breakers',
-    title: 'Circuit Breakers — Hystrix, resilience4j, Service Mesh',
+    title: 'Circuit Breakers',
     icon: 'zap',
     color: '#ec4899',
     questions: 3,
@@ -6788,7 +6788,7 @@ The pragmatic truth: circuit breakers are necessary but not sufficient. Layer th
 
   {
     id: 'cascading-failure',
-    title: 'Cascading Failure — How Systems Die in Production',
+    title: 'Cascading Failure',
     icon: 'alertOctagon',
     color: '#ec4899',
     questions: 3,
@@ -7027,7 +7027,7 @@ Other-language equivalents:
 
   {
     id: 'graceful-degradation',
-    title: 'Graceful Degradation — Serving Less, Not Nothing',
+    title: 'Graceful Degradation',
     icon: 'minimize',
     color: '#ec4899',
     questions: 3,
@@ -7255,7 +7255,7 @@ Common pitfall: SREs build sophisticated graceful degradation, then never look a
 
   {
     id: 'retry-jitter-backoff',
-    title: 'Retry, Jitter, and Backoff — AWS Full-Jitter and the Retry Storm',
+    title: 'Retry, Jitter & Backoff',
     icon: 'refreshCw',
     color: '#ec4899',
     questions: 3,
@@ -7507,7 +7507,7 @@ The cultural framing: retries help individual requests; retry budget protects th
 
   {
     id: 'load-shedding',
-    title: 'Load Shedding — Drop Before You Die',
+    title: 'Load Shedding',
     icon: 'minus',
     color: '#ec4899',
     questions: 3,
@@ -7766,7 +7766,7 @@ Both should include \`Retry-After\` header to tell clients when to retry.`,
 
   {
     id: 'idempotency',
-    title: 'Idempotency — Making Retries Safe',
+    title: 'Idempotency',
     icon: 'repeat',
     color: '#ec4899',
     questions: 3,
@@ -8062,7 +8062,7 @@ Stripe\'s opinion (from their docs): "Idempotency is fundamental to building rel
 
   {
     id: 'bulkheads',
-    title: 'Bulkheads — Isolating Resource Pools',
+    title: 'Bulkheads',
     icon: 'package',
     color: '#ec4899',
     questions: 3,
@@ -8340,7 +8340,7 @@ In 2026 with Java 21 virtual threads being mainstream, the bulkhead pattern is s
 
   {
     id: 'timeouts-deadlines',
-    title: 'Timeouts and Deadlines — The Universal Discipline',
+    title: 'Timeouts & Deadlines',
     icon: 'clock',
     color: '#ec4899',
     questions: 3,
@@ -8638,7 +8638,7 @@ Skipping any leaves a failure mode open. The mature production service has all f
   // ─────────────────────────────────────────────────────────────────────
   {
     id: 'oncall-structure',
-    title: 'On-call Structure — Primary, Secondary, Follow-the-Sun',
+    title: 'On-call Structure',
     icon: 'clock',
     color: '#14b8a6',
     questions: 3,
@@ -8894,7 +8894,7 @@ The data: the cost of replacing a senior SRE is 6-12 months of lost productivity
 
   {
     id: 'oncall-sustainability',
-    title: 'On-call Sustainability — Burnout Prevention and Pager Load',
+    title: 'On-call Sustainability',
     icon: 'heart',
     color: '#14b8a6',
     questions: 3,
@@ -9165,7 +9165,7 @@ Painful but the only sustainable path. Otherwise, every service decays into a no
 
   {
     id: 'runbooks',
-    title: 'Runbooks — Writing Them So They Actually Get Used',
+    title: 'Runbooks',
     icon: 'book',
     color: '#14b8a6',
     questions: 3,
@@ -9465,7 +9465,7 @@ The discipline: even fully-automated runbooks should track their auto-remediatio
 
   {
     id: 'pager-discipline',
-    title: 'Pager Discipline — Acknowledge Fast, Escalate Without Shame',
+    title: 'Pager Discipline',
     icon: 'phone',
     color: '#14b8a6',
     questions: 3,
@@ -9764,7 +9764,7 @@ Post-incident:
 
   {
     id: 'sre-team-models',
-    title: 'SRE Team Models — Embedded, Centralized, Platform',
+    title: 'SRE Team Models',
     icon: 'users',
     color: '#14b8a6',
     questions: 3,
@@ -10051,7 +10051,7 @@ The bottom line: SRE is engineering applied to reliability. If the work is mostl
   // ─────────────────────────────────────────────────────────────────────
   {
     id: 'reliability-security-overlap',
-    title: 'Where Reliability Meets Security — The BSRS Book',
+    title: 'Reliability & Security',
     icon: 'lock',
     color: '#6366f1',
     questions: 3,
@@ -10339,7 +10339,7 @@ The 80/20: secret management + least privilege + audit logging covers most of wh
 
   {
     id: 'secret-management',
-    title: 'Secret Management — Vault, Secrets Manager, Sealed Secrets',
+    title: 'Secret Management',
     icon: 'key',
     color: '#6366f1',
     questions: 3,
@@ -10948,7 +10948,7 @@ The high-value moves:
 
   {
     id: 'supply-chain-security',
-    title: 'Supply Chain Security — SBOM, Sigstore, and the Post-SolarWinds World',
+    title: 'Supply Chain Security',
     icon: 'package',
     color: '#6366f1',
     questions: 3,
@@ -11282,7 +11282,7 @@ For a new system in 2026: cosign + Kyverno is the table-stakes setup. Cost: a da
 
   {
     id: 'security-incident-response',
-    title: 'Security Incident Response — Containment, Eradication, Recovery',
+    title: 'Security Incident Response',
     icon: 'alertTriangle',
     color: '#6366f1',
     questions: 3,

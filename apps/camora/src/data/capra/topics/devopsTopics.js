@@ -157,7 +157,7 @@ export const devopsTopics = [
   // ─────────────────────────────────────────────────────────────────────
   {
     id: 'three-ways',
-    title: 'The Three Ways — Flow, Feedback, Continual Learning',
+    title: 'The Three Ways',
     icon: 'gitMerge',
     color: '#3b82f6',
     questions: 4,
@@ -329,7 +329,7 @@ The diagnostic discipline: don\'t fix randomly. Identify which Way is blocking, 
 
   {
     id: 'westrum-calms-culture',
-    title: 'Westrum Typology + CALMS Framework — DevOps Culture',
+    title: 'Westrum Typology & CALMS',
     icon: 'users',
     color: '#3b82f6',
     questions: 3,
@@ -544,7 +544,7 @@ The order to invest:
 
   {
     id: 'value-stream-mapping',
-    title: 'Value Stream Mapping — Find the Bottleneck',
+    title: 'Value Stream Mapping',
     icon: 'gitMerge',
     color: '#3b82f6',
     questions: 3,
@@ -805,7 +805,7 @@ VSM tells you WHERE the time is going. DORA gives you a single number to track o
 
   {
     id: 'dora-metrics',
-    title: 'DORA Metrics — The Four Keys + Performance Bands',
+    title: 'DORA Metrics',
     icon: 'gauge',
     color: '#3b82f6',
     questions: 4,
@@ -1045,7 +1045,7 @@ The DORA-specific framing: high CFR with high test coverage usually means you\'r
 
   {
     id: 'team-topologies',
-    title: 'Team Topologies — Stream-Aligned, Enabling, Platform, Subsystem',
+    title: 'Team Topologies',
     icon: 'users',
     color: '#3b82f6',
     questions: 3,
@@ -1286,7 +1286,7 @@ Right approach (Inverse Conway):
 
   {
     id: 'continuous-integration',
-    title: 'Continuous Integration — Commit to Mainline, Many Times a Day',
+    title: 'Continuous Integration',
     icon: 'gitMerge',
     color: '#22c55e',
     questions: 4,
@@ -1445,7 +1445,7 @@ The ranking is useful when consulting on a struggling team: do not start with "w
 
   {
     id: 'continuous-delivery-vs-deploy',
-    title: 'Continuous Delivery vs Continuous Deployment — Capability vs Policy',
+    title: 'Continuous Delivery vs Deployment',
     icon: 'send',
     color: '#22c55e',
     questions: 4,
@@ -1612,7 +1612,7 @@ Pipeline-as-code. The pipeline definition lives in the repo, versioned alongside
 
   {
     id: 'trunk-based-development',
-    title: 'Trunk-Based Development — Short-Lived Branches, Feature Flags',
+    title: 'Trunk-Based Development',
     icon: 'gitBranch',
     color: '#22c55e',
     questions: 3,
@@ -1764,7 +1764,7 @@ What success looks like. Median branch lifetime under 24 hours, p95 under 48 hou
 
   {
     id: 'pipeline-as-code',
-    title: 'Pipeline-as-Code — YAML, Jenkinsfile, Reusable Workflows',
+    title: 'Pipeline-as-Code',
     icon: 'codepen',
     color: '#22c55e',
     questions: 3,
@@ -1905,7 +1905,7 @@ Run a canary. The platform team upgrades their own one or two pipelines to the n
 
   {
     id: 'test-pyramid',
-    title: 'Test Pyramid — Unit-Heavy, Integration-Mid, E2E-Sparse',
+    title: 'Test Pyramid',
     icon: 'layers',
     color: '#22c55e',
     questions: 3,
@@ -2050,7 +2050,7 @@ When to adopt: ≥5 services owned by ≥3 teams; independent deployability is a
 
   {
     id: 'monorepo-build-systems',
-    title: 'Monorepo Build Systems — Bazel, Nx, Turborepo, Pants',
+    title: 'Monorepo Build Systems',
     icon: 'package',
     color: '#22c55e',
     questions: 3,
@@ -2210,7 +2210,7 @@ The trap to avoid. Many teams choose Bazel because Google uses it, then spend a 
 
   {
     id: 'github-actions-deep-dive',
-    title: 'GitHub Actions — Workflows, Runners, OIDC, Reusable Workflows',
+    title: 'GitHub Actions',
     icon: 'github',
     color: '#16a34a',
     questions: 6,
@@ -3193,7 +3193,7 @@ The cumulative effect is: PRs run in 4-8 minutes; main pushes deploy to staging 
 
   {
     id: 'gitlab-ci-deep-dive',
-    title: 'GitLab CI — .gitlab-ci.yml, Runners, Auto DevOps, DevSecOps',
+    title: 'GitLab CI',
     icon: 'gitlab',
     color: '#16a34a',
     questions: 6,
@@ -4335,7 +4335,7 @@ These are the answers a GitLab-fluent senior engineer should give without prepar
 
   {
     id: 'jenkins-deep-dive',
-    title: 'Jenkins — Controller, Agents, Jenkinsfile, Shared Libraries',
+    title: 'Jenkins',
     icon: 'tool',
     color: '#16a34a',
     questions: 6,
@@ -5379,7 +5379,7 @@ These are the answers a Jenkins-fluent senior engineer should give without prepa
 
   {
     id: 'circleci-deep-dive',
-    title: 'CircleCI — Workflows, Orbs, Executors, Test Splitting',
+    title: 'CircleCI',
     icon: 'tool',
     color: '#16a34a',
     questions: 5,
@@ -6333,7 +6333,7 @@ These are the answers a CircleCI-fluent engineer should give without preparation
 
   {
     id: 'buildkite-runners',
-    title: 'Buildkite — Hybrid SaaS Frontend + Self-Hosted Agents',
+    title: 'Buildkite',
     icon: 'tool',
     color: '#16a34a',
     questions: 5,
@@ -7148,7 +7148,7 @@ These are the answers a Buildkite-fluent platform engineer should give without p
 
   {
     id: 'tekton-pipelines',
-    title: 'Tekton — Kubernetes-Native CI/CD Pipelines as CRDs',
+    title: 'Tekton',
     icon: 'tool',
     color: '#16a34a',
     questions: 5,
@@ -8108,7 +8108,7 @@ Operational lesson: Tekton inherits all K8s operational concerns (PVCs, scheduli
 
   {
     id: 'argo-workflows',
-    title: 'Argo Workflows — DAG / Steps for Kubernetes',
+    title: 'Argo Workflows',
     icon: 'tool',
     color: '#16a34a',
     questions: 5,
@@ -9105,7 +9105,7 @@ These are the answers an Argo Workflows-fluent engineer should give without prep
 
   {
     id: 'deployment-strategies',
-    title: 'Deployment Strategies — Rolling, Blue/Green, Canary, Recreate',
+    title: 'Deployment Strategies',
     icon: 'send',
     color: '#06b6d4',
     questions: 5,
@@ -9317,7 +9317,7 @@ These are answers a deploy-fluent platform engineer should give without preparat
 
   {
     id: 'feature-flags-platforms',
-    title: 'Feature Flags — LaunchDarkly, Statsig, Unleash, Flagsmith',
+    title: 'Feature Flags',
     icon: 'send',
     color: '#06b6d4',
     questions: 5,
@@ -9474,7 +9474,7 @@ These are answers a flag-platform-fluent platform engineer should give without p
 
   {
     id: 'progressive-delivery',
-    title: 'Progressive Delivery — Canary, Blue/Green, Argo Rollouts, Flagger',
+    title: 'Progressive Delivery',
     icon: 'send',
     color: '#06b6d4',
     questions: 5,
@@ -9867,7 +9867,7 @@ These are answers a CD-fluent platform engineer should give without preparation.
 
   {
     id: 'database-migrations-cicd',
-    title: 'Database Migrations in CI/CD — Flyway, Liquibase, Atlas, Online DDL',
+    title: 'Database Migrations in CI/CD',
     icon: 'send',
     color: '#06b6d4',
     questions: 5,
@@ -10128,7 +10128,7 @@ These are answers a migration-fluent platform engineer should give without prepa
 
   {
     id: 'release-engineering',
-    title: 'Release Engineering — Versioning, Branches, Hotfixes, Artifacts, SLSA',
+    title: 'Release Engineering',
     icon: 'send',
     color: '#06b6d4',
     questions: 5,
@@ -10381,7 +10381,7 @@ These are answers a release-engineering-fluent platform engineer should give wit
 
   {
     id: 'gitops-principles',
-    title: 'GitOps Principles — OpenGitOps Spec, Declarative, Pulled, Reconciled',
+    title: 'GitOps Principles',
     icon: 'gitPullRequest',
     color: '#0891b2',
     questions: 5,
@@ -10878,7 +10878,7 @@ These are the answers a GitOps-fluent platform engineer should give without prep
 
   {
     id: 'argocd-architecture',
-    title: 'Argo CD Architecture — Application, Project, ApplicationSet, RBAC',
+    title: 'Argo CD',
     icon: 'gitPullRequest',
     color: '#0891b2',
     questions: 5,
@@ -11838,7 +11838,7 @@ These are answers an Argo CD-fluent platform engineer should give without prepar
 
   {
     id: 'fluxcd-architecture',
-    title: 'Flux v2 — GitOps Toolkit (GOTK), source-controller, kustomize-controller, helm-controller',
+    title: 'Flux v2',
     icon: 'gitPullRequest',
     color: '#0891b2',
     questions: 5,
@@ -12749,7 +12749,7 @@ These are answers a Flux-fluent platform engineer should give without preparatio
 
   {
     id: 'app-of-apps-pattern',
-    title: 'App of Apps Pattern — Argo CD Hierarchy and ApplicationSets',
+    title: 'App of Apps Pattern',
     icon: 'gitPullRequest',
     color: '#0891b2',
     questions: 5,
@@ -12980,7 +12980,7 @@ These are answers a GitOps-fluent platform engineer should give without preparat
 
   {
     id: 'multi-cluster-gitops',
-    title: 'Multi-Cluster GitOps — Argo CD ApplicationSet, Flux Multi-Tenancy',
+    title: 'Multi-Cluster GitOps',
     icon: 'gitPullRequest',
     color: '#0891b2',
     questions: 5,
@@ -13311,7 +13311,7 @@ These are answers a GitOps-fluent platform engineer should give without preparat
 
   {
     id: 'iac-fundamentals',
-    title: 'Infrastructure as Code — Fundamentals, Declarative vs Imperative',
+    title: 'Infrastructure as Code',
     icon: 'codepen',
     color: '#f59e0b',
     questions: 5,
@@ -13441,7 +13441,7 @@ These are answers an IaC-fluent platform engineer should give without preparatio
 
   {
     id: 'terraform-internals',
-    title: 'Terraform / OpenTofu Internals — Providers, State, Modules, Plans',
+    title: 'Terraform & OpenTofu',
     icon: 'codepen',
     color: '#f59e0b',
     questions: 5,
@@ -13579,7 +13579,7 @@ These are answers a Terraform-fluent platform engineer should give without prepa
 
   {
     id: 'pulumi-language-iac',
-    title: 'Pulumi — Real Programming Languages for Infrastructure',
+    title: 'Pulumi',
     icon: 'codepen',
     color: '#f59e0b',
     questions: 5,
@@ -13708,7 +13708,7 @@ These are answers an IaC-fluent platform engineer should give without preparatio
 
   {
     id: 'cloud-native-iac',
-    title: 'Cloud-Native IaC — CDK, Crossplane, AWS CDK, Bicep, ACK',
+    title: 'Cloud-Native IaC',
     icon: 'codepen',
     color: '#f59e0b',
     questions: 5,
@@ -13857,7 +13857,7 @@ These are answers a cloud-native platform engineer should give without preparati
 
   {
     id: 'iac-state-at-scale',
-    title: 'IaC State Management at Scale — Locking, Encryption, Splits',
+    title: 'IaC State Management',
     icon: 'codepen',
     color: '#f59e0b',
     questions: 5,
@@ -14014,7 +14014,7 @@ These are answers an IaC-fluent platform engineer should give without preparatio
 
   {
     id: 'iac-governance',
-    title: 'IaC Governance — OPA, Sentinel, CI Gates, Policy as Code',
+    title: 'IaC Governance',
     icon: 'codepen',
     color: '#f59e0b',
     questions: 5,
@@ -14171,7 +14171,7 @@ These are answers a governance-fluent platform engineer should give without prep
 
   {
     id: 'immutable-infrastructure',
-    title: 'Immutable Infrastructure — Bake, Replace, Never Mutate',
+    title: 'Immutable Infrastructure',
     icon: 'settings',
     color: '#8b5cf6',
     questions: 5,
@@ -14385,7 +14385,7 @@ These are answers a config-fluent platform engineer should give without preparat
 
   {
     id: 'ansible-essentials',
-    title: 'Ansible — Inventory, Playbooks, Roles, Collections, AWX',
+    title: 'Ansible',
     icon: 'settings',
     color: '#8b5cf6',
     questions: 5,
@@ -14622,7 +14622,7 @@ These are answers a config-fluent platform engineer should give without preparat
 
   {
     id: 'puppet-chef-salt',
-    title: 'Puppet, Chef, Salt — Pull-Based and Eventually-Consistent Config',
+    title: 'Puppet, Chef & Salt',
     icon: 'settings',
     color: '#8b5cf6',
     questions: 5,
@@ -14824,7 +14824,7 @@ These are answers a config-fluent platform engineer should give without preparat
 
   {
     id: 'drift-remediation',
-    title: 'Configuration Drift — Detection and Remediation',
+    title: 'Configuration Drift',
     icon: 'settings',
     color: '#8b5cf6',
     questions: 5,
@@ -15017,7 +15017,7 @@ These are answers a config-fluent platform engineer should give without preparat
 
   {
     id: 'container-fundamentals',
-    title: 'Container Fundamentals — Namespaces, Cgroups, OCI',
+    title: 'Container Fundamentals',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -15187,7 +15187,7 @@ These are answers a container-fluent platform engineer should give without prepa
 
   {
     id: 'docker-overview',
-    title: 'Docker Overview — Architecture, Objects & Core Commands',
+    title: 'Docker Overview',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -15634,7 +15634,7 @@ These are answers a container-fluent platform engineer should give without prepa
 
   {
     id: 'docker-buildx',
-    title: 'Docker Buildx — Multi-Platform Builds & BuildKit',
+    title: 'Docker Buildx',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -15715,7 +15715,7 @@ A: Attaches SLSA provenance metadata to the image in the registry — build inpu
 
   {
     id: 'image-hardening',
-    title: 'Container Image Hardening — Distroless, Chainguard, Wolfi',
+    title: 'Container Image Hardening',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -15887,7 +15887,7 @@ These are answers a container-fluent platform engineer should give without prepa
 
   {
     id: 'buildpacks-jib-ko',
-    title: 'Buildpacks, Jib, ko — Source-to-Image Without Dockerfiles',
+    title: 'Buildpacks, Jib & ko',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -16053,7 +16053,7 @@ These are answers a container-fluent platform engineer should give without prepa
 
   {
     id: 'docker-cli',
-    title: 'Docker CLI — Essential Commands & Run Flags',
+    title: 'Docker CLI',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -16153,7 +16153,7 @@ A: Static configuration: mounts, environment variables, network config, labels, 
 
   {
     id: 'docker-daemon',
-    title: 'Docker Daemon — dockerd, Storage Drivers & Daemon Config',
+    title: 'Docker Daemon',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -16250,7 +16250,7 @@ A: Each image layer is stored as four directories: lowerdir (read-only parent la
 
   {
     id: 'docker-resource-limits',
-    title: 'Docker Resource Limits — CPU, Memory, OOM & cgroups',
+    title: 'Docker Resource Limits',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -16379,7 +16379,7 @@ These are answers a container-resource-fluent engineer should give without prepa
 
   {
     id: 'docker-networking',
-    title: 'Docker Networking — Bridge, Host, Overlay & Port Publishing',
+    title: 'Docker Networking',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -16519,7 +16519,7 @@ These are answers a Docker-networking-fluent engineer should give without prepar
 
   {
     id: 'docker-volumes',
-    title: 'Docker Storage — Volumes, Bind Mounts & overlayfs',
+    title: 'Docker Storage',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -16669,7 +16669,7 @@ These are answers a Docker-storage-fluent engineer should give without preparati
 
   {
     id: 'docker-compose',
-    title: 'Docker Compose — Multi-Container Apps',
+    title: 'Docker Compose',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -16791,7 +16791,7 @@ These are answers a Docker-Compose-fluent engineer should give without preparati
 
   {
     id: 'docker-registry',
-    title: 'Docker Registries — Push, Pull, Tags & Multi-arch Manifests',
+    title: 'Docker Registries',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -16913,7 +16913,7 @@ These are answers a container-registry-fluent engineer should give without prepa
 
   {
     id: 'docker-swarm',
-    title: 'Docker Swarm — Cluster Orchestration & Rolling Deploys',
+    title: 'Docker Swarm',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -17004,7 +17004,7 @@ A: TCP 2377 (cluster management), TCP/UDP 7946 (node communication), UDP 4789 (V
 
   {
     id: 'docker-security',
-    title: 'Docker Security — Rootless, Capabilities, Seccomp & Image Signing',
+    title: 'Docker Security',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -17128,7 +17128,7 @@ These are answers a container-security-fluent engineer should give without prepa
 
   {
     id: 'container-security',
-    title: 'Container Runtime Security — Falco, Tetragon, gVisor, Kata',
+    title: 'Container Runtime Security',
     icon: 'package',
     color: '#ec4899',
     questions: 5,
@@ -17338,7 +17338,7 @@ These are answers a container-security-fluent platform engineer should give with
 
   {
     id: 'kubernetes-architecture',
-    title: 'Kubernetes Architecture — Control Plane, Nodes, etcd',
+    title: 'Kubernetes Architecture',
     icon: 'gitBranch',
     color: '#14b8a6',
     questions: 5,
@@ -17466,7 +17466,7 @@ These are answers a Kubernetes-fluent platform engineer should give without prep
 
   {
     id: 'k8s-core-resources',
-    title: 'Kubernetes Core Resources — Pods, Services, Workloads',
+    title: 'Kubernetes Core Resources',
     icon: 'gitBranch',
     color: '#14b8a6',
     questions: 5,
@@ -17602,7 +17602,7 @@ These are answers a Kubernetes-fluent platform engineer should give without prep
 
   {
     id: 'helm-vs-kustomize',
-    title: 'Helm vs Kustomize — Templating vs Patching',
+    title: 'Helm vs Kustomize',
     icon: 'gitBranch',
     color: '#14b8a6',
     questions: 5,
@@ -17740,7 +17740,7 @@ These are answers a Kubernetes-fluent platform engineer should give without prep
 
   {
     id: 'ingress-gateway-api',
-    title: 'Ingress and Gateway API — North-South Traffic',
+    title: 'Ingress & Gateway API',
     icon: 'gitBranch',
     color: '#14b8a6',
     questions: 5,
@@ -17907,7 +17907,7 @@ These are answers a Kubernetes-fluent platform engineer should give without prep
 
   {
     id: 'operators-and-crds',
-    title: 'Kubernetes Operators and CRDs — Extending the API',
+    title: 'Kubernetes Operators & CRDs',
     icon: 'gitBranch',
     color: '#14b8a6',
     questions: 5,
@@ -18057,7 +18057,7 @@ These are answers a Kubernetes-fluent platform engineer should give without prep
 
   {
     id: 'service-mesh',
-    title: 'Service Mesh — Istio, Linkerd, Cilium Mesh',
+    title: 'Service Mesh',
     icon: 'gitBranch',
     color: '#14b8a6',
     questions: 5,
@@ -18208,7 +18208,7 @@ These are answers a Kubernetes-fluent platform engineer should give without prep
 
   {
     id: 'opentelemetry-fundamentals',
-    title: 'OpenTelemetry — Vendor-Neutral Traces, Metrics, Logs',
+    title: 'OpenTelemetry',
     icon: 'activity',
     color: '#f97316',
     questions: 5,
@@ -19353,7 +19353,7 @@ These are answers an OTel-fluent platform engineer should give without preparati
 
   {
     id: 'prometheus-grafana-stack',
-    title: 'Prometheus + Grafana — Pull-Based Metrics, PromQL, Long-Term Storage',
+    title: 'Prometheus & Grafana',
     icon: 'activity',
     color: '#f97316',
     questions: 5,
@@ -20611,7 +20611,7 @@ These are answers a Prometheus-fluent SRE should give without preparation.`,
 
   {
     id: 'log-aggregation-stacks',
-    title: 'Log Aggregation — Loki, ELK, OpenSearch, Fluent Bit, Vector',
+    title: 'Log Aggregation',
     icon: 'activity',
     color: '#f97316',
     questions: 5,
@@ -22013,7 +22013,7 @@ These are answers a logging-fluent platform engineer should give without prepara
 
   {
     id: 'distributed-tracing',
-    title: 'Distributed Tracing — Spans, Context Propagation, Jaeger, Tempo, Honeycomb',
+    title: 'Distributed Tracing',
     icon: 'activity',
     color: '#f97316',
     questions: 5,
@@ -23184,7 +23184,7 @@ These are answers a tracing-fluent platform engineer should give without prepara
 
   {
     id: 'apm-platforms',
-    title: 'APM Platforms — Datadog, New Relic, Dynatrace, Honeycomb',
+    title: 'APM Platforms',
     icon: 'activity',
     color: '#f97316',
     questions: 5,
@@ -24402,7 +24402,7 @@ These are answers an APM-fluent platform/SRE engineer should give without prepar
 
   {
     id: 'slo-error-budgets-dashboards',
-    title: 'SLO / SLI / Error Budgets — Reliability Math and Burn-Rate Alerts',
+    title: 'SLO / SLI / Error Budgets',
     icon: 'activity',
     color: '#f97316',
     questions: 5,
@@ -24719,7 +24719,7 @@ These are answers an SRE-fluent platform engineer should give without preparatio
 
   {
     id: 'ebpf-observability',
-    title: 'eBPF Observability — Cilium Hubble, Pixie, Parca, Falco',
+    title: 'eBPF Observability',
     icon: 'activity',
     color: '#f97316',
     questions: 5,
@@ -24979,7 +24979,7 @@ These are answers a kernel-fluent platform/SRE engineer should give without prep
 
   {
     id: 'platform-engineering-principles',
-    title: 'Platform Engineering — Product Mindset for Internal Tooling',
+    title: 'Platform Engineering',
     icon: 'layers',
     color: '#6366f1',
     questions: 5,
@@ -25137,7 +25137,7 @@ These are answers a platform-engineering-fluent engineer should give without pre
 
   {
     id: 'internal-developer-platforms',
-    title: 'Internal Developer Platforms — IDP Reference Architecture',
+    title: 'Internal Developer Platforms',
     icon: 'layers',
     color: '#6366f1',
     questions: 5,
@@ -25297,7 +25297,7 @@ These are answers a platform-engineering-fluent engineer should give without pre
 
   {
     id: 'golden-paths',
-    title: 'Golden Paths — Paved Roads for the 80% Use Case',
+    title: 'Golden Paths',
     icon: 'layers',
     color: '#6366f1',
     questions: 5,
@@ -25477,7 +25477,7 @@ These are answers a platform-engineering-fluent engineer should give without pre
 
   {
     id: 'backstage-and-alternatives',
-    title: 'Backstage — Spotify-Origin Developer Portal and Alternatives',
+    title: 'Backstage',
     icon: 'layers',
     color: '#6366f1',
     questions: 5,
@@ -25650,7 +25650,7 @@ These are answers a platform-engineering-fluent engineer should give without pre
 
   {
     id: 'developer-experience-metrics',
-    title: 'Developer Experience Metrics — DORA, SPACE, DX Core 4',
+    title: 'Developer Experience Metrics',
     icon: 'layers',
     color: '#6366f1',
     questions: 5,
@@ -25852,7 +25852,7 @@ These are answers a platform-engineering-fluent engineer should give without pre
 
   {
     id: 'shift-left-security',
-    title: 'Shift-Left Security — Embedding Security in Dev',
+    title: 'Shift-Left Security',
     icon: 'shield',
     color: '#ef4444',
     questions: 5,
@@ -26016,7 +26016,7 @@ These are answers a security-fluent platform engineer should give without prepar
 
   {
     id: 'sast-dast-sca',
-    title: 'SAST, DAST, SCA, IAST — The Application Security Taxonomy',
+    title: 'SAST, DAST, SCA & IAST',
     icon: 'shield',
     color: '#ef4444',
     questions: 5,
@@ -26181,7 +26181,7 @@ These are answers a security-fluent platform engineer should give without prepar
 
   {
     id: 'supply-chain-slsa',
-    title: 'Supply Chain Security — SLSA, SBOM, Sigstore Beyond Basics',
+    title: 'Supply Chain Security',
     icon: 'shield',
     color: '#ef4444',
     questions: 5,
@@ -26353,7 +26353,7 @@ These are answers a security-fluent platform engineer should give without prepar
 
   {
     id: 'policy-as-code',
-    title: 'Policy as Code — OPA, Kyverno, Cedar, IAM Access Analyzer',
+    title: 'Policy as Code',
     icon: 'shield',
     color: '#ef4444',
     questions: 5,
@@ -26517,7 +26517,7 @@ These are answers a security-fluent platform engineer should give without prepar
 
   {
     id: 'runtime-security',
-    title: 'Runtime Security — Falco, Tetragon, eBPF, Container Sandboxing',
+    title: 'Runtime Security',
     icon: 'shield',
     color: '#ef4444',
     questions: 5,
@@ -26684,7 +26684,7 @@ These are answers a security-fluent platform engineer should give without prepar
 
   {
     id: 'twelve-factor-app',
-    title: 'Twelve-Factor App — The Modern Reinterpretation',
+    title: 'Twelve-Factor App',
     icon: 'cloud',
     color: '#0ea5e9',
     questions: 5,
@@ -26824,7 +26824,7 @@ These are answers a cloud-native-fluent platform engineer should give without pr
 
   {
     id: 'microservices-design',
-    title: 'Microservices Design — Boundaries, Communication, and Failure',
+    title: 'Microservices Design',
     icon: 'cloud',
     color: '#0ea5e9',
     questions: 5,
@@ -27026,7 +27026,7 @@ These are answers a microservices-fluent platform engineer should give without p
 
   {
     id: 'strangler-fig',
-    title: 'Strangler Fig — Incremental Migration Without a Rewrite',
+    title: 'Strangler Fig',
     icon: 'cloud',
     color: '#0ea5e9',
     questions: 5,
@@ -27179,7 +27179,7 @@ These are answers a migration-fluent platform engineer should give without prepa
 
   {
     id: 'event-driven-saga-outbox',
-    title: 'Event-Driven Architecture — Saga, Outbox, CQRS, Event Sourcing',
+    title: 'Event-Driven Architecture',
     icon: 'cloud',
     color: '#0ea5e9',
     questions: 5,
@@ -27358,7 +27358,7 @@ These are answers an event-driven-fluent platform engineer should give without p
 
   {
     id: 'serverless-patterns',
-    title: 'Serverless Patterns — Lambda, Cloud Run, Knative, Functions',
+    title: 'Serverless Patterns',
     icon: 'cloud',
     color: '#0ea5e9',
     questions: 5,
@@ -27527,7 +27527,7 @@ These are answers a serverless-fluent platform engineer should give without prep
 
   {
     id: 'db-schema-migrations',
-    title: 'Database Schema Evolution — Patterns Beyond CI Tooling',
+    title: 'Database Schema Evolution',
     icon: 'database',
     color: '#a855f7',
     questions: 5,
@@ -27709,7 +27709,7 @@ These are answers a schema-evolution-fluent platform engineer should give withou
 
   {
     id: 'gitops-for-databases',
-    title: 'GitOps for Databases — Schemas, Roles, Snapshots in Git',
+    title: 'GitOps for Databases',
     icon: 'database',
     color: '#a855f7',
     questions: 5,
@@ -27888,7 +27888,7 @@ These are answers a database-GitOps-fluent platform engineer should give without
 
   {
     id: 'data-observability-lineage',
-    title: 'Data Observability — Freshness, Volume, Schema, Lineage',
+    title: 'Data Observability',
     icon: 'database',
     color: '#a855f7',
     questions: 5,
@@ -28084,7 +28084,7 @@ These are answers a data-observability-fluent platform engineer should give with
 
   {
     id: 'mlops-lifecycle',
-    title: 'MLOps Lifecycle — Data, Train, Deploy, Monitor, Iterate',
+    title: 'MLOps Lifecycle',
     icon: 'cpu',
     color: '#84cc16',
     questions: 5,
@@ -28225,7 +28225,7 @@ These are answers an MLOps-fluent platform engineer should give without preparat
 
   {
     id: 'feature-stores',
-    title: 'Feature Stores — Feast, Tecton, Vertex AI, Hopsworks',
+    title: 'Feature Stores',
     icon: 'cpu',
     color: '#84cc16',
     questions: 5,
@@ -28355,7 +28355,7 @@ These are answers an MLOps-fluent platform engineer should give without preparat
 
   {
     id: 'model-registry-mlflow',
-    title: 'Model Registry — MLflow, W&B, Vertex Model Registry',
+    title: 'Model Registry',
     icon: 'cpu',
     color: '#84cc16',
     questions: 5,
@@ -28511,7 +28511,7 @@ These are answers an MLOps-fluent platform engineer should give without preparat
 
   {
     id: 'model-serving-kserve-bento',
-    title: 'Model Serving — KServe, BentoML, Seldon, Triton',
+    title: 'Model Serving',
     icon: 'cpu',
     color: '#84cc16',
     questions: 5,
@@ -28669,7 +28669,7 @@ These are answers an MLOps-fluent platform engineer should give without preparat
 
   {
     id: 'model-drift-detection',
-    title: 'Model Drift Detection — Data Drift, Concept Drift, Performance Decay',
+    title: 'Model Drift Detection',
     icon: 'cpu',
     color: '#84cc16',
     questions: 5,
@@ -28828,7 +28828,7 @@ These are answers an MLOps-fluent platform engineer should give without preparat
 
   {
     id: 'llmops-evals-prompts',
-    title: 'LLMOps — Prompts, Evals, RAG Pipelines, Cost Tracking',
+    title: 'LLMOps',
     icon: 'cpu',
     color: '#84cc16',
     questions: 5,
@@ -28985,7 +28985,7 @@ These are answers an MLOps-fluent platform engineer should give without preparat
 
   {
     id: 'llm-serving-vllm-tgi',
-    title: 'LLM Serving — vLLM, TGI, TensorRT-LLM, SGLang',
+    title: 'LLM Serving',
     icon: 'cpu',
     color: '#84cc16',
     questions: 5,
@@ -29163,7 +29163,7 @@ These are answers an MLOps-fluent platform engineer should give without preparat
 
   {
     id: 'aiops-fundamentals',
-    title: 'AIOps — From Reactive Monitoring to Predictive Operations',
+    title: 'AIOps',
     icon: 'zap',
     color: '#d946ef',
     questions: 5,
@@ -29389,7 +29389,7 @@ These are answers an AIOps-fluent platform / SRE engineer should give without pr
 
   {
     id: 'anomaly-detection-ml',
-    title: 'Anomaly Detection in Ops — Statistical, ML, and Forecasting',
+    title: 'Anomaly Detection in Ops',
     icon: 'zap',
     color: '#d946ef',
     questions: 5,
@@ -29581,7 +29581,7 @@ These are answers an anomaly-detection-fluent platform / SRE engineer should giv
 
   {
     id: 'alert-correlation-grouping',
-    title: 'Alert Correlation and Grouping — Reducing Alert Storm Noise',
+    title: 'Alert Correlation & Grouping',
     icon: 'zap',
     color: '#d946ef',
     questions: 5,
@@ -29743,7 +29743,7 @@ These are answers an AIOps-fluent platform / SRE engineer should give without pr
 
   {
     id: 'incident-rca-ml',
-    title: 'ML-Assisted Incident RCA — Pattern Matching and Causal Inference',
+    title: 'ML-Assisted Incident RCA',
     icon: 'zap',
     color: '#d946ef',
     questions: 5,
