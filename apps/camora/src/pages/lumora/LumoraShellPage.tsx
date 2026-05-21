@@ -737,18 +737,16 @@ export const LumoraShellPage = () => {
                   borderBottom: '1px solid var(--cam-gold-leaf)',
                 }}
               >
-                <div className="max-w-3xl mx-auto px-6 py-6 w-full relative">
+                <div className="max-w-3xl mx-auto px-6 py-8 w-full relative">
                   <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ textShadow: '0 0 20px rgba(255,255,255,0.12)' }}>Sessions</h2>
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
                     Your interview session history — <span className="font-bold" style={{ color: 'var(--cam-gold-leaf-lt)', textShadow: '0 0 14px rgba(217,181,67,0.45)' }}>{history.length}</span> saved.
                   </p>
                 </div>
               </div>
-              <div className="max-w-3xl mx-auto px-6 py-6 w-full">
-                <div className="flex items-end justify-between mb-6">
-                  <div>
-                  </div>
-                  {history.length > 0 && (
+              <div className="max-w-3xl mx-auto px-6 pt-5 pb-10 w-full">
+                {history.length > 0 && (
+                  <div className="flex justify-end mb-4">
                     <button
                       onClick={async () => {
                         const ok = await dialogConfirm({ title: 'Clear all sessions?', message: 'This will permanently remove every saved session.', confirmLabel: 'Clear all', tone: 'danger' });
@@ -757,8 +755,8 @@ export const LumoraShellPage = () => {
                       className="text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors"
                       style={{ color: 'var(--danger)', border: '1px solid var(--danger)', background: 'var(--bg-surface)' }}
                     >Clear all</button>
-                  )}
-                </div>
+                  </div>
+                )}
                 {history.length === 0 ? (
                   <div className="text-center py-16" style={{ color: 'var(--text-muted)' }}>
                     <div className="relative w-14 h-14 mx-auto mb-3">
@@ -787,7 +785,7 @@ export const LumoraShellPage = () => {
                     </Link>
                   </div>
                 ) : (
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
                     {history.slice().reverse().map((entry: any, revIdx: number) => {
                       const realIdx = history.length - 1 - revIdx;
                       return (
@@ -867,12 +865,12 @@ export const LumoraShellPage = () => {
           {activeTab === 'credits' && (
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
-                <div className="max-w-2xl mx-auto px-6 py-6 w-full">
+                <div className="max-w-2xl mx-auto px-6 py-8 w-full">
                   <h2 className="text-3xl font-extrabold mb-2 text-white">Credits & <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Usage</span></h2>
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Track your AI usage and remaining credits.</p>
                 </div>
               </div>
-              <div className="max-w-2xl mx-auto px-6 py-6 w-full">
+              <div className="max-w-2xl mx-auto px-6 pt-5 pb-10 w-full">
                 <div className="grid grid-cols-3 gap-3 mb-6">
                   {[
                     { label: 'Sessions Used', value: String(history.length), sub: 'this month' },
