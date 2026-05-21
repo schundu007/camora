@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DevopsChallengeDetail from './DevopsChallengeDetail.jsx';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -355,7 +356,23 @@ function ChallengeCard({ challenge, onClick }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+const DEVOPS_MCQ_DOMAINS = [
+  { label: 'Docker',     color: '#2496ED', domain: 'Docker' },
+  { label: 'Kubernetes', color: '#326CE5', domain: 'Kubernetes' },
+  { label: 'Ansible',    color: '#EE0000', domain: 'Ansible' },
+  { label: 'Terraform',  color: '#7B42BC', domain: 'Terraform' },
+  { label: 'AWS',        color: '#FF9900', domain: 'AWS' },
+  { label: 'Linux',      color: '#FCC624', domain: 'Linux Administration' },
+  { label: 'Git',        color: '#F05032', domain: 'Git' },
+  { label: 'Jenkins',    color: '#D33833', domain: 'Jenkins / Nexus' },
+  { label: 'GCP',        color: '#4285F4', domain: 'GCP' },
+  { label: 'Bash',       color: '#4EAA25', domain: 'Bash' },
+];
+
+const ALL_DEVOPS_DOMAINS = DEVOPS_MCQ_DOMAINS.map(d => d.domain).join(',');
+
 export default function DevopsChallengesPage({ challenges = [] }) {
+  const navigate = useNavigate();
   const [activeSkills,       setActiveSkills]       = useState(new Set());
   const [activeDifficulties, setActiveDifficulties] = useState(new Set());
   const [activeLevels,       setActiveLevels]       = useState(new Set());
@@ -395,6 +412,61 @@ export default function DevopsChallengesPage({ challenges = [] }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+
+      {/* ── DevOps Q&A Quiz section ─────────────────────────────────────────── */}
+      <div style={{
+        marginBottom: 24,
+        padding: '18px 20px',
+        borderRadius: 10,
+        background: 'var(--bg-elevated)',
+        border: '1px solid var(--border)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 3 }}>
+              Interview Q&amp;A
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              355 multiple-choice questions across 10 DevOps domains — AI-generated from real interview topics
+            </div>
+          </div>
+          <button
+            onClick={() => navigate(`/capra/quiz/session?domain=${encodeURIComponent(ALL_DEVOPS_DOMAINS)}&count=10`)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '7px 16px', borderRadius: 6, fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', whiteSpace: 'nowrap',
+              background: 'var(--cam-gold-leaf, #d4af37)',
+              border: 'none', color: '#000',
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="8" cy="8" r="6"/><path d="M6 10l2-4 2 4M7 8.5h2"/>
+            </svg>
+            Start Mixed Quiz
+          </button>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {DEVOPS_MCQ_DOMAINS.map(({ label, color, domain }) => (
+            <button
+              key={domain}
+              onClick={() => navigate(`/capra/quiz/session?domain=${encodeURIComponent(domain)}&count=10`)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '4px 11px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                cursor: 'pointer',
+                background: `${color}18`,
+                border: `1px solid ${color}40`,
+                color,
+              }}
+            >
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Filter bar */}
       <div
         style={{
