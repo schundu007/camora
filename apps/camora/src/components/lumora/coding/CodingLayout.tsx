@@ -334,7 +334,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Store
-  const { streamChunks, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache } = useInterviewStore();
+  const { streamText, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache } = useInterviewStore();
   const lastFromCache = useInterviewStore(s => s.lastFromCache);
 
   // Stable refs for language + problem text — used by resolveLanguage so
@@ -810,8 +810,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
     // Last resort: extract from raw stream
     if (!extracted) {
-      const raw = streamChunks.join('');
-      const codeMatch = raw.match(/```(?:python|java|cpp|javascript|typescript|go|rust)?\n([\s\S]*?)```/);
+      const codeMatch = streamText.match(/```(?:python|java|cpp|javascript|typescript|go|rust)?\n([\s\S]*?)```/);
       if (codeMatch?.[1]?.trim()) extracted = codeMatch[1].trim();
     }
 
@@ -848,8 +847,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   // JSON repair from stream
   useEffect(() => {
-    if (!isStreaming && streamChunks.length > 0 && !jsonSolution) {
-      const raw = streamChunks.join('');
+    if (!isStreaming && streamText.length > 0 && !jsonSolution) {
+      const raw = streamText;
       try {
         let text = raw.trim();
         if (text.startsWith('```')) {
@@ -894,7 +893,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         }
       } catch { /* not JSON */ }
     }
-  }, [isStreaming, streamChunks, jsonSolution]);
+  }, [isStreaming, streamText, jsonSolution]);
 
   // Extract test cases from problem text — only if user hasn't manually edited any
   const testCasesUserEdited = useRef(false);
@@ -1459,7 +1458,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     const u = [...testCases]; u[i] = { ...u[i], [field]: value }; setTestCases(u);
   };
 
-  const streamingSolution = streamChunks.join('');
+  const streamingSolution = streamText;
   const sd = jsonSolution;
 
   // Passed/failed counts

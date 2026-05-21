@@ -65,7 +65,7 @@ export const InterviewPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
     isStreaming,
     isDesignQuestion,
     isCodingQuestion,
-    streamChunks,
+    streamText,
     parsedBlocks,
     activeCitations,
     error,
@@ -159,10 +159,10 @@ export const InterviewPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesi
               response completes. StreamingAnswer parses partial blocks
               (HEADLINE, CODE, ANSWER, COMPLEXITY, etc.) and shows each
               section as soon as it becomes available. */}
-          {isStreaming && streamChunks && streamChunks.length > 0 && (
+          {isStreaming && streamText && streamText.length > 0 && (
             <div className="shrink-0 mt-1">
               <StreamingAnswer
-                chunks={streamChunks}
+                chunks={[streamText]}
                 isDesign={isDesignQuestion}
                 isCoding={isCodingQuestion}
               />
