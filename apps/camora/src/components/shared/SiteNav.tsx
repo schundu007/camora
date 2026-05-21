@@ -99,7 +99,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
                   className={cn(
                     'px-3 py-1.5 rounded-full text-[13px] font-semibold transition-colors',
                     active
-                      ? 'bg-white/10 text-white'
+                      ? 'bg-[rgba(0,71,171,0.30)] text-white'
                       : 'text-white/70 hover:text-white hover:bg-white/5',
                   )}
                 >

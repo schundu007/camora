@@ -150,7 +150,7 @@ function FilterDropdown({
           display: 'inline-flex', alignItems: 'center', gap: 5,
           padding: '5px 12px', borderRadius: 20,
           border: `1px solid ${count > 0 ? 'var(--border-focus)' : 'var(--border)'}`,
-          background: count > 0 ? 'rgba(89,133,182,0.12)' : 'var(--bg-elevated)',
+          background: count > 0 ? 'rgba(0,71,171,0.16)' : 'var(--bg-elevated)',
           color: count > 0 ? 'var(--text-primary)' : 'var(--text-secondary)',
           fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
         }}
@@ -701,7 +701,7 @@ export default function HRLibraryPage() {
               <button key={p2} onClick={() => updateParam('page', String(p2))} style={{
                 padding: '5px 10px', borderRadius: 6,
                 border: `1px solid ${p2 === page ? 'var(--border-focus)' : 'var(--border)'}`,
-                background: p2 === page ? 'rgba(89,133,182,0.15)' : 'var(--bg-surface)',
+                background: p2 === page ? 'rgba(0,71,171,0.16)' : 'var(--bg-surface)',
                 color: p2 === page ? 'var(--text-primary)' : 'var(--text-muted)',
                 cursor: 'pointer', fontSize: 13, fontWeight: p2 === page ? 700 : 400,
               }}>{p2}</button>

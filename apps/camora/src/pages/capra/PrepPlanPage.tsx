@@ -230,7 +230,7 @@ export default function PrepPlanPage() {
             <div className="flex items-center gap-4 flex-wrap">
               {/* Days remaining */}
               <div className="text-center">
-                <p className="text-3xl font-bold text-[var(--accent)]">{days_remaining}</p>
+                <p className="text-3xl font-bold" style={{ color: 'var(--cam-gold-leaf)' }}>{days_remaining}</p>
                 <p className="text-xs text-[var(--text-secondary)] mt-0.5">{days_remaining === 1 ? 'day left' : 'days left'}</p>
               </div>
 
@@ -238,11 +238,12 @@ export default function PrepPlanPage() {
               <div className="flex-1 min-w-[200px] max-w-sm">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-sm font-medium text-[var(--text-primary)]">Overall Progress</span>
-                  <span className="text-sm font-semibold text-[var(--accent)]">{completion_pct}%</span>
+                  <span className="text-sm font-semibold" style={{ color: 'var(--cam-gold-leaf)' }}>{completion_pct}%</span>
                 </div>
                 <div className="h-2.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[var(--accent)] rounded-full transition-all duration-500"
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ background: 'var(--cam-gold-leaf)' }}
                     style={{ width: `${completion_pct}%` }}
                   />
                 </div>
