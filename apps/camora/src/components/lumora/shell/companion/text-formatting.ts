@@ -43,8 +43,10 @@ export function cleanTags(text: string): string {
   // Handles optional lang= attribute on CODE and optional whitespace padding.
   t = t.replace(/\[\/?\s*(?:FOLLOWUP|HEADLINE|ANSWER|CODE(?:\s+lang=[\w-]+)?|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS|PROBLEM|APPROACH|COMPLEXITY|WALKTHROUGH|TESTCASES|PITCH|JD_COVERAGE)\s*\]/gi, '');
 
-  // Fenced JSON — ```json { ... } ``` or plain ``` { ... } ``` — keep inner content.
-  t = t.replace(/```(?:json|JSON)?\s*\n?([\s\S]*?)\n?```/g, '$1');
+  // Fenced JSON — ```json { ... } ``` — keep inner content (prose, not code).
+  // Only matches json/JSON explicitly; other language fences (bash, python, etc.)
+  // were produced by the [CODE] conversion above and must be preserved for RichText.
+  t = t.replace(/```(?:json|JSON)\s*\n?([\s\S]*?)\n?```/g, '$1');
 
   // If the whole payload looks like a JSON object/array, try to pull readable
   // text values out of it. This catches the case where the model streams

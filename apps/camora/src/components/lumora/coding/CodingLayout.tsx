@@ -196,6 +196,11 @@ interface CodingLayoutProps {
   pendingHackerrankStarterCode?: string | null;
   /** Called once the starter code has been consumed so parent can clear it. */
   onHackerrankStarterCodeConsumed?: () => void;
+  /** Array of screenshot dataUrls from multi-page SNAP auto-scroll capture.
+   *  Each image is OCR'd and the extracted texts are concatenated. */
+  pendingHackerrankDataUrls?: string[] | null;
+  /** Called once the multi-page capture has been consumed so parent can clear it. */
+  onHackerrankDataUrlsConsumed?: () => void;
   /** Active coding platform from tool-picker ('hackerrank'|'leetcode'|'coderpad'|'none').
    *  When set (non-empty, non-'none'), hides manual input modes and shows autopilot status. */
   codingPlatform?: string;
@@ -240,7 +245,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, pendingHackerrankDataUrls, onHackerrankDataUrlsConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -969,6 +974,15 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingHackerrankText]);
 
+  // Multi-page SNAP: parent passes an array of screenshot dataUrls captured via
+  // auto-scroll injection. Extract and concatenate all pages then generate.
+  useEffect(() => {
+    if (!pendingHackerrankDataUrls?.length) return;
+    onHackerrankDataUrlsConsumed?.();
+    void extractAndGenerateFromDataUrls(pendingHackerrankDataUrls);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingHackerrankDataUrls]);
+
   // Desktop screenshot watcher (Electron): user presses Cmd+Shift+4, saves a
   // screenshot of the HackerRank problem + code editor to ~/Desktop, and Lumora
   // auto-picks it up, OCRs it, and generates a solution — zero clicks needed.
@@ -1146,6 +1160,61 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     return () => { onScreenshotAppendRef.current = null; };
   }, [onScreenshotAppendRef]);
 
+  // Multi-page screenshot OCR: extracts each page, concatenates problem texts, generates.
+  const extractAndGenerateFromDataUrls = useCallback(async (urls: string[]) => {
+    if (!token) { setError('Not authenticated'); return; }
+    setIsProcessing(true);
+    setError(null);
+    setProblemText('');
+    try {
+      const results = await Promise.all(urls.map(async (dataUrl, idx) => {
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], `snap-page-${idx + 1}.png`, { type: blob.type || 'image/png' });
+        const formData = new FormData();
+        formData.append('image', file);
+        const resp = await fetch(`${API_BASE_URL}/api/v1/coding/extract-from-image`, {
+          credentials: 'include',
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData,
+        });
+        if (!resp.ok) return null;
+        return resp.json();
+      }));
+      const valid = results.filter(Boolean);
+      if (!valid.length) throw new Error('Could not extract problem from screenshots');
+      const combinedText = valid.map(r => String(r.problem || '').trim()).filter(Boolean).join('\n\n');
+      const extractedStarterCode = valid.map(r => r.starter_code).find(Boolean) || null;
+      const detectedLang: string | null = valid.map(r => r.detected_language).find(Boolean) || null;
+      const effectiveLang = detectedLang || resolveLanguage(combinedText);
+      setProblemText(combinedText);
+      setSnapChipCode(combinedText);
+      setStarterCode(extractedStarterCode);
+      if (detectedLang) setLanguage(detectedLang);
+      setInputMode('paste');
+      if (combinedText) {
+        setStreamError(null);
+        setTestResults([]);
+        setTestCases([]);
+        setOutput('');
+        setShowFixPrompt(false);
+        clearStreamChunks();
+        setParsedBlocks([]);
+        setJsonSolution(null);
+        setCode(getDefaultCode(effectiveLang));
+        setCollapsedCards(new Set());
+        setActiveSolutionIdx(0);
+        setIsOutputCollapsed(true);
+        setProblemTab('solution');
+        onSubmit(combinedText, effectiveLang, extractedStarterCode ? { starterCode: extractedStarterCode } : undefined);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [token, resolveLanguage, setLanguage, clearStreamChunks, setParsedBlocks, setStreamError, onSubmit, getDefaultCode]);
+
   const handleHackerrankFetch = async () => {
     const camo = (window as any).camo;
     if (!camo?.fetchHackerrankNow) {
@@ -1161,12 +1230,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         if (result.needsScreenPermission) camo.openSystemPrivacy?.('screen');
         return;
       }
-      // result.dataUrl is a screenshot — run through the existing Claude Vision OCR pipeline
-      const blob = await (await fetch(result.dataUrl)).blob();
-      const file = new File([blob], 'hackerrank-capture.png', { type: blob.type || 'image/png' });
-      setInputMode('image');
-      setImagePreview(result.dataUrl);
-      await extractAndMaybeGenerate(file, true);
+      if (result.dataUrls) {
+        // multi-page auto-scroll capture — OCR each page and concatenate
+        await extractAndGenerateFromDataUrls(result.dataUrls);
+      } else {
+        // single screenshot — run through existing Claude Vision OCR pipeline
+        const blob = await (await fetch(result.dataUrl)).blob();
+        const file = new File([blob], 'hackerrank-capture.png', { type: blob.type || 'image/png' });
+        setInputMode('image');
+        setImagePreview(result.dataUrl);
+        await extractAndMaybeGenerate(file, true);
+      }
     } catch (err: any) {
       await dialogAlert({ title: 'HackerRank fetch error', message: err.message || 'Unknown error' });
     } finally {
@@ -1411,7 +1485,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   };
 
   const renderAnalysisContent = (content: string): React.ReactNode => {
-    const segments = content.split(/(```[\w-]*\n[\s\S]*?```)/g);
+    // Normalize before splitting: convert bracketed CODE blocks to markdown fences
+    // and strip closing section tags ([/APPROACH], [/CODE], etc.) so they never
+    // leak as raw text — the bracketLabel renderer only handles opening [TAG] form.
+    const normalized = content
+      .replace(/\[CODE(?:\s+lang=([\w-]+))?\]([\s\S]*?)\[\/CODE\]/gi,
+        (_: string, lang: string, code: string) => `\n\`\`\`${lang || ''}\n${code.trim()}\n\`\`\`\n`)
+      .replace(/\[\/[A-Z][A-Z0-9_\s-]*\]/g, '');
+    const segments = normalized.split(/(```[\w-]*\n[\s\S]*?```)/g);
     let questionCounter = 0;
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -1733,104 +1814,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 {/* Autopilot mode: when a coding platform is selected the user
                     never needs to manually input a problem. Replace the entire
                     Text/URL/Image picker with a single monitoring status bar. */}
-                {codingPlatform && codingPlatform !== 'none' ? (
-                  /* Autopilot mode — platform chip is in ScreenshotStrip above; show only collapse button here */
-                  <div
-                    className="flex flex-col"
-                    style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
-                  >
-                    {/* ── Screen permission warning (desktop only) ── */}
-                    {screenPermStatus && screenPermStatus !== 'granted' && (
-                      <div className="flex items-center gap-2 px-3 pt-2 pb-1.5 min-w-0">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                        <span className="text-[11px] font-semibold truncate" style={{ color: '#f59e0b' }}>Screen Recording not granted — auto-detect paused</span>
-                        <button onClick={() => (window as any).camo?.openSystemPrivacy?.('screen')} className="px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-80" style={{ background: '#f59e0b', color: '#000' }}>Fix in Settings</button>
-                      </div>
-                    )}
-
-                    {/* ── Chips + collapse in one row ── */}
-                    <div className="flex items-center gap-1.5 px-3 py-1.5">
-                      {!isLoading && snapChipCode && (
-                        <>
-                          <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
-                            style={{ color: 'var(--cam-gold-leaf)' }}>Snap:</span>
-                          {SNAP_CHIPS.map(chip => (
-                            <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
-                              className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
-                              style={{ background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }}>
-                              {chip.label}
-                            </button>
-                          ))}
-                          <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
-                            className="shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
-                            style={{ color: 'rgba(255,255,255,0.35)' }}>
-                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          </button>
-                        </>
-                      )}
-                      <div className="flex-1" />
-                      <button
-                        onClick={() => setIsInputCollapsed(!isInputCollapsed)}
-                        className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-                        style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}
-                        aria-label={isInputCollapsed ? 'Expand input' : 'Collapse input'}
-                      >
-                        <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  /* Manual mode — two-row layout (Image #15 design):
-                     Row 1: TEXT / URL / IMAGE pill tabs + Snap
-                     Row 2: Stealth + mic controls + collapse              */
-                  <div
-                    className="flex flex-col"
-                    style={{
-                      background: 'var(--cam-hero-strip)',
-                      borderBottom: '1px solid var(--cam-gold-leaf)',
-                    }}
-                  >
-                    {/* ── Chips + collapse in one row ── */}
-                    <div className="flex items-center gap-1.5 px-3 py-1.5">
-                      {!isLoading && snapChipCode && (
-                        <>
-                          <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
-                            style={{ color: 'var(--cam-gold-leaf)' }}>Snap:</span>
-                          {SNAP_CHIPS.map(chip => (
-                            <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
-                              className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
-                              style={{ background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }}>
-                              {chip.label}
-                            </button>
-                          ))}
-                          <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
-                            className="shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
-                            style={{ color: 'rgba(255,255,255,0.35)' }}>
-                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          </button>
-                        </>
-                      )}
-                      <div className="flex-1" />
-                      <button
-                        onClick={() => setIsInputCollapsed(!isInputCollapsed)}
-                        className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
-                        style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}
-                        aria-label={isInputCollapsed ? 'Expand input' : 'Collapse input'}
-                      >
-                        <svg className={`w-3 h-3 transition-transform ${isInputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                    </div>
+                {/* Screen permission warning — autopilot mode, desktop only */}
+                {codingPlatform && codingPlatform !== 'none' && screenPermStatus && screenPermStatus !== 'granted' && (
+                  <div className="flex items-center gap-2 px-3 py-2 min-w-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span className="text-[11px] font-semibold truncate" style={{ color: '#f59e0b' }}>Screen Recording not granted — auto-detect paused</span>
+                    <button onClick={() => (window as any).camo?.openSystemPrivacy?.('screen')} className="px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-80" style={{ background: '#f59e0b', color: '#000' }}>Fix in Settings</button>
                   </div>
                 )}
 
                 <div className="p-3 md:p-4 space-y-3">
-                  {/* Collapsible Content */}
-                  {!isInputCollapsed && (
-                    <div className="space-y-3">
+                  <div className="space-y-3">
 
                       {/* Input Areas */}
                       {inputMode === 'paste' && (
@@ -1895,7 +1889,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         </div>
                       )}
                     </div>
-                  )}
 
                   {error && (
                     <div className="p-2.5 rounded-lg text-xs" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--danger)', color: 'var(--danger)' }}>{error}</div>

@@ -445,6 +445,66 @@ end tell`);
   }
 }
 
+// Detects if the problem container in the active browser tab has more scrollable
+// content below the visible area. Used by multi-page SNAP to know when to stop.
+async function checkHasMoreContent(browser) {
+  const js = `(function(){
+    var ss=['.challenge-description-body','.problem-statement','[class*="problem-description"]','[class*="problemDescription"]'];
+    for(var i=0;i<ss.length;i++){
+      var el=document.querySelector(ss[i]);
+      if(!el)continue;
+      var p=el;
+      while(p&&p!==document.body){
+        var st=getComputedStyle(p);
+        if(st.overflowY==='auto'||st.overflowY==='scroll'){
+          return (p.scrollHeight-p.scrollTop-p.clientHeight)>50;
+        }
+        p=p.parentElement;
+      }
+    }
+    return (document.body.scrollHeight-window.scrollY-window.innerHeight)>100;
+  })()`;
+  const escapedJs = js.replace(/"/g, '\\"');
+  try {
+    const raw = await runAppleScript(`tell application "${browser}"
+  set r to execute active tab of front window javascript "${escapedJs}"
+  if r is missing value then return "false"
+  return r as string
+end tell`);
+    return raw.trim() === 'true';
+  } catch {
+    return false;
+  }
+}
+
+// Scrolls the problem container down by ~75% of its visible height.
+async function scrollDownProblem(browser) {
+  const js = `(function(){
+    var ss=['.challenge-description-body','.problem-statement','[class*="problem-description"]','[class*="problemDescription"]'];
+    for(var i=0;i<ss.length;i++){
+      var el=document.querySelector(ss[i]);
+      if(!el)continue;
+      var p=el;
+      while(p&&p!==document.body){
+        var st=getComputedStyle(p);
+        if(st.overflowY==='auto'||st.overflowY==='scroll'){
+          p.scrollBy(0,Math.floor(p.clientHeight*0.75));
+          return true;
+        }
+        p=p.parentElement;
+      }
+    }
+    window.scrollBy(0,Math.floor(window.innerHeight*0.75));
+    return true;
+  })()`;
+  const escapedJs = js.replace(/"/g, '\\"');
+  try {
+    await runAppleScript(`tell application "${browser}"
+  execute active tab of front window javascript "${escapedJs}"
+end tell`);
+  } catch {}
+}
+
 async function doHackerrankScrape() {
   const info = await getActiveBrowserInfo();
   if (!info) return { ok: false, error: 'No browser window found. Open Chrome/Brave with HackerRank.' };
@@ -469,12 +529,27 @@ async function doHackerrankScrape() {
     _lastHrUrl = url;
     return { ok: true, text, starterCode, url };
   }
-  // Fall back to screenshot → OCR pipeline.
-  console.log('[hr-auto] DOM text extraction failed, falling back to screenshot');
-  const dataUrl = await captureExactBrowserWindow(windowTitle);
-  if (!dataUrl) return { ok: false, error: 'Could not capture the HackerRank browser window. Make sure it is visible (not minimised or behind other windows).' };
+  // Fall back to screenshot → OCR pipeline with auto-scroll multi-page capture.
+  // Captures up to 6 pages, scrolling between each to cover long problem descriptions.
+  console.log('[hr-auto] DOM text extraction failed, falling back to multi-page screenshot');
+  const dataUrls = [];
+  const firstDataUrl = await captureExactBrowserWindow(windowTitle);
+  if (!firstDataUrl) return { ok: false, error: 'Could not capture the HackerRank browser window. Make sure it is visible (not minimised or behind other windows).' };
+  dataUrls.push(firstDataUrl);
+
+  for (let page = 1; page < 6; page++) {
+    const hasMore = await checkHasMoreContent(browser);
+    if (!hasMore) break;
+    await scrollDownProblem(browser);
+    await new Promise(r => setTimeout(r, 600)); // let scroll settle + repaint
+    const next = await captureExactBrowserWindow(windowTitle);
+    if (!next) break;
+    dataUrls.push(next);
+  }
+
   _lastHrUrl = url;
-  return { ok: true, dataUrl, url };
+  if (dataUrls.length === 1) return { ok: true, dataUrl: dataUrls[0], url };
+  return { ok: true, dataUrls, url };
 }
 
 // Capture a specific browser window by matching its EXACT title from AppleScript.
