@@ -1002,39 +1002,26 @@ export default function DocsPage({ onBack }) {
                               className="card-lift group relative rounded-xl overflow-hidden flex flex-col active:scale-[0.98]"
                               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                             >
-                              <TopicIllustration name={cat.id} />
-                              <div className="p-5">
-                                <div className="flex items-center justify-between mb-3">
-                                  <div className="flex items-center gap-3">
-                                    <DatabricksThumb
-                                      color={CATEGORY_HEX[cat.id] || 'navy'}
-                                      size={44}
-                                      icon={<Icon name={cat.icon} size={22} style={{ color: '#FFFFFF' }} />}
-                                      title={cat.title}
-                                    />
-                                    <div>
-                                      <h3 className="text-[17px] font-bold leading-tight tracking-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
-                                      <span className="text-[12px] font-semibold tabular-nums" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
-                                    </div>
-                                  </div>
-                                  {/* Progress ring */}
-                                  <div className="relative shrink-0" style={{ width: 52, height: 52 }}>
-                                    <svg width="52" height="52" viewBox="0 0 52 52" className="transform -rotate-90">
-                                      <circle cx="26" cy="26" r="21" fill="none" stroke="rgba(38,97,156,0.1)" strokeWidth="3" />
-                                      <circle cx="26" cy="26" r="21" fill="none" stroke="var(--accent)" strokeWidth="3"
-                                        strokeDasharray={2 * Math.PI * 21} strokeDashoffset={(2 * Math.PI * 21) - (cat.progress / 100) * (2 * Math.PI * 21)}
-                                        strokeLinecap="round" className="transition-colors duration-1000" />
-                                    </svg>
-                                    <span className="absolute inset-0 flex items-center justify-center text-[12px] font-bold tabular-nums" style={{ color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                                      {cat.progress}%
-                                    </span>
-                                  </div>
+                              <TopicIllustration name={cat.id} style={{ aspectRatio: '5 / 1' }} />
+                              <div className="px-4 pt-4 pb-4 flex flex-col items-center text-center gap-3">
+                                <DatabricksThumb
+                                  color={CATEGORY_HEX[cat.id] || 'navy'}
+                                  size={40}
+                                  icon={<Icon name={cat.icon} size={20} style={{ color: '#FFFFFF' }} />}
+                                  title={cat.title}
+                                />
+                                <div>
+                                  <h3 className="text-[20px] font-bold leading-tight tracking-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
+                                  <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
                                 </div>
-                                {/* Progress bar */}
-                                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-                                  <div className="h-full rounded-full transition-colors duration-1000" style={{ width: `${Math.max(cat.progress, 2)}%`, background: 'var(--accent)' }} />
+                                <div className="w-full flex items-center gap-2.5">
+                                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
+                                    <div className="h-full rounded-full transition-colors duration-1000" style={{ width: `${Math.max(cat.progress, 2)}%`, background: 'var(--accent)' }} />
+                                  </div>
+                                  <span className="text-[11px] font-bold tabular-nums shrink-0" style={{ color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                    {cat.progress}%
+                                  </span>
                                 </div>
-
                               </div>
                             </Link>
                             );
