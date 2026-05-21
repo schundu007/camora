@@ -19,7 +19,7 @@ const PROFILE = join(process.env.HOME, 'Library/Application Support/Google/Chrom
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function main() {
-  try { execSync(`lsof -ti :${CDP_PORT} | xargs kill -9 2>/dev/null`); } catch {}
+  try { execSync(`pkill -f "Google Chrome.*remote-debugging-port=${CDP_PORT}" 2>/dev/null || true`); } catch {}
   await sleep(500);
 
   const tmp = join(tmpdir(), `hr-cdp-${Date.now()}`);
@@ -78,7 +78,7 @@ async function main() {
   ws.close();
   // Kill only the Chrome process listening on the CDP port, not the node client
   // connected to it (lsof -ti would also return the node PID and self-kill).
-  try { execSync(`pkill -f "remote-debugging-port=${CDP_PORT}" 2>/dev/null`); } catch {}
+  try { execSync(`pkill -f "Google Chrome.*remote-debugging-port=${CDP_PORT}" 2>/dev/null || true`); } catch {}
   try { execSync(`rm -rf "${tmp}"`); } catch {}
 
   if (relevant.length === 0) {
@@ -87,6 +87,7 @@ async function main() {
 
   const cookieStr = relevant.map(c => `${c.name}=${c.value}`).join('; ');
   writeFileSync(COOKIES_OUT, JSON.stringify({ cookieStr, extractedAt: new Date().toISOString() }, null, 2));
+  execSync(`chmod 600 "${COOKIES_OUT}"`);
   console.log(`Saved ${relevant.length} cookies to ${COOKIES_OUT}`);
 }
 
