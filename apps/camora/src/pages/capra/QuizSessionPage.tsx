@@ -251,6 +251,43 @@ export default function QuizSessionPage() {
   });
   const multiDomain = Object.keys(domainScores).length > 1;
 
+  // ── Shared filter-chip styles (used in all screens) ─────────────────────────
+  const chipBase: React.CSSProperties = {
+    padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+    letterSpacing: '0.03em', border: '1px solid transparent',
+    cursor: 'pointer', whiteSpace: 'nowrap' as const, transition: 'all 0.12s',
+  };
+  const chipActive: React.CSSProperties = {
+    ...chipBase, background: 'var(--cam-gold-leaf, #d4af37)', color: '#000',
+    border: '1px solid var(--cam-gold-leaf, #d4af37)',
+  };
+  const chipInactive: React.CSSProperties = {
+    ...chipBase, background: 'var(--bg-elevated)', color: 'var(--text-secondary)',
+    border: '1px solid var(--border)',
+  };
+  const DIFF_OPTS = ['easy', 'medium', 'hard'];
+
+  const FilterBar = () => (
+    <div style={{
+      borderBottom: '1px solid var(--border)', background: 'var(--bg-app)',
+      padding: '10px 24px', display: 'flex', flexDirection: 'column', gap: 8,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 2 }}>Topic</span>
+        {DOMAIN_CATS.map(cat => (
+          <button key={cat.value} style={activeCat === cat.value ? chipActive : chipInactive} onClick={() => handleNewQuiz(cat.value, diffFilter)}>{cat.label}</button>
+        ))}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 2 }}>Level</span>
+        <button style={!diffFilter ? chipActive : chipInactive} onClick={() => handleNewQuiz(activeCat, null)}>All</button>
+        {DIFF_OPTS.map(d => (
+          <button key={d} style={diffFilter === d ? chipActive : chipInactive} onClick={() => handleNewQuiz(activeCat, d)}>{d.charAt(0).toUpperCase() + d.slice(1)}</button>
+        ))}
+      </div>
+    </div>
+  );
+
   // ── Header bar ───────────────────────────────────────────────────────────────
   const HeaderBar = () => (
     <div style={{
@@ -330,6 +367,7 @@ export default function QuizSessionPage() {
     return (
       <div style={{ background: 'var(--bg-app)', minHeight: '100%' }}>
         <HeaderBar />
+        <FilterBar />
         <div style={{ maxWidth: 760, margin: '0 auto', padding: '28px 24px' }}>
           <div style={{
             fontSize: 13, color: 'var(--text-muted)', marginBottom: 28,
@@ -356,6 +394,7 @@ export default function QuizSessionPage() {
     return (
       <div style={{ background: 'var(--bg-app)', minHeight: '100%' }}>
         <HeaderBar />
+        <FilterBar />
         <div style={{
           maxWidth: 480, margin: '80px auto', padding: '0 24px',
           textAlign: 'center',
@@ -400,6 +439,7 @@ export default function QuizSessionPage() {
     return (
       <div style={{ background: 'var(--bg-app)', minHeight: '100%' }}>
         <HeaderBar />
+        <FilterBar />
 
         <div style={{ maxWidth: 640, margin: '0 auto', padding: '48px 24px 80px' }}>
 
@@ -480,7 +520,13 @@ export default function QuizSessionPage() {
               Retry Quiz
             </button>
             <button
-              onClick={() => navigate('/capra/library')}
+              onClick={() => {
+                const params = new URLSearchParams();
+                params.set('count', String(countParam));
+                if (domainParam) params.set('domain', domainParam);
+                if (diffFilter) params.set('difficulty', diffFilter);
+                navigate(`/capra/quiz/session?${params.toString()}`);
+              }}
               style={{
                 flex: 1, padding: '11px 0', borderRadius: 8, fontSize: 14, fontWeight: 600,
                 background: 'transparent', color: 'var(--text-secondary)',
@@ -611,68 +657,10 @@ export default function QuizSessionPage() {
 
   const qMeta = metaPool.find(p => p.id === q.id);
 
-  const chipBase: React.CSSProperties = {
-    padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700,
-    letterSpacing: '0.03em', border: '1px solid transparent',
-    cursor: 'pointer', whiteSpace: 'nowrap' as const, transition: 'all 0.12s',
-  };
-  const chipActive: React.CSSProperties = {
-    ...chipBase,
-    background: 'var(--cam-gold-leaf, #d4af37)', color: '#000',
-    border: '1px solid var(--cam-gold-leaf, #d4af37)',
-  };
-  const chipInactive: React.CSSProperties = {
-    ...chipBase,
-    background: 'var(--bg-elevated)', color: 'var(--text-secondary)',
-    border: '1px solid var(--border)',
-  };
-
-  const DIFF_OPTS = ['easy', 'medium', 'hard'];
-
   return (
     <div style={{ background: 'var(--bg-app)', minHeight: '100%', color: 'var(--text-primary)' }}>
       <HeaderBar />
-
-      {/* ── Filter bar ─────────────────────────────────────────────────────────── */}
-      <div style={{
-        borderBottom: '1px solid var(--border)',
-        background: 'var(--bg-app)',
-        padding: '10px 24px',
-        display: 'flex', flexDirection: 'column', gap: 8,
-      }}>
-        {/* Domain category chips */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 2 }}>Topic</span>
-          {DOMAIN_CATS.map(cat => (
-            <button
-              key={cat.value}
-              style={activeCat === cat.value ? chipActive : chipInactive}
-              onClick={() => handleNewQuiz(cat.value, diffFilter)}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-        {/* Difficulty chips */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 2 }}>Level</span>
-          <button
-            style={!diffFilter ? chipActive : chipInactive}
-            onClick={() => handleNewQuiz(activeCat, null)}
-          >
-            All
-          </button>
-          {DIFF_OPTS.map(d => (
-            <button
-              key={d}
-              style={diffFilter === d ? chipActive : chipInactive}
-              onClick={() => handleNewQuiz(activeCat, d)}
-            >
-              {d.charAt(0).toUpperCase() + d.slice(1)}
-            </button>
-          ))}
-        </div>
-      </div>
+      <FilterBar />
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '36px 24px 80px' }}>
 
