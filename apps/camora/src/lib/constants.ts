@@ -38,7 +38,7 @@ export const CODING_BLOCK_TYPES: BlockTypeValue[] = [
   BlockType.TESTCASES,
 ];
 
-/** Status states for the interview flow */
+/** Status states for the session flow */
 export const StatusState = {
   IDLE: 'idle',
   READY: 'ready',

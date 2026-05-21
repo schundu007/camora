@@ -258,7 +258,7 @@ export default function JobUrlAnalysisDemo() {
                   <Sparkle />
                 </div>
                 <p className="text-xs font-bold tracking-[0.15em] uppercase" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
-                  AI Analysis • Interview Focus
+                  AI Analysis • Analysis Focus
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-3">

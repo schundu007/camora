@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAudioCapture } from './hooks/useAudioCapture';
 import { useAudioDevices } from './hooks/useAudioDevices';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSessionStore } from '@/stores/session-store';
 import { transcriptionAPI, speakerAPI } from '@/lib/api-client';
 import { useAuth } from '@/contexts/AuthContext';
 import { isQuestion } from '@/lib/questionDetector';
-import { InterviewerAudioPill } from './InterviewerAudio';
+import { SpeakerAudioPill } from './SpeakerAudio';
 
 // Backward-compatible alias for the old SystemAudioButton — the
-// implementation now lives in InterviewerAudio.tsx as InterviewerAudioPill,
-// which consumes the shared InterviewerAudioProvider.
+// implementation now lives in SpeakerAudio.tsx as SpeakerAudioPill,
+// which consumes the shared SpeakerAudioProvider.
 export const SystemAudioButton = (_props: { onTranscription?: (text: string) => void; disabled?: boolean }) => {
-  return <InterviewerAudioPill />;
+  return <SpeakerAudioPill />;
 };
 
 // Keyboard shortcuts — use Cmd/Ctrl+M to avoid conflict with typing.
@@ -199,7 +199,7 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
     setVoiceEnrolled,
     setVoiceFilterEnabled,
     setIsEnrolling,
-  } = useInterviewStore();
+  } = useSessionStore();
 
   // Get selected audio device
   const { selectedDeviceId } = useAudioDevices();
@@ -304,7 +304,7 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
     }, effectiveWait);
   }, [flushAccumulatedText]);
 
-  // Auto-enroll user's voice from first audio chunk in record-interviewer mode
+  // Auto-enroll user's voice from first audio chunk in record-speaker mode
   const autoEnrollRef = useRef(false);
   const handleAutoEnroll = useCallback(async (blob: Blob) => {
     if (autoEnrollRef.current) return; // prevent double-fire
@@ -341,7 +341,7 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
     // very next blob would re-fire the "filter without enrollment"
     // branch and turn the filter back off — undoing the enrollment
     // immediately after it succeeded.
-    const live = useInterviewStore.getState();
+    const live = useSessionStore.getState();
     const voiceEnrolled = live.voiceEnrolled;
     const voiceFilterEnabled = live.voiceFilterEnabled;
     const voiceMode = live.voiceMode;
@@ -357,7 +357,7 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
     }
 
     // Record Interviewer: auto-enroll user's voice from first chunk
-    if (autoEnrollPending && !voiceEnrolled && voiceMode === 'record-interviewer') {
+    if (autoEnrollPending && !voiceEnrolled && voiceMode === 'record-speaker') {
       handleAutoEnroll(blob);
       // Also transcribe this first chunk (no filtering yet)
     }
@@ -370,7 +370,7 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
     // the filter, surface a clear warning, and let audio pass through
     // unfiltered so transcription still works. The user can re-enroll
     // if they want filtering back.
-    if (voiceFilterEnabled && !voiceEnrolled && !(autoEnrollPending && voiceMode === 'record-interviewer')) {
+    if (voiceFilterEnabled && !voiceEnrolled && !(autoEnrollPending && voiceMode === 'record-speaker')) {
       setVoiceFilterEnabled(false);
       setStatus('warn', 'Filter auto-disabled — no voice enrolled. Audio is being transcribed unfiltered.');
       // fall through to non-filtered transcription
@@ -729,7 +729,7 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
       // means the analyser stopped (laptop sleep/wake, OS audio
       // context suspended). Only short-circuit when BOTH the store
       // says recording AND we got a recent level bump.
-      const state = useInterviewStore.getState();
+      const state = useSessionStore.getState();
       const stalledMs = Date.now() - lastHealthyAtRef.current;
       if (state.isRecording && stalledMs < 4000) return;
       if (stalledMs > 4000 && !isStartingRef.current) {
@@ -781,7 +781,7 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
       // Don't yank the recorder away from a manual recording in
       // progress just because the tab regained focus.
       if (recordingModeRef.current === 'manual') return;
-      const state = useInterviewStore.getState();
+      const state = useSessionStore.getState();
       if (state.isRecording) {
         // Even if the store says "recording", the AudioContext likely
         // got suspended. Force a fresh start to be safe.

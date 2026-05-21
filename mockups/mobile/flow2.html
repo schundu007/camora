@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sona Mobile — Flow 2</title>
+<style>
+:root {
+  --bg-app:      #06090D;
+  --bg-base:     #0B0F15;
+  --bg-surface:  #131B26;
+  --bg-elevated: #1A2334;
+  --border:      rgba(255,255,255,0.07);
+  --border-md:   rgba(255,255,255,0.11);
+  --navy:        #0047AB;
+  --navy-lt:     rgba(0,71,171,0.24);
+  --gold:        #C9A227;
+  --gold-lt:     #DDB93A;
+  --gold-dim:    rgba(201,162,39,0.16);
+  --gold-ring:   rgba(201,162,39,0.28);
+  --text-1:      #ECF0F6;
+  --text-2:      #7A8EA8;
+  --text-3:      #3E4F65;
+  --success:     #22C55E;
+  --danger:      #EF4444;
+  --blue-lt:     #7AABFF;
+  --SCALE:       0.665;
+  --PH:          393px;
+  --PV:          852px;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg-app);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64px 48px 80px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Canvas header ── */
+.canvas-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 60px;
+}
+.brand-row { display: flex; align-items: center; gap: 12px; }
+.brand-mark {
+  width: 40px; height: 40px;
+  background: var(--gold);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+.brand-mark svg { color: #0A0D12; }
+.brand-name { font-size: 22px; font-weight: 800; color: var(--text-1); letter-spacing: -0.4px; }
+.brand-by { font-size: 14px; color: var(--text-3); font-weight: 500; margin-left: 2px; }
+.canvas-subtitle { font-size: 13px; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+.canvas-flow-label {
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-md);
+  border-radius: 100px;
+  padding: 4px 14px;
+}
+
+/* ── Phones ── */
+.phones-row { display: flex; align-items: flex-start; gap: 28px; }
+.phone-col { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.screen-label { font-size: 10px; font-weight: 700; color: var(--text-3); letter-spacing: 0.12em; text-transform: uppercase; }
+
+.phone-wrapper {
+  width: calc(var(--PH) * var(--SCALE));
+  height: calc(var(--PV) * var(--SCALE));
+  position: relative;
+  flex-shrink: 0;
+}
+.phone-scaler {
+  transform: scale(var(--SCALE));
+  transform-origin: top left;
+  width: var(--PH);
+  height: var(--PV);
+  position: absolute;
+  top: 0; left: 0;
+}
+
+/* ── Frame ── */
+.phone-frame {
+  width: 100%; height: 100%;
+  background: var(--bg-base);
+  border-radius: 52px;
+  border: 2px solid rgba(255,255,255,0.13);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.7),
+    0 50px 100px rgba(0,0,0,0.85),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.di {
+  width: 126px; height: 36px;
+  background: #000;
+  border-radius: 20px;
+  position: absolute;
+  top: 14px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+}
+
+.sbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 28px;
+  height: 62px;
+  position: relative;
+  z-index: 50;
+  flex-shrink: 0;
+}
+.sbar-time { font-size: 16px; font-weight: 700; color: var(--text-1); letter-spacing: -0.2px; }
+.sbar-icons { display: flex; align-items: center; gap: 5px; }
+.sbar-icons svg { color: var(--text-1); }
+
+/* ── Shared ── */
+.pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+.pill-gold { background: var(--gold-dim); color: var(--gold-lt); border: 1px solid var(--gold-ring); }
+.pill-navy { background: rgba(0,71,171,0.18); color: var(--blue-lt); border: 1px solid rgba(0,71,171,0.30); }
+.pill-success { background: rgba(34,197,94,0.12); color: var(--success); border: 1px solid rgba(34,197,94,0.20); }
+
+.tab-bar {
+  display: flex; align-items: flex-start; justify-content: space-around;
+  padding: 12px 8px 0;
+  background: rgba(11,15,21,0.94);
+  border-top: 1px solid var(--border-md);
+  flex-shrink: 0;
+  height: 82px;
+}
+.tab-item { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; }
+.tab-icon { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; }
+.tab-lbl { font-size: 10px; font-weight: 600; color: var(--text-3); }
+.tab-item.active .tab-lbl { color: var(--gold-lt); }
+.tab-item.active .tab-icon svg { color: var(--gold-lt); }
+.tab-item .tab-icon svg { color: var(--text-3); }
+
+.home-bar {
+  width: 134px; height: 5px;
+  background: rgba(255,255,255,0.22);
+  border-radius: 3px;
+  margin: 0 auto;
+  flex-shrink: 0;
+  margin-top: auto;
+  margin-bottom: 8px;
+}
+
+/* ═══════════════════════════════════════
+   SCREEN 1 — ONBOARDING WELCOME
+═══════════════════════════════════════ */
+.on-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Atmospheric gold glow at top */
+.on-glow {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(201,162,39,0.18) 0%, transparent 68%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Subtle grain texture overlay */
+.on-grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.on-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.on-mark {
+  width: 80px; height: 80px;
+  background: var(--gold);
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+  box-shadow: 0 0 0 12px rgba(201,162,39,0.10), 0 0 48px rgba(201,162,39,0.24);
+}
+.on-mark svg { color: #0A0D12; }
+
+.on-headline {
+  font-size: 34px;
+  font-weight: 900;
+  color: var(--text-1);
+  text-align: center;
+  letter-spacing: -0.8px;
+  line-height: 1.12;
+  margin-bottom: 14px;
+}
+.on-headline em { color: var(--gold-lt); font-style: normal; }
+
+.on-sub {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-2);
+  text-align: center;
+  max-width: 280px;
+  margin-bottom: 40px;
+}
+
+.on-features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 40px;
+}
+.on-feat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+.on-feat-icon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.on-feat-icon svg { color: #fff; }
+.on-feat-text { font-size: 14px; color: var(--text-1); font-weight: 500; }
+.on-feat-text span { display: block; font-size: 12px; color: var(--text-3); font-weight: 400; margin-top: 1px; }
+
+.on-cta-block {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+  padding: 0 32px 32px;
+}
+.on-cta-main {
+  width: 100%;
+  padding: 16px;
+  background: var(--gold);
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0A0D12;
+  text-align: center;
+  letter-spacing: -0.2px;
+}
+.on-cta-sub {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-2);
+}
+.on-cta-sub strong { color: var(--gold-lt); font-weight: 600; }
+
+/* ═══════════════════════════════════════
+   SCREEN 2 — SESSION SETUP
+═══════════════════════════════════════ */
+.ss-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+.ss-nav {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 8px;
+}
+.ss-back { display: flex; align-items: center; gap: 3px; color: var(--gold-lt); font-size: 16px; font-weight: 500; }
+.ss-back svg { color: var(--gold-lt); }
+.ss-nav-title { flex: 1; text-align: center; font-size: 16px; font-weight: 700; color: var(--text-1); }
+
+.ss-content { flex: 1; padding: 20px 22px; overflow: hidden; display: flex; flex-direction: column; gap: 18px; }
+
+.ss-field-group { display: flex; flex-direction: column; gap: 10px; }
+.ss-field-lbl { font-size: 12px; font-weight: 700; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; }
+.ss-input {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-md);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ss-input-val { font-size: 15px; color: var(--text-1); font-weight: 500; }
+.ss-input-placeholder { font-size: 15px; color: var(--text-3); }
+.ss-input svg { color: var(--text-3); }
+
+.ss-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.ss-type-tile {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.ss-type-tile.active {
+  border-color: var(--gold);
+  background: var(--gold-dim);
+}
+.ss-type-icon {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ss-type-icon svg { color: var(--text-2); }
+.ss-type-tile.active .ss-type-icon svg { color: var(--gold-lt); }
+.ss-type-name { font-size: 12px; font-weight: 700; color: var(--text-2); text-align: center; }
+.ss-type-tile.active .ss-type-name { color: var(--gold-lt); }
+
+.ss-mic-block {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ss-mic-row { display: flex; align-items: center; justify-content: space-between; }
+.ss-mic-label { font-size: 14px; font-weight: 600; color: var(--text-1); }
+.ss-mic-status { display: flex; align-items: center; gap: 6px; }
+.ss-mic-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; }
+.ss-mic-val { font-size: 12px; color: var(--success); font-weight: 600; }
+.ss-level-bar { height: 6px; background: var(--bg-elevated); border-radius: 3px; overflow: hidden; }
+.ss-level-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--navy), var(--gold)); width: 62%; }
+
+.ss-start-btn {
+  margin: 0 22px 18px;
+  padding: 17px;
+  background: var(--gold);
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0A0D12;
+  text-align: center;
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.ss-start-btn svg { color: #0A0D12; }
+
+/* ═══════════════════════════════════════
+   SCREEN 3 — CODING MODE
+═══════════════════════════════════════ */
+.cm-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+.cm-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  height: 48px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.cm-problem-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-md);
+  border-radius: 100px;
+  padding: 6px 14px 6px 10px;
+}
+.cm-problem-pill svg { color: var(--text-3); }
+.cm-problem-title { font-size: 13px; font-weight: 700; color: var(--text-1); }
+.cm-diff { font-size: 11px; font-weight: 700; color: #F59E0B; }
+
+.cm-lang-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cm-lang {
+  padding: 5px 12px;
+  background: var(--navy-lt);
+  border: 1px solid rgba(0,71,171,0.30);
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue-lt);
+}
+
+/* Rec dot */
+.cm-rec { display: flex; align-items: center; gap: 5px; }
+.cm-rec-dot { width: 7px; height: 7px; background: var(--danger); border-radius: 50%; }
+.cm-rec-time { font-size: 12px; font-weight: 600; color: var(--text-2); }
+
+/* Code editor area */
+.cm-editor {
+  flex: 1;
+  background: #0D1117;
+  overflow: hidden;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  position: relative;
+}
+
+.cm-line {
+  display: flex;
+  align-items: flex-start;
+  padding: 0 16px;
+}
+.cm-ln {
+  width: 28px;
+  color: #3E4F65;
+  font-size: 12px;
+  flex-shrink: 0;
+  text-align: right;
+  margin-right: 16px;
+  user-select: none;
+  line-height: 1.7;
+}
+.cm-code { color: #CDD9E5; }
+
+/* Syntax colors */
+.kw { color: #FF7B72; }   /* keyword */
+.fn { color: #D2A8FF; }   /* function */
+.cm-str { color: #A5D6FF; } /* string */
+.cm-num { color: #79C0FF; } /* number */
+.cm-cmt { color: #3E4F65; } /* comment */
+.cm-var { color: #FFA657; } /* variable */
+.cm-type { color: #7EE787; } /* type */
+.punc { color: #8B949E; }  /* punctuation */
+
+/* Active line highlight */
+.cm-line.active-line { background: rgba(201,162,39,0.05); }
+.cm-cursor { display: inline-block; width: 2px; height: 15px; background: var(--gold); vertical-align: text-bottom; border-radius: 1px; }
+
+/* Sona hint drawer */
+.cm-sona-drawer {
+  background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
+  border-top: 1px solid rgba(201,162,39,0.20);
+  flex-shrink: 0;
+}
+.cm-sona-hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.cm-sona-mark {
+  width: 22px; height: 22px;
+  background: var(--gold);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 900; color: #0A0D12;
+}
+.cm-sona-lbl { font-size: 12px; font-weight: 700; color: var(--gold-lt); }
+.cm-sona-tag { margin-left: auto; }
+
+.cm-sona-body { padding: 10px 16px 14px; }
+.cm-hint-text { font-size: 13px; line-height: 1.55; color: var(--text-1); }
+.cm-hint-text strong { color: var(--gold-lt); font-weight: 700; }
+
+/* ═══════════════════════════════════════
+   SCREEN 4 — SESSION COMPLETE
+═══════════════════════════════════════ */
+.sc-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.sc-glow {
+  position: absolute;
+  top: -60px; left: 50%;
+  transform: translateX(-50%);
+  width: 480px; height: 300px;
+  background: radial-gradient(ellipse, rgba(201,162,39,0.14) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.sc-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 24px 0;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.sc-ring {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  border: 3px solid var(--gold);
+  box-shadow: 0 0 0 8px rgba(201,162,39,0.10), 0 0 40px rgba(201,162,39,0.20);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold-dim);
+  margin-bottom: 18px;
+  flex-shrink: 0;
+}
+.sc-ring svg { color: var(--gold-lt); }
+
+.sc-complete-lbl { font-size: 12px; font-weight: 700; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+.sc-score { font-size: 56px; font-weight: 900; color: var(--gold-lt); letter-spacing: -2px; line-height: 1; margin-bottom: 4px; }
+.sc-score-sub { font-size: 14px; color: var(--text-2); margin-bottom: 18px; }
+
+.sc-company { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.sc-co-mark {
+  width: 36px; height: 36px;
+  background: var(--bg-elevated);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: var(--text-2);
+}
+.sc-co-info {}
+.sc-co-name { font-size: 15px; font-weight: 700; color: var(--text-1); }
+.sc-co-role { font-size: 12px; color: var(--text-2); margin-top: 1px; }
+
+.sc-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 18px;
+}
+.sc-stat {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 10px;
+  text-align: center;
+}
+.sc-stat-val { font-size: 20px; font-weight: 800; color: var(--text-1); letter-spacing: -0.4px; }
+.sc-stat-val.g { color: var(--gold-lt); }
+.sc-stat-lbl { font-size: 10px; color: var(--text-3); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-top: 3px; }
+
+.sc-highlights {
+  width: 100%;
+  background: var(--bg-surface);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.sc-hl-hdr {
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.sc-hl-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.sc-hl-row:last-child { border-bottom: none; }
+.sc-hl-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; flex-shrink: 0; }
+.sc-hl-text { font-size: 13px; color: var(--text-1); line-height: 1.4; }
+
+.sc-actions {
+  display: flex;
+  gap: 10px;
+  padding: 0 22px 18px;
+  width: 100%;
+  flex-shrink: 0;
+}
+.sc-btn { flex: 1; padding: 14px; border-radius: 14px; font-size: 14px; font-weight: 700; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.sc-btn-primary { background: var(--gold); color: #0A0D12; }
+.sc-btn-secondary { background: var(--bg-elevated); color: var(--text-1); border: 1px solid var(--border-md); }
+
+/* ═══════════════════════════════════════
+   SCREEN 5 — PREP TOPICS
+═══════════════════════════════════════ */
+.pt-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+.pt-hdr { padding: 0 24px; }
+.pt-eyebrow { font-size: 12px; font-weight: 700; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+.pt-title { font-size: 26px; font-weight: 800; color: var(--text-1); letter-spacing: -0.6px; line-height: 1.2; }
+
+.pt-interview-bar {
+  margin: 14px 20px 0;
+  background: var(--bg-surface);
+  border: 1px solid rgba(201,162,39,0.20);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pt-company-mark {
+  width: 38px; height: 38px;
+  background: var(--bg-elevated);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 900; color: var(--text-2);
+  flex-shrink: 0;
+}
+.pt-interview-info { flex: 1; }
+.pt-co { font-size: 15px; font-weight: 700; color: var(--text-1); }
+.pt-time { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.pt-countdown { padding: 4px 10px; background: var(--gold-dim); border: 1px solid var(--gold-ring); border-radius: 100px; font-size: 12px; font-weight: 700; color: var(--gold-lt); flex-shrink: 0; }
+
+.pt-topics-section { padding: 16px 20px 0; }
+.pt-section-lbl { font-size: 12px; font-weight: 700; color: var(--text-3); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 10px; }
+
+.pt-topic-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 15px 16px;
+  margin-bottom: 9px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.pt-topic-card.priority { border-color: rgba(201,162,39,0.22); }
+
+.pt-topic-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.pt-topic-icon svg { color: #fff; }
+
+.pt-topic-info { flex: 1; min-width: 0; }
+.pt-topic-name { font-size: 14px; font-weight: 700; color: var(--text-1); }
+.pt-topic-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.pt-topic-time { font-size: 11px; color: var(--text-3); font-weight: 500; }
+.pt-topic-progress { flex: 1; height: 4px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden; }
+.pt-prog-fill { height: 100%; border-radius: 2px; background: var(--gold); }
+
+.pt-topic-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.pt-start-btn {
+  padding: 6px 13px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-md);
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+.pt-start-btn.cta { background: var(--gold-dim); border-color: var(--gold-ring); color: var(--gold-lt); }
+.pt-done-mark { width: 22px; height: 22px; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.pt-done-mark svg { color: var(--success); }
+</style>
+</head>
+<body>
+
+<div class="canvas-header">
+  <div class="brand-row">
+    <div class="brand-mark">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+        <line x1="8" y1="22" x2="16" y2="22"/>
+      </svg>
+    </div>
+    <span class="brand-name">Sona</span>
+    <span class="brand-by">by Camora</span>
+  </div>
+  <span class="canvas-subtitle">AI Interview Companion · iOS Mobile · Design Concept</span>
+  <span class="canvas-flow-label">Flow 2 — Onboarding · Setup · Coding · Complete · Prep</span>
+</div>
+
+<div class="phones-row">
+
+  <!-- ── PHONE 1: ONBOARDING ── -->
+  <div class="phone-col">
+    <span class="screen-label">Welcome</span>
+    <div class="phone-wrapper">
+      <div class="phone-scaler">
+        <div class="phone-frame" style="background:#0B0F15">
+          <div class="di"></div>
+          <div class="sbar" style="position:relative;z-index:51">
+            <span class="sbar-time">9:41</span>
+            <div class="sbar-icons">
+              <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="2" y="2" width="18" height="8" rx="2" fill="currentColor"/><path d="M23 4v4a2 2 0 0 0 0-4z" fill="currentColor" fill-opacity=".4"/></svg>
+            </div>
+          </div>
+
+          <div class="on-screen">
+            <div class="on-glow"></div>
+            <div class="on-grain"></div>
+
+            <div class="on-content">
+              <div class="on-mark">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="22"/>
+                  <line x1="8" y1="22" x2="16" y2="22"/>
+                </svg>
+              </div>
+
+              <div class="on-headline">Meet <em>Sona</em>,<br>your interview AI.</div>
+              <div class="on-sub">Real-time answers during live interviews. Private, instant, and built for top-tier candidates.</div>
+
+              <div class="on-features">
+                <div class="on-feat">
+                  <div class="on-feat-icon" style="background:#0047AB">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  </div>
+                  <div class="on-feat-text">Live transcription
+                    <span>Hears the interviewer in real time</span>
+                  </div>
+                </div>
+                <div class="on-feat">
+                  <div class="on-feat-icon" style="background:#C9A227">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  </div>
+                  <div class="on-feat-text">AI-drafted answers
+                    <span>Claude generates responses as you listen</span>
+                  </div>
+                </div>
+                <div class="on-feat">
+                  <div class="on-feat-icon" style="background:#22C55E">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                  <div class="on-feat-text">Fully private
+                    <span>Audio never leaves your device</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="on-cta-block">
+              <div class="on-cta-main">Get started — it's free</div>
+              <div class="on-cta-sub">Already have an account? <strong>Sign in</strong></div>
+            </div>
+          </div>
+
+          <div class="home-bar" style="margin-top:0;margin-bottom:8px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PHONE 2: SESSION SETUP ── -->
+  <div class="phone-col">
+    <span class="screen-label">Setup</span>
+    <div class="phone-wrapper">
+      <div class="phone-scaler">
+        <div class="phone-frame">
+          <div class="di"></div>
+          <div class="sbar">
+            <span class="sbar-time">9:41</span>
+            <div class="sbar-icons">
+              <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/><path d="M23 4v4a2 2 0 0 0 0-4z" fill="currentColor" fill-opacity=".4"/></svg>
+            </div>
+          </div>
+
+          <div class="ss-body">
+            <div class="ss-nav">
+              <div class="ss-back">
+                <svg width="10" height="18" viewBox="0 0 10 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1L1 9l8 8"/></svg>
+                Back
+              </div>
+              <div class="ss-nav-title">New Session</div>
+              <div style="width:40px"></div>
+            </div>
+
+            <div class="ss-content">
+              <div class="ss-field-group">
+                <div class="ss-field-lbl">Company</div>
+                <div class="ss-input">
+                  <span class="ss-input-val">Stripe</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+              </div>
+
+              <div class="ss-field-group">
+                <div class="ss-field-lbl">Role</div>
+                <div class="ss-input">
+                  <span class="ss-input-val">Staff Software Engineer</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+              </div>
+
+              <div class="ss-field-group">
+                <div class="ss-field-lbl">Session type</div>
+                <div class="ss-type-grid">
+                  <div class="ss-type-tile active">
+                    <div class="ss-type-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </div>
+                    <span class="ss-type-name">Technical</span>
+                  </div>
+                  <div class="ss-type-tile">
+                    <div class="ss-type-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    </div>
+                    <span class="ss-type-name">Behavioral</span>
+                  </div>
+                  <div class="ss-type-tile">
+                    <div class="ss-type-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    </div>
+                    <span class="ss-type-name">Coding</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ss-field-group">
+                <div class="ss-field-lbl">Microphone check</div>
+                <div class="ss-mic-block">
+                  <div class="ss-mic-row">
+                    <span class="ss-mic-label">Built-in Microphone</span>
+                    <div class="ss-mic-status">
+                      <div class="ss-mic-dot"></div>
+                      <span class="ss-mic-val">Good signal</span>
+                    </div>
+                  </div>
+                  <div class="ss-level-bar">
+                    <div class="ss-level-fill"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ss-start-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+              Begin Session
+            </div>
+          </div>
+
+          <div class="home-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PHONE 3: CODING MODE ── -->
+  <div class="phone-col">
+    <span class="screen-label">Coding Mode</span>
+    <div class="phone-wrapper">
+      <div class="phone-scaler">
+        <div class="phone-frame" style="background:#0D1117">
+          <div class="di"></div>
+          <div class="sbar" style="background:#0D1117">
+            <span class="sbar-time">9:41</span>
+            <div class="sbar-icons">
+              <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="2" y="2" width="13" height="8" rx="2" fill="currentColor"/><path d="M23 4v4a2 2 0 0 0 0-4z" fill="currentColor" fill-opacity=".4"/></svg>
+            </div>
+          </div>
+
+          <div class="cm-body">
+            <div class="cm-top-bar" style="background:#0D1117;border-color:rgba(255,255,255,0.06)">
+              <div class="cm-problem-pill">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <span class="cm-problem-title">Two Sum</span>
+                <span class="cm-diff">Medium</span>
+              </div>
+              <div class="cm-lang-row">
+                <div class="cm-lang">Python</div>
+                <div class="cm-rec">
+                  <div class="cm-rec-dot"></div>
+                  <span class="cm-rec-time">08:22</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cm-editor">
+              <div class="cm-line"><span class="cm-ln">1</span><span class="cm-code"><span class="cm-cmt"># Given: nums array + target</span></span></div>
+              <div class="cm-line"><span class="cm-ln">2</span><span class="cm-code"><span class="cm-cmt"># Return: indices of two numbers</span></span></div>
+              <div class="cm-line"><span class="cm-ln">3</span><span class="cm-code"></span></div>
+              <div class="cm-line"><span class="cm-ln">4</span><span class="cm-code"><span class="kw">class</span> <span class="fn">Solution</span><span class="punc">:</span></span></div>
+              <div class="cm-line"><span class="cm-ln">5</span><span class="cm-code">  <span class="kw">def</span> <span class="fn">twoSum</span><span class="punc">(</span><span class="cm-var">self</span><span class="punc">,</span> <span class="cm-var">nums</span><span class="punc">,</span> <span class="cm-var">target</span><span class="punc">):</span></span></div>
+              <div class="cm-line"><span class="cm-ln">6</span><span class="cm-code">    <span class="cm-var">seen</span> <span class="punc">=</span> <span class="punc">{}</span></span></div>
+              <div class="cm-line active-line"><span class="cm-ln">7</span><span class="cm-code">    <span class="kw">for</span> <span class="cm-var">i</span><span class="punc">,</span> <span class="cm-var">n</span> <span class="kw">in</span> <span class="fn">enumerate</span><span class="punc">(</span><span class="cm-var">nums</span><span class="punc">):</span><span class="cm-cursor"></span></span></div>
+              <div class="cm-line"><span class="cm-ln">8</span><span class="cm-code">      <span class="cm-var">diff</span> <span class="punc">=</span> <span class="cm-var">target</span> <span class="punc">-</span> <span class="cm-var">n</span></span></div>
+              <div class="cm-line"><span class="cm-ln">9</span><span class="cm-code">      <span class="kw">if</span> <span class="cm-var">diff</span> <span class="kw">in</span> <span class="cm-var">seen</span><span class="punc">:</span></span></div>
+              <div class="cm-line"><span class="cm-ln">10</span><span class="cm-code">        <span class="kw">return</span> <span class="punc">[</span><span class="cm-var">seen</span><span class="punc">[</span><span class="cm-var">diff</span><span class="punc">],</span> <span class="cm-var">i</span><span class="punc">]</span></span></div>
+              <div class="cm-line"><span class="cm-ln">11</span><span class="cm-code">      <span class="cm-var">seen</span><span class="punc">[</span><span class="cm-var">n</span><span class="punc">]</span> <span class="punc">=</span> <span class="cm-var">i</span></span></div>
+            </div>
+
+            <div class="cm-sona-drawer">
+              <div class="cm-sona-hdr">
+                <div class="cm-sona-mark">S</div>
+                <span class="cm-sona-lbl">Sona</span>
+                <span class="cm-sona-tag"><span class="pill pill-gold" style="font-size:10px">Hint</span></span>
+              </div>
+              <div class="cm-sona-body">
+                <div class="cm-hint-text">Your hash map approach is correct. Mention <strong>O(n) time / O(n) space</strong> trade-off vs. brute force O(n²). Also note: this handles negative numbers and duplicates cleanly.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="home-bar" style="margin-top:0;background:rgba(255,255,255,0.15)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PHONE 4: SESSION COMPLETE ── -->
+  <div class="phone-col">
+    <span class="screen-label">Complete</span>
+    <div class="phone-wrapper">
+      <div class="phone-scaler">
+        <div class="phone-frame">
+          <div class="di"></div>
+          <div class="sbar">
+            <span class="sbar-time">10:39</span>
+            <div class="sbar-icons">
+              <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="2" y="2" width="18" height="8" rx="2" fill="currentColor"/><path d="M23 4v4a2 2 0 0 0 0-4z" fill="currentColor" fill-opacity=".4"/></svg>
+            </div>
+          </div>
+
+          <div class="sc-body">
+            <div class="sc-glow"></div>
+            <div class="sc-top">
+              <div class="sc-ring">
+                <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="sc-complete-lbl">Session complete</div>
+              <div class="sc-score">87%</div>
+              <div class="sc-score-sub">Overall performance score</div>
+
+              <div class="sc-company">
+                <div class="sc-co-mark">S</div>
+                <div class="sc-co-info">
+                  <div class="sc-co-name">Stripe · Staff Engineer</div>
+                  <div class="sc-co-role">Technical · 54 min · May 21</div>
+                </div>
+              </div>
+
+              <div class="sc-stats">
+                <div class="sc-stat"><div class="sc-stat-val">9</div><div class="sc-stat-lbl">Questions</div></div>
+                <div class="sc-stat"><div class="sc-stat-val g">7</div><div class="sc-stat-lbl">Answered</div></div>
+                <div class="sc-stat"><div class="sc-stat-val">3</div><div class="sc-stat-lbl">Bookmarked</div></div>
+              </div>
+
+              <div class="sc-highlights" style="margin-top:14px">
+                <div class="sc-hl-hdr">Key strengths</div>
+                <div class="sc-hl-row">
+                  <div class="sc-hl-dot"></div>
+                  <div class="sc-hl-text">Strong STAR structure on leadership questions</div>
+                </div>
+                <div class="sc-hl-row">
+                  <div class="sc-hl-dot"></div>
+                  <div class="sc-hl-text">Good system design depth on the payment infra Q</div>
+                </div>
+                <div class="sc-hl-row">
+                  <div class="sc-hl-dot" style="background:var(--gold-lt)"></div>
+                  <div class="sc-hl-text" style="color:var(--text-2)">Improve: quantify outcomes more in behavioral Qs</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sc-actions">
+              <div class="sc-btn sc-btn-primary">View transcript</div>
+              <div class="sc-btn sc-btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                Share
+              </div>
+            </div>
+          </div>
+
+          <div class="home-bar" style="margin-top:0;margin-bottom:8px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PHONE 5: PREP TOPICS ── -->
+  <div class="phone-col">
+    <span class="screen-label">Prep</span>
+    <div class="phone-wrapper">
+      <div class="phone-scaler">
+        <div class="phone-frame">
+          <div class="di"></div>
+          <div class="sbar">
+            <span class="sbar-time">9:41</span>
+            <div class="sbar-icons">
+              <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="2" y="2" width="15" height="8" rx="2" fill="currentColor"/><path d="M23 4v4a2 2 0 0 0 0-4z" fill="currentColor" fill-opacity=".4"/></svg>
+            </div>
+          </div>
+
+          <div class="pt-body">
+            <div class="pt-hdr">
+              <div class="pt-eyebrow">Tonight's study plan</div>
+              <div class="pt-title">Prep for<br>Stripe</div>
+            </div>
+
+            <div class="pt-interview-bar">
+              <div class="pt-company-mark">S</div>
+              <div class="pt-interview-info">
+                <div class="pt-co">Stripe · Staff Eng</div>
+                <div class="pt-time">Tomorrow at 10:00 AM PST</div>
+              </div>
+              <div class="pt-countdown">18h left</div>
+            </div>
+
+            <div class="pt-topics-section">
+              <div class="pt-section-lbl">Recommended topics</div>
+
+              <div class="pt-topic-card priority">
+                <div class="pt-topic-icon" style="background:#0047AB">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </div>
+                <div class="pt-topic-info">
+                  <div class="pt-topic-name">System Design</div>
+                  <div class="pt-topic-meta">
+                    <span class="pt-topic-time">~45 min</span>
+                    <div class="pt-topic-progress"><div class="pt-prog-fill" style="width:30%"></div></div>
+                    <span class="pt-topic-time">30%</span>
+                  </div>
+                </div>
+                <div class="pt-topic-right">
+                  <div class="pt-start-btn cta">Continue</div>
+                </div>
+              </div>
+
+              <div class="pt-topic-card priority">
+                <div class="pt-topic-icon" style="background:#C9A227">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                </div>
+                <div class="pt-topic-info">
+                  <div class="pt-topic-name">Algorithms</div>
+                  <div class="pt-topic-meta">
+                    <span class="pt-topic-time">~30 min</span>
+                    <div class="pt-topic-progress"><div class="pt-prog-fill" style="width:65%"></div></div>
+                    <span class="pt-topic-time">65%</span>
+                  </div>
+                </div>
+                <div class="pt-topic-right">
+                  <div class="pt-start-btn">Review</div>
+                </div>
+              </div>
+
+              <div class="pt-topic-card">
+                <div class="pt-topic-icon" style="background:#8B5CF6">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <div class="pt-topic-info">
+                  <div class="pt-topic-name">Behavioral STAR</div>
+                  <div class="pt-topic-meta">
+                    <span class="pt-topic-time">~20 min</span>
+                    <div class="pt-topic-progress"><div class="pt-prog-fill" style="width:100%"></div></div>
+                    <span class="pt-topic-time">Done</span>
+                  </div>
+                </div>
+                <div class="pt-topic-right">
+                  <div class="pt-done-mark">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-topic-card">
+                <div class="pt-topic-icon" style="background:#EF4444">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="pt-topic-info">
+                  <div class="pt-topic-name">Leadership & Influence</div>
+                  <div class="pt-topic-meta">
+                    <span class="pt-topic-time">~25 min</span>
+                    <div class="pt-topic-progress"><div class="pt-prog-fill" style="width:0%"></div></div>
+                    <span class="pt-topic-time">0%</span>
+                  </div>
+                </div>
+                <div class="pt-topic-right">
+                  <div class="pt-start-btn">Start</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-bar">
+            <div class="tab-item">
+              <div class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+              <span class="tab-lbl">Home</span>
+            </div>
+            <div class="tab-item">
+              <div class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+              <span class="tab-lbl">Sessions</span>
+            </div>
+            <div class="tab-item">
+              <div class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></div>
+              <span class="tab-lbl">Live</span>
+            </div>
+            <div class="tab-item active">
+              <div class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+              <span class="tab-lbl">Prep</span>
+            </div>
+          </div>
+          <div class="home-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

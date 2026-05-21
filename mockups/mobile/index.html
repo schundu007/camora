@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sona Mobile — Design Concept</title>
+<style>
+:root {
+  --bg-app:      #06090D;
+  --bg-base:     #0B0F15;
+  --bg-surface:  #131B26;
+  --bg-elevated: #1A2334;
+  --border:      rgba(255,255,255,0.07);
+  --border-md:   rgba(255,255,255,0.11);
+  --navy:        #0047AB;
+  --navy-lt:     rgba(0,71,171,0.24);
+  --gold:        #C9A227;
+  --gold-lt:     #DDB93A;
+  --gold-dim:    rgba(201,162,39,0.16);
+  --gold-ring:   rgba(201,162,39,0.28);
+  --text-1:      #ECF0F6;
+  --text-2:      #7A8EA8;
+  --text-3:      #3E4F65;
+  --success:     #22C55E;
+  --danger:      #EF4444;
+  --blue-lt:     #7AABFF;
+  --SCALE:       0.665;
+  --PH:          393px;
+  --PV:          852px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg-app);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64px 48px 80px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Canvas header ── */
+.canvas-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 60px;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  background: var(--gold);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-mark svg { color: #0A0D12; }
+
+.brand-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-1);
+  letter-spacing: -0.4px;
+}
+
+.brand-by {
+  font-size: 14px;
+  color: var(--text-3);
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+.canvas-subtitle {
+  font-size: 13px;
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* ── Phone grid ── */
+.phones-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+.phone-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.screen-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Phone scaling wrapper */
+.phone-wrapper {
+  width: calc(var(--PH) * var(--SCALE));
+  height: calc(var(--PV) * var(--SCALE));
+  position: relative;
+  flex-shrink: 0;
+}
+
+.phone-scaler {
+  transform: scale(var(--SCALE));
+  transform-origin: top left;
+  width: var(--PH);
+  height: var(--PV);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* ── Phone frame ── */
+.phone-frame {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-base);
+  border-radius: 52px;
+  border: 2px solid rgba(255,255,255,0.13);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.7),
+    0 50px 100px rgba(0,0,0,0.85),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.di {
+  width: 126px;
+  height: 36px;
+  background: #000;
+  border-radius: 20px;
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+}
+
+.sbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 28px;
+  height: 62px;
+  position: relative;
+  z-index: 50;
+  flex-shrink: 0;
+}
+
+.sbar-time { font-size: 16px; font-weight: 700; color: var(--text-1); letter-spacing: -0.2px; }
+
+.sbar-icons { display: flex; align-items: center; gap: 5px; }
+.sbar-icons svg { color: var(--text-1); }
+
+/* ── Shared components ── */
+.card {
+  background: var(--bg-surface);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pill-gold { background: var(--gold-dim); color: var(--gold-lt); border: 1px solid var(--gold-ring); }
+.pill-navy { background: rgba(0,71,171,0.18); color: var(--blue-lt); border: 1px solid rgba(0,71,171,0.30); }
+.pill-success { background: rgba(34,197,94,0.12); color: var(--success); border: 1px solid rgba(34,197,94,0.20); }
+
+/* ── Tab bar ── */
+.tab-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  padding: 12px 8px 0;
+  background: rgba(11,15,21,0.94);
+  border-top: 1px solid var(--border-md);
+  flex-shrink: 0;
+  height: 82px;
+}
+
+.tab-item { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; }
+.tab-icon { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; }
+.tab-lbl { font-size: 10px; font-weight: 600; color: var(--text-3); }
+.tab-item.active .tab-lbl { color: var(--gold-lt); }
+.tab-item.active .tab-icon svg { color: var(--gold-lt); }
+.tab-item .tab-icon svg { color: var(--text-3); }
+
+.home-bar {
+  width: 134px;
+  height: 5px;
+  background: rgba(255,255,255,0.22);
+  border-radius: 3px;
+  margin: 0 auto;
+  flex-shrink: 0;
+  margin-top: auto;
+  margin-bottom: 8px;
+}
+
+/* ═══════════════════════════════════════
+   SCREEN 1 — HOME
+═══════════════════════════════════════ */
+
+.s1-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+.s1-greeting { padding: 4px 24px 0; }
+.s1-date { font-size: 12px; color: var(--text-3); font-weight: 600; letter-spacing: 0.04em; margin-bottom: 4px; }
+.s1-title { font-size: 27px; font-weight: 800; color: var(--text-1); letter-spacing: -0.6px; line-height: 1.18; }
+
+.s1-upcoming {
+  margin: 18px 20px 0;
+  background: var(--bg-surface);
+  border-radius: 20px;
+  border: 1px solid rgba(201,162,39,0.22);
+  overflow: hidden;
+}
+.s1-card-accent { height: 3px; background: linear-gradient(90deg, var(--gold), rgba(201,162,39,0)); }
+.s1-card-body { padding: 16px 20px 18px; }
+.s1-card-eye {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.s1-company { font-size: 19px; font-weight: 800; color: var(--text-1); letter-spacing: -0.4px; }
+.s1-role { font-size: 13px; color: var(--text-2); margin-top: 2px; margin-bottom: 14px; }
+.s1-when {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.s1-when-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.s1-when-item svg { color: var(--text-3); }
+.s1-when-item span { font-size: 13px; font-weight: 600; color: var(--text-2); }
+
+.s1-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin: 14px 20px 0;
+}
+.s1-stat {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 10px;
+  text-align: center;
+}
+.s1-stat-val { font-size: 22px; font-weight: 800; color: var(--text-1); letter-spacing: -0.5px; }
+.s1-stat-val.g { color: var(--gold-lt); }
+.s1-stat-lbl { font-size: 10px; color: var(--text-3); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-top: 3px; }
+
+.s1-recent { padding: 18px 20px 0; }
+.s1-section-lbl { font-size: 12px; font-weight: 700; color: var(--text-3); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 10px; }
+
+.s1-srow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  margin-bottom: 8px;
+}
+.s1-srow-icon {
+  width: 38px; height: 38px;
+  background: var(--bg-elevated);
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-2);
+}
+.s1-srow-info { flex: 1; min-width: 0; }
+.s1-srow-company { font-size: 14px; font-weight: 700; color: var(--text-1); }
+.s1-srow-meta { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+.s1-srow-score { font-size: 17px; font-weight: 800; color: var(--gold-lt); }
+
+/* ═══════════════════════════════════════
+   SCREEN 2 — LIVE SESSION
+═══════════════════════════════════════ */
+.s2-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+.s2-rec-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 40px;
+  background: rgba(239,68,68,0.09);
+  border-bottom: 1px solid rgba(239,68,68,0.18);
+  flex-shrink: 0;
+}
+.s2-rec-left { display: flex; align-items: center; gap: 8px; }
+.s2-rec-dot { width: 8px; height: 8px; background: var(--danger); border-radius: 50%; }
+.s2-rec-lbl { font-size: 13px; font-weight: 700; color: var(--danger); letter-spacing: 0.02em; }
+.s2-rec-time { font-size: 13px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+.s2-convo { flex: 1; padding: 18px 22px; overflow: hidden; display: flex; flex-direction: column; gap: 14px; }
+
+.s2-speaker { font-size: 10px; font-weight: 700; color: var(--text-3); letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 6px; }
+
+.s2-bubble {
+  background: var(--bg-elevated);
+  border-radius: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+}
+.s2-bubble-text { font-size: 15px; line-height: 1.55; color: var(--text-1); }
+
+.s2-sona-block {
+  background: linear-gradient(135deg, rgba(0,71,171,0.10), rgba(201,162,39,0.05));
+  border-radius: 20px;
+  border: 1px solid rgba(201,162,39,0.22);
+  overflow: hidden;
+}
+.s2-sona-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.s2-sona-mark {
+  width: 28px; height: 28px;
+  background: var(--gold);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+  color: #0A0D12;
+  flex-shrink: 0;
+}
+.s2-sona-name { font-size: 13px; font-weight: 700; color: var(--gold-lt); }
+.s2-sona-streaming {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-3);
+  font-weight: 600;
+}
+.s2-stream-dot { width: 5px; height: 5px; background: var(--gold); border-radius: 50%; }
+
+.s2-sona-answer { padding: 12px 16px 16px; }
+.s2-ans-text { font-size: 14px; line-height: 1.65; color: var(--text-1); }
+.s2-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 14px;
+  background: var(--gold);
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  border-radius: 1px;
+}
+
+.s2-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 14px 24px 16px;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-md);
+  flex-shrink: 0;
+}
+.s2-btn {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-md);
+}
+.s2-btn svg { color: var(--text-2); }
+.s2-btn.end { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.28); }
+.s2-btn.end svg { color: var(--danger); }
+
+/* ═══════════════════════════════════════
+   SCREEN 3 — ANSWER DETAIL
+═══════════════════════════════════════ */
+.s3-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+.s3-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.s3-back { display: flex; align-items: center; gap: 3px; color: var(--gold-lt); font-size: 16px; font-weight: 500; }
+.s3-back svg { color: var(--gold-lt); }
+.s3-nav-title { flex: 1; text-align: center; font-size: 16px; font-weight: 700; color: var(--text-1); }
+.s3-nav-acts { display: flex; gap: 14px; }
+.s3-nav-acts svg { color: var(--gold-lt); }
+
+.s3-content { flex: 1; padding: 18px 22px; overflow: hidden; display: flex; flex-direction: column; gap: 14px; }
+
+.s3-q-block {
+  background: var(--bg-elevated);
+  border-radius: 14px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--navy);
+  flex-shrink: 0;
+}
+.s3-q-eye { font-size: 10px; font-weight: 700; color: var(--blue-lt); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+.s3-q-text { font-size: 14px; font-weight: 600; color: var(--text-1); line-height: 1.4; }
+
+.s3-ans-block {
+  background: var(--bg-surface);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  padding: 18px;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.s3-ans-hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.s3-sona-sm {
+  width: 24px; height: 24px;
+  background: var(--gold);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 900;
+  color: #0A0D12;
+}
+.s3-sona-lbl { font-size: 13px; font-weight: 700; color: var(--gold-lt); }
+
+.s3-para { font-size: 14px; line-height: 1.65; color: var(--text-1); }
+.s3-kps { display: flex; flex-direction: column; gap: 10px; }
+.s3-kp { display: flex; gap: 10px; align-items: flex-start; }
+.s3-kp-num {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--navy-lt);
+  border: 1px solid rgba(0,71,171,0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--blue-lt);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.s3-kp-text { font-size: 14px; line-height: 1.5; color: var(--text-1); }
+
+.s3-actions {
+  display: flex;
+  gap: 10px;
+  padding: 14px 22px 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.s3-btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.s3-btn-primary { background: var(--gold); color: #0A0D12; }
+.s3-btn-secondary { background: var(--bg-elevated); color: var(--text-1); border: 1px solid var(--border-md); }
+
+/* ═══════════════════════════════════════
+   SCREEN 4 — SESSION HISTORY
+═══════════════════════════════════════ */
+.s4-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+.s4-hdr { padding: 0 24px; }
+.s4-title { font-size: 33px; font-weight: 900; color: var(--text-1); letter-spacing: -0.9px; }
+
+.s4-meta { display: flex; gap: 18px; padding: 8px 24px 0; }
+.s4-meta-item { display: flex; align-items: center; gap: 5px; }
+.s4-meta-val { font-size: 13px; font-weight: 700; color: var(--gold-lt); }
+.s4-meta-lbl { font-size: 12px; color: var(--text-3); }
+
+.s4-filters { display: flex; gap: 8px; padding: 14px 20px 0; }
+.s4-chip {
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--bg-surface);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+.s4-chip.active {
+  background: var(--gold-dim);
+  color: var(--gold-lt);
+  border-color: var(--gold-ring);
+}
+
+.s4-group { padding: 16px 20px 0; }
+.s4-month-lbl { font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 10px; }
+
+.s4-session {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 15px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-bottom: 8px;
+}
+.s4-mark {
+  width: 42px; height: 42px;
+  background: var(--bg-elevated);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+.s4-info { flex: 1; min-width: 0; }
+.s4-co { font-size: 14px; font-weight: 700; color: var(--text-1); }
+.s4-role { font-size: 12px; color: var(--text-2); margin-top: 1px; }
+.s4-sm { display: flex; gap: 10px; margin-top: 4px; }
+.s4-sm span { font-size: 11px; color: var(--text-3); font-weight: 500; }
+.s4-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.s4-score { font-size: 19px; font-weight: 900; color: var(--gold-lt); letter-spacing: -0.3px; }
+.s4-score-lbl { font-size: 10px; color: var(--text-3); font-weight: 600; }
+
+/* ═══════════════════════════════════════
+   SCREEN 5 — SETTINGS
+═══════════════════════════════════════ */
+.s5-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+.s5-hdr { padding: 0 24px; }
+.s5-title { font-size: 33px; font-weight: 900; color: var(--text-1); letter-spacing: -0.9px; }
+
+.s5-profile {
+  margin: 16px 20px 0;
+  background: var(--bg-surface);
+  border-radius: 20px;
+  border: 1px solid var(--border-md);
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.s5-avatar {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0047AB, #C9A227);
+  border: 2.5px solid var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  flex-shrink: 0;
+}
+.s5-user { flex: 1; }
+.s5-user-name { font-size: 16px; font-weight: 700; color: var(--text-1); }
+.s5-user-email { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.s5-badge {
+  padding: 4px 10px;
+  background: var(--gold-dim);
+  color: var(--gold-lt);
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--gold-ring);
+}
+
+.s5-section { margin: 16px 20px 0; }
+.s5-sec-lbl { font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; padding: 0 2px; }
+.s5-group { background: var(--bg-surface); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; }
+
+.s5-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.s5-row:last-child { border-bottom: none; }
+.s5-row-ico {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.s5-row-ico svg { color: #fff; }
+.s5-row-lbl { font-size: 15px; font-weight: 500; color: var(--text-1); flex: 1; }
+.s5-row-val { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--text-2); }
+.s5-row-val svg { color: var(--text-3); }
+
+.s5-toggle {
+  width: 48px; height: 28px;
+  background: var(--success);
+  border-radius: 14px;
+  position: relative;
+}
+.s5-toggle::after {
+  content: '';
+  position: absolute;
+  width: 22px; height: 22px;
+  background: #fff;
+  border-radius: 50%;
+  top: 3px; right: 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+}
+
+.s5-row.danger .s5-row-lbl { color: var(--danger); }
+
+.s5-danger-ico { background: rgba(239,68,68,0.18) !important; }
+.s5-danger-ico svg { color: var(--danger) !important; }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="canvas-header">
+  <div class="brand-row">
+    <div class="brand-mark">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+        <line x1="8" y1="22" x2="16" y2="22"/>
+      </svg>
+    </div>
+    <span class="brand-name">Sona</span>
+    <span class="brand-by">by Camora</span>
+  </div>
+  <span class="canvas-subtitle">AI Interview Companion · iOS Mobile · Design Concept</span>
+</div>
+
+<!-- ── 5 phones ── -->
+<div class="phones-row">
+
+  <!-- ── PHONE 1: HOME ── -->
+  <div class="phone-col">
+    <span class="screen-label">Home</span>
+    <div class="phone-wrapper">
+      <div class="phone-scaler">
+        <div class="phone-frame">
+          <div class="di"></div>
+          <div class="sbar">
+            <span class="sbar-time">9:41</span>
+            <div class="sbar-icons">
+              <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 2.4C5.6 2.4 3.4 3.4 1.8 5L0 3.2C2.2 1.2 5 0 8 0s5.8 1.2 8 3.2L14.2 5C12.6 3.4 10.4 2.4 8 2.4z"/><path d="M8 6.4c-1.6 0-3 .7-4 1.7L2.4 6.5C3.8 5 5.8 4 8 4s4.2 1 5.6 2.5L12 8.1c-1-1-2.4-1.7-4-1.7z"/><circle cx="8" cy="11" r="1.5"/></svg>
+              <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="3" width="2" height="9" rx="1"/><rect x="4" y="1.5" width="2" height="10.5" rx="1"/><rect x="8" y="0" width="2" height="12" rx="1"/><rect x="12" y="0" width="2" height="12" rx="1" opacity=".3"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/><path d="M23 4v4a2 2 0 0 0 0-4z" fill="currentColor" fill-opacity=".4"/></svg>
+            </div>
+          </div>
+
+          <div class="s1-body">
+            <div class="s1-greeting">
+              <div class="s1-date">WED, MAY 20</div>
+              <div class="s1-title">Ready for<br>tomorrow, Chundu.</div>
+            </div>
+
+            <div class="s1-upcoming">
+              <div class="s1-card-accent"></div>
+              <div class="s1-card-body">
+                <div class="s1-card-eye">
+                  <span class="pill pill-gold">Upcoming</span>
+                  <span class="pill pill-navy">Technical</span>
+                </div>
+                <div class="s1-company">Stripe</div>
+                <div class="s1-role">Staff Software Engineer — Infra</div>
+                <div class="s1-when">
+                  <div class="s1-when-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span>Tomorrow</span>
+                  </div>
+                  <div class="s1-when-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+                    <span>10:00 AM PST</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="s1-stats">
+              <div class="s1-stat">
+                <div class="s1-stat-val">3</div>
+                <div class="s1-stat-lbl">This week</div>
+              </div>
+              <div class="s1-stat">
+                <div class="s1-stat-val g">87%</div>
+                <div class="s1-stat-lbl">Avg score</div>
+              </div>
+              <div class="s1-stat">
+                <div class="s1-stat-val">24</div>
+                <div class="s1-stat-lbl">Topics</div>
+              </div>
+            </div>
+
+            <div class="s1-recent">
+              <div class="s1-section-lbl">Recent sessions</div>
+              <div class="s1-srow">
+                <div class="s1-srow-icon">M</div>
+                <div class="s1-srow-info">
+                  <div class="s1-srow-company">Meta</div>
+                  <div class="s1-srow-meta">Yesterday · 45 min · SWE</div>
+                </div>
+                <div class="s1-srow-score">91%</div>
+              </div>
+              <div class="s1-srow">
+                <div class="s1-srow-icon">G</div>
+                <div class="s1-srow-info">
+                  <div class="s1-srow-company">Google</div>
+                  <div class="s1-srow-meta">2 days ago · 38 min · PM</div>
+                </div>
+                <div class="s1-srow-score">83%</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-bar">
+            <div class="tab-item active">
+              <div class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+              <span class="tab-lbl">Home</span>
+            </div>
+            <div class="tab-item">
+              <div class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+              <span class="tab-lbl">Sessions</span>
+            </div>
+            <div class="tab-item">
+              <div class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div>
+              <span class="tab-lbl">Live</span>
+            </div>
+            <div class="tab-item">
+              <div class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></div>
+              <span class="tab-lbl">Profile</span>
+            </div>
+          </div>
+          <div class="home-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PHONE 2: LIVE SESSION ── -->
+  <div class="phone-col">
+    <span class="screen-label">Live Session</span>
+    <div class="phone-wrapper">
+      <div class="phone-scaler">
+        <div class="phone-frame">
+          <div class="di"></div>
+          <div class="sbar">
+            <span class="sbar-time">9:41</span>
+            <div class="sbar-icons">
+              <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 2.4C5.6 2.4 3.4 3.4 1.8 5L0 3.2C2.2 1.2 5 0 8 0s5.8 1.2 8 3.2L14.2 5C12.6 3.4 10.4 2.4 8 2.4z"/><path d="M8 6.4c-1.6 0-3 .7-4 1.7L2.4 6.5C3.8 5 5.8 4 8 4s4.2 1 5.6 2.5L12 8.1c-1-1-2.4-1.7-4-1.7z"/><circle cx="8" cy="11" r="1.5"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/><path d="M23 4v4a2 2 0 0 0 0-4z" fill="currentColor" fill-opacity=".4"/></svg>
+            </div>
+          </div>
+
+          <div class="s2-body">
+            <div class="s2-rec-bar">
+              <div class="s2-rec-left">
+                <div class="s2-rec-dot"></div>
+                <span class="s2-rec-lbl">Recording</span>
+              </div>
+              <span class="s2-rec-time">12:43</span>
+            </div>
+
+            <div class="s2-convo">
+              <div>
+                <div class="s2-speaker">Interviewer</div>
+                <div class="s2-bubble">
+                  <div class="s2-bubble-text">Tell me about a time you had to make a technical decision with incomplete information. How did you approach it?</div>
+                </div>
+              </div>
+
+              <div class="s2-sona-block">
+                <div class="s2-sona-hdr">
+                  <div class="s2-sona-mark">S</div>
+                  <span class="s2-sona-name">Sona</span>
+                  <span class="s2-sona-streaming">
+                    <span class="s2-stream-dot"></span>
+                    Answering
+                  </span>
+                </div>
+                <div class="s2-sona-answer">
+                  <div class="s2-ans-text">At my last role, we needed to choose between two database architectures for a high-scale feature — with only 2 days before the deadline. I ran a quick risk matrix across latency, cost, and rollback complexity, then proposed a time-boxed spike to validate our top assumption. We shipped on time and the decision held at 10× traffic.<span class="s2-cursor"></span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="s2-controls">
+              <div class="s2-btn">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V5a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+              </div>
+              <div class="s2-btn">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="s2-btn end">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07C9.44 17.29 7.76 15.57 6.18 13.5a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 5.11 3h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L9.09 10.91"/><line x1="23" y1="1" x2="1" y2="23"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="home-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PHONE 3: ANSWER DETAIL ── -->
+  <div class="phone-col">
+    <span class="screen-label">Answer Detail</span>
+    <div class="phone-wrapper">
+      <div class="phone-scaler">
+        <div class="phone-frame">
+          <div class="di"></div>
+          <div class="sbar">
+            <span class="sbar-time">9:41</span>
+            <div class="sbar-icons">
+              <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/><path d="M23 4v4a2 2 0 0 0 0-4z" fill="currentColor" fill-opacity=".4"/></svg>
+            </div>
+          </div>
+
+          <div class="s3-body">
+            <div class="s3-nav">
+              <div class="s3-back">
+                <svg width="10" height="18" viewBox="0 0 10 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1L1 9l8 8"/></svg>
+                Back
+              </div>
+              <div class="s3-nav-title">Sona's Answer</div>
+              <div class="s3-nav-acts">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              </div>
+            </div>
+
+            <div class="s3-content">
+              <div class="s3-q-block">
+                <div class="s3-q-eye">Question asked</div>
+                <div class="s3-q-text">Tell me about a time you made a technical decision with incomplete information.</div>
+              </div>
+
+              <div class="s3-ans-block">
+                <div class="s3-ans-hdr">
+                  <div class="s3-sona-sm">S</div>
+                  <span class="s3-sona-lbl">Sona's answer</span>
+                  <span class="pill pill-success" style="margin-left:auto">Reviewed</span>
+                </div>
+                <div class="s3-para">Use the STAR method. Ground your answer in a real constraint — time pressure, missing data, or team disagreement — then show your reasoning process clearly.</div>
+                <div class="s3-kps">
+                  <div class="s3-kp">
+                    <div class="s3-kp-num">1</div>
+                    <div class="s3-kp-text"><strong>State the stakes</strong> — what would break if you chose wrong?</div>
+                  </div>
+                  <div class="s3-kp">
+                    <div class="s3-kp-num">2</div>
+                    <div class="s3-kp-text"><strong>Show the reasoning</strong> — risk matrix, spike, lightweight prototype.</div>
+                  </div>
+                  <div class="s3-kp">
+                    <div class="s3-kp-num">3</div>
+                    <div class="s3-kp-text"><strong>Quantify the result</strong> — latency, scale, team trust, time saved.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="s3-actions">
+              <button class="s3-btn s3-btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy answer
+              </button>
+              <button class="s3-btn s3-btn-secondary">Next →</button>
+            </div>
+          </div>
+
+          <div class="home-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PHONE 4: SESSION HISTORY ── -->
+  <div class="phone-col">
+    <span class="screen-label">Sessions</span>
+    <div class="phone-wrapper">
+      <div class="phone-scaler">
+        <div class="phone-frame">
+          <div class="di"></div>
+          <div class="sbar">
+            <span class="sbar-time">9:41</span>
+            <div class="sbar-icons">
+              <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="2" y="2" width="13" height="8" rx="2" fill="currentColor"/><path d="M23 4v4a2 2 0 0 0 0-4z" fill="currentColor" fill-opacity=".4"/></svg>
+            </div>
+          </div>
+
+          <div class="s4-body">
+            <div class="s4-hdr">
+              <div class="s4-title">Sessions</div>
+            </div>
+            <div class="s4-meta">
+              <div class="s4-meta-item"><span class="s4-meta-val">12</span><span class="s4-meta-lbl">total</span></div>
+              <div class="s4-meta-item"><span class="s4-meta-val">8h 24m</span><span class="s4-meta-lbl">total time</span></div>
+              <div class="s4-meta-item"><span class="s4-meta-val">87%</span><span class="s4-meta-lbl">avg score</span></div>
+            </div>
+            <div class="s4-filters">
+              <div class="s4-chip active">All</div>
+              <div class="s4-chip">Technical</div>
+              <div class="s4-chip">Behavioral</div>
+              <div class="s4-chip">Coding</div>
+            </div>
+            <div class="s4-group">
+              <div class="s4-month-lbl">May 2026</div>
+              <div class="s4-session">
+                <div class="s4-mark">S</div>
+                <div class="s4-info">
+                  <div class="s4-co">Stripe</div>
+                  <div class="s4-role">Staff Eng · Technical</div>
+                  <div class="s4-sm"><span>May 21</span><span>·</span><span>54 min</span><span>·</span><span>9 Qs</span></div>
+                </div>
+                <div class="s4-right">
+                  <div class="s4-score">91%</div>
+                  <div class="s4-score-lbl">score</div>
+                </div>
+              </div>
+              <div class="s4-session">
+                <div class="s4-mark">M</div>
+                <div class="s4-info">
+                  <div class="s4-co">Meta</div>
+                  <div class="s4-role">SWE L5 · Technical</div>
+                  <div class="s4-sm"><span>May 19</span><span>·</span><span>45 min</span><span>·</span><span>7 Qs</span></div>
+                </div>
+                <div class="s4-right">
+                  <div class="s4-score">88%</div>
+                  <div class="s4-score-lbl">score</div>
+                </div>
+              </div>
+              <div class="s4-session">
+                <div class="s4-mark">G</div>
+                <div class="s4-info">
+                  <div class="s4-co">Google</div>
+                  <div class="s4-role">PM L6 · Behavioral</div>
+                  <div class="s4-sm"><span>May 18</span><span>·</span><span>38 min</span><span>·</span><span>6 Qs</span></div>
+                </div>
+                <div class="s4-right">
+                  <div class="s4-score">83%</div>
+                  <div class="s4-score-lbl">score</div>
+                </div>
+              </div>
+              <div class="s4-session">
+                <div class="s4-mark">N</div>
+                <div class="s4-info">
+                  <div class="s4-co">NVIDIA</div>
+                  <div class="s4-role">Staff Eng · Systems</div>
+                  <div class="s4-sm"><span>May 16</span><span>·</span><span>61 min</span><span>·</span><span>11 Qs</span></div>
+                </div>
+                <div class="s4-right">
+                  <div class="s4-score">79%</div>
+                  <div class="s4-score-lbl">score</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-bar">
+            <div class="tab-item">
+              <div class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+              <span class="tab-lbl">Home</span>
+            </div>
+            <div class="tab-item active">
+              <div class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+              <span class="tab-lbl">Sessions</span>
+            </div>
+            <div class="tab-item">
+              <div class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></div>
+              <span class="tab-lbl">Live</span>
+            </div>
+            <div class="tab-item">
+              <div class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></div>
+              <span class="tab-lbl">Profile</span>
+            </div>
+          </div>
+          <div class="home-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PHONE 5: SETTINGS ── -->
+  <div class="phone-col">
+    <span class="screen-label">Settings</span>
+    <div class="phone-wrapper">
+      <div class="phone-scaler">
+        <div class="phone-frame">
+          <div class="di"></div>
+          <div class="sbar">
+            <span class="sbar-time">9:41</span>
+            <div class="sbar-icons">
+              <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="2" y="2" width="18" height="8" rx="2" fill="currentColor"/><path d="M23 4v4a2 2 0 0 0 0-4z" fill="currentColor" fill-opacity=".4"/></svg>
+            </div>
+          </div>
+
+          <div class="s5-body">
+            <div class="s5-hdr">
+              <div class="s5-title">Settings</div>
+            </div>
+
+            <div class="s5-profile">
+              <div class="s5-avatar">C</div>
+              <div class="s5-user">
+                <div class="s5-user-name">Chundu B.</div>
+                <div class="s5-user-email">chundubabu@gmail.com</div>
+              </div>
+              <div class="s5-badge">Pro</div>
+            </div>
+
+            <div class="s5-section">
+              <div class="s5-sec-lbl">Voice & Mic</div>
+              <div class="s5-group">
+                <div class="s5-row">
+                  <div class="s5-row-ico" style="background:#0047AB">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                  </div>
+                  <span class="s5-row-lbl">Microphone</span>
+                  <div class="s5-row-val">
+                    Built-in
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                </div>
+                <div class="s5-row">
+                  <div class="s5-row-ico" style="background:#6366F1">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  </div>
+                  <span class="s5-row-lbl">Sensitivity</span>
+                  <div class="s5-row-val">
+                    Medium
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                </div>
+                <div class="s5-row">
+                  <div class="s5-row-ico" style="background:#22C55E">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  </div>
+                  <span class="s5-row-lbl">Auto-detect questions</span>
+                  <div class="s5-toggle"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="s5-section">
+              <div class="s5-sec-lbl">AI Model</div>
+              <div class="s5-group">
+                <div class="s5-row">
+                  <div class="s5-row-ico" style="background:#C9A227">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  </div>
+                  <span class="s5-row-lbl">Model</span>
+                  <div class="s5-row-val">
+                    Claude Sonnet
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                </div>
+                <div class="s5-row">
+                  <div class="s5-row-ico" style="background:#8B5CF6">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <span class="s5-row-lbl">Response speed</span>
+                  <div class="s5-row-val">
+                    Fast
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="s5-section">
+              <div class="s5-sec-lbl">Account</div>
+              <div class="s5-group">
+                <div class="s5-row">
+                  <div class="s5-row-ico" style="background:#374151">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                  <span class="s5-row-lbl">Plan</span>
+                  <div class="s5-row-val">
+                    Pro Monthly
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                </div>
+                <div class="s5-row danger">
+                  <div class="s5-row-ico s5-danger-ico">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                  </div>
+                  <span class="s5-row-lbl">Sign out</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="home-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.phones-row -->
+
+</body>
+</html>

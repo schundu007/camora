@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSessionStore } from '@/stores/session-store';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { LumoraSettings } from './LumoraSettings';
@@ -56,7 +56,7 @@ interface LumoraTopBarProps {
 }
 
 export const LumoraTopBar = ({ onTranscription, inline = false }: LumoraTopBarProps) => {
-  const { status } = useInterviewStore();
+  const { status } = useSessionStore();
   const [showSettings, setShowSettings] = useState(false);
 
   if (inline) {

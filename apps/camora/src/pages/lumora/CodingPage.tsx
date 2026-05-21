@@ -3,12 +3,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CodingLayout } from '../../components/lumora/coding/CodingLayout';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
 import { PaywallGate } from '../../components/shared/ui/PaywallGate';
-import { useStreamingInterview } from '../../hooks/useStreamingInterview';
+import { useStreamingSession } from '../../hooks/useStreamingSession';
 
 const CodingPageContent = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { handleCodingSubmit, isStreaming } = useStreamingInterview();
+  const { handleCodingSubmit, isStreaming } = useStreamingSession();
 
   const initialProblem = searchParams.get('problem') || '';
   const initialUrl = searchParams.get('url') || '';

@@ -72,7 +72,7 @@ function LiveSessionPreviewImpl() {
           style={{ background: 'rgba(255,255,255,0.04)' }}
         >
           <p className="text-[9px] font-mono text-white/35 mb-1.5 uppercase tracking-[0.12em]">
-            Interviewer
+            Question
           </p>
           <p className="text-[12.5px] text-white/80 leading-relaxed">
             Design a rate limiter handling 10M requests per day across multiple data centers.

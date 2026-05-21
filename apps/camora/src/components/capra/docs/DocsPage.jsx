@@ -630,7 +630,7 @@ export default function DocsPage({ onBack }) {
       case 'coding': return { title: 'Data Structures & Algorithms', color: 'var(--text-primary)' };
       case 'system-design': return { title: 'System Design', color: 'var(--text-primary)' };
       case 'low-level': return { title: 'Low Level Design', color: 'var(--text-primary)' };
-      case 'behavioral': return { title: 'Behavioral Interviews', color: 'var(--text-primary)' };
+      case 'behavioral': return { title: 'Behavioral Questions', color: 'var(--text-primary)' };
       case 'microservices': return { title: 'Microservices Patterns', color: 'var(--text-primary)' };
       case 'databases': return { title: 'Databases & SQL', color: 'var(--text-primary)' };
       case 'projects': return { title: 'Projects', color: 'var(--text-primary)' };
@@ -1108,15 +1108,15 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Interview Resources */}
+                      {/* Learning Resources */}
                       <div className="mb-8">
                         <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Interview Resources</span>
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Learning Resources</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
-                            { href: '/capra/prepare?page=coding', illustration: 'coding', icon: 'list', hexColor: 'navy',    title: 'Interview Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
+                            { href: '/capra/prepare?page=coding', illustration: 'coding', icon: 'list', hexColor: 'navy',    title: 'Study Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
                             { href: '/handbook', icon: 'code', illustration: 'low-level',                    hexColor: 'navy-dk', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
                             { href: '/capra/practice', icon: 'behavioral', illustration: 'behavioral',       hexColor: 'gold',    title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
                           ].map(resource => (
@@ -1151,7 +1151,7 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Interview Cheatsheet — Before / During / After */}
+                      {/* Study Cheatsheet — Before / During / After */}
                       <div className="mb-8">
                         <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
@@ -1406,7 +1406,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="users" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Behavioral Interviews</h2>
+                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Behavioral Questions</h2>
                             <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
                               Craft compelling stories using the STAR method. Prepare answers for leadership, conflict resolution, and teamwork questions — the human side that determines culture fit at every company from startups to FAANG.
                             </p>
@@ -2212,7 +2212,7 @@ export default function DocsPage({ onBack }) {
                   {/* Gradient Divider */}
                   <div className="h-px bg-[var(--border)] mb-6" />
 
-                  {/* Interview Framework */}
+                  {/* Session Framework */}
                   <div className="rounded overflow-hidden p-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                     <div className="mb-4">
                       <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Framework</span>
@@ -2379,7 +2379,7 @@ export default function DocsPage({ onBack }) {
                           <div className="flex items-center justify-between mb-4">
                             <div>
                               <span className="landing-mono text-[10px] text-[var(--accent)] tracking-widest uppercase">Your Progress</span>
-                              <h2 className="landing-display font-bold text-lg tracking-tight text-[var(--text-primary)]">Interview Readiness</h2>
+                              <h2 className="landing-display font-bold text-lg tracking-tight text-[var(--text-primary)]">Readiness</h2>
                             </div>
                             <div className="text-right">
                               <span className="landing-mono text-2xl font-black text-[var(--accent)]">{readinessPercent}%</span>
@@ -2567,11 +2567,11 @@ export default function DocsPage({ onBack }) {
                   {/* Gradient Divider */}
                   <div className="h-px bg-[var(--border)] mb-6" />
 
-                  {/* Interview Day Playbook — Modern data-point presentation */}
+                  {/* Session Day Playbook — Modern data-point presentation */}
                   <div className="mb-6">
                     <SectionHero
                       eyebrow="Game Day"
-                      title="Interview Day Playbook"
+                      title="Session Day Playbook"
                       className="mb-4"
                     />
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSessionStore } from '@/stores/session-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme as useGlobalTheme } from '@/hooks/useTheme';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
@@ -294,7 +294,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Screen Recording permission status — checked once on mount (desktop only).
   // 'granted' | 'denied' | 'restricted' | 'not-determined' | null (non-desktop)
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
-  const isStealthActive = useInterviewStore(s => s.isStealthActive);
+  const isStealthActive = useSessionStore(s => s.isStealthActive);
   // Extracted code from the last image snap — drives quick-action chips.
   const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
   // Analysis tabs — Explain / Issues / Deep Dive generated from the active solution code
@@ -335,8 +335,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Store
-  const { streamText, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache } = useInterviewStore();
-  const lastFromCache = useInterviewStore(s => s.lastFromCache);
+  const { streamText, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache } = useSessionStore();
+  const lastFromCache = useSessionStore(s => s.lastFromCache);
 
   // Stable refs for language + problem text — used by resolveLanguage so
   // it always reads the latest value without being in any deps array.
@@ -469,7 +469,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setAnalysisCache({});
     setAnalysisTab('code');
     autoAnalysisFiredForRef.current = -1;
-    useInterviewStore.getState().setLiveSolveContext(null);
+    useSessionStore.getState().setLiveSolveContext(null);
     onNewProblemCallback?.();
   }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, language, onNewProblemCallback]);
 
@@ -840,7 +840,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     if (!solCode && sol.explanations?.length) {
       solCode = sol.explanations.map((ex: any) => ex.code).filter(Boolean).join('\n');
     }
-    useInterviewStore.getState().setLiveSolveContext({
+    useSessionStore.getState().setLiveSolveContext({
       surface: 'coding',
       problem: problemText.trim().slice(0, 4000),
       approach: (sol.approach || sol.name || '').slice(0, 800),

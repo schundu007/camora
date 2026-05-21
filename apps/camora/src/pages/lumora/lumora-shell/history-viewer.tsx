@@ -3,7 +3,7 @@
    user clicks a past question on Home; the persisted ParsedBlock array is
    piped back through AnswerBlocks so coding/design/behavioral entries render
    with the same fidelity they had when first streamed. */
-import { AnswerBlocks } from '../../../components/lumora/interview/AnswerBlocks';
+import { AnswerBlocks } from '../../../components/lumora/session/AnswerBlocks';
 import { DESIGN_BLOCK_TYPES, CODING_BLOCK_TYPES } from '../../../lib/constants';
 import type { ParsedBlock } from '../../../types';
 

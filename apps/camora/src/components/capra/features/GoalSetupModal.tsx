@@ -32,7 +32,7 @@ export default function GoalSetupModal({ isOpen, onClose, onSetup }: GoalSetupMo
     setError(null);
 
     try {
-      const res = await fetch(`${API_URL}/api/interview/setup`, {
+      const res = await fetch(`${API_URL}/api/goal/setup`, {
         credentials: 'include',
         method: 'POST',
         headers: {
@@ -92,11 +92,11 @@ export default function GoalSetupModal({ isOpen, onClose, onSetup }: GoalSetupMo
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           {/* Date */}
           <div>
-            <label htmlFor="interview-date" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+            <label htmlFor="goal-date" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
               Goal Date
             </label>
             <input
-              id="interview-date"
+              id="goal-date"
               type="date"
               min={today}
               value={goalDate}

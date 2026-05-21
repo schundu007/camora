@@ -39,7 +39,7 @@ import teamsRouter from './routes/teams.js';
 import topicReadsRouter from './routes/topicReads.js';
 import topicCommentsRouter from './routes/topicComments.js';
 import referralRouter from './routes/referral.js';
-import interviewCountdownRouter from './routes/interviewCountdown.js';
+import goalCountdownRouter from './routes/goalCountdown.js';
 import gamificationRouter from './routes/gamification.js';
 import scoreCardsRouter from './routes/scoreCards.js';
 import challengeRouter from './routes/challenge.js';
@@ -1163,7 +1163,7 @@ app.use('/api/topic-comments', apiLimiter, topicCommentsRouter);
 app.use('/api/referral', apiLimiter, referralRouter);
 
 // Interview countdown routes (all require auth)
-app.use('/api/interview', authenticate, apiLimiter, interviewCountdownRouter);
+app.use('/api/goal', authenticate, apiLimiter, goalCountdownRouter);
 
 // Gamification routes (XP, badges, leaderboard — uses jwtAuth internally)
 app.use('/api/gamification', apiLimiter, gamificationRouter);

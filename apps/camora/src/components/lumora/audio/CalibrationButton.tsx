@@ -1,5 +1,5 @@
 import { useCalibration } from './hooks/useCalibration';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSessionStore } from '@/stores/session-store';
 
 interface CalibrationButtonProps {
   deviceId?: string | null;
@@ -9,7 +9,7 @@ interface CalibrationButtonProps {
 
 export const CalibrationButton = ({ deviceId, disabled, variant = 'dark' }: CalibrationButtonProps) => {
   const isLight = variant === 'light';
-  const { setThreshold, setStatus, vadThreshold } = useInterviewStore();
+  const { setThreshold, setStatus, vadThreshold } = useSessionStore();
 
   const { isCalibrating, error, calibrate } = useCalibration({
     deviceId,

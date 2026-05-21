@@ -1138,7 +1138,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
         },
         body: JSON.stringify({
           sections: generated,
-          companyName: activeCompany || 'Interview',
+          companyName: activeCompany || 'Company',
         }),
       });
 
@@ -1173,7 +1173,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
         },
         body: JSON.stringify({
           sections: generated,
-          companyName: activeCompany || 'Interview',
+          companyName: activeCompany || 'Company',
         }),
       });
 

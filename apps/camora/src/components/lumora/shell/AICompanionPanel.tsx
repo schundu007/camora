@@ -10,7 +10,7 @@ import { isQuestion } from '@/lib/questionDetector';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
 import { Citations } from '@/components/lumora/Citations';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSessionStore } from '@/stores/session-store';
 import { sonaRegistry } from '@/lib/sona-registry';
 import type { Citation } from '@/types';
 
@@ -163,7 +163,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // has no idea which problem was solved. Cleared on New Problem /
   // Reset, so once the user moves on, Sona stops answering against
   // stale context.
-  const liveSolveContext = useInterviewStore(s => s.liveSolveContext);
+  const liveSolveContext = useSessionStore(s => s.liveSolveContext);
   const systemContext = useMemo(() => {
     if (!liveSolveContext) return baseSystemContext;
     const surface = liveSolveContext.surface === 'design' ? 'system-design' : 'coding';
@@ -192,17 +192,17 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // Pull the global Lumora history store. Behavioral Q&A pairs are
   // pushed here so they show up in /lumora/sessions alongside Coding
   // and Design entries — without this, the Sessions tab only saw the
-  // InterviewPage history and Behavioral chats vanished on tab close.
-  const addHistoryEntry = useInterviewStore(s => s.addHistoryEntry);
+  // LivePage history and Behavioral chats vanished on tab close.
+  const addHistoryEntry = useSessionStore(s => s.addHistoryEntry);
 
   // Voice-filter state — surfaces directly in the input area so users can
   // tell whether their own voice is being transcribed. Behavioral has no
   // LumoraTopBar (only coding/design tabs do), so this is the ONLY place
   // the user can see/toggle the filter from inside this view.
-  const voiceEnrolled = useInterviewStore(s => s.voiceEnrolled);
-  const voiceFilterEnabled = useInterviewStore(s => s.voiceFilterEnabled);
-  const voiceEnrolledAt = useInterviewStore(s => s.voiceEnrolledAt);
-  const ensureVoiceEnrolledAt = useInterviewStore(s => s.ensureVoiceEnrolledAt);
+  const voiceEnrolled = useSessionStore(s => s.voiceEnrolled);
+  const voiceFilterEnabled = useSessionStore(s => s.voiceFilterEnabled);
+  const voiceEnrolledAt = useSessionStore(s => s.voiceEnrolledAt);
+  const ensureVoiceEnrolledAt = useSessionStore(s => s.ensureVoiceEnrolledAt);
 
   // Voice-enroll banner dismissal — persisted in localStorage so a
   // user who has seen and dismissed the prompt doesn't get re-nagged
@@ -367,7 +367,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // Declared here (before the useEffect below) so the dependency array
   // can reference it without a TDZ — const/let in function scope is hoisted
   // as uninitialized, so any reference before the declaration line crashes.
-  const setSonaActions = useInterviewStore(s => s.setSonaActions);
+  const setSonaActions = useSessionStore(s => s.setSonaActions);
 
   // Ref holds the latest unstable callbacks so the useEffect below can
   // read fresh values without listing them as deps. LumoraShellPage passes
@@ -435,8 +435,8 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     return typeof window === 'undefined' ? 560 : Math.min(560, Math.max(360, window.innerHeight - 96));
   });
   const [isResizing, setIsResizing] = useState<false | 'w' | 'h' | 'wh' | 'e' | 's' | 'es'>(false);
-  const answerMode = useInterviewStore(s => s.answerMode);
-  const setAnswerMode = useInterviewStore(s => s.setAnswerMode);
+  const answerMode = useSessionStore(s => s.answerMode);
+  const setAnswerMode = useSessionStore(s => s.setAnswerMode);
   const [position, setPosition] = useState(() => savedPrefs ? { x: savedPrefs.x, y: savedPrefs.y } : { x: 0, y: 0 });
 
   // Debounced write-through of size + position
@@ -762,7 +762,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
 
   // When embedded in /lumora/behavioral, listen for interviewer-audio
   // transcriptions forwarded from LumoraShellPage. The shell's
-  // useStreamingInterview path renders into InterviewPage which is
+  // useStreamingSession path renders into LivePage which is
   // hidden behind this embedded panel — so the answer would otherwise
   // disappear into nothing.
   useEffect(() => {

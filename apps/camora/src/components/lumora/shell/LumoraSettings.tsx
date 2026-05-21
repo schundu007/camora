@@ -3,7 +3,7 @@ import { MicrophoneSelector } from '@/components/lumora/audio/MicrophoneSelector
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { CalibrationButton } from '@/components/lumora/audio/CalibrationButton';
 import { useAudioDevices } from '@/components/lumora/audio/hooks/useAudioDevices';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSessionStore } from '@/stores/session-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { profileAPI } from '@/lib/api-client';
 
@@ -24,7 +24,7 @@ const PLATFORMS = [
 
 export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
   const [platform, setPlatform] = useState('teams');
-  const { voiceMode, setVoiceMode, setAutoEnrollPending, setVoiceFilterEnabled, preferredModel, setPreferredModel } = useInterviewStore();
+  const { voiceMode, setVoiceMode, setAutoEnrollPending, setVoiceFilterEnabled, preferredModel, setPreferredModel } = useSessionStore();
   const { selectedDeviceId } = useAudioDevices();
   const { token } = useAuth();
 
@@ -193,9 +193,9 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
 
                 {/* Mode 2: Record Interviewer */}
                 <VoiceModeCard
-                  active={voiceMode === 'record-interviewer'}
+                  active={voiceMode === 'record-speaker'}
                   onClick={() => {
-                    setVoiceMode('record-interviewer');
+                    setVoiceMode('record-speaker');
                     setAutoEnrollPending(true);
                     setVoiceFilterEnabled(true);
                   }}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSessionStore } from '@/stores/session-store';
 import { useAudioDevices } from './hooks/useAudioDevices';
 import { useAuth } from '@/contexts/AuthContext';
 import { speakerAPI } from '@/lib/api-client';
@@ -27,7 +27,7 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
     setVoiceFilterEnabled,
     setIsEnrolling,
     setStatus,
-  } = useInterviewStore();
+  } = useSessionStore();
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingProgress, setRecordingProgress] = useState(0);
@@ -56,7 +56,7 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
       setVoiceFilterEnabled(true);
     }
     // Clear any stuck isEnrolling flag from a previous interrupted session
-    if (useInterviewStore.getState().isEnrolling) setIsEnrolling(false);
+    if (useSessionStore.getState().isEnrolling) setIsEnrolling(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

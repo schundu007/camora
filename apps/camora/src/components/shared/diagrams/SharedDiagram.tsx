@@ -13,7 +13,7 @@ interface SharedDiagramProps {
 
 /**
  * Unified architecture diagram component.
- * Used by: Lumora Interview, Lumora Design, Capra Dashboard, Capra Practice
+ * Used by: Lumora Session, Lumora Design, Capra Dashboard, Capra Practice
  *
  * Features:
  * - Cache-first lookup (no per-request generation)
