@@ -2156,6 +2156,61 @@ figure:has(> .viz-caption) {
   border-color: color-mix(in srgb, var(--cam-gold-leaf) 28%, transparent);
 }
 
+/* ── Q&A pairs — navy "Q" badge / gold "A" badge ───────────────────────── */
+.qa-q,
+.qa-a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.45rem 0.9rem 0.45rem 0.75rem;
+  border-radius: 6px;
+  margin: 0.35rem 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.qa-q {
+  background: color-mix(in srgb, var(--cam-primary) 7%, var(--bg-elevated));
+  border-left: 3px solid var(--cam-primary);
+}
+.qa-a {
+  background: color-mix(in srgb, var(--cam-gold-leaf) 8%, var(--bg-elevated));
+  border-left: 3px solid var(--cam-gold-leaf);
+  margin-bottom: 0.75rem;
+}
+[data-theme='dark'] .qa-q {
+  background: color-mix(in srgb, var(--cam-primary) 18%, var(--bg-elevated));
+}
+[data-theme='dark'] .qa-a {
+  background: color-mix(in srgb, var(--cam-gold-leaf) 12%, var(--bg-elevated));
+}
+.qa-label {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+.qa-q .qa-label {
+  background: var(--cam-primary);
+  color: #fff;
+}
+.qa-a .qa-label {
+  background: var(--cam-gold-leaf);
+  color: #1a1200;
+}
+.qa-body {
+  color: var(--text-secondary);
+  font-family: inherit;
+}
+
 /* ── Lists — better spacing + gold leaf bullets ──────────────────── */
 .docs-page ul,
 .docs-page ol,

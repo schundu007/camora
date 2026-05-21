@@ -344,6 +344,21 @@ export default function FormattedContent({ content, inline = false }) {
           return;
         }
 
+        // Q&A pairs: lines starting with "Q: " or "A: " get navy/gold badge treatment.
+        const qaMatch = trimmed.match(/^([QA]):\s+(.+)$/);
+        if (qaMatch) {
+          flushList();
+          const label = qaMatch[1];
+          const body = qaMatch[2];
+          pushBody(
+            <div key={`qa-${blockIdx}-${lineIdx}`} className={label === 'Q' ? 'qa-q' : 'qa-a'}>
+              <span className="qa-label">{label}</span>
+              <span className="qa-body">{formatInlineText(body)}</span>
+            </div>,
+          );
+          return;
+        }
+
         flushList();
         pushBody(
           <p
