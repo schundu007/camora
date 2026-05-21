@@ -431,21 +431,20 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
       </div>
 
       {/* ── Tab Row 2: Problems in selected category ──────────────────── */}
-      <div className="flex items-center gap-1 px-3 py-1.5 overflow-x-auto" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
+      <div className="flex items-center gap-0.5 px-2 py-1 overflow-x-auto no-scrollbar" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
         {categoryProblems.map((p) => (
           <button key={p.id} onClick={() => setSelectedProblemId(p.id)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium rounded-lg transition-[background-color,color,border-color] duration-150 active:scale-[0.98] whitespace-nowrap"
+            className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md transition-[background-color,color,border-color] duration-150 active:scale-[0.98] whitespace-nowrap flex-shrink-0"
             style={p.id === selectedProblemId
               ? { background: 'var(--accent-subtle)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
               : { color: 'var(--text-muted)' }
             }>
             {solved.has(p.id) ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><path d="M9 12l2 2 4-4" /></svg>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><path d="M9 12l2 2 4-4" /></svg>
             ) : (
-              <span className="w-3 h-3 rounded-full border-2" style={{ borderColor: 'var(--border)' }} />
+              <span className="w-2.5 h-2.5 rounded-full border" style={{ borderColor: 'var(--border)' }} />
             )}
-            {p.id}. {p.title.length > 20 ? p.title.slice(0, 20) + '...' : p.title}
-            <DifficultyBadge difficulty={p.difficulty} />
+            {p.id}. {p.title.length > 15 ? p.title.slice(0, 15) + '…' : p.title}
           </button>
         ))}
       </div>
