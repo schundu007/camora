@@ -801,7 +801,7 @@ export const LumoraShellPage = () => {
                           }}
                         >
                           <span
-                            className="flex items-center justify-center w-8 h-8 rounded-lg text-[11px] font-bold shrink-0"
+                            className="session-badge-num flex items-center justify-center w-8 h-8 rounded-lg text-[11px] font-bold shrink-0"
                             style={{
                               background:
                                 'linear-gradient(135deg, var(--cam-primary) 0%, var(--cam-primary-dk) 100%)',
