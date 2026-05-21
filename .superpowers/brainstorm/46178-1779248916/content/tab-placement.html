@@ -1,0 +1,88 @@
+<h2>Where does the Code Fixer tab live?</h2>
+<p class="subtitle">Choose which navigation level the new feature belongs to</p>
+
+<div class="cards">
+
+  <!-- Option A: New top-level tab in Header -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#0d1117;border-radius:8px;font-family:monospace;font-size:12px;">
+      <div style="display:flex;gap:8px;align-items:center;padding:8px 12px;background:#161b22;border-radius:6px;margin-bottom:12px;">
+        <span style="padding:4px 12px;background:#0047AB;color:#fff;border-radius:20px;font-size:11px;">Interview</span>
+        <span style="padding:4px 12px;background:#0047AB;color:#fff;border-radius:20px;font-size:11px;">Coding</span>
+        <span style="padding:4px 12px;background:#0047AB;color:#fff;border-radius:20px;font-size:11px;">Design</span>
+        <span style="padding:4px 12px;background:#f59e0b;color:#000;border-radius:20px;font-size:11px;font-weight:700;">✦ Fix</span>
+      </div>
+      <div style="display:flex;gap:8px;height:90px;">
+        <div style="flex:1;background:#1c2128;border-radius:6px;padding:8px;border:1px dashed #30363d;">
+          <div style="font-size:10px;color:#8b949e;margin-bottom:4px;">Paste broken code</div>
+          <div style="color:#f0883e;font-size:10px;">def solution(n):</div>
+          <div style="color:#ff7b72;font-size:10px;">  retrun n * 2  ← error</div>
+        </div>
+        <div style="flex:1;background:#1c2128;border-radius:6px;padding:8px;border:1px dashed #238636;">
+          <div style="font-size:10px;color:#8b949e;margin-bottom:4px;">Fixed code + explanation</div>
+          <div style="color:#7ee787;font-size:10px;">def solution(n):</div>
+          <div style="color:#7ee787;font-size:10px;">  return n * 2  ✓</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — New top-level tab</h3>
+      <p>Adds a 4th tab in the Lumora header bar alongside Interview, Coding, and Design. Own route at <code>/lumora/fix</code>. Fully standalone experience.</p>
+    </div>
+  </div>
+
+  <!-- Option B: New sub-tab inside Coding analysis area -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#0d1117;border-radius:8px;font-family:monospace;font-size:12px;">
+      <div style="display:flex;gap:8px;align-items:center;padding:8px 12px;background:#161b22;border-radius:6px;margin-bottom:12px;">
+        <span style="padding:4px 12px;background:#0047AB;color:#fff;border-radius:20px;font-size:11px;">Interview</span>
+        <span style="padding:4px 12px;background:#0047AB;color:#fff;border-radius:20px;font-size:11px;">Coding</span>
+        <span style="padding:4px 12px;background:#0047AB;color:#fff;border-radius:20px;font-size:11px;">Design</span>
+      </div>
+      <div style="background:#161b22;border-radius:6px;padding:8px;margin-bottom:6px;">
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <span style="padding:3px 8px;background:#21262d;color:#8b949e;border-radius:12px;font-size:10px;">Code</span>
+          <span style="padding:3px 8px;background:#21262d;color:#8b949e;border-radius:12px;font-size:10px;">Explain</span>
+          <span style="padding:3px 8px;background:#21262d;color:#8b949e;border-radius:12px;font-size:10px;">Issues</span>
+          <span style="padding:3px 8px;background:#21262d;color:#8b949e;border-radius:12px;font-size:10px;">Deep Dive</span>
+          <span style="padding:3px 8px;background:#f59e0b22;color:#f59e0b;border-radius:12px;font-size:10px;font-weight:700;">Fix</span>
+        </div>
+        <div style="display:flex;gap:6px;height:55px;">
+          <div style="flex:1;background:#0d1117;border-radius:4px;padding:6px;border:1px dashed #30363d;"><div style="color:#ff7b72;font-size:9px;">broken code paste area</div></div>
+          <div style="flex:1;background:#0d1117;border-radius:4px;padding:6px;border:1px dashed #238636;"><div style="color:#7ee787;font-size:9px;">fixed code + explanations</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Analysis sub-tab in Coding</h3>
+      <p>Fifth tab alongside the existing Code / Explain / Issues / Deep Dive tabs inside the Coding page. Available after solving a problem. Shown in the analysis panel at the bottom.</p>
+    </div>
+  </div>
+
+  <!-- Option C: New top-level page with own design -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#0d1117;border-radius:8px;font-family:monospace;font-size:12px;">
+      <div style="display:flex;gap:8px;align-items:center;padding:8px 12px;background:#161b22;border-radius:6px;margin-bottom:12px;">
+        <span style="padding:4px 12px;background:#0047AB;color:#fff;border-radius:20px;font-size:11px;">Interview</span>
+        <span style="padding:4px 12px;background:#0047AB;color:#fff;border-radius:20px;font-size:11px;">Coding</span>
+        <span style="padding:4px 12px;background:#0047AB;color:#fff;border-radius:20px;font-size:11px;">Design</span>
+      </div>
+      <div style="background:#161b22;border-radius:6px;padding:8px;margin-bottom:6px;">
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <span style="padding:3px 8px;background:#21262d;color:#8b949e;border-radius:12px;font-size:10px;">Description</span>
+          <span style="padding:3px 8px;background:#21262d;color:#8b949e;border-radius:12px;font-size:10px;">Solution</span>
+          <span style="padding:3px 8px;background:#f59e0b22;color:#f59e0b;border-radius:12px;font-size:10px;font-weight:700;">Fix My Code</span>
+        </div>
+        <div style="display:flex;gap:6px;height:55px;">
+          <div style="flex:1;background:#0d1117;border-radius:4px;padding:6px;border:1px dashed #30363d;"><div style="color:#ff7b72;font-size:9px;">paste code + describe issue</div></div>
+          <div style="flex:1;background:#0d1117;border-radius:4px;padding:6px;border:1px dashed #238636;"><div style="color:#7ee787;font-size:9px;">fixed code + line explanations</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Tab inside Coding (problem level)</h3>
+      <p>Third tab alongside Description and Solution inside the Coding page, at the same level as those tabs. Independent from the solve flow — paste and fix without needing a problem first.</p>
+    </div>
+  </div>
+
+</div>

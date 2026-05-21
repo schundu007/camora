@@ -1,30 +1,31 @@
 #!/usr/bin/env node
 /**
- * Fetches full question bodies (+ MCQ options) for all HR library problems
- * that currently lack question_body, using HackerRank's internal question API.
+ * Scrapes full question bodies for all HR library problems missing question_body.
  *
- * Usage:
- *   node scrape_full_questions.js [--headless]
+ * Discovery: /x/api/v1/library?copyscrape=true&filter=TYPE returns full
+ * question HTML + options for each type. Paginates all type combinations.
  *
- * Default: headed browser opens — log in if needed, then the script takes over.
- * Pass --headless only if you know your HR session cookies are still valid.
- *
- * URLs targeted:
- *   https://www.hackerrank.com/work/library/tests
- *   https://www.hackerrank.com/work/library/interviews
- *
- * Progress is saved every 50 questions so you can safely Ctrl-C and resume.
+ * Usage:  node scrape_full_questions.js
  */
 
+import { createRequire } from 'module';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const require = createRequire(import.meta.url);
 const { chromium } = require('/Users/chundu/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
-const fs = require('fs');
-const path = require('path');
 
-const LIBRARY_PATH = path.resolve(__dirname, '../../../ascend-backend/data/hr_library.json');
-const HEADLESS = process.argv.includes('--headless');
-const DELAY_MS = 120; // polite delay between API calls
-
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const LIBRARY_PATH = resolve(__dirname, '../../../ascend-backend/data/hr_library.json');
+const SESSION_PATH = resolve(__dirname, '.hr_session');
 const OPTION_LETTERS = 'ABCDEFGHIJKLMNOP';
+
+// All types that have missing question_body
+const TYPES = ['mcq','multiple_mcq','code','fullstack','database','sudorank',
+               'coderepo_task','code_review','prompt_engineering','whiteboard',
+               'complete','approx','diagram','design','textAns'];
+const DIFFICULTIES = ['Easy','Medium','Hard','']; // '' = no filter
 
 function htmlToText(html) {
   if (!html || typeof html !== 'string') return '';
@@ -35,8 +36,8 @@ function htmlToText(html) {
     .replace(/<p[^>]*class="section-title"[^>]*>([\s\S]*?)<\/p>/gi, (_, c) => '\n' + c.replace(/<[^>]+>/g,'') + '\n')
     .replace(/<\/p>/gi, '\n').replace(/<p[^>]*>\s*/gi, '')
     .replace(/<li[^>]*>/gi, '• ').replace(/<\/li>/gi, '\n')
-    .replace(/<\/ul>/gi, '').replace(/<ul[^>]*>/gi, '')
-    .replace(/<\/ol>/gi, '').replace(/<ol[^>]*>/gi, '')
+    .replace(/<\/ul>/gi, '').replace(/<\/ol>/gi, '')
+    .replace(/<ul[^>]*>/gi, '').replace(/<ol[^>]*>/gi, '')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/h[1-6]>/gi, '\n\n').replace(/<h[1-6][^>]*>/gi, '\n')
     .replace(/<\/div>/gi, '\n')
@@ -53,12 +54,10 @@ function htmlToText(html) {
 }
 
 function buildBody(qData) {
-  // Try multiple possible field names for the question body HTML
-  const html = qData.question || qData.body || qData.description || qData.statement || '';
+  const html = qData.question || qData.body || qData.description || '';
   const text = htmlToText(html);
   if (!text || text.length < 10) return null;
-
-  const type = qData.type || qData.question_type || '';
+  const type = qData.type || '';
   const isChoice = type === 'mcq' || type === 'multiple_mcq';
   const options = qData.options || qData.choices || [];
   if (isChoice && Array.isArray(options) && options.length > 0) {
@@ -69,128 +68,140 @@ function buildBody(qData) {
   return text;
 }
 
-async function fetchQuestion(page, id) {
-  // Try both API endpoints
-  const urls = [
-    `https://www.hackerrank.com/x/api/v3/questions/${id}`,
-    `https://www.hackerrank.com/x/api/v3/library/questions/${id}`,
-  ];
-  for (const url of urls) {
-    try {
-      const result = await page.evaluate(async (u) => {
-        const r = await fetch(u, { credentials: 'include', headers: { 'Accept': 'application/json' } });
-        if (!r.ok) return { __status: r.status };
-        return r.json();
-      }, url);
+async function fetchPage(page, type, difficulty, start, limit = 100) {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    library: 'hackerrank',
+    copyscrape: 'true',
+    hide_ai_solvable: 'true',
+    start: String(start),
+    show_only_available: 'false',
+    expand: 'coderepo_parent',
+    new_sort: '1',
+    filter: type,
+  });
+  if (difficulty) params.set('difficulties', difficulty);
 
-      if (result.__status === 401 || result.__status === 403) return { auth: false };
-      if (result.__status) continue; // try next URL
-
-      // Unwrap common response shapes
-      const qData = result.question || result.data || result;
-      if (qData && (qData.question || qData.body || qData.description)) return { data: qData };
-    } catch (_) {}
-  }
-  return { data: null };
+  const url = `https://www.hackerrank.com/x/api/v1/library?${params}`;
+  return page.evaluate(async (u) => {
+    const r = await fetch(u, { credentials: 'include' });
+    if (!r.ok) return { __status: r.status };
+    return r.json();
+  }, url);
 }
 
 async function main() {
-  const lib = JSON.parse(fs.readFileSync(LIBRARY_PATH, 'utf-8'));
-  const missing = lib.problems.filter(p => !p.question_body);
+  const lib = JSON.parse(readFileSync(LIBRARY_PATH, 'utf-8'));
+  const missingIds = new Set(lib.problems.filter(p => !p.question_body).map(p => p.id));
   const total = lib.problems.length;
-  const have = total - missing.length;
+  const startHave = total - missingIds.size;
 
-  console.log(`\nHR Library: ${total} total | ${have} have question_body | ${missing.length} missing\n`);
-  if (missing.length === 0) { console.log('All problems already have question_body!'); return; }
+  console.log(`\nHR Library: ${total} total | ${startHave} have question_body | ${missingIds.size} missing\n`);
+  if (missingIds.size === 0) { console.log('All done!'); return; }
 
-  const browser = await chromium.launch({ headless: HEADLESS, slowMo: 50 });
-  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-  const page = await context.newPage();
-
-  // Open HackerRank — go to login page so user can sign in if needed
-  console.log('Opening HackerRank…');
-  await page.goto('https://www.hackerrank.com/auth/login', { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
-
-  // Wait until the user is on the library/work page (i.e. logged in and navigated there)
-  console.log('\nWaiting for you to log in and navigate to:');
-  console.log('  https://www.hackerrank.com/work/library/tests');
-  console.log('\nThe script will continue automatically once you are on the library page.\n');
-
-  await page.waitForURL('**/work/library/**', { timeout: 300000 }).catch(async () => {
-    // Also accept if they're anywhere on hackerrank after login (dashboard, etc.)
-    const url = page.url();
-    if (!url.includes('hackerrank.com/work') && !url.includes('hackerrank.com/dashboard')) {
-      console.error('Timed out waiting for login. Re-run the script.');
-      await browser.close();
-      process.exit(1);
-    }
+  const browser = await chromium.launch({ headless: true });
+  const ctx = await browser.newContext({
+    storageState: existsSync(SESSION_PATH) ? SESSION_PATH : undefined,
   });
+  const page = await ctx.newPage();
 
-  // Confirm auth works by hitting the API
-  let testResp;
-  for (let attempt = 0; attempt < 5; attempt++) {
-    testResp = await page.evaluate(async () => {
-      const r = await fetch('https://www.hackerrank.com/x/api/v3/questions?limit=1', { credentials: 'include' });
-      return { status: r.status };
-    });
-    if (testResp.status !== 401 && testResp.status !== 403) break;
-    await page.waitForTimeout(2000);
+  // Verify auth
+  await page.goto('https://www.hackerrank.com/work/library/tests', {
+    waitUntil: 'domcontentloaded', timeout: 20000
+  }).catch(() => {});
+
+  const isLoggedIn = await page.evaluate(() =>
+    !window.location.href.includes('/login') && !window.location.href.includes('/access-account')
+  );
+  if (!isLoggedIn) {
+    console.error('Not logged in. Run with headless:false first to save session.');
+    await browser.close(); process.exit(1);
   }
-  if (testResp.status === 401 || testResp.status === 403) {
-    console.error('Auth check failed (HTTP', testResp.status, '). Make sure you are logged in to hackerrank.com/work and re-run.');
-    await browser.close();
-    process.exit(1);
-  }
-  console.log('Auth OK (HTTP', testResp.status, '). Starting fetch…\n');
+  console.log('Auth OK. Starting pagination…\n');
 
-  let updated = 0, failed = 0, authExpired = false;
-  const SAVE_EVERY = 50;
+  let totalCaptured = 0;
+  let lastSave = Date.now();
+  const LIMIT = 100;
 
-  for (let i = 0; i < missing.length; i++) {
-    const p = missing[i];
-    const result = await fetchQuestion(page, p.id);
+  for (const type of TYPES) {
+    const typeMissing = lib.problems.filter(p => !p.question_body && p.type === type).length;
+    if (typeMissing === 0) continue;
 
-    if (result.auth === false) {
-      console.error(`\nAuth expired at ${i}/${missing.length}. Progress saved. Re-run to continue.\n`);
-      authExpired = true;
-      break;
-    }
+    let typeCaptured = 0;
 
-    if (result.data) {
-      const body = buildBody(result.data);
-      if (body && body.length > 10) {
-        const libP = lib.problems.find(lp => lp.id === p.id);
-        if (libP) {
-          libP.question_body = body;
-          if (result.data.unique_id) libP.unique_id = result.data.unique_id;
-          updated++;
+    for (const difficulty of DIFFICULTIES) {
+      let start = 0;
+      let pageEmpty = false;
+      let pagesWithNoNewData = 0;
+
+      while (!pageEmpty && pagesWithNoNewData < 3) {
+        let data;
+        try {
+          data = await fetchPage(page, type, difficulty, start, LIMIT);
+        } catch (e) {
+          break;
         }
-      } else {
-        failed++;
+
+        if (data.__status === 401 || data.__status === 403) {
+          console.error('\nAuth expired. Re-run.');
+          await browser.close(); process.exit(1);
+        }
+        if (data.__status) { start += LIMIT; continue; }
+
+        const qs = data?.model?.questions || data?.questions || [];
+        if (qs.length === 0) { pageEmpty = true; break; }
+
+        let pageCaptures = 0;
+        for (const q of qs) {
+          if (!q.id || !missingIds.has(q.id)) continue;
+          if (!q.question && !q.options) continue;
+          const body = buildBody(q);
+          if (!body || body.length < 10) continue;
+          const libP = lib.problems.find(p => p.id === q.id);
+          if (libP && !libP.question_body) {
+            libP.question_body = body;
+            if (q.unique_id) libP.unique_id = q.unique_id;
+            missingIds.delete(q.id);
+            totalCaptured++;
+            typeCaptured++;
+            pageCaptures++;
+          }
+        }
+
+        if (pageCaptures === 0) pagesWithNoNewData++;
+        else pagesWithNoNewData = 0;
+
+        // Save every 5 seconds
+        if (Date.now() - lastSave > 5000) {
+          writeFileSync(LIBRARY_PATH, JSON.stringify(lib, null, 0));
+          lastSave = Date.now();
+        }
+
+        const coverage = Math.round(((total - missingIds.size) / total) * 100);
+        process.stdout.write(`\r  [${type}/${difficulty||'all'}] start=${start} +${typeCaptured} | total: ${totalCaptured} | remaining: ${missingIds.size} | ${coverage}%  `);
+
+        start += LIMIT;
+        if (qs.length < LIMIT) { pageEmpty = true; }
+
+        await page.waitForTimeout(60); // polite
       }
-    } else {
-      failed++;
     }
 
-    if ((i + 1) % SAVE_EVERY === 0 || i === missing.length - 1) {
-      fs.writeFileSync(LIBRARY_PATH, JSON.stringify(lib, null, 0));
-      const pct = Math.round(((have + updated) / total) * 100);
-      process.stdout.write(`\r[${i+1}/${missing.length}] +${updated} fetched | ${failed} failed | ${pct}% of library covered  `);
-    }
-
-    await page.waitForTimeout(DELAY_MS);
+    if (typeCaptured > 0) console.log(`\n  ✓ [${type}] captured: ${typeCaptured}`);
   }
 
+  writeFileSync(LIBRARY_PATH, JSON.stringify(lib, null, 0));
+  await ctx.storageState({ path: SESSION_PATH });
   await browser.close();
 
   const finalHave = lib.problems.filter(p => p.question_body).length;
-  console.log(`\n\nFinal: ${finalHave}/${total} problems have question_body (${Math.round(finalHave/total*100)}%)`);
-  console.log(`This run: +${updated} added, ${failed} failed${authExpired ? ' — auth expired, re-run to continue' : ''}`);
+  console.log(`\n\nFinal: ${finalHave}/${total} (${Math.round(finalHave/total*100)}%) have question_body`);
+  console.log(`Added this run: +${totalCaptured}`);
 
-  if (!authExpired) {
-    console.log('\nAll done! Run:');
-    console.log('  git add apps/ascend-backend/data/hr_library.json && git push');
-    console.log('to deploy the updated library.\n');
+  if (totalCaptured > 0) {
+    console.log('\nDeploy: git add apps/ascend-backend/data/hr_library.json && git push');
+  } else {
+    console.log('\nNothing captured — the copyscrape API may not include full data for these question types.');
   }
 }
 

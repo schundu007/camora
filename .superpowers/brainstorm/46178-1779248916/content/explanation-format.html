@@ -1,0 +1,72 @@
+<h2>How should code explanations appear?</h2>
+<p class="subtitle">The right panel shows fixed code — pick how line-by-line explanations are presented</p>
+
+<div class="cards">
+
+  <!-- Option A: Inline comments in the code -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:14px;background:#0d1117;border-radius:8px;font-family:monospace;font-size:11px;line-height:1.6;">
+      <div style="color:#8b949e;margin-bottom:6px;font-size:10px;">RIGHT PANEL — Fixed Code</div>
+      <div style="background:#161b22;border-radius:6px;padding:10px;">
+        <div><span style="color:#6e7681;"># ✓ Fixed: was 'retrun', now 'return'</span></div>
+        <div><span style="color:#c9d1d9;">def </span><span style="color:#d2a8ff;">solution</span><span style="color:#c9d1d9;">(n):</span></div>
+        <div style="margin-left:16px;"><span style="color:#6e7681;"># ✓ Added base case to handle n=0</span></div>
+        <div style="margin-left:16px;"><span style="color:#ff7b72;">if</span><span style="color:#c9d1d9;"> n == 0: </span><span style="color:#ff7b72;">return</span><span style="color:#c9d1d9;"> 0</span></div>
+        <div style="margin-left:16px;"><span style="color:#6e7681;"># ✓ Core logic preserved, typo fixed</span></div>
+        <div style="margin-left:16px;"><span style="color:#ff7b72;">return</span><span style="color:#c9d1d9;"> n * 2</span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Inline comments</h3>
+      <p>Explanations appear as <code># ✓</code> comments directly above each changed/important line. Code and explanation are unified in one editor view.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Explanation panel below fixed code -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:14px;background:#0d1117;border-radius:8px;font-family:monospace;font-size:11px;line-height:1.6;">
+      <div style="color:#8b949e;margin-bottom:6px;font-size:10px;">RIGHT PANEL</div>
+      <div style="background:#161b22;border-radius:6px;padding:10px;margin-bottom:6px;">
+        <div><span style="color:#c9d1d9;">def </span><span style="color:#d2a8ff;">solution</span><span style="color:#c9d1d9;">(n):</span></div>
+        <div style="margin-left:16px;"><span style="color:#ff7b72;">if</span><span style="color:#c9d1d9;"> n == 0: </span><span style="color:#ff7b72;">return</span><span style="color:#c9d1d9;"> 0</span></div>
+        <div style="margin-left:16px;"><span style="color:#ff7b72;">return</span><span style="color:#c9d1d9;"> n * 2</span></div>
+      </div>
+      <div style="background:#161b22;border-radius:6px;padding:10px;border-top:2px solid #f59e0b22;">
+        <div style="color:#f59e0b;font-size:10px;margin-bottom:4px;">CHANGES EXPLAINED</div>
+        <div style="color:#8b949e;font-size:10px;">① Line 1 — Typo fixed: <span style="color:#7ee787;">'retrun' → 'return'</span></div>
+        <div style="color:#8b949e;font-size:10px;">② Line 2 — Added edge case guard for n=0</div>
+        <div style="color:#8b949e;font-size:10px;">③ Line 3 — Core logic preserved unchanged</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Explanation panel below</h3>
+      <p>Clean code on top, numbered explanation list below. Each item maps to a line number. Code stays uncluttered, explanations are scannable.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Split right panel — code left, annotations right -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:14px;background:#0d1117;border-radius:8px;font-family:monospace;font-size:11px;line-height:1.6;">
+      <div style="color:#8b949e;margin-bottom:6px;font-size:10px;">RIGHT PANEL — Split view</div>
+      <div style="display:flex;gap:6px;background:#161b22;border-radius:6px;padding:10px;">
+        <div style="flex:1.2;border-right:1px solid #30363d;padding-right:8px;">
+          <div style="color:#6e7681;font-size:9px;margin-bottom:4px;">FIXED CODE</div>
+          <div><span style="color:#c9d1d9;">def </span><span style="color:#d2a8ff;">solution</span><span style="color:#c9d1d9;">(n):</span><span style="background:#f59e0b33;color:#f59e0b;border-radius:2px;padding:0 2px;margin-left:4px;font-size:9px;">①</span></div>
+          <div style="margin-left:16px;"><span style="color:#ff7b72;">if</span><span style="color:#c9d1d9;"> n==0: return 0</span><span style="background:#238636;color:#7ee787;border-radius:2px;padding:0 2px;margin-left:2px;font-size:9px;">②</span></div>
+          <div style="margin-left:16px;"><span style="color:#ff7b72;">return</span><span style="color:#c9d1d9;"> n * 2</span></div>
+        </div>
+        <div style="flex:1;padding-left:6px;">
+          <div style="color:#f59e0b;font-size:9px;margin-bottom:4px;">NOTES</div>
+          <div style="color:#8b949e;font-size:9px;margin-bottom:4px;">① Typo corrected</div>
+          <div style="color:#8b949e;font-size:9px;margin-bottom:4px;">② Edge case added</div>
+          <div style="color:#8b949e;font-size:9px;">③ Logic unchanged</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Inline badge + side notes</h3>
+      <p>Numbered badges on changed lines in the code, with a matching annotation column on the right side. Visual connection between code and explanation without cluttering with comments.</p>
+    </div>
+  </div>
+
+</div>
