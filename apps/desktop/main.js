@@ -384,6 +384,36 @@ const PLATFORM_URL_MATCH = {
   coderpad: (url) => url.includes('coderpad.io/'),
 };
 
+// Injects JS to extract the starter/template code from the active platform's
+// code editor (CodeMirror on HackerRank, Monaco on LeetCode). Returns the
+// verbatim editor content so the backend can thread it into the prompt and
+// generate a solution that fills in the function body without rewriting
+// the input-reading boilerplate (e.g. HackerRank's readarray + wrapper call).
+async function extractStarterCodeFromBrowser(browser, url) {
+  if (!url.includes('hackerrank.com') && !url.includes('leetcode.com') && !url.includes('coderpad.io')) return null;
+  const js = `(function(){
+    try{var cm=document.querySelector('.CodeMirror');if(cm&&cm.CodeMirror){var v=cm.CodeMirror.getValue();if(v&&v.trim().length>10)return v;}}catch(e){}
+    try{if(window.monaco){var m=window.monaco.editor.getModels();if(m&&m.length>0){var v=m[0].getValue();if(v&&v.trim().length>10)return v;}}}catch(e){}
+    try{var ls=document.querySelectorAll('.CodeMirror-line');if(ls.length>2){var t=Array.from(ls).map(function(l){return l.innerText||'';}).join('\\n');if(t.trim().length>10)return t;}}catch(e){}
+    try{var ed=document.querySelector('[class*="editor"] textarea,[class*="Editor"] textarea');if(ed&&ed.value&&ed.value.trim().length>10)return ed.value;}catch(e){}
+    return null;
+  })()`;
+  const escapedJs = js.replace(/"/g, '\\"');
+  try {
+    const raw = await runAppleScript(`
+tell application "${browser}"
+  set r to execute active tab of front window javascript "${escapedJs}"
+  if r is missing value then return ""
+  return r as string
+end tell`);
+    const code = (raw || '').trim();
+    return code.length > 10 ? code : null;
+  } catch (err) {
+    console.log('[dom-extract] starter code extraction failed:', err.message);
+    return null;
+  }
+}
+
 // Injects a JS IIFE into the active browser tab via AppleScript and returns
 // the full problem text from the DOM — bypasses viewport limits and HackerRank's
 // copy-paste restrictions entirely. Falls back to null on any failure.
@@ -431,8 +461,13 @@ async function doHackerrankScrape() {
   const text = await extractProblemTextFromBrowser(browser, url);
   if (text) {
     console.log('[hr-auto] DOM text extraction succeeded, skipping screenshot OCR');
+    // Also extract the editor starter code so the backend can preserve the
+    // exact input-reading template (e.g. readarray, Scanner, etc.) instead
+    // of generating it from scratch.
+    const starterCode = await extractStarterCodeFromBrowser(browser, url);
+    if (starterCode) console.log('[hr-auto] starter code extracted, len=' + starterCode.length);
     _lastHrUrl = url;
-    return { ok: true, text, url };
+    return { ok: true, text, starterCode, url };
   }
   // Fall back to screenshot → OCR pipeline.
   console.log('[hr-auto] DOM text extraction failed, falling back to screenshot');
@@ -599,6 +634,7 @@ function startHackerrankAutoDetect() {
         mainWindow.webContents.send('hackerrank-capture-result', {
           dataUrl: result.dataUrl,
           text: result.text,
+          starterCode: result.starterCode,
         });
       }
     } catch (err) {
