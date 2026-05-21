@@ -1,16 +1,5 @@
-# Exclude everything from the monorepo root except what this app needs.
-# EAS resolves from apps/mobile/ but pnpm hoists node_modules to the root,
-# so the workspace root is included in the archive. These exclusions keep the
-# archive from ballooning to 500MB+.
-
-../../apps/camora/
-../../apps/lumora-backend/
-../../apps/ascend-backend/
-../../apps/ai-services/
-../../apps/desktop/
-../../apps/camora/
-../../packages/
-../../docs/
-../../mockups/
-../../.git/
-../../node_modules/.cache/
+# Exclude heavy monorepo directories irrelevant to the mobile build.
+# Paths are relative to the project root (apps/mobile/).
+dist/
+android/
+ios/
