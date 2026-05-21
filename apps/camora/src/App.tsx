@@ -34,7 +34,6 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const PublicScoreCardPage = lazy(() => import('./pages/PublicScoreCardPage'));
 const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'));
 const BrandPage = lazy(() => import('./pages/BrandPage'));
-const ChallengePage = lazy(() => import('./pages/ChallengePage'));
 const Blind75Page = lazy(() => import('./pages/Blind75Page'));
 const Blind75PracticePage = lazy(() => import('./pages/Blind75PracticePage'));
 const InterviewQuestionsPage = lazy(() => import('./pages/InterviewQuestionsPage'));
@@ -270,7 +269,6 @@ const RouteTitle = () => {
       ['/pricing', 'Pricing — Camora'],
       ['/login', 'Sign In — Camora'],
       ['/signup', 'Sign Up — Camora'],
-      ['/challenge', 'The Camora Challenge'],
       ['/handbook', 'Blind 75 — Camora'],
     ];
     const match = fallbacks.find(([prefix]) => pathname === prefix || pathname.startsWith(prefix + '/'));
@@ -395,9 +393,6 @@ export const App = () => {
 
           {/* ── Brand ────────────────────────────────── */}
           <Route path="/brand" element={<BrandPage />} />
-
-          {/* ── Challenge ─────────────────────────────── */}
-          <Route path="/challenge" element={<ChallengePage />} />
 
           {/* ── Profile ──────────────────────────────── */}
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

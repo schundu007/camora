@@ -65,8 +65,4 @@ export const NAV_LINKS = [
   { label: 'Practice', href: '/capra/practice' },
   { label: 'Attend', href: '/lumora' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Challenge', href: '/challenge' },
 ];
-
-/** Challenge campaign dates */
-export const CHALLENGE_END = new Date('2026-10-07T23:59:59Z');

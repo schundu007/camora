@@ -6,17 +6,9 @@ import CamoraLogo from './CamoraLogo';
 import UserDropdown from './UserDropdown';
 import { HourMeterChip } from './ui/HourMeterChip';
 import { cn } from '../../utils/cn';
-import { NAV_LINKS, CHALLENGE_END } from '../../lib/constants';
+import { NAV_LINKS } from '../../lib/constants';
 
-const TICKER_HEIGHT = 28;
 const NAV_HEIGHT = 60;
-const TICKER_ITEMS = [
-  { text: 'The Camora Challenge', highlight: '$21,812 in prizes' },
-  { text: 'Find bugs, build features', highlight: 'join the founding team' },
-  { text: '5 Founding Engineer', highlight: '+ 10 Core Engineer positions' },
-  { text: 'Bug Bounty', highlight: 'Critical = 10 pts · Security = 8 pts' },
-  { text: 'Open to all developers worldwide', highlight: 'remote-first' },
-];
 
 /**
  * SiteNav — enterprise-grade chrome.
@@ -48,12 +40,9 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   const isActive = (href: string) =>
     location.pathname === href || location.pathname.startsWith(href + '/');
 
-  const showTicker = new Date() < CHALLENGE_END;
-  const navHeight = showTicker ? NAV_HEIGHT + TICKER_HEIGHT : NAV_HEIGHT;
-
   useEffect(() => {
-    document.documentElement.style.setProperty('--nav-h', `${navHeight}px`);
-  }, [navHeight]);
+    document.documentElement.style.setProperty('--nav-h', `${NAV_HEIGHT}px`);
+  }, []);
 
   return (
     <>
@@ -162,11 +151,11 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
               aria-label="Close menu"
               onClick={() => setOpen(false)}
               className="md:hidden fixed inset-0 z-40 bg-black/40 cursor-default"
-              style={{ top: navHeight }}
+              style={{ top: NAV_HEIGHT }}
             />
             <div
               className="md:hidden absolute right-0 z-50 w-[280px] max-w-[92vw] rounded-bl-2xl border border-t-0 border-[var(--border)] bg-[var(--bg-surface)] shadow-2xl"
-              style={{ top: navHeight }}
+              style={{ top: NAV_HEIGHT }}
               role="menu"
             >
               <div className="px-4 py-3 max-h-[70vh] overflow-y-auto">
@@ -218,37 +207,9 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           </>
         )}
 
-        {showTicker && <ChallengeTicker />}
       </nav>
-      <div style={{ height: navHeight }} aria-hidden="true" />
+      <div style={{ height: NAV_HEIGHT }} aria-hidden="true" />
     </>
-  );
-}
-
-function ChallengeTicker() {
-  return (
-    <Link
-      to="/challenge"
-      className="block overflow-hidden border-t border-black/15 bg-gradient-to-r from-[var(--cam-gold-leaf-dk)] via-[var(--cam-gold-leaf)] to-[var(--cam-gold-leaf-dk)]"
-      style={{ height: TICKER_HEIGHT }}
-    >
-      <div className="mx-auto h-full max-w-7xl overflow-hidden px-4 sm:px-6 lg:px-8">
-        <div className="challenge-ticker flex h-full items-center whitespace-nowrap">
-          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-            <span key={i} className="inline-flex items-center px-6 text-[11px] font-bold tracking-wide text-[#11141A]">
-              {item.text}{' '}
-              <span className="ml-1 font-extrabold">{item.highlight}</span>
-              <span className="mx-5 h-1.5 w-1.5 rounded-full bg-[#11141A]/55" aria-hidden="true" />
-            </span>
-          ))}
-        </div>
-      </div>
-      <style>{`
-        .challenge-ticker { animation: ticker-scroll 32s linear infinite; }
-        .challenge-ticker:hover { animation-play-state: paused; }
-        @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-      `}</style>
-    </Link>
   );
 }
 
