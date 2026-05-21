@@ -29,6 +29,7 @@ function isCodeTemplate(text: string): boolean {
 
 function detectLanguage(text: string): string {
   const t = text.toLowerCase();
+  if (/^\s*FROM\s+\S+/m.test(text) || /^\s*(RUN|COPY|ENV|EXPOSE|CMD|ENTRYPOINT|ARG|LABEL)\s+/m.test(text)) return 'docker';
   if (/def\s+\w+\s*\(|class\s+\w+:|import\s+\w+|print\s*\(|\.py\b/.test(text)) return 'python';
   if (/function\s+\w+\s*\(|const\s+\w+\s*=|let\s+\w+\s*=|var\s+\w+\s*=|=>\s*{/.test(text)) return 'javascript';
   if (/public\s+class\s+\w+|public\s+static\s+void\s+main|System\.out\.print/.test(text)) return 'java';
