@@ -831,8 +831,33 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               borderBottom: '1px solid var(--cam-gold-leaf)',
             }}
           >
-            {/* ── Collapse input panel ── */}
-            <div className="flex items-center justify-end px-3 py-1.5">
+            {/* ── Quick-action chips + collapse — single row ── */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5">
+              {!isLoading && (
+                <>
+                  <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
+                    style={{ color: snapChipCode ? 'var(--cam-gold-leaf)' : 'var(--cam-gold-leaf-lt)' }}>
+                    {snapChipCode ? 'Snap:' : 'Quick ask:'}
+                  </span>
+                  {SNAP_CHIPS.map(chip => (
+                    <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
+                      className="shrink-0 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
+                      style={snapChipCode
+                        ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }
+                        : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.18)' }}>
+                      {chip.label}
+                    </button>
+                  ))}
+                  {snapChipCode && (
+                    <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
+                      className="shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
+                      style={{ color: 'rgba(255,255,255,0.35)' }}>
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  )}
+                </>
+              )}
+              <div className="flex-1" />
               <button
                 onClick={() => setInputCollapsed(!inputCollapsed)}
                 className="shrink-0 flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
@@ -844,31 +869,6 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 </svg>
               </button>
             </div>
-            {/* ── Quick-action chips — always visible ── */}
-            {!isLoading && (
-              <div className="flex flex-wrap items-center gap-1.5 px-3 py-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
-                  style={{ color: snapChipCode ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.32)' }}>
-                  {snapChipCode ? 'Snap:' : 'Quick ask:'}
-                </span>
-                {SNAP_CHIPS.map(chip => (
-                  <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
-                    className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
-                    style={snapChipCode
-                      ? { background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }
-                      : { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.60)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                    {chip.label}
-                  </button>
-                ))}
-                {snapChipCode && (
-                  <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
-                    className="ml-auto shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
-                    style={{ color: 'rgba(255,255,255,0.35)' }}>
-                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </button>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Input area - collapsible */}
