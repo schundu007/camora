@@ -705,9 +705,11 @@ function startHackerrankAutoDetect() {
       // _lastHrUrl is set inside doHackerrankScrape on success
       if (mainWindow && !mainWindow.isDestroyed()) {
         // Send whichever payload doHackerrankScrape produced.
-        // DOM extraction returns { text, url }; screenshot fallback returns { dataUrl, url }.
+        // DOM extraction returns { text, url }; single-page screenshot returns { dataUrl, url };
+        // multi-page screenshot returns { dataUrls, url }.
         mainWindow.webContents.send('hackerrank-capture-result', {
           dataUrl: result.dataUrl,
+          dataUrls: result.dataUrls,
           text: result.text,
           starterCode: result.starterCode,
         });

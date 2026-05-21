@@ -1454,6 +1454,7 @@ const imageUpload = multer({
 
 function detectLangFromCode(code) {
   if (!code) return null;
+  if (/^\s*FROM\s+\S+/m.test(code) || /^\s*(RUN|COPY|ENV|EXPOSE|CMD|ENTRYPOINT|ARG|LABEL)\s+/m.test(code)) return 'docker';
   if (/^#!\s*\/usr\/bin\/env\s+bash|^#!\s*\/bin\/bash|^#!\s*\/bin\/sh\b/m.test(code)) return 'bash';
   if (/^#!\s*\/usr\/bin\/env\s+python|^#!\s*\/usr\/bin\/python/m.test(code)) return 'python';
   if (/^#!\s*\/usr\/bin\/env\s+ruby|^#!\s*\/usr\/bin\/ruby/m.test(code)) return 'ruby';
@@ -1534,10 +1535,11 @@ Critical rules:
       return res.status(422).json({ detail: 'Could not extract a problem from this image. Try a clearer screenshot showing the problem statement.' });
     }
     // Prefer Claude's vision-based language detection, but validate it against
-    // the supported list — the model sometimes hallucinates 'dockerfile', 'makefile',
-    // 'plaintext', etc. from non-code content visible in the screenshot.
+    // the supported list. Normalize known aliases: 'dockerfile' → 'docker',
+    // 'makefile'/'plaintext'/etc. get filtered out as hallucinations.
     const rawVisionLang = parsed?.detected_language?.toLowerCase()?.trim() || null;
-    const visionLang = rawVisionLang && SUPPORTED_LANGUAGES.includes(rawVisionLang) ? rawVisionLang : null;
+    const normalizedVisionLang = rawVisionLang === 'dockerfile' ? 'docker' : rawVisionLang;
+    const visionLang = normalizedVisionLang && SUPPORTED_LANGUAGES.includes(normalizedVisionLang) ? normalizedVisionLang : null;
     const regexLang = detectLangFromCode(starterCode);
     const detectedLanguage = visionLang || regexLang;
     console.log(`[extract-from-image] lang_vision_raw=${rawVisionLang} lang_vision_valid=${visionLang} lang_regex=${regexLang} final=${detectedLanguage}`);
