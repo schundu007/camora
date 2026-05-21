@@ -14,6 +14,12 @@ import { bootstrapTheme } from './hooks/useTheme';
 // page never flashes the wrong substrate.
 bootstrapTheme();
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 // Tag the body when running inside the Electron desktop build so CSS can
 // add a drag region and exempt interactive elements without each component
 // having to detect Electron individually. macOS uses titleBarStyle:
