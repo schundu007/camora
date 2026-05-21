@@ -1336,24 +1336,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               · Enrolled, on       → quiet green confirmation
               · Enrolled, on, ≥7d  → amber stale-nudge: refresh enrollment
             The VoiceEnrollment component handles enroll / toggle / unenroll. */}
-        {/* Embedded + dismissed → keep mic + voice-enrollment buttons
-            visible. Only the warning copy + tinted banner collapse out;
-            the primary action (mic) and the voice-enrollment toggles
-            (Filter On/Off, Enroll, Re-enroll) stay reachable so the
-            user can still talk and manage their voice profile without
-            re-opening the dismissed banner. */}
+        {/* Embedded + dismissed → ScreenshotStrip already shows AudioCapture
+            and VoiceEnrollment in the top bar, so only render the restore
+            chevron here to avoid duplicating those controls. */}
         {embedded && voiceBannerDismissed && (
-          <div
-            className="w-full flex flex-wrap items-center justify-center gap-2"
-            aria-label="Audio controls"
-          >
-            <div
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full shrink-0"
-              style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)' }}
-            >
-              <AudioCapture onTranscription={handleAutoTranscription} compact active={embedded} />
-            </div>
-            <VoiceEnrollment disabled={false} variant="light" />
+          <div className="w-full flex items-center justify-center py-0.5">
             <button
               type="button"
               onClick={restoreVoiceBanner}
