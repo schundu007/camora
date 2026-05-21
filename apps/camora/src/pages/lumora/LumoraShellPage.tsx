@@ -793,8 +793,8 @@ export const LumoraShellPage = () => {
                           key={realIdx}
                           type="button"
                           onClick={() => { setFocusedEntry(realIdx); navigate('/lumora'); }}
-                          className="session-row flex items-center gap-3 p-3.5 rounded-xl w-full text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cam-primary)]/40"
-                          style={{
+                          className="session-row session-row-enter flex items-center gap-3 p-3.5 rounded-xl w-full text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cam-primary)]/40"
+                          style={{ animationDelay: `${Math.min(revIdx * 30, 210)}ms`,
                             background:
                               'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(34,211,238,0.02) 100%)',
                             border: '1px solid rgba(38,97,156,0.10)',
@@ -996,7 +996,7 @@ export const LumoraShellPage = () => {
         <div className="md:hidden fixed inset-0 z-50" onClick={() => setMobileMoreOpen(false)} role="dialog" aria-modal="true" aria-label="Menu">
           <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.35)' }} />
           <div onClick={e => e.stopPropagation()}
-            className="absolute right-2 w-[260px] max-w-[90vw] rounded-bl-xl rounded-br-xl"
+            className="lumora-mobile-sheet absolute right-2 w-[260px] max-w-[90vw] rounded-bl-xl rounded-br-xl"
             style={{ top: 48, background: 'var(--bg-surface)', boxShadow: '0 12px 28px rgba(0,0,0,0.20)', border: '1px solid var(--border)' }}>
             <div className="py-2 max-h-[70vh] overflow-y-auto">
               {[
