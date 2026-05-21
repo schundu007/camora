@@ -65,6 +65,19 @@ const INTERVIEW_VERBS_ANYWHERE = [
   'explain the', 'explain how', 'what is the',
   'given an', 'given a', 'given two',
   'let me ask',
+  // Behavioral question phrases (past-tense story prompts)
+  'what did you', 'how did you', 'what was your', 'what were you',
+  'have you ever', 'can you give', 'could you give', 'tell us about',
+  'take me through', 'take us through',
+  'talk me through', 'talk us through',
+];
+
+// One-word sentence-initial fillers that precede the actual question.
+// Strip these before applying start-based checks so "And what did you
+// learn?" and "So how would you handle that?" are detected correctly.
+const FILLER_PREFIXES = [
+  'and ', 'so ', 'now ', 'right ', 'okay ', 'ok ',
+  'alright ', 'well ', 'but ', 'though ', 'then ',
 ];
 
 /**
@@ -162,16 +175,23 @@ export function isQuestion(raw: string): boolean {
   // Ends with "?" — obvious question
   if (text.endsWith('?')) return true;
 
+  // Strip one-word sentence-initial fillers ("And what did you learn?"
+  // should match "what" even though it starts with "and ").
+  let stripped = text;
+  for (const p of FILLER_PREFIXES) {
+    if (stripped.startsWith(p)) { stripped = stripped.slice(p.length); break; }
+  }
+
   // Background / small-talk openers — explicit no
-  if (BACKGROUND_STARTERS.some((s) => text.startsWith(s))) {
+  if (BACKGROUND_STARTERS.some((s) => stripped.startsWith(s))) {
     // But: if the SAME utterance also contains a clear interview verb
     // later on ("I think — how would you handle this?"), let it through.
     if (INTERVIEW_VERBS_ANYWHERE.some((v) => text.includes(v))) return true;
     return false;
   }
 
-  // Starts with a question word or interview imperative
-  if (QUESTION_STARTERS.some((s) => text.startsWith(s))) return true;
+  // Starts with a question word or interview imperative (check stripped)
+  if (QUESTION_STARTERS.some((s) => stripped.startsWith(s))) return true;
 
   // Contains an interview verb phrase anywhere
   if (INTERVIEW_VERBS_ANYWHERE.some((v) => text.includes(v))) return true;

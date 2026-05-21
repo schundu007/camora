@@ -1,0 +1,323 @@
+{
+  "cookies": [
+    {
+      "name": "fileDownload",
+      "value": "true",
+      "domain": "www.hackerrank.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_hrank_session",
+      "value": "9e300872b15d97131026d80a2dbd307ba090130afede51ca95343166220a190d7b4ed6d1a5946d53bd7d6baac382d90303981762339c6e6a6dc1834c4b6fd205",
+      "domain": "www.hackerrank.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_gcl_au",
+      "value": "1.1.1697905730.1778694747",
+      "domain": ".hackerrank.com",
+      "path": "/",
+      "expires": 1786470747,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "li_sugr",
+      "value": "99173f45-00e0-4521-8af7-7329197eac18",
+      "domain": ".linkedin.com",
+      "path": "/",
+      "expires": 1786471315.201323,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "bcookie",
+      "value": "\"v=2&2501a037-475c-4295-8abb-354e353e13d1\"",
+      "domain": ".linkedin.com",
+      "path": "/",
+      "expires": 1810231316.201359,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "lidc",
+      "value": "\"b=OGST06:s=O:r=O:a=O:p=O:g=3531:u=1:x=1:i=1778694746:t=1778781146:v=2:sig=AQF69ya7sLnZq1LDcScFG3PKnTBBb58o\"",
+      "domain": ".linkedin.com",
+      "path": "/",
+      "expires": 1778781146.864315,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_gid",
+      "value": "GA1.2.99798601.1778694747",
+      "domain": ".hackerrank.com",
+      "path": "/",
+      "expires": 1778781715,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "UserMatchHistory",
+      "value": "AQIeyDT8TmwMeQAAAZ4id_MWESkCIXe8QXpvPEo6Q9WJTxdj_bJwpp5soucqOVCC_6uJLDmFhEyRww",
+      "domain": ".linkedin.com",
+      "path": "/",
+      "expires": 1781286746.911954,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "AnalyticsSyncHistory",
+      "value": "AQKQFJN4k_gchwAAAZ4id_MWKzU47E6RJ7ccN-3NgLLIXtv37RRCiQCd4sAh8ejqT4vyGPadxQs9sKPEVhOWcw",
+      "domain": ".linkedin.com",
+      "path": "/",
+      "expires": 1781286746.911961,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "bscookie",
+      "value": "\"v=1&202605131752270b2b2b21-8cd9-4d66-84db-1b9274a86ffeAQE4X6jxJ1BiegsyNAvIu77S3Za4Bk7w\"",
+      "domain": ".www.linkedin.com",
+      "path": "/",
+      "expires": 1810230747.076346,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "__cf_bm",
+      "value": "dQJqYJNm.q3YTf8TJu7DwKosR83nCCtBl29HHvxTIEI-1778694747.022342-1.0.1.1-OkPBPbAk6UQTEGHXwGmEFmcmheoQiA0CFMtC2xtIEjXjwonBkQ9mHTy1nvzGmiSSo15wks_3Nozn86u6KjCuwQ21ADEiLC8VdQxJwnHKsDhCOCRRGRddrXIyaTtqCITy",
+      "domain": ".linkedin.com",
+      "path": "/",
+      "expires": 1778696547.076377,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "web_browser_id",
+      "value": "7c54332eddfb6f0d0bc25cc6e1a548fb",
+      "domain": "www.hackerrank.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_fcdscst",
+      "value": "MTc3ODY5NDc0NzU5Nw==",
+      "domain": ".hackerrank.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_fcdscv",
+      "value": "eyJDdXN0b21lcklkIjoiOWUyMDZiMGQtMDAxNC00MmI5LThkMzktYzJiOTA5NGEyNzMxIiwiVmlzaXRvciI6eyJFbWFpbCI6bnVsbCwiRXh0ZXJuYWxWaXNpdG9ySWQiOiJjYjVkZDY3MC00OWJjLTRhNmMtOWMyMi1jOTFkMTkwYTczOTUifSwiVmlzaXRzIjpbXSwiQWN0aXZpdGllcyI6W10sIkRpYWdub3N0aWNNZXNzYWdlIjpudWxsfQ==",
+      "domain": ".hackerrank.com",
+      "path": "/",
+      "expires": 1813254748.125934,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga_BCP376TP8D",
+      "value": "GS2.1.s1778694754$o1$g1$t1778694766$j48$l0$h0",
+      "domain": ".hackerrank.com",
+      "path": "/",
+      "expires": 1813254766.993451,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "jwt_refresh_token",
+      "value": "N0plWDNrc0ttSnpZOGVEb084TjVlSjNZY2VGUXNJdzQ2Si9WMlBqa09rSWZnbDJ4NFU4dWdHM2EzZlZvellHZ09iOTkzbWVDMkpwdXRlRDlwWk5JMnRHay95bU5qc0d0Rk9GbW1NVW5zNVRhZHZ4STFtdFFBZGxiUEgxOXpkbDczRjUweE9lQmhsQ21DejVweU9jdHNQQ0lqWTMzejZHZ3A4MWtXeUhVN05ERGozS1NHeDlaLzFsblhKaXlMQ1YvU0swUHVFczBCZUZhUnNaRFpKaHBtcXBxMkRKOXVkWmFGRDV4dTBzVW1WTEFKZEJWUGpib3doaVVzaGU0K0I0aUx3cVRIODIrR3FvcE5LY1ZMS3JkLmQ3ZmY3MWRjOTVmZWE1NTFiYTQwYzFjMmUzYmI3YzJmMTA1ZjAzODY1NDYzMGZjNjRjYWNkOGRjODA2MjY0MjYuVjI%3D",
+      "domain": ".hackerrank.com",
+      "path": "/",
+      "expires": 1779904367.606372,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "access_token",
+      "value": "e6d558f734a2856d091ac42f444599d613df5550bb03336d4002ad7bea38b1e4",
+      "domain": ".hackerrank.com",
+      "path": "/",
+      "expires": 1779904367.606405,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "last_loggedIn_product",
+      "value": "HRW",
+      "domain": "www.hackerrank.com",
+      "path": "/",
+      "expires": 1779299567,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "hackerrankx_mixpanel_token",
+      "value": "9384f65b-edd9-4df8-950d-37371e8088b0",
+      "domain": "www.hackerrank.com",
+      "path": "/",
+      "expires": 1810230767.167447,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga_ZDWKWB1ZWT",
+      "value": "GS2.1.s1778694746$o1$g1$t1778695315$j60$l0$h0",
+      "domain": ".hackerrank.com",
+      "path": "/",
+      "expires": 1813255315.054824,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "fs_lua",
+      "value": "1.1778695314874",
+      "domain": ".hackerrank.com",
+      "path": "/",
+      "expires": 1778697115,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Strict"
+    },
+    {
+      "name": "fs_uid",
+      "value": "#Q02VK#4b6f07fd-cb67-48a5-a7b7-dd1731111d04:cb1e7efc-1a22-4d5e-857e-be8472e35eea:1778694746800::3#3dd61388##/1810230753",
+      "domain": ".hackerrank.com",
+      "path": "/",
+      "expires": 1810230753,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Strict"
+    },
+    {
+      "name": "_ga",
+      "value": "GA1.2.945279168.1778694747",
+      "domain": ".hackerrank.com",
+      "path": "/",
+      "expires": 1813255315.068943,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "m",
+      "value": "a903f95b-eea9-48aa-80f7-e8dd40b1595eb33129",
+      "domain": "m.stripe.com",
+      "path": "/",
+      "expires": 1813255316.179483,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "__stripe_mid",
+      "value": "4fca14ab-9b14-49f5-b5ad-c14af17dcd269521f0",
+      "domain": ".www.hackerrank.com",
+      "path": "/",
+      "expires": 1810231316,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Strict"
+    },
+    {
+      "name": "__stripe_sid",
+      "value": "3f6cd9df-d045-4ee1-8554-87121b832dfe2e9de3",
+      "domain": ".www.hackerrank.com",
+      "path": "/",
+      "expires": 1778697116,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Strict"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://www.hackerrank.com",
+      "localStorage": [
+        {
+          "name": "_pendo_feedback_notification_count.6a49047d-7d4c-46f5-7b81-8b6193d6bf7b",
+          "value": "0"
+        },
+        {
+          "name": "_pendo_sessionId.6a49047d-7d4c-46f5-7b81-8b6193d6bf7b",
+          "value": "{\"sessionId\":\"9voNg8MvxiO8K5hi\",\"timestamp\":1778695315548}"
+        },
+        {
+          "name": "_pendo_utm.6a49047d-7d4c-46f5-7b81-8b6193d6bf7b",
+          "value": "{\"channel\":\"Direct\"}"
+        },
+        {
+          "name": "NRBA_SESSION",
+          "value": "{\"value\":\"d211290c8046e2b4\",\"inactiveAt\":1778696566985,\"expiresAt\":1778709147584,\"updatedAt\":1778694769181,\"sessionReplayMode\":0,\"sessionReplaySentFirstChunk\":false,\"sessionTraceMode\":0,\"traceHarvestStarted\":false,\"loggingMode\":1,\"logApiMode\":0,\"serverTimeDiff\":-160,\"custom\":{},\"numOfResets\":0,\"consent\":false}"
+        },
+        {
+          "name": "_pendo_accountId.6a49047d-7d4c-46f5-7b81-8b6193d6bf7b",
+          "value": "{\"ttl\":1787335315209,\"value\":\"488851\"}"
+        },
+        {
+          "name": "_fs_lua",
+          "value": "1.1778695314874"
+        },
+        {
+          "name": "_pendo_feedback_ping_sent.6a49047d-7d4c-46f5-7b81-8b6193d6bf7b",
+          "value": "{\"ttl\":1778698915210,\"value\":\"{\\\"user\\\":{\\\"id\\\":\\\"1568647\\\",\\\"email\\\":\\\"schundu@cariara.com\\\",\\\"allowed_products\\\":[{\\\"id\\\":\\\"cc16973d-c311-440f-88b0-1090ac462533\\\"}],\\\"full_name\\\":\\\"No Name Provided1568647\\\"},\\\"account\\\":{\\\"id\\\":\\\"488851\\\",\\\"is_paying\\\":true},\\\"vendor\\\":{\\\"id\\\":\\\"a54ddf31-e220-40f8-9e08-5f6bc22aa039\\\"}}\"}"
+        },
+        {
+          "name": "_pendo_guides_blocked.6a49047d-7d4c-46f5-7b81-8b6193d6bf7b",
+          "value": "{\"ttl\":1778709715566,\"value\":\"0\"}"
+        },
+        {
+          "name": "_pendo_meta.6a49047d-7d4c-46f5-7b81-8b6193d6bf7b",
+          "value": "{\"ttl\":1787335315211,\"value\":1112019139}"
+        },
+        {
+          "name": "_gcl_ls",
+          "value": "{\"schema\":\"gcl\",\"version\":1,\"gcl_ctr\":{\"value\":{\"value\":0,\"timeouts\":0,\"errors\":0,\"eopCount\":0,\"creationTimeMs\":1778694746772},\"expires\":1786470746772}}"
+        },
+        {
+          "name": "_pendo_visitorId.6a49047d-7d4c-46f5-7b81-8b6193d6bf7b",
+          "value": "{\"ttl\":1787335315209,\"value\":\"1568647\"}"
+        },
+        {
+          "name": "li_adsId",
+          "value": "3eb3804a-18e0-4dcb-ae2e-966868ef290a"
+        },
+        {
+          "name": "_fs_uid",
+          "value": "#Q02VK#4b6f07fd-cb67-48a5-a7b7-dd1731111d04:cb1e7efc-1a22-4d5e-857e-be8472e35eea:1778694746800::3#3dd61388##/1810230753"
+        }
+      ]
+    }
+  ]
+}

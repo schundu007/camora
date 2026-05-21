@@ -1,0 +1,139 @@
+<h2>CoFix — Full Page Layout</h2>
+<p class="subtitle">Top-level tab at /lumora/fix — split pane with Monaco editors and annotation column</p>
+
+<div class="mockup">
+  <div class="mockup-header">CoFix Page — /lumora/fix</div>
+  <div class="mockup-body" style="padding:0;overflow:hidden;background:#0d1117;font-family:monospace;font-size:11px;">
+
+    <!-- Header bar (same as other Lumora pages) -->
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:#161b22;border-bottom:1px solid #30363d;">
+      <span style="color:#c9d1d9;font-weight:700;margin-right:8px;font-size:13px;">◈ Lumora</span>
+      <span style="padding:4px 12px;background:#21262d;color:#8b949e;border-radius:20px;font-size:11px;cursor:pointer;">Interview</span>
+      <span style="padding:4px 12px;background:#21262d;color:#8b949e;border-radius:20px;font-size:11px;cursor:pointer;">Coding</span>
+      <span style="padding:4px 12px;background:#21262d;color:#8b949e;border-radius:20px;font-size:11px;cursor:pointer;">Design</span>
+      <span style="padding:4px 12px;background:#0047AB;color:#fff;border-radius:20px;font-size:11px;font-weight:700;">CoFix</span>
+      <div style="flex:1;"></div>
+      <span style="color:#8b949e;font-size:10px;">Python</span>
+      <span style="background:#21262d;color:#8b949e;padding:3px 8px;border-radius:4px;font-size:10px;">▾</span>
+    </div>
+
+    <!-- Two-column layout -->
+    <div style="display:flex;height:480px;">
+
+      <!-- LEFT PANEL: Paste broken code -->
+      <div style="flex:1;border-right:1px solid #30363d;display:flex;flex-direction:column;">
+        <div style="padding:10px 14px;background:#161b22;border-bottom:1px solid #30363d;display:flex;align-items:center;justify-content:space-between;">
+          <span style="color:#8b949e;font-size:10px;letter-spacing:.05em;">BROKEN CODE</span>
+          <span style="color:#30363d;font-size:10px;">paste or type</span>
+        </div>
+        <!-- Monaco editor area -->
+        <div style="flex:1;padding:14px;background:#0d1117;overflow:hidden;">
+          <div style="color:#ff7b72;">class DevImageBuilder:</div>
+          <div style="margin-left:16px;color:#c9d1d9;">def find_build_schedule(self, developers, deadlines, layers):</div>
+          <div style="margin-left:32px;color:#ff7b72;">for dev in developers</div>
+          <div style="margin-left:48px;color:#c9d1d9;"><span style="background:#ff000033;border-radius:2px;padding:0 2px;">deps = layers[dev].dependancies</span></div>
+          <div style="margin-left:48px;color:#c9d1d9;">schedule[dev] = deadline[dev]</div>
+          <div style="margin-left:48px;color:#f0883e;">  ...</div>
+          <div style="margin-left:48px;color:#8b949e;"># missing: backwards propagation</div>
+        </div>
+        <!-- Optional hint -->
+        <div style="padding:10px 14px;background:#161b22;border-top:1px solid #30363d;">
+          <div style="color:#8b949e;font-size:10px;margin-bottom:6px;">HINT (optional)</div>
+          <div style="background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px;color:#c9d1d9;font-family:sans-serif;font-size:11px;">missing the colon after for loop + typo 'dependancies' + backwards deadline propagation logic</div>
+        </div>
+        <!-- Fix button -->
+        <div style="padding:10px 14px;background:#161b22;border-top:1px solid #30363d;">
+          <button style="width:100%;padding:9px;background:#0047AB;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.03em;">⚡ Fix with CoFix</button>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL: Fixed code + annotations -->
+      <div style="flex:1;display:flex;flex-direction:column;">
+        <div style="padding:10px 14px;background:#161b22;border-bottom:1px solid #30363d;display:flex;align-items:center;justify-content:space-between;">
+          <span style="color:#7ee787;font-size:10px;letter-spacing:.05em;">✓ FIXED CODE</span>
+          <div style="display:flex;gap:6px;">
+            <span style="background:#21262d;color:#8b949e;padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;">Copy</span>
+            <span style="background:#21262d;color:#8b949e;padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;">Send to Coding →</span>
+          </div>
+        </div>
+
+        <!-- Split: code + annotations side by side -->
+        <div style="flex:1;display:flex;overflow:hidden;">
+
+          <!-- Fixed code with badges -->
+          <div style="flex:1.4;padding:14px;background:#0d1117;border-right:1px solid #21262d;overflow:hidden;">
+            <div style="color:#7ee787;">class DevImageBuilder:</div>
+            <div style="margin-left:16px;color:#c9d1d9;">def find_build_schedule(self, developers, deadlines, layers):</div>
+            <div style="margin-left:32px;display:flex;align-items:center;gap:6px;">
+              <span style="color:#ff7b72;">for</span><span style="color:#c9d1d9;"> dev </span><span style="color:#ff7b72;">in</span><span style="color:#c9d1d9;"> developers<span style="color:#7ee787;">:</span></span>
+              <span style="background:#f59e0b;color:#000;border-radius:10px;padding:1px 5px;font-size:9px;font-weight:700;">①</span>
+            </div>
+            <div style="margin-left:48px;display:flex;align-items:center;gap:6px;">
+              <span style="color:#c9d1d9;">deps = layers[dev].<span style="background:#23863633;color:#7ee787;border-radius:2px;padding:0 2px;">dependencies</span></span>
+              <span style="background:#f59e0b;color:#000;border-radius:10px;padding:1px 5px;font-size:9px;font-weight:700;">②</span>
+            </div>
+            <div style="margin-left:48px;color:#c9d1d9;">schedule[dev] = deadline[dev]</div>
+            <div style="margin-left:48px;display:flex;align-items:center;gap:6px;">
+              <span style="color:#c9d1d9;"><span style="color:#ff7b72;">if</span> dep <span style="color:#ff7b72;">not in</span> schedule:</span>
+              <span style="background:#238636;color:#7ee787;border-radius:10px;padding:1px 5px;font-size:9px;font-weight:700;">③</span>
+            </div>
+            <div style="margin-left:64px;display:flex;align-items:center;gap:6px;">
+              <span style="color:#c9d1d9;">schedule[dep] = min(schedule.get(dep, <span style="color:#79c0ff;">inf</span>), deadline[dev] - 1)</span>
+              <span style="background:#238636;color:#7ee787;border-radius:10px;padding:1px 5px;font-size:9px;font-weight:700;">④</span>
+            </div>
+          </div>
+
+          <!-- Annotation column -->
+          <div style="width:180px;padding:14px;background:#0d1117;overflow-y:auto;">
+            <div style="color:#f59e0b;font-size:9px;letter-spacing:.07em;margin-bottom:10px;">CHANGES</div>
+
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+                <span style="background:#f59e0b;color:#000;border-radius:10px;padding:1px 5px;font-size:9px;font-weight:700;">①</span>
+                <span style="color:#c9d1d9;font-size:10px;">Missing colon</span>
+              </div>
+              <div style="color:#8b949e;font-size:9px;font-family:sans-serif;">Added <code style="color:#7ee787;">:</code> at end of <code>for</code> statement — Python syntax requires it.</div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+                <span style="background:#f59e0b;color:#000;border-radius:10px;padding:1px 5px;font-size:9px;font-weight:700;">②</span>
+                <span style="color:#c9d1d9;font-size:10px;">Typo fixed</span>
+              </div>
+              <div style="color:#8b949e;font-size:9px;font-family:sans-serif;"><code style="color:#ff7b72;">dependancies</code> → <code style="color:#7ee787;">dependencies</code></div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+                <span style="background:#238636;color:#7ee787;border-radius:10px;padding:1px 5px;font-size:9px;font-weight:700;">③</span>
+                <span style="color:#c9d1d9;font-size:10px;">Added: guard</span>
+              </div>
+              <div style="color:#8b949e;font-size:9px;font-family:sans-serif;">Skip deps already scheduled to avoid overwriting tighter deadlines.</div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+                <span style="background:#238636;color:#7ee787;border-radius:10px;padding:1px 5px;font-size:9px;font-weight:700;">④</span>
+                <span style="color:#c9d1d9;font-size:10px;">Added: propagation</span>
+              </div>
+              <div style="color:#8b949e;font-size:9px;font-family:sans-serif;">Backwards deadline propagation: dep must finish before dev's deadline.</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Complexity summary strip -->
+        <div style="padding:8px 14px;background:#161b22;border-top:1px solid #30363d;display:flex;gap:16px;">
+          <span style="color:#8b949e;font-size:10px;">Time: <span style="color:#c9d1d9;">O(V + E)</span></span>
+          <span style="color:#8b949e;font-size:10px;">Space: <span style="color:#c9d1d9;">O(V)</span></span>
+          <span style="color:#8b949e;font-size:10px;">HackerRank: <span style="color:#7ee787;">✓ Compatible</span></span>
+          <div style="flex:1;"></div>
+          <span style="color:#8b949e;font-size:10px;">4 changes</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px;">Does this layout look right? The "Send to Coding →" button copies the fixed code into the Coding tab for further testing.</p>

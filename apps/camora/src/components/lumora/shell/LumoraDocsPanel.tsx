@@ -923,7 +923,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                       <SectionHeading label="STAR Response" />
                       <div className="space-y-2">
                         {stars.map((s) => q[s.key] && (
-                          <div key={s.key} className="rounded-lg p-3 flex gap-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderLeft: `3px solid ${s.accent}` }}>
+                          <div key={s.key} className="rounded-lg p-3 flex gap-3" style={{ background: `${s.accent}10`, border: `1px solid ${s.accent}40` }}>
                             <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wider" style={{ color: s.accent, minWidth: 64 }}>{s.label}</span>
                             <span className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-primary)' }}>{Array.isArray(q[s.key]) ? q[s.key].join('\n') : q[s.key]}</span>
                           </div>

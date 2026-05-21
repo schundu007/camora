@@ -374,7 +374,7 @@ export const LumoraShellPage = () => {
           style={{
             borderBottom: '1px solid var(--border)',
             background: 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)',
-            boxShadow: '0 1px 3px rgba(38,97,156,0.06), 0 4px 16px rgba(38,97,156,0.04)',
+            boxShadow: 'var(--shadow-primary-xs)',
           }}
         >
           {/* Mobile-only Camora logo — the desktop LumoraIconRail (which
