@@ -921,7 +921,7 @@ export default function DocsPage({ onBack }) {
                                 <Link
                                   to={`/capra/prepare/${lastTopic.category || 'coding'}?topic=${encodeURIComponent(lastTopic.topicId)}`}
                                   className="card-lift rounded-lg p-5 flex flex-col"
-                                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                  style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                                 >
                                   <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>CONTINUE</span>
                                   <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{lastTitle}</h3>
@@ -931,7 +931,7 @@ export default function DocsPage({ onBack }) {
                                 <Link
                                   to="/capra/prepare/coding"
                                   className="card-lift rounded-lg p-5 flex flex-col"
-                                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                  style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                                 >
                                   <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>NEW HERE</span>
                                   <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Start with DSA</h3>
@@ -942,7 +942,7 @@ export default function DocsPage({ onBack }) {
                               <Link
                                 to={`/capra/prepare/coding?topic=${encodeURIComponent(daily?.id || '')}`}
                                 className="card-lift rounded-lg p-5 flex flex-col"
-                                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                               >
                                 <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--warning-text)', fontFamily: 'var(--font-mono)' }}>TODAY'S PICK</span>
                                 <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{daily?.title || 'A new topic each day'}</h3>
@@ -952,7 +952,7 @@ export default function DocsPage({ onBack }) {
                               <Link
                                 to="/capra/practice"
                                 className="card-lift rounded-lg p-5 flex flex-col"
-                                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                               >
                                 <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>PRACTICE</span>
                                 <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Run a timed mock</h3>
@@ -1000,7 +1000,7 @@ export default function DocsPage({ onBack }) {
                               key={cat.id}
                               to={`/capra/prepare/${cat.href}`}
                               className="card-lift group relative rounded-xl overflow-hidden flex flex-col active:scale-[0.98]"
-                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                              style={{ background: 'var(--bg-elevated)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 28%, transparent)' }}
                             >
                               <TopicIllustration name={cat.id} style={{ aspectRatio: '5 / 1' }} />
                               <div className="px-4 pt-4 pb-4 flex flex-col items-center text-center gap-3">
@@ -1040,7 +1040,7 @@ export default function DocsPage({ onBack }) {
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
                           <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Learning Path</span>
                         </div>
-                        <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: 'none' }}>
+                        <div className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
                             {[
                               { step: 1, title: 'Coding', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu' },
@@ -1085,7 +1085,7 @@ export default function DocsPage({ onBack }) {
                               key={resource.title}
                               href={resource.href}
                               className="card-lift group rounded-lg overflow-hidden flex flex-col"
-                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                              style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                             >
                               <TopicIllustration name={resource.illustration} />
                               <div className="p-5">
@@ -1127,7 +1127,7 @@ export default function DocsPage({ onBack }) {
                             <div
                               key={card.title}
                               className="rounded overflow-hidden"
-                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                              style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                             >
                               <div className="p-5">
                               <div className="flex items-center gap-3 mb-4">
@@ -1171,7 +1171,7 @@ export default function DocsPage({ onBack }) {
                               <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
                               <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Continue Where You Left Off</span>
                             </div>
-                            <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                            <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                               {recentItems.map((topic) => (
                                 <Link
                                   key={topic.id}
@@ -1566,7 +1566,7 @@ export default function DocsPage({ onBack }) {
               {activePage === 'coding' && (
                 <>
                   {/* All topics in a flat 2-column grid */}
-                  <div className="rounded overflow-hidden mb-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                  <div className="rounded overflow-hidden mb-6" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-3">
                     {filteredTopics.map((topic, idx) => {
                       const catId = codingCategoryMap[topic.id];
@@ -1594,7 +1594,7 @@ export default function DocsPage({ onBack }) {
                           <div
                             onClick={() => setSelectedTopic(topic.id)}
                             className={`group rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer transition-[background-color] duration-150 hover:bg-[var(--bg-elevated)] active:scale-[0.99] ${codingLocked ? 'opacity-60' : ''}`}
-                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                            style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: codingLocked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.07)' }}>
@@ -1641,7 +1641,7 @@ export default function DocsPage({ onBack }) {
                     />
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Time Complexity Card */}
-                      <div className="rounded overflow-hidden transition-colors" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                      <div className="rounded overflow-hidden transition-colors" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                         <CategoryHeader icon="clock" title="Time Complexity Cheat Sheet" />
                         <div className="p-4 overflow-x-auto">
                           <table className="w-full text-sm">
@@ -1669,7 +1669,7 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
                       {/* Data Structure Selection Card */}
-                      <div className="rounded overflow-hidden transition-colors" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                      <div className="rounded overflow-hidden transition-colors" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                         <CategoryHeader icon="database" title="When to Use What" />
                         <div className="p-4 overflow-x-auto">
                           <table className="w-full text-sm">
@@ -1715,7 +1715,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => systemDesignCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           {/* Category Header with Progress */}
                           <CategoryHeader
                             icon={category.icon}
@@ -1731,7 +1731,7 @@ export default function DocsPage({ onBack }) {
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
                                 className={`group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200   ${locked ? 'opacity-60' : ''}`}
-                                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
@@ -1819,7 +1819,7 @@ export default function DocsPage({ onBack }) {
                                 <div
                                   key={design.id}
                                   className={`group rounded p-3 flex items-center justify-between transition-colors duration-200   min-w-0 overflow-hidden ${designLocked ? 'opacity-60' : ''}`}
-                                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                  style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                                 >
                                   <div
                                     onClick={() => setSelectedTopic(design.id)}
@@ -1878,7 +1878,7 @@ export default function DocsPage({ onBack }) {
                       if (categoryProblems.length === 0) return null;
                       // diffStyle is computed inline per-problem below
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -1893,7 +1893,7 @@ export default function DocsPage({ onBack }) {
                                   key={problem.id}
                                   onClick={() => setSelectedTopic(problem.id)}
                                   className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
-                                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                  style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                                 >
                                   <div className="flex items-center gap-2.5">
                                     {getCompanyLogoSrc(problem.id) ? (
@@ -1941,7 +1941,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = systemDesignPatterns.filter(t => systemDesignPatternCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -1954,7 +1954,7 @@ export default function DocsPage({ onBack }) {
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
                                 className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
-                                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
@@ -1993,7 +1993,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = microservicesPatterns.filter(t => microservicesCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -2006,7 +2006,7 @@ export default function DocsPage({ onBack }) {
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
                                 className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
-                                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
@@ -2045,7 +2045,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = systemDesignTradeoffs.filter(t => tradeoffCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -2058,7 +2058,7 @@ export default function DocsPage({ onBack }) {
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
                                 className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
-                                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
@@ -2097,7 +2097,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = scalableSystemsTopics.filter(t => scalableSystemsCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -2110,7 +2110,7 @@ export default function DocsPage({ onBack }) {
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
                                 className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
-                                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
@@ -2144,14 +2144,14 @@ export default function DocsPage({ onBack }) {
                       subtitle="Thread-safe programming, synchronization, and classic problems"
                       className="mb-4"
                     />
-                    <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                    <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                         {concurrencyTopics.map((topic) => (
                           <div
                             key={topic.id}
                             onClick={() => setSelectedTopic(topic.id)}
                             className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
-                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                            style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                           >
                             <div className="flex items-center gap-2.5">
                               <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-elevated)' }}>
@@ -2175,7 +2175,7 @@ export default function DocsPage({ onBack }) {
                   <div className="h-px bg-[var(--border)] mb-6" />
 
                   {/* Session Framework */}
-                  <div className="rounded overflow-hidden p-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                  <div className="rounded overflow-hidden p-5" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                     <div className="mb-4">
                       <span className="landing-mono text-xs text-[var(--accent)] tracking-widest uppercase">Framework</span>
                       <h3 className="landing-display font-bold text-lg mt-1 tracking-tight text-[var(--text-primary)] flex items-center gap-2">
@@ -2219,7 +2219,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => lldCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -2234,7 +2234,7 @@ export default function DocsPage({ onBack }) {
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
                                 className={`group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200   ${locked ? 'opacity-60' : ''}`}
-                                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
@@ -2277,7 +2277,7 @@ export default function DocsPage({ onBack }) {
                       const categoryProblems = lldProblems.filter(p => lldProblemCategoryMap[p.id] === category.id);
                       if (categoryProblems.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -2292,7 +2292,7 @@ export default function DocsPage({ onBack }) {
                                   key={problem.id}
                                   onClick={() => setSelectedTopic(problem.id)}
                                   className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
-                                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                  style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                                 >
                                   <div className="flex items-center gap-2.5">
                                     {getCompanyLogoSrc(problem.id) ? (
@@ -2336,7 +2336,7 @@ export default function DocsPage({ onBack }) {
                     const readinessPercent = totalTopics > 0 ? Math.round((completedCount / totalTopics) * 100) : 0;
                     const readinessLabel = readinessPercent === 0 ? 'Not Started' : readinessPercent < 25 ? 'Getting Started' : readinessPercent < 50 ? 'Building Momentum' : readinessPercent < 75 ? 'Strong Progress' : readinessPercent < 100 ? 'Almost Ready' : 'Fully Prepared';
                     return (
-                      <div className="rounded overflow-hidden mb-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                      <div className="rounded overflow-hidden mb-6" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                         <div className="px-5 py-4">
                           <div className="flex items-center justify-between mb-4">
                             <div>
@@ -2377,7 +2377,7 @@ export default function DocsPage({ onBack }) {
                   })()}
 
                   {/* STAR Method — Compact */}
-                  <div className="rounded overflow-hidden mb-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                  <div className="rounded overflow-hidden mb-6" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                     <div className="px-5 py-3">
                       <div className="flex items-center gap-2 mb-2">
                         <Icon name="star" size={14} className="text-[var(--accent)]" />
@@ -2429,7 +2429,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => topicCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           {/* Category Header with Progress */}
                           <CategoryHeader
                             icon={category.icon}
@@ -2443,7 +2443,7 @@ export default function DocsPage({ onBack }) {
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
                                 className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
-                                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
@@ -2543,7 +2543,7 @@ export default function DocsPage({ onBack }) {
                         { icon: 'layers', title: '8-10 Stories Ready', desc: 'Diverse stories that flex across question types and company values.', metric: 'Story Bank' },
                         { icon: 'target', title: 'Quantify Everything', desc: 'Revenue, percentages, users impacted, time saved — numbers stick.', metric: 'Data > Words' },
                       ].map((tip, i) => (
-                        <div key={i} className="rounded transition-colors p-4 group  " style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={i} className="rounded transition-colors p-4 group  " style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <div className="flex items-center justify-between mb-3">
                             <div className="w-8 h-8 rounded flex items-center justify-center transition-colors" style={{ background: 'var(--bg-elevated)' }}>
                               <Icon name={tip.icon} size={14} style={{ color: 'var(--accent)' }} />
@@ -2573,7 +2573,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => microservicesCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -2586,7 +2586,7 @@ export default function DocsPage({ onBack }) {
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
                                 className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
-                                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
@@ -2623,7 +2623,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => databaseCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -2638,7 +2638,7 @@ export default function DocsPage({ onBack }) {
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
                                 className={`group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200   ${locked ? 'opacity-60' : ''}`}
-                                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
@@ -2668,7 +2668,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => sqlCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -2683,7 +2683,7 @@ export default function DocsPage({ onBack }) {
                                 key={topic.id}
                                 onClick={() => setSelectedTopic(topic.id)}
                                 className={`group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200   ${locked ? 'opacity-60' : ''}`}
-                                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'rgba(38,97,156,0.1)' }}>
@@ -2727,7 +2727,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => projectCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -2743,7 +2743,7 @@ export default function DocsPage({ onBack }) {
                                   key={topic.id}
                                   onClick={() => !isLocked && setSelectedTopic(topic.id)}
                                   className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
-                                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                  style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                                 >
                                   <div className="flex items-start justify-between gap-2.5">
                                     <span
@@ -2807,7 +2807,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => roadmapCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -2823,7 +2823,7 @@ export default function DocsPage({ onBack }) {
                                   key={topic.id}
                                   onClick={() => !isLocked && setSelectedTopic(topic.id)}
                                   className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
-                                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                  style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                                 >
                                   <div className="flex items-start justify-between gap-2.5">
                                     <span
@@ -2911,7 +2911,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => engBlogCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -2927,7 +2927,7 @@ export default function DocsPage({ onBack }) {
                                   key={topic.id}
                                   onClick={() => !isLocked && setSelectedTopic(topic.id)}
                                   className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
-                                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                  style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                                 >
                                   <div className="flex items-start justify-between gap-2.5">
                                     <span
@@ -2998,7 +2998,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => sreTopicCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -3014,7 +3014,7 @@ export default function DocsPage({ onBack }) {
                                   key={topic.id}
                                   onClick={() => !isLocked && setSelectedTopic(topic.id)}
                                   className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
-                                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                  style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                                 >
                                   <div className="flex items-start justify-between gap-2.5">
                                     {/* Custom topic icon — colored chip badge per topic icon name */}
@@ -3077,7 +3077,7 @@ export default function DocsPage({ onBack }) {
                       const categoryTopics = filteredTopics.filter(t => devopsTopicCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
-                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
@@ -3093,7 +3093,7 @@ export default function DocsPage({ onBack }) {
                                   key={topic.id}
                                   onClick={() => !isLocked && setSelectedTopic(topic.id)}
                                   className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
-                                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                                  style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                                 >
                                   <div className="flex items-start justify-between gap-2.5">
                                     <span
