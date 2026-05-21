@@ -293,7 +293,6 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
             </div>
             <div className="mt-2 text-sm font-medium" style={{ color: 'rgba(255,255,255,0.78)' }}>{dateStr}</div>
             <h1 className="mt-4 text-xl font-bold text-white">{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
-            <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.7)' }}>Launch an AI assistant for your next interview.</p>
           </div>
         </div>
         {/* Soft fade into the body — replaces the diagonal divider */}
