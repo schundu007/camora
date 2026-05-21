@@ -286,11 +286,8 @@ export default function DocsPage({ onBack }) {
 
   // Clear job-role filter
   const clearJobFilter = () => {
-    if (jobContext?.fromProfile) {
-      setShowAllContent(true);
-    } else {
-      setJobContext(null);
-    }
+    setShowAllContent(true);
+    setJobContext(null);
   };
 
   const reEnableRoleFilter = () => {
@@ -724,11 +721,11 @@ export default function DocsPage({ onBack }) {
     // Microservices. Tier 4 (portfolio + reference, used between rounds,
     // not tested directly): Projects → Roadmaps → Eng Blogs.
     const cats = [
-      { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: 'var(--text-primary)', topics: codingTopics, description: 'Arrays, strings, trees, graphs, DP — the algorithmic core of every coding interview.' },
+      { id: 'coding', href: 'coding', title: 'DSA & Algorithms', icon: 'cpu', color: 'var(--text-primary)', topics: codingTopics, description: 'Arrays, strings, trees, graphs, DP — the algorithmic core of technical hiring.' },
       { id: 'system-design', href: 'system-design', title: 'System Design', icon: 'systemDesign', color: 'var(--text-primary)', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics], description: 'Scale, sharding, caching, queues, consistency — design Twitter, Uber, WhatsApp end to end.' },
       { id: 'behavioral', href: 'behavioral', title: 'Behavioral', icon: 'users', color: 'var(--text-primary)', topics: [...behavioralTopics, ...companyPrep], description: 'STAR method, leadership stories, conflict resolution — company-specific prep for FAANG and startups.' },
       { id: 'low-level', href: 'low-level-design', title: 'Low Level Design', icon: 'layers', color: 'var(--text-primary)', topics: [...lldTopics, ...lldProblems], description: 'OOP, SOLID, design patterns — parking lot, LRU cache, vending machine, chess engine.' },
-      { id: 'sre', href: 'sre', title: 'Site Reliability Engineering', icon: 'shield', color: 'var(--text-primary)', topics: sreTopics, description: 'SLOs, error budgets, incident response, observability — the reliability + on-call interview track.' },
+      { id: 'sre', href: 'sre', title: 'Site Reliability Engineering', icon: 'shield', color: 'var(--text-primary)', topics: sreTopics, description: 'SLOs, error budgets, incident response, observability — the reliability + on-call track.' },
       { id: 'devops', href: 'devops', title: 'DevOps', icon: 'gitMerge', color: 'var(--text-primary)', topics: devopsTopics, description: 'CI/CD, infrastructure as code, containers, GitOps, progressive delivery — platform engineer essentials.' },
       { id: 'databases', href: 'databases', title: 'Databases & SQL', icon: 'database', color: 'var(--text-primary)', topics: [...databaseTopics, ...sqlTopics], description: 'Indexes, transactions, isolation levels, query plans — relational + NoSQL with hands-on SQL practice.' },
       { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: 'var(--text-primary)', topics: microservicesPatterns, description: 'Service decomposition, API gateways, saga + outbox, service mesh — patterns for splitting the monolith.' },
@@ -938,7 +935,7 @@ export default function DocsPage({ onBack }) {
                                 >
                                   <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>NEW HERE</span>
                                   <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Start with DSA</h3>
-                                  <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>The most-asked interview category.</p>
+                                  <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>The most-studied category.</p>
                                 </Link>
                               )}
                               {/* Today's challenge */}
@@ -1118,7 +1115,7 @@ export default function DocsPage({ onBack }) {
                           {[
                             { href: '/capra/prepare?page=coding', illustration: 'coding', icon: 'list', hexColor: 'navy',    title: 'Study Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
                             { href: '/handbook', icon: 'code', illustration: 'low-level',                    hexColor: 'navy-dk', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
-                            { href: '/capra/practice', icon: 'behavioral', illustration: 'behavioral',       hexColor: 'gold',    title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership interviews', badge: 'Practice' },
+                            { href: '/capra/practice', icon: 'behavioral', illustration: 'behavioral',       hexColor: 'gold',    title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership challenges', badge: 'Practice' },
                           ].map(resource => (
                             <a
                               key={resource.title}
@@ -1305,7 +1302,8 @@ export default function DocsPage({ onBack }) {
                         <button
                           type="button"
                           onClick={clearJobFilter}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-surface)] border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0 landing-body"
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded flex-shrink-0 landing-body transition-colors hover:opacity-80"
+                          style={{ color: 'var(--cam-gold-leaf)', background: 'rgba(3,19,46,0.88)', border: '1px solid rgba(201,162,39,0.50)' }}
                         >
                           <Icon name="x" size={12} />
                           Show all topics
@@ -1322,7 +1320,7 @@ export default function DocsPage({ onBack }) {
                           <button
                             key={tab.key}
                             onClick={() => { setActivePageState(tab.key); setSelectedTopicState(null); setActiveSection(tab.key); }}
-                            className={`chip chip-sm${activePage === tab.key ? ' chip-active' : ''} flex items-center gap-1.5`}
+                            className={`chip chip-sm chip-gold${activePage === tab.key ? ' chip-active' : ''} flex items-center gap-1.5`}
                           >
                             <Icon name={tab.icon} size={12} />
                             {tab.label}
@@ -1360,7 +1358,7 @@ export default function DocsPage({ onBack }) {
                           <div className="flex-1 min-w-0">
                             <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
                             <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                              Master the building blocks of technical interviews. From arrays and strings to trees, graphs, and dynamic programming — practice the patterns that top companies like Google, Meta, and Amazon test most frequently.
+                              Master the building blocks of technical hiring. From arrays and strings to trees, graphs, and dynamic programming — practice the patterns that top companies like Google, Meta, and Amazon test most frequently.
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {['Arrays & Hashing', 'Trees & Graphs', 'Dynamic Programming', 'Sliding Window', 'Binary Search', 'Backtracking'].map(tag => (
@@ -1480,7 +1478,7 @@ export default function DocsPage({ onBack }) {
                           <div className="flex-1 min-w-0">
                             <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
                             <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                              Master database internals and SQL queries for interviews. Understand indexing, replication, partitioning, consistency models, window functions, CTEs, and complex joins — the exact topics asked at Meta, Amazon, and top firms.
+                              Master database internals and SQL queries. Understand indexing, replication, partitioning, consistency models, window functions, CTEs, and complex joins — the exact topics asked at Meta, Amazon, and top firms.
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {['Indexing', 'Replication', 'Sharding', 'ACID vs BASE', 'Window Functions', 'CTEs', 'Complex Joins', 'Query Optimization'].map(tag => (
@@ -2576,7 +2574,7 @@ export default function DocsPage({ onBack }) {
                     />
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                       {[
-                        { icon: 'user', title: 'Use "I" not "We"', desc: 'Own your contribution. Interviewers evaluate you, not your team.', metric: '#1 Rule' },
+                        { icon: 'user', title: 'Use "I" not "We"', desc: 'Own your contribution. Own your contribution, not your team.', metric: '#1 Rule' },
                         { icon: 'clock', title: '2 Min Per Answer', desc: 'Concise and structured. Practice timing for the ideal window.', metric: '90-120s' },
                         { icon: 'layers', title: '8-10 Stories Ready', desc: 'Diverse stories that flex across question types and company values.', metric: 'Story Bank' },
                         { icon: 'target', title: 'Quantify Everything', desc: 'Revenue, percentages, users impacted, time saved — numbers stick.', metric: 'Data > Words' },
