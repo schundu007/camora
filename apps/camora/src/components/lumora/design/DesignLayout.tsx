@@ -249,6 +249,40 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [snapChipCode, problemText]);
 
+  const handleUrlFetch = async (overrideUrl?: string) => {
+    const url = (overrideUrl ?? urlInput).trim();
+    if (!url || !token) return;
+    try {
+      const resp = await fetch(`${API_URL}/api/v1/coding/fetch-problem`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ url }),
+      });
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        throw new Error(body.error || body.detail || `Failed to fetch (${resp.status})`);
+      }
+      const data = await resp.json();
+      if (data.problem) { setProblemText(data.problem); setInputTab('text'); }
+    } catch (err: any) {
+      setErrorMsg(`Failed to fetch URL: ${err.message}`);
+    }
+  };
+
+  // When the user switches to URL mode, auto-detect Chrome's active tab URL (desktop only)
+  useEffect(() => {
+    if (inputTab !== 'url') return;
+    const camo = (window as any).camo;
+    if (!camo?.getActiveBrowserUrl) return;
+    camo.getActiveBrowserUrl().then((result: any) => {
+      if (!result?.ok || !result.url) return;
+      setUrlInput(result.url);
+      handleUrlFetch(result.url);
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputTab]);
+
   const handleImageUpload = useCallback(async (file: File) => {
     // Show preview
     const reader = new FileReader();
@@ -894,25 +928,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}
                 />
                 <button
-                  onClick={async () => {
-                    if (!urlInput.trim() || !token) return;
-                    try {
-                      const resp = await fetch(`${API_URL}/api/v1/coding/fetch-problem`, {
-                        credentials: 'include',
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ url: urlInput.trim() }),
-                      });
-                      if (!resp.ok) {
-                        const body = await resp.json().catch(() => ({}));
-                        throw new Error(body.error || body.detail || `Failed to fetch (${resp.status})`);
-                      }
-                      const data = await resp.json();
-                      if (data.problem) { setProblemText(data.problem); setInputTab('text'); }
-                    } catch (err: any) {
-                      setErrorMsg(`Failed to fetch URL: ${err.message}`);
-                    }
-                  }}
+                  onClick={() => handleUrlFetch()}
+                  disabled={!urlInput.trim() || !token}
                   className="px-4 py-2 bg-[var(--accent)] text-white text-xs font-semibold rounded-lg hover:bg-[var(--accent-hover)] disabled:opacity-50 transition-colors"
                 >
                   Fetch
