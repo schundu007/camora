@@ -648,7 +648,7 @@ export default function HRLibraryPage() {
             )}
           </div>
 
-          {/* Right: count | sort */}
+          {/* Right: count | sort | Start Quiz */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
             {loading ? <span>Loading…</span> : (
               <>
@@ -660,6 +660,31 @@ export default function HRLibraryPage() {
                 <span style={{ opacity: 0.25 }}>|</span>
                 <span>Sort by <strong style={{ color: 'var(--text-secondary)' }}>Relevance</strong></span>
               </>
+            )}
+            {/* Start Quiz — only visible when the MCQ tab is active */}
+            {(activeTab === 'mcq' || activeTab === 'all') && (
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  params.set('count', '10');
+                  if (activeTab === 'mcq' && selectedSkills.length === 1) params.set('domain', selectedSkills[0]);
+                  if (selectedDiffs.length === 1) params.set('difficulty', selectedDiffs[0].toLowerCase());
+                  navigate(`/capra/quiz/session?${params.toString()}`);
+                }}
+                style={{
+                  marginLeft: 4,
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '5px 14px', borderRadius: 6,
+                  background: 'var(--cam-gold-leaf, #d4af37)', color: '#000',
+                  border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                  letterSpacing: '0.01em', whiteSpace: 'nowrap',
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M6 3.5l7 4.5-7 4.5V3.5z"/>
+                </svg>
+                Start Quiz
+              </button>
             )}
           </div>
         </div>
