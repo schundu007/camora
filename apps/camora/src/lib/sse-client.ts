@@ -10,35 +10,46 @@ const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.
 // we rely on the stream-alive signal, not a wall-clock timeout — user answers
 // can legitimately take 20-30s to complete.
 const CONNECT_TIMEOUT_MS = 30_000;
+// How long to wait between chunks before treating the connection as dead.
+// A mid-stream TCP stall with no data and no RST will otherwise hang forever.
+const SILENCE_TIMEOUT_MS = 30_000;
 // How many times to retry on pre-stream network / 5xx failures. Zero retries
 // once tokens are flowing — replaying would double-bill Anthropic and confuse
 // the UI mid-answer.
 const MAX_CONNECT_RETRIES = 2;
 
 async function fetchWithConnectRetry(url: string, init: RequestInit): Promise<Response> {
+  const outerSignal = init.signal as AbortSignal | undefined;
   let lastErr: any;
   for (let attempt = 0; attempt <= MAX_CONNECT_RETRIES; attempt++) {
+    // A fresh AbortController per attempt so the connect-timeout fires the
+    // right controller and doesn't bleed into the streaming phase.
+    const attemptAbort = new AbortController();
+    if (outerSignal?.aborted) {
+      attemptAbort.abort();
+    } else if (outerSignal) {
+      outerSignal.addEventListener('abort', () => attemptAbort.abort(), { once: true });
+    }
+    const connectTimer = setTimeout(() => attemptAbort.abort(), CONNECT_TIMEOUT_MS);
     try {
-      // A fresh AbortController PER ATTEMPT so the connect-timeout doesn't leak
-      // into the streaming phase. We reapply the caller's signal as the fetch
-      // signal (so external aborts still work).
-      const connectTimer = setTimeout(() => { try { (init as any)._connectAbort?.abort(); } catch {} }, CONNECT_TIMEOUT_MS);
-      try {
-        const response = await fetch(url, init);
-        clearTimeout(connectTimer);
-        // Retry only on pre-stream 5xx; 4xx is a real answer the caller should see.
-        if (response.status >= 500 && attempt < MAX_CONNECT_RETRIES) {
-          lastErr = new Error(`HTTP ${response.status}`);
-          await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
-          continue;
-        }
-        return response;
-      } finally {
-        clearTimeout(connectTimer);
+      const response = await fetch(url, { ...init, signal: attemptAbort.signal });
+      clearTimeout(connectTimer);
+      // Retry only on pre-stream 5xx; 4xx is a real answer the caller should see.
+      if (response.status >= 500 && attempt < MAX_CONNECT_RETRIES) {
+        lastErr = new Error(`HTTP ${response.status}`);
+        await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
+        continue;
       }
+      return response;
     } catch (err: any) {
-      if (err?.name === 'AbortError') throw err;
-      lastErr = err;
+      clearTimeout(connectTimer);
+      // If the outer signal aborted us, re-throw so the caller's AbortError propagates.
+      if (outerSignal?.aborted) throw err;
+      if (err?.name === 'AbortError') {
+        lastErr = new Error(`Connect timeout after ${CONNECT_TIMEOUT_MS}ms`);
+      } else {
+        lastErr = err;
+      }
       if (attempt >= MAX_CONNECT_RETRIES) break;
       await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
     }
@@ -179,7 +190,8 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     let currentData = '';
 
     while (true) {
-      const { done, value } = await reader.read();
+      const silenceTimer = setTimeout(() => abortController.abort(), SILENCE_TIMEOUT_MS);
+      const { done, value } = await reader.read().finally(() => clearTimeout(silenceTimer));
 
       if (done) {
         // Flush remaining buffer content before completing
@@ -377,7 +389,8 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
     let currentData = '';
 
     while (true) {
-      const { done, value } = await reader.read();
+      const silenceTimer = setTimeout(() => abortController.abort(), SILENCE_TIMEOUT_MS);
+      const { done, value } = await reader.read().finally(() => clearTimeout(silenceTimer));
 
       if (done) {
         // Flush remaining buffer content before completing
@@ -515,7 +528,8 @@ export async function streamCoFixResponse(options: CoFixStreamOptions): Promise<
     let currentData = '';
 
     while (true) {
-      const { done, value } = await reader.read();
+      const silenceTimer = setTimeout(() => abortController.abort(), SILENCE_TIMEOUT_MS);
+      const { done, value } = await reader.read().finally(() => clearTimeout(silenceTimer));
 
       if (done) {
         // Flush any partial frame left in buffer (final chunk may lack trailing \n)

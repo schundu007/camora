@@ -1083,7 +1083,7 @@ router.post('/execute', authenticate, async (req, res) => {
 // POST /fix — Auto-fix code based on failing test feedback
 // ---------------------------------------------------------------------------
 
-router.post('/fix', authenticate, async (req, res) => {
+router.post('/fix', authenticate, checkUsage('questions'), async (req, res) => {
   const { code, language, error: feedback, problem } = req.body;
 
   if (!code || !language || !feedback) {
@@ -1299,7 +1299,7 @@ RULES:
 // POST /translate — Translate a single solution to another language
 // ---------------------------------------------------------------------------
 
-router.post('/translate', authenticate, async (req, res) => {
+router.post('/translate', authenticate, checkUsage('questions'), async (req, res) => {
   const { code, fromLanguage, toLanguage, problem } = req.body;
 
   if (!code || !toLanguage) {
@@ -1510,7 +1510,7 @@ function detectLangFromCode(code) {
   return null;
 }
 
-router.post('/extract-from-image', authenticate, imageUpload.single('image'), async (req, res) => {
+router.post('/extract-from-image', authenticate, checkUsage('questions'), imageUpload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image uploaded (expected multipart field "image")' });
