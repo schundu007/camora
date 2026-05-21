@@ -400,11 +400,15 @@ export default function PracticePage() {
   // Whiteboard state for system design practice
   const whiteboardState = useWhiteboardState(questions.length || 10);
   const [sdGenerating, setSdGenerating] = useState(false);
+  const [sdTab, setSdTab] = useState('draw'); // 'draw' | 'reference'
+  const [sdRefDiagram, setSdRefDiagram] = useState({}); // { [idx]: { status: 'idle'|'loading'|'cached'|'missing', url } }
 
   // Timer countdown is now handled by the shared InterviewTimer component.
   // The onExpire callback on InterviewTimer calls endChallengeRef.current().
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
+  // Reset to draw mode when user navigates to a new question
+  useEffect(() => { setSdTab('draw'); }, [currentIdx]);
 
   const startChallenge = useCallback((overrideCategory, overrideDifficulty, forceQuestions) => {
     const cat = overrideCategory ?? category;
@@ -1114,46 +1118,31 @@ export default function PracticePage() {
                   }
                 };
 
-                const getDiagramForQuestion = (questionText) => {
-                  const q = questionText.toLowerCase();
-                  // Most specific matches first to avoid false positives
-                  if (q.includes('payment') || q.includes('wallet') || q.includes('transaction') || q.includes('billing'))
-                    return 'flowchart TD\n  A[Client] --> B[API Gateway]\n  B --> C[Payment Service]\n  C --> D[Idempotency Check / Redis]\n  C --> E[Ledger Service]\n  E --> F[PostgreSQL]\n  C --> G[Payment Processor / Stripe]\n  C --> H[Fraud Detection]\n  H --> I[ML Model]\n  C --> J[Kafka]\n  J --> K[Settlement Service]\n  J --> L[Notification Service]\n  B --> M[Wallet Service]\n  M --> F';
-                  if (q.includes('youtube') || q.includes('video streaming') || q.includes('netflix') || q.includes('twitch'))
-                    return 'flowchart TD\n  A[Client App] --> B[CDN]\n  B --> C[API Gateway]\n  C --> D[Video Upload Service]\n  C --> E[Video Streaming Service]\n  D --> F[Transcoding Pipeline]\n  F --> G[Object Storage / S3]\n  E --> G\n  C --> H[Search Service]\n  H --> I[Elasticsearch]\n  C --> J[Recommendation Engine]\n  J --> K[ML Model]\n  C --> L[User Service]\n  L --> M[PostgreSQL]\n  F --> N[Message Queue]';
-                  if (q.includes('chat') || q.includes('messaging') || q.includes('whatsapp') || q.includes('slack') || q.includes('discord'))
-                    return 'flowchart TD\n  A[Client App] --> B[WebSocket Gateway]\n  B --> C[Connection Manager]\n  C --> D[Message Router]\n  D --> E[Message Queue / Kafka]\n  E --> F[Message Storage]\n  F --> G[Cassandra]\n  D --> H[Presence Service]\n  H --> I[Redis]\n  C --> J[Group Service]\n  J --> K[PostgreSQL]\n  D --> L[Push Notification]\n  L --> M[APNS / FCM]';
-                  if (q.includes('uber') || q.includes('ride') || q.includes('delivery') || q.includes('doordash') || q.includes('lyft'))
-                    return 'flowchart TD\n  A[Rider App] --> B[API Gateway]\n  C[Driver App] --> B\n  B --> D[Trip Service]\n  B --> E[Matching Service]\n  E --> F[Location Service]\n  F --> G[Redis Geospatial]\n  D --> H[PostgreSQL]\n  B --> I[Pricing Service]\n  B --> J[Payment Service]\n  J --> K[Stripe]\n  F --> L[Kafka]\n  L --> M[ETA Service]';
-                  if (q.includes('twitter') || q.includes('feed') || q.includes('social') || q.includes('instagram') || q.includes('facebook') || q.includes('tiktok'))
-                    return 'flowchart TD\n  A[Client App] --> B[API Gateway]\n  B --> C[Post Service]\n  C --> D[Fan-out Service]\n  D --> E[Redis Feed Cache]\n  B --> F[Timeline Service]\n  F --> E\n  C --> G[PostgreSQL]\n  B --> H[Search Service]\n  H --> I[Elasticsearch]\n  D --> J[Kafka]\n  J --> K[Notification Service]\n  B --> L[Media Service]\n  L --> M[CDN / S3]';
-                  if (q.includes('url') || q.includes('shortener') || q.includes('bit.ly') || q.includes('tiny'))
-                    return 'flowchart TD\n  A[Client] --> B[API Gateway]\n  B --> C[URL Service]\n  C --> D[ID Generator]\n  C --> E[Redis Cache]\n  C --> F[PostgreSQL]\n  B --> G[Redirect Service]\n  G --> E\n  G --> F\n  B --> H[Analytics Service]\n  H --> I[Kafka]\n  I --> J[ClickHouse]';
-                  if (q.includes('rate limit'))
-                    return 'flowchart TD\n  A[Client] --> B[Load Balancer]\n  B --> C[Rate Limiter]\n  C --> D[Token Bucket / Redis]\n  C --> E[API Router]\n  E --> F[Auth Service]\n  E --> G[Service A]\n  E --> H[Service B]\n  G --> I[Database]\n  H --> I\n  C --> J[Metrics]\n  J --> K[Prometheus]';
-                  if (q.includes('search') || q.includes('yelp') || q.includes('google maps'))
-                    return 'flowchart TD\n  A[Client] --> B[API Gateway]\n  B --> C[Search Service]\n  C --> D[Elasticsearch]\n  B --> E[Geospatial Service]\n  E --> F[PostGIS / Redis]\n  B --> G[Ranking Service]\n  G --> H[ML Model]\n  C --> I[Index Builder]\n  I --> J[Kafka]\n  J --> D\n  B --> K[Review Service]\n  K --> L[PostgreSQL]';
-                  if (q.includes('e-commerce') || q.includes('shopping') || q.includes('shopify') || q.includes('amazon'))
-                    return 'flowchart TD\n  A[Client] --> B[CDN]\n  B --> C[API Gateway]\n  C --> D[Product Catalog]\n  D --> E[Elasticsearch]\n  C --> F[Cart Service]\n  F --> G[Redis]\n  C --> H[Order Service]\n  H --> I[PostgreSQL]\n  C --> J[Payment Service]\n  J --> K[Stripe]\n  H --> L[Kafka]\n  L --> M[Inventory Service]\n  L --> N[Notification Service]';
-                  if (q.includes('dropbox') || q.includes('drive') || q.includes('file') || q.includes('storage'))
-                    return 'flowchart TD\n  A[Client App] --> B[API Gateway]\n  B --> C[File Metadata Service]\n  C --> D[PostgreSQL]\n  B --> E[Upload Service]\n  E --> F[Chunk Manager]\n  F --> G[Object Storage / S3]\n  B --> H[Sync Service]\n  H --> I[WebSocket Notifications]\n  H --> J[Redis Pub/Sub]\n  B --> K[Sharing Service]\n  K --> D\n  F --> L[Dedup Service]';
-                  if (q.includes('notification') || q.includes('push'))
-                    return 'flowchart TD\n  A[Service Trigger] --> B[Notification Service]\n  B --> C[Priority Router]\n  C --> D[Template Engine]\n  D --> E[Email / SES]\n  D --> F[Push / FCM / APNS]\n  D --> G[SMS / Twilio]\n  B --> H[User Preferences]\n  H --> I[PostgreSQL]\n  B --> J[Kafka]\n  J --> K[Rate Limiter]\n  K --> L[Delivery Workers]\n  L --> M[Delivery Tracking]';
-                  if (q.includes('leaderboard') || q.includes('ranking') || q.includes('top k'))
-                    return 'flowchart TD\n  A[Client] --> B[API Gateway]\n  B --> C[Score Ingestion]\n  C --> D[Kafka]\n  D --> E[Aggregation Service]\n  E --> F[Redis Sorted Sets]\n  B --> G[Leaderboard API]\n  G --> F\n  E --> H[PostgreSQL]\n  B --> I[User Service]\n  I --> H\n  G --> J[CDN Cache]';
-                  if (q.includes('zoom') || q.includes('video call') || q.includes('conference'))
-                    return 'flowchart TD\n  A[Client App] --> B[Signaling Server / WebSocket]\n  B --> C[Session Manager]\n  C --> D[Redis]\n  A --> E[Media Server / SFU]\n  E --> F[TURN / STUN Server]\n  B --> G[Room Service]\n  G --> H[PostgreSQL]\n  E --> I[Recording Service]\n  I --> J[Object Storage / S3]\n  B --> K[Chat Service]\n  K --> L[Kafka]\n  G --> M[Scheduling Service]';
-                  if (q.includes('api gateway') || q.includes('gateway'))
-                    return 'flowchart TD\n  A[Client] --> B[Load Balancer]\n  B --> C[API Gateway]\n  C --> D[Auth / JWT Validation]\n  C --> E[Rate Limiter / Redis]\n  C --> F[Request Router]\n  F --> G[Service Discovery]\n  F --> H[Service A]\n  F --> I[Service B]\n  F --> J[Service C]\n  H --> K[Database]\n  C --> L[Logging / Tracing]\n  L --> M[Prometheus / Grafana]';
-                  // Generic fallback
-                  return 'flowchart TD\n  A[Client] --> B[Load Balancer]\n  B --> C[API Gateway]\n  C --> D[Auth Service]\n  C --> E[Core Service]\n  E --> F[Redis Cache]\n  E --> G[PostgreSQL]\n  E --> H[Message Queue]\n  H --> I[Worker Service]\n  I --> G\n  C --> J[Search / Analytics]\n  E --> K[Object Storage]';
-                };
+                const refState = sdRefDiagram[currentIdx] || { status: 'idle', url: null };
 
-                const handleLoadAIDiagram = async () => {
+                const loadRefDiagram = async () => {
+                  setSdTab('reference');
+                  if (refState.status !== 'idle') return;
                   const q = questions[currentIdx];
-                  const questionText = `${q.q}: ${q.desc}`;
-                  // Always return a problem-specific diagram immediately
-                  return getDiagramForQuestion(questionText);
+                  if (!q) return;
+                  setSdRefDiagram(prev => ({ ...prev, [currentIdx]: { status: 'loading', url: null } }));
+                  try {
+                    const res = await fetch(`${API_URL}/api/diagram/lookup`, {
+                      credentials: 'include',
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                      body: JSON.stringify({ question: `${q.q}: ${q.desc}` }),
+                    });
+                    const data = await res.json();
+                    setSdRefDiagram(prev => ({
+                      ...prev,
+                      [currentIdx]: data.success && data.image_url
+                        ? { status: 'cached', url: data.image_url }
+                        : { status: 'missing', url: null },
+                    }));
+                  } catch {
+                    setSdRefDiagram(prev => ({ ...prev, [currentIdx]: { status: 'missing', url: null } }));
+                  }
                 };
 
                 return (
@@ -1169,19 +1158,68 @@ export default function PracticePage() {
                       </button>
                     </div>
 
-                    <div style={{ height: 'calc(100dvh - 280px)', minHeight: 360, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)' }}>
+                    <div style={{ height: 'calc(100dvh - 280px)', minHeight: 360, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)', position: 'relative' }}>
                       <Allotment defaultSizes={[45, 55]}>
-                        {/* Left: Excalidraw Whiteboard */}
+                        {/* Left: Draw / Reference toggle pane */}
                         <Allotment.Pane minSize={320}>
-                          <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
-                            <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: 13 }}>Loading whiteboard...</div>}>
-                              <ExcalidrawWhiteboard
-                                key={currentIdx}
-                                initialElements={whiteboardState.getScene(currentIdx)}
-                                onChange={(elements) => whiteboardState.saveScene(currentIdx, elements)}
-                                onLoadAIDiagram={handleLoadAIDiagram}
-                              />
-                            </Suspense>
+                          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                            {/* Tab bar */}
+                            <div style={{ display: 'flex', gap: 2, padding: '4px 8px', background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+                              <button
+                                type="button"
+                                onClick={() => setSdTab('draw')}
+                                style={{ padding: '3px 10px', fontSize: 11, fontWeight: 600, borderRadius: 6, border: 'none', cursor: 'pointer', background: sdTab === 'draw' ? 'var(--accent-subtle)' : 'transparent', color: sdTab === 'draw' ? 'var(--accent)' : 'var(--text-muted)' }}
+                              >
+                                Whiteboard
+                              </button>
+                              <button
+                                type="button"
+                                onClick={loadRefDiagram}
+                                style={{ padding: '3px 10px', fontSize: 11, fontWeight: 600, borderRadius: 6, border: 'none', cursor: refState.status === 'loading' ? 'wait' : 'pointer', background: sdTab === 'reference' ? 'var(--accent-subtle)' : 'transparent', color: sdTab === 'reference' ? 'var(--accent)' : 'var(--text-muted)' }}
+                              >
+                                {refState.status === 'loading' ? 'Loading...' : 'Reference'}
+                              </button>
+                            </div>
+                            {/* Content */}
+                            {sdTab === 'draw' ? (
+                              <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+                                <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: 13 }}>Loading whiteboard...</div>}>
+                                  <ExcalidrawWhiteboard
+                                    key={currentIdx}
+                                    initialElements={whiteboardState.getScene(currentIdx)}
+                                    onChange={(elements) => whiteboardState.saveScene(currentIdx, elements)}
+                                  />
+                                </Suspense>
+                              </div>
+                            ) : (
+                              <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: refState.status === 'cached' ? 'flex-start' : 'center', background: 'var(--bg-surface)', padding: refState.status === 'cached' ? 0 : 24 }}>
+                                {refState.status === 'loading' && (
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, color: 'var(--text-muted)' }}>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
+                                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                                    </svg>
+                                    <span style={{ fontSize: 13 }}>Loading diagram...</span>
+                                  </div>
+                                )}
+                                {refState.status === 'cached' && refState.url && (
+                                  <img
+                                    src={`${API_URL}${refState.url}`}
+                                    alt="Reference architecture diagram"
+                                    style={{ maxWidth: '100%', height: 'auto', display: 'block' }}
+                                  />
+                                )}
+                                {(refState.status === 'missing' || refState.status === 'idle') && (
+                                  <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 12, opacity: 0.4 }}>
+                                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                                      <path d="M3 9h18M9 21V9" />
+                                    </svg>
+                                    <p style={{ fontSize: 13, fontWeight: 600, margin: '0 0 4px', color: 'var(--text-secondary)' }}>Diagram coming soon</p>
+                                    <p style={{ fontSize: 12, margin: 0, maxWidth: 220, lineHeight: 1.5 }}>Our team pre-generates reference diagrams for all questions.</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </Allotment.Pane>
 
