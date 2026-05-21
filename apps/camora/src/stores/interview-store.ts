@@ -340,20 +340,31 @@ export const useInterviewStore = create<InterviewState>()(
     }),
     {
       name: 'lumora-interview-store',
-      version: 2, // bump version to discard old localStorage with stale history
+      version: 3,
       partialize: (state) => ({
         useSearch: state.useSearch,
         responseFormat: state.responseFormat,
         preferredModel: state.preferredModel,
         threshold: state.threshold,
-        conversationId: state.conversationId,
         history: state.history,
         voiceMode: state.voiceMode,
         voiceEnrolled: state.voiceEnrolled,
         voiceEnrolledAt: state.voiceEnrolledAt,
+        voiceFilterEnabled: state.voiceFilterEnabled,
         modelOverrides: state.modelOverrides,
       }),
-      migrate: () => ({ useSearch: false, threshold: 0.015 }), // fresh start
+      migrate: (old: any) => ({
+        useSearch: old?.useSearch ?? false,
+        responseFormat: old?.responseFormat ?? 'auto',
+        preferredModel: old?.preferredModel ?? '',
+        threshold: old?.threshold ?? 0.015,
+        history: old?.history ?? [],
+        voiceMode: old?.voiceMode ?? 'filter-candidate',
+        voiceEnrolled: old?.voiceEnrolled ?? false,
+        voiceEnrolledAt: old?.voiceEnrolledAt ?? null,
+        voiceFilterEnabled: old?.voiceFilterEnabled ?? false,
+        modelOverrides: old?.modelOverrides ?? { coding: '', behavioral: '', design: '', prep: '' },
+      }),
     }
   )
 );

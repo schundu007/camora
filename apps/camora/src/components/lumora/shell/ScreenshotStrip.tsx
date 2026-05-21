@@ -63,8 +63,8 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       let dataUrl: string;
       if (camo?.snapActiveBrowser) {
         const result = await camo.snapActiveBrowser();
-        if (result?.error) throw new Error(result.error);
-        const blob = await fetch(result.dataUrl || result).then(r => r.blob());
+        if (!result?.ok || !result.dataUrl) throw new Error(result?.error || 'Snap failed');
+        const blob = await fetch(result.dataUrl).then(r => r.blob());
         dataUrl = await new Promise<string>(res => {
           const reader = new FileReader();
           reader.onloadend = () => res(reader.result as string);

@@ -38,10 +38,13 @@ contextBridge.exposeInMainWorld('camo', {
   // Auto-detect push events from main process (polling or F9 screenshot)
   captureHackerrankWindow: () => ipcRenderer.invoke('capture-window-by-name', 'hackerrank'),
   onHackerrankCapture: (callback) => {
-    ipcRenderer.on('hackerrank-capture-result', (_event, data) => callback(data));
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('hackerrank-capture-result', handler);
+    return handler;
   },
-  offHackerrankCapture: () => {
-    ipcRenderer.removeAllListeners('hackerrank-capture-result');
+  offHackerrankCapture: (handler) => {
+    if (handler) ipcRenderer.removeListener('hackerrank-capture-result', handler);
+    else ipcRenderer.removeAllListeners('hackerrank-capture-result');
   },
   // Notify main that OCR failed so the next poll retries the same URL.
   resetLastCaptureUrl: () => ipcRenderer.invoke('reset-last-capture-url'),
@@ -75,9 +78,12 @@ contextBridge.exposeInMainWorld('camo', {
   // (Cmd+Shift+3/4) while HackerRank is on screen. Renderer calls extractAndMaybeGenerate
   // on the received dataUrl, same as the F9 / auto-detect pipeline.
   onScreenshotWatcher: (callback) => {
-    ipcRenderer.on('screenshot-watcher-new', (_event, data) => callback(data));
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('screenshot-watcher-new', handler);
+    return handler;
   },
-  offScreenshotWatcher: () => {
-    ipcRenderer.removeAllListeners('screenshot-watcher-new');
+  offScreenshotWatcher: (handler) => {
+    if (handler) ipcRenderer.removeListener('screenshot-watcher-new', handler);
+    else ipcRenderer.removeAllListeners('screenshot-watcher-new');
   },
 });
