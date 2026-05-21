@@ -270,7 +270,7 @@ function scaleMathFor(kind) {
   return SCALEMATH_BLOCK;
 }
 
-export function buildInterviewDesignPrompt(resume, technical, detailLevel = null, cloudProvider = 'aws', designKind = 'system') {
+export function buildDesignPrompt(resume, technical, detailLevel = null, cloudProvider = 'aws', designKind = 'system') {
   const kind = VALID_DESIGN_KINDS.has(designKind) ? designKind : 'system';
   const isBasic = detailLevel === 'basic';
   const isFull = detailLevel === 'full';
@@ -646,7 +646,7 @@ IMPORTANT CODE FORMATTING RULE:
     // existing distributed-system questions never regress.
     const { classifyDesignKind } = await import('./designKindClassifier.js');
     const resolvedKind = classifyDesignKind(cleanQuestion, options.designKind);
-    systemPrompt = buildInterviewDesignPrompt(resume, technical, detailLevel, cloudProvider, resolvedKind);
+    systemPrompt = buildDesignPrompt(resume, technical, detailLevel, cloudProvider, resolvedKind);
     maxTokens = MAX_TOKENS_DESIGN;
   } else {
     const basePrompt = buildGeneralPrompt(resume, technical) + `

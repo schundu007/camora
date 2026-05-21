@@ -131,7 +131,7 @@ export function ApplyAnim() {
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   PREPARE — 3×3 interview topic grid with staggered pulse
+   PREPARE — 3×3 topic grid with staggered pulse
    ───────────────────────────────────────────────────────────────── */
 export function PrepareAnim() {
   const topics = ['DSA', 'SYS DESIGN', 'SQL', 'BEHAVIORAL', 'OS', 'NETWORKS', 'LLD', 'GRAPHS', 'OOD'];
@@ -619,9 +619,9 @@ export function FeaturePrepAnim() {
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   FEATURE 4: MOCK INTERVIEWS — triple circular-gauge score dashboard
+   FEATURE 4: MOCK SESSIONS — triple circular-gauge score dashboard
    ───────────────────────────────────────────────────────────────── */
-export function FeatureMockInterviewAnim() {
+export function FeatureMockSessionAnim() {
   const R = 18;
   const C = 2 * Math.PI * R;
   const gauges = [

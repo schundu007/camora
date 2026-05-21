@@ -21,7 +21,7 @@ function formatTime(seconds: number): string {
 }
 
 /**
- * Reusable interview timer component.
+ * Reusable session timer component.
  *
  * Displays a countdown in MM:SS format with color-coded urgency:
  *   - Green  when > 50% time remains

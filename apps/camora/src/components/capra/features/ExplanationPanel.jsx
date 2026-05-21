@@ -599,7 +599,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
           </SectionCard>
         )}
 
-        {/* Interviewer Q&A Section */}
+        {/* Q&A Section */}
         {hasSolution && onFollowUpQuestion && (
           <div className="animate-fadeIn">
             <div className="flex items-center justify-between mb-3">
@@ -610,7 +610,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
                   </svg>
                 </div>
                 <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-primary)]">
-                  Interviewer Q&A
+                  Q&A
                 </span>
               </div>
 
@@ -682,7 +682,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
                   ))}
                 </select>
                 <p className="text-xs text-[var(--text-muted)] mt-2 leading-relaxed">
-                  <strong>Tip:</strong> For best results capturing interviewer voice from Zoom/Meet/Teams:
+                  <strong>Tip:</strong> For best results capturing speaker voice from Zoom/Meet/Teams:
                   <br />• Install <a href="https://existential.audio/blackhole/" target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:underline">BlackHole</a> (free virtual audio device)
                   <br />• Create Multi-Output Device in Audio MIDI Setup
                   <br />• Route system audio through BlackHole

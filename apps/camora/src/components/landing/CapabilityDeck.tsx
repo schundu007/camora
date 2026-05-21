@@ -536,7 +536,7 @@ function ScenePrep() {
         {/* Footer stats */}
         <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: '1px solid var(--cam-primary-dk)', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 1.2s forwards' }}>
           <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.1em' }}>
-            Requirements · Capacity · Architecture · API · Data · Trade-offs · Edge Cases · Interview Follow-ups
+            Requirements · Capacity · Architecture · API · Data · Trade-offs · Edge Cases · Follow-ups
           </span>
           <span style={{ marginLeft: 'auto', fontSize: 10, color: ACCENT, fontWeight: 700, fontFamily: MONO }}>14 / 14 ✓</span>
         </div>

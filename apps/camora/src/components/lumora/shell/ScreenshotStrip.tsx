@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSessionStore } from '@/stores/session-store';
 import { dialogAlert } from '@/components/shared/Dialog';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
@@ -35,14 +35,14 @@ const pillBase = 'flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-b
 
 export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inputMode, onInputModeChange, showInputModeSelector, onTranscription, isTabActive, codingPlatform }: ScreenshotStripProps) => {
   const { token } = useAuth();
-  const isStealthActive = useInterviewStore(s => s.isStealthActive);
-  const setIsStealthActive = useInterviewStore(s => s.setIsStealthActive);
-  const answerMode = useInterviewStore(s => s.answerMode);
-  const setAnswerMode = useInterviewStore(s => s.setAnswerMode);
-  const sonaExport = useInterviewStore(s => s.sonaExport);
-  const sonaClear = useInterviewStore(s => s.sonaClear);
-  const sonaClose = useInterviewStore(s => s.sonaClose);
-  const sonaHasMessages = useInterviewStore(s => s.sonaHasMessages);
+  const isStealthActive = useSessionStore(s => s.isStealthActive);
+  const setIsStealthActive = useSessionStore(s => s.setIsStealthActive);
+  const answerMode = useSessionStore(s => s.answerMode);
+  const setAnswerMode = useSessionStore(s => s.setAnswerMode);
+  const sonaExport = useSessionStore(s => s.sonaExport);
+  const sonaClear = useSessionStore(s => s.sonaClear);
+  const sonaClose = useSessionStore(s => s.sonaClose);
+  const sonaHasMessages = useSessionStore(s => s.sonaHasMessages);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
   const [pendingIds, setPendingIds] = useState<string[]>([]);
 

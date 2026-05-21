@@ -10,8 +10,8 @@ import {
   isVirtualMicLabel,
   findVirtualMic,
 } from '@/lib/audio-preferences';
-import { useInterviewerAudio } from './InterviewerAudio';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSpeakerAudio } from './SpeakerAudio';
+import { useSessionStore } from '@/stores/session-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { audioPrefsAPI } from '@/lib/api-client';
 
@@ -35,7 +35,7 @@ import { audioPrefsAPI } from '@/lib/api-client';
  *   • internally: opens once per session if prefs.setupCompleted is false.
  *
  * Persisted via lib/audio-preferences (localStorage now, backend in a
- * follow-up commit). Components like InterviewerAudioProvider read the
+ * follow-up commit). Components like SpeakerAudioProvider read the
  * same prefs and honor the user's chosen method.
  */
 
@@ -54,18 +54,18 @@ export const AudioSetupWizard = ({
   forceOpen?: boolean;
   onClose?: () => void;
 }) => {
-  const interviewer = useInterviewerAudio();
+  const interviewer = useSpeakerAudio();
   const { token } = useAuth();
-  const setInterviewerAudio = useInterviewStore((s) => s.setInterviewerAudio);
-  const everConnected = useInterviewStore((s) => s.interviewerAudio.everConnected);
-  const voiceEnrolled = useInterviewStore((s) => s.voiceEnrolled);
-  const voiceFilterEnabled = useInterviewStore((s) => s.voiceFilterEnabled);
+  const setSpeakerAudio = useSessionStore((s) => s.setSpeakerAudio);
+  const everConnected = useSessionStore((s) => s.speakerAudio.everConnected);
+  const voiceEnrolled = useSessionStore((s) => s.voiceEnrolled);
+  const voiceFilterEnabled = useSessionStore((s) => s.voiceFilterEnabled);
   // The candidate-mic AudioCapture might already be running (continuous
   // mode auto-starts on tab load). The wizard's mic-level monitor must
   // not also open getUserMedia on the same device — concurrent streams
   // on the same physical mic fail unpredictably and were the actual
   // source of the "AudioContext encountered an error" spam.
-  const candidateMicActive = useInterviewStore((s) => s.isRecording);
+  const candidateMicActive = useSessionStore((s) => s.isRecording);
   const [prefs, setPrefs] = useState<AudioPreferences>(loadAudioPrefs);
 
   // Hydrate prefs from backend on mount so the user's mic/speaker/method
@@ -505,9 +505,9 @@ export const AudioSetupWizard = ({
 
   /* ── connect interviewer audio (delegates to provider) ────────── */
   const connectInterviewer = useCallback(async () => {
-    setInterviewerAudio({ error: null });
+    setSpeakerAudio({ error: null });
     await interviewer.start();
-  }, [interviewer, setInterviewerAudio]);
+  }, [interviewer, setSpeakerAudio]);
 
   /* ── done ──────────────────────────────────────────────────────── */
   const finish = useCallback(() => {

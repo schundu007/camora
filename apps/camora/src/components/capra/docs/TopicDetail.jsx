@@ -693,7 +693,7 @@ export default function TopicDetail({
     }
     if (activePage === 'projects') {
       if (topicDetails.learningObjectives?.length) s.push({ id: 'learning-objectives', label: 'What You\'ll Learn' });
-      if (topicDetails.interviewRelevance?.length) s.push({ id: 'interview-relevance', label: 'Interview Relevance' });
+      if (topicDetails.interviewRelevance?.length) s.push({ id: 'relevance', label: 'Why It Matters' });
       if (topicDetails.keyQuestions?.length) s.push({ id: 'key-questions', label: 'Key Questions' });
     }
     return s;
@@ -1275,8 +1275,8 @@ export default function TopicDetail({
 
           {/* Interview Relevance */}
           {topicDetails.interviewRelevance && (
-            <div id="interview-relevance" className="rounded overflow-hidden scroll-mt-24 border border-[var(--accent)]/20 bg-[var(--accent)]/10/50">
-              <ContentHeading title="Interview Relevance" />
+            <div id="relevance" className="rounded overflow-hidden scroll-mt-24 border border-[var(--accent)]/20 bg-[var(--accent)]/10/50">
+              <ContentHeading title="Why It Matters" />
               <div className="pt-2">
                 <p className="text-sm text-[var(--text-secondary)] landing-body leading-relaxed">{topicDetails.interviewRelevance}</p>
               </div>
@@ -1671,7 +1671,7 @@ export default function TopicDetail({
           {/* 11. Tips & Study Tips — final checklist */}
           {(topicDetails.tips || topicDetails.interviewTips) && (
             <div id="tips" className="scroll-mt-24 mt-14 first:mt-0">
-              <ContentHeading title="Tips & Interview Checklist" actions={<GlassPill>PRO</GlassPill>} />
+              <ContentHeading title="Tips & Checklist" actions={<GlassPill>PRO</GlassPill>} />
               <div className="p-3 grid grid-cols-1 gap-1.5">
                 {topicDetails.tips && topicDetails.tips.map((tip, i) => (
                   <div key={`tip-${i}`} className="flex items-start gap-2.5 p-2 rounded hover:bg-[var(--bg-elevated)] transition-colors">

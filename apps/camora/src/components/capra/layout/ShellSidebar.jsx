@@ -231,7 +231,7 @@ export default function ShellSidebar() {
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-[var(--accent)] hover:bg-[var(--accent-subtle)] transition-all"
           >
             <Icon name="microphone" size={15} className="text-[var(--accent)]" />
-            <span>Live AI Interview</span>
+            <span>Live Session</span>
           </Link>
         )}
 

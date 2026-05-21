@@ -13,7 +13,7 @@
 
 import { sonaRegistry } from './sona-registry';
 import { isQuestion } from './questionDetector';
-import { useInterviewStore } from '../stores/interview-store';
+import { useSessionStore } from '../stores/session-store';
 
 type ProblemRef = React.MutableRefObject<((text: string) => void) | null>;
 
@@ -42,7 +42,7 @@ export function dispatchTranscript({
     // After a solution is loaded: route interviewer questions to Sona
     // (same pattern as behavioral tab). Manual presses always go to
     // the problem field regardless.
-    const hasSolution = !!useInterviewStore.getState().liveSolveContext;
+    const hasSolution = !!useSessionStore.getState().liveSolveContext;
     if (hasSolution && !opts?.manual && isQuestion(trimmed)) {
       log(`${activeTab} → sona (question after solve)`, trimmed.slice(0, 60));
       window.dispatchEvent(new CustomEvent('lumora:coding-question', { detail: { text: trimmed } }));

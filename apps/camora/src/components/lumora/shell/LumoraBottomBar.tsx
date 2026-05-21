@@ -15,7 +15,7 @@
 
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSessionStore } from '@/stores/session-store';
 import { useEffect, useMemo, useState } from 'react';
 
 interface LumoraBottomBarProps {
@@ -28,9 +28,9 @@ interface LumoraBottomBarProps {
 }
 
 export const LumoraBottomBar = ({ onTranscription }: LumoraBottomBarProps) => {
-  const voiceEnrolled = useInterviewStore(s => s.voiceEnrolled);
-  const voiceFilterEnabled = useInterviewStore(s => s.voiceFilterEnabled);
-  const voiceEnrolledAt = useInterviewStore(s => s.voiceEnrolledAt);
+  const voiceEnrolled = useSessionStore(s => s.voiceEnrolled);
+  const voiceFilterEnabled = useSessionStore(s => s.voiceFilterEnabled);
+  const voiceEnrolledAt = useSessionStore(s => s.voiceEnrolledAt);
   // Shared dismissal key with AICompanionPanel — same banner copy in
   // both places, so dismissing once should hide everywhere. Wired up
   // via a custom event so dismissing on one surface updates the other

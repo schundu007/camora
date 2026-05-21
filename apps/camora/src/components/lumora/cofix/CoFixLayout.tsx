@@ -12,7 +12,7 @@ import { dialogAlert } from '@/components/shared/Dialog';
 import type { ScreenshotEntry } from '@/components/lumora/shell/ScreenshotStrip';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSessionStore } from '@/stores/session-store';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -70,8 +70,8 @@ const pillBase = 'flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-b
 
 export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped, onRemove, onTranscription, isTabActive }: CoFixLayoutProps) => {
   const { token } = useAuth();
-  const isStealthActive = useInterviewStore(s => s.isStealthActive);
-  const setIsStealthActive = useInterviewStore(s => s.setIsStealthActive);
+  const isStealthActive = useSessionStore(s => s.isStealthActive);
+  const setIsStealthActive = useSessionStore(s => s.setIsStealthActive);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
   const [pendingSnapIds, setPendingSnapIds] = useState<string[]>([]);
   const onSnappedRef = useRef(onSnapped);

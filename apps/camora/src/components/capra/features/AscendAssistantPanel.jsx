@@ -427,8 +427,8 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
         setAudioDevices({ inputs, outputs });
 
         // Load saved preferences or use defaults
-        const savedMic = localStorage.getItem('interview_mic');
-        const savedSpeaker = localStorage.getItem('interview_speaker');
+        const savedMic = localStorage.getItem('session_mic');
+        const savedSpeaker = localStorage.getItem('session_speaker');
 
         if (savedMic && inputs.find(d => d.deviceId === savedMic)) {
           setSelectedMic(savedMic);
@@ -463,11 +463,11 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
 
   // Save device preferences when changed
   useEffect(() => {
-    if (selectedMic) localStorage.setItem('interview_mic', selectedMic);
+    if (selectedMic) localStorage.setItem('session_mic', selectedMic);
   }, [selectedMic]);
 
   useEffect(() => {
-    if (selectedSpeaker) localStorage.setItem('interview_speaker', selectedSpeaker);
+    if (selectedSpeaker) localStorage.setItem('session_speaker', selectedSpeaker);
   }, [selectedSpeaker]);
 
   // Cleanup on unmount
@@ -1223,7 +1223,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
               <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
             </svg>
           </div>
-          <span className="text-sm font-medium text-[var(--text-primary)]">Interview</span>
+          <span className="text-sm font-medium text-[var(--text-primary)]">Session</span>
           {isRecording && (
             <>
               <span className="text-xs font-mono text-error-400">{formatDuration(recordingDuration)}</span>
@@ -1347,7 +1347,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                 <svg className="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <span className="text-sm font-medium text-amber-400">BlackHole Required for Interviewer Audio</span>
+                <span className="text-sm font-medium text-amber-400">BlackHole Required for Speaker Audio</span>
               </div>
               <p className="text-xs text-[var(--text-primary)] mb-3">
                 To capture audio from Google Meet/Zoom, you need to install BlackHole (a free virtual audio driver) and configure it.
@@ -1470,7 +1470,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                   : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
               }`}
             >
-              Interviewer
+              Remote
             </button>
             <button
               onClick={() => setAudioSource('mic')}
@@ -1486,7 +1486,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
             <button
               onClick={() => setShowBlackholeSetup(true)}
               className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-all"
-              title="Setup guide for capturing interviewer audio"
+              title="Setup guide for capturing speaker audio"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1568,7 +1568,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
               <div className="flex items-center justify-between mb-2 px-2 py-1.5 rounded-lg bg-error-500/10 border border-error-500/30">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-error-500 animate-pulse" />
-                  <span className="text-xs font-medium text-error-400">Recording {audioSource === 'system' ? 'Interviewer' : 'Mic'}...</span>
+                  <span className="text-xs font-medium text-error-400">Recording {audioSource === 'system' ? 'Remote' : 'Mic'}...</span>
                   <span className="text-xs font-mono text-error-300">{formatDuration(recordingDuration)}</span>
                 </div>
                 {isSpeaking && <span className="text-xs text-brand-400 bg-brand-400/10 px-2 py-0.5 rounded">Speaking</span>}
@@ -1797,9 +1797,9 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                 </div>
                 <div className="ml-8 space-y-2">
                   <ol className="text-xs text-[var(--text-primary)] space-y-1.5 list-decimal list-inside">
-                    <li>In Ascend, click the <span className="text-brand-400 font-medium">"Interviewer"</span> button (not "Speaker")</li>
+                    <li>In Ascend, click the <span className="text-brand-400 font-medium">"Speaker"</span> button (not "Speaker")</li>
                     <li>Click the <span className="text-brand-400 font-medium">Record</span> button</li>
-                    <li>Ascend will now capture both your voice AND the interviewer's voice</li>
+                    <li>Ascend will now capture both your voice AND the speaker's voice</li>
                   </ol>
                 </div>
               </div>

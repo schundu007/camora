@@ -34,7 +34,7 @@ export const USER_GROUPS: DocsSidebarGroup[] = [
   {
     label: 'Lumora live',
     items: [
-      { label: 'Live interview', to: '/docs/lumora-live' },
+      { label: 'Live session', to: '/docs/lumora-live' },
       { label: 'Coding helper', to: '/docs/lumora-coding' },
       { label: 'System design', to: '/docs/lumora-design' },
     ],

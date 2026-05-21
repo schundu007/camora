@@ -6,7 +6,7 @@ import { Icon } from '../../components/shared/Icons.jsx';
 import { DatabricksThumb } from '../../components/shared/DatabricksThumb';
 import { getAuthHeaders } from '../../utils/authHeaders.js';
 import { SectionCard } from '../../components/capra/ui';
-import { InterviewTimer } from '../../components/shared/timer/InterviewTimer';
+import { SessionTimer } from '../../components/shared/timer/SessionTimer';
 import { useWhiteboardState } from '../../hooks/useWhiteboardState';
 
 const ExcalidrawWhiteboard = lazy(() => import('../../components/shared/diagrams/ExcalidrawWhiteboard'));
@@ -403,8 +403,8 @@ export default function PracticePage() {
   const [sdTab, setSdTab] = useState('draw'); // 'draw' | 'reference'
   const [sdRefDiagram, setSdRefDiagram] = useState({}); // { [idx]: { status: 'idle'|'loading'|'cached'|'missing', url } }
 
-  // Timer countdown is now handled by the shared InterviewTimer component.
-  // The onExpire callback on InterviewTimer calls endChallengeRef.current().
+  // Timer countdown is now handled by the shared SessionTimer component.
+  // The onExpire callback on SessionTimer calls endChallengeRef.current().
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
   // Reset to draw mode when user navigates to a new question
@@ -964,7 +964,7 @@ export default function PracticePage() {
                       <div key={qi} style={{ width: qi === currentIdx ? 18 : 8, height: 8, borderRadius: 99, background: qi < currentIdx ? 'var(--accent)' : qi === currentIdx ? 'var(--accent)' : 'var(--border)', transition: 'all 0.3s' }} />
                     ))}
                   </div>
-                  <InterviewTimer
+                  <SessionTimer
                     duration={modeConfig.time}
                     isRunning={phase === 'active'}
                     onExpire={() => { if (endChallengeRef.current) endChallengeRef.current(); }}

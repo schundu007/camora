@@ -1,5 +1,5 @@
 /**
- * Type definitions for the Interview Assistant frontend.
+ * Type definitions for the Camora frontend.
  *
  * Cross-app shared shapes (JWTPayload, backend User / Conversation /
  * Message rows, Subscription, etc.) live in @camora/shared-types. Re-export

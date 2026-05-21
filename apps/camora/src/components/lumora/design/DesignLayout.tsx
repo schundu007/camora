@@ -1,10 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSessionStore } from '@/stores/session-store';
 import { streamResponse } from '@/lib/sse-client';
 import { useCloudProvider } from '@/hooks/useCloudProvider';
 import { getSystemContext, getActiveAssistant } from '@/lib/lumora-assistant';
-import { ArchitectureDiagram } from '@/components/lumora/interview/ArchitectureDiagram';
+import { ArchitectureDiagram } from '@/components/lumora/session/ArchitectureDiagram';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { dialogAlert } from '@/components/shared/Dialog';
 import {
@@ -135,8 +135,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
   const { token } = useAuth();
-  const { setStatus } = useInterviewStore();
-  const lastFromCache = useInterviewStore(s => s.lastFromCache);
+  const { setStatus } = useSessionStore();
+  const lastFromCache = useSessionStore(s => s.lastFromCache);
   const [problemText, setProblemText] = useState(initialProblem || '');
   const autoSubmittedRef = useRef(false);
   const [inputTab, _setInputTabLocal] = useState<'text' | 'url' | 'image'>(externalInputTab ?? 'text');
@@ -173,7 +173,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Desktop stealth (read from store — set by ScreenshotStrip in parent shell)
-  const isStealthActive = useInterviewStore(s => s.isStealthActive);
+  const isStealthActive = useSessionStore(s => s.isStealthActive);
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
   // Extracted code from the last image snap — drives quick-action chips.
   const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
@@ -342,7 +342,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setQuestion(text.trim());
     setStatus('write', 'Generating design...');
     // Reset cache indicator before each solve; onAnswer overwrites it.
-    useInterviewStore.getState().setLastFromCache(null);
+    useSessionStore.getState().setLastFromCache(null);
 
     const chunks: string[] = [];
     // Stores data.raw from onAnswer so onComplete's safety net can parse it
@@ -426,7 +426,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           // the model. Cleared on every fresh /stream call (see
           // store's lastFromCache reset in handleReset / before
           // streamResponse below).
-          useInterviewStore.getState().setLastFromCache(Boolean(data.fromCache));
+          useSessionStore.getState().setLastFromCache(Boolean(data.fromCache));
           const parsed = data.parsed;
           const raw = data.raw || '';
           lastRawAnswer = raw;
@@ -603,8 +603,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setErrorMsg(null);
     setExpandedFollowup(null);
     setInputCollapsed(false);
-    useInterviewStore.getState().setLastFromCache(null);
-    useInterviewStore.getState().setLiveSolveContext(null);
+    useSessionStore.getState().setLastFromCache(null);
+    useSessionStore.getState().setLiveSolveContext(null);
   }, []);
 
   // Regenerate — re-runs the same design problem with bypass_cache=true
@@ -656,7 +656,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       techChoices && `TECH CHOICES:\n${techChoices}`,
       tradeoffs && `TRADEOFFS:\n${tradeoffs}`,
     ].filter(Boolean).join('\n\n').slice(0, 4000);
-    useInterviewStore.getState().setLiveSolveContext({
+    useSessionStore.getState().setLiveSolveContext({
       surface: 'design',
       problem: problemText.trim().slice(0, 4000),
       approach: (sd as any).overview?.slice(0, 800) || '',

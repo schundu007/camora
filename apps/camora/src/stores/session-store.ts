@@ -123,7 +123,7 @@ interface SessionState {
     solvedAt: number;
   } | null;
 
-  // Stealth mode — hides live answers on-screen during interview
+  // Stealth mode — hides live answers on-screen during sessions
   isStealthActive: boolean;
 
   // Sona response verbosity — shared across AICompanionPanel and ScreenshotStrip

@@ -8,7 +8,7 @@ import SiteFooter from '../components/shared/SiteFooter';
 import JobUrlAnalysisDemo from '../components/shared/JobUrlAnalysisDemo';
 import {
   ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles,
-  FeatureLiveAIAnim, FeatureJobMatchAnim, FeaturePrepAnim, FeatureMockInterviewAnim,
+  FeatureLiveAIAnim, FeatureJobMatchAnim, FeaturePrepAnim, FeatureMockSessionAnim,
 } from '../components/landing/CardAnimations';
 import CapabilityDeck from '../components/landing/CapabilityDeck';
 import LiveSessionPreview from '../components/landing/LiveSessionPreview';
@@ -101,7 +101,7 @@ const FEATURES = [
     label: 'Mock Interviews',
     title: 'AI-scored practice sessions',
     desc: 'Timed practice sessions with instant feedback. Scored on communication, accuracy, and code quality.',
-    Anim: FeatureMockInterviewAnim,
+    Anim: FeatureMockSessionAnim,
   },
 ];
 

@@ -1,7 +1,7 @@
 /**
  * Cariara Custom Icon Library for React
  *
- * A curated set of inspiring, modern icons for the Capra/Ascend Interview Prep Portal.
+ * A curated set of inspiring, modern icons for the Camora Learning Portal.
  * All icons use a consistent 24x24 viewBox with 2px stroke width.
  *
  * Usage:
@@ -78,7 +78,7 @@ const icons = {
     sparkles: `<path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>`,
 
     // =========================================================================
-    // INTERVIEW PRACTICE ICONS
+    // PRACTICE ICONS
     // =========================================================================
     microphone: `<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>`,
 
@@ -632,7 +632,7 @@ export const RoleIcons = {
     mobile: icons.mobile,
 };
 
-// Category icons for interview topics
+// Category icons for topics
 export const CategoryIcons = {
     coding: icons.code,
     system_design: icons.systemDesign,

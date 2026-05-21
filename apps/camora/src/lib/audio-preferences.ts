@@ -1,7 +1,7 @@
 /**
  * Audio preferences — what mic to record from, what speakers to play
  * sound through, and which method to use to capture the interviewer's
- * voice. Shared by AudioSetupWizard, InterviewerAudioProvider, and the
+ * voice. Shared by AudioSetupWizard, SpeakerAudioProvider, and the
  * candidate-mic AudioCapture so all three honor the same choices.
  *
  * Persisted to localStorage immediately for instant reload and synced

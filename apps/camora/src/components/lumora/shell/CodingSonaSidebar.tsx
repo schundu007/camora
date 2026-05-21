@@ -20,7 +20,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { getSystemContext } from '@/lib/lumora-assistant';
-import { useInterviewStore } from '@/stores/interview-store';
+import { useSessionStore } from '@/stores/session-store';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView } from './companion/answer-view';
 import { Citations } from '@/components/lumora/Citations';
@@ -66,7 +66,7 @@ const saveHistory = (surface: string, msgs: ChatMessage[]) => {
 
 export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: CodingSonaSidebarProps) => {
   const { token } = useAuth();
-  const liveSolveContext = useInterviewStore(s => s.liveSolveContext);
+  const liveSolveContext = useSessionStore(s => s.liveSolveContext);
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadHistory(surface));
   const [input, setInput] = useState('');

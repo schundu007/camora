@@ -92,7 +92,7 @@ async function verifySpeaker(userId, audioBuffer, filename) {
 
 /**
  * Call the ai-services diarize endpoint for two-speaker segmentation.
- * Returns { should_transcribe, segments, interviewer_ratio }.
+ * Returns { should_transcribe, segments, speaker_ratio }.
  * Falls back to simple verify on error.
  */
 async function diarizeSpeaker(userId, audioBuffer, filename) {
@@ -154,10 +154,10 @@ router.post(
         req.body.filter_user_voice === 'true' || req.body.filter_user_voice === true;
 
       // ── Speaker diarization / verification (optional) ─────────────────
-      // If the diarizer slices the audio to interviewer-only WAV bytes,
+      // If the diarizer slices the audio to speaker-only WAV bytes,
       // we send THAT to Whisper instead of the original upload. Without
-      // this, a chunk containing both the candidate and the interviewer
-      // gets fully transcribed and the candidate's words leak to Sona.
+      // this, a chunk containing both the user and the speaker
+      // gets fully transcribed and the user's words leak to Sona.
       let audioForWhisper = file.buffer;
       let filenameForWhisper = file.originalname || 'audio.webm';
 
@@ -174,10 +174,10 @@ router.post(
         console.log(`[VoiceFilter] Result:`, JSON.stringify(diarLog), audio_b64 ? `(sliced=${audio_b64.length}B b64)` : '(no slice)');
 
         if (!diarization.should_transcribe) {
-          const ratio = diarization.interviewer_ratio ?? diarization.similarity ?? 0;
+          const ratio = diarization.speaker_ratio ?? diarization.interviewer_ratio ?? diarization.similarity ?? 0;
           console.info(
             `Skipped transcription user=${req.user.id}: ` +
-            `candidate voice detected (interviewer_ratio=${(ratio).toFixed(3)})`,
+            `user voice detected (speaker_ratio=${(ratio).toFixed(3)})`,
           );
           return res.json({
             text: '',
@@ -190,7 +190,7 @@ router.post(
           });
         }
 
-        // Mixed chunk — swap in the interviewer-only slice. Single-
+        // Mixed chunk — swap in the speaker-only slice. Single-
         // speaker chunks have no audio_b64 and we send the original.
         if (diarization.audio_b64) {
           try {
@@ -207,7 +207,7 @@ router.post(
         // Log diarization results for debugging
         if (diarization.segments) {
           const speakers = diarization.segments.map(s => s.speaker);
-          console.info(`Diarization: ${speakers.join(' → ')} (interviewer=${(diarization.interviewer_ratio * 100).toFixed(0)}%)`);
+          console.info(`Diarization: ${speakers.join(' → ')} (speaker=${(diarization.interviewer_ratio * 100).toFixed(0)}%)`);
         }
       }
 
