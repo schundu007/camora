@@ -712,8 +712,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         setErrorMsg(err.message || 'Failed to process screenshot.');
       }
     };
-    camo.onScreenshotWatcher(handler);
-    return () => camo.offScreenshotWatcher?.();
+    const unwatch = camo.onScreenshotWatcher(handler);
+    return () => camo.offScreenshotWatcher?.(unwatch);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -289,6 +289,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // manual Fix button. The user never sees intermediate failures.
   const autoGenRef = useRef<{ active: boolean; attempts: number }>({ active: false, attempts: 0 });
   const handleAutoFixRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
+  const handleRunRef = useRef<(() => Promise<void>) | null>(null);
 
   // Screen Recording permission status — checked once on mount (desktop only).
   // 'granted' | 'denied' | 'restricted' | 'not-determined' | null (non-desktop)
@@ -396,8 +397,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           if (line.startsWith('data: ')) {
             try {
               const d = JSON.parse(line.slice(6));
-              if (d.t) { accumulated += d.t; setAnalysisCache(prev => ({ ...prev, [cacheKey]: accumulated })); }
-              else if (d.raw) { accumulated = d.raw; setAnalysisCache(prev => ({ ...prev, [cacheKey]: accumulated })); }
+              if (d.t && !abort.signal.aborted) { accumulated += d.t; setAnalysisCache(prev => ({ ...prev, [cacheKey]: accumulated })); }
+              else if (d.raw && !abort.signal.aborted) { accumulated = d.raw; setAnalysisCache(prev => ({ ...prev, [cacheKey]: accumulated })); }
             } catch {}
           }
         }
@@ -464,6 +465,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setParsedBlocks([]);
     setLastFromCache(null);
     setSnapChipCode(null);
+    analysisAbortRef.current?.abort();
+    setAnalysisCache({});
+    setAnalysisTab('code');
+    autoAnalysisFiredForRef.current = -1;
     useInterviewStore.getState().setLiveSolveContext(null);
     onNewProblemCallback?.();
   }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, language, onNewProblemCallback]);
@@ -649,8 +654,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         setCode(data.code);
         if (!silent) setOutput('Code fixed! Click Run to test again.' + (data.explanation ? `\n\nFix: ${data.explanation}` : ''));
         if (silent) {
-          // Re-run automatically — wait one tick for setCode to propagate
-          setTimeout(() => handleRun(), 80);
+          // Re-run via ref so we get the handleRun that has the just-set code
+          setTimeout(() => handleRunRef.current?.(), 80);
         }
       } else {
         if (!silent) setOutput('Auto-fix returned no code. Try editing manually.');
@@ -660,8 +665,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     }
   }, [token, code, language, fixError, problemText, handleRun]);
 
-  // Keep ref current so the auto-fix effect can call it without stale closures
+  // Keep refs current so the auto-fix loop can call the latest versions without stale closures
   useEffect(() => { handleAutoFixRef.current = handleAutoFix; }, [handleAutoFix]);
+  useEffect(() => { handleRunRef.current = handleRun; }, [handleRun]);
 
   // ── Keyboard Shortcuts ─────────────────────────────────────────────────
 
@@ -1003,8 +1009,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         setError(err.message || 'Failed to process screenshot.');
       }
     };
-    camo.onScreenshotWatcher(handler);
-    return () => camo.offScreenshotWatcher?.();
+    const unwatch = camo.onScreenshotWatcher(handler);
+    return () => camo.offScreenshotWatcher?.(unwatch);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

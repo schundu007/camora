@@ -221,6 +221,10 @@ app.whenReady().then(async () => {
   // Cmd+Shift+H was the prior choice but it navigates Chrome to the home page.
   const hrRegistered = globalShortcut.register('F9', async () => {
     if (!mainWindow || mainWindow.isDestroyed()) return;
+    // Block the 3s auto-detect poll from running concurrently so both paths
+    // don't send separate hackerrank-capture-result events to the renderer.
+    if (_scrapeInProgress) return;
+    _scrapeInProgress = true;
     try {
       const dataUrl = await captureWindowByName('hackerrank');
       if (!dataUrl) {
@@ -233,6 +237,8 @@ app.whenReady().then(async () => {
     } catch (err) {
       console.error('[hackerrank-capture] failed:', err);
       mainWindow.webContents.send('hackerrank-capture-result', { error: err?.message || 'Capture failed' });
+    } finally {
+      _scrapeInProgress = false;
     }
   });
   if (!hrRegistered) console.warn('[shortcut] F9 registration failed — may be claimed by OS or another app');
@@ -267,6 +273,7 @@ app.on('before-quit', () => { isQuitting = true; });
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
   if (_hrPollTimer) clearInterval(_hrPollTimer);
+  if (_desktopWatchTimer) clearInterval(_desktopWatchTimer);
 });
 
 app.on('second-instance', () => {
@@ -295,9 +302,16 @@ function runAppleScript(script) {
     const proc = spawn('osascript', ['-']);
     let out = '';
     let err = '';
+    // 8 s hard timeout — a hung osascript blocks the IPC handler thread and
+    // makes the app appear frozen to the renderer. Kill the child and reject.
+    const killTimer = setTimeout(() => {
+      proc.kill();
+      reject(new Error('osascript timed out after 8 s'));
+    }, 8000);
     proc.stdout.on('data', d => { out += d.toString(); });
     proc.stderr.on('data', d => { err += d.toString(); });
     proc.on('close', code => {
+      clearTimeout(killTimer);
       if (code === 0) resolve(out.trim());
       else reject(new Error(err.trim() || `osascript exited ${code}`));
     });
@@ -741,6 +755,7 @@ let _desktopKnownFiles = new Set();
 // company interview session is active so captures are stored per-interview.
 let _sessionFolder = null;
 let _watchedFolder = null; // tracks which folder is currently being polled
+let _desktopWatchTimer = null;
 
 function startDesktopScreenshotWatcher() {
   const desktopPath = path.join(os.homedir(), 'Desktop');
@@ -757,7 +772,7 @@ function startDesktopScreenshotWatcher() {
     return;
   }
 
-  setInterval(() => {
+  _desktopWatchTimer = setInterval(() => {
     try {
       const watchFolder = _sessionFolder || desktopPath;
 
