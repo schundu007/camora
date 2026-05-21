@@ -48,6 +48,7 @@ import libraryRouter from './routes/library.js';
 // (which currently runs ascend code) can answer /api/v1/jobs requests from
 // the frontend's /jobs page. Falls back to 503 if JOBS_DATABASE_URL is unset.
 import jobsRouter from './routes/jobs.js';
+import mcqRouter from './routes/mcq.js';
 
 // Same pattern as jobs above — the entire lumora-backend route surface was
 // copied under src/lumora/ so this service can answer /api/v1/transcribe,
@@ -440,6 +441,19 @@ async function runMigrations() {
     await query('CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at)');
     await query('CREATE INDEX IF NOT EXISTS idx_page_views_email ON page_views(email)');
     console.log('[Migrations] Page views table ensured');
+
+    // MCQ generated questions cache — stores AI-generated questions by problem_id
+    await query(`CREATE TABLE IF NOT EXISTS ascend_mcq_generated (
+      id SERIAL PRIMARY KEY,
+      problem_id VARCHAR(100) UNIQUE NOT NULL,
+      question TEXT NOT NULL,
+      options JSONB NOT NULL,
+      correct_letter CHAR(1) NOT NULL,
+      explanation TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_mcq_generated_problem ON ascend_mcq_generated(problem_id)');
+    console.log('[Migrations] MCQ generated table ensured');
 
     // Ensure site_visitors table exists (legacy visitor counter)
     await query(`CREATE TABLE IF NOT EXISTS site_visitors (
@@ -1184,6 +1198,9 @@ app.use('/api/v1/teams', apiLimiter, teamsRouter);
 // No rate limiter on /events endpoint for real-time streaming
 app.use('/api/voice', authenticate, voiceRouter);
 app.use('/api/v1/resume', aiLimiter, resumeRouter);
+
+// MCQ question generation — AI-generated questions from CoderPad metadata, DB-cached
+app.use('/api/v1/mcq', mcqRouter);
 
 // Enhanced health check
 app.get('/api/health', (req, res) => {
