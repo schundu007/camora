@@ -132,6 +132,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
     });
+    res.flushHeaders();
 
     if (retrieved.chunks.length > 0) {
       const citations = retrieved.chunks.map((c) => ({
@@ -152,8 +153,14 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
     let clientDisconnected = false;
     const abortController = new AbortController();
 
+    // Keepalive — Railway / Cloudflare proxies drop idle SSE connections after 30s.
+    const keepaliveTimer = setInterval(() => {
+      if (!clientDisconnected) res.write(': ping\n\n');
+    }, 20_000);
+
     req.on('close', () => {
       clientDisconnected = true;
+      clearInterval(keepaliveTimer);
       // Tear down the Anthropic stream immediately so we stop getting billed
       // for tokens the user will never see.
       try { abortController.abort(); } catch {}
@@ -255,10 +262,12 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
     }
 
     // End SSE stream
+    clearInterval(keepaliveTimer);
     sendSSE(res, 'done', {});
     res.end();
   } catch (err) {
     console.error('Stream error:', err);
+    clearInterval(keepaliveTimer);
     // If headers already sent, write error as SSE
     if (res.headersSent) {
       sendSSE(res, 'error', { msg: err.message || String(err) });

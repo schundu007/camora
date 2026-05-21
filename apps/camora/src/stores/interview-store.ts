@@ -233,7 +233,6 @@ export const useInterviewStore = create<InterviewState>()(
 
   appendStreamChunk: (chunk) =>
     set((state) => ({
-      streamChunks: [...state.streamChunks, chunk],
       streamText: state.streamText + chunk,
     })),
 

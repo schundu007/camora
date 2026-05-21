@@ -24,40 +24,33 @@ const REDIS_URL = process.env.REDIS_URL || process.env.REDIS_PRIVATE_URL || null
 const DEFAULT_TTL_SECONDS = parseInt(process.env.ANSWER_CACHE_TTL_SECONDS || String(30 * 24 * 60 * 60), 10);
 
 let client = null;
-let connectionFailed = false;
+let _lastErrorMsg = null;
 
 function getClient() {
   if (!REDIS_URL) return null;
-  if (connectionFailed) return null;
   if (client) return client;
   try {
     client = new Redis(REDIS_URL, {
       lazyConnect: false,
       maxRetriesPerRequest: 1,
       enableOfflineQueue: false,
-      retryStrategy: (times) => {
-        // After two failed connection attempts, stop trying for the
-        // rest of the process — a missing/wrong Redis shouldn't slow
-        // down every request with reconnect attempts.
-        if (times > 2) {
-          connectionFailed = true;
-          console.warn('[answerCache] Redis unreachable after retries — disabling cache');
-          return null;
-        }
-        return Math.min(times * 200, 1000);
-      },
+      // Exponential backoff capped at 30s — lets ioredis heal after a
+      // transient Redis restart without spamming reconnects.
+      retryStrategy: (times) => Math.min(times * 500, 30_000),
     });
     client.on('error', (err) => {
-      // Logged once per error class via ioredis's own dedup. We don't
-      // want to spam logs but we DO want to know if the cache is down.
-      if (!connectionFailed) {
+      if (err.message !== _lastErrorMsg) {
+        _lastErrorMsg = err.message;
         console.warn('[answerCache] Redis error:', err.message);
       }
+    });
+    client.on('ready', () => {
+      _lastErrorMsg = null;
+      console.info('[answerCache] Redis connected');
     });
     return client;
   } catch (err) {
     console.warn('[answerCache] Redis init failed:', err.message);
-    connectionFailed = true;
     return null;
   }
 }
@@ -106,6 +99,7 @@ export function buildAnswerCacheKey(parts) {
     dl: parts.detailLevel || null,
     pl: parts.plan || null,
     md: parts.model || null,
+    mo: parts.mode || null, // 'general' | 'design' | 'coding' — different system prompts
     rt: parts.route || null, // 'stream' | 'solve' — different shapes
     lg: parts.language || null,
     // Starter code changes the expected solution structure completely (CASE A vs CASE B,
@@ -114,8 +108,8 @@ export function buildAnswerCacheKey(parts) {
     sk: parts.starterCode ? crypto.createHash('sha1').update(String(parts.starterCode)).digest('hex').slice(0, 12) : null,
   });
   const h = crypto.createHash('sha256').update(normalized).digest('hex');
-  // v4: bash always generates 1 solution — busts v3 entries with 3-solution bash answers.
-  return `lumora:answer:v4:${h}`;
+  // v5: added mode field to key — busts v4 entries that crossed mode boundaries.
+  return `lumora:answer:v5:${h}`;
 }
 
 export async function cacheGet(key) {

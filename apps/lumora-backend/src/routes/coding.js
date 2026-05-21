@@ -524,28 +524,36 @@ function extractJsonFromText(text) {
 // ---------------------------------------------------------------------------
 
 /**
- * Check whether a free-tier user has remaining coding solves for today.
- * Returns { allowed: boolean, remaining: number, message?: string }.
+ * Atomically check the free-tier daily limit AND insert a usage row if
+ * allowed — eliminates the TOCTOU window between check and record.
+ * Returns { allowed, remaining, reservationId? }.
  */
-async function checkFreeTierLimit(userId) {
+async function checkAndReserveFreeTierSlot(userId, language = 'pending') {
   const result = await query(
-    `SELECT COUNT(*) AS cnt
+    `WITH daily AS (
+       SELECT COUNT(*) AS cnt
        FROM coding_usage
-      WHERE user_id = $1
-        AND created_at >= CURRENT_DATE`,
-    [userId],
+       WHERE user_id = $1 AND created_at >= CURRENT_DATE
+     ),
+     ins AS (
+       INSERT INTO coding_usage (user_id, language, input_tokens, output_tokens, latency_ms)
+       SELECT $1, $3, 0, 0, 0
+       FROM daily WHERE cnt < $2
+       RETURNING id
+     )
+     SELECT daily.cnt, (SELECT id FROM ins) AS reservation_id FROM daily`,
+    [userId, FREE_TIER_DAILY_LIMIT, language],
   );
-  const used = parseInt(result.rows[0]?.cnt || '0', 10);
-  const remaining = Math.max(0, FREE_TIER_DAILY_LIMIT - used);
-
-  if (remaining <= 0) {
+  const { cnt, reservation_id } = result.rows[0];
+  const used = parseInt(cnt, 10);
+  if (!reservation_id) {
     return {
       allowed: false,
       remaining: 0,
       message: `Daily free-tier limit reached (${FREE_TIER_DAILY_LIMIT}/day). Upgrade for unlimited access.`,
     };
   }
-  return { allowed: true, remaining };
+  return { allowed: true, remaining: Math.max(0, FREE_TIER_DAILY_LIMIT - used - 1), reservationId: reservation_id };
 }
 
 /**
@@ -563,13 +571,7 @@ async function recordCodingUsage(userId, language, inputTokens, outputTokens, la
 // POST /solve — SSE streaming endpoint
 // ---------------------------------------------------------------------------
 
-// /stream alias for backwards compatibility with frontend
-router.post('/stream', authenticate, checkUsage('questions'), async (req, res, next) => {
-  req.url = '/solve';
-  next();
-});
-
-router.post('/solve', authenticate, checkUsage('questions'), async (req, res) => {
+router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async (req, res) => {
   const { problem, language, conversationHistory, system_context: systemContext, bypass_cache: bypassCache, starter_code: starterCode } = req.body;
 
   // ── Validate ────────────────────────────────────────────────────────────
@@ -588,13 +590,15 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
     });
   }
 
-  // ── Free-tier check ─────────────────────────────────────────────────────
+  // ── Free-tier check (atomic: check + insert in one CTE) ─────────────────
   const planType = req.user.plan_type || 'free';
+  let freeTierReservationId = null;
   if (planType === 'free') {
-    const quota = await checkFreeTierLimit(req.user.id);
+    const quota = await checkAndReserveFreeTierSlot(req.user.id, lang);
     if (!quota.allowed) {
       return res.status(429).json({ error: quota.message });
     }
+    freeTierReservationId = quota.reservationId;
   }
 
   // ── Paid users: soft daily cap to prevent abuse ─────────────────────────
@@ -679,15 +683,14 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
       sendEvent('answer', { ...cachedAnswer, fromCache: true });
       sendEvent('done', { ok: true, fromCache: true });
 
-      // Meter the cached replay too. coding_usage drives the daily-limit
-      // counter consulted at the top of /solve; without this insert, free
-      // users could blow past their daily cap as long as the problem was
-      // cached. Charge zero tokens (LLM didn't run) but increment the
-      // row count so the day-limit check sees the request.
-      try {
-        await recordCodingUsage(req.user.id, lang, 0, 0, 0);
-      } catch (mErr) {
-        console.warn('[coding/solve] cached-answer metering failed:', mErr.message);
+      // Free-tier: slot already atomically reserved by checkAndReserveFreeTierSlot.
+      // Paid-tier: still need to record so the paid soft-cap counter is accurate.
+      if (planType !== 'free') {
+        try {
+          await recordCodingUsage(req.user.id, lang, 0, 0, 0);
+        } catch (mErr) {
+          console.warn('[coding/solve] cached-answer metering failed:', mErr.message);
+        }
       }
 
       return res.end();
@@ -1017,7 +1020,15 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
         [conversationId, rawAnswer, JSON.stringify({ tokens_used: inputTokens + outputTokens, latency_ms: latencyMs })],
       );
     }
-    await recordCodingUsage(req.user.id, lang, inputTokens, outputTokens, latencyMs);
+    if (freeTierReservationId) {
+      // Update the pre-reserved row with real token counts.
+      await query(
+        `UPDATE coding_usage SET language=$1, input_tokens=$2, output_tokens=$3, latency_ms=$4 WHERE id=$5`,
+        [lang, inputTokens, outputTokens, latencyMs, freeTierReservationId],
+      );
+    } else {
+      await recordCodingUsage(req.user.id, lang, inputTokens, outputTokens, latencyMs);
+    }
   } catch (err) {
     console.error('Failed to persist coding usage:', err.message);
   }
@@ -1167,15 +1178,29 @@ router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, 
     Connection: 'keep-alive',
     'X-Accel-Buffering': 'no',
   });
+  res.flushHeaders();
 
   function sendEvent(event, data) {
     res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
   }
 
+  let clientDisconnected = false;
+  const abortController = new AbortController();
+
+  const keepaliveTimer = setInterval(() => {
+    if (!clientDisconnected) res.write(': ping\n\n');
+  }, 20_000);
+
+  req.on('close', () => {
+    clientDisconnected = true;
+    clearInterval(keepaliveTimer);
+    try { abortController.abort(); } catch {}
+  });
+
   try {
     const stream = await anthropicClient.messages.stream({
       model,
-      max_tokens: 4096,
+      max_tokens: 8192,
       messages: [
         {
           role: 'user',
@@ -1213,42 +1238,57 @@ RULES:
 - Do NOT add comments inside the code (changes[] documents everything)`,
         },
       ],
-    });
+    }, { signal: abortController.signal });
 
     let fullText = '';
     for await (const chunk of stream) {
+      if (clientDisconnected) break;
       if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
         fullText += chunk.delta.text;
         sendEvent('token', { chunk: chunk.delta.text });
       }
     }
 
-    // Parse accumulated JSON
+    if (clientDisconnected) { clearInterval(keepaliveTimer); return; }
+
+    // Parse accumulated JSON — strip optional markdown fences, then attempt
+    // recovery by trimming to the last closing brace if JSON.parse fails.
     let parsed;
     try {
-      const jsonMatch = fullText.match(/```json\s*([\s\S]*?)\s*```/) ||
-                        fullText.match(/```\s*([\s\S]*?)\s*```/);
-      const jsonStr = jsonMatch ? jsonMatch[1] : fullText.trim();
-      parsed = JSON.parse(jsonStr);
+      const fenced = fullText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      let jsonStr = fenced ? fenced[1] : fullText.trim();
+      try {
+        parsed = JSON.parse(jsonStr);
+      } catch {
+        // Attempt recovery: truncate to the last '}' to handle partial streams
+        const lastBrace = jsonStr.lastIndexOf('}');
+        if (lastBrace !== -1) {
+          parsed = JSON.parse(jsonStr.slice(0, lastBrace + 1));
+        } else {
+          throw new Error('no closing brace');
+        }
+      }
     } catch {
       sendEvent('error', { message: 'Failed to parse CoFix response — try again' });
+      clearInterval(keepaliveTimer);
       return res.end();
     }
 
     sendEvent('answer', parsed);
     sendEvent('done', {});
 
-    // Record usage so the daily cap counter actually increments.
-    // Mirrors the pattern in /solve (line ~1020). Fire-and-forget — a DB
-    // hiccup must never break the already-delivered SSE response.
+    // Fire-and-forget usage recording — DB hiccup must not break the response.
     try {
       await recordCodingUsage(req.user.id, lang, 0, 0, 0);
     } catch (err) {
       console.error('[cofix] Failed to record usage:', err.message);
     }
 
+    clearInterval(keepaliveTimer);
     res.end();
   } catch (err) {
+    clearInterval(keepaliveTimer);
+    if (clientDisconnected) return;
     console.error('CoFix stream error:', err);
     sendEvent('error', { message: err.message || 'CoFix failed' });
     res.end();
