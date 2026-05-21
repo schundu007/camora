@@ -110,7 +110,7 @@ export function getAssistantFromPrepKit(): LumoraAssistant | null {
         studyMaterialsFile?: string;
       }>;
     };
-    const key = prep.activeCompany || prep.companies?.[0];
+    const key = prep.activeCompany;
     if (!key) return null;
     const doc = prep.data?.[key];
     if (!doc) return null;

@@ -84,14 +84,11 @@ const CompanyContextPicker = () => {
         type="button"
         onClick={() => setOpen(true)}
         title="Switch which Prep Kit workspace Sona uses for context"
-        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.1em] transition-colors"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-extrabold uppercase tracking-[0.1em] transition-colors"
         style={{
-          background: 'rgba(255,255,255,0.12)',
-          border: `1px solid var(--cam-gold-leaf)`,
-          color: '#fff',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
-          backdropFilter: 'blur(6px)',
-          WebkitBackdropFilter: 'blur(6px)',
+          background: 'rgba(3,19,46,0.88)',
+          border: '1px solid rgba(201,162,39,0.50)',
+          color: 'rgba(255,255,255,0.90)',
           maxWidth: 240,
         }}
       >
