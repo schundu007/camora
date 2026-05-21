@@ -405,7 +405,7 @@ Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
       basicImplementation: {
         title: 'Basic Implementation',
         description: 'Client → Load Balancer → Web Server → Count Cache → Database. The web server requests a base-10 number from the count cache, converts it to base-62, and uses it as the short URL.',
-        diagramSrc: '/diagrams/url-shortener/architecture-basic.png',
+        diagramSrc: '/diagrams/url-shortener/impl-basic.png',
         problems: [
           'Single point of failure in web server, cache, and database',
           'When horizontally scaled, distributed caches can return same number → COLLISION',
@@ -417,7 +417,7 @@ Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
       advancedImplementation: {
         title: 'Advanced Implementation with ZooKeeper',
         description: 'ZooKeeper allocates ID ranges to web servers, avoiding collisions. Each server generates IDs independently.',
-        diagramSrc: '/diagrams/url-shortener/architecture-advanced.png',
+        diagramSrc: '/diagrams/url-shortener/impl-advanced.png',
         keyPoints: [
           'ZooKeeper allocates ranges of 1 million IDs to each web server',
           'Each server generates IDs independently within its range - no collisions',
@@ -1428,7 +1428,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
       basicImplementation: {
         title: 'Basic Implementation (Fan-out on Write)',
         description: 'When a user posts a tweet, fan-out service pushes it to all followers\' timeline caches',
-        diagramSrc: '/diagrams/twitter/architecture-basic.png',
+        diagramSrc: '/diagrams/twitter/impl-basic.png',
         problems: [
           'Celebrity tweets to 10M followers = 10M cache writes',
           'Hot celebrities cause massive write amplification',
@@ -1440,7 +1440,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
       advancedImplementation: {
         title: 'Hybrid Fan-out (Twitter\'s Approach)',
         description: 'Fan-out on write for <10K followers, celebrity tweets merged on read from cache',
-        diagramSrc: '/diagrams/twitter/architecture-advanced.png',
+        diagramSrc: '/diagrams/twitter/impl-advanced.png',
         keyPoints: [
           'Follower threshold (e.g., 10K) determines fan-out strategy',
           'Timeline read merges pre-computed feed + celebrity tweets',
@@ -2167,7 +2167,7 @@ rides {
       basicImplementation: {
         title: 'Basic Implementation',
         description: 'Rider and Driver apps connect to Matching service, with Location service and Redis for real-time tracking',
-        diagramSrc: '/diagrams/uber/architecture-basic.png',
+        diagramSrc: '/diagrams/uber/impl-basic.png',
         problems: [
           'Database cannot handle 1M location updates/second',
           'PostGIS queries slow at scale',
@@ -2179,7 +2179,7 @@ rides {
       advancedImplementation: {
         title: 'Scalable Implementation with Cell-based Architecture',
         description: 'City divided into S2 cells, each with dedicated services. Redis Geo for O(log N) spatial queries.',
-        diagramSrc: '/diagrams/uber/architecture-advanced.png',
+        diagramSrc: '/diagrams/uber/impl-advanced.png',
         keyPoints: [
           'Divide city into S2 cells (roughly 1km²)',
           'Each cell service manages drivers in that area',
@@ -2893,7 +2893,7 @@ Quick quality first: 360p available in minutes, 4K later`
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Upload → Transcode → Store → CDN → Client pipeline for video streaming',
-        diagramSrc: '/diagrams/youtube/architecture-basic.png',
+        diagramSrc: '/diagrams/youtube/impl-basic.png',
         problems: [
           'Single transcoding queue becomes bottleneck',
           'No adaptive bitrate - fixed quality',
@@ -2905,7 +2905,7 @@ Quick quality first: 360p available in minutes, 4K later`
 
       advancedImplementation: {
         title: 'Production Architecture',
-        diagramSrc: '/diagrams/youtube/architecture-advanced.png',
+        diagramSrc: '/diagrams/youtube/impl-advanced.png',
         architecture: 'See diagram above.',
         keyPoints: [
           'Chunked upload with resume: Handle large files (up to 256GB)',
@@ -4749,7 +4749,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Monolithic service with pull-based feed generation',
-        diagramSrc: '/diagrams/instagram/architecture-basic.png',
+        diagramSrc: '/diagrams/instagram/impl-basic.png',
         architecture: 'See diagram above.',
         problems: [
           'Feed query is slow: N+1 queries for each followed user',
@@ -4762,7 +4762,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
 
       advancedImplementation: {
         title: 'Production Architecture',
-        diagramSrc: '/diagrams/instagram/architecture-advanced.png',
+        diagramSrc: '/diagrams/instagram/impl-advanced.png',
         architecture: 'See diagram above.',
         keyPoints: [
           'Hybrid feed model: Push for regular users, pull for celebrity followers',
@@ -5750,7 +5750,7 @@ Changes are pushed through notification service, client then fetches full delta.
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Simple upload/download without block-level sync',
-        diagramSrc: '/diagrams/dropbox/architecture-basic.png',
+        diagramSrc: '/diagrams/dropbox/impl-basic.png',
         architecture: 'See diagram above.',
         problems: [
           'Entire file uploaded/downloaded on any change',
@@ -5763,7 +5763,7 @@ Changes are pushed through notification service, client then fetches full delta.
 
       advancedImplementation: {
         title: 'Production Architecture',
-        diagramSrc: '/diagrams/dropbox/architecture-advanced.png',
+        diagramSrc: '/diagrams/dropbox/impl-advanced.png',
         architecture: 'See diagram above.',
         keyPoints: [
           'Block-level sync: 4MB chunks, only upload changed blocks',
@@ -6443,7 +6443,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Simple streaming with single CDN',
-        diagramSrc: '/diagrams/netflix/architecture-basic.png',
+        diagramSrc: '/diagrams/netflix/impl-basic.png',
         architecture: 'See diagram above.',
         problems: [
           'Third-party CDN is expensive at scale',
@@ -6456,7 +6456,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
 
       advancedImplementation: {
         title: 'Production Architecture',
-        diagramSrc: '/diagrams/netflix/architecture-advanced.png',
+        diagramSrc: '/diagrams/netflix/impl-advanced.png',
         architecture: 'See diagram above.',
         keyPoints: [
           'Open Connect CDN: 17,000+ edge servers at ISPs worldwide',
@@ -8529,7 +8529,7 @@ presence {
       basicImplementation: {
         title: 'Basic Architecture',
         description: 'Simple last-write-wins without real-time collaboration',
-        diagramSrc: '/diagrams/google-docs/architecture-basic.png',
+        diagramSrc: '/diagrams/google-docs/impl-basic.png',
         architecture: 'See diagram above.',
         problems: [
           'Last-write-wins causes data loss',
@@ -8542,7 +8542,7 @@ presence {
 
       advancedImplementation: {
         title: 'Production Architecture',
-        diagramSrc: '/diagrams/google-docs/architecture-advanced.png',
+        diagramSrc: '/diagrams/google-docs/impl-advanced.png',
         architecture: 'See diagram above.',
         keyPoints: [
           'OT engine: Transforms concurrent operations for consistency',
@@ -10083,7 +10083,7 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
       basicImplementation: {
         title: 'Basic Search Architecture',
         description: 'Query → Search Service → Elasticsearch with index shards for parallel query processing',
-        diagramSrc: '/diagrams/search-engine/architecture-basic.png',
+        diagramSrc: '/diagrams/search-engine/impl-basic.png',
         architecture: 'See diagram above.',
         problems: [
           'Single datacenter = high latency for distant users',
@@ -10095,7 +10095,7 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
 
       advancedImplementation: {
         title: 'Production Search Architecture',
-        diagramSrc: '/diagrams/search-engine/architecture-advanced.png',
+        diagramSrc: '/diagrams/search-engine/impl-advanced.png',
         architecture: 'See diagram above.',
         keyPoints: [
           'Tiered index: Hot (1% in memory), warm (10% on SSD), cold (disk)',
@@ -10700,7 +10700,7 @@ const userTime = convertToTimezone(now(), user.timezone);
       basicImplementation: {
         title: 'Basic Notification Architecture',
         description: 'Single queue with multiple channel workers distributing to Push, Email, and SMS providers',
-        diagramSrc: '/diagrams/notification-system/architecture-basic.png',
+        diagramSrc: '/diagrams/notification-system/impl-basic.png',
         problems: [
           'Single queue = no priority handling',
           'No user preference checking',
@@ -12617,7 +12617,7 @@ Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (
       basicImplementation: {
         title: 'Basic Typeahead Architecture',
         description: 'In-memory trie with pre-computed suggestions',
-        diagramSrc: '/diagrams/typeahead/architecture-basic.png',
+        diagramSrc: '/diagrams/typeahead/impl-basic.png',
         architecture: 'See diagram above.',
         problems: [
           'Single server = limited scalability',
@@ -12629,7 +12629,7 @@ Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (
 
       advancedImplementation: {
         title: 'Production Typeahead Architecture',
-        diagramSrc: '/diagrams/typeahead/architecture-advanced.png',
+        diagramSrc: '/diagrams/typeahead/impl-advanced.png',
         architecture: 'See diagram above.',
         keyPoints: [
           'Client-side debouncing (wait 100ms after keystroke)',
@@ -13145,7 +13145,7 @@ When a channel receives messages faster than members can consume, the gateway ap
       basicImplementation: {
         title: 'Basic Chat Architecture',
         description: 'Single WebSocket server with direct database connection for real-time messaging',
-        diagramSrc: '/diagrams/chat-system/architecture-basic.png',
+        diagramSrc: '/diagrams/chat-system/impl-basic.png',
         problems: [
           'Single server = limited connections',
           'No fan-out mechanism for multi-server',
@@ -13157,7 +13157,7 @@ When a channel receives messages faster than members can consume, the gateway ap
       advancedImplementation: {
         title: 'Production Chat Architecture',
         description: 'WebSocket gateway cluster with Redis Pub/Sub for cross-server message fan-out, Vitess/ScyllaDB for message storage.',
-        diagramSrc: '/diagrams/chat-system/architecture-advanced.png',
+        diagramSrc: '/diagrams/chat-system/impl-advanced.png',
         keyPoints: [
           'WebSocket Gateway cluster with 50K connections per node',
           'Redis Pub/Sub for cross-gateway message fan-out',
@@ -15119,7 +15119,7 @@ When a user has zero listening history, recommendations must still feel relevant
       basicImplementation: {
         title: 'Basic Music Streaming',
         description: 'Simple audio serving with basic playlists',
-        diagramSrc: '/diagrams/spotify/architecture-basic.png',
+        diagramSrc: '/diagrams/spotify/impl-basic.png',
         architecture: 'See diagram above.',
         problems: [
           'No CDN = high latency for distant users',
@@ -15131,7 +15131,7 @@ When a user has zero listening history, recommendations must still feel relevant
 
       advancedImplementation: {
         title: 'Production Spotify Architecture',
-        diagramSrc: '/diagrams/spotify/architecture-advanced.png',
+        diagramSrc: '/diagrams/spotify/impl-advanced.png',
         architecture: 'See diagram above.',
         keyPoints: [
           'Global CDN with edge caching for popular tracks',
@@ -18938,7 +18938,7 @@ When a normal user (<10K followers) posts:
       basicImplementation: {
         title: 'Pull-Based Architecture',
         description: 'Simple pull model - compute feed on read',
-        diagramSrc: '/diagrams/facebook-newsfeed/architecture-basic.png',
+        diagramSrc: '/diagrams/facebook-newsfeed/impl-basic.png',
         architecture: 'See diagram above.',
         problems: [
           'N+1 query problem (query per friend)',
@@ -18951,7 +18951,7 @@ When a normal user (<10K followers) posts:
 
       advancedImplementation: {
         title: 'Hybrid Fan-out Architecture',
-        diagramSrc: '/diagrams/facebook-newsfeed/architecture-advanced.png',
+        diagramSrc: '/diagrams/facebook-newsfeed/impl-advanced.png',
         architecture: 'See diagram above.',
         keyPoints: [
           'Hybrid fan-out: push for normal users, pull for celebrities',
