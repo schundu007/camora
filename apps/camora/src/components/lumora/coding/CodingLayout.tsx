@@ -1730,8 +1730,27 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       </div>
                     )}
 
-                    {/* ── Collapse input panel ── */}
-                    <div className="flex items-center justify-end px-3 py-2">
+                    {/* ── Chips + collapse in one row ── */}
+                    <div className="flex items-center gap-1.5 px-3 py-1.5">
+                      {!isLoading && snapChipCode && (
+                        <>
+                          <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
+                            style={{ color: 'var(--cam-gold-leaf)' }}>Snap:</span>
+                          {SNAP_CHIPS.map(chip => (
+                            <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
+                              className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
+                              style={{ background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }}>
+                              {chip.label}
+                            </button>
+                          ))}
+                          <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
+                            className="shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
+                            style={{ color: 'rgba(255,255,255,0.35)' }}>
+                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          </button>
+                        </>
+                      )}
+                      <div className="flex-1" />
                       <button
                         onClick={() => setIsInputCollapsed(!isInputCollapsed)}
                         className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
@@ -1743,27 +1762,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         </svg>
                       </button>
                     </div>
-                    {/* ── Snap chips (autopilot mode) — only when snap code is set ── */}
-                    {!isLoading && snapChipCode && (
-                      <div className="flex flex-wrap items-center gap-1.5 px-3 py-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                        <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
-                          style={{ color: 'var(--cam-gold-leaf)' }}>
-                          Snap:
-                        </span>
-                        {SNAP_CHIPS.map(chip => (
-                          <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
-                            className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
-                            style={{ background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }}>
-                            {chip.label}
-                          </button>
-                        ))}
-                        <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
-                          className="ml-auto shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
-                          style={{ color: 'rgba(255,255,255,0.35)' }}>
-                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                        </button>
-                      </div>
-                    )}
                   </div>
                 ) : (
                   /* Manual mode — two-row layout (Image #15 design):
@@ -1776,8 +1774,27 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       borderBottom: '1px solid var(--cam-gold-leaf)',
                     }}
                   >
-                    {/* ── Collapse input panel ── */}
-                    <div className="flex items-center justify-end px-3 py-1.5">
+                    {/* ── Chips + collapse in one row ── */}
+                    <div className="flex items-center gap-1.5 px-3 py-1.5">
+                      {!isLoading && snapChipCode && (
+                        <>
+                          <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
+                            style={{ color: 'var(--cam-gold-leaf)' }}>Snap:</span>
+                          {SNAP_CHIPS.map(chip => (
+                            <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
+                              className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
+                              style={{ background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }}>
+                              {chip.label}
+                            </button>
+                          ))}
+                          <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
+                            className="shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
+                            style={{ color: 'rgba(255,255,255,0.35)' }}>
+                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          </button>
+                        </>
+                      )}
+                      <div className="flex-1" />
                       <button
                         onClick={() => setIsInputCollapsed(!isInputCollapsed)}
                         className="flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
@@ -1789,27 +1806,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         </svg>
                       </button>
                     </div>
-                    {/* ── Snap chips (manual mode) — only when snap code is set ── */}
-                    {!isLoading && snapChipCode && (
-                      <div className="flex flex-wrap items-center gap-1.5 px-3 py-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                        <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
-                          style={{ color: 'var(--cam-gold-leaf)' }}>
-                          Snap:
-                        </span>
-                        {SNAP_CHIPS.map(chip => (
-                          <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
-                            className="shrink-0 px-2.5 py-0.5 text-[10px] font-semibold rounded-full transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
-                            style={{ background: 'rgba(255,213,0,0.14)', color: 'rgba(255,220,50,0.95)', border: '1px solid rgba(255,213,0,0.35)' }}>
-                            {chip.label}
-                          </button>
-                        ))}
-                        <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
-                          className="ml-auto shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
-                          style={{ color: 'rgba(255,255,255,0.35)' }}>
-                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                        </button>
-                      </div>
-                    )}
                   </div>
                 )}
 
