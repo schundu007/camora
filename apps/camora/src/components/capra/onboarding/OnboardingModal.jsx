@@ -33,19 +33,15 @@ export default function OnboardingModal({ isOpen, onComplete, onOpenPricing }) {
 
   const steps = [
     {
-      title: 'Welcome to Ascend',
+      title: 'Welcome to Camora',
       subtitle: 'Your Study Assistant',
       icon: (
-        <div
-          className="w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-pulse-glow bg-[var(--accent)]"
-          style={{
-            boxShadow: '0 0 30px var(--accent-subtle)'
-          }}
-        >
+        <div className="flex justify-center mx-auto mb-6">
           <img
-            src="/ascend-logo.png"
-            alt="Ascend"
-            className="h-14 w-auto object-contain filter brightness-0 invert"
+            src="/camora_tile_dark.png"
+            alt="Camora"
+            className="w-24 h-24 object-contain"
+            style={{ borderRadius: 20 }}
           />
         </div>
       ),
