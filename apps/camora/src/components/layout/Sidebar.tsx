@@ -163,6 +163,12 @@ const icons = {
       <circle cx="12" cy="16" r="1" fill="currentColor"/>
     </svg>
   ),
+  profile: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/>
+    </svg>
+  ),
 };
 
 /* ─── Navigation sections ────────────────────────────────────── */
@@ -197,7 +203,6 @@ const sections: NavSection[] = [
       { label: 'Practice', path: '/capra/practice', icon: icons.play },
       { label: 'Problem Library', path: '/capra/library', icon: icons.library },
       { label: 'Blind 75', path: '/handbook', icon: icons.star },
-      { label: 'Achievements', path: '/profile?tab=achievements', icon: icons.trophy },
     ],
   },
   {
@@ -211,6 +216,13 @@ const sections: NavSection[] = [
     items: [
       { label: 'Code Solver', path: '/capra', icon: icons.layout },
       { label: 'Design Solver', path: '/capra/design', icon: icons.layers },
+    ],
+  },
+  {
+    title: 'Profile',
+    items: [
+      { label: 'Achievements', path: '/profile?tab=achievements', icon: icons.trophy },
+      { label: 'Account', path: '/profile', icon: icons.profile },
     ],
   },
 ];
