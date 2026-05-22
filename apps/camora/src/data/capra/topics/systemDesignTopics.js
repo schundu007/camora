@@ -6676,7 +6676,7 @@ Request: GET /api/checkout
       basicImplementation: {
         title: 'Simple Microservices',
         description: 'API Gateway routing to independent services, each owning their database',
-        diagramSrc: '/diagrams/fundamentals/simple-microservices.png',
+        diagramSrc: '/diagrams/fundamentals/simple-microservices.svg',
         problems: [
           'Direct calls create tight coupling',
           'No fault tolerance (cascading failures)',
