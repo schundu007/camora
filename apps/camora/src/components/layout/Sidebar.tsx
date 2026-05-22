@@ -222,7 +222,6 @@ const sections: NavSection[] = [
     title: 'Profile',
     items: [
       { label: 'Achievements', path: '/profile?tab=achievements', icon: icons.trophy },
-      { label: 'Account', path: '/profile', icon: icons.profile },
     ],
   },
 ];
