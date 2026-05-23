@@ -123,6 +123,7 @@ function spawnWithStdin(cmd, args, input, timeoutMs = 5000) {
     child.stderr.on('data', d => { stderr += d; });
     child.stdin.write(input, 'utf8');
     child.stdin.end();
+    child.stdin.on('error', () => {}); // suppress EPIPE if child exits before reading all stdin
     child.on('close', (code) => {
       clearTimeout(timer);
       resolve({ stdout, stderr, exitCode: code ?? 0 });
@@ -236,7 +237,7 @@ router.post('/run', async (req, res, next) => {
 router.post('/lint', async (req, res, next) => {
   try {
     const { code } = req.body;
-    if (!code || code.length > CODE_LIMIT) return res.json({ diagnostics: [] });
+    if (!code || typeof code !== 'string' || code.length > CODE_LIMIT) return res.json({ diagnostics: [] });
 
     const result = await spawnWithStdin(
       'ruff', ['check', '--output-format=json', '--stdin-filename=main.py', '-'],
