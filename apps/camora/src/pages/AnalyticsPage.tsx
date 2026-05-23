@@ -366,13 +366,13 @@ export default function AnalyticsPage() {
                 </div>
 
                 <h2 className="text-base font-semibold mb-3 text-[var(--text-primary)]">By Page</h2>
-                <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden mb-10">
-                  <table className="w-full text-left">
+                <div className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-x-auto mb-10">
+                  <table className="w-full min-w-full text-left">
                     <thead>
                       <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))' }}
                         className="border-b border-[var(--border)]">
                         {['Path', 'Views', 'Unique Visitors'].map((h, i) => (
-                          <th key={h} className={`px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-80 ${i > 0 ? 'text-right' : ''}`}>{h}</th>
+                          <th key={h} className={`px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-80 ${i === 0 ? 'w-full' : 'whitespace-nowrap text-right'}`}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -395,13 +395,13 @@ export default function AnalyticsPage() {
                 </div>
 
                 <h2 className="text-base font-semibold mb-3 text-[var(--text-primary)]">By Day</h2>
-                <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden">
-                  <table className="w-full text-left">
+                <div className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-x-auto">
+                  <table className="w-full min-w-full text-left">
                     <thead>
                       <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))' }}
                         className="border-b border-[var(--border)]">
                         {['Date', 'Views', 'Unique Visitors', 'Trend'].map((h, i) => (
-                          <th key={h} className={`px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-80 ${i === 1 || i === 2 ? 'text-right' : ''} ${i === 3 ? 'w-40' : ''}`}>{h}</th>
+                          <th key={h} className={`px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-80 ${i === 0 ? 'w-full' : ''} ${i === 1 || i === 2 ? 'whitespace-nowrap text-right' : ''} ${i === 3 ? 'w-40' : ''}`}>{h}</th>
                         ))}
                       </tr>
                     </thead>
