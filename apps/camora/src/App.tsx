@@ -264,6 +264,7 @@ const RouteTitle = () => {
       ['/capra/practice', 'Practice — Camora'],
       ['/capra/plan', 'Study Plan — Camora'],
       ['/capra/library', 'Problem Library — Camora'],
+      ['/capra/learn/python', 'Python — Learning Library — Camora'],
       ['/capra/onboarding', 'Get Started — Camora'],
       ['/jobs', 'Jobs — Camora'],
       ['/profile', 'Profile — Camora'],
@@ -380,6 +381,7 @@ export const App = () => {
           <Route path="/capra/library" element={<ShellRoute><HRLibraryPage /></ShellRoute>} />
           <Route path="/capra/quiz"         element={<ShellRoute><MCQPage /></ShellRoute>} />
           <Route path="/capra/quiz/session" element={<ShellRoute><QuizSessionPage /></ShellRoute>} />
+          <Route path="/capra/learn/python" lazy={() => import('./pages/capra/PythonLearnPage').then(m => ({ Component: m.default }))} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
           <Route path="/capra/achievements" element={<Navigate to="/profile?tab=achievements" replace />} />
