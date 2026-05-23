@@ -267,7 +267,7 @@ export default function AnalyticsPage() {
   if (isAdmin === null) {
     return (
       <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[var(--cam-primary)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -328,76 +328,85 @@ export default function AnalyticsPage() {
 
             {loading ? (
               <div className="flex justify-center py-20">
-                <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[var(--cam-primary)] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : stats ? (
               <>
-                <div className="grid grid-cols-2 gap-4 mb-10">
-                  <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-6">
-                    <p className="text-[var(--text-muted)] text-sm">Total Page Views</p>
-                    <p className="text-4xl font-bold mt-1">{stats.total_views.toLocaleString()}</p>
+                <div className="flex gap-6 mb-10">
+                  <div className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-6 py-5">
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-70 mb-2">Total Page Views</p>
+                    <p className="text-4xl font-bold text-[var(--text-primary)] tabular-nums">{stats.total_views.toLocaleString()}</p>
                   </div>
-                  <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-6">
-                    <p className="text-[var(--text-muted)] text-sm">Unique Visitors</p>
-                    <p className="text-4xl font-bold mt-1 text-[var(--accent)]">{stats.unique_visitors.toLocaleString()}</p>
+                  <div className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-6 py-5"
+                    style={{ borderColor: 'color-mix(in oklab, var(--cam-gold-leaf) 40%, var(--border))' }}>
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-gold-leaf)] opacity-80 mb-2">Unique Visitors</p>
+                    <p className="text-4xl font-bold tabular-nums" style={{ color: 'var(--cam-gold-leaf)' }}>{stats.unique_visitors.toLocaleString()}</p>
                   </div>
                 </div>
 
-                <h2 className="text-xl font-semibold mb-4">By Page</h2>
+                <h2 className="text-base font-semibold mb-3 text-[var(--text-primary)]">By Page</h2>
                 <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden mb-10">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-[var(--border)] text-[var(--text-muted)] text-sm">
-                        <th className="px-5 py-3">Path</th>
-                        <th className="px-5 py-3 text-right">Views</th>
-                        <th className="px-5 py-3 text-right">Unique Visitors</th>
+                      <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))' }}
+                        className="border-b border-[var(--border)]">
+                        {['Path', 'Views', 'Unique Visitors'].map((h, i) => (
+                          <th key={h} className={`px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-80 ${i > 0 ? 'text-right' : ''}`}>{h}</th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {stats.by_path.map(row => (
-                        <tr key={row.path} className="border-b border-[var(--border)]/50 hover:bg-[var(--border)]/30">
-                          <td className="px-5 py-3 font-mono text-sm text-[var(--accent)]">{row.path}</td>
-                          <td className="px-5 py-3 text-right">{parseInt(row.views).toLocaleString()}</td>
-                          <td className="px-5 py-3 text-right font-semibold">{parseInt(row.unique_visitors).toLocaleString()}</td>
+                      {stats.by_path.map((row, i) => (
+                        <tr key={row.path}
+                          className="border-b border-[var(--border)]/40 transition-colors"
+                          onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 5%, var(--bg-surface))')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                          <td className="px-5 py-3 font-mono text-xs text-[var(--cam-primary)]">{row.path}</td>
+                          <td className="px-5 py-3 text-right text-sm text-[var(--text-secondary)]">{parseInt(row.views).toLocaleString()}</td>
+                          <td className="px-5 py-3 text-right text-sm font-semibold text-[var(--text-primary)]">{parseInt(row.unique_visitors).toLocaleString()}</td>
                         </tr>
                       ))}
                       {stats.by_path.length === 0 && (
-                        <tr><td colSpan={3} className="px-5 py-8 text-center text-[var(--text-muted)]">No data yet</td></tr>
+                        <tr><td colSpan={3} className="px-5 py-10 text-center text-[var(--text-muted)] text-sm">No data yet</td></tr>
                       )}
                     </tbody>
                   </table>
                 </div>
 
-                <h2 className="text-xl font-semibold mb-4">By Day</h2>
+                <h2 className="text-base font-semibold mb-3 text-[var(--text-primary)]">By Day</h2>
                 <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-[var(--border)] text-[var(--text-muted)] text-sm">
-                        <th className="px-5 py-3">Date</th>
-                        <th className="px-5 py-3 text-right">Views</th>
-                        <th className="px-5 py-3 text-right">Unique Visitors</th>
-                        <th className="px-5 py-3 text-right w-48">Trend</th>
+                      <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))' }}
+                        className="border-b border-[var(--border)]">
+                        {['Date', 'Views', 'Unique Visitors', 'Trend'].map((h, i) => (
+                          <th key={h} className={`px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-80 ${i === 1 || i === 2 ? 'text-right' : ''} ${i === 3 ? 'w-40' : ''}`}>{h}</th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {stats.by_day.map(row => {
+                      {stats.by_day.map((row) => {
                         const maxViews = Math.max(...stats.by_day.map(d => parseInt(d.views)));
                         const pct = maxViews > 0 ? (parseInt(row.views) / maxViews) * 100 : 0;
                         return (
-                          <tr key={row.date} className="border-b border-[var(--border)]/50 hover:bg-[var(--border)]/30">
-                            <td className="px-5 py-3 text-sm">{new Date(row.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
-                            <td className="px-5 py-3 text-right">{parseInt(row.views).toLocaleString()}</td>
-                            <td className="px-5 py-3 text-right font-semibold">{parseInt(row.unique_visitors).toLocaleString()}</td>
+                          <tr key={row.date}
+                            className="border-b border-[var(--border)]/40 transition-colors"
+                            onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 5%, var(--bg-surface))')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                            <td className="px-5 py-3 text-sm text-[var(--text-secondary)]">{new Date(row.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
+                            <td className="px-5 py-3 text-right text-sm text-[var(--text-secondary)]">{parseInt(row.views).toLocaleString()}</td>
+                            <td className="px-5 py-3 text-right text-sm font-semibold text-[var(--text-primary)]">{parseInt(row.unique_visitors).toLocaleString()}</td>
                             <td className="px-5 py-3">
-                              <div className="w-full bg-[var(--bg-elevated)] rounded-full h-2">
-                                <div className="bg-[var(--accent)] h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                              <div className="w-full bg-[var(--bg-elevated)] rounded-full h-1.5">
+                                <div className="h-1.5 rounded-full transition-[width]"
+                                  style={{ width: `${pct}%`, background: 'var(--cam-primary)' }} />
                               </div>
                             </td>
                           </tr>
                         );
                       })}
                       {stats.by_day.length === 0 && (
-                        <tr><td colSpan={4} className="px-5 py-8 text-center text-[var(--text-muted)]">No data yet</td></tr>
+                        <tr><td colSpan={4} className="px-5 py-10 text-center text-[var(--text-muted)] text-sm">No data yet</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -417,14 +426,14 @@ export default function AnalyticsPage() {
               <div className="grid grid-cols-5 gap-3 mb-6">
                 {[
                   { label: 'Total Users', value: totalUsers, color: 'text-[var(--text-primary)]', filter: '' },
-                  { label: 'Paid', value: paidUsers, color: 'text-[var(--accent)]', filter: 'paid' },
-                  { label: 'Trial', value: trialUsers, color: 'text-[var(--accent)]', filter: 'trial' },
-                  { label: 'Challenger', value: challengerUsers, color: 'text-[var(--accent)]', filter: 'challenger' },
+                  { label: 'Paid', value: paidUsers, color: 'text-[var(--cam-gold-leaf)]', filter: 'paid' },
+                  { label: 'Trial', value: trialUsers, color: 'text-[var(--cam-primary)]', filter: 'trial' },
+                  { label: 'Challenger', value: challengerUsers, color: 'text-[var(--cam-primary)]', filter: 'challenger' },
                   { label: 'Free', value: freeUsers, color: 'text-[var(--text-muted)]', filter: 'free' },
                 ].map(c => (
                   <button key={c.label} onClick={() => setPlanFilter(planFilter === c.filter ? '' : c.filter)}
                     className={`bg-[var(--bg-surface)] border rounded-xl p-4 text-left transition-[border-color,box-shadow,transform] active:scale-[0.98] ${
-                      planFilter === c.filter ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]/30' : 'border-[var(--border)] hover:border-[var(--border)]'
+                      planFilter === c.filter ? 'border-[var(--cam-primary)] ring-1 ring-[var(--cam-primary)]/20' : 'border-[var(--border)] hover:border-[var(--cam-primary)]/40'
                     }`}>
                     <p className="text-[var(--text-muted)] text-xs">{c.label}</p>
                     <p className={`text-2xl font-bold mt-1 ${c.color}`}>{c.value}</p>
@@ -433,9 +442,9 @@ export default function AnalyticsPage() {
               </div>
             )}
 
-            {/* Search + Refresh */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="relative flex-1 max-w-sm">
+            {/* Search + toolbar */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="relative flex-1">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -444,134 +453,152 @@ export default function AnalyticsPage() {
                   placeholder="Search by name, email, location, company..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
+                  className="w-full pl-9 pr-4 py-2.5 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--cam-primary)] focus:ring-1 focus:ring-[var(--cam-primary)]/20 transition-[border-color,box-shadow]"
                 />
               </div>
+              {usersLoaded && (
+                <span className="text-[var(--text-muted)] text-xs whitespace-nowrap font-mono">
+                  {filteredUsers.length} / {users.length}
+                </span>
+              )}
               <RefreshBtn onClick={() => { setUsersLoaded(false); fetchUsers(); }} loading={usersLoading} />
             </div>
 
             {trialError && (
-              <p className="text-red-400 text-sm mb-3">{trialError}</p>
+              <p className="text-[var(--danger)] text-sm mb-3">{trialError}</p>
             )}
 
             {usersLoading && !usersLoaded ? (
               <div className="flex justify-center py-20">
-                <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[var(--cam-primary)] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : usersError ? (
-              <p className="text-red-400">{usersError}</p>
+              <p className="text-[var(--danger)]">{usersError}</p>
             ) : (
-              <>
-                <p className="text-[var(--text-muted)] text-xs mb-2">{filteredUsers.length} of {users.length} users{search && ` matching "${search}"`}</p>
-                <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-[var(--border)] text-[var(--text-muted)]">
-                        <th className="px-4 py-3">User</th>
-                        <th className="px-4 py-3">Email</th>
-                        <th className="px-4 py-3">Plan</th>
-                        <th className="px-4 py-3">Location</th>
-                        <th className="px-4 py-3">Target</th>
-                        <th className="px-4 py-3">Last Login</th>
-                        <th className="px-4 py-3">Joined</th>
-                        <th className="px-4 py-3">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredUsers.map(u => (
-                        <tr key={u.id} className="border-b border-[var(--border)]/50 hover:bg-[var(--border)]/30">
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              {u.avatar ? (
-                                <img src={u.avatar} alt="" className="w-8 h-8 rounded-full" />
-                              ) : (
-                                <div className="w-8 h-8 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center text-xs font-bold">
-                                  {(u.name || u.email)[0].toUpperCase()}
-                                </div>
-                              )}
-                              <div>
-                                <p className="font-medium">{u.name || '—'}</p>
-                                {u.username && <p className="text-[var(--text-muted)] text-xs">@{u.username}</p>}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-[var(--text-secondary)]">{u.email}</td>
-                          <td className="px-4 py-3">
-                            {(() => {
-                              const cat = getUserPlanCategory(u);
-                              return (
-                                <div className="flex flex-col gap-1">
-                                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium w-fit ${
-                                    cat === 'paid' ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
-                                      : cat === 'challenger' ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
-                                      : cat === 'trial' ? 'bg-[var(--accent)]/10 text-[var(--accent)]'
-                                      : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
-                                  }`}>
-                                    {cat === 'paid' ? u.sub_plan : cat}
-                                  </span>
-                                  {cat === 'trial' && (
-                                    <span className="text-[10px] text-[var(--accent)]">
-                                      ends {new Date(u.trial_ends_at!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                    </span>
-                                  )}
-                                </div>
-                              );
-                            })()}
-                          </td>
-                          <td className="px-4 py-3 text-[var(--text-muted)] text-xs">{u.location || '—'}</td>
-                          <td className="px-4 py-3 text-[var(--text-muted)] text-xs">
-                            {u.target_company || u.target_role
-                              ? `${u.target_role || ''} ${u.target_company ? `@ ${u.target_company}` : ''}`.trim()
-                              : '—'}
-                          </td>
-                          <td className="px-4 py-3 text-[var(--text-muted)] text-xs">
-                            {u.last_login_at ? new Date(u.last_login_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'}
-                          </td>
-                          <td className="px-4 py-3 text-[var(--text-muted)] text-xs">
-                            {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex gap-1 items-center">
-                              {[3, 7, 14].map(d => (
-                                <button
-                                  key={d}
-                                  onClick={() => grantTrial(u.id, d)}
-                                  disabled={granting === u.id}
-                                  className="px-2 py-1 rounded text-[11px] font-medium bg-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)]/40 transition-[background-color,opacity,transform] active:scale-[0.98] disabled:opacity-50"
-                                >
-                                  {granting === u.id ? '...' : `${d}d`}
-                                </button>
-                              ))}
-                              <button
-                                onClick={() => toggleAdmin(u.id, !u.is_admin)}
-                                disabled={togglingAdmin === u.id}
-                                className={`px-2 py-1 rounded text-[11px] font-medium transition-[background-color,opacity,transform] active:scale-[0.98] disabled:opacity-50 ml-1 ${u.is_admin ? 'bg-[var(--cam-gold-leaf)]/20 text-[var(--cam-gold-leaf-dk)] hover:bg-[var(--cam-gold-leaf)]/40' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:bg-[var(--border)]'}`}
-                                title={u.is_admin ? 'Revoke admin' : 'Make admin'}
-                              >
-                                {togglingAdmin === u.id ? '…' : u.is_admin ? 'Admin ✓' : 'Admin'}
-                              </button>
-                              {!u.is_admin && (
-                                <button
-                                  onClick={() => deleteUser(u.id)}
-                                  className="px-2 py-1 rounded text-[11px] font-medium text-red-500 hover:bg-red-50 transition-[background-color,transform] active:scale-[0.98] ml-1"
-                                  title={`Delete ${u.email}`}
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
+              <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))' }}
+                      className="border-b border-[var(--border)]">
+                      {['User', 'Email', 'Plan', 'Location', 'Target', 'Last Login', 'Joined', 'Actions'].map(h => (
+                        <th key={h} className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-80 whitespace-nowrap">{h}</th>
                       ))}
-                      {filteredUsers.length === 0 && (
-                        <tr><td colSpan={8} className="px-4 py-8 text-center text-[var(--text-muted)]">
-                          {search ? `No users matching "${search}"` : 'No users found'}
-                        </td></tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((u, i) => (
+                      <tr key={u.id}
+                        className="border-b border-[var(--border)]/40 transition-colors"
+                        style={{ background: i % 2 === 0 ? 'transparent' : 'color-mix(in oklab, var(--cam-primary) 2%, transparent)' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 5%, var(--bg-surface))')}
+                        onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? 'transparent' : 'color-mix(in oklab, var(--cam-primary) 2%, transparent)')}>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2.5">
+                            {u.avatar ? (
+                              <img src={u.avatar} alt="" className="w-8 h-8 rounded-full ring-1 ring-[var(--border)]" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                                style={{ background: 'color-mix(in oklab, var(--cam-primary) 15%, transparent)', color: 'var(--cam-primary)' }}>
+                                {(u.name || u.email)[0].toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-semibold text-[var(--text-primary)] leading-tight">{u.name || '—'}</p>
+                              {u.username && <p className="text-[var(--text-muted)] text-[10px] font-mono mt-0.5">@{u.username}</p>}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-[var(--text-secondary)] text-xs">{u.email}</td>
+                        <td className="px-4 py-3">
+                          {(() => {
+                            const cat = getUserPlanCategory(u);
+                            return (
+                              <div className="flex flex-col gap-0.5">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide w-fit font-mono ${
+                                  cat === 'paid'
+                                    ? 'bg-[var(--cam-gold-leaf)]/15 text-[var(--cam-gold-leaf)]'
+                                    : cat === 'challenger'
+                                    ? 'bg-[var(--cam-primary)]/12 text-[var(--cam-primary)]'
+                                    : cat === 'trial'
+                                    ? 'bg-[var(--cam-primary)]/10 text-[var(--cam-primary)]'
+                                    : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
+                                }`}>
+                                  {cat === 'paid' ? (u.sub_plan || 'paid').replace('_', ' ') : cat}
+                                </span>
+                                {cat === 'trial' && (
+                                  <span className="text-[10px] font-mono text-[var(--cam-primary)] opacity-70">
+                                    ends {new Date(u.trial_ends_at!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </td>
+                        <td className="px-4 py-3 text-[var(--text-muted)] text-xs max-w-[140px] truncate">{u.location || <span className="opacity-30">—</span>}</td>
+                        <td className="px-4 py-3 text-[var(--text-muted)] text-xs max-w-[140px] truncate">
+                          {u.target_company || u.target_role
+                            ? `${u.target_role || ''} ${u.target_company ? `@ ${u.target_company}` : ''}`.trim()
+                            : <span className="opacity-30">—</span>}
+                        </td>
+                        <td className="px-4 py-3 text-[var(--text-muted)] text-xs whitespace-nowrap">
+                          {u.last_login_at
+                            ? new Date(u.last_login_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                            : <span className="opacity-30">—</span>}
+                        </td>
+                        <td className="px-4 py-3 text-[var(--text-muted)] text-xs whitespace-nowrap">
+                          {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1 items-center flex-wrap">
+                            {[3, 7, 14].map(d => (
+                              <button
+                                key={d}
+                                onClick={() => grantTrial(u.id, d)}
+                                disabled={granting === u.id}
+                                className="px-2 py-1 rounded text-[11px] font-bold font-mono transition-[background-color,opacity,transform] active:scale-[0.97] disabled:opacity-50"
+                                style={{ background: 'color-mix(in oklab, var(--cam-primary) 10%, transparent)', color: 'var(--cam-primary)' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 22%, transparent)')}
+                                onMouseLeave={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 10%, transparent)')}
+                              >
+                                {granting === u.id ? '…' : `${d}d`}
+                              </button>
+                            ))}
+                            <button
+                              onClick={() => toggleAdmin(u.id, !u.is_admin)}
+                              disabled={togglingAdmin === u.id}
+                              className={`px-2 py-1 rounded text-[11px] font-bold font-mono transition-[background-color,opacity,transform] active:scale-[0.97] disabled:opacity-50 ml-0.5 ${
+                                u.is_admin
+                                  ? 'bg-[var(--cam-gold-leaf)]/20 text-[var(--cam-gold-leaf)] hover:bg-[var(--cam-gold-leaf)]/35'
+                                  : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:bg-[var(--border)]'
+                              }`}
+                              title={u.is_admin ? 'Revoke admin' : 'Make admin'}
+                            >
+                              {togglingAdmin === u.id ? '…' : u.is_admin ? 'Admin ✓' : 'Admin'}
+                            </button>
+                            {!u.is_admin && (
+                              <button
+                                onClick={() => deleteUser(u.id)}
+                                className="p-1 rounded text-[var(--danger)] transition-[background-color,transform] active:scale-[0.97] ml-0.5"
+                                style={{ background: 'transparent' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--danger) 10%, transparent)')}
+                                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                title={`Delete ${u.email}`}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredUsers.length === 0 && (
+                      <tr><td colSpan={8} className="px-4 py-12 text-center text-[var(--text-muted)] text-sm">
+                        {search ? `No users matching "${search}"` : 'No users found'}
+                      </td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             )}
           </>
         )}
@@ -584,7 +611,7 @@ export default function AnalyticsPage() {
             </div>
             {emailsLoading && !emailsLoaded ? (
               <div className="flex justify-center py-20">
-                <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[var(--cam-primary)] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : emailsError ? (
               <p className="text-red-400">{emailsError}</p>
