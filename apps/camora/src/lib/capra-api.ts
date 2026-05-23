@@ -2,7 +2,7 @@
  * API client for communicating with the ascend-backend (Capra/prep API).
  */
 
-const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
+const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
 
 class CapraAPIError extends Error {
   constructor(
@@ -21,7 +21,7 @@ async function fetchCapra<T>(
   token?: string
 ): Promise<T> {
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
     ...(options.headers as Record<string, string> || {}),
   };
 
