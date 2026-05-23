@@ -84,7 +84,7 @@ router.post('/stream', async (req, res) => {
               role: m.role === 'assistant' ? 'model' : 'user',
               parts: [{ text: m.content }],
             })),
-            generationConfig: { maxOutputTokens: 2000, temperature: 0.2 },
+            generationConfig: { maxOutputTokens: 8000, temperature: 0.2 },
           }),
         }
       );
@@ -111,7 +111,7 @@ router.post('/stream', async (req, res) => {
       // Claude (default / fallback)
       const stream = anthropic.messages.stream({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2000,
+        max_tokens: 8000,
         system,
         messages: msgs,
       });
