@@ -1394,21 +1394,21 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             </div>
           );
         })()}
-        {/* Text input row — taller + larger text on mobile so the iOS
-            keyboard shows up at a comfortable size and the placeholder
-            doesn't trigger Safari's text-zoom (it kicks in below 16px). */}
-        <div className="flex items-center gap-2 px-3 h-12 md:h-9 rounded-xl w-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-          <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && input.trim()) handleSubmit(); }}
-            placeholder="Type a question..."
-            className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40 text-[16px] md:text-[10px]"
-            style={{ fontFamily: "var(--font-sans)", color: 'var(--text-primary)' }} disabled={streaming} />
-          {input.trim() && !streaming && (
-            <button onClick={handleSubmit} className="w-9 h-9 md:w-6 md:h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--cam-primary)' }} aria-label="Send question">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" className="w-4 h-4 md:w-3 md:h-3"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-            </button>
-          )}
-        </div>
+        {/* Text input — hidden in embedded behavioral mode; voice is the input */}
+        {!embedded && (
+          <div className="flex items-center gap-2 px-3 h-12 md:h-9 rounded-xl w-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && input.trim()) handleSubmit(); }}
+              placeholder="Type a question..."
+              className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40 text-[16px] md:text-[10px]"
+              style={{ fontFamily: "var(--font-sans)", color: 'var(--text-primary)' }} disabled={streaming} />
+            {input.trim() && !streaming && (
+              <button onClick={handleSubmit} className="w-9 h-9 md:w-6 md:h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--cam-primary)' }} aria-label="Send question">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" className="w-4 h-4 md:w-3 md:h-3"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
