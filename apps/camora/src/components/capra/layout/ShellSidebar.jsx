@@ -25,6 +25,10 @@ const PRACTICE_ITEMS = [
   { id: 'achievements', label: 'Achievements', icon: 'trophy', href: '/profile?tab=achievements' },
 ];
 
+const LEARN_ITEMS = [
+  { id: 'python', label: 'Python', icon: 'book', href: '/capra/learn/python' },
+];
+
 /**
  * Unified sidebar — expanded (labels + icons) or collapsed (icons only).
  * Mobile drawer always shows expanded.
@@ -144,6 +148,32 @@ export default function ShellSidebar() {
         {/* Practice */}
         {!isCollapsed && <div className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Practice</div>}
         {PRACTICE_ITEMS.map((item) => {
+          const isActive = isPracticeActive(item.href);
+          return (
+            <button
+              key={item.id}
+              onClick={() => handleNav(item.href)}
+              title={isCollapsed ? item.label : undefined}
+              className={`w-full flex items-center rounded-lg transition-all mb-0.5 ${
+                isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'
+              } ${
+                isActive
+                  ? `text-[var(--accent)] font-semibold bg-[var(--accent-subtle)] ${isCollapsed ? '' : 'border-l-2 border-[var(--accent)]'}`
+                  : `text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] font-medium ${isCollapsed ? '' : 'border-l-2 border-transparent'}`
+              }`}
+            >
+              <Icon name={item.icon} size={isCollapsed ? 18 : 16} className={isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'} />
+              {!isCollapsed && <span className="flex-1 text-left text-[13px]">{item.label}</span>}
+            </button>
+          );
+        })}
+
+        {/* Divider */}
+        <div className={`h-px bg-[var(--bg-elevated)] my-3 ${isCollapsed ? 'mx-1' : 'mx-4'}`} />
+
+        {/* Learn */}
+        {!isCollapsed && <div className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Learn</div>}
+        {LEARN_ITEMS.map((item) => {
           const isActive = isPracticeActive(item.href);
           return (
             <button
