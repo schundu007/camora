@@ -1171,7 +1171,7 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
 
 /* Grid overflow prevention */
 .grid > * { min-width: 0; }
-table { max-width: 100%; overflow-x: auto; display: block; }
+table { max-width: 100%; }
 pre { max-width: 100%; overflow-x: auto; }
 img { max-width: 100%; height: auto; }
 
