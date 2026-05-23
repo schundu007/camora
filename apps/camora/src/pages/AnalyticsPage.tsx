@@ -35,6 +35,7 @@ interface User {
   trial_ends_at: string | null;
   sub_plan: string | null;
   is_challenger: boolean | null;
+  is_admin: boolean | null;
 }
 
 interface Email {
@@ -87,6 +88,7 @@ export default function AnalyticsPage() {
   const [search, setSearch] = useState('');
   const [granting, setGranting] = useState<number | null>(null);
   const [trialError, setTrialError] = useState('');
+  const [togglingAdmin, setTogglingAdmin] = useState<number | null>(null);
 
   // Emails state
   const [emails, setEmails] = useState<Email[]>([]);
@@ -205,6 +207,27 @@ export default function AnalyticsPage() {
     } catch (err: any) {
       dialogAlert({ title: 'Delete failed', message: `Failed to delete user: ${err.message}`, tone: 'danger' });
     }
+  }
+
+  async function toggleAdmin(userId: number, makeAdmin: boolean) {
+    const user = users.find(u => u.id === userId);
+    const action = makeAdmin ? 'Grant admin to' : 'Revoke admin from';
+    if (!(await dialogConfirm({ title: `${action} ${user?.name || user?.email}?`, message: makeAdmin ? 'This user will have full admin access to the platform.' : 'This user will lose all admin privileges.', confirmLabel: makeAdmin ? 'Grant admin' : 'Revoke admin', tone: makeAdmin ? 'default' : 'danger' }))) return;
+    setTogglingAdmin(userId);
+    try {
+      const r = await fetch(`${API}/api/admin/set-admin`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ userId, isAdmin: makeAdmin }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Failed');
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_admin: d.is_admin } : u));
+    } catch (err: any) {
+      dialogAlert({ title: 'Failed', message: err.message, tone: 'danger' });
+    }
+    setTogglingAdmin(null);
   }
 
   // Plan filter from summary cards
@@ -519,6 +542,14 @@ export default function AnalyticsPage() {
                                   {granting === u.id ? '...' : `${d}d`}
                                 </button>
                               ))}
+                              <button
+                                onClick={() => toggleAdmin(u.id, !u.is_admin)}
+                                disabled={togglingAdmin === u.id}
+                                className={`px-2 py-1 rounded text-[11px] font-medium transition-[background-color,opacity,transform] active:scale-[0.98] disabled:opacity-50 ml-1 ${u.is_admin ? 'bg-[var(--cam-gold-leaf)]/20 text-[var(--cam-gold-leaf-dk)] hover:bg-[var(--cam-gold-leaf)]/40' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:bg-[var(--border)]'}`}
+                                title={u.is_admin ? 'Revoke admin' : 'Make admin'}
+                              >
+                                {togglingAdmin === u.id ? '…' : u.is_admin ? 'Admin ✓' : 'Admin'}
+                              </button>
                               <button
                                 onClick={() => deleteUser(u.id)}
                                 className="px-2 py-1 rounded text-[11px] font-medium text-red-500 hover:bg-red-50 transition-[background-color,transform] active:scale-[0.98] ml-1"

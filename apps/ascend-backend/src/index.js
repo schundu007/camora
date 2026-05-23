@@ -886,7 +886,8 @@ app.get('/api/admin/users', apiLimiter, authenticate, async (req, res) => {
       SELECT u.id, u.email, u.name, u.image, u.provider, u.is_active,
              u.onboarding_completed, u.plan_type, u.plan_status, u.created_at,
              u.username, u.referral_code, u.target_company, u.target_role, u.interview_date,
-             u.location, u.last_login_at, s.plan_type as sub_plan, s.is_challenger, s.trial_ends_at
+             u.location, u.last_login_at, u.is_admin,
+             s.plan_type as sub_plan, s.is_challenger, s.trial_ends_at
       FROM users u
       LEFT JOIN ascend_subscriptions s ON s.user_id = u.id
       ORDER BY u.created_at DESC
@@ -918,6 +919,32 @@ app.get('/api/admin/emails', apiLimiter, authenticate, async (req, res) => {
   } catch (err) {
     console.error('[Admin Emails] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch emails' });
+  }
+});
+
+// Admin: toggle admin status for a user
+app.post('/api/admin/set-admin', apiLimiter, authenticate, async (req, res) => {
+  try {
+    const admin = await query('SELECT is_admin FROM users WHERE id = $1', [req.user.id]);
+    if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
+
+    const { userId, isAdmin } = req.body;
+    if (userId === undefined || isAdmin === undefined) return res.status(400).json({ error: 'userId and isAdmin required' });
+
+    const userIdNum = parseInt(userId, 10);
+    if (!Number.isFinite(userIdNum) || userIdNum <= 0) return res.status(400).json({ error: 'userId must be a positive integer' });
+
+    // Prevent removing own admin
+    if (userIdNum === req.user.id && !isAdmin) return res.status(400).json({ error: 'Cannot remove your own admin status' });
+
+    await query('UPDATE users SET is_admin = $1 WHERE id = $2', [!!isAdmin, userIdNum]);
+    const updated = await query('SELECT email, name, is_admin FROM users WHERE id = $1', [userIdNum]);
+    if (!updated.rows[0]) return res.status(404).json({ error: 'User not found' });
+
+    res.json({ ok: true, ...updated.rows[0] });
+  } catch (err) {
+    console.error('[Admin SetAdmin] Error:', err.message);
+    res.status(500).json({ error: 'Failed to update admin status' });
   }
 });
 
