@@ -319,62 +319,43 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
           <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Launch Now</span>
         </div>
         <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>Start fast with ready-to-use session co-pilots.</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="flex flex-col gap-2">
           {COPILOTS.map(cp => (
             <button
               key={cp.name}
               onClick={cp.onClick}
-              className="group relative text-left rounded-2xl overflow-hidden transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 active:scale-[0.98]"
+              className="group flex items-center gap-3 p-3 rounded-xl text-left transition-[box-shadow,border-color] duration-200"
               style={{
-                background: 'linear-gradient(135deg, rgba(38,97,156,0.06) 0%, rgba(38,97,156,0.10) 100%)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                boxShadow: '0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.05)',
+                border: '1px solid rgba(38,97,156,0.14)',
+                background: 'rgba(38,97,156,0.04)',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow =
-                  '0 1px 0 rgba(255,255,255,0.06) inset, 0 12px 36px rgba(38,97,156,0.22), 0 0 0 1px rgba(38,97,156,0.32)';
+                e.currentTarget.style.borderColor = 'rgba(38,97,156,0.35)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(38,97,156,0.14)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow =
-                  '0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.05)';
+                e.currentTarget.style.borderColor = 'rgba(38,97,156,0.14)';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              {/* Hero photo strip — duotone-navy filter unifies the 3
-                  photos. Tall enough at 90px to show the imagery, short
-                  enough that the title is still the focus. */}
-              <div className="relative w-full overflow-hidden" style={{ aspectRatio: '5 / 1', background: 'var(--cam-primary-dk)' }}>
+              <div className="relative shrink-0 rounded-lg overflow-hidden" style={{ width: 44, height: 44, background: 'var(--cam-primary-dk)' }}>
                 <img
                   src={cp.image}
                   alt=""
                   loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  style={{ filter: 'grayscale(100%) contrast(1.08) brightness(0.78)' }}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ filter: 'grayscale(100%) contrast(1.08) brightness(0.72)' }}
                 />
                 <div aria-hidden="true" className="absolute inset-0" style={{ background: 'var(--cam-primary)', mixBlendMode: 'multiply' }} />
-                <div aria-hidden="true" className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.45) 100%)' }} />
-                {/* Top-right gold accent — like a brand tag */}
-                <span
-                  aria-hidden="true"
-                  className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full"
-                  style={{ background: 'var(--cam-gold-leaf-lt)', boxShadow: '0 0 8px rgba(217,181,67,0.6)' }}
-                />
+                <div className="absolute inset-0 flex items-center justify-center">{cp.icon}</div>
               </div>
-              <div className="p-5">
-                <div className="flex items-center gap-2.5 mb-2.5">
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-[transform] group-hover:scale-110"
-                    style={{ background: 'rgba(38,97,156,0.12)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)' }}
-                  >
-                    {cp.icon}
-                  </div>
-                  <span className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>{cp.name}</span>
-                </div>
-                <p className="text-[12px] leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{cp.desc}</p>
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-[gap,color,opacity] group-hover:gap-2" style={{ color: 'var(--cam-primary)' }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
-                  Launch
-                </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>{cp.name}</div>
+                <div className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--text-muted)' }}>{cp.desc}</div>
               </div>
+              <svg className="shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+              </svg>
             </button>
           ))}
         </div>
