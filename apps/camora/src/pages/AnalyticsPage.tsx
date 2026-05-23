@@ -365,12 +365,16 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
 
+                {/* ── By Page + By Day side by side ── */}
+                <div className="flex gap-6 items-start mb-10">
+
                 {/* ── By Page ── */}
+                <div className="flex-1 min-w-0 flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
                   <p className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>By Page</p>
                   <span className="font-mono text-[10px] text-[var(--text-muted)]">{stats.by_path.length} routes</span>
                 </div>
-                <div className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden mb-10">
+                <div className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden">
                   <table className="w-full text-left">
                     <thead>
                       <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 18%, var(--border))' }}>
@@ -416,13 +420,15 @@ export default function AnalyticsPage() {
                     </tbody>
                   </table>
                 </div>
+                </div>{/* end By Page column */}
 
                 {/* ── By Day ── */}
+                <div className="flex-1 min-w-0 flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
                   <p className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>By Day</p>
                   <span className="font-mono text-[10px] text-[var(--text-muted)]">{stats.by_day.length} days</span>
                 </div>
-                <div className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden mb-10">
+                <div className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden">
                   <table className="w-full text-left">
                     <thead>
                       <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 18%, var(--border))' }}>
@@ -482,6 +488,8 @@ export default function AnalyticsPage() {
                     </tbody>
                   </table>
                 </div>
+                </div>{/* end By Day column */}
+                </div>{/* end side-by-side row */}
 
                 {/* ── Unique Visitors ── */}
                 <div className="flex items-center justify-between mb-3">
