@@ -97,6 +97,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const rightEditorRef = useRef<any>(null);
   const decorationCollectionRef = useRef<any>(null);
 
+  // effectiveLang must be declared before any useEffect that lists it as a dependency,
+  // otherwise it is in TDZ when React evaluates the dependency array.
+  const effectiveLang = language === 'auto' ? detectLanguage(inputCode) : language;
+  const lineCount = inputCode.split('\n').length;
+
   // Re-render when company context changes
   const [assistantVersion, setAssistantVersion] = useState(0);
   useEffect(() => {
@@ -146,9 +151,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     };
     return () => { onScreenshotAppendRef.current = null; };
   }, [onScreenshotAppendRef]);
-
-  const effectiveLang = language === 'auto' ? detectLanguage(inputCode) : language;
-  const lineCount = inputCode.split('\n').length;
 
   useEffect(() => {
     const editor = rightEditorRef.current;
