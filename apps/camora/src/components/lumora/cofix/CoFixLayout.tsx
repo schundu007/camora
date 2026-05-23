@@ -473,8 +473,16 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
         {/* LEFT — broken code input */}
         <div className="flex flex-col w-1/2 border-r border-[var(--border)]">
-          <div className="h-8 flex items-center px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
+          <div className="h-8 flex items-center justify-between px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
             <span className="text-[10px] font-semibold tracking-wider text-[var(--cam-gold-leaf-dk)] uppercase">Input — Broken Code</span>
+            <button
+              onClick={handleFix}
+              disabled={inputCode.trim().length < 5 || isLoading}
+              className="h-6 px-3 rounded text-[10px] font-bold uppercase tracking-[0.1em] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
+              style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf)' }}
+            >
+              {isLoading ? 'Analyzing…' : '⚡ Fix with CoFix'}
+            </button>
           </div>
 
           {lineCount > 500 && (
@@ -504,16 +512,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
             />
           </div>
 
-          <div className="px-3 pb-3 pt-2 bg-[var(--bg-secondary)]">
-            <button
-              onClick={handleFix}
-              disabled={inputCode.trim().length < 5 || isLoading}
-              className="w-full py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-[0.12em] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf)' }}
-            >
-              {isLoading ? 'Analyzing…' : '⚡ Fix with CoFix'}
-            </button>
-          </div>
         </div>
 
         {/* RIGHT — fixed code output */}
