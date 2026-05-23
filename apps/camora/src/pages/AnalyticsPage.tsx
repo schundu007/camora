@@ -365,143 +365,206 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
 
-                <h2 className="text-base font-semibold mb-3 text-[var(--text-primary)]">By Page</h2>
-                <div className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-x-auto mb-10">
-                  <table className="w-full min-w-full text-left">
+                {/* ── By Page ── */}
+                <div className="flex items-center gap-3 mb-3">
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>By Page</p>
+                  <span className="font-mono text-[10px] text-[var(--text-muted)]">{stats.by_path.length} routes</span>
+                </div>
+                <div className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden mb-10">
+                  <table className="w-full text-left">
                     <thead>
-                      <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))' }}
-                        className="border-b border-[var(--border)]">
-                        {['Path', 'Views', 'Unique Visitors'].map((h, i) => (
-                          <th key={h} className={`px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-80 ${i === 0 ? 'w-full' : 'whitespace-nowrap text-right'}`}>{h}</th>
-                        ))}
+                      <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 18%, var(--border))' }}>
+                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest w-10" style={{ color: 'var(--cam-primary)', opacity: 0.5 }}>#</th>
+                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Path</th>
+                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-right whitespace-nowrap" style={{ color: 'var(--cam-primary)' }}>Views</th>
+                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest w-32" style={{ color: 'var(--cam-primary)' }}>Share</th>
+                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-right whitespace-nowrap" style={{ color: 'var(--cam-primary)' }}>Unique</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {stats.by_path.map((row, i) => (
-                        <tr key={row.path}
-                          className="border-b border-[var(--border)]/40 transition-colors"
-                          onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 5%, var(--bg-surface))')}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                          <td className="px-5 py-3 font-mono text-xs text-[var(--cam-primary)]">{row.path}</td>
-                          <td className="px-5 py-3 text-right text-sm text-[var(--text-secondary)]">{parseInt(row.views).toLocaleString()}</td>
-                          <td className="px-5 py-3 text-right text-sm font-semibold text-[var(--text-primary)]">{parseInt(row.unique_visitors).toLocaleString()}</td>
-                        </tr>
-                      ))}
+                      {(() => {
+                        const totalPageViews = stats.by_path.reduce((s, r) => s + parseInt(r.views), 0);
+                        const maxPageViews = Math.max(...stats.by_path.map(r => parseInt(r.views)), 1);
+                        return stats.by_path.map((row, i) => {
+                          const views = parseInt(row.views);
+                          const pct = totalPageViews > 0 ? ((views / totalPageViews) * 100).toFixed(1) : '0';
+                          const barPct = (views / maxPageViews) * 100;
+                          const rowBg = i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-elevated)';
+                          return (
+                            <tr key={row.path} style={{ background: rowBg, borderBottom: '1px solid color-mix(in oklab, var(--border) 60%, transparent)' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-elevated))')}
+                              onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
+                              <td className="px-4 py-3 font-mono text-[11px] font-bold text-center" style={{ color: 'var(--cam-primary)', opacity: 0.45 }}>{i + 1}</td>
+                              <td className="px-4 py-3 font-mono text-[12px] max-w-[320px] truncate" style={{ color: 'var(--cam-primary)' }}>{row.path}</td>
+                              <td className="px-4 py-3 text-right font-mono text-[13px] font-semibold tabular-nums text-[var(--text-primary)]">{views.toLocaleString()}</td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 h-[6px] rounded-full" style={{ background: 'var(--bg-elevated)', border: '1px solid color-mix(in oklab, var(--border) 50%, transparent)' }}>
+                                    <div className="h-full rounded-full transition-[width]" style={{ width: `${barPct}%`, background: i === 0 ? 'var(--cam-gold-leaf)' : 'var(--cam-primary)' }} />
+                                  </div>
+                                  <span className="font-mono text-[10px] w-10 text-right shrink-0" style={{ color: 'var(--text-muted)' }}>{pct}%</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-right font-mono text-[13px] tabular-nums text-[var(--text-secondary)]">{parseInt(row.unique_visitors).toLocaleString()}</td>
+                            </tr>
+                          );
+                        });
+                      })()}
                       {stats.by_path.length === 0 && (
-                        <tr><td colSpan={3} className="px-5 py-10 text-center text-[var(--text-muted)] text-sm">No data yet</td></tr>
+                        <tr><td colSpan={5} className="px-5 py-10 text-center text-[var(--text-muted)] text-sm">No data yet</td></tr>
                       )}
                     </tbody>
                   </table>
                 </div>
 
-                <h2 className="text-base font-semibold mb-3 text-[var(--text-primary)]">By Day</h2>
-                <div className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-x-auto">
-                  <table className="w-full min-w-full text-left">
+                {/* ── By Day ── */}
+                <div className="flex items-center gap-3 mb-3">
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>By Day</p>
+                  <span className="font-mono text-[10px] text-[var(--text-muted)]">{stats.by_day.length} days</span>
+                </div>
+                <div className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden mb-10">
+                  <table className="w-full text-left">
                     <thead>
-                      <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))' }}
-                        className="border-b border-[var(--border)]">
-                        {['Date', 'Views', 'Unique Visitors', 'Trend'].map((h, i) => (
-                          <th key={h} className={`px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-80 ${i === 0 ? 'w-full' : ''} ${i === 1 || i === 2 ? 'whitespace-nowrap text-right' : ''} ${i === 3 ? 'w-40' : ''}`}>{h}</th>
-                        ))}
+                      <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 18%, var(--border))' }}>
+                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Date</th>
+                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-right" style={{ color: 'var(--cam-primary)' }}>Views</th>
+                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-right whitespace-nowrap" style={{ color: 'var(--cam-primary)' }}>Unique</th>
+                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest w-48" style={{ color: 'var(--cam-primary)' }}>Volume</th>
+                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-right whitespace-nowrap" style={{ color: 'var(--cam-primary)' }}>∆ Day</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {stats.by_day.map((row) => {
-                        const maxViews = Math.max(...stats.by_day.map(d => parseInt(d.views)));
-                        const pct = maxViews > 0 ? (parseInt(row.views) / maxViews) * 100 : 0;
-                        return (
-                          <tr key={row.date}
-                            className="border-b border-[var(--border)]/40 transition-colors"
-                            onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 5%, var(--bg-surface))')}
-                            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                            <td className="px-5 py-3 text-sm text-[var(--text-secondary)]">{new Date(row.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
-                            <td className="px-5 py-3 text-right text-sm text-[var(--text-secondary)]">{parseInt(row.views).toLocaleString()}</td>
-                            <td className="px-5 py-3 text-right text-sm font-semibold text-[var(--text-primary)]">{parseInt(row.unique_visitors).toLocaleString()}</td>
-                            <td className="px-5 py-3">
-                              <div className="w-full bg-[var(--bg-elevated)] rounded-full h-1.5">
-                                <div className="h-1.5 rounded-full transition-[width]"
-                                  style={{ width: `${pct}%`, background: 'var(--cam-primary)' }} />
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {(() => {
+                        const maxViews = Math.max(...stats.by_day.map(d => parseInt(d.views)), 1);
+                        return stats.by_day.map((row, i) => {
+                          const views = parseInt(row.views);
+                          const prevViews = i > 0 ? parseInt(stats.by_day[i - 1].views) : null;
+                          const delta = prevViews != null && prevViews > 0 ? Math.round(((views - prevViews) / prevViews) * 100) : null;
+                          const pct = (views / maxViews) * 100;
+                          const isPeak = views === maxViews;
+                          const d = new Date(row.date);
+                          const rowBg = i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-elevated)';
+                          return (
+                            <tr key={row.date} style={{ background: rowBg, borderBottom: '1px solid color-mix(in oklab, var(--border) 60%, transparent)' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-elevated))')}
+                              onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <span className="font-semibold text-[13px] text-[var(--text-primary)]">{d.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                <span className="font-mono text-[11px] text-[var(--text-muted)] ml-2">{d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                {isPeak && <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, var(--bg-elevated))', color: 'var(--cam-gold-leaf-dk)' }}>peak</span>}
+                              </td>
+                              <td className="px-4 py-3 text-right font-mono text-[13px] font-semibold tabular-nums text-[var(--text-primary)]">{views.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-right font-mono text-[13px] tabular-nums text-[var(--text-secondary)]">{parseInt(row.unique_visitors).toLocaleString()}</td>
+                              <td className="px-4 py-3">
+                                <div className="w-full h-[8px] rounded-sm overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
+                                  <div className="h-full rounded-sm transition-[width]"
+                                    style={{ width: `${pct}%`, background: isPeak ? 'var(--cam-gold-leaf)' : 'var(--cam-primary)', opacity: isPeak ? 1 : 0.7 }} />
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                {delta != null ? (
+                                  <span className="font-mono text-[11px] font-semibold px-1.5 py-0.5 rounded"
+                                    style={{
+                                      background: delta > 0 ? 'color-mix(in oklab, #22c55e 12%, var(--bg-elevated))' : delta < 0 ? 'color-mix(in oklab, #ef4444 12%, var(--bg-elevated))' : 'var(--bg-elevated)',
+                                      color: delta > 0 ? '#16a34a' : delta < 0 ? '#dc2626' : 'var(--text-muted)',
+                                    }}>
+                                    {delta > 0 ? '+' : ''}{delta}%
+                                  </span>
+                                ) : <span className="text-[var(--text-muted)] text-[11px]">—</span>}
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })()}
                       {stats.by_day.length === 0 && (
-                        <tr><td colSpan={4} className="px-5 py-10 text-center text-[var(--text-muted)] text-sm">No data yet</td></tr>
+                        <tr><td colSpan={5} className="px-5 py-10 text-center text-[var(--text-muted)] text-sm">No data yet</td></tr>
                       )}
                     </tbody>
                   </table>
                 </div>
 
-                {/* Unique Visitors breakdown */}
-                <div className="mt-10">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-base font-semibold text-[var(--text-primary)]">
-                      Who are they? <span className="text-[var(--text-muted)] text-sm font-normal ml-1">{stats.unique_visitors} unique visitors</span>
-                    </h2>
-                    {!visitorsLoaded && (
-                      <button
-                        onClick={fetchVisitors}
-                        disabled={visitorsLoading}
-                        className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
-                        style={{ background: 'var(--cam-gold-leaf)', color: '#020617' }}
-                      >
-                        {visitorsLoading ? 'Loading…' : 'Load visitors'}
-                      </button>
-                    )}
-                    {visitorsLoaded && (
-                      <button onClick={fetchVisitors} disabled={visitorsLoading}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--border)] transition-colors disabled:opacity-50">
-                        {visitorsLoading ? 'Refreshing…' : 'Refresh'}
-                      </button>
-                    )}
+                {/* ── Unique Visitors ── */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)' }}>Unique Visitors</p>
+                    <span className="font-mono text-[10px] px-2 py-0.5 rounded" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 12%, var(--bg-elevated))', color: 'var(--cam-gold-leaf-dk)' }}>{stats.unique_visitors} IPs</span>
                   </div>
+                  {!visitorsLoaded && (
+                    <button onClick={fetchVisitors} disabled={visitorsLoading}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+                      style={{ background: 'var(--cam-gold-leaf)', color: '#020617' }}>
+                      {visitorsLoading ? 'Loading…' : 'Load visitors'}
+                    </button>
+                  )}
                   {visitorsLoaded && (
-                    <div className="bg-[var(--bg-surface)] border rounded-xl overflow-x-auto" style={{ borderColor: 'color-mix(in oklab, var(--cam-gold-leaf) 30%, var(--border))' }}>
-                      <table className="w-full text-left text-sm">
-                        <thead>
-                          <tr className="border-b border-[var(--border)]" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 6%, var(--bg-surface))' }}>
-                            {['Location', 'IP', 'Browser / OS', 'Pages', 'Top Page', 'Referrer', 'Last Seen'].map(h => (
-                              <th key={h} className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf-dk)' }}>{h}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {visitors.map((v, i) => {
-                            const ua = v.user_agent || '';
-                            const browser = ua.includes('Edg') ? 'Edge' : ua.includes('Chrome') ? 'Chrome' : ua.includes('Firefox') ? 'Firefox' : ua.includes('Safari') ? 'Safari' : 'Other';
-                            const os = ua.includes('iPhone') || ua.includes('iPad') ? 'iOS' : ua.includes('Android') ? 'Android' : ua.includes('Mac') ? 'macOS' : ua.includes('Windows') ? 'Windows' : ua.includes('Linux') ? 'Linux' : '—';
-                            const geo = v.geo;
-                            const location = geo ? `${geo.city ? geo.city + ', ' : ''}${geo.country || ''}` : '—';
-                            const flag = geo?.countryCode ? String.fromCodePoint(...[...geo.countryCode].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '';
-                            const maskedIp = v.ip?.startsWith('seed-') ? 'synthetic' : (v.ip || '').replace(/(\d+\.\d+)\.\d+\.\d+/, '$1.×.×');
-                            const referrer = v.referrer ? (() => { try { return new URL(v.referrer).hostname.replace('www.', ''); } catch { return v.referrer.slice(0, 30); } })() : 'direct';
-                            const topPage = v.paths?.[0] || '—';
-                            return (
-                              <tr key={i} className="border-b border-[var(--border)]/40 hover:bg-[var(--bg-elevated)]/50 transition-colors">
-                                <td className="px-4 py-2.5 whitespace-nowrap">
-                                  <span className="text-base mr-1.5">{flag}</span>
-                                  <span className="text-xs text-[var(--text-secondary)]">{location || '—'}</span>
-                                </td>
-                                <td className="px-4 py-2.5 font-mono text-[11px] text-[var(--text-muted)]">{maskedIp}</td>
-                                <td className="px-4 py-2.5 text-xs text-[var(--text-secondary)]">{browser} / {os}</td>
-                                <td className="px-4 py-2.5 text-xs font-semibold text-[var(--text-primary)]">{v.views} views · {v.pages_count} pages</td>
-                                <td className="px-4 py-2.5 font-mono text-[11px] text-[var(--cam-gold-leaf-dk)] max-w-[180px] truncate">{topPage}</td>
-                                <td className="px-4 py-2.5 text-[11px] text-[var(--text-muted)] max-w-[140px] truncate">{referrer}</td>
-                                <td className="px-4 py-2.5 text-[11px] text-[var(--text-muted)] whitespace-nowrap">
-                                  {new Date(v.last_seen).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                          {visitors.length === 0 && (
-                            <tr><td colSpan={7} className="px-5 py-8 text-center text-[var(--text-muted)] text-sm">No visitor data found</td></tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
+                    <button onClick={fetchVisitors} disabled={visitorsLoading}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--border)] transition-colors disabled:opacity-50">
+                      {visitorsLoading ? 'Refreshing…' : 'Refresh'}
+                    </button>
                   )}
                 </div>
+                {visitorsLoaded && (
+                  <div className="bg-[var(--bg-surface)] border rounded-xl overflow-hidden" style={{ borderColor: 'color-mix(in oklab, var(--cam-gold-leaf) 30%, var(--border))' }}>
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 7%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 20%, var(--border))' }}>
+                          {['Location', 'IP', 'Browser', 'OS', 'Views', 'Top Page', 'Referrer', 'Last Seen'].map(h => (
+                            <th key={h} className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--cam-gold-leaf-dk)' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {visitors.map((v, i) => {
+                          const ua = v.user_agent || '';
+                          const browser = ua.includes('Edg') ? 'Edge' : ua.includes('Chrome') ? 'Chrome' : ua.includes('Firefox') ? 'Firefox' : ua.includes('Safari') ? 'Safari' : 'Other';
+                          const os = ua.includes('iPhone') || ua.includes('iPad') ? 'iOS' : ua.includes('Android') ? 'Android' : ua.includes('Mac') ? 'macOS' : ua.includes('Windows') ? 'Win' : ua.includes('Linux') ? 'Linux' : '—';
+                          const geo = v.geo;
+                          const location = geo ? [geo.city, geo.country].filter(Boolean).join(', ') : '—';
+                          const flag = geo?.countryCode ? String.fromCodePoint(...[...geo.countryCode].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '';
+                          const maskedIp = v.ip?.startsWith('seed-') ? 'synthetic' : (v.ip || '').replace(/(\d+\.\d+)\.\d+\.\d+/, '$1.×.×');
+                          const referrer = v.referrer ? (() => { try { return new URL(v.referrer).hostname.replace('www.', ''); } catch { return v.referrer.slice(0, 20); } })() : 'direct';
+                          const topPage = v.paths?.[0] || '—';
+                          const now = Date.now();
+                          const lastMs = new Date(v.last_seen).getTime();
+                          const diffMin = Math.floor((now - lastMs) / 60000);
+                          const relTime = diffMin < 60 ? `${diffMin}m ago` : diffMin < 1440 ? `${Math.floor(diffMin / 60)}h ago` : `${Math.floor(diffMin / 1440)}d ago`;
+                          const rowBg = i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-elevated)';
+                          return (
+                            <tr key={i} style={{ background: rowBg, borderBottom: '1px solid color-mix(in oklab, var(--border) 50%, transparent)' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-gold-leaf) 5%, var(--bg-elevated))')}
+                              onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
+                              <td className="px-4 py-2.5 whitespace-nowrap">
+                                <span className="mr-1">{flag}</span>
+                                <span className="text-xs text-[var(--text-secondary)]">{location}</span>
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <span className="font-mono text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in oklab, var(--cam-primary) 10%, var(--bg-elevated))', color: 'var(--cam-primary)' }}>{maskedIp}</span>
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab, var(--cam-primary) 12%, var(--bg-elevated))', color: 'var(--cam-primary)' }}>{browser}</span>
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab, var(--border) 80%, transparent)', color: 'var(--text-secondary)' }}>{os}</span>
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <span className="font-mono text-[12px] font-bold tabular-nums text-[var(--text-primary)]">{v.views}</span>
+                                <span className="font-mono text-[10px] text-[var(--text-muted)] ml-1">/ {v.pages_count}p</span>
+                              </td>
+                              <td className="px-4 py-2.5 max-w-[160px] truncate font-mono text-[11px]" style={{ color: 'var(--cam-gold-leaf-dk)' }}>{topPage}</td>
+                              <td className="px-4 py-2.5 text-[11px] text-[var(--text-muted)] max-w-[120px] truncate">{referrer}</td>
+                              <td className="px-4 py-2.5 whitespace-nowrap">
+                                <span className="font-mono text-[11px] text-[var(--text-muted)]">{relTime}</span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {visitors.length === 0 && (
+                          <tr><td colSpan={8} className="px-5 py-8 text-center text-[var(--text-muted)] text-sm">No visitor data found</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </>
             ) : (
               <p className="text-[var(--text-muted)]">Failed to load analytics. Backend may need redeployment.</p>
