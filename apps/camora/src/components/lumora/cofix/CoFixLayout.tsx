@@ -210,10 +210,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     decorationCollectionRef.current = null;
 
     const controller = await streamCoFixResponse({
-      code: activeAssistant?.company
-        ? `[Company: ${activeAssistant.company}]\n\n${inputCode}`
-        : inputCode,
+      code: inputCode,
       hint: hint.trim() || undefined,
+      company: activeAssistant?.company || undefined,
       language: effectiveLang,
       token: token!,
       onAnswer: (data: CoFixAnswer) => {
