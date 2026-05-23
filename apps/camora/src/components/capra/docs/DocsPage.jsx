@@ -1116,7 +1116,7 @@ export default function DocsPage({ onBack }) {
                       <div className="mb-8">
                         <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Survival Guide</span>
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Checklist</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
