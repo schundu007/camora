@@ -51,6 +51,7 @@ import jobsRouter from './routes/jobs.js';
 import mcqRouter from './routes/mcq.js';
 import { playgroundRouter } from './routes/playground.js';
 import { playgroundLimiter } from './middleware/playgroundLimiter.js';
+import { askRouter } from './routes/ask.js';
 
 // Same pattern as jobs above — the entire lumora-backend route surface was
 // copied under src/lumora/ so this service can answer /api/v1/transcribe,
@@ -579,6 +580,23 @@ async function runMigrations() {
       'CREATE INDEX IF NOT EXISTS idx_lumora_completion_user ON lumora_completion_marks(user_id)',
       'CREATE INDEX IF NOT EXISTS idx_lumora_quotas_user ON lumora_quotas(user_id)',
       'CREATE INDEX IF NOT EXISTS idx_coding_usage_user_date ON coding_usage(user_id, created_at)',
+      `CREATE TABLE IF NOT EXISTS lumora_ask_conversations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(200),
+        provider VARCHAR(20) DEFAULT 'claude',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS lumora_ask_messages (
+        id BIGSERIAL PRIMARY KEY,
+        conversation_id UUID NOT NULL REFERENCES lumora_ask_conversations(id) ON DELETE CASCADE,
+        role VARCHAR(20) NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
+      'CREATE INDEX IF NOT EXISTS idx_ask_conv_user ON lumora_ask_conversations(user_id, updated_at DESC)',
+      'CREATE INDEX IF NOT EXISTS idx_ask_msg_conv ON lumora_ask_messages(conversation_id, created_at ASC)',
     ];
     for (const sql of lumoraMigrations) {
       try { await query(sql); } catch { /* table or index may already exist */ }
@@ -1125,6 +1143,7 @@ app.use('/api/analyze', authenticate, hourBudgetGate, aiLimiter, analyzeRouter);
 app.use('/api/fetch', authenticate, apiLimiter, fetchRouter);
 app.use('/api/run', authenticate, apiLimiter, runRouter);
 app.use('/api/v1/playground', authenticate, playgroundLimiter, playgroundRouter);
+app.use('/api/v1/ask', authenticate, aiLimiter, askRouter);
 app.use('/api/fix', authenticate, hourBudgetGate, aiLimiter, fixRouter);
 app.use('/api/transcribe', authenticate, hourBudgetGate, aiLimiter, transcribeRouter);
 app.use('/api/ascend/prep', authenticate, hourBudgetGate, apiLimiter, ascendPrepRouter);
