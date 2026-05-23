@@ -43,21 +43,26 @@ router.post('/stream', async (req, res) => {
     const system = isCode ? SYS_CODE : SYS_GENERAL;
     const userId = req.user?.id;
 
-    // Persist conversation + user message
+    // Persist conversation + user message — isolated so a missing table never kills the stream
     let convId = conversationId || null;
-    if (userId) {
-      if (!convId) {
-        const { rows } = await query(
-          `INSERT INTO lumora_ask_conversations (user_id, title, provider) VALUES ($1, $2, $3) RETURNING id`,
-          [userId, message.slice(0, 120), provider]
+    try {
+      if (userId) {
+        if (!convId) {
+          const { rows } = await query(
+            `INSERT INTO lumora_ask_conversations (user_id, title, provider) VALUES ($1, $2, $3) RETURNING id`,
+            [userId, message.slice(0, 120), provider]
+          );
+          convId = rows[0].id;
+          res.write(`data: ${JSON.stringify({ conversationId: convId })}\n\n`);
+        }
+        await query(
+          `INSERT INTO lumora_ask_messages (conversation_id, role, content) VALUES ($1, 'user', $2)`,
+          [convId, message]
         );
-        convId = rows[0].id;
-        res.write(`data: ${JSON.stringify({ conversationId: convId })}\n\n`);
       }
-      await query(
-        `INSERT INTO lumora_ask_messages (conversation_id, role, content) VALUES ($1, 'user', $2)`,
-        [convId, message]
-      );
+    } catch (dbErr) {
+      console.error('[Ask] DB write error (non-fatal):', dbErr.message);
+      convId = null; // don't try to save reply either
     }
 
     const msgs = [
@@ -120,11 +125,15 @@ router.post('/stream', async (req, res) => {
 
     // Persist assistant reply
     if (userId && convId && full) {
-      await query(
-        `INSERT INTO lumora_ask_messages (conversation_id, role, content) VALUES ($1, 'assistant', $2)`,
-        [convId, full]
-      );
-      await query(`UPDATE lumora_ask_conversations SET updated_at = NOW() WHERE id = $1`, [convId]);
+      try {
+        await query(
+          `INSERT INTO lumora_ask_messages (conversation_id, role, content) VALUES ($1, 'assistant', $2)`,
+          [convId, full]
+        );
+        await query(`UPDATE lumora_ask_conversations SET updated_at = NOW() WHERE id = $1`, [convId]);
+      } catch (dbErr) {
+        console.error('[Ask] DB reply save error (non-fatal):', dbErr.message);
+      }
     }
 
     res.write('data: [DONE]\n\n');
