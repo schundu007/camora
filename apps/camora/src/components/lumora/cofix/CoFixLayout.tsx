@@ -340,6 +340,12 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
           Explain
         </button>
 
+        {explainMode && (
+          <span className="text-[11px] italic shrink-0 animate-pulse" style={{ color: 'var(--cam-gold-leaf-dk)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            hover any line →
+          </span>
+        )}
+
         {/* Divider */}
         <div className="w-px h-5 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
 
