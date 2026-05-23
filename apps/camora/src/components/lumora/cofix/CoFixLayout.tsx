@@ -395,7 +395,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
         {/* LEFT — broken code input */}
         <div className="flex flex-col w-1/2 border-r border-[var(--border)]">
-          <div className="px-4 py-1.5 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)]">
+          <div className="h-8 flex items-center px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
             <span className="text-[10px] font-semibold tracking-wider text-[var(--cam-gold-leaf-dk)] uppercase">Input — Broken Code</span>
           </div>
 
@@ -442,7 +442,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         <div className="flex w-1/2">
           {/* Code editor column */}
           <div className="flex flex-col flex-1 min-w-0">
-          <div className="px-4 py-1.5 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] flex items-center justify-between">
+          <div className="h-8 flex items-center justify-between px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
             <span className={`text-[10px] font-semibold tracking-wider uppercase ${fixedCode ? 'text-[var(--cam-gold-leaf)]' : 'text-[var(--cam-gold-leaf-dk)]'}`}>
               {fixedCode ? '✓ Fixed Code' : 'Output — Fixed Code'}
             </span>
