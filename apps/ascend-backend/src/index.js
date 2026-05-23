@@ -468,6 +468,9 @@ async function runMigrations() {
       count INTEGER DEFAULT 0
     )`);
 
+    // Admin column — must exist before the OWNER_EMAILS UPDATE below
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false');
+
     // Ensure owner accounts are admins. Pulled from OWNER_EMAILS /
     // ADMIN_EMAILS env (csv) — hardcoding the list in source meant that
     // changing the owner's email would require a code edit + redeploy
