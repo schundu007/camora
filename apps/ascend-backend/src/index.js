@@ -563,6 +563,14 @@ async function runMigrations() {
         latency_ms INTEGER DEFAULT 0,
         created_at TIMESTAMPTZ DEFAULT NOW()
       )`,
+      `CREATE TABLE IF NOT EXISTS playground_snippets (
+        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        language TEXT NOT NULL,
+        code TEXT NOT NULL,
+        tests_code TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`,
       'CREATE INDEX IF NOT EXISTS idx_lumora_conversations_user ON lumora_conversations(user_id)',
       'CREATE INDEX IF NOT EXISTS idx_lumora_messages_conv ON lumora_messages(conversation_id)',
       'CREATE INDEX IF NOT EXISTS idx_lumora_usage_user ON lumora_usage_logs(user_id)',

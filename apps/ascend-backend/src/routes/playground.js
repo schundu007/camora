@@ -284,4 +284,41 @@ router.post('/format', async (req, res, next) => {
   }
 });
 
+// POST /share  — save snippet, return short URL
+router.post('/share', async (req, res, next) => {
+  try {
+    const { language, code, testsCode } = req.body;
+    if (!language || !code) {
+      return res.status(400).json({ error: 'language and code are required' });
+    }
+    const result = await query(
+      `INSERT INTO playground_snippets (user_id, language, code, tests_code)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id`,
+      [req.user.id, language, code, testsCode ?? null]
+    );
+    const id = result.rows[0].id;
+    res.json({ id, url: `/lumora/playground/s/${id}` });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /share/:id  — load shared snippet (auth still required — all playground routes require login)
+router.get('/share/:id', async (req, res, next) => {
+  try {
+    const result = await query(
+      `SELECT language, code, tests_code FROM playground_snippets WHERE id = $1`,
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Snippet not found' });
+    }
+    const { language, code, tests_code } = result.rows[0];
+    res.json({ language, code, testsCode: tests_code });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export { router as playgroundRouter };
