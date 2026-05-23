@@ -31,6 +31,7 @@ import CompanyContextPicker from '../../components/lumora/shell/CompanyContextPi
 const CodingLayout = lazy(() => import('../../components/lumora/coding/CodingLayout').then(m => ({ default: m.CodingLayout })));
 const DesignLayout = lazy(() => import('../../components/lumora/design/DesignLayout').then(m => ({ default: m.DesignLayout })));
 const CoFixLayout = lazy(() => import('../../components/lumora/cofix/CoFixLayout').then(m => ({ default: m.CoFixLayout })));
+const PlaygroundLayout = lazy(() => import('../../components/lumora/playground/PlaygroundLayout').then(m => ({ default: m.PlaygroundLayout })));
 
 export const LumoraShellPage = () => {
   const navigate = useNavigate();
@@ -122,6 +123,7 @@ export const LumoraShellPage = () => {
     location.pathname.includes('/coding') ? 'coding' :
     location.pathname.includes('/design') ? 'design' :
     location.pathname.includes('/fix') ? 'cofix' :
+    location.pathname.includes('/playground') ? 'playground' :
     location.pathname.includes('/behavioral') ? 'behavioral' :
     location.pathname.includes('/prepkit') ? 'prepkit' :
     location.pathname.includes('/calendar') ? 'calendar' :
@@ -707,6 +709,17 @@ export const LumoraShellPage = () => {
                     onTranscription={handleTranscription}
                     isTabActive={activeTab === 'cofix'}
                   />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
+
+          {/* Playground tab — lazy mounted */}
+          {mountedTabs.has('playground') && (
+            <div style={{ display: activeTab === 'playground' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
+              <ErrorBoundary>
+                <Suspense fallback={<TabLoading label="Playground" />}>
+                  <PlaygroundLayout />
                 </Suspense>
               </ErrorBoundary>
             </div>
