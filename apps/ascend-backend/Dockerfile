@@ -49,7 +49,7 @@ RUN curl -fsSL https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_li
  && rm /tmp/terraform.zip \
  && mkdir -p /terraform-plugin-cache /tmp/tf-warmup \
  && printf 'terraform {\n  required_providers {\n    null   = { source = "hashicorp/null" }\n    random = { source = "hashicorp/random" }\n  }\n}\n' > /tmp/tf-warmup/main.tf \
- && TF_PLUGIN_CACHE_DIR=/terraform-plugin-cache terraform -chdir=/tmp/tf-warmup init -backend=false -no-color 2>/dev/null || true \
+ && TF_PLUGIN_CACHE_DIR=/terraform-plugin-cache terraform -chdir=/tmp/tf-warmup init -backend=false -no-color || true \
  && rm -rf /tmp/tf-warmup
 
 WORKDIR /app
