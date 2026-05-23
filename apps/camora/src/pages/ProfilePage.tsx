@@ -40,10 +40,10 @@ function ActivityHeatmap() {
 
   const getColor = (v: number) => {
     if (v === 0) return 'var(--bg-elevated)';
-    if (v === 1) return 'var(--accent-subtle)';
-    if (v === 2) return 'color-mix(in srgb, var(--accent) 30%, transparent)';
-    if (v === 3) return 'color-mix(in srgb, var(--accent) 60%, transparent)';
-    return 'var(--accent)';
+    if (v === 1) return 'color-mix(in oklab, var(--cam-primary) 20%, var(--bg-elevated))';
+    if (v === 2) return 'color-mix(in oklab, var(--cam-primary) 40%, var(--bg-elevated))';
+    if (v === 3) return 'color-mix(in oklab, var(--cam-primary) 65%, var(--bg-elevated))';
+    return 'var(--cam-primary)';
   };
 
   return (
@@ -141,8 +141,8 @@ function SubscriptionCard() {
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-      <div className="px-5 py-3 flex items-center justify-between" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-        <h3 className="text-base font-bold text-[var(--text-primary)]">Subscription</h3>
+      <div className="px-5 py-3 flex items-center justify-between" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+        <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Subscription</h3>
         {endDate && sub?.status === 'active' && sub?.cancel_at_period_end && (
           <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ color: 'var(--warning-text)', background: 'var(--bg-elevated)', border: '1px solid var(--warning)' }}>
             Your access to premium content will end on {endDate}
@@ -173,8 +173,8 @@ function ProfileSettings() {
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-      <div className="px-5 py-3" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-        <h3 className="text-base font-bold text-[var(--text-primary)]">Profile settings</h3>
+      <div className="px-5 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+        <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Profile settings</h3>
       </div>
       <div className="divide-y divide-[var(--border)]">
         <div className="px-5 py-4 flex items-center justify-between">
@@ -241,8 +241,8 @@ function ContributionsTab() {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <div className="px-5 py-3" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-          <h3 className="text-base font-bold text-[var(--text-primary)]">Problem Contributions</h3>
+        <div className="px-5 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+          <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Problem Contributions</h3>
         </div>
         <div className="px-5 py-4">
           <div className="flex items-center justify-between mb-6">
@@ -255,7 +255,7 @@ function ContributionsTab() {
           </div>
           {/* Table */}
           <div className="rounded-xl overflow-hidden border border-[var(--border)]">
-            <div className="grid grid-cols-5 gap-0 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] bg-[var(--bg-elevated)]" style={{ fontFamily: 'var(--font-mono)' }}>
+            <div className="grid grid-cols-5 gap-0 text-[10px] font-bold uppercase tracking-widest font-mono" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', color: 'var(--cam-primary)', opacity: 0.9 }}>
               <div className="px-4 py-2.5">Company</div>
               <div className="px-4 py-2.5">Role Level</div>
               <div className="px-4 py-2.5">Round Type</div>
@@ -333,8 +333,8 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {/* Account Info */}
             <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-              <div className="px-5 py-3" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-                <h3 className="text-base font-bold text-[var(--text-primary)]">Account Information</h3>
+              <div className="px-5 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+                <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Account Information</h3>
               </div>
               <div className="px-5 py-4 flex items-center justify-between">
                 <span className="text-sm text-[var(--text-primary)]">Email</span>
@@ -361,8 +361,8 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {/* Invite section */}
             <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-              <div className="px-5 py-3" style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)' }}>
-                <h3 className="text-base font-bold text-[var(--text-primary)]">Invite Friends to Get Free Access</h3>
+              <div className="px-5 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+                <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Invite Friends to Get Free Access</h3>
               </div>
               <div className="px-5 py-4">
                 <p className="text-sm text-[var(--text-secondary)] mb-4">
@@ -371,8 +371,8 @@ export default function ProfilePage() {
                 <div className="flex flex-col gap-2 mb-4">
                   {['Each successful referral gives you 30% off your next invoice', 'Discounts stack across multiple billing cycles', 'Your friends also get 30% off their subscription'].map(t => (
                     <div key={t} className="flex items-center gap-2 text-sm text-[var(--text-primary)]">
-                      <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--accent-subtle)' }}>
-                        <svg className="w-3 h-3" style={{ color: 'var(--accent)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in oklab, var(--cam-primary) 15%, var(--bg-surface))' }}>
+                        <svg className="w-3 h-3" style={{ color: 'var(--cam-primary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                       </span>
                       {t}
                     </div>
