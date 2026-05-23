@@ -96,9 +96,9 @@ async function runMigrations() {
     // match (we only enforce the check when `gen` is present in the token).
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS token_generation INTEGER NOT NULL DEFAULT 1');
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS image TEXT');
-    // Backfill: copy picture → image for any user who has a Google photo in the
-    // legacy picture column but no value in image (added later)
-    await query(`UPDATE users SET image = picture WHERE image IS NULL AND picture IS NOT NULL`);
+    // Backfill: copy avatar → image for any user whose Google photo landed in the
+    // legacy avatar column but not in image (added later). picture column does not exist.
+    await query(`UPDATE users SET image = avatar WHERE image IS NULL AND avatar IS NOT NULL`);
     console.log('[Migrations] Onboarding columns ensured');
 
     // Diagram cache table — store generated diagrams to avoid re-generating
@@ -974,7 +974,7 @@ app.get('/api/admin/users', apiLimiter, authenticate, async (req, res) => {
     if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
 
     const result = await query(`
-      SELECT u.id, u.email, u.name, COALESCE(u.image, u.picture) as image, u.provider, u.is_active,
+      SELECT u.id, u.email, u.name, COALESCE(u.image, u.avatar) as image, u.provider, u.is_active,
              u.onboarding_completed, u.plan_type, u.plan_status, u.created_at,
              u.username, u.referral_code, u.target_company, u.target_role, u.interview_date,
              u.location, u.last_login_at, u.is_admin,
