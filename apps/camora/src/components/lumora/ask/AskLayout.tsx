@@ -207,21 +207,21 @@ export const AskLayout = () => {
   return (
     <div className="flex flex-col h-full" style={{ background: 'var(--bg-primary)' }}>
 
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-5 h-10 shrink-0" style={{ borderBottom: '1px solid var(--cam-gold-leaf-dk)', background: 'var(--bg-secondary)' }}>
+      {/* Top bar — navy strip with gold-leaf border */}
+      <div className="flex items-center justify-between px-5 h-12 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-2">
           {hasMessages && (
-            <button onClick={startNew} className="flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--cam-gold-leaf-dk)', ...sans }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+            <button onClick={startNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:bg-white/10" style={{ color: 'var(--cam-gold-leaf)', border: '1px solid rgba(217,181,67,0.35)', ...sans }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New
             </button>
           )}
         </div>
-        <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: 'var(--cam-gold-leaf-dk)', ...sans }}>Ask Sona</span>
+        <span className="text-[11px] uppercase tracking-widest font-bold" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>Ask Sona</span>
         <button
           onClick={() => setShowHistory(h => !h)}
-          className="text-[11px] px-2.5 py-1 rounded transition-colors hover:bg-[var(--bg-elevated)]"
-          style={{ color: 'var(--text-muted)', ...sans }}
+          className="text-[11px] px-3 py-1.5 rounded-lg font-medium transition-colors hover:bg-white/10"
+          style={{ color: showHistory ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.7)', border: `1px solid ${showHistory ? 'rgba(217,181,67,0.5)' : 'rgba(255,255,255,0.15)'}`, ...sans }}
         >
           {showHistory ? 'Close' : `History (${history.length})`}
         </button>
@@ -318,15 +318,15 @@ export const AskLayout = () => {
           <h1 className="text-[26px] font-semibold mb-8 text-center" style={{ color: 'var(--text-primary)', ...sans }}>
             Hey <span style={{ color: 'var(--cam-gold-leaf)' }}>{firstName}</span>, what's on your mind?
           </h1>
-          <div className="flex flex-col gap-1 mb-6 w-full" style={{ maxWidth: 640 }}>
+          <div className="flex flex-col gap-2 mb-6 w-full" style={{ maxWidth: 640 }}>
             {SUGGESTIONS.map((s, i) => (
               <button
                 key={i}
                 onClick={() => handleSubmit(s)}
-                className="flex items-center gap-3 text-left px-4 py-2.5 rounded-xl transition-colors hover:bg-[var(--bg-elevated)]"
-                style={{ color: 'var(--text-secondary)', fontSize: 13, ...sans }}
+                className="flex items-center gap-3 text-left px-4 py-3 rounded-xl transition-all hover:bg-[var(--bg-elevated)] active:scale-[0.99]"
+                style={{ color: 'var(--text-secondary)', fontSize: 13, background: 'var(--bg-surface)', border: '1px solid rgba(217,181,67,0.18)', ...sans }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--cam-gold-leaf-dk)', flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--cam-gold-leaf)', flexShrink: 0 }}>
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                 </svg>
                 {s}
@@ -337,7 +337,7 @@ export const AskLayout = () => {
       )}
 
       {/* Input bar */}
-      <div className="shrink-0 px-4 pb-4 pt-2" style={{ borderTop: hasMessages ? '1px solid var(--border)' : 'none' }}>
+      <div className="shrink-0 px-4 pb-4 pt-3" style={{ borderTop: '1px solid var(--cam-gold-leaf-dk)', background: 'var(--bg-surface)' }}>
         <div style={{ maxWidth: 780, margin: '0 auto' }}>
           {/* Provider toggle */}
           <div className="flex items-center justify-end gap-1.5 mb-2">
@@ -349,8 +349,9 @@ export const AskLayout = () => {
                 style={{
                   ...sans,
                   background: provider === p ? 'var(--cam-gold-leaf)' : 'var(--bg-elevated)',
-                  color: provider === p ? '#0a0e1a' : 'var(--text-muted)',
+                  color: provider === p ? '#020617' : 'var(--text-muted)',
                   border: `1px solid ${provider === p ? 'var(--cam-gold-leaf)' : 'var(--border)'}`,
+                  boxShadow: provider === p ? '0 0 0 1px rgba(217,181,67,0.4), 0 2px 8px rgba(217,181,67,0.2)' : 'none',
                 }}
               >
                 {p === 'claude' ? '✦ Claude' : '◆ Gemini'}
@@ -359,7 +360,7 @@ export const AskLayout = () => {
           </div>
 
           {/* Input box */}
-          <div className="relative rounded-2xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 2px 16px rgba(0,0,0,0.25)' }}>
+          <div className="relative rounded-2xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--cam-gold-leaf-dk)', boxShadow: '0 0 0 1px rgba(217,181,67,0.1), 0 4px 20px rgba(0,0,0,0.3)' }}>
             <textarea
               ref={inputRef}
               value={input}
