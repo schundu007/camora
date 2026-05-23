@@ -29,8 +29,8 @@ export function LanguageTabs({ active, onChange }: Props) {
             'px-4 py-2 mt-1 text-[11px] font-semibold rounded-t-md transition-colors',
             'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0047AB]',
             active === tab.id
-              ? 'bg-[#0047AB] text-white'
-              : 'text-[#475569] hover:text-white',
+              ? 'border border-[var(--cam-gold-leaf)] text-[var(--cam-gold-leaf)]'
+              : 'border border-transparent text-[#94a3b8] hover:text-white',
           ].join(' ')}
           style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
         >
