@@ -232,4 +232,55 @@ router.post('/run', async (req, res, next) => {
   }
 });
 
+// POST /lint  — ruff, Python3 only
+router.post('/lint', async (req, res, next) => {
+  try {
+    const { code } = req.body;
+    if (!code || code.length > CODE_LIMIT) return res.json({ diagnostics: [] });
+
+    const result = await spawnWithStdin(
+      'ruff', ['check', '--output-format=json', '--stdin-filename=main.py', '-'],
+      code, 5000
+    );
+
+    let diagnostics = [];
+    try {
+      const raw = JSON.parse(result.stdout || '[]');
+      diagnostics = raw.map(d => ({
+        line:    d.location?.row    ?? 1,
+        col:     d.location?.column ?? 1,
+        endLine: d.end_location?.row    ?? d.location?.row    ?? 1,
+        endCol:  d.end_location?.column ?? d.location?.column ?? 2,
+        code:    d.code ?? 'E000',
+        message: d.message ?? '',
+      }));
+    } catch {}
+
+    res.json({ diagnostics });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /format  — black, Python3 only
+router.post('/format', async (req, res, next) => {
+  try {
+    const { code } = req.body;
+    if (!code || typeof code !== 'string') {
+      return res.status(400).json({ error: 'code is required' });
+    }
+
+    const result = await spawnWithStdin('black', ['-', '--quiet'], code, 5000);
+
+    if (result.exitCode === 0) {
+      res.json({ code: result.stdout });
+    } else {
+      // black failed (syntax error) — return original unchanged
+      res.json({ code, error: result.stderr });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
 export { router as playgroundRouter };
