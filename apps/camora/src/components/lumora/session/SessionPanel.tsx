@@ -97,7 +97,7 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
         // the cam-hero-bg used in the Dashboard's hero band.
         background:
           'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(38,97,156,0.06), transparent 70%),' +
-          'radial-gradient(ellipse 70% 40% at 50% 105%, rgba(34,211,238,0.05), transparent 70%),' +
+          'radial-gradient(ellipse 70% 40% at 50% 105%, rgba(38,97,156,0.07), transparent 70%),' +
           'var(--bg-surface)',
       }}
     >
@@ -111,6 +111,13 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
           0%, 100% { background-position: 0% 50%; }
           50%      { background-position: 100% 50%; }
         }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
       `}</style>
       {showEmptyState ? (
         <EmptyState onAskQuestion={onAskQuestion} onSwitchToCoding={onSwitchToCoding} onSwitchToDesign={onSwitchToDesign} />
@@ -122,7 +129,7 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
               className="relative flex items-center gap-3 px-4 py-3 rounded-xl shrink-0 overflow-hidden"
               style={{
                 background:
-                  'linear-gradient(110deg, rgba(38,97,156,0.10) 0%, rgba(34,211,238,0.06) 50%, rgba(38,97,156,0.10) 100%)',
+                  'linear-gradient(110deg, rgba(38,97,156,0.10) 0%, rgba(38,97,156,0.16) 50%, rgba(38,97,156,0.10) 100%)',
                 backgroundSize: '200% 200%',
                 border: '1px solid rgba(38,97,156,0.30)',
                 boxShadow: '0 4px 20px rgba(38,97,156,0.18), inset 0 1px 0 rgba(255,255,255,0.04)',
@@ -263,7 +270,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'radial-gradient(ellipse 70% 60% at 80% 30%, rgba(34,211,238,0.10), transparent 60%),' +
+              'radial-gradient(ellipse 70% 60% at 80% 30%, rgba(38,97,156,0.14), transparent 60%),' +
               'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.10), transparent 70%)',
           }}
         />
@@ -273,7 +280,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
               <span
                 className="font-bold tabular-nums"
                 style={{
-                  fontSize: 'clamp(48px, 8vw, 72px)',
+                  fontSize: '60px',
                   letterSpacing: '-0.02em',
                   textShadow: '0 0 24px rgba(255,255,255,0.18)',
                 }}
@@ -283,7 +290,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
               <span
                 className="font-semibold tabular-nums"
                 style={{
-                  fontSize: 'clamp(18px, 2.5vw, 24px)',
+                  fontSize: '20px',
                   color: 'var(--cam-gold-leaf-lt)',
                   textShadow: '0 0 18px rgba(217,181,67,0.35)',
                 }}
@@ -319,7 +326,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
               onClick={cp.onClick}
               className="group relative text-left rounded-2xl overflow-hidden transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 active:scale-[0.98]"
               style={{
-                background: 'linear-gradient(135deg, rgba(38,97,156,0.06) 0%, rgba(34,211,238,0.04) 100%)',
+                background: 'linear-gradient(135deg, rgba(38,97,156,0.06) 0%, rgba(38,97,156,0.10) 100%)',
                 border: '1px solid rgba(255,255,255,0.06)',
                 boxShadow: '0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.05)',
               }}
@@ -388,7 +395,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
               onClick={() => handlePromptClick(p)}
               className="group flex items-center gap-3 text-left p-3 rounded-xl transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
               style={{
-                background: 'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(34,211,238,0.02) 100%)',
+                background: 'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(38,97,156,0.08) 100%)',
                 border: '1px solid rgba(38,97,156,0.10)',
               }}
               onMouseEnter={(e) => {

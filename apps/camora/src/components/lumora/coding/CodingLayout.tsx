@@ -1568,17 +1568,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 // ### H3
                 const h3 = trimmed.match(/^###\s+(.*)/);
                 if (h3)
-                  return <div key={li} style={{ fontWeight: 600, fontSize: 11.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 8, marginBottom: 2, paddingLeft: 8, borderLeft: '2px solid var(--cam-gold-leaf)' }}>{renderInline(h3[1])}</div>;
+                  return <div key={li} style={{ fontWeight: 600, fontSize: 11.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 8, marginBottom: 2 }}>{renderInline(h3[1])}</div>;
 
                 // ## H2
                 const h2 = trimmed.match(/^##\s+(.*)/);
                 if (h2)
-                  return <div key={li} style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 12, marginBottom: 3, paddingLeft: 10, borderLeft: '3px solid var(--cam-gold-leaf)' }}>{renderInline(h2[1])}</div>;
+                  return <div key={li} style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 12, marginBottom: 3, paddingBottom: 3, borderBottom: '1px solid rgba(201,162,39,0.30)' }}>{renderInline(h2[1])}</div>;
 
                 // # H1
                 const h1 = trimmed.match(/^#\s+(.*)/);
                 if (h1)
-                  return <div key={li} style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 14, marginBottom: 4, paddingLeft: 10, borderLeft: '3px solid var(--cam-gold-leaf)' }}>{renderInline(h1[1])}</div>;
+                  return <div key={li} style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 14, marginBottom: 4, paddingBottom: 4, borderBottom: '1px solid rgba(201,162,39,0.45)' }}>{renderInline(h1[1])}</div>;
 
                 // Question N: ... pattern
                 const qMatch = trimmed.match(/^Question\s+(\d+)[:.]\s*(.*)/i);
@@ -1596,7 +1596,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 const answerMatch = trimmed.match(/^Answer[:.]\s*(.*)/i);
                 if (answerMatch)
                   return (
-                    <div key={li} style={{ marginLeft: 28, marginTop: 2, paddingLeft: 10, borderLeft: '2px solid rgba(38,97,156,0.4)' }}>
+                    <div key={li} style={{ marginLeft: 28, marginTop: 2, paddingLeft: 10, paddingTop: 3, paddingBottom: 3, borderRadius: 4, background: 'rgba(38,97,156,0.08)' }}>
                       {answerMatch[1] ? <span style={{ color: 'var(--text-primary)', fontSize: 11.5 }}>{renderInline(answerMatch[1])}</span> : <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--cam-primary)', letterSpacing: '0.06em' }}>Answer</span>}
                     </div>
                   );
@@ -1667,7 +1667,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               // doesn't compete with the editor or answer surfaces.
               background:
                 'radial-gradient(ellipse 50% 40% at 15% 0%, rgba(38,97,156,0.08), transparent 70%),' +
-                'radial-gradient(ellipse 60% 40% at 85% 100%, rgba(34,211,238,0.06), transparent 70%)',
+                'radial-gradient(ellipse 60% 40% at 85% 100%, rgba(38,97,156,0.10), transparent 70%)',
             }
           : undefined
       }
@@ -1677,6 +1677,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           0%   { box-shadow: 0 0 0 0 rgba(38,97,156,0.45); }
           70%  { box-shadow: 0 0 0 10px rgba(38,97,156,0); }
           100% { box-shadow: 0 0 0 0 rgba(38,97,156,0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
         }
       `}</style>
       {/* ═══ HEADER — hidden when embedded in LumoraShell ═══ */}
@@ -1731,7 +1738,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             <div
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
               style={{
-                background: 'linear-gradient(110deg, rgba(38,97,156,0.18) 0%, rgba(34,211,238,0.10) 100%)',
+                background: 'linear-gradient(110deg, rgba(38,97,156,0.18) 0%, rgba(38,97,156,0.28) 100%)',
                 border: '1px solid rgba(38,97,156,0.42)',
                 boxShadow: '0 0 18px rgba(38,97,156,0.32), inset 0 1px 0 rgba(255,255,255,0.08)',
               }}
@@ -2207,8 +2214,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                                 className="rounded-lg mt-2"
                                 style={{
                                   background: 'var(--accent-subtle)',
-                                  border: '1px solid var(--border)',
-                                  borderLeft: '3px solid var(--cam-primary)',
+                                  border: '1px solid rgba(38,97,156,0.35)',
                                 }}>
                                 <div
                                   className="flex items-center justify-between px-2.5 py-1.5"

@@ -727,7 +727,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               // navy spotlight at top-left + cyan wash at bottom-right.
               background:
                 'radial-gradient(ellipse 50% 40% at 15% 0%, rgba(38,97,156,0.08), transparent 70%),' +
-                'radial-gradient(ellipse 60% 40% at 85% 100%, rgba(34,211,238,0.06), transparent 70%)',
+                'radial-gradient(ellipse 60% 40% at 85% 100%, rgba(38,97,156,0.10), transparent 70%)',
             }
           : undefined
       }
@@ -737,6 +737,13 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           0%   { box-shadow: 0 0 0 0 rgba(38,97,156,0.45); }
           70%  { box-shadow: 0 0 0 10px rgba(38,97,156,0); }
           100% { box-shadow: 0 0 0 0 rgba(38,97,156,0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
         }
       `}</style>
       {/* Header — hidden when embedded in LumoraShell */}
@@ -814,7 +821,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <div
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
               style={{
-                background: 'linear-gradient(110deg, rgba(38,97,156,0.18) 0%, rgba(34,211,238,0.10) 100%)',
+                background: 'linear-gradient(110deg, rgba(38,97,156,0.18) 0%, rgba(38,97,156,0.28) 100%)',
                 border: '1px solid rgba(38,97,156,0.42)',
                 boxShadow: '0 0 18px rgba(38,97,156,0.32), inset 0 1px 0 rgba(255,255,255,0.08)',
               }}

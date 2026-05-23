@@ -534,7 +534,7 @@ const GridCard = ({
           // Richer header — inner cyan glow at top-right + the existing
           // navy strip beneath. Reads as a lit chrome bar instead of flat.
           background:
-            'radial-gradient(ellipse 60% 100% at 100% 0%, rgba(34,211,238,0.18), transparent 60%),' +
+            'radial-gradient(ellipse 60% 100% at 100% 0%, rgba(38,97,156,0.22), transparent 60%),' +
             'var(--cam-hero-strip)',
           borderBottom: '1px solid var(--cam-gold-leaf)',
         }}
@@ -859,7 +859,7 @@ const FollowupList = ({ content }: { content: string }) => {
             </span>
             <span className="text-sm font-semibold text-text leading-relaxed">{pair.question}</span>
           </div>
-          <div className="ml-9 pl-4 py-1" style={{ borderLeft: '2px solid var(--accent)' }}>
+          <div className="ml-9 px-3 py-1.5 rounded-md" style={{ background: 'rgba(38,97,156,0.07)' }}>
             <span className="text-[13px] text-[var(--text-muted)] leading-relaxed">{pair.answer}</span>
           </div>
         </div>
