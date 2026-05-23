@@ -94,22 +94,13 @@ export function PlaygroundLayout() {
             {activeTab === 'python3' ? 'main.py' : activeTab === 'bash' ? 'script.sh' : activeTab === 'docker' ? 'Dockerfile' : 'main.tf'}
           </span>
         </div>
-        {/* CENTER: Run button */}
-        <button
-          onClick={handleRun}
-          disabled={running}
-          className="text-[11px] px-5 py-1.5 rounded-md font-semibold bg-[#10b981] text-white hover:bg-[#059669] transition-colors disabled:opacity-50"
-          style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
-        >
-          {running ? 'Running…' : '▶ Run'}
-        </button>
-        {/* RIGHT: Format / Clear + shortcut hint */}
-        <div className="flex-1 flex items-center justify-end gap-2">
+        {/* CENTER: action chips + Run */}
+        <div className="flex items-center gap-2">
           {activeTab === 'python3' && (
             <button
               onClick={handleFormat}
               disabled={formatting}
-              className="text-[11px] px-3 py-1 rounded-md border border-[#1e293b] text-[#64748b] hover:text-white hover:border-[#334155] transition-colors disabled:opacity-40"
+              className="text-[11px] px-3 py-1 rounded-md border border-[var(--cam-gold-leaf)] text-[var(--cam-gold-leaf)] hover:opacity-80 transition-opacity disabled:opacity-40"
               style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
             >
               {formatting ? 'Formatting…' : 'Format'}
@@ -117,11 +108,22 @@ export function PlaygroundLayout() {
           )}
           <button
             onClick={handleClear}
-            className="text-[11px] px-3 py-1 rounded-md border border-[#1e293b] text-[#64748b] hover:text-white hover:border-[#334155] transition-colors"
+            className="text-[11px] px-3 py-1 rounded-md border border-[#334155] text-[#94a3b8] hover:text-white hover:border-[#475569] transition-colors"
             style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
           >
             Clear
           </button>
+          <button
+            onClick={handleRun}
+            disabled={running}
+            className="text-[11px] px-5 py-1.5 rounded-md font-semibold bg-[#0047AB] text-white hover:bg-[#0055cc] transition-colors disabled:opacity-50"
+            style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+          >
+            {running ? 'Running…' : '▶ Run'}
+          </button>
+        </div>
+        {/* RIGHT: shortcut hint */}
+        <div className="flex-1 flex items-center justify-end">
           <span className="text-[10px] text-[#334155] hidden md:block" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
             ⌘↵ · ⌘L · ⌘D
           </span>
