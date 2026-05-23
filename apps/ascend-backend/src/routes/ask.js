@@ -175,4 +175,37 @@ router.get('/history/:id', async (req, res) => {
   }
 });
 
+// DELETE /history/:id — delete a single conversation
+router.delete('/history/:id', async (req, res) => {
+  try {
+    const { rows: [conv] } = await query(
+      `SELECT id FROM lumora_ask_conversations WHERE id = $1 AND user_id = $2`,
+      [req.params.id, req.user.id]
+    );
+    if (!conv) return res.status(404).json({ error: 'not found' });
+    await query(`DELETE FROM lumora_ask_messages WHERE conversation_id = $1`, [req.params.id]);
+    await query(`DELETE FROM lumora_ask_conversations WHERE id = $1`, [req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /history — clear all conversations for user
+router.delete('/history', async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT id FROM lumora_ask_conversations WHERE user_id = $1`,
+      [req.user.id]
+    );
+    for (const { id } of rows) {
+      await query(`DELETE FROM lumora_ask_messages WHERE conversation_id = $1`, [id]);
+    }
+    await query(`DELETE FROM lumora_ask_conversations WHERE user_id = $1`, [req.user.id]);
+    res.json({ ok: true, deleted: rows.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export { router as askRouter };

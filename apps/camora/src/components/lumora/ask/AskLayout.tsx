@@ -110,6 +110,25 @@ export const AskLayout = () => {
     } catch {}
   }, []);
 
+  const deleteConversation = useCallback(async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await fetch(`${API_URL}/api/v1/ask/history/${id}`, { method: 'DELETE', credentials: 'include' });
+      setHistory(prev => prev.filter(c => c.id !== id));
+      if (convId === id) { setMessages([]); setConvId(null); }
+    } catch {}
+  }, [convId]);
+
+  const clearAllHistory = useCallback(async () => {
+    try {
+      await fetch(`${API_URL}/api/v1/ask/history`, { method: 'DELETE', credentials: 'include' });
+      setHistory([]);
+      setMessages([]);
+      setConvId(null);
+      setShowHistory(false);
+    } catch {}
+  }, []);
+
   const handleSubmit = useCallback(async (text?: string) => {
     const msg = (text ?? input).trim();
     if (!msg || streaming) return;
@@ -208,24 +227,57 @@ export const AskLayout = () => {
         </button>
       </div>
 
-      {/* History panel overlay */}
+      {/* History panel */}
       {showHistory && (
-        <div className="shrink-0 overflow-y-auto border-b" style={{ maxHeight: 220, borderColor: 'var(--border)', background: 'var(--bg-surface)' }}>
-          {history.length === 0 ? (
-            <p className="p-4 text-[12px]" style={{ color: 'var(--text-muted)', ...sans }}>No history yet</p>
-          ) : history.map(c => (
-            <button
-              key={c.id}
-              onClick={() => loadConversation(c.id)}
-              className="w-full text-left px-4 py-2.5 text-[13px] transition-colors hover:bg-[var(--bg-elevated)] flex items-center justify-between gap-3"
-              style={{ color: 'var(--text-primary)', borderBottom: '1px solid var(--border)', ...sans }}
-            >
-              <span className="truncate">{c.title}</span>
-              <span className="shrink-0 text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                {c.provider}
-              </span>
-            </button>
-          ))}
+        <div className="shrink-0 border-b" style={{ borderColor: 'var(--cam-gold-leaf-dk)', background: 'var(--cam-hero-strip)' }}>
+          {/* History header */}
+          <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: 'var(--cam-gold-leaf-dk)' }}>
+            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>
+              History ({history.length})
+            </span>
+            {history.length > 0 && (
+              <button
+                onClick={clearAllHistory}
+                className="text-[11px] px-2.5 py-1 rounded transition-colors hover:bg-red-900/30"
+                style={{ color: '#f87171', ...sans }}
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+          {/* History list */}
+          <div className="overflow-y-auto" style={{ maxHeight: 200 }}>
+            {history.length === 0 ? (
+              <p className="p-4 text-[12px]" style={{ color: 'var(--cam-gold-leaf-dk)', ...sans }}>No history yet</p>
+            ) : history.map(c => (
+              <div
+                key={c.id}
+                className="flex items-center gap-2 border-b hover:bg-white/5 transition-colors"
+                style={{ borderColor: 'rgba(217,181,67,0.15)' }}
+              >
+                <button
+                  onClick={() => loadConversation(c.id)}
+                  className="flex-1 text-left px-4 py-2.5 text-[13px] flex items-center gap-3 min-w-0"
+                  style={{ color: 'rgba(255,255,255,0.85)', ...sans }}
+                >
+                  <span className="truncate">{c.title}</span>
+                  <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(217,181,67,0.15)', color: 'var(--cam-gold-leaf)' }}>
+                    {c.provider}
+                  </span>
+                </button>
+                <button
+                  onClick={e => deleteConversation(c.id, e)}
+                  className="shrink-0 mr-3 p-1 rounded hover:bg-red-900/40 transition-colors"
+                  title="Delete conversation"
+                  style={{ color: '#f87171' }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
