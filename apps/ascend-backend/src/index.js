@@ -876,6 +876,90 @@ app.get('/api/visitors/pageview-stats', authenticate, async (req, res) => {
   }
 });
 
+// Admin: unique visitor detail with geo lookup
+app.get('/api/visitors/visitors-detail', apiLimiter, authenticate, async (req, res) => {
+  try {
+    const admin = await query('SELECT is_admin FROM users WHERE id = $1', [req.user.id]);
+    if (!admin.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
+
+    const { days, exclude_emails } = req.query;
+    const params = [];
+    const conditions = [];
+    let idx = 1;
+
+    if (exclude_emails) {
+      const emails = exclude_emails.split(',').map(e => e.trim().toLowerCase());
+      conditions.push(`(email IS NULL OR LOWER(email) NOT IN (${emails.map(() => `$${idx++}`).join(',')}))`);
+      params.push(...emails);
+    }
+    if (days) {
+      const d = parseInt(days, 10);
+      if (Number.isFinite(d) && d > 0) {
+        conditions.push(`created_at >= NOW() - ($${idx++} * INTERVAL '1 day')`);
+        params.push(d);
+      }
+    }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // Aggregate per unique IP
+    const { rows } = await query(`
+      SELECT
+        ip,
+        COUNT(*) as views,
+        COUNT(DISTINCT path) as pages_count,
+        MIN(created_at) as first_seen,
+        MAX(created_at) as last_seen,
+        MODE() WITHIN GROUP (ORDER BY user_agent) as user_agent,
+        MODE() WITHIN GROUP (ORDER BY referrer) as referrer,
+        array_agg(DISTINCT path ORDER BY path) FILTER (WHERE path IS NOT NULL) as paths
+      FROM page_views ${where}
+      GROUP BY ip
+      ORDER BY last_seen DESC
+      LIMIT 200
+    `, params);
+
+    // Skip geo for synthetic seed IPs
+    const realRows = rows.filter(r => r.ip && !r.ip.startsWith('seed-'));
+
+    // Batch geo lookup via ip-api.com (free, server-side HTTP only)
+    let geoMap = {};
+    try {
+      const ips = realRows.map(r => ({ query: r.ip, fields: 'status,country,countryCode,city,isp,org' }));
+      for (let i = 0; i < ips.length; i += 100) {
+        const batch = ips.slice(i, i + 100);
+        const geoRes = await fetch('http://ip-api.com/batch?fields=status,country,countryCode,city,isp,org,query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(batch),
+        });
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          for (const g of geoData) {
+            if (g.status === 'success') geoMap[g.query] = g;
+          }
+        }
+      }
+    } catch { /* geo is best-effort */ }
+
+    const visitors = rows.map(r => ({
+      ip: r.ip,
+      views: parseInt(r.views),
+      pages_count: parseInt(r.pages_count),
+      first_seen: r.first_seen,
+      last_seen: r.last_seen,
+      user_agent: r.user_agent || null,
+      referrer: r.referrer || null,
+      paths: (r.paths || []).slice(0, 5),
+      geo: geoMap[r.ip] || null,
+    }));
+
+    res.json({ visitors });
+  } catch (err) {
+    console.error('[Visitors Detail] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch visitor detail' });
+  }
+});
+
 // Admin: list all users (protected, admin-only)
 app.get('/api/admin/users', apiLimiter, authenticate, async (req, res) => {
   try {

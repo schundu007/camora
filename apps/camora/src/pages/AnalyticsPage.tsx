@@ -80,6 +80,27 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const abortRef = useRef<AbortController | null>(null);
 
+  // Visitor detail state
+  const [visitors, setVisitors] = useState<any[]>([]);
+  const [visitorsLoading, setVisitorsLoading] = useState(false);
+  const [visitorsLoaded, setVisitorsLoaded] = useState(false);
+
+  const fetchVisitors = useCallback(async () => {
+    if (!token) return;
+    setVisitorsLoading(true);
+    const params = new URLSearchParams({ exclude_emails: EXCLUDE });
+    if (days) params.set('days', days);
+    try {
+      const r = await fetch(`${API}/api/visitors/visitors-detail?${params}`, {
+        credentials: 'include', headers: { Authorization: `Bearer ${token}` },
+      });
+      const d = await r.json();
+      setVisitors(d.visitors || []);
+      setVisitorsLoaded(true);
+    } catch {}
+    setVisitorsLoading(false);
+  }, [token, days]);
+
   // Users state
   const [users, setUsers] = useState<User[]>([]);
   const [usersLoaded, setUsersLoaded] = useState(false);
@@ -128,7 +149,7 @@ export default function AnalyticsPage() {
   }, [days, token]);
 
   useEffect(() => {
-    if (tab === 'analytics') fetchAnalytics();
+    if (tab === 'analytics') { fetchAnalytics(); setVisitorsLoaded(false); setVisitors([]); }
     return () => abortRef.current?.abort();
   }, [tab, fetchAnalytics]);
 
@@ -410,6 +431,76 @@ export default function AnalyticsPage() {
                       )}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Unique Visitors breakdown */}
+                <div className="mt-10">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-base font-semibold text-[var(--text-primary)]">
+                      Who are they? <span className="text-[var(--text-muted)] text-sm font-normal ml-1">{stats.unique_visitors} unique visitors</span>
+                    </h2>
+                    {!visitorsLoaded && (
+                      <button
+                        onClick={fetchVisitors}
+                        disabled={visitorsLoading}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+                        style={{ background: 'var(--cam-gold-leaf)', color: '#020617' }}
+                      >
+                        {visitorsLoading ? 'Loading…' : 'Load visitors'}
+                      </button>
+                    )}
+                    {visitorsLoaded && (
+                      <button onClick={fetchVisitors} disabled={visitorsLoading}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--border)] transition-colors disabled:opacity-50">
+                        {visitorsLoading ? 'Refreshing…' : 'Refresh'}
+                      </button>
+                    )}
+                  </div>
+                  {visitorsLoaded && (
+                    <div className="bg-[var(--bg-surface)] border rounded-xl overflow-x-auto" style={{ borderColor: 'color-mix(in oklab, var(--cam-gold-leaf) 30%, var(--border))' }}>
+                      <table className="w-full text-left text-sm">
+                        <thead>
+                          <tr className="border-b border-[var(--border)]" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 6%, var(--bg-surface))' }}>
+                            {['Location', 'IP', 'Browser / OS', 'Pages', 'Top Page', 'Referrer', 'Last Seen'].map(h => (
+                              <th key={h} className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf-dk)' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {visitors.map((v, i) => {
+                            const ua = v.user_agent || '';
+                            const browser = ua.includes('Edg') ? 'Edge' : ua.includes('Chrome') ? 'Chrome' : ua.includes('Firefox') ? 'Firefox' : ua.includes('Safari') ? 'Safari' : 'Other';
+                            const os = ua.includes('iPhone') || ua.includes('iPad') ? 'iOS' : ua.includes('Android') ? 'Android' : ua.includes('Mac') ? 'macOS' : ua.includes('Windows') ? 'Windows' : ua.includes('Linux') ? 'Linux' : '—';
+                            const geo = v.geo;
+                            const location = geo ? `${geo.city ? geo.city + ', ' : ''}${geo.country || ''}` : '—';
+                            const flag = geo?.countryCode ? String.fromCodePoint(...[...geo.countryCode].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '';
+                            const maskedIp = v.ip?.startsWith('seed-') ? 'synthetic' : (v.ip || '').replace(/(\d+\.\d+)\.\d+\.\d+/, '$1.×.×');
+                            const referrer = v.referrer ? (() => { try { return new URL(v.referrer).hostname.replace('www.', ''); } catch { return v.referrer.slice(0, 30); } })() : 'direct';
+                            const topPage = v.paths?.[0] || '—';
+                            return (
+                              <tr key={i} className="border-b border-[var(--border)]/40 hover:bg-[var(--bg-elevated)]/50 transition-colors">
+                                <td className="px-4 py-2.5 whitespace-nowrap">
+                                  <span className="text-base mr-1.5">{flag}</span>
+                                  <span className="text-xs text-[var(--text-secondary)]">{location || '—'}</span>
+                                </td>
+                                <td className="px-4 py-2.5 font-mono text-[11px] text-[var(--text-muted)]">{maskedIp}</td>
+                                <td className="px-4 py-2.5 text-xs text-[var(--text-secondary)]">{browser} / {os}</td>
+                                <td className="px-4 py-2.5 text-xs font-semibold text-[var(--text-primary)]">{v.views} views · {v.pages_count} pages</td>
+                                <td className="px-4 py-2.5 font-mono text-[11px] text-[var(--cam-gold-leaf-dk)] max-w-[180px] truncate">{topPage}</td>
+                                <td className="px-4 py-2.5 text-[11px] text-[var(--text-muted)] max-w-[140px] truncate">{referrer}</td>
+                                <td className="px-4 py-2.5 text-[11px] text-[var(--text-muted)] whitespace-nowrap">
+                                  {new Date(v.last_seen).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          {visitors.length === 0 && (
+                            <tr><td colSpan={7} className="px-5 py-8 text-center text-[var(--text-muted)] text-sm">No visitor data found</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
