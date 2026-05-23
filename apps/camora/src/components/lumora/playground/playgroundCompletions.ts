@@ -41,7 +41,7 @@ const PYTHON_SNIPPETS = [
   { label: 'from import',  detail: 'From import',          insertText: 'from ${1:module} import ${0:name}' },
 ];
 
-function registerPython(monaco: typeof Monaco): Monaco.IDisposable {
+const registerPython = (monaco: typeof Monaco): Monaco.IDisposable => {
   const { CompletionItemKind, CompletionItemInsertTextRule } = monaco.languages;
   return monaco.languages.registerCompletionItemProvider('python', {
     provideCompletionItems: (model, position) => {
@@ -83,7 +83,7 @@ const BASH_COMMANDS = [
   'find','xargs','sort','uniq','head','tail','wc','tr','cut','date','sleep',
 ];
 
-function registerBash(monaco: typeof Monaco): Monaco.IDisposable {
+const registerBash = (monaco: typeof Monaco): Monaco.IDisposable => {
   const { CompletionItemKind, CompletionItemInsertTextRule } = monaco.languages;
   return monaco.languages.registerCompletionItemProvider('shell', {
     provideCompletionItems: (model, position) => {
@@ -131,7 +131,7 @@ const DOCKER_SNIPPETS = [
   },
 ];
 
-function registerDocker(monaco: typeof Monaco): Monaco.IDisposable {
+const registerDocker = (monaco: typeof Monaco): Monaco.IDisposable => {
   const { CompletionItemKind, CompletionItemInsertTextRule } = monaco.languages;
   return monaco.languages.registerCompletionItemProvider('dockerfile', {
     provideCompletionItems: (model, position) => {
@@ -164,7 +164,7 @@ const TERRAFORM_SNIPPETS = [
   { label: 'null_resource', detail: 'Null resource',    insertText: 'resource "null_resource" "${1:example}" {\n\ttriggers = {\n\t\t${2:value} = "${3:hello}"\n\t}\n}' },
 ];
 
-function registerTerraform(monaco: typeof Monaco): Monaco.IDisposable {
+const registerTerraform = (monaco: typeof Monaco): Monaco.IDisposable => {
   const { CompletionItemKind, CompletionItemInsertTextRule } = monaco.languages;
   return monaco.languages.registerCompletionItemProvider('hcl', {
     provideCompletionItems: (model, position) => {
@@ -185,7 +185,7 @@ function registerTerraform(monaco: typeof Monaco): Monaco.IDisposable {
 
 // ── Export ──────────────────────────────────────────────────────────────────
 
-export function registerPlaygroundCompletions(monaco: typeof Monaco): Monaco.IDisposable {
+export const registerPlaygroundCompletions = (monaco: typeof Monaco): Monaco.IDisposable => {
   const disposables = [
     registerPython(monaco),
     registerBash(monaco),
