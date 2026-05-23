@@ -344,7 +344,14 @@ export const AskLayout = () => {
             {(['claude', 'gemini'] as Provider[]).map(p => (
               <button
                 key={p}
-                onClick={() => setProvider(p)}
+                onClick={() => {
+                  if (p === provider) return;
+                  setProvider(p);
+                  setMessages([]);
+                  setConvId(null);
+                  setStreamText('');
+                  setShowHistory(false);
+                }}
                 className="px-3 py-1 text-[11px] rounded-full font-semibold transition-all"
                 style={{
                   ...sans,
