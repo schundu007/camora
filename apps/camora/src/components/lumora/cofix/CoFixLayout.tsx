@@ -310,7 +310,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         {/* Action buttons — only when fixed code is ready */}
         {fixedCode && (
           <div className="flex items-center gap-1.5 shrink-0">
-            <button onClick={handleCopy} className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-primary)] bg-[var(--bg-primary)] hover:bg-[var(--bg-elevated)] transition-colors">Copy</button>
             <button onClick={handleSendToCoding} className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] bg-[var(--bg-primary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors whitespace-nowrap">→ Coding</button>
           </div>
         )}
@@ -447,13 +446,16 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               {fixedCode ? '✓ Fixed Code' : 'Output — Fixed Code'}
             </span>
             {fixedCode && (
-              <button
-                onClick={handleRun}
-                disabled={isRunning}
-                className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-lg bg-[#0047AB] text-white hover:bg-[#0038a0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isRunning ? <><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />Running</> : <>▶ Run</>}
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button onClick={handleCopy} className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-lg border border-[var(--border)] text-[var(--text-primary)] bg-[var(--bg-primary)] hover:bg-[var(--bg-elevated)] transition-colors">Copy</button>
+                <button
+                  onClick={handleRun}
+                  disabled={isRunning}
+                  className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-lg bg-[#0047AB] text-white hover:bg-[#0038a0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isRunning ? <><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />Running</> : <>▶ Run</>}
+                </button>
+              </div>
             )}
           </div>
 
