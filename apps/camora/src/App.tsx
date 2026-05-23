@@ -352,6 +352,8 @@ export const App = () => {
           <Route path="/lumora/profile" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/credits" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/fix" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/playground" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
+          <Route path="/lumora/playground/s/:snippetId" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
 
           {/* ── /app/* → /lumora/* — legacy aliases collapsed to redirects ── */}
           <Route path="/app" element={<Navigate to="/lumora" replace />} />
