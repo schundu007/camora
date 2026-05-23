@@ -32,6 +32,7 @@ const CodingLayout = lazy(() => import('../../components/lumora/coding/CodingLay
 const DesignLayout = lazy(() => import('../../components/lumora/design/DesignLayout').then(m => ({ default: m.DesignLayout })));
 const CoFixLayout = lazy(() => import('../../components/lumora/cofix/CoFixLayout').then(m => ({ default: m.CoFixLayout })));
 const PlaygroundLayout = lazy(() => import('../../components/lumora/playground/PlaygroundLayout').then(m => ({ default: m.PlaygroundLayout })));
+const AskLayout = lazy(() => import('../../components/lumora/ask/AskLayout').then(m => ({ default: m.AskLayout })));
 
 export const LumoraShellPage = () => {
   const navigate = useNavigate();
@@ -130,7 +131,8 @@ export const LumoraShellPage = () => {
     location.pathname.includes('/sessions') ? 'sessions' :
     location.pathname.includes('/assistants') ? 'assistants' :
     location.pathname.includes('/profile') ? 'profile' :
-    location.pathname.includes('/credits') ? 'credits' : 'session';
+    location.pathname.includes('/credits') ? 'credits' :
+    location.pathname.includes('/ask') ? 'ask' : 'session';
 
   // Ref tracks the current activeTab so async callbacks (transcription, snap)
   // always route to the tab that was active when the event fired, not the tab
@@ -233,6 +235,7 @@ export const LumoraShellPage = () => {
       behavioral: 'Behavioral Interview | Camora',
       prepkit: 'Prep Kit | Camora',
       calendar: 'Calendar | Camora',
+      ask: 'Ask Sona | Camora',
     };
     document.title = titles[activeTab] || 'Camora';
   }, [activeTab]);
@@ -726,6 +729,17 @@ export const LumoraShellPage = () => {
               <ErrorBoundary>
                 <Suspense fallback={<TabLoading label="Playground" />}>
                   <PlaygroundLayout />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
+
+          {/* Ask tab — lazy mounted */}
+          {mountedTabs.has('ask') && (
+            <div style={{ display: activeTab === 'ask' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
+              <ErrorBoundary>
+                <Suspense fallback={<TabLoading label="Ask Sona" />}>
+                  <AskLayout />
                 </Suspense>
               </ErrorBoundary>
             </div>
