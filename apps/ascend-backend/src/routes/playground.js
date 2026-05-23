@@ -7,15 +7,24 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomUUID, createHash } from 'crypto';
 import { query } from '../config/database.js';
+import Anthropic from '@anthropic-ai/sdk';
 
 const execFileAsync = promisify(execFile);
 const router = Router();
 
 const CODE_LIMIT = 50 * 1024; // 50KB
-const EXEC_OPTS = { maxBuffer: 1024 * 1024 }; // 1MB
+const EXEC_OPTS = { maxBuffer: 1024 * 1024, encoding: 'utf8' };
 
 const EXPLAIN_CACHE = new Map();
 const EXPLAIN_CACHE_MAX = 500;
+
+let _anthropic = null;
+const getAnthropic = () => {
+  if (!_anthropic && process.env.ANTHROPIC_API_KEY) {
+    _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  }
+  return _anthropic;
+};
 
 async function callGemini(prompt) {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -36,6 +45,20 @@ async function callGemini(prompt) {
   return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
 }
 
+async function callExplain(prompt) {
+  if (process.env.GEMINI_API_KEY) {
+    try { return await callGemini(prompt); } catch { /* fall through to Claude */ }
+  }
+  const client = getAnthropic();
+  if (!client) throw new Error('No AI provider configured');
+  const msg = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 150,
+    messages: [{ role: 'user', content: prompt }],
+  });
+  return msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : '';
+}
+
 // Wrapper reads code.py from disk — avoids any string-escaping issues.
 // Emits __VARS__:<json> to stderr so backend can parse variables separately.
 const PYTHON_WRAPPER = `import json as _j, sys as _s, traceback as _t, io as _io
@@ -53,6 +76,7 @@ except Exception:
     _s.stdout = _s.__stdout__
     _s.stdout.write(_cap.getvalue())
     _s.stderr.write(_t.format_exc())
+    _s.stderr.flush()
     _s.exit(1)
 
 _s.stdout = _s.__stdout__
@@ -251,7 +275,7 @@ router.post('/explain', async (req, res, next) => {
     }
 
     const prompt = `Explain what line ${lineNumber} does in this ${language} code in 1-2 concise sentences. Focus on the purpose, not just restating the syntax.\n\nCode:\n\`\`\`${language}\n${code}\n\`\`\`\n\nLine ${lineNumber}: ${lineContent}`;
-    const explanation = await callGemini(prompt);
+    const explanation = await callExplain(prompt);
 
     if (EXPLAIN_CACHE.size >= EXPLAIN_CACHE_MAX) {
       EXPLAIN_CACHE.delete(EXPLAIN_CACHE.keys().next().value);
