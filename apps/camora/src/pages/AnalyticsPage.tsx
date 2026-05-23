@@ -354,11 +354,11 @@ export default function AnalyticsPage() {
             ) : stats ? (
               <>
                 <div className="flex gap-6 mb-10">
-                  <div className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-6 py-5">
+                  <div className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-6 py-5 flex flex-col items-center justify-center text-center">
                     <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-70 mb-2">Total Page Views</p>
                     <p className="text-4xl font-bold text-[var(--text-primary)] tabular-nums">{stats.total_views.toLocaleString()}</p>
                   </div>
-                  <div className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-6 py-5"
+                  <div className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-6 py-5 flex flex-col items-center justify-center text-center"
                     style={{ borderColor: 'color-mix(in oklab, var(--cam-gold-leaf) 40%, var(--border))' }}>
                     <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-gold-leaf)] opacity-80 mb-2">Unique Visitors</p>
                     <p className="text-4xl font-bold tabular-nums" style={{ color: 'var(--cam-gold-leaf)' }}>{stats.unique_visitors.toLocaleString()}</p>
