@@ -1,0 +1,14 @@
+# apps/ascend-backend/nixpacks.toml
+[phases.setup]
+nixPkgs = [
+  "hadolint",
+  "terraform",
+]
+
+[phases.build]
+cmds = [
+  "pip install ruff black radon pytest 2>/dev/null || pip3 install ruff black radon pytest",
+  "mkdir -p /terraform-plugin-cache /tmp/tf-warmup",
+  "printf 'terraform { required_providers { null = { source = \"hashicorp/null\" } random = { source = \"hashicorp/random\" } } }\\n' > /tmp/tf-warmup/main.tf",
+  "TF_PLUGIN_CACHE_DIR=/terraform-plugin-cache terraform -chdir=/tmp/tf-warmup init -backend=false -no-color 2>/dev/null || true",
+]
