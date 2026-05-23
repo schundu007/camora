@@ -84,7 +84,7 @@ print(type(x))       # <class 'str'>`,
       "Comparing to None with == instead of 'is' can give wrong results if an object overrides __eq__. Always write 'if x is None' or 'if x is not None'.",
     tip: 'Use type annotations (x: int = 42) to document intent without restricting runtime behaviour. Run mypy or pyright in CI to catch type mismatches before they reach production.',
     realWorldNote:
-      "Google's TensorFlow and NumPy rely heavily on Python's numeric type system — int tensors and float32 tensors are distinct dtypes, and accidental int/float coercion is a top source of shape mismatches in ML pipelines.",
+      "Type awareness matters in every Python project. When building a web API, the difference between passing '42' (a string) and 42 (an int) to a database query causes silent bugs or crashes. Using type() and isinstance() checks at API boundaries — before data reaches your database or business logic — prevents a whole class of runtime errors.",
   },
 
   {
@@ -134,7 +134,7 @@ while chunk := sys.stdin.readline():  # assign, then test truthiness
       'The is operator checks identity (same object in memory), not equality. 1 is 1 may be True due to integer caching, but 1000 is 1000 can be False in some contexts. Always use == for value comparison.',
     tip: 'Use parentheses freely to make operator precedence explicit. ** and unary minus interact unexpectedly: -2**2 == -(2**2) == -4, not (-2)**2 == 4.',
     realWorldNote:
-      "Netflix uses Python's bitwise operators extensively in feature-flag systems where user segment membership is encoded as a bitmask — a single integer storing 64 boolean flags with O(1) set/test operations.",
+      "Operators are everywhere in practical code. Floor division (//) is used in pagination logic (page = offset // page_size). The walrus operator (:=) cleans up while-loops that read from a socket or file. The % operator powers time-based scheduling (run if tick % 5 == 0). Bitwise operators are used in permission systems to pack multiple boolean flags into a single integer field.",
   },
 
   {
@@ -202,7 +202,7 @@ match point:
       "A match statement does not fall through like C's switch. Each case is independent. To match multiple values in one case, use the OR pattern: case 'quit' | 'exit' | 'q':",
     tip: "Use match/case over long if/elif chains whenever you're dispatching on the structure or type of an object — the pattern matching engine is more readable and handles None/missing keys gracefully.",
     realWorldNote:
-      "Google's internal command routers and Discord's slash-command dispatch systems use structural pattern matching to route API payloads to handlers without brittle isinstance chains.",
+      "Control flow is the skeleton of every program. In a REST API handler, you check auth, validate input, query the database, and format the response — each step is an if/elif/else branch. Pattern matching (Python 3.10+) lets you cleanly dispatch on the shape of incoming JSON payloads without deeply nested conditionals, making API routers and CLI argument parsers dramatically easier to read.",
   },
 
   {
@@ -270,7 +270,7 @@ for i in range(10):
       'Modifying a list while iterating over it causes items to be skipped or visited twice. Always iterate over a copy (for item in mylist[:]:) or build a new list with a comprehension.',
     tip: 'Prefer enumerate() over manual counter variables (i = 0; i += 1). Prefer zip() over index-based parallel iteration. Both are more readable, less error-prone, and faster.',
     realWorldNote:
-      "Netflix's content recommendation pipeline processes billions of viewing events using Python generators and itertools.islice to stream data in bounded chunks — never loading the full dataset into RAM.",
+      "Loops are core to automation and data processing scripts. Reading a CSV row by row with a for loop instead of loading everything into memory lets you process files larger than your RAM. In web scraping, a while loop with a page cursor drives pagination until the API returns an empty next_page. In CLI tools, iterating over sys.argv or argparse results drives command routing.",
   },
 
   {
@@ -328,7 +328,7 @@ parse('hello', encoding='ascii') # OK
       'Never use a mutable object as a default argument (def f(items=[]): ...). The list is created once and shared across all calls. Use None as default and create fresh inside the function.',
     tip: 'Use functools.lru_cache on pure functions that are called repeatedly with the same arguments. A single decorator line can turn an exponential-time recursive function into a linear-time one.',
     realWorldNote:
-      "Django's view functions, FastAPI's route handlers, and every AWS Lambda function are plain Python functions — the frameworks discover and call them by convention. Mastering function signatures is mastering every major Python framework.",
+      "Functions are the primary unit of reuse in Python. Every web framework route handler is a function. Every test is a function. Every scheduled job, CLI command, and event handler is a function. Understanding default arguments, *args, **kwargs, and return types is essential for reading and writing library code, API clients, and anything using callbacks.",
   },
 
   {
@@ -387,7 +387,7 @@ print(first, rest)  # 1  [2, 3, 4, 5]`,
       'list * n creates n references to the SAME inner objects, not n independent copies. [[0]*3]*3 gives 3 rows pointing to the same list. Use [[0]*3 for _ in range(3)] for independent rows.',
     tip: 'Use list.sort(key=...) with a key function instead of a custom comparison. key=str.lower sorts case-insensitively; key=lambda x: (x[1], x[0]) sorts by second element then first.',
     realWorldNote:
-      "Google's MapReduce — and its Python descendant Apache Beam — process data as sequences of (key, value) tuples. Tuple immutability makes them safe to share across distributed workers without copying.",
+      "Lists are the workhorse of data handling in Python scripts. Sorting a list of user records by signup date, filtering search results, building up rows to insert into a database — all list operations. Knowing when to use a list vs a tuple matters: tuples are faster to iterate and can be used as dict keys, making them useful for caching and coordinate pairs (lat, lng).",
   },
 
   {
@@ -455,7 +455,7 @@ print(dict(graph))  # {'A': ['B', 'C']}`,
       "Dictionary keys must be hashable. Lists and other dicts cannot be keys. Use a tuple instead of a list when you need a compound key: d[(row, col)] instead of d[[row, col]].",
     tip: "Use collections.Counter for frequency counting — it's a dict subclass with .most_common(n), arithmetic operations, and set-like behaviour built in. It handles the tally pattern in one line.",
     realWorldNote:
-      "Redis — used by Twitter, GitHub, and Airbnb — stores its entire data model as hash tables (Python dicts) in memory. Python's dict merge operator mirrors Redis's HSET/HGETALL pattern for bulk key-value updates.",
+      "Dicts and sets are used constantly in real projects. A dict maps user IDs to session data, request headers to values, or config keys to settings. Sets efficiently deduplicate lists — finding unique visitors in a log file, unique tags on posts, or common elements between two lists. Dict comprehensions power data transformation in ETL scripts and API response reshaping.",
   },
 
   {
@@ -524,7 +524,7 @@ print(sql.strip())`,
       "String concatenation with + in a loop is O(n) because strings are immutable — each + creates a new string. Collect parts in a list and use ''.join(parts) at the end for O(n) performance.",
     tip: "Use f'{value!r}' to get the repr() of a value inside an f-string — shows the type unambiguously (quotes for strings, None for None). Invaluable for debugging.",
     realWorldNote:
-      "NVIDIA's CUDA toolkit ships Python bindings where kernel names are passed as strings. Python's string methods (strip, split, f-strings) are used to parse compiler output, generate CUDA kernel launch configurations, and format debug logs.",
+      "String handling appears in almost every Python task: parsing CSV or log files with split(), sanitising user input with strip() and replace(), building dynamic SQL or HTML with f-strings, and validating emails or URLs with re. In web development, f-strings build query parameters and response messages. In automation scripts, they format file paths, log entries, and email bodies.",
   },
 
   {
@@ -594,7 +594,7 @@ with open('/tmp/scores.csv', 'w', newline='') as f:
       "Opening a file with 'w' immediately truncates (empties) it, even before you write anything. If you want to append, use 'a'. If you want to read and then write, use 'r+' but seek(0) first.",
     tip: "Use Path.read_text() / Path.write_text() for short files — they open, read/write, and close in one call. Reserve the with open() pattern for streaming large files line-by-line.",
     realWorldNote:
-      "Netflix's data engineering team uses Python pathlib extensively in ETL pipelines to discover and process thousands of Parquet files across S3-mounted paths, using .glob() patterns and .rglob() for recursive discovery.",
+      "File I/O is essential for automation, configuration, and data processing. Reading a JSON config file at startup, writing results to a CSV, appending to a log file, or processing uploaded files in a web app — all use open() and pathlib. Using 'with open(...)' ensures files are always closed even if an error occurs mid-write, preventing data corruption.",
   },
 
   {
@@ -667,7 +667,7 @@ except AppError as e:
       "Catching bare 'Exception' is usually too broad and 'except:' (no type) is almost always wrong — it catches SystemExit, KeyboardInterrupt, and GeneratorExit, which should propagate. Always specify at least 'except Exception:'.",
     tip: "Use 'raise SpecificError(...) from original_exc' to chain exceptions and preserve the original traceback. This is essential for library code — it lets callers see both the library error and the underlying cause.",
     realWorldNote:
-      "Google's gRPC Python library maps every network and server error to a specific status.StatusCode exception subclass. Stripe's Python SDK wraps every HTTP error into StripeError subclasses (CardError, InvalidRequestError) — both follow this custom exception hierarchy pattern.",
+      "Good error handling separates production code from scripts. In a web API, catching specific exceptions (ValueError for bad input, KeyError for missing fields, requests.HTTPError for failed API calls) lets you return the right HTTP status code. Defining custom exception classes like InsufficientStockError or UserNotFoundError makes error flow readable and lets callers handle cases precisely.",
   },
 
   {
@@ -745,7 +745,7 @@ print(sys.path[:3])   # ['', '/usr/lib/python312.zip', ...]`,
       'Circular imports (A imports B, B imports A) cause ImportError or partially-initialised modules. Restructure to break the cycle: move shared code to a third module, or move the import inside a function.',
     tip: "Use 'python -m package.module' to run a module that's inside a package — it sets up sys.path correctly so relative imports work. Running 'python src/myapp/main.py' directly often breaks imports.",
     realWorldNote:
-      'PyPI hosts 500,000+ packages. Google, Netflix, and NVIDIA all publish internal tools as private PyPI packages using Google Artifact Registry / AWS CodeArtifact, treating Python packages as first-class deployment artifacts.',
+      "The Python ecosystem's strength is its modules. Need to make HTTP requests? import requests. Parse dates? import arrow or dateutil. Send email? import smtplib. Build a web API? import fastapi. Organising your own code into modules and packages keeps projects maintainable as they grow — each module has one responsibility, and imports make dependencies explicit.",
   },
 
   {
@@ -839,7 +839,7 @@ print(issubclass(Dog, Animal))  # True`,
       'Class attributes are shared across all instances. If a class attribute is mutable (list, dict), modifying it through one instance modifies it for all. Use instance attributes in __init__ for per-instance state.',
     tip: 'Use @dataclass for simple data-holding classes to avoid writing __init__, __repr__, and __eq__ by hand. Reserve hand-written classes for objects with significant behaviour.',
     realWorldNote:
-      "Django's Model class, SQLAlchemy's declarative_base, and Pydantic's BaseModel all use Python's class machinery. When you write class UserModel(Base): with field annotations, Python's metaclass executes that definition and registers the schema.",
+      "OOP is how most Python libraries are structured. When you use requests.Session(), open a database connection, or instantiate a Flask app, you are working with objects. Writing your own classes organises related data and behaviour together — a ShoppingCart class that tracks items and computes totals, a DatabaseConnection that handles retries, or a ReportGenerator that encapsulates formatting logic.",
   },
 
   // ── ADVANCED ─────────────────────────────────────────────────────────────
@@ -909,7 +909,7 @@ for name, age in pipeline:
       'A generator can only be iterated once. After exhaustion, it yields nothing. If you need to iterate multiple times, convert to a list first — or recreate the generator expression.',
     tip: 'Prefer generator expressions over list comprehensions when you only need to iterate once or pass to an aggregation function (sum, max, any, all). The memory savings are substantial for large datasets.',
     realWorldNote:
-      "Google's BigQuery Python client and pandas use generator-based chunking internally — read_gbq() streams result pages as generators so a 10 GB query result never fully lands in RAM.",
+      "Comprehensions appear in virtually every Python codebase. Filtering active users from a database result, transforming a list of filenames into full paths, building a lookup dict from two lists — all are one-liners with comprehensions. They are also the idiomatic way to construct JSON response payloads, convert ORM models to dicts, and reshape data between API calls.",
   },
 
   {
@@ -995,7 +995,7 @@ except ConnectionError:
       'Without functools.wraps, the wrapper function replaces __name__ and __doc__ with the wrapper\'s own. This breaks introspection, help(), and some testing frameworks that rely on function metadata.',
     tip: 'Decorators are evaluated at import time, not at call time. Expensive setup in a decorator runs once per decorated function. Use this for one-time compilation, schema validation, or route registration.',
     realWorldNote:
-      "Flask's @app.route('/') and FastAPI's @router.get('/') are decorator factories that register URL → handler mappings at import time. Every web framework with a routing DSL uses this pattern.",
+      "Decorators are how Python frameworks extend your functions without you changing them. @app.route registers a URL handler. @login_required guards a view. @retry retries on network failure. @cache.memoize caches expensive results. Writing your own decorators lets you add logging, timing, validation, or authentication to any function by just adding a line above it.",
   },
 
   {
@@ -1083,7 +1083,7 @@ def head(n: int, lines):
       "Generators don't support len() or random access — they're single-pass. If you call list() on a generator, it's exhausted. Wrap in itertools.tee() only as a last resort; prefer recreating the generator.",
     tip: 'Use itertools — chain, islice, groupby, product, combinations, permutations — before writing any custom iteration logic. The module provides battle-tested, C-speed implementations of the most common patterns.',
     realWorldNote:
-      "Python's asyncio event loop is built on generator-based coroutines. CPython's async/await compiles to a generator state machine under the hood. Every async framework — aiohttp, FastAPI, Starlette — relies on this generator protocol.",
+      "Generators are practical for any task that produces a large or infinite sequence. Reading a large file line by line, paginating through an API, streaming database rows, or generating unique IDs — generators let you write this as a simple loop that yields one item at a time, using almost no memory regardless of the total size of the data.",
   },
 
   {
@@ -1156,7 +1156,7 @@ print('Still running')`,
       '__exit__ is called even when no exception occurs — exc_type, exc_val, and exc_tb are all None in the happy path. Return False (or None) to let exceptions propagate; return True only when you intentionally want to swallow them.',
     tip: 'Use @contextmanager for simple context managers instead of writing a full class. The generator form is cleaner for one-off use cases. Use the class form when you need state, multiple methods, or subclassing.',
     realWorldNote:
-      "SQLAlchemy's session management (with Session() as session:), pytest's tmp_path fixture, and Django's TestCase.assertRaises all use context managers. Every database ORM uses them for transaction scope.",
+      "Context managers appear everywhere in production code. Opening a database connection, acquiring a lock, managing a temporary directory, timing a block of code, or suppressing specific errors — all are cleaner with 'with'. The key benefit: cleanup always runs even if the block raises an exception, preventing resource leaks that cause hard-to-diagnose production issues.",
   },
 
   {
@@ -1227,7 +1227,7 @@ print(cur())    # 10  (back to start)`,
       'The classic loop + lambda gotcha: lambdas in a list comprehension all share the same loop variable by reference. By the time any lambda is called, the loop has finished and the variable holds its final value. Use a default argument (lambda x, i=i: ...) to capture the value at each iteration.',
     tip: 'Use functools.partial instead of a manual closure when you just want to fix some arguments of a function: double = functools.partial(operator.mul, 2). It is more explicit and shows up better in tracebacks.',
     realWorldNote:
-      "JavaScript's module pattern and Python's factory functions both use closures to create private state. Flask's application factory (create_app()) uses a closure to capture the config object and return a configured WSGI app.",
+      "Closures are the mechanism behind many patterns you use daily. A function that returns a configured logger, a request handler pre-loaded with a database connection, or a validator pre-seeded with allowed values — these are all closures. They are the foundation of factory functions and any pattern where you need to 'bake in' some context without using a class.",
   },
 
   {
@@ -1300,7 +1300,7 @@ print(p3d)  # Point3D(x=1.0, y=2.0, label='', z=3.0)`,
       'If a parent dataclass has a field with a default, all child fields must also have defaults (Python limitation on positional arguments). Reorder fields or use field(default=...) on the parent to work around this.',
     tip: 'Use dataclasses.asdict() to convert a dataclass to a plain dict (recursively) for JSON serialisation. Use dataclasses.replace(instance, field=new_value) to create a modified copy without mutating the original.',
     realWorldNote:
-      "Pydantic v2 (used by FastAPI, OpenAI SDK, LangChain) compiles dataclass-like models to Rust-backed validators. The @dataclass pattern is so universal that Pydantic's BaseModel mirrors it exactly — migrating between them requires only changing the base class.",
+      "Dataclasses are the modern way to define data-holding objects without boilerplate. Use them for API request/response models, configuration objects, database row representations, and any struct-like container. They generate __init__, __repr__, and __eq__ automatically, and support frozen=True for immutable records — a common pattern for cache keys and event objects.",
   },
 
   {
@@ -1388,7 +1388,7 @@ asyncio.run(main())`,
       "Calling a coroutine without await doesn't execute it — it just creates a coroutine object. Python 3.10+ warns about unawaited coroutines, but silently dropping them is a common bug. Always await or pass to asyncio.create_task().",
     tip: 'Use asyncio.create_task() instead of await when you want to start a coroutine and continue without waiting for it. Collect the tasks and await them later with asyncio.gather() for structured concurrency.',
     realWorldNote:
-      "Discord's bot library (discord.py), FastAPI, and Sanic are all built on asyncio. Discord handles 200M+ users with Python async — each WebSocket connection is a coroutine, allowing thousands of concurrent connections on a single thread.",
+      "Async Python is the right tool whenever your program spends time waiting — for a database query, an HTTP response, a file read, or a WebSocket message. A web API that makes multiple downstream API calls can fire them all concurrently with asyncio.gather, cutting response time from the sum of all calls to the slowest one. FastAPI, aiohttp, and Starlette are all async-native.",
   },
 
   {
@@ -1462,7 +1462,7 @@ if __name__ == '__main__':   # REQUIRED for multiprocessing on Windows/macOS
       "The if __name__ == '__main__': guard is REQUIRED when using multiprocessing on macOS and Windows. Without it, each spawned process reimports the script and tries to spawn more processes — causing a fork bomb.",
     tip: "Use asyncio for many concurrent I/O operations (hundreds of HTTP calls). Use ThreadPoolExecutor for a handful of blocking I/O calls you can't make async. Use ProcessPoolExecutor only when you've confirmed the bottleneck is CPU-bound computation.",
     realWorldNote:
-      "Instagram's backend runs on Python with a combination of asyncio (for async ORM queries via Django Channels) and Celery workers (multiprocessing) for background job processing. They handle 500M+ daily actives this way.",
+      "Concurrency matters once your app has multiple users or background tasks. Use threading when waiting on I/O (HTTP calls, file reads) and you need simple shared state. Use multiprocessing when doing CPU-heavy work (image processing, data crunching) that needs to bypass the GIL. Celery and RQ are popular libraries that put background jobs on a queue so your web server stays responsive.",
   },
 
   {
@@ -1545,7 +1545,7 @@ def get_user() -> UserRecord:
       'Type hints are not validated at runtime by default. Passing the wrong type to a hinted function raises no error unless you use a runtime validator like pydantic or beartype. Use mypy/pyright in CI to get the safety guarantees.',
     tip: "Use 'from __future__ import annotations' at the top of any file to enable postponed evaluation of annotations — this makes forward references and recursive types work without quotes, and is the default in Python 3.14+.",
     realWorldNote:
-      "Microsoft's Pylance (used in VS Code) and Google's pytype both use Python type hints to provide real-time error detection and autocompletion. Meta's Pyre type checker runs on the entire Instagram codebase — 2M+ lines of typed Python.",
+      "Type hints pay dividends on any project with more than one contributor or more than a few hundred lines of code. They let your editor autocomplete correctly, catch bugs before running the code, and serve as live documentation — a function signature like def get_user(user_id: int) -> User | None tells you everything about the contract without reading the body. Tools like mypy and pyright enforce hints in CI.",
   },
 
   {
@@ -1622,6 +1622,6 @@ print(f'Speedup: {py_t/np_t:.0f}x')
       "premature optimisation is the root of all evil. Profile first with cProfile or timeit — 90% of runtime is usually in 10% of code. Rewriting clean Python in Cython before measuring is almost always wasted effort.",
     tip: "Use timeit.timeit() for microbenchmarks instead of time.time() — it runs the code thousands of times to average out OS jitter and disables garbage collection during measurement for stable results.",
     realWorldNote:
-      "Spotify's music recommendation model runs in Python backed by NumPy and scikit-learn. NVIDIA's cuML replicates scikit-learn's API but runs on GPU — the same vectorised programming model, just on CUDA cores instead of CPU.",
+      "Performance optimisation starts with measurement. Before reaching for multiprocessing or rewriting in C, profile with cProfile or py-spy to find the actual bottleneck — it is almost always one or two hot functions. Replacing a nested loop with a dict lookup, switching from a list to a set for membership tests, or caching a repeated expensive call with functools.lru_cache often gives 10-100x speedups with minimal code change.",
   },
 ];
