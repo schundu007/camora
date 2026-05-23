@@ -523,7 +523,7 @@ export default function AnalyticsPage() {
                   { label: 'Free', value: freeUsers, numColor: 'var(--text-muted)', accent: 'var(--border)', filter: 'free' },
                 ].map(c => (
                   <button key={c.label} onClick={() => setPlanFilter(planFilter === c.filter ? '' : c.filter)}
-                    className={`relative overflow-hidden bg-[var(--bg-surface)] border rounded-xl pt-5 px-5 pb-4 text-left transition-[border-color,transform] active:scale-[0.98] ${
+                    className={`relative overflow-hidden bg-[var(--bg-surface)] border rounded-xl pt-5 px-5 pb-4 text-center transition-[border-color,transform] active:scale-[0.98] ${
                       planFilter === c.filter
                         ? 'border-[var(--cam-primary)] ring-1 ring-[var(--cam-primary)]/15'
                         : 'border-[var(--border)] hover:border-[var(--cam-primary)]/30'
