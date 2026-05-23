@@ -83,18 +83,10 @@ export function PlaygroundLayout() {
     <div className="flex flex-col h-full bg-[#111318] text-white">
       <LanguageTabs active={activeTab} onChange={handleTabChange} />
 
-      {/* Toolbar — Run + filename on the left (above editor), secondary actions on the right */}
-      <div className="flex items-center justify-between px-4 py-2 bg-[#0d1117] border-b border-[#1e293b]">
-        {/* LEFT: Run button + filename chip */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleRun}
-            disabled={running}
-            className="text-[11px] px-4 py-1.5 rounded-md font-semibold bg-[#10b981] text-white hover:bg-[#059669] transition-colors disabled:opacity-50"
-            style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
-          >
-            {running ? 'Running…' : '▶ Run'}
-          </button>
+      {/* Toolbar — filename left, Run centered, secondary actions right */}
+      <div className="flex items-center px-4 py-2 bg-[#0d1117] border-b border-[#1e293b]">
+        {/* LEFT: filename chip */}
+        <div className="flex-1">
           <span
             className="text-[10px] text-[#334155] uppercase tracking-widest font-medium"
             style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
@@ -102,8 +94,17 @@ export function PlaygroundLayout() {
             {activeTab === 'python3' ? 'main.py' : activeTab === 'bash' ? 'script.sh' : activeTab === 'docker' ? 'Dockerfile' : 'main.tf'}
           </span>
         </div>
+        {/* CENTER: Run button */}
+        <button
+          onClick={handleRun}
+          disabled={running}
+          className="text-[11px] px-5 py-1.5 rounded-md font-semibold bg-[#10b981] text-white hover:bg-[#059669] transition-colors disabled:opacity-50"
+          style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+        >
+          {running ? 'Running…' : '▶ Run'}
+        </button>
         {/* RIGHT: Format / Clear + shortcut hint */}
-        <div className="flex items-center gap-2">
+        <div className="flex-1 flex items-center justify-end gap-2">
           {activeTab === 'python3' && (
             <button
               onClick={handleFormat}
