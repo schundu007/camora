@@ -70,6 +70,7 @@ const AdminLumoraCodingPage = lazy(() => import('./pages/docs/admin/AdminLumoraC
 const AdminLumoraDesignPage = lazy(() => import('./pages/docs/admin/AdminLumoraDesignPage'));
 const FlyerPage = lazy(() => import('./pages/FlyerPage'));
 const MobileAuthPage = lazy(() => import('./pages/MobileAuthPage'));
+const PythonLearnPage = lazy(() => import('./pages/capra/PythonLearnPage'));
 
 const Loading = () => {
   return (
@@ -381,7 +382,7 @@ export const App = () => {
           <Route path="/capra/library" element={<ShellRoute><HRLibraryPage /></ShellRoute>} />
           <Route path="/capra/quiz"         element={<ShellRoute><MCQPage /></ShellRoute>} />
           <Route path="/capra/quiz/session" element={<ShellRoute><QuizSessionPage /></ShellRoute>} />
-          <Route path="/capra/learn/python" lazy={() => import('./pages/capra/PythonLearnPage').then(m => ({ Component: m.default }))} />
+          <Route path="/capra/learn/python" element={<PythonLearnPage />} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
           <Route path="/capra/achievements" element={<Navigate to="/profile?tab=achievements" replace />} />
