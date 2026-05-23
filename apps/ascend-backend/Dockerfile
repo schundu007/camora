@@ -42,6 +42,11 @@ RUN curl -fsSL https://github.com/hadolint/hadolint/releases/download/v2.12.0/ha
     -o /usr/local/bin/hadolint \
  && chmod +x /usr/local/bin/hadolint
 
+# shfmt — Bash formatter for playground /format endpoint
+RUN curl -fsSL https://github.com/mvdan/sh/releases/download/v3.8.0/shfmt_v3.8.0_linux_amd64 \
+    -o /usr/local/bin/shfmt \
+ && chmod +x /usr/local/bin/shfmt
+
 # Terraform — validate + plan for playground /run endpoint
 RUN curl -fsSL https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip \
     -o /tmp/terraform.zip \

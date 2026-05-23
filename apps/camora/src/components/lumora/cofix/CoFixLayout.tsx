@@ -4,6 +4,7 @@ import { Editor, useMonaco } from '@monaco-editor/react';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import { AnnotationPanel } from './AnnotationPanel';
 import { streamCoFixResponse } from '@/lib/sse-client';
+import { playgroundAPI } from '@/lib/capra-api';
 import type { CoFixAnswer, CoFixChange } from '@/lib/sse-client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
@@ -91,8 +92,10 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
   const [isRunning, setIsRunning] = useState(false);
   const [runOutput, setRunOutput] = useState<string | null>(null);
+  const [explainMode, setExplainMode] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
+  const cofixHoverDisposable = useRef<any>(null);
   const rightEditorRef = useRef<any>(null);
   const decorationCollectionRef = useRef<any>(null);
 
@@ -104,6 +107,38 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     return () => window.removeEventListener(ASSISTANT_UPDATED_EVENT, handler);
   }, []);
   const activeAssistant = useMemo(() => getActiveAssistant(), [assistantVersion]);
+
+  useEffect(() => {
+    cofixHoverDisposable.current?.dispose();
+    cofixHoverDisposable.current = null;
+    if (!monaco || !explainMode) return;
+
+    const monacoLang = toMonacoLang(effectiveLang);
+    cofixHoverDisposable.current = monaco.languages.registerHoverProvider(monacoLang, {
+      provideHover: async (model, position) => {
+        const lineContent = model.getLineContent(position.lineNumber).trim();
+        if (!lineContent) return null;
+        try {
+          const result = await playgroundAPI.explain(
+            model.getValue(),
+            position.lineNumber,
+            effectiveLang
+          );
+          if (!result.explanation) return null;
+          return {
+            contents: [
+              { value: `**Line ${position.lineNumber}** — *Gemini*` },
+              { value: result.explanation },
+            ],
+          };
+        } catch {
+          return null;
+        }
+      },
+    });
+
+    return () => { cofixHoverDisposable.current?.dispose(); };
+  }, [monaco, explainMode, effectiveLang]);
 
   // Screenshot append ref — appends OCR text to the left pane input
   useEffect(() => {
@@ -282,6 +317,28 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
             {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
           </select>
         </div>
+
+        {/* Divider */}
+        <div className="w-px h-5 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
+
+        {/* Explain chip */}
+        <button
+          onClick={() => setExplainMode(v => !v)}
+          className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90 shrink-0"
+          style={explainMode ? {
+            fontFamily: 'Plus Jakarta Sans, sans-serif',
+            background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)',
+            border: '1px solid var(--cam-gold-leaf)',
+            color: '#0a0e1a',
+          } : {
+            fontFamily: 'Plus Jakarta Sans, sans-serif',
+            background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
+            border: '1px solid var(--cam-gold-leaf-dk)',
+            color: 'var(--cam-gold-leaf-dk)',
+          }}
+        >
+          Explain
+        </button>
 
         {/* Divider */}
         <div className="w-px h-5 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
