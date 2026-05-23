@@ -512,52 +512,49 @@ export default function AnalyticsPage() {
         {/* ── Users Tab ── */}
         {tab === 'users' && (
           <>
-            {/* Summary cards */}
+            {/* Metric strip */}
             {usersLoaded && (
               <div className="grid grid-cols-5 gap-3 mb-6">
                 {[
-                  { label: 'Total Users', value: totalUsers, color: 'text-[var(--text-primary)]', filter: '' },
-                  { label: 'Paid', value: paidUsers, color: 'text-[var(--cam-gold-leaf)]', filter: 'paid' },
-                  { label: 'Trial', value: trialUsers, color: 'text-[var(--cam-primary)]', filter: 'trial' },
-                  { label: 'Challenger', value: challengerUsers, color: 'text-[var(--cam-primary)]', filter: 'challenger' },
-                  { label: 'Free', value: freeUsers, color: 'text-[var(--text-muted)]', filter: 'free' },
+                  { label: 'Total Users', value: totalUsers, numColor: 'var(--text-primary)', accent: 'var(--cam-primary)', filter: '' },
+                  { label: 'Paid', value: paidUsers, numColor: 'var(--cam-gold-leaf)', accent: 'var(--cam-gold-leaf)', filter: 'paid' },
+                  { label: 'Trial', value: trialUsers, numColor: 'var(--cam-primary)', accent: 'var(--cam-primary)', filter: 'trial' },
+                  { label: 'Challenger', value: challengerUsers, numColor: 'var(--cam-primary)', accent: 'var(--cam-primary)', filter: 'challenger' },
+                  { label: 'Free', value: freeUsers, numColor: 'var(--text-muted)', accent: 'var(--border)', filter: 'free' },
                 ].map(c => (
                   <button key={c.label} onClick={() => setPlanFilter(planFilter === c.filter ? '' : c.filter)}
-                    className={`bg-[var(--bg-surface)] border rounded-xl p-4 text-left transition-[border-color,box-shadow,transform] active:scale-[0.98] ${
-                      planFilter === c.filter ? 'border-[var(--cam-primary)] ring-1 ring-[var(--cam-primary)]/20' : 'border-[var(--border)] hover:border-[var(--cam-primary)]/40'
+                    className={`relative overflow-hidden bg-[var(--bg-surface)] border rounded-xl pt-5 px-5 pb-4 text-left transition-[border-color,transform] active:scale-[0.98] ${
+                      planFilter === c.filter
+                        ? 'border-[var(--cam-primary)] ring-1 ring-[var(--cam-primary)]/15'
+                        : 'border-[var(--border)] hover:border-[var(--cam-primary)]/30'
                     }`}>
-                    <p className="text-[var(--text-muted)] text-xs">{c.label}</p>
-                    <p className={`text-2xl font-bold mt-1 ${c.color}`}>{c.value}</p>
+                    <span className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: c.accent }} />
+                    <p className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)] mb-3">{c.label}</p>
+                    <p className="text-[2rem] font-bold leading-none tabular-nums" style={{ color: c.numColor }}>{c.value}</p>
                   </button>
                 ))}
               </div>
             )}
 
-            {/* Search + toolbar */}
+            {/* Toolbar */}
             <div className="flex items-center gap-3 mb-5">
               <div className="relative flex-1">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <input
-                  type="text"
+                <input type="text"
                   placeholder="Search by name, email, location, company..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--cam-primary)] focus:ring-1 focus:ring-[var(--cam-primary)]/20 transition-[border-color,box-shadow]"
-                />
+                  className="w-full pl-9 pr-4 py-2.5 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--cam-primary)] focus:ring-1 focus:ring-[var(--cam-primary)]/20 transition-[border-color,box-shadow]" />
               </div>
               {usersLoaded && (
-                <span className="text-[var(--text-muted)] text-xs whitespace-nowrap font-mono">
-                  {filteredUsers.length} / {users.length}
-                </span>
+                <span className="font-mono text-[11px] text-[var(--text-muted)] whitespace-nowrap tabular-nums">{filteredUsers.length} / {users.length}</span>
               )}
               <RefreshBtn onClick={() => { setUsersLoaded(false); fetchUsers(); }} loading={usersLoading} />
             </div>
 
-            {trialError && (
-              <p className="text-[var(--danger)] text-sm mb-3">{trialError}</p>
-            )}
+            {trialError && <p className="text-[var(--danger)] text-sm mb-3">{trialError}</p>}
 
             {usersLoading && !usersLoaded ? (
               <div className="flex justify-center py-20">
@@ -566,126 +563,171 @@ export default function AnalyticsPage() {
             ) : usersError ? (
               <p className="text-[var(--danger)]">{usersError}</p>
             ) : (
-              <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-x-auto">
-                <table className="w-full text-left text-sm">
+              <div className="border border-[var(--border)] rounded-xl overflow-x-auto" style={{ background: 'var(--bg-surface)' }}>
+                <table className="w-full text-left" style={{ fontSize: '13px' }}>
                   <thead>
-                    <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))' }}
-                      className="border-b border-[var(--border)]">
+                    <tr className="border-b border-[var(--border)]"
+                      style={{ background: 'color-mix(in oklab, var(--cam-primary) 7%, var(--bg-surface))' }}>
                       {['User', 'Email', 'Plan', 'Location', 'Target', 'Last Login', 'Joined', 'Actions'].map(h => (
-                        <th key={h} className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-80 whitespace-nowrap">{h}</th>
+                        <th key={h} className="px-4 py-2.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] whitespace-nowrap"
+                          style={{ color: 'var(--cam-primary)', opacity: 0.85 }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((u, i) => (
-                      <tr key={u.id}
-                        className="border-b border-[var(--border)]/40 transition-colors"
-                        style={{ background: i % 2 === 0 ? 'transparent' : 'color-mix(in oklab, var(--cam-primary) 2%, transparent)' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 5%, var(--bg-surface))')}
-                        onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? 'transparent' : 'color-mix(in oklab, var(--cam-primary) 2%, transparent)')}>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2.5">
-                            {u.avatar ? (
-                              <img src={u.avatar} alt="" className="w-8 h-8 rounded-full ring-1 ring-[var(--border)]" />
-                            ) : (
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                                style={{ background: 'color-mix(in oklab, var(--cam-primary) 15%, transparent)', color: 'var(--cam-primary)' }}>
-                                {(u.name || u.email)[0].toUpperCase()}
+                    {filteredUsers.map((u, i) => {
+                      const rowBase = i % 2 !== 0
+                        ? 'color-mix(in oklab, var(--cam-primary) 2%, var(--bg-surface))'
+                        : 'var(--bg-surface)';
+                      return (
+                        <tr key={u.id}
+                          className="border-b border-[var(--border)]/30 transition-colors duration-75"
+                          style={{ background: rowBase }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))')}
+                          onMouseLeave={e => (e.currentTarget.style.background = rowBase)}>
+
+                          <td className="px-4 py-2.5">
+                            <div className="flex items-center gap-2.5">
+                              {u.avatar ? (
+                                <img src={u.avatar} alt="" className="w-8 h-8 rounded-full flex-shrink-0"
+                                  style={{ boxShadow: '0 0 0 1px color-mix(in oklab, var(--cam-primary) 20%, transparent)' }} />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-[11px] font-bold"
+                                  style={{ background: 'color-mix(in oklab, var(--cam-primary) 16%, var(--bg-surface))', color: 'var(--cam-primary)' }}>
+                                  {(u.name || u.email)[0].toUpperCase()}
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-semibold text-[var(--text-primary)] truncate leading-snug">{u.name || '—'}</p>
+                                {u.username && <p className="font-mono text-[10px] text-[var(--text-muted)] truncate">@{u.username}</p>}
                               </div>
-                            )}
-                            <div>
-                              <p className="font-semibold text-[var(--text-primary)] leading-tight">{u.name || '—'}</p>
-                              {u.username && <p className="text-[var(--text-muted)] text-[10px] font-mono mt-0.5">@{u.username}</p>}
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-[var(--text-secondary)] text-xs">{u.email}</td>
-                        <td className="px-4 py-3">
-                          {(() => {
-                            const cat = getUserPlanCategory(u);
-                            return (
-                              <div className="flex flex-col gap-0.5">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide w-fit font-mono ${
-                                  cat === 'paid'
-                                    ? 'bg-[var(--cam-gold-leaf)]/15 text-[var(--cam-gold-leaf)]'
-                                    : cat === 'challenger'
-                                    ? 'bg-[var(--cam-primary)]/12 text-[var(--cam-primary)]'
-                                    : cat === 'trial'
-                                    ? 'bg-[var(--cam-primary)]/10 text-[var(--cam-primary)]'
-                                    : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
-                                }`}>
-                                  {cat === 'paid' ? (u.sub_plan || 'paid').replace('_', ' ') : cat}
-                                </span>
-                                {cat === 'trial' && (
-                                  <span className="text-[10px] font-mono text-[var(--cam-primary)] opacity-70">
-                                    ends {new Date(u.trial_ends_at!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </td>
+
+                          <td className="px-4 py-2.5 text-xs text-[var(--text-muted)]">
+                            <span className="truncate block max-w-[200px]">{u.email}</span>
+                          </td>
+
+                          <td className="px-4 py-2.5 whitespace-nowrap">
+                            {(() => {
+                              const cat = getUserPlanCategory(u);
+                              const badgeStyle = cat === 'paid'
+                                ? { background: 'color-mix(in oklab, var(--cam-gold-leaf) 14%, var(--bg-surface))', color: 'var(--cam-gold-leaf)' }
+                                : cat === 'trial' || cat === 'challenger'
+                                ? { background: 'color-mix(in oklab, var(--cam-primary) 11%, var(--bg-surface))', color: 'var(--cam-primary)' }
+                                : { background: 'var(--bg-elevated)', color: 'var(--text-muted)' };
+                              return (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="inline-block px-2 py-0.5 rounded font-mono text-[10px] font-bold uppercase tracking-wide" style={badgeStyle}>
+                                    {cat === 'paid' ? (u.sub_plan || 'paid').replace(/_/g, ' ') : cat}
                                   </span>
-                                )}
+                                  {cat === 'trial' && u.trial_ends_at && (
+                                    <span className="font-mono text-[10px]" style={{ color: 'var(--cam-primary)', opacity: 0.5 }}>
+                                      · {new Date(u.trial_ends_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </td>
+
+                          <td className="px-4 py-2.5 text-xs max-w-[130px]">
+                            <span className="truncate block text-[var(--text-muted)]">
+                              {u.location || <span style={{ opacity: 0.3 }}>—</span>}
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-2.5 text-xs max-w-[130px]">
+                            <span className="truncate block text-[var(--text-muted)]">
+                              {u.target_company || u.target_role
+                                ? `${u.target_role || ''} ${u.target_company ? `@ ${u.target_company}` : ''}`.trim()
+                                : <span style={{ opacity: 0.3 }}>—</span>}
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-2.5 text-xs text-[var(--text-muted)] whitespace-nowrap">
+                            {u.last_login_at
+                              ? new Date(u.last_login_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                              : <span style={{ opacity: 0.3 }}>—</span>}
+                          </td>
+
+                          <td className="px-4 py-2.5 text-xs text-[var(--text-muted)] whitespace-nowrap">
+                            {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </td>
+
+                          <td className="px-4 py-2.5">
+                            <div className="flex items-center gap-1.5">
+                              {/* Trial days — connected button group */}
+                              <div className="flex overflow-hidden rounded border"
+                                style={{ borderColor: 'color-mix(in oklab, var(--cam-primary) 22%, var(--border))' }}>
+                                {[3, 7, 14].map((d, idx) => (
+                                  <button key={d}
+                                    onClick={() => grantTrial(u.id, d)}
+                                    disabled={granting === u.id}
+                                    className="px-2.5 py-[3px] font-mono text-[11px] font-bold disabled:opacity-50 active:scale-95 transition-colors duration-75"
+                                    style={{
+                                      color: 'var(--cam-primary)',
+                                      background: 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))',
+                                      ...(idx > 0 ? { borderLeft: '1px solid color-mix(in oklab, var(--cam-primary) 18%, var(--border))' } : {}),
+                                    }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 20%, var(--bg-surface))')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))')}>
+                                    {granting === u.id ? '…' : `${d}d`}
+                                  </button>
+                                ))}
                               </div>
-                            );
-                          })()}
-                        </td>
-                        <td className="px-4 py-3 text-[var(--text-muted)] text-xs max-w-[140px] truncate">{u.location || <span className="opacity-30">—</span>}</td>
-                        <td className="px-4 py-3 text-[var(--text-muted)] text-xs max-w-[140px] truncate">
-                          {u.target_company || u.target_role
-                            ? `${u.target_role || ''} ${u.target_company ? `@ ${u.target_company}` : ''}`.trim()
-                            : <span className="opacity-30">—</span>}
-                        </td>
-                        <td className="px-4 py-3 text-[var(--text-muted)] text-xs whitespace-nowrap">
-                          {u.last_login_at
-                            ? new Date(u.last_login_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-                            : <span className="opacity-30">—</span>}
-                        </td>
-                        <td className="px-4 py-3 text-[var(--text-muted)] text-xs whitespace-nowrap">
-                          {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex gap-1 items-center flex-wrap">
-                            {[3, 7, 14].map(d => (
+
+                              {/* Admin toggle */}
                               <button
-                                key={d}
-                                onClick={() => grantTrial(u.id, d)}
-                                disabled={granting === u.id}
-                                className="px-2 py-1 rounded text-[11px] font-bold font-mono transition-[background-color,opacity,transform] active:scale-[0.97] disabled:opacity-50"
-                                style={{ background: 'color-mix(in oklab, var(--cam-primary) 10%, transparent)', color: 'var(--cam-primary)' }}
-                                onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 22%, transparent)')}
-                                onMouseLeave={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 10%, transparent)')}
-                              >
-                                {granting === u.id ? '…' : `${d}d`}
+                                onClick={() => toggleAdmin(u.id, !u.is_admin)}
+                                disabled={togglingAdmin === u.id}
+                                className="px-2.5 py-[3px] rounded font-mono text-[11px] font-bold disabled:opacity-50 active:scale-95 transition-colors duration-75"
+                                style={u.is_admin ? {
+                                  background: 'color-mix(in oklab, var(--cam-gold-leaf) 16%, var(--bg-surface))',
+                                  color: 'var(--cam-gold-leaf)',
+                                  border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 28%, transparent)',
+                                } : {
+                                  background: 'var(--bg-elevated)',
+                                  color: 'var(--text-muted)',
+                                  border: '1px solid var(--border)',
+                                }}
+                                onMouseEnter={e => {
+                                  if (u.is_admin) { e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-gold-leaf) 28%, var(--bg-surface))'; }
+                                  else { e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 10%, var(--bg-surface))'; (e.currentTarget as HTMLElement).style.color = 'var(--cam-primary)'; (e.currentTarget as HTMLElement).style.borderColor = 'color-mix(in oklab, var(--cam-primary) 28%, transparent)'; }
+                                }}
+                                onMouseLeave={e => {
+                                  if (u.is_admin) { e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-gold-leaf) 16%, var(--bg-surface))'; }
+                                  else { e.currentTarget.style.background = 'var(--bg-elevated)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; }
+                                }}
+                                title={u.is_admin ? 'Revoke admin' : 'Grant admin'}>
+                                {togglingAdmin === u.id ? '…' : u.is_admin ? 'Admin ✓' : 'Admin'}
                               </button>
-                            ))}
-                            <button
-                              onClick={() => toggleAdmin(u.id, !u.is_admin)}
-                              disabled={togglingAdmin === u.id}
-                              className={`px-2 py-1 rounded text-[11px] font-bold font-mono transition-[background-color,opacity,transform] active:scale-[0.97] disabled:opacity-50 ml-0.5 ${
-                                u.is_admin
-                                  ? 'bg-[var(--cam-gold-leaf)]/20 text-[var(--cam-gold-leaf)] hover:bg-[var(--cam-gold-leaf)]/35'
-                                  : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:bg-[var(--border)]'
-                              }`}
-                              title={u.is_admin ? 'Revoke admin' : 'Make admin'}
-                            >
-                              {togglingAdmin === u.id ? '…' : u.is_admin ? 'Admin ✓' : 'Admin'}
-                            </button>
-                            {!u.is_admin && (
-                              <button
-                                onClick={() => deleteUser(u.id)}
-                                className="p-1 rounded text-[var(--danger)] transition-[background-color,transform] active:scale-[0.97] ml-0.5"
-                                style={{ background: 'transparent' }}
-                                onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--danger) 10%, transparent)')}
-                                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                                title={`Delete ${u.email}`}
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
-                              </button>
-                            )}
-                          </div>
+
+                              {/* Delete */}
+                              {!u.is_admin && (
+                                <button
+                                  onClick={() => deleteUser(u.id)}
+                                  className="w-[26px] h-[26px] flex items-center justify-center rounded transition-colors duration-75 active:scale-95"
+                                  style={{ color: 'var(--text-muted)', background: 'transparent' }}
+                                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in oklab, var(--danger) 12%, var(--bg-surface))'; (e.currentTarget as HTMLElement).style.color = 'var(--danger)'; }}
+                                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'; }}
+                                  title={`Delete ${u.email}`}>
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {filteredUsers.length === 0 && (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-14 text-center text-sm text-[var(--text-muted)]">
+                          {search ? `No users matching "${search}"` : 'No users found'}
                         </td>
                       </tr>
-                    ))}
-                    {filteredUsers.length === 0 && (
-                      <tr><td colSpan={8} className="px-4 py-12 text-center text-[var(--text-muted)] text-sm">
-                        {search ? `No users matching "${search}"` : 'No users found'}
-                      </td></tr>
                     )}
                   </tbody>
                 </table>
@@ -709,40 +751,48 @@ export default function AnalyticsPage() {
             ) : (
               <>
                 <p className="text-[var(--text-muted)] text-xs mb-2">{emails.length} emails sent</p>
-                <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-x-auto">
-                  <table className="w-full text-left text-sm">
+                <div className="border border-[var(--border)] rounded-xl overflow-x-auto" style={{ background: 'var(--bg-surface)', fontSize: '13px' }}>
+                  <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-[var(--border)] text-[var(--text-muted)]">
-                        <th className="px-4 py-3">To</th>
-                        <th className="px-4 py-3">Subject</th>
-                        <th className="px-4 py-3">Status</th>
-                        <th className="px-4 py-3">Sent</th>
+                      <tr className="border-b border-[var(--border)]"
+                        style={{ background: 'color-mix(in oklab, var(--cam-primary) 7%, var(--bg-surface))' }}>
+                        {['To', 'Subject', 'Status', 'Sent'].map(h => (
+                          <th key={h} className="px-4 py-2.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em]"
+                            style={{ color: 'var(--cam-primary)', opacity: 0.85 }}>{h}</th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {emails.map(e => (
-                        <tr key={e.id} className="border-b border-[var(--border)]/50 hover:bg-[var(--border)]/30">
-                          <td className="px-4 py-3 text-[var(--text-secondary)]">{e.to.join(', ')}</td>
-                          <td className="px-4 py-3 text-[var(--text-primary)] font-medium">{e.subject}</td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                              e.last_event === 'delivered' ? 'bg-[var(--success)]/20 text-[var(--success)]'
-                                : e.last_event === 'opened' ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
-                                : e.last_event === 'clicked' ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
-                                : e.last_event === 'bounced' ? 'bg-[var(--danger)]/20 text-[var(--danger)]'
-                                : e.last_event === 'complained' ? 'bg-[var(--warning)]/20 text-[var(--warning-text)]'
-                                : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
-                            }`}>
-                              {e.last_event || 'sent'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-[var(--text-muted)] text-xs">
-                            {new Date(e.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                          </td>
-                        </tr>
-                      ))}
+                      {emails.map((e, i) => {
+                        const rowBase = i % 2 !== 0
+                          ? 'color-mix(in oklab, var(--cam-primary) 2%, var(--bg-surface))'
+                          : 'var(--bg-surface)';
+                        return (
+                          <tr key={e.id} className="border-b border-[var(--border)]/30 transition-colors duration-75"
+                            style={{ background: rowBase }}
+                            onMouseEnter={ev => (ev.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))')}
+                            onMouseLeave={ev => (ev.currentTarget.style.background = rowBase)}>
+                            <td className="px-4 py-2.5 text-xs text-[var(--text-secondary)] max-w-[200px] truncate">{e.to.join(', ')}</td>
+                            <td className="px-4 py-2.5 text-[var(--text-primary)] font-medium max-w-[300px] truncate">{e.subject}</td>
+                            <td className="px-4 py-2.5">
+                              <span className="inline-block px-2 py-0.5 rounded font-mono text-[10px] font-bold uppercase tracking-wide" style={
+                                e.last_event === 'delivered' ? { background: 'color-mix(in oklab, var(--success) 14%, var(--bg-surface))', color: 'var(--success)' }
+                                : e.last_event === 'opened' || e.last_event === 'clicked' ? { background: 'color-mix(in oklab, var(--cam-primary) 11%, var(--bg-surface))', color: 'var(--cam-primary)' }
+                                : e.last_event === 'bounced' ? { background: 'color-mix(in oklab, var(--danger) 12%, var(--bg-surface))', color: 'var(--danger)' }
+                                : e.last_event === 'complained' ? { background: 'color-mix(in oklab, var(--cam-gold-leaf) 12%, var(--bg-surface))', color: 'var(--cam-gold-leaf)' }
+                                : { background: 'var(--bg-elevated)', color: 'var(--text-muted)' }
+                              }>
+                                {e.last_event || 'sent'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-xs text-[var(--text-muted)] whitespace-nowrap">
+                              {new Date(e.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                            </td>
+                          </tr>
+                        );
+                      })}
                       {emails.length === 0 && (
-                        <tr><td colSpan={4} className="px-4 py-8 text-center text-[var(--text-muted)]">No emails sent yet</td></tr>
+                        <tr><td colSpan={4} className="px-4 py-12 text-center text-sm text-[var(--text-muted)]">No emails sent yet</td></tr>
                       )}
                     </tbody>
                   </table>
