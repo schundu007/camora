@@ -545,7 +545,7 @@ export default function AnalyticsPage() {
                                 <span className="mr-1">{flag}</span>
                                 <span className="text-xs text-[var(--text-secondary)]">{location}</span>
                               </td>
-                              <td className="px-4 py-2.5">
+                              <td className="px-4 py-2.5 whitespace-nowrap">
                                 <span className="font-mono text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in oklab, var(--cam-primary) 10%, var(--bg-elevated))', color: 'var(--cam-primary)' }}>{maskedIp}</span>
                               </td>
                               <td className="px-4 py-2.5">
