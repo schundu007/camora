@@ -1172,6 +1172,9 @@ router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, 
   const model = getModelForUser(req);
   const hintSection = hint ? `\nUSER HINT: ${hint.trim().slice(0, 500)}\n` : '';
 
+  // Strip metadata header lines like [Company: Databricks] before sending to AI
+  const cleanedCode = code.replace(/^\s*\[[^\]]+:[^\]]+\]\s*\n?/gm, '').trim();
+
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
@@ -1208,7 +1211,7 @@ router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, 
 
 CODE:
 \`\`\`${lang}
-${code}
+${cleanedCode}
 \`\`\`
 
 Return ONLY a JSON object (no markdown fences) with this exact structure:
