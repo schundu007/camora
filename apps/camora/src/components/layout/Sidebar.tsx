@@ -206,6 +206,12 @@ const sections: NavSection[] = [
     ],
   },
   {
+    title: 'Learn',
+    items: [
+      { label: 'Python', path: '/capra/learn/python', icon: icons.book },
+    ],
+  },
+  {
     title: 'Attend',
     items: [
       { label: 'Live Session', path: '/lumora', icon: icons.mic },
