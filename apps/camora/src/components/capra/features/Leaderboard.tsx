@@ -81,28 +81,31 @@ export default function Leaderboard() {
 
   if (entries.length === 0) {
     return (
-      <div className="rounded-2xl p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Weekly Leaderboard</h3>
-        <p className="text-sm text-[var(--text-muted)] mt-2">No activity this week yet. Be the first!</p>
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+          <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Weekly Leaderboard</h3>
+          <p className="text-sm text-[var(--text-muted)] mt-1">No activity this week yet. Be the first!</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl p-6 space-y-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-      <div>
-        <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Weekly Leaderboard</h3>
+    <div className="rounded-2xl overflow-hidden space-y-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+      <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+        <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Weekly Leaderboard</h3>
         <p className="text-sm text-[var(--text-muted)] mt-1">Top performers this week</p>
       </div>
+      <div className="px-6 pb-5">
 
       <div className="rounded-lg overflow-hidden border border-[var(--border)]">
         <table className="w-full text-left">
           <thead>
-            <tr className="bg-[var(--bg-elevated)] text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
-              <th className="px-4 py-3 w-14">Rank</th>
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3 text-right">XP</th>
-              <th className="px-4 py-3 text-right">Solved</th>
+            <tr className="text-xs font-medium uppercase tracking-wide" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))' }}>
+              <th className="px-4 py-3 w-14 font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Rank</th>
+              <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Name</th>
+              <th className="px-4 py-3 text-right font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>XP</th>
+              <th className="px-4 py-3 text-right font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Solved</th>
             </tr>
           </thead>
           <tbody>
@@ -175,6 +178,7 @@ export default function Leaderboard() {
             })}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   );

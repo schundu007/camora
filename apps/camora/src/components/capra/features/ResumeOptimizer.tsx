@@ -748,20 +748,12 @@ export default function ResumeOptimizer() {
           }}
         >
           {/* Tabs */}
-          <div
-            style={{
-              display: 'flex',
-              background: 'var(--bg-elevated)',
-              borderRadius: '10px',
-              padding: '3px',
-              gap: '2px',
-            }}
-          >
+          <div className="tab-group">
             {(
               [
-                { key: 'resume' as OutputTab, label: 'Resume', dot: 'var(--accent)' },
-                { key: 'coverLetter' as OutputTab, label: 'Cover Letter', dot: 'var(--cam-gold-leaf)' },
-                { key: 'atsScore' as OutputTab, label: 'ATS Score', dot: 'var(--accent)' },
+                { key: 'resume' as OutputTab, label: 'Resume' },
+                { key: 'coverLetter' as OutputTab, label: 'Cover Letter' },
+                { key: 'atsScore' as OutputTab, label: 'ATS Score' },
               ] as const
             ).map((tab) => {
               const isActive = activeTab === tab.key;
@@ -770,36 +762,9 @@ export default function ResumeOptimizer() {
                   key={tab.key}
                   type="button"
                   onClick={() => setActiveTab(tab.key)}
-                  style={{
-                    padding: '8px 16px',
-                    border: isActive ? '1px solid var(--accent)' : '1px solid var(--border)',
-                    borderRadius: '8px',
-                    background: isActive ? 'var(--accent)' : 'var(--bg-elevated)',
-                    color: isActive ? '#fff' : 'var(--text-muted)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '7px',
-                    whiteSpace: 'nowrap',
-                    transition: 'background-color 0.15s ease-out, color 0.15s ease-out, border-color 0.15s ease-out',
-                  }}
+                  className={`tab-group-item${isActive ? ' tab-group-item-active' : ''}`}
                 >
-                  <span style={{
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    background: isActive ? 'rgba(255,255,255,0.7)' : tab.dot,
-                    flexShrink: 0,
-                  }} />
-                  <span style={{
-                    fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                  }}>
-                    {tab.label}
-                  </span>
+                  {tab.label}
                 </button>
               );
             })}

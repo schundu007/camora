@@ -135,26 +135,16 @@ export default function PrepTab({ isOpen, onClose }) {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-[var(--border)]">
+        <div className="tab-group">
           <button
             onClick={() => setActiveTab('coding')}
-            className="flex-1 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors"
-            style={{
-              color: activeTab === 'coding' ? 'var(--accent)' : 'var(--text-muted)',
-              borderBottom: activeTab === 'coding' ? '2px solid var(--accent)' : '2px solid transparent',
-              background: activeTab === 'coding' ? 'var(--bg-elevated)' : 'transparent',
-            }}
+            className={`tab-group-item${activeTab === 'coding' ? ' tab-group-item-active' : ''}`}
           >
             Coding Platforms
           </button>
           <button
             onClick={() => setActiveTab('prep')}
-            className="flex-1 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors"
-            style={{
-              color: activeTab === 'prep' ? 'var(--accent)' : 'var(--text-muted)',
-              borderBottom: activeTab === 'prep' ? '2px solid var(--accent)' : '2px solid transparent',
-              background: activeTab === 'prep' ? 'var(--bg-elevated)' : 'transparent',
-            }}
+            className={`tab-group-item${activeTab === 'prep' ? ' tab-group-item-active' : ''}`}
           >
             Prep Sites
           </button>

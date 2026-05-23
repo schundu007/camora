@@ -93,16 +93,12 @@ export default function SettingsPanel({ onClose, provider, model, onProviderChan
         </div>
 
         {/* Tabs */}
-        <div className="flex px-8 pt-4 gap-1 border-b border-[var(--border)]">
+        <div className="tab-group px-8 pt-4">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all border-b-2 -mb-px ${
-                activeTab === tab.id
-                  ? 'text-[var(--accent)] border-[var(--accent)] bg-[rgba(38,97,156,0.08)]'
-                  : 'text-[var(--text-muted)] border-transparent hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
-              }`}
+              className={`tab-group-item${activeTab === tab.id ? ' tab-group-item-active' : ''}`}
             >
               <TabIcon name={tab.icon} />
               {tab.label}

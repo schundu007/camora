@@ -150,13 +150,14 @@ export default function BadgeGrid() {
   }
 
   return (
-    <div className="rounded-2xl p-6 space-y-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-      <div>
-        <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Badges</h3>
+    <div className="rounded-2xl overflow-hidden space-y-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+      <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+        <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Badges</h3>
         <p className="text-sm text-[var(--text-muted)] mt-1">
           {badges.filter((b) => b.earned).length} of {badges.length} earned
         </p>
       </div>
+      <div className="px-6 pb-6">
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
         {badges.map((badge) => (
@@ -211,6 +212,7 @@ export default function BadgeGrid() {
             )}
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

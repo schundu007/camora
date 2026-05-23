@@ -1211,8 +1211,8 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
     }}>
       {/* Header - Matching other panels, draggable in dedicated window */}
       <div
-        className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)]"
-        style={isDedicatedWindow ? { WebkitAppRegion: 'drag', paddingTop: '2rem' } : {}}
+        className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]"
+        style={Object.assign({ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }, isDedicatedWindow ? { WebkitAppRegion: 'drag', paddingTop: '2rem' } : {})}
       >
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{
@@ -1642,8 +1642,8 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
         {/* Questions Section - Left side, 40% width */}
         <div className="w-[40%] shrink-0 border-r border-[var(--border)]">
           <div className="h-full flex flex-col">
-            <div className="px-3 py-1 flex items-center justify-between border-b border-[var(--border)] bg-[var(--bg-elevated)]">
-              <span className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
+            <div className="px-3 py-1 flex items-center justify-between border-b border-[var(--border)]" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>
                 Questions
               </span>
               {questions.length > 0 && (

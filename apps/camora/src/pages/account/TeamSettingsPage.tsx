@@ -607,10 +607,12 @@ export default function TeamSettingsPage() {
                 a recurring sub. Hidden for one-time SKUs (Business Starter,
                 Business Desktop) since there's nothing to cancel. */}
             {isOwner && subDetails && ['pro_monthly', 'pro_yearly', 'team'].includes(subDetails.plan_type) && (
-              <section className="rounded-xl p-5" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                <div className="flex items-start justify-between gap-3 flex-wrap">
+              <section className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+                  <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Subscription</h2>
+                </div>
+                <div className="p-5 flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
-                    <h2 className="text-base font-bold mb-1">Subscription</h2>
                     {subDetails.cancel_at_period_end ? (
                       <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
                         Cancellation scheduled. You'll keep access until{' '}
@@ -713,8 +715,11 @@ export default function TeamSettingsPage() {
 
             {/* Auto top-up (owner-only for teams; everyone else sees the personal version) */}
             {isOwner && (
-              <section className="rounded-xl p-5" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                <h2 className="text-base font-bold mb-1">Auto top-up</h2>
+              <section className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+                  <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Auto top-up</h2>
+                </div>
+                <div className="p-5">
                 <p className="text-[12px] mb-3" style={{ color: 'var(--text-secondary)' }}>
                   When the team pool runs out, automatically charge a top-up pack so calls keep flowing. Off by default. Always capped — your card is never charged more than the monthly limit.
                 </p>
@@ -758,13 +763,17 @@ export default function TeamSettingsPage() {
                     Charged to your saved card. Disable any time. Failed charges fall through to the normal "buy a top-up" prompt.
                   </p>
                 )}
+                </div>
               </section>
             )}
 
             {/* Invite (owner only) */}
             {isOwner && (
-              <section className="rounded-xl p-5" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                <h2 className="text-base font-bold mb-3">Invite a mate</h2>
+              <section className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+                  <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Invite a mate</h2>
+                </div>
+                <div className="p-5">
                 <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="email"
@@ -814,6 +823,7 @@ export default function TeamSettingsPage() {
                     You're at the {team.seat_limit}-seat limit. Remove a member or upgrade your plan to invite more.
                   </p>
                 )}
+                </div>
               </section>
             )}
 

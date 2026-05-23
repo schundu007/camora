@@ -262,12 +262,25 @@ export default function PrepPlanPage() {
               return (
                 <div key={day.day} className="bg-[var(--bg-surface)] border-0 rounded-2xl overflow-hidden">
                   {/* Day header */}
-                  <div className={`px-5 py-3 border-b border-[var(--border)] flex items-center justify-between ${allDone ? 'bg-[var(--accent)]/10' : 'bg-[var(--bg-elevated)]'}`}>
+                  <div
+                    className="px-5 py-3 flex items-center justify-between"
+                    style={{
+                      background: allDone
+                        ? 'color-mix(in oklab, #22c55e 8%, var(--bg-surface))'
+                        : 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))',
+                      borderBottom: allDone
+                        ? '1px solid color-mix(in oklab, #22c55e 20%, var(--border))'
+                        : '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))',
+                    }}
+                  >
                     <div className="flex items-center gap-2">
-                      <span className={`text-sm font-bold ${allDone ? 'text-[var(--success)]' : 'text-[var(--text-primary)]'}`}>
+                      <span
+                        className="font-mono text-[11px] font-bold uppercase tracking-widest"
+                        style={{ color: allDone ? '#22c55e' : 'var(--cam-primary)' }}
+                      >
                         Day {day.day}
                       </span>
-                      <span className="text-sm text-[var(--text-secondary)]">&mdash; {day.focus}</span>
+                      <span className="text-xs text-[var(--text-secondary)]">&mdash; {day.focus}</span>
                     </div>
                     <span className="text-xs text-[var(--text-muted)]">{dayCompleted}/{dayTotal}</span>
                   </div>

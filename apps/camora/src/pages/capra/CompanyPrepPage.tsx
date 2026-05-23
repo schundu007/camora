@@ -443,12 +443,12 @@ export default function CompanyPrepPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {genericSections.map((section) => (
                 <div key={section.title} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-                  <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ padding: '12px 24px', background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
                     <div className="flex items-center gap-3 mb-2">
-                      <div style={{ width: 36, height: 36, borderRadius: 10, background: `${section.color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ color: 'var(--cam-primary)', opacity: 0.7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {getSectionIcon(section.icon)}
                       </div>
-                      <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                      <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)', margin: 0 }}>
                         {section.title}
                       </h2>
                     </div>
@@ -662,20 +662,21 @@ export default function CompanyPrepPage() {
                 {/* Section header */}
                 <div
                   style={{
-                    padding: '18px 22px',
-                    borderBottom: '1px solid var(--border)',
+                    padding: '12px 22px',
+                    background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))',
+                    borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 12,
                   }}
                 >
-                  <div style={{ color: companyData.color, display: 'flex', alignItems: 'center' }}>
+                  <div style={{ color: 'var(--cam-primary)', display: 'flex', alignItems: 'center', opacity: 0.7 }}>
                     {getSectionIcon(section.icon)}
                   </div>
-                  <h2 className="practice-display" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                  <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)', margin: 0 }}>
                     {section.title}
                   </h2>
-                  <span className="practice-body" style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, marginLeft: 'auto' }}>
+                  <span className="practice-body" style={{ fontSize: 11, color: 'var(--cam-primary)', fontWeight: 600, marginLeft: 'auto', opacity: 0.7 }}>
                     {section.questions.length} question{section.questions.length !== 1 ? 's' : ''}
                   </span>
                 </div>

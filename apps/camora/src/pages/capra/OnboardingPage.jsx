@@ -455,24 +455,16 @@ export default function OnboardingPage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b border-[var(--border)] mb-6">
+                <div className="tab-group mb-6">
                   <button
                     onClick={() => setResumeTab('upload')}
-                    className={`flex-1 pb-3 text-sm font-medium border-b-2 transition-colors ${
-                      resumeTab === 'upload'
-                        ? 'border-[var(--accent)] text-[var(--accent)]'
-                        : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
-                    }`}
+                    className={resumeTab === 'upload' ? 'tab-group-item tab-group-item-active' : 'tab-group-item'}
                   >
                     Upload File
                   </button>
                   <button
                     onClick={() => setResumeTab('paste')}
-                    className={`flex-1 pb-3 text-sm font-medium border-b-2 transition-colors ${
-                      resumeTab === 'paste'
-                        ? 'border-[var(--accent)] text-[var(--accent)]'
-                        : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
-                    }`}
+                    className={resumeTab === 'paste' ? 'tab-group-item tab-group-item-active' : 'tab-group-item'}
                   >
                     Paste Text
                   </button>
