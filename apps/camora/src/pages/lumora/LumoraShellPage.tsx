@@ -433,18 +433,22 @@ export const LumoraShellPage = () => {
 
           {/* Cross-section quick links + tool pickers — lg+ only so 5-tab
               cluster fits cleanly at the md (768px) tablet breakpoint. */}
-          <div className="hidden lg:flex items-center gap-1 p-0.5 rounded-md shrink-0"
-            style={{ background: 'var(--lumora-chrome-bg)', border: '1px solid var(--lumora-chrome-border)', boxShadow: 'var(--lumora-chrome-shadow)' }}>
-            <Link to="/capra/prepare"
-              className="lumora-chrome-link px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color]"
-              style={{ color: 'var(--lumora-chrome-text)' }}
-            >Prepare</Link>
-            <Link to="/pricing"
-              className="lumora-chrome-link px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color]"
-              style={{ color: 'var(--lumora-chrome-text)' }}
-            >Pricing</Link>
-            {/* Separator */}
-            <div className="w-px h-4 mx-0.5" style={{ background: 'var(--lumora-chrome-border)' }} />
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
+            {/* Nav links pill */}
+            <div className="flex items-center gap-1 p-0.5 rounded-md"
+              style={{ background: 'var(--lumora-chrome-bg)', border: '1px solid var(--lumora-chrome-border)', boxShadow: 'var(--lumora-chrome-shadow)' }}>
+              <Link to="/capra/prepare"
+                className="lumora-chrome-link px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color]"
+                style={{ color: 'var(--lumora-chrome-text)' }}
+              >Prepare</Link>
+              <Link to="/pricing"
+                className="lumora-chrome-link px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color]"
+                style={{ color: 'var(--lumora-chrome-text)' }}
+              >Pricing</Link>
+            </div>
+            {/* Tool chips pill */}
+            <div className="flex items-center gap-1 p-0.5 rounded-md"
+              style={{ background: 'var(--lumora-chrome-bg)', border: '1px solid var(--lumora-chrome-border)', boxShadow: 'var(--lumora-chrome-shadow)' }}>
             {/* Meeting platform */}
             <div className="lumora-chrome-link flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold cursor-pointer transition-[background-color]"
               style={{ color: 'var(--lumora-chrome-text)' }}
@@ -487,7 +491,8 @@ export const LumoraShellPage = () => {
               </select>
               <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
             </div>
-          </div>
+            </div>{/* end tool chips pill */}
+          </div>{/* end quick links + tool pickers */}
 
           {/* LEFT spacer — pushes the tab pills toward the centre of the
               top bar instead of letting them sit flush against the
