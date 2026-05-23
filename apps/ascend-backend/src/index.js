@@ -49,6 +49,8 @@ import libraryRouter from './routes/library.js';
 // the frontend's /jobs page. Falls back to 503 if JOBS_DATABASE_URL is unset.
 import jobsRouter from './routes/jobs.js';
 import mcqRouter from './routes/mcq.js';
+import { playgroundRouter } from './routes/playground.js';
+import { playgroundLimiter } from './middleware/playgroundLimiter.js';
 
 // Same pattern as jobs above — the entire lumora-backend route surface was
 // copied under src/lumora/ so this service can answer /api/v1/transcribe,
@@ -1114,6 +1116,7 @@ app.use('/api/solve', authenticate, hourBudgetGate, aiLimiter, solveRouter);
 app.use('/api/analyze', authenticate, hourBudgetGate, aiLimiter, analyzeRouter);
 app.use('/api/fetch', authenticate, apiLimiter, fetchRouter);
 app.use('/api/run', authenticate, apiLimiter, runRouter);
+app.use('/api/v1/playground', authenticate, playgroundLimiter, playgroundRouter);
 app.use('/api/fix', authenticate, hourBudgetGate, aiLimiter, fixRouter);
 app.use('/api/transcribe', authenticate, hourBudgetGate, aiLimiter, transcribeRouter);
 app.use('/api/ascend/prep', authenticate, hourBudgetGate, apiLimiter, ascendPrepRouter);
