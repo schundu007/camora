@@ -1155,7 +1155,7 @@ IMPORTANT:
 // ---------------------------------------------------------------------------
 
 router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, res) => {
-  const { code, hint, language } = req.body;
+  const { code, hint, language, company } = req.body;
 
   if (!code || code.trim().length < 5) {
     return res.status(400).json({ error: 'Missing or too-short code' });
@@ -1171,8 +1171,9 @@ router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, 
 
   const model = getModelForUser(req);
   const hintSection = hint ? `\nUSER HINT: ${hint.trim().slice(0, 500)}\n` : '';
+  const companySection = company ? `\nCOMPANY CONTEXT: Tailor the fix to ${company.trim().slice(0, 100)} coding standards.\n` : '';
 
-  // Strip metadata header lines like [Company: Databricks] before sending to AI
+  // Strip any residual [Key: Value] metadata headers in case they appear in pasted code
   const cleanedCode = code.replace(/^\s*\[[^\]]+:[^\]]+\]\s*\n?/gm, '').trim();
 
   res.writeHead(200, {
@@ -1207,7 +1208,7 @@ router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, 
       messages: [
         {
           role: 'user',
-          content: `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}
+          content: `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}${companySection}
 
 CODE:
 \`\`\`${lang}

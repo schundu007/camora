@@ -471,6 +471,7 @@ export interface CoFixAnswer {
 export interface CoFixStreamOptions {
   code: string;
   hint?: string;
+  company?: string;
   language: string;
   token: string;
   signal?: AbortSignal;
@@ -481,7 +482,7 @@ export interface CoFixStreamOptions {
 }
 
 export async function streamCoFixResponse(options: CoFixStreamOptions): Promise<AbortController> {
-  const { code, hint, language, token, signal: externalSignal, onToken, onAnswer, onError, onComplete } = options;
+  const { code, hint, company, language, token, signal: externalSignal, onToken, onAnswer, onError, onComplete } = options;
 
   const abortController = new AbortController();
   if (externalSignal) {
@@ -505,6 +506,7 @@ export async function streamCoFixResponse(options: CoFixStreamOptions): Promise<
         code,
         language,
         ...(hint ? { hint } : {}),
+        ...(company ? { company } : {}),
       }),
       credentials: 'include',
       signal: abortController.signal,
