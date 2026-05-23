@@ -929,9 +929,10 @@ app.get('/api/visitors/visitors-detail', apiLimiter, authenticate, async (req, r
     const realRows = rows.filter(r => r.ip && !r.ip.startsWith('seed-'));
 
     // Batch geo lookup via ip-api.com (free, server-side HTTP only)
+    // NOTE: do NOT set per-item `fields` — it overrides the URL fields and drops `query`
     let geoMap = {};
     try {
-      const ips = realRows.map(r => ({ query: r.ip, fields: 'status,country,countryCode,city,isp,org' }));
+      const ips = realRows.map(r => ({ query: r.ip }));
       for (let i = 0; i < ips.length; i += 100) {
         const batch = ips.slice(i, i + 100);
         const geoRes = await fetch('http://ip-api.com/batch?fields=status,country,countryCode,city,isp,org,query', {
@@ -946,7 +947,9 @@ app.get('/api/visitors/visitors-detail', apiLimiter, authenticate, async (req, r
           }
         }
       }
-    } catch { /* geo is best-effort */ }
+    } catch (err) {
+      console.error('[Geo] batch lookup failed:', err.message);
+    }
 
     const visitors = rows.map(r => ({
       ip: r.ip,
