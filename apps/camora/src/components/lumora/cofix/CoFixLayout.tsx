@@ -268,53 +268,68 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       <div className="flex items-center gap-2 px-3 py-2 shrink-0 overflow-x-auto no-scrollbar" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         {/* Language */}
         <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-[10px] font-semibold tracking-wider uppercase text-[var(--text-muted)]">Lang</span>
+          <span className="text-[11px] font-bold tracking-wider uppercase" style={{ color: 'var(--cam-gold-leaf)' }}>Lang</span>
           <select
             value={language}
             onChange={e => setLanguage(e.target.value)}
-            className="text-[11px] bg-[var(--bg-primary)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-primary)] focus:outline-none focus:border-[#0047AB] cursor-pointer"
+            className="text-[12px] rounded px-2 py-1 cursor-pointer focus:outline-none"
+            style={{
+              background: 'linear-gradient(135deg, rgba(0,47,120,0.55) 0%, rgba(10,14,26,0.85) 100%)',
+              border: '1px solid var(--cam-gold-leaf-dk)',
+              color: 'var(--cam-gold-leaf)',
+            }}
           >
             {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
           </select>
         </div>
 
         {/* Divider */}
-        <div className="w-px h-5 bg-[var(--border)] shrink-0" />
+        <div className="w-px h-5 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
 
         {/* Status */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {isLoading && (
-            <span className="flex items-center gap-1.5 text-[11px] text-[#0047AB]">
-              <span className="w-3 h-3 border-2 border-[#0047AB] border-t-transparent rounded-full animate-spin shrink-0" />
+            <span className="flex items-center gap-1.5 text-[12px]" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
+              <span className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf-lt)', borderTopColor: 'transparent' }} />
               Analyzing…
             </span>
           )}
           {!isLoading && fixedCode && changes.length > 0 && (
-            <span className="flex items-center gap-1.5 text-[11px] text-amber-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+            <span className="flex items-center gap-1.5 text-[12px]" style={{ color: 'var(--cam-gold-leaf)' }}>
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
               {changes.length} fix{changes.length !== 1 ? 'es' : ''} applied
             </span>
           )}
           {!isLoading && fixedCode && changes.length === 0 && (
-            <span className="flex items-center gap-1.5 text-[11px] text-emerald-400">
+            <span className="flex items-center gap-1.5 text-[12px] text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
               No issues found
             </span>
           )}
           {!isLoading && !fixedCode && (
-            <span className="text-[11px] text-[var(--text-muted)]">Paste broken code on the left, then click Fix</span>
+            <span className="text-[12px]" style={{ color: 'var(--cam-gold-leaf-dk)' }}>Paste broken code on the left, then click Fix</span>
           )}
         </div>
 
         {/* Action buttons — only when fixed code is ready */}
         {fixedCode && (
           <div className="flex items-center gap-1.5 shrink-0">
-            <button onClick={handleSendToCoding} className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] bg-[var(--bg-primary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors whitespace-nowrap">→ Coding</button>
+            <button
+              onClick={handleSendToCoding}
+              className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90 whitespace-nowrap"
+              style={{
+                background: 'linear-gradient(135deg, rgba(0,47,120,0.55) 0%, rgba(10,14,26,0.85) 100%)',
+                border: '1px solid var(--cam-gold-leaf-dk)',
+                color: 'var(--cam-gold-leaf-dk)',
+              }}
+            >
+              → Coding
+            </button>
           </div>
         )}
 
         {/* Divider */}
-        <div className="w-px h-5 shrink-0" style={{ background: 'rgba(255,255,255,0.18)' }} />
+        <div className="w-px h-5 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
 
         {/* SNAP */}
         {onSnapped && (
