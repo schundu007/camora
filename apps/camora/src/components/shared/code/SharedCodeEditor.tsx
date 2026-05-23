@@ -12,6 +12,7 @@ interface SharedCodeEditorProps {
   height?: string;
   showLineNumbers?: boolean;
   className?: string;
+  onMount?: (editor: any) => void;
 }
 
 function EditorSkeleton({ height }: { height: string }) {
@@ -42,6 +43,7 @@ export default function SharedCodeEditor({
   height = '300px',
   showLineNumbers = true,
   className,
+  onMount,
 }: SharedCodeEditorProps) {
   return (
     <div className={className} style={{ height, overflow: 'hidden' }}>
@@ -51,6 +53,7 @@ export default function SharedCodeEditor({
           language={language}
           value={code}
           onChange={(val) => onChange(val || '')}
+          onMount={onMount}
           theme={theme}
           options={{
             fontSize,

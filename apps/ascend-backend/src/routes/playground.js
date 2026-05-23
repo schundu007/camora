@@ -5,7 +5,7 @@ import { execFile, spawn } from 'child_process';
 import { writeFile, rm, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { randomUUID } from 'crypto';
+import { randomUUID, createHash } from 'crypto';
 import { query } from '../config/database.js';
 
 const execFileAsync = promisify(execFile);
@@ -13,6 +13,28 @@ const router = Router();
 
 const CODE_LIMIT = 50 * 1024; // 50KB
 const EXEC_OPTS = { maxBuffer: 1024 * 1024 }; // 1MB
+
+const EXPLAIN_CACHE = new Map();
+const EXPLAIN_CACHE_MAX = 500;
+
+async function callGemini(prompt) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('GEMINI_API_KEY not set');
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 150, temperature: 0.1 },
+      }),
+    }
+  );
+  if (!resp.ok) throw new Error(`Gemini ${resp.status}`);
+  const data = await resp.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+}
 
 // Wrapper reads code.py from disk — avoids any string-escaping issues.
 // Emits __VARS__:<json> to stderr so backend can parse variables separately.
@@ -205,6 +227,43 @@ async function runTerraform(code) {
   });
 }
 
+// POST /explain  — Gemini line explanation with in-memory cache
+router.post('/explain', async (req, res, next) => {
+  try {
+    const { code, line, language = 'python' } = req.body;
+    if (!code || !line || typeof code !== 'string') {
+      return res.status(400).json({ error: 'code and line are required' });
+    }
+    if (code.length > CODE_LIMIT) {
+      return res.status(413).json({ error: 'Code too large' });
+    }
+
+    const lineNumber = Number(line);
+    const lineContent = code.split('\n')[lineNumber - 1] ?? '';
+    if (!lineContent.trim()) return res.json({ explanation: '' });
+
+    const cacheKey = createHash('sha256')
+      .update(`${code}:${lineNumber}:${language}`)
+      .digest('hex');
+
+    if (EXPLAIN_CACHE.has(cacheKey)) {
+      return res.json({ explanation: EXPLAIN_CACHE.get(cacheKey) });
+    }
+
+    const prompt = `Explain what line ${lineNumber} does in this ${language} code in 1-2 concise sentences. Focus on the purpose, not just restating the syntax.\n\nCode:\n\`\`\`${language}\n${code}\n\`\`\`\n\nLine ${lineNumber}: ${lineContent}`;
+    const explanation = await callGemini(prompt);
+
+    if (EXPLAIN_CACHE.size >= EXPLAIN_CACHE_MAX) {
+      EXPLAIN_CACHE.delete(EXPLAIN_CACHE.keys().next().value);
+    }
+    EXPLAIN_CACHE.set(cacheKey, explanation);
+
+    res.json({ explanation });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /run
 router.post('/run', async (req, res, next) => {
   try {
@@ -263,21 +322,31 @@ router.post('/lint', async (req, res, next) => {
   }
 });
 
-// POST /format  — black, Python3 only
+// POST /format  — black (python3), shfmt (bash), terraform fmt (terraform)
 router.post('/format', async (req, res, next) => {
   try {
-    const { code } = req.body;
+    const { code, language = 'python3' } = req.body;
     if (!code || typeof code !== 'string') {
       return res.status(400).json({ error: 'code is required' });
     }
 
-    const result = await spawnWithStdin('black', ['-', '--quiet'], code, 5000);
+    const lang = String(language).toLowerCase();
+    let result;
+
+    if (lang === 'python3') {
+      result = await spawnWithStdin('black', ['-', '--quiet'], code, 5000);
+    } else if (lang === 'bash') {
+      result = await spawnWithStdin('shfmt', ['-i', '2', '-'], code, 5000);
+    } else if (lang === 'terraform') {
+      result = await spawnWithStdin('terraform', ['fmt', '-'], code, 10000);
+    } else {
+      return res.json({ code });
+    }
 
     if (result.exitCode === 0) {
       res.json({ code: result.stdout });
     } else {
-      // black failed (syntax error) — return original unchanged
-      res.json({ code, error: result.stderr });
+      res.json({ code, error: result.stderr || `${lang} formatter failed` });
     }
   } catch (err) {
     next(err);

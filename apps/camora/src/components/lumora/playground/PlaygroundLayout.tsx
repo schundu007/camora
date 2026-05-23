@@ -17,6 +17,7 @@ export function PlaygroundLayout() {
   const [activeTab, setActiveTab]   = useState<PlaygroundLanguage>('python3');
   const [running, setRunning]       = useState(false);
   const [formatting, setFormatting] = useState(false);
+  const [explainMode, setExplainMode] = useState(false);
   const [result, setResult]         = useState<PlaygroundRunResult | null>(null);
   const [error, setError]           = useState<string | null>(null);
 
@@ -44,12 +45,12 @@ export function PlaygroundLayout() {
   }, [activeTab]);
 
   const handleFormat = useCallback(async () => {
-    if (activeTab !== 'python3') return;
-    const code = codeRef.current.python3;
+    if (activeTab === 'docker') return;
+    const code = codeRef.current[activeTab];
     setFormatting(true);
     try {
-      const r = await playgroundAPI.format(code);
-      codeRef.current.python3 = r.code;
+      const r = await playgroundAPI.format(code, activeTab);
+      codeRef.current[activeTab] = r.code;
       editorRef.current?.setValue(r.code);
     } catch {
       // format is best-effort
@@ -96,7 +97,7 @@ export function PlaygroundLayout() {
         </div>
         {/* CENTER: action chips + Run */}
         <div className="flex items-center gap-2">
-          {activeTab === 'python3' && (
+          {activeTab !== 'docker' && (
             <button
               onClick={handleFormat}
               disabled={formatting}
@@ -111,6 +112,23 @@ export function PlaygroundLayout() {
               {formatting ? 'Formatting…' : 'Format'}
             </button>
           )}
+          <button
+            onClick={() => setExplainMode(v => !v)}
+            className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90"
+            style={explainMode ? {
+              fontFamily: 'Plus Jakarta Sans, sans-serif',
+              background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)',
+              border: '1px solid var(--cam-gold-leaf)',
+              color: '#0a0e1a',
+            } : {
+              fontFamily: 'Plus Jakarta Sans, sans-serif',
+              background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
+              border: '1px solid var(--cam-gold-leaf-dk)',
+              color: 'var(--cam-gold-leaf-dk)',
+            }}
+          >
+            Explain
+          </button>
           <button
             onClick={handleClear}
             className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90"
@@ -153,6 +171,7 @@ export function PlaygroundLayout() {
             defaultValue={codeRef.current[activeTab]}
             onChange={handleCodeChange}
             onMount={handleEditorMount}
+            explainMode={explainMode}
           />
         </div>
         <div className="w-1/2 overflow-hidden">

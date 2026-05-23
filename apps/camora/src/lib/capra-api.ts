@@ -105,11 +105,12 @@ export const playgroundAPI = {
 
   format: (
     code: string,
+    language: PlaygroundLanguage = 'python3',
     token?: string
   ): Promise<{ code: string; error?: string }> =>
     fetchCapra('/api/v1/playground/format', {
       method: 'POST',
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code, language }),
     }, token),
 
   share: (
@@ -126,6 +127,17 @@ export const playgroundAPI = {
     token?: string
   ): Promise<{ language: string; code: string; testsCode?: string }> =>
     fetchCapra(`/api/v1/playground/share/${id}`, {}, token),
+
+  explain: (
+    code: string,
+    line: number,
+    language: string,
+    token?: string
+  ): Promise<{ explanation: string }> =>
+    fetchCapra('/api/v1/playground/explain', {
+      method: 'POST',
+      body: JSON.stringify({ code, line, language }),
+    }, token),
 };
 
 export { CapraAPIError };
