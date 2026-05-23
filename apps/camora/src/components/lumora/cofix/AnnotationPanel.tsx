@@ -8,8 +8,8 @@ export function AnnotationPanel({ changes }: AnnotationPanelProps) {
   if (changes.length === 0) return null;
 
   return (
-    <div className="w-[200px] flex-shrink-0 overflow-y-auto border-l border-[var(--border)] bg-[var(--bg-primary)] p-3">
-      <p className="text-[10px] font-semibold tracking-wider text-[var(--text-muted)] uppercase mb-3">
+    <div className="w-[200px] flex-shrink-0 overflow-y-auto border-l border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-primary)] p-3">
+      <p className="text-[10px] font-semibold tracking-wider text-[var(--cam-gold-leaf)] uppercase mb-3">
         Changes
       </p>
       <div className="flex flex-col gap-4">
@@ -17,11 +17,8 @@ export function AnnotationPanel({ changes }: AnnotationPanelProps) {
           <div key={change.badge} className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
               <span
-                className={`flex-shrink-0 w-[18px] h-[18px] rounded-full text-[9px] font-bold flex items-center justify-center ${
-                  change.type === 'fix'
-                    ? 'bg-[#0047AB] text-white'
-                    : 'bg-emerald-600 text-white'
-                }`}
+                className="flex-shrink-0 w-[18px] h-[18px] rounded-full text-[9px] font-bold flex items-center justify-center"
+                style={{ background: 'var(--cam-gold-leaf)', color: '#0a0e1a' }}
               >
                 {change.badge}
               </span>
