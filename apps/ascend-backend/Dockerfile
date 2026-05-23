@@ -18,7 +18,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 #   font packages (so graphviz/librsvg render labels with our chosen fonts).
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      ca-certificates curl bash \
+      ca-certificates curl bash unzip \
       python3 python3-venv \
       graphviz \
       git \
@@ -37,6 +37,21 @@ RUN apt-get update \
 # on Debian's TS packaging cadence.
 RUN npm install -g typescript
 
+# hadolint — Dockerfile linter for playground /run endpoint
+RUN curl -fsSL https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64 \
+    -o /usr/local/bin/hadolint \
+ && chmod +x /usr/local/bin/hadolint
+
+# Terraform — validate + plan for playground /run endpoint
+RUN curl -fsSL https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip \
+    -o /tmp/terraform.zip \
+ && unzip /tmp/terraform.zip -d /usr/local/bin \
+ && rm /tmp/terraform.zip \
+ && mkdir -p /terraform-plugin-cache /tmp/tf-warmup \
+ && printf 'terraform {\n  required_providers {\n    null   = { source = "hashicorp/null" }\n    random = { source = "hashicorp/random" }\n  }\n}\n' > /tmp/tf-warmup/main.tf \
+ && TF_PLUGIN_CACHE_DIR=/terraform-plugin-cache terraform -chdir=/tmp/tf-warmup init -backend=false -no-color 2>/dev/null || true \
+ && rm -rf /tmp/tf-warmup
+
 WORKDIR /app
 
 # Install JS deps first so source-only changes don't bust this layer.
@@ -47,7 +62,7 @@ RUN npm install --no-audit --no-fund --omit=optional
 
 # Python venv used by the diagram generation pipeline (services/diagram-*).
 RUN python3 -m venv /app/.venv \
- && /app/.venv/bin/pip install --no-cache-dir diagrams anthropic
+ && /app/.venv/bin/pip install --no-cache-dir diagrams anthropic ruff black radon pytest
 
 # Rebuild the font cache so freshly-added fonts are visible to graphviz/rsvg.
 RUN fc-cache -fv || true
