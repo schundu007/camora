@@ -524,6 +524,7 @@ export const LumoraShellPage = () => {
               { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral', title: 'Behavioral session assistant' },
               { id: 'cofix', label: 'CoFix', path: '/lumora/fix', title: 'Fix & debug code' },
               { id: 'playground', label: 'Playground', path: '/lumora/playground', title: 'DevOps Playground' },
+              { id: 'ask', label: 'Ask Sona', path: '/lumora/ask', title: 'Ask anything' },
             ].map(tab => {
               const isActive = activeTab === tab.id;
               return (
@@ -1050,6 +1051,7 @@ export const LumoraShellPage = () => {
                 { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral' },
                 { id: 'cofix',      label: 'CoFix',      path: '/lumora/fix' },
                 { id: 'playground', label: 'Playground', path: '/lumora/playground' },
+                { id: 'ask',        label: 'Ask Sona',   path: '/lumora/ask' },
                 { id: 'calendar',   label: 'Calendar',   path: '/lumora/calendar' },
                 { id: 'sessions',   label: 'Sessions',   path: '/lumora/sessions' },
                 { id: 'assistants', label: 'Assistants', path: '/lumora/assistants' },
