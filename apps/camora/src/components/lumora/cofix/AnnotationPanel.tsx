@@ -19,7 +19,7 @@ export function AnnotationPanel({ changes }: AnnotationPanelProps) {
               <span
                 className={`flex-shrink-0 w-[18px] h-[18px] rounded-full text-[9px] font-bold flex items-center justify-center ${
                   change.type === 'fix'
-                    ? 'bg-amber-500 text-black'
+                    ? 'bg-[#0047AB] text-white'
                     : 'bg-emerald-600 text-white'
                 }`}
               >

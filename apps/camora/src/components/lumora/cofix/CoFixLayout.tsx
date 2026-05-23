@@ -440,7 +440,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         </div>
 
         {/* RIGHT — fixed code output */}
-        <div className="flex flex-col w-1/2">
+        <div className="flex w-1/2">
+          {/* Code editor column */}
+          <div className="flex flex-col flex-1 min-w-0">
           <div className="px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)] flex items-center justify-between">
             <span className={`text-[10px] font-semibold tracking-wider uppercase ${fixedCode ? 'text-emerald-400' : 'text-[var(--text-muted)]'}`}>
               {fixedCode ? '✓ Fixed Code' : 'Output — Fixed Code'}
@@ -498,7 +500,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               />
             </div>
 
-            {changes.length > 0 && <AnnotationPanel changes={changes} />}
           </div>
 
           {/* Complexity strip */}
@@ -534,6 +535,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               </pre>
             </div>
           )}
+          </div>
+          {changes.length > 0 && <AnnotationPanel changes={changes} />}
         </div>
       </div>
     </div>
