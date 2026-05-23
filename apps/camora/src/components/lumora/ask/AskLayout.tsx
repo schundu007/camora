@@ -152,15 +152,19 @@ export const AskLayout = () => {
             const parsed = JSON.parse(raw);
             if (parsed.conversationId) setConvId(parsed.conversationId);
             if (parsed.text) { full += parsed.text; setStreamText(full); }
+            if (parsed.error) { full = `Error: ${parsed.error}`; break; }
           } catch {}
         }
       }
 
       if (full) {
         setMessages(prev => [...prev, { role: 'assistant', content: full }]);
-        // refresh history list
-        fetch(`${API_URL}/api/v1/ask/history`, { credentials: 'include' })
-          .then(r => r.json()).then(d => setHistory(d.conversations || [])).catch(() => {});
+        if (!full.startsWith('Error:')) {
+          fetch(`${API_URL}/api/v1/ask/history`, { credentials: 'include' })
+            .then(r => r.json()).then(d => setHistory(d.conversations || [])).catch(() => {});
+        }
+      } else {
+        setMessages(prev => [...prev, { role: 'assistant', content: 'No response received. Please try again.' }]);
       }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Something went wrong. Please try again.' }]);
