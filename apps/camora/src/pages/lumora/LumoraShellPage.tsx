@@ -752,7 +752,7 @@ export const LumoraShellPage = () => {
               style={{
                 background:
                   'radial-gradient(ellipse 50% 40% at 0% 0%, rgba(38,97,156,0.06), transparent 70%),' +
-                  'radial-gradient(ellipse 60% 40% at 100% 100%, rgba(34,211,238,0.04), transparent 70%),' +
+                  'radial-gradient(ellipse 60% 40% at 100% 100%, rgba(38,97,156,0.08), transparent 70%),' +
                   'var(--bg-surface)',
               }}
             >
@@ -761,7 +761,7 @@ export const LumoraShellPage = () => {
                 className="shrink-0 relative"
                 style={{
                   background:
-                    'radial-gradient(ellipse 60% 100% at 100% 0%, rgba(34,211,238,0.14), transparent 60%),' +
+                    'radial-gradient(ellipse 60% 100% at 100% 0%, rgba(38,97,156,0.18), transparent 60%),' +
                     'var(--cam-hero-strip)',
                   borderBottom: '1px solid var(--cam-gold-leaf)',
                 }}
@@ -825,7 +825,7 @@ export const LumoraShellPage = () => {
                           className="session-row session-row-enter flex items-center gap-3 p-3.5 rounded-xl w-full text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cam-primary)]/40"
                           style={{ animationDelay: `${Math.min(revIdx * 30, 210)}ms`,
                             background:
-                              'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(34,211,238,0.02) 100%)',
+                              'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(38,97,156,0.08) 100%)',
                             border: '1px solid rgba(38,97,156,0.10)',
                           }}
                         >
