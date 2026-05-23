@@ -84,11 +84,11 @@ export function PlaygroundLayout() {
       <LanguageTabs active={activeTab} onChange={handleTabChange} />
 
       {/* Toolbar — filename left, Run centered, secondary actions right */}
-      <div className="flex items-center px-4 py-2 bg-[#0d1117] border-b border-[#1e293b]">
+      <div className="flex items-center px-4 py-2 bg-[#0a0e1a] border-b border-[var(--cam-gold-leaf-dk)]">
         {/* LEFT: filename chip */}
         <div className="flex-1">
           <span
-            className="text-[10px] text-[#334155] uppercase tracking-widest font-medium"
+            className="text-[10px] text-[var(--cam-gold-leaf-dk)] uppercase tracking-widest font-medium"
             style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
           >
             {activeTab === 'python3' ? 'main.py' : activeTab === 'bash' ? 'script.sh' : activeTab === 'docker' ? 'Dockerfile' : 'main.tf'}
@@ -108,7 +108,7 @@ export function PlaygroundLayout() {
           )}
           <button
             onClick={handleClear}
-            className="text-[11px] px-3 py-1 rounded-md border border-[#334155] text-[#94a3b8] hover:text-white hover:border-[#475569] transition-colors"
+            className="text-[11px] px-3 py-1 rounded-md border border-[var(--cam-gold-leaf)] text-[var(--cam-gold-leaf)] opacity-60 hover:opacity-100 transition-opacity"
             style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
           >
             Clear
@@ -116,7 +116,7 @@ export function PlaygroundLayout() {
           <button
             onClick={handleRun}
             disabled={running}
-            className="text-[11px] px-5 py-1.5 rounded-md font-semibold bg-[#0047AB] text-white hover:bg-[#0055cc] transition-colors disabled:opacity-50"
+            className="text-[11px] px-5 py-1.5 rounded-md font-semibold bg-[var(--cam-gold-leaf)] text-[#0a0e1a] hover:bg-[var(--cam-gold-leaf-lt)] transition-colors disabled:opacity-50"
             style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
           >
             {running ? 'Running…' : '▶ Run'}
@@ -124,7 +124,7 @@ export function PlaygroundLayout() {
         </div>
         {/* RIGHT: shortcut hint */}
         <div className="flex-1 flex items-center justify-end">
-          <span className="text-[10px] text-[#334155] hidden md:block" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+          <span className="text-[10px] text-[var(--cam-gold-leaf-dk)] hidden md:block" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
             ⌘↵ · ⌘L · ⌘D
           </span>
         </div>
