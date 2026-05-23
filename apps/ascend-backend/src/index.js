@@ -95,6 +95,10 @@ async function runMigrations() {
     // so existing rows + any backwards-issued tokens with no `gen` claim still
     // match (we only enforce the check when `gen` is present in the token).
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS token_generation INTEGER NOT NULL DEFAULT 1');
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS image TEXT');
+    // Backfill: copy picture → image for any user who has a Google photo in the
+    // legacy picture column but no value in image (added later)
+    await query(`UPDATE users SET image = picture WHERE image IS NULL AND picture IS NOT NULL`);
     console.log('[Migrations] Onboarding columns ensured');
 
     // Diagram cache table — store generated diagrams to avoid re-generating
