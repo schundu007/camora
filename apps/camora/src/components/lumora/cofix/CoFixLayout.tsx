@@ -17,7 +17,7 @@ import { useSessionStore } from '@/stores/session-store';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
-function detectLanguage(text: string): string {
+const detectLanguage = (text: string): string => {
   if (/^FROM\s+\S+/m.test(text)) return 'dockerfile';
   if (/^services:\s*$/m.test(text) && /image:|build:/.test(text)) return 'docker-compose';
   if (/^resource\s+"[\w_]+"\s+"[\w_]+"\s*\{/m.test(text) || /^provider\s+"[\w_]+"\s*\{/m.test(text)) return 'terraform';
@@ -30,7 +30,7 @@ function detectLanguage(text: string): string {
   if (/func\s+\w+\s*\(.*\)\s*(->|\{)|package\s+main/.test(text)) return 'go';
   if (/pub\s+fn\s+\w+|let\s+mut\s+\w+/.test(text)) return 'rust';
   return 'python';
-}
+};
 
 // Maps CoFix language IDs → Monaco editor language tokens
 const MONACO_LANG: Record<string, string> = {
@@ -38,9 +38,7 @@ const MONACO_LANG: Record<string, string> = {
   'docker-compose': 'yaml',
   terraform: 'hcl',
 };
-function toMonacoLang(lang: string): string {
-  return MONACO_LANG[lang] ?? lang;
-}
+const toMonacoLang = (lang: string): string => MONACO_LANG[lang] ?? lang;
 
 const LANGUAGES = [
   { id: 'auto', label: 'Auto-detect' },
