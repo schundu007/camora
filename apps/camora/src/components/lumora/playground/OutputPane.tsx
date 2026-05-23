@@ -7,7 +7,7 @@ interface Props {
   language: PlaygroundLanguage;
 }
 
-export function OutputPane({ result, error, language }: Props) {
+export const OutputPane = ({ result, error, language }: Props) => {
   const eyebrow = (s: string) => (
     <span
       className="text-[9px] uppercase tracking-widest text-[#334155] font-medium"

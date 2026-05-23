@@ -12,7 +12,7 @@ interface Props {
   onChange: (lang: PlaygroundLanguage) => void;
 }
 
-export function LanguageTabs({ active, onChange }: Props) {
+export const LanguageTabs = ({ active, onChange }: Props) => {
   return (
     <div
       className="flex items-end gap-0 px-4 bg-[#0d1117] border-b border-[#1e293b]"
