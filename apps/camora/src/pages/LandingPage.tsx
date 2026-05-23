@@ -55,8 +55,8 @@ const APPA: Step[] = [
   },
   {
     key: 'practice', label: 'Practice', href: '/capra/practice',
-    headline: '33,000+ problems with AI feedback',
-    desc: 'Coding, DSA, MCQ, system design, SQL — 33,000+ unique problems across 50+ domains with AI scoring.',
+    headline: '1,500+ problems with AI feedback',
+    desc: 'Coding, DSA, MCQ, system design, SQL — 1,500+ unique problems across 50+ domains with AI scoring.',
     Anim: PracticeAnim,
     icon: Glyph(<><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></>),
   },
@@ -215,7 +215,7 @@ export default function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
               >
-                1,000+ matched roles, 1,500+ study topics, 33,000+ practice problems, and a live AI copilot AI assistance in real time: everything from first application to final offer.
+                1,000+ matched roles, 1,500+ study topics, 1,500+ practice problems, and a live AI copilot AI assistance in real time: everything from first application to final offer.
               </motion.p>
 
               <motion.div
@@ -483,7 +483,7 @@ export default function LandingPage() {
             <AudienceCard
               eyebrow="For engineers"
               title="Roles, practice & live AI"
-              body="1,000+ engineering roles matched to your skills, 1,500+ curated study topics with diagrams, and 33,000+ problems with AI feedback. Then live transcription assistance during the session itself: the moment that decides the offer."
+              body="1,000+ engineering roles matched to your skills, 1,500+ curated study topics with diagrams, and 1,500+ problems with AI feedback. Then live transcription assistance during the session itself: the moment that decides the offer."
               ctaLabel={isAuthenticated ? 'Open dashboard' : 'Start free'}
               ctaHref="/capra/prepare"
             />
