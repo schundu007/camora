@@ -216,8 +216,11 @@ router.get('/google/callback', async (req, res) => {
       onboardingCompleted = userResult.rows[0].onboarding_completed || false;
     }
 
-    // Update last login time
-    await query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [userId]);
+    // Update last login time and refresh Google profile picture on every login
+    await query(
+      'UPDATE users SET last_login_at = NOW(), image = COALESCE($2, image) WHERE id = $1',
+      [userId, gUser.picture || null]
+    );
 
     // Initialize Ascend data (subscription, credits, free usage)
     try {
