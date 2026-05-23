@@ -395,8 +395,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
         {/* LEFT — broken code input */}
         <div className="flex flex-col w-1/2 border-r border-[var(--border)]">
-          <div className="px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
-            <span className="text-[10px] font-semibold tracking-wider text-[var(--text-muted)] uppercase">Input — Broken Code</span>
+          <div className="px-4 py-1.5 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)]">
+            <span className="text-[10px] font-semibold tracking-wider text-[var(--cam-gold-leaf-dk)] uppercase">Input — Broken Code</span>
           </div>
 
           {lineCount > 500 && (
@@ -442,19 +442,19 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         <div className="flex w-1/2">
           {/* Code editor column */}
           <div className="flex flex-col flex-1 min-w-0">
-          <div className="px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)] flex items-center justify-between">
-            <span className={`text-[10px] font-semibold tracking-wider uppercase ${fixedCode ? 'text-emerald-400' : 'text-[var(--text-muted)]'}`}>
+          <div className="px-4 py-1.5 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] flex items-center justify-between">
+            <span className={`text-[10px] font-semibold tracking-wider uppercase ${fixedCode ? 'text-[var(--cam-gold-leaf)]' : 'text-[var(--cam-gold-leaf-dk)]'}`}>
               {fixedCode ? '✓ Fixed Code' : 'Output — Fixed Code'}
             </span>
             {fixedCode && (
               <div className="flex items-center gap-1.5">
-                <button onClick={handleCopy} className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-lg border border-[var(--border)] text-[var(--text-primary)] bg-[var(--bg-primary)] hover:bg-[var(--bg-elevated)] transition-colors">Copy</button>
+                <button onClick={handleCopy} className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-lg border border-[var(--cam-gold-leaf)] text-[var(--cam-gold-leaf)] opacity-70 hover:opacity-100 transition-opacity">Copy</button>
                 <button
                   onClick={handleRun}
                   disabled={isRunning}
-                  className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-lg bg-[#0047AB] text-white hover:bg-[#0038a0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-lg bg-[var(--cam-gold-leaf)] text-[#0a0e1a] hover:bg-[var(--cam-gold-leaf-lt)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {isRunning ? <><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />Running</> : <>▶ Run</>}
+                  {isRunning ? <><span className="w-3 h-3 border-2 border-[#0a0e1a]/40 border-t-[#0a0e1a] rounded-full animate-spin" />Running</> : <>▶ Run</>}
                 </button>
               </div>
             )}
