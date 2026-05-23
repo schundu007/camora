@@ -57,6 +57,7 @@ function PathCard({ path }: { path: LearnPath }) {
       style={{
         background: 'var(--bg-surface)',
         border: '1px solid var(--border)',
+        transition: 'border-color 0.15s, background 0.15s',
       }}
     >
       <span className="text-[13px] font-semibold leading-snug flex-1" style={{ color: 'var(--text-primary)' }}>
@@ -171,8 +172,8 @@ export default function CodeSignalLearnPage() {
               onClick={() => setDiffFilter(tab.value)}
               className="px-3 py-1 rounded-md text-[12px] font-medium transition-all"
               style={diffFilter === tab.value ? {
-                background: 'var(--cam-primary)',
-                color: '#fff',
+                background: 'var(--cam-gold-leaf)',
+                color: 'var(--cam-navy)',
               } : {
                 background: 'transparent',
                 color: 'var(--text-muted)',

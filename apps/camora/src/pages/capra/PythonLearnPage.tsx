@@ -30,13 +30,13 @@ const CodeBlock = ({ code }: { code: string }) => {
 const TopicButton = ({ topic, active, onClick }: { topic: Topic; active: boolean; onClick: () => void }) => (
   <button onClick={onClick} className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center justify-between gap-2"
     style={{
-      background: active ? 'color-mix(in oklab, var(--cam-primary) 12%, var(--bg-elevated))' : 'transparent',
-      border: active ? '1px solid color-mix(in oklab, var(--cam-primary) 30%, transparent)' : '1px solid transparent',
+      background: active ? 'color-mix(in oklab, var(--cam-gold-leaf) 12%, var(--bg-elevated))' : 'transparent',
+      border: active ? '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)' : '1px solid transparent',
     }}
     onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-elevated)'; }}
     onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
     <span className={`text-[13px] ${active ? 'font-semibold' : 'font-medium'}`}
-      style={{ color: active ? 'var(--cam-primary)' : 'var(--text-secondary)' }}>
+      style={{ color: active ? 'var(--cam-gold-leaf-dk)' : 'var(--text-secondary)' }}>
       {topic.title}
     </span>
     <span className="font-mono text-[10px] shrink-0" style={{ color: 'var(--text-muted)' }}>{topic.estimatedMins}m</span>
