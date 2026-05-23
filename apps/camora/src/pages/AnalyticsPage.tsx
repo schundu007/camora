@@ -550,13 +550,15 @@ export default function AnalyticsPage() {
                               >
                                 {togglingAdmin === u.id ? '…' : u.is_admin ? 'Admin ✓' : 'Admin'}
                               </button>
-                              <button
-                                onClick={() => deleteUser(u.id)}
-                                className="px-2 py-1 rounded text-[11px] font-medium text-red-500 hover:bg-red-50 transition-[background-color,transform] active:scale-[0.98] ml-1"
-                                title={`Delete ${u.email}`}
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
-                              </button>
+                              {!u.is_admin && (
+                                <button
+                                  onClick={() => deleteUser(u.id)}
+                                  className="px-2 py-1 rounded text-[11px] font-medium text-red-500 hover:bg-red-50 transition-[background-color,transform] active:scale-[0.98] ml-1"
+                                  title={`Delete ${u.email}`}
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>

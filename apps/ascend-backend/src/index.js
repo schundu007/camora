@@ -996,7 +996,8 @@ app.delete('/api/admin/delete-user/:userId', apiLimiter, authenticate, async (re
     // Prevent self-deletion
     if (userId === req.user.id) return res.status(400).json({ error: 'Cannot delete your own account' });
 
-    const user = await query('SELECT email, name FROM users WHERE id = $1', [userId]);
+    const user = await query('SELECT email, name, is_admin FROM users WHERE id = $1', [userId]);
+    if (user.rows[0]?.is_admin) return res.status(403).json({ error: 'Cannot delete an admin account. Revoke admin first.' });
     if (!user.rows[0]) return res.status(404).json({ error: 'User not found' });
 
     const { email, name } = user.rows[0];
