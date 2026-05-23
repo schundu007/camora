@@ -558,8 +558,8 @@ export default function AnalyticsPage() {
                                 <span className="font-mono text-[12px] font-bold tabular-nums text-[var(--text-primary)]">{v.views}</span>
                                 <span className="font-mono text-[10px] text-[var(--text-muted)] ml-1">/ {v.pages_count}p</span>
                               </td>
-                              <td className="px-4 py-2.5 max-w-[160px] truncate font-mono text-[11px]" style={{ color: 'var(--cam-gold-leaf-dk)' }}>{topPage}</td>
-                              <td className="px-4 py-2.5 text-[11px] text-[var(--text-muted)] max-w-[120px] truncate">{referrer}</td>
+                              <td className="px-4 py-2.5 font-mono text-[11px] whitespace-nowrap" style={{ color: 'var(--cam-gold-leaf-dk)' }}>{topPage}</td>
+                              <td className="px-4 py-2.5 text-[11px] text-[var(--text-muted)] whitespace-nowrap">{referrer}</td>
                               <td className="px-4 py-2.5 whitespace-nowrap">
                                 <span className="font-mono text-[11px] text-[var(--text-muted)]">{relTime}</span>
                               </td>
