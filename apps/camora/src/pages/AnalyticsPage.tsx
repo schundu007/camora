@@ -20,7 +20,7 @@ interface User {
   id: number;
   email: string;
   name: string | null;
-  avatar: string | null;
+  image: string | null;
   provider: string;
   is_active: boolean;
   onboarding_completed: boolean;
@@ -576,24 +576,24 @@ export default function AnalyticsPage() {
                   </thead>
                   <tbody>
                     {filteredUsers.map((u, i) => {
-                      const rowBase = i % 2 !== 0
-                        ? 'color-mix(in oklab, var(--cam-primary) 2%, var(--bg-surface))'
-                        : 'var(--bg-surface)';
+                      const rowBase = i % 2 !== 0 ? 'var(--bg-elevated)' : 'var(--bg-surface)';
                       return (
                         <tr key={u.id}
-                          className="border-b border-[var(--border)]/30 transition-colors duration-75"
+                          className="border-b border-[var(--border)]/40 transition-colors duration-75"
                           style={{ background: rowBase }}
-                          onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))')}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 9%, var(--bg-elevated))')}
                           onMouseLeave={e => (e.currentTarget.style.background = rowBase)}>
 
                           <td className="px-4 py-2.5">
                             <div className="flex items-center gap-2.5">
-                              {u.avatar ? (
-                                <img src={u.avatar} alt="" className="w-8 h-8 rounded-full flex-shrink-0"
-                                  style={{ boxShadow: '0 0 0 1px color-mix(in oklab, var(--cam-primary) 20%, transparent)' }} />
+                              {u.image ? (
+                                <img src={u.image} alt={u.name || u.email}
+                                  className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
+                                  style={{ boxShadow: '0 0 0 2px color-mix(in oklab, var(--cam-primary) 30%, transparent)' }}
+                                  referrerPolicy="no-referrer" />
                               ) : (
                                 <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-[11px] font-bold"
-                                  style={{ background: 'color-mix(in oklab, var(--cam-primary) 16%, var(--bg-surface))', color: 'var(--cam-primary)' }}>
+                                  style={{ background: 'color-mix(in oklab, var(--cam-primary) 18%, var(--bg-elevated))', color: 'var(--cam-primary)' }}>
                                   {(u.name || u.email)[0].toUpperCase()}
                                 </div>
                               )}
