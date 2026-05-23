@@ -15,7 +15,7 @@ interface SharedCodeEditorProps {
   onMount?: (editor: any) => void;
 }
 
-function EditorSkeleton({ height }: { height: string }) {
+const EditorSkeleton = ({ height }: { height: string }) => {
   return (
     <div
       className="shimmer rounded-md flex items-center justify-center"
@@ -33,7 +33,7 @@ function EditorSkeleton({ height }: { height: string }) {
   );
 }
 
-export default function SharedCodeEditor({
+const SharedCodeEditor = ({
   language,
   code,
   onChange,
@@ -44,7 +44,7 @@ export default function SharedCodeEditor({
   showLineNumbers = true,
   className,
   onMount,
-}: SharedCodeEditorProps) {
+}: SharedCodeEditorProps) => {
   return (
     <div className={className} style={{ height, overflow: 'hidden' }}>
       <Suspense fallback={<EditorSkeleton height={height} />}>
@@ -79,4 +79,6 @@ export default function SharedCodeEditor({
       </Suspense>
     </div>
   );
-}
+};
+
+export default SharedCodeEditor;

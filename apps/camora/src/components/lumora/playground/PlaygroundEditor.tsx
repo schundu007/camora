@@ -19,7 +19,7 @@ interface Props {
   explainMode:  boolean;
 }
 
-export function PlaygroundEditor({ language, defaultValue, onChange, onMount, explainMode }: Props) {
+export const PlaygroundEditor = ({ language, defaultValue, onChange, onMount, explainMode }: Props) => {
   const monaco = useMonaco();
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const lintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

@@ -4,7 +4,7 @@ interface AnnotationPanelProps {
   changes: CoFixChange[];
 }
 
-export function AnnotationPanel({ changes }: AnnotationPanelProps) {
+export const AnnotationPanel = ({ changes }: AnnotationPanelProps) => {
   if (changes.length === 0) return null;
 
   return (

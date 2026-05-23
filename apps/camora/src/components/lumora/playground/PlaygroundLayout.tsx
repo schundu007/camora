@@ -13,7 +13,7 @@ const DEFAULT_CODE: Record<PlaygroundLanguage, string> = {
   terraform: 'resource "null_resource" "example" {\n  triggers = {\n    value = "hello"\n  }\n}\n',
 };
 
-export function PlaygroundLayout() {
+export const PlaygroundLayout = () => {
   const [activeTab, setActiveTab]   = useState<PlaygroundLanguage>('python3');
   const [running, setRunning]       = useState(false);
   const [formatting, setFormatting] = useState(false);
