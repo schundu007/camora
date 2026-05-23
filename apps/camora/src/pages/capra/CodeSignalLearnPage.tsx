@@ -1,0 +1,195 @@
+import { useState, useMemo } from 'react';
+import { Icon } from '../../components/shared/Icons.jsx';
+import { CODESIGNAL_LEARN_PATHS } from '../../data/capra/codesignalLearnPaths.js';
+
+type Difficulty = 'easy' | 'medium' | 'hard';
+
+interface LearnPath {
+  slug: string;
+  title: string;
+  topic: string;
+  difficulty: Difficulty;
+  practiceCount: number;
+  urlSlug: string;
+}
+
+const TOPIC_LABELS: Record<string, string> = {
+  general: 'General',
+  javascript: 'JavaScript',
+  python: 'Python',
+  java: 'Java',
+  dsa: 'DSA',
+  sql: 'SQL',
+  searching: 'Searching',
+  graphs: 'Graphs',
+};
+
+const DIFF_CHIP: Record<Difficulty, { bg: string; text: string }> = {
+  easy:   { bg: 'color-mix(in oklab, #10b981 15%, var(--bg-elevated))', text: '#10b981' },
+  medium: { bg: 'color-mix(in oklab, #f59e0b 15%, var(--bg-elevated))', text: '#f59e0b' },
+  hard:   { bg: 'color-mix(in oklab, #ef4444 15%, var(--bg-elevated))', text: '#ef4444' },
+};
+
+const TOPIC_ACCENT: Record<string, string> = {
+  python:     'var(--cam-primary)',
+  javascript: 'var(--cam-gold-leaf)',
+  java:       'var(--cam-primary)',
+  dsa:        'var(--cam-primary)',
+  sql:        'var(--cam-gold-leaf)',
+  general:    'var(--cam-primary)',
+  searching:  'var(--cam-primary)',
+  graphs:     'var(--cam-gold-leaf)',
+};
+
+function PathCard({ path }: { path: LearnPath }) {
+  const diff = DIFF_CHIP[path.difficulty];
+  const url = `https://codesignal.com/learn/course-paths/${path.urlSlug}`;
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex flex-col gap-3 rounded-xl p-4 transition-all"
+      style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLAnchorElement).style.borderColor = 'color-mix(in oklab, var(--cam-primary) 40%, transparent)';
+        (e.currentTarget as HTMLAnchorElement).style.background = 'color-mix(in oklab, var(--cam-primary) 4%, var(--bg-surface))';
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--border)';
+        (e.currentTarget as HTMLAnchorElement).style.background = 'var(--bg-surface)';
+      }}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-[13px] font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
+          {path.title}
+        </span>
+        <Icon name="external-link" className="w-3.5 h-3.5 shrink-0 mt-0.5 opacity-0 group-hover:opacity-60 transition-opacity" style={{ color: 'var(--text-muted)' }} />
+      </div>
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full capitalize" style={{ background: diff.bg, color: diff.text }}>
+          {path.difficulty}
+        </span>
+        {path.practiceCount > 0 && (
+          <span className="font-mono text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
+            {path.practiceCount} tasks
+          </span>
+        )}
+      </div>
+    </a>
+  );
+}
+
+function TopicSection({ topic, paths }: { topic: string; paths: LearnPath[] }) {
+  const accent = TOPIC_ACCENT[topic] ?? 'var(--cam-primary)';
+  const label = TOPIC_LABELS[topic] ?? topic;
+
+  return (
+    <section>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: accent }} />
+        <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: accent }}>
+          {label}
+        </h2>
+        <span className="font-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>{paths.length}</span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {paths.map(p => <PathCard key={p.slug} path={p} />)}
+      </div>
+    </section>
+  );
+}
+
+const TOPIC_ORDER = ['general', 'javascript', 'python', 'java', 'dsa', 'sql', 'searching', 'graphs'];
+
+export default function CodeSignalLearnPage() {
+  const [query, setQuery] = useState('');
+  const [diffFilter, setDiffFilter] = useState<'all' | Difficulty>('all');
+
+  const filtered = useMemo<LearnPath[]>(() => {
+    const q = query.toLowerCase();
+    return (CODESIGNAL_LEARN_PATHS as LearnPath[]).filter(p => {
+      if (diffFilter !== 'all' && p.difficulty !== diffFilter) return false;
+      if (q && !p.title.toLowerCase().includes(q) && !p.topic.includes(q)) return false;
+      return true;
+    });
+  }, [query, diffFilter]);
+
+  const grouped = useMemo(() => {
+    const map: Record<string, LearnPath[]> = {};
+    for (const p of filtered) {
+      if (!map[p.topic]) map[p.topic] = [];
+      map[p.topic].push(p);
+    }
+    return map;
+  }, [filtered]);
+
+  const topicOrder = TOPIC_ORDER.filter(t => grouped[t]);
+  const otherTopics = Object.keys(grouped).filter(t => !TOPIC_ORDER.includes(t));
+
+  return (
+    <div className="flex flex-col min-h-full">
+      {/* Header strip */}
+      <div className="cam-hero-strip px-6 py-5" style={{ borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+        <div className="flex items-center gap-3 mb-1">
+          <Icon name="book" className="w-5 h-5" style={{ color: 'var(--cam-gold-leaf)' }} />
+          <h1 className="text-[15px] font-bold" style={{ color: 'var(--cam-gold-leaf)' }}>
+            CodeSignal Learn
+          </h1>
+          <span className="font-mono text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)', color: 'var(--cam-gold-leaf)' }}>
+            {(CODESIGNAL_LEARN_PATHS as LearnPath[]).length} paths
+          </span>
+        </div>
+        <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          Browse all CodeSignal learning paths. Click any card to open it on CodeSignal.
+        </p>
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center gap-3 px-6 py-4 flex-wrap" style={{ borderBottom: '1px solid var(--border)' }}>
+        <div className="flex items-center gap-2 rounded-lg px-3 py-2 flex-1 min-w-48" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          <Icon name="search" className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--text-muted)' }} />
+          <input
+            type="text"
+            placeholder="Search paths…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            className="flex-1 bg-transparent text-[13px] outline-none"
+            style={{ color: 'var(--text-primary)' }}
+          />
+        </div>
+        <div className="tab-group flex gap-1">
+          {(['all', 'easy', 'medium', 'hard'] as const).map(d => (
+            <button
+              key={d}
+              onClick={() => setDiffFilter(d)}
+              className={`tab-item capitalize ${diffFilter === d ? 'active' : ''}`}
+            >
+              {d}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 px-6 py-6 space-y-8 max-w-6xl">
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-16" style={{ color: 'var(--text-muted)' }}>
+            <Icon name="search" className="w-8 h-8 opacity-30" />
+            <p className="text-[13px]">No paths match your filters.</p>
+          </div>
+        ) : (
+          <>
+            {[...topicOrder, ...otherTopics].map(topic => (
+              <TopicSection key={topic} topic={topic} paths={grouped[topic]} />
+            ))}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

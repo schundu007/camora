@@ -27,6 +27,7 @@ const PRACTICE_ITEMS = [
 
 const LEARN_ITEMS = [
   { id: 'python', label: 'Python', icon: 'book', href: '/capra/learn/python' },
+  { id: 'codesignal', label: 'CodeSignal', icon: 'book', href: '/capra/learn/codesignal' },
 ];
 
 /**
