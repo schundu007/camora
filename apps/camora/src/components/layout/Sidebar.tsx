@@ -177,61 +177,74 @@ const icons = {
 
 /* ─── Navigation sections ────────────────────────────────────── */
 
+const em = (e: string) => <span style={{ fontSize: 15, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16 }}>{e}</span>;
+
+const pyLogo = (
+  <svg viewBox="0 0 110 110" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="pyNavBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#5A9FD4"/><stop offset="100%" stopColor="#306998"/></linearGradient>
+      <linearGradient id="pyNavYellow" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#FFE052"/><stop offset="100%" stopColor="#FFC331"/></linearGradient>
+    </defs>
+    <path fill="url(#pyNavBlue)" d="M54.9 5C33.3 5 34.7 14.1 34.7 14.1l0 9.4h20.6v2.8H22.2S5 24.1 5 45.9c0 21.8 12.1 21 12.1 21h7.2v-10.1s-.4-12.1 11.9-12.1h20.5s11.5.2 11.5-11.1V16.3S70 5 54.9 5zm-11.4 6.6c2.1 0 3.7 1.7 3.7 3.7 0 2.1-1.7 3.7-3.7 3.7-2.1 0-3.7-1.7-3.7-3.7 0-2.1 1.7-3.7 3.7-3.7z"/>
+    <path fill="url(#pyNavYellow)" d="M55.5 105c21.6 0 20.2-9.1 20.2-9.1l0-9.4H55.1v-2.8h33.1S105 86 105 64.1C105 42.3 92.9 43.1 92.9 43.1h-7.2v10.1s.4 12.1-11.9 12.1H53.3S41.8 65.1 41.8 76.4v27.3S40.4 105 55.5 105zm11.4-6.6c-2.1 0-3.7-1.7-3.7-3.7 0-2.1 1.7-3.7 3.7-3.7 2.1 0 3.7 1.7 3.7 3.7 0 2.1-1.7 3.7-3.7 3.7z"/>
+  </svg>
+);
+
 const sections: NavSection[] = [
   {
     title: 'Apply',
     items: [
-      { label: 'Jobs', path: '/jobs', icon: icons.briefcase },
+      { label: 'Jobs', path: '/jobs', icon: em('💼') },
     ],
   },
   {
     title: 'Prepare',
     items: [
-      { label: 'Overview', path: '/capra/prepare', icon: icons.home },
-      { label: 'DSA', path: '/capra/prepare/coding', icon: icons.cpu },
-      { label: 'System Design', path: '/capra/prepare/system-design', icon: icons.layers },
-      { label: 'Behavioral', path: '/capra/prepare/behavioral', icon: icons.users },
-      { label: 'Low Level Design', path: '/capra/prepare/low-level-design', icon: icons.code },
-      { label: 'Microservices', path: '/capra/prepare/microservices', icon: icons.grid },
-      { label: 'DevOps', path: '/capra/prepare/devops', icon: icons.devops },
-      { label: 'SRE', path: '/capra/prepare/sre', icon: icons.sre },
-      { label: 'Databases & SQL', path: '/capra/prepare/databases', icon: icons.database },
-      { label: 'Projects', path: '/capra/prepare/projects', icon: icons.folder },
-      { label: 'Roadmaps', path: '/capra/prepare/roadmaps', icon: icons.map },
-      { label: 'Eng Blogs', path: '/capra/prepare/eng-blogs', icon: icons.book },
+      { label: 'Overview', path: '/capra/prepare', icon: em('🏠') },
+      { label: 'DSA', path: '/capra/prepare/coding', icon: em('🧮') },
+      { label: 'System Design', path: '/capra/prepare/system-design', icon: em('🏗️') },
+      { label: 'Behavioral', path: '/capra/prepare/behavioral', icon: em('🗣️') },
+      { label: 'Low Level Design', path: '/capra/prepare/low-level-design', icon: em('⚙️') },
+      { label: 'Microservices', path: '/capra/prepare/microservices', icon: em('🔗') },
+      { label: 'DevOps', path: '/capra/prepare/devops', icon: em('🚀') },
+      { label: 'SRE', path: '/capra/prepare/sre', icon: em('🛡️') },
+      { label: 'Databases & SQL', path: '/capra/prepare/databases', icon: em('🗄️') },
+      { label: 'Projects', path: '/capra/prepare/projects', icon: em('📂') },
+      { label: 'Roadmaps', path: '/capra/prepare/roadmaps', icon: em('🗺️') },
+      { label: 'Eng Blogs', path: '/capra/prepare/eng-blogs', icon: em('📰') },
     ],
   },
   {
     title: 'Practice',
     items: [
-      { label: 'Practice', path: '/capra/practice', icon: icons.play },
-      { label: 'Problem Library', path: '/capra/library', icon: icons.library },
-      { label: 'Blind 75', path: '/handbook', icon: icons.star },
+      { label: 'Practice', path: '/capra/practice', icon: em('🎯') },
+      { label: 'Problem Library', path: '/capra/library', icon: em('📚') },
+      { label: 'Blind 75', path: '/handbook', icon: em('⭐') },
     ],
   },
   {
     title: 'Learn',
     items: [
-      { label: 'Python', path: '/capra/learn/python', icon: icons.book },
+      { label: 'Python', path: '/capra/learn/python', icon: pyLogo },
     ],
   },
   {
     title: 'Attend',
     items: [
-      { label: 'Live Session', path: '/lumora', icon: icons.mic },
+      { label: 'Live Session', path: '/lumora', icon: em('🎙️') },
     ],
   },
   {
     title: 'Tools',
     items: [
-      { label: 'Code Solver', path: '/capra', icon: icons.layout },
-      { label: 'Design Solver', path: '/capra/design', icon: icons.layers },
+      { label: 'Code Solver', path: '/capra', icon: em('💻') },
+      { label: 'Design Solver', path: '/capra/design', icon: em('🎨') },
     ],
   },
   {
     title: 'Profile',
     items: [
-      { label: 'Achievements', path: '/profile?tab=achievements', icon: icons.trophy },
+      { label: 'Achievements', path: '/profile?tab=achievements', icon: em('🏆') },
     ],
   },
 ];
