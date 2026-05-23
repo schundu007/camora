@@ -41,35 +41,27 @@ const TOPIC_ACCENT: Record<string, string> = {
   graphs:     'var(--cam-gold-leaf)',
 };
 
+const DIFF_TABS: { value: 'all' | Difficulty; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'easy', label: 'Easy' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'hard', label: 'Hard' },
+];
+
 function PathCard({ path }: { path: LearnPath }) {
   const diff = DIFF_CHIP[path.difficulty];
-  const url = `https://codesignal.com/learn/course-paths/${path.urlSlug}`;
 
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group flex flex-col gap-3 rounded-xl p-4 transition-all"
+    <div
+      className="flex flex-col gap-3 rounded-xl p-4"
       style={{
         background: 'var(--bg-surface)',
         border: '1px solid var(--border)',
       }}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = 'color-mix(in oklab, var(--cam-primary) 40%, transparent)';
-        (e.currentTarget as HTMLAnchorElement).style.background = 'color-mix(in oklab, var(--cam-primary) 4%, var(--bg-surface))';
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--border)';
-        (e.currentTarget as HTMLAnchorElement).style.background = 'var(--bg-surface)';
-      }}
     >
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-[13px] font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
-          {path.title}
-        </span>
-        <Icon name="external-link" className="w-3.5 h-3.5 shrink-0 mt-0.5 opacity-0 group-hover:opacity-60 transition-opacity" style={{ color: 'var(--text-muted)' }} />
-      </div>
+      <span className="text-[13px] font-semibold leading-snug flex-1" style={{ color: 'var(--text-primary)' }}>
+        {path.title}
+      </span>
       <div className="flex items-center gap-2 flex-wrap">
         <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full capitalize" style={{ background: diff.bg, color: diff.text }}>
           {path.difficulty}
@@ -80,7 +72,7 @@ function PathCard({ path }: { path: LearnPath }) {
           </span>
         )}
       </div>
-    </a>
+    </div>
   );
 }
 
@@ -97,7 +89,7 @@ function TopicSection({ topic, paths }: { topic: string; paths: LearnPath[] }) {
         </h2>
         <span className="font-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>{paths.length}</span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         {paths.map(p => <PathCard key={p.slug} path={p} />)}
       </div>
     </section>
@@ -143,9 +135,19 @@ export default function CodeSignalLearnPage() {
           <span className="font-mono text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)', color: 'var(--cam-gold-leaf)' }}>
             {(CODESIGNAL_LEARN_PATHS as LearnPath[]).length} paths
           </span>
+          <a
+            href="https://codesignal.com/learn/course-paths/browse"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-opacity hover:opacity-80"
+            style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 20%, transparent)', color: 'var(--cam-gold-leaf)', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 35%, transparent)' }}
+          >
+            Open on CodeSignal
+            <Icon name="external-link" className="w-3 h-3" />
+          </a>
         </div>
         <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
-          Browse all CodeSignal learning paths. Click any card to open it on CodeSignal.
+          421 learning paths from CodeSignal. Use the search or filter to find topics.
         </p>
       </div>
 
@@ -162,21 +164,28 @@ export default function CodeSignalLearnPage() {
             style={{ color: 'var(--text-primary)' }}
           />
         </div>
-        <div className="tab-group flex gap-1">
-          {(['all', 'easy', 'medium', 'hard'] as const).map(d => (
+        <div className="flex items-center gap-1 rounded-lg p-1" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          {DIFF_TABS.map(tab => (
             <button
-              key={d}
-              onClick={() => setDiffFilter(d)}
-              className={`tab-item capitalize ${diffFilter === d ? 'active' : ''}`}
+              key={tab.value}
+              onClick={() => setDiffFilter(tab.value)}
+              className="px-3 py-1 rounded-md text-[12px] font-medium transition-all"
+              style={diffFilter === tab.value ? {
+                background: 'var(--cam-primary)',
+                color: '#fff',
+              } : {
+                background: 'transparent',
+                color: 'var(--text-muted)',
+              }}
             >
-              {d}
+              {tab.label}
             </button>
           ))}
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-6 py-6 space-y-8 max-w-6xl">
+      <div className="flex-1 px-6 py-6 space-y-8 mx-auto w-full max-w-7xl">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16" style={{ color: 'var(--text-muted)' }}>
             <Icon name="search" className="w-8 h-8 opacity-30" />
