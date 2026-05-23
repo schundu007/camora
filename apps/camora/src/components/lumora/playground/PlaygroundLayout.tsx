@@ -100,24 +100,38 @@ export function PlaygroundLayout() {
             <button
               onClick={handleFormat}
               disabled={formatting}
-              className="text-[11px] px-3 py-1 rounded-md border border-[var(--cam-gold-leaf)] text-[var(--cam-gold-leaf)] hover:opacity-80 transition-opacity disabled:opacity-40"
-              style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+              className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40"
+              style={{
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                background: 'linear-gradient(135deg, rgba(0,47,120,0.55) 0%, rgba(10,14,26,0.85) 100%)',
+                border: '1px solid var(--cam-gold-leaf)',
+                color: 'var(--cam-gold-leaf)',
+              }}
             >
               {formatting ? 'Formatting…' : 'Format'}
             </button>
           )}
           <button
             onClick={handleClear}
-            className="text-[11px] px-3 py-1 rounded-md border border-[var(--cam-gold-leaf)] text-[var(--cam-gold-leaf)] opacity-60 hover:opacity-100 transition-opacity"
-            style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+            className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90"
+            style={{
+              fontFamily: 'Plus Jakarta Sans, sans-serif',
+              background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
+              border: '1px solid var(--cam-gold-leaf-dk)',
+              color: 'var(--cam-gold-leaf-dk)',
+            }}
           >
             Clear
           </button>
           <button
             onClick={handleRun}
             disabled={running}
-            className="text-[11px] px-5 py-1.5 rounded-md font-semibold bg-[var(--cam-gold-leaf)] text-[#0a0e1a] hover:bg-[var(--cam-gold-leaf-lt)] transition-colors disabled:opacity-50"
-            style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+            className="text-[11px] font-bold px-5 py-1.5 rounded-md transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{
+              fontFamily: 'Plus Jakarta Sans, sans-serif',
+              background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
+              color: '#0a0e1a',
+            }}
           >
             {running ? 'Running…' : '▶ Run'}
           </button>
