@@ -900,18 +900,21 @@ export const LumoraShellPage = () => {
                 </div>
               </div>
               <div className="max-w-2xl mx-auto px-6 pt-5 pb-10 w-full">
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                  {[
-                    { label: 'Sessions Used', value: String(history.length), sub: 'this month' },
-                    { label: 'AI Questions', value: String(history.filter((e: any) => e.question).length), sub: 'total asked' },
-                    { label: 'Plan', value: 'Active', sub: 'subscription' },
-                  ].map(s => (
-                    <div key={s.label} className="rounded-xl p-4 text-center" style={{ border: '1px solid var(--border)' }}>
-                      <div className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>{s.value}</div>
-                      <div className="text-[10px] font-medium mt-1" style={{ color: 'var(--text-primary)' }}>{s.label}</div>
-                      <div className="text-[9px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{s.sub}</div>
-                    </div>
-                  ))}
+                <div className="flex items-center gap-5 mb-6 px-4 py-3 rounded-xl" style={{ border: '1px solid var(--border)', background: 'rgba(38,97,156,0.04)' }}>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{history.length}</span>
+                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>sessions</span>
+                  </div>
+                  <div className="w-px h-5 shrink-0" style={{ background: 'var(--border)' }} />
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{history.filter((e: any) => e.question).length}</span>
+                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>questions asked</span>
+                  </div>
+                  <div className="w-px h-5 shrink-0" style={{ background: 'var(--border)' }} />
+                  <div className="flex items-center gap-1.5 ml-auto">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(38,97,156,0.12)', color: 'var(--accent)', border: '1px solid rgba(38,97,156,0.25)' }}>Active</span>
+                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>subscription</span>
+                  </div>
                 </div>
                 <div className="rounded-xl p-4" style={{ border: '1px solid var(--border)' }}>
                   <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Recent Usage</h3>
