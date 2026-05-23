@@ -208,11 +208,11 @@ export default function PricingPage() {
                   <col style={{ width: '17%' }} />
                 </colgroup>
                 <thead>
-                  <tr className="bg-[var(--bg-elevated)]">
-                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Feature</th>
-                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Free</th>
-                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Monthly</th>
-                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Yearly</th>
+                  <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))' }}>
+                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--cam-primary)' }}>Feature</th>
+                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--cam-primary)' }}>Free</th>
+                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--cam-primary)' }}>Monthly</th>
+                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--cam-primary)' }}>Yearly</th>
                     <th className="px-5 pt-3 pb-1 text-left">
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--cam-primary-dk)] px-2.5 py-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.18em] text-white">
                         <span className="h-1 w-1 rounded-full bg-[var(--cam-gold-leaf-lt)]" />

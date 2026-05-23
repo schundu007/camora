@@ -548,26 +548,14 @@ export default function Blind75Page() {
       {/* ═══════════════════════ Tab Navigation (sticky) ═══════════════════════ */}
       <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 'var(--nav-h, 56px)', zIndex: 30 }}>
         <div className="page-wrap">
-          <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', scrollbarWidth: 'none', padding: '8px 0' }} className="b75-pills-scroll">
+          <div className="tab-group b75-pills-scroll" style={{ overflowX: 'auto', scrollbarWidth: 'none', padding: '8px 0' }}>
             {TABS.map((tab) => {
               const isActive = activeTab === tab.key;
               return (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    padding: '7px 16px',
-                    background: isActive ? 'var(--accent)' : 'transparent',
-                    border: isActive ? 'none' : '1px solid transparent',
-                    borderRadius: '20px',
-                    color: isActive ? '#ffffff' : 'var(--text-muted)',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                  }}
+                  className={`tab-group-item${isActive ? ' tab-group-item-active' : ''}`}
                 >
                   {tab.label}
                 </button>

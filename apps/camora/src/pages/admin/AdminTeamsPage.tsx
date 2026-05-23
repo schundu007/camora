@@ -268,15 +268,15 @@ export default function AdminTeamsPage() {
         {!loading && !error && (
           <div className="rounded-xl overflow-x-auto" style={{ border: '1px solid var(--border)' }}>
             <table className="w-full text-sm">
-              <thead style={{ background: 'var(--bg-elevated)' }}>
-                <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  <th className="text-left px-3 py-2.5 font-semibold">Team / owner</th>
-                  <th className="text-left px-3 py-2.5 font-semibold">Plan</th>
-                  <th className="text-left px-3 py-2.5 font-semibold">Members</th>
-                  <th className="text-left px-3 py-2.5 font-semibold">Used / Pool</th>
-                  <th className="text-left px-3 py-2.5 font-semibold">Auto top-up</th>
-                  <th className="text-left px-3 py-2.5 font-semibold">30d auto-charged</th>
-                  <th className="text-left px-3 py-2.5 font-semibold">Actions</th>
+              <thead style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+                <tr>
+                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Team / owner</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Plan</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Members</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Used / Pool</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Auto top-up</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>30d auto-charged</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>

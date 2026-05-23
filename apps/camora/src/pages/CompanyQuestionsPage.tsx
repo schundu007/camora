@@ -102,8 +102,11 @@ export default function CompanyQuestionsPage() {
         </section>
 
         {/* Interview Process */}
-        <section>
-          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Interview Process</h2>
+        <section className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+          <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+            <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Interview Process</h2>
+          </div>
+          <div className="p-5">
           <ol className="space-y-3">
             {company.interviewProcess.map((step, i) => (
               <li key={i} className="flex items-start gap-3">
@@ -114,11 +117,15 @@ export default function CompanyQuestionsPage() {
               </li>
             ))}
           </ol>
+          </div>
         </section>
 
         {/* Sample Questions */}
-        <section>
-          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Sample Practice Questions</h2>
+        <section className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+          <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+            <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Sample Practice Questions</h2>
+          </div>
+          <div className="p-5">
           <div className="space-y-3">
             {company.sampleQuestions.map((question, i) => {
               const typeStyle = TYPE_COLORS[question.type] ?? TYPE_COLORS.coding;
@@ -153,11 +160,15 @@ export default function CompanyQuestionsPage() {
               );
             })}
           </div>
+          </div>
         </section>
 
         {/* Tips */}
-        <section>
-          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Study Tips</h2>
+        <section className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+          <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+            <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Study Tips</h2>
+          </div>
+          <div className="p-5">
           <div className="grid gap-3 sm:grid-cols-3">
             {company.tips.map((tip, i) => (
               <div key={i} className="bg-[var(--bg-surface)] border-0 rounded-xl p-5">
@@ -167,6 +178,7 @@ export default function CompanyQuestionsPage() {
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{tip}</p>
               </div>
             ))}
+          </div>
           </div>
         </section>
 
@@ -187,8 +199,11 @@ export default function CompanyQuestionsPage() {
         </section>
 
         {/* Related Companies */}
-        <section>
-          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Explore Other Companies</h2>
+        <section className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+          <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+            <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Explore Other Companies</h2>
+          </div>
+          <div className="p-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {related.map((relSlug) => {
               const rel = COMPANY_SEO_DATA[relSlug];
@@ -205,6 +220,7 @@ export default function CompanyQuestionsPage() {
                 </Link>
               );
             })}
+          </div>
           </div>
         </section>
       </main>

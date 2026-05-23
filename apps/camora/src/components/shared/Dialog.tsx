@@ -190,7 +190,7 @@ const DialogOverlay = ({ pending, confirmBtnRef, onClose }: {
           </div>
         </div>
         {/* Actions */}
-        <div className="px-5 py-3 flex items-center justify-end gap-2" style={{ background: 'var(--bg-elevated)', borderTop: '1px solid var(--border)' }}>
+        <div className="px-5 py-3 flex items-center justify-end gap-2" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderTop: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
           {cancelLabel && (
             <button
               type="button"
