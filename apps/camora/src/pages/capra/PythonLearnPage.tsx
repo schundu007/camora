@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
 import { PYTHON_TOPICS, type Topic } from '../../data/python-curriculum';
@@ -148,6 +148,7 @@ const TopicView = ({ topic }: { topic: Topic }) => {
 export default function PythonLearnPage() {
   const [params, setParams] = useSearchParams();
   const [search, setSearch] = useState('');
+  const navigate = useNavigate();
   const selectedId = params.get('topic') || PYTHON_TOPICS[0].id;
 
   const setTopic = (id: string) => setParams({ topic: id });
@@ -176,9 +177,22 @@ export default function PythonLearnPage() {
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.07), transparent 70%)' }} />
-        <div className="relative page-wrap pt-20 pb-14">
+        <div className="relative page-wrap pt-14 pb-14">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 mb-6 text-[12px] font-medium transition-opacity hover:opacity-70" style={{ color: 'rgba(255,255,255,0.55)' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            Back
+          </button>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl font-bold" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, rgba(255,255,255,0.08))', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)' }}>🐍</div>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, rgba(255,255,255,0.08))', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)' }}>
+              <svg viewBox="0 0 110 110" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="pyHeroBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#5A9FD4"/><stop offset="100%" stopColor="#306998"/></linearGradient>
+                  <linearGradient id="pyHeroYellow" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#FFE052"/><stop offset="100%" stopColor="#FFC331"/></linearGradient>
+                </defs>
+                <path fill="url(#pyHeroBlue)" d="M54.9 5C33.3 5 34.7 14.1 34.7 14.1l0 9.4h20.6v2.8H22.2S5 24.1 5 45.9c0 21.8 12.1 21 12.1 21h7.2v-10.1s-.4-12.1 11.9-12.1h20.5s11.5.2 11.5-11.1V16.3S70 5 54.9 5zm-11.4 6.6c2.1 0 3.7 1.7 3.7 3.7 0 2.1-1.7 3.7-3.7 3.7-2.1 0-3.7-1.7-3.7-3.7 0-2.1 1.7-3.7 3.7-3.7z"/>
+                <path fill="url(#pyHeroYellow)" d="M55.5 105c21.6 0 20.2-9.1 20.2-9.1l0-9.4H55.1v-2.8h33.1S105 86 105 64.1C105 42.3 92.9 43.1 92.9 43.1h-7.2v10.1s.4 12.1-11.9 12.1H53.3S41.8 65.1 41.8 76.4v27.3S40.4 105 55.5 105zm11.4-6.6c-2.1 0-3.7-1.7-3.7-3.7 0-2.1 1.7-3.7 3.7-3.7 2.1 0 3.7 1.7 3.7 3.7 0 2.1-1.7 3.7-3.7 3.7z"/>
+              </svg>
+            </div>
             <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)' }}>Learning Library</span>
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Python <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Mastery</span></h1>
