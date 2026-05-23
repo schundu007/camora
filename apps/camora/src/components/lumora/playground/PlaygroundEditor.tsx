@@ -12,24 +12,22 @@ const MONACO_LANG: Record<PlaygroundLanguage, string> = {
 };
 
 interface Props {
-  language:     PlaygroundLanguage;
-  defaultValue: string;
-  onChange:     (value: string) => void;
-  onMount:      (editor: Monaco.editor.IStandaloneCodeEditor) => void;
-  explainMode:  boolean;
+  language:        PlaygroundLanguage;
+  defaultValue:    string;
+  onChange:        (value: string) => void;
+  onMount:         (editor: Monaco.editor.IStandaloneCodeEditor) => void;
+  onCursorChange?: (line: number, code: string) => void;
 }
 
-export const PlaygroundEditor = ({ language, defaultValue, onChange, onMount, explainMode }: Props) => {
+export const PlaygroundEditor = ({ language, defaultValue, onChange, onMount, onCursorChange }: Props) => {
   const monaco = useMonaco();
-  const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
-  const lintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editorRef      = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const lintTimer      = useRef<ReturnType<typeof setTimeout> | null>(null);
   const completionsRef = useRef<Monaco.IDisposable | null>(null);
-  const hoverDisposable = useRef<Monaco.IDisposable | null>(null);
 
   function handleChange(value: string | undefined) {
     const v = value ?? '';
     onChange(v);
-
     if (language === 'python3' && monaco) {
       if (lintTimer.current) clearTimeout(lintTimer.current);
       lintTimer.current = setTimeout(() => runLint(v), 500);
@@ -72,41 +70,12 @@ export const PlaygroundEditor = ({ language, defaultValue, onChange, onMount, ex
     return () => { completionsRef.current?.dispose(); };
   }, [monaco]);
 
-  useEffect(() => {
-    hoverDisposable.current?.dispose();
-    hoverDisposable.current = null;
-    if (!monaco || !explainMode) return;
-
-    const monacoLang = MONACO_LANG[language];
-    hoverDisposable.current = monaco.languages.registerHoverProvider(monacoLang, {
-      provideHover: async (model, position) => {
-        const lineContent = model.getLineContent(position.lineNumber).trim();
-        if (!lineContent) return null;
-        try {
-          const result = await playgroundAPI.explain(
-            model.getValue(),
-            position.lineNumber,
-            language
-          );
-          if (!result.explanation) return null;
-          return {
-            contents: [
-              { value: `**Line ${position.lineNumber}** — *Gemini*` },
-              { value: result.explanation },
-            ],
-          };
-        } catch {
-          return null;
-        }
-      },
-    });
-
-    return () => { hoverDisposable.current?.dispose(); };
-  }, [monaco, language, explainMode]);
-
   function handleMount(editor: Monaco.editor.IStandaloneCodeEditor) {
     editorRef.current = editor;
     onMount(editor);
+    editor.onDidChangeCursorPosition(e => {
+      onCursorChange?.(e.position.lineNumber, editor.getValue());
+    });
   }
 
   return (
@@ -138,4 +107,4 @@ export const PlaygroundEditor = ({ language, defaultValue, onChange, onMount, ex
       }}
     />
   );
-}
+};

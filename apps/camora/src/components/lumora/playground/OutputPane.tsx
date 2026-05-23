@@ -88,6 +88,13 @@ export const OutputPane = ({ result, error, language }: Props) => {
           (no output)
         </div>
       )}
+
+      {/* Non-zero exit with no captured output */}
+      {!stdout && !stderr && exitCode !== 0 && (
+        <div className="px-4 py-3">
+          <pre className="text-[#f87171] text-[11px] font-mono">Process exited with code {exitCode} (no output captured)</pre>
+        </div>
+      )}
     </div>
   );
 }
