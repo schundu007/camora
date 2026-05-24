@@ -867,9 +867,6 @@ export default function DocsPage({ onBack }) {
                             <h1 className="font-bold tracking-tight text-3xl md:text-5xl lg:text-6xl mb-3 text-white" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.05 }}>
                               {user?.name ? <>Welcome back, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>{user.name.split(' ')[0]}</span>.</> : <>Your prep, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>organized.</span></>}
                             </h1>
-                            <p className="text-base md:text-lg max-w-2xl" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.55 }}>
-                              {overviewTotalTopics}+ topics across {overviewCategories.length} categories — coding, system design, behavioral, low-level design, and more.
-                            </p>
                           </div>
 
                           {/* Inline progress line — replaces the 4-box metric grid */}
@@ -1320,10 +1317,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="cpu" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
-                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                              Master the building blocks of technical hiring. From arrays and strings to trees, graphs, and dynamic programming — practice the patterns that top companies like Google, Meta, and Amazon test most frequently.
-                            </p>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Arrays & Hashing', 'Trees & Graphs', 'Dynamic Programming', 'Sliding Window', 'Binary Search', 'Backtracking'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1344,10 +1338,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="systemDesign" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>System Design</h2>
-                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                              Learn to design scalable, reliable systems from the ground up. Study real-world architectures like URL shorteners, messaging platforms, and distributed databases — the exact problems asked at senior-level interviews.
-                            </p>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>System Design</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Scalability', 'Load Balancing', 'Caching', 'Database Sharding', 'Message Queues', 'CAP Theorem'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1368,10 +1359,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="users" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Behavioral Questions</h2>
-                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                              Craft compelling stories using the STAR method. Prepare answers for leadership, conflict resolution, and teamwork questions — the human side that determines culture fit at every company from startups to FAANG.
-                            </p>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Behavioral Questions</h2>
                             <div className="flex flex-wrap gap-2">
                               {['STAR Method', 'Leadership', 'Conflict Resolution', 'Teamwork', 'Failure Stories', 'Company Research'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1392,10 +1380,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="layers" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
-                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                              Deep-dive into object-oriented design, SOLID principles, and design patterns. Practice designing class hierarchies for parking lots, elevators, and chess games — the LLD round that separates mid from senior engineers.
-                            </p>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
                             <div className="flex flex-wrap gap-2">
                               {['OOP Principles', 'SOLID', 'Design Patterns', 'Class Diagrams', 'UML', 'Clean Architecture'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1416,10 +1401,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="grid" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
-                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                              Understand distributed system patterns used by Netflix, Uber, and Spotify. Learn service discovery, circuit breakers, saga patterns, and event-driven architectures that power modern cloud-native applications.
-                            </p>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Service Mesh', 'Circuit Breakers', 'Event Sourcing', 'CQRS', 'API Gateway', 'Saga Pattern'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1440,10 +1422,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="database" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
-                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                              Master database internals and SQL queries. Understand indexing, replication, partitioning, consistency models, window functions, CTEs, and complex joins — the exact topics asked at Meta, Amazon, and top firms.
-                            </p>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Indexing', 'Replication', 'Sharding', 'ACID vs BASE', 'Window Functions', 'CTEs', 'Complex Joins', 'Query Optimization'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1464,10 +1443,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="code" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
-                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                              Build impressive projects that showcase real engineering skills. From full-stack web apps to CLI tools and API services — create the portfolio pieces that make hiring managers take notice.
-                            </p>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Full-Stack Apps', 'API Design', 'CI/CD', 'Testing', 'Documentation', 'Open Source'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1488,10 +1464,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="trendingUp" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
-                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                              Follow structured learning paths tailored to your target role. Whether you're aiming for frontend, backend, DevOps, or ML engineering — get a clear roadmap from where you are to where you want to be.
-                            </p>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Frontend', 'Backend', 'Full-Stack', 'DevOps', 'ML Engineering', 'Staff Engineer'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1512,10 +1485,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="bookOpen" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-2 text-white" style={{ fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
-                            <p className="text-base mb-5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                              Learn from the engineers who built the systems you'll be asked about. Curated posts from Netflix, Uber, Stripe, and more — real-world context that elevates your system design answers beyond textbook theory.
-                            </p>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Netflix Tech', 'Uber Engineering', 'Stripe Blog', 'Meta Engineering', 'AWS Architecture', 'Google SRE'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1869,7 +1839,6 @@ export default function DocsPage({ onBack }) {
                     <SectionHero
                       eyebrow="Object-Oriented"
                       title="Low Level Design"
-                      subtitle="Class diagrams, design patterns, and OOP implementations"
                       className="mb-4"
                     />
                     <div className="space-y-3">
@@ -1933,7 +1902,6 @@ export default function DocsPage({ onBack }) {
                     <SectionHero
                       eyebrow="Advanced"
                       title="Distributed System Patterns"
-                      subtitle="Consistency, availability, and data integrity patterns for distributed systems"
                       className="mb-4"
                     />
                     <div className="space-y-3">
@@ -1985,7 +1953,6 @@ export default function DocsPage({ onBack }) {
                     <SectionHero
                       eyebrow="Architecture"
                       title="Microservices Patterns"
-                      subtitle="Service communication, resilience, data management, and deployment patterns"
                       className="mb-4"
                     />
                     <div className="space-y-3">
@@ -2037,7 +2004,6 @@ export default function DocsPage({ onBack }) {
                     <SectionHero
                       eyebrow="Critical"
                       title="System Design Trade-offs"
-                      subtitle="Key architectural decisions and when to choose each approach"
                       className="mb-4"
                     />
                     <div className="space-y-3">
@@ -2089,7 +2055,6 @@ export default function DocsPage({ onBack }) {
                     <SectionHero
                       eyebrow="Senior"
                       title="Scalable Systems"
-                      subtitle="Advanced caching, networking, data, and operational patterns for production systems"
                       className="mb-4"
                     />
                     <div className="space-y-3">
@@ -2141,7 +2106,6 @@ export default function DocsPage({ onBack }) {
                     <SectionHero
                       eyebrow="Advanced"
                       title="Concurrency & Multithreading"
-                      subtitle="Thread-safe programming, synchronization, and classic problems"
                       className="mb-4"
                     />
                     <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
@@ -2269,7 +2233,6 @@ export default function DocsPage({ onBack }) {
                     <SectionHero
                       eyebrow="Practice"
                       title="Design Problems"
-                      subtitle="Apply OOP and design patterns to real-world systems"
                       className="mb-4"
                     />
                     <div className="space-y-3">
@@ -2477,7 +2440,6 @@ export default function DocsPage({ onBack }) {
                     <SectionHero
                       eyebrow="Companies"
                       title="Company-Specific Prep"
-                      subtitle="Tailored guidance for top tech companies"
                       className="mb-4"
                     />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -2719,7 +2681,6 @@ export default function DocsPage({ onBack }) {
                     <SectionHero
                       eyebrow="Build"
                       title="Projects"
-                      subtitle="24 projects across portfolio, take-home, full-stack, system design, and frontend challenges."
                       className="mb-4"
                     />
                     <div className="space-y-3">
@@ -2799,7 +2760,6 @@ export default function DocsPage({ onBack }) {
                     <SectionHero
                       eyebrow="Learning Paths"
                       title="Roadmaps"
-                      subtitle="12 structured learning paths with visual phase diagrams from beginner to advanced."
                       className="mb-4"
                     />
                     <div className="space-y-3">
@@ -2876,7 +2836,6 @@ export default function DocsPage({ onBack }) {
                     <SectionHero
                       eyebrow="Learn from the Best"
                       title="Engineering Blogs"
-                      subtitle="300+ curated articles from 35 top tech companies. Learn how real systems are built at scale."
                       className="mb-4"
                     />
                     <div className="space-y-3">
@@ -2990,7 +2949,6 @@ export default function DocsPage({ onBack }) {
                     <SectionHero
                       eyebrow="Production Reliability"
                       title="Site Reliability Engineering"
-                      subtitle="53 topics across 9 sub-categories — SLOs, observability, incidents, automation, capacity, reliability patterns, on-call, security."
                       className="mb-4"
                     />
                     <div className="space-y-3">
@@ -3069,7 +3027,6 @@ export default function DocsPage({ onBack }) {
                     <SectionHero
                       eyebrow="Build, Ship, Run"
                       title="DevOps"
-                      subtitle="56 topics across 11 sub-categories — foundations, CI/CD, continuous delivery, IaC, configuration, containers, Kubernetes, platform engineering, DevSecOps, cloud-native, data DevOps."
                       className="mb-4"
                     />
                     <div className="space-y-3">

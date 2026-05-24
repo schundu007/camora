@@ -747,9 +747,6 @@ export default function PracticePage() {
                       ? <>Welcome back, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>{user.name.split(' ')[0]}</span>.</>
                       : <>Your practice, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>sharpened.</span></>}
                   </h1>
-                  <p className="text-base max-w-2xl" style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.55 }}>
-                    Timed mock interviews across coding, system design, and behavioral. Build speed and consistency.
-                  </p>
                   <div className="flex items-center gap-2 mt-5 flex-wrap" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
                     <span style={{ color: 'var(--cam-gold-leaf-lt)', fontWeight: 700 }}>{stats.totalCompleted}</span>
                     <span>challenges completed</span>
