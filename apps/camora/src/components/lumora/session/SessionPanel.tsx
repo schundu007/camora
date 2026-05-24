@@ -310,7 +310,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         />
       </div>
 
-      <div className="px-3 sm:px-4 md:px-6 pt-2 md:pt-3 pb-6 max-w-5xl mx-auto w-full" style={{ borderBottom: '1px solid var(--border)' }}>
+      <div className="px-3 sm:px-4 md:px-6 pt-2 md:pt-3 pb-6 max-w-5xl mx-auto w-full">
 
       {/* Launch Now */}
       <div className="mb-8">
@@ -412,6 +412,8 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘B</kbd> blank screen</span>
       </div>
       </div>
+      {/* Full-width border below content — separates content from empty space */}
+      <div style={{ borderTop: '1px solid var(--border)', flexShrink: 0 }} />
     </div>
   );
 }
