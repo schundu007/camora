@@ -233,6 +233,19 @@ const icons = {
       <path d="M10 4l.6 1.8H12.5L10.9 7l.6 1.8L10 7.6l-1.5 1.2.6-1.8L7.5 5.8H9.4z"/>
     </svg>
   ),
+  /* CodeSignal — lightning bolt */
+  bolt: (
+    <svg {...S} viewBox="0 0 20 20">
+      <path d="M11 2L4 11h7l-2 7 9-10h-7z"/>
+    </svg>
+  ),
+  /* Must Do — checkmark circle */
+  check: (
+    <svg {...S} viewBox="0 0 20 20">
+      <circle cx="10" cy="10" r="7"/>
+      <path d="M7 10l2.5 2.5L13 8"/>
+    </svg>
+  ),
   /* Chevron — keep for section toggles */
   chevron: (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -279,8 +292,8 @@ const sections: NavSection[] = [
     title: 'Learn',
     items: [
       { label: 'Python', path: '/capra/learn/python', icon: icons.python },
-      { label: 'CodeSignal', path: '/capra/learn/codesignal', icon: em('⚡') },
-      { label: 'Programiz', path: 'https://www.programiz.com/python-programming', icon: em('🐍'), external: true },
+      { label: 'CodeSignal', path: '/capra/learn/codesignal', icon: icons.bolt },
+      { label: 'Programiz', path: 'https://www.programiz.com/python-programming', icon: icons.python, external: true },
     ],
   },
   {
@@ -288,7 +301,7 @@ const sections: NavSection[] = [
     items: MUST_DO_PROBLEMS.map(p => ({
       label: p.label,
       path: `/capra/coding?problem=${encodeURIComponent(p.description)}`,
-      icon: em('✅'),
+      icon: icons.check,
     })),
   },
   {
