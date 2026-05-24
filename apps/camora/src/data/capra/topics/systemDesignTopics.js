@@ -23925,7 +23925,7 @@ Two clients write different values to the same key concurrently:
       basicImplementation: {
         title: 'Simple Quorum (N=3, W=2, R=2)',
         description: 'Three replicas with strict quorum for reads and writes. Provides strong consistency but fails writes if more than one replica is down.',
-        diagramSrc: '/diagrams/fundamentals/simple-cache.png',
+        diagramSrc: '/diagrams/quorum/impl-basic.png',
         problems: [
           'Writes fail if fewer than W replicas are available',
           'No mechanism for handling temporary failures gracefully',
@@ -23937,7 +23937,7 @@ Two clients write different values to the same key concurrently:
       advancedImplementation: {
         title: 'Dynamo-Style Quorum System',
         description: 'Tunable quorum with sloppy quorum support, hinted handoff, read repair, Merkle tree anti-entropy, and vector clock conflict detection.',
-        diagramSrc: '/diagrams/fundamentals/sharded-database.png',
+        diagramSrc: '/diagrams/quorum/impl-advanced.png',
         keyPoints: [
           'Tunable N/R/W per operation for flexible consistency-latency trade-off',
           'Sloppy quorum with hinted handoff for availability during partitions',
