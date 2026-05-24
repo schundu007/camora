@@ -1,59 +1,56 @@
 import { useState, useMemo } from 'react';
 import { Icon } from '../../components/shared/Icons.jsx';
-import { CODESIGNAL_LEARN_PATHS } from '../../data/capra/codesignalLearnPaths.js';
+import { PROGRAMIZ_PATHS } from '../../data/capra/programizPaths.js';
 
-type Difficulty = 'easy' | 'medium' | 'hard';
+type Level = 'beginner' | 'intermediate' | 'advanced';
 
 interface LearnPath {
   slug: string;
   title: string;
-  topic: string;
-  difficulty: Difficulty;
-  practiceCount: number;
-  urlSlug: string;
+  category: string;
+  level: Level;
+  url: string;
 }
 
-const TOPIC_LABELS: Record<string, string> = {
-  general: 'General',
-  javascript: 'JavaScript',
-  python: 'Python',
-  java: 'Java',
-  dsa: 'DSA',
-  sql: 'SQL',
-  searching: 'Searching',
-  graphs: 'Graphs',
+const CATEGORY_LABELS: Record<string, string> = {
+  basics:           'Basics',
+  'control-flow':   'Control Flow',
+  functions:        'Functions',
+  'data-structures':'Data Structures',
+  oop:              'OOP',
+  advanced:         'Advanced',
 };
 
-const DIFF_CHIP: Record<Difficulty, { bg: string; text: string }> = {
-  easy:   { bg: 'color-mix(in oklab, #10b981 15%, var(--bg-elevated))', text: '#10b981' },
-  medium: { bg: 'color-mix(in oklab, #f59e0b 15%, var(--bg-elevated))', text: '#f59e0b' },
-  hard:   { bg: 'color-mix(in oklab, #ef4444 15%, var(--bg-elevated))', text: '#ef4444' },
+const LEVEL_CHIP: Record<Level, { bg: string; text: string }> = {
+  beginner:     { bg: 'color-mix(in oklab, #10b981 15%, var(--bg-elevated))', text: '#10b981' },
+  intermediate: { bg: 'color-mix(in oklab, #f59e0b 15%, var(--bg-elevated))', text: '#f59e0b' },
+  advanced:     { bg: 'color-mix(in oklab, #ef4444 15%, var(--bg-elevated))', text: '#ef4444' },
 };
 
-const TOPIC_ACCENT: Record<string, string> = {
-  python:     'var(--cam-primary)',
-  javascript: 'var(--cam-gold-leaf)',
-  java:       'var(--cam-primary)',
-  dsa:        'var(--cam-primary)',
-  sql:        'var(--cam-gold-leaf)',
-  general:    'var(--cam-primary)',
-  searching:  'var(--cam-primary)',
-  graphs:     'var(--cam-gold-leaf)',
+const CATEGORY_ACCENT: Record<string, string> = {
+  basics:           'var(--cam-primary)',
+  'control-flow':   'var(--cam-gold-leaf)',
+  functions:        'var(--cam-primary)',
+  'data-structures':'var(--cam-gold-leaf)',
+  oop:              'var(--cam-primary)',
+  advanced:         'var(--cam-gold-leaf)',
 };
 
-const DIFF_TABS: { value: 'all' | Difficulty; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'easy', label: 'Easy' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'hard', label: 'Hard' },
+const LEVEL_TABS: { value: 'all' | Level; label: string }[] = [
+  { value: 'all',          label: 'All' },
+  { value: 'beginner',     label: 'Beginner' },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced',     label: 'Advanced' },
 ];
 
+const CATEGORY_ORDER = ['basics', 'control-flow', 'functions', 'data-structures', 'oop', 'advanced'];
+
 function PathCard({ path }: { path: LearnPath }) {
-  const diff = DIFF_CHIP[path.difficulty];
+  const chip = LEVEL_CHIP[path.level];
 
   return (
     <a
-      href={`https://codesignal.com/learn/course-paths/${path.urlSlug}`}
+      href={path.url}
       target="_blank"
       rel="noopener noreferrer"
       className="flex flex-col gap-3 rounded-xl p-4"
@@ -76,23 +73,16 @@ function PathCard({ path }: { path: LearnPath }) {
       <span className="text-[13px] font-semibold leading-snug flex-1" style={{ color: 'var(--text-primary)' }}>
         {path.title}
       </span>
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full capitalize" style={{ background: diff.bg, color: diff.text }}>
-          {path.difficulty}
-        </span>
-        {path.practiceCount > 0 && (
-          <span className="font-mono text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
-            {path.practiceCount} tasks
-          </span>
-        )}
-      </div>
+      <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full capitalize self-start" style={{ background: chip.bg, color: chip.text }}>
+        {path.level}
+      </span>
     </a>
   );
 }
 
-function TopicSection({ topic, paths }: { topic: string; paths: LearnPath[] }) {
-  const accent = TOPIC_ACCENT[topic] ?? 'var(--cam-primary)';
-  const label = TOPIC_LABELS[topic] ?? topic;
+function CategorySection({ category, paths }: { category: string; paths: LearnPath[] }) {
+  const accent = CATEGORY_ACCENT[category] ?? 'var(--cam-primary)';
+  const label = CATEGORY_LABELS[category] ?? category;
 
   return (
     <section>
@@ -110,32 +100,32 @@ function TopicSection({ topic, paths }: { topic: string; paths: LearnPath[] }) {
   );
 }
 
-const TOPIC_ORDER = ['general', 'javascript', 'python', 'java', 'dsa', 'sql', 'searching', 'graphs'];
-
-export default function CodeSignalLearnPage() {
+export default function ProgramizLearnPage() {
   const [query, setQuery] = useState('');
-  const [diffFilter, setDiffFilter] = useState<'all' | Difficulty>('all');
+  const [levelFilter, setLevelFilter] = useState<'all' | Level>('all');
 
   const filtered = useMemo<LearnPath[]>(() => {
     const q = query.toLowerCase();
-    return (CODESIGNAL_LEARN_PATHS as LearnPath[]).filter(p => {
-      if (diffFilter !== 'all' && p.difficulty !== diffFilter) return false;
-      if (q && !p.title.toLowerCase().includes(q) && !p.topic.includes(q)) return false;
+    return (PROGRAMIZ_PATHS as LearnPath[]).filter(p => {
+      if (levelFilter !== 'all' && p.level !== levelFilter) return false;
+      if (q && !p.title.toLowerCase().includes(q) && !p.category.includes(q)) return false;
       return true;
     });
-  }, [query, diffFilter]);
+  }, [query, levelFilter]);
 
   const grouped = useMemo(() => {
     const map: Record<string, LearnPath[]> = {};
     for (const p of filtered) {
-      if (!map[p.topic]) map[p.topic] = [];
-      map[p.topic].push(p);
+      if (!map[p.category]) map[p.category] = [];
+      map[p.category].push(p);
     }
     return map;
   }, [filtered]);
 
-  const topicOrder = TOPIC_ORDER.filter(t => grouped[t]);
-  const otherTopics = Object.keys(grouped).filter(t => !TOPIC_ORDER.includes(t));
+  const orderedCategories = [
+    ...CATEGORY_ORDER.filter(c => grouped[c]),
+    ...Object.keys(grouped).filter(c => !CATEGORY_ORDER.includes(c)),
+  ];
 
   return (
     <div className="flex flex-col min-h-full">
@@ -144,24 +134,24 @@ export default function CodeSignalLearnPage() {
         <div className="flex items-center gap-3 mb-1">
           <Icon name="book" className="w-5 h-5" style={{ color: 'var(--cam-gold-leaf)' }} />
           <h1 className="text-[15px] font-bold" style={{ color: 'var(--cam-gold-leaf)' }}>
-            CodeSignal Learn
+            Programiz Python
           </h1>
           <span className="font-mono text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)', color: 'var(--cam-gold-leaf)' }}>
-            {(CODESIGNAL_LEARN_PATHS as LearnPath[]).length} paths
+            {PROGRAMIZ_PATHS.length} tutorials
           </span>
           <a
-            href="https://codesignal.com/learn/course-paths/browse"
+            href="https://www.programiz.com/python-programming"
             target="_blank"
             rel="noopener noreferrer"
             className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-opacity hover:opacity-80"
             style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 20%, transparent)', color: 'var(--cam-gold-leaf)', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 35%, transparent)' }}
           >
-            Open on CodeSignal
+            Open on Programiz
             <Icon name="external-link" className="w-3 h-3" />
           </a>
         </div>
         <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
-          421 learning paths from CodeSignal. Use the search or filter to find topics.
+          Curated Python tutorials from Programiz — from basics to advanced topics.
         </p>
       </div>
 
@@ -171,7 +161,7 @@ export default function CodeSignalLearnPage() {
           <Icon name="search" className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
-            placeholder="Search paths…"
+            placeholder="Search tutorials…"
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="flex-1 bg-transparent text-[13px] outline-none"
@@ -179,17 +169,15 @@ export default function CodeSignalLearnPage() {
           />
         </div>
         <div className="flex items-center gap-1 rounded-lg p-1" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-          {DIFF_TABS.map(tab => (
+          {LEVEL_TABS.map(tab => (
             <button
               key={tab.value}
-              onClick={() => setDiffFilter(tab.value)}
-              className="px-3 py-1 rounded-md text-[12px] font-medium transition-all"
-              style={diffFilter === tab.value ? {
-                background: 'var(--cam-gold-leaf)',
-                color: 'var(--cam-navy)',
-              } : {
-                background: 'transparent',
-                color: 'var(--text-muted)',
+              onClick={() => setLevelFilter(tab.value)}
+              className="font-mono text-[11px] px-3 py-1 rounded-md transition-colors"
+              style={{
+                background: levelFilter === tab.value ? 'var(--cam-primary)' : 'transparent',
+                color: levelFilter === tab.value ? 'white' : 'var(--text-muted)',
+                fontWeight: levelFilter === tab.value ? 700 : 500,
               }}
             >
               {tab.label}
@@ -199,18 +187,15 @@ export default function CodeSignalLearnPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-6 py-6 space-y-8 mx-auto w-full max-w-7xl">
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 py-16" style={{ color: 'var(--text-muted)' }}>
-            <Icon name="search" className="w-8 h-8 opacity-30" />
-            <p className="text-[13px]">No paths match your filters.</p>
+      <div className="flex-1 px-6 py-6 space-y-8 overflow-y-auto">
+        {orderedCategories.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <span className="text-[13px]" style={{ color: 'var(--text-muted)' }}>No tutorials match your search.</span>
           </div>
         ) : (
-          <>
-            {[...topicOrder, ...otherTopics].map(topic => (
-              <TopicSection key={topic} topic={topic} paths={grouped[topic]} />
-            ))}
-          </>
+          orderedCategories.map(cat => (
+            <CategorySection key={cat} category={cat} paths={grouped[cat]} />
+          ))
         )}
       </div>
     </div>
