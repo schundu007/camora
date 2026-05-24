@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../components/shared/Icons.jsx';
 import { PROGRAMIZ_PATHS } from '../../data/capra/programizPaths.js';
 
@@ -46,28 +47,34 @@ const LEVEL_TABS: { value: 'all' | Level; label: string }[] = [
 const CATEGORY_ORDER = ['basics', 'control-flow', 'functions', 'data-structures', 'oop', 'advanced'];
 
 function PathCard({ path }: { path: LearnPath }) {
+  const navigate = useNavigate();
   const chip = LEVEL_CHIP[path.level];
 
+  const params = new URLSearchParams({
+    title: path.title,
+    source: 'programiz',
+    category: path.category,
+    level: path.level,
+  });
+
   return (
-    <a
-      href={path.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex flex-col gap-3 rounded-xl p-4"
+    <button
+      type="button"
+      onClick={() => navigate(`/capra/learn/topic/${path.slug}?${params}`)}
+      className="flex flex-col gap-3 rounded-xl p-4 text-left w-full"
       style={{
         background: 'var(--bg-surface)',
         border: '1px solid var(--border)',
         transition: 'border-color 0.15s, background 0.15s',
         cursor: 'pointer',
-        textDecoration: 'none',
       }}
       onMouseEnter={e => {
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = 'color-mix(in oklab, var(--cam-gold-leaf) 50%, transparent)';
-        (e.currentTarget as HTMLAnchorElement).style.background = 'var(--bg-elevated)';
+        (e.currentTarget as HTMLButtonElement).style.borderColor = 'color-mix(in oklab, var(--cam-gold-leaf) 50%, transparent)';
+        (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-elevated)';
       }}
       onMouseLeave={e => {
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--border)';
-        (e.currentTarget as HTMLAnchorElement).style.background = 'var(--bg-surface)';
+        (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)';
+        (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface)';
       }}
     >
       <span className="text-[13px] font-semibold leading-snug flex-1" style={{ color: 'var(--text-primary)' }}>
@@ -76,7 +83,7 @@ function PathCard({ path }: { path: LearnPath }) {
       <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full capitalize self-start" style={{ background: chip.bg, color: chip.text }}>
         {path.level}
       </span>
-    </a>
+    </button>
   );
 }
 
@@ -139,16 +146,6 @@ export default function ProgramizLearnPage() {
           <span className="font-mono text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)', color: 'var(--cam-gold-leaf)' }}>
             {PROGRAMIZ_PATHS.length} tutorials
           </span>
-          <a
-            href="https://www.programiz.com/python-programming"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-opacity hover:opacity-80"
-            style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 20%, transparent)', color: 'var(--cam-gold-leaf)', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 35%, transparent)' }}
-          >
-            Open on Programiz
-            <Icon name="external-link" className="w-3 h-3" />
-          </a>
         </div>
         <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
           Curated Python tutorials from Programiz — from basics to advanced topics.

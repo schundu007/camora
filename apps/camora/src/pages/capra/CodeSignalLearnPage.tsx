@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../components/shared/Icons.jsx';
 import { CODESIGNAL_LEARN_PATHS } from '../../data/capra/codesignalLearnPaths.js';
 
@@ -49,28 +50,35 @@ const DIFF_TABS: { value: 'all' | Difficulty; label: string }[] = [
 ];
 
 function PathCard({ path }: { path: LearnPath }) {
+  const navigate = useNavigate();
   const diff = DIFF_CHIP[path.difficulty];
 
+  const params = new URLSearchParams({
+    title: path.title,
+    source: 'codesignal',
+    topic: path.topic,
+    difficulty: path.difficulty,
+    count: String(path.practiceCount),
+  });
+
   return (
-    <a
-      href={`https://codesignal.com/learn/course-paths/${path.urlSlug}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex flex-col gap-3 rounded-xl p-4"
+    <button
+      type="button"
+      onClick={() => navigate(`/capra/learn/topic/${path.slug}?${params}`)}
+      className="flex flex-col gap-3 rounded-xl p-4 text-left w-full"
       style={{
         background: 'var(--bg-surface)',
         border: '1px solid var(--border)',
         transition: 'border-color 0.15s, background 0.15s',
         cursor: 'pointer',
-        textDecoration: 'none',
       }}
       onMouseEnter={e => {
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = 'color-mix(in oklab, var(--cam-gold-leaf) 50%, transparent)';
-        (e.currentTarget as HTMLAnchorElement).style.background = 'var(--bg-elevated)';
+        (e.currentTarget as HTMLButtonElement).style.borderColor = 'color-mix(in oklab, var(--cam-gold-leaf) 50%, transparent)';
+        (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-elevated)';
       }}
       onMouseLeave={e => {
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--border)';
-        (e.currentTarget as HTMLAnchorElement).style.background = 'var(--bg-surface)';
+        (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)';
+        (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface)';
       }}
     >
       <span className="text-[13px] font-semibold leading-snug flex-1" style={{ color: 'var(--text-primary)' }}>
@@ -86,7 +94,7 @@ function PathCard({ path }: { path: LearnPath }) {
           </span>
         )}
       </div>
-    </a>
+    </button>
   );
 }
 
@@ -149,16 +157,6 @@ export default function CodeSignalLearnPage() {
           <span className="font-mono text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)', color: 'var(--cam-gold-leaf)' }}>
             {(CODESIGNAL_LEARN_PATHS as LearnPath[]).length} paths
           </span>
-          <a
-            href="https://codesignal.com/learn/course-paths/browse"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-opacity hover:opacity-80"
-            style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 20%, transparent)', color: 'var(--cam-gold-leaf)', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 35%, transparent)' }}
-          >
-            Open on CodeSignal
-            <Icon name="external-link" className="w-3 h-3" />
-          </a>
         </div>
         <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
           421 learning paths from CodeSignal. Use the search or filter to find topics.
