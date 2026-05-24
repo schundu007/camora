@@ -533,13 +533,8 @@ export default function JobsPage() {
           title={<>Find your <HeroAccent>next role</HeroAccent></>}
           subtitle={
             total > 0 ? (
-              <>
-                <strong className="text-white font-bold">{total.toLocaleString()}</strong>
-                {' '}open roles, curated from top tech companies and refreshed daily. Filter by role, location, or company — or paste any job URL to get a personalized prep plan.
-              </>
-            ) : (
-              'Curated open roles from top tech companies — refreshed daily. Filter by role, location, or company, or paste any job URL to get a personalized prep plan.'
-            )
+              <><strong className="text-white font-bold">{total.toLocaleString()}</strong>{' '}open roles</>
+            ) : undefined
           }
           actions={
             <>
