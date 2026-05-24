@@ -276,7 +276,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         />
         <div className="relative px-3 sm:px-4 md:px-6 pt-5 md:pt-7 pb-10 md:pb-12">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="flex items-baseline justify-center gap-2 leading-none" style={{ color: '#FFFFFF', fontFamily: 'var(--font-code)' }}>
+            <div className="flex items-baseline justify-center gap-2 leading-none" style={{ color: 'oklch(97% 0.006 250)', fontFamily: 'var(--font-code)' }}>
               <span
                 className="font-bold tabular-nums"
                 style={{
@@ -298,8 +298,8 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
                 {ampm}
               </span>
             </div>
-            <div className="mt-2 text-sm font-medium" style={{ color: 'rgba(255,255,255,0.78)' }}>{dateStr}</div>
-            <h1 className="mt-4 text-xl font-bold text-white">{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+            <div className="mt-2 text-sm font-medium" style={{ color: 'oklch(82% 0.008 250)' }}>{dateStr}</div>
+            <h1 className="mt-4 text-xl font-bold" style={{ color: 'oklch(97% 0.006 250)' }}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
           </div>
         </div>
         {/* Soft fade into the body — replaces the diagonal divider */}
@@ -315,10 +315,9 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
       {/* Launch Now */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--text-primary)' }}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
-          <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Launch Now</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--text-muted)' }}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
+          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-code)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.10em', fontWeight: 600 }}>Launch Now</span>
         </div>
-        <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>Start fast with ready-to-use session co-pilots.</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {COPILOTS.map(cp => (
             <button
@@ -366,10 +365,10 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
           glyph for instant visual scanning. */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--text-primary)' }}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
-          <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Try Asking</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--text-muted)' }}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
+          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-code)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.10em', fontWeight: 600 }}>Try Asking</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
           {QUICK_PROMPTS.map(p => (
             <button
               key={p.text}
