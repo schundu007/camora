@@ -6,7 +6,7 @@
     {
       "type": "text",
       "id": "title",
-      "x": 500,
+      "x": 1118,
       "y": 20,
       "width": 900,
       "height": 56,
@@ -25,8 +25,8 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "text": "Spotify — Advanced Architecture (ML + Scale)",
-      "originalText": "Spotify — Advanced Architecture (ML + Scale)",
+      "text": "Spotify \u2014 Advanced Architecture (ML + Scale)",
+      "originalText": "Spotify \u2014 Advanced Architecture (ML + Scale)",
       "fontSize": 28,
       "fontFamily": 3,
       "textAlign": "center",
@@ -37,7 +37,7 @@
     {
       "type": "text",
       "id": "lbl-core",
-      "x": 60,
+      "x": 1088,
       "y": 80,
       "width": 300,
       "height": 31,
@@ -68,7 +68,7 @@
     {
       "type": "text",
       "id": "lbl-ml",
-      "x": 680,
+      "x": 1013,
       "y": 80,
       "width": 300,
       "height": 31,
@@ -99,7 +99,7 @@
     {
       "type": "rectangle",
       "id": "client",
-      "x": 60,
+      "x": 1088,
       "y": 110,
       "width": 204,
       "height": 120,
@@ -131,7 +131,7 @@
     {
       "type": "text",
       "id": "client-lbl",
-      "x": 65,
+      "x": 1093,
       "y": 132,
       "width": 140,
       "height": 56,
@@ -162,7 +162,7 @@
     {
       "type": "rectangle",
       "id": "api-gw",
-      "x": 280,
+      "x": 1143,
       "y": 110,
       "width": 229,
       "height": 120,
@@ -206,7 +206,7 @@
     {
       "type": "text",
       "id": "api-gw-lbl",
-      "x": 285,
+      "x": 1148,
       "y": 132,
       "width": 165,
       "height": 56,
@@ -239,7 +239,7 @@
       "id": "sa1",
       "x": 210,
       "y": 145,
-      "width": 70,
+      "width": 180,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -262,7 +262,7 @@
           0
         ],
         [
-          70,
+          180,
           0
         ]
       ],
@@ -282,7 +282,7 @@
     {
       "type": "rectangle",
       "id": "music-svc",
-      "x": 530,
+      "x": 913,
       "y": 110,
       "width": 214,
       "height": 120,
@@ -314,7 +314,7 @@
     {
       "type": "text",
       "id": "music-svc-lbl",
-      "x": 535,
+      "x": 918,
       "y": 128,
       "width": 150,
       "height": 56,
@@ -347,7 +347,7 @@
       "id": "sa2",
       "x": 440,
       "y": 140,
-      "width": 90,
+      "width": 473,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -370,7 +370,7 @@
           0
         ],
         [
-          90,
+          473,
           0
         ]
       ],
@@ -390,7 +390,7 @@
     {
       "type": "rectangle",
       "id": "podcast-svc",
-      "x": 530,
+      "x": 913,
       "y": 246,
       "width": 247,
       "height": 120,
@@ -422,7 +422,7 @@
     {
       "type": "text",
       "id": "podcast-svc-lbl",
-      "x": 535,
+      "x": 918,
       "y": 264,
       "width": 183,
       "height": 56,
@@ -502,7 +502,7 @@
     {
       "type": "rectangle",
       "id": "social-graph",
-      "x": 1052,
+      "x": 1210,
       "y": 494,
       "width": 229,
       "height": 148,
@@ -534,7 +534,7 @@
     {
       "type": "text",
       "id": "social-graph-lbl",
-      "x": 1057,
+      "x": 1215,
       "y": 512,
       "width": 165,
       "height": 84,
@@ -614,7 +614,7 @@
     {
       "type": "rectangle",
       "id": "collab-filter",
-      "x": 777,
+      "x": 1125,
       "y": 110,
       "width": 301,
       "height": 176,
@@ -646,7 +646,7 @@
     {
       "type": "text",
       "id": "collab-lbl",
-      "x": 782,
+      "x": 1130,
       "y": 128,
       "width": 237,
       "height": 112,
@@ -679,7 +679,7 @@
       "id": "sa5",
       "x": 690,
       "y": 140,
-      "width": 10,
+      "width": 218,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -702,7 +702,7 @@
           0
         ],
         [
-          10,
+          218,
           0
         ]
       ],
@@ -722,7 +722,7 @@
     {
       "type": "rectangle",
       "id": "analytics-pipeline",
-      "x": 1052,
+      "x": 1210,
       "y": 302,
       "width": 274,
       "height": 176,
@@ -758,7 +758,7 @@
     {
       "type": "text",
       "id": "analytics-lbl",
-      "x": 1057,
+      "x": 1215,
       "y": 320,
       "width": 210,
       "height": 112,
@@ -791,7 +791,7 @@
       "id": "sa6",
       "x": 690,
       "y": 345,
-      "width": 10,
+      "width": 218,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -814,7 +814,7 @@
           0
         ],
         [
-          10,
+          218,
           0
         ]
       ],
@@ -879,7 +879,7 @@
     {
       "type": "rectangle",
       "id": "discover-weekly",
-      "x": 1078,
+      "x": 1236,
       "y": 110,
       "width": 292,
       "height": 176,
@@ -910,7 +910,7 @@
     {
       "type": "text",
       "id": "discover-lbl",
-      "x": 1083,
+      "x": 1241,
       "y": 128,
       "width": 228,
       "height": 112,
@@ -986,7 +986,7 @@
     {
       "type": "rectangle",
       "id": "evidence",
-      "x": 60,
+      "x": 1088,
       "y": 430,
       "width": 976,
       "height": 148,
@@ -1014,7 +1014,7 @@
     {
       "type": "text",
       "id": "evidence-lbl",
-      "x": 70,
+      "x": 1098,
       "y": 440,
       "width": 912,
       "height": 84,

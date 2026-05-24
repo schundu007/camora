@@ -6,11 +6,11 @@
     {
       "id": "title",
       "type": "text",
-      "x": 480,
+      "x": 695,
       "y": 18,
       "width": 740,
       "height": 48,
-      "text": "Chat System — Basic Architecture",
+      "text": "Chat System \u2014 Basic Architecture",
       "fontSize": 24,
       "fontFamily": 1,
       "textAlign": "center",
@@ -26,7 +26,7 @@
     {
       "id": "lbl-clienta",
       "type": "text",
-      "x": 30,
+      "x": 217,
       "y": 76,
       "width": 120,
       "height": 31,
@@ -46,7 +46,7 @@
     {
       "id": "clienta-box",
       "type": "rectangle",
-      "x": 30,
+      "x": 217,
       "y": 94,
       "width": 120,
       "height": 60,
@@ -61,7 +61,7 @@
     {
       "id": "clienta-lbl",
       "type": "text",
-      "x": 42,
+      "x": 229,
       "y": 111,
       "width": 155,
       "height": 56,
@@ -83,7 +83,7 @@
       "type": "arrow",
       "x": 152,
       "y": 124,
-      "width": 88,
+      "width": 457,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -100,7 +100,7 @@
           0
         ],
         [
-          88,
+          457,
           0
         ]
       ]
@@ -108,7 +108,7 @@
     {
       "id": "lbl-ws",
       "type": "text",
-      "x": 250,
+      "x": 619,
       "y": 60,
       "width": 200,
       "height": 31,
@@ -128,10 +128,10 @@
     {
       "id": "ws-box",
       "type": "rectangle",
-      "x": 250,
+      "x": 619,
       "y": 76,
       "width": 200,
-      "height": 96,
+      "height": 170,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
       "fillStyle": "solid",
@@ -143,7 +143,7 @@
     {
       "id": "ws-lbl",
       "type": "text",
-      "x": 262,
+      "x": 631,
       "y": 90,
       "width": 183,
       "height": 140,
@@ -190,7 +190,7 @@
     {
       "id": "lbl-clientb",
       "type": "text",
-      "x": 550,
+      "x": 875,
       "y": 76,
       "width": 120,
       "height": 31,
@@ -210,7 +210,7 @@
     {
       "id": "clientb-box",
       "type": "rectangle",
-      "x": 509,
+      "x": 834,
       "y": 63,
       "width": 201,
       "height": 120,
@@ -225,7 +225,7 @@
     {
       "id": "clientb-lbl",
       "type": "text",
-      "x": 562,
+      "x": 887,
       "y": 111,
       "width": 137,
       "height": 56,
@@ -272,7 +272,7 @@
     {
       "id": "lbl-msgdb",
       "type": "text",
-      "x": 250,
+      "x": 619,
       "y": 252,
       "width": 200,
       "height": 31,
@@ -307,7 +307,7 @@
     {
       "id": "msgdb-lbl",
       "type": "text",
-      "x": 262,
+      "x": 631,
       "y": 286,
       "width": 176,
       "height": 56,
@@ -327,7 +327,7 @@
     {
       "id": "lbl-presence",
       "type": "text",
-      "x": 30,
+      "x": 217,
       "y": 252,
       "width": 180,
       "height": 31,
@@ -347,7 +347,7 @@
     {
       "id": "presence-box",
       "type": "rectangle",
-      "x": 30,
+      "x": 217,
       "y": 270,
       "width": 180,
       "height": 60,
@@ -362,11 +362,11 @@
     {
       "id": "presence-lbl",
       "type": "text",
-      "x": 42,
+      "x": 229,
       "y": 284,
       "width": 219,
       "height": 84,
-      "text": "Presence Service\nonline/offline status\nRedis: user:1 → \"online\"",
+      "text": "Presence Service\nonline/offline status\nRedis: user:1 \u2192 \"online\"",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
@@ -409,7 +409,7 @@
     {
       "id": "lbl-offline",
       "type": "text",
-      "x": 480,
+      "x": 695,
       "y": 252,
       "width": 220,
       "height": 31,
@@ -429,7 +429,7 @@
     {
       "id": "offline-box",
       "type": "rectangle",
-      "x": 480,
+      "x": 695,
       "y": 270,
       "width": 220,
       "height": 60,
@@ -444,7 +444,7 @@
     {
       "id": "offline-lbl",
       "type": "text",
-      "x": 492,
+      "x": 707,
       "y": 284,
       "width": 256,
       "height": 84,
@@ -491,7 +491,7 @@
     {
       "id": "lbl-schema",
       "type": "text",
-      "x": 30,
+      "x": 217,
       "y": 362,
       "width": 400,
       "height": 31,
@@ -511,10 +511,10 @@
     {
       "id": "schema-box",
       "type": "rectangle",
-      "x": 30,
+      "x": 217,
       "y": 380,
       "width": 360,
-      "height": 120,
+      "height": 250,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
       "fillStyle": "solid",
@@ -526,7 +526,7 @@
     {
       "id": "schema-text",
       "type": "text",
-      "x": 44,
+      "x": 231,
       "y": 390,
       "width": 356,
       "height": 224,
@@ -546,7 +546,7 @@
     {
       "id": "lbl-ws-frame",
       "type": "text",
-      "x": 420,
+      "x": 899,
       "y": 362,
       "width": 400,
       "height": 31,
@@ -566,10 +566,10 @@
     {
       "id": "wsframe-box",
       "type": "rectangle",
-      "x": 420,
+      "x": 899,
       "y": 380,
       "width": 400,
-      "height": 120,
+      "height": 306,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
       "fillStyle": "solid",
@@ -581,11 +581,11 @@
     {
       "id": "wsframe-text",
       "type": "text",
-      "x": 434,
+      "x": 913,
       "y": 390,
       "width": 383,
       "height": 280,
-      "text": "# Alice sends message to Bob\nWS → { \"type\": \"message\",\n        \"to\": \"user456\",\n        \"text\": \"hey!\",\n        \"client_msg_id\": \"abc-123\" }\n\n# Server → Bob's socket\nWS → { \"type\": \"message\",\n        \"from\": \"user123\", \"text\": \"hey!\",\n        \"msg_id\": 9871, \"ts\": 1746523200 }",
+      "text": "# Alice sends message to Bob\nWS \u2192 { \"type\": \"message\",\n        \"to\": \"user456\",\n        \"text\": \"hey!\",\n        \"client_msg_id\": \"abc-123\" }\n\n# Server \u2192 Bob's socket\nWS \u2192 { \"type\": \"message\",\n        \"from\": \"user123\", \"text\": \"hey!\",\n        \"msg_id\": 9871, \"ts\": 1746523200 }",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",

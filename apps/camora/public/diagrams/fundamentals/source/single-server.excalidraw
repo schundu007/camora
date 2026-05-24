@@ -6,7 +6,7 @@
     {
       "id": "title",
       "type": "text",
-      "x": 600,
+      "x": 960,
       "y": 30,
       "width": 500,
       "height": 56,
@@ -24,7 +24,7 @@
     {
       "id": "user",
       "type": "rectangle",
-      "x": 48,
+      "x": 1432,
       "y": 121,
       "width": 224,
       "height": 98,
@@ -37,7 +37,7 @@
     {
       "id": "user-label",
       "type": "text",
-      "x": 80,
+      "x": 1472,
       "y": 158,
       "width": 160,
       "height": 34,
@@ -55,7 +55,7 @@
     {
       "id": "user-sub",
       "type": "text",
-      "x": 80,
+      "x": 1472,
       "y": 182,
       "width": 160,
       "height": 31,
@@ -96,7 +96,7 @@
     {
       "id": "dns",
       "type": "rectangle",
-      "x": 338,
+      "x": 1256,
       "y": 121,
       "width": 224,
       "height": 98,
@@ -109,7 +109,7 @@
     {
       "id": "dns-label",
       "type": "text",
-      "x": 370,
+      "x": 1472,
       "y": 158,
       "width": 160,
       "height": 34,
@@ -127,7 +127,7 @@
     {
       "id": "dns-sub",
       "type": "text",
-      "x": 370,
+      "x": 1472,
       "y": 182,
       "width": 174,
       "height": 31,
@@ -168,7 +168,7 @@
     {
       "id": "server-box",
       "type": "rectangle",
-      "x": 620,
+      "x": 1044,
       "y": 70,
       "width": 560,
       "height": 310,
@@ -181,7 +181,7 @@
     {
       "id": "server-title",
       "type": "text",
-      "x": 660,
+      "x": 1480,
       "y": 90,
       "width": 420,
       "height": 31,
@@ -199,7 +199,7 @@
     {
       "id": "webserver",
       "type": "rectangle",
-      "x": 648,
+      "x": 1468,
       "y": 112,
       "width": 224,
       "height": 96,
@@ -212,7 +212,7 @@
     {
       "id": "webserver-label",
       "type": "text",
-      "x": 680,
+      "x": 1252,
       "y": 143,
       "width": 160,
       "height": 32,
@@ -230,7 +230,7 @@
     {
       "id": "webserver-sub",
       "type": "text",
-      "x": 680,
+      "x": 1252,
       "y": 167,
       "width": 160,
       "height": 31,
@@ -248,7 +248,7 @@
     {
       "id": "appcode",
       "type": "rectangle",
-      "x": 880,
+      "x": 1430,
       "y": 120,
       "width": 240,
       "height": 80,
@@ -261,7 +261,7 @@
     {
       "id": "appcode-label",
       "type": "text",
-      "x": 860,
+      "x": 1248,
       "y": 143,
       "width": 160,
       "height": 32,
@@ -279,7 +279,7 @@
     {
       "id": "appcode-sub",
       "type": "text",
-      "x": 860,
+      "x": 1248,
       "y": 167,
       "width": 192,
       "height": 31,
@@ -297,7 +297,7 @@
     {
       "id": "db-inner",
       "type": "rectangle",
-      "x": 708,
+      "x": 1442,
       "y": 240,
       "width": 264,
       "height": 100,
@@ -310,7 +310,7 @@
     {
       "id": "db-inner-label",
       "type": "text",
-      "x": 740,
+      "x": 952,
       "y": 270,
       "width": 200,
       "height": 32,
@@ -328,7 +328,7 @@
     {
       "id": "db-inner-sub",
       "type": "text",
-      "x": 740,
+      "x": 952,
       "y": 296,
       "width": 200,
       "height": 31,
@@ -396,7 +396,7 @@
     {
       "id": "limitations-box",
       "type": "rectangle",
-      "x": 80,
+      "x": 1472,
       "y": 310,
       "width": 540,
       "height": 140,
@@ -409,7 +409,7 @@
     {
       "id": "limitations-title",
       "type": "text",
-      "x": 80,
+      "x": 1472,
       "y": 318,
       "width": 540,
       "height": 34,
@@ -427,11 +427,11 @@
     {
       "id": "limitations-text",
       "type": "text",
-      "x": 100,
+      "x": 920,
       "y": 348,
       "width": 584,
       "height": 112,
-      "text": "Single point of failure — any crash takes down entire system\nCannot scale horizontally — constrained by one machine's CPU/RAM\nNo redundancy — data loss risk on disk failure\nMaintenance requires complete downtime",
+      "text": "Single point of failure \u2014 any crash takes down entire system\nCannot scale horizontally \u2014 constrained by one machine's CPU/RAM\nNo redundancy \u2014 data loss risk on disk failure\nMaintenance requires complete downtime",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
@@ -445,7 +445,7 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 648,
+      "x": 1468,
       "y": 371,
       "width": 444,
       "height": 148,
@@ -458,11 +458,11 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 680,
+      "x": 1252,
       "y": 414,
       "width": 380,
       "height": 84,
-      "text": "GET /api/users  →  Web Server\n  App code queries MySQL\n  MySQL returns rows  →  JSON response",
+      "text": "GET /api/users  \u2192  Web Server\n  App code queries MySQL\n  MySQL returns rows  \u2192  JSON response",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",

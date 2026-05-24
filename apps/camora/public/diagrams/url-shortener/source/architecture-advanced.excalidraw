@@ -6,11 +6,11 @@
     {
       "id": "title",
       "type": "text",
-      "x": 600,
+      "x": 1226,
       "y": 18,
       "width": 600,
       "height": 48,
-      "text": "URL Shortener — Advanced Architecture",
+      "text": "URL Shortener \u2014 Advanced Architecture",
       "fontSize": 24,
       "fontFamily": 1,
       "textAlign": "center",
@@ -26,7 +26,7 @@
     {
       "id": "lbl-dns",
       "type": "text",
-      "x": 30,
+      "x": 1223,
       "y": 76,
       "width": 100,
       "height": 31,
@@ -46,7 +46,7 @@
     {
       "id": "dns-box",
       "type": "rectangle",
-      "x": 7,
+      "x": 1120,
       "y": 63,
       "width": 156,
       "height": 120,
@@ -61,7 +61,7 @@
     {
       "id": "dns-lbl",
       "type": "text",
-      "x": 40,
+      "x": 936,
       "y": 112,
       "width": 92,
       "height": 56,
@@ -108,7 +108,7 @@
     {
       "id": "lbl-lb",
       "type": "text",
-      "x": 220,
+      "x": 323,
       "y": 76,
       "width": 165,
       "height": 31,
@@ -128,10 +128,10 @@
     {
       "id": "lb-box",
       "type": "rectangle",
-      "x": 190,
+      "x": 943,
       "y": 63,
       "width": 210,
-      "height": 120,
+      "height": 219,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
       "fillStyle": "solid",
@@ -143,7 +143,7 @@
     {
       "id": "lb-lbl",
       "type": "text",
-      "x": 232,
+      "x": 335,
       "y": 110,
       "width": 146,
       "height": 56,
@@ -163,7 +163,7 @@
     {
       "id": "lbl-rl",
       "type": "text",
-      "x": 220,
+      "x": 323,
       "y": 176,
       "width": 150,
       "height": 31,
@@ -183,7 +183,7 @@
     {
       "id": "rl-box",
       "type": "rectangle",
-      "x": 246,
+      "x": 520,
       "y": 199,
       "width": 229,
       "height": 120,
@@ -198,7 +198,7 @@
     {
       "id": "rl-lbl",
       "type": "text",
-      "x": 232,
+      "x": 335,
       "y": 210,
       "width": 165,
       "height": 56,
@@ -272,7 +272,7 @@
     {
       "id": "lbl-api",
       "type": "text",
-      "x": 450,
+      "x": 1252,
       "y": 60,
       "width": 180,
       "height": 31,
@@ -292,7 +292,7 @@
     {
       "id": "api1-box",
       "type": "rectangle",
-      "x": 428,
+      "x": 1230,
       "y": 53,
       "width": 174,
       "height": 95,
@@ -307,7 +307,7 @@
     {
       "id": "api1-lbl",
       "type": "text",
-      "x": 462,
+      "x": 1264,
       "y": 93,
       "width": 110,
       "height": 31,
@@ -327,7 +327,7 @@
     {
       "id": "api2-box",
       "type": "rectangle",
-      "x": 491,
+      "x": 898,
       "y": 164,
       "width": 174,
       "height": 95,
@@ -342,7 +342,7 @@
     {
       "id": "api2-lbl",
       "type": "text",
-      "x": 462,
+      "x": 1264,
       "y": 153,
       "width": 110,
       "height": 31,
@@ -362,7 +362,7 @@
     {
       "id": "api3-box",
       "type": "rectangle",
-      "x": 491,
+      "x": 898,
       "y": 275,
       "width": 158,
       "height": 75,
@@ -377,7 +377,7 @@
     {
       "id": "api3-lbl",
       "type": "text",
-      "x": 462,
+      "x": 1264,
       "y": 213,
       "width": 110,
       "height": 31,
@@ -424,7 +424,7 @@
     {
       "id": "lbl-redis",
       "type": "text",
-      "x": 660,
+      "x": 1286,
       "y": 60,
       "width": 180,
       "height": 31,
@@ -444,7 +444,7 @@
     {
       "id": "redis-box",
       "type": "rectangle",
-      "x": 660,
+      "x": 1286,
       "y": 76,
       "width": 160,
       "height": 70,
@@ -459,11 +459,11 @@
     {
       "id": "redis-lbl",
       "type": "text",
-      "x": 672,
+      "x": 1298,
       "y": 92,
       "width": 192,
       "height": 84,
-      "text": "Redis Cluster\n3 shards × 2 replicas\nLRU eviction",
+      "text": "Redis Cluster\n3 shards \u00d7 2 replicas\nLRU eviction",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
@@ -506,7 +506,7 @@
     {
       "id": "lbl-db",
       "type": "text",
-      "x": 900,
+      "x": 1206,
       "y": 60,
       "width": 200,
       "height": 31,
@@ -526,10 +526,10 @@
     {
       "id": "db-primary",
       "type": "rectangle",
-      "x": 861,
+      "x": 1120,
       "y": 43,
       "width": 238,
-      "height": 120,
+      "height": 166,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
       "fillStyle": "solid",
@@ -541,7 +541,7 @@
     {
       "id": "db-primary-lbl",
       "type": "text",
-      "x": 912,
+      "x": 1218,
       "y": 93,
       "width": 174,
       "height": 56,
@@ -561,7 +561,7 @@
     {
       "id": "db-replica",
       "type": "rectangle",
-      "x": 873,
+      "x": 1132,
       "y": 168,
       "width": 213,
       "height": 75,
@@ -576,11 +576,11 @@
     {
       "id": "db-replica-lbl",
       "type": "text",
-      "x": 912,
+      "x": 1218,
       "y": 162,
       "width": 165,
       "height": 31,
-      "text": "Read Replicas (×3)",
+      "text": "Read Replicas (\u00d73)",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
@@ -596,7 +596,7 @@
     {
       "id": "lbl-token",
       "type": "text",
-      "x": 450,
+      "x": 1252,
       "y": 270,
       "width": 180,
       "height": 31,
@@ -616,7 +616,7 @@
     {
       "id": "token-box",
       "type": "rectangle",
-      "x": 686,
+      "x": 1312,
       "y": 388,
       "width": 180,
       "height": 60,
@@ -631,7 +631,7 @@
     {
       "id": "token-lbl",
       "type": "text",
-      "x": 462,
+      "x": 1264,
       "y": 304,
       "width": 210,
       "height": 84,
@@ -678,7 +678,7 @@
     {
       "id": "lbl-analytics",
       "type": "text",
-      "x": 660,
+      "x": 1286,
       "y": 270,
       "width": 400,
       "height": 31,
@@ -698,7 +698,7 @@
     {
       "id": "kafka-box",
       "type": "rectangle",
-      "x": 681,
+      "x": 1307,
       "y": 252,
       "width": 192,
       "height": 120,
@@ -713,7 +713,7 @@
     {
       "id": "kafka-lbl",
       "type": "text",
-      "x": 672,
+      "x": 1298,
       "y": 305,
       "width": 128,
       "height": 56,
@@ -760,7 +760,7 @@
     {
       "id": "flink-box",
       "type": "rectangle",
-      "x": 889,
+      "x": 1195,
       "y": 252,
       "width": 183,
       "height": 120,
@@ -775,7 +775,7 @@
     {
       "id": "flink-lbl",
       "type": "text",
-      "x": 844,
+      "x": 1365,
       "y": 305,
       "width": 119,
       "height": 56,
@@ -822,7 +822,7 @@
     {
       "id": "ch-box",
       "type": "rectangle",
-      "x": 1088,
+      "x": 1357,
       "y": 264,
       "width": 176,
       "height": 97,
@@ -837,7 +837,7 @@
     {
       "id": "ch-lbl",
       "type": "text",
-      "x": 1006,
+      "x": 1275,
       "y": 305,
       "width": 128,
       "height": 56,
@@ -884,7 +884,7 @@
     {
       "id": "lbl-cdn",
       "type": "text",
-      "x": 30,
+      "x": 1223,
       "y": 270,
       "width": 200,
       "height": 31,
@@ -904,7 +904,7 @@
     {
       "id": "cdn-box",
       "type": "rectangle",
-      "x": 30,
+      "x": 1223,
       "y": 288,
       "width": 200,
       "height": 60,
@@ -919,7 +919,7 @@
     {
       "id": "cdn-lbl",
       "type": "text",
-      "x": 42,
+      "x": 938,
       "y": 305,
       "width": 237,
       "height": 84,
@@ -966,7 +966,7 @@
     {
       "id": "evidence-lbl",
       "type": "text",
-      "x": 250,
+      "x": 524,
       "y": 378,
       "width": 300,
       "height": 31,
@@ -986,7 +986,7 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 250,
+      "x": 524,
       "y": 396,
       "width": 420,
       "height": 100,
@@ -1001,11 +1001,11 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 262,
+      "x": 536,
       "y": 406,
       "width": 602,
       "height": 168,
-      "text": "POST /shorten  { url: \"https://...\", alias: \"mylink\", ttl: 86400 }\n→ { short_url: \"https://short.ly/mylink\", expires_at: \"...\" }\n\nGET /abc123  → 301 Location: <original>\nX-Cache: HIT  X-Edge-Location: us-east-1\nX-Hit-Count: 14829",
+      "text": "POST /shorten  { url: \"https://...\", alias: \"mylink\", ttl: 86400 }\n\u2192 { short_url: \"https://short.ly/mylink\", expires_at: \"...\" }\n\nGET /abc123  \u2192 301 Location: <original>\nX-Cache: HIT  X-Edge-Location: us-east-1\nX-Hit-Count: 14829",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
@@ -1021,7 +1021,7 @@
     {
       "id": "scale-lbl",
       "type": "text",
-      "x": 700,
+      "x": 1326,
       "y": 378,
       "width": 300,
       "height": 31,
@@ -1041,7 +1041,7 @@
     {
       "id": "scale-box",
       "type": "rectangle",
-      "x": 882,
+      "x": 1188,
       "y": 396,
       "width": 300,
       "height": 100,
@@ -1056,11 +1056,11 @@
     {
       "id": "scale-text",
       "type": "text",
-      "x": 712,
+      "x": 1338,
       "y": 406,
       "width": 338,
       "height": 168,
-      "text": "Write: 100K URLs/day = ~1.2 QPS\nRead:  10B redirects/day = ~115K QPS\nStorage: 500 bytes × 100K × 365 × 5yr\n          = ~91 GB\nCache hit ratio target: 99%+\nRedirect p99 latency: < 10ms",
+      "text": "Write: 100K URLs/day = ~1.2 QPS\nRead:  10B redirects/day = ~115K QPS\nStorage: 500 bytes \u00d7 100K \u00d7 365 \u00d7 5yr\n          = ~91 GB\nCache hit ratio target: 99%+\nRedirect p99 latency: < 10ms",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
