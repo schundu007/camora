@@ -29,23 +29,78 @@ const CodeBlock = ({ code, lang }: { code: string; lang: string }) => (
   </div>
 );
 
+// Process inline markdown: **bold**, `code`
+const inlineMarkdown = (raw: string): React.ReactNode[] => {
+  const nodes: React.ReactNode[] = [];
+  const re = /\*\*(.+?)\*\*|`([^`]+)`/g;
+  let last = 0, m: RegExpExecArray | null;
+  while ((m = re.exec(raw)) !== null) {
+    if (m.index > last) nodes.push(raw.slice(last, m.index));
+    if (m[1] !== undefined) {
+      nodes.push(<strong key={m.index} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{m[1]}</strong>);
+    } else {
+      nodes.push(<code key={m.index} style={{ padding: '1px 5px', background: 'rgba(16,185,129,0.12)', borderRadius: 4, color: '#10b981', fontFamily: 'IBM Plex Mono, monospace', fontSize: 12 }}>{m[2]}</code>);
+    }
+    last = m.index + m[0].length;
+  }
+  if (last < raw.length) nodes.push(raw.slice(last));
+  return nodes;
+};
+
 const renderContent = (text: string) => {
   const parts = text.split(/(```[\s\S]*?```)/g);
-  return parts.map((part, i) => {
+  const result: React.ReactNode[] = [];
+  let key = 0;
+
+  for (const part of parts) {
     if (part.startsWith('```')) {
       const inner = part.slice(3, -3);
       const nl = inner.indexOf('\n');
       const lang = nl > -1 ? inner.slice(0, nl).trim() : '';
       const code = nl > -1 ? inner.slice(nl + 1) : inner;
-      return <CodeBlock key={i} code={code} lang={lang} />;
+      result.push(<CodeBlock key={key++} code={code} lang={lang} />);
+      continue;
     }
-    if (!part.trim()) return null;
-    return (
-      <span key={i} className="whitespace-pre-wrap text-[14px] leading-relaxed" style={{ color: 'var(--text-primary)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-        {part}
-      </span>
-    );
-  });
+    if (!part.trim()) continue;
+
+    // Render line-by-line so list items get proper treatment
+    const lines = part.split('\n');
+    const listItems: string[] = [];
+
+    const flushList = () => {
+      if (!listItems.length) return;
+      result.push(
+        <ul key={key++} className="space-y-1 my-1.5 ml-1">
+          {listItems.map((item, j) => (
+            <li key={j} className="flex items-start gap-2 text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              <span className="w-1 h-1 rounded-full mt-[7px] shrink-0" style={{ background: 'var(--cam-primary)' }} />
+              <span>{inlineMarkdown(item)}</span>
+            </li>
+          ))}
+        </ul>
+      );
+      listItems.length = 0;
+    };
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.match(/^[-*•]\s/)) {
+        listItems.push(trimmed.replace(/^[-*•]\s/, ''));
+      } else {
+        flushList();
+        if (trimmed) {
+          result.push(
+            <p key={key++} className="text-[13px] leading-relaxed my-0.5" style={{ color: 'var(--text-secondary)' }}>
+              {inlineMarkdown(trimmed)}
+            </p>
+          );
+        }
+      }
+    }
+    flushList();
+  }
+
+  return result;
 };
 
 const AskResponse = ({ content }: { content: string }) => {
