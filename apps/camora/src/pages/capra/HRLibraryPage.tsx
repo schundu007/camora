@@ -444,7 +444,7 @@ export default function HRLibraryPage() {
     params.set('page',  String(page));
     params.set('limit', String(PAGE_LIMIT));
 
-    if (activeTab === 'must-do') { setLoading(false); setProblems([]); return; }
+    if (activeTab === 'must-do') { setLoading(false); setProblems([]); setTotal(0); setPages(1); return; }
 
     setLoading(true);
     fetch(`${API}/api/library?${params}`)
