@@ -27,3 +27,6 @@ apps/desktop/.local-cert/
 # HackerRank sync — local secrets, never commit
 scripts/hackerrank-sync/.hackerrank-cookies.json
 scripts/hackerrank-sync/hackerrank-descriptions.json
+
+# Research pipeline — working files, not committed
+apps/camora/scripts/research/*.json
