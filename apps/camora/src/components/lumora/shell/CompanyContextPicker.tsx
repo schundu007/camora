@@ -76,29 +76,29 @@ const CompanyContextPicker = () => {
   };
 
   const activeName = activeKey || null;
-  const label = activeName ? `Company: ${activeName}` : 'Pick Company';
+  const label = activeName || 'Company';
 
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        title="Switch which Prep Kit workspace Sona uses for context"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-extrabold uppercase tracking-[0.1em] transition-colors"
+        title={activeName ? `Active workspace: ${activeName}` : 'Switch which Prep Kit workspace Sona uses for context'}
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold uppercase tracking-[0.1em] transition-colors min-w-0"
         style={{
           background: 'rgba(3,19,46,0.88)',
           border: '1px solid rgba(201,162,39,0.50)',
           color: 'rgba(255,255,255,0.90)',
-          maxWidth: 240,
+          maxWidth: 160,
         }}
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
           <polyline points="14 2 14 8 20 8" />
           <line x1="9" y1="13" x2="15" y2="13" />
           <line x1="9" y1="17" x2="13" y2="17" />
         </svg>
-        <span className="truncate" style={{ maxWidth: 180 }}>{label}</span>
+        <span className="truncate min-w-0" style={{ maxWidth: 110 }}>{label}</span>
       </button>
 
       {open && (

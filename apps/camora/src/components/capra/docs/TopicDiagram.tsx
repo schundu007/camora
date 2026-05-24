@@ -33,8 +33,8 @@ export default function TopicDiagram({
   const src = `/diagrams/${topicId}/${kind}.png`;
   return (
     <figure
-      className={`rounded-xl overflow-hidden ${className}`}
-      style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', display: 'block', maxWidth: '960px', margin: '0 auto' }}
+      className={`rounded-xl ${className}`}
+      style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', display: 'block', maxWidth: '100%', margin: '0 auto' }}
     >
       <img
         src={src}
