@@ -5,6 +5,114 @@ type DiagramEntry = { id: string; title: string; file: string };
 type TopicDiagrams = { deepDives: DiagramEntry[]; tradeoffs: DiagramEntry[] };
 
 export const GENERATED_DIAGRAMS: Record<string, TopicDiagrams> = {
+  'chat-system': {
+    deepDives: [
+    {
+        "id": "websocket-connection",
+        "title": "WebSocket Connection Lifecycle & Heartbeats",
+        "file": "deep-dive-websocket-connection.png"
+    },
+    {
+        "id": "message-ordering",
+        "title": "Message Ordering & Idempotency",
+        "file": "deep-dive-message-ordering.png"
+    },
+    {
+        "id": "offline-sync",
+        "title": "Offline Message Sync & Push Notifications",
+        "file": "deep-dive-offline-sync.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "websocket-vs-longpoll-vs-sse",
+        "title": "WebSocket vs Long Polling vs SSE",
+        "file": "tradeoff-websocket-vs-longpoll-vs-sse.png"
+    },
+    {
+        "id": "read-receipts-consistency",
+        "title": "Strong vs Eventual Read-Receipt Consistency",
+        "file": "tradeoff-read-receipts-consistency.png"
+    },
+    {
+        "id": "end-to-end-encryption",
+        "title": "End-to-End Encryption vs Server-Side Encryption",
+        "file": "tradeoff-end-to-end-encryption.png"
+    }
+],
+  },
+  'dropbox': {
+    deepDives: [
+    {
+        "id": "chunking-and-deduplication",
+        "title": "File Chunking & Deduplication Pipeline",
+        "file": "deep-dive-chunking-and-deduplication.png"
+    },
+    {
+        "id": "resumable-upload-flow",
+        "title": "Resumable Upload & Presigned URL Flow",
+        "file": "deep-dive-resumable-upload-flow.png"
+    },
+    {
+        "id": "sync-notification-pipeline",
+        "title": "Real-Time Sync & Change Notification",
+        "file": "deep-dive-sync-notification-pipeline.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "chunking-strategy",
+        "title": "Fixed-Size vs Content-Defined Chunking",
+        "file": "tradeoff-chunking-strategy.png"
+    },
+    {
+        "id": "metadata-database-choice",
+        "title": "SQL vs NoSQL for File Metadata",
+        "file": "tradeoff-metadata-database-choice.png"
+    },
+    {
+        "id": "sync-push-vs-poll",
+        "title": "Push Notifications vs Client Polling",
+        "file": "tradeoff-sync-push-vs-poll.png"
+    }
+],
+  },
+  'google-docs': {
+    deepDives: [
+    {
+        "id": "ot-vs-crdt-flow",
+        "title": "Operational Transformation Conflict Resolution Flow",
+        "file": "deep-dive-ot-vs-crdt-flow.png"
+    },
+    {
+        "id": "websocket-presence-pipeline",
+        "title": "Real-Time Presence and Cursor Sync Pipeline",
+        "file": "deep-dive-websocket-presence-pipeline.png"
+    },
+    {
+        "id": "document-persistence-snapshot",
+        "title": "Document Snapshotting and Version History",
+        "file": "deep-dive-document-persistence-snapshot.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "ot-vs-crdt",
+        "title": "Operational Transformation vs CRDT",
+        "file": "tradeoff-ot-vs-crdt.png"
+    },
+    {
+        "id": "storage-model",
+        "title": "Document Storage Model",
+        "file": "tradeoff-storage-model.png"
+    },
+    {
+        "id": "transport-protocol",
+        "title": "Client-Server Transport",
+        "file": "tradeoff-transport-protocol.png"
+    }
+],
+  },
   'instagram': {
     deepDives: [
     {
@@ -38,6 +146,258 @@ export const GENERATED_DIAGRAMS: Record<string, TopicDiagrams> = {
         "id": "image-storage-cdn",
         "title": "Pre-generate vs On-the-Fly Image Variants",
         "file": "tradeoff-image-storage-cdn.png"
+    }
+],
+  },
+  'netflix': {
+    deepDives: [
+    {
+        "id": "drm-licensing",
+        "title": "DRM and License Acquisition Flow",
+        "file": "deep-dive-drm-licensing.png"
+    },
+    {
+        "id": "analytics-pipeline",
+        "title": "Real-Time Analytics and Telemetry Pipeline",
+        "file": "deep-dive-analytics-pipeline.png"
+    },
+    {
+        "id": "bookmark-viewing-history",
+        "title": "Viewing History and Bookmark Service",
+        "file": "deep-dive-bookmark-viewing-history.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "storage-cassandra-vs-dynamodb",
+        "title": "Cassandra vs DynamoDB for Viewing History",
+        "file": "tradeoff-storage-cassandra-vs-dynamodb.png"
+    },
+    {
+        "id": "cdn-push-vs-pull",
+        "title": "Push CDN vs Pull CDN for Video Distribution",
+        "file": "tradeoff-cdn-push-vs-pull.png"
+    },
+    {
+        "id": "transcoding-strategy",
+        "title": "Per-Title Encoding vs Per-Shot vs Fixed Ladder",
+        "file": "tradeoff-transcoding-strategy.png"
+    }
+],
+  },
+  'rate-limiter': {
+    deepDives: [
+    {
+        "id": "token-bucket-algorithm",
+        "title": "Token Bucket Algorithm Flow",
+        "file": "deep-dive-token-bucket-algorithm.png"
+    },
+    {
+        "id": "distributed-counter-sync",
+        "title": "Distributed Counter Synchronization",
+        "file": "deep-dive-distributed-counter-sync.png"
+    },
+    {
+        "id": "failure-fallback-flow",
+        "title": "Failure Mode & Fallback Strategy",
+        "file": "deep-dive-failure-fallback-flow.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "algorithm-choice",
+        "title": "Token Bucket vs Sliding Window vs Fixed Window",
+        "file": "tradeoff-algorithm-choice.png"
+    },
+    {
+        "id": "storage-backend",
+        "title": "Redis vs Local In-Memory Counters",
+        "file": "tradeoff-storage-backend.png"
+    },
+    {
+        "id": "enforcement-location",
+        "title": "API Gateway vs Sidecar vs Middleware",
+        "file": "tradeoff-enforcement-location.png"
+    }
+],
+  },
+  'twitter': {
+    deepDives: [
+    {
+        "id": "celebrity-fanout",
+        "title": "Celebrity Problem & Hybrid Fanout",
+        "file": "deep-dive-celebrity-fanout.png"
+    },
+    {
+        "id": "timeline-cache",
+        "title": "Timeline Cache Architecture & Eviction",
+        "file": "deep-dive-timeline-cache.png"
+    },
+    {
+        "id": "notification-pipeline",
+        "title": "Real-time Notification Delivery",
+        "file": "deep-dive-notification-pipeline.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "fanout-strategy",
+        "title": "Push vs Pull vs Hybrid Fanout",
+        "file": "tradeoff-fanout-strategy.png"
+    },
+    {
+        "id": "tweet-storage",
+        "title": "SQL vs NoSQL for Tweet Storage",
+        "file": "tradeoff-tweet-storage.png"
+    },
+    {
+        "id": "search-indexing",
+        "title": "Elasticsearch vs Earlybird (Lucene Custom)",
+        "file": "tradeoff-search-indexing.png"
+    }
+],
+  },
+  'typeahead': {
+    deepDives: [
+    {
+        "id": "trie-data-structure",
+        "title": "Trie Construction & Query Flow",
+        "file": "deep-dive-trie-data-structure.png"
+    },
+    {
+        "id": "analytics-aggregation-pipeline",
+        "title": "Query Logging & Aggregation Pipeline",
+        "file": "deep-dive-analytics-aggregation-pipeline.png"
+    },
+    {
+        "id": "trie-sharding-replication",
+        "title": "Trie Sharding & Replication Strategy",
+        "file": "deep-dive-trie-sharding-replication.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "trie-vs-inverted-index",
+        "title": "Trie vs Inverted Index",
+        "file": "tradeoff-trie-vs-inverted-index.png"
+    },
+    {
+        "id": "update-strategy",
+        "title": "Real-time vs Batch Trie Updates",
+        "file": "tradeoff-update-strategy.png"
+    },
+    {
+        "id": "client-vs-server-debounce",
+        "title": "Client-Side vs Server-Side Optimization",
+        "file": "tradeoff-client-vs-server-debounce.png"
+    }
+],
+  },
+  'uber': {
+    deepDives: [
+    {
+        "id": "payment-processing",
+        "title": "Payment Processing & Idempotency",
+        "file": "deep-dive-payment-processing.png"
+    },
+    {
+        "id": "driver-location-sharding",
+        "title": "Driver Location Sharding & Hot Cell Handling",
+        "file": "deep-dive-driver-location-sharding.png"
+    },
+    {
+        "id": "failure-recovery",
+        "title": "Fault Tolerance & Trip State Recovery",
+        "file": "deep-dive-failure-recovery.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "location-transport",
+        "title": "WebSockets vs HTTP Long Polling vs MQTT",
+        "file": "tradeoff-location-transport.png"
+    },
+    {
+        "id": "geo-indexing",
+        "title": "Geohash vs S2 vs H3",
+        "file": "tradeoff-geo-indexing.png"
+    },
+    {
+        "id": "matching-strategy",
+        "title": "Greedy Nearest vs Batched Optimization",
+        "file": "tradeoff-matching-strategy.png"
+    }
+],
+  },
+  'url-shortener': {
+    deepDives: [
+    {
+        "id": "short-code-generation",
+        "title": "Short Code Generation & Collision Handling",
+        "file": "deep-dive-short-code-generation.png"
+    },
+    {
+        "id": "read-path-caching",
+        "title": "Read Path with Multi-Layer Cache",
+        "file": "deep-dive-read-path-caching.png"
+    },
+    {
+        "id": "analytics-pipeline",
+        "title": "Click Analytics Pipeline",
+        "file": "deep-dive-analytics-pipeline.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "code-generation-strategy",
+        "title": "Hash-based vs Counter-based vs Random Code Generation",
+        "file": "tradeoff-code-generation-strategy.png"
+    },
+    {
+        "id": "database-choice",
+        "title": "SQL vs NoSQL for URL Mappings",
+        "file": "tradeoff-database-choice.png"
+    },
+    {
+        "id": "analytics-processing",
+        "title": "Real-time Stream vs Batch Analytics",
+        "file": "tradeoff-analytics-processing.png"
+    }
+],
+  },
+  'youtube': {
+    deepDives: [
+    {
+        "id": "search-indexing",
+        "title": "Search Indexing & Query Pipeline",
+        "file": "deep-dive-search-indexing.png"
+    },
+    {
+        "id": "live-streaming",
+        "title": "Live Streaming Pipeline (RTMP to HLS)",
+        "file": "deep-dive-live-streaming.png"
+    },
+    {
+        "id": "analytics-pipeline",
+        "title": "Real-time Analytics & Engagement Pipeline",
+        "file": "deep-dive-analytics-pipeline.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "storage-db",
+        "title": "SQL (Spanner) vs NoSQL (Cassandra) for Video Metadata",
+        "file": "tradeoff-storage-db.png"
+    },
+    {
+        "id": "cdn-strategy",
+        "title": "Push CDN vs Pull CDN for Video Delivery",
+        "file": "tradeoff-cdn-strategy.png"
+    },
+    {
+        "id": "recommendation-approach",
+        "title": "Collaborative Filtering vs Deep Learning vs Hybrid Recommendations",
+        "file": "tradeoff-recommendation-approach.png"
     }
 ],
   },
