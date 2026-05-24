@@ -36,21 +36,23 @@ from pathlib import Path
 import graphviz
 
 
-# Dark-mode color palette, hardcoded so PNGs look the same regardless of
-# the page's theme (we render once at build time). Picked to match the
-# Camora navy + gold-leaf accent grammar.
-BG_GRAPH       = "#0F1218"   # page-app background
-BG_LAYER       = "#1A1E26"   # bg-surface
-BG_COMPONENT   = "#232830"   # bg-elevated
-BORDER         = "#2E3440"   # subtle panel border
-GOLD_LEAF      = "#D9B543"   # accent rail / arrows
-GOLD_LEAF_DK   = "#A88817"   # text on light if needed
-TEXT_PRIMARY   = "#E8EAEC"   # near-white
-TEXT_SECONDARY = "#A6B0BD"   # muted body
-NAVY           = "#1A4F86"   # connector edges between layers
+# Enterprise architecture palette — white background, colored layers cycling
+# through blue / green / amber / purple to match the excalidraw arch diagrams.
+BG_GRAPH     = "#ffffff"
+ARROW_COLOR  = "#64748b"
+TEXT_PURPOSE = "#475569"
 
 FONT_HEADING = "Helvetica-Bold"
 FONT_BODY    = "Helvetica"
+
+# Each layer cycles through these palettes (blue → green → amber → purple → rose)
+_LAYER_PALETTES = [
+    {"bg": "#eff6ff", "border": "#3b82f6", "comp_bg": "#3b82f6",  "comp_text": "#ffffff",  "name_color": "#1e3a5f"},
+    {"bg": "#f0fdf4", "border": "#047857", "comp_bg": "#a7f3d0",  "comp_text": "#065f46",  "name_color": "#065f46"},
+    {"bg": "#fffbeb", "border": "#b45309", "comp_bg": "#fef3c7",  "comp_text": "#92400e",  "name_color": "#92400e"},
+    {"bg": "#fdf4ff", "border": "#7c3aed", "comp_bg": "#e9d5ff",  "comp_text": "#5b21b6",  "name_color": "#5b21b6"},
+    {"bg": "#fff1f2", "border": "#be123c", "comp_bg": "#fecdd3",  "comp_text": "#9f1239",  "name_color": "#9f1239"},
+]
 
 
 def _normalize(s: str) -> str:
@@ -85,7 +87,7 @@ def render_layered(spec: dict, out_path: Path) -> None:
         ranksep="0.28",
         pad="0.5,0.5",
         fontname=FONT_BODY,
-        fontcolor=TEXT_PRIMARY,
+        fontcolor="#1e293b",
         label=f"<{_html_escape(title)}>" if title else "",
         labelloc="t",
         fontsize="20",
@@ -93,13 +95,14 @@ def render_layered(spec: dict, out_path: Path) -> None:
     g.attr("node", shape="none", margin="0")
     g.attr(
         "edge",
-        color=GOLD_LEAF,
-        penwidth="2.5",
-        arrowsize="1.0",
+        color=ARROW_COLOR,
+        penwidth="2.0",
+        arrowsize="0.9",
         arrowhead="vee",
     )
 
     for i, layer in enumerate(layers):
+        pal = _LAYER_PALETTES[i % len(_LAYER_PALETTES)]
         name = _html_escape(layer.get("name", f"Layer {i + 1}"))
         purpose = _html_escape(layer.get("purpose", ""))
         comps = layer.get("components") or []
@@ -108,23 +111,23 @@ def render_layered(spec: dict, out_path: Path) -> None:
         # Title + purpose rows span all component columns.
         title_row = (
             f'<TR><TD COLSPAN="{n}" CELLPADDING="10" BORDER="0">'
-            f'<B><FONT FACE="{FONT_HEADING}" POINT-SIZE="13" COLOR="{TEXT_PRIMARY}">'
+            f'<B><FONT FACE="{FONT_HEADING}" POINT-SIZE="13" COLOR="{pal["name_color"]}">'
             f'{name}</FONT></B></TD></TR>'
         )
         purpose_row = ""
         if purpose:
             purpose_row = (
                 f'<TR><TD COLSPAN="{n}" CELLPADDING="2" BORDER="0">'
-                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="10" COLOR="{TEXT_SECONDARY}">'
+                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="10" COLOR="{TEXT_PURPOSE}">'
                 f'{purpose}</FONT></TD></TR>'
             )
 
         # Component cells — each in its own rounded box cell.
         if comps:
             comp_cells = "".join(
-                f'<TD BGCOLOR="{BG_COMPONENT}" STYLE="ROUNDED" BORDER="1"'
-                f' COLOR="{BORDER}" CELLPADDING="7">'
-                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="11" COLOR="{TEXT_PRIMARY}">'
+                f'<TD BGCOLOR="{pal["comp_bg"]}" STYLE="ROUNDED" BORDER="1"'
+                f' COLOR="{pal["border"]}" CELLPADDING="7">'
+                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="11" COLOR="{pal["comp_text"]}">'
                 f'{_html_escape(c)}</FONT></TD>'
                 for c in comps
             )
@@ -132,12 +135,12 @@ def render_layered(spec: dict, out_path: Path) -> None:
         else:
             comp_row = (
                 f'<TR><TD BORDER="0" CELLPADDING="4">'
-                f'<FONT COLOR="{TEXT_SECONDARY}">(no components)</FONT></TD></TR>'
+                f'<FONT COLOR="{TEXT_PURPOSE}">(no components)</FONT></TD></TR>'
             )
 
         label = (
             f'<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="6"'
-            f' BGCOLOR="{BG_LAYER}" COLOR="{GOLD_LEAF}" CELLPADDING="0"'
+            f' BGCOLOR="{pal["bg"]}" COLOR="{pal["border"]}" CELLPADDING="0"'
             f' STYLE="ROUNDED">'
             + title_row + purpose_row + comp_row +
             f'</TABLE>>'
@@ -169,7 +172,7 @@ def render_flow(spec: dict, out_path: Path) -> None:
         ranksep="0.6",
         pad="0.4",
         fontname=FONT_BODY,
-        fontcolor=TEXT_PRIMARY,
+        fontcolor="#1e293b",
         label=title or "",
         labelloc="t",
         fontsize="20",
@@ -178,17 +181,17 @@ def render_flow(spec: dict, out_path: Path) -> None:
         "node",
         shape="box",
         style="rounded,filled",
-        fillcolor=BG_LAYER,
-        color=GOLD_LEAF,
+        fillcolor="#eff6ff",
+        color="#3b82f6",
         fontname=FONT_HEADING,
         fontsize="12",
-        fontcolor=TEXT_PRIMARY,
+        fontcolor="#1e3a5f",
         margin="0.22,0.14",
-        penwidth="1.4",
+        penwidth="1.8",
     )
     g.attr(
         "edge",
-        color=GOLD_LEAF,
+        color=ARROW_COLOR,
         penwidth="2",
         arrowsize="1",
         arrowhead="vee",

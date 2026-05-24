@@ -1928,6 +1928,7 @@ export default function TopicDetail({
                     caption="Layered Design"
                     className="mb-3"
                   />
+                  <p className="text-[11px] font-bold text-[var(--text-muted)] mb-2 mt-1 landing-mono uppercase tracking-widest">Layer Breakdown</p>
                   <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
                     {effectiveLayeredDesign.map((layer, i) => (
                       <div key={i}>
