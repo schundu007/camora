@@ -3,6 +3,19 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
+// Try to load pre-generated static content from the public directory.
+// Returns the content string, or null if the file doesn't exist.
+async function loadStaticContent(source: string, slug: string): Promise<string | null> {
+  try {
+    const resp = await fetch(`/learn-content/${source}/${slug}.json`);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data.content || null;
+  } catch {
+    return null;
+  }
+}
+
 // ── Markdown renderer ────────────────────────────────────────────────────────
 
 function renderMarkdown(text: string) {
@@ -160,6 +173,15 @@ export default function LearnTopicPage() {
       setFromCache(false);
       setStreaming(true);
 
+      // Check pre-generated static file first — instant, no AI generation
+      const staticContent = await loadStaticContent(source, slug);
+      if (staticContent && !cancelled) {
+        setContent(staticContent);
+        setFromCache(true);
+        setStreaming(false);
+        return;
+      }
+
       try {
         const resp = await fetch(`${API_URL}/api/v1/learn/topic/${slug}`, {
           method: 'POST',
@@ -190,7 +212,6 @@ export default function LearnTopicPage() {
             try {
               const parsed = JSON.parse(raw);
               if (parsed.fromCache) {
-                // Cached: received full content in one shot
                 isCache = true;
                 full = parsed.text;
                 if (!cancelled) setContent(full);
