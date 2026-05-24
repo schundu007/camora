@@ -80,7 +80,7 @@ const TAB_GROUPS: Record<string, string[]> = {
 };
 
 const TAB_LABELS: Record<string, string> = {
-  all: 'All', mcq: 'MCQ', coding: 'Coding', design: 'Design', 'must-do': '⭐ Must Do',
+  all: 'All', mcq: 'MCQ', coding: 'Coding', design: 'Design', 'must-do': 'Must Do',
 };
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -399,7 +399,7 @@ export default function HRLibraryPage() {
 
   // Type dropdown options: narrowed to the active tab's group, further filtered by cascaded meta
   const typeOptions = activeTab !== 'all'
-    ? TAB_GROUPS[activeTab].filter(t => metaTypes.length === 0 || metaTypes.includes(t))
+    ? (TAB_GROUPS[activeTab] ?? []).filter(t => metaTypes.length === 0 || metaTypes.includes(t))
     : (metaTypes.length > 0 ? metaTypes : ALL_TYPES);
 
   const [searchInput, setSearchInput] = useState(q);
@@ -608,7 +608,12 @@ export default function HRLibraryPage() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {TAB_LABELS[tab]}
+              {tab === 'must-do' ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Icon name="starFilled" size={11} style={{ flexShrink: 0 }} />
+                  Must Do
+                </span>
+              ) : TAB_LABELS[tab]}
             </button>
           ))}
         </div>
