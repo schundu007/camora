@@ -28,7 +28,7 @@ function renderMarkdown(text: string) {
     let r = escHtml(s);
     r = r.replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text-primary);font-weight:600">$1</strong>');
     r = r.replace(/`([^`]+)`/g, '<code style="padding:1px 5px;background:color-mix(in oklab,var(--cam-primary) 12%,var(--bg-elevated));border-radius:4px;color:var(--cam-primary);font-family:var(--font-mono);font-size:12px">$1</code>');
-    r = r.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    r = r.replace(/\*([^*]+?)\*/g, '<em>$1</em>');
     return r;
   };
 
@@ -46,6 +46,7 @@ function renderMarkdown(text: string) {
   while (i < lines.length) {
     const line = lines[i];
 
+    // ── Code block ──────────────────────────────────────────────────────────
     if (line.startsWith('__CODE_')) {
       const idx = parseInt(line.replace('__CODE_', '').replace('__', ''));
       const { lang, code } = codes[idx];
@@ -62,6 +63,25 @@ function renderMarkdown(text: string) {
       i++; continue;
     }
 
+    // ── Horizontal rule ─────────────────────────────────────────────────────
+    if (/^[-*_]{3,}\s*$/.test(line.trim())) {
+      elements.push(
+        <div key={key++} className="my-5" style={{ borderTop: '1px solid var(--border)' }} />
+      );
+      i++; continue;
+    }
+
+    // ── H1 (topic title, appears once at top of content) ────────────────────
+    if (line.startsWith('# ') && !line.startsWith('## ')) {
+      elements.push(
+        <h1 key={key++} className="text-[20px] font-bold mt-2 mb-5 leading-snug" style={{ color: 'var(--cam-gold-leaf)' }}>
+          {line.slice(2)}
+        </h1>
+      );
+      i++; continue;
+    }
+
+    // ── H2 ──────────────────────────────────────────────────────────────────
     if (line.startsWith('## ')) {
       elements.push(
         <h2 key={key++} className="text-[15px] font-bold mt-8 mb-3 flex items-center gap-2" style={{ color: 'var(--cam-gold-leaf)' }}>
@@ -72,6 +92,7 @@ function renderMarkdown(text: string) {
       i++; continue;
     }
 
+    // ── H3 ──────────────────────────────────────────────────────────────────
     if (line.startsWith('### ')) {
       elements.push(
         <h3 key={key++} className="text-[13px] font-semibold mt-5 mb-2" style={{ color: 'var(--text-primary)' }}>
@@ -81,6 +102,19 @@ function renderMarkdown(text: string) {
       i++; continue;
     }
 
+    // ── Standalone bold label: **Text** on its own line ─────────────────────
+    // Treat as a sub-section label with distinct styling instead of plain <p>.
+    if (/^\*\*[^*]+\*\*[:.]?\s*$/.test(line.trim())) {
+      const label = line.trim().replace(/^\*\*/, '').replace(/\*\*[:.]?\s*$/, '');
+      elements.push(
+        <p key={key++} className="text-[12px] font-bold uppercase tracking-[0.08em] mt-4 mb-1" style={{ color: 'var(--cam-primary)' }}>
+          {label}
+        </p>
+      );
+      i++; continue;
+    }
+
+    // ── Bullet list ──────────────────────────────────────────────────────────
     if (line.match(/^[-*•]\s/)) {
       const items: string[] = [];
       while (i < lines.length && lines[i].match(/^[-*•]\s/)) {
@@ -100,26 +134,64 @@ function renderMarkdown(text: string) {
       continue;
     }
 
+    // ── Ordered list ─────────────────────────────────────────────────────────
+    // Detect "section-style" numbered items (each followed by bullet sub-items)
+    // vs. a plain sequential numbered list. Section-style renders the ordered
+    // item as a bold sub-heading and the bullets as indented children.
     if (line.match(/^\d+[.)]\s/)) {
-      const items: string[] = [];
-      while (i < lines.length && lines[i].match(/^\d+[.)]\s/)) {
-        items.push(lines[i].replace(/^\d+[.)]\s/, ''));
-        i++;
+      const sections: Array<{ heading: string; bullets: string[] }> = [];
+      let j = i;
+      while (j < lines.length && lines[j].match(/^\d+[.)]\s/)) {
+        const heading = lines[j].replace(/^\d+[.)]\s/, '');
+        j++;
+        const bullets: string[] = [];
+        while (j < lines.length && lines[j].match(/^[-*•]\s/)) {
+          bullets.push(lines[j].replace(/^[-*•]\s/, ''));
+          j++;
+        }
+        sections.push({ heading, bullets });
       }
-      elements.push(
-        <ol key={key++} className="space-y-1.5 my-2 ml-4 list-decimal" style={{ paddingLeft: '1.25rem' }}>
-          {items.map((item, j) => (
-            <li key={j} className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              <span dangerouslySetInnerHTML={{ __html: inline(item) }} />
-            </li>
-          ))}
-        </ol>
-      );
+      i = j;
+
+      if (sections.some(s => s.bullets.length > 0)) {
+        // Section-style: bold sub-heading + indented bullet children
+        for (const section of sections) {
+          elements.push(
+            <p key={key++} className="text-[13px] font-semibold mt-3 mb-1" style={{ color: 'var(--text-primary)' }}
+              dangerouslySetInnerHTML={{ __html: inline(section.heading) }} />
+          );
+          if (section.bullets.length > 0) {
+            elements.push(
+              <ul key={key++} className="space-y-1 mb-2 ml-4">
+                {section.bullets.map((item, idx) => (
+                  <li key={idx} className="text-[13px] leading-relaxed flex items-start gap-2" style={{ color: 'var(--text-secondary)' }}>
+                    <span className="w-1 h-1 rounded-full mt-2 shrink-0" style={{ background: 'var(--cam-primary)', opacity: 0.6 }} />
+                    <span dangerouslySetInnerHTML={{ __html: inline(item) }} />
+                  </li>
+                ))}
+              </ul>
+            );
+          }
+        }
+      } else {
+        // Plain sequential numbered list
+        elements.push(
+          <ol key={key++} className="space-y-1.5 my-2 ml-4 list-decimal" style={{ paddingLeft: '1.25rem' }}>
+            {sections.map((s, idx) => (
+              <li key={idx} className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                <span dangerouslySetInnerHTML={{ __html: inline(s.heading) }} />
+              </li>
+            ))}
+          </ol>
+        );
+      }
       continue;
     }
 
+    // ── Empty line ───────────────────────────────────────────────────────────
     if (!line.trim()) { i++; continue; }
 
+    // ── Paragraph ────────────────────────────────────────────────────────────
     elements.push(
       <p key={key++} className="text-[13px] leading-relaxed my-2" style={{ color: 'var(--text-secondary)' }}
         dangerouslySetInnerHTML={{ __html: inline(line) }} />
