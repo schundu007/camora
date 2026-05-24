@@ -72,6 +72,7 @@ const FlyerPage = lazy(() => import('./pages/FlyerPage'));
 const MobileAuthPage = lazy(() => import('./pages/MobileAuthPage'));
 const PythonLearnPage = lazy(() => import('./pages/capra/PythonLearnPage'));
 const CodeSignalLearnPage = lazy(() => import('./pages/capra/CodeSignalLearnPage'));
+const ProgramizLearnPage = lazy(() => import('./pages/capra/ProgramizLearnPage'));
 
 const Loading = () => {
   return (
@@ -268,6 +269,7 @@ const RouteTitle = () => {
       ['/capra/library', 'Problem Library — Camora'],
       ['/capra/learn/python', 'Python — Learning Library — Camora'],
       ['/capra/learn/codesignal', 'CodeSignal Learn — Camora'],
+      ['/capra/learn/programiz', 'Programiz Python — Camora'],
       ['/capra/onboarding', 'Get Started — Camora'],
       ['/jobs', 'Jobs — Camora'],
       ['/profile', 'Profile — Camora'],
@@ -386,6 +388,7 @@ export const App = () => {
           <Route path="/capra/quiz/session" element={<ShellRoute><QuizSessionPage /></ShellRoute>} />
           <Route path="/capra/learn/python" element={<PythonLearnPage />} />
           <Route path="/capra/learn/codesignal" element={<ShellRoute><CodeSignalLearnPage /></ShellRoute>} />
+          <Route path="/capra/learn/programiz" element={<ShellRoute><ProgramizLearnPage /></ShellRoute>} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
           <Route path="/capra/achievements" element={<Navigate to="/profile?tab=achievements" replace />} />

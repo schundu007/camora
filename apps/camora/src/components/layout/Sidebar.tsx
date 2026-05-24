@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MUST_DO_PROBLEMS } from '../../data/capra/mustDoProblems.js';
 
 /* ─── Types ──────────────────────────────────────────────────── */
 
@@ -293,16 +292,8 @@ const sections: NavSection[] = [
     items: [
       { label: 'Python', path: '/capra/learn/python', icon: icons.python },
       { label: 'CodeSignal', path: '/capra/learn/codesignal', icon: icons.bolt },
-      { label: 'Programiz', path: 'https://www.programiz.com/python-programming', icon: icons.python, external: true },
+      { label: 'Programiz', path: '/capra/learn/programiz', icon: icons.python },
     ],
-  },
-  {
-    title: 'Must Do',
-    items: MUST_DO_PROBLEMS.map(p => ({
-      label: p.label,
-      path: `/capra/coding?problem=${encodeURIComponent(p.description)}`,
-      icon: icons.check,
-    })),
   },
   {
     title: 'Attend',

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { MUST_DO_PROBLEMS } from '../../data/capra/mustDoProblems.js';
 
 const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -78,7 +79,7 @@ const TAB_GROUPS: Record<string, string[]> = {
 };
 
 const TAB_LABELS: Record<string, string> = {
-  all: 'All', mcq: 'MCQ', coding: 'Coding', design: 'Design',
+  all: 'All', mcq: 'MCQ', coding: 'Coding', design: 'Design', 'must-do': '⭐ Must Do',
 };
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -442,6 +443,8 @@ export default function HRLibraryPage() {
     params.set('page',  String(page));
     params.set('limit', String(PAGE_LIMIT));
 
+    if (activeTab === 'must-do') { setLoading(false); setProblems([]); return; }
+
     setLoading(true);
     fetch(`${API}/api/library?${params}`)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
@@ -452,7 +455,7 @@ export default function HRLibraryPage() {
       })
       .catch(() => { setProblems([]); setTotal(0); })
       .finally(() => setLoading(false));
-  }, [q,
+  }, [q, activeTab,
     selectedRoles.join(','), effectiveTypes.join(','), selectedDiffs.join(','),
     selectedSkills.join(','), selectedDurs.join(','), page]);
 
@@ -572,7 +575,7 @@ export default function HRLibraryPage() {
           borderRadius: 10,
           marginBottom: 14,
         }}>
-          {(['all', 'mcq', 'coding', 'design'] as const).map(tab => (
+          {(['all', 'mcq', 'coding', 'design', 'must-do'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -695,7 +698,43 @@ export default function HRLibraryPage() {
 
       {/* ── Problem list — full width, no max-width container ─────────────── */}
       <div>
-        {loading ? (
+        {activeTab === 'must-do' ? (
+          <div style={{ padding: '28px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+            {MUST_DO_PROBLEMS.map((p: { slug: string; label: string; description: string }) => (
+              <button
+                key={p.slug}
+                onClick={() => navigate(`/capra/coding?problem=${encodeURIComponent(p.description)}`)}
+                style={{
+                  display: 'flex', flexDirection: 'column', gap: 10,
+                  padding: '16px', borderRadius: 10, textAlign: 'left',
+                  background: 'var(--bg-surface)', border: '1px solid var(--border)',
+                  cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'color-mix(in oklab, var(--cam-gold-leaf) 60%, transparent)';
+                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-elevated)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)';
+                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface)';
+                }}
+              >
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.3 }}>
+                  {p.label}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{
+                    fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
+                    padding: '2px 8px', borderRadius: 999,
+                    background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, var(--bg-elevated))',
+                    color: 'var(--cam-gold-leaf)',
+                  }}>Must Do</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>DSA</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : loading ? (
           Array.from({ length: PAGE_LIMIT }).map((_, i) => <SkeletonCard key={i} i={i} />)
         ) : problems.length === 0 ? (
           <div style={{ padding: '80px 28px', textAlign: 'center', color: 'var(--text-muted)' }}>
