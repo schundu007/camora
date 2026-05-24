@@ -6,11 +6,11 @@
     {
       "id": "title-text",
       "type": "text",
-      "x": 934,
+      "x": 550,
       "y": 20,
       "width": 700,
       "height": 48,
-      "text": "Google Docs \u2014 Basic Architecture",
+      "text": "Google Docs — Basic Architecture",
       "fontSize": 24,
       "fontFamily": 1,
       "textAlign": "center",
@@ -26,7 +26,7 @@
     {
       "id": "label-client",
       "type": "text",
-      "x": 949,
+      "x": 40,
       "y": 78,
       "width": 130,
       "height": 31,
@@ -46,7 +46,7 @@
     {
       "id": "client-box",
       "type": "rectangle",
-      "x": 216,
+      "x": 0,
       "y": 64,
       "width": 210,
       "height": 148,
@@ -61,7 +61,7 @@
     {
       "id": "client-label",
       "type": "text",
-      "x": 959,
+      "x": 50,
       "y": 120,
       "width": 146,
       "height": 84,
@@ -83,7 +83,7 @@
       "type": "arrow",
       "x": 172,
       "y": 138,
-      "width": 481,
+      "width": 78,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -100,7 +100,7 @@
           0
         ],
         [
-          481,
+          78,
           0
         ]
       ]
@@ -108,7 +108,7 @@
     {
       "id": "label-ws",
       "type": "text",
-      "x": 953,
+      "x": 260,
       "y": 78,
       "width": 160,
       "height": 31,
@@ -128,7 +128,7 @@
     {
       "id": "ws-box",
       "type": "rectangle",
-      "x": 953,
+      "x": 260,
       "y": 98,
       "width": 160,
       "height": 80,
@@ -143,7 +143,7 @@
     {
       "id": "ws-label",
       "type": "text",
-      "x": 963,
+      "x": 270,
       "y": 114,
       "width": 201,
       "height": 112,
@@ -165,7 +165,7 @@
       "type": "arrow",
       "x": 422,
       "y": 138,
-      "width": 462,
+      "width": 78,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -182,7 +182,7 @@
           0
         ],
         [
-          462,
+          78,
           0
         ]
       ]
@@ -190,7 +190,7 @@
     {
       "id": "label-docsvc",
       "type": "text",
-      "x": 894,
+      "x": 510,
       "y": 78,
       "width": 160,
       "height": 31,
@@ -210,10 +210,10 @@
     {
       "id": "docsvc-box",
       "type": "rectangle",
-      "x": 894,
+      "x": 510,
       "y": 98,
       "width": 160,
-      "height": 148,
+      "height": 80,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
       "fillStyle": "solid",
@@ -225,7 +225,7 @@
     {
       "id": "docsvc-label",
       "type": "text",
-      "x": 904,
+      "x": 520,
       "y": 118,
       "width": 165,
       "height": 112,
@@ -272,7 +272,7 @@
     {
       "id": "label-ot",
       "type": "text",
-      "x": 1050,
+      "x": 760,
       "y": 78,
       "width": 200,
       "height": 31,
@@ -292,10 +292,10 @@
     {
       "id": "ot-box",
       "type": "rectangle",
-      "x": 1025,
+      "x": 735,
       "y": 67,
       "width": 249,
-      "height": 171,
+      "height": 142,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
       "fillStyle": "solid",
@@ -307,7 +307,7 @@
     {
       "id": "ot-label",
       "type": "text",
-      "x": 1060,
+      "x": 770,
       "y": 110,
       "width": 201,
       "height": 112,
@@ -354,7 +354,7 @@
     {
       "id": "label-docstore",
       "type": "text",
-      "x": 1050,
+      "x": 760,
       "y": 274,
       "width": 200,
       "height": 31,
@@ -374,7 +374,7 @@
     {
       "id": "docstore-box",
       "type": "rectangle",
-      "x": 1050,
+      "x": 760,
       "y": 294,
       "width": 200,
       "height": 90,
@@ -389,7 +389,7 @@
     {
       "id": "docstore-label",
       "type": "text",
-      "x": 1060,
+      "x": 770,
       "y": 310,
       "width": 237,
       "height": 112,
@@ -409,7 +409,7 @@
     {
       "id": "label-ot-explain",
       "type": "text",
-      "x": 961,
+      "x": 440,
       "y": 274,
       "width": 290,
       "height": 31,
@@ -429,7 +429,7 @@
     {
       "id": "ot-explain-box",
       "type": "rectangle",
-      "x": 961,
+      "x": 440,
       "y": 294,
       "width": 290,
       "height": 120,
@@ -444,7 +444,7 @@
     {
       "id": "ot-explain-text",
       "type": "text",
-      "x": 973,
+      "x": 452,
       "y": 304,
       "width": 365,
       "height": 224,
@@ -464,7 +464,7 @@
     {
       "id": "label-evidence",
       "type": "text",
-      "x": 949,
+      "x": 40,
       "y": 274,
       "width": 380,
       "height": 31,
@@ -484,10 +484,10 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 949,
+      "x": 40,
       "y": 294,
       "width": 380,
-      "height": 362,
+      "height": 120,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
       "fillStyle": "solid",
@@ -499,11 +499,11 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 961,
+      "x": 52,
       "y": 304,
       "width": 374,
       "height": 336,
-      "text": "Client \u2192 Server (WebSocket):\n{type:\"op\", docId:\"abc\", revision:42,\n op:{type:\"insert\",pos:5,text:\"hello\"}}\n\nServer \u2192 All Clients (broadcast):\n{type:\"ack\", revision:43,\n op:{type:\"insert\",pos:5,text:\"hello\"},\n transformedFrom:42}\n\n1. Client sends op + its current revision\n2. OT transforms against concurrent ops\n3. Server acks new revision, broadcasts",
+      "text": "Client → Server (WebSocket):\n{type:\"op\", docId:\"abc\", revision:42,\n op:{type:\"insert\",pos:5,text:\"hello\"}}\n\nServer → All Clients (broadcast):\n{type:\"ack\", revision:43,\n op:{type:\"insert\",pos:5,text:\"hello\"},\n transformedFrom:42}\n\n1. Client sends op + its current revision\n2. OT transforms against concurrent ops\n3. Server acks new revision, broadcasts",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",

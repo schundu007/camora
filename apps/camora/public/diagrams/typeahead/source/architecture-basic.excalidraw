@@ -6,11 +6,11 @@
     {
       "id": "title-text",
       "type": "text",
-      "x": 767,
+      "x": 500,
       "y": 20,
       "width": 760,
       "height": 48,
-      "text": "Typeahead/Autocomplete \u2014 Basic Architecture",
+      "text": "Typeahead/Autocomplete — Basic Architecture",
       "fontSize": 24,
       "fontFamily": 1,
       "textAlign": "center",
@@ -26,7 +26,7 @@
     {
       "id": "label-user",
       "type": "text",
-      "x": 243,
+      "x": 40,
       "y": 78,
       "width": 130,
       "height": 31,
@@ -46,7 +46,7 @@
     {
       "id": "user-box",
       "type": "rectangle",
-      "x": 207,
+      "x": 4,
       "y": 64,
       "width": 201,
       "height": 148,
@@ -61,7 +61,7 @@
     {
       "id": "user-label",
       "type": "text",
-      "x": 670,
+      "x": 50,
       "y": 118,
       "width": 137,
       "height": 84,
@@ -83,7 +83,7 @@
       "type": "arrow",
       "x": 172,
       "y": 138,
-      "width": 495,
+      "width": 78,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -100,7 +100,7 @@
           0
         ],
         [
-          495,
+          78,
           0
         ]
       ]
@@ -108,7 +108,7 @@
     {
       "id": "label-trie",
       "type": "text",
-      "x": 677,
+      "x": 260,
       "y": 78,
       "width": 200,
       "height": 31,
@@ -128,7 +128,7 @@
     {
       "id": "trie-box",
       "type": "rectangle",
-      "x": 677,
+      "x": 260,
       "y": 98,
       "width": 200,
       "height": 80,
@@ -143,11 +143,11 @@
     {
       "id": "trie-label",
       "type": "text",
-      "x": 687,
+      "x": 270,
       "y": 112,
       "width": 237,
       "height": 112,
-      "text": "Prefix Trie\nO(k) lookup (k=prefix len)\na\u2192p\u2192[app, apple, april]\nTop-k stored at each node",
+      "text": "Prefix Trie\nO(k) lookup (k=prefix len)\na→p→[app, apple, april]\nTop-k stored at each node",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
@@ -190,7 +190,7 @@
     {
       "id": "label-topk",
       "type": "text",
-      "x": 944,
+      "x": 550,
       "y": 78,
       "width": 180,
       "height": 31,
@@ -210,10 +210,10 @@
     {
       "id": "topk-box",
       "type": "rectangle",
-      "x": 944,
+      "x": 550,
       "y": 98,
       "width": 180,
-      "height": 170,
+      "height": 80,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
       "fillStyle": "solid",
@@ -225,7 +225,7 @@
     {
       "id": "topk-label",
       "type": "text",
-      "x": 954,
+      "x": 560,
       "y": 112,
       "width": 174,
       "height": 140,
@@ -247,7 +247,7 @@
       "type": "arrow",
       "x": 730,
       "y": 138,
-      "width": 205,
+      "width": 78,
       "height": 0,
       "strokeColor": "#047857",
       "backgroundColor": "transparent",
@@ -264,7 +264,7 @@
           0
         ],
         [
-          205,
+          78,
           0
         ]
       ]
@@ -272,7 +272,7 @@
     {
       "id": "label-freq",
       "type": "text",
-      "x": 945,
+      "x": 818,
       "y": 78,
       "width": 200,
       "height": 31,
@@ -292,7 +292,7 @@
     {
       "id": "freq-box",
       "type": "rectangle",
-      "x": 945,
+      "x": 818,
       "y": 98,
       "width": 200,
       "height": 80,
@@ -307,11 +307,11 @@
     {
       "id": "freq-label",
       "type": "text",
-      "x": 955,
+      "x": 828,
       "y": 112,
       "width": 237,
       "height": 112,
-      "text": "Frequency DB\nquery \u2192 search_count\nUpdated by analytics\nBatch rebuild trie nightly",
+      "text": "Frequency DB\nquery → search_count\nUpdated by analytics\nBatch rebuild trie nightly",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
@@ -327,7 +327,7 @@
     {
       "id": "label-trie-viz",
       "type": "text",
-      "x": 243,
+      "x": 40,
       "y": 230,
       "width": 300,
       "height": 31,
@@ -347,7 +347,7 @@
     {
       "id": "trie-viz-box",
       "type": "rectangle",
-      "x": 243,
+      "x": 40,
       "y": 250,
       "width": 300,
       "height": 150,
@@ -362,11 +362,11 @@
     {
       "id": "trie-viz-text",
       "type": "text",
-      "x": 672,
+      "x": 52,
       "y": 260,
       "width": 447,
       "height": 280,
-      "text": "root\n\u2514\u2500 a (freq: 42M)\n   \u2514\u2500 p (freq: 18M) \u2190 user typed here\n      \u251c\u2500 p (freq: 9.2M)\n      \u2502  \u251c\u2500 l (freq: 9.1M)\n      \u2502  \u2502  \u2514\u2500 e \u2192 \"apple\" [9.1M]\n      \u2502  \u2514\u2500 \"app\" [3.8M]\n      \u251c\u2500 p-l-i-c-a-t-i-o-n \u2192 \"application\" [4.1M]\n      \u251c\u2500 r-i-l \u2192 \"april\" [2.3M]\n      \u2514\u2500 a-r-t-m-e-n-t \u2192 \"apartment\" [1.9M]",
+      "text": "root\n└─ a (freq: 42M)\n   └─ p (freq: 18M) ← user typed here\n      ├─ p (freq: 9.2M)\n      │  ├─ l (freq: 9.1M)\n      │  │  └─ e → \"apple\" [9.1M]\n      │  └─ \"app\" [3.8M]\n      ├─ p-l-i-c-a-t-i-o-n → \"application\" [4.1M]\n      ├─ r-i-l → \"april\" [2.3M]\n      └─ a-r-t-m-e-n-t → \"apartment\" [1.9M]",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
@@ -382,7 +382,7 @@
     {
       "id": "label-evidence",
       "type": "text",
-      "x": 777,
+      "x": 360,
       "y": 230,
       "width": 690,
       "height": 31,
@@ -402,10 +402,10 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 777,
+      "x": 360,
       "y": 250,
       "width": 690,
-      "height": 362,
+      "height": 150,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
       "fillStyle": "solid",
@@ -417,11 +417,11 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 789,
+      "x": 372,
       "y": 260,
       "width": 666,
       "height": 336,
-      "text": "GET /suggest?q=ap&limit=5\n\u2192 200 OK (< 50ms)\n[\"apple\", \"application\", \"app\", \"april\", \"apartment\"]\n\nFrequency update (async, batched):\nKafka topic: search_clicks\n{query: \"apple\", clicked: true, position: 0, ts: 1714982400}\n\nTrie rebuild (nightly, 30min batch):\nSELECT query, count(*) FROM search_log\nWHERE ts > NOW() - INTERVAL '1 day'\nGROUP BY query ORDER BY count DESC LIMIT 10M",
+      "text": "GET /suggest?q=ap&limit=5\n→ 200 OK (< 50ms)\n[\"apple\", \"application\", \"app\", \"april\", \"apartment\"]\n\nFrequency update (async, batched):\nKafka topic: search_clicks\n{query: \"apple\", clicked: true, position: 0, ts: 1714982400}\n\nTrie rebuild (nightly, 30min batch):\nSELECT query, count(*) FROM search_log\nWHERE ts > NOW() - INTERVAL '1 day'\nGROUP BY query ORDER BY count DESC LIMIT 10M",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",

@@ -412,8 +412,8 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘B</kbd> blank screen</span>
       </div>
       </div>
-      {/* Full-width border below content — separates content from empty space */}
-      <div style={{ borderTop: '1px solid var(--border)', flexShrink: 0 }} />
+      {/* Full-width gold border below content — mirrors the hero strip top border */}
+      <div style={{ borderTop: '2px solid var(--cam-gold-leaf)', flexShrink: 0 }} />
     </div>
   );
 }

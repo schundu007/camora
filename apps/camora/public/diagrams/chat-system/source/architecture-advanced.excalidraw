@@ -6,11 +6,11 @@
     {
       "id": "title",
       "type": "text",
-      "x": 988,
+      "x": 420,
       "y": 18,
       "width": 860,
       "height": 48,
-      "text": "Chat System \u2014 Distributed Architecture (Advanced)",
+      "text": "Chat System — Distributed Architecture (Advanced)",
       "fontSize": 24,
       "fontFamily": 1,
       "textAlign": "center",
@@ -26,7 +26,7 @@
     {
       "id": "lbl-clients",
       "type": "text",
-      "x": 1143,
+      "x": 30,
       "y": 76,
       "width": 120,
       "height": 31,
@@ -46,10 +46,10 @@
     {
       "id": "clienta-box",
       "type": "rectangle",
-      "x": 170,
+      "x": 10,
       "y": 58,
       "width": 140,
-      "height": 186,
+      "height": 120,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
       "fillStyle": "solid",
@@ -61,7 +61,7 @@
     {
       "id": "clienta-lbl",
       "type": "text",
-      "x": 1155,
+      "x": 42,
       "y": 108,
       "width": 76,
       "height": 56,
@@ -81,7 +81,7 @@
     {
       "id": "clientb-box",
       "type": "rectangle",
-      "x": 178,
+      "x": 18,
       "y": 183,
       "width": 124,
       "height": 97,
@@ -96,7 +96,7 @@
     {
       "id": "clientb-lbl",
       "type": "text",
-      "x": 1155,
+      "x": 42,
       "y": 172,
       "width": 76,
       "height": 56,
@@ -118,7 +118,7 @@
       "type": "arrow",
       "x": 132,
       "y": 119,
-      "width": 777,
+      "width": 68,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -135,7 +135,7 @@
           0
         ],
         [
-          777,
+          68,
           0
         ]
       ]
@@ -145,7 +145,7 @@
       "type": "arrow",
       "x": 132,
       "y": 183,
-      "width": 777,
+      "width": 68,
       "height": 60,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -162,7 +162,7 @@
           0
         ],
         [
-          777,
+          68,
           60
         ]
       ]
@@ -170,7 +170,7 @@
     {
       "id": "lbl-ws-cluster",
       "type": "text",
-      "x": 1163,
+      "x": 210,
       "y": 60,
       "width": 228,
       "height": 31,
@@ -190,7 +190,7 @@
     {
       "id": "ws1-box",
       "type": "rectangle",
-      "x": 1142,
+      "x": 189,
       "y": 43,
       "width": 201,
       "height": 120,
@@ -205,7 +205,7 @@
     {
       "id": "ws1-lbl",
       "type": "text",
-      "x": 931,
+      "x": 222,
       "y": 92,
       "width": 137,
       "height": 56,
@@ -225,10 +225,10 @@
     {
       "id": "ws2-box",
       "type": "rectangle",
-      "x": 1047,
+      "x": 157,
       "y": 168,
       "width": 264,
-      "height": 161,
+      "height": 97,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
       "fillStyle": "solid",
@@ -240,7 +240,7 @@
     {
       "id": "ws2-lbl",
       "type": "text",
-      "x": 931,
+      "x": 222,
       "y": 164,
       "width": 137,
       "height": 56,
@@ -260,7 +260,7 @@
     {
       "id": "lbl-zk",
       "type": "text",
-      "x": 1163,
+      "x": 210,
       "y": 224,
       "width": 200,
       "height": 31,
@@ -280,7 +280,7 @@
     {
       "id": "zk-box",
       "type": "rectangle",
-      "x": 1146,
+      "x": 193,
       "y": 281,
       "width": 194,
       "height": 97,
@@ -295,7 +295,7 @@
     {
       "id": "zk-lbl",
       "type": "text",
-      "x": 931,
+      "x": 222,
       "y": 257,
       "width": 146,
       "height": 56,
@@ -317,7 +317,7 @@
       "type": "arrow",
       "x": 372,
       "y": 103,
-      "width": 89,
+      "width": 68,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -334,7 +334,7 @@
           0
         ],
         [
-          89,
+          68,
           0
         ]
       ]
@@ -344,7 +344,7 @@
       "type": "arrow",
       "x": 372,
       "y": 175,
-      "width": 89,
+      "width": 68,
       "height": -72,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -361,7 +361,7 @@
           0
         ],
         [
-          89,
+          68,
           -72
         ]
       ]
@@ -369,7 +369,7 @@
     {
       "id": "lbl-kafka",
       "type": "text",
-      "x": 1039,
+      "x": 450,
       "y": 60,
       "width": 180,
       "height": 31,
@@ -389,7 +389,7 @@
     {
       "id": "kafka-box",
       "type": "rectangle",
-      "x": 1039,
+      "x": 450,
       "y": 76,
       "width": 160,
       "height": 60,
@@ -404,7 +404,7 @@
     {
       "id": "kafka-lbl",
       "type": "text",
-      "x": 1051,
+      "x": 462,
       "y": 93,
       "width": 228,
       "height": 84,
@@ -453,7 +453,7 @@
       "type": "arrow",
       "x": 612,
       "y": 106,
-      "width": 312,
+      "width": 68,
       "height": 0,
       "strokeColor": "#6d28d9",
       "backgroundColor": "transparent",
@@ -470,7 +470,7 @@
           0
         ],
         [
-          312,
+          68,
           0
         ]
       ]
@@ -478,7 +478,7 @@
     {
       "id": "lbl-cassandra",
       "type": "text",
-      "x": 934,
+      "x": 690,
       "y": 60,
       "width": 200,
       "height": 31,
@@ -498,7 +498,7 @@
     {
       "id": "cassandra-box",
       "type": "rectangle",
-      "x": 934,
+      "x": 690,
       "y": 76,
       "width": 200,
       "height": 60,
@@ -513,7 +513,7 @@
     {
       "id": "cassandra-lbl",
       "type": "text",
-      "x": 1136,
+      "x": 702,
       "y": 89,
       "width": 247,
       "height": 84,
@@ -533,7 +533,7 @@
     {
       "id": "lbl-cdn",
       "type": "text",
-      "x": 934,
+      "x": 690,
       "y": 158,
       "width": 200,
       "height": 31,
@@ -553,7 +553,7 @@
     {
       "id": "cdn-box",
       "type": "rectangle",
-      "x": 910,
+      "x": 666,
       "y": 140,
       "width": 247,
       "height": 120,
@@ -568,7 +568,7 @@
     {
       "id": "cdn-lbl",
       "type": "text",
-      "x": 1136,
+      "x": 702,
       "y": 192,
       "width": 183,
       "height": 56,
@@ -588,7 +588,7 @@
     {
       "id": "lbl-push",
       "type": "text",
-      "x": 1039,
+      "x": 450,
       "y": 158,
       "width": 200,
       "height": 31,
@@ -608,7 +608,7 @@
     {
       "id": "push-box",
       "type": "rectangle",
-      "x": 1039,
+      "x": 450,
       "y": 176,
       "width": 200,
       "height": 50,
@@ -623,7 +623,7 @@
     {
       "id": "push-lbl",
       "type": "text",
-      "x": 1051,
+      "x": 462,
       "y": 192,
       "width": 237,
       "height": 84,
@@ -670,7 +670,7 @@
     {
       "id": "lbl-evidence",
       "type": "text",
-      "x": 1143,
+      "x": 30,
       "y": 330,
       "width": 440,
       "height": 31,
@@ -690,7 +690,7 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 1143,
+      "x": 30,
       "y": 394,
       "width": 440,
       "height": 130,
@@ -705,7 +705,7 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 1157,
+      "x": 44,
       "y": 358,
       "width": 412,
       "height": 308,
@@ -725,7 +725,7 @@
     {
       "id": "lbl-scale",
       "type": "text",
-      "x": 1089,
+      "x": 500,
       "y": 330,
       "width": 400,
       "height": 31,
@@ -745,7 +745,7 @@
     {
       "id": "scale-box",
       "type": "rectangle",
-      "x": 1089,
+      "x": 500,
       "y": 348,
       "width": 400,
       "height": 130,
@@ -760,11 +760,11 @@
     {
       "id": "scale-text",
       "type": "text",
-      "x": 1103,
+      "x": 514,
       "y": 358,
       "width": 529,
       "height": 280,
-      "text": "Kafka fan-out: all WS gateways in channel subscribe\n\u2192 each gateway delivers to its connected clients\n\nPresence: Redis key per user, TTL 60s, heartbeat every 30s\n\nConnection routing: Zookeeper stores which gateway\nserves each userId \u2014 message service looks up target\n\nMedia: client uploads directly to S3 presigned URL,\nsends CDN URL as message content (never through WS)",
+      "text": "Kafka fan-out: all WS gateways in channel subscribe\n→ each gateway delivers to its connected clients\n\nPresence: Redis key per user, TTL 60s, heartbeat every 30s\n\nConnection routing: Zookeeper stores which gateway\nserves each userId — message service looks up target\n\nMedia: client uploads directly to S3 presigned URL,\nsends CDN URL as message content (never through WS)",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",
