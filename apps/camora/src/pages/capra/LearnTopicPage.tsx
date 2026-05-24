@@ -230,12 +230,24 @@ export default function LearnTopicPage() {
   const abortRef = useRef<AbortController | null>(null);
 
   const levelChip = LEVEL_COLORS[level] ?? LEVEL_COLORS.beginner;
+  const cacheKey = `learn_topic_${slug}`;
 
-  const generate = async () => {
+  const generate = async (force = false) => {
     if (loading) {
       abortRef.current?.abort();
       return;
     }
+
+    // Return cached content unless forcing a regeneration
+    if (!force) {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        setContent(cached);
+        setDone(true);
+        return;
+      }
+    }
+
     setContent('');
     setDone(false);
     setLoading(true);
@@ -275,6 +287,7 @@ export default function LearnTopicPage() {
           } catch {}
         }
       }
+      if (full) localStorage.setItem(cacheKey, full);
       setDone(true);
     } catch (e: unknown) {
       if (e instanceof Error && e.name !== 'AbortError') {
@@ -286,9 +299,9 @@ export default function LearnTopicPage() {
     }
   };
 
-  // Auto-generate on mount
+  // Load from cache or generate on mount
   useEffect(() => {
-    generate();
+    generate(false);
     return () => abortRef.current?.abort();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
@@ -340,7 +353,7 @@ export default function LearnTopicPage() {
       <div className="flex items-center gap-3 px-6 py-3" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
         <button
           type="button"
-          onClick={generate}
+          onClick={() => generate(loading ? false : true)}
           className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-opacity hover:opacity-80"
           style={{
             background: loading ? 'color-mix(in oklab,var(--cam-primary) 20%,var(--bg-surface))' : 'var(--cam-primary)',
