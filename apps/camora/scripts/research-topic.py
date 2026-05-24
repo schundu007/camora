@@ -282,15 +282,16 @@ def _generate_dot_for_deep_dive(topic_id: str, entry: dict) -> str:
         Key components: {', '.join(entry.get('components', []))}
 
         STRICT layout rules — follow all of these exactly:
-        - graph attrs: bgcolor="#0d1117" rankdir=LR splines=ortho nodesep=0.9 ranksep=1.4 pad=0.6 dpi=150
-        - node attrs: style=filled fillcolor="#161b22" color="#30363d" fontcolor="#e6edf3" fontname="Courier New" fontsize=13
-        - edge attrs: color="#58a6ff" fontcolor="#adbac7" fontname="Courier New" fontsize=11
-        - NEVER draw bidirectional arrows (a -> b AND b -> a). Pick one direction only, or use a single edge with label indicating both directions.
-        - Max 12 edges total. Trim less important flows.
-        - Edge labels must be SHORT — 3-6 words max, no parentheses.
+        - graph attrs: bgcolor="#0d1117" rankdir=LR splines=ortho nodesep=1.0 ranksep=1.6 pad=0.6 dpi=150
+        - node attrs: style="filled,rounded" shape=box fillcolor="#0f2744" color="#3b82f6" fontcolor="white" fontname="Arial" fontsize=14 margin="0.35,0.2"
+        - edge attrs: color="#60a5fa" fontcolor="#cbd5e1" fontname="Arial" fontsize=12 penwidth=1.5
+        - NEVER draw bidirectional arrows (a -> b AND b -> a). Pick one direction only.
+        - Max 10 edges total. Show only the critical data flow path.
+        - Edge labels must be SHORT — 3-5 words max, no parentheses.
         - No more than 2 subgraphs (cluster_*). Only use subgraphs for truly co-located components.
-        - At least 3 nodes must be at the same rank — use {{ rank=same; A; B; C; }} to force horizontal alignment.
-        - Subgraph style: bgcolor="#0d1117" color="#30363d" fontcolor="#8b949e" fontname="Courier New"
+        - At least 3 nodes must be at the same rank — use {{ rank=same; A; B; C; }} OUTSIDE any cluster, never inside.
+        - NEVER put rank=same inside a cluster/subgraph — it causes Graphviz assertion errors.
+        - Subgraph style: style=filled bgcolor="#0a1628" color="#3b82f6" fontcolor="#93c5fd" fontname="Arial" fontsize=12
         - Output ONLY valid DOT source — no explanation, no markdown fences, no comments.
     """).strip()
 
@@ -382,13 +383,20 @@ def phase_generate(topic_id: str) -> None:
             generated_dd.append(entry)
             continue
         print(f"  Generating deep-dive: {entry['title']} …")
-        try:
-            dot = _generate_dot_for_deep_dive(topic_id, entry)
-            _render_dot_to_png(dot, out_png)
-            print(f"  Written: {out_png.name}")
-            generated_dd.append(entry)
-        except Exception as e:
-            print(f"  [error] {entry['id']}: {e}", file=sys.stderr)
+        success = False
+        for attempt in range(3):
+            try:
+                dot = _generate_dot_for_deep_dive(topic_id, entry)
+                _render_dot_to_png(dot, out_png)
+                print(f"  Written: {out_png.name}")
+                generated_dd.append(entry)
+                success = True
+                break
+            except Exception as e:
+                if attempt < 2:
+                    print(f"  [retry {attempt+1}] {entry['id']}: {str(e)[:80]}", file=sys.stderr)
+                else:
+                    print(f"  [error] {entry['id']}: {e}", file=sys.stderr)
 
     # ── Trade-off comparison diagrams ─────────────────────────────────────────
     sys.path.insert(0, str(SCRIPTS))
