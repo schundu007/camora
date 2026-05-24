@@ -967,16 +967,6 @@ export const LumoraShellPage = () => {
         </div>
       </div>
 
-      {/* AI Copilot — floating popup. Hidden on Coding / Design tabs
-          per user request: those surfaces have their own solver and
-          don't benefit from a co-resident Sona panel. Sona stays
-          available on the Home (interview) and Behavioral tabs. */}
-      {!copilotFullscreen && activeTab !== 'coding' && activeTab !== 'design' && activeTab !== 'cofix' && activeTab !== 'playground' && activeTab !== 'ask' && (
-        <AICompanionPanel
-          isOpen={true}
-          onClose={() => {}}
-        />
-      )}
 
       {/* Sidebar toggle FAB — only on coding/design when sidebar is
           closed. Uses the live solve context as a "context ready"

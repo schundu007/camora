@@ -928,7 +928,7 @@ const std::string URLShortener::CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
           id: 'shorten-url-flow',
           title: 'Shorten URL Flow',
           description: 'Complete flow from user submitting a long URL to receiving the short code',
-          src: '/diagrams/url-shortener/shorten-flow.svg',
+          src: '/diagrams/url-shortener/shorten-flow.png',
           steps: [
             { step: 1, label: 'Client Request', detail: 'POST /api/v1/shorten with long_url, optional custom_alias and expire_at' },
             { step: 2, label: 'Rate Limit Check', detail: 'API gateway checks token bucket: 100 shortens/hour per user or IP' },
@@ -943,7 +943,7 @@ const std::string URLShortener::CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
           id: 'redirect-url-flow',
           title: 'Redirect URL Flow',
           description: 'How a short URL request is resolved and redirected to the original URL',
-          src: '/diagrams/url-shortener/redirect-flow.svg',
+          src: '/diagrams/url-shortener/redirect-flow.png',
           steps: [
             { step: 1, label: 'Client Request', detail: 'GET /{short_code} — browser or app follows the short link' },
             { step: 2, label: 'CDN Check', detail: 'CloudFront/Cloudflare checks edge cache — serves 80% of requests in <50ms' },
@@ -954,10 +954,10 @@ const std::string URLShortener::CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
         }
       ],
       staticDiagrams: [
-        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for URL shortening service', src: '/diagrams/url-shortener/problem-definition.svg', type: 'overview' },
-        { id: 'capacity', title: 'Capacity Estimation', description: 'Traffic, storage, bandwidth, cache calculations', src: '/diagrams/url-shortener/capacity-estimation.svg', type: 'estimation' },
-        { id: 'shorten', title: 'URL Shortening Flow', description: 'Client to API Gateway to URL Service to DB with cache warming', src: '/diagrams/url-shortener/shorten-flow.svg', type: 'flow' },
-        { id: 'redirect', title: 'URL Redirect Flow', description: 'CDN cache check, Redis lookup, DB fallback with analytics', src: '/diagrams/url-shortener/redirect-flow.svg', type: 'flow' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries for URL shortening service', src: '/diagrams/url-shortener/problem-definition.png', type: 'overview' },
+        { id: 'capacity', title: 'Capacity Estimation', description: 'Traffic, storage, bandwidth, cache calculations', src: '/diagrams/url-shortener/capacity-estimation.png', type: 'estimation' },
+        { id: 'shorten', title: 'URL Shortening Flow', description: 'Client to API Gateway to URL Service to DB with cache warming', src: '/diagrams/url-shortener/shorten-flow.png', type: 'flow' },
+        { id: 'redirect', title: 'URL Redirect Flow', description: 'CDN cache check, Redis lookup, DB fallback with analytics', src: '/diagrams/url-shortener/redirect-flow.png', type: 'flow' },
       ],
       visualCards: [
         {
@@ -1726,7 +1726,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           id: 'post-tweet-flow',
           title: 'Post Tweet Flow',
           description: 'Complete flow from tweet creation through fan-out to follower timelines',
-          src: '/diagrams/twitter/post-tweet-flow.svg',
+          src: '/diagrams/twitter/flow-create-tweet.png',
           steps: [
             { step: 1, label: 'Client Request', detail: 'POST /api/tweets with content (280 chars), mediaIds[], replyToId' },
             { step: 2, label: 'Validation', detail: 'Content length check, spam detection ML model, rate limit (300 tweets/3hr)' },
@@ -1742,7 +1742,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           id: 'read-timeline-flow',
           title: 'Read Timeline Flow',
           description: 'How a personalized home timeline is assembled from multiple sources',
-          src: '/diagrams/twitter/fanout-hybrid.svg',
+          src: '/diagrams/twitter/impl-advanced.png',
           steps: [
             { step: 1, label: 'Client Request', detail: 'GET /api/timeline with cursor (Snowflake ID) and limit=20' },
             { step: 2, label: 'Fetch Pre-computed', detail: 'ZREVRANGEBYSCORE timeline:{userId} from Redis — pre-computed from fan-out' },
@@ -1767,10 +1767,10 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
         }
       ],
       staticDiagrams: [
-        { id: 'problem-def', title: 'Problem Definition', description: 'Scope: Users, core actions, in-scope vs out-of-scope features', src: '/diagrams/twitter/problem-definition.svg', type: 'overview' },
-        { id: 'capacity', title: 'Capacity Estimation', description: 'Traffic QPS, fan-out volume, storage, Snowflake IDs', src: '/diagrams/twitter/capacity-estimation.svg', type: 'estimation' },
-        { id: 'fanout', title: 'Hybrid Fan-out Strategy', description: 'Fan-out on write vs read vs hybrid — Twitter\'s approach with 5K follower threshold', src: '/diagrams/twitter/fanout-hybrid.svg', type: 'flow' },
-        { id: 'post-flow', title: 'Post Tweet Flow', description: 'End-to-end flow from tweet creation through Kafka to fan-out, search indexing, and notifications', src: '/diagrams/twitter/post-tweet-flow.svg', type: 'flow' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope: Users, core actions, in-scope vs out-of-scope features', src: '/diagrams/twitter/problem-definition.png', type: 'overview' },
+        { id: 'capacity', title: 'Capacity Estimation', description: 'Traffic QPS, fan-out volume, storage, Snowflake IDs', src: '/diagrams/twitter/capacity-estimation.png', type: 'estimation' },
+        { id: 'fanout', title: 'Hybrid Fan-out Strategy', description: 'Fan-out on write vs read vs hybrid — Twitter\'s approach with 5K follower threshold', src: '/diagrams/twitter/impl-advanced.png', type: 'flow' },
+        { id: 'post-flow', title: 'Post Tweet Flow', description: 'End-to-end flow from tweet creation through Kafka to fan-out, search indexing, and notifications', src: '/diagrams/twitter/flow-create-tweet.png', type: 'flow' },
       ],
       visualCards: [
         {
@@ -2443,10 +2443,10 @@ rides {
       ],
 
       staticDiagrams: [
-        { id: 'uber-problem-definition', title: 'Problem Definition', description: 'Uber system scope, scale, and key challenges', src: '/diagrams/uber/problem-definition.svg', type: 'overview' },
-        { id: 'uber-capacity-estimation', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for Uber scale', src: '/diagrams/uber/capacity-estimation.svg', type: 'estimation' },
-        { id: 'uber-ride-request', title: 'Ride Request Flow', description: 'End-to-end flow from request to driver match', src: '/diagrams/uber/ride-request-flow.svg', type: 'flow' },
-        { id: 'uber-location-pipeline', title: 'Location Update Pipeline', description: 'How GPS updates flow through Redis, Kafka, and analytics', src: '/diagrams/uber/location-pipeline.svg', type: 'flow' },
+        { id: 'uber-problem-definition', title: 'Problem Definition', description: 'Uber system scope, scale, and key challenges', src: '/diagrams/uber/problem-definition.png', type: 'overview' },
+        { id: 'uber-capacity-estimation', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for Uber scale', src: '/diagrams/uber/capacity-estimation.png', type: 'estimation' },
+        { id: 'uber-ride-request', title: 'Ride Request Flow', description: 'End-to-end flow from request to driver match', src: '/diagrams/uber/ride-request-flow.png', type: 'flow' },
+        { id: 'uber-location-pipeline', title: 'Location Update Pipeline', description: 'How GPS updates flow through Redis, Kafka, and analytics', src: '/diagrams/uber/location-pipeline.png', type: 'flow' },
       ],
 
       algorithmApproaches: [
@@ -3023,12 +3023,12 @@ Quick quality first: 360p available in minutes, 4K later`
       ],
 
       deepDiveTopics: [
-        { topic: 'Video Transcoding Pipeline', diagramSrc: '/diagrams/youtube/deep-dive-transcoding.svg', detail: `When a creator uploads a video, it enters a multi-stage transcoding pipeline. The raw video (potentially 4K, 60fps, various codecs) is split into segments and distributed across a GPU worker fleet. Each worker transcodes one segment into one resolution/codec combination. YouTube produces 6 resolutions (360p through 4K) across 3 codecs (H.264 for compatibility, VP9 for Chrome/Android, AV1 for newest devices). Per-title encoding optimizes bitrate per content type — a static slideshow needs far less bitrate than an action movie at the same resolution. The 360p version is prioritized so the video becomes watchable within minutes, while higher resolutions continue processing in the background.` },
-        { topic: 'Adaptive Bitrate Streaming', diagramSrc: '/diagrams/youtube/deep-dive-abr-streaming.svg', detail: `The player downloads a manifest file (HLS M3U8 or DASH MPD) listing all available quality levels and their segment URLs. As the video plays, the client continuously measures download throughput and buffer fill level. A buffer-based ABR algorithm selects the optimal quality: if the buffer is healthy (>15 seconds), try a higher quality; if it is draining (<5 seconds), drop to a lower quality immediately. Hysteresis prevents rapid oscillation — the algorithm requires sustained bandwidth improvement before upgrading quality. Segments are served from the nearest CDN edge, with 95%+ cache hit rates for popular content.` },
-        { topic: 'Two-Stage Recommendation Engine', diagramSrc: '/diagrams/youtube/deep-dive-recommendations.svg', diagramSrc: '/diagrams/netflix/deep-dive-abr.png',
+        { topic: 'Video Transcoding Pipeline', diagramSrc: '/diagrams/youtube/deep-dive-transcoding.png', detail: `When a creator uploads a video, it enters a multi-stage transcoding pipeline. The raw video (potentially 4K, 60fps, various codecs) is split into segments and distributed across a GPU worker fleet. Each worker transcodes one segment into one resolution/codec combination. YouTube produces 6 resolutions (360p through 4K) across 3 codecs (H.264 for compatibility, VP9 for Chrome/Android, AV1 for newest devices). Per-title encoding optimizes bitrate per content type — a static slideshow needs far less bitrate than an action movie at the same resolution. The 360p version is prioritized so the video becomes watchable within minutes, while higher resolutions continue processing in the background.` },
+        { topic: 'Adaptive Bitrate Streaming', diagramSrc: '/diagrams/youtube/deep-dive-abr-streaming.png', detail: `The player downloads a manifest file (HLS M3U8 or DASH MPD) listing all available quality levels and their segment URLs. As the video plays, the client continuously measures download throughput and buffer fill level. A buffer-based ABR algorithm selects the optimal quality: if the buffer is healthy (>15 seconds), try a higher quality; if it is draining (<5 seconds), drop to a lower quality immediately. Hysteresis prevents rapid oscillation — the algorithm requires sustained bandwidth improvement before upgrading quality. Segments are served from the nearest CDN edge, with 95%+ cache hit rates for popular content.` },
+        { topic: 'Two-Stage Recommendation Engine', diagramSrc: '/diagrams/youtube/deep-dive-recommendations.png',
           detail: `YouTube recommendations are responsible for over 70% of all watch time. Stage 1 (Candidate Generation) uses a deep neural network to narrow 800M+ videos down to ~1000 candidates per user. It combines collaborative filtering signals (users with similar watch history), content-based features (video embeddings from titles and thumbnails), and contextual signals (time of day, device type). Stage 2 (Ranking) applies a separate neural network that scores each candidate on predicted watch time, not click probability — this critical design choice prevents clickbait from dominating recommendations. The ranking model incorporates hundreds of features including video freshness, creator authority, and user engagement history.` },
-        { topic: 'View Counter Architecture', diagramSrc: '/diagrams/youtube/deep-dive-view-counter.svg', detail: `Counting 5 billion views per day (58K/second) while detecting fraud requires a specialized pipeline. View events from clients are published to Kafka, where a Flink streaming job performs deduplication (same user, same video, within time window), fraud filtering (bot detection ML model, minimum watch time of 30 seconds), and aggregation. Counts are not updated in real-time in the primary database — instead, batch jobs update view counts every 5-10 minutes. For viral videos, the counter is sharded across 100+ Redis instances to avoid hot-key bottlenecks. Public view counts may lag by hours for new videos while fraud checks complete.` },
-        { topic: 'CDN Cache Hierarchy', diagramSrc: '/diagrams/youtube/deep-dive-cdn-hierarchy.svg', detail: `YouTube operates one of the world's largest CDN networks. The architecture uses three tiers: Edge PoPs (100+ locations, embedded in ISPs) cache the top 1% of videos on SSD with 95%+ hit rates. Regional PoPs (~20 locations) cache the top 10% on mixed HDD/SSD. Origin data centers (3-5 globally) store the complete catalog with hot/cold tiering. An origin shield layer sits between regional and origin, collapsing duplicate requests from multiple edge PoPs requesting the same cache miss. For anticipated viral content (music video premieres, major creator uploads), the system pre-warms edge caches before the video goes public.` },
+        { topic: 'View Counter Architecture', diagramSrc: '/diagrams/youtube/deep-dive-view-counter.png', detail: `Counting 5 billion views per day (58K/second) while detecting fraud requires a specialized pipeline. View events from clients are published to Kafka, where a Flink streaming job performs deduplication (same user, same video, within time window), fraud filtering (bot detection ML model, minimum watch time of 30 seconds), and aggregation. Counts are not updated in real-time in the primary database — instead, batch jobs update view counts every 5-10 minutes. For viral videos, the counter is sharded across 100+ Redis instances to avoid hot-key bottlenecks. Public view counts may lag by hours for new videos while fraud checks complete.` },
+        { topic: 'CDN Cache Hierarchy', diagramSrc: '/diagrams/youtube/deep-dive-cdn-hierarchy.png', detail: `YouTube operates one of the world's largest CDN networks. The architecture uses three tiers: Edge PoPs (100+ locations, embedded in ISPs) cache the top 1% of videos on SSD with 95%+ hit rates. Regional PoPs (~20 locations) cache the top 10% on mixed HDD/SSD. Origin data centers (3-5 globally) store the complete catalog with hot/cold tiering. An origin shield layer sits between regional and origin, collapsing duplicate requests from multiple edge PoPs requesting the same cache miss. For anticipated viral content (music video premieres, major creator uploads), the system pre-warm edge caches before the video goes public.` },
       ],
 
       comparisonTables: [
@@ -3038,8 +3038,24 @@ Quick quality first: 360p available in minutes, 4K later`
       ],
 
       flowcharts: [
-        { id: 'youtube-upload-flow', title: 'Video Upload Pipeline', description: 'From creator upload to globally available video', src: '/diagrams/youtube/upload-pipeline.svg', steps: [{ step: 1, label: 'Chunked Upload', detail: 'Client splits video into 8MB chunks, uploads with CRC32 checksums. Resume from last chunk on failure.' }, { step: 2, label: 'Chunk Assembly', detail: 'Server assembles chunks in object storage (GCS), verifies integrity, sets status to PROCESSING.' }, { step: 3, label: 'Content ID Scan', detail: 'Audio/visual fingerprinting against 100M+ reference files. Block, monetize, or allow based on rights holder config.' }, { step: 4, label: 'Parallel Transcode', detail: 'GPU workers encode 6 resolutions × 3 codecs in parallel. 360p prioritized for fast availability.' }, { step: 5, label: 'Segment + Package', detail: 'Each resolution split into 4-second segments. Generate HLS manifest (M3U8) and DASH manifest (MPD).' }, { step: 6, label: 'Thumbnail + Metadata', detail: 'Auto-generate thumbnails at key frames. Extract captions via speech-to-text. Index in search.' }, { step: 7, label: 'CDN Distribution', detail: 'Segments pushed to origin storage. Popular content pre-warmed at edge PoPs. Status → READY.' }] },
-        { id: 'youtube-playback-flow', title: 'Video Playback Flow', description: 'From user click to adaptive bitrate playback', src: '/diagrams/youtube/streaming-flow.svg', steps: [{ step: 1, label: 'Video Page Load', detail: 'Client requests video metadata (title, description, view count) from Vitess database.' }, { step: 2, label: 'Manifest Request', detail: 'Client requests HLS/DASH manifest listing all quality levels and segment URLs from nearest CDN.' }, { step: 3, label: 'Initial Segment', detail: 'Start with low quality (360p) for fast playback start (<200ms). Buffer first 2-3 segments.' }, { step: 4, label: 'Bandwidth Probe', detail: 'Measure download speed of initial segments. ABR algorithm selects optimal quality.' }, { step: 5, label: 'Quality Ramp-up', detail: 'Switch to higher quality at next segment boundary. Buffer 15+ seconds ahead.' }, { step: 6, label: 'Prefetch Next', detail: 'If autoplay enabled, prefetch first segments of next video in recommendation list.' }, { step: 7, label: 'Analytics Events', detail: 'Log view start, 25/50/75/100% completion, quality changes, rebuffers to Kafka for analytics.' }] },
+        { id: 'youtube-upload-flow', title: 'Video Upload Pipeline', description: 'From creator upload to globally available video', src: '/diagrams/youtube/upload-pipeline.png', steps: [
+          { step: 1, label: 'Chunked Upload', detail: 'Client splits video into 8MB chunks, uploads with CRC32 checksums. Resume from last chunk on failure.' },
+          { step: 2, label: 'Chunk Assembly', detail: 'Server assembles chunks in object storage (GCS), verifies integrity, sets status to PROCESSING.' },
+          { step: 3, label: 'Content ID Scan', detail: 'Audio/visual fingerprinting against 100M+ reference files. Block, monetize, or allow based on rights holder config.' },
+          { step: 4, label: 'Parallel Transcode', detail: 'GPU workers encode 6 resolutions × 3 codecs in parallel. 360p prioritized for fast availability.' },
+          { step: 5, label: 'Segment + Package', detail: 'Each resolution split into 4-second segments. Generate HLS manifest (M3U8) and DASH manifest (MPD).' },
+          { step: 6, label: 'Thumbnail + Metadata', detail: 'Auto-generate thumbnails at key frames. Extract captions via speech-to-text. Index in search.' },
+          { step: 7, label: 'CDN Distribution', detail: 'Segments pushed to origin storage. Popular content pre-warmed at edge PoPs. Status → READY.' }
+        ] },
+        { id: 'youtube-playback-flow', title: 'Video Playback Flow', description: 'From user click to adaptive bitrate playback', src: '/diagrams/youtube/streaming-flow.png', steps: [
+          { step: 1, label: 'Video Page Load', detail: 'Client requests video metadata (title, description, view count) from Vitess database.' },
+          { step: 2, label: 'Manifest Request', detail: 'Client requests HLS/DASH manifest listing all quality levels and segment URLs from nearest CDN.' },
+          { step: 3, label: 'Initial Segment', detail: 'Start with low quality (360p) for fast playback start (<200ms). Buffer first 2-3 segments.' },
+          { step: 4, label: 'Bandwidth Probe', detail: 'Measure download speed of initial segments. ABR algorithm selects optimal quality.' },
+          { step: 5, label: 'Quality Ramp-up', detail: 'Switch to higher quality at next segment boundary. Buffer 15+ seconds ahead.' },
+          { step: 6, label: 'Prefetch Next', detail: 'If autoplay enabled, prefetch first segments of next video in recommendation list.' },
+          { step: 7, label: 'Analytics Events', detail: 'Log view start, 25/50/75/100% completion, quality changes, rebuffers to Kafka for analytics.' }
+        ] },
       ],
 
       visualCards: [
@@ -3055,10 +3071,10 @@ Quick quality first: 360p available in minutes, 4K later`
       ],
 
       staticDiagrams: [
-        { id: 'youtube-problem-definition', title: 'Problem Definition', description: 'YouTube system scope, scale, and key challenges', src: '/diagrams/youtube/problem-definition.svg', type: 'overview' },
-        { id: 'youtube-capacity-estimation', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for YouTube scale', src: '/diagrams/youtube/capacity-estimation.svg', type: 'estimation' },
-        { id: 'youtube-upload-pipeline', title: 'Upload Pipeline', description: 'Chunked upload through transcoding to CDN delivery', src: '/diagrams/youtube/upload-pipeline.svg', type: 'flow' },
-        { id: 'youtube-streaming-flow', title: 'Streaming Architecture', description: 'Adaptive bitrate streaming with multi-tier CDN', src: '/diagrams/youtube/streaming-flow.svg', type: 'flow' },
+        { id: 'youtube-problem-definition', title: 'Problem Definition', description: 'YouTube system scope, scale, and key challenges', src: '/diagrams/youtube/problem-definition.png', type: 'overview' },
+        { id: 'youtube-capacity-estimation', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for YouTube scale', src: '/diagrams/youtube/capacity-estimation.png', type: 'estimation' },
+        { id: 'youtube-upload-pipeline', title: 'Upload Pipeline', description: 'Chunked upload through transcoding to CDN delivery', src: '/diagrams/youtube/upload-pipeline.png', type: 'flow' },
+        { id: 'youtube-streaming-flow', title: 'Streaming Architecture', description: 'Adaptive bitrate streaming with multi-tier CDN', src: '/diagrams/youtube/streaming-flow.png', type: 'flow' },
       ],
     },
     {
@@ -3083,7 +3099,7 @@ Quick quality first: 360p available in minutes, 4K later`
           outOfScope: ['Voice/video calling', 'Payment features', 'Status/Stories', 'WhatsApp Business API', 'Sticker marketplace'],
         },
         keyChallenge: 'Delivering 100 billion messages per day with sub-second latency while maintaining end-to-end encryption — the server itself cannot read any message content.',
-        screenshotUrl: '/diagrams/whatsapp/whatsapp-ui-mockup.svg',
+        screenshotUrl: '/diagrams/whatsapp/whatsapp-ui-mockup.png',
       },
 
       introduction: `WhatsApp is the world's most widely used messaging application, connecting over **2 billion** monthly active users across **180+ countries**. At its peak, the system delivers over **100 billion messages per day** with sub-second latency, making it one of the most demanding distributed systems ever built.
@@ -3906,10 +3922,10 @@ Why Cassandra wins for messages:
         { name: 'Push & Notification Layer', purpose: 'Deliver notifications to offline users via platform-specific push services. When a message cannot be delivered via WebSocket (recipient offline), this layer sends a push notification containing only a generic alert (no message content, for privacy). On reconnect, the actual messages are delivered from the offline queue.', components: ['Push Service (APNs for iOS, FCM for Android)', 'Push Token Registry', 'Notification Rate Limiter', 'Silent Push for Background Sync'] },
       ],
       staticDiagrams: [
-        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries — in-scope essentials vs out-of-scope features for the WhatsApp design interview', src: '/diagrams/whatsapp/problem-definition.svg', type: 'overview' },
-        { id: 'capacity-est', title: 'Back-of-Envelope Estimates', description: 'Traffic QPS, presence load, storage growth, connection requirements with step-by-step calculations', src: '/diagrams/whatsapp/capacity-estimation.svg', type: 'estimation' },
-        { id: 'msg-flow', title: 'Message Flow (Both Online)', description: 'Complete end-to-end flow: User A sends a message to User B through chat gateways, Kafka, and Redis', src: '/diagrams/whatsapp/message-flow-online.svg', type: 'flow' },
-        { id: 'ui-mockup', title: 'WhatsApp Chat Interface', description: 'The product we are designing — chat UI with message bubbles, delivery ticks, typing indicator, and presence', src: '/diagrams/whatsapp/whatsapp-ui-mockup.svg', type: 'ui' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries — in-scope essentials vs out-of-scope features for the WhatsApp design interview', src: '/diagrams/whatsapp/problem-definition.png', type: 'overview' },
+        { id: 'capacity-est', title: 'Back-of-Envelope Estimates', description: 'Traffic QPS, presence load, storage growth, connection requirements with step-by-step calculations', src: '/diagrams/whatsapp/capacity-estimation.png', type: 'estimation' },
+        { id: 'msg-flow', title: 'Message Flow (Both Online)', description: 'Complete end-to-end flow: User A sends a message to User B through chat gateways, Kafka, and Redis', src: '/diagrams/whatsapp/message-flow-online.png', type: 'flow' },
+        { id: 'ui-mockup', title: 'WhatsApp Chat Interface', description: 'The product we are designing — chat UI with message bubbles, delivery ticks, typing indicator, and presence', src: '/diagrams/whatsapp/whatsapp-ui-mockup.png', type: 'ui' },
       ],
       comparisonTables: [
         {
@@ -4933,7 +4949,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
         },
         {
           topic: 'Hybrid Fan-out for Feed Generation',
-          diagramSrc: '/diagrams/instagram/feed-generation-flow.svg',
+          diagramSrc: '/diagrams/instagram/feed-generation-flow.png',
           detail: `The feed system is the core of Instagram experience -- getting it wrong means slow feeds or wasted compute.
 
 **The celebrity problem:**
@@ -5070,7 +5086,7 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
           id: 'photo-upload-pipeline',
           title: 'Photo Upload Pipeline',
           description: 'Complete flow from client upload to CDN-ready image with multiple resolutions',
-          src: '/diagrams/instagram/photo-upload-flow.svg',
+          src: '/diagrams/instagram/photo-upload-flow.png',
           steps: [
             { step: 1, label: 'Client Upload', detail: 'Client sends photo (avg 2MB) to Upload Service via pre-signed S3 URL' },
             { step: 2, label: 'Store Original', detail: 'Raw image stored in S3 Raw bucket with unique postId key' },
@@ -5086,7 +5102,7 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
           id: 'news-feed-generation',
           title: 'News Feed Generation',
           description: 'How a personalized feed is assembled using the hybrid fan-out approach',
-          src: '/diagrams/instagram/feed-generation-flow.svg',
+          src: '/diagrams/instagram/feed-generation-flow.png',
           steps: [
             { step: 1, label: 'Feed Request', detail: 'Client requests GET /api/feed?cursor=X&limit=20' },
             { step: 2, label: 'Check Cache', detail: 'Look up pre-ranked feed in Redis (5-minute TTL)' },
@@ -5154,11 +5170,11 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
       ],
       // ── Static Diagrams ──
       staticDiagrams: [
-        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries — in-scope features vs out-of-scope for the Instagram design interview', src: '/diagrams/instagram/problem-definition.svg', type: 'overview' },
-        { id: 'capacity-est', title: 'Back-of-Envelope Estimates', description: 'Upload QPS, feed read QPS, storage growth (600 TB/day), CDN egress, and like throughput calculations', src: '/diagrams/instagram/capacity-estimation.svg', type: 'estimation' },
-        { id: 'upload-flow', title: 'Photo Upload Pipeline', description: 'End-to-end flow: pre-signed URL, S3 upload, multi-resolution processing, moderation, and CDN distribution', src: '/diagrams/instagram/flow-photo-upload.png', type: 'flow' },
-        { id: 'feed-generation-flow', title: 'Feed Generation Flow', description: 'Feed Generation Flow diagram for instagram', src: '/diagrams/instagram/feed-generation-flow.svg', type: 'flow' },
-        { id: 'photo-upload-flow', title: 'Photo Upload Flow', description: 'Photo Upload Flow diagram for instagram', src: '/diagrams/instagram/photo-upload-flow.svg', type: 'flow' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Scope boundaries — in-scope features vs out-of-scope for the Instagram design interview', src: '/diagrams/instagram/problem-definition.png', type: 'overview' },
+        { id: 'capacity-est', title: 'Back-of-Envelope Estimates', description: 'Upload QPS, feed read QPS, storage growth (600 TB/day), CDN egress, and like throughput calculations', src: '/diagrams/instagram/capacity-estimation.png', type: 'estimation' },
+        { id: 'upload-flow', title: 'Photo Upload Pipeline', description: 'End-to-end flow: pre-signed URL, S3 upload, multi-resolution processing, moderation, and CDN distribution', src: '/diagrams/instagram/photo-upload-flow.png', type: 'flow' },
+        { id: 'feed-generation-flow', title: 'Feed Generation Flow', description: 'Feed Generation Flow diagram for instagram', src: '/diagrams/instagram/feed-generation-flow.png', type: 'flow' },
+        { id: 'photo-upload-flow', title: 'Photo Upload Flow', description: 'Photo Upload Flow diagram for instagram', src: '/diagrams/instagram/photo-upload-flow.png', type: 'flow' },
       ],
       // ── Charts ──
       charts: [
@@ -6814,9 +6830,9 @@ Stage 2 -- Ranking (online, at request time, <200ms):
         }
       ],
       staticDiagrams: [
-        { id: 'problem-def', title: 'Problem Definition', description: 'Video streaming scope and core features', src: '/diagrams/netflix/problem-definition.svg', type: 'overview' },
-        { id: 'capacity', title: 'Capacity Estimation', description: 'Streaming bandwidth, encoding, CDN capacity', src: '/diagrams/netflix/capacity-estimation.svg', type: 'estimation' },
-        { id: 'playback', title: 'Video Playback Flow', description: 'Click Play through DRM, OCA steering, ABR buffering', src: '/diagrams/netflix/video-playback-flow.svg', type: 'flow' },
+        { id: 'problem-def', title: 'Problem Definition', description: 'Video streaming scope and core features', src: '/diagrams/netflix/problem-definition.png', type: 'overview' },
+        { id: 'capacity', title: 'Capacity Estimation', description: 'Streaming bandwidth, encoding, CDN capacity', src: '/diagrams/netflix/capacity-estimation.png', type: 'estimation' },
+        { id: 'playback', title: 'Video Playback Flow', description: 'Click Play through DRM, OCA steering, ABR buffering', src: '/diagrams/netflix/video-playback-flow.png', type: 'flow' },
       ],
       // ── Visual Cards ──
       visualCards: [
@@ -17447,7 +17463,7 @@ Where credibility considers:
           id: 'tweet-to-trend-pipeline',
           title: 'Tweet-to-Trend Detection Pipeline',
           description: 'Complete flow from raw tweet ingestion to trend publication',
-          src: '/diagrams/twitter-trends/trend-detect-flow.svg',
+          src: '/diagrams/twitter-trends/trend-detect-flow.png',
           steps: [
             { step: 1, label: 'Tweet Ingested', detail: 'Raw tweet arrives via Kafka, geo-partitioned by user region' },
             { step: 2, label: 'Spam Pre-filter', detail: 'Check account age, rate limits, known bot list -- assign credibility weight (0.0-1.0)' },
