@@ -281,14 +281,17 @@ def _generate_dot_for_deep_dive(topic_id: str, entry: dict) -> str:
         Description: {entry['description']}
         Key components: {', '.join(entry.get('components', []))}
 
-        Requirements:
-        - Dark theme: graph bgcolor="#0d1117", node fillcolor="#161b22", fontcolor="#e6edf3"
-        - Edge color="#58a6ff", node style=filled, node color="#30363d"
-        - rankdir=LR for flow diagrams
-        - Label each edge with the action/data flowing (e.g., "HTTP GET /r/abc")
-        - Use subgraphs (cluster_*) to group related components
-        - fontname="Courier New" on all nodes and edges
-        - Output ONLY valid DOT source, no explanation, no markdown fences.
+        STRICT layout rules — follow all of these exactly:
+        - graph attrs: bgcolor="#0d1117" rankdir=LR splines=ortho nodesep=0.9 ranksep=1.4 pad=0.6 dpi=150
+        - node attrs: style=filled fillcolor="#161b22" color="#30363d" fontcolor="#e6edf3" fontname="Courier New" fontsize=13
+        - edge attrs: color="#58a6ff" fontcolor="#adbac7" fontname="Courier New" fontsize=11
+        - NEVER draw bidirectional arrows (a -> b AND b -> a). Pick one direction only, or use a single edge with label indicating both directions.
+        - Max 12 edges total. Trim less important flows.
+        - Edge labels must be SHORT — 3-6 words max, no parentheses.
+        - No more than 2 subgraphs (cluster_*). Only use subgraphs for truly co-located components.
+        - At least 3 nodes must be at the same rank — use {{ rank=same; A; B; C; }} to force horizontal alignment.
+        - Subgraph style: bgcolor="#0d1117" color="#30363d" fontcolor="#8b949e" fontname="Courier New"
+        - Output ONLY valid DOT source — no explanation, no markdown fences, no comments.
     """).strip()
 
     msg = client.messages.create(
