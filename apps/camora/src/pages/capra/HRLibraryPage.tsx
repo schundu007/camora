@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MUST_DO_PROBLEMS } from '../../data/capra/mustDoProblems.js';
+import { Icon } from '../../components/shared/Icons.jsx';
 
 const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -538,10 +539,25 @@ export default function HRLibraryPage() {
     <div style={{ background: 'var(--bg-app)', minHeight: '100%', color: 'var(--text-primary)' }}>
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div style={{ padding: '24px 28px 0' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 20px', letterSpacing: '-0.3px' }}>
-          Problem Library
-        </h1>
+      <div style={{ padding: '20px 28px 0' }}>
+        <div className="mb-5 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+          <div aria-hidden className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+          <div className="relative p-5">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                <Icon name="code" size={24} style={{ color: 'var(--cam-primary-dk)' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl font-extrabold mb-3 text-white" style={{ fontFamily: 'var(--font-display)' }}>Problem Library</h1>
+                <div className="flex flex-wrap gap-2">
+                  {['Coding', 'Database', 'MCQ', 'Full Stack', 'Behavioral', 'Whiteboard'].map(tag => (
+                    <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Full-width search bar */}
         <div style={{ position: 'relative', marginBottom: 14 }}>
