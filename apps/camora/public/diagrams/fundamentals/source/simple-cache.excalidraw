@@ -6,7 +6,7 @@
     {
       "id": "title",
       "type": "text",
-      "x": 1052,
+      "x": 400,
       "y": 20,
       "width": 620,
       "height": 56,
@@ -24,7 +24,7 @@
     {
       "id": "app",
       "type": "rectangle",
-      "x": 240,
+      "x": 28,
       "y": 191,
       "width": 224,
       "height": 98,
@@ -37,7 +37,7 @@
     {
       "id": "app-label",
       "type": "text",
-      "x": 272,
+      "x": 60,
       "y": 228,
       "width": 160,
       "height": 34,
@@ -78,7 +78,7 @@
     {
       "id": "cache",
       "type": "rectangle",
-      "x": 950,
+      "x": 298,
       "y": 140,
       "width": 247,
       "height": 200,
@@ -91,7 +91,7 @@
     {
       "id": "cache-label",
       "type": "text",
-      "x": 974,
+      "x": 322,
       "y": 158,
       "width": 200,
       "height": 36,
@@ -109,7 +109,7 @@
     {
       "id": "hit-label",
       "type": "text",
-      "x": 984,
+      "x": 332,
       "y": 188,
       "width": 180,
       "height": 31,
@@ -127,7 +127,7 @@
     {
       "id": "hit-detail",
       "type": "text",
-      "x": 984,
+      "x": 332,
       "y": 210,
       "width": 183,
       "height": 31,
@@ -145,7 +145,7 @@
     {
       "id": "miss-label",
       "type": "text",
-      "x": 984,
+      "x": 332,
       "y": 238,
       "width": 180,
       "height": 31,
@@ -163,11 +163,11 @@
     {
       "id": "miss-detail",
       "type": "text",
-      "x": 984,
+      "x": 332,
       "y": 260,
       "width": 210,
       "height": 31,
-      "text": "Query DB \u2192 SET TTL 300s",
+      "text": "Query DB → SET TTL 300s",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
@@ -181,7 +181,7 @@
     {
       "id": "ttl-detail",
       "type": "text",
-      "x": 984,
+      "x": 332,
       "y": 284,
       "width": 210,
       "height": 31,
@@ -222,7 +222,7 @@
     {
       "id": "miss-arrow-label",
       "type": "text",
-      "x": 1020,
+      "x": 528,
       "y": 258,
       "width": 82,
       "height": 31,
@@ -240,7 +240,7 @@
     {
       "id": "db",
       "type": "rectangle",
-      "x": 1184,
+      "x": 582,
       "y": 200,
       "width": 244,
       "height": 140,
@@ -253,7 +253,7 @@
     {
       "id": "db-label",
       "type": "text",
-      "x": 952,
+      "x": 614,
       "y": 222,
       "width": 180,
       "height": 36,
@@ -271,7 +271,7 @@
     {
       "id": "db-sub",
       "type": "text",
-      "x": 952,
+      "x": 614,
       "y": 250,
       "width": 180,
       "height": 31,
@@ -289,7 +289,7 @@
     {
       "id": "db-sub2",
       "type": "text",
-      "x": 952,
+      "x": 614,
       "y": 274,
       "width": 180,
       "height": 31,
@@ -307,7 +307,7 @@
     {
       "id": "db-sub3",
       "type": "text",
-      "x": 952,
+      "x": 614,
       "y": 298,
       "width": 180,
       "height": 31,
@@ -325,7 +325,7 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 258,
+      "x": 46,
       "y": 382,
       "width": 768,
       "height": 176,
@@ -338,11 +338,11 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 942,
+      "x": 78,
       "y": 434,
       "width": 704,
       "height": 112,
-      "text": "HIT:  GET user:123  \u2192 \"{ id:123, name:'Alice' }\"  (< 1ms)\nMISS: GET user:456  \u2192 (nil)\n      SELECT * FROM users WHERE id=456  \u2192 row\n      SET user:456 '{ id:456, ... }' EX 300  \u2192 OK  (next request: HIT)",
+      "text": "HIT:  GET user:123  → \"{ id:123, name:'Alice' }\"  (< 1ms)\nMISS: GET user:456  → (nil)\n      SELECT * FROM users WHERE id=456  → row\n      SET user:456 '{ id:456, ... }' EX 300  → OK  (next request: HIT)",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",

@@ -6,7 +6,7 @@
     {
       "type": "text",
       "id": "t_title",
-      "x": 360,
+      "x": 40,
       "y": 16,
       "width": 542,
       "height": 52,
@@ -38,12 +38,12 @@
     {
       "type": "text",
       "id": "t_subtitle",
-      "x": 360,
+      "x": 40,
       "y": 50,
       "width": 629,
       "height": 31,
-      "text": "Async multi-channel delivery \u2014 priority queue + dedup + rate limiting",
-      "originalText": "Async multi-channel delivery \u2014 priority queue + dedup + rate limiting",
+      "text": "Async multi-channel delivery — priority queue + dedup + rate limiting",
+      "originalText": "Async multi-channel delivery — priority queue + dedup + rate limiting",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
@@ -104,7 +104,7 @@
     {
       "type": "text",
       "id": "lbl_triggers",
-      "x": 360,
+      "x": 40,
       "y": 88,
       "width": 150,
       "height": 31,
@@ -136,7 +136,7 @@
     {
       "type": "text",
       "id": "lbl_ingest",
-      "x": 689,
+      "x": 250,
       "y": 88,
       "width": 130,
       "height": 31,
@@ -168,7 +168,7 @@
     {
       "type": "text",
       "id": "lbl_queue",
-      "x": 709,
+      "x": 430,
       "y": 88,
       "width": 150,
       "height": 31,
@@ -200,7 +200,7 @@
     {
       "type": "text",
       "id": "lbl_router",
-      "x": 1310,
+      "x": 635,
       "y": 88,
       "width": 100,
       "height": 31,
@@ -232,7 +232,7 @@
     {
       "type": "text",
       "id": "lbl_workers",
-      "x": 1450,
+      "x": 800,
       "y": 88,
       "width": 137,
       "height": 31,
@@ -264,7 +264,7 @@
     {
       "type": "text",
       "id": "lbl_providers",
-      "x": 1321,
+      "x": 980,
       "y": 88,
       "width": 110,
       "height": 31,
@@ -296,7 +296,7 @@
     {
       "type": "rectangle",
       "id": "r_api_event",
-      "x": 360,
+      "x": 40,
       "y": 112,
       "width": 189,
       "height": 120,
@@ -332,7 +332,7 @@
     {
       "type": "text",
       "id": "t_api_event",
-      "x": 375,
+      "x": 55,
       "y": 125,
       "width": 125,
       "height": 56,
@@ -364,7 +364,7 @@
     {
       "type": "rectangle",
       "id": "r_batch",
-      "x": 360,
+      "x": 40,
       "y": 248,
       "width": 189,
       "height": 120,
@@ -400,7 +400,7 @@
     {
       "type": "text",
       "id": "t_batch",
-      "x": 375,
+      "x": 55,
       "y": 261,
       "width": 125,
       "height": 56,
@@ -432,7 +432,7 @@
     {
       "type": "rectangle",
       "id": "r_user",
-      "x": 360,
+      "x": 40,
       "y": 384,
       "width": 192,
       "height": 120,
@@ -468,7 +468,7 @@
     {
       "type": "text",
       "id": "t_user",
-      "x": 375,
+      "x": 55,
       "y": 397,
       "width": 128,
       "height": 56,
@@ -500,7 +500,7 @@
     {
       "type": "rectangle",
       "id": "r_gateway",
-      "x": 687,
+      "x": 248,
       "y": 172,
       "width": 201,
       "height": 148,
@@ -548,12 +548,12 @@
     {
       "type": "text",
       "id": "t_gateway",
-      "x": 697,
+      "x": 258,
       "y": 195,
       "width": 137,
       "height": 84,
-      "text": "API Gateway\nAuth \u00b7 Validate\nThrottle",
-      "originalText": "API Gateway\nAuth \u00b7 Validate\nThrottle",
+      "text": "API Gateway\nAuth · Validate\nThrottle",
+      "originalText": "API Gateway\nAuth · Validate\nThrottle",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
@@ -718,7 +718,7 @@
     {
       "type": "rectangle",
       "id": "r_ratelimit",
-      "x": 1239,
+      "x": 465,
       "y": 112,
       "width": 247,
       "height": 120,
@@ -758,12 +758,12 @@
     {
       "type": "text",
       "id": "t_ratelimit",
-      "x": 1249,
+      "x": 475,
       "y": 125,
       "width": 183,
       "height": 56,
-      "text": "Rate Limiter\nRedis \u00b7 Token Bucket",
-      "originalText": "Rate Limiter\nRedis \u00b7 Token Bucket",
+      "text": "Rate Limiter\nRedis · Token Bucket",
+      "originalText": "Rate Limiter\nRedis · Token Bucket",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
@@ -836,7 +836,7 @@
     {
       "type": "rectangle",
       "id": "r_queue",
-      "x": 1239,
+      "x": 465,
       "y": 248,
       "width": 201,
       "height": 176,
@@ -876,12 +876,12 @@
     {
       "type": "text",
       "id": "t_queue",
-      "x": 1249,
+      "x": 475,
       "y": 268,
       "width": 137,
       "height": 112,
-      "text": "Priority Queue\n\u2500\u2500 HIGH (OTP)\n\u2500\u2500 MED (Alert)\n\u2500\u2500 LOW (Digest)",
-      "originalText": "Priority Queue\n\u2500\u2500 HIGH (OTP)\n\u2500\u2500 MED (Alert)\n\u2500\u2500 LOW (Digest)",
+      "text": "Priority Queue\n── HIGH (OTP)\n── MED (Alert)\n── LOW (Digest)",
+      "originalText": "Priority Queue\n── HIGH (OTP)\n── MED (Alert)\n── LOW (Digest)",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
@@ -910,7 +910,7 @@
       "id": "arr_rl_q",
       "x": 522,
       "y": 165,
-      "width": 167,
+      "width": 0,
       "height": 30,
       "strokeColor": "#dc2626",
       "backgroundColor": "transparent",
@@ -934,7 +934,7 @@
           0
         ],
         [
-          167,
+          0,
           30
         ]
       ],
@@ -954,7 +954,7 @@
     {
       "type": "rectangle",
       "id": "r_dedup",
-      "x": 1331,
+      "x": 656,
       "y": 440,
       "width": 256,
       "height": 120,
@@ -986,12 +986,12 @@
     {
       "type": "text",
       "id": "t_dedup",
-      "x": 1341,
+      "x": 666,
       "y": 453,
       "width": 192,
       "height": 56,
-      "text": "Dedup Cache\nBloom Filter \u00b7 TTL 1h",
-      "originalText": "Dedup Cache\nBloom Filter \u00b7 TTL 1h",
+      "text": "Dedup Cache\nBloom Filter · TTL 1h",
+      "originalText": "Dedup Cache\nBloom Filter · TTL 1h",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",
@@ -1052,7 +1052,7 @@
     {
       "type": "text",
       "id": "t_dedup_note",
-      "x": 1317,
+      "x": 530,
       "y": 326,
       "width": 101,
       "height": 31,
@@ -1084,7 +1084,7 @@
     {
       "type": "rectangle",
       "id": "r_router",
-      "x": 1438,
+      "x": 728,
       "y": 196,
       "width": 192,
       "height": 148,
@@ -1132,7 +1132,7 @@
     {
       "type": "text",
       "id": "t_router",
-      "x": 1233,
+      "x": 738,
       "y": 226,
       "width": 128,
       "height": 84,
@@ -1210,7 +1210,7 @@
     {
       "type": "rectangle",
       "id": "r_push",
-      "x": 1324,
+      "x": 936,
       "y": 128,
       "width": 184,
       "height": 95,
@@ -1250,7 +1250,7 @@
     {
       "type": "text",
       "id": "t_push",
-      "x": 1334,
+      "x": 946,
       "y": 141,
       "width": 120,
       "height": 31,
@@ -1282,7 +1282,7 @@
     {
       "type": "rectangle",
       "id": "r_email",
-      "x": 1324,
+      "x": 936,
       "y": 230,
       "width": 184,
       "height": 95,
@@ -1322,7 +1322,7 @@
     {
       "type": "text",
       "id": "t_email",
-      "x": 1334,
+      "x": 946,
       "y": 243,
       "width": 120,
       "height": 31,
@@ -1354,7 +1354,7 @@
     {
       "type": "rectangle",
       "id": "r_sms",
-      "x": 1316,
+      "x": 928,
       "y": 360,
       "width": 184,
       "height": 95,
@@ -1394,7 +1394,7 @@
     {
       "type": "text",
       "id": "t_sms",
-      "x": 1326,
+      "x": 938,
       "y": 373,
       "width": 120,
       "height": 31,
@@ -1564,7 +1564,7 @@
     {
       "type": "rectangle",
       "id": "r_prov_push",
-      "x": 1433,
+      "x": 1136,
       "y": 128,
       "width": 164,
       "height": 95,
@@ -1600,7 +1600,7 @@
     {
       "type": "text",
       "id": "t_prov_push",
-      "x": 1443,
+      "x": 1146,
       "y": 141,
       "width": 100,
       "height": 31,
@@ -1632,7 +1632,7 @@
     {
       "type": "rectangle",
       "id": "r_prov_email",
-      "x": 1433,
+      "x": 1136,
       "y": 230,
       "width": 192,
       "height": 95,
@@ -1668,7 +1668,7 @@
     {
       "type": "text",
       "id": "t_prov_email",
-      "x": 1443,
+      "x": 1146,
       "y": 243,
       "width": 128,
       "height": 31,
@@ -1700,7 +1700,7 @@
     {
       "type": "rectangle",
       "id": "r_prov_sms",
-      "x": 1425,
+      "x": 1128,
       "y": 332,
       "width": 174,
       "height": 95,
@@ -1736,7 +1736,7 @@
     {
       "type": "text",
       "id": "t_prov_sms",
-      "x": 1435,
+      "x": 1138,
       "y": 345,
       "width": 110,
       "height": 31,
@@ -1906,7 +1906,7 @@
     {
       "type": "rectangle",
       "id": "r_payload",
-      "x": 687,
+      "x": 248,
       "y": 451,
       "width": 392,
       "height": 176,
@@ -1938,7 +1938,7 @@
     {
       "type": "text",
       "id": "t_payload",
-      "x": 703,
+      "x": 264,
       "y": 463,
       "width": 328,
       "height": 112,
@@ -1970,7 +1970,7 @@
     {
       "type": "text",
       "id": "t_payload_label",
-      "x": 360,
+      "x": 40,
       "y": 408,
       "width": 247,
       "height": 31,
@@ -2002,7 +2002,7 @@
     {
       "type": "rectangle",
       "id": "r_retry",
-      "x": 1425,
+      "x": 1128,
       "y": 434,
       "width": 484,
       "height": 120,
@@ -2034,12 +2034,12 @@
     {
       "type": "text",
       "id": "t_retry",
-      "x": 1435,
+      "x": 1138,
       "y": 449,
       "width": 420,
       "height": 56,
-      "text": "Retry & DLQ  \u00b7  Exponential backoff (1s\u21922s\u21924s)\nFailed \u2192 Dead Letter Queue \u2192 Alert oncall",
-      "originalText": "Retry & DLQ  \u00b7  Exponential backoff (1s\u21922s\u21924s)\nFailed \u2192 Dead Letter Queue \u2192 Alert oncall",
+      "text": "Retry & DLQ  ·  Exponential backoff (1s→2s→4s)\nFailed → Dead Letter Queue → Alert oncall",
+      "originalText": "Retry & DLQ  ·  Exponential backoff (1s→2s→4s)\nFailed → Dead Letter Queue → Alert oncall",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "center",

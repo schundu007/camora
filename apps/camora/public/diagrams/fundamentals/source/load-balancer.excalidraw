@@ -6,7 +6,7 @@
     {
       "id": "title",
       "type": "text",
-      "x": 1388,
+      "x": 550,
       "y": 20,
       "width": 600,
       "height": 56,
@@ -24,7 +24,7 @@
     {
       "id": "client",
       "type": "rectangle",
-      "x": 220,
+      "x": 28,
       "y": 191,
       "width": 204,
       "height": 98,
@@ -37,7 +37,7 @@
     {
       "id": "client-label",
       "type": "text",
-      "x": 252,
+      "x": 60,
       "y": 228,
       "width": 140,
       "height": 34,
@@ -78,7 +78,7 @@
     {
       "id": "lb",
       "type": "rectangle",
-      "x": 1148,
+      "x": 272,
       "y": 170,
       "width": 256,
       "height": 140,
@@ -91,7 +91,7 @@
     {
       "id": "lb-label",
       "type": "text",
-      "x": 1186,
+      "x": 310,
       "y": 192,
       "width": 180,
       "height": 34,
@@ -109,7 +109,7 @@
     {
       "id": "lb-detail1",
       "type": "text",
-      "x": 1194,
+      "x": 318,
       "y": 220,
       "width": 174,
       "height": 31,
@@ -127,7 +127,7 @@
     {
       "id": "lb-detail2",
       "type": "text",
-      "x": 1194,
+      "x": 318,
       "y": 242,
       "width": 192,
       "height": 31,
@@ -145,7 +145,7 @@
     {
       "id": "lb-detail3",
       "type": "text",
-      "x": 1194,
+      "x": 318,
       "y": 264,
       "width": 164,
       "height": 31,
@@ -232,7 +232,7 @@
     {
       "id": "ws1",
       "type": "rectangle",
-      "x": 1386,
+      "x": 548,
       "y": 72,
       "width": 224,
       "height": 96,
@@ -245,7 +245,7 @@
     {
       "id": "ws1-label",
       "type": "text",
-      "x": 1178,
+      "x": 580,
       "y": 103,
       "width": 160,
       "height": 32,
@@ -263,7 +263,7 @@
     {
       "id": "ws1-sub",
       "type": "text",
-      "x": 1178,
+      "x": 580,
       "y": 127,
       "width": 160,
       "height": 31,
@@ -281,7 +281,7 @@
     {
       "id": "ws2",
       "type": "rectangle",
-      "x": 1386,
+      "x": 548,
       "y": 192,
       "width": 224,
       "height": 96,
@@ -294,7 +294,7 @@
     {
       "id": "ws2-label",
       "type": "text",
-      "x": 1178,
+      "x": 580,
       "y": 223,
       "width": 160,
       "height": 32,
@@ -312,7 +312,7 @@
     {
       "id": "ws2-sub",
       "type": "text",
-      "x": 1178,
+      "x": 580,
       "y": 247,
       "width": 160,
       "height": 31,
@@ -330,7 +330,7 @@
     {
       "id": "ws3",
       "type": "rectangle",
-      "x": 1386,
+      "x": 548,
       "y": 312,
       "width": 224,
       "height": 96,
@@ -343,7 +343,7 @@
     {
       "id": "ws3-label",
       "type": "text",
-      "x": 1178,
+      "x": 580,
       "y": 343,
       "width": 160,
       "height": 32,
@@ -361,7 +361,7 @@
     {
       "id": "ws3-sub",
       "type": "text",
-      "x": 1178,
+      "x": 580,
       "y": 367,
       "width": 160,
       "height": 31,
@@ -448,7 +448,7 @@
     {
       "id": "db",
       "type": "rectangle",
-      "x": 1378,
+      "x": 778,
       "y": 170,
       "width": 234,
       "height": 140,
@@ -461,7 +461,7 @@
     {
       "id": "db-label",
       "type": "text",
-      "x": 1410,
+      "x": 810,
       "y": 192,
       "width": 170,
       "height": 32,
@@ -479,7 +479,7 @@
     {
       "id": "db-sub",
       "type": "text",
-      "x": 1410,
+      "x": 810,
       "y": 218,
       "width": 170,
       "height": 31,
@@ -497,7 +497,7 @@
     {
       "id": "session",
       "type": "rectangle",
-      "x": 1410,
+      "x": 810,
       "y": 326,
       "width": 170,
       "height": 60,
@@ -510,7 +510,7 @@
     {
       "id": "session-label",
       "type": "text",
-      "x": 1410,
+      "x": 810,
       "y": 258,
       "width": 170,
       "height": 31,
@@ -528,7 +528,7 @@
     {
       "id": "session-sub",
       "type": "text",
-      "x": 1410,
+      "x": 810,
       "y": 278,
       "width": 210,
       "height": 31,
@@ -546,7 +546,7 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 252,
+      "x": 60,
       "y": 460,
       "width": 500,
       "height": 80,
@@ -559,11 +559,11 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 1146,
+      "x": 78,
       "y": 474,
       "width": 611,
       "height": 84,
-      "text": "Request 1 \u2192 Server1  |  Request 2 \u2192 Server2  |  Request 3 \u2192 Server3\nGET /health \u2192 200 OK  (health check every 5s)\nFailed server removed from rotation automatically",
+      "text": "Request 1 → Server1  |  Request 2 → Server2  |  Request 3 → Server3\nGET /health → 200 OK  (health check every 5s)\nFailed server removed from rotation automatically",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
@@ -577,7 +577,7 @@
     {
       "id": "note-label",
       "type": "text",
-      "x": 1178,
+      "x": 580,
       "y": 460,
       "width": 400,
       "height": 112,
