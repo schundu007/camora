@@ -6,9 +6,9 @@
     {
       "id": "title",
       "type": "text",
-      "x": 500,
+      "x": 400.0,
       "y": 18,
-      "width": 700,
+      "width": 560.0,
       "height": 48,
       "text": "Twitter Feed — Fanout on Write (Basic)",
       "fontSize": 24,
@@ -26,9 +26,9 @@
     {
       "id": "lbl-user",
       "type": "text",
-      "x": 30,
+      "x": 24.0,
       "y": 76,
-      "width": 100,
+      "width": 80.0,
       "height": 31,
       "text": "USER",
       "fontSize": 14,
@@ -46,9 +46,9 @@
     {
       "id": "user-box",
       "type": "rectangle",
-      "x": -3,
+      "x": -2.4,
       "y": 63,
-      "width": 165,
+      "width": 132.0,
       "height": 120,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -61,9 +61,9 @@
     {
       "id": "user-lbl",
       "type": "text",
-      "x": 40,
+      "x": 32.0,
       "y": 113,
-      "width": 101,
+      "width": 80.8,
       "height": 56,
       "text": "User\nPosts Tweet",
       "fontSize": 14,
@@ -81,9 +81,9 @@
     {
       "id": "arr-user-tweet",
       "type": "arrow",
-      "x": 132,
+      "x": 105.6,
       "y": 124,
-      "width": 68,
+      "width": 54.4,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -96,11 +96,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          54.4,
           0
         ]
       ]
@@ -108,9 +108,9 @@
     {
       "id": "lbl-tweet-svc",
       "type": "text",
-      "x": 210,
+      "x": 168.0,
       "y": 76,
-      "width": 140,
+      "width": 112.0,
       "height": 31,
       "text": "TWEET SERVICE",
       "fontSize": 14,
@@ -128,9 +128,9 @@
     {
       "id": "tweet-svc-box",
       "type": "rectangle",
-      "x": 210,
+      "x": 168.0,
       "y": 94,
-      "width": 140,
+      "width": 112.0,
       "height": 60,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -143,9 +143,9 @@
     {
       "id": "tweet-svc-lbl",
       "type": "text",
-      "x": 222,
+      "x": 177.6,
       "y": 108,
-      "width": 183,
+      "width": 146.4,
       "height": 84,
       "text": "Tweet Service\nValidate (280 chars)\nSnowflake ID gen",
       "fontSize": 14,
@@ -163,9 +163,9 @@
     {
       "id": "lbl-tweet-db",
       "type": "text",
-      "x": 210,
+      "x": 168.0,
       "y": 176,
-      "width": 140,
+      "width": 112.0,
       "height": 31,
       "text": "TWEET DB",
       "fontSize": 14,
@@ -182,9 +182,9 @@
     {
       "id": "tweet-db-box",
       "type": "rectangle",
-      "x": 210,
+      "x": 168.0,
       "y": 194,
-      "width": 140,
+      "width": 112.0,
       "height": 55,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -197,9 +197,9 @@
     {
       "id": "tweet-db-lbl",
       "type": "text",
-      "x": 222,
+      "x": 177.6,
       "y": 208,
-      "width": 119,
+      "width": 95.2,
       "height": 84,
       "text": "Tweet DB\nMySQL sharded\nby userId",
       "fontSize": 14,
@@ -217,9 +217,9 @@
     {
       "id": "arr-svc-db",
       "type": "arrow",
-      "x": 280,
+      "x": 224.0,
       "y": 156,
-      "width": 0,
+      "width": 0.0,
       "height": 36,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -232,11 +232,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           36
         ]
       ]
@@ -244,9 +244,9 @@
     {
       "id": "arr-svc-fanout",
       "type": "arrow",
-      "x": 352,
+      "x": 281.6,
       "y": 124,
-      "width": 68,
+      "width": 54.4,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -259,11 +259,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          54.4,
           0
         ]
       ]
@@ -271,9 +271,9 @@
     {
       "id": "lbl-fanout",
       "type": "text",
-      "x": 430,
+      "x": 344.0,
       "y": 76,
-      "width": 160,
+      "width": 128.0,
       "height": 31,
       "text": "FANOUT WORKER",
       "fontSize": 14,
@@ -291,9 +291,9 @@
     {
       "id": "fanout-box",
       "type": "rectangle",
-      "x": 394,
+      "x": 315.2,
       "y": 64,
-      "width": 231,
+      "width": 184.8,
       "height": 120,
       "strokeColor": "#6d28d9",
       "backgroundColor": "#ddd6fe",
@@ -306,9 +306,9 @@
     {
       "id": "fanout-lbl",
       "type": "text",
-      "x": 442,
+      "x": 353.6,
       "y": 108,
-      "width": 183,
+      "width": 146.4,
       "height": 84,
       "text": "Fanout Worker\nFetch follower list\nPush tweetId to each",
       "fontSize": 14,
@@ -326,9 +326,9 @@
     {
       "id": "arr-fanout-redis",
       "type": "arrow",
-      "x": 592,
+      "x": 473.6,
       "y": 124,
-      "width": 68,
+      "width": 54.4,
       "height": 0,
       "strokeColor": "#6d28d9",
       "backgroundColor": "transparent",
@@ -341,11 +341,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          54.4,
           0
         ]
       ]
@@ -353,9 +353,9 @@
     {
       "id": "lbl-redis",
       "type": "text",
-      "x": 670,
+      "x": 536.0,
       "y": 60,
-      "width": 300,
+      "width": 240.0,
       "height": 31,
       "text": "TIMELINE CACHE (Redis)",
       "fontSize": 14,
@@ -373,9 +373,9 @@
     {
       "id": "redis-box",
       "type": "rectangle",
-      "x": 658,
+      "x": 526.4,
       "y": 45,
-      "width": 324,
+      "width": 259.2,
       "height": 142,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -388,9 +388,9 @@
     {
       "id": "redis-lbl",
       "type": "text",
-      "x": 682,
+      "x": 545.6,
       "y": 88,
-      "width": 276,
+      "width": 220.8,
       "height": 112,
       "text": "Redis — Pre-computed Timelines\nKey: \"timeline:{userId}\"\nLPUSH tweet_id → LTRIM 0 799\n(max 800 tweets per user list)",
       "fontSize": 14,
@@ -408,9 +408,9 @@
     {
       "id": "lbl-read",
       "type": "text",
-      "x": 670,
+      "x": 536.0,
       "y": 176,
-      "width": 300,
+      "width": 240.0,
       "height": 31,
       "text": "ON READ (fast path)",
       "fontSize": 14,
@@ -428,9 +428,9 @@
     {
       "id": "read-box",
       "type": "rectangle",
-      "x": 986,
+      "x": 788.8,
       "y": 203,
-      "width": 367,
+      "width": 293.6,
       "height": 120,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -443,9 +443,9 @@
     {
       "id": "read-lbl",
       "type": "text",
-      "x": 682,
+      "x": 545.6,
       "y": 205,
-      "width": 319,
+      "width": 255.2,
       "height": 84,
       "text": "LRANGE timeline:123 0 99\n→ [tweetId1, tweetId2, ...]\nHydrate tweet details from Tweet DB",
       "fontSize": 14,
@@ -463,9 +463,9 @@
     {
       "id": "lbl-evidence",
       "type": "text",
-      "x": 30,
+      "x": 24.0,
       "y": 290,
-      "width": 380,
+      "width": 304.0,
       "height": 31,
       "text": "API EVIDENCE",
       "fontSize": 14,
@@ -483,9 +483,9 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 30,
+      "x": 24.0,
       "y": 308,
-      "width": 400,
+      "width": 320.0,
       "height": 110,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -498,9 +498,9 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 44,
+      "x": 35.2,
       "y": 318,
-      "width": 420,
+      "width": 336.0,
       "height": 196,
       "text": "POST /api/tweets\n{ content: \"Hello world!\", userId: \"user123\" }\n→ { tweetId: \"1234567890\", createdAt: \"...\" }\n\nFanout: LPUSH timeline:follower1 1234567890\n        LPUSH timeline:follower2 1234567890\n        ... × N followers (one per follower!)",
       "fontSize": 14,
@@ -518,9 +518,9 @@
     {
       "id": "lbl-limitation",
       "type": "text",
-      "x": 450,
+      "x": 360.0,
       "y": 290,
-      "width": 520,
+      "width": 416.0,
       "height": 31,
       "text": "LIMITATION (why basic fails)",
       "fontSize": 14,
@@ -538,9 +538,9 @@
     {
       "id": "limitation-box",
       "type": "rectangle",
-      "x": 450,
+      "x": 360.0,
       "y": 308,
-      "width": 520,
+      "width": 416.0,
       "height": 110,
       "strokeColor": "#dc2626",
       "backgroundColor": "#fee2e2",
@@ -553,9 +553,9 @@
     {
       "id": "limitation-text",
       "type": "text",
-      "x": 464,
+      "x": 371.2,
       "y": 318,
-      "width": 547,
+      "width": 437.6,
       "height": 196,
       "text": "Celebrity Problem: @elonmusk has 100M followers\n→ ONE tweet triggers 100M Redis LPUSH writes!\n→ Timeline service is overwhelmed for seconds/minutes\n→ Followers see delayed or missing tweets\n\nWasted Storage: 10M inactive users still get timeline writes\nSolution needed: Hybrid Fanout (Advanced)",
       "fontSize": 14,

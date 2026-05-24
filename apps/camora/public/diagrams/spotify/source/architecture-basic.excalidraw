@@ -6,9 +6,9 @@
     {
       "type": "text",
       "id": "title",
-      "x": 500,
+      "x": 400.0,
       "y": 20,
-      "width": 820,
+      "width": 656.0,
       "height": 56,
       "angle": 0,
       "strokeColor": "#1e40af",
@@ -37,9 +37,9 @@
     {
       "type": "text",
       "id": "lbl-client",
-      "x": 60,
+      "x": 48.0,
       "y": 80,
-      "width": 160,
+      "width": 128.0,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -68,9 +68,9 @@
     {
       "type": "text",
       "id": "lbl-api",
-      "x": 320,
+      "x": 256.0,
       "y": 80,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -99,9 +99,9 @@
     {
       "type": "text",
       "id": "lbl-store",
-      "x": 900,
+      "x": 720.0,
       "y": 80,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -130,9 +130,9 @@
     {
       "type": "rectangle",
       "id": "sp-client",
-      "x": 60,
+      "x": 48.0,
       "y": 110,
-      "width": 204,
+      "width": 163.2,
       "height": 148,
       "angle": 0,
       "strokeColor": "#c2410c",
@@ -162,9 +162,9 @@
     {
       "type": "text",
       "id": "sp-client-lbl",
-      "x": 65,
+      "x": 52.0,
       "y": 126,
-      "width": 140,
+      "width": 112.0,
       "height": 84,
       "angle": 0,
       "strokeColor": "#7c2d12",
@@ -193,9 +193,9 @@
     {
       "type": "rectangle",
       "id": "api-server",
-      "x": 320,
+      "x": 256.0,
       "y": 110,
-      "width": 214,
+      "width": 171.2,
       "height": 120,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -233,9 +233,9 @@
     {
       "type": "text",
       "id": "api-server-lbl",
-      "x": 325,
+      "x": 260.0,
       "y": 130,
-      "width": 150,
+      "width": 120.0,
       "height": 56,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -264,9 +264,9 @@
     {
       "type": "arrow",
       "id": "sp-arr1",
-      "x": 210,
-      "y": 150,
-      "width": 110,
+      "x": 168.0,
+      "y": 110,
+      "width": 88.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -285,11 +285,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          110,
+          88.0,
           0
         ]
       ],
@@ -309,9 +309,9 @@
     {
       "type": "rectangle",
       "id": "track-svc",
-      "x": 560,
+      "x": 448.0,
       "y": 110,
-      "width": 214,
+      "width": 171.2,
       "height": 120,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -345,9 +345,9 @@
     {
       "type": "text",
       "id": "track-svc-lbl",
-      "x": 565,
+      "x": 452.0,
       "y": 130,
-      "width": 150,
+      "width": 120.0,
       "height": 56,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -376,9 +376,9 @@
     {
       "type": "arrow",
       "id": "sp-arr2",
-      "x": 480,
-      "y": 145,
-      "width": 80,
+      "x": 384.0,
+      "y": 110,
+      "width": 64.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -397,11 +397,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          80,
+          64.0,
           0
         ]
       ],
@@ -421,9 +421,9 @@
     {
       "type": "rectangle",
       "id": "playlist-svc",
-      "x": 560,
+      "x": 448.0,
       "y": 246,
-      "width": 214,
+      "width": 171.2,
       "height": 120,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -457,9 +457,9 @@
     {
       "type": "text",
       "id": "playlist-svc-lbl",
-      "x": 565,
+      "x": 452.0,
       "y": 266,
-      "width": 150,
+      "width": 120.0,
       "height": 56,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -488,9 +488,9 @@
     {
       "type": "arrow",
       "id": "sp-arr3",
-      "x": 480,
+      "x": 427.2,
       "y": 180,
-      "width": 80,
+      "width": 64.0,
       "height": 75,
       "angle": 0,
       "strokeColor": "#374151",
@@ -509,15 +509,15 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           75
         ],
         [
-          80,
+          64.0,
           75
         ]
       ],
@@ -537,9 +537,9 @@
     {
       "type": "rectangle",
       "id": "db",
-      "x": 820,
+      "x": 656.0,
       "y": 110,
-      "width": 247,
+      "width": 197.6,
       "height": 176,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -573,9 +573,9 @@
     {
       "type": "text",
       "id": "db-lbl",
-      "x": 825,
+      "x": 660.0,
       "y": 126,
-      "width": 183,
+      "width": 146.4,
       "height": 112,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -604,9 +604,9 @@
     {
       "type": "arrow",
       "id": "sp-arr4",
-      "x": 720,
-      "y": 145,
-      "width": 100,
+      "x": 576.0,
+      "y": 110,
+      "width": 80.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -625,11 +625,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          100,
+          80.0,
           0
         ]
       ],
@@ -649,9 +649,9 @@
     {
       "type": "arrow",
       "id": "sp-arr5",
-      "x": 720,
-      "y": 255,
-      "width": 100,
+      "x": 576.0,
+      "y": 246,
+      "width": 80.0,
       "height": -45,
       "angle": 0,
       "strokeColor": "#374151",
@@ -670,15 +670,15 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          100,
+          80.0,
           0
         ],
         [
-          100,
+          80.0,
           -45
         ]
       ],
@@ -698,9 +698,9 @@
     {
       "type": "rectangle",
       "id": "cache",
-      "x": 820,
+      "x": 656.0,
       "y": 302,
-      "width": 256,
+      "width": 204.8,
       "height": 120,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -726,9 +726,9 @@
     {
       "type": "text",
       "id": "cache-lbl",
-      "x": 825,
+      "x": 660.0,
       "y": 320,
-      "width": 192,
+      "width": 153.6,
       "height": 56,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -757,9 +757,9 @@
     {
       "type": "rectangle",
       "id": "cdn-audio",
-      "x": 1090,
+      "x": 872.0,
       "y": 110,
-      "width": 265,
+      "width": 212.0,
       "height": 148,
       "angle": 0,
       "strokeColor": "#047857",
@@ -793,9 +793,9 @@
     {
       "type": "text",
       "id": "cdn-audio-lbl",
-      "x": 1095,
+      "x": 876.0,
       "y": 126,
-      "width": 201,
+      "width": 160.8,
       "height": 84,
       "angle": 0,
       "strokeColor": "#065f46",
@@ -824,9 +824,9 @@
     {
       "type": "rectangle",
       "id": "obj-store",
-      "x": 1090,
+      "x": 872.0,
       "y": 274,
-      "width": 265,
+      "width": 212.0,
       "height": 120,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -856,9 +856,9 @@
     {
       "type": "text",
       "id": "obj-store-lbl",
-      "x": 1095,
+      "x": 876.0,
       "y": 296,
-      "width": 201,
+      "width": 160.8,
       "height": 56,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -887,9 +887,9 @@
     {
       "type": "arrow",
       "id": "sp-arr6",
-      "x": 1000,
-      "y": 145,
-      "width": 90,
+      "x": 800.0,
+      "y": 110,
+      "width": 72.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -908,11 +908,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          90,
+          72.0,
           0
         ]
       ],
@@ -932,9 +932,9 @@
     {
       "type": "arrow",
       "id": "sp-cdn-client",
-      "x": 1190,
-      "y": 190,
-      "width": -980,
+      "x": 952.0,
+      "y": 258,
+      "width": -784.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -953,15 +953,15 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           80
         ],
         [
-          -980,
+          -784.0,
           80
         ]
       ],
@@ -981,9 +981,9 @@
     {
       "type": "text",
       "id": "cdn-note",
-      "x": 200,
+      "x": 160.0,
       "y": 278,
-      "width": 329,
+      "width": 263.2,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -1012,9 +1012,9 @@
     {
       "type": "rectangle",
       "id": "evidence-box",
-      "x": 60,
+      "x": 48.0,
       "y": 380,
-      "width": 666,
+      "width": 532.8,
       "height": 176,
       "angle": 0,
       "strokeColor": "#22c55e",
@@ -1040,9 +1040,9 @@
     {
       "type": "text",
       "id": "evidence-text",
-      "x": 70,
+      "x": 56.0,
       "y": 390,
-      "width": 602,
+      "width": 481.6,
       "height": 112,
       "angle": 0,
       "strokeColor": "#22c55e",

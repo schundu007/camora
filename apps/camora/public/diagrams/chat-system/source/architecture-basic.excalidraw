@@ -6,9 +6,9 @@
     {
       "id": "title",
       "type": "text",
-      "x": 480,
+      "x": 384.0,
       "y": 18,
-      "width": 740,
+      "width": 592.0,
       "height": 48,
       "text": "Chat System — Basic Architecture",
       "fontSize": 24,
@@ -26,9 +26,9 @@
     {
       "id": "lbl-clienta",
       "type": "text",
-      "x": 30,
+      "x": 24.0,
       "y": 76,
-      "width": 120,
+      "width": 96.0,
       "height": 31,
       "text": "CLIENT A",
       "fontSize": 14,
@@ -46,9 +46,9 @@
     {
       "id": "clienta-box",
       "type": "rectangle",
-      "x": 30,
+      "x": 24.0,
       "y": 94,
-      "width": 120,
+      "width": 96.0,
       "height": 60,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -61,12 +61,12 @@
     {
       "id": "clienta-lbl",
       "type": "text",
-      "x": 42,
+      "x": 33.6,
       "y": 111,
-      "width": 155,
+      "width": 66.0,
       "height": 56,
       "text": "Client A\n(Alice, userId=1)",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -81,9 +81,9 @@
     {
       "id": "arr-a-ws",
       "type": "arrow",
-      "x": 152,
+      "x": 121.6,
       "y": 124,
-      "width": 88,
+      "width": 70.4,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -96,11 +96,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          88,
+          70.4,
           0
         ]
       ]
@@ -108,9 +108,9 @@
     {
       "id": "lbl-ws",
       "type": "text",
-      "x": 250,
+      "x": 200.0,
       "y": 60,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "WEBSOCKET SERVER",
       "fontSize": 14,
@@ -128,9 +128,9 @@
     {
       "id": "ws-box",
       "type": "rectangle",
-      "x": 250,
+      "x": 200.0,
       "y": 76,
-      "width": 200,
+      "width": 160.0,
       "height": 96,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -143,12 +143,12 @@
     {
       "id": "ws-lbl",
       "type": "text",
-      "x": 262,
+      "x": 209.6,
       "y": 90,
-      "width": 183,
+      "width": 130.0,
       "height": 140,
       "text": "WebSocket Server\n- Auth token verify\n- Route messages\n- Manage connections\n- Track online users",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -163,9 +163,9 @@
     {
       "id": "arr-ws-b",
       "type": "arrow",
-      "x": 452,
+      "x": 361.6,
       "y": 124,
-      "width": 88,
+      "width": 45.599999999999966,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -178,11 +178,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          88,
+          45.599999999999966,
           0
         ]
       ]
@@ -190,9 +190,9 @@
     {
       "id": "lbl-clientb",
       "type": "text",
-      "x": 550,
+      "x": 440.0,
       "y": 76,
-      "width": 120,
+      "width": 96.0,
       "height": 31,
       "text": "CLIENT B",
       "fontSize": 14,
@@ -210,9 +210,9 @@
     {
       "id": "clientb-box",
       "type": "rectangle",
-      "x": 509,
+      "x": 407.2,
       "y": 63,
-      "width": 201,
+      "width": 160.8,
       "height": 120,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -225,9 +225,9 @@
     {
       "id": "clientb-lbl",
       "type": "text",
-      "x": 562,
+      "x": 449.6,
       "y": 111,
-      "width": 137,
+      "width": 109.6,
       "height": 56,
       "text": "Client B\n(Bob, userId=2)",
       "fontSize": 14,
@@ -245,10 +245,10 @@
     {
       "id": "arr-ws-db",
       "type": "arrow",
-      "x": 350,
+      "x": 280.0,
       "y": 174,
-      "width": 0,
-      "height": 66,
+      "width": 0.0,
+      "height": 65,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
       "fillStyle": "solid",
@@ -260,21 +260,21 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
-          66
+          0.0,
+          65
         ]
       ]
     },
     {
       "id": "lbl-msgdb",
       "type": "text",
-      "x": 250,
+      "x": 200.0,
       "y": 252,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "MESSAGE STORE",
       "fontSize": 14,
@@ -292,9 +292,9 @@
     {
       "id": "msgdb-box",
       "type": "rectangle",
-      "x": 230,
+      "x": 184.0,
       "y": 239,
-      "width": 240,
+      "width": 192.0,
       "height": 120,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -307,9 +307,9 @@
     {
       "id": "msgdb-lbl",
       "type": "text",
-      "x": 262,
+      "x": 209.6,
       "y": 286,
-      "width": 176,
+      "width": 140.8,
       "height": 56,
       "text": "PostgreSQL\nmessages table",
       "fontSize": 14,
@@ -327,9 +327,9 @@
     {
       "id": "lbl-presence",
       "type": "text",
-      "x": 30,
+      "x": 24.0,
       "y": 252,
-      "width": 180,
+      "width": 144.0,
       "height": 31,
       "text": "PRESENCE SERVICE",
       "fontSize": 14,
@@ -347,9 +347,9 @@
     {
       "id": "presence-box",
       "type": "rectangle",
-      "x": 30,
+      "x": 24.0,
       "y": 270,
-      "width": 180,
+      "width": 144.0,
       "height": 60,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -362,12 +362,12 @@
     {
       "id": "presence-lbl",
       "type": "text",
-      "x": 42,
+      "x": 33.6,
       "y": 284,
-      "width": 219,
+      "width": 114.0,
       "height": 84,
       "text": "Presence Service\nonline/offline status\nRedis: user:1 → \"online\"",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -382,9 +382,9 @@
     {
       "id": "arr-ws-presence",
       "type": "arrow",
-      "x": 250,
+      "x": 200.0,
       "y": 160,
-      "width": -40,
+      "width": 0,
       "height": 108,
       "strokeColor": "#047857",
       "backgroundColor": "transparent",
@@ -397,11 +397,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          -40,
+          0.0,
           108
         ]
       ]
@@ -409,9 +409,9 @@
     {
       "id": "lbl-offline",
       "type": "text",
-      "x": 480,
+      "x": 384.0,
       "y": 252,
-      "width": 220,
+      "width": 176.0,
       "height": 31,
       "text": "OFFLINE DELIVERY QUEUE",
       "fontSize": 14,
@@ -429,9 +429,9 @@
     {
       "id": "offline-box",
       "type": "rectangle",
-      "x": 480,
+      "x": 384.0,
       "y": 270,
-      "width": 220,
+      "width": 176.0,
       "height": 60,
       "strokeColor": "#6d28d9",
       "backgroundColor": "#ddd6fe",
@@ -444,12 +444,12 @@
     {
       "id": "offline-lbl",
       "type": "text",
-      "x": 492,
+      "x": 393.6,
       "y": 284,
-      "width": 256,
+      "width": 146.0,
       "height": 84,
       "text": "Offline Queue\nStore msgs for offline users\nDeliver on reconnect",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -464,10 +464,10 @@
     {
       "id": "arr-ws-offline",
       "type": "arrow",
-      "x": 452,
+      "x": 361.6,
       "y": 160,
-      "width": 138,
-      "height": 108,
+      "width": 110.4,
+      "height": 0,
       "strokeColor": "#6d28d9",
       "backgroundColor": "transparent",
       "fillStyle": "solid",
@@ -479,21 +479,21 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          138,
-          108
+          110.4,
+          0
         ]
       ]
     },
     {
       "id": "lbl-schema",
       "type": "text",
-      "x": 30,
+      "x": 24.0,
       "y": 362,
-      "width": 400,
+      "width": 320.0,
       "height": 31,
       "text": "DB SCHEMA",
       "fontSize": 14,
@@ -511,9 +511,9 @@
     {
       "id": "schema-box",
       "type": "rectangle",
-      "x": 30,
+      "x": 24.0,
       "y": 380,
-      "width": 360,
+      "width": 288.0,
       "height": 120,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -526,12 +526,12 @@
     {
       "id": "schema-text",
       "type": "text",
-      "x": 44,
+      "x": 35.2,
       "y": 390,
-      "width": 356,
+      "width": 258.0,
       "height": 224,
       "text": "messages (\n  id         BIGSERIAL PRIMARY KEY,\n  sender_id  BIGINT NOT NULL,\n  receiver_id BIGINT NOT NULL,\n  content    TEXT NOT NULL,\n  timestamp  TIMESTAMPTZ DEFAULT NOW(),\n  delivered  BOOLEAN DEFAULT FALSE\n)",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -546,9 +546,9 @@
     {
       "id": "lbl-ws-frame",
       "type": "text",
-      "x": 420,
+      "x": 336.0,
       "y": 362,
-      "width": 400,
+      "width": 320.0,
       "height": 31,
       "text": "WEBSOCKET FRAME EVIDENCE",
       "fontSize": 14,
@@ -566,9 +566,9 @@
     {
       "id": "wsframe-box",
       "type": "rectangle",
-      "x": 420,
+      "x": 336.0,
       "y": 380,
-      "width": 400,
+      "width": 320.0,
       "height": 120,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -581,12 +581,12 @@
     {
       "id": "wsframe-text",
       "type": "text",
-      "x": 434,
+      "x": 347.2,
       "y": 390,
-      "width": 383,
+      "width": 290.0,
       "height": 280,
       "text": "# Alice sends message to Bob\nWS → { \"type\": \"message\",\n        \"to\": \"user456\",\n        \"text\": \"hey!\",\n        \"client_msg_id\": \"abc-123\" }\n\n# Server → Bob's socket\nWS → { \"type\": \"message\",\n        \"from\": \"user123\", \"text\": \"hey!\",\n        \"msg_id\": 9871, \"ts\": 1746523200 }",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

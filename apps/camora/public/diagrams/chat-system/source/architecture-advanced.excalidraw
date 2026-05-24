@@ -6,9 +6,9 @@
     {
       "id": "title",
       "type": "text",
-      "x": 420,
+      "x": 336.0,
       "y": 18,
-      "width": 860,
+      "width": 688.0,
       "height": 48,
       "text": "Chat System — Distributed Architecture (Advanced)",
       "fontSize": 24,
@@ -26,9 +26,9 @@
     {
       "id": "lbl-clients",
       "type": "text",
-      "x": 30,
+      "x": 24.0,
       "y": 76,
-      "width": 120,
+      "width": 82.0,
       "height": 31,
       "text": "CLIENTS",
       "fontSize": 14,
@@ -46,9 +46,9 @@
     {
       "id": "clienta-box",
       "type": "rectangle",
-      "x": 10,
+      "x": 8.0,
       "y": 58,
-      "width": 140,
+      "width": 112.0,
       "height": 120,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -61,9 +61,9 @@
     {
       "id": "clienta-lbl",
       "type": "text",
-      "x": 42,
+      "x": 33.6,
       "y": 108,
-      "width": 76,
+      "width": 60.8,
       "height": 56,
       "text": "Client A\nAlice",
       "fontSize": 14,
@@ -81,9 +81,9 @@
     {
       "id": "clientb-box",
       "type": "rectangle",
-      "x": 18,
+      "x": 14.4,
       "y": 183,
-      "width": 124,
+      "width": 99.2,
       "height": 97,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -96,9 +96,9 @@
     {
       "id": "clientb-lbl",
       "type": "text",
-      "x": 42,
+      "x": 33.6,
       "y": 172,
-      "width": 76,
+      "width": 60.8,
       "height": 56,
       "text": "Client B\nBob",
       "fontSize": 14,
@@ -116,9 +116,9 @@
     {
       "id": "arr-a-ws1",
       "type": "arrow",
-      "x": 132,
+      "x": 120.0,
       "y": 119,
-      "width": 68,
+      "width": 31.19999999999999,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -131,11 +131,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          31.19999999999999,
           0
         ]
       ]
@@ -143,10 +143,10 @@
     {
       "id": "arr-b-ws2",
       "type": "arrow",
-      "x": 132,
+      "x": 105.6,
       "y": 183,
-      "width": 68,
-      "height": 60,
+      "width": 0,
+      "height": 82,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
       "fillStyle": "solid",
@@ -158,21 +158,21 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
-          60
+          0.0,
+          82
         ]
       ]
     },
     {
       "id": "lbl-ws-cluster",
       "type": "text",
-      "x": 210,
+      "x": 168.0,
       "y": 60,
-      "width": 228,
+      "width": 130.8,
       "height": 31,
       "text": "WEBSOCKET GATEWAY CLUSTER",
       "fontSize": 14,
@@ -190,9 +190,9 @@
     {
       "id": "ws1-box",
       "type": "rectangle",
-      "x": 189,
+      "x": 151.2,
       "y": 43,
-      "width": 201,
+      "width": 160.8,
       "height": 120,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -205,9 +205,9 @@
     {
       "id": "ws1-lbl",
       "type": "text",
-      "x": 222,
+      "x": 177.6,
       "y": 92,
-      "width": 137,
+      "width": 109.6,
       "height": 56,
       "text": "WS Gateway 1\n50K connections",
       "fontSize": 14,
@@ -225,9 +225,9 @@
     {
       "id": "ws2-box",
       "type": "rectangle",
-      "x": 157,
+      "x": 125.6,
       "y": 168,
-      "width": 264,
+      "width": 211.2,
       "height": 97,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -240,9 +240,9 @@
     {
       "id": "ws2-lbl",
       "type": "text",
-      "x": 222,
+      "x": 177.6,
       "y": 164,
-      "width": 137,
+      "width": 109.6,
       "height": 56,
       "text": "WS Gateway 2\n50K connections",
       "fontSize": 14,
@@ -260,9 +260,9 @@
     {
       "id": "lbl-zk",
       "type": "text",
-      "x": 210,
+      "x": 168.0,
       "y": 224,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "SERVICE DISCOVERY",
       "fontSize": 14,
@@ -280,9 +280,9 @@
     {
       "id": "zk-box",
       "type": "rectangle",
-      "x": 193,
+      "x": 154.4,
       "y": 281,
-      "width": 194,
+      "width": 155.2,
       "height": 97,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -295,9 +295,9 @@
     {
       "id": "zk-lbl",
       "type": "text",
-      "x": 222,
+      "x": 177.6,
       "y": 257,
-      "width": 146,
+      "width": 116.8,
       "height": 56,
       "text": "Zookeeper\ngateway registry",
       "fontSize": 14,
@@ -315,9 +315,9 @@
     {
       "id": "arr-ws1-kafka",
       "type": "arrow",
-      "x": 372,
+      "x": 312.0,
       "y": 103,
-      "width": 68,
+      "width": 54.4,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -330,11 +330,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          54.4,
           0
         ]
       ]
@@ -342,9 +342,9 @@
     {
       "id": "arr-ws2-kafka",
       "type": "arrow",
-      "x": 372,
-      "y": 175,
-      "width": 68,
+      "x": 297.6,
+      "y": 168,
+      "width": 0,
       "height": -72,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -357,11 +357,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          0.0,
           -72
         ]
       ]
@@ -369,9 +369,9 @@
     {
       "id": "lbl-kafka",
       "type": "text",
-      "x": 450,
+      "x": 360.0,
       "y": 60,
-      "width": 180,
+      "width": 144.0,
       "height": 31,
       "text": "MESSAGE BUS",
       "fontSize": 14,
@@ -389,9 +389,9 @@
     {
       "id": "kafka-box",
       "type": "rectangle",
-      "x": 450,
+      "x": 360.0,
       "y": 76,
-      "width": 160,
+      "width": 128.0,
       "height": 60,
       "strokeColor": "#6d28d9",
       "backgroundColor": "#ddd6fe",
@@ -404,12 +404,12 @@
     {
       "id": "kafka-lbl",
       "type": "text",
-      "x": 462,
+      "x": 369.6,
       "y": 93,
-      "width": 228,
+      "width": 98.0,
       "height": 84,
       "text": "Kafka\nPartitioned by channel_id\nRetention: 7 days",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -424,10 +424,10 @@
     {
       "id": "arr-kafka-ws-fanout",
       "type": "arrow",
-      "x": 450,
+      "x": 360.0,
       "y": 106,
-      "width": -68,
-      "height": 69,
+      "width": 0,
+      "height": 62,
       "strokeColor": "#6d28d9",
       "backgroundColor": "transparent",
       "fillStyle": "solid",
@@ -439,21 +439,21 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          -68,
-          69
+          0.0,
+          62
         ]
       ]
     },
     {
       "id": "arr-kafka-cassandra",
       "type": "arrow",
-      "x": 612,
+      "x": 489.6,
       "y": 106,
-      "width": 68,
+      "width": 54.4,
       "height": 0,
       "strokeColor": "#6d28d9",
       "backgroundColor": "transparent",
@@ -466,11 +466,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          54.4,
           0
         ]
       ]
@@ -478,9 +478,9 @@
     {
       "id": "lbl-cassandra",
       "type": "text",
-      "x": 690,
+      "x": 552.0,
       "y": 60,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "MESSAGE STORAGE",
       "fontSize": 14,
@@ -498,9 +498,9 @@
     {
       "id": "cassandra-box",
       "type": "rectangle",
-      "x": 690,
+      "x": 552.0,
       "y": 76,
-      "width": 200,
+      "width": 160.0,
       "height": 60,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -513,12 +513,12 @@
     {
       "id": "cassandra-lbl",
       "type": "text",
-      "x": 702,
+      "x": 561.6,
       "y": 89,
-      "width": 247,
+      "width": 130.0,
       "height": 84,
       "text": "Cassandra\nPartition: channel_id\nCluster key: timestamp DESC",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -533,9 +533,9 @@
     {
       "id": "lbl-cdn",
       "type": "text",
-      "x": 690,
+      "x": 552.0,
       "y": 158,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "MEDIA / CDN",
       "fontSize": 14,
@@ -553,9 +553,9 @@
     {
       "id": "cdn-box",
       "type": "rectangle",
-      "x": 666,
+      "x": 532.8,
       "y": 140,
-      "width": 247,
+      "width": 197.6,
       "height": 120,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -568,9 +568,9 @@
     {
       "id": "cdn-lbl",
       "type": "text",
-      "x": 702,
+      "x": 561.6,
       "y": 192,
-      "width": 183,
+      "width": 146.4,
       "height": 56,
       "text": "S3 + CloudFront CDN\nImages, video, files",
       "fontSize": 14,
@@ -588,9 +588,9 @@
     {
       "id": "lbl-push",
       "type": "text",
-      "x": 450,
+      "x": 360.0,
       "y": 158,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "PUSH NOTIFICATIONS",
       "fontSize": 14,
@@ -608,9 +608,9 @@
     {
       "id": "push-box",
       "type": "rectangle",
-      "x": 450,
+      "x": 360.0,
       "y": 176,
-      "width": 200,
+      "width": 160.0,
       "height": 50,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -623,12 +623,12 @@
     {
       "id": "push-lbl",
       "type": "text",
-      "x": 462,
+      "x": 369.6,
       "y": 192,
-      "width": 237,
+      "width": 130.0,
       "height": 84,
       "text": "Push Service\nAPNs (iOS) / FCM (Android)\nfor offline users",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -643,9 +643,9 @@
     {
       "id": "arr-kafka-push",
       "type": "arrow",
-      "x": 530,
+      "x": 424.0,
       "y": 138,
-      "width": 0,
+      "width": 0.0,
       "height": 36,
       "strokeColor": "#6d28d9",
       "backgroundColor": "transparent",
@@ -658,11 +658,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           36
         ]
       ]
@@ -670,9 +670,9 @@
     {
       "id": "lbl-evidence",
       "type": "text",
-      "x": 30,
+      "x": 24.0,
       "y": 330,
-      "width": 440,
+      "width": 352.0,
       "height": 31,
       "text": "CASSANDRA SCHEMA",
       "fontSize": 14,
@@ -690,9 +690,9 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 30,
+      "x": 24.0,
       "y": 394,
-      "width": 440,
+      "width": 352.0,
       "height": 130,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -705,9 +705,9 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 44,
+      "x": 35.2,
       "y": 358,
-      "width": 412,
+      "width": 329.6,
       "height": 308,
       "text": "CREATE TABLE messages (\n  channel_id  UUID,\n  timestamp   TIMEUUID,\n  sender_id   UUID,\n  content     TEXT,\n  media_url   TEXT,\n  PRIMARY KEY (channel_id, timestamp)\n) WITH CLUSTERING ORDER BY (timestamp DESC);\n\n-- Query: SELECT * FROM messages\n--        WHERE channel_id = ? LIMIT 50;",
       "fontSize": 14,
@@ -725,9 +725,9 @@
     {
       "id": "lbl-scale",
       "type": "text",
-      "x": 500,
+      "x": 400.0,
       "y": 330,
-      "width": 400,
+      "width": 320.0,
       "height": 31,
       "text": "SCALE + DESIGN NOTES",
       "fontSize": 14,
@@ -745,9 +745,9 @@
     {
       "id": "scale-box",
       "type": "rectangle",
-      "x": 500,
+      "x": 400.0,
       "y": 348,
-      "width": 400,
+      "width": 320.0,
       "height": 130,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -760,12 +760,12 @@
     {
       "id": "scale-text",
       "type": "text",
-      "x": 514,
+      "x": 411.2,
       "y": 358,
-      "width": 529,
+      "width": 290.0,
       "height": 280,
       "text": "Kafka fan-out: all WS gateways in channel subscribe\n→ each gateway delivers to its connected clients\n\nPresence: Redis key per user, TTL 60s, heartbeat every 30s\n\nConnection routing: Zookeeper stores which gateway\nserves each userId — message service looks up target\n\nMedia: client uploads directly to S3 presigned URL,\nsends CDN URL as message content (never through WS)",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",

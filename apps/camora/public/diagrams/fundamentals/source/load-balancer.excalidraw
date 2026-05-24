@@ -6,9 +6,9 @@
     {
       "id": "title",
       "type": "text",
-      "x": 550,
+      "x": 440.0,
       "y": 20,
-      "width": 600,
+      "width": 480.0,
       "height": 56,
       "text": "Load Balancer Architecture",
       "fontSize": 28,
@@ -24,9 +24,9 @@
     {
       "id": "client",
       "type": "rectangle",
-      "x": 28,
+      "x": 22.4,
       "y": 191,
-      "width": 204,
+      "width": 163.2,
       "height": 98,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -37,9 +37,9 @@
     {
       "id": "client-label",
       "type": "text",
-      "x": 60,
+      "x": 48.0,
       "y": 228,
-      "width": 140,
+      "width": 112.0,
       "height": 34,
       "text": "Client",
       "fontSize": 16,
@@ -55,9 +55,9 @@
     {
       "id": "arrow-client-lb",
       "type": "arrow",
-      "x": 202,
+      "x": 185.6,
       "y": 240,
-      "width": 108,
+      "width": 32.0,
       "height": 0,
       "strokeColor": "#64748b",
       "backgroundColor": "transparent",
@@ -70,7 +70,7 @@
           0
         ],
         [
-          108,
+          32.0,
           0
         ]
       ]
@@ -78,10 +78,10 @@
     {
       "id": "lb",
       "type": "rectangle",
-      "x": 272,
-      "y": 170,
-      "width": 256,
-      "height": 140,
+      "x": 217.6,
+      "y": 80,
+      "width": 204.8,
+      "height": 300,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
       "fillStyle": "solid",
@@ -91,9 +91,9 @@
     {
       "id": "lb-label",
       "type": "text",
-      "x": 310,
+      "x": 248.0,
       "y": 192,
-      "width": 180,
+      "width": 144.0,
       "height": 34,
       "text": "Load Balancer",
       "fontSize": 16,
@@ -109,9 +109,9 @@
     {
       "id": "lb-detail1",
       "type": "text",
-      "x": 318,
+      "x": 254.4,
       "y": 220,
-      "width": 174,
+      "width": 139.2,
       "height": 31,
       "text": "Round-robin routing",
       "fontSize": 14,
@@ -127,9 +127,9 @@
     {
       "id": "lb-detail2",
       "type": "text",
-      "x": 318,
+      "x": 254.4,
       "y": 242,
-      "width": 192,
+      "width": 153.6,
       "height": 31,
       "text": "Health checks /health",
       "fontSize": 14,
@@ -145,9 +145,9 @@
     {
       "id": "lb-detail3",
       "type": "text",
-      "x": 318,
+      "x": 254.4,
       "y": 264,
-      "width": 164,
+      "width": 131.2,
       "height": 31,
       "text": "SSL termination",
       "fontSize": 14,
@@ -163,32 +163,9 @@
     {
       "id": "arrow-lb-ws1",
       "type": "arrow",
-      "x": 492,
-      "y": 200,
-      "width": 88,
-      "height": -80,
-      "strokeColor": "#64748b",
-      "backgroundColor": "transparent",
-      "fillStyle": "solid",
-      "roughness": 0,
-      "opacity": 100,
-      "points": [
-        [
-          0,
-          0
-        ],
-        [
-          88,
-          -80
-        ]
-      ]
-    },
-    {
-      "id": "arrow-lb-ws2",
-      "type": "arrow",
-      "x": 492,
-      "y": 240,
-      "width": 88,
+      "x": 422.4,
+      "y": 120,
+      "width": 16.0,
       "height": 0,
       "strokeColor": "#64748b",
       "backgroundColor": "transparent",
@@ -201,18 +178,18 @@
           0
         ],
         [
-          88,
+          16.0,
           0
         ]
       ]
     },
     {
-      "id": "arrow-lb-ws3",
+      "id": "arrow-lb-ws2",
       "type": "arrow",
-      "x": 492,
-      "y": 280,
-      "width": 88,
-      "height": 80,
+      "x": 422.4,
+      "y": 240,
+      "width": 16.0,
+      "height": 0,
       "strokeColor": "#64748b",
       "backgroundColor": "transparent",
       "fillStyle": "solid",
@@ -224,17 +201,40 @@
           0
         ],
         [
-          88,
-          80
+          16.0,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "arrow-lb-ws3",
+      "type": "arrow",
+      "x": 422.4,
+      "y": 360,
+      "width": 16.0,
+      "height": 0,
+      "strokeColor": "#64748b",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          16.0,
+          0
         ]
       ]
     },
     {
       "id": "ws1",
       "type": "rectangle",
-      "x": 548,
+      "x": 438.4,
       "y": 72,
-      "width": 224,
+      "width": 179.2,
       "height": 96,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -245,9 +245,9 @@
     {
       "id": "ws1-label",
       "type": "text",
-      "x": 580,
+      "x": 464.0,
       "y": 103,
-      "width": 160,
+      "width": 128.0,
       "height": 32,
       "text": "Web Server 1",
       "fontSize": 15,
@@ -263,9 +263,9 @@
     {
       "id": "ws1-sub",
       "type": "text",
-      "x": 580,
+      "x": 464.0,
       "y": 127,
-      "width": 160,
+      "width": 128.0,
       "height": 31,
       "text": "Stateless app",
       "fontSize": 14,
@@ -281,9 +281,9 @@
     {
       "id": "ws2",
       "type": "rectangle",
-      "x": 548,
+      "x": 438.4,
       "y": 192,
-      "width": 224,
+      "width": 179.2,
       "height": 96,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -294,9 +294,9 @@
     {
       "id": "ws2-label",
       "type": "text",
-      "x": 580,
+      "x": 464.0,
       "y": 223,
-      "width": 160,
+      "width": 128.0,
       "height": 32,
       "text": "Web Server 2",
       "fontSize": 15,
@@ -312,9 +312,9 @@
     {
       "id": "ws2-sub",
       "type": "text",
-      "x": 580,
+      "x": 464.0,
       "y": 247,
-      "width": 160,
+      "width": 128.0,
       "height": 31,
       "text": "Stateless app",
       "fontSize": 14,
@@ -330,9 +330,9 @@
     {
       "id": "ws3",
       "type": "rectangle",
-      "x": 548,
+      "x": 438.4,
       "y": 312,
-      "width": 224,
+      "width": 179.2,
       "height": 96,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -343,9 +343,9 @@
     {
       "id": "ws3-label",
       "type": "text",
-      "x": 580,
+      "x": 464.0,
       "y": 343,
-      "width": 160,
+      "width": 128.0,
       "height": 32,
       "text": "Web Server 3",
       "fontSize": 15,
@@ -361,9 +361,9 @@
     {
       "id": "ws3-sub",
       "type": "text",
-      "x": 580,
+      "x": 464.0,
       "y": 367,
-      "width": 160,
+      "width": 128.0,
       "height": 31,
       "text": "Stateless app",
       "fontSize": 14,
@@ -379,32 +379,9 @@
     {
       "id": "arrow-ws1-db",
       "type": "arrow",
-      "x": 742,
+      "x": 617.6,
       "y": 120,
-      "width": 68,
-      "height": 100,
-      "strokeColor": "#64748b",
-      "backgroundColor": "transparent",
-      "fillStyle": "solid",
-      "roughness": 0,
-      "opacity": 100,
-      "points": [
-        [
-          0,
-          0
-        ],
-        [
-          68,
-          100
-        ]
-      ]
-    },
-    {
-      "id": "arrow-ws2-db",
-      "type": "arrow",
-      "x": 742,
-      "y": 240,
-      "width": 68,
+      "width": 42.4,
       "height": 0,
       "strokeColor": "#64748b",
       "backgroundColor": "transparent",
@@ -417,18 +394,18 @@
           0
         ],
         [
-          68,
+          42.4,
           0
         ]
       ]
     },
     {
-      "id": "arrow-ws3-db",
+      "id": "arrow-ws2-db",
       "type": "arrow",
-      "x": 742,
-      "y": 360,
-      "width": 68,
-      "height": -100,
+      "x": 617.6,
+      "y": 240,
+      "width": 42.4,
+      "height": 0,
       "strokeColor": "#64748b",
       "backgroundColor": "transparent",
       "fillStyle": "solid",
@@ -440,18 +417,41 @@
           0
         ],
         [
-          68,
-          -100
+          42.4,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "arrow-ws3-db",
+      "type": "arrow",
+      "x": 617.6,
+      "y": 360,
+      "width": 42.4,
+      "height": 0,
+      "strokeColor": "#64748b",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          42.4,
+          0
         ]
       ]
     },
     {
       "id": "db",
       "type": "rectangle",
-      "x": 778,
-      "y": 170,
-      "width": 234,
-      "height": 140,
+      "x": 660.0,
+      "y": 100,
+      "width": 187.2,
+      "height": 300,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
       "fillStyle": "solid",
@@ -461,9 +461,9 @@
     {
       "id": "db-label",
       "type": "text",
-      "x": 810,
-      "y": 192,
-      "width": 170,
+      "x": 688.0,
+      "y": 215,
+      "width": 131.2,
       "height": 32,
       "text": "Shared Database",
       "fontSize": 15,
@@ -479,9 +479,9 @@
     {
       "id": "db-sub",
       "type": "text",
-      "x": 810,
-      "y": 218,
-      "width": 170,
+      "x": 688.0,
+      "y": 255,
+      "width": 131.2,
       "height": 31,
       "text": "PostgreSQL primary",
       "fontSize": 14,
@@ -497,9 +497,9 @@
     {
       "id": "session",
       "type": "rectangle",
-      "x": 810,
-      "y": 326,
-      "width": 170,
+      "x": 668.0,
+      "y": 420,
+      "width": 136.0,
       "height": 60,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -510,9 +510,9 @@
     {
       "id": "session-label",
       "type": "text",
-      "x": 810,
-      "y": 334,
-      "width": 170,
+      "x": 668.0,
+      "y": 428,
+      "width": 106.0,
       "height": 31,
       "text": "Session Store",
       "fontSize": 14,
@@ -528,9 +528,9 @@
     {
       "id": "session-sub",
       "type": "text",
-      "x": 810,
-      "y": 355,
-      "width": 164,
+      "x": 668.0,
+      "y": 453,
+      "width": 106.0,
       "height": 31,
       "text": "Redis (sticky sessions)",
       "fontSize": 14,
@@ -546,9 +546,9 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 60,
-      "y": 460,
-      "width": 500,
+      "x": 48.0,
+      "y": 500,
+      "width": 400.0,
       "height": 100,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -559,9 +559,9 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 78,
-      "y": 474,
-      "width": 470,
+      "x": 62.4,
+      "y": 514,
+      "width": 370.0,
       "height": 84,
       "text": "Request 1 → Server1  |  Request 2 → Server2  |  Request 3 → Server3\nGET /health → 200 OK  (health check every 5s)\nFailed server removed from rotation automatically",
       "fontSize": 14,
@@ -577,9 +577,9 @@
     {
       "id": "note-label",
       "type": "text",
-      "x": 580,
-      "y": 460,
-      "width": 400,
+      "x": 464.0,
+      "y": 500,
+      "width": 320.0,
       "height": 112,
       "text": "Benefits:\n- No single point of failure\n- Horizontal scaling: add more servers\n- Zero-downtime deployments (rolling)",
       "fontSize": 14,

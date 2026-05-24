@@ -6,9 +6,9 @@
     {
       "id": "title",
       "type": "text",
-      "x": 480,
+      "x": 384.0,
       "y": 18,
-      "width": 740,
+      "width": 592.0,
       "height": 48,
       "text": "Twitter Feed — Hybrid Fanout (Advanced)",
       "fontSize": 24,
@@ -26,9 +26,9 @@
     {
       "id": "lbl-user",
       "type": "text",
-      "x": 30,
+      "x": 24.0,
       "y": 76,
-      "width": 100,
+      "width": 80.0,
       "height": 31,
       "text": "USER",
       "fontSize": 14,
@@ -46,9 +46,9 @@
     {
       "id": "user-box",
       "type": "rectangle",
-      "x": -3,
+      "x": -2.4,
       "y": 61,
-      "width": 165,
+      "width": 132.0,
       "height": 120,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -61,9 +61,9 @@
     {
       "id": "user-lbl",
       "type": "text",
-      "x": 40,
+      "x": 32.0,
       "y": 110,
-      "width": 101,
+      "width": 80.8,
       "height": 56,
       "text": "User\nPosts Tweet",
       "fontSize": 14,
@@ -81,9 +81,9 @@
     {
       "id": "arr-user-svc",
       "type": "arrow",
-      "x": 132,
+      "x": 105.6,
       "y": 121,
-      "width": 68,
+      "width": 54.4,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -96,11 +96,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          54.4,
           0
         ]
       ]
@@ -108,9 +108,9 @@
     {
       "id": "lbl-tweet-svc",
       "type": "text",
-      "x": 210,
+      "x": 168.0,
       "y": 76,
-      "width": 150,
+      "width": 120.0,
       "height": 31,
       "text": "TWEET SERVICE",
       "fontSize": 14,
@@ -128,9 +128,9 @@
     {
       "id": "tweet-svc-box",
       "type": "rectangle",
-      "x": 210,
+      "x": 168.0,
       "y": 94,
-      "width": 150,
+      "width": 120.0,
       "height": 55,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -143,9 +143,9 @@
     {
       "id": "tweet-svc-lbl",
       "type": "text",
-      "x": 222,
+      "x": 177.6,
       "y": 108,
-      "width": 183,
+      "width": 146.4,
       "height": 84,
       "text": "Tweet Service\nStore tweet\nCheck follower count",
       "fontSize": 14,
@@ -163,9 +163,9 @@
     {
       "id": "arr-svc-check",
       "type": "arrow",
-      "x": 362,
+      "x": 289.6,
       "y": 121,
-      "width": 68,
+      "width": 54.4,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -178,11 +178,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          54.4,
           0
         ]
       ]
@@ -190,9 +190,9 @@
     {
       "id": "lbl-check",
       "type": "text",
-      "x": 440,
+      "x": 352.0,
       "y": 76,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "FOLLOWER COUNT CHECK",
       "fontSize": 14,
@@ -210,9 +210,9 @@
     {
       "id": "check-box",
       "type": "diamond",
-      "x": 402,
+      "x": 321.6,
       "y": 65,
-      "width": 256,
+      "width": 204.8,
       "height": 120,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -225,9 +225,9 @@
     {
       "id": "check-lbl",
       "type": "text",
-      "x": 455,
+      "x": 364.0,
       "y": 113,
-      "width": 192,
+      "width": 153.6,
       "height": 56,
       "text": "followers > 10K?\n(celebrity threshold)",
       "fontSize": 14,
@@ -245,9 +245,9 @@
     {
       "id": "lbl-no",
       "type": "text",
-      "x": 635,
+      "x": 508.0,
       "y": 100,
-      "width": 30,
+      "width": 24.0,
       "height": 31,
       "text": "NO",
       "fontSize": 14,
@@ -265,9 +265,9 @@
     {
       "id": "arr-no-fanout",
       "type": "arrow",
-      "x": 622,
+      "x": 497.6,
       "y": 126,
-      "width": 78,
+      "width": 62.4,
       "height": 0,
       "strokeColor": "#047857",
       "backgroundColor": "transparent",
@@ -280,11 +280,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          78,
+          62.4,
           0
         ]
       ]
@@ -292,9 +292,9 @@
     {
       "id": "lbl-write-fanout",
       "type": "text",
-      "x": 710,
+      "x": 568.0,
       "y": 60,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "WRITE FANOUT PATH",
       "fontSize": 14,
@@ -312,9 +312,9 @@
     {
       "id": "write-fanout-box",
       "type": "rectangle",
-      "x": 695,
+      "x": 556.0,
       "y": 43,
-      "width": 249,
+      "width": 199.2,
       "height": 142,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -327,9 +327,9 @@
     {
       "id": "write-fanout-lbl",
       "type": "text",
-      "x": 722,
+      "x": 577.6,
       "y": 86,
-      "width": 201,
+      "width": 160.8,
       "height": 112,
       "text": "Fanout Worker\nFetch all follower IDs\nLPUSH tweetId to each\ntimeline cache key",
       "fontSize": 14,
@@ -347,9 +347,9 @@
     {
       "id": "lbl-yes",
       "type": "text",
-      "x": 520,
+      "x": 416.0,
       "y": 174,
-      "width": 30,
+      "width": 24.0,
       "height": 31,
       "text": "YES",
       "fontSize": 14,
@@ -367,9 +367,9 @@
     {
       "id": "arr-yes-celeb",
       "type": "arrow",
-      "x": 530,
+      "x": 424.0,
       "y": 166,
-      "width": 0,
+      "width": 0.0,
       "height": 64,
       "strokeColor": "#dc2626",
       "backgroundColor": "transparent",
@@ -382,11 +382,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           64
         ]
       ]
@@ -394,9 +394,9 @@
     {
       "id": "lbl-celeb-path",
       "type": "text",
-      "x": 440,
+      "x": 352.0,
       "y": 242,
-      "width": 220,
+      "width": 176.0,
       "height": 31,
       "text": "CELEBRITY READ PATH",
       "fontSize": 14,
@@ -414,9 +414,9 @@
     {
       "id": "celeb-box",
       "type": "rectangle",
-      "x": 440,
+      "x": 352.0,
       "y": 260,
-      "width": 240,
+      "width": 192.0,
       "height": 70,
       "strokeColor": "#dc2626",
       "backgroundColor": "#fee2e2",
@@ -429,9 +429,9 @@
     {
       "id": "celeb-lbl",
       "type": "text",
-      "x": 452,
+      "x": 361.6,
       "y": 274,
-      "width": 292,
+      "width": 233.6,
       "height": 112,
       "text": "Celebrity Tweet Store\nStore in celebrity cache ONLY\nNo fan-out on write\n(fetched on-demand at read time)",
       "fontSize": 14,
@@ -449,9 +449,9 @@
     {
       "id": "lbl-merge",
       "type": "text",
-      "x": 710,
+      "x": 568.0,
       "y": 242,
-      "width": 260,
+      "width": 208.0,
       "height": 31,
       "text": "TIMELINE READ — MERGE",
       "fontSize": 14,
@@ -469,9 +469,9 @@
     {
       "id": "merge-box",
       "type": "rectangle",
-      "x": 710,
+      "x": 568.0,
       "y": 260,
-      "width": 260,
+      "width": 208.0,
       "height": 70,
       "strokeColor": "#6d28d9",
       "backgroundColor": "#ddd6fe",
@@ -484,9 +484,9 @@
     {
       "id": "merge-lbl",
       "type": "text",
-      "x": 722,
+      "x": 577.6,
       "y": 274,
-      "width": 274,
+      "width": 219.2,
       "height": 112,
       "text": "Timeline Service (read)\n1. LRANGE timeline:userId 0 99\n2. Fetch celebrity tweets\n3. Merge + sort by timestamp",
       "fontSize": 14,
@@ -504,9 +504,9 @@
     {
       "id": "arr-celeb-merge",
       "type": "arrow",
-      "x": 682,
+      "x": 545.6,
       "y": 295,
-      "width": 26,
+      "width": 20.8,
       "height": 0,
       "strokeColor": "#dc2626",
       "backgroundColor": "transparent",
@@ -519,11 +519,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          26,
+          20.8,
           0
         ]
       ]
@@ -531,9 +531,9 @@
     {
       "id": "arr-writefanout-merge",
       "type": "arrow",
-      "x": 820,
+      "x": 656.0,
       "y": 154,
-      "width": 0,
+      "width": 0.0,
       "height": 104,
       "strokeColor": "#047857",
       "backgroundColor": "transparent",
@@ -546,11 +546,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           104
         ]
       ]
@@ -558,9 +558,9 @@
     {
       "id": "lbl-evidence",
       "type": "text",
-      "x": 30,
+      "x": 24.0,
       "y": 380,
-      "width": 420,
+      "width": 336.0,
       "height": 31,
       "text": "REDIS CACHE KEYS",
       "fontSize": 14,
@@ -578,9 +578,9 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 30,
+      "x": 24.0,
       "y": 398,
-      "width": 420,
+      "width": 336.0,
       "height": 100,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -593,9 +593,9 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 44,
+      "x": 35.2,
       "y": 408,
-      "width": 502,
+      "width": 401.6,
       "height": 224,
       "text": "# Regular user timeline (fanout on write)\ntimeline:user123  → [tweetId9, tweetId8, ..., tweetId1]\n\n# Celebrity cache (no fan-out)\nceleb:tweets:elonmusk → sorted set (score=timestamp)\n\n# Follower threshold check\nGET follower_count:userId  → \"10500\" (celebrity!)",
       "fontSize": 14,
@@ -613,9 +613,9 @@
     {
       "id": "lbl-tradeoff",
       "type": "text",
-      "x": 480,
+      "x": 384.0,
       "y": 380,
-      "width": 500,
+      "width": 400.0,
       "height": 31,
       "text": "TRADEOFFS",
       "fontSize": 14,
@@ -633,9 +633,9 @@
     {
       "id": "tradeoff-box",
       "type": "rectangle",
-      "x": 480,
+      "x": 384.0,
       "y": 398,
-      "width": 500,
+      "width": 400.0,
       "height": 100,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -648,9 +648,9 @@
     {
       "id": "tradeoff-text",
       "type": "text",
-      "x": 494,
+      "x": 395.2,
       "y": 408,
-      "width": 629,
+      "width": 503.2,
       "height": 196,
       "text": "Pros: Eliminates celebrity write amplification\n       Regular users: O(1) read (just LRANGE)\n       Celebrities: fewer total writes\n\nCons: Read path more complex (must merge 2 sources)\n       Slight latency increase for reads (celebrity fetch)\n       Threshold boundary (9.9K vs 10K followers) can be inconsistent",
       "fontSize": 14,

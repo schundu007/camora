@@ -6,9 +6,9 @@
     {
       "id": "title",
       "type": "text",
-      "x": 600,
+      "x": 480.0,
       "y": 18,
-      "width": 600,
+      "width": 480.0,
       "height": 48,
       "text": "URL Shortener — Advanced Architecture",
       "fontSize": 24,
@@ -26,9 +26,9 @@
     {
       "id": "lbl-dns",
       "type": "text",
-      "x": 30,
+      "x": 24.0,
       "y": 76,
-      "width": 100,
+      "width": 80.0,
       "height": 31,
       "text": "GLOBAL DNS",
       "fontSize": 14,
@@ -46,9 +46,9 @@
     {
       "id": "dns-box",
       "type": "rectangle",
-      "x": 7,
+      "x": 5.6,
       "y": 63,
-      "width": 156,
+      "width": 124.8,
       "height": 120,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -61,9 +61,9 @@
     {
       "id": "dns-lbl",
       "type": "text",
-      "x": 40,
+      "x": 32.0,
       "y": 112,
-      "width": 92,
+      "width": 73.6,
       "height": 56,
       "text": "Global DNS\nGeoDNS",
       "fontSize": 14,
@@ -81,9 +81,9 @@
     {
       "id": "arr-dns-lb",
       "type": "arrow",
-      "x": 142,
+      "x": 130.4,
       "y": 124,
-      "width": 68,
+      "width": 21.599999999999994,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -96,11 +96,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          21.599999999999994,
           0
         ]
       ]
@@ -108,9 +108,9 @@
     {
       "id": "lbl-lb",
       "type": "text",
-      "x": 220,
+      "x": 176.0,
       "y": 76,
-      "width": 165,
+      "width": 132.0,
       "height": 31,
       "text": "LOAD BALANCER (L7)",
       "fontSize": 14,
@@ -128,9 +128,9 @@
     {
       "id": "lb-box",
       "type": "rectangle",
-      "x": 190,
+      "x": 152.0,
       "y": 63,
-      "width": 210,
+      "width": 168.0,
       "height": 120,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -143,9 +143,9 @@
     {
       "id": "lb-lbl",
       "type": "text",
-      "x": 232,
+      "x": 185.6,
       "y": 110,
-      "width": 146,
+      "width": 116.8,
       "height": 56,
       "text": "L7 Load Balancer\nNGINX / HAProxy",
       "fontSize": 14,
@@ -163,9 +163,9 @@
     {
       "id": "lbl-rl",
       "type": "text",
-      "x": 220,
+      "x": 176.0,
       "y": 176,
-      "width": 150,
+      "width": 120.0,
       "height": 31,
       "text": "RATE LIMITER",
       "fontSize": 14,
@@ -183,9 +183,9 @@
     {
       "id": "rl-box",
       "type": "rectangle",
-      "x": 246,
+      "x": 196.8,
       "y": 199,
-      "width": 229,
+      "width": 183.2,
       "height": 120,
       "strokeColor": "#dc2626",
       "backgroundColor": "#fee2e2",
@@ -198,9 +198,9 @@
     {
       "id": "rl-lbl",
       "type": "text",
-      "x": 232,
+      "x": 185.6,
       "y": 210,
-      "width": 165,
+      "width": 132.0,
       "height": 56,
       "text": "Rate Limiter\n100 req/min per IP",
       "fontSize": 14,
@@ -218,9 +218,9 @@
     {
       "id": "arr-lb-rl",
       "type": "arrow",
-      "x": 295,
-      "y": 156,
-      "width": 0,
+      "x": 236.0,
+      "y": 183,
+      "width": 0.0,
       "height": 36,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -233,11 +233,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           36
         ]
       ]
@@ -245,9 +245,9 @@
     {
       "id": "arr-lb-api",
       "type": "arrow",
-      "x": 372,
+      "x": 320.0,
       "y": 124,
-      "width": 68,
+      "width": 22.399999999999977,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -260,11 +260,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          22.399999999999977,
           0
         ]
       ]
@@ -272,9 +272,9 @@
     {
       "id": "lbl-api",
       "type": "text",
-      "x": 450,
+      "x": 360.0,
       "y": 60,
-      "width": 180,
+      "width": 109.19999999999999,
       "height": 31,
       "text": "API SERVER CLUSTER",
       "fontSize": 14,
@@ -292,9 +292,9 @@
     {
       "id": "api1-box",
       "type": "rectangle",
-      "x": 428,
+      "x": 342.4,
       "y": 53,
-      "width": 174,
+      "width": 139.2,
       "height": 95,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -307,9 +307,9 @@
     {
       "id": "api1-lbl",
       "type": "text",
-      "x": 462,
+      "x": 369.6,
       "y": 93,
-      "width": 110,
+      "width": 88.0,
       "height": 31,
       "text": "API Server 1",
       "fontSize": 14,
@@ -327,9 +327,9 @@
     {
       "id": "api2-box",
       "type": "rectangle",
-      "x": 491,
+      "x": 392.8,
       "y": 164,
-      "width": 174,
+      "width": 139.2,
       "height": 95,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -342,9 +342,9 @@
     {
       "id": "api2-lbl",
       "type": "text",
-      "x": 462,
+      "x": 369.6,
       "y": 153,
-      "width": 110,
+      "width": 88.0,
       "height": 31,
       "text": "API Server 2",
       "fontSize": 14,
@@ -362,9 +362,9 @@
     {
       "id": "api3-box",
       "type": "rectangle",
-      "x": 491,
+      "x": 392.8,
       "y": 275,
-      "width": 158,
+      "width": 126.4,
       "height": 75,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -377,9 +377,9 @@
     {
       "id": "api3-lbl",
       "type": "text",
-      "x": 462,
+      "x": 369.6,
       "y": 213,
-      "width": 110,
+      "width": 88.0,
       "height": 31,
       "text": "API Server N",
       "fontSize": 14,
@@ -397,9 +397,9 @@
     {
       "id": "arr-api-cache",
       "type": "arrow",
-      "x": 582,
+      "x": 481.59999999999997,
       "y": 124,
-      "width": 68,
+      "width": 54.4,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -412,11 +412,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          54.4,
           0
         ]
       ]
@@ -424,9 +424,9 @@
     {
       "id": "lbl-redis",
       "type": "text",
-      "x": 660,
+      "x": 528.0,
       "y": 60,
-      "width": 180,
+      "width": 144.0,
       "height": 31,
       "text": "DISTRIBUTED CACHE",
       "fontSize": 14,
@@ -444,9 +444,9 @@
     {
       "id": "redis-box",
       "type": "rectangle",
-      "x": 660,
+      "x": 528.0,
       "y": 76,
-      "width": 160,
+      "width": 128.0,
       "height": 70,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -459,12 +459,12 @@
     {
       "id": "redis-lbl",
       "type": "text",
-      "x": 672,
+      "x": 537.6,
       "y": 92,
-      "width": 192,
+      "width": 98.0,
       "height": 84,
       "text": "Redis Cluster\n3 shards × 2 replicas\nLRU eviction",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -479,9 +479,9 @@
     {
       "id": "arr-cache-db",
       "type": "arrow",
-      "x": 822,
+      "x": 657.6,
       "y": 111,
-      "width": 68,
+      "width": 31.199999999999932,
       "height": 0,
       "strokeColor": "#047857",
       "backgroundColor": "transparent",
@@ -494,11 +494,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          31.199999999999932,
           0
         ]
       ]
@@ -506,9 +506,9 @@
     {
       "id": "lbl-db",
       "type": "text",
-      "x": 900,
+      "x": 720.0,
       "y": 60,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "PRIMARY DB + REPLICAS",
       "fontSize": 14,
@@ -526,9 +526,9 @@
     {
       "id": "db-primary",
       "type": "rectangle",
-      "x": 861,
+      "x": 688.8,
       "y": 43,
-      "width": 238,
+      "width": 190.4,
       "height": 120,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -541,9 +541,9 @@
     {
       "id": "db-primary-lbl",
       "type": "text",
-      "x": 912,
+      "x": 729.6,
       "y": 93,
-      "width": 174,
+      "width": 139.2,
       "height": 56,
       "text": "Primary DB (writes)\nCassandra / MySQL",
       "fontSize": 14,
@@ -561,9 +561,9 @@
     {
       "id": "db-replica",
       "type": "rectangle",
-      "x": 873,
+      "x": 698.4,
       "y": 168,
-      "width": 213,
+      "width": 170.4,
       "height": 75,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -576,9 +576,9 @@
     {
       "id": "db-replica-lbl",
       "type": "text",
-      "x": 912,
+      "x": 729.6,
       "y": 162,
-      "width": 165,
+      "width": 132.0,
       "height": 31,
       "text": "Read Replicas (×3)",
       "fontSize": 14,
@@ -596,9 +596,9 @@
     {
       "id": "lbl-token",
       "type": "text",
-      "x": 450,
+      "x": 360.0,
       "y": 270,
-      "width": 180,
+      "width": 144.0,
       "height": 31,
       "text": "TOKEN SERVICE",
       "fontSize": 14,
@@ -616,9 +616,9 @@
     {
       "id": "token-box",
       "type": "rectangle",
-      "x": 686,
+      "x": 548.8,
       "y": 388,
-      "width": 180,
+      "width": 144.0,
       "height": 60,
       "strokeColor": "#6d28d9",
       "backgroundColor": "#ddd6fe",
@@ -631,9 +631,9 @@
     {
       "id": "token-lbl",
       "type": "text",
-      "x": 462,
+      "x": 369.6,
       "y": 304,
-      "width": 210,
+      "width": 153.2,
       "height": 84,
       "text": "Token Service\nPre-generated IDs pool\n(Snowflake / ZooKeeper)",
       "fontSize": 14,
@@ -651,10 +651,10 @@
     {
       "id": "arr-api-token",
       "type": "arrow",
-      "x": 515,
-      "y": 248,
-      "width": 0,
-      "height": 38,
+      "x": 412.0,
+      "y": 259,
+      "width": 0.0,
+      "height": 16,
       "strokeColor": "#6d28d9",
       "backgroundColor": "transparent",
       "fillStyle": "solid",
@@ -666,21 +666,21 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
-          38
+          0.0,
+          16
         ]
       ]
     },
     {
       "id": "lbl-analytics",
       "type": "text",
-      "x": 660,
+      "x": 528.0,
       "y": 270,
-      "width": 400,
+      "width": 320.0,
       "height": 31,
       "text": "ANALYTICS PIPELINE",
       "fontSize": 14,
@@ -698,9 +698,9 @@
     {
       "id": "kafka-box",
       "type": "rectangle",
-      "x": 681,
+      "x": 544.8,
       "y": 252,
-      "width": 192,
+      "width": 153.6,
       "height": 120,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -713,9 +713,9 @@
     {
       "id": "kafka-lbl",
       "type": "text",
-      "x": 672,
+      "x": 537.6,
       "y": 305,
-      "width": 128,
+      "width": 102.4,
       "height": 56,
       "text": "Kafka\n(click events)",
       "fontSize": 14,
@@ -733,9 +733,9 @@
     {
       "id": "arr-kafka-flink",
       "type": "arrow",
-      "x": 782,
-      "y": 313,
-      "width": 48,
+      "x": 625.6,
+      "y": 372,
+      "width": 72.79999999999995,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -748,11 +748,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          48,
+          72.79999999999995,
           0
         ]
       ]
@@ -760,9 +760,9 @@
     {
       "id": "flink-box",
       "type": "rectangle",
-      "x": 889,
+      "x": 711.2,
       "y": 252,
-      "width": 183,
+      "width": 146.4,
       "height": 120,
       "strokeColor": "#6d28d9",
       "backgroundColor": "#ddd6fe",
@@ -775,9 +775,9 @@
     {
       "id": "flink-lbl",
       "type": "text",
-      "x": 844,
+      "x": 675.2,
       "y": 305,
-      "width": 119,
+      "width": 95.2,
       "height": 56,
       "text": "Flink\n(stream proc)",
       "fontSize": 14,
@@ -795,9 +795,9 @@
     {
       "id": "arr-flink-ch",
       "type": "arrow",
-      "x": 944,
+      "x": 711.2,
       "y": 313,
-      "width": 48,
+      "width": 82.39999999999998,
       "height": 0,
       "strokeColor": "#6d28d9",
       "backgroundColor": "transparent",
@@ -810,11 +810,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          48,
+          82.39999999999998,
           0
         ]
       ]
@@ -822,9 +822,9 @@
     {
       "id": "ch-box",
       "type": "rectangle",
-      "x": 1088,
+      "x": 870.4,
       "y": 264,
-      "width": 176,
+      "width": 140.8,
       "height": 97,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -837,9 +837,9 @@
     {
       "id": "ch-lbl",
       "type": "text",
-      "x": 1006,
+      "x": 804.8,
       "y": 305,
-      "width": 128,
+      "width": 102.4,
       "height": 56,
       "text": "ClickHouse\n(analytics DB)",
       "fontSize": 14,
@@ -857,7 +857,7 @@
     {
       "id": "arr-api-kafka",
       "type": "arrow",
-      "x": 720,
+      "x": 576.0,
       "y": 248,
       "width": 0,
       "height": 38,
@@ -872,11 +872,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           38
         ]
       ]
@@ -884,9 +884,9 @@
     {
       "id": "lbl-cdn",
       "type": "text",
-      "x": 30,
+      "x": 24.0,
       "y": 270,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "CDN + EDGE REDIRECTS",
       "fontSize": 14,
@@ -904,9 +904,9 @@
     {
       "id": "cdn-box",
       "type": "rectangle",
-      "x": 30,
+      "x": 24.0,
       "y": 288,
-      "width": 200,
+      "width": 160.0,
       "height": 60,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -919,12 +919,12 @@
     {
       "id": "cdn-lbl",
       "type": "text",
-      "x": 42,
+      "x": 33.6,
       "y": 305,
-      "width": 237,
+      "width": 130.0,
       "height": 84,
       "text": "CDN (CloudFront)\nEdge-cached redirects\n< 5ms p99 for popular URLs",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -939,9 +939,9 @@
     {
       "id": "arr-dns-cdn",
       "type": "arrow",
-      "x": 85,
-      "y": 156,
-      "width": 0,
+      "x": 68.0,
+      "y": 183,
+      "width": 0.0,
       "height": 130,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -954,11 +954,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           130
         ]
       ]
@@ -966,9 +966,9 @@
     {
       "id": "evidence-lbl",
       "type": "text",
-      "x": 250,
+      "x": 200.0,
       "y": 378,
-      "width": 300,
+      "width": 240.0,
       "height": 31,
       "text": "API EVIDENCE",
       "fontSize": 14,
@@ -986,9 +986,9 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 250,
+      "x": 200.0,
       "y": 396,
-      "width": 420,
+      "width": 336.0,
       "height": 100,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -1001,12 +1001,12 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 262,
+      "x": 209.6,
       "y": 406,
-      "width": 602,
+      "width": 306.0,
       "height": 168,
       "text": "POST /shorten  { url: \"https://...\", alias: \"mylink\", ttl: 86400 }\n→ { short_url: \"https://short.ly/mylink\", expires_at: \"...\" }\n\nGET /abc123  → 301 Location: <original>\nX-Cache: HIT  X-Edge-Location: us-east-1\nX-Hit-Count: 14829",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -1021,9 +1021,9 @@
     {
       "id": "scale-lbl",
       "type": "text",
-      "x": 700,
+      "x": 560.0,
       "y": 378,
-      "width": 300,
+      "width": 240.0,
       "height": 31,
       "text": "SCALE TARGETS",
       "fontSize": 14,
@@ -1041,9 +1041,9 @@
     {
       "id": "scale-box",
       "type": "rectangle",
-      "x": 882,
+      "x": 705.6,
       "y": 396,
-      "width": 300,
+      "width": 240.0,
       "height": 100,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -1056,12 +1056,12 @@
     {
       "id": "scale-text",
       "type": "text",
-      "x": 712,
+      "x": 569.6,
       "y": 406,
-      "width": 338,
+      "width": 114.0,
       "height": 168,
       "text": "Write: 100K URLs/day = ~1.2 QPS\nRead:  10B redirects/day = ~115K QPS\nStorage: 500 bytes × 100K × 365 × 5yr\n          = ~91 GB\nCache hit ratio target: 99%+\nRedirect p99 latency: < 10ms",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "left",
       "verticalAlign": "top",

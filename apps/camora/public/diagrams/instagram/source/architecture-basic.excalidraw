@@ -6,9 +6,9 @@
     {
       "type": "text",
       "id": "title",
-      "x": 600,
+      "x": 480.0,
       "y": 20,
-      "width": 720,
+      "width": 576.0,
       "height": 64,
       "angle": 0,
       "strokeColor": "#1e40af",
@@ -37,9 +37,9 @@
     {
       "type": "text",
       "id": "label-client",
-      "x": 60,
+      "x": 48.0,
       "y": 80,
-      "width": 120,
+      "width": 96.0,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -68,9 +68,9 @@
     {
       "type": "rectangle",
       "id": "mobile-app",
-      "x": 60,
+      "x": 48.0,
       "y": 105,
-      "width": 224,
+      "width": 179.2,
       "height": 128,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -103,9 +103,9 @@
     {
       "type": "text",
       "id": "mobile-app-label",
-      "x": 60,
+      "x": 48.0,
       "y": 118,
-      "width": 160,
+      "width": 128.0,
       "height": 64,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -134,9 +134,9 @@
     {
       "type": "text",
       "id": "label-api",
-      "x": 300,
+      "x": 240.0,
       "y": 80,
-      "width": 140,
+      "width": 112.0,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -165,9 +165,9 @@
     {
       "type": "rectangle",
       "id": "api-gateway",
-      "x": 300,
+      "x": 240.0,
       "y": 105,
-      "width": 224,
+      "width": 179.2,
       "height": 128,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -208,9 +208,9 @@
     {
       "type": "text",
       "id": "api-gateway-label",
-      "x": 300,
+      "x": 240.0,
       "y": 118,
-      "width": 160,
+      "width": 128.0,
       "height": 64,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -239,9 +239,9 @@
     {
       "type": "arrow",
       "id": "arrow-upload",
-      "x": 220,
-      "y": 140,
-      "width": 80,
+      "x": 176.0,
+      "y": 105,
+      "width": 64.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -260,11 +260,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          80,
+          64.0,
           0
         ]
       ],
@@ -284,9 +284,9 @@
     {
       "type": "text",
       "id": "label-services",
-      "x": 550,
+      "x": 440.0,
       "y": 80,
-      "width": 180,
+      "width": 144.0,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -315,9 +315,9 @@
     {
       "type": "rectangle",
       "id": "upload-svc",
-      "x": 550,
+      "x": 440.0,
       "y": 105,
-      "width": 231,
+      "width": 184.8,
       "height": 128,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -358,9 +358,9 @@
     {
       "type": "text",
       "id": "upload-svc-label",
-      "x": 550,
+      "x": 440.0,
       "y": 118,
-      "width": 167,
+      "width": 133.6,
       "height": 64,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -389,9 +389,9 @@
     {
       "type": "rectangle",
       "id": "feed-svc",
-      "x": 36,
+      "x": 28.8,
       "y": 249,
-      "width": 1258,
+      "width": 1006.4,
       "height": 128,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -432,9 +432,9 @@
     {
       "type": "text",
       "id": "feed-svc-label",
-      "x": 550,
+      "x": 440.0,
       "y": 262,
-      "width": 167,
+      "width": 133.6,
       "height": 64,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -463,9 +463,9 @@
     {
       "type": "arrow",
       "id": "arrow-to-upload-svc",
-      "x": 460,
-      "y": 130,
-      "width": 90,
+      "x": 368.0,
+      "y": 105,
+      "width": 72.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -484,11 +484,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          90,
+          72.0,
           0
         ]
       ],
@@ -508,9 +508,9 @@
     {
       "type": "arrow",
       "id": "arrow-to-feed-svc",
-      "x": 460,
-      "y": 155,
-      "width": 90,
+      "x": 368.0,
+      "y": 105,
+      "width": 0,
       "height": 90,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -529,11 +529,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          90,
+          0.0,
           90
         ]
       ],
@@ -553,9 +553,9 @@
     {
       "type": "text",
       "id": "label-storage",
-      "x": 810,
+      "x": 648.0,
       "y": 80,
-      "width": 160,
+      "width": 128.0,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -584,9 +584,9 @@
     {
       "type": "rectangle",
       "id": "s3",
-      "x": 810,
+      "x": 648.0,
       "y": 105,
-      "width": 224,
+      "width": 179.2,
       "height": 128,
       "angle": 0,
       "strokeColor": "#047857",
@@ -623,9 +623,9 @@
     {
       "type": "text",
       "id": "s3-label",
-      "x": 810,
+      "x": 648.0,
       "y": 118,
-      "width": 160,
+      "width": 128.0,
       "height": 64,
       "angle": 0,
       "strokeColor": "#065f46",
@@ -654,9 +654,9 @@
     {
       "type": "rectangle",
       "id": "posts-db",
-      "x": 1310,
+      "x": 1048.0,
       "y": 249,
-      "width": 224,
+      "width": 179.2,
       "height": 128,
       "angle": 0,
       "strokeColor": "#047857",
@@ -693,9 +693,9 @@
     {
       "type": "text",
       "id": "posts-db-label",
-      "x": 1310,
+      "x": 1048.0,
       "y": 262,
-      "width": 160,
+      "width": 128.0,
       "height": 64,
       "angle": 0,
       "strokeColor": "#065f46",
@@ -724,9 +724,9 @@
     {
       "type": "rectangle",
       "id": "social-db",
-      "x": 810,
+      "x": 648.0,
       "y": 393,
-      "width": 224,
+      "width": 179.2,
       "height": 128,
       "angle": 0,
       "strokeColor": "#047857",
@@ -759,9 +759,9 @@
     {
       "type": "text",
       "id": "social-db-label",
-      "x": 810,
+      "x": 648.0,
       "y": 406,
-      "width": 160,
+      "width": 128.0,
       "height": 64,
       "angle": 0,
       "strokeColor": "#065f46",
@@ -790,9 +790,9 @@
     {
       "type": "arrow",
       "id": "arrow-to-s3",
-      "x": 710,
-      "y": 130,
-      "width": 100,
+      "x": 568.0,
+      "y": 105,
+      "width": 80.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#047857",
@@ -811,11 +811,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          100,
+          80.0,
           0
         ]
       ],
@@ -835,9 +835,9 @@
     {
       "type": "arrow",
       "id": "arrow-to-posts-db",
-      "x": 710,
-      "y": 155,
-      "width": 100,
+      "x": 568.0,
+      "y": 105,
+      "width": 0,
       "height": 90,
       "angle": 0,
       "strokeColor": "#047857",
@@ -856,11 +856,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          100,
+          0.0,
           90
         ]
       ],
@@ -880,9 +880,9 @@
     {
       "type": "arrow",
       "id": "arrow-feed-to-posts",
-      "x": 710,
+      "x": 568.0,
       "y": 245,
-      "width": 100,
+      "width": 80.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#047857",
@@ -901,11 +901,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          100,
+          80.0,
           0
         ]
       ],
@@ -925,10 +925,10 @@
     {
       "type": "arrow",
       "id": "arrow-feed-to-social",
-      "x": 710,
-      "y": 265,
-      "width": 100,
-      "height": 85,
+      "x": 568.0,
+      "y": 249,
+      "width": 0,
+      "height": 128,
       "angle": 0,
       "strokeColor": "#047857",
       "backgroundColor": "transparent",
@@ -946,12 +946,12 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          100,
-          85
+          0.0,
+          128
         ]
       ],
       "startBinding": {
@@ -970,9 +970,9 @@
     {
       "type": "text",
       "id": "label-cdn",
-      "x": 1060,
+      "x": 848.0,
       "y": 80,
-      "width": 140,
+      "width": 112.0,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -1001,9 +1001,9 @@
     {
       "type": "rectangle",
       "id": "cdn",
-      "x": 1060,
+      "x": 848.0,
       "y": 105,
-      "width": 242,
+      "width": 193.6,
       "height": 128,
       "angle": 0,
       "strokeColor": "#b45309",
@@ -1040,9 +1040,9 @@
     {
       "type": "text",
       "id": "cdn-label",
-      "x": 1060,
+      "x": 848.0,
       "y": 118,
-      "width": 178,
+      "width": 142.4,
       "height": 64,
       "angle": 0,
       "strokeColor": "#78350f",
@@ -1071,9 +1071,9 @@
     {
       "type": "arrow",
       "id": "arrow-s3-to-cdn",
-      "x": 970,
-      "y": 140,
-      "width": 90,
+      "x": 776.0,
+      "y": 105,
+      "width": 72.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#b45309",
@@ -1092,11 +1092,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          90,
+          72.0,
           0
         ]
       ],
@@ -1116,10 +1116,10 @@
     {
       "type": "arrow",
       "id": "arrow-cdn-to-client",
-      "x": 1140,
-      "y": 175,
-      "width": 0,
-      "height": 80,
+      "x": 912.0,
+      "y": 233,
+      "width": 0.0,
+      "height": 16,
       "angle": 0,
       "strokeColor": "#b45309",
       "backgroundColor": "transparent",
@@ -1142,12 +1142,12 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
-          80
+          0.0,
+          16
         ]
       ],
       "startBinding": {
@@ -1162,9 +1162,9 @@
     {
       "type": "text",
       "id": "arrow-cdn-label",
-      "x": 1145,
+      "x": 916.0,
       "y": 200,
-      "width": 146,
+      "width": 116.8,
       "height": 31,
       "angle": 0,
       "strokeColor": "#b45309",
@@ -1193,9 +1193,9 @@
     {
       "type": "rectangle",
       "id": "evidence-box",
-      "x": 60,
+      "x": 48.0,
       "y": 660,
-      "width": 1184,
+      "width": 947.2,
       "height": 394,
       "angle": 0,
       "strokeColor": "#22c55e",
@@ -1224,9 +1224,9 @@
     {
       "type": "text",
       "id": "evidence-text",
-      "x": 80,
+      "x": 64.0,
       "y": 675,
-      "width": 1120,
+      "width": 896.0,
       "height": 330,
       "angle": 0,
       "strokeColor": "#22c55e",
@@ -1255,9 +1255,9 @@
     {
       "type": "text",
       "id": "schema-label",
-      "x": 60,
+      "x": 48.0,
       "y": 610,
-      "width": 967,
+      "width": 773.6,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -1286,9 +1286,9 @@
     {
       "type": "text",
       "id": "upload-flow-label",
-      "x": 60,
+      "x": 48.0,
       "y": 310,
-      "width": 1194,
+      "width": 955.2,
       "height": 31,
       "angle": 0,
       "strokeColor": "#475569",
@@ -1317,9 +1317,9 @@
     {
       "type": "text",
       "id": "feed-flow-label",
-      "x": 60,
+      "x": 48.0,
       "y": 340,
-      "width": 1058,
+      "width": 846.4,
       "height": 31,
       "angle": 0,
       "strokeColor": "#475569",

@@ -6,9 +6,9 @@
     {
       "type": "text",
       "id": "t_title",
-      "x": 40,
+      "x": 32.0,
       "y": 16,
-      "width": 542,
+      "width": 433.6,
       "height": 52,
       "text": "Notification System Architecture",
       "originalText": "Notification System Architecture",
@@ -38,9 +38,9 @@
     {
       "type": "text",
       "id": "t_subtitle",
-      "x": 40,
+      "x": 32.0,
       "y": 50,
-      "width": 629,
+      "width": 503.2,
       "height": 31,
       "text": "Async multi-channel delivery — priority queue + dedup + rate limiting",
       "originalText": "Async multi-channel delivery — priority queue + dedup + rate limiting",
@@ -70,9 +70,9 @@
     {
       "type": "line",
       "id": "divider1",
-      "x": 40,
+      "x": 32.0,
       "y": 78,
-      "width": 1060,
+      "width": 848.0,
       "height": 0,
       "strokeColor": "#cbd5e1",
       "backgroundColor": "transparent",
@@ -92,11 +92,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          1060,
+          848.0,
           0
         ]
       ]
@@ -104,9 +104,9 @@
     {
       "type": "text",
       "id": "lbl_triggers",
-      "x": 40,
+      "x": 32.0,
       "y": 88,
-      "width": 150,
+      "width": 120.0,
       "height": 31,
       "text": "EVENT TRIGGERS",
       "originalText": "EVENT TRIGGERS",
@@ -136,9 +136,9 @@
     {
       "type": "text",
       "id": "lbl_ingest",
-      "x": 250,
+      "x": 200.0,
       "y": 88,
-      "width": 130,
+      "width": 104.0,
       "height": 31,
       "text": "INGEST",
       "originalText": "INGEST",
@@ -168,9 +168,9 @@
     {
       "type": "text",
       "id": "lbl_queue",
-      "x": 430,
+      "x": 344.0,
       "y": 88,
-      "width": 150,
+      "width": 120.0,
       "height": 31,
       "text": "PRIORITY QUEUE",
       "originalText": "PRIORITY QUEUE",
@@ -200,9 +200,9 @@
     {
       "type": "text",
       "id": "lbl_router",
-      "x": 635,
+      "x": 508.0,
       "y": 88,
-      "width": 100,
+      "width": 80.0,
       "height": 31,
       "text": "ROUTER",
       "originalText": "ROUTER",
@@ -232,9 +232,9 @@
     {
       "type": "text",
       "id": "lbl_workers",
-      "x": 800,
+      "x": 640.0,
       "y": 88,
-      "width": 137,
+      "width": 109.6,
       "height": 31,
       "text": "CHANNEL WORKERS",
       "originalText": "CHANNEL WORKERS",
@@ -264,9 +264,9 @@
     {
       "type": "text",
       "id": "lbl_providers",
-      "x": 980,
+      "x": 784.0,
       "y": 88,
-      "width": 110,
+      "width": 88.0,
       "height": 31,
       "text": "PROVIDERS",
       "originalText": "PROVIDERS",
@@ -296,9 +296,9 @@
     {
       "type": "rectangle",
       "id": "r_api_event",
-      "x": 40,
+      "x": 32.0,
       "y": 112,
-      "width": 189,
+      "width": 151.2,
       "height": 120,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -332,9 +332,9 @@
     {
       "type": "text",
       "id": "t_api_event",
-      "x": 55,
+      "x": 44.0,
       "y": 125,
-      "width": 125,
+      "width": 100.0,
       "height": 56,
       "text": "API Event\nPOST /notify",
       "originalText": "API Event\nPOST /notify",
@@ -364,9 +364,9 @@
     {
       "type": "rectangle",
       "id": "r_batch",
-      "x": 40,
+      "x": 32.0,
       "y": 248,
-      "width": 189,
+      "width": 151.2,
       "height": 120,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -400,9 +400,9 @@
     {
       "type": "text",
       "id": "t_batch",
-      "x": 55,
+      "x": 44.0,
       "y": 261,
-      "width": 125,
+      "width": 100.0,
       "height": 56,
       "text": "Scheduled Job\nCron / Digest",
       "originalText": "Scheduled Job\nCron / Digest",
@@ -432,9 +432,9 @@
     {
       "type": "rectangle",
       "id": "r_user",
-      "x": 40,
+      "x": 32.0,
       "y": 384,
-      "width": 192,
+      "width": 153.6,
       "height": 120,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -468,9 +468,9 @@
     {
       "type": "text",
       "id": "t_user",
-      "x": 55,
+      "x": 44.0,
       "y": 397,
-      "width": 128,
+      "width": 102.4,
       "height": 56,
       "text": "User Action\nLike / Comment",
       "originalText": "User Action\nLike / Comment",
@@ -500,9 +500,9 @@
     {
       "type": "rectangle",
       "id": "r_gateway",
-      "x": 248,
+      "x": 198.4,
       "y": 172,
-      "width": 201,
+      "width": 160.8,
       "height": 148,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -548,9 +548,9 @@
     {
       "type": "text",
       "id": "t_gateway",
-      "x": 258,
+      "x": 206.4,
       "y": 195,
-      "width": 137,
+      "width": 109.6,
       "height": 84,
       "text": "API Gateway\nAuth · Validate\nThrottle",
       "originalText": "API Gateway\nAuth · Validate\nThrottle",
@@ -580,9 +580,9 @@
     {
       "type": "arrow",
       "id": "arr_api_gw",
-      "x": 196,
-      "y": 138,
-      "width": 52,
+      "x": 156.8,
+      "y": 112,
+      "width": 0,
       "height": 80,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -602,11 +602,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          52,
+          0.0,
           80
         ]
       ],
@@ -626,9 +626,9 @@
     {
       "type": "arrow",
       "id": "arr_batch_gw",
-      "x": 196,
-      "y": 218,
-      "width": 52,
+      "x": 156.8,
+      "y": 232,
+      "width": 41.6,
       "height": 0,
       "strokeColor": "#b45309",
       "backgroundColor": "transparent",
@@ -648,11 +648,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          52,
+          41.6,
           0
         ]
       ],
@@ -672,9 +672,9 @@
     {
       "type": "arrow",
       "id": "arr_user_gw",
-      "x": 196,
+      "x": 183.2,
       "y": 298,
-      "width": 52,
+      "width": 0,
       "height": -80,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -694,11 +694,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          52,
+          0.0,
           -80
         ]
       ],
@@ -718,9 +718,9 @@
     {
       "type": "rectangle",
       "id": "r_ratelimit",
-      "x": 465,
+      "x": 372.0,
       "y": 112,
-      "width": 247,
+      "width": 197.6,
       "height": 120,
       "strokeColor": "#dc2626",
       "backgroundColor": "#fee2e2",
@@ -758,9 +758,9 @@
     {
       "type": "text",
       "id": "t_ratelimit",
-      "x": 475,
+      "x": 380.0,
       "y": 125,
-      "width": 183,
+      "width": 146.4,
       "height": 56,
       "text": "Rate Limiter\nRedis · Token Bucket",
       "originalText": "Rate Limiter\nRedis · Token Bucket",
@@ -790,9 +790,9 @@
     {
       "type": "arrow",
       "id": "arr_gw_rl",
-      "x": 396,
+      "x": 359.20000000000005,
       "y": 218,
-      "width": 52,
+      "width": 0,
       "height": -68,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -812,11 +812,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          52,
+          0.0,
           -68
         ]
       ],
@@ -836,9 +836,9 @@
     {
       "type": "rectangle",
       "id": "r_queue",
-      "x": 465,
+      "x": 372.0,
       "y": 248,
-      "width": 201,
+      "width": 160.8,
       "height": 176,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -876,9 +876,9 @@
     {
       "type": "text",
       "id": "t_queue",
-      "x": 475,
+      "x": 380.0,
       "y": 268,
-      "width": 137,
+      "width": 109.6,
       "height": 112,
       "text": "Priority Queue\n── HIGH (OTP)\n── MED (Alert)\n── LOW (Digest)",
       "originalText": "Priority Queue\n── HIGH (OTP)\n── MED (Alert)\n── LOW (Digest)",
@@ -908,10 +908,10 @@
     {
       "type": "arrow",
       "id": "arr_rl_q",
-      "x": 522,
+      "x": 372.0,
       "y": 165,
       "width": 0,
-      "height": 30,
+      "height": 67,
       "strokeColor": "#dc2626",
       "backgroundColor": "transparent",
       "fillStyle": "solid",
@@ -930,12 +930,12 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
-          30
+          0.0,
+          67
         ]
       ],
       "startBinding": {
@@ -954,9 +954,9 @@
     {
       "type": "rectangle",
       "id": "r_dedup",
-      "x": 656,
+      "x": 524.8,
       "y": 440,
-      "width": 256,
+      "width": 204.8,
       "height": 120,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -986,9 +986,9 @@
     {
       "type": "text",
       "id": "t_dedup",
-      "x": 666,
+      "x": 532.8,
       "y": 453,
-      "width": 192,
+      "width": 153.6,
       "height": 56,
       "text": "Dedup Cache\nBloom Filter · TTL 1h",
       "originalText": "Dedup Cache\nBloom Filter · TTL 1h",
@@ -1018,9 +1018,9 @@
     {
       "type": "line",
       "id": "line_q_dedup",
-      "x": 522,
+      "x": 417.6,
       "y": 317,
-      "width": 0,
+      "width": 0.0,
       "height": 34,
       "strokeColor": "#64748b",
       "backgroundColor": "transparent",
@@ -1040,11 +1040,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           34
         ]
       ]
@@ -1052,9 +1052,9 @@
     {
       "type": "text",
       "id": "t_dedup_note",
-      "x": 530,
+      "x": 424.0,
       "y": 326,
-      "width": 101,
+      "width": 80.8,
       "height": 31,
       "text": "dedup check",
       "originalText": "dedup check",
@@ -1084,9 +1084,9 @@
     {
       "type": "rectangle",
       "id": "r_router",
-      "x": 728,
+      "x": 582.4,
       "y": 196,
-      "width": 192,
+      "width": 153.6,
       "height": 148,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#60a5fa",
@@ -1132,9 +1132,9 @@
     {
       "type": "text",
       "id": "t_router",
-      "x": 738,
+      "x": 590.4,
       "y": 226,
-      "width": 128,
+      "width": 102.4,
       "height": 84,
       "text": "Notification\nRouter\nChannel Select",
       "originalText": "Notification\nRouter\nChannel Select",
@@ -1164,9 +1164,9 @@
     {
       "type": "arrow",
       "id": "arr_q_router",
-      "x": 596,
-      "y": 256,
-      "width": 52,
+      "x": 476.8,
+      "y": 248,
+      "width": 41.599999999999966,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -1186,11 +1186,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          52,
+          41.599999999999966,
           0
         ]
       ],
@@ -1210,9 +1210,9 @@
     {
       "type": "rectangle",
       "id": "r_push",
-      "x": 936,
+      "x": 748.8,
       "y": 128,
-      "width": 184,
+      "width": 147.2,
       "height": 95,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -1250,9 +1250,9 @@
     {
       "type": "text",
       "id": "t_push",
-      "x": 946,
+      "x": 756.8,
       "y": 141,
-      "width": 120,
+      "width": 96.0,
       "height": 31,
       "text": "Push Worker",
       "originalText": "Push Worker",
@@ -1282,9 +1282,9 @@
     {
       "type": "rectangle",
       "id": "r_email",
-      "x": 936,
+      "x": 748.8,
       "y": 230,
-      "width": 184,
+      "width": 147.2,
       "height": 95,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -1322,9 +1322,9 @@
     {
       "type": "text",
       "id": "t_email",
-      "x": 946,
+      "x": 756.8,
       "y": 243,
-      "width": 120,
+      "width": 96.0,
       "height": 31,
       "text": "Email Worker",
       "originalText": "Email Worker",
@@ -1354,9 +1354,9 @@
     {
       "type": "rectangle",
       "id": "r_sms",
-      "x": 928,
+      "x": 742.4,
       "y": 360,
-      "width": 184,
+      "width": 147.2,
       "height": 95,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -1394,9 +1394,9 @@
     {
       "type": "text",
       "id": "t_sms",
-      "x": 938,
+      "x": 750.4,
       "y": 373,
-      "width": 120,
+      "width": 96.0,
       "height": 31,
       "text": "SMS Worker",
       "originalText": "SMS Worker",
@@ -1426,9 +1426,9 @@
     {
       "type": "arrow",
       "id": "arr_r_push",
-      "x": 788,
-      "y": 236,
-      "width": 52,
+      "x": 630.4,
+      "y": 196,
+      "width": 0,
       "height": -82,
       "strokeColor": "#047857",
       "backgroundColor": "transparent",
@@ -1448,11 +1448,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          52,
+          0.0,
           -82
         ]
       ],
@@ -1472,9 +1472,9 @@
     {
       "type": "arrow",
       "id": "arr_r_email",
-      "x": 788,
+      "x": 582.4,
       "y": 256,
-      "width": 52,
+      "width": 89.60000000000002,
       "height": 0,
       "strokeColor": "#047857",
       "backgroundColor": "transparent",
@@ -1494,11 +1494,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          52,
+          89.60000000000002,
           0
         ]
       ],
@@ -1518,9 +1518,9 @@
     {
       "type": "arrow",
       "id": "arr_r_sms",
-      "x": 788,
+      "x": 582.4,
       "y": 276,
-      "width": 52,
+      "width": 0,
       "height": 82,
       "strokeColor": "#047857",
       "backgroundColor": "transparent",
@@ -1540,11 +1540,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          52,
+          0.0,
           82
         ]
       ],
@@ -1564,9 +1564,9 @@
     {
       "type": "rectangle",
       "id": "r_prov_push",
-      "x": 1136,
+      "x": 908.8,
       "y": 128,
-      "width": 164,
+      "width": 131.2,
       "height": 95,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#93c5fd",
@@ -1600,9 +1600,9 @@
     {
       "type": "text",
       "id": "t_prov_push",
-      "x": 1146,
+      "x": 916.8,
       "y": 141,
-      "width": 100,
+      "width": 80.0,
       "height": 31,
       "text": "FCM / APNs",
       "originalText": "FCM / APNs",
@@ -1632,9 +1632,9 @@
     {
       "type": "rectangle",
       "id": "r_prov_email",
-      "x": 1136,
+      "x": 908.8,
       "y": 230,
-      "width": 192,
+      "width": 153.6,
       "height": 95,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#93c5fd",
@@ -1668,9 +1668,9 @@
     {
       "type": "text",
       "id": "t_prov_email",
-      "x": 1146,
+      "x": 916.8,
       "y": 243,
-      "width": 128,
+      "width": 102.4,
       "height": 31,
       "text": "SendGrid / SES",
       "originalText": "SendGrid / SES",
@@ -1700,9 +1700,9 @@
     {
       "type": "rectangle",
       "id": "r_prov_sms",
-      "x": 1128,
+      "x": 902.4,
       "y": 332,
-      "width": 174,
+      "width": 139.2,
       "height": 95,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#93c5fd",
@@ -1736,9 +1736,9 @@
     {
       "type": "text",
       "id": "t_prov_sms",
-      "x": 1138,
+      "x": 910.4,
       "y": 345,
-      "width": 110,
+      "width": 88.0,
       "height": 31,
       "text": "Twilio / SNS",
       "originalText": "Twilio / SNS",
@@ -1768,9 +1768,9 @@
     {
       "type": "arrow",
       "id": "arr_push_prov",
-      "x": 980,
-      "y": 154,
-      "width": 50,
+      "x": 784.0,
+      "y": 128,
+      "width": 40.0,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -1790,11 +1790,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          50,
+          40.0,
           0
         ]
       ],
@@ -1814,9 +1814,9 @@
     {
       "type": "arrow",
       "id": "arr_email_prov",
-      "x": 980,
-      "y": 256,
-      "width": 50,
+      "x": 784.0,
+      "y": 230,
+      "width": 40.0,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -1836,11 +1836,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          50,
+          40.0,
           0
         ]
       ],
@@ -1860,9 +1860,9 @@
     {
       "type": "arrow",
       "id": "arr_sms_prov",
-      "x": 980,
+      "x": 784.0,
       "y": 358,
-      "width": 50,
+      "width": 40.0,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -1882,11 +1882,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          50,
+          40.0,
           0
         ]
       ],
@@ -1906,9 +1906,9 @@
     {
       "type": "rectangle",
       "id": "r_payload",
-      "x": 248,
+      "x": 198.4,
       "y": 451,
-      "width": 392,
+      "width": 313.6,
       "height": 176,
       "strokeColor": "#334155",
       "backgroundColor": "#1e293b",
@@ -1938,9 +1938,9 @@
     {
       "type": "text",
       "id": "t_payload",
-      "x": 264,
+      "x": 211.2,
       "y": 463,
-      "width": 328,
+      "width": 262.4,
       "height": 112,
       "text": "POST /notify\n{ \"to\": \"user_123\",  \"type\": \"OTP\",\n  \"channel\": [\"push\",\"sms\"],\n  \"priority\": \"HIGH\",  \"ttl\": 300 }",
       "originalText": "POST /notify\n{ \"to\": \"user_123\",  \"type\": \"OTP\",\n  \"channel\": [\"push\",\"sms\"],\n  \"priority\": \"HIGH\",  \"ttl\": 300 }",
@@ -1970,9 +1970,9 @@
     {
       "type": "text",
       "id": "t_payload_label",
-      "x": 40,
+      "x": 32.0,
       "y": 408,
-      "width": 247,
+      "width": 123.6,
       "height": 31,
       "text": "Notification payload (JSON)",
       "originalText": "Notification payload (JSON)",
@@ -2002,9 +2002,9 @@
     {
       "type": "rectangle",
       "id": "r_retry",
-      "x": 1128,
+      "x": 902.4,
       "y": 434,
-      "width": 484,
+      "width": 387.2,
       "height": 120,
       "strokeColor": "#6d28d9",
       "backgroundColor": "#ddd6fe",
@@ -2034,9 +2034,9 @@
     {
       "type": "text",
       "id": "t_retry",
-      "x": 1138,
+      "x": 910.4,
       "y": 449,
-      "width": 420,
+      "width": 336.0,
       "height": 56,
       "text": "Retry & DLQ  ·  Exponential backoff (1s→2s→4s)\nFailed → Dead Letter Queue → Alert oncall",
       "originalText": "Retry & DLQ  ·  Exponential backoff (1s→2s→4s)\nFailed → Dead Letter Queue → Alert oncall",

@@ -6,9 +6,9 @@
     {
       "id": "title-text",
       "type": "text",
-      "x": 550,
+      "x": 440.0,
       "y": 20,
-      "width": 700,
+      "width": 560.0,
       "height": 48,
       "text": "Google Docs — Basic Architecture",
       "fontSize": 24,
@@ -26,9 +26,9 @@
     {
       "id": "label-client",
       "type": "text",
-      "x": 40,
+      "x": 32.0,
       "y": 78,
-      "width": 130,
+      "width": 104.0,
       "height": 31,
       "text": "CLIENT",
       "fontSize": 14,
@@ -46,9 +46,9 @@
     {
       "id": "client-box",
       "type": "rectangle",
-      "x": 0,
+      "x": 0.0,
       "y": 64,
-      "width": 210,
+      "width": 168.0,
       "height": 148,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -61,9 +61,9 @@
     {
       "id": "client-label",
       "type": "text",
-      "x": 50,
+      "x": 40.0,
       "y": 120,
-      "width": 146,
+      "width": 116.8,
       "height": 84,
       "text": "Browser Client\nLocal doc buffer\nSend/recv ops",
       "fontSize": 14,
@@ -81,9 +81,9 @@
     {
       "id": "arrow-client-ws",
       "type": "arrow",
-      "x": 172,
+      "x": 168.0,
       "y": 138,
-      "width": 78,
+      "width": 62.4,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -96,11 +96,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          78,
+          62.4,
           0
         ]
       ]
@@ -108,9 +108,9 @@
     {
       "id": "label-ws",
       "type": "text",
-      "x": 260,
+      "x": 208.0,
       "y": 78,
-      "width": 160,
+      "width": 128.0,
       "height": 31,
       "text": "WEBSOCKET SERVER",
       "fontSize": 14,
@@ -128,9 +128,9 @@
     {
       "id": "ws-box",
       "type": "rectangle",
-      "x": 260,
+      "x": 208.0,
       "y": 98,
-      "width": 160,
+      "width": 128.0,
       "height": 80,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -143,12 +143,12 @@
     {
       "id": "ws-label",
       "type": "text",
-      "x": 270,
+      "x": 216.0,
       "y": 114,
-      "width": 201,
+      "width": 98.0,
       "height": 112,
       "text": "WebSocket Server\nPersistent connections\nBroadcast ops to\ncollaborators",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -163,9 +163,9 @@
     {
       "id": "arrow-ws-docsvc",
       "type": "arrow",
-      "x": 422,
+      "x": 337.6,
       "y": 138,
-      "width": 78,
+      "width": 62.4,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -178,11 +178,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          78,
+          62.4,
           0
         ]
       ]
@@ -190,9 +190,9 @@
     {
       "id": "label-docsvc",
       "type": "text",
-      "x": 510,
+      "x": 408.0,
       "y": 78,
-      "width": 160,
+      "width": 128.0,
       "height": 31,
       "text": "DOCUMENT SERVICE",
       "fontSize": 14,
@@ -210,9 +210,9 @@
     {
       "id": "docsvc-box",
       "type": "rectangle",
-      "x": 510,
+      "x": 408.0,
       "y": 98,
-      "width": 160,
+      "width": 128.0,
       "height": 80,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -225,12 +225,12 @@
     {
       "id": "docsvc-label",
       "type": "text",
-      "x": 520,
+      "x": 416.0,
       "y": 118,
-      "width": 165,
+      "width": 98.0,
       "height": 112,
       "text": "Document Service\nValidate ops\nApply to doc state\nRoute to OT engine",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -245,9 +245,9 @@
     {
       "id": "arrow-docsvc-ot",
       "type": "arrow",
-      "x": 672,
+      "x": 537.6,
       "y": 138,
-      "width": 78,
+      "width": 50.39999999999998,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -260,11 +260,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          78,
+          50.39999999999998,
           0
         ]
       ]
@@ -272,9 +272,9 @@
     {
       "id": "label-ot",
       "type": "text",
-      "x": 760,
+      "x": 608.0,
       "y": 78,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "OT ENGINE",
       "fontSize": 14,
@@ -292,9 +292,9 @@
     {
       "id": "ot-box",
       "type": "rectangle",
-      "x": 735,
+      "x": 588.0,
       "y": 67,
-      "width": 249,
+      "width": 199.2,
       "height": 142,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -307,9 +307,9 @@
     {
       "id": "ot-label",
       "type": "text",
-      "x": 770,
+      "x": 616.0,
       "y": 110,
-      "width": 201,
+      "width": 160.8,
       "height": 112,
       "text": "Operational Transform\nMerge concurrent edits\nTransform ops against\nrevision history",
       "fontSize": 14,
@@ -327,9 +327,9 @@
     {
       "id": "arrow-ot-docstore",
       "type": "arrow",
-      "x": 860,
-      "y": 180,
-      "width": 0,
+      "x": 688.0,
+      "y": 209,
+      "width": 0.0,
       "height": 82,
       "strokeColor": "#b45309",
       "backgroundColor": "transparent",
@@ -342,11 +342,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           82
         ]
       ]
@@ -354,9 +354,9 @@
     {
       "id": "label-docstore",
       "type": "text",
-      "x": 760,
+      "x": 608.0,
       "y": 274,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "DOCUMENT STORE",
       "fontSize": 14,
@@ -374,9 +374,9 @@
     {
       "id": "docstore-box",
       "type": "rectangle",
-      "x": 760,
+      "x": 608.0,
       "y": 294,
-      "width": 200,
+      "width": 160.0,
       "height": 90,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -389,12 +389,12 @@
     {
       "id": "docstore-label",
       "type": "text",
-      "x": 770,
+      "x": 616.0,
       "y": 310,
-      "width": 237,
+      "width": 130.0,
       "height": 112,
       "text": "Document Store\ncontent (full snapshot)\nop_log (revision history)\nversion number (monotonic)",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -409,9 +409,9 @@
     {
       "id": "label-ot-explain",
       "type": "text",
-      "x": 440,
+      "x": 352.0,
       "y": 274,
-      "width": 290,
+      "width": 232.0,
       "height": 31,
       "text": "OT OPERATION EXAMPLE",
       "fontSize": 14,
@@ -429,9 +429,9 @@
     {
       "id": "ot-explain-box",
       "type": "rectangle",
-      "x": 440,
+      "x": 352.0,
       "y": 294,
-      "width": 290,
+      "width": 232.0,
       "height": 120,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -444,12 +444,12 @@
     {
       "id": "ot-explain-text",
       "type": "text",
-      "x": 452,
+      "x": 361.6,
       "y": 304,
-      "width": 365,
+      "width": 202.0,
       "height": 224,
       "text": "User A: {op:\"insert\",pos:5,text:\"hello\",\n  userId:123, revision:42}\nUser B: {op:\"insert\",pos:3,text:\"world\",\n  userId:456, revision:42}\n\nOT transforms B's pos=3 against A's op:\nResult: B inserts at pos=3, A at pos=10\n(positions adjusted, no data lost)",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -464,9 +464,9 @@
     {
       "id": "label-evidence",
       "type": "text",
-      "x": 40,
+      "x": 32.0,
       "y": 274,
-      "width": 380,
+      "width": 304.0,
       "height": 31,
       "text": "WEBSOCKET MESSAGE FLOW",
       "fontSize": 14,
@@ -484,9 +484,9 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 40,
+      "x": 32.0,
       "y": 294,
-      "width": 380,
+      "width": 304.0,
       "height": 120,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -499,12 +499,12 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 52,
+      "x": 41.6,
       "y": 304,
-      "width": 374,
+      "width": 274.0,
       "height": 336,
       "text": "Client → Server (WebSocket):\n{type:\"op\", docId:\"abc\", revision:42,\n op:{type:\"insert\",pos:5,text:\"hello\"}}\n\nServer → All Clients (broadcast):\n{type:\"ack\", revision:43,\n op:{type:\"insert\",pos:5,text:\"hello\"},\n transformedFrom:42}\n\n1. Client sends op + its current revision\n2. OT transforms against concurrent ops\n3. Server acks new revision, broadcasts",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

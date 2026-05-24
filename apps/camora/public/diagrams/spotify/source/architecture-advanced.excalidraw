@@ -6,9 +6,9 @@
     {
       "type": "text",
       "id": "title",
-      "x": 500,
+      "x": 400.0,
       "y": 20,
-      "width": 900,
+      "width": 720.0,
       "height": 56,
       "angle": 0,
       "strokeColor": "#1e40af",
@@ -37,9 +37,9 @@
     {
       "type": "text",
       "id": "lbl-core",
-      "x": 60,
+      "x": 48.0,
       "y": 80,
-      "width": 300,
+      "width": 240.0,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -68,9 +68,9 @@
     {
       "type": "text",
       "id": "lbl-ml",
-      "x": 680,
+      "x": 544.0,
       "y": 80,
-      "width": 300,
+      "width": 240.0,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -99,9 +99,9 @@
     {
       "type": "rectangle",
       "id": "client",
-      "x": 60,
+      "x": 48.0,
       "y": 110,
-      "width": 204,
+      "width": 163.2,
       "height": 120,
       "angle": 0,
       "strokeColor": "#c2410c",
@@ -131,9 +131,9 @@
     {
       "type": "text",
       "id": "client-lbl",
-      "x": 65,
+      "x": 52.0,
       "y": 132,
-      "width": 140,
+      "width": 112.0,
       "height": 56,
       "angle": 0,
       "strokeColor": "#7c2d12",
@@ -162,9 +162,9 @@
     {
       "type": "rectangle",
       "id": "api-gw",
-      "x": 280,
+      "x": 224.0,
       "y": 110,
-      "width": 229,
+      "width": 183.2,
       "height": 120,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -206,9 +206,9 @@
     {
       "type": "text",
       "id": "api-gw-lbl",
-      "x": 285,
+      "x": 228.0,
       "y": 132,
-      "width": 165,
+      "width": 132.0,
       "height": 56,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -237,9 +237,9 @@
     {
       "type": "arrow",
       "id": "sa1",
-      "x": 210,
-      "y": 145,
-      "width": 70,
+      "x": 168.0,
+      "y": 110,
+      "width": 56.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -258,11 +258,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          70,
+          56.0,
           0
         ]
       ],
@@ -282,9 +282,9 @@
     {
       "type": "rectangle",
       "id": "music-svc",
-      "x": 530,
+      "x": 424.0,
       "y": 110,
-      "width": 214,
+      "width": 171.2,
       "height": 120,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -314,9 +314,9 @@
     {
       "type": "text",
       "id": "music-svc-lbl",
-      "x": 535,
+      "x": 428.0,
       "y": 128,
-      "width": 150,
+      "width": 120.0,
       "height": 56,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -345,9 +345,9 @@
     {
       "type": "arrow",
       "id": "sa2",
-      "x": 440,
-      "y": 140,
-      "width": 90,
+      "x": 352.0,
+      "y": 110,
+      "width": 72.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -366,11 +366,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          90,
+          72.0,
           0
         ]
       ],
@@ -390,9 +390,9 @@
     {
       "type": "rectangle",
       "id": "podcast-svc",
-      "x": 530,
+      "x": 424.0,
       "y": 246,
-      "width": 247,
+      "width": 197.6,
       "height": 120,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -422,9 +422,9 @@
     {
       "type": "text",
       "id": "podcast-svc-lbl",
-      "x": 535,
+      "x": 428.0,
       "y": 264,
-      "width": 183,
+      "width": 146.4,
       "height": 56,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -453,9 +453,9 @@
     {
       "type": "arrow",
       "id": "sa3",
-      "x": 440,
-      "y": 160,
-      "width": 65,
+      "x": 352.0,
+      "y": 110,
+      "width": 52.0,
       "height": 80,
       "angle": 0,
       "strokeColor": "#374151",
@@ -474,15 +474,15 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           80
         ],
         [
-          90,
+          72.0,
           80
         ]
       ],
@@ -502,9 +502,9 @@
     {
       "type": "rectangle",
       "id": "social-graph",
-      "x": 1052,
+      "x": 841.6,
       "y": 494,
-      "width": 229,
+      "width": 183.2,
       "height": 148,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -534,9 +534,9 @@
     {
       "type": "text",
       "id": "social-graph-lbl",
-      "x": 1057,
+      "x": 845.6,
       "y": 512,
-      "width": 165,
+      "width": 132.0,
       "height": 84,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -565,9 +565,9 @@
     {
       "type": "arrow",
       "id": "sa4",
-      "x": 440,
-      "y": 160,
-      "width": 55,
+      "x": 352.0,
+      "y": 110,
+      "width": 44.0,
       "height": 185,
       "angle": 0,
       "strokeColor": "#374151",
@@ -586,15 +586,15 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           185
         ],
         [
-          90,
+          72.0,
           185
         ]
       ],
@@ -614,9 +614,9 @@
     {
       "type": "rectangle",
       "id": "collab-filter",
-      "x": 777,
+      "x": 621.6,
       "y": 110,
-      "width": 301,
+      "width": 240.8,
       "height": 176,
       "angle": 0,
       "strokeColor": "#b45309",
@@ -646,9 +646,9 @@
     {
       "type": "text",
       "id": "collab-lbl",
-      "x": 782,
+      "x": 625.6,
       "y": 128,
-      "width": 237,
+      "width": 189.6,
       "height": 112,
       "angle": 0,
       "strokeColor": "#92400e",
@@ -677,9 +677,9 @@
     {
       "type": "arrow",
       "id": "sa5",
-      "x": 690,
-      "y": 140,
-      "width": 10,
+      "x": 552.0,
+      "y": 110,
+      "width": 8.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -698,11 +698,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          10,
+          8.0,
           0
         ]
       ],
@@ -722,9 +722,9 @@
     {
       "type": "rectangle",
       "id": "analytics-pipeline",
-      "x": 1052,
+      "x": 841.6,
       "y": 302,
-      "width": 274,
+      "width": 219.2,
       "height": 176,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -758,9 +758,9 @@
     {
       "type": "text",
       "id": "analytics-lbl",
-      "x": 1057,
+      "x": 845.6,
       "y": 320,
-      "width": 210,
+      "width": 168.0,
       "height": 112,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -789,9 +789,9 @@
     {
       "type": "arrow",
       "id": "sa6",
-      "x": 690,
-      "y": 345,
-      "width": 10,
+      "x": 552.0,
+      "y": 366,
+      "width": 8.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -810,11 +810,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          10,
+          8.0,
           0
         ]
       ],
@@ -834,10 +834,10 @@
     {
       "type": "arrow",
       "id": "sa7",
-      "x": 810,
+      "x": 621.6,
       "y": 210,
       "width": 0,
-      "height": 50,
+      "height": 76,
       "angle": 0,
       "strokeColor": "#374151",
       "backgroundColor": "transparent",
@@ -855,12 +855,12 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
-          50
+          0.0,
+          76
         ]
       ],
       "startBinding": {
@@ -879,9 +879,9 @@
     {
       "type": "rectangle",
       "id": "discover-weekly",
-      "x": 1078,
+      "x": 862.4,
       "y": 110,
-      "width": 292,
+      "width": 233.6,
       "height": 176,
       "angle": 0,
       "strokeColor": "#047857",
@@ -910,9 +910,9 @@
     {
       "type": "text",
       "id": "discover-lbl",
-      "x": 1083,
+      "x": 866.4,
       "y": 128,
-      "width": 228,
+      "width": 182.4,
       "height": 112,
       "angle": 0,
       "strokeColor": "#065f46",
@@ -941,9 +941,9 @@
     {
       "type": "arrow",
       "id": "sa8",
-      "x": 920,
-      "y": 155,
-      "width": 80,
+      "x": 736.0,
+      "y": 110,
+      "width": 64.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#374151",
@@ -962,11 +962,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          80,
+          64.0,
           0
         ]
       ],
@@ -986,9 +986,9 @@
     {
       "type": "rectangle",
       "id": "evidence",
-      "x": 60,
+      "x": 48.0,
       "y": 430,
-      "width": 976,
+      "width": 780.8,
       "height": 148,
       "angle": 0,
       "strokeColor": "#22c55e",
@@ -1014,9 +1014,9 @@
     {
       "type": "text",
       "id": "evidence-lbl",
-      "x": 70,
+      "x": 56.0,
       "y": 440,
-      "width": 912,
+      "width": 729.6,
       "height": 84,
       "angle": 0,
       "strokeColor": "#22c55e",
