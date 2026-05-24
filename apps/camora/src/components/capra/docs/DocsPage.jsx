@@ -1497,6 +1497,48 @@ export default function DocsPage({ onBack }) {
                     </div>
                   )}
 
+                  {activePage === 'sre' && !selectedTopic && (
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="shield" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Site Reliability Engineering</h2>
+                            <div className="flex flex-wrap gap-2">
+                              {['SLOs & SLAs', 'Error Budgets', 'Incident Response', 'Observability', 'On-Call', 'Capacity Planning'].map(tag => (
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activePage === 'devops' && !selectedTopic && (
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="gitMerge" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>DevOps</h2>
+                            <div className="flex flex-wrap gap-2">
+                              {['CI/CD', 'Infrastructure as Code', 'Containers & Kubernetes', 'Monitoring', 'Cloud Native', 'DevSecOps'].map(tag => (
+                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Gradient Divider */}
                   {activePage !== 'overview' && !(activePage === 'databases' && sqlPlaygroundOpen) && <div className="h-px bg-[var(--border)] mb-6" />}
 
@@ -2946,11 +2988,6 @@ export default function DocsPage({ onBack }) {
               {activePage === 'sre' && (
                 <>
                   <div className="mb-6">
-                    <SectionHero
-                      eyebrow="Production Reliability"
-                      title="Site Reliability Engineering"
-                      className="mb-4"
-                    />
                     <div className="space-y-3">
                     {sreCategories.map((category) => {
                       const categoryTopics = filteredTopics.filter(t => sreTopicCategoryMap[t.id] === category.id);
@@ -3024,11 +3061,6 @@ export default function DocsPage({ onBack }) {
               {activePage === 'devops' && (
                 <>
                   <div className="mb-6">
-                    <SectionHero
-                      eyebrow="Build, Ship, Run"
-                      title="DevOps"
-                      className="mb-4"
-                    />
                     <div className="space-y-3">
                     {devopsCategories.map((category) => {
                       const categoryTopics = filteredTopics.filter(t => devopsTopicCategoryMap[t.id] === category.id);
