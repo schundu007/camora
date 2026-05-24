@@ -82,11 +82,29 @@ function htmlHarness() {
     const elements = data.elements || [];
     const appState = data.appState || {};
     const files = data.files || {};
-    // Compute viewport to include every element + a generous padding
-    // so labels that overflow their stored width are still captured.
+
+    // Build set of container IDs that have bound text so we don't exclude them.
+    const boundContainerIds = new Set(
+      elements
+        .filter(e => !e.isDeleted && e.containerId)
+        .map(e => e.containerId)
+    );
+
+    // Compute viewport from elements with visible content only.
+    // Blank shapes (rectangle/ellipse/diamond) with no bound text, no inline
+    // text, and neither a visible fill nor stroke are layout artifacts that
+    // expand the canvas into whitespace — skip them for bounds only.
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const el of elements) {
       if (el.isDeleted) continue;
+      const isShape = el.type === 'rectangle' || el.type === 'ellipse' || el.type === 'diamond';
+      if (isShape) {
+        const hasBoundText = boundContainerIds.has(el.id);
+        const hasInlineText = el.text && String(el.text).trim();
+        const hasVisibleFill = el.backgroundColor && el.backgroundColor !== 'transparent';
+        const hasVisibleStroke = el.strokeColor && el.strokeColor !== 'transparent';
+        if (!hasBoundText && !hasInlineText && !hasVisibleFill && !hasVisibleStroke) continue;
+      }
       minX = Math.min(minX, el.x);
       minY = Math.min(minY, el.y);
       maxX = Math.max(maxX, el.x + (el.width || 0));
