@@ -310,7 +310,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         />
       </div>
 
-      <div className="px-3 sm:px-4 md:px-6 pt-2 md:pt-3 pb-2 md:pb-3 max-w-5xl mx-auto w-full">
+      <div className="px-3 sm:px-4 md:px-6 pt-2 md:pt-3 pb-6 max-w-5xl mx-auto w-full" style={{ borderBottom: '1px solid var(--border)' }}>
 
       {/* Launch Now */}
       <div className="mb-8">
