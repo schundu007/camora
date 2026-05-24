@@ -6,9 +6,9 @@
     {
       "id": "title",
       "type": "text",
-      "x": 350,
+      "x": 280.0,
       "y": 20,
-      "width": 540,
+      "width": 432.0,
       "height": 56,
       "text": "REST API Architecture",
       "fontSize": 28,
@@ -24,9 +24,9 @@
     {
       "id": "client",
       "type": "rectangle",
-      "x": 18,
+      "x": 14.4,
       "y": 179,
-      "width": 214,
+      "width": 171.2,
       "height": 101,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -37,9 +37,9 @@
     {
       "id": "client-label",
       "type": "text",
-      "x": 50,
+      "x": 40.0,
       "y": 210,
-      "width": 150,
+      "width": 120.0,
       "height": 37,
       "text": "Client",
       "fontSize": 18,
@@ -55,9 +55,9 @@
     {
       "id": "client-sub",
       "type": "text",
-      "x": 50,
+      "x": 40.0,
       "y": 238,
-      "width": 150,
+      "width": 120.0,
       "height": 31,
       "text": "Browser / Mobile",
       "fontSize": 14,
@@ -73,9 +73,9 @@
     {
       "id": "arrow-client-ctrl",
       "type": "arrow",
-      "x": 202,
+      "x": 185.6,
       "y": 230,
-      "width": 88,
+      "width": 26.400000000000006,
       "height": 0,
       "strokeColor": "#64748b",
       "backgroundColor": "transparent",
@@ -84,11 +84,11 @@
       "opacity": 100,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          88,
+          26.400000000000006,
           0
         ]
       ]
@@ -96,9 +96,9 @@
     {
       "id": "ctrl",
       "type": "rectangle",
-      "x": 265,
+      "x": 212.0,
       "y": 150,
-      "width": 229,
+      "width": 183.2,
       "height": 160,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -109,9 +109,9 @@
     {
       "id": "ctrl-label",
       "type": "text",
-      "x": 290,
+      "x": 232.0,
       "y": 168,
-      "width": 180,
+      "width": 144.0,
       "height": 34,
       "text": "Controller",
       "fontSize": 16,
@@ -127,9 +127,9 @@
     {
       "id": "ctrl-d1",
       "type": "text",
-      "x": 298,
+      "x": 238.4,
       "y": 196,
-      "width": 165,
+      "width": 132.0,
       "height": 31,
       "text": "Parse request body",
       "fontSize": 14,
@@ -145,9 +145,9 @@
     {
       "id": "ctrl-d2",
       "type": "text",
-      "x": 298,
+      "x": 238.4,
       "y": 218,
-      "width": 164,
+      "width": 131.2,
       "height": 31,
       "text": "Validate input",
       "fontSize": 14,
@@ -163,9 +163,9 @@
     {
       "id": "ctrl-d3",
       "type": "text",
-      "x": 298,
+      "x": 238.4,
       "y": 240,
-      "width": 165,
+      "width": 132.0,
       "height": 31,
       "text": "Return HTTP status",
       "fontSize": 14,
@@ -181,9 +181,9 @@
     {
       "id": "ctrl-d4",
       "type": "text",
-      "x": 298,
+      "x": 238.4,
       "y": 262,
-      "width": 192,
+      "width": 153.6,
       "height": 31,
       "text": "200 / 201 / 400 / 404",
       "fontSize": 14,
@@ -199,9 +199,9 @@
     {
       "id": "arrow-ctrl-svc",
       "type": "arrow",
-      "x": 472,
+      "x": 395.2,
       "y": 230,
-      "width": 78,
+      "width": 25.600000000000023,
       "height": 0,
       "strokeColor": "#64748b",
       "backgroundColor": "transparent",
@@ -210,11 +210,11 @@
       "opacity": 100,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          78,
+          25.600000000000023,
           0
         ]
       ]
@@ -222,9 +222,9 @@
     {
       "id": "svc",
       "type": "rectangle",
-      "x": 526,
+      "x": 420.8,
       "y": 150,
-      "width": 228,
+      "width": 182.4,
       "height": 160,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -235,9 +235,9 @@
     {
       "id": "svc-label",
       "type": "text",
-      "x": 550,
+      "x": 440.0,
       "y": 168,
-      "width": 180,
+      "width": 144.0,
       "height": 34,
       "text": "Service Layer",
       "fontSize": 16,
@@ -253,9 +253,9 @@
     {
       "id": "svc-d1",
       "type": "text",
-      "x": 558,
+      "x": 446.4,
       "y": 196,
-      "width": 164,
+      "width": 131.2,
       "height": 31,
       "text": "Business logic",
       "fontSize": 14,
@@ -271,9 +271,9 @@
     {
       "id": "svc-d2",
       "type": "text",
-      "x": 558,
+      "x": 446.4,
       "y": 218,
-      "width": 164,
+      "width": 131.2,
       "height": 31,
       "text": "Auth checks",
       "fontSize": 14,
@@ -289,9 +289,9 @@
     {
       "id": "svc-d3",
       "type": "text",
-      "x": 558,
+      "x": 446.4,
       "y": 240,
-      "width": 174,
+      "width": 139.2,
       "height": 31,
       "text": "Data transformation",
       "fontSize": 14,
@@ -307,9 +307,9 @@
     {
       "id": "svc-d4",
       "type": "text",
-      "x": 558,
+      "x": 446.4,
       "y": 262,
-      "width": 165,
+      "width": 132.0,
       "height": 31,
       "text": "Orchestrates calls",
       "fontSize": 14,
@@ -325,9 +325,9 @@
     {
       "id": "arrow-svc-repo",
       "type": "arrow",
-      "x": 732,
+      "x": 603.2,
       "y": 230,
-      "width": 78,
+      "width": 20.799999999999955,
       "height": 0,
       "strokeColor": "#64748b",
       "backgroundColor": "transparent",
@@ -336,11 +336,11 @@
       "opacity": 100,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          78,
+          20.799999999999955,
           0
         ]
       ]
@@ -348,9 +348,9 @@
     {
       "id": "repo",
       "type": "rectangle",
-      "x": 780,
+      "x": 624.0,
       "y": 150,
-      "width": 219,
+      "width": 175.2,
       "height": 160,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -361,9 +361,9 @@
     {
       "id": "repo-label",
       "type": "text",
-      "x": 810,
+      "x": 648.0,
       "y": 168,
-      "width": 160,
+      "width": 128.0,
       "height": 34,
       "text": "Repository",
       "fontSize": 16,
@@ -379,9 +379,9 @@
     {
       "id": "repo-d1",
       "type": "text",
-      "x": 818,
+      "x": 654.4,
       "y": 196,
-      "width": 155,
+      "width": 124.0,
       "height": 31,
       "text": "Data access layer",
       "fontSize": 14,
@@ -397,9 +397,9 @@
     {
       "id": "repo-d2",
       "type": "text",
-      "x": 818,
+      "x": 654.4,
       "y": 218,
-      "width": 155,
+      "width": 124.0,
       "height": 31,
       "text": "SQL / ORM queries",
       "fontSize": 14,
@@ -415,9 +415,9 @@
     {
       "id": "repo-d3",
       "type": "text",
-      "x": 818,
+      "x": 654.4,
       "y": 240,
-      "width": 146,
+      "width": 116.8,
       "height": 31,
       "text": "Hides DB details",
       "fontSize": 14,
@@ -433,9 +433,9 @@
     {
       "id": "arrow-repo-db",
       "type": "arrow",
-      "x": 972,
+      "x": 799.2,
       "y": 230,
-      "width": 68,
+      "width": 7.199999999999932,
       "height": 0,
       "strokeColor": "#64748b",
       "backgroundColor": "transparent",
@@ -444,11 +444,11 @@
       "opacity": 100,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          7.199999999999932,
           0
         ]
       ]
@@ -456,9 +456,9 @@
     {
       "id": "db",
       "type": "rectangle",
-      "x": 1008,
+      "x": 806.4,
       "y": 170,
-      "width": 214,
+      "width": 171.2,
       "height": 120,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -469,9 +469,9 @@
     {
       "id": "db-label",
       "type": "text",
-      "x": 1040,
+      "x": 832.0,
       "y": 198,
-      "width": 150,
+      "width": 120.0,
       "height": 34,
       "text": "Database",
       "fontSize": 16,
@@ -487,9 +487,9 @@
     {
       "id": "db-sub",
       "type": "text",
-      "x": 1040,
+      "x": 832.0,
       "y": 228,
-      "width": 150,
+      "width": 120.0,
       "height": 31,
       "text": "PostgreSQL",
       "fontSize": 14,
@@ -505,9 +505,9 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 36,
+      "x": 28.8,
       "y": 358,
-      "width": 728,
+      "width": 582.4,
       "height": 204,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -518,9 +518,9 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 68,
+      "x": 54.4,
       "y": 412,
-      "width": 664,
+      "width": 531.2,
       "height": 140,
       "text": "GET    /users         → 200 OK  [ list of users ]\nPOST   /users         → 201 Created  { id, name, email }\nGET    /users/{id}    → 200 OK  { id, name } | 404 Not Found\nPUT    /users/{id}    → 200 OK  { updated } | 400 Bad Request\nDELETE /users/{id}    → 204 No Content | 500 Internal Error",
       "fontSize": 14,
@@ -536,9 +536,9 @@
     {
       "id": "notes-box",
       "type": "text",
-      "x": 780,
+      "x": 624.0,
       "y": 400,
-      "width": 420,
+      "width": 336.0,
       "height": 168,
       "text": "REST Constraints:\n- Stateless (no server-side session)\n- Uniform interface (HTTP verbs)\n- Resource-based URLs (/nouns)\n- Idempotent: GET, PUT, DELETE\n- Non-idempotent: POST",
       "fontSize": 14,

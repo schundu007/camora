@@ -6,9 +6,9 @@
     {
       "id": "title-text",
       "type": "text",
-      "x": 500,
+      "x": 400.0,
       "y": 20,
-      "width": 760,
+      "width": 608.0,
       "height": 48,
       "text": "Google Docs — Advanced Architecture",
       "fontSize": 24,
@@ -26,9 +26,9 @@
     {
       "id": "label-client",
       "type": "text",
-      "x": 40,
+      "x": 32.0,
       "y": 78,
-      "width": 150,
+      "width": 120.0,
       "height": 31,
       "text": "CLIENT",
       "fontSize": 14,
@@ -46,9 +46,9 @@
     {
       "id": "client-box",
       "type": "rectangle",
-      "x": 40,
+      "x": 32.0,
       "y": 98,
-      "width": 150,
+      "width": 120.0,
       "height": 80,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -61,12 +61,12 @@
     {
       "id": "client-label",
       "type": "text",
-      "x": 50,
+      "x": 40.0,
       "y": 114,
-      "width": 146,
+      "width": 90.0,
       "height": 112,
       "text": "Browser Client\nCRDT local state\nOffline queue\nPresence cursors",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -81,9 +81,9 @@
     {
       "id": "arrow-client-ws",
       "type": "arrow",
-      "x": 192,
+      "x": 153.6,
       "y": 138,
-      "width": 68,
+      "width": 54.4,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -96,11 +96,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          54.4,
           0
         ]
       ]
@@ -108,9 +108,9 @@
     {
       "id": "label-ws",
       "type": "text",
-      "x": 270,
+      "x": 216.0,
       "y": 78,
-      "width": 160,
+      "width": 128.0,
       "height": 31,
       "text": "COLLAB GATEWAY",
       "fontSize": 14,
@@ -128,9 +128,9 @@
     {
       "id": "ws-box",
       "type": "rectangle",
-      "x": 270,
+      "x": 216.0,
       "y": 98,
-      "width": 160,
+      "width": 128.0,
       "height": 80,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -143,12 +143,12 @@
     {
       "id": "ws-label",
       "type": "text",
-      "x": 280,
+      "x": 224.0,
       "y": 114,
-      "width": 165,
+      "width": 98.0,
       "height": 112,
       "text": "Collab Gateway\nWebSocket mux\nSession routing\nPresence heartbeat",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -163,9 +163,9 @@
     {
       "id": "arrow-ws-crdt",
       "type": "arrow",
-      "x": 432,
+      "x": 345.6,
       "y": 138,
-      "width": 68,
+      "width": 41.599999999999966,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -178,11 +178,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          41.599999999999966,
           0
         ]
       ]
@@ -190,9 +190,9 @@
     {
       "id": "label-crdt",
       "type": "text",
-      "x": 510,
+      "x": 408.0,
       "y": 78,
-      "width": 170,
+      "width": 136.0,
       "height": 31,
       "text": "CRDT ENGINE",
       "fontSize": 14,
@@ -210,9 +210,9 @@
     {
       "id": "crdt-box",
       "type": "rectangle",
-      "x": 484,
+      "x": 387.2,
       "y": 67,
-      "width": 222,
+      "width": 177.6,
       "height": 142,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -225,9 +225,9 @@
     {
       "id": "crdt-label",
       "type": "text",
-      "x": 520,
+      "x": 416.0,
       "y": 112,
-      "width": 174,
+      "width": 139.2,
       "height": 112,
       "text": "CRDT Engine\nConflict-free merge\nOffline edits sync\nCausal ordering",
       "fontSize": 14,
@@ -245,9 +245,9 @@
     {
       "id": "arrow-crdt-presence",
       "type": "arrow",
-      "x": 682,
+      "x": 564.8,
       "y": 138,
-      "width": 68,
+      "width": 54.4,
       "height": 0,
       "strokeColor": "#b45309",
       "backgroundColor": "transparent",
@@ -260,11 +260,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          54.4,
           0
         ]
       ]
@@ -272,9 +272,9 @@
     {
       "id": "label-presence",
       "type": "text",
-      "x": 760,
+      "x": 608.0,
       "y": 78,
-      "width": 180,
+      "width": 144.0,
       "height": 31,
       "text": "PRESENCE SERVICE",
       "fontSize": 14,
@@ -292,9 +292,9 @@
     {
       "id": "presence-box",
       "type": "rectangle",
-      "x": 760,
+      "x": 608.0,
       "y": 98,
-      "width": 180,
+      "width": 144.0,
       "height": 80,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -307,12 +307,12 @@
     {
       "id": "presence-label",
       "type": "text",
-      "x": 770,
+      "x": 616.0,
       "y": 112,
-      "width": 210,
+      "width": 114.0,
       "height": 112,
       "text": "Presence Service\nCursor positions\nUser avatars in doc\nLive collaborators list",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -327,9 +327,9 @@
     {
       "id": "arrow-crdt-revhist",
       "type": "arrow",
-      "x": 595,
-      "y": 180,
-      "width": 0,
+      "x": 476.0,
+      "y": 209,
+      "width": 0.0,
       "height": 82,
       "strokeColor": "#b45309",
       "backgroundColor": "transparent",
@@ -342,11 +342,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           82
         ]
       ]
@@ -354,9 +354,9 @@
     {
       "id": "label-revhist",
       "type": "text",
-      "x": 460,
+      "x": 368.0,
       "y": 274,
-      "width": 270,
+      "width": 216.0,
       "height": 31,
       "text": "REVISION HISTORY + COMMENTS",
       "fontSize": 14,
@@ -374,9 +374,9 @@
     {
       "id": "revhist-box",
       "type": "rectangle",
-      "x": 460,
+      "x": 368.0,
       "y": 294,
-      "width": 270,
+      "width": 216.0,
       "height": 90,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -389,12 +389,12 @@
     {
       "id": "revhist-label",
       "type": "text",
-      "x": 470,
+      "x": 376.0,
       "y": 308,
-      "width": 338,
+      "width": 186.0,
       "height": 112,
       "text": "Revision History (git-like snapshots)\nNamed versions + timestamps\nComment threads on text ranges\nSuggested edits (track changes)",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -409,9 +409,9 @@
     {
       "id": "label-acl",
       "type": "text",
-      "x": 760,
+      "x": 608.0,
       "y": 274,
-      "width": 180,
+      "width": 144.0,
       "height": 31,
       "text": "PERMISSIONS (ACL)",
       "fontSize": 14,
@@ -429,9 +429,9 @@
     {
       "id": "acl-box",
       "type": "rectangle",
-      "x": 760,
+      "x": 608.0,
       "y": 294,
-      "width": 180,
+      "width": 144.0,
       "height": 90,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -444,12 +444,12 @@
     {
       "id": "acl-label",
       "type": "text",
-      "x": 770,
+      "x": 616.0,
       "y": 308,
-      "width": 210,
+      "width": 114.0,
       "height": 112,
       "text": "Permissions ACL\nOwner / Editor / Viewer\nLink sharing (public)\nDomain-restricted",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -464,9 +464,9 @@
     {
       "id": "label-evidence",
       "type": "text",
-      "x": 40,
+      "x": 32.0,
       "y": 274,
-      "width": 400,
+      "width": 320.0,
       "height": 31,
       "text": "CRDT + PRESENCE EVIDENCE",
       "fontSize": 14,
@@ -484,9 +484,9 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 40,
+      "x": 32.0,
       "y": 294,
-      "width": 400,
+      "width": 320.0,
       "height": 130,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -499,12 +499,12 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 52,
+      "x": 41.6,
       "y": 304,
-      "width": 438,
+      "width": 290.0,
       "height": 308,
       "text": "CRDT insert (offline-safe):\n{type:\"insert\", id:\"node_xyz\",\n after:\"node_abc\", text:\"hello\",\n clock:{userId:123, seq:7}}\n\nPresence update (broadcast <100ms):\n{userId:456, cursor:{line:12, col:5},\n selection:{from:10, to:20},\n color:\"#f87171\"}\n\nOffline queue merges on reconnect, no conflicts.",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

@@ -6,9 +6,9 @@
     {
       "id": "title-text",
       "type": "text",
-      "x": 500,
+      "x": 400.0,
       "y": 20,
-      "width": 760,
+      "width": 608.0,
       "height": 48,
       "text": "Typeahead/Autocomplete — Basic Architecture",
       "fontSize": 24,
@@ -26,9 +26,9 @@
     {
       "id": "label-user",
       "type": "text",
-      "x": 40,
+      "x": 32.0,
       "y": 78,
-      "width": 130,
+      "width": 104.0,
       "height": 31,
       "text": "USER INPUT",
       "fontSize": 14,
@@ -46,9 +46,9 @@
     {
       "id": "user-box",
       "type": "rectangle",
-      "x": 4,
+      "x": 3.2,
       "y": 64,
-      "width": 201,
+      "width": 160.8,
       "height": 148,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -61,9 +61,9 @@
     {
       "id": "user-label",
       "type": "text",
-      "x": 50,
+      "x": 40.0,
       "y": 118,
-      "width": 137,
+      "width": 109.6,
       "height": 84,
       "text": "User types \"ap\"\nSearch box\nDebounce 150ms",
       "fontSize": 14,
@@ -81,9 +81,9 @@
     {
       "id": "arrow-user-trie",
       "type": "arrow",
-      "x": 172,
+      "x": 164.0,
       "y": 138,
-      "width": 78,
+      "width": 62.4,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -96,11 +96,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          78,
+          62.4,
           0
         ]
       ]
@@ -108,9 +108,9 @@
     {
       "id": "label-trie",
       "type": "text",
-      "x": 260,
+      "x": 208.0,
       "y": 78,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "TRIE DATA STRUCTURE",
       "fontSize": 14,
@@ -128,9 +128,9 @@
     {
       "id": "trie-box",
       "type": "rectangle",
-      "x": 260,
+      "x": 208.0,
       "y": 98,
-      "width": 200,
+      "width": 160.0,
       "height": 80,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -143,12 +143,12 @@
     {
       "id": "trie-label",
       "type": "text",
-      "x": 270,
+      "x": 216.0,
       "y": 112,
-      "width": 237,
+      "width": 130.0,
       "height": 112,
       "text": "Prefix Trie\nO(k) lookup (k=prefix len)\na→p→[app, apple, april]\nTop-k stored at each node",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -163,9 +163,9 @@
     {
       "id": "arrow-trie-topk",
       "type": "arrow",
-      "x": 462,
+      "x": 369.6,
       "y": 138,
-      "width": 78,
+      "width": 62.4,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -178,11 +178,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          78,
+          62.4,
           0
         ]
       ]
@@ -190,9 +190,9 @@
     {
       "id": "label-topk",
       "type": "text",
-      "x": 550,
+      "x": 440.0,
       "y": 78,
-      "width": 180,
+      "width": 144.0,
       "height": 31,
       "text": "TOP-K SUGGESTIONS",
       "fontSize": 14,
@@ -210,9 +210,9 @@
     {
       "id": "topk-box",
       "type": "rectangle",
-      "x": 550,
+      "x": 440.0,
       "y": 98,
-      "width": 180,
+      "width": 144.0,
       "height": 80,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -225,12 +225,12 @@
     {
       "id": "topk-label",
       "type": "text",
-      "x": 560,
+      "x": 448.0,
       "y": 112,
-      "width": 174,
+      "width": 114.0,
       "height": 140,
       "text": "Top-5 Suggestions\nSorted by frequency\napple (9.2M/day)\napplication (4.1M)\napp (3.8M)",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -245,9 +245,9 @@
     {
       "id": "arrow-topk-freq",
       "type": "arrow",
-      "x": 730,
+      "x": 584.0,
       "y": 138,
-      "width": 78,
+      "width": 62.4,
       "height": 0,
       "strokeColor": "#047857",
       "backgroundColor": "transparent",
@@ -260,11 +260,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          78,
+          62.4,
           0
         ]
       ]
@@ -272,9 +272,9 @@
     {
       "id": "label-freq",
       "type": "text",
-      "x": 818,
+      "x": 654.4,
       "y": 78,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "FREQUENCY STORE",
       "fontSize": 14,
@@ -292,9 +292,9 @@
     {
       "id": "freq-box",
       "type": "rectangle",
-      "x": 818,
+      "x": 654.4,
       "y": 98,
-      "width": 200,
+      "width": 160.0,
       "height": 80,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -307,12 +307,12 @@
     {
       "id": "freq-label",
       "type": "text",
-      "x": 828,
+      "x": 662.4,
       "y": 112,
-      "width": 237,
+      "width": 130.0,
       "height": 112,
       "text": "Frequency DB\nquery → search_count\nUpdated by analytics\nBatch rebuild trie nightly",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -327,9 +327,9 @@
     {
       "id": "label-trie-viz",
       "type": "text",
-      "x": 40,
+      "x": 32.0,
       "y": 230,
-      "width": 300,
+      "width": 240.0,
       "height": 31,
       "text": "TRIE STRUCTURE FOR PREFIX \"ap\"",
       "fontSize": 14,
@@ -347,9 +347,9 @@
     {
       "id": "trie-viz-box",
       "type": "rectangle",
-      "x": 40,
+      "x": 32.0,
       "y": 250,
-      "width": 300,
+      "width": 240.0,
       "height": 150,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -362,12 +362,12 @@
     {
       "id": "trie-viz-text",
       "type": "text",
-      "x": 52,
+      "x": 41.6,
       "y": 260,
-      "width": 447,
+      "width": 210.0,
       "height": 280,
       "text": "root\n└─ a (freq: 42M)\n   └─ p (freq: 18M) ← user typed here\n      ├─ p (freq: 9.2M)\n      │  ├─ l (freq: 9.1M)\n      │  │  └─ e → \"apple\" [9.1M]\n      │  └─ \"app\" [3.8M]\n      ├─ p-l-i-c-a-t-i-o-n → \"application\" [4.1M]\n      ├─ r-i-l → \"april\" [2.3M]\n      └─ a-r-t-m-e-n-t → \"apartment\" [1.9M]",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -382,9 +382,9 @@
     {
       "id": "label-evidence",
       "type": "text",
-      "x": 360,
+      "x": 288.0,
       "y": 230,
-      "width": 690,
+      "width": 552.0,
       "height": 31,
       "text": "API EVIDENCE",
       "fontSize": 14,
@@ -402,9 +402,9 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 360,
+      "x": 288.0,
       "y": 250,
-      "width": 690,
+      "width": 552.0,
       "height": 150,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -417,12 +417,12 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 372,
+      "x": 297.6,
       "y": 260,
-      "width": 666,
+      "width": 522.0,
       "height": 336,
       "text": "GET /suggest?q=ap&limit=5\n→ 200 OK (< 50ms)\n[\"apple\", \"application\", \"app\", \"april\", \"apartment\"]\n\nFrequency update (async, batched):\nKafka topic: search_clicks\n{query: \"apple\", clicked: true, position: 0, ts: 1714982400}\n\nTrie rebuild (nightly, 30min batch):\nSELECT query, count(*) FROM search_log\nWHERE ts > NOW() - INTERVAL '1 day'\nGROUP BY query ORDER BY count DESC LIMIT 10M",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

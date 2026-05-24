@@ -6,9 +6,9 @@
     {
       "id": "title-text",
       "type": "text",
-      "x": 400,
+      "x": 320.0,
       "y": 20,
-      "width": 900,
+      "width": 720.0,
       "height": 48,
       "text": "Typeahead/Autocomplete — Advanced Architecture",
       "fontSize": 24,
@@ -26,9 +26,9 @@
     {
       "id": "label-client",
       "type": "text",
-      "x": 40,
+      "x": 32.0,
       "y": 78,
-      "width": 130,
+      "width": 104.0,
       "height": 31,
       "text": "CLIENT",
       "fontSize": 14,
@@ -46,9 +46,9 @@
     {
       "id": "client-box",
       "type": "rectangle",
-      "x": -5,
+      "x": -4.0,
       "y": 64,
-      "width": 219,
+      "width": 175.2,
       "height": 148,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -61,9 +61,9 @@
     {
       "id": "client-label",
       "type": "text",
-      "x": 50,
+      "x": 40.0,
       "y": 118,
-      "width": 155,
+      "width": 124.0,
       "height": 84,
       "text": "User types\nBrowser LRU cache\nDebounce 150ms",
       "fontSize": 14,
@@ -81,9 +81,9 @@
     {
       "id": "arrow-client-cdn",
       "type": "arrow",
-      "x": 172,
+      "x": 171.2,
       "y": 138,
-      "width": 68,
+      "width": 12.800000000000011,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -96,11 +96,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          12.800000000000011,
           0
         ]
       ]
@@ -108,9 +108,9 @@
     {
       "id": "label-cdn",
       "type": "text",
-      "x": 250,
+      "x": 200.0,
       "y": 78,
-      "width": 130,
+      "width": 104.0,
       "height": 31,
       "text": "CDN EDGE",
       "fontSize": 14,
@@ -128,9 +128,9 @@
     {
       "id": "cdn-box",
       "type": "rectangle",
-      "x": 230,
+      "x": 184.0,
       "y": 64,
-      "width": 210,
+      "width": 168.0,
       "height": 148,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -143,9 +143,9 @@
     {
       "id": "cdn-label",
       "type": "text",
-      "x": 260,
+      "x": 208.0,
       "y": 118,
-      "width": 146,
+      "width": 116.8,
       "height": 84,
       "text": "CDN Edge Cache\n99% hit 1-3 char\n<10ms p50",
       "fontSize": 14,
@@ -163,9 +163,9 @@
     {
       "id": "arrow-cdn-redis",
       "type": "arrow",
-      "x": 382,
+      "x": 352.0,
       "y": 138,
-      "width": 68,
+      "width": 54.4,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -178,11 +178,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          54.4,
           0
         ]
       ]
@@ -190,9 +190,9 @@
     {
       "id": "label-redis",
       "type": "text",
-      "x": 460,
+      "x": 368.0,
       "y": 78,
-      "width": 160,
+      "width": 128.0,
       "height": 31,
       "text": "REDIS SORTED SETS",
       "fontSize": 14,
@@ -210,9 +210,9 @@
     {
       "id": "redis-box",
       "type": "rectangle",
-      "x": 456,
+      "x": 364.8,
       "y": 67,
-      "width": 231,
+      "width": 184.8,
       "height": 142,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -225,9 +225,9 @@
     {
       "id": "redis-label",
       "type": "text",
-      "x": 470,
+      "x": 376.0,
       "y": 112,
-      "width": 183,
+      "width": 146.4,
       "height": 112,
       "text": "Redis ZSET\nZRANGEBYSCORE prefix\nO(log N + k)\nTop-10 per prefix",
       "fontSize": 14,
@@ -245,9 +245,9 @@
     {
       "id": "arrow-redis-disttrie",
       "type": "arrow",
-      "x": 622,
+      "x": 549.6,
       "y": 138,
-      "width": 68,
+      "width": 54.4,
       "height": 0,
       "strokeColor": "#047857",
       "backgroundColor": "transparent",
@@ -260,11 +260,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          54.4,
           0
         ]
       ]
@@ -272,9 +272,9 @@
     {
       "id": "label-disttrie",
       "type": "text",
-      "x": 700,
+      "x": 560.0,
       "y": 78,
-      "width": 180,
+      "width": 144.0,
       "height": 31,
       "text": "DISTRIBUTED TRIE",
       "fontSize": 14,
@@ -292,9 +292,9 @@
     {
       "id": "disttrie-box",
       "type": "rectangle",
-      "x": 700,
+      "x": 560.0,
       "y": 98,
-      "width": 180,
+      "width": 144.0,
       "height": 80,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -307,12 +307,12 @@
     {
       "id": "disttrie-label",
       "type": "text",
-      "x": 710,
+      "x": 568.0,
       "y": 112,
-      "width": 210,
+      "width": 114.0,
       "height": 112,
       "text": "Distributed Trie\nSharded by prefix (a-z)\nIn-memory per shard\nReplicated 3x",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -327,9 +327,9 @@
     {
       "id": "arrow-disttrie-personal",
       "type": "arrow",
-      "x": 882,
+      "x": 705.6,
       "y": 138,
-      "width": 68,
+      "width": 51.19999999999993,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -342,11 +342,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          68,
+          51.19999999999993,
           0
         ]
       ]
@@ -354,9 +354,9 @@
     {
       "id": "label-personal",
       "type": "text",
-      "x": 960,
+      "x": 768.0,
       "y": 78,
-      "width": 200,
+      "width": 152.4,
       "height": 31,
       "text": "PERSONALIZATION",
       "fontSize": 14,
@@ -374,9 +374,9 @@
     {
       "id": "personal-box",
       "type": "rectangle",
-      "x": 946,
+      "x": 756.8,
       "y": 67,
-      "width": 228,
+      "width": 182.4,
       "height": 142,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -389,9 +389,9 @@
     {
       "id": "personal-label",
       "type": "text",
-      "x": 970,
+      "x": 776.0,
       "y": 112,
-      "width": 180,
+      "width": 144.0,
       "height": 112,
       "text": "Personalization\nUser history 70%\nGlobal trending 30%\nBlend + re-rank",
       "fontSize": 14,
@@ -409,9 +409,9 @@
     {
       "id": "label-trending",
       "type": "text",
-      "x": 40,
+      "x": 32.0,
       "y": 240,
-      "width": 280,
+      "width": 224.0,
       "height": 31,
       "text": "TRENDING TERMS ENGINE",
       "fontSize": 14,
@@ -429,9 +429,9 @@
     {
       "id": "trending-box",
       "type": "rectangle",
-      "x": 10,
+      "x": 8.0,
       "y": 234,
-      "width": 340,
+      "width": 272.0,
       "height": 142,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -444,9 +444,9 @@
     {
       "id": "trending-label",
       "type": "text",
-      "x": 50,
+      "x": 40.0,
       "y": 276,
-      "width": 292,
+      "width": 233.6,
       "height": 112,
       "text": "Time-Decayed Trending\nw(t) = count * e^(-lambda*age)\nKafka stream → Flink aggregation\nTop-1000 trending per hour",
       "fontSize": 14,
@@ -464,9 +464,9 @@
     {
       "id": "label-analytics",
       "type": "text",
-      "x": 340,
+      "x": 272.0,
       "y": 240,
-      "width": 260,
+      "width": 208.0,
       "height": 31,
       "text": "ANALYTICS PIPELINE",
       "fontSize": 14,
@@ -484,9 +484,9 @@
     {
       "id": "analytics-box",
       "type": "rectangle",
-      "x": 366,
+      "x": 292.8,
       "y": 260,
-      "width": 260,
+      "width": 208.0,
       "height": 90,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -499,9 +499,9 @@
     {
       "id": "analytics-label",
       "type": "text",
-      "x": 350,
+      "x": 280.0,
       "y": 276,
-      "width": 274,
+      "width": 219.2,
       "height": 140,
       "text": "Click Tracking\nKafka → {prefix, clicked, pos}\nBatch: update freq DB\nRebuild trie nightly\nA/B test suggestion quality",
       "fontSize": 14,
@@ -519,9 +519,9 @@
     {
       "id": "label-evidence",
       "type": "text",
-      "x": 620,
+      "x": 496.0,
       "y": 240,
-      "width": 540,
+      "width": 432.0,
       "height": 31,
       "text": "PERSONALIZATION EVIDENCE",
       "fontSize": 14,
@@ -539,9 +539,9 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 642,
+      "x": 513.6,
       "y": 260,
-      "width": 540,
+      "width": 432.0,
       "height": 130,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -554,9 +554,9 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 632,
+      "x": 505.6,
       "y": 270,
-      "width": 575,
+      "width": 460.0,
       "height": 336,
       "text": "GET /suggest?q=ap&userId=123&limit=5\n→ 200 OK\n{\n  suggestions: [\n    {text:\"apple music\", source:\"personal\", score:0.95},\n    {text:\"apple\", source:\"global\", score:0.87},\n    {text:\"application form\", source:\"trending\", score:0.82}\n  ],\n  latency_ms: 32\n}\n\nMerge: 70% user_history + 30% global_top_k, re-ranked by score.",
       "fontSize": 14,

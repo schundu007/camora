@@ -6,9 +6,9 @@
     {
       "id": "title-text",
       "type": "text",
-      "x": 600,
+      "x": 480.0,
       "y": 20,
-      "width": 600,
+      "width": 480.0,
       "height": 48,
       "text": "Dropbox — Basic Architecture",
       "fontSize": 24,
@@ -26,9 +26,9 @@
     {
       "id": "label-client",
       "type": "text",
-      "x": 40,
+      "x": 32.0,
       "y": 78,
-      "width": 140,
+      "width": 112.0,
       "height": 31,
       "text": "CLIENT",
       "fontSize": 14,
@@ -46,9 +46,9 @@
     {
       "id": "client-box",
       "type": "rectangle",
-      "x": 9,
+      "x": 7.2,
       "y": 64,
-      "width": 201,
+      "width": 160.8,
       "height": 148,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
@@ -61,9 +61,9 @@
     {
       "id": "client-label",
       "type": "text",
-      "x": 55,
+      "x": 44.0,
       "y": 118,
-      "width": 137,
+      "width": 109.6,
       "height": 84,
       "text": "Desktop\nSync Agent\n(watches files)",
       "fontSize": 14,
@@ -81,9 +81,9 @@
     {
       "id": "arrow-client-api",
       "type": "arrow",
-      "x": 182,
+      "x": 168.0,
       "y": 138,
-      "width": 78,
+      "width": 34.400000000000006,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -96,11 +96,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          78,
+          34.400000000000006,
           0
         ]
       ]
@@ -108,9 +108,9 @@
     {
       "id": "label-api",
       "type": "text",
-      "x": 270,
+      "x": 216.0,
       "y": 78,
-      "width": 140,
+      "width": 109.19999999999999,
       "height": 31,
       "text": "API SERVER",
       "fontSize": 14,
@@ -128,9 +128,9 @@
     {
       "id": "api-box",
       "type": "rectangle",
-      "x": 253,
+      "x": 202.4,
       "y": 77,
-      "width": 174,
+      "width": 139.2,
       "height": 120,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -143,9 +143,9 @@
     {
       "id": "api-label",
       "type": "text",
-      "x": 285,
+      "x": 228.0,
       "y": 125,
-      "width": 110,
+      "width": 88.0,
       "height": 56,
       "text": "API Server\n(HTTPS REST)",
       "fontSize": 14,
@@ -163,9 +163,9 @@
     {
       "id": "arrow-api-chunker",
       "type": "arrow",
-      "x": 412,
+      "x": 341.6,
       "y": 138,
-      "width": 78,
+      "width": 62.4,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -178,11 +178,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          78,
+          62.4,
           0
         ]
       ]
@@ -190,9 +190,9 @@
     {
       "id": "label-chunker",
       "type": "text",
-      "x": 500,
+      "x": 400.0,
       "y": 78,
-      "width": 170,
+      "width": 136.0,
       "height": 31,
       "text": "CHUNKER SERVICE",
       "fontSize": 14,
@@ -210,9 +210,9 @@
     {
       "id": "chunker-box",
       "type": "rectangle",
-      "x": 500,
+      "x": 400.0,
       "y": 98,
-      "width": 170,
+      "width": 136.0,
       "height": 80,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -225,12 +225,12 @@
     {
       "id": "chunker-label",
       "type": "text",
-      "x": 510,
+      "x": 408.0,
       "y": 112,
-      "width": 210,
+      "width": 106.0,
       "height": 112,
       "text": "Chunker\nSplit file → 4MB blocks\nCompute SHA-256\nper chunk",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -245,9 +245,9 @@
     {
       "id": "arrow-chunker-s3",
       "type": "arrow",
-      "x": 672,
+      "x": 537.6,
       "y": 138,
-      "width": 78,
+      "width": 62.4,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -260,11 +260,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          78,
+          62.4,
           0
         ]
       ]
@@ -272,9 +272,9 @@
     {
       "id": "label-s3",
       "type": "text",
-      "x": 760,
+      "x": 608.0,
       "y": 78,
-      "width": 180,
+      "width": 144.0,
       "height": 31,
       "text": "OBJECT STORE (S3)",
       "fontSize": 14,
@@ -292,9 +292,9 @@
     {
       "id": "s3-box",
       "type": "rectangle",
-      "x": 760,
+      "x": 608.0,
       "y": 98,
-      "width": 180,
+      "width": 144.0,
       "height": 80,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
@@ -307,12 +307,12 @@
     {
       "id": "s3-label",
       "type": "text",
-      "x": 775,
+      "x": 620.0,
       "y": 115,
-      "width": 192,
+      "width": 114.0,
       "height": 112,
       "text": "S3 Object Store\nKeyed by SHA-256 hash\nContent-addressed\nDedup via hash match",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 1,
       "textAlign": "center",
       "verticalAlign": "middle",
@@ -327,9 +327,9 @@
     {
       "id": "arrow-api-metadb",
       "type": "arrow",
-      "x": 340,
-      "y": 180,
-      "width": 0,
+      "x": 272.0,
+      "y": 197,
+      "width": 0.0,
       "height": 70,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -342,11 +342,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           70
         ]
       ]
@@ -354,9 +354,9 @@
     {
       "id": "label-metadb",
       "type": "text",
-      "x": 210,
+      "x": 168.0,
       "y": 262,
-      "width": 260,
+      "width": 208.0,
       "height": 31,
       "text": "METADATA DB",
       "fontSize": 14,
@@ -374,9 +374,9 @@
     {
       "id": "metadb-box",
       "type": "rectangle",
-      "x": 211,
+      "x": 168.8,
       "y": 256,
-      "width": 322,
+      "width": 257.6,
       "height": 142,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
@@ -389,9 +389,9 @@
     {
       "id": "metadb-label",
       "type": "text",
-      "x": 225,
+      "x": 180.0,
       "y": 296,
-      "width": 274,
+      "width": 219.2,
       "height": 112,
       "text": "Metadata DB (PostgreSQL)\nfiles: path, version, user_id\nchunks[]: [sha256_1, sha256_2]\nupdated_at, size_bytes",
       "fontSize": 14,
@@ -409,9 +409,9 @@
     {
       "id": "label-dedup",
       "type": "text",
-      "x": 500,
+      "x": 400.0,
       "y": 262,
-      "width": 200,
+      "width": 160.0,
       "height": 31,
       "text": "DEDUP CHECK",
       "fontSize": 14,
@@ -429,9 +429,9 @@
     {
       "id": "dedup-box",
       "type": "rectangle",
-      "x": 549,
+      "x": 439.2,
       "y": 243,
-      "width": 311,
+      "width": 248.8,
       "height": 148,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
@@ -444,9 +444,9 @@
     {
       "id": "dedup-label",
       "type": "text",
-      "x": 510,
+      "x": 408.0,
       "y": 296,
-      "width": 247,
+      "width": 197.6,
       "height": 84,
       "text": "Hash Exists Check\nhash present → skip upload\nhash missing → upload block",
       "fontSize": 14,
@@ -464,7 +464,7 @@
     {
       "id": "arrow-chunker-dedup",
       "type": "arrow",
-      "x": 585,
+      "x": 468.0,
       "y": 180,
       "width": 0,
       "height": 100,
@@ -479,11 +479,11 @@
       "endArrowhead": "arrow",
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          0,
+          0.0,
           100
         ]
       ]
@@ -491,9 +491,9 @@
     {
       "id": "label-evidence",
       "type": "text",
-      "x": 40,
+      "x": 32.0,
       "y": 262,
-      "width": 160,
+      "width": 128.0,
       "height": 31,
       "text": "API EVIDENCE",
       "fontSize": 14,
@@ -511,9 +511,9 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 40,
+      "x": 32.0,
       "y": 282,
-      "width": 155,
+      "width": 124.0,
       "height": 120,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -526,12 +526,12 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 50,
+      "x": 40.0,
       "y": 292,
-      "width": 201,
+      "width": 94.0,
       "height": 252,
       "text": "POST /chunks/check\n{\n  chunk: \"sha256:abc\",\n  exists: true\n}\n→ skip upload\n\nexists: false\n→ upload block",
-      "fontSize": 14,
+      "fontSize": 10,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",
@@ -546,9 +546,9 @@
     {
       "id": "label-schema",
       "type": "text",
-      "x": 760,
+      "x": 608.0,
       "y": 262,
-      "width": 380,
+      "width": 218.8,
       "height": 31,
       "text": "SYNC FLOW",
       "fontSize": 14,
@@ -566,9 +566,9 @@
     {
       "id": "schema-box",
       "type": "rectangle",
-      "x": 876,
+      "x": 700.8,
       "y": 282,
-      "width": 380,
+      "width": 304.0,
       "height": 120,
       "strokeColor": "#22c55e",
       "backgroundColor": "#1e293b",
@@ -581,12 +581,12 @@
     {
       "id": "schema-text",
       "type": "text",
-      "x": 772,
+      "x": 617.6,
       "y": 292,
-      "width": 383,
+      "width": 218.8,
       "height": 196,
       "text": "1. File change detected (inotify/FSEvents)\n2. Split into 4MB blocks, SHA-256 each\n3. POST /chunks/check → get missing hashes\n4. Upload only missing blocks to S3\n5. Commit metadata: PUT /files/{path}\n   { version, chunks: [hash1, hash2...] }\n6. Other devices notified via long poll",
-      "fontSize": 14,
+      "fontSize": 11,
       "fontFamily": 3,
       "textAlign": "left",
       "verticalAlign": "top",

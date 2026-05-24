@@ -6,9 +6,9 @@
     {
       "type": "text",
       "id": "title",
-      "x": 400,
+      "x": 320.0,
       "y": 20,
-      "width": 1100,
+      "width": 880.0,
       "height": 64,
       "angle": 0,
       "strokeColor": "#1e40af",
@@ -37,9 +37,9 @@
     {
       "type": "text",
       "id": "section-cell",
-      "x": 40,
+      "x": 32.0,
       "y": 80,
-      "width": 300,
+      "width": 240.0,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -68,9 +68,9 @@
     {
       "type": "rectangle",
       "id": "gateway",
-      "x": 40,
+      "x": 32.0,
       "y": 105,
-      "width": 204,
+      "width": 163.2,
       "height": 128,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -99,9 +99,9 @@
     {
       "type": "text",
       "id": "gateway-label",
-      "x": 40,
+      "x": 32.0,
       "y": 115,
-      "width": 140,
+      "width": 112.0,
       "height": 64,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -130,9 +130,9 @@
     {
       "type": "rectangle",
       "id": "cell-sf",
-      "x": 250,
+      "x": 200.0,
       "y": 85,
-      "width": 224,
+      "width": 179.2,
       "height": 176,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -161,9 +161,9 @@
     {
       "type": "text",
       "id": "cell-sf-label",
-      "x": 250,
+      "x": 200.0,
       "y": 90,
-      "width": 160,
+      "width": 128.0,
       "height": 112,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -192,9 +192,9 @@
     {
       "type": "rectangle",
       "id": "cell-nyc",
-      "x": 250,
+      "x": 200.0,
       "y": 277,
-      "width": 238,
+      "width": 190.4,
       "height": 176,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -223,9 +223,9 @@
     {
       "type": "text",
       "id": "cell-nyc-label",
-      "x": 250,
+      "x": 200.0,
       "y": 282,
-      "width": 174,
+      "width": 139.2,
       "height": 112,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -254,9 +254,9 @@
     {
       "type": "arrow",
       "id": "arr-gw-sf",
-      "x": 180,
-      "y": 120,
-      "width": 70,
+      "x": 144.0,
+      "y": 105,
+      "width": 56.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -275,11 +275,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          70,
+          56.0,
           0
         ]
       ],
@@ -291,9 +291,9 @@
     {
       "type": "arrow",
       "id": "arr-gw-nyc",
-      "x": 180,
-      "y": 145,
-      "width": 70,
+      "x": 144.0,
+      "y": 105,
+      "width": 0,
       "height": 110,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -312,11 +312,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          70,
+          0.0,
           110
         ]
       ],
@@ -328,9 +328,9 @@
     {
       "type": "text",
       "id": "section-services2",
-      "x": 490,
+      "x": 392.0,
       "y": 80,
-      "width": 300,
+      "width": 240.0,
       "height": 31,
       "angle": 0,
       "strokeColor": "#64748b",
@@ -359,9 +359,9 @@
     {
       "type": "rectangle",
       "id": "eta-svc",
-      "x": 490,
+      "x": 392.0,
       "y": 105,
-      "width": 274,
+      "width": 219.2,
       "height": 148,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -390,9 +390,9 @@
     {
       "type": "text",
       "id": "eta-svc-label",
-      "x": 490,
+      "x": 392.0,
       "y": 112,
-      "width": 210,
+      "width": 168.0,
       "height": 84,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -421,9 +421,9 @@
     {
       "type": "rectangle",
       "id": "pricing-svc",
-      "x": 490,
+      "x": 392.0,
       "y": 269,
-      "width": 238,
+      "width": 190.4,
       "height": 148,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -452,9 +452,9 @@
     {
       "type": "text",
       "id": "pricing-svc-label",
-      "x": 490,
+      "x": 392.0,
       "y": 279,
-      "width": 174,
+      "width": 139.2,
       "height": 84,
       "angle": 0,
       "strokeColor": "#ffffff",
@@ -483,9 +483,9 @@
     {
       "type": "rectangle",
       "id": "payment-svc",
-      "x": 764,
+      "x": 611.2,
       "y": 105,
-      "width": 224,
+      "width": 179.2,
       "height": 148,
       "angle": 0,
       "strokeColor": "#047857",
@@ -514,9 +514,9 @@
     {
       "type": "text",
       "id": "payment-svc-label",
-      "x": 764,
+      "x": 611.2,
       "y": 115,
-      "width": 160,
+      "width": 128.0,
       "height": 84,
       "angle": 0,
       "strokeColor": "#065f46",
@@ -545,9 +545,9 @@
     {
       "type": "rectangle",
       "id": "rating-svc",
-      "x": 764,
+      "x": 611.2,
       "y": 269,
-      "width": 224,
+      "width": 179.2,
       "height": 148,
       "angle": 0,
       "strokeColor": "#047857",
@@ -576,9 +576,9 @@
     {
       "type": "text",
       "id": "rating-svc-label",
-      "x": 764,
+      "x": 611.2,
       "y": 279,
-      "width": 160,
+      "width": 128.0,
       "height": 84,
       "angle": 0,
       "strokeColor": "#065f46",
@@ -607,9 +607,9 @@
     {
       "type": "arrow",
       "id": "arr-cell-eta",
-      "x": 410,
-      "y": 130,
-      "width": 80,
+      "x": 328.0,
+      "y": 85,
+      "width": 64.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -628,11 +628,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          80,
+          64.0,
           0
         ]
       ],
@@ -644,9 +644,9 @@
     {
       "type": "arrow",
       "id": "arr-cell-pricing",
-      "x": 410,
-      "y": 230,
-      "width": 80,
+      "x": 328.0,
+      "y": 261,
+      "width": 64.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -665,11 +665,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          80,
+          64.0,
           0
         ]
       ],
@@ -681,9 +681,9 @@
     {
       "type": "arrow",
       "id": "arr-eta-payment",
-      "x": 650,
-      "y": 140,
-      "width": 50,
+      "x": 520.0,
+      "y": 105,
+      "width": 40.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#047857",
@@ -702,11 +702,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          50,
+          40.0,
           0
         ]
       ],
@@ -718,9 +718,9 @@
     {
       "type": "arrow",
       "id": "arr-pricing-rating",
-      "x": 650,
-      "y": 240,
-      "width": 50,
+      "x": 520.0,
+      "y": 253,
+      "width": 40.0,
       "height": 0,
       "angle": 0,
       "strokeColor": "#047857",
@@ -739,11 +739,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          50,
+          40.0,
           0
         ]
       ],
@@ -755,9 +755,9 @@
     {
       "type": "rectangle",
       "id": "kafka-adv",
-      "x": 988,
+      "x": 790.4,
       "y": 140,
-      "width": 279,
+      "width": 223.2,
       "height": 124,
       "angle": 0,
       "strokeColor": "#b45309",
@@ -786,9 +786,9 @@
     {
       "type": "text",
       "id": "kafka-adv-label",
-      "x": 988,
+      "x": 790.4,
       "y": 150,
-      "width": 215,
+      "width": 149.2,
       "height": 60,
       "angle": 0,
       "strokeColor": "#78350f",
@@ -817,9 +817,9 @@
     {
       "type": "arrow",
       "id": "arr-cells-kafka",
-      "x": 410,
+      "x": 379.2,
       "y": 165,
-      "width": 500,
+      "width": 348.8,
       "height": 0,
       "angle": 0,
       "strokeColor": "#b45309",
@@ -838,11 +838,11 @@
       "locked": false,
       "points": [
         [
-          0,
+          0.0,
           0
         ],
         [
-          500,
+          348.8,
           0
         ]
       ],
@@ -854,9 +854,9 @@
     {
       "type": "rectangle",
       "id": "evidence-uber-adv",
-      "x": 40,
+      "x": 32.0,
       "y": 483,
-      "width": 1251,
+      "width": 1000.8,
       "height": 456,
       "angle": 0,
       "strokeColor": "#22c55e",
@@ -885,9 +885,9 @@
     {
       "type": "text",
       "id": "evidence-uber-adv-text",
-      "x": 60,
+      "x": 48.0,
       "y": 498,
-      "width": 1187,
+      "width": 949.6,
       "height": 392,
       "angle": 0,
       "strokeColor": "#22c55e",
