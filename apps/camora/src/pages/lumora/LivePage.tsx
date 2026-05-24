@@ -112,7 +112,7 @@ export const LivePage = () => {
   const showEmptyState = !question && !isStreaming && parsedBlocks.length === 0 && history.length === 0;
 
   return (
-    <div className="h-dvh w-full flex flex-col overflow-y-auto md:overflow-hidden lumora-app-bg">
+    <div className="h-dvh w-full flex flex-col overflow-y-auto md:overflow-y-hidden md:overflow-x-clip lumora-app-bg">
       <div className="lumora-grid-overlay" />
 
       {/* Header — shared component with tabs, audio, controls */}
@@ -127,7 +127,7 @@ export const LivePage = () => {
       />
 
       {/* Sidebar + Main content area */}
-      <div className="flex-1 flex min-h-0 overflow-hidden relative">
+      <div className="flex-1 flex min-h-0 overflow-y-hidden overflow-x-clip relative">
         <SessionSidebar
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}

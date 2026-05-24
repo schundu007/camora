@@ -374,8 +374,8 @@ export const AskLayout = () => {
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
               placeholder="Ask anything…"
-              rows={2}
-              className="w-full resize-none px-5 pt-4 pb-14 text-[14px] bg-transparent focus:outline-none placeholder:opacity-40"
+              rows={1}
+              className="w-full resize-none px-5 pt-3 pb-10 text-[14px] bg-transparent focus:outline-none placeholder:opacity-40"
               style={{ color: 'var(--text-primary)', ...sans }}
             />
             <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
