@@ -6,7 +6,7 @@ import { query } from '../config/database.js';
 const router = Router();
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const CODE_RE = /\b(fill|missing|complete|fix|write|implement|function|class|bug|error|code|loop|array|list|dict|string)\b/i;
+const CODE_RE = /\b(fill|missing|complete|fix|write|implement|function|class|bug|error|code|loop|array|list|dict|string|algorithm|sort|search|tree|graph|dp|dynamic)\b/i;
 
 const SYS_GENERAL = `You are Sona, a sharp coding assistant. Be direct and concise. No filler sentences.`;
 
@@ -27,6 +27,74 @@ const SYS_CODE = `You are Sona, a sharp coding assistant. For coding questions r
 (cover every non-trivial line)
 
 For non-coding questions respond normally without these sections.`;
+
+const SYS_CODE_DUAL = (draft) => `You are Sona, a sharp coding assistant.
+
+A secondary AI model produced this draft solution:
+<draft>
+${draft}
+</draft>
+
+Your task — carefully verify the draft against the problem:
+1. Trace through the logic step by step
+2. Fix every bug, off-by-one, or edge-case miss you find
+3. Keep the code minimal — remove any unnecessary lines
+4. Ensure the solution matches the expected output exactly
+
+Respond in EXACTLY this structure:
+
+### Missing Code
+\`\`\`<lang>
+<only the missing or fixed part — no surrounding context>
+\`\`\`
+
+### Full Code
+\`\`\`<lang>
+<complete, verified working solution — minimal lines>
+\`\`\`
+
+### Line Explanation
+- **Line N**: what it does
+(cover every non-trivial line)`;
+
+// Fetch a quick non-streaming Gemini solution for cross-checking
+async function fetchGeminiDraft(message, history, geminiKey, timeoutMs = 6000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const contents = [
+      ...history.slice(-6).map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      })),
+      { role: 'user', parts: [{ text: message }] },
+    ];
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: ctrl.signal,
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SYS_CODE }] },
+          contents,
+          generationConfig: { maxOutputTokens: 4096, temperature: 0.1 },
+        }),
+      }
+    );
+    if (!resp.ok) {
+      console.warn(`[Ask/Gemini-draft] ${resp.status} — skipping dual-model`);
+      return null;
+    }
+    const data = await resp.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+  } catch (err) {
+    if (err.name !== 'AbortError') console.warn('[Ask/Gemini-draft] error:', err.message);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 // POST /stream — streaming ask
 router.post('/stream', async (req, res) => {
@@ -73,12 +141,26 @@ router.post('/stream', async (req, res) => {
     let full = '';
 
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY;
-    const useGemini = provider === 'gemini' && !!geminiKey;
     if (provider === 'gemini' && !geminiKey) {
       console.warn('[Ask/Gemini] No API key — set GEMINI_API_KEY or GOOGLE_AI_API_KEY. Falling back to Claude.');
     }
 
-    if (useGemini) {
+    // ── Dual-model for coding questions ────────────────────────────────────────
+    // Gemini drafts a fast solution; Claude verifies, fixes bugs, and streams
+    // the minimal correct final answer. For non-coding or when Gemini key is
+    // absent the path degrades to Claude-only with no UX change.
+    let claudeSystem = system;
+    if (isCode && geminiKey) {
+      res.write(`data: ${JSON.stringify({ status: 'Drafting with Gemini…' })}\n\n`);
+      const draft = await fetchGeminiDraft(message, history, geminiKey);
+      if (draft) {
+        claudeSystem = SYS_CODE_DUAL(draft);
+        res.write(`data: ${JSON.stringify({ status: 'Verifying with Claude…' })}\n\n`);
+      }
+    }
+
+    // ── Non-coding Gemini-only path (provider toggle in UI) ────────────────────
+    if (!isCode && provider === 'gemini' && geminiKey) {
       let geminiOk = false;
       try {
         const resp = await fetch(
@@ -96,7 +178,6 @@ router.post('/stream', async (req, res) => {
             }),
           }
         );
-
         if (!resp.ok) {
           const errText = await resp.text().catch(() => '');
           console.error(`[Ask/Gemini] API error ${resp.status}:`, errText.slice(0, 300));
@@ -125,19 +206,15 @@ router.post('/stream', async (req, res) => {
       } catch (geminiErr) {
         console.error('[Ask/Gemini] fetch error:', geminiErr.message);
       }
-
-      // If Gemini failed entirely, fall back to Claude silently
-      if (!geminiOk || !full) {
-        full = '';
-      }
+      if (!geminiOk || !full) full = '';
     }
 
-    if (!useGemini || !full) {
-      // Claude (default / fallback)
+    // ── Claude final stream (coding always; non-coding when not Gemini-only) ──
+    if (!full) {
       const stream = anthropic.messages.stream({
         model: 'claude-sonnet-4-6',
         max_tokens: 8000,
-        system,
+        system: claudeSystem,
         messages: msgs,
       });
       for await (const chunk of stream) {
