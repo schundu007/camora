@@ -6,7 +6,7 @@
     {
       "type": "text",
       "id": "title",
-      "x": 500,
+      "x": 937,
       "y": 20,
       "width": 1075,
       "height": 60,
@@ -25,8 +25,8 @@
       "boundElements": [],
       "link": null,
       "locked": false,
-      "text": "Facebook Newsfeed — Fanout-on-Write (Push) Architecture",
-      "originalText": "Facebook Newsfeed — Fanout-on-Write (Push) Architecture",
+      "text": "Facebook Newsfeed \u2014 Fanout-on-Write (Push) Architecture",
+      "originalText": "Facebook Newsfeed \u2014 Fanout-on-Write (Push) Architecture",
       "fontSize": 30,
       "fontFamily": 3,
       "textAlign": "center",
@@ -37,7 +37,7 @@
     {
       "type": "text",
       "id": "label-write",
-      "x": 40,
+      "x": 982,
       "y": 80,
       "width": 240,
       "height": 31,
@@ -68,7 +68,7 @@
     {
       "type": "rectangle",
       "id": "user-write",
-      "x": 40,
+      "x": 982,
       "y": 105,
       "width": 200,
       "height": 98,
@@ -99,7 +99,7 @@
     {
       "type": "text",
       "id": "user-write-label",
-      "x": 40,
+      "x": 982,
       "y": 122,
       "width": 136,
       "height": 34,
@@ -130,7 +130,7 @@
     {
       "type": "rectangle",
       "id": "post-svc",
-      "x": 256,
+      "x": 1004,
       "y": 105,
       "width": 214,
       "height": 124,
@@ -161,7 +161,7 @@
     {
       "type": "text",
       "id": "post-svc-label",
-      "x": 256,
+      "x": 1004,
       "y": 115,
       "width": 150,
       "height": 60,
@@ -229,7 +229,7 @@
     {
       "type": "rectangle",
       "id": "posts-db-fb",
-      "x": 486,
+      "x": 923,
       "y": 105,
       "width": 214,
       "height": 124,
@@ -260,7 +260,7 @@
     {
       "type": "text",
       "id": "posts-db-fb-label",
-      "x": 486,
+      "x": 923,
       "y": 115,
       "width": 150,
       "height": 60,
@@ -328,7 +328,7 @@
     {
       "type": "rectangle",
       "id": "fanout-worker",
-      "x": 716,
+      "x": 1174,
       "y": 105,
       "width": 224,
       "height": 124,
@@ -359,7 +359,7 @@
     {
       "type": "text",
       "id": "fanout-worker-label",
-      "x": 716,
+      "x": 1174,
       "y": 115,
       "width": 160,
       "height": 60,
@@ -392,7 +392,7 @@
       "id": "arr-db-fanout",
       "x": 590,
       "y": 135,
-      "width": 60,
+      "width": 327,
       "height": 0,
       "angle": 0,
       "strokeColor": "#1e3a5f",
@@ -415,7 +415,7 @@
           0
         ],
         [
-          60,
+          327,
           0
         ]
       ],
@@ -427,7 +427,7 @@
     {
       "type": "rectangle",
       "id": "friends-feeds",
-      "x": 1079,
+      "x": 1211,
       "y": 85,
       "width": 301,
       "height": 176,
@@ -458,7 +458,7 @@
     {
       "type": "text",
       "id": "friends-feeds-label",
-      "x": 1079,
+      "x": 1211,
       "y": 90,
       "width": 237,
       "height": 112,
@@ -491,7 +491,7 @@
       "id": "arr-fanout-redis",
       "x": 810,
       "y": 135,
-      "width": 60,
+      "width": 192,
       "height": 0,
       "angle": 0,
       "strokeColor": "#b45309",
@@ -519,7 +519,7 @@
           0
         ],
         [
-          60,
+          192,
           0
         ]
       ],
@@ -531,7 +531,7 @@
     {
       "type": "text",
       "id": "fanout-label",
-      "x": 813,
+      "x": 1115,
       "y": 115,
       "width": 101,
       "height": 56,
@@ -562,7 +562,7 @@
     {
       "type": "text",
       "id": "label-read",
-      "x": 40,
+      "x": 982,
       "y": 230,
       "width": 240,
       "height": 31,
@@ -593,7 +593,7 @@
     {
       "type": "rectangle",
       "id": "user-read",
-      "x": 40,
+      "x": 982,
       "y": 255,
       "width": 200,
       "height": 98,
@@ -624,7 +624,7 @@
     {
       "type": "text",
       "id": "user-read-label",
-      "x": 40,
+      "x": 982,
       "y": 272,
       "width": 136,
       "height": 34,
@@ -655,7 +655,7 @@
     {
       "type": "rectangle",
       "id": "feed-read-api",
-      "x": 256,
+      "x": 1004,
       "y": 255,
       "width": 214,
       "height": 124,
@@ -686,7 +686,7 @@
     {
       "type": "text",
       "id": "feed-read-api-label",
-      "x": 256,
+      "x": 1004,
       "y": 265,
       "width": 150,
       "height": 60,
@@ -754,7 +754,7 @@
     {
       "type": "rectangle",
       "id": "redis-read",
-      "x": 486,
+      "x": 923,
       "y": 255,
       "width": 311,
       "height": 120,
@@ -785,7 +785,7 @@
     {
       "type": "text",
       "id": "redis-read-label",
-      "x": 486,
+      "x": 923,
       "y": 265,
       "width": 247,
       "height": 56,
@@ -853,7 +853,7 @@
     {
       "type": "rectangle",
       "id": "hydrate-db",
-      "x": 813,
+      "x": 1115,
       "y": 255,
       "width": 250,
       "height": 124,
@@ -884,7 +884,7 @@
     {
       "type": "text",
       "id": "hydrate-db-label",
-      "x": 813,
+      "x": 1115,
       "y": 265,
       "width": 186,
       "height": 60,
@@ -952,7 +952,7 @@
     {
       "type": "rectangle",
       "id": "evidence-fb-basic",
-      "x": 40,
+      "x": 982,
       "y": 409,
       "width": 1364,
       "height": 372,
@@ -983,7 +983,7 @@
     {
       "type": "text",
       "id": "evidence-fb-basic-text",
-      "x": 60,
+      "x": 1002,
       "y": 424,
       "width": 1300,
       "height": 308,

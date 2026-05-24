@@ -6,11 +6,11 @@
     {
       "id": "title-text",
       "type": "text",
-      "x": 500,
+      "x": 957,
       "y": 20,
       "width": 760,
       "height": 48,
-      "text": "Search Engine — Basic Architecture",
+      "text": "Search Engine \u2014 Basic Architecture",
       "fontSize": 24,
       "fontFamily": 1,
       "textAlign": "center",
@@ -26,7 +26,7 @@
     {
       "id": "label-crawler",
       "type": "text",
-      "x": 40,
+      "x": 863,
       "y": 78,
       "width": 120,
       "height": 31,
@@ -46,10 +46,10 @@
     {
       "id": "crawler-box",
       "type": "rectangle",
-      "x": 40,
+      "x": 863,
       "y": 98,
       "width": 120,
-      "height": 80,
+      "height": 244,
       "strokeColor": "#c2410c",
       "backgroundColor": "#fed7aa",
       "fillStyle": "solid",
@@ -61,7 +61,7 @@
     {
       "id": "crawler-label",
       "type": "text",
-      "x": 50,
+      "x": 873,
       "y": 118,
       "width": 119,
       "height": 112,
@@ -83,7 +83,7 @@
       "type": "arrow",
       "x": 162,
       "y": 138,
-      "width": 68,
+      "width": 333,
       "height": 0,
       "strokeColor": "#c2410c",
       "backgroundColor": "transparent",
@@ -100,7 +100,7 @@
           0
         ],
         [
-          68,
+          333,
           0
         ]
       ]
@@ -108,7 +108,7 @@
     {
       "id": "label-docstore",
       "type": "text",
-      "x": 240,
+      "x": 962,
       "y": 78,
       "width": 140,
       "height": 31,
@@ -128,10 +128,10 @@
     {
       "id": "docstore-box",
       "type": "rectangle",
-      "x": 240,
+      "x": 962,
       "y": 98,
       "width": 140,
-      "height": 80,
+      "height": 148,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "#3b82f6",
       "fillStyle": "solid",
@@ -143,7 +143,7 @@
     {
       "id": "docstore-label",
       "type": "text",
-      "x": 250,
+      "x": 972,
       "y": 118,
       "width": 137,
       "height": 112,
@@ -190,7 +190,7 @@
     {
       "id": "label-indexer",
       "type": "text",
-      "x": 460,
+      "x": 1007,
       "y": 78,
       "width": 150,
       "height": 31,
@@ -210,7 +210,7 @@
     {
       "id": "indexer-box",
       "type": "rectangle",
-      "x": 460,
+      "x": 1007,
       "y": 98,
       "width": 150,
       "height": 80,
@@ -225,7 +225,7 @@
     {
       "id": "indexer-label",
       "type": "text",
-      "x": 470,
+      "x": 1017,
       "y": 112,
       "width": 183,
       "height": 112,
@@ -247,7 +247,7 @@
       "type": "arrow",
       "x": 612,
       "y": 138,
-      "width": 68,
+      "width": 281,
       "height": 0,
       "strokeColor": "#1e3a5f",
       "backgroundColor": "transparent",
@@ -264,7 +264,7 @@
           0
         ],
         [
-          68,
+          281,
           0
         ]
       ]
@@ -272,7 +272,7 @@
     {
       "id": "label-inverted",
       "type": "text",
-      "x": 690,
+      "x": 1070,
       "y": 78,
       "width": 200,
       "height": 31,
@@ -292,7 +292,7 @@
     {
       "id": "inverted-box",
       "type": "rectangle",
-      "x": 690,
+      "x": 1070,
       "y": 98,
       "width": 200,
       "height": 80,
@@ -307,11 +307,11 @@
     {
       "id": "inverted-label",
       "type": "text",
-      "x": 700,
+      "x": 1080,
       "y": 112,
       "width": 247,
       "height": 112,
-      "text": "Inverted Index\nterm → [{docId, positions}]\nTF-IDF scores cached\nPageRank scores stored",
+      "text": "Inverted Index\nterm \u2192 [{docId, positions}]\nTF-IDF scores cached\nPageRank scores stored",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
@@ -327,7 +327,7 @@
     {
       "id": "label-query",
       "type": "text",
-      "x": 40,
+      "x": 863,
       "y": 230,
       "width": 120,
       "height": 31,
@@ -362,7 +362,7 @@
     {
       "id": "user-label",
       "type": "text",
-      "x": 50,
+      "x": 873,
       "y": 270,
       "width": 101,
       "height": 56,
@@ -409,7 +409,7 @@
     {
       "id": "qparser-box",
       "type": "rectangle",
-      "x": 184,
+      "x": 736,
       "y": 219,
       "width": 192,
       "height": 120,
@@ -424,7 +424,7 @@
     {
       "id": "qparser-label",
       "type": "text",
-      "x": 230,
+      "x": 952,
       "y": 266,
       "width": 128,
       "height": 56,
@@ -471,10 +471,10 @@
     {
       "id": "ranker-box",
       "type": "rectangle",
-      "x": 393,
+      "x": 872,
       "y": 220,
       "width": 203,
-      "height": 120,
+      "height": 144,
       "strokeColor": "#b45309",
       "backgroundColor": "#fef3c7",
       "fillStyle": "solid",
@@ -486,7 +486,7 @@
     {
       "id": "ranker-label",
       "type": "text",
-      "x": 430,
+      "x": 909,
       "y": 264,
       "width": 155,
       "height": 84,
@@ -508,7 +508,7 @@
       "type": "arrow",
       "x": 572,
       "y": 280,
-      "width": 68,
+      "width": 326,
       "height": 0,
       "strokeColor": "#b45309",
       "backgroundColor": "transparent",
@@ -525,7 +525,7 @@
           0
         ],
         [
-          68,
+          326,
           0
         ]
       ]
@@ -533,10 +533,10 @@
     {
       "id": "results-box",
       "type": "rectangle",
-      "x": 635,
+      "x": 1015,
       "y": 220,
       "width": 149,
-      "height": 120,
+      "height": 144,
       "strokeColor": "#047857",
       "backgroundColor": "#a7f3d0",
       "fillStyle": "solid",
@@ -548,7 +548,7 @@
     {
       "id": "results-label",
       "type": "text",
-      "x": 660,
+      "x": 1040,
       "y": 264,
       "width": 101,
       "height": 84,
@@ -568,7 +568,7 @@
     {
       "id": "label-evidence",
       "type": "text",
-      "x": 40,
+      "x": 863,
       "y": 340,
       "width": 420,
       "height": 31,
@@ -588,7 +588,7 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 40,
+      "x": 863,
       "y": 360,
       "width": 420,
       "height": 110,
@@ -603,11 +603,11 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 52,
+      "x": 875,
       "y": 370,
       "width": 493,
       "height": 196,
-      "text": "\"database\": [\n  {docId: 42, pos: [5, 78], tf: 0.12, pagerank: 0.85},\n  {docId: 100, pos: [12], tf: 0.08, pagerank: 0.62}\n]\n\nScore = TF * log(N/df) * PageRank\nQuery: tokenize → stem → lookup → merge → rank",
+      "text": "\"database\": [\n  {docId: 42, pos: [5, 78], tf: 0.12, pagerank: 0.85},\n  {docId: 100, pos: [12], tf: 0.08, pagerank: 0.62}\n]\n\nScore = TF * log(N/df) * PageRank\nQuery: tokenize \u2192 stem \u2192 lookup \u2192 merge \u2192 rank",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
@@ -623,7 +623,7 @@
     {
       "id": "label-indexflow",
       "type": "text",
-      "x": 480,
+      "x": 1027,
       "y": 340,
       "width": 410,
       "height": 31,
@@ -643,7 +643,7 @@
     {
       "id": "indexflow-box",
       "type": "rectangle",
-      "x": 480,
+      "x": 1027,
       "y": 360,
       "width": 410,
       "height": 110,
@@ -658,11 +658,11 @@
     {
       "id": "indexflow-text",
       "type": "text",
-      "x": 492,
+      "x": 949,
       "y": 370,
       "width": 484,
       "height": 168,
-      "text": "1. Crawl: fetch raw HTML, extract links\n2. Parse: extract title, body, anchor text\n3. Tokenize: split on whitespace/punct\n4. Normalize: lowercase, stem (\"running\" → \"run\")\n5. Stop words: remove \"the\", \"is\", \"at\"\n6. Index: term → [(docId, pos[], tf)] sorted by score",
+      "text": "1. Crawl: fetch raw HTML, extract links\n2. Parse: extract title, body, anchor text\n3. Tokenize: split on whitespace/punct\n4. Normalize: lowercase, stem (\"running\" \u2192 \"run\")\n5. Stop words: remove \"the\", \"is\", \"at\"\n6. Index: term \u2192 [(docId, pos[], tf)] sorted by score",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "left",

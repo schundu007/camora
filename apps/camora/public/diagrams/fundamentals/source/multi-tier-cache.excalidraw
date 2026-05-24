@@ -6,7 +6,7 @@
     {
       "id": "title",
       "type": "text",
-      "x": 300,
+      "x": 1197,
       "y": 20,
       "width": 620,
       "height": 56,
@@ -24,7 +24,7 @@
     {
       "id": "user",
       "type": "rectangle",
-      "x": 28,
+      "x": 220,
       "y": 192,
       "width": 204,
       "height": 96,
@@ -37,7 +37,7 @@
     {
       "id": "user-label",
       "type": "text",
-      "x": 60,
+      "x": 1149,
       "y": 228,
       "width": 140,
       "height": 32,
@@ -78,7 +78,7 @@
     {
       "id": "l1",
       "type": "rectangle",
-      "x": 246,
+      "x": 1143,
       "y": 140,
       "width": 228,
       "height": 200,
@@ -91,7 +91,7 @@
     {
       "id": "l1-label",
       "type": "text",
-      "x": 270,
+      "x": 1167,
       "y": 158,
       "width": 180,
       "height": 31,
@@ -109,7 +109,7 @@
     {
       "id": "l1-latency",
       "type": "text",
-      "x": 278,
+      "x": 1175,
       "y": 184,
       "width": 183,
       "height": 31,
@@ -127,7 +127,7 @@
     {
       "id": "l1-ttl",
       "type": "text",
-      "x": 278,
+      "x": 1175,
       "y": 206,
       "width": 228,
       "height": 31,
@@ -145,7 +145,7 @@
     {
       "id": "l1-hit",
       "type": "text",
-      "x": 278,
+      "x": 1175,
       "y": 228,
       "width": 164,
       "height": 31,
@@ -163,7 +163,7 @@
     {
       "id": "l1-stores",
       "type": "text",
-      "x": 278,
+      "x": 1175,
       "y": 252,
       "width": 192,
       "height": 31,
@@ -204,7 +204,7 @@
     {
       "id": "l2",
       "type": "rectangle",
-      "x": 496,
+      "x": 1207,
       "y": 140,
       "width": 228,
       "height": 200,
@@ -217,7 +217,7 @@
     {
       "id": "l2-label",
       "type": "text",
-      "x": 520,
+      "x": 1231,
       "y": 158,
       "width": 180,
       "height": 31,
@@ -235,7 +235,7 @@
     {
       "id": "l2-latency",
       "type": "text",
-      "x": 528,
+      "x": 1239,
       "y": 184,
       "width": 192,
       "height": 31,
@@ -253,7 +253,7 @@
     {
       "id": "l2-ttl",
       "type": "text",
-      "x": 528,
+      "x": 1239,
       "y": 206,
       "width": 164,
       "height": 31,
@@ -271,7 +271,7 @@
     {
       "id": "l2-hit",
       "type": "text",
-      "x": 528,
+      "x": 1239,
       "y": 228,
       "width": 164,
       "height": 31,
@@ -289,7 +289,7 @@
     {
       "id": "l2-stores",
       "type": "text",
-      "x": 528,
+      "x": 1239,
       "y": 252,
       "width": 210,
       "height": 31,
@@ -330,7 +330,7 @@
     {
       "id": "l3",
       "type": "rectangle",
-      "x": 746,
+      "x": 1351,
       "y": 140,
       "width": 228,
       "height": 200,
@@ -343,7 +343,7 @@
     {
       "id": "l3-label",
       "type": "text",
-      "x": 770,
+      "x": 906,
       "y": 158,
       "width": 192,
       "height": 31,
@@ -361,7 +361,7 @@
     {
       "id": "l3-latency",
       "type": "text",
-      "x": 778,
+      "x": 914,
       "y": 184,
       "width": 201,
       "height": 31,
@@ -379,7 +379,7 @@
     {
       "id": "l3-ttl",
       "type": "text",
-      "x": 778,
+      "x": 914,
       "y": 206,
       "width": 164,
       "height": 31,
@@ -397,7 +397,7 @@
     {
       "id": "l3-hit",
       "type": "text",
-      "x": 778,
+      "x": 914,
       "y": 228,
       "width": 164,
       "height": 31,
@@ -415,7 +415,7 @@
     {
       "id": "l3-stores",
       "type": "text",
-      "x": 778,
+      "x": 914,
       "y": 252,
       "width": 210,
       "height": 31,
@@ -435,7 +435,7 @@
       "type": "arrow",
       "x": 952,
       "y": 240,
-      "width": 68,
+      "width": 257,
       "height": 0,
       "strokeColor": "#64748b",
       "backgroundColor": "transparent",
@@ -448,7 +448,7 @@
           0
         ],
         [
-          68,
+          257,
           0
         ]
       ]
@@ -456,7 +456,7 @@
     {
       "id": "l4",
       "type": "rectangle",
-      "x": 991,
+      "x": 1249,
       "y": 140,
       "width": 238,
       "height": 200,
@@ -469,7 +469,7 @@
     {
       "id": "l4-label",
       "type": "text",
-      "x": 1020,
+      "x": 1278,
       "y": 158,
       "width": 180,
       "height": 31,
@@ -487,7 +487,7 @@
     {
       "id": "l4-latency",
       "type": "text",
-      "x": 1028,
+      "x": 1286,
       "y": 184,
       "width": 164,
       "height": 31,
@@ -505,7 +505,7 @@
     {
       "id": "l4-ttl",
       "type": "text",
-      "x": 1028,
+      "x": 1286,
       "y": 206,
       "width": 174,
       "height": 31,
@@ -523,7 +523,7 @@
     {
       "id": "l4-hit",
       "type": "text",
-      "x": 1028,
+      "x": 1286,
       "y": 228,
       "width": 164,
       "height": 31,
@@ -541,7 +541,7 @@
     {
       "id": "l4-stores",
       "type": "text",
-      "x": 1028,
+      "x": 1286,
       "y": 252,
       "width": 165,
       "height": 31,
@@ -559,7 +559,7 @@
     {
       "id": "evidence-box",
       "type": "rectangle",
-      "x": 48,
+      "x": 1137,
       "y": 399,
       "width": 1164,
       "height": 120,
@@ -572,11 +572,11 @@
     {
       "id": "evidence-text",
       "type": "text",
-      "x": 80,
+      "x": 1169,
       "y": 434,
       "width": 1100,
       "height": 56,
-      "text": "Request path: Browser cache (HIT 40%) → CDN (HIT 70%) → Redis GET user:123 (HIT 85%) → SELECT * FROM users WHERE id=123\nCache hierarchy: Each tier absorbs misses from the tier before it — DB only sees ~15% of total requests",
+      "text": "Request path: Browser cache (HIT 40%) \u2192 CDN (HIT 70%) \u2192 Redis GET user:123 (HIT 85%) \u2192 SELECT * FROM users WHERE id=123\nCache hierarchy: Each tier absorbs misses from the tier before it \u2014 DB only sees ~15% of total requests",
       "fontSize": 14,
       "fontFamily": 3,
       "textAlign": "left",
