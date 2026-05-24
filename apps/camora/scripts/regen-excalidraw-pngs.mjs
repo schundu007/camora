@@ -90,21 +90,37 @@ function htmlHarness() {
         .map(e => e.containerId)
     );
 
-    // Compute viewport from elements with visible content only.
-    // Blank shapes (rectangle/ellipse/diamond) with no bound text, no inline
-    // text, and neither a visible fill nor stroke are layout artifacts that
-    // expand the canvas into whitespace — skip them for bounds only.
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const el of elements) {
-      if (el.isDeleted) continue;
+    // Bounding boxes of all standalone text elements — used to detect which
+    // shapes actually contain or overlap readable content.
+    const textBoxes = elements
+      .filter(e => !e.isDeleted && e.type === 'text')
+      .map(e => ({ x: e.x, y: e.y, x2: e.x + (e.width || 0), y2: e.y + (e.height || 0) }));
+
+    const overlapsText = (el) => {
+      const ex2 = el.x + (el.width || 0);
+      const ey2 = el.y + (el.height || 0);
+      return textBoxes.some(t => el.x < t.x2 && ex2 > t.x && el.y < t.y2 && ey2 > t.y);
+    };
+
+    // A shape is an artifact if it has no bound-text children, no inline text,
+    // and no free-standing text element overlaps it. These appear as blank
+    // colored boxes in the export even though they carry no real content.
+    const isArtifact = (el) => {
+      if (el.isDeleted) return true;
       const isShape = el.type === 'rectangle' || el.type === 'ellipse' || el.type === 'diamond';
-      if (isShape) {
-        const hasBoundText = boundContainerIds.has(el.id);
-        const hasInlineText = el.text && String(el.text).trim();
-        const hasVisibleFill = el.backgroundColor && el.backgroundColor !== 'transparent';
-        const hasVisibleStroke = el.strokeColor && el.strokeColor !== 'transparent';
-        if (!hasBoundText && !hasInlineText && !hasVisibleFill && !hasVisibleStroke) continue;
-      }
+      if (!isShape) return false;
+      if (boundContainerIds.has(el.id)) return false;
+      const hasInlineText = el.text && String(el.text).trim();
+      if (hasInlineText) return false;
+      return textBoxes.length > 0 && !overlapsText(el);
+    };
+
+    const visibleElements = elements.filter(e => !isArtifact(e));
+
+    // Compute viewport from visible elements only.
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const el of visibleElements) {
+      if (el.isDeleted) continue;
       minX = Math.min(minX, el.x);
       minY = Math.min(minY, el.y);
       maxX = Math.max(maxX, el.x + (el.width || 0));
@@ -121,7 +137,7 @@ function htmlHarness() {
     const height = baseH * SCALE;
 
     const canvas = await exportToCanvas({
-      elements,
+      elements: visibleElements,
       appState: {
         ...appState,
         exportBackground: true,
