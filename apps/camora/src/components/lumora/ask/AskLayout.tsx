@@ -1,5 +1,29 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import hljs from 'highlight.js/lib/core';
+import hljsPython from 'highlight.js/lib/languages/python';
+import hljsJS from 'highlight.js/lib/languages/javascript';
+import hljsTS from 'highlight.js/lib/languages/typescript';
+import hljsJava from 'highlight.js/lib/languages/java';
+import hljsGo from 'highlight.js/lib/languages/go';
+import hljsSQL from 'highlight.js/lib/languages/sql';
+import hljsCpp from 'highlight.js/lib/languages/cpp';
+import hljsBash from 'highlight.js/lib/languages/bash';
+import 'highlight.js/styles/atom-one-dark.css';
+
+hljs.registerLanguage('python', hljsPython);
+hljs.registerLanguage('py', hljsPython);
+hljs.registerLanguage('javascript', hljsJS);
+hljs.registerLanguage('js', hljsJS);
+hljs.registerLanguage('typescript', hljsTS);
+hljs.registerLanguage('ts', hljsTS);
+hljs.registerLanguage('java', hljsJava);
+hljs.registerLanguage('go', hljsGo);
+hljs.registerLanguage('sql', hljsSQL);
+hljs.registerLanguage('cpp', hljsCpp);
+hljs.registerLanguage('c', hljsCpp);
+hljs.registerLanguage('bash', hljsBash);
+hljs.registerLanguage('sh', hljsBash);
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
 
@@ -15,19 +39,33 @@ const SUGGESTIONS = [
   'Implement a LRU cache class with get and put methods',
 ];
 
-// ── Simple structured response renderer ──────────────────────────────────────
-const CodeBlock = ({ code, lang }: { code: string; lang: string }) => (
-  <div className="my-2 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-    {lang && (
-      <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-wider" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>
-        {lang}
-      </div>
-    )}
-    <pre className="px-4 py-3 text-[12px] overflow-x-auto leading-relaxed" style={{ background: '#0d1117', color: '#e6edf3', fontFamily: 'IBM Plex Mono, monospace', margin: 0 }}>
-      {code.trim()}
-    </pre>
-  </div>
-);
+// ── Syntax-highlighted code block ─────────────────────────────────────────────
+const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
+  const html = useMemo(() => {
+    const trimmed = code.trim();
+    try {
+      if (lang && hljs.getLanguage(lang)) {
+        return hljs.highlight(trimmed, { language: lang, ignoreIllegals: true }).value;
+      }
+      return hljs.highlightAuto(trimmed).value;
+    } catch {
+      return trimmed.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+  }, [code, lang]);
+
+  return (
+    <div className="my-2 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+      {lang && (
+        <div className="px-3 py-1.5 flex items-center justify-between" style={{ background: '#21252b', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: '#abb2bf' }}>{lang}</span>
+        </div>
+      )}
+      <pre className="px-4 py-3 text-[12.5px] overflow-x-auto leading-relaxed hljs" style={{ background: '#282c34', fontFamily: 'IBM Plex Mono, monospace', margin: 0 }}>
+        <code dangerouslySetInnerHTML={{ __html: html }} />
+      </pre>
+    </div>
+  );
+};
 
 // Process inline markdown: **bold**, `code`
 const inlineMarkdown = (raw: string): React.ReactNode[] => {
