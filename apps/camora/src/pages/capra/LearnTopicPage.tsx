@@ -104,14 +104,17 @@ function renderMarkdown(text: string) {
 
     // ── Standalone bold label: **Text** on its own line ─────────────────────
     // Treat as a sub-section label with distinct styling instead of plain <p>.
-    if (/^\*\*[^*]+\*\*[:.]?\s*$/.test(line.trim())) {
-      const label = line.trim().replace(/^\*\*/, '').replace(/\*\*[:.]?\s*$/, '');
-      elements.push(
-        <p key={key++} className="text-[12px] font-bold uppercase tracking-[0.08em] mt-4 mb-1" style={{ color: 'var(--cam-primary)' }}>
-          {label}
-        </p>
-      );
-      i++; continue;
+    {
+      const t = line.trim();
+      if (t.startsWith('**') && t.endsWith('**') && t.length > 4 && !t.slice(2, -2).includes('**')) {
+        const label = t.slice(2, -2);
+        elements.push(
+          <p key={key++} className="text-[12px] font-bold uppercase tracking-[0.08em] mt-4 mb-1" style={{ color: 'var(--cam-primary)' }}>
+            {label}
+          </p>
+        );
+        i++; continue;
+      }
     }
 
     // ── Bullet list ──────────────────────────────────────────────────────────
@@ -144,6 +147,7 @@ function renderMarkdown(text: string) {
       while (j < lines.length && lines[j].match(/^\d+[.)]\s/)) {
         const heading = lines[j].replace(/^\d+[.)]\s/, '');
         j++;
+        if (j < lines.length && !lines[j].trim()) j++; // skip optional blank line between heading and bullets
         const bullets: string[] = [];
         while (j < lines.length && lines[j].match(/^[-*•]\s/)) {
           bullets.push(lines[j].replace(/^[-*•]\s/, ''));
