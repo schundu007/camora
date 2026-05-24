@@ -66,78 +66,170 @@ function htmlHarness() {
 <body style="margin:0;background:${BG_COLORS[BG]}">
 <div id="status">loading…</div>
 <script type="module">
-  // Load Excalidraw via esm.sh — sidesteps the local-node-modules
-  // ESM resolution problem (Excalidraw ships ESM with relative imports
-  // that don't resolve from a file:// URL).
   const mod = await import('https://esm.sh/@excalidraw/excalidraw@0.18.1');
   const { exportToCanvas } = mod;
 
-  // Wait for Virgil + Cascadia + Helvetica to be available so text
-  // measures are correct in the rasterized canvas. Excalidraw lazy-
-  // loads its fonts through CSS @font-face; we force them by drawing
-  // a hidden test string after a short delay.
-  await new Promise((r) => setTimeout(r, 500));
+  await new Promise((r) => setTimeout(r, 600));
 
-  window.__renderToPng = async (data, opts) => {
-    const elements = data.elements || [];
-    const appState = data.appState || {};
-    const files = data.files || {};
+  // ── Color helpers ──────────────────────────────────────────────────────────
+  function hexToRgb(hex) {
+    const h = hex.replace('#','');
+    if (h.length === 3) {
+      return { r: parseInt(h[0]+h[0],16), g: parseInt(h[1]+h[1],16), b: parseInt(h[2]+h[2],16) };
+    }
+    return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+  }
+  function rgbToHsl({ r, g, b }) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r,g,b), min = Math.min(r,g,b), l = (max+min)/2;
+    if (max === min) return { h: 0, s: 0, l };
+    const d = max - min, s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+    const h = max === r ? (g-b)/d+(g<b?6:0) : max === g ? (b-r)/d+2 : (r-g)/d+4;
+    return { h: h/6, s, l };
+  }
+  function hslToHex(h, s, l) {
+    const hue2rgb = (p,q,t) => {
+      if (t<0) t+=1; if (t>1) t-=1;
+      if (t<1/6) return p+(q-p)*6*t;
+      if (t<1/2) return q;
+      if (t<2/3) return p+(q-p)*(2/3-t)*6;
+      return p;
+    };
+    if (s===0) { const v=Math.round(l*255); return '#'+v.toString(16).padStart(2,'0').repeat(3); }
+    const q = l<0.5 ? l*(1+s) : l+s-l*s, p = 2*l-q;
+    const r=Math.round(hue2rgb(p,q,h+1/3)*255), g=Math.round(hue2rgb(p,q,h)*255), b=Math.round(hue2rgb(p,q,h-1/3)*255);
+    return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+  }
+  function luminance(hex) {
+    if (!hex || !hex.startsWith('#')) return 0;
+    try { const {r,g,b}=hexToRgb(hex); return 0.299*r/255+0.587*g/255+0.114*b/255; } catch { return 0; }
+  }
 
-    // Build set of container IDs that have bound text so we don't exclude them.
+  // Convert any fill color to dark-theme fill+stroke pair.
+  // Light colors → very dark fill of same hue + bright stroke of same hue.
+  // Already-dark → keep dark fill, dim border.
+  function darkPair(hex) {
+    if (!hex || hex==='transparent'||hex==='none') return { fill:'#0d1117', stroke:'#30363d' };
+    if (!hex.startsWith('#')) return { fill:'#161b22', stroke:'#30363d' };
+    try {
+      const lum = luminance(hex);
+      const hsl = rgbToHsl(hexToRgb(hex));
+      if (lum < 0.12) {
+        // already dark — use as fill, dim border
+        return { fill: hex, stroke: hslToHex(hsl.h, Math.min(hsl.s*1.2,1), 0.45) };
+      }
+      // light color → darken fill, brighten stroke
+      const fill   = hslToHex(hsl.h, Math.min(hsl.s*0.7,1), 0.07);
+      const stroke = hslToHex(hsl.h, Math.min(hsl.s*1.1,1), 0.62);
+      return { fill, stroke };
+    } catch { return { fill:'#161b22', stroke:'#30363d' }; }
+  }
+
+  // Apply professional dark theme to all elements in-place (returns new array).
+  function applyDarkTheme(elements) {
+    return elements.map(el => {
+      if (el.isDeleted) return el;
+      const e = { ...el };
+
+      if (e.type === 'rectangle' || e.type === 'ellipse' || e.type === 'diamond') {
+        const { fill, stroke } = darkPair(e.backgroundColor || 'transparent');
+        e.backgroundColor = fill;
+        // Keep original stroke if already bright, else derive from fill color
+        const sLum = e.strokeColor ? luminance(e.strokeColor) : 0;
+        e.strokeColor = sLum > 0.35 ? e.strokeColor : stroke;
+        e.strokeWidth = Math.max(e.strokeWidth || 1, 2);
+        e.roughness = 0;
+        e.roundness = e.roundness || { type: 3, value: 6 };
+      }
+      if (e.type === 'arrow' || e.type === 'line') {
+        const sLum = e.strokeColor ? luminance(e.strokeColor) : 0;
+        if (sLum < 0.35) {
+          // dark arrow on dark bg — make it visible
+          e.strokeColor = '#58a6ff';
+        }
+        e.strokeWidth = Math.max(e.strokeWidth || 1, 2);
+        e.roughness = 0;
+      }
+      if (e.type === 'text') {
+        const sLum = e.strokeColor ? luminance(e.strokeColor) : 0;
+        // Dark text → flip to light
+        if (sLum < 0.45) e.strokeColor = '#e6edf3';
+        e.fontFamily = 3; // Cascadia monospace
+        e.roughness = 0;
+      }
+      return e;
+    });
+  }
+
+  // ── Artifact detection ─────────────────────────────────────────────────────
+  // Shape is an artifact if: no bound-text children, no inline text, no
+  // standalone text overlaps it, AND no arrow endpoint is inside it.
+  function buildVisibleElements(elements) {
     const boundContainerIds = new Set(
-      elements
-        .filter(e => !e.isDeleted && e.containerId)
-        .map(e => e.containerId)
+      elements.filter(e => !e.isDeleted && e.containerId).map(e => e.containerId)
     );
 
-    // Bounding boxes of all standalone text elements — used to detect which
-    // shapes actually contain or overlap readable content.
+    // Collect absolute arrow endpoints from points array.
+    const arrowEndpoints = [];
+    for (const e of elements) {
+      if (e.isDeleted || (e.type !== 'arrow' && e.type !== 'line')) continue;
+      const pts = e.points || [[0,0]];
+      // first and last point are the endpoints
+      for (const pt of [pts[0], pts[pts.length-1]]) {
+        arrowEndpoints.push({ x: e.x + pt[0], y: e.y + pt[1] });
+      }
+      // also check binding ids
+      if (e.startBinding) arrowEndpoints.push({ boundId: e.startBinding.elementId });
+      if (e.endBinding)   arrowEndpoints.push({ boundId: e.endBinding.elementId });
+    }
+    const arrowBoundIds = new Set(arrowEndpoints.filter(p=>p.boundId).map(p=>p.boundId));
+    const arrowPoints   = arrowEndpoints.filter(p=>p.x !== undefined);
+
     const textBoxes = elements
       .filter(e => !e.isDeleted && e.type === 'text')
-      .map(e => ({ x: e.x, y: e.y, x2: e.x + (e.width || 0), y2: e.y + (e.height || 0) }));
+      .map(e => ({ x: e.x, y: e.y, x2: e.x+(e.width||0), y2: e.y+(e.height||0) }));
 
     const overlapsText = (el) => {
-      const ex2 = el.x + (el.width || 0);
-      const ey2 = el.y + (el.height || 0);
+      const ex2 = el.x+(el.width||0), ey2 = el.y+(el.height||0);
       return textBoxes.some(t => el.x < t.x2 && ex2 > t.x && el.y < t.y2 && ey2 > t.y);
     };
-
-    // A shape is an artifact if it has no bound-text children, no inline text,
-    // and no free-standing text element overlaps it. These appear as blank
-    // colored boxes in the export even though they carry no real content.
-    const isArtifact = (el) => {
-      if (el.isDeleted) return true;
-      const isShape = el.type === 'rectangle' || el.type === 'ellipse' || el.type === 'diamond';
-      if (!isShape) return false;
-      if (boundContainerIds.has(el.id)) return false;
-      const hasInlineText = el.text && String(el.text).trim();
-      if (hasInlineText) return false;
-      return textBoxes.length > 0 && !overlapsText(el);
+    const hasArrowEndpoint = (el) => {
+      if (arrowBoundIds.has(el.id)) return true;
+      const ex2 = el.x+(el.width||0), ey2 = el.y+(el.height||0);
+      return arrowPoints.some(p => p.x >= el.x && p.x <= ex2 && p.y >= el.y && p.y <= ey2);
     };
 
-    const visibleElements = elements.filter(e => !isArtifact(e));
+    const isArtifact = (el) => {
+      if (el.isDeleted) return true;
+      const isShape = el.type==='rectangle'||el.type==='ellipse'||el.type==='diamond';
+      if (!isShape) return false;
+      if (boundContainerIds.has(el.id)) return false;
+      if (el.text && String(el.text).trim()) return false;
+      if (overlapsText(el)) return false;
+      if (hasArrowEndpoint(el)) return false;
+      return true;
+    };
 
-    // Compute viewport from visible elements only.
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const el of visibleElements) {
-      if (el.isDeleted) continue;
-      minX = Math.min(minX, el.x);
-      minY = Math.min(minY, el.y);
-      maxX = Math.max(maxX, el.x + (el.width || 0));
-      maxY = Math.max(maxY, el.y + (el.height || 0));
-    }
-    const PAD = 96;
-    const baseW = Math.ceil(maxX - minX + PAD * 2);
-    const baseH = Math.ceil(maxY - minY + PAD * 2);
-    // 3× scale: sharp text at any inline preview width (typically
-    // ~1000-1200px container) AND sharp at lightbox native size.
-    // Roughly matches the original 5520-wide manual exports.
+    return elements.filter(e => !isArtifact(e));
+  }
+
+  window.__renderToPng = async (data, opts) => {
+    const rawElements = data.elements || [];
+    const appState    = data.appState || {};
+    const files       = data.files   || {};
+
+    // 1. Remove artifacts, 2. Apply dark theme.
+    const visible = buildVisibleElements(rawElements);
+    const elements = applyDarkTheme(visible);
+
+    // Let excalidraw compute the tight bounding box. getDimensions receives
+    // the natural canvas size (content + 2*exportPadding) and we multiply
+    // by SCALE for a high-res output — no manual bbox math needed.
+    const PAD   = 72;
     const SCALE = 3;
-    const width = baseW * SCALE;
-    const height = baseH * SCALE;
 
     const canvas = await exportToCanvas({
-      elements: visibleElements,
+      elements,
       appState: {
         ...appState,
         exportBackground: true,
@@ -145,7 +237,7 @@ function htmlHarness() {
         exportPadding: PAD,
       },
       files,
-      getDimensions: () => ({ width, height, scale: SCALE }),
+      getDimensions: (w, h) => ({ width: w * SCALE, height: h * SCALE, scale: SCALE }),
     });
     return canvas.toDataURL('image/png');
   };
