@@ -1,29 +1,29 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import hljs from 'highlight.js/lib/core';
-import hljsPython from 'highlight.js/lib/languages/python';
-import hljsJS from 'highlight.js/lib/languages/javascript';
-import hljsTS from 'highlight.js/lib/languages/typescript';
-import hljsJava from 'highlight.js/lib/languages/java';
-import hljsGo from 'highlight.js/lib/languages/go';
-import hljsSQL from 'highlight.js/lib/languages/sql';
-import hljsCpp from 'highlight.js/lib/languages/cpp';
-import hljsBash from 'highlight.js/lib/languages/bash';
-import 'highlight.js/styles/atom-one-dark.css';
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import python from 'react-syntax-highlighter/dist/esm/languages/hljs/python';
+import javascript from 'react-syntax-highlighter/dist/esm/languages/hljs/javascript';
+import typescript from 'react-syntax-highlighter/dist/esm/languages/hljs/typescript';
+import java from 'react-syntax-highlighter/dist/esm/languages/hljs/java';
+import go from 'react-syntax-highlighter/dist/esm/languages/hljs/go';
+import sql from 'react-syntax-highlighter/dist/esm/languages/hljs/sql';
+import cpp from 'react-syntax-highlighter/dist/esm/languages/hljs/cpp';
+import bash from 'react-syntax-highlighter/dist/esm/languages/hljs/bash';
 
-hljs.registerLanguage('python', hljsPython);
-hljs.registerLanguage('py', hljsPython);
-hljs.registerLanguage('javascript', hljsJS);
-hljs.registerLanguage('js', hljsJS);
-hljs.registerLanguage('typescript', hljsTS);
-hljs.registerLanguage('ts', hljsTS);
-hljs.registerLanguage('java', hljsJava);
-hljs.registerLanguage('go', hljsGo);
-hljs.registerLanguage('sql', hljsSQL);
-hljs.registerLanguage('cpp', hljsCpp);
-hljs.registerLanguage('c', hljsCpp);
-hljs.registerLanguage('bash', hljsBash);
-hljs.registerLanguage('sh', hljsBash);
+SyntaxHighlighter.registerLanguage('python', python);
+SyntaxHighlighter.registerLanguage('py', python);
+SyntaxHighlighter.registerLanguage('javascript', javascript);
+SyntaxHighlighter.registerLanguage('js', javascript);
+SyntaxHighlighter.registerLanguage('typescript', typescript);
+SyntaxHighlighter.registerLanguage('ts', typescript);
+SyntaxHighlighter.registerLanguage('java', java);
+SyntaxHighlighter.registerLanguage('go', go);
+SyntaxHighlighter.registerLanguage('sql', sql);
+SyntaxHighlighter.registerLanguage('cpp', cpp);
+SyntaxHighlighter.registerLanguage('c', cpp);
+SyntaxHighlighter.registerLanguage('bash', bash);
+SyntaxHighlighter.registerLanguage('sh', bash);
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
 
@@ -40,29 +40,26 @@ const SUGGESTIONS = [
 ];
 
 // ── Syntax-highlighted code block ─────────────────────────────────────────────
-const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
-  const html = useMemo(() => {
-    const trimmed = code.trim();
-    try {
-      if (lang && hljs.getLanguage(lang)) {
-        return hljs.highlight(trimmed, { language: lang, ignoreIllegals: true }).value;
-      }
-      return hljs.highlightAuto(trimmed).value;
-    } catch {
-      return trimmed.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-  }, [code, lang]);
+const KNOWN_LANGS = new Set(['python','py','javascript','js','typescript','ts','java','go','sql','cpp','c','bash','sh']);
 
+const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
+  const normalizedLang = KNOWN_LANGS.has(lang?.toLowerCase()) ? lang.toLowerCase() : 'python';
   return (
     <div className="my-2 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
       {lang && (
-        <div className="px-3 py-1.5 flex items-center justify-between" style={{ background: '#21252b', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="px-3 py-1.5" style={{ background: '#21252b', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: '#abb2bf' }}>{lang}</span>
         </div>
       )}
-      <pre className="px-4 py-3 text-[12.5px] overflow-x-auto leading-relaxed hljs" style={{ background: '#282c34', fontFamily: 'IBM Plex Mono, monospace', margin: 0 }}>
-        <code dangerouslySetInnerHTML={{ __html: html }} />
-      </pre>
+      <SyntaxHighlighter
+        language={normalizedLang}
+        style={atomOneDark}
+        customStyle={{ margin: 0, padding: '12px 16px', fontSize: '12.5px', lineHeight: '1.6', fontFamily: 'IBM Plex Mono, monospace', background: '#282c34', borderRadius: 0 }}
+        showLineNumbers={false}
+        wrapLongLines={false}
+      >
+        {code.trim()}
+      </SyntaxHighlighter>
     </div>
   );
 };
@@ -172,7 +169,7 @@ export const AskLayout = () => {
   const [input, setInput]               = useState('');
   const [streaming, setStreaming]       = useState(false);
   const [streamText, setStreamText]     = useState('');
-  const [provider, setProvider]         = useState<Provider>('claude');
+  const [provider, setProvider]         = useState<Provider>('gemini');
   const [convId, setConvId]             = useState<string | null>(null);
   const [history, setHistory]           = useState<Conv[]>([]);
   const [showHistory, setShowHistory]   = useState(false);
