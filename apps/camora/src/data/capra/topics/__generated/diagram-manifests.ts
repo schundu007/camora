@@ -5,39 +5,615 @@ type DiagramEntry = { id: string; title: string; file: string };
 type TopicDiagrams = { deepDives: DiagramEntry[]; tradeoffs: DiagramEntry[] };
 
 export const GENERATED_DIAGRAMS: Record<string, TopicDiagrams> = {
-  'chat-system': {
+  'acid-vs-base': {
     deepDives: [
     {
-        "id": "websocket-connection",
-        "title": "WebSocket Connection Lifecycle & Heartbeats",
-        "file": "deep-dive-websocket-connection.png"
+        "id": "two-phase-commit",
+        "title": "Two-Phase Commit Protocol (ACID Distributed Transactions)",
+        "file": "deep-dive-two-phase-commit.png"
     },
     {
-        "id": "message-ordering",
-        "title": "Message Ordering & Idempotency",
-        "file": "deep-dive-message-ordering.png"
+        "id": "eventual-consistency-flow",
+        "title": "Eventual Consistency Replication (BASE)",
+        "file": "deep-dive-eventual-consistency-flow.png"
     },
     {
-        "id": "offline-sync",
-        "title": "Offline Message Sync & Push Notifications",
-        "file": "deep-dive-offline-sync.png"
+        "id": "saga-pattern",
+        "title": "Saga Pattern for Long-Running Transactions",
+        "file": "deep-dive-saga-pattern.png"
     }
 ],
     tradeoffs: [
     {
-        "id": "websocket-vs-longpoll-vs-sse",
-        "title": "WebSocket vs Long Polling vs SSE",
-        "file": "tradeoff-websocket-vs-longpoll-vs-sse.png"
+        "id": "consistency-vs-availability",
+        "title": "Strong Consistency vs Eventual Consistency",
+        "file": "tradeoff-consistency-vs-availability.png"
     },
     {
-        "id": "read-receipts-consistency",
-        "title": "Strong vs Eventual Read-Receipt Consistency",
-        "file": "tradeoff-read-receipts-consistency.png"
+        "id": "sql-vs-nosql",
+        "title": "SQL (ACID) vs NoSQL (BASE) Databases",
+        "file": "tradeoff-sql-vs-nosql.png"
     },
     {
-        "id": "end-to-end-encryption",
-        "title": "End-to-End Encryption vs Server-Side Encryption",
-        "file": "tradeoff-end-to-end-encryption.png"
+        "id": "2pc-vs-saga",
+        "title": "Two-Phase Commit vs Saga Pattern",
+        "file": "tradeoff-2pc-vs-saga.png"
+    }
+],
+  },
+  'apache-flink-deep-dive': {
+    deepDives: [
+    {
+        "id": "checkpointing-mechanism",
+        "title": "Chandy-Lamport Checkpointing & Barrier Alignment",
+        "file": "deep-dive-checkpointing-mechanism.png"
+    },
+    {
+        "id": "state-backend-internals",
+        "title": "RocksDB State Backend & Incremental Checkpoints",
+        "file": "deep-dive-state-backend-internals.png"
+    },
+    {
+        "id": "watermark-event-time",
+        "title": "Watermark Propagation & Event-Time Windowing",
+        "file": "deep-dive-watermark-event-time.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "state-backend-choice",
+        "title": "HashMap vs RocksDB State Backend",
+        "file": "tradeoff-state-backend-choice.png"
+    },
+    {
+        "id": "processing-semantics",
+        "title": "Exactly-Once vs At-Least-Once Processing",
+        "file": "tradeoff-processing-semantics.png"
+    },
+    {
+        "id": "deployment-mode",
+        "title": "Session vs Per-Job vs Application Mode",
+        "file": "tradeoff-deployment-mode.png"
+    }
+],
+  },
+  'api-design': {
+    deepDives: [
+    {
+        "id": "api-versioning-strategy",
+        "title": "API Versioning Strategies",
+        "file": "deep-dive-api-versioning-strategy.png"
+    },
+    {
+        "id": "auth-flow-oauth2",
+        "title": "OAuth 2.0 + JWT Authentication Flow",
+        "file": "deep-dive-auth-flow-oauth2.png"
+    },
+    {
+        "id": "rate-limiting-pipeline",
+        "title": "Distributed Rate Limiting Pipeline",
+        "file": "deep-dive-rate-limiting-pipeline.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "rest-vs-graphql-vs-grpc-choice",
+        "title": "REST vs GraphQL vs gRPC",
+        "file": "tradeoff-rest-vs-graphql-vs-grpc-choice.png"
+    },
+    {
+        "id": "versioning-uri-vs-header",
+        "title": "URI Versioning vs Header Versioning",
+        "file": "tradeoff-versioning-uri-vs-header.png"
+    },
+    {
+        "id": "pagination-offset-vs-cursor",
+        "title": "Offset Pagination vs Cursor Pagination",
+        "file": "tradeoff-pagination-offset-vs-cursor.png"
+    }
+],
+  },
+  'bloom-filters': {
+    deepDives: [
+    {
+        "id": "insertion-lookup-flow",
+        "title": "Insertion and Lookup Data Flow",
+        "file": "deep-dive-insertion-lookup-flow.png"
+    },
+    {
+        "id": "false-positive-tuning",
+        "title": "False Positive Rate vs Size & Hash Count",
+        "file": "deep-dive-false-positive-tuning.png"
+    },
+    {
+        "id": "counting-bloom-deletion",
+        "title": "Counting Bloom Filter for Deletions",
+        "file": "deep-dive-counting-bloom-deletion.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "standard-vs-counting-bloom",
+        "title": "Standard vs Counting Bloom Filter",
+        "file": "tradeoff-standard-vs-counting-bloom.png"
+    },
+    {
+        "id": "bloom-vs-cuckoo-filter",
+        "title": "Bloom Filter vs Cuckoo Filter",
+        "file": "tradeoff-bloom-vs-cuckoo-filter.png"
+    },
+    {
+        "id": "in-memory-vs-distributed-bloom",
+        "title": "In-Memory vs Distributed Bloom Filter",
+        "file": "tradeoff-in-memory-vs-distributed-bloom.png"
+    }
+],
+  },
+  'caching': {
+    deepDives: [
+    {
+        "id": "consistent-hashing-ring",
+        "title": "Consistent Hashing Ring for Distributed Cache",
+        "file": "deep-dive-consistent-hashing-ring.png"
+    },
+    {
+        "id": "cache-invalidation-flow",
+        "title": "Distributed Cache Invalidation Pipeline",
+        "file": "deep-dive-cache-invalidation-flow.png"
+    },
+    {
+        "id": "hot-key-mitigation",
+        "title": "Hot Key Detection and Mitigation",
+        "file": "deep-dive-hot-key-mitigation.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "write-through-vs-write-back",
+        "title": "Write-Through vs Write-Back vs Write-Around",
+        "file": "tradeoff-write-through-vs-write-back.png"
+    },
+    {
+        "id": "eviction-policy",
+        "title": "LRU vs LFU vs TTL Eviction",
+        "file": "tradeoff-eviction-policy.png"
+    },
+    {
+        "id": "local-vs-distributed-cache",
+        "title": "Local (In-Process) vs Distributed Cache",
+        "file": "tradeoff-local-vs-distributed-cache.png"
+    }
+],
+  },
+  'cap-pacelc-deep-dive': {
+    deepDives: [
+    {
+        "id": "pacelc-decision-flow",
+        "title": "PACELC Decision Flow",
+        "file": "deep-dive-pacelc-decision-flow.png"
+    },
+    {
+        "id": "quorum-consensus-flow",
+        "title": "Quorum-Based Read/Write Flow",
+        "file": "deep-dive-quorum-consensus-flow.png"
+    },
+    {
+        "id": "consistency-spectrum",
+        "title": "Consistency Models Spectrum",
+        "file": "deep-dive-consistency-spectrum.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "cp-vs-ap",
+        "title": "CP vs AP Under Partition",
+        "file": "tradeoff-cp-vs-ap.png"
+    },
+    {
+        "id": "el-vs-ec",
+        "title": "EL vs EC in Normal Operation",
+        "file": "tradeoff-el-vs-ec.png"
+    },
+    {
+        "id": "replication-strategy",
+        "title": "Sync vs Async vs Quorum Replication",
+        "file": "tradeoff-replication-strategy.png"
+    }
+],
+  },
+  'cassandra-deep-dive': {
+    deepDives: [
+    {
+        "id": "write-path-internals",
+        "title": "Cassandra Write Path Internals",
+        "file": "deep-dive-write-path-internals.png"
+    },
+    {
+        "id": "read-path-internals",
+        "title": "Cassandra Read Path & Repair",
+        "file": "deep-dive-read-path-internals.png"
+    },
+    {
+        "id": "gossip-failure-detection",
+        "title": "Gossip Protocol & Failure Detection",
+        "file": "deep-dive-gossip-failure-detection.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "consistency-level-tradeoff",
+        "title": "QUORUM vs ONE vs ALL Consistency",
+        "file": "tradeoff-consistency-level-tradeoff.png"
+    },
+    {
+        "id": "partitioner-choice",
+        "title": "Murmur3 vs ByteOrdered Partitioner",
+        "file": "tradeoff-partitioner-choice.png"
+    },
+    {
+        "id": "compaction-strategy",
+        "title": "STCS vs LCS vs TWCS Compaction",
+        "file": "tradeoff-compaction-strategy.png"
+    }
+],
+  },
+  'cdn-deep-dive': {
+    deepDives: [
+    {
+        "id": "cache-hierarchy-flow",
+        "title": "Multi-Tier Cache Hierarchy & Request Flow",
+        "file": "deep-dive-cache-hierarchy-flow.png"
+    },
+    {
+        "id": "cache-invalidation-pipeline",
+        "title": "Cache Invalidation & Purge Propagation",
+        "file": "deep-dive-cache-invalidation-pipeline.png"
+    },
+    {
+        "id": "anycast-gslb-routing",
+        "title": "Anycast + GSLB Request Routing",
+        "file": "deep-dive-anycast-gslb-routing.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "push-vs-pull-cdn",
+        "title": "Push CDN vs Pull CDN",
+        "file": "tradeoff-push-vs-pull-cdn.png"
+    },
+    {
+        "id": "consistent-hashing-vs-rendezvous",
+        "title": "Consistent Hashing vs Rendezvous Hashing",
+        "file": "tradeoff-consistent-hashing-vs-rendezvous.png"
+    },
+    {
+        "id": "tls-termination-location",
+        "title": "Edge TLS Termination vs Origin TLS Passthrough",
+        "file": "tradeoff-tls-termination-location.png"
+    }
+],
+  },
+  'checksum': {
+    deepDives: [
+    {
+        "id": "merkle-tree-verification",
+        "title": "Merkle Tree Integrity Verification",
+        "file": "deep-dive-merkle-tree-verification.png"
+    },
+    {
+        "id": "end-to-end-upload-flow",
+        "title": "End-to-End Upload with Checksum Pipeline",
+        "file": "deep-dive-end-to-end-upload-flow.png"
+    },
+    {
+        "id": "collision-detection-recovery",
+        "title": "Collision Detection & Corruption Recovery",
+        "file": "deep-dive-collision-detection-recovery.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "cryptographic-vs-noncryptographic",
+        "title": "Cryptographic vs Non-Cryptographic Hashes",
+        "file": "tradeoff-cryptographic-vs-noncryptographic.png"
+    },
+    {
+        "id": "block-vs-whole-file-checksum",
+        "title": "Block-Level vs Whole-File Checksum",
+        "file": "tradeoff-block-vs-whole-file-checksum.png"
+    },
+    {
+        "id": "inline-vs-async-verification",
+        "title": "Inline vs Asynchronous Verification",
+        "file": "tradeoff-inline-vs-async-verification.png"
+    }
+],
+  },
+  'consistent-hashing': {
+    deepDives: [
+    {
+        "id": "virtual-nodes",
+        "title": "Virtual Nodes Distribution",
+        "file": "deep-dive-virtual-nodes.png"
+    },
+    {
+        "id": "node-failure-rebalancing",
+        "title": "Node Failure and Key Rebalancing",
+        "file": "deep-dive-node-failure-rebalancing.png"
+    },
+    {
+        "id": "replication-strategy",
+        "title": "Replication Across Ring",
+        "file": "deep-dive-replication-strategy.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "virtual-vs-physical-nodes",
+        "title": "Virtual Nodes vs Physical Nodes Only",
+        "file": "tradeoff-virtual-vs-physical-nodes.png"
+    },
+    {
+        "id": "hash-function-choice",
+        "title": "MD5/SHA-1 vs MurmurHash vs xxHash",
+        "file": "tradeoff-hash-function-choice.png"
+    },
+    {
+        "id": "consistent-hashing-vs-alternatives",
+        "title": "Ring Hashing vs Rendezvous vs Jump Hash",
+        "file": "tradeoff-consistent-hashing-vs-alternatives.png"
+    }
+],
+  },
+  'data-partitioning': {
+    deepDives: [
+    {
+        "id": "consistent-hashing-ring",
+        "title": "Consistent Hashing Ring with Virtual Nodes",
+        "file": "deep-dive-consistent-hashing-ring.png"
+    },
+    {
+        "id": "resharding-data-flow",
+        "title": "Resharding and Data Migration Flow",
+        "file": "deep-dive-resharding-data-flow.png"
+    },
+    {
+        "id": "cross-shard-query",
+        "title": "Cross-Shard Query and Distributed Transactions",
+        "file": "deep-dive-cross-shard-query.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "range-vs-hash-partitioning",
+        "title": "Range vs Hash Partitioning",
+        "file": "tradeoff-range-vs-hash-partitioning.png"
+    },
+    {
+        "id": "vertical-vs-horizontal-sharding",
+        "title": "Vertical vs Horizontal Sharding",
+        "file": "tradeoff-vertical-vs-horizontal-sharding.png"
+    },
+    {
+        "id": "client-vs-proxy-vs-coordinator-routing",
+        "title": "Shard Routing Strategies",
+        "file": "tradeoff-client-vs-proxy-vs-coordinator-routing.png"
+    }
+],
+  },
+  'database-indexes': {
+    deepDives: [
+    {
+        "id": "btree-insert-split",
+        "title": "B+ Tree Insertion and Node Split",
+        "file": "deep-dive-btree-insert-split.png"
+    },
+    {
+        "id": "lsm-compaction",
+        "title": "LSM Tree Write Path and Compaction",
+        "file": "deep-dive-lsm-compaction.png"
+    },
+    {
+        "id": "composite-index-query",
+        "title": "Composite Index Query Resolution",
+        "file": "deep-dive-composite-index-query.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "btree-vs-lsm",
+        "title": "B+ Tree vs LSM Tree",
+        "file": "tradeoff-btree-vs-lsm.png"
+    },
+    {
+        "id": "hash-vs-btree",
+        "title": "Hash Index vs B+ Tree Index",
+        "file": "tradeoff-hash-vs-btree.png"
+    },
+    {
+        "id": "clustered-vs-secondary",
+        "title": "Clustered vs Non-Clustered vs Covering Index",
+        "file": "tradeoff-clustered-vs-secondary.png"
+    }
+],
+  },
+  'databases': {
+    deepDives: [
+    {
+        "id": "raft-consensus-protocol",
+        "title": "Raft Consensus & Leader Election",
+        "file": "deep-dive-raft-consensus-protocol.png"
+    },
+    {
+        "id": "lsm-tree-write-path",
+        "title": "LSM-Tree Write & Compaction Path",
+        "file": "deep-dive-lsm-tree-write-path.png"
+    },
+    {
+        "id": "two-phase-commit",
+        "title": "Distributed Transaction (2PC) Flow",
+        "file": "deep-dive-two-phase-commit.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "strong-vs-eventual-consistency",
+        "title": "Strong vs Eventual Consistency",
+        "file": "tradeoff-strong-vs-eventual-consistency.png"
+    },
+    {
+        "id": "leader-based-vs-leaderless-replication",
+        "title": "Leader-Based vs Leaderless Replication",
+        "file": "tradeoff-leader-based-vs-leaderless-replication.png"
+    },
+    {
+        "id": "normalization-vs-denormalization",
+        "title": "Normalized vs Denormalized Schema",
+        "file": "tradeoff-normalization-vs-denormalization.png"
+    }
+],
+  },
+  'distributed-file-systems': {
+    deepDives: [
+    {
+        "id": "write-path-replication",
+        "title": "Write Path with Chunk Replication",
+        "file": "deep-dive-write-path-replication.png"
+    },
+    {
+        "id": "metadata-consensus",
+        "title": "Metadata Server HA via Raft Consensus",
+        "file": "deep-dive-metadata-consensus.png"
+    },
+    {
+        "id": "failure-recovery",
+        "title": "Chunk Server Failure Detection and Re-Replication",
+        "file": "deep-dive-failure-recovery.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "centralized-vs-distributed-metadata",
+        "title": "Centralized vs Distributed Metadata",
+        "file": "tradeoff-centralized-vs-distributed-metadata.png"
+    },
+    {
+        "id": "replication-vs-erasure-coding",
+        "title": "Replication vs Erasure Coding",
+        "file": "tradeoff-replication-vs-erasure-coding.png"
+    },
+    {
+        "id": "strong-vs-eventual-consistency",
+        "title": "Strong vs Eventual Consistency",
+        "file": "tradeoff-strong-vs-eventual-consistency.png"
+    }
+],
+  },
+  'distributed-lock': {
+    deepDives: [
+    {
+        "id": "redlock-algorithm-flow",
+        "title": "Redlock Algorithm Acquisition Flow",
+        "file": "deep-dive-redlock-algorithm-flow.png"
+    },
+    {
+        "id": "fencing-token-flow",
+        "title": "Fencing Token Protection Flow",
+        "file": "deep-dive-fencing-token-flow.png"
+    },
+    {
+        "id": "lease-renewal-failure-recovery",
+        "title": "Lease Renewal & Failure Recovery",
+        "file": "deep-dive-lease-renewal-failure-recovery.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "redis-vs-zookeeper-vs-etcd",
+        "title": "Redis vs ZooKeeper vs etcd",
+        "file": "tradeoff-redis-vs-zookeeper-vs-etcd.png"
+    },
+    {
+        "id": "ttl-vs-heartbeat",
+        "title": "Fixed TTL vs Heartbeat Renewal",
+        "file": "tradeoff-ttl-vs-heartbeat.png"
+    },
+    {
+        "id": "single-node-vs-quorum",
+        "title": "Single-Node Lock vs Quorum-Based Lock",
+        "file": "tradeoff-single-node-vs-quorum.png"
+    }
+],
+  },
+  'distributed-messaging': {
+    deepDives: [
+    {
+        "id": "message-delivery-flow",
+        "title": "Real-Time Message Delivery & Fanout",
+        "file": "deep-dive-message-delivery-flow.png"
+    },
+    {
+        "id": "read-receipts-presence",
+        "title": "Presence & Read Receipts Pipeline",
+        "file": "deep-dive-read-receipts-presence.png"
+    },
+    {
+        "id": "group-chat-sharding",
+        "title": "Group Chat Storage & Sharding",
+        "file": "deep-dive-group-chat-sharding.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "websocket-vs-long-polling",
+        "title": "WebSockets vs Long Polling vs SSE",
+        "file": "tradeoff-websocket-vs-long-polling.png"
+    },
+    {
+        "id": "push-vs-pull-fanout",
+        "title": "Push Fanout vs Pull Fanout",
+        "file": "tradeoff-push-vs-pull-fanout.png"
+    },
+    {
+        "id": "message-storage-db",
+        "title": "Cassandra vs Sharded RDBMS for Messages",
+        "file": "tradeoff-message-storage-db.png"
+    }
+],
+  },
+  'dns-deep-dive': {
+    deepDives: [
+    {
+        "id": "dns-caching-hierarchy",
+        "title": "DNS Caching Hierarchy & TTL Flow",
+        "file": "deep-dive-dns-caching-hierarchy.png"
+    },
+    {
+        "id": "geodns-anycast-routing",
+        "title": "GeoDNS & Anycast Routing",
+        "file": "deep-dive-geodns-anycast-routing.png"
+    },
+    {
+        "id": "dnssec-validation-chain",
+        "title": "DNSSEC Validation Chain of Trust",
+        "file": "deep-dive-dnssec-validation-chain.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "recursive-vs-iterative",
+        "title": "Recursive vs Iterative Resolution",
+        "file": "tradeoff-recursive-vs-iterative.png"
+    },
+    {
+        "id": "udp-vs-tcp-vs-doh",
+        "title": "UDP vs TCP vs DoH/DoT Transport",
+        "file": "tradeoff-udp-vs-tcp-vs-doh.png"
+    },
+    {
+        "id": "high-vs-low-ttl",
+        "title": "High TTL vs Low TTL",
+        "file": "tradeoff-high-vs-low-ttl.png"
     }
 ],
   },
@@ -77,6 +653,78 @@ export const GENERATED_DIAGRAMS: Record<string, TopicDiagrams> = {
     }
 ],
   },
+  'dynamodb-deep-dive': {
+    deepDives: [
+    {
+        "id": "partitioning-consistent-hashing",
+        "title": "Partitioning & Consistent Hashing Ring",
+        "file": "deep-dive-partitioning-consistent-hashing.png"
+    },
+    {
+        "id": "replication-quorum-protocol",
+        "title": "Replication & Quorum Read/Write Path",
+        "file": "deep-dive-replication-quorum-protocol.png"
+    },
+    {
+        "id": "streams-and-global-tables",
+        "title": "DynamoDB Streams & Global Tables Replication",
+        "file": "deep-dive-streams-and-global-tables.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "consistency-model",
+        "title": "Eventual vs Strong Consistency Reads",
+        "file": "tradeoff-consistency-model.png"
+    },
+    {
+        "id": "capacity-mode",
+        "title": "Provisioned vs On-Demand Capacity",
+        "file": "tradeoff-capacity-mode.png"
+    },
+    {
+        "id": "secondary-index-choice",
+        "title": "Local vs Global Secondary Index",
+        "file": "tradeoff-secondary-index-choice.png"
+    }
+],
+  },
+  'fundamentals': {
+    deepDives: [
+    {
+        "id": "consistent-hashing",
+        "title": "Consistent Hashing Ring",
+        "file": "deep-dive-consistent-hashing.png"
+    },
+    {
+        "id": "leader-election-consensus",
+        "title": "Leader Election & Raft Consensus",
+        "file": "deep-dive-leader-election-consensus.png"
+    },
+    {
+        "id": "cdc-event-pipeline",
+        "title": "Change Data Capture Pipeline",
+        "file": "deep-dive-cdc-event-pipeline.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "sql-vs-nosql",
+        "title": "SQL vs NoSQL Databases",
+        "file": "tradeoff-sql-vs-nosql.png"
+    },
+    {
+        "id": "strong-vs-eventual-consistency",
+        "title": "Strong vs Eventual Consistency",
+        "file": "tradeoff-strong-vs-eventual-consistency.png"
+    },
+    {
+        "id": "sharding-strategies",
+        "title": "Range vs Hash vs Directory Sharding",
+        "file": "tradeoff-sharding-strategies.png"
+    }
+],
+  },
   'google-docs': {
     deepDives: [
     {
@@ -113,75 +761,399 @@ export const GENERATED_DIAGRAMS: Record<string, TopicDiagrams> = {
     }
 ],
   },
-  'instagram': {
+  'heartbeat-mechanism': {
     deepDives: [
     {
-        "id": "notification-system",
-        "title": "Real-Time Notification System",
-        "file": "deep-dive-notification-system.png"
+        "id": "failure-detection-flow",
+        "title": "Failure Detection & Recovery Flow",
+        "file": "deep-dive-failure-detection-flow.png"
     },
     {
-        "id": "counter-service",
-        "title": "Like & Follower Counter Service",
-        "file": "deep-dive-counter-service.png"
+        "id": "gossip-protocol",
+        "title": "Gossip-Based Heartbeat Propagation",
+        "file": "deep-dive-gossip-protocol.png"
     },
     {
-        "id": "search-indexing",
-        "title": "Search & Hashtag Indexing Pipeline",
-        "file": "deep-dive-search-indexing.png"
+        "id": "phi-accrual-detector",
+        "title": "Phi Accrual Failure Detector",
+        "file": "deep-dive-phi-accrual-detector.png"
     }
 ],
     tradeoffs: [
     {
-        "id": "feed-delivery",
-        "title": "Push vs Pull vs Hybrid Feed",
-        "file": "tradeoff-feed-delivery.png"
+        "id": "push-vs-pull",
+        "title": "Push Heartbeats vs Pull Health Checks",
+        "file": "tradeoff-push-vs-pull.png"
     },
     {
-        "id": "metadata-store",
-        "title": "SQL vs NoSQL for Post Metadata",
-        "file": "tradeoff-metadata-store.png"
+        "id": "centralized-vs-gossip",
+        "title": "Centralized vs Gossip-Based Heartbeats",
+        "file": "tradeoff-centralized-vs-gossip.png"
     },
     {
-        "id": "image-storage-cdn",
-        "title": "Pre-generate vs On-the-Fly Image Variants",
-        "file": "tradeoff-image-storage-cdn.png"
+        "id": "timeout-strategy",
+        "title": "Fixed Timeout vs Adaptive Timeout vs Phi Accrual",
+        "file": "tradeoff-timeout-strategy.png"
     }
 ],
   },
-  'netflix': {
+  'latency-vs-throughput': {
     deepDives: [
     {
-        "id": "drm-licensing",
-        "title": "DRM and License Acquisition Flow",
-        "file": "deep-dive-drm-licensing.png"
+        "id": "latency-breakdown",
+        "title": "End-to-End Latency Breakdown",
+        "file": "deep-dive-latency-breakdown.png"
     },
     {
-        "id": "analytics-pipeline",
-        "title": "Real-Time Analytics and Telemetry Pipeline",
-        "file": "deep-dive-analytics-pipeline.png"
+        "id": "throughput-pipeline",
+        "title": "Throughput Optimization Pipeline",
+        "file": "deep-dive-throughput-pipeline.png"
     },
     {
-        "id": "bookmark-viewing-history",
-        "title": "Viewing History and Bookmark Service",
-        "file": "deep-dive-bookmark-viewing-history.png"
+        "id": "tail-latency-mitigation",
+        "title": "Tail Latency Mitigation (P99)",
+        "file": "deep-dive-tail-latency-mitigation.png"
     }
 ],
     tradeoffs: [
     {
-        "id": "storage-cassandra-vs-dynamodb",
-        "title": "Cassandra vs DynamoDB for Viewing History",
-        "file": "tradeoff-storage-cassandra-vs-dynamodb.png"
+        "id": "batching-vs-streaming",
+        "title": "Batch Processing vs Stream Processing",
+        "file": "tradeoff-batching-vs-streaming.png"
     },
     {
-        "id": "cdn-push-vs-pull",
-        "title": "Push CDN vs Pull CDN for Video Distribution",
-        "file": "tradeoff-cdn-push-vs-pull.png"
+        "id": "sync-vs-async",
+        "title": "Synchronous vs Asynchronous Communication",
+        "file": "tradeoff-sync-vs-async.png"
     },
     {
-        "id": "transcoding-strategy",
-        "title": "Per-Title Encoding vs Per-Shot vs Fixed Ladder",
-        "file": "tradeoff-transcoding-strategy.png"
+        "id": "vertical-vs-horizontal-scaling",
+        "title": "Vertical vs Horizontal vs Caching Scaling",
+        "file": "tradeoff-vertical-vs-horizontal-scaling.png"
+    }
+],
+  },
+  'leader-follower': {
+    deepDives: [
+    {
+        "id": "replication-log-flow",
+        "title": "Replication Log & WAL Streaming",
+        "file": "deep-dive-replication-log-flow.png"
+    },
+    {
+        "id": "leader-election-failover",
+        "title": "Leader Election & Failover Protocol",
+        "file": "deep-dive-leader-election-failover.png"
+    },
+    {
+        "id": "split-brain-fencing",
+        "title": "Split-Brain Prevention & Fencing",
+        "file": "deep-dive-split-brain-fencing.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "sync-vs-async-replication",
+        "title": "Synchronous vs Asynchronous Replication",
+        "file": "tradeoff-sync-vs-async-replication.png"
+    },
+    {
+        "id": "single-vs-multi-leader",
+        "title": "Single-Leader vs Multi-Leader",
+        "file": "tradeoff-single-vs-multi-leader.png"
+    },
+    {
+        "id": "read-routing-strategy",
+        "title": "Read-from-Leader vs Read-from-Follower",
+        "file": "tradeoff-read-routing-strategy.png"
+    }
+],
+  },
+  'load-balancing': {
+    deepDives: [
+    {
+        "id": "consistent-hashing-ring",
+        "title": "Consistent Hashing with Virtual Nodes",
+        "file": "deep-dive-consistent-hashing-ring.png"
+    },
+    {
+        "id": "health-check-failover",
+        "title": "Health Check and Failover Flow",
+        "file": "deep-dive-health-check-failover.png"
+    },
+    {
+        "id": "gslb-anycast-routing",
+        "title": "Global Server Load Balancing with Anycast",
+        "file": "deep-dive-gslb-anycast-routing.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "l4-vs-l7-detailed",
+        "title": "Layer 4 vs Layer 7 Load Balancing",
+        "file": "tradeoff-l4-vs-l7-detailed.png"
+    },
+    {
+        "id": "round-robin-vs-least-connections",
+        "title": "Round Robin vs Least Connections vs Consistent Hashing",
+        "file": "tradeoff-round-robin-vs-least-connections.png"
+    },
+    {
+        "id": "dns-vs-anycast-vs-hardware",
+        "title": "DNS LB vs Anycast vs Hardware/Software LB",
+        "file": "tradeoff-dns-vs-anycast-vs-hardware.png"
+    }
+],
+  },
+  'long-polling-websockets-sse': {
+    deepDives: [
+    {
+        "id": "websocket-handshake-flow",
+        "title": "WebSocket Upgrade Handshake",
+        "file": "deep-dive-websocket-handshake-flow.png"
+    },
+    {
+        "id": "sse-reconnection-flow",
+        "title": "SSE Auto-Reconnect with Last-Event-ID",
+        "file": "deep-dive-sse-reconnection-flow.png"
+    },
+    {
+        "id": "connection-scaling-pubsub",
+        "title": "Horizontal Scaling with Pub/Sub Backplane",
+        "file": "deep-dive-connection-scaling-pubsub.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "long-poll-vs-ws-vs-sse",
+        "title": "Long Polling vs WebSocket vs SSE",
+        "file": "tradeoff-long-poll-vs-ws-vs-sse.png"
+    },
+    {
+        "id": "sticky-vs-stateless-routing",
+        "title": "Sticky Sessions vs Stateless Routing",
+        "file": "tradeoff-sticky-vs-stateless-routing.png"
+    },
+    {
+        "id": "delivery-guarantees",
+        "title": "At-Most-Once vs At-Least-Once Delivery",
+        "file": "tradeoff-delivery-guarantees.png"
+    }
+],
+  },
+  'message-queues': {
+    deepDives: [
+    {
+        "id": "partition-replication-isr",
+        "title": "Partition Replication & ISR Protocol",
+        "file": "deep-dive-partition-replication-isr.png"
+    },
+    {
+        "id": "consumer-group-rebalance",
+        "title": "Consumer Group Rebalancing Flow",
+        "file": "deep-dive-consumer-group-rebalance.png"
+    },
+    {
+        "id": "exactly-once-delivery",
+        "title": "Exactly-Once Semantics Pipeline",
+        "file": "deep-dive-exactly-once-delivery.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "push-vs-pull",
+        "title": "Push vs Pull Consumer Model",
+        "file": "tradeoff-push-vs-pull.png"
+    },
+    {
+        "id": "log-vs-queue",
+        "title": "Log-Based vs Traditional Queue",
+        "file": "tradeoff-log-vs-queue.png"
+    },
+    {
+        "id": "delivery-guarantees",
+        "title": "At-Most-Once vs At-Least-Once vs Exactly-Once",
+        "file": "tradeoff-delivery-guarantees.png"
+    }
+],
+  },
+  'microservices': {
+    deepDives: [
+    {
+        "id": "service-discovery",
+        "title": "Service Discovery & Registration Flow",
+        "file": "deep-dive-service-discovery.png"
+    },
+    {
+        "id": "saga-pattern",
+        "title": "Distributed Transaction Saga Pattern",
+        "file": "deep-dive-saga-pattern.png"
+    },
+    {
+        "id": "circuit-breaker",
+        "title": "Circuit Breaker & Resilience Flow",
+        "file": "deep-dive-circuit-breaker.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "orchestration-vs-choreography",
+        "title": "Orchestration vs Choreography",
+        "file": "tradeoff-orchestration-vs-choreography.png"
+    },
+    {
+        "id": "sync-vs-async-communication",
+        "title": "Synchronous REST/gRPC vs Asynchronous Messaging",
+        "file": "tradeoff-sync-vs-async-communication.png"
+    },
+    {
+        "id": "database-per-service",
+        "title": "Database-per-Service vs Shared Database vs CQRS",
+        "file": "tradeoff-database-per-service.png"
+    }
+],
+  },
+  'monitoring': {
+    deepDives: [
+    {
+        "id": "metrics-ingestion-pipeline",
+        "title": "Metrics Ingestion and Aggregation Pipeline",
+        "file": "deep-dive-metrics-ingestion-pipeline.png"
+    },
+    {
+        "id": "alerting-evaluation-flow",
+        "title": "Alert Evaluation and Notification Flow",
+        "file": "deep-dive-alerting-evaluation-flow.png"
+    },
+    {
+        "id": "tsdb-storage-internals",
+        "title": "Time-Series DB Storage and Retention",
+        "file": "deep-dive-tsdb-storage-internals.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "push-vs-pull",
+        "title": "Push vs Pull Metrics Collection",
+        "file": "tradeoff-push-vs-pull.png"
+    },
+    {
+        "id": "tsdb-vs-general-db",
+        "title": "Purpose-built TSDB vs General-purpose DB",
+        "file": "tradeoff-tsdb-vs-general-db.png"
+    },
+    {
+        "id": "sampling-vs-aggregation",
+        "title": "Sampling vs Pre-Aggregation vs Full Fidelity",
+        "file": "tradeoff-sampling-vs-aggregation.png"
+    }
+],
+  },
+  'network-essentials': {
+    deepDives: [
+    {
+        "id": "tcp-handshake-teardown",
+        "title": "TCP Three-Way Handshake & Connection Teardown",
+        "file": "deep-dive-tcp-handshake-teardown.png"
+    },
+    {
+        "id": "dns-resolution-flow",
+        "title": "DNS Resolution Hierarchy",
+        "file": "deep-dive-dns-resolution-flow.png"
+    },
+    {
+        "id": "tls-handshake",
+        "title": "TLS 1.3 Handshake & Encryption Flow",
+        "file": "deep-dive-tls-handshake.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "tcp-vs-udp",
+        "title": "TCP vs UDP",
+        "file": "tradeoff-tcp-vs-udp.png"
+    },
+    {
+        "id": "http-versions",
+        "title": "HTTP/1.1 vs HTTP/2 vs HTTP/3",
+        "file": "tradeoff-http-versions.png"
+    },
+    {
+        "id": "load-balancer-layer",
+        "title": "L4 vs L7 Load Balancing",
+        "file": "tradeoff-load-balancer-layer.png"
+    }
+],
+  },
+  'proxies': {
+    deepDives: [
+    {
+        "id": "forward-proxy-flow",
+        "title": "Forward Proxy Request Flow",
+        "file": "deep-dive-forward-proxy-flow.png"
+    },
+    {
+        "id": "reverse-proxy-load-balancing",
+        "title": "Reverse Proxy with Load Balancing & TLS Termination",
+        "file": "deep-dive-reverse-proxy-load-balancing.png"
+    },
+    {
+        "id": "proxy-caching-invalidation",
+        "title": "Proxy Caching & Invalidation Flow",
+        "file": "deep-dive-proxy-caching-invalidation.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "forward-vs-reverse-proxy",
+        "title": "Forward Proxy vs Reverse Proxy",
+        "file": "tradeoff-forward-vs-reverse-proxy.png"
+    },
+    {
+        "id": "l4-vs-l7-proxy",
+        "title": "Layer 4 vs Layer 7 Proxy",
+        "file": "tradeoff-l4-vs-l7-proxy.png"
+    },
+    {
+        "id": "tls-termination-strategy",
+        "title": "TLS Termination Strategies",
+        "file": "tradeoff-tls-termination-strategy.png"
+    }
+],
+  },
+  'quorum': {
+    deepDives: [
+    {
+        "id": "read-write-quorum-flow",
+        "title": "Read/Write Quorum Request Flow",
+        "file": "deep-dive-read-write-quorum-flow.png"
+    },
+    {
+        "id": "anti-entropy-repair",
+        "title": "Anti-Entropy and Read Repair",
+        "file": "deep-dive-anti-entropy-repair.png"
+    },
+    {
+        "id": "conflict-resolution",
+        "title": "Conflict Resolution with Vector Clocks",
+        "file": "deep-dive-conflict-resolution.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "strict-vs-sloppy-quorum",
+        "title": "Strict Quorum vs Sloppy Quorum",
+        "file": "tradeoff-strict-vs-sloppy-quorum.png"
+    },
+    {
+        "id": "quorum-tuning",
+        "title": "Read-Heavy vs Write-Heavy vs Balanced Quorum",
+        "file": "tradeoff-quorum-tuning.png"
+    },
+    {
+        "id": "leaderless-vs-leader-based",
+        "title": "Leaderless Quorum vs Leader-Based Replication",
+        "file": "tradeoff-leaderless-vs-leader-based.png"
     }
 ],
   },
@@ -221,39 +1193,219 @@ export const GENERATED_DIAGRAMS: Record<string, TopicDiagrams> = {
     }
 ],
   },
-  'twitter': {
+  'rate-limiting': {
     deepDives: [
     {
-        "id": "celebrity-fanout",
-        "title": "Celebrity Problem & Hybrid Fanout",
-        "file": "deep-dive-celebrity-fanout.png"
+        "id": "token-bucket-algorithm",
+        "title": "Token Bucket Algorithm Flow",
+        "file": "deep-dive-token-bucket-algorithm.png"
     },
     {
-        "id": "timeline-cache",
-        "title": "Timeline Cache Architecture & Eviction",
-        "file": "deep-dive-timeline-cache.png"
+        "id": "distributed-counter-sync",
+        "title": "Distributed Counter Synchronization",
+        "file": "deep-dive-distributed-counter-sync.png"
     },
     {
-        "id": "notification-pipeline",
-        "title": "Real-time Notification Delivery",
-        "file": "deep-dive-notification-pipeline.png"
+        "id": "sliding-window-log",
+        "title": "Sliding Window Log Data Structure",
+        "file": "deep-dive-sliding-window-log.png"
     }
 ],
     tradeoffs: [
     {
-        "id": "fanout-strategy",
-        "title": "Push vs Pull vs Hybrid Fanout",
-        "file": "tradeoff-fanout-strategy.png"
+        "id": "fixed-vs-sliding-window",
+        "title": "Fixed Window vs Sliding Window Counter",
+        "file": "tradeoff-fixed-vs-sliding-window.png"
     },
     {
-        "id": "tweet-storage",
-        "title": "SQL vs NoSQL for Tweet Storage",
-        "file": "tradeoff-tweet-storage.png"
+        "id": "centralized-vs-local-counters",
+        "title": "Centralized Redis vs Local In-Memory Counters",
+        "file": "tradeoff-centralized-vs-local-counters.png"
     },
     {
-        "id": "search-indexing",
-        "title": "Elasticsearch vs Earlybird (Lucene Custom)",
-        "file": "tradeoff-search-indexing.png"
+        "id": "fail-open-vs-fail-closed",
+        "title": "Fail-Open vs Fail-Closed on Limiter Outage",
+        "file": "tradeoff-fail-open-vs-fail-closed.png"
+    }
+],
+  },
+  'redundancy-replication': {
+    deepDives: [
+    {
+        "id": "raft-consensus-flow",
+        "title": "Raft Consensus Replication Flow",
+        "file": "deep-dive-raft-consensus-flow.png"
+    },
+    {
+        "id": "failover-recovery",
+        "title": "Replica Failover and Recovery",
+        "file": "deep-dive-failover-recovery.png"
+    },
+    {
+        "id": "multi-region-replication",
+        "title": "Multi-Region Geo-Replication Topology",
+        "file": "deep-dive-multi-region-replication.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "sync-vs-async-replication",
+        "title": "Synchronous vs Asynchronous Replication",
+        "file": "tradeoff-sync-vs-async-replication.png"
+    },
+    {
+        "id": "leader-vs-leaderless",
+        "title": "Leader-Based vs Leaderless Replication",
+        "file": "tradeoff-leader-vs-leaderless.png"
+    },
+    {
+        "id": "quorum-configurations",
+        "title": "Strict Quorum vs Sloppy Quorum",
+        "file": "tradeoff-quorum-configurations.png"
+    }
+],
+  },
+  'rest-vs-rpc': {
+    deepDives: [
+    {
+        "id": "rest-request-lifecycle",
+        "title": "REST Request Lifecycle and Resource Modeling",
+        "file": "deep-dive-rest-request-lifecycle.png"
+    },
+    {
+        "id": "grpc-call-flow",
+        "title": "gRPC Call Flow with Protobuf and HTTP/2",
+        "file": "deep-dive-grpc-call-flow.png"
+    },
+    {
+        "id": "error-handling-retry",
+        "title": "Error Handling and Retry Semantics",
+        "file": "deep-dive-error-handling-retry.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "rest-vs-grpc-public-api",
+        "title": "REST vs gRPC for Public APIs",
+        "file": "tradeoff-rest-vs-grpc-public-api.png"
+    },
+    {
+        "id": "sync-vs-async-communication",
+        "title": "Synchronous RPC vs Asynchronous Messaging",
+        "file": "tradeoff-sync-vs-async-communication.png"
+    },
+    {
+        "id": "api-style-comparison",
+        "title": "REST vs gRPC vs GraphQL",
+        "file": "tradeoff-api-style-comparison.png"
+    }
+],
+  },
+  'security': {
+    deepDives: [
+    {
+        "id": "oauth2-authorization-code-flow",
+        "title": "OAuth 2.0 Authorization Code Flow with PKCE",
+        "file": "deep-dive-oauth2-authorization-code-flow.png"
+    },
+    {
+        "id": "zero-trust-request-flow",
+        "title": "Zero Trust Request Verification Pipeline",
+        "file": "deep-dive-zero-trust-request-flow.png"
+    },
+    {
+        "id": "secrets-management-rotation",
+        "title": "Secrets Management and Rotation Pipeline",
+        "file": "deep-dive-secrets-management-rotation.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "session-vs-jwt",
+        "title": "Server-Side Sessions vs JWT Tokens",
+        "file": "tradeoff-session-vs-jwt.png"
+    },
+    {
+        "id": "encryption-at-rest-strategy",
+        "title": "Application-Level vs Database-Level vs Disk-Level Encryption",
+        "file": "tradeoff-encryption-at-rest-strategy.png"
+    },
+    {
+        "id": "rate-limiting-algorithms",
+        "title": "Token Bucket vs Sliding Window vs Fixed Window",
+        "file": "tradeoff-rate-limiting-algorithms.png"
+    }
+],
+  },
+  'strong-vs-eventual-consistency': {
+    deepDives: [
+    {
+        "id": "quorum-reads-writes",
+        "title": "Quorum-Based Consistency (R + W > N)",
+        "file": "deep-dive-quorum-reads-writes.png"
+    },
+    {
+        "id": "raft-consensus-flow",
+        "title": "Raft Consensus Protocol Flow",
+        "file": "deep-dive-raft-consensus-flow.png"
+    },
+    {
+        "id": "conflict-resolution-crdt",
+        "title": "Eventual Consistency Conflict Resolution",
+        "file": "deep-dive-conflict-resolution-crdt.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "linearizability-vs-eventual",
+        "title": "Linearizability vs Eventual Consistency",
+        "file": "tradeoff-linearizability-vs-eventual.png"
+    },
+    {
+        "id": "leader-based-vs-leaderless",
+        "title": "Leader-Based vs Leaderless Replication",
+        "file": "tradeoff-leader-based-vs-leaderless.png"
+    },
+    {
+        "id": "sync-vs-async-replication",
+        "title": "Synchronous vs Asynchronous Replication",
+        "file": "tradeoff-sync-vs-async-replication.png"
+    }
+],
+  },
+  'synchronous-vs-asynchronous': {
+    deepDives: [
+    {
+        "id": "message-queue-flow",
+        "title": "Asynchronous Message Queue Flow",
+        "file": "deep-dive-message-queue-flow.png"
+    },
+    {
+        "id": "request-response-lifecycle",
+        "title": "Synchronous Request-Response Lifecycle",
+        "file": "deep-dive-request-response-lifecycle.png"
+    },
+    {
+        "id": "hybrid-saga-pattern",
+        "title": "Hybrid Saga with Sync + Async Steps",
+        "file": "deep-dive-hybrid-saga-pattern.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "sync-vs-async-communication",
+        "title": "Synchronous vs Asynchronous Communication",
+        "file": "tradeoff-sync-vs-async-communication.png"
+    },
+    {
+        "id": "polling-vs-push",
+        "title": "Polling vs WebSockets vs Server-Sent Events",
+        "file": "tradeoff-polling-vs-push.png"
+    },
+    {
+        "id": "at-least-once-vs-exactly-once",
+        "title": "At-Least-Once vs Exactly-Once Delivery",
+        "file": "tradeoff-at-least-once-vs-exactly-once.png"
     }
 ],
   },
@@ -293,42 +1445,6 @@ export const GENERATED_DIAGRAMS: Record<string, TopicDiagrams> = {
     }
 ],
   },
-  'uber': {
-    deepDives: [
-    {
-        "id": "payment-processing",
-        "title": "Payment Processing & Idempotency",
-        "file": "deep-dive-payment-processing.png"
-    },
-    {
-        "id": "driver-location-sharding",
-        "title": "Driver Location Sharding & Hot Cell Handling",
-        "file": "deep-dive-driver-location-sharding.png"
-    },
-    {
-        "id": "failure-recovery",
-        "title": "Fault Tolerance & Trip State Recovery",
-        "file": "deep-dive-failure-recovery.png"
-    }
-],
-    tradeoffs: [
-    {
-        "id": "location-transport",
-        "title": "WebSockets vs HTTP Long Polling vs MQTT",
-        "file": "tradeoff-location-transport.png"
-    },
-    {
-        "id": "geo-indexing",
-        "title": "Geohash vs S2 vs H3",
-        "file": "tradeoff-geo-indexing.png"
-    },
-    {
-        "id": "matching-strategy",
-        "title": "Greedy Nearest vs Batched Optimization",
-        "file": "tradeoff-matching-strategy.png"
-    }
-],
-  },
   'url-shortener': {
     deepDives: [
     {
@@ -365,39 +1481,75 @@ export const GENERATED_DIAGRAMS: Record<string, TopicDiagrams> = {
     }
 ],
   },
-  'youtube': {
+  'vector-databases-deep-dive': {
     deepDives: [
     {
-        "id": "search-indexing",
-        "title": "Search Indexing & Query Pipeline",
-        "file": "deep-dive-search-indexing.png"
+        "id": "hnsw-index-construction",
+        "title": "HNSW Graph Construction & Search",
+        "file": "deep-dive-hnsw-index-construction.png"
     },
     {
-        "id": "live-streaming",
-        "title": "Live Streaming Pipeline (RTMP to HLS)",
-        "file": "deep-dive-live-streaming.png"
+        "id": "vector-ingestion-pipeline",
+        "title": "Embedding Ingestion & Indexing Pipeline",
+        "file": "deep-dive-vector-ingestion-pipeline.png"
     },
     {
-        "id": "analytics-pipeline",
-        "title": "Real-time Analytics & Engagement Pipeline",
-        "file": "deep-dive-analytics-pipeline.png"
+        "id": "hybrid-search-rerank",
+        "title": "Hybrid Search with Filtering & Reranking",
+        "file": "deep-dive-hybrid-search-rerank.png"
     }
 ],
     tradeoffs: [
     {
-        "id": "storage-db",
-        "title": "SQL (Spanner) vs NoSQL (Cassandra) for Video Metadata",
-        "file": "tradeoff-storage-db.png"
+        "id": "hnsw-vs-ivf-pq",
+        "title": "HNSW vs IVF-PQ Indexing",
+        "file": "tradeoff-hnsw-vs-ivf-pq.png"
     },
     {
-        "id": "cdn-strategy",
-        "title": "Push CDN vs Pull CDN for Video Delivery",
-        "file": "tradeoff-cdn-strategy.png"
+        "id": "filter-strategy",
+        "title": "Pre-filtering vs Post-filtering vs Inline Filtering",
+        "file": "tradeoff-filter-strategy.png"
     },
     {
-        "id": "recommendation-approach",
-        "title": "Collaborative Filtering vs Deep Learning vs Hybrid Recommendations",
-        "file": "tradeoff-recommendation-approach.png"
+        "id": "dedicated-vs-extension",
+        "title": "Dedicated Vector DB vs Postgres pgvector Extension",
+        "file": "tradeoff-dedicated-vs-extension.png"
+    }
+],
+  },
+  'zookeeper-deep-dive': {
+    deepDives: [
+    {
+        "id": "zab-protocol-flow",
+        "title": "ZAB Protocol: Atomic Broadcast & Write Path",
+        "file": "deep-dive-zab-protocol-flow.png"
+    },
+    {
+        "id": "leader-election",
+        "title": "Leader Election (Fast Leader Election)",
+        "file": "deep-dive-leader-election.png"
+    },
+    {
+        "id": "session-watch-lifecycle",
+        "title": "Session & Watch Lifecycle",
+        "file": "deep-dive-session-watch-lifecycle.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "zab-vs-raft-vs-paxos",
+        "title": "ZAB vs Raft vs Multi-Paxos",
+        "file": "tradeoff-zab-vs-raft-vs-paxos.png"
+    },
+    {
+        "id": "zookeeper-vs-etcd",
+        "title": "Zookeeper vs etcd",
+        "file": "tradeoff-zookeeper-vs-etcd.png"
+    },
+    {
+        "id": "ensemble-size",
+        "title": "3-Node vs 5-Node vs 7-Node Ensemble",
+        "file": "tradeoff-ensemble-size.png"
     }
 ],
   },
