@@ -319,7 +319,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
           <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Launch Now</span>
         </div>
         <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>Start fast with ready-to-use session co-pilots.</p>
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {COPILOTS.map(cp => (
             <button
               key={cp.name}
