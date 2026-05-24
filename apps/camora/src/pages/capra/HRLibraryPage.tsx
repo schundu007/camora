@@ -56,7 +56,7 @@ const DIFF_COLOR: Record<string, string> = {
   Hard:   '#ef4444',
 };
 
-const PAGE_LIMIT = 30;
+const PAGE_LIMIT = 50;
 
 const ALL_TYPES = [
   'code', 'mcq', 'database', 'fullstack', 'coderepo_task',
@@ -721,7 +721,7 @@ export default function HRLibraryPage() {
       <div>
         {activeTab === 'must-do' ? (
           <div style={{ padding: '28px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
-            {MUST_DO_PROBLEMS.map((p: { slug: string; label: string; description: string }) => (
+            {MUST_DO_PROBLEMS.map((p: { slug: string; label: string; description: string; category?: string }) => (
               <button
                 key={p.slug}
                 onClick={() => navigate(`/capra/coding?problem=${encodeURIComponent(p.description)}`)}
@@ -750,7 +750,7 @@ export default function HRLibraryPage() {
                     background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, var(--bg-elevated))',
                     color: 'var(--cam-gold-leaf)',
                   }}>Must Do</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>DSA</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>{p.category ?? 'DSA'}</span>
                 </div>
               </button>
             ))}
