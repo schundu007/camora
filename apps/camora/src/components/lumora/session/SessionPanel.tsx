@@ -373,8 +373,9 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
             <button
               key={p.text}
               onClick={() => handlePromptClick(p)}
-              className="group flex items-center gap-3 text-left p-3 rounded-xl transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+              className="group flex items-center gap-3 text-left p-5 rounded-xl transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
               style={{
+                minHeight: 88,
                 background: 'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(38,97,156,0.08) 100%)',
                 border: '1px solid rgba(38,97,156,0.10)',
               }}
@@ -405,7 +406,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
       </div>
 
       {/* Keyboard hints — hidden on mobile (no physical keyboard) */}
-      <div className="hidden md:flex items-center gap-4 text-[10px]" style={{ color: 'var(--text-muted)' }}>
+      <div className="hidden md:flex items-center gap-4 text-[10px] pt-4 mt-2" style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--border)' }}>
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘K</kbd> focus</span>
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘M</kbd> mic</span>
         <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘B</kbd> blank screen</span>
