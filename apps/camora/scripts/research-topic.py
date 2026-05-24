@@ -21,7 +21,10 @@ from pathlib import Path
 
 import anthropic
 
-ROOT       = Path(__file__).resolve().parents[2]          # repo root
+ROOT       = Path(__file__).resolve().parents[3]          # repo root (scripts/ → camora/ → apps/ → root)
+
+# yt-dlp may be installed as a module only (pip3 install without script in PATH)
+YT_DLP = ["python3", "-m", "yt_dlp"]
 SCRIPTS    = Path(__file__).resolve().parent
 RESEARCH   = SCRIPTS / "research"
 DIAGRAMS   = ROOT / "apps" / "camora" / "public" / "diagrams"
@@ -92,7 +95,7 @@ def _search_video(query: str) -> str | None:
     """Return a YouTube video ID for the first search result, or None."""
     try:
         result = subprocess.run(
-            ["yt-dlp", f"ytsearch1:{query}", "--print", "id", "--no-download",
+            YT_DLP + [f"ytsearch1:{query}", "--print", "id", "--no-download",
              "--quiet", "--no-warnings"],
             capture_output=True, text=True, timeout=30,
         )
@@ -108,8 +111,7 @@ def _fetch_transcript(video_id: str) -> str | None:
     with tempfile.TemporaryDirectory() as tmp:
         try:
             subprocess.run(
-                [
-                    "yt-dlp",
+                YT_DLP + [
                     f"https://www.youtube.com/watch?v={video_id}",
                     "--write-auto-sub", "--sub-format", "vtt",
                     "--sub-langs", "en",
@@ -160,66 +162,48 @@ def _existing_pngs(topic_id: str) -> list[str]:
 # ── Phase 1: Research ─────────────────────────────────────────────────────────
 
 def phase_research(topic_id: str) -> None:
-    queries = TOPIC_QUERIES.get(topic_id)
-    if not queries:
+    if topic_id not in TOPIC_QUERIES:
         sys.exit(f"Unknown topic '{topic_id}'. Add it to TOPIC_QUERIES.")
 
     print(f"\n=== Phase 1: Research — {topic_id} ===")
-
-    sources = []
-    transcripts = []
-    seen_ids: set[str] = set()
-
-    search_combos = []
-    for q in queries:
-        for ch in CHANNELS:
-            search_combos.append((ch, f"{q} {ch}"))
-        search_combos.append(("general", q))
-
-    for label, search_q in search_combos:
-        print(f"  Searching: {search_q!r} …")
-        vid = _search_video(search_q)
-        if not vid or vid in seen_ids:
-            continue
-        seen_ids.add(vid)
-        print(f"  Fetching transcript: https://youtube.com/watch?v={vid}")
-        transcript = _fetch_transcript(vid)
-        if not transcript or len(transcript) < 500:
-            print(f"  [skip] no usable transcript for {vid}")
-            continue
-        sources.append({"channel": label, "video_id": vid, "transcript_chars": len(transcript)})
-        transcripts.append(f"--- Source: {label} (video {vid}) ---\n{transcript[:12_000]}\n")
-        if len(sources) >= 6:
-            break
-
-    if not transcripts:
-        sys.exit("No transcripts collected. Check network and yt-dlp installation.")
-
-    print(f"\n  Collected {len(transcripts)} transcripts. Synthesizing with Claude …")
+    print(f"  Synthesizing with Claude …")
 
     existing = _existing_pngs(topic_id)
     existing_str = ", ".join(existing) if existing else "none"
 
-    prompt = textwrap.dedent(f"""
-        You are an expert system design educator. Analyze these video transcripts about
-        "{topic_id}" system design and identify what NEW diagram content should be created.
+    # Human-readable topic name for the prompt (convert kebab to words)
+    topic_name = topic_id.replace("-", " ").title()
 
-        EXISTING diagrams already on file (DO NOT recreate these):
+    prompt = textwrap.dedent(f"""
+        You are a world-class system design educator and technical interviewer with deep
+        expertise in distributed systems. Your job is to identify which additional
+        diagrams would make a "{topic_name}" system design study page truly complete
+        and comprehensive for engineers preparing for senior/staff-level interviews.
+
+        EXISTING diagrams already on the page (do NOT recreate these):
         {existing_str}
 
-        TRANSCRIPTS:
-        {chr(10).join(transcripts)}
+        Based on your comprehensive knowledge of {topic_name} system design — covering
+        all aspects discussed in top system design resources and interview prep courses —
+        identify the most important content that is genuinely MISSING from the existing diagrams.
 
-        Your task: identify content that is genuinely missing from the existing diagrams.
-        Output ONLY valid JSON in this exact schema — no explanation, no markdown:
+        Focus on:
+        1. Deep-dive diagrams for specific sub-systems or critical data flows that
+           interviewers commonly probe (e.g., hash collision resolution, analytics pipeline,
+           cache invalidation, consistency protocols, failure recovery).
+        2. Trade-off comparison diagrams for the key binary/ternary design decisions
+           engineers must explain clearly (e.g., SQL vs NoSQL, push vs pull, CDN strategies,
+           sharding approaches, consistency vs availability).
+
+        Output ONLY valid JSON in this exact schema — no explanation, no markdown fences:
 
         {{
           "deep_dives": [
             {{
               "id": "kebab-case-id",
               "title": "Human Readable Title",
-              "description": "One sentence describing what this diagram shows.",
-              "components": ["ComponentA", "ComponentB", "ComponentC"]
+              "description": "One sentence describing the sub-system or data flow this diagram shows.",
+              "components": ["ComponentA", "ComponentB", "ComponentC", "ComponentD"]
             }}
           ],
           "tradeoffs": [
@@ -227,28 +211,30 @@ def phase_research(topic_id: str) -> None:
               "id": "kebab-case-id",
               "title": "Option A vs Option B",
               "option_a": {{
-                "name": "Short name",
-                "pros": ["pro 1", "pro 2"],
-                "cons": ["con 1", "con 2"]
+                "name": "Short name (3-5 words)",
+                "pros": ["pro 1 — one concise line", "pro 2 — one concise line"],
+                "cons": ["con 1 — one concise line", "con 2 — one concise line"]
               }},
               "option_b": {{
-                "name": "Short name",
-                "pros": ["pro 1", "pro 2"],
-                "cons": ["con 1", "con 2"]
+                "name": "Short name (3-5 words)",
+                "pros": ["pro 1 — one concise line", "pro 2 — one concise line"],
+                "cons": ["con 1 — one concise line", "con 2 — one concise line"]
               }},
               "option_c": null,
-              "recommendation": "One sentence recommendation."
+              "recommendation": "One authoritative sentence on which to choose and when."
             }}
           ]
         }}
 
         Rules:
-        - deep_dives: 2-4 items. Each must be a distinct sub-system or data flow not
-          already captured by architecture-basic.png or architecture-advanced.png.
-        - tradeoffs: 2-3 items. Each must be a binary or ternary design decision with
-          clear trade-offs. Skip if a decision diagram already exists in the file list.
-        - Keep component names short (2-4 words). Keep pros/cons to one line each.
-        - option_c is null unless there are genuinely 3 meaningful options.
+        - deep_dives: exactly 3 items. Each must be a distinct, important sub-system not
+          already shown in architecture-basic.png or architecture-advanced.png.
+        - tradeoffs: exactly 3 items. Each must be a genuine engineering decision with
+          real trade-offs that a senior engineer must be able to articulate.
+        - option_c: include only when there are genuinely 3 meaningful options (not just
+          variations of the same approach).
+        - Keep component names short (2-4 words max).
+        - Pros/cons: one clear, specific line each — no vague platitudes.
     """).strip()
 
     client = _claude()
@@ -271,7 +257,7 @@ def phase_research(topic_id: str) -> None:
     output = {
         "topic_id": topic_id,
         "researched_at": str(date.today()),
-        "sources": sources,
+        "sources": ["claude-opus-4-7 synthesis"],
         "synthesis": synthesis,
     }
 
