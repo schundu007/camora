@@ -72,13 +72,17 @@ router.post('/stream', async (req, res) => {
 
     let full = '';
 
-    const useGemini = provider === 'gemini' && process.env.GEMINI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY;
+    const useGemini = provider === 'gemini' && !!geminiKey;
+    if (provider === 'gemini' && !geminiKey) {
+      console.warn('[Ask/Gemini] No API key — set GEMINI_API_KEY or GOOGLE_AI_API_KEY. Falling back to Claude.');
+    }
 
     if (useGemini) {
       let geminiOk = false;
       try {
         const resp = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${process.env.GEMINI_API_KEY}&alt=sse`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${geminiKey}&alt=sse`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
