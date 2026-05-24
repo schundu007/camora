@@ -72,42 +72,63 @@ router.post('/stream', async (req, res) => {
 
     let full = '';
 
-    if (provider === 'gemini' && process.env.GEMINI_API_KEY) {
-      const resp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${process.env.GEMINI_API_KEY}&alt=sse`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: system }] },
-            contents: msgs.map(m => ({
-              role: m.role === 'assistant' ? 'model' : 'user',
-              parts: [{ text: m.content }],
-            })),
-            generationConfig: { maxOutputTokens: 8000, temperature: 0.2 },
-          }),
+    const useGemini = provider === 'gemini' && process.env.GEMINI_API_KEY;
+
+    if (useGemini) {
+      let geminiOk = false;
+      try {
+        const resp = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${process.env.GEMINI_API_KEY}&alt=sse`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              system_instruction: { parts: [{ text: system }] },
+              contents: msgs.map(m => ({
+                role: m.role === 'assistant' ? 'model' : 'user',
+                parts: [{ text: m.content }],
+              })),
+              generationConfig: { maxOutputTokens: 8000, temperature: 0.2 },
+            }),
+          }
+        );
+
+        if (!resp.ok) {
+          const errText = await resp.text().catch(() => '');
+          console.error(`[Ask/Gemini] API error ${resp.status}:`, errText.slice(0, 300));
+        } else {
+          geminiOk = true;
+          const reader = resp.body.getReader();
+          const dec = new TextDecoder();
+          let buf = '';
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buf += dec.decode(value, { stream: true });
+            const lines = buf.split('\n');
+            buf = lines.pop() || '';
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue;
+              const raw = line.slice(6).trim();
+              if (raw === '[DONE]') continue;
+              try {
+                const text = JSON.parse(raw).candidates?.[0]?.content?.parts?.[0]?.text || '';
+                if (text) { full += text; res.write(`data: ${JSON.stringify({ text })}\n\n`); }
+              } catch {}
+            }
+          }
         }
-      );
-      const reader = resp.body.getReader();
-      const dec = new TextDecoder();
-      let buf = '';
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const lines = buf.split('\n');
-        buf = lines.pop() || '';
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const raw = line.slice(6).trim();
-          if (raw === '[DONE]') continue;
-          try {
-            const text = JSON.parse(raw).candidates?.[0]?.content?.parts?.[0]?.text || '';
-            if (text) { full += text; res.write(`data: ${JSON.stringify({ text })}\n\n`); }
-          } catch {}
-        }
+      } catch (geminiErr) {
+        console.error('[Ask/Gemini] fetch error:', geminiErr.message);
       }
-    } else {
+
+      // If Gemini failed entirely, fall back to Claude silently
+      if (!geminiOk || !full) {
+        full = '';
+      }
+    }
+
+    if (!useGemini || !full) {
       // Claude (default / fallback)
       const stream = anthropic.messages.stream({
         model: 'claude-sonnet-4-6',
