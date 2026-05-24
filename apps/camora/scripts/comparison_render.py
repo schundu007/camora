@@ -45,9 +45,18 @@ class TradeoffDiagram:
     recommendation: Optional[str] = None
 
 
+def _esc(text: str) -> str:
+    """HTML-escape text for safe use inside Graphviz HTML labels."""
+    return (text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace('"', "&quot;"))
+
+
 def _wrap(text: str, width: int = 36) -> str:
-    """Wrap long text for HTML labels."""
-    return "<BR/>".join(textwrap.wrap(text, width=width))
+    """HTML-escape and wrap long text for HTML labels."""
+    return "<BR/>".join(textwrap.wrap(_esc(text), width=width))
 
 
 def _bullet_rows(items: list[str], fg: str, bg: str, width: int = 36) -> str:
@@ -66,7 +75,7 @@ def build_dot(diagram: TradeoffDiagram) -> str:
 
     opt_headers = "".join(
         f'<TD BORDER="1" BGCOLOR="{OPT_BG}" ALIGN="CENTER" WIDTH="{260}">'
-        f'<FONT COLOR="{OPT_FG}" FACE="{SANS}" POINT-SIZE="14"><B>{opt.name}</B></FONT>'
+        f'<FONT COLOR="{OPT_FG}" FACE="{SANS}" POINT-SIZE="14"><B>{_esc(opt.name)}</B></FONT>'
         f"</TD>"
         for opt in diagram.options
     )
@@ -92,14 +101,14 @@ def build_dot(diagram: TradeoffDiagram) -> str:
         rec_row = (
             f'<TR><TD COLSPAN="{n}" BORDER="1" BGCOLOR="{REC_BG}" ALIGN="LEFT">'
             f'<FONT COLOR="{REC_FG}" FACE="{SANS}" POINT-SIZE="12">'
-            f"<B>Recommendation:</B> {_wrap(diagram.recommendation, 80)}"
+            f"<B>Recommendation:</B> {_wrap(diagram.recommendation[:300], 80)}"
             f"</FONT></TD></TR>"
         )
 
     label = (
         f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="2" BGCOLOR="{BG}">'
         f'<TR><TD COLSPAN="{n}" BORDER="1" BGCOLOR="{TITLE_BG}" ALIGN="CENTER">'
-        f'<FONT COLOR="{TITLE_FG}" FACE="{SANS}" POINT-SIZE="18"><B>{diagram.title}</B></FONT>'
+        f'<FONT COLOR="{TITLE_FG}" FACE="{SANS}" POINT-SIZE="18"><B>{_esc(diagram.title)}</B></FONT>'
         f"</TD></TR>"
         f'<TR><TD COLSPAN="{n}" HEIGHT="4" BORDER="0"></TD></TR>'
         f"<TR>{opt_headers}</TR>"

@@ -5,39 +5,39 @@ type DiagramEntry = { id: string; title: string; file: string };
 type TopicDiagrams = { deepDives: DiagramEntry[]; tradeoffs: DiagramEntry[] };
 
 export const GENERATED_DIAGRAMS: Record<string, TopicDiagrams> = {
-  'url-shortener': {
+  'instagram': {
     deepDives: [
     {
-        "id": "short-code-generation",
-        "title": "Short Code Generation & Collision Handling",
-        "file": "deep-dive-short-code-generation.png"
+        "id": "notification-system",
+        "title": "Real-Time Notification System",
+        "file": "deep-dive-notification-system.png"
     },
     {
-        "id": "read-path-caching",
-        "title": "Read Path with Multi-Layer Cache",
-        "file": "deep-dive-read-path-caching.png"
+        "id": "counter-service",
+        "title": "Like & Follower Counter Service",
+        "file": "deep-dive-counter-service.png"
     },
     {
-        "id": "analytics-pipeline",
-        "title": "Click Analytics Pipeline",
-        "file": "deep-dive-analytics-pipeline.png"
+        "id": "search-indexing",
+        "title": "Search & Hashtag Indexing Pipeline",
+        "file": "deep-dive-search-indexing.png"
     }
 ],
     tradeoffs: [
     {
-        "id": "code-generation-strategy",
-        "title": "Hash-based vs Counter-based vs Random Code Generation",
-        "file": "tradeoff-code-generation-strategy.png"
+        "id": "feed-delivery",
+        "title": "Push vs Pull vs Hybrid Feed",
+        "file": "tradeoff-feed-delivery.png"
     },
     {
-        "id": "database-choice",
-        "title": "SQL vs NoSQL for URL Mappings",
-        "file": "tradeoff-database-choice.png"
+        "id": "metadata-store",
+        "title": "SQL vs NoSQL for Post Metadata",
+        "file": "tradeoff-metadata-store.png"
     },
     {
-        "id": "analytics-processing",
-        "title": "Real-time Stream vs Batch Analytics",
-        "file": "tradeoff-analytics-processing.png"
+        "id": "image-storage-cdn",
+        "title": "Pre-generate vs On-the-Fly Image Variants",
+        "file": "tradeoff-image-storage-cdn.png"
     }
 ],
   },

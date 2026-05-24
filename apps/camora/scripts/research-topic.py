@@ -374,7 +374,9 @@ def phase_generate(topic_id: str) -> None:
 
     # ── Deep-dive diagrams ────────────────────────────────────────────────────
     for entry in synthesis.get("deep_dives", []):
-        out_png = topic_dir / f"deep-dive-{entry['id']}.png"
+        clean_id = entry['id'].removeprefix('deep-dive-')
+        entry = {**entry, 'id': clean_id}
+        out_png = topic_dir / f"deep-dive-{clean_id}.png"
         if out_png.exists():
             print(f"  [skip] {out_png.name} already exists")
             generated_dd.append(entry)
@@ -393,7 +395,9 @@ def phase_generate(topic_id: str) -> None:
     from comparison_render import TradeoffDiagram, TradeoffOption, render_to_png
 
     for entry in synthesis.get("tradeoffs", []):
-        out_png = topic_dir / f"tradeoff-{entry['id']}.png"
+        clean_id = entry['id'].removeprefix('tradeoff-')
+        entry = {**entry, 'id': clean_id}
+        out_png = topic_dir / f"tradeoff-{clean_id}.png"
         if out_png.exists():
             print(f"  [skip] {out_png.name} already exists")
             generated_tr.append(entry)
