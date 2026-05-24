@@ -52,6 +52,7 @@ import mcqRouter from './routes/mcq.js';
 import { playgroundRouter } from './routes/playground.js';
 import { playgroundLimiter } from './middleware/playgroundLimiter.js';
 import { askRouter } from './routes/ask.js';
+import learnTopicRouter from './routes/learnTopic.js';
 
 // Same pattern as jobs above — the entire lumora-backend route surface was
 // copied under src/lumora/ so this service can answer /api/v1/transcribe,
@@ -615,6 +616,20 @@ async function runMigrations() {
       console.warn('[Migrations] Lumora usage table init skipped:', e.message);
     }
     console.log('[Migrations] Lumora schema ensured');
+
+  // Learn topic content cache
+  await query(`CREATE TABLE IF NOT EXISTS ascend_learn_topic_cache (
+    id SERIAL PRIMARY KEY,
+    slug VARCHAR(200) UNIQUE NOT NULL,
+    content TEXT NOT NULL,
+    title VARCHAR(300),
+    source VARCHAR(20),
+    category VARCHAR(100),
+    level VARCHAR(20),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+  )`);
+  await query('CREATE INDEX IF NOT EXISTS idx_learn_topic_slug ON ascend_learn_topic_cache(slug)');
   } catch (err) {
     console.warn('[Migrations] Failed to run lumora migrations:', err.message);
   }
@@ -1353,6 +1368,9 @@ app.use('/api/v1/resume', aiLimiter, resumeRouter);
 
 // MCQ question generation — AI-generated questions from CoderPad metadata, DB-cached
 app.use('/api/v1/mcq', mcqRouter);
+
+// Learn topic content — Redis L1 + Postgres L2 cache, auto-generated on first visit
+app.use('/api/v1/learn/topic', apiLimiter, learnTopicRouter);
 
 // Enhanced health check
 app.get('/api/health', (req, res) => {
