@@ -122,6 +122,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const logScrollRef = useRef<HTMLDivElement | null>(null);
   const logHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [autoFixEnabled, setAutoFixEnabled] = useState(true);
+  const autoFixAttemptsRef = useRef(0);
+  const pendingAutoFixRef2 = useRef<{ code: string; hint: string } | null>(null);
   const autoRunRef = useRef(false);
   const pendingAnalyzeRef = useRef(false);
   const handleFixRef = useRef<() => void>(() => {});
@@ -267,6 +270,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
   const handleFix = useCallback(async () => {
     if (inputCode.trim().length < 5 || isLoading) return;
+    autoFixAttemptsRef.current = 0;
 
     abortRef.current?.abort();
     if (logHideTimerRef.current) clearTimeout(logHideTimerRef.current);
@@ -369,13 +373,27 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || data.detail || `Error ${response.status}`);
-      setRunOutput(data.direct_output || data.output || '(no output)');
+      const runResult = data.direct_output || data.output || '(no output)';
+      const hasRunError =
+        runResult.startsWith('Error:') || runResult.startsWith('Traceback') ||
+        /^error:/i.test(runResult) ||
+        /SyntaxError|NameError|TypeError|ValueError|AttributeError|RuntimeError/.test(runResult);
+      if (autoFixEnabled && hasRunError && autoFixAttemptsRef.current < 1) {
+        autoFixAttemptsRef.current += 1;
+        setRunOutput('⚡ Error detected — auto-fixing…');
+        pendingAutoFixRef2.current = {
+          code: fixedCode,
+          hint: `Runtime error:\n${runResult.slice(0, 600)}\n\nFix the code so it runs without errors.`,
+        };
+      } else {
+        setRunOutput(runResult);
+      }
     } catch (err: any) {
       setRunOutput(`Error: ${err.message}`);
     } finally {
       setIsRunning(false);
     }
-  }, [fixedCode, effectiveLang, token, isRunning]);
+  }, [fixedCode, effectiveLang, token, isRunning, autoFixEnabled]);
 
   // Auto-run when fix completes if triggered by paste
   useEffect(() => {
@@ -416,6 +434,52 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   useEffect(() => {
     if (logScrollRef.current) logScrollRef.current.scrollTop = logScrollRef.current.scrollHeight;
   }, [logLines]);
+
+  const runAutoFix = useCallback(async (code: string, errorHint: string) => {
+    if (isLoading) return;
+    setIsLoading(true);
+    setError(null);
+    setRunOutput(null);
+    logStartRef.current = Date.now();
+    setLogLines([]);
+    setShowLogPopup(true);
+    addLog('🔧', 'Auto-fixing runtime error…');
+    const controller = await streamCoFixResponse({
+      code,
+      hint: errorHint,
+      company: activeAssistant?.company || undefined,
+      language: effectiveLang,
+      token: token!,
+      onAnswer: (data: CoFixAnswer) => {
+        addLog('📥', `Applying fix… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`);
+        setFixedCode(data.fixed_code);
+        setChanges(data.changes);
+        setComplexity(data.complexity);
+        setHackerrankCompatible(data.hackerrank_compatible);
+      },
+      onError: ({ msg }) => {
+        addLog('✕', `Auto-fix failed: ${msg}`);
+        setError(msg);
+        setIsLoading(false);
+      },
+      onComplete: () => {
+        addLog('✅', 'Auto-fix done — re-running…');
+        autoRunRef.current = true;
+        pendingAnalyzeRef.current = true;
+        setIsLoading(false);
+        logHideTimerRef.current = setTimeout(() => setShowLogPopup(false), 2000);
+      },
+    });
+    abortRef.current = controller;
+  }, [isLoading, effectiveLang, token, activeAssistant, addLog]);
+
+  useEffect(() => {
+    if (!isRunning && !isLoading && pendingAutoFixRef2.current) {
+      const { code, hint: errorHint } = pendingAutoFixRef2.current;
+      pendingAutoFixRef2.current = null;
+      runAutoFix(code, errorHint);
+    }
+  }, [isRunning, isLoading, runAutoFix]);
 
   const guessEdgeCases = (inputFormat: string): string[] => {
     const f = inputFormat.toLowerCase();
@@ -742,6 +806,18 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   }}
                 >
                   Copy
+                </button>
+                <button
+                  onClick={() => setAutoFixEnabled(v => !v)}
+                  title={autoFixEnabled ? 'Auto-Fix on — errors trigger automatic re-fix' : 'Auto-Fix off'}
+                  className="text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-lg transition-all hover:opacity-90"
+                  style={{
+                    background: autoFixEnabled ? 'rgba(16,185,129,0.12)' : 'rgba(51,65,85,0.15)',
+                    border: `1px solid ${autoFixEnabled ? 'rgba(16,185,129,0.5)' : 'rgba(100,116,139,0.25)'}`,
+                    color: autoFixEnabled ? '#10b981' : 'var(--text-muted)',
+                  }}
+                >
+                  ⚡ Auto-Fix
                 </button>
                 <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
               </>
