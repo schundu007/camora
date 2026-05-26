@@ -94,6 +94,53 @@ const DIMENSION_LABELS = ['Solving', 'Design', 'DSA', 'Comms', 'Time'];
 const DIMENSION_KEYS = ['problemSolving', 'systemDesign', 'dataStructures', 'communication', 'timeManagement'];
 
 
+/* ══════════════════════════════ Markdown renderer ══════════════════════════════ */
+
+function renderMd(text) {
+  if (!text) return null;
+  const escHtml = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const inline = s => {
+    let r = escHtml(s);
+    r = r.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    r = r.replace(/`([^`]+)`/g, '<code style="padding:1px 5px;background:rgba(255,255,255,0.08);border-radius:4px;font-family:monospace;font-size:12px">$1</code>');
+    return r;
+  };
+  const blocks = [];
+  const codeRe = /```(\w*)\n([\s\S]*?)```/g;
+  let last = 0, m;
+  while ((m = codeRe.exec(text)) !== null) {
+    if (m.index > last) blocks.push({ type: 'text', content: text.slice(last, m.index) });
+    blocks.push({ type: 'code', lang: m[1] || 'code', content: m[2].trim() });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) blocks.push({ type: 'text', content: text.slice(last) });
+
+  return blocks.map((block, bi) => {
+    if (block.type === 'code') {
+      return (
+        <div key={bi} style={{ margin: '10px 0', borderRadius: 8, overflow: 'hidden', background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ padding: '4px 12px', background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <span style={{ fontFamily: 'monospace', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.4)' }}>{block.lang}</span>
+          </div>
+          <pre style={{ margin: 0, padding: '12px', fontFamily: 'monospace', fontSize: 12, color: '#e6edf3', overflowX: 'auto', lineHeight: 1.6 }}>
+            <code>{block.content}</code>
+          </pre>
+        </div>
+      );
+    }
+    return block.content.split('\n').map((line, li) => {
+      if (!line.trim()) return <br key={`${bi}-${li}`} />;
+      if (line.startsWith('## ')) return <p key={`${bi}-${li}`} style={{ fontWeight: 700, fontSize: 13, margin: '8px 0 2px', color: 'inherit' }}>{line.slice(3)}</p>;
+      if (line.startsWith('### ') || /^\*{1,4}[^*].+[^*]\*{1,4}:?\s*$/.test(line.trim())) {
+        const label = line.startsWith('### ') ? line.slice(4) : line.trim().replace(/^\*+(.+?)\*+:?\s*$/, '$1');
+        return <p key={`${bi}-${li}`} style={{ fontWeight: 600, fontSize: 12, margin: '6px 0 1px', color: 'inherit' }}>{label}</p>;
+      }
+      if (/^[-*•]\s/.test(line)) return <p key={`${bi}-${li}`} style={{ margin: '1px 0', display: 'flex', gap: 6, alignItems: 'flex-start' }}><span style={{ flexShrink: 0, marginTop: 2, opacity: 0.5 }}>·</span><span dangerouslySetInnerHTML={{ __html: inline(line.replace(/^[-*•]\s/, '')) }} /></p>;
+      return <p key={`${bi}-${li}`} style={{ margin: '2px 0', lineHeight: 1.5 }} dangerouslySetInnerHTML={{ __html: inline(line) }} />;
+    });
+  });
+}
+
 /* ══════════════════════════════ Helpers ══════════════════════════════ */
 
 function getStats() {
@@ -1359,8 +1406,8 @@ export default function PracticePage() {
                         {showModelAnswer === currentIdx ? 'Hide' : 'Show'} Model Answer
                       </button>
                       {showModelAnswer === currentIdx && (
-                        <div style={{ marginTop: 8, padding: 14, background: 'var(--accent-subtle)', borderRadius: 10, fontSize: 13, color: 'var(--accent-hover)', lineHeight: 1.6, fontFamily: category === 'coding' ? "var(--font-mono)" : 'inherit', whiteSpace: 'pre-wrap' }}>
-                          {inlineEval.modelAnswer}
+                        <div style={{ marginTop: 8, padding: 14, background: 'var(--accent-subtle)', borderRadius: 10, fontSize: 13, color: 'var(--accent-hover)', lineHeight: 1.6 }}>
+                          {renderMd(inlineEval.modelAnswer)}
                         </div>
                       )}
                     </div>
@@ -1546,8 +1593,8 @@ export default function PracticePage() {
                                 {showModelAnswer === `r-${i}` ? 'Hide' : 'Show'} Model Answer
                               </button>
                               {showModelAnswer === `r-${i}` && (
-                                <div style={{ marginTop: 8, padding: 14, background: 'var(--accent-subtle)', borderRadius: 10, border: '1px solid var(--border)', fontSize: 12, color: 'var(--accent-hover)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-                                  {ma.modelAnswer}
+                                <div style={{ marginTop: 8, padding: 14, background: 'var(--accent-subtle)', borderRadius: 10, border: '1px solid var(--border)', fontSize: 12, color: 'var(--accent-hover)', lineHeight: 1.6 }}>
+                                  {renderMd(ma.modelAnswer)}
                                 </div>
                               )}
                             </div>

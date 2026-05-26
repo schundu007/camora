@@ -96,13 +96,17 @@ function renderMarkdown(text: string) {
     {
       const t = line.trim();
       const isH3 = line.startsWith('### ');
-      const isStandaloneBold = !isH3 && t.startsWith('**') && t.endsWith('**') && t.length > 4 && !t.slice(2, -2).includes('**');
-      if (isH3 || isStandaloneBold) {
-        const label = isH3 ? line.slice(4) : t.slice(2, -2);
+      // Match "**label**", "****label****", "| **label**" with optional trailing colon
+      const boldRe = /^(?:\|\s*)?\*{1,4}((?:[^*]|\*(?!\*))+)\*{1,4}:?\s*$/;
+      const boldMatch = !isH3 ? boldRe.exec(t) : null;
+      if (isH3 || boldMatch) {
+        const rawLabel = isH3 ? line.slice(4) : (boldMatch ? boldMatch[1] : t);
+        // Strip any wrapping ** that the AI adds inside H3 titles (e.g. ### **Title**)
+        const cleanLabel = rawLabel.replace(/^\*+(.+?)\*+$/, '$1').trim();
         elements.push(
           <h3 key={key++} className="text-[13px] font-semibold mt-6 mb-2 flex items-center gap-2" style={{ color: 'var(--cam-gold-leaf)' }}>
             <span className="w-0.5 h-3.5 rounded-full shrink-0" style={{ background: 'var(--cam-gold-leaf)', opacity: 0.6 }} />
-            {label}
+            <span dangerouslySetInnerHTML={{ __html: inline(cleanLabel) }} />
           </h3>
         );
         i++; continue;
