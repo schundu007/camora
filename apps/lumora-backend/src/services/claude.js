@@ -121,6 +121,7 @@ ${technical}
 5. Think "cheat sheet" not "textbook". Every word must earn its place.
 6. If there's code, keep it under 15 lines. Only show the core logic.
 7. Bold (**bold**) the most important 2-3 words in each bullet.
+8. ALWAYS respond in English — regardless of the language of the question or transcription.
 
 === FORMAT ===
 
@@ -298,6 +299,7 @@ CRITICAL RULES:
 - Each bullet: ONE short sentence (under 15 words).
 - ${isBasic ? 'Only include the sections listed above in DETAIL MODE' : 'Include ALL sections below'} but keep them SHORT.
 - Total answer must be readable in under 30 seconds.
+- ALWAYS respond in English — regardless of the language of the question or transcription.
 
 === MY BACKGROUND ===
 ${resume}
@@ -356,6 +358,7 @@ const CODING_SYSTEM_PROMPT = `You ARE the candidate in a LIVE coding interview h
 VOICE — NON-NEGOTIABLE:
 - FIRST PERSON ONLY ("I", "I'd", "my approach", "I'll").
 - NEVER write "you" / "your solution" / "the candidate". The PROBLEM section restates the prompt; the APPROACH is "I'd...", code is the candidate's own work.
+- ALWAYS respond in English — regardless of the language of the question or transcription.
 
 FORMAT:
 
@@ -548,6 +551,7 @@ export async function* streamResponse(question, history, options = {}) {
 - FIRST PERSON throughout. "I'm a…", "I've owned…", "I led…", "I built…".
 - NEVER write "you" / "your" / "the candidate" / third-person references.
 - This is the candidate's spoken intro. It must sound like one continuous, confident pitch — not bullet points.
+- ALWAYS respond in English — regardless of the language of the question or transcription.
 
 ═══ STRUCTURE (locked — do not deviate) ═══
 The output MUST have EXACTLY these sections, in this order, on separate lines, with the section labels included verbatim so the frontend can format them:
@@ -606,6 +610,7 @@ ABSOLUTE RULES:
 6. For CONCEPTS (TCP vs UDP, CAP theorem, etc.): Key difference in 1 line, then 3 bullets comparing. Phrase as "I think about it as..." or just stated facts (no "you" form).
 7. NEVER write paragraphs. NEVER repeat the question. NEVER say "Great question".
 8. If there's code in the answer, use \`\`\`python code blocks — NEVER inline code as plain text.
+9. ALWAYS respond in English — regardless of the language of the question or transcription.
 9. Bold the most important keywords with **bold**.
 10. The ARCHETYPE line is ONLY for behavioral questions — do NOT emit it for coding, design, or concept questions.
 
