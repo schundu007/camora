@@ -33,7 +33,8 @@ Bullet points of the typical developer workflow / mental model for this feature.
 ## Practice Exercise
 One concrete hands-on exercise with a clear problem statement.
 
-Keep code clean and idiomatic Python. Be specific to "${title}".`;
+Keep code clean and idiomatic Python. Be specific to "${title}".
+Wrap ALL code in triple-backtick code blocks with "python" as the language (e.g., \`\`\`python ... \`\`\`). Never write bare code lines without backticks.`;
   }
 
   return `Create a comprehensive learning guide for the programming course path: "${title}".
@@ -55,7 +56,7 @@ Use ### subheadings (e.g. ### Phase 1: Fundamentals) for each phase or stage. Ne
 Specific technical competencies and patterns you'll develop.
 
 ## Sample Problem Types
-3–4 representative problem types with brief descriptions and code sketches.
+3–4 representative problem types. For each, include a brief description and a Code Sketch wrapped in a triple-backtick code block with the language name (e.g., \`\`\`python ... \`\`\`).
 
 ## Prerequisites
 What to know before starting, and what you can tackle after completing this path.
@@ -63,7 +64,7 @@ What to know before starting, and what you can tackle after completing this path
 ## Interview Relevance
 How mastery of this path translates to technical interview performance.
 
-Include concrete code examples where relevant.`;
+IMPORTANT: Wrap ALL code — every example, snippet, and code sketch — in triple-backtick code blocks (e.g., \`\`\`python ... \`\`\`). Never write bare code lines without backticks.`;
 }
 
 // GET /api/v1/learn/topic/:slug — cache lookup only

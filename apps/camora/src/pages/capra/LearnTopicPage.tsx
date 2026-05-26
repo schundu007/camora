@@ -109,7 +109,47 @@ function renderMarkdown(text: string) {
             <span dangerouslySetInnerHTML={{ __html: inline(cleanLabel) }} />
           </h3>
         );
-        i++; continue;
+        i++;
+        // After a "Code Sketch / Code Sample / Snippet" heading, collect bare code lines that
+        // the AI forgot to wrap in triple backticks and render them as a formatted code block.
+        if (/code[\s_-]*(sketch|sample|snippet|example)|sample[\s_-]*code/i.test(cleanLabel)) {
+          let j = i;
+          if (j < lines.length && !lines[j].trim()) j++; // skip optional blank separator
+          // Only activate if next content is NOT already a placeholder code block
+          if (j < lines.length && !lines[j].startsWith('__CODE_') &&
+              !lines[j].startsWith('## ') && !lines[j].startsWith('### ') && lines[j].trim()) {
+            const codeLines: string[] = [];
+            while (j < lines.length) {
+              const ln = lines[j];
+              if (!ln.trim()) break;
+              if (ln.startsWith('__CODE_') || ln.startsWith('## ') || ln.startsWith('### ')) break;
+              if (/^\*{1,4}[A-Z]/.test(ln.trim()) && /\*{1,4}:?\s*$/.test(ln.trim())) break;
+              codeLines.push(ln);
+              j++;
+            }
+            if (codeLines.length > 0) {
+              // First line may be a bare language name (e.g. "nginx", "python")
+              const firstTrimmed = codeLines[0].trim();
+              const isLangIndicator = /^[a-z][a-z0-9+#-]*$/.test(firstTrimmed) && codeLines.length > 1;
+              const lang = isLangIndicator ? firstTrimmed : 'code';
+              const codeContent = (isLangIndicator ? codeLines.slice(1) : codeLines).join('\n').trim();
+              if (codeContent) {
+                elements.push(
+                  <div key={key++} className="my-4 rounded-xl overflow-hidden" style={{ background: '#0d1117', border: '1px solid color-mix(in oklab,var(--cam-primary) 20%,transparent)' }}>
+                    <div className="px-4 py-2" style={{ background: 'color-mix(in oklab,var(--cam-primary) 10%,#0d1117)', borderBottom: '1px solid color-mix(in oklab,var(--cam-primary) 15%,transparent)' }}>
+                      <span className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)', opacity: 0.7 }}>{lang}</span>
+                    </div>
+                    <pre className="px-4 py-4 overflow-x-auto text-[13px] leading-relaxed m-0" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3' }}>
+                      <code>{codeContent}</code>
+                    </pre>
+                  </div>
+                );
+                i = j;
+              }
+            }
+          }
+        }
+        continue;
       }
     }
 
