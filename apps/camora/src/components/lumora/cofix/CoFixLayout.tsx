@@ -106,6 +106,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const mkTest = (seed = ''): CustomTest => ({ id: `t${Date.now()}-${Math.random()}`, input: seed, expected: '', result: null, running: false, isErr: false });
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisError, setAnalysisError] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
   const [panelTab, setPanelTab] = useState<'problem' | 'tests' | 'learn'>('problem');
   const [customTests, setCustomTests] = useState<CustomTest[]>([mkTest()]);
@@ -285,6 +286,16 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     const t2 = setTimeout(() => addLog('🐛', 'Scanning for issues…'), 800);
     const t3 = setTimeout(() => addLog('🤖', 'Querying AI model…'), 1400);
 
+    // Reset panel — analyze will fire with fixedCode once fix stream completes
+    setAnalysis(null);
+    setAnalysisError(false);
+    setCustomTests([mkTest()]);
+    setShowPanel(true);
+    setPanelTab('problem');
+
+    let latestFixedCode = '';
+    const capturedLang = effectiveLang;
+
     const controller = await streamCoFixResponse({
       code: inputCode,
       hint: hint.trim() || undefined,
@@ -293,6 +304,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       token: token!,
       onAnswer: (data: CoFixAnswer) => {
         clearTimeout(t3);
+        latestFixedCode = data.fixed_code;
         addLog('📥', `Receiving fixes… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`);
         setFixedCode(data.fixed_code);
         setChanges(data.changes);
@@ -307,42 +319,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       },
       onComplete: () => {
         clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
-        addLog('✅', 'Complete');
+        addLog('✅', 'Complete — analyzing problem…');
         setIsLoading(false);
         logHideTimerRef.current = setTimeout(() => setShowLogPopup(false), 2500);
+        if (latestFixedCode) runAnalyze(latestFixedCode, capturedLang);
       },
     });
     abortRef.current = controller;
-
-    // Parallel: generate problem statement + test cases + beginner walkthrough
-    setAnalysis(null);
-    setCustomTests([mkTest()]);
-    setAnalysisLoading(true);
-    setShowPanel(true);
-    setPanelTab('problem');
-    fetch(`${API_URL}/api/v1/coding/analyze`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      credentials: 'include',
-      body: JSON.stringify({ code: inputCode, language: effectiveLang }),
-    }).then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data) {
-          setAnalysis(data);
-          if (data.test_cases?.length > 0) {
-            setCustomTests(prev => {
-              const fromAI: CustomTest[] = data.test_cases.map((tc: { input: string; expected: string }) =>
-                ({ id: `a${Date.now()}-${Math.random()}`, input: tc.input, expected: tc.expected, result: null, running: false, isErr: false })
-              );
-              // Keep any user-typed tests, drop the initial blank placeholder
-              const userTyped = prev.filter(t => t.input.trim() !== '');
-              return [...fromAI, ...userTyped, mkTest()];
-            });
-          }
-        }
-      })
-      .catch(() => {})
-      .finally(() => setAnalysisLoading(false));
   }, [inputCode, hint, effectiveLang, token, isLoading, activeAssistant]);
 
   const runCustomTest = useCallback(async (id: string) => {
@@ -436,6 +419,49 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   useEffect(() => {
     if (logScrollRef.current) logScrollRef.current.scrollTop = logScrollRef.current.scrollHeight;
   }, [logLines]);
+
+  const guessEdgeCases = (inputFormat: string): string[] => {
+    const f = inputFormat.toLowerCase();
+    if (/list|array/.test(f)) return ['print(solution([]))', 'print(solution([1]))'];
+    if (/string/.test(f))     return ['print(solution(""))', 'print(solution("a"))'];
+    if (/tree/.test(f))       return ['print(solution(None))', 'print(solution([1, None, 2]))'];
+    if (/graph/.test(f))      return ['print(solution({}))', 'print(solution({0: [1], 1: [0]}))'];
+    if (/int|number/.test(f)) return ['print(solution(0))', 'print(solution(-1))'];
+    return ['# Add edge case 1 here', '# Add edge case 2 here'];
+  };
+
+  const runAnalyze = useCallback((code: string, lang: string) => {
+    setAnalysis(null);
+    setAnalysisError(false);
+    setAnalysisLoading(true);
+    fetch(`${API_URL}/api/v1/coding/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      credentials: 'include',
+      body: JSON.stringify({ code, language: lang }),
+    })
+      .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); })
+      .then(data => {
+        setAnalysis(data);
+        const aiTests: CustomTest[] = (data.test_cases || []).map((tc: { input: string; expected: string }) =>
+          ({ id: `ai-${Date.now()}-${Math.random()}`, input: tc.input, expected: tc.expected, result: null, running: false, isErr: false })
+        );
+        const edgeCalls = guessEdgeCases(data.input_format || '');
+        const edgeTests: CustomTest[] = edgeCalls.map((call, i) =>
+          ({ id: `edge-${i}-${Date.now()}`, input: call, expected: '', result: null, running: false, isErr: false })
+        );
+        setCustomTests(prev => {
+          const userTyped = prev.filter(t => t.input.trim() !== '' && !t.id.startsWith('ai-') && !t.id.startsWith('edge-'));
+          return [...aiTests, ...edgeTests, ...userTyped, mkTest()];
+        });
+      })
+      .catch(() => setAnalysisError(true))
+      .finally(() => setAnalysisLoading(false));
+  }, [token]);
+
+  const retryAnalyze = useCallback(() => {
+    if (fixedCode) runAnalyze(fixedCode, effectiveLang);
+  }, [fixedCode, effectiveLang, runAnalyze]);
 
   const handleOutputDragStart = useCallback((e: React.MouseEvent) => {
     if (!outputPanelRef.current) return;
@@ -884,10 +910,36 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
           {/* Panel body */}
           <div className="flex-1 overflow-y-auto px-4 py-3">
-            {!analysis && analysisLoading && (
-              <div className="flex items-center justify-center h-full gap-3" style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
-                Generating problem analysis…
+
+            {/* Shared: loading state for Problem/Learn */}
+            {!analysis && analysisLoading && panelTab !== 'tests' && (
+              <div className="flex flex-col items-center justify-center h-full gap-3">
+                <span className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
+                <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                  {panelTab === 'problem' ? 'Generating problem statement…' : 'Building step-by-step walkthrough…'}
+                </span>
+              </div>
+            )}
+
+            {/* Shared: error/retry state for Problem/Learn */}
+            {!analysis && !analysisLoading && analysisError && panelTab !== 'tests' && (
+              <div className="flex flex-col items-center justify-center h-full gap-3">
+                <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Could not generate analysis</span>
+                <button
+                  onClick={retryAnalyze}
+                  disabled={!fixedCode}
+                  className="text-[11px] font-bold px-4 py-1.5 rounded-lg transition-opacity disabled:opacity-40 hover:opacity-80"
+                  style={{ border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)', background: 'transparent' }}
+                >
+                  ↺ Retry
+                </button>
+              </div>
+            )}
+
+            {/* Shared: no fixed code yet */}
+            {!analysis && !analysisLoading && !analysisError && panelTab !== 'tests' && (
+              <div className="flex items-center justify-center h-full">
+                <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Run CoFix to generate analysis</span>
               </div>
             )}
 
@@ -1021,19 +1073,45 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
             {analysis && panelTab === 'learn' && (
               <div>
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {analysis.concepts.map((c, i) => (
-                    <span key={i} className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
-                      style={{ background: 'color-mix(in oklab,var(--cam-primary) 15%,var(--bg-elevated))', color: 'var(--cam-primary)' }}>{c}</span>
-                  ))}
-                </div>
-                <div className="space-y-3">
+                {/* Concepts */}
+                {analysis.concepts.length > 0 && (
+                  <div className="mb-4">
+                    <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Concepts used</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {analysis.concepts.map((c, i) => (
+                        <span key={i} className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+                          style={{ background: 'color-mix(in oklab,var(--cam-primary) 15%,var(--bg-elevated))', border: '1px solid color-mix(in oklab,var(--cam-primary) 30%,transparent)', color: 'var(--cam-primary)' }}>
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Why this solution works */}
+                {analysis.problem && (
+                  <div className="mb-4 p-3 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
+                    <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--cam-gold-leaf-dk)' }}>Why this approach</div>
+                    <p className="text-[12px] leading-relaxed m-0" style={{ color: 'var(--text-secondary)' }}>{analysis.problem}</p>
+                  </div>
+                )}
+
+                {/* Step-by-step walkthrough */}
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>How it works — step by step</div>
+                <div className="space-y-2.5">
                   {analysis.steps.map((s, i) => (
-                    <div key={i} className="flex gap-3 items-start">
-                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5"
-                        style={{ background: 'color-mix(in oklab,var(--cam-primary) 20%,var(--bg-elevated))', color: 'var(--cam-primary)' }}>{i + 1}</span>
+                    <div key={i} className="flex gap-3 items-start p-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5"
+                        style={{ background: 'color-mix(in oklab,var(--cam-gold-leaf) 20%,var(--bg-surface))', color: 'var(--cam-gold-leaf)', border: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 40%,transparent)' }}>
+                        {i + 1}
+                      </span>
                       <div className="flex-1 min-w-0">
-                        {s.code && <code className="block text-[11px] px-2 py-1 rounded mb-1.5" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3', background: '#0d1117' }}>{s.code}</code>}
+                        {s.code && (
+                          <code className="block text-[11px] px-2.5 py-1.5 rounded mb-1.5 leading-relaxed"
+                            style={{ fontFamily: "'IBM Plex Mono', monospace", color: '#e6edf3', background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            {s.code}
+                          </code>
+                        )}
                         <p className="text-[12px] leading-relaxed m-0" style={{ color: 'var(--text-secondary)' }}>{s.text}</p>
                       </div>
                     </div>
