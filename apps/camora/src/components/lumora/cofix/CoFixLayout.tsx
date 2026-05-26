@@ -121,7 +121,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
-  const [panelTab, setPanelTab] = useState<'problem' | 'tests' | 'learn'>('problem');
+  const [panelTab, setPanelTab] = useState<'problem' | 'learn'>('problem');
   const [customTests, setCustomTests] = useState<CustomTest[]>([mkTest()]);
 
   const [outputHeight, setOutputHeight] = useState<number | null>(null);
@@ -981,54 +981,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
             </div>
           )}
 
-          {/* Run output */}
-          {runOutput !== null && (
-            <div
-              ref={outputPanelRef}
-              className="border-t border-[var(--border)] shrink-0 flex flex-col"
-              style={{
-                background: isErr ? 'rgba(239,68,68,0.05)' : 'var(--bg-primary)',
-                ...(outputHeight !== null && !outputCollapsed ? { height: outputHeight, overflow: 'hidden' } : {}),
-              }}
-            >
-              {/* Drag-resize handle — hidden when collapsed */}
-              {!outputCollapsed && (
-                <div
-                  onMouseDown={handleOutputDragStart}
-                  className="h-1.5 shrink-0 cursor-ns-resize"
-                  style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.35 }}
-                  title="Drag to resize"
-                />
-              )}
-              <div className="flex items-center justify-between px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)] shrink-0">
-                <span className={`text-[10px] font-bold tracking-wider uppercase ${isErr ? 'text-red-400' : 'text-emerald-400'}`}>
-                  {isErr ? '✕ Runtime Error' : '✓ Output'}
-                </span>
-                <button
-                  onClick={() => setOutputCollapsed(v => !v)}
-                  title={outputCollapsed ? 'Expand output' : 'Collapse output'}
-                  className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors px-1"
-                >
-                  {outputCollapsed ? '▲' : '▼'}
-                </button>
-              </div>
-              {!outputCollapsed && (
-                <pre
-                  className={`px-4 py-3 whitespace-pre-wrap ${outputHeight !== null ? 'overflow-y-auto flex-1' : ''} ${isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}
-                  style={{
-                    fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
-                    fontSize: 11,
-                    lineHeight: 1.65,
-                    letterSpacing: '-0.02em',
-                    WebkitFontSmoothing: 'antialiased',
-                    MozOsxFontSmoothing: 'grayscale',
-                  }}
-                >
-                  {runOutput}
-                </pre>
-              )}
-            </div>
-          )}
           </div>
           {changes.length > 0 && (
             <div ref={changesRef} className="flex-shrink-0 flex flex-row h-full" style={{ width: changesWidth }}>
@@ -1048,11 +1000,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       </Allotment>
       </div>
 
-      {/* ── Analysis panel ── */}
+      {/* ── Analysis panel — 2 columns ── */}
       {showPanel && (
         <div ref={panelRef} className="shrink-0 flex flex-col" style={{ height: panelHeight, borderTop: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-surface)' }}>
 
-          {/* Drag handle to resize panel height */}
+          {/* Drag handle */}
           <div
             onMouseDown={handlePanelDragStart}
             className="h-1.5 shrink-0 cursor-ns-resize"
@@ -1060,117 +1012,168 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
             title="Drag to resize"
           />
 
-          {/* Panel tab bar */}
-          <div className="flex items-center shrink-0" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
-            {(['problem', 'tests', 'learn'] as const).map(tab => (
-              <button key={tab} onClick={() => setPanelTab(tab)}
-                className="h-full px-4 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors"
-                style={{ color: panelTab === tab ? 'var(--cam-gold-leaf)' : 'var(--cam-gold-leaf-dk)', borderBottom: panelTab === tab ? '2px solid var(--cam-gold-leaf)' : '2px solid transparent', background: 'none' }}>
-                {tab === 'problem' ? 'Problem' : tab === 'tests' ? 'Tests' : 'Learn'}
-              </button>
-            ))}
-            <div className="flex-1" />
-            {analysisLoading && (
-              <span className="flex items-center gap-1.5 text-[11px] px-3" style={{ color: 'var(--cam-gold-leaf-dk)' }}>
-                <span className="w-2.5 h-2.5 rounded-full border-2 border-t-transparent animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf-dk)', borderTopColor: 'transparent' }} />
-                Analyzing…
-              </span>
-            )}
-            <button onClick={() => setShowPanel(false)} className="px-3 text-[13px] hover:opacity-70 transition-opacity" style={{ color: 'var(--text-muted)' }}>✕</button>
-          </div>
+          {/* Two-column body */}
+          <div className="flex flex-1 min-h-0">
 
-          {/* Panel body */}
-          <div className="flex-1 overflow-y-auto px-4 py-3">
-
-            {/* Shared: loading state for Problem/Learn */}
-            {!analysis && analysisLoading && panelTab !== 'tests' && (
-              <div className="flex flex-col items-center justify-center h-full gap-3">
-                <span className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
-                <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
-                  {panelTab === 'problem' ? 'Generating problem statement…' : 'Building step-by-step walkthrough…'}
-                </span>
+            {/* ── LEFT: Problem / Learn ── */}
+            <div className="flex flex-col min-w-0" style={{ width: '50%', borderRight: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
+              <div className="flex items-center shrink-0" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
+                {(['problem', 'learn'] as const).map(tab => (
+                  <button key={tab} onClick={() => setPanelTab(tab)}
+                    className="h-full px-4 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors"
+                    style={{ color: panelTab === tab ? 'var(--cam-gold-leaf)' : 'var(--cam-gold-leaf-dk)', borderBottom: panelTab === tab ? '2px solid var(--cam-gold-leaf)' : '2px solid transparent', background: 'none' }}>
+                    {tab === 'problem' ? 'Problem' : 'Learn'}
+                  </button>
+                ))}
+                <div className="flex-1" />
+                {analysisLoading && (
+                  <span className="flex items-center gap-1.5 text-[11px] px-3" style={{ color: 'var(--cam-gold-leaf-dk)' }}>
+                    <span className="w-2.5 h-2.5 rounded-full border-2 border-t-transparent animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf-dk)', borderTopColor: 'transparent' }} />
+                    Analyzing…
+                  </span>
+                )}
+                <button onClick={() => setShowPanel(false)} className="px-3 text-[13px] hover:opacity-70 transition-opacity" style={{ color: 'var(--text-muted)' }}>✕</button>
               </div>
-            )}
 
-            {/* Shared: error/retry state for Problem/Learn */}
-            {!analysis && !analysisLoading && analysisError && panelTab !== 'tests' && (
-              <div className="flex flex-col items-center justify-center h-full gap-3">
-                <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Could not generate analysis</span>
+              <div className="flex-1 overflow-y-auto px-4 py-3">
+                {/* Loading */}
+                {!analysis && analysisLoading && (
+                  <div className="flex flex-col items-center justify-center h-full gap-3">
+                    <span className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
+                    <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                      {panelTab === 'problem' ? 'Generating problem statement…' : 'Building step-by-step walkthrough…'}
+                    </span>
+                  </div>
+                )}
+                {/* Error */}
+                {!analysis && !analysisLoading && analysisError && (
+                  <div className="flex flex-col items-center justify-center h-full gap-3">
+                    <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Could not generate analysis</span>
+                    <button onClick={retryAnalyze} disabled={!fixedCode}
+                      className="text-[11px] font-bold px-4 py-1.5 rounded-lg transition-opacity disabled:opacity-40 hover:opacity-80"
+                      style={{ border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)', background: 'transparent' }}>
+                      ↺ Retry
+                    </button>
+                  </div>
+                )}
+                {/* Empty */}
+                {!analysis && !analysisLoading && !analysisError && (
+                  <div className="flex items-center justify-center h-full">
+                    <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Run CoFix to generate analysis</span>
+                  </div>
+                )}
+
+                {/* Problem tab */}
+                {analysis && panelTab === 'problem' && (
+                  <div>
+                    <h3 className="text-[14px] font-bold mb-2" style={{ color: 'var(--cam-gold-leaf)' }}>{analysis.title}</h3>
+                    <p className="text-[12px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>{analysis.problem}</p>
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      {[['Input', analysis.input_format], ['Output', analysis.output_format]].map(([label, val]) => (
+                        <div key={label} className="p-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                          <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>{label}</div>
+                          <div className="text-[12px]" style={{ color: 'var(--text-primary)' }}>{val}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-1.5">
+                      {analysis.examples.map((ex, i) => (
+                        <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg text-[12px]" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                          <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-primary)' }}>{ex.input}</code>
+                          <span style={{ color: 'var(--text-muted)' }}>→</span>
+                          <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-gold-leaf)', fontWeight: 600 }}>{ex.output}</code>
+                          {ex.explanation && <span className="italic text-[11px]" style={{ color: 'var(--text-muted)' }}>// {ex.explanation}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Learn tab */}
+                {analysis && panelTab === 'learn' && (
+                  <div>
+                    {analysis.concepts.length > 0 && (
+                      <div className="mb-4">
+                        <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Concepts used</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {analysis.concepts.map((c, i) => (
+                            <span key={i} className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+                              style={{ background: 'color-mix(in oklab,var(--cam-primary) 15%,var(--bg-elevated))', border: '1px solid color-mix(in oklab,var(--cam-primary) 30%,transparent)', color: 'var(--cam-primary)' }}>
+                              {c}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {analysis.problem && (
+                      <div className="mb-4 p-3 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
+                        <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--cam-gold-leaf-dk)' }}>Why this approach</div>
+                        <p className="text-[12px] leading-relaxed m-0" style={{ color: 'var(--text-secondary)' }}>{analysis.problem}</p>
+                      </div>
+                    )}
+                    <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>How it works — step by step</div>
+                    <div className="space-y-2.5">
+                      {analysis.steps.map((s, i) => (
+                        <div key={i} className="flex gap-3 items-start p-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                          <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5"
+                            style={{ background: 'color-mix(in oklab,var(--cam-gold-leaf) 20%,var(--bg-surface))', color: 'var(--cam-gold-leaf)', border: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 40%,transparent)' }}>
+                            {i + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            {s.code && (
+                              <code className="block text-[11px] px-2.5 py-1.5 rounded mb-1.5 leading-relaxed"
+                                style={{ fontFamily: "'IBM Plex Mono', monospace", color: '#e6edf3', background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                {s.code}
+                              </code>
+                            )}
+                            <p className="text-[12px] leading-relaxed m-0" style={{ color: 'var(--text-secondary)' }}>{s.text}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── RIGHT: Tests + Output ── */}
+            <div className="flex flex-col flex-1 min-w-0 min-h-0">
+              {/* Header */}
+              <div className="flex items-center shrink-0 gap-2 px-4" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
+                <span className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf)' }}>Tests</span>
+                <div className="flex-1" />
                 <button
-                  onClick={retryAnalyze}
-                  disabled={!fixedCode}
-                  className="text-[11px] font-bold px-4 py-1.5 rounded-lg transition-opacity disabled:opacity-40 hover:opacity-80"
+                  onClick={runAllCustomTests}
+                  disabled={!fixedCode || customTests.every(t => !t.input.trim())}
+                  className="text-[10px] font-bold px-2.5 py-1 rounded transition-opacity disabled:opacity-40 hover:opacity-80"
                   style={{ border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)', background: 'transparent' }}
                 >
-                  ↺ Retry
+                  ▶ Run All
+                </button>
+                <button
+                  onClick={() => setCustomTests(prev => [...prev, mkTest()])}
+                  className="text-[10px] font-bold px-2.5 py-1 rounded transition-opacity hover:opacity-80"
+                  style={{ border: '1px solid var(--cam-gold-leaf-dk)', color: 'var(--cam-gold-leaf-dk)', background: 'transparent' }}
+                >
+                  + Add
                 </button>
               </div>
-            )}
 
-            {/* Shared: no fixed code yet */}
-            {!analysis && !analysisLoading && !analysisError && panelTab !== 'tests' && (
-              <div className="flex items-center justify-center h-full">
-                <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Run CoFix to generate analysis</span>
-              </div>
-            )}
-
-            {analysis && panelTab === 'problem' && (
-              <div>
-                <h3 className="text-[14px] font-bold mb-2" style={{ color: 'var(--cam-gold-leaf)' }}>{analysis.title}</h3>
-                <p className="text-[12px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>{analysis.problem}</p>
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  {[['Input', analysis.input_format], ['Output', analysis.output_format]].map(([label, val]) => (
-                    <div key={label} className="p-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                      <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>{label}</div>
-                      <div className="text-[12px]" style={{ color: 'var(--text-primary)' }}>{val}</div>
-                    </div>
-                  ))}
+              {/* Tests list */}
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+                {!fixedCode && (
+                  <p className="text-[11px] text-center pt-4" style={{ color: 'var(--text-muted)' }}>Run CoFix first to enable test execution</p>
+                )}
+                <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>
+                  {customTests.filter(t => t.input.trim()).length} case{customTests.filter(t => t.input.trim()).length !== 1 ? 's' : ''}
+                  {analysisLoading && ' · AI generating…'}
                 </div>
-                <div className="space-y-1.5">
-                  {analysis.examples.map((ex, i) => (
-                    <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg text-[12px]" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                      <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-primary)' }}>{ex.input}</code>
-                      <span style={{ color: 'var(--text-muted)' }}>→</span>
-                      <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-gold-leaf)', fontWeight: 600 }}>{ex.output}</code>
-                      {ex.explanation && <span className="italic text-[11px]" style={{ color: 'var(--text-muted)' }}>// {ex.explanation}</span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {panelTab === 'tests' && (
-              <div className="space-y-2">
-                {/* Toolbar */}
-                <div className="flex items-center gap-2 pb-1">
-                  <span className="flex-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                    {customTests.filter(t => t.input.trim()).length} case{customTests.filter(t => t.input.trim()).length !== 1 ? 's' : ''}
-                    {analysisLoading && ' · AI generating…'}
-                  </span>
-                  <button
-                    onClick={runAllCustomTests}
-                    disabled={!fixedCode || customTests.every(t => !t.input.trim())}
-                    className="text-[10px] font-bold px-2.5 py-1 rounded transition-opacity disabled:opacity-40 hover:opacity-80"
-                    style={{ border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)', background: 'transparent' }}
-                  >
-                    ▶ Run All
-                  </button>
-                  <button
-                    onClick={() => setCustomTests(prev => [...prev, mkTest()])}
-                    className="text-[10px] font-bold px-2.5 py-1 rounded transition-opacity hover:opacity-80"
-                    style={{ border: '1px solid var(--cam-gold-leaf-dk)', color: 'var(--cam-gold-leaf-dk)', background: 'transparent' }}
-                  >
-                    + Add
-                  </button>
-                </div>
-
                 {customTests.map(tc => {
                   const hasPassed = tc.result !== null && !tc.isErr && (!tc.expected || tc.result.trim() === tc.expected.trim());
                   const hasFailed = tc.result !== null && !tc.isErr && tc.expected && tc.result.trim() !== tc.expected.trim();
                   const borderColor = tc.isErr ? 'rgba(239,68,68,0.35)' : hasPassed ? 'rgba(34,197,94,0.35)' : hasFailed ? 'rgba(251,191,36,0.35)' : 'var(--border)';
                   return (
                     <div key={tc.id} className="rounded-lg overflow-hidden flex flex-col" style={{ border: `1px solid ${borderColor}`, background: 'var(--bg-elevated)' }}>
-                      {/* Input row */}
                       <div className="flex items-start gap-2 px-3 pt-2 pb-1">
                         <span className="text-[9px] font-bold uppercase tracking-wider mt-2 w-9 shrink-0" style={{ color: 'var(--text-muted)' }}>Input</span>
                         <textarea
@@ -1188,9 +1191,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                             className="flex items-center justify-center text-[10px] font-bold w-8 h-6 rounded transition-opacity disabled:opacity-40"
                             style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)', color: '#0a0e1a' }}
                           >
-                            {tc.running
-                              ? <span className="w-2.5 h-2.5 border border-[#0a0e1a]/30 border-t-[#0a0e1a] rounded-full animate-spin" />
-                              : '▶'}
+                            {tc.running ? <span className="w-2.5 h-2.5 border border-[#0a0e1a]/30 border-t-[#0a0e1a] rounded-full animate-spin" /> : '▶'}
                           </button>
                           <button
                             onClick={() => setCustomTests(prev => prev.length > 1 ? prev.filter(t => t.id !== tc.id) : [mkTest()])}
@@ -1199,8 +1200,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                           >✕</button>
                         </div>
                       </div>
-
-                      {/* Expected (optional) */}
                       <div className="flex items-center gap-2 px-3 pb-2">
                         <span className="text-[9px] font-bold uppercase tracking-wider w-9 shrink-0" style={{ color: 'var(--text-muted)' }}>Expect</span>
                         <input
@@ -1211,8 +1210,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                           style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: 'var(--cam-gold-leaf-dk)' }}
                         />
                       </div>
-
-                      {/* Result */}
                       {tc.result !== null && (
                         <div className="px-3 pb-2 pt-1.5" style={{ borderTop: '1px solid var(--border)' }}>
                           <div className="flex items-center gap-2 mb-1">
@@ -1235,61 +1232,43 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                     </div>
                   );
                 })}
-
-                {!fixedCode && (
-                  <p className="text-[11px] text-center pt-2" style={{ color: 'var(--text-muted)' }}>Run CoFix first to enable test execution</p>
-                )}
               </div>
-            )}
 
-            {analysis && panelTab === 'learn' && (
-              <div>
-                {/* Concepts */}
-                {analysis.concepts.length > 0 && (
-                  <div className="mb-4">
-                    <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Concepts used</div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {analysis.concepts.map((c, i) => (
-                        <span key={i} className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
-                          style={{ background: 'color-mix(in oklab,var(--cam-primary) 15%,var(--bg-elevated))', border: '1px solid color-mix(in oklab,var(--cam-primary) 30%,transparent)', color: 'var(--cam-primary)' }}>
-                          {c}
-                        </span>
-                      ))}
-                    </div>
+              {/* Run Output pinned at bottom */}
+              {runOutput !== null && (
+                <div
+                  ref={outputPanelRef}
+                  className="shrink-0 flex flex-col"
+                  style={{
+                    borderTop: '1px solid var(--cam-gold-leaf-dk)',
+                    background: isErr ? 'rgba(239,68,68,0.05)' : 'var(--bg-primary)',
+                    ...(outputHeight !== null && !outputCollapsed ? { height: outputHeight, overflow: 'hidden' } : {}),
+                  }}
+                >
+                  {!outputCollapsed && (
+                    <div onMouseDown={handleOutputDragStart} className="h-1.5 shrink-0 cursor-ns-resize" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.35 }} title="Drag to resize" />
+                  )}
+                  <div className="flex items-center justify-between px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)] shrink-0">
+                    <span className={`text-[10px] font-bold tracking-wider uppercase ${isErr ? 'text-red-400' : 'text-emerald-400'}`}>
+                      {isErr ? '✕ Runtime Error' : '✓ Output'}
+                    </span>
+                    <button onClick={() => setOutputCollapsed(v => !v)} title={outputCollapsed ? 'Expand output' : 'Collapse output'}
+                      className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors px-1">
+                      {outputCollapsed ? '▲' : '▼'}
+                    </button>
                   </div>
-                )}
-
-                {/* Why this solution works */}
-                {analysis.problem && (
-                  <div className="mb-4 p-3 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
-                    <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--cam-gold-leaf-dk)' }}>Why this approach</div>
-                    <p className="text-[12px] leading-relaxed m-0" style={{ color: 'var(--text-secondary)' }}>{analysis.problem}</p>
-                  </div>
-                )}
-
-                {/* Step-by-step walkthrough */}
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>How it works — step by step</div>
-                <div className="space-y-2.5">
-                  {analysis.steps.map((s, i) => (
-                    <div key={i} className="flex gap-3 items-start p-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5"
-                        style={{ background: 'color-mix(in oklab,var(--cam-gold-leaf) 20%,var(--bg-surface))', color: 'var(--cam-gold-leaf)', border: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 40%,transparent)' }}>
-                        {i + 1}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        {s.code && (
-                          <code className="block text-[11px] px-2.5 py-1.5 rounded mb-1.5 leading-relaxed"
-                            style={{ fontFamily: "'IBM Plex Mono', monospace", color: '#e6edf3', background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)' }}>
-                            {s.code}
-                          </code>
-                        )}
-                        <p className="text-[12px] leading-relaxed m-0" style={{ color: 'var(--text-secondary)' }}>{s.text}</p>
-                      </div>
-                    </div>
-                  ))}
+                  {!outputCollapsed && (
+                    <pre
+                      className={`px-4 py-3 whitespace-pre-wrap ${outputHeight !== null ? 'overflow-y-auto flex-1' : ''} ${isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}
+                      style={{ fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace", fontSize: 11, lineHeight: 1.65, letterSpacing: '-0.02em', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}
+                    >
+                      {runOutput}
+                    </pre>
+                  )}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
           </div>
         </div>
       )}
