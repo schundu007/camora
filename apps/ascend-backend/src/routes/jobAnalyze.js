@@ -70,21 +70,27 @@ async function assertPublicHost(rawUrl) {
 }
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
-  // Reject internal targets before the connect attempt. Note: this is
-  // a best-effort check — DNS rebind attacks could still flip the IP
-  // between this resolve and the actual connect — but this catches
-  // every common SSRF probe.
-  await assertPublicHost(url);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    // `redirect: 'manual'` so an open redirect on a job board can't
-    // chain to an internal target. Callers that legitimately need
-    // redirects can re-validate the Location header through
-    // assertPublicHost before fetching it.
-    const res = await fetch(url, { signal: controller.signal, redirect: 'manual', ...options });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res;
+    let currentUrl = url;
+    let hops = 0;
+    while (hops <= 8) {
+      // SSRF check before every hop — prevents open-redirect chains to internal IPs
+      await assertPublicHost(currentUrl);
+      const res = await fetch(currentUrl, { signal: controller.signal, redirect: 'manual', ...options });
+      if (res.status >= 300 && res.status < 400) {
+        const location = res.headers.get('location');
+        if (!location) throw new Error(`HTTP ${res.status}`);
+        // Resolve relative redirects before SSRF-checking the next hop
+        currentUrl = new URL(location, currentUrl).href;
+        hops++;
+        continue;
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res;
+    }
+    throw new Error('Too many redirects');
   } finally {
     clearTimeout(timeout);
   }
