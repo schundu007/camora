@@ -461,11 +461,18 @@ export interface CoFixChange {
   note: string;
 }
 
+export interface CoFixWalkStep {
+  lines: string;
+  context?: string;
+  text: string;
+}
+
 export interface CoFixAnswer {
   fixed_code: string;
   changes: CoFixChange[];
   complexity: { time: string; space: string };
   hackerrank_compatible: boolean;
+  walkthrough?: CoFixWalkStep[];
 }
 
 export interface CoFixStreamOptions {

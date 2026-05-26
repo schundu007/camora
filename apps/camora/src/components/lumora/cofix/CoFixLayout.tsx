@@ -7,7 +7,7 @@ import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import { AnnotationPanel } from './AnnotationPanel';
 import { streamCoFixResponse } from '@/lib/sse-client';
 import { playgroundAPI } from '@/lib/capra-api';
-import type { CoFixAnswer, CoFixChange } from '@/lib/sse-client';
+import type { CoFixAnswer, CoFixChange, CoFixWalkStep } from '@/lib/sse-client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT } from '@/lib/companyContext';
@@ -98,6 +98,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const [isLoading, setIsLoading] = useState(false);
   const [fixedCode, setFixedCode] = useState('');
   const [changes, setChanges] = useState<CoFixChange[]>([]);
+  const [walkthrough, setWalkthrough] = useState<CoFixWalkStep[]>([]);
   const [complexity, setComplexity] = useState<{ time: string; space: string } | null>(null);
   const [hackerrankCompatible, setHackerrankCompatible] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -300,6 +301,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     setIsLoading(true);
     setFixedCode('');
     setChanges([]);
+    setWalkthrough([]);
     setComplexity(null);
     setHackerrankCompatible(null);
     setError(null);
@@ -329,6 +331,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         addLog(<LogIconReceive />, `Receiving fixes… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`, 'success');
         setFixedCode(data.fixed_code);
         setChanges(data.changes);
+        setWalkthrough(data.walkthrough ?? []);
         setComplexity(data.complexity);
         setHackerrankCompatible(data.hackerrank_compatible);
       },
@@ -475,6 +478,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         addLog(<LogIconWrench />, `Applying fix… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`);
         setFixedCode(data.fixed_code);
         setChanges(data.changes);
+        setWalkthrough(data.walkthrough ?? []);
         setComplexity(data.complexity);
         setHackerrankCompatible(data.hackerrank_compatible);
       },
@@ -1034,7 +1038,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                 style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.35 }}
                 title="Drag to resize"
               />
-              <AnnotationPanel changes={changes} width={changesWidth - 6} />
+              <AnnotationPanel changes={changes} walkthrough={walkthrough} width={changesWidth - 6} />
             </div>
           )}
         </div>
