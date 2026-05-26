@@ -1228,7 +1228,14 @@ Return ONLY a JSON object (no markdown fences) with this exact structure:
     }
   ],
   "complexity": { "time": "O(...)", "space": "O(...)" },
-  "hackerrank_compatible": true | false
+  "hackerrank_compatible": true | false,
+  "walkthrough": [
+    {
+      "lines": "7",
+      "context": "optional label like 'brute' or 'optimised' — omit if not relevant",
+      "text": "First-person plain English the candidate says aloud. Reference variable names with backticks. Max 30 words."
+    }
+  ]
 }
 
 RULES:
@@ -1239,7 +1246,8 @@ RULES:
 - hackerrank_compatible: true only if the function has a clean return-based signature with no stdin/input() boilerplate
 - If code has no issues, return changes: [] and fixed_code equal to the input
 - Return the COMPLETE fixed code, not a partial snippet
-- Do NOT add comments inside the code (changes[] documents everything)`,
+- Do NOT add comments inside the code (changes[] documents everything)
+- walkthrough: cover every non-trivial line or logical block (3-8 entries). Write in first person ("I iterate…", "I seed…"). Group consecutive related lines ("35-38"). Use backticks for variable/code refs. One sentence per entry, max 30 words.`,
         },
       ],
     }, { signal: abortController.signal });
