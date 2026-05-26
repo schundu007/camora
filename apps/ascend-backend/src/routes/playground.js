@@ -4,13 +4,54 @@ import { promisify } from 'util';
 import { execFile, spawn } from 'child_process';
 import { writeFile, rm, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { tmpdir } from 'os';
+import { tmpdir, platform } from 'os';
 import { randomUUID, createHash } from 'crypto';
 import { query } from '../config/database.js';
 import Anthropic from '@anthropic-ai/sdk';
 
 const execFileAsync = promisify(execFile);
 const router = Router();
+
+// ---------------------------------------------------------------------------
+// Auto-install missing Python packages
+// ---------------------------------------------------------------------------
+
+const PIP_ALIAS = {
+  cv2: 'opencv-python',
+  PIL: 'Pillow',
+  sklearn: 'scikit-learn',
+  bs4: 'beautifulsoup4',
+  yaml: 'PyYAML',
+  dotenv: 'python-dotenv',
+  Crypto: 'pycryptodome',
+};
+
+function missingModule(stderr = '') {
+  return stderr.match(/ModuleNotFoundError: No module named '([\w.]+)'/)?.[1]?.split('.')?.[0] ?? null;
+}
+
+async function findPip() {
+  const whichCmd = platform() === 'win32' ? 'where' : 'which';
+  for (const pip of ['pip3', 'pip']) {
+    try {
+      const { stdout } = await execFileAsync(whichCmd, [pip], { timeout: 3000, encoding: 'utf8' });
+      const p = stdout.trim().split('\n')[0];
+      if (p) return p;
+    } catch { /* try next */ }
+  }
+  return null;
+}
+
+async function pipInstall(importName) {
+  if (!/^[a-zA-Z0-9._-]+$/.test(importName)) return false;
+  const pkgName = PIP_ALIAS[importName] ?? importName;
+  const pip = await findPip();
+  if (!pip) return false;
+  try {
+    await execFileAsync(pip, ['install', '--quiet', '--user', pkgName], { timeout: 30000, encoding: 'utf8' });
+    return true;
+  } catch { return false; }
+}
 
 const CODE_LIMIT = 50 * 1024; // 50KB
 const EXEC_OPTS = { maxBuffer: 1024 * 1024, encoding: 'utf8' };
@@ -117,23 +158,32 @@ async function runPython(code) {
     await writeFile(join(dir, 'code.py'), code, 'utf8');
     await writeFile(join(dir, 'main.py'), PYTHON_WRAPPER, 'utf8');
     const start = Date.now();
-    try {
-      const { stdout, stderr } = await execFileAsync(
-        'python3', ['main.py'],
-        { cwd: dir, timeout: 10000, ...EXEC_OPTS }
-      );
-      const { cleanStderr, variables } = parseVarsSentinel(stderr);
-      return { stdout, stderr: cleanStderr, exitCode: 0, duration: Date.now() - start, variables };
-    } catch (err) {
-      const { cleanStderr, variables } = parseVarsSentinel(err.stderr);
-      return {
-        stdout: err.stdout || '',
-        stderr: cleanStderr || err.message,
-        exitCode: typeof err.code === 'number' ? err.code : 1,
-        duration: Date.now() - start,
-        variables,
-      };
+
+    const exec = () => execFileAsync('python3', ['main.py'], { cwd: dir, timeout: 10000, ...EXEC_OPTS });
+
+    let lastErr = null;
+    for (let attempt = 0; attempt <= 5; attempt++) {
+      try {
+        const { stdout, stderr } = await exec();
+        const { cleanStderr, variables } = parseVarsSentinel(stderr);
+        return { stdout, stderr: cleanStderr, exitCode: 0, duration: Date.now() - start, variables };
+      } catch (err) {
+        lastErr = err;
+        const mod = missingModule(err.stderr);
+        if (!mod) break;
+        const ok = await pipInstall(mod);
+        if (!ok) break;
+      }
     }
+
+    const { cleanStderr, variables } = parseVarsSentinel(lastErr.stderr);
+    return {
+      stdout: lastErr.stdout || '',
+      stderr: cleanStderr || lastErr.message,
+      exitCode: typeof lastErr.code === 'number' ? lastErr.code : 1,
+      duration: Date.now() - start,
+      variables,
+    };
   });
 }
 
