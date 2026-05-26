@@ -103,6 +103,81 @@ function renderMarkdown(text: string) {
         const rawLabel = isH3 ? line.slice(4) : (boldMatch ? boldMatch[1] : t);
         // Strip any wrapping ** that the AI adds inside H3 titles (e.g. ### **Title**)
         const cleanLabel = rawLabel.replace(/^\*+(.+?)\*+$/, '$1').trim();
+
+        // ── Phase card layout (Learning Path Workflow phase headings) ────────
+        if (/^phase\s+\d+/i.test(cleanLabel)) {
+          i++;
+          const topics: { title: string; taskRange: string; bullets: string[] }[] = [];
+          while (i < lines.length) {
+            const ln = lines[i];
+            const lnt = ln.trim();
+            if (ln.startsWith('## ') || ln.startsWith('### ')) break;
+            // Detect next phase bold heading — stop collecting
+            if (boldRe.test(lnt)) {
+              const m = boldRe.exec(lnt);
+              if (m && /^phase\s+\d+/i.test(m[1].replace(/^\*+(.+?)\*+$/, '$1').trim())) break;
+            }
+            const numMatch = ln.match(/^\d+[.)]\s+(.*)/);
+            if (numMatch) {
+              const raw = numMatch[1].replace(/\*\*/g, '').trim();
+              // Separate topic title from "(Tasks X–Y)" range annotation
+              const taskM = raw.match(/^([\s\S]+?)\s+(\(Tasks?\s+[\d\-–—,\s]+\))\s*$/i);
+              const title = (taskM ? taskM[1] : raw).trim();
+              const taskRange = taskM ? taskM[2] : '';
+              i++;
+              const bullets: string[] = [];
+              while (i < lines.length && /^[-*•]\s/.test(lines[i])) {
+                bullets.push(lines[i].replace(/^[-*•]\s/, ''));
+                i++;
+              }
+              topics.push({ title, taskRange, bullets });
+              continue;
+            }
+            if (!lnt) { i++; continue; }
+            break;
+          }
+          elements.push(
+            <div key={key++} className="my-5 rounded-xl overflow-hidden"
+              style={{ border: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
+              <div className="cam-hero-strip px-4 py-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
+                <span className="text-[13px] font-bold" style={{ color: 'var(--cam-gold-leaf)' }}>{cleanLabel}</span>
+              </div>
+              <div className="px-4 py-4 space-y-4" style={{ background: 'var(--bg-surface)' }}>
+                {topics.map((topic, ti) => (
+                  <div key={ti}>
+                    <div className="flex items-start gap-2.5 mb-1.5">
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5"
+                        style={{ background: 'color-mix(in oklab,var(--cam-primary) 15%,var(--bg-elevated))', color: 'var(--cam-primary)' }}>
+                        {ti + 1}
+                      </span>
+                      <span className="text-[13px] font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
+                        {topic.title}
+                        {topic.taskRange && (
+                          <span className="ml-1.5 text-[11px] font-normal" style={{ color: 'var(--text-muted)' }}>{topic.taskRange}</span>
+                        )}
+                      </span>
+                    </div>
+                    {topic.bullets.length > 0 && (
+                      <ul className="space-y-1 ml-7">
+                        {topic.bullets.map((b, bi) => (
+                          <li key={bi} className="flex items-start gap-1.5 text-[12px] leading-relaxed"
+                            style={{ color: 'var(--text-secondary)' }}>
+                            <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ background: 'var(--text-muted)' }} />
+                            <span dangerouslySetInnerHTML={{ __html: inline(b) }} />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+          continue;
+        }
+
+        // ── Normal H3 / bold subheading ──────────────────────────────────────
         elements.push(
           <h3 key={key++} className="text-[13px] font-semibold mt-6 mb-2 flex items-center gap-2" style={{ color: 'var(--cam-gold-leaf)' }}>
             <span className="w-0.5 h-3.5 rounded-full shrink-0" style={{ background: 'var(--cam-gold-leaf)', opacity: 0.6 }} />
@@ -128,7 +203,6 @@ function renderMarkdown(text: string) {
               j++;
             }
             if (codeLines.length > 0) {
-              // First line may be a bare language name (e.g. "nginx", "python")
               const firstTrimmed = codeLines[0].trim();
               const isLangIndicator = /^[a-z][a-z0-9+#-]*$/.test(firstTrimmed) && codeLines.length > 1;
               const lang = isLangIndicator ? firstTrimmed : 'code';
