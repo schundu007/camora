@@ -114,6 +114,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const outputPanelRef = useRef<HTMLDivElement | null>(null);
   const outputDragRef = useRef<{ startY: number; startH: number } | null>(null);
 
+  type LogLine = { elapsed: string; icon: string; msg: string };
+  const [logLines, setLogLines] = useState<LogLine[]>([]);
+  const [showLogPopup, setShowLogPopup] = useState(false);
+  const logStartRef = useRef(0);
+  const logScrollRef = useRef<HTMLDivElement | null>(null);
+  const logHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const autoRunRef = useRef(false);
   const handleFixRef = useRef<() => void>(() => {});
 
@@ -260,6 +267,10 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     if (inputCode.trim().length < 5 || isLoading) return;
 
     abortRef.current?.abort();
+    if (logHideTimerRef.current) clearTimeout(logHideTimerRef.current);
+    logStartRef.current = Date.now();
+    setLogLines([]);
+    setShowLogPopup(true);
     setIsLoading(true);
     setFixedCode('');
     setChanges([]);
@@ -269,6 +280,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     setRunOutput(null);
     decorationCollectionRef.current = null;
 
+    addLog('⚡', 'Starting CoFix…');
+    const t1 = setTimeout(() => addLog('🔍', `Parsing ${effectiveLang} code…`), 300);
+    const t2 = setTimeout(() => addLog('🐛', 'Scanning for issues…'), 800);
+    const t3 = setTimeout(() => addLog('🤖', 'Querying AI model…'), 1400);
+
     const controller = await streamCoFixResponse({
       code: inputCode,
       hint: hint.trim() || undefined,
@@ -276,16 +292,25 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       language: effectiveLang,
       token: token!,
       onAnswer: (data: CoFixAnswer) => {
+        clearTimeout(t3);
+        addLog('📥', `Receiving fixes… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`);
         setFixedCode(data.fixed_code);
         setChanges(data.changes);
         setComplexity(data.complexity);
         setHackerrankCompatible(data.hackerrank_compatible);
       },
       onError: ({ msg }) => {
+        clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+        addLog('✕', `Error: ${msg}`);
         setError(msg);
         setIsLoading(false);
       },
-      onComplete: () => setIsLoading(false),
+      onComplete: () => {
+        clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+        addLog('✅', 'Complete');
+        setIsLoading(false);
+        logHideTimerRef.current = setTimeout(() => setShowLogPopup(false), 2500);
+      },
     });
     abortRef.current = controller;
 
@@ -402,6 +427,15 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       }
     });
   }, []);
+
+  const addLog = useCallback((icon: string, msg: string) => {
+    const elapsed = `+${((Date.now() - logStartRef.current) / 1000).toFixed(1)}s`;
+    setLogLines(prev => [...prev, { elapsed, icon, msg }]);
+  }, []);
+
+  useEffect(() => {
+    if (logScrollRef.current) logScrollRef.current.scrollTop = logScrollRef.current.scrollHeight;
+  }, [logLines]);
 
   const handleOutputDragStart = useCallback((e: React.MouseEvent) => {
     if (!outputPanelRef.current) return;
@@ -689,10 +723,36 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
           <div className="flex flex-1 min-h-0">
             {/* Monaco editor — read-only with line decorations */}
             <div className="flex-1 min-w-0 relative">
-              {isLoading && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[var(--bg-primary)]/90 backdrop-blur-sm">
-                  <div className="w-8 h-8 border-2 border-[#0047AB] border-t-transparent rounded-full animate-spin" />
-                  <span className="text-[13px] font-medium text-[var(--text-muted)]">Analyzing and fixing…</span>
+              {/* Streaming log popup */}
+              {showLogPopup && (
+                <div className="absolute top-3 right-3 z-20 w-72 flex flex-col rounded-lg overflow-hidden shadow-2xl"
+                  style={{ background: '#080c17', border: '1px solid var(--cam-gold-leaf)', opacity: 0.97 }}>
+                  {/* Title bar */}
+                  <div className="flex items-center gap-2 px-3 py-1.5 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid rgba(196,160,60,0.3)' }}>
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: isLoading ? 'var(--cam-gold-leaf)' : '#22c55e', boxShadow: isLoading ? '0 0 6px var(--cam-gold-leaf)' : '0 0 6px #22c55e' }} />
+                    <span className="flex-1 text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: "'IBM Plex Mono', monospace" }}>CoFix Log</span>
+                    {!isLoading && (
+                      <button onClick={() => setShowLogPopup(false)} className="text-[11px] opacity-50 hover:opacity-100 transition-opacity" style={{ color: 'var(--cam-gold-leaf-dk)' }}>✕</button>
+                    )}
+                  </div>
+                  {/* Log body */}
+                  <div ref={logScrollRef} className="flex flex-col gap-0.5 px-3 py-2 max-h-48 overflow-y-auto">
+                    {logLines.map((line, i) => (
+                      <div key={i} className="flex items-baseline gap-2">
+                        <span className="text-[9px] shrink-0 tabular-nums" style={{ color: 'rgba(196,160,60,0.45)', fontFamily: "'IBM Plex Mono', monospace" }}>{line.elapsed}</span>
+                        <span className="text-[11px] shrink-0">{line.icon}</span>
+                        <span className="text-[10px] leading-relaxed" style={{ color: line.icon === '✕' ? '#f87171' : line.icon === '✅' ? '#4ade80' : 'rgba(255,255,255,0.8)', fontFamily: "'IBM Plex Mono', monospace" }}>{line.msg}</span>
+                      </div>
+                    ))}
+                    {isLoading && (
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[9px] tabular-nums" style={{ color: 'rgba(196,160,60,0.45)', fontFamily: "'IBM Plex Mono', monospace" }}>…</span>
+                        <span className="w-3 h-px flex-1 overflow-hidden relative" style={{ background: 'rgba(196,160,60,0.15)' }}>
+                          <span className="absolute inset-y-0 left-0 w-1/3 animate-[shimmer_1s_ease-in-out_infinite]" style={{ background: 'var(--cam-gold-leaf)', animation: 'pulse 1s ease-in-out infinite' }} />
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
               {error && !isLoading && (
