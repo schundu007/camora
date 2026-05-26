@@ -296,8 +296,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
     addLog('⚡', 'Starting CoFix…');
     const t1 = setTimeout(() => addLog('🔍', `Parsing ${effectiveLang} code…`), 300);
-    const t2 = setTimeout(() => addLog('🐛', 'Scanning for issues…'), 800);
-    const t3 = setTimeout(() => addLog('🤖', 'Querying AI model…'), 1400);
+    const t2 = setTimeout(() => addLog('🔬', 'Scanning for issues…'), 800);
+    const t3 = setTimeout(() => addLog('🧠', 'Querying AI model…'), 1400);
 
     // Reset panel — analyze will fire with fixedCode once fix stream completes
     setAnalysis(null);
@@ -314,7 +314,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       token: token!,
       onAnswer: (data: CoFixAnswer) => {
         clearTimeout(t3);
-        addLog('📥', `Receiving fixes… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`);
+        addLog('📬', `Receiving fixes… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`);
         setFixedCode(data.fixed_code);
         setChanges(data.changes);
         setComplexity(data.complexity);
@@ -322,7 +322,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       },
       onError: ({ msg }) => {
         clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
-        addLog('✕', `Error: ${msg}`);
+        addLog('❌', `Error: ${msg}`);
         setError(msg);
         setIsLoading(false);
       },
@@ -452,7 +452,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     logStartRef.current = Date.now();
     setLogLines([]);
     setShowLogPopup(true);
-    addLog('🔧', 'Auto-fixing runtime error…');
+    addLog('⚙️', 'Auto-fixing runtime error…');
     const controller = await streamCoFixResponse({
       code,
       hint: errorHint,
@@ -460,14 +460,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       language: effectiveLang,
       token: token!,
       onAnswer: (data: CoFixAnswer) => {
-        addLog('📥', `Applying fix… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`);
+        addLog('🛠️', `Applying fix… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`);
         setFixedCode(data.fixed_code);
         setChanges(data.changes);
         setComplexity(data.complexity);
         setHackerrankCompatible(data.hackerrank_compatible);
       },
       onError: ({ msg }) => {
-        addLog('✕', `Auto-fix failed: ${msg}`);
+        addLog('❌', `Auto-fix failed: ${msg}`);
         setError(msg);
         setIsLoading(false);
       },
