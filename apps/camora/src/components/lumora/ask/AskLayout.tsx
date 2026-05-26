@@ -54,7 +54,7 @@ const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
       <SyntaxHighlighter
         language={normalizedLang}
         style={atomOneDark}
-        customStyle={{ margin: 0, padding: '12px 16px', fontSize: '12.5px', lineHeight: '1.6', fontFamily: 'IBM Plex Mono, monospace', background: '#282c34', borderRadius: 0 }}
+        customStyle={{ margin: 0, padding: '12px 16px', fontSize: '11px', lineHeight: '1.65', fontFamily: "'IBM Plex Mono', monospace", letterSpacing: '-0.02em', WebkitFontSmoothing: 'antialiased', background: '#282c34', borderRadius: 0 }}
         showLineNumbers={false}
         wrapLongLines={false}
       >
@@ -74,7 +74,7 @@ const inlineMarkdown = (raw: string): React.ReactNode[] => {
     if (m[1] !== undefined) {
       nodes.push(<strong key={m.index} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{m[1]}</strong>);
     } else {
-      nodes.push(<code key={m.index} style={{ padding: '1px 5px', background: 'rgba(16,185,129,0.12)', borderRadius: 4, color: '#10b981', fontFamily: 'IBM Plex Mono, monospace', fontSize: 12 }}>{m[2]}</code>);
+      nodes.push(<code key={m.index} style={{ padding: '1px 5px', background: 'rgba(16,185,129,0.12)', borderRadius: 4, color: '#10b981', fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '-0.02em' }}>{m[2]}</code>);
     }
     last = m.index + m[0].length;
   }
