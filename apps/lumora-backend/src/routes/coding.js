@@ -1595,4 +1595,59 @@ Critical rules:
   }
 });
 
+// POST /api/v1/coding/analyze — problem statement + test cases + beginner walkthrough
+router.post('/analyze', authenticate, async (req, res) => {
+  const { code, language = 'python' } = req.body;
+  if (!code?.trim() || code.trim().length < 15) {
+    return res.status(400).json({ error: 'Code too short' });
+  }
+
+  const prompt = `You are a beginner-friendly coding tutor. Analyze this ${language} code and return structured JSON.
+
+\`\`\`${language}
+${code.slice(0, 3000)}
+\`\`\`
+
+Return ONLY this JSON (no markdown fences, no extra text):
+{
+  "title": "5-8 word problem title",
+  "problem": "2-3 sentence plain-English description of what this code solves",
+  "input_format": "describe the inputs in simple terms",
+  "output_format": "describe what the function returns",
+  "examples": [
+    {"input": "function_name(arg1, arg2)", "output": "result", "explanation": "why this output"}
+  ],
+  "test_cases": [
+    {"input": "function_name(val)", "expected": "result"}
+  ],
+  "steps": [
+    {"code": "line or short block", "text": "plain English for someone who has never coded"}
+  ],
+  "concepts": ["python concept name"]
+}
+
+Rules:
+- examples: 2-3 with varied inputs
+- test_cases: 3-5 covering normal + edge cases (empty, zero, negative, boundary)
+- steps: walk through each key line/block explaining what it does like the reader is brand new to programming
+- concepts: list Python concepts used that a beginner should learn (e.g. "for loops", "if statements", "lists", "return values")`;
+
+  try {
+    const msg = await anthropicClient.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1400,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    const raw = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+    const jsonStr = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    const match = jsonStr.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('no JSON in response');
+    res.json(JSON.parse(match[0]));
+  } catch (err) {
+    console.error('[analyze]', err?.message);
+    res.status(500).json({ error: 'Analysis failed' });
+  }
+});
+
 export default router;
+
