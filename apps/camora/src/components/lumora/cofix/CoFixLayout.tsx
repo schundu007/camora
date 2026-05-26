@@ -385,14 +385,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     }
   }, [isLoading, fixedCode, handleRun]);
 
-  // Trigger analyze after fix stream completes (avoids stale closure in onComplete)
-  useEffect(() => {
-    if (!isLoading && pendingAnalyzeRef.current && fixedCode) {
-      pendingAnalyzeRef.current = false;
-      runAnalyze(fixedCode, effectiveLang);
-    }
-  }, [isLoading, fixedCode, effectiveLang, runAnalyze]);
-
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(fixedCode);
   }, [fixedCode]);
@@ -467,6 +459,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const retryAnalyze = useCallback(() => {
     if (fixedCode) runAnalyze(fixedCode, effectiveLang);
   }, [fixedCode, effectiveLang, runAnalyze]);
+
+  // Trigger analyze after fix stream completes — must be AFTER runAnalyze declaration to avoid TDZ
+  useEffect(() => {
+    if (!isLoading && pendingAnalyzeRef.current && fixedCode) {
+      pendingAnalyzeRef.current = false;
+      runAnalyze(fixedCode, effectiveLang);
+    }
+  }, [isLoading, fixedCode, effectiveLang, runAnalyze]);
 
   const handleOutputDragStart = useCallback((e: React.MouseEvent) => {
     if (!outputPanelRef.current) return;
