@@ -19,24 +19,37 @@ import * as cheerio from 'cheerio';
 export async function searchInterviewQuestions(companyName, roleName, questionType = 'coding') {
   const results = [];
 
+  // Hard 5s timeout per source — both LeetCode and Glassdoor block bots from
+  // server IPs; we don't want a hanging fetch to block the whole section
+  // generator and cause Railway to reset the SSE connection.
+  const timedFetch = (url, opts) => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(t));
+  };
+
   // LeetCode discussions
   try {
     const leetcodeUrl = `https://leetcode.com/discuss/interview-question?currentPage=1&orderBy=hot&query=${encodeURIComponent(companyName)}`;
-    const response = await fetch(leetcodeUrl, {
+    const response = await timedFetch(leetcodeUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
         'Accept': 'text/html,application/xhtml+xml',
       },
     });
     if (response.ok) {
-      const html = await response.text();
-      const $ = cheerio.load(html);
-      $('a[href*="/discuss/interview-question/"]').slice(0, 5).each((_, el) => {
-        const title = $(el).text().trim();
-        if (title && title.length > 10) {
-          results.push({ source: 'LeetCode', question: title });
-        }
-      });
+      // Cap body read to 512KB to avoid cheerio parsing multi-MB pages
+      const buf = await response.arrayBuffer();
+      if (buf.byteLength < 512 * 1024) {
+        const html = new TextDecoder().decode(buf);
+        const $ = cheerio.load(html);
+        $('a[href*="/discuss/interview-question/"]').slice(0, 5).each((_, el) => {
+          const title = $(el).text().trim();
+          if (title && title.length > 10) {
+            results.push({ source: 'LeetCode', question: title });
+          }
+        });
+      }
     }
   } catch (err) {
     console.log('[AscendPrep] LeetCode search failed:', err.message);
@@ -44,29 +57,29 @@ export async function searchInterviewQuestions(companyName, roleName, questionTy
 
   // Glassdoor
   try {
-    const response = await fetch(`https://www.glassdoor.com/Interview/index.htm?sc.keyword=${encodeURIComponent(companyName + ' ' + roleName)}`, {
+    const response = await timedFetch(`https://www.glassdoor.com/Interview/index.htm?sc.keyword=${encodeURIComponent(companyName + ' ' + roleName)}`, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
         'Accept': 'text/html,application/xhtml+xml',
       },
     });
     if (response.ok) {
-      const html = await response.text();
-      const $ = cheerio.load(html);
-      $('.interview-question, [class*="interviewQuestion"]').slice(0, 5).each((_, el) => {
-        const question = $(el).text().trim();
-        if (question && question.length > 10) {
-          results.push({ source: 'Glassdoor', question });
-        }
-      });
+      const buf = await response.arrayBuffer();
+      if (buf.byteLength < 512 * 1024) {
+        const html = new TextDecoder().decode(buf);
+        const $ = cheerio.load(html);
+        $('.interview-question, [class*="interviewQuestion"]').slice(0, 5).each((_, el) => {
+          const question = $(el).text().trim();
+          if (question && question.length > 10) {
+            results.push({ source: 'Glassdoor', question });
+          }
+        });
+      }
     }
   } catch (err) {
     console.log('[AscendPrep] Glassdoor search failed:', err.message);
   }
 
-  // Suppress unused var lint — questionType is a documented arg even if the
-  // current implementations don't filter on it (LeetCode/Glassdoor return
-  // mixed types; the generator filters downstream).
   void questionType;
   return results;
 }

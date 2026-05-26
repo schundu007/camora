@@ -82,8 +82,13 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
       if (res.status >= 300 && res.status < 400) {
         const location = res.headers.get('location');
         if (!location) throw new Error(`HTTP ${res.status}`);
-        // Resolve relative redirects before SSRF-checking the next hop
-        currentUrl = new URL(location, currentUrl).href;
+        let nextUrl;
+        try {
+          nextUrl = new URL(location, currentUrl).href;
+        } catch {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        currentUrl = nextUrl;
         hops++;
         continue;
       }
