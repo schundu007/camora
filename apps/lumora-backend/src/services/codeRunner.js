@@ -165,9 +165,17 @@ async function directExecute(code, runtime) {
     try {
       const bin = await which(cmd);
       if (!bin) throw new Error(`Runtime '${cmd}' not found on server`);
-      const { stdout, stderr, exitCode } = await runCommand(cmd, [srcPath]);
-      if (exitCode !== 0) return { direct_output: friendlyError(stderr) ?? (stderr ? `Error:\n${stderr}` : 'Execution failed') };
-      const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
+      let result = await runCommand(cmd, [srcPath]);
+      // Auto-install missing packages and retry (up to 5 different imports)
+      for (let attempt = 0; attempt < 5 && result.exitCode !== 0; attempt++) {
+        const mod = missingModule(result.stderr);
+        if (!mod) break;
+        const ok = await pipInstall(mod);
+        if (!ok) break;
+        result = await runCommand(cmd, [srcPath]);
+      }
+      if (result.exitCode !== 0) return { direct_output: result.stderr ? `Error:\n${result.stderr}` : 'Execution failed' };
+      const out = result.stderr ? `${result.stdout}\n[stderr]: ${result.stderr}` : result.stdout;
       return { direct_output: out.trim() || emptyOutputHint(code, runtime) };
     } finally {
       await unlink(srcPath).catch(() => {});
@@ -621,21 +629,34 @@ function compareOutput(expected, actual) {
 }
 
 // ---------------------------------------------------------------------------
-// Friendly error rewriting
+// Auto-install missing Python packages
 // ---------------------------------------------------------------------------
 
-function friendlyError(stderr) {
-  const moduleMatch = stderr.match(/ModuleNotFoundError: No module named '([\w.]+)'/);
-  if (moduleMatch) {
-    const mod = moduleMatch[1];
-    return (
-      `Module '${mod}' is not available in the sandbox.\n` +
-      `The code runner supports the Python standard library only — ` +
-      `third-party packages (requests, numpy, pandas, etc.) cannot be installed here.\n` +
-      `To test code that uses external libraries, run it locally on your machine.`
-    );
-  }
-  return null;
+const PIP_TIMEOUT_MS = 30_000;
+// Known import→package name mismatches
+const PIP_ALIAS = {
+  cv2: 'opencv-python',
+  PIL: 'Pillow',
+  sklearn: 'scikit-learn',
+  bs4: 'beautifulsoup4',
+  yaml: 'PyYAML',
+  dotenv: 'python-dotenv',
+  Crypto: 'pycryptodome',
+  google: 'google-api-python-client',
+};
+
+async function pipInstall(importName) {
+  // Only allow safe package name characters
+  if (!/^[a-zA-Z0-9._-]+$/.test(importName)) return false;
+  const pkgName = PIP_ALIAS[importName] ?? importName;
+  const pip = await which('pip3') ?? await which('pip');
+  if (!pip) return false;
+  const result = await runCommand(pip, ['install', '--quiet', '--user', pkgName], { timeout: PIP_TIMEOUT_MS });
+  return result.exitCode === 0;
+}
+
+function missingModule(stderr) {
+  return stderr?.match(/ModuleNotFoundError: No module named '([\w.]+)'/)?.[1]?.split('.')?.[0] ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -708,14 +729,23 @@ export async function executeCode(code, language, testCases = []) {
       const runnerCode = builder(code, tc.input);
       await writeFile(tmpPath, runnerCode, 'utf8');
 
-      const { stdout, stderr, exitCode } = await runInSandbox(cmd, tmpPath, tc.input);
+      let tcResult = await runInSandbox(cmd, tmpPath, tc.input);
+      // Auto-install missing packages and retry
+      for (let attempt = 0; attempt < 5 && tcResult.exitCode !== 0; attempt++) {
+        const mod = missingModule(tcResult.stderr);
+        if (!mod) break;
+        const ok = await pipInstall(mod);
+        if (!ok) break;
+        tcResult = await runInSandbox(cmd, tmpPath, tc.input);
+      }
+      const { stdout, stderr, exitCode } = tcResult;
       const output = stdout.trim();
       let error = null;
 
       if (exitCode !== 0) {
-        error = friendlyError(stderr) ?? (stderr?.slice(0, 500) || 'Execution failed');
+        error = stderr?.slice(0, 500) || 'Execution failed';
       } else if (stderr && !output) {
-        error = friendlyError(stderr) ?? stderr.slice(0, 500);
+        error = stderr.slice(0, 500);
       }
 
       const passed = !error && !!output && compareOutput(tc.expected, output);
