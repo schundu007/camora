@@ -2502,7 +2502,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 code={code}
                 onChange={setCode}
                 theme="vs-dark"
-                fontSize={13}
+                fontSize={11}
+                onMount={(editor) => editor.updateOptions({
+                  fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
+                  fontLigatures: true,
+                  letterSpacing: -0.3,
+                  lineHeight: 19,
+                })}
               />
             )}
           </EditorContainer>

@@ -920,8 +920,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 value={problemText}
                 onChange={(e) => setProblemText(e.target.value)}
                 placeholder="Describe your system design problem...&#10;&#10;Example: Design a URL shortener like bit.ly that handles 100M links/month"
-                className="w-full h-[80px] rounded-lg p-3 text-xs md:text-sm leading-relaxed resize-none focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all font-mono"
-                style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}
+                className="w-full h-[80px] rounded-lg p-3 text-xs leading-relaxed resize-none focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all"
+                style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '-0.01em' }}
               />
             )}
             {inputTab === 'url' && (
@@ -931,8 +931,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
                   placeholder="https://leetcode.com/problems/..."
-                  className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all font-mono"
-                  style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}
+                  className="flex-1 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all"
+                  style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '-0.01em' }}
                 />
                 <button
                   onClick={() => handleUrlFetch()}

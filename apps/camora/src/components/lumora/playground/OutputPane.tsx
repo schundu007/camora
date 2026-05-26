@@ -7,6 +7,12 @@ interface Props {
   language: PlaygroundLanguage;
 }
 
+const monoStyle: React.CSSProperties = {
+  fontFamily: "'IBM Plex Mono', monospace",
+  letterSpacing: '-0.02em',
+  WebkitFontSmoothing: 'antialiased',
+};
+
 export const OutputPane = ({ result, error, language }: Props) => {
   const eyebrow = (s: string) => (
     <span
@@ -29,7 +35,7 @@ export const OutputPane = ({ result, error, language }: Props) => {
     return (
       <div className="p-4 h-full bg-[#0a0d12]">
         {eyebrow('Error')}
-        <pre className="mt-2 text-[#f87171] text-[11px] font-mono whitespace-pre-wrap break-words">{error}</pre>
+        <pre className="mt-2 text-[#f87171] text-[11px] whitespace-pre-wrap break-words" style={monoStyle}>{error}</pre>
       </div>
     );
   }
@@ -54,7 +60,7 @@ export const OutputPane = ({ result, error, language }: Props) => {
       {stdout && (
         <div className="px-4 py-3 border-b border-[#1e293b]">
           {eyebrow('stdout')}
-          <pre className="mt-1 text-[#10b981] text-[11px] font-mono whitespace-pre-wrap break-words leading-relaxed">
+          <pre className="mt-1 text-[#10b981] text-[11px] whitespace-pre-wrap break-words leading-relaxed" style={monoStyle}>
             {stdout}
           </pre>
         </div>
@@ -64,7 +70,7 @@ export const OutputPane = ({ result, error, language }: Props) => {
       {stderr && (
         <div className="px-4 py-3 border-b border-[#1e293b]">
           {eyebrow('stderr')}
-          <pre className="mt-1 text-[#f87171] text-[11px] font-mono whitespace-pre-wrap break-words leading-relaxed">
+          <pre className="mt-1 text-[#f87171] text-[11px] whitespace-pre-wrap break-words leading-relaxed" style={monoStyle}>
             {stderr}
           </pre>
         </div>
@@ -92,7 +98,9 @@ export const OutputPane = ({ result, error, language }: Props) => {
       {/* Non-zero exit with no captured output */}
       {!stdout && !stderr && exitCode !== 0 && (
         <div className="px-4 py-3">
-          <pre className="text-[#f87171] text-[11px] font-mono">Process exited with code {exitCode} (no output captured)</pre>
+          <pre className="text-[#f87171] text-[11px] whitespace-pre-wrap" style={monoStyle}>
+            Process exited with code {exitCode} (no output captured)
+          </pre>
         </div>
       )}
     </div>

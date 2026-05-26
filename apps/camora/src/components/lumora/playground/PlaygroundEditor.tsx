@@ -87,9 +87,11 @@ export const PlaygroundEditor = ({ language, defaultValue, onChange, onMount, on
       onMount={handleMount}
       theme="vs-dark"
       options={{
-        fontSize: 13,
-        fontFamily: '"IBM Plex Mono", "Fira Code", monospace',
+        fontSize: 11,
+        fontFamily: '"IBM Plex Mono", "Cascadia Code", monospace',
         fontLigatures: true,
+        letterSpacing: -0.3,
+        lineHeight: 19,
         minimap: { enabled: false },
         scrollBeyondLastLine: false,
         padding: { top: 12, bottom: 12 },
