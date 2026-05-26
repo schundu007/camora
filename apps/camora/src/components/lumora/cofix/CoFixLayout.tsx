@@ -21,7 +21,7 @@ const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.
 
 // ── CoFix Log custom icons ────────────────────────────────────────────────────
 const G = 'var(--cam-gold-leaf)';
-const LogIconBolt    = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7 1L2.5 6.5H5.5L5 11L9.5 5.5H6.5L7 1Z" fill={G}/></svg>;
+const LogIconBolt    = ({ color = G }: { color?: string }) => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7 1L2.5 6.5H5.5L5 11L9.5 5.5H6.5L7 1Z" fill={color}/></svg>;
 const LogIconSearch  = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={G} strokeWidth="1.5" strokeLinecap="round"><circle cx="5" cy="5" r="3.2"/><line x1="7.5" y1="7.5" x2="10.5" y2="10.5"/></svg>;
 const LogIconScan    = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={G} strokeWidth="1.4" strokeLinecap="round"><rect x="1.5" y="1.5" width="9" height="9" rx="1.5"/><line x1="3.5" y1="4" x2="8.5" y2="4"/><line x1="3.5" y1="6" x2="8.5" y2="6"/><line x1="3.5" y1="8" x2="6" y2="8"/></svg>;
 const LogIconSpark   = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={G} strokeWidth="1.3" strokeLinecap="round"><line x1="6" y1="1" x2="6" y2="2.5"/><line x1="6" y1="9.5" x2="6" y2="11"/><line x1="1" y1="6" x2="2.5" y2="6"/><line x1="9.5" y1="6" x2="11" y2="6"/><line x1="2.8" y1="2.8" x2="3.8" y2="3.8"/><line x1="8.2" y1="8.2" x2="9.2" y2="9.2"/><line x1="9.2" y1="2.8" x2="8.2" y2="3.8"/><line x1="3.8" y1="8.2" x2="2.8" y2="9.2"/><circle cx="6" cy="6" r="1.8" fill={G} stroke="none"/></svg>;
@@ -344,6 +344,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       onComplete: () => {
         clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
         addLog(<LogIconCheck />, 'Complete — analyzing problem…', 'success');
+        autoRunRef.current = true;
         pendingAnalyzeRef.current = true;
         setIsLoading(false);
         logHideTimerRef.current = setTimeout(() => setShowLogPopup(false), 2500);
@@ -404,7 +405,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         /SyntaxError|NameError|TypeError|ValueError|AttributeError|RuntimeError/.test(runResult);
       if (autoFixEnabled && hasRunError && autoFixAttemptsRef.current < 1) {
         autoFixAttemptsRef.current += 1;
-        setRunOutput('⚡ Error detected — auto-fixing…');
+        setRunOutput('Error detected — auto-fixing…');
         pendingAutoFixRef2.current = {
           code: fixedCode,
           hint: `Runtime error:\n${runResult.slice(0, 600)}\n\nFix the code so it runs without errors.`,
@@ -806,7 +807,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               className="h-6 px-3 rounded text-[10px] font-bold uppercase tracking-[0.1em] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
               style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf)' }}
             >
-              {isLoading ? 'Analyzing…' : '⚡ Fix with CoFix'}
+              {isLoading ? 'Analyzing…' : <><LogIconBolt color="currentColor" />{' Fix with CoFix'}</>}
             </button>
           </div>
 
@@ -882,7 +883,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                     color: autoFixEnabled ? '#10b981' : 'var(--text-muted)',
                   }}
                 >
-                  ⚡ Auto-Fix
+                  <LogIconBolt color="currentColor" />{' Auto-Fix'}
                 </button>
                 <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
               </>
