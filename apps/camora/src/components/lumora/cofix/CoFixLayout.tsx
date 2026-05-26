@@ -102,16 +102,20 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     steps: { code: string; text: string }[];
     concepts: string[];
   };
+  type CustomTest = { id: string; input: string; expected: string; result: string | null; running: boolean; isErr: boolean };
+  const mkTest = (seed = ''): CustomTest => ({ id: `t${Date.now()}-${Math.random()}`, input: seed, expected: '', result: null, running: false, isErr: false });
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
   const [panelTab, setPanelTab] = useState<'problem' | 'tests' | 'learn'>('problem');
-  const [testResults, setTestResults] = useState<Record<number, string>>({});
-  const [runningTest, setRunningTest] = useState<number | null>(null);
+  const [customTests, setCustomTests] = useState<CustomTest[]>([mkTest()]);
 
   const [outputHeight, setOutputHeight] = useState<number | null>(null);
   const outputPanelRef = useRef<HTMLDivElement | null>(null);
   const outputDragRef = useRef<{ startY: number; startH: number } | null>(null);
+
+  const autoRunRef = useRef(false);
+  const handleFixRef = useRef<() => void>(() => {});
 
   const abortRef = useRef<AbortController | null>(null);
   const cofixHoverDisposable = useRef<any>(null);
@@ -287,7 +291,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
     // Parallel: generate problem statement + test cases + beginner walkthrough
     setAnalysis(null);
-    setTestResults({});
+    setCustomTests([mkTest()]);
     setAnalysisLoading(true);
     setShowPanel(true);
     setPanelTab('problem');
@@ -297,16 +301,31 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       credentials: 'include',
       body: JSON.stringify({ code: inputCode, language: effectiveLang }),
     }).then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setAnalysis(data); })
+      .then(data => {
+        if (data) {
+          setAnalysis(data);
+          if (data.test_cases?.length > 0) {
+            setCustomTests(prev => {
+              const fromAI: CustomTest[] = data.test_cases.map((tc: { input: string; expected: string }) =>
+                ({ id: `a${Date.now()}-${Math.random()}`, input: tc.input, expected: tc.expected, result: null, running: false, isErr: false })
+              );
+              // Keep any user-typed tests, drop the initial blank placeholder
+              const userTyped = prev.filter(t => t.input.trim() !== '');
+              return [...fromAI, ...userTyped, mkTest()];
+            });
+          }
+        }
+      })
       .catch(() => {})
       .finally(() => setAnalysisLoading(false));
   }, [inputCode, hint, effectiveLang, token, isLoading, activeAssistant]);
 
-  const runSingleTest = useCallback(async (idx: number, tc: { input: string; expected: string }) => {
-    if (!fixedCode) return;
-    setRunningTest(idx);
+  const runCustomTest = useCallback(async (id: string) => {
+    const tc = customTests.find(t => t.id === id);
+    if (!tc || !fixedCode || !tc.input.trim()) return;
+    setCustomTests(prev => prev.map(t => t.id === id ? { ...t, running: true, result: null } : t));
     try {
-      const testCode = `${fixedCode}\n\nprint(${tc.input})`;
+      const testCode = `${fixedCode}\n\n${tc.input}`;
       const resp = await fetch(`${API_URL}/api/v1/coding/execute`, {
         method: 'POST',
         credentials: 'include',
@@ -314,21 +333,22 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         body: JSON.stringify({ code: testCode, language: effectiveLang, test_cases: [] }),
       });
       const data = await resp.json();
-      const output = (data.direct_output || data.output || '').trim();
-      setTestResults(prev => ({ ...prev, [idx]: output }));
-    } catch {
-      setTestResults(prev => ({ ...prev, [idx]: 'error' }));
-    } finally {
-      setRunningTest(null);
+      const output = (data.direct_output || data.output || '(no output)').trim();
+      const err = !resp.ok || output.startsWith('Error:') || output.startsWith('Traceback') || /^error:/i.test(output);
+      setCustomTests(prev => prev.map(t => t.id === id ? { ...t, running: false, result: output, isErr: err } : t));
+    } catch (e: any) {
+      setCustomTests(prev => prev.map(t => t.id === id ? { ...t, running: false, result: `Error: ${e.message}`, isErr: true } : t));
     }
-  }, [fixedCode, effectiveLang, token]);
+  }, [customTests, fixedCode, effectiveLang, token]);
 
-  const runAllTests = useCallback(async () => {
-    if (!analysis?.test_cases || !fixedCode) return;
-    for (let i = 0; i < analysis.test_cases.length; i++) {
-      await runSingleTest(i, analysis.test_cases[i]);
+  const runAllCustomTests = useCallback(async () => {
+    for (const tc of customTests) {
+      if (tc.input.trim()) await runCustomTest(tc.id);
     }
-  }, [analysis, fixedCode, runSingleTest]);
+  }, [customTests, runCustomTest]);
+
+  // Keep handleFixRef current so paste handler always calls the latest closure
+  useEffect(() => { handleFixRef.current = handleFix; }, [handleFix]);
 
   const handleRun = useCallback(async () => {
     if (!fixedCode || isRunning) return;
@@ -352,6 +372,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     }
   }, [fixedCode, effectiveLang, token, isRunning]);
 
+  // Auto-run when fix completes if triggered by paste
+  useEffect(() => {
+    if (!isLoading && autoRunRef.current && fixedCode) {
+      autoRunRef.current = false;
+      handleRun();
+    }
+  }, [isLoading, fixedCode, handleRun]);
+
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(fixedCode);
   }, [fixedCode]);
@@ -359,6 +387,21 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const handleSendToCoding = useCallback(() => {
     navigate('/lumora/coding', { state: { cofixCode: fixedCode } });
   }, [fixedCode, navigate]);
+
+  const handleLeftEditorMount = useCallback((editor: any) => {
+    editor.updateOptions({
+      fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
+      fontLigatures: true,
+      letterSpacing: -0.3,
+    });
+    editor.onDidPaste(() => {
+      const val = editor.getValue();
+      if (val.trim().length >= 5) {
+        autoRunRef.current = true;
+        setTimeout(() => handleFixRef.current(), 50);
+      }
+    });
+  }, []);
 
   const handleOutputDragStart = useCallback((e: React.MouseEvent) => {
     if (!outputPanelRef.current) return;
@@ -587,6 +630,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               readOnly={false}
               height="100%"
               showLineNumbers
+              fontSize={11}
+              onMount={handleLeftEditorMount}
             />
           </div>
 
@@ -669,7 +714,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   readOnly: true,
                   minimap: { enabled: false },
                   lineNumbers: 'on',
-                  fontSize: 13,
+                  fontSize: 11,
+                  fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
+                  fontLigatures: true,
+                  letterSpacing: -0.3,
+                  lineHeight: 19,
                   scrollBeyondLastLine: false,
                   glyphMargin: false,
                   folding: false,
@@ -728,7 +777,15 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                 </button>
               </div>
               <pre
-                className={`px-4 py-3 text-[12px] font-mono whitespace-pre-wrap ${outputHeight !== null ? 'overflow-y-auto flex-1' : ''} ${isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}
+                className={`px-4 py-3 whitespace-pre-wrap ${outputHeight !== null ? 'overflow-y-auto flex-1' : ''} ${isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}
+                style={{
+                  fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
+                  fontSize: 11,
+                  lineHeight: 1.65,
+                  letterSpacing: '-0.02em',
+                  WebkitFontSmoothing: 'antialiased',
+                  MozOsxFontSmoothing: 'grayscale',
+                }}
               >
                 {runOutput}
               </pre>
@@ -799,34 +856,105 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               </div>
             )}
 
-            {analysis && panelTab === 'tests' && (
-              <div className="space-y-1.5">
-                {analysis.test_cases.map((tc, i) => {
-                  const result = testResults[i];
-                  const passed = result !== undefined && result === tc.expected;
-                  const failed = result !== undefined && result !== tc.expected;
+            {panelTab === 'tests' && (
+              <div className="space-y-2">
+                {/* Toolbar */}
+                <div className="flex items-center gap-2 pb-1">
+                  <span className="flex-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                    {customTests.filter(t => t.input.trim()).length} case{customTests.filter(t => t.input.trim()).length !== 1 ? 's' : ''}
+                    {analysisLoading && ' · AI generating…'}
+                  </span>
+                  <button
+                    onClick={runAllCustomTests}
+                    disabled={!fixedCode || customTests.every(t => !t.input.trim())}
+                    className="text-[10px] font-bold px-2.5 py-1 rounded transition-opacity disabled:opacity-40 hover:opacity-80"
+                    style={{ border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)', background: 'transparent' }}
+                  >
+                    ▶ Run All
+                  </button>
+                  <button
+                    onClick={() => setCustomTests(prev => [...prev, mkTest()])}
+                    className="text-[10px] font-bold px-2.5 py-1 rounded transition-opacity hover:opacity-80"
+                    style={{ border: '1px solid var(--cam-gold-leaf-dk)', color: 'var(--cam-gold-leaf-dk)', background: 'transparent' }}
+                  >
+                    + Add
+                  </button>
+                </div>
+
+                {customTests.map(tc => {
+                  const hasPassed = tc.result !== null && !tc.isErr && (!tc.expected || tc.result.trim() === tc.expected.trim());
+                  const hasFailed = tc.result !== null && !tc.isErr && tc.expected && tc.result.trim() !== tc.expected.trim();
+                  const borderColor = tc.isErr ? 'rgba(239,68,68,0.35)' : hasPassed ? 'rgba(34,197,94,0.35)' : hasFailed ? 'rgba(251,191,36,0.35)' : 'var(--border)';
                   return (
-                    <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg text-[12px]"
-                      style={{ background: 'var(--bg-elevated)', border: `1px solid ${passed ? '#22c55e44' : failed ? '#ef444444' : 'var(--border)'}` }}>
-                      <code className="flex-1" style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-primary)' }}>{tc.input}</code>
-                      <span style={{ color: 'var(--text-muted)' }}>→</span>
-                      <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-gold-leaf)' }}>{tc.expected}</code>
-                      {passed && <span className="text-[11px] font-bold text-emerald-400">✓</span>}
-                      {failed && <span className="text-[11px] font-bold text-red-400">✗ {result}</span>}
-                      <button onClick={() => runSingleTest(i, tc)} disabled={runningTest === i || !fixedCode}
-                        className="text-[10px] font-bold px-2 py-0.5 rounded transition-opacity disabled:opacity-40"
-                        style={{ border: '1px solid var(--cam-gold-leaf-dk)', color: 'var(--cam-gold-leaf-dk)', background: 'transparent', cursor: fixedCode ? 'pointer' : 'not-allowed' }}>
-                        {runningTest === i ? '…' : '▶'}
-                      </button>
+                    <div key={tc.id} className="rounded-lg overflow-hidden flex flex-col" style={{ border: `1px solid ${borderColor}`, background: 'var(--bg-elevated)' }}>
+                      {/* Input row */}
+                      <div className="flex items-start gap-2 px-3 pt-2 pb-1">
+                        <span className="text-[9px] font-bold uppercase tracking-wider mt-2 w-9 shrink-0" style={{ color: 'var(--text-muted)' }}>Input</span>
+                        <textarea
+                          value={tc.input}
+                          onChange={e => setCustomTests(prev => prev.map(t => t.id === tc.id ? { ...t, input: e.target.value, result: null } : t))}
+                          placeholder="print(my_function(arg1, arg2))"
+                          rows={2}
+                          className="flex-1 resize-none bg-transparent focus:outline-none placeholder:opacity-30"
+                          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: 'var(--text-primary)', lineHeight: 1.6 }}
+                        />
+                        <div className="flex flex-col gap-1 shrink-0 pt-0.5">
+                          <button
+                            onClick={() => runCustomTest(tc.id)}
+                            disabled={tc.running || !fixedCode || !tc.input.trim()}
+                            className="flex items-center justify-center text-[10px] font-bold w-8 h-6 rounded transition-opacity disabled:opacity-40"
+                            style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)', color: '#0a0e1a' }}
+                          >
+                            {tc.running
+                              ? <span className="w-2.5 h-2.5 border border-[#0a0e1a]/30 border-t-[#0a0e1a] rounded-full animate-spin" />
+                              : '▶'}
+                          </button>
+                          <button
+                            onClick={() => setCustomTests(prev => prev.length > 1 ? prev.filter(t => t.id !== tc.id) : [mkTest()])}
+                            className="flex items-center justify-center w-8 h-6 rounded transition-opacity hover:opacity-70 text-[11px]"
+                            style={{ color: 'var(--text-muted)', background: 'transparent' }}
+                          >✕</button>
+                        </div>
+                      </div>
+
+                      {/* Expected (optional) */}
+                      <div className="flex items-center gap-2 px-3 pb-2">
+                        <span className="text-[9px] font-bold uppercase tracking-wider w-9 shrink-0" style={{ color: 'var(--text-muted)' }}>Expect</span>
+                        <input
+                          value={tc.expected}
+                          onChange={e => setCustomTests(prev => prev.map(t => t.id === tc.id ? { ...t, expected: e.target.value } : t))}
+                          placeholder="optional expected output"
+                          className="flex-1 bg-transparent focus:outline-none placeholder:opacity-25"
+                          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: 'var(--cam-gold-leaf-dk)' }}
+                        />
+                      </div>
+
+                      {/* Result */}
+                      {tc.result !== null && (
+                        <div className="px-3 pb-2 pt-1.5" style={{ borderTop: '1px solid var(--border)' }}>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-[9px] font-bold uppercase tracking-wider ${tc.isErr ? 'text-red-400' : hasFailed ? 'text-amber-400' : 'text-emerald-400'}`}>
+                              {tc.isErr ? '✕ Error' : hasFailed ? '≠ Mismatch' : '✓ Output'}
+                            </span>
+                            {tc.expected && !tc.isErr && (
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${hasPassed ? 'text-emerald-400' : 'text-amber-400'}`}
+                                style={{ background: hasPassed ? 'rgba(34,197,94,0.12)' : 'rgba(251,191,36,0.12)' }}>
+                                {hasPassed ? 'PASS' : 'FAIL'}
+                              </span>
+                            )}
+                          </div>
+                          <pre className={`text-[11px] whitespace-pre-wrap m-0 ${tc.isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}
+                            style={{ fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.6 }}>
+                            {tc.result}
+                          </pre>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
-                {analysis.test_cases.length > 0 && (
-                  <button onClick={runAllTests} disabled={!fixedCode}
-                    className="mt-1 px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-[0.1em] transition-opacity disabled:opacity-40"
-                    style={{ border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)', background: 'transparent', cursor: fixedCode ? 'pointer' : 'not-allowed' }}>
-                    ▶ Run All Tests
-                  </button>
+
+                {!fixedCode && (
+                  <p className="text-[11px] text-center pt-2" style={{ color: 'var(--text-muted)' }}>Run CoFix first to enable test execution</p>
                 )}
               </div>
             )}
