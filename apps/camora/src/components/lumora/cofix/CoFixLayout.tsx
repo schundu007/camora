@@ -109,6 +109,10 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const [testResults, setTestResults] = useState<Record<number, string>>({});
   const [runningTest, setRunningTest] = useState<number | null>(null);
 
+  const [outputHeight, setOutputHeight] = useState<number | null>(null);
+  const outputPanelRef = useRef<HTMLDivElement | null>(null);
+  const outputDragRef = useRef<{ startY: number; startH: number } | null>(null);
+
   const abortRef = useRef<AbortController | null>(null);
   const cofixHoverDisposable = useRef<any>(null);
   const rightEditorRef = useRef<any>(null);
@@ -329,6 +333,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const handleRun = useCallback(async () => {
     if (!fixedCode || isRunning) return;
     setIsRunning(true);
+    setOutputHeight(null);
     setRunOutput('Running…');
     try {
       const response = await fetch(`${API_URL}/api/v1/coding/execute`, {
@@ -354,6 +359,26 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const handleSendToCoding = useCallback(() => {
     navigate('/lumora/coding', { state: { cofixCode: fixedCode } });
   }, [fixedCode, navigate]);
+
+  const handleOutputDragStart = useCallback((e: React.MouseEvent) => {
+    if (!outputPanelRef.current) return;
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = outputPanelRef.current.offsetHeight;
+    outputDragRef.current = { startY, startH };
+    const onMove = (ev: MouseEvent) => {
+      if (!outputDragRef.current) return;
+      const delta = outputDragRef.current.startY - ev.clientY;
+      setOutputHeight(Math.max(48, outputDragRef.current.startH + delta));
+    };
+    const onUp = () => {
+      outputDragRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, []);
 
   const isErr = runOutput !== null && (runOutput.startsWith('Error:') || runOutput.startsWith('Traceback') || /^error:/i.test(runOutput));
 
@@ -676,16 +701,35 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
           {/* Run output */}
           {runOutput !== null && (
-            <div className="border-t border-[var(--border)] shrink-0" style={{ background: isErr ? 'rgba(239,68,68,0.05)' : 'var(--bg-primary)' }}>
-              <div className="flex items-center justify-between px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
+            <div
+              ref={outputPanelRef}
+              className="border-t border-[var(--border)] shrink-0 flex flex-col"
+              style={{
+                background: isErr ? 'rgba(239,68,68,0.05)' : 'var(--bg-primary)',
+                ...(outputHeight !== null ? { height: outputHeight, overflow: 'hidden' } : {}),
+              }}
+            >
+              {/* Drag-resize handle */}
+              <div
+                onMouseDown={handleOutputDragStart}
+                className="h-1.5 shrink-0 cursor-ns-resize group"
+                style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.35 }}
+                title="Drag to resize"
+              />
+              <div className="flex items-center justify-between px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)] shrink-0">
                 <span className={`text-[10px] font-bold tracking-wider uppercase ${isErr ? 'text-red-400' : 'text-emerald-400'}`}>
                   {isErr ? '✕ Runtime Error' : '✓ Output'}
                 </span>
-                <button onClick={() => setRunOutput(null)} className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+                <button
+                  onClick={() => { setRunOutput(null); setOutputHeight(null); }}
+                  className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                >
                   ✕
                 </button>
               </div>
-              <pre className={`px-4 py-3 text-[12px] font-mono whitespace-pre-wrap max-h-44 overflow-y-auto ${isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}>
+              <pre
+                className={`px-4 py-3 text-[12px] font-mono whitespace-pre-wrap ${outputHeight !== null ? 'overflow-y-auto flex-1' : ''} ${isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}
+              >
                 {runOutput}
               </pre>
             </div>
