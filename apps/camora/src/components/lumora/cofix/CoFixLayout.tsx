@@ -94,6 +94,21 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const [runOutput, setRunOutput] = useState<string | null>(null);
   const [explainMode, setExplainMode] = useState(false);
 
+  // Analysis panel state
+  type Analysis = {
+    title: string; problem: string; input_format: string; output_format: string;
+    examples: { input: string; output: string; explanation: string }[];
+    test_cases: { input: string; expected: string }[];
+    steps: { code: string; text: string }[];
+    concepts: string[];
+  };
+  const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [showPanel, setShowPanel] = useState(false);
+  const [panelTab, setPanelTab] = useState<'problem' | 'tests' | 'learn'>('problem');
+  const [testResults, setTestResults] = useState<Record<number, string>>({});
+  const [runningTest, setRunningTest] = useState<number | null>(null);
+
   const abortRef = useRef<AbortController | null>(null);
   const cofixHoverDisposable = useRef<any>(null);
   const rightEditorRef = useRef<any>(null);
@@ -265,7 +280,51 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       onComplete: () => setIsLoading(false),
     });
     abortRef.current = controller;
+
+    // Parallel: generate problem statement + test cases + beginner walkthrough
+    setAnalysis(null);
+    setTestResults({});
+    setAnalysisLoading(true);
+    setShowPanel(true);
+    setPanelTab('problem');
+    fetch(`${API_URL}/api/v1/coding/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      credentials: 'include',
+      body: JSON.stringify({ code: inputCode, language: effectiveLang }),
+    }).then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setAnalysis(data); })
+      .catch(() => {})
+      .finally(() => setAnalysisLoading(false));
   }, [inputCode, hint, effectiveLang, token, isLoading, activeAssistant]);
+
+  const runSingleTest = useCallback(async (idx: number, tc: { input: string; expected: string }) => {
+    if (!fixedCode) return;
+    setRunningTest(idx);
+    try {
+      const testCode = `${fixedCode}\n\nprint(${tc.input})`;
+      const resp = await fetch(`${API_URL}/api/v1/coding/execute`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ code: testCode, language: effectiveLang, test_cases: [] }),
+      });
+      const data = await resp.json();
+      const output = (data.direct_output || data.output || '').trim();
+      setTestResults(prev => ({ ...prev, [idx]: output }));
+    } catch {
+      setTestResults(prev => ({ ...prev, [idx]: 'error' }));
+    } finally {
+      setRunningTest(null);
+    }
+  }, [fixedCode, effectiveLang, token]);
+
+  const runAllTests = useCallback(async () => {
+    if (!analysis?.test_cases || !fixedCode) return;
+    for (let i = 0; i < analysis.test_cases.length; i++) {
+      await runSingleTest(i, analysis.test_cases[i]);
+    }
+  }, [analysis, fixedCode, runSingleTest]);
 
   const handleRun = useCallback(async () => {
     if (!fixedCode || isRunning) return;
@@ -638,6 +697,121 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
       </Allotment>
       </div>
+
+      {/* ── Analysis panel ── */}
+      {showPanel && (
+        <div className="shrink-0 flex flex-col" style={{ height: 300, borderTop: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-surface)' }}>
+
+          {/* Panel tab bar */}
+          <div className="flex items-center shrink-0" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
+            {(['problem', 'tests', 'learn'] as const).map(tab => (
+              <button key={tab} onClick={() => setPanelTab(tab)}
+                className="h-full px-4 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors"
+                style={{ color: panelTab === tab ? 'var(--cam-gold-leaf)' : 'var(--cam-gold-leaf-dk)', borderBottom: panelTab === tab ? '2px solid var(--cam-gold-leaf)' : '2px solid transparent', background: 'none' }}>
+                {tab === 'problem' ? 'Problem' : tab === 'tests' ? 'Tests' : 'Learn'}
+              </button>
+            ))}
+            <div className="flex-1" />
+            {analysisLoading && (
+              <span className="flex items-center gap-1.5 text-[11px] px-3" style={{ color: 'var(--cam-gold-leaf-dk)' }}>
+                <span className="w-2.5 h-2.5 rounded-full border-2 border-t-transparent animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf-dk)', borderTopColor: 'transparent' }} />
+                Analyzing…
+              </span>
+            )}
+            <button onClick={() => setShowPanel(false)} className="px-3 text-[13px] hover:opacity-70 transition-opacity" style={{ color: 'var(--text-muted)' }}>✕</button>
+          </div>
+
+          {/* Panel body */}
+          <div className="flex-1 overflow-y-auto px-4 py-3">
+            {!analysis && analysisLoading && (
+              <div className="flex items-center justify-center h-full gap-3" style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
+                Generating problem analysis…
+              </div>
+            )}
+
+            {analysis && panelTab === 'problem' && (
+              <div>
+                <h3 className="text-[14px] font-bold mb-2" style={{ color: 'var(--cam-gold-leaf)' }}>{analysis.title}</h3>
+                <p className="text-[12px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>{analysis.problem}</p>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  {[['Input', analysis.input_format], ['Output', analysis.output_format]].map(([label, val]) => (
+                    <div key={label} className="p-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                      <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>{label}</div>
+                      <div className="text-[12px]" style={{ color: 'var(--text-primary)' }}>{val}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-1.5">
+                  {analysis.examples.map((ex, i) => (
+                    <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg text-[12px]" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                      <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-primary)' }}>{ex.input}</code>
+                      <span style={{ color: 'var(--text-muted)' }}>→</span>
+                      <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-gold-leaf)', fontWeight: 600 }}>{ex.output}</code>
+                      {ex.explanation && <span className="italic text-[11px]" style={{ color: 'var(--text-muted)' }}>// {ex.explanation}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {analysis && panelTab === 'tests' && (
+              <div className="space-y-1.5">
+                {analysis.test_cases.map((tc, i) => {
+                  const result = testResults[i];
+                  const passed = result !== undefined && result === tc.expected;
+                  const failed = result !== undefined && result !== tc.expected;
+                  return (
+                    <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg text-[12px]"
+                      style={{ background: 'var(--bg-elevated)', border: `1px solid ${passed ? '#22c55e44' : failed ? '#ef444444' : 'var(--border)'}` }}>
+                      <code className="flex-1" style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-primary)' }}>{tc.input}</code>
+                      <span style={{ color: 'var(--text-muted)' }}>→</span>
+                      <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-gold-leaf)' }}>{tc.expected}</code>
+                      {passed && <span className="text-[11px] font-bold text-emerald-400">✓</span>}
+                      {failed && <span className="text-[11px] font-bold text-red-400">✗ {result}</span>}
+                      <button onClick={() => runSingleTest(i, tc)} disabled={runningTest === i || !fixedCode}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded transition-opacity disabled:opacity-40"
+                        style={{ border: '1px solid var(--cam-gold-leaf-dk)', color: 'var(--cam-gold-leaf-dk)', background: 'transparent', cursor: fixedCode ? 'pointer' : 'not-allowed' }}>
+                        {runningTest === i ? '…' : '▶'}
+                      </button>
+                    </div>
+                  );
+                })}
+                {analysis.test_cases.length > 0 && (
+                  <button onClick={runAllTests} disabled={!fixedCode}
+                    className="mt-1 px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-[0.1em] transition-opacity disabled:opacity-40"
+                    style={{ border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)', background: 'transparent', cursor: fixedCode ? 'pointer' : 'not-allowed' }}>
+                    ▶ Run All Tests
+                  </button>
+                )}
+              </div>
+            )}
+
+            {analysis && panelTab === 'learn' && (
+              <div>
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {analysis.concepts.map((c, i) => (
+                    <span key={i} className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+                      style={{ background: 'color-mix(in oklab,var(--cam-primary) 15%,var(--bg-elevated))', color: 'var(--cam-primary)' }}>{c}</span>
+                  ))}
+                </div>
+                <div className="space-y-3">
+                  {analysis.steps.map((s, i) => (
+                    <div key={i} className="flex gap-3 items-start">
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5"
+                        style={{ background: 'color-mix(in oklab,var(--cam-primary) 20%,var(--bg-elevated))', color: 'var(--cam-primary)' }}>{i + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        {s.code && <code className="block text-[11px] px-2 py-1 rounded mb-1.5" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3', background: '#0d1117' }}>{s.code}</code>}
+                        <p className="text-[12px] leading-relaxed m-0" style={{ color: 'var(--text-secondary)' }}>{s.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
