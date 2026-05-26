@@ -524,23 +524,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         <div className="flex h-full">
           {/* Code editor column */}
           <div className="flex flex-col flex-1 min-w-0">
-          <div className="h-8 flex items-center justify-between px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
-            <span className={`text-[10px] font-semibold tracking-wider uppercase ${fixedCode ? 'text-[var(--cam-gold-leaf)]' : 'text-[var(--cam-gold-leaf-dk)]'}`}>
-              {fixedCode ? '✓ Fixed Code' : 'Output — Fixed Code'}
-            </span>
+          <div className="h-8 flex items-center gap-2 px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
             {fixedCode && (
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={handleCopy}
-                  className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-lg transition-opacity hover:opacity-90"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(0,47,120,0.55) 0%, rgba(10,14,26,0.85) 100%)',
-                    border: '1px solid var(--cam-gold-leaf)',
-                    color: 'var(--cam-gold-leaf)',
-                  }}
-                >
-                  Copy
-                </button>
+              <>
                 <button
                   onClick={handleRun}
                   disabled={isRunning}
@@ -552,8 +538,23 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                 >
                   {isRunning ? <><span className="w-3 h-3 border-2 border-[#0a0e1a]/40 border-t-[#0a0e1a] rounded-full animate-spin" />Running</> : <>▶ Run</>}
                 </button>
-              </div>
+                <button
+                  onClick={handleCopy}
+                  className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-lg transition-opacity hover:opacity-90"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(0,47,120,0.55) 0%, rgba(10,14,26,0.85) 100%)',
+                    border: '1px solid var(--cam-gold-leaf)',
+                    color: 'var(--cam-gold-leaf)',
+                  }}
+                >
+                  Copy
+                </button>
+                <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
+              </>
             )}
+            <span className={`text-[10px] font-semibold tracking-wider uppercase ${fixedCode ? 'text-[var(--cam-gold-leaf)]' : 'text-[var(--cam-gold-leaf-dk)]'}`}>
+              {fixedCode ? '✓ Fixed Code' : 'Output — Fixed Code'}
+            </span>
           </div>
 
           <div className="flex flex-1 min-h-0">
