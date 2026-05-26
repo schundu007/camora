@@ -129,6 +129,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const pendingAnalyzeRef = useRef(false);
   const handleFixRef = useRef<() => void>(() => {});
 
+  const [outputCollapsed, setOutputCollapsed] = useState(false);
+  const [panelHeight, setPanelHeight] = useState(300);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const panelDragRef = useRef<{ startY: number; startH: number } | null>(null);
+  const [changesWidth, setChangesWidth] = useState(200);
+  const changesRef = useRef<HTMLDivElement | null>(null);
+  const changesDragRef = useRef<{ startX: number; startW: number } | null>(null);
+
   const abortRef = useRef<AbortController | null>(null);
   const cofixHoverDisposable = useRef<any>(null);
   const rightEditorRef = useRef<any>(null);
@@ -363,6 +371,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     if (!fixedCode || isRunning) return;
     setIsRunning(true);
     setOutputHeight(null);
+    setOutputCollapsed(false);
     setRunOutput('Running…');
     try {
       const response = await fetch(`${API_URL}/api/v1/coding/execute`, {
@@ -545,6 +554,46 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     };
     const onUp = () => {
       outputDragRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, []);
+
+  const handlePanelDragStart = useCallback((e: React.MouseEvent) => {
+    if (!panelRef.current) return;
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = panelRef.current.offsetHeight;
+    panelDragRef.current = { startY, startH };
+    const onMove = (ev: MouseEvent) => {
+      if (!panelDragRef.current) return;
+      const delta = panelDragRef.current.startY - ev.clientY;
+      setPanelHeight(Math.max(80, Math.min(640, panelDragRef.current.startH + delta)));
+    };
+    const onUp = () => {
+      panelDragRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, []);
+
+  const handleChangesDragStart = useCallback((e: React.MouseEvent) => {
+    if (!changesRef.current) return;
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = changesRef.current.offsetWidth;
+    changesDragRef.current = { startX, startW };
+    const onMove = (ev: MouseEvent) => {
+      if (!changesDragRef.current) return;
+      const delta = changesDragRef.current.startX - ev.clientX;
+      setChangesWidth(Math.max(120, Math.min(420, changesDragRef.current.startW + delta)));
+    };
+    const onUp = () => {
+      changesDragRef.current = null;
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
     };
@@ -922,44 +971,60 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               className="border-t border-[var(--border)] shrink-0 flex flex-col"
               style={{
                 background: isErr ? 'rgba(239,68,68,0.05)' : 'var(--bg-primary)',
-                ...(outputHeight !== null ? { height: outputHeight, overflow: 'hidden' } : {}),
+                ...(outputHeight !== null && !outputCollapsed ? { height: outputHeight, overflow: 'hidden' } : {}),
               }}
             >
-              {/* Drag-resize handle */}
-              <div
-                onMouseDown={handleOutputDragStart}
-                className="h-1.5 shrink-0 cursor-ns-resize group"
-                style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.35 }}
-                title="Drag to resize"
-              />
+              {/* Drag-resize handle — hidden when collapsed */}
+              {!outputCollapsed && (
+                <div
+                  onMouseDown={handleOutputDragStart}
+                  className="h-1.5 shrink-0 cursor-ns-resize"
+                  style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.35 }}
+                  title="Drag to resize"
+                />
+              )}
               <div className="flex items-center justify-between px-4 py-1.5 border-b border-[var(--border)] bg-[var(--bg-secondary)] shrink-0">
                 <span className={`text-[10px] font-bold tracking-wider uppercase ${isErr ? 'text-red-400' : 'text-emerald-400'}`}>
                   {isErr ? '✕ Runtime Error' : '✓ Output'}
                 </span>
                 <button
-                  onClick={() => { setRunOutput(null); setOutputHeight(null); }}
-                  className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                  onClick={() => setOutputCollapsed(v => !v)}
+                  title={outputCollapsed ? 'Expand output' : 'Collapse output'}
+                  className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors px-1"
                 >
-                  ✕
+                  {outputCollapsed ? '▲' : '▼'}
                 </button>
               </div>
-              <pre
-                className={`px-4 py-3 whitespace-pre-wrap ${outputHeight !== null ? 'overflow-y-auto flex-1' : ''} ${isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}
-                style={{
-                  fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
-                  fontSize: 11,
-                  lineHeight: 1.65,
-                  letterSpacing: '-0.02em',
-                  WebkitFontSmoothing: 'antialiased',
-                  MozOsxFontSmoothing: 'grayscale',
-                }}
-              >
-                {runOutput}
-              </pre>
+              {!outputCollapsed && (
+                <pre
+                  className={`px-4 py-3 whitespace-pre-wrap ${outputHeight !== null ? 'overflow-y-auto flex-1' : ''} ${isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}
+                  style={{
+                    fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
+                    fontSize: 11,
+                    lineHeight: 1.65,
+                    letterSpacing: '-0.02em',
+                    WebkitFontSmoothing: 'antialiased',
+                    MozOsxFontSmoothing: 'grayscale',
+                  }}
+                >
+                  {runOutput}
+                </pre>
+              )}
             </div>
           )}
           </div>
-          {changes.length > 0 && <AnnotationPanel changes={changes} />}
+          {changes.length > 0 && (
+            <div ref={changesRef} className="flex-shrink-0 flex flex-row h-full" style={{ width: changesWidth }}>
+              {/* Left drag handle */}
+              <div
+                onMouseDown={handleChangesDragStart}
+                className="w-1.5 shrink-0 cursor-ew-resize h-full"
+                style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.35 }}
+                title="Drag to resize"
+              />
+              <AnnotationPanel changes={changes} width={changesWidth - 6} />
+            </div>
+          )}
         </div>
         </Allotment.Pane>
 
@@ -968,7 +1033,15 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
       {/* ── Analysis panel ── */}
       {showPanel && (
-        <div className="shrink-0 flex flex-col" style={{ height: 300, borderTop: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-surface)' }}>
+        <div ref={panelRef} className="shrink-0 flex flex-col" style={{ height: panelHeight, borderTop: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-surface)' }}>
+
+          {/* Drag handle to resize panel height */}
+          <div
+            onMouseDown={handlePanelDragStart}
+            className="h-1.5 shrink-0 cursor-ns-resize"
+            style={{ background: 'var(--cam-gold-leaf)', opacity: 0.35 }}
+            title="Drag to resize"
+          />
 
           {/* Panel tab bar */}
           <div className="flex items-center shrink-0" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>

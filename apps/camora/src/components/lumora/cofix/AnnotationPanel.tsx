@@ -2,13 +2,17 @@ import type { CoFixChange } from '@/lib/sse-client';
 
 interface AnnotationPanelProps {
   changes: CoFixChange[];
+  width?: number;
 }
 
-export const AnnotationPanel = ({ changes }: AnnotationPanelProps) => {
+export const AnnotationPanel = ({ changes, width }: AnnotationPanelProps) => {
   if (changes.length === 0) return null;
 
   return (
-    <div className="w-[200px] flex-shrink-0 overflow-y-auto border-l border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-primary)] p-3">
+    <div
+      className="flex-shrink-0 overflow-y-auto border-l border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-primary)] p-3"
+      style={width ? { width } : { width: 200 }}
+    >
       <p className="text-[10px] font-semibold tracking-wider text-[var(--cam-gold-leaf)] uppercase mb-3">
         Changes
       </p>
