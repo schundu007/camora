@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Allotment } from 'allotment';
 import 'allotment/dist/style.css';
@@ -18,6 +18,18 @@ import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { useSessionStore } from '@/stores/session-store';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+
+// ── CoFix Log custom icons ────────────────────────────────────────────────────
+const G = 'var(--cam-gold-leaf)';
+const LogIconBolt    = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7 1L2.5 6.5H5.5L5 11L9.5 5.5H6.5L7 1Z" fill={G}/></svg>;
+const LogIconSearch  = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={G} strokeWidth="1.5" strokeLinecap="round"><circle cx="5" cy="5" r="3.2"/><line x1="7.5" y1="7.5" x2="10.5" y2="10.5"/></svg>;
+const LogIconScan    = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={G} strokeWidth="1.4" strokeLinecap="round"><rect x="1.5" y="1.5" width="9" height="9" rx="1.5"/><line x1="3.5" y1="4" x2="8.5" y2="4"/><line x1="3.5" y1="6" x2="8.5" y2="6"/><line x1="3.5" y1="8" x2="6" y2="8"/></svg>;
+const LogIconSpark   = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={G} strokeWidth="1.3" strokeLinecap="round"><line x1="6" y1="1" x2="6" y2="2.5"/><line x1="6" y1="9.5" x2="6" y2="11"/><line x1="1" y1="6" x2="2.5" y2="6"/><line x1="9.5" y1="6" x2="11" y2="6"/><line x1="2.8" y1="2.8" x2="3.8" y2="3.8"/><line x1="8.2" y1="8.2" x2="9.2" y2="9.2"/><line x1="9.2" y1="2.8" x2="8.2" y2="3.8"/><line x1="3.8" y1="8.2" x2="2.8" y2="9.2"/><circle cx="6" cy="6" r="1.8" fill={G} stroke="none"/></svg>;
+const LogIconReceive = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="1.5" x2="6" y2="8"/><polyline points="3.5,5.5 6,8 8.5,5.5"/><line x1="2" y1="10.5" x2="10" y2="10.5"/></svg>;
+const LogIconError   = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round"><circle cx="6" cy="6" r="4.5"/><line x1="4" y1="4" x2="8" y2="8"/><line x1="8" y1="4" x2="4" y2="8"/></svg>;
+const LogIconCheck   = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="4.5"/><polyline points="3.5,6 5.5,8 8.5,4"/></svg>;
+const LogIconGear    = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={G} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="1.8"/><path d="M6 1.5V3M6 9v1.5M1.5 6H3M9 6h1.5M2.9 2.9l1 1M8.1 8.1l1 1M9.1 2.9l-1 1M3.9 8.1l-1 1"/></svg>;
+const LogIconWrench  = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={G} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8.8 1.5a2.5 2.5 0 00-2.5 3.1L2 9a1 1 0 001.4 1.4l4.4-4.3A2.5 2.5 0 008.8 1.5z"/><line x1="2.5" y1="9.5" x2="3.2" y2="8.8"/></svg>;
 
 const detectLanguage = (text: string): string => {
   if (/^FROM\s+\S+/m.test(text)) return 'dockerfile';
@@ -115,7 +127,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const outputPanelRef = useRef<HTMLDivElement | null>(null);
   const outputDragRef = useRef<{ startY: number; startH: number } | null>(null);
 
-  type LogLine = { elapsed: string; icon: string; msg: string };
+  type LogLine = { elapsed: string; icon: React.ReactNode; status?: 'error' | 'success'; msg: string };
   const [logLines, setLogLines] = useState<LogLine[]>([]);
   const [showLogPopup, setShowLogPopup] = useState(false);
   const logStartRef = useRef(0);
@@ -294,10 +306,10 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     setRunOutput(null);
     decorationCollectionRef.current = null;
 
-    addLog('⚡', 'Starting CoFix…');
-    const t1 = setTimeout(() => addLog('🔍', `Parsing ${effectiveLang} code…`), 300);
-    const t2 = setTimeout(() => addLog('🔬', 'Scanning for issues…'), 800);
-    const t3 = setTimeout(() => addLog('🧠', 'Querying AI model…'), 1400);
+    addLog(<LogIconBolt />, 'Starting CoFix…');
+    const t1 = setTimeout(() => addLog(<LogIconSearch />, `Parsing ${effectiveLang} code…`), 300);
+    const t2 = setTimeout(() => addLog(<LogIconScan />, 'Scanning for issues…'), 800);
+    const t3 = setTimeout(() => addLog(<LogIconSpark />, 'Querying AI model…'), 1400);
 
     // Reset panel — analyze will fire with fixedCode once fix stream completes
     setAnalysis(null);
@@ -314,7 +326,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       token: token!,
       onAnswer: (data: CoFixAnswer) => {
         clearTimeout(t3);
-        addLog('📬', `Receiving fixes… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`);
+        addLog(<LogIconReceive />, `Receiving fixes… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`, 'success');
         setFixedCode(data.fixed_code);
         setChanges(data.changes);
         setComplexity(data.complexity);
@@ -322,13 +334,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       },
       onError: ({ msg }) => {
         clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
-        addLog('❌', `Error: ${msg}`);
+        addLog(<LogIconError />, `Error: ${msg}`, 'error');
         setError(msg);
         setIsLoading(false);
       },
       onComplete: () => {
         clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
-        addLog('✅', 'Complete — analyzing problem…');
+        addLog(<LogIconCheck />, 'Complete — analyzing problem…', 'success');
         pendingAnalyzeRef.current = true;
         setIsLoading(false);
         logHideTimerRef.current = setTimeout(() => setShowLogPopup(false), 2500);
@@ -435,9 +447,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     });
   }, []);
 
-  const addLog = useCallback((icon: string, msg: string) => {
+  const addLog = useCallback((icon: React.ReactNode, msg: string, status?: 'error' | 'success') => {
     const elapsed = `+${((Date.now() - logStartRef.current) / 1000).toFixed(1)}s`;
-    setLogLines(prev => [...prev, { elapsed, icon, msg }]);
+    setLogLines(prev => [...prev, { elapsed, icon, status, msg }]);
   }, []);
 
   useEffect(() => {
@@ -452,7 +464,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     logStartRef.current = Date.now();
     setLogLines([]);
     setShowLogPopup(true);
-    addLog('⚙️', 'Auto-fixing runtime error…');
+    addLog(<LogIconGear />, 'Auto-fixing runtime error…');
     const controller = await streamCoFixResponse({
       code,
       hint: errorHint,
@@ -460,19 +472,19 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       language: effectiveLang,
       token: token!,
       onAnswer: (data: CoFixAnswer) => {
-        addLog('🛠️', `Applying fix… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`);
+        addLog(<LogIconWrench />, `Applying fix… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`);
         setFixedCode(data.fixed_code);
         setChanges(data.changes);
         setComplexity(data.complexity);
         setHackerrankCompatible(data.hackerrank_compatible);
       },
       onError: ({ msg }) => {
-        addLog('❌', `Auto-fix failed: ${msg}`);
+        addLog(<LogIconError />, `Auto-fix failed: ${msg}`, 'error');
         setError(msg);
         setIsLoading(false);
       },
       onComplete: () => {
-        addLog('✅', 'Auto-fix done — re-running…');
+        addLog(<LogIconCheck />, 'Auto-fix done — re-running…', 'success');
         autoRunRef.current = true;
         pendingAnalyzeRef.current = true;
         setIsLoading(false);
@@ -894,10 +906,10 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   {/* Log body */}
                   <div ref={logScrollRef} className="flex flex-col gap-0.5 px-3 py-2 max-h-48 overflow-y-auto">
                     {logLines.map((line, i) => (
-                      <div key={i} className="flex items-baseline gap-2">
+                      <div key={i} className="flex items-center gap-2">
                         <span className="text-[9px] shrink-0 tabular-nums" style={{ color: 'rgba(196,160,60,0.45)', fontFamily: "'IBM Plex Mono', monospace" }}>{line.elapsed}</span>
-                        <span className="text-[11px] shrink-0">{line.icon}</span>
-                        <span className="text-[10px] leading-relaxed" style={{ color: line.icon === '✕' ? '#f87171' : line.icon === '✅' ? '#4ade80' : 'rgba(255,255,255,0.8)', fontFamily: "'IBM Plex Mono', monospace" }}>{line.msg}</span>
+                        <span className="shrink-0 flex items-center">{line.icon}</span>
+                        <span className="text-[10px] leading-relaxed" style={{ color: line.status === 'error' ? '#f87171' : line.status === 'success' ? '#4ade80' : 'rgba(255,255,255,0.8)', fontFamily: "'IBM Plex Mono', monospace" }}>{line.msg}</span>
                       </div>
                     ))}
                     {isLoading && (
