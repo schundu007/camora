@@ -92,26 +92,18 @@ function renderMarkdown(text: string) {
       i++; continue;
     }
 
-    // ── H3 ──────────────────────────────────────────────────────────────────
-    if (line.startsWith('### ')) {
-      elements.push(
-        <h3 key={key++} className="text-[13px] font-semibold mt-5 mb-2" style={{ color: 'var(--text-primary)' }}>
-          {line.slice(4)}
-        </h3>
-      );
-      i++; continue;
-    }
-
-    // ── Standalone bold label: **Text** on its own line ─────────────────────
-    // Treat as a sub-section label with distinct styling instead of plain <p>.
+    // ── H3 / standalone **bold** — both render as a subheading ─────────────
     {
       const t = line.trim();
-      if (t.startsWith('**') && t.endsWith('**') && t.length > 4 && !t.slice(2, -2).includes('**')) {
-        const label = t.slice(2, -2);
+      const isH3 = line.startsWith('### ');
+      const isStandaloneBold = !isH3 && t.startsWith('**') && t.endsWith('**') && t.length > 4 && !t.slice(2, -2).includes('**');
+      if (isH3 || isStandaloneBold) {
+        const label = isH3 ? line.slice(4) : t.slice(2, -2);
         elements.push(
-          <p key={key++} className="text-[12px] font-bold uppercase tracking-[0.08em] mt-4 mb-1" style={{ color: 'var(--cam-primary)' }}>
+          <h3 key={key++} className="text-[13px] font-semibold mt-6 mb-2 flex items-center gap-2" style={{ color: 'var(--cam-gold-leaf)' }}>
+            <span className="w-0.5 h-3.5 rounded-full shrink-0" style={{ background: 'var(--cam-gold-leaf)', opacity: 0.6 }} />
             {label}
-          </p>
+          </h3>
         );
         i++; continue;
       }

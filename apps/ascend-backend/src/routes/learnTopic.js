@@ -49,6 +49,7 @@ Bullet list of the main subjects and skills taught (6–8 items).
 
 ## Learning Path Workflow
 Step-by-step breakdown of how to progress through this course — what to learn in what order.
+Use ### subheadings (e.g. ### Phase 1: Fundamentals) for each phase or stage. Never use **bold** as a heading substitute.
 
 ## Key Skills You'll Build
 Specific technical competencies and patterns you'll develop.
