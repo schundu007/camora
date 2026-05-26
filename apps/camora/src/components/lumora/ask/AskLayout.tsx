@@ -44,17 +44,35 @@ const KNOWN_LANGS = new Set(['python','py','javascript','js','typescript','ts','
 
 const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
   const normalizedLang = KNOWN_LANGS.has(lang?.toLowerCase()) ? lang.toLowerCase() : 'python';
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code.trim()).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
+  };
+
   return (
-    <div className="my-2 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-      {lang && (
-        <div className="px-3 py-1.5" style={{ background: '#21252b', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: '#abb2bf' }}>{lang}</span>
-        </div>
-      )}
+    <div className="my-3 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 2px 12px rgba(0,0,0,0.3)' }}>
+      <div className="flex items-center justify-between px-3 py-1.5" style={{ background: '#1e222a', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <span className="text-[10px] font-mono font-semibold uppercase tracking-widest" style={{ color: '#61afef' }}>{lang || 'code'}</span>
+        <button
+          onClick={handleCopy}
+          className="text-[10px] font-medium px-2 py-0.5 rounded transition-all"
+          style={{
+            color: copied ? '#98c379' : '#abb2bf',
+            background: copied ? 'rgba(152,195,121,0.12)' : 'rgba(255,255,255,0.06)',
+            fontFamily: 'Plus Jakarta Sans, sans-serif',
+          }}
+        >
+          {copied ? '✓ Copied' : 'Copy'}
+        </button>
+      </div>
       <SyntaxHighlighter
         language={normalizedLang}
         style={atomOneDark}
-        customStyle={{ margin: 0, padding: '12px 16px', fontSize: '11px', lineHeight: '1.65', fontFamily: "'IBM Plex Mono', monospace", letterSpacing: '-0.02em', WebkitFontSmoothing: 'antialiased', background: '#282c34', borderRadius: 0 }}
+        customStyle={{ margin: 0, padding: '14px 16px', fontSize: '11px', lineHeight: '1.65', fontFamily: "'IBM Plex Mono', monospace", letterSpacing: '-0.02em', WebkitFontSmoothing: 'antialiased', background: '#282c34', borderRadius: 0 }}
         showLineNumbers={false}
         wrapLongLines={false}
       >
