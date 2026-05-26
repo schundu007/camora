@@ -102,6 +102,10 @@ async function callExplain(prompt) {
 
 // Wrapper reads code.py from disk — avoids any string-escaping issues.
 // Emits __VARS__:<json> to stderr so backend can parse variables separately.
+//
+// Single shared namespace (_ns) is critical: exec with separate globals/locals
+// breaks cross-references between top-level classes/functions and prevents
+// `if __name__ == '__main__':` from ever being true.
 const PYTHON_WRAPPER = `import json as _j, sys as _s, traceback as _t, io as _io
 
 with open('code.py', 'r') as _f:
@@ -109,10 +113,10 @@ with open('code.py', 'r') as _f:
 
 _cap = _io.StringIO()
 _s.stdout = _cap
-_loc = {}
+_ns = {'__name__': '__main__'}
 
 try:
-    exec(compile(_src, 'code.py', 'exec'), {}, _loc)
+    exec(compile(_src, 'code.py', 'exec'), _ns)
 except Exception:
     _s.stdout = _s.__stdout__
     _s.stdout.write(_cap.getvalue())
@@ -123,7 +127,7 @@ except Exception:
 _s.stdout = _s.__stdout__
 _s.stdout.write(_cap.getvalue())
 _safe = {}
-for _k, _v in _loc.items():
+for _k, _v in _ns.items():
     if not _k.startswith('_'):
         try:
             _safe[_k] = {'type': type(_v).__name__, 'repr': repr(_v)[:200]}
