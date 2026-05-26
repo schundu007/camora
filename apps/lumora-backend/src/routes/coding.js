@@ -1623,26 +1623,35 @@ Return ONLY this JSON (no markdown fences, no extra text):
   "steps": [
     {"code": "line or short block", "text": "plain English for someone who has never coded"}
   ],
-  "concepts": ["python concept name"]
+  "concepts": ["concept name"]
 }
 
 Rules:
 - examples: 2-3 with varied inputs
 - test_cases: 3-5 covering normal + edge cases (empty, zero, negative, boundary)
 - steps: walk through each key line/block explaining what it does like the reader is brand new to programming
-- concepts: list Python concepts used that a beginner should learn (e.g. "for loops", "if statements", "lists", "return values")`;
+- concepts: list ${language} concepts used that a beginner should learn (e.g. "for loops", "if statements", "dictionaries", "return values")
+- Keep steps concise — no more than 8 steps total`;
 
   try {
     const msg = await anthropicClient.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1400,
+      max_tokens: 2500,
       messages: [{ role: 'user', content: prompt }],
     });
     const raw = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
     const jsonStr = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
     const match = jsonStr.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('no JSON in response');
-    res.json(JSON.parse(match[0]));
+    let parsed;
+    try {
+      parsed = JSON.parse(match[0]);
+    } catch {
+      // Attempt to recover a truncated JSON by capping arrays
+      const truncFixed = match[0].replace(/,\s*$/, '').replace(/\[\s*$/, '[]').replace(/\{\s*$/, '{}') + '}';
+      parsed = JSON.parse(truncFixed);
+    }
+    res.json(parsed);
   } catch (err) {
     console.error('[analyze]', err?.message);
     res.status(500).json({ error: 'Analysis failed' });
