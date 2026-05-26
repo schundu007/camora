@@ -107,6 +107,7 @@ function renderMarkdown(text: string) {
         // ── Phase card layout (Learning Path Workflow phase headings) ────────
         if (/^phase\s+\d+/i.test(cleanLabel)) {
           i++;
+          const descLines: string[] = [];
           const topics: { title: string; taskRange: string; bullets: string[] }[] = [];
           while (i < lines.length) {
             const ln = lines[i];
@@ -120,8 +121,8 @@ function renderMarkdown(text: string) {
             const numMatch = ln.match(/^\d+[.)]\s+(.*)/);
             if (numMatch) {
               const raw = numMatch[1].replace(/\*\*/g, '').trim();
-              // Separate topic title from "(Tasks X–Y)" range annotation
-              const taskM = raw.match(/^([\s\S]+?)\s+(\(Tasks?\s+[\d\-–—,\s]+\))\s*$/i);
+              // Separate topic title from "(Tasks X–Y)" / "(Week N)" range annotation
+              const taskM = raw.match(/^([\s\S]+?)\s+(\((?:Tasks?|Week)\s+[\d\-–—,\s]+\))\s*$/i);
               const title = (taskM ? taskM[1] : raw).trim();
               const taskRange = taskM ? taskM[2] : '';
               i++;
@@ -134,8 +135,11 @@ function renderMarkdown(text: string) {
               continue;
             }
             if (!lnt) { i++; continue; }
+            // Non-numbered text before any topics = phase description line
+            if (topics.length === 0) { descLines.push(lnt); i++; continue; }
             break;
           }
+          const description = descLines.join(' ');
           elements.push(
             <div key={key++} className="my-5 rounded-xl overflow-hidden"
               style={{ border: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
@@ -144,6 +148,9 @@ function renderMarkdown(text: string) {
                 <span className="text-[13px] font-bold" style={{ color: 'var(--cam-gold-leaf)' }}>{cleanLabel}</span>
               </div>
               <div className="px-4 py-4 space-y-4" style={{ background: 'var(--bg-surface)' }}>
+                {description && (
+                  <p className="text-[12px] leading-relaxed -mt-1 mb-1" style={{ color: 'var(--text-muted)' }}>{description}</p>
+                )}
                 {topics.map((topic, ti) => (
                   <div key={ti}>
                     <div className="flex items-start gap-2.5 mb-1.5">
