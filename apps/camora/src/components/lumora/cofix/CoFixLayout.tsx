@@ -123,6 +123,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const logHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const autoRunRef = useRef(false);
+  const pendingAnalyzeRef = useRef(false);
   const handleFixRef = useRef<() => void>(() => {});
 
   const abortRef = useRef<AbortController | null>(null);
@@ -293,9 +294,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     setShowPanel(true);
     setPanelTab('problem');
 
-    let latestFixedCode = '';
-    const capturedLang = effectiveLang;
-
     const controller = await streamCoFixResponse({
       code: inputCode,
       hint: hint.trim() || undefined,
@@ -304,7 +302,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       token: token!,
       onAnswer: (data: CoFixAnswer) => {
         clearTimeout(t3);
-        latestFixedCode = data.fixed_code;
         addLog('📥', `Receiving fixes… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`);
         setFixedCode(data.fixed_code);
         setChanges(data.changes);
@@ -320,9 +317,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       onComplete: () => {
         clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
         addLog('✅', 'Complete — analyzing problem…');
+        pendingAnalyzeRef.current = true;
         setIsLoading(false);
         logHideTimerRef.current = setTimeout(() => setShowLogPopup(false), 2500);
-        if (latestFixedCode) runAnalyze(latestFixedCode, capturedLang);
       },
     });
     abortRef.current = controller;
@@ -387,6 +384,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       handleRun();
     }
   }, [isLoading, fixedCode, handleRun]);
+
+  // Trigger analyze after fix stream completes (avoids stale closure in onComplete)
+  useEffect(() => {
+    if (!isLoading && pendingAnalyzeRef.current && fixedCode) {
+      pendingAnalyzeRef.current = false;
+      runAnalyze(fixedCode, effectiveLang);
+    }
+  }, [isLoading, fixedCode, effectiveLang, runAnalyze]);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(fixedCode);
