@@ -2381,3 +2381,16 @@ figure:has(> .viz-caption) {
 /* ── CoFix Monaco editor line decorations ── */
 .cofix-line-fix { background-color: rgba(245, 158, 11, 0.12) !important; }
 .cofix-line-added { background-color: rgba(34, 197, 94, 0.12) !important; }
+
+/* ── Allotment sash — gold-leaf theme for CoFix split pane ── */
+.split-view-view > .sash-container > .sash {
+  background: var(--cam-gold-leaf-dk) !important;
+  opacity: 0.35;
+  transition: opacity 0.15s;
+  width: 3px !important;
+}
+.split-view-view > .sash-container > .sash:hover,
+.split-view-view > .sash-container > .sash.active {
+  opacity: 1 !important;
+  background: var(--cam-gold-leaf) !important;
+}

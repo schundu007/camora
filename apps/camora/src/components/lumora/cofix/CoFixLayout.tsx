@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Allotment } from 'allotment';
+import 'allotment/dist/style.css';
 import { Editor, useMonaco } from '@monaco-editor/react';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import { AnnotationPanel } from './AnnotationPanel';
@@ -469,10 +471,12 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       </div>
 
       {/* ── Split pane ── */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex-1 min-h-0">
+      <Allotment defaultSizes={[50, 50]}>
 
         {/* LEFT — broken code input */}
-        <div className="flex flex-col w-1/2 border-r border-[var(--border)]">
+        <Allotment.Pane minSize={220}>
+        <div className="flex flex-col h-full border-r border-[var(--border)]">
           <div className="h-8 flex items-center justify-between px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
             <span className="text-[10px] font-semibold tracking-wider text-[var(--cam-gold-leaf-dk)] uppercase">Input — Broken Code</span>
             <button
@@ -513,9 +517,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
           </div>
 
         </div>
+        </Allotment.Pane>
 
         {/* RIGHT — fixed code output */}
-        <div className="flex w-1/2">
+        <Allotment.Pane minSize={220}>
+        <div className="flex h-full">
           {/* Code editor column */}
           <div className="flex flex-col flex-1 min-w-0">
           <div className="h-8 flex items-center justify-between px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
@@ -627,6 +633,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
           </div>
           {changes.length > 0 && <AnnotationPanel changes={changes} />}
         </div>
+        </Allotment.Pane>
+
+      </Allotment>
       </div>
     </div>
   );
