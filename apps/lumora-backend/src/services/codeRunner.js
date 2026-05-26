@@ -166,7 +166,7 @@ async function directExecute(code, runtime) {
       const bin = await which(cmd);
       if (!bin) throw new Error(`Runtime '${cmd}' not found on server`);
       const { stdout, stderr, exitCode } = await runCommand(cmd, [srcPath]);
-      if (exitCode !== 0) return { direct_output: stderr ? `Error:\n${stderr}` : 'Execution failed' };
+      if (exitCode !== 0) return { direct_output: friendlyError(stderr) ?? (stderr ? `Error:\n${stderr}` : 'Execution failed') };
       const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
       return { direct_output: out.trim() || emptyOutputHint(code, runtime) };
     } finally {
@@ -621,6 +621,24 @@ function compareOutput(expected, actual) {
 }
 
 // ---------------------------------------------------------------------------
+// Friendly error rewriting
+// ---------------------------------------------------------------------------
+
+function friendlyError(stderr) {
+  const moduleMatch = stderr.match(/ModuleNotFoundError: No module named '([\w.]+)'/);
+  if (moduleMatch) {
+    const mod = moduleMatch[1];
+    return (
+      `Module '${mod}' is not available in the sandbox.\n` +
+      `The code runner supports the Python standard library only — ` +
+      `third-party packages (requests, numpy, pandas, etc.) cannot be installed here.\n` +
+      `To test code that uses external libraries, run it locally on your machine.`
+    );
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Not executable languages
 // ---------------------------------------------------------------------------
 
@@ -695,9 +713,9 @@ export async function executeCode(code, language, testCases = []) {
       let error = null;
 
       if (exitCode !== 0) {
-        error = stderr?.slice(0, 500) || 'Execution failed';
+        error = friendlyError(stderr) ?? (stderr?.slice(0, 500) || 'Execution failed');
       } else if (stderr && !output) {
-        error = stderr.slice(0, 500);
+        error = friendlyError(stderr) ?? stderr.slice(0, 500);
       }
 
       const passed = !error && !!output && compareOutput(tc.expected, output);
