@@ -259,6 +259,36 @@ const PageTracker = () => {
  * may still override with a more specific title in their own useEffect
  * — this only sets a fallback if they don't.
  */
+/**
+ * Set data-product attribute on <html> so CSS can differentiate
+ * Lumora (live interview cockpit) from Capra (prep/study library).
+ * Defaults to 'capra' (the browsable product). Bare /docs routes
+ * and shared surfaces like /profile, /pricing, /login get no
+ * product override (leave the default for backward compat).
+ */
+const ProductAttribute = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const root = document.documentElement;
+    if (pathname.startsWith('/lumora') || pathname.startsWith('/app')) {
+      root.setAttribute('data-product', 'lumora');
+    } else if (
+      pathname.startsWith('/capra') ||
+      pathname.startsWith('/prepare') ||
+      pathname.startsWith('/practice') ||
+      pathname.startsWith('/handbook') ||
+      pathname.startsWith('/problems') ||
+      pathname.startsWith('/jobs') ||
+      pathname.startsWith('/profile')
+    ) {
+      root.setAttribute('data-product', 'capra');
+    } else {
+      root.removeAttribute('data-product');
+    }
+  }, [pathname]);
+  return null;
+};
+
 const RouteTitle = () => {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -294,6 +324,7 @@ export const App = () => {
       <Suspense fallback={<Loading />}>
         <ScrollToTop />
         <PageTracker />
+        <ProductAttribute />
         <RouteTitle />
         <Routes>
           {/* ── Public ─────────────────────────────────── */}
