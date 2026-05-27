@@ -333,6 +333,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const appendFileInputRef = useRef<HTMLInputElement>(null);
 
   // Store
   const { streamText, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache } = useSessionStore();
@@ -930,12 +931,54 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUrl, token]);
 
-  // F9 shortcut (Electron desktop): auto-process HackerRank window screenshot via OCR.
+  // F9 shortcut (Electron desktop): URL-first then OCR fallback.
+  // 1) Ask Electron for the active browser tab URL and try backend scraper.
+  // 2) If that fails or returns empty, fall back to OCR on the screenshot.
   useEffect(() => {
     if (!pendingHackerrankCapture) return;
     onHackerrankCaptureConsumed?.();
     (async () => {
       try {
+        const camo = (window as any).camo;
+        const activeUrl: string | null = camo?.getActiveBrowserUrl ? await camo.getActiveBrowserUrl() : null;
+        if (activeUrl && token) {
+          try {
+            const resp = await fetch(`${API_BASE_URL}/api/v1/coding/fetch-problem`, {
+              credentials: 'include',
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({ url: activeUrl }),
+            });
+            if (resp.ok) {
+              const data = await resp.json();
+              const text = String(data.problem || '').trim();
+              if (text) {
+                setProblemText(text);
+                setSnapChipCode(text);
+                setStarterCode(null);
+                setInputMode('paste');
+                setStreamError(null);
+                setTestResults([]);
+                setTestCases([]);
+                setOutput('');
+                setShowFixPrompt(false);
+                clearStreamChunks();
+                setParsedBlocks([]);
+                setJsonSolution(null);
+                setCode(getDefaultCode(resolveLanguage(text)));
+                setCollapsedCards(new Set());
+                setActiveSolutionIdx(0);
+                setIsOutputCollapsed(true);
+                setProblemTab('solution');
+                onSubmit(text, resolveLanguage(text), undefined);
+                return;
+              }
+            }
+          } catch {
+            // URL fetch failed — fall through to OCR
+          }
+        }
+        // Fallback: OCR the screenshot
         const blob = await (await fetch(pendingHackerrankCapture)).blob();
         const file = new File([blob], 'hackerrank-capture.png', { type: blob.type || 'image/png' });
         setInputMode('image');
@@ -1432,6 +1475,38 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     }
   }, [token, language, setLanguage, clearStreamChunks, onSubmit]);
 
+  // OCR a supplemental screenshot and APPEND its text to the existing problem.
+  // Used for multi-page problems: take a 2nd/3rd screenshot and add to current
+  // problem text without replacing it or triggering a new solution generation.
+  const extractAndAppend = useCallback(async (file: File) => {
+    if (!token) { setError('Not authenticated'); return; }
+    setIsProcessing(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const resp = await fetch(`${API_BASE_URL}/api/v1/coding/extract-from-image`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
+      if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).detail || 'Failed to extract');
+      const data = await resp.json();
+      const text = String(data.problem || '').trim();
+      if (text) {
+        const combined = (problemTextRef.current ? problemTextRef.current + '\n\n' + text : text).trim();
+        setProblemText(combined);
+        setSnapChipCode(combined);
+        setInputMode('paste');
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [token]);
+
   // Drop/select an image → preview + auto-extract + auto-generate solution.
   // No more manual click chain: image in, answer out.
   const acceptImage = useCallback((file: File) => {
@@ -1867,15 +1942,28 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
                       {/* Input Areas */}
                       {inputMode === 'paste' && (
-                        <textarea id="problem-text"
-                          value={problemText}
-                          onChange={(e) => { setProblemText(e.target.value); setStarterCode(null); }}
-                          onDrop={handleDrop}
-                          onDragOver={(e) => e.preventDefault()}
-                          placeholder="Paste your coding problem here...&#10;&#10;Example: Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target."
-                          className="w-full h-[140px] sm:h-[180px] md:h-[220px] max-h-[40dvh] rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-[var(--text-dimmed)] resize-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
-                          style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }}
-                        />
+                        <div className="space-y-2">
+                          <textarea id="problem-text"
+                            value={problemText}
+                            onChange={(e) => { setProblemText(e.target.value); setStarterCode(null); }}
+                            onDrop={handleDrop}
+                            onDragOver={(e) => e.preventDefault()}
+                            placeholder="Paste your coding problem here...&#10;&#10;Example: Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target."
+                            className="w-full h-[140px] sm:h-[180px] md:h-[220px] max-h-[40dvh] rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-[var(--text-dimmed)] resize-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
+                            style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }}
+                          />
+                          {problemText.trim() && (
+                            <>
+                              <input ref={appendFileInputRef} type="file" accept="image/*" className="hidden"
+                                onChange={(e) => { const f = e.target.files?.[0]; if (f) void extractAndAppend(f); e.target.value = ''; }} />
+                              <button type="button" onClick={() => appendFileInputRef.current?.click()} disabled={isProcessing}
+                                className="w-full py-1.5 text-xs font-semibold rounded-lg border transition-colors disabled:opacity-50"
+                                style={{ borderColor: t.inputBorder, color: t.textDim, background: t.sectionBg }}>
+                                {isProcessing ? 'Appending…' : '+ Add Page'}
+                              </button>
+                            </>
+                          )}
+                        </div>
                       )}
 
                       {inputMode === 'url' && (
