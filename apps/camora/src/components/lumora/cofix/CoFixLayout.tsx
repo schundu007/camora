@@ -440,8 +440,17 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       letterSpacing: -0.3,
     });
     editor.onDidPaste(() => {
-      const val = editor.getValue();
-      if (val.trim().length >= 5) {
+      const raw = editor.getValue();
+      const stripped = raw.split('\n').filter((l: string) => l.trim() !== '').join('\n');
+      if (stripped !== raw) {
+        editor.setValue(stripped);
+        const model = editor.getModel();
+        if (model) {
+          const lineCount = model.getLineCount();
+          editor.setPosition({ lineNumber: lineCount, column: model.getLineLength(lineCount) + 1 });
+        }
+      }
+      if (stripped.trim().length >= 5) {
         autoRunRef.current = true;
         setTimeout(() => handleFixRef.current(), 50);
       }
