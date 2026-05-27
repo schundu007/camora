@@ -102,9 +102,9 @@ function runCommand(cmd, args = [], opts = {}) {
         });
       }
     });
-    if (opts.stdin && child.stdin) {
-      child.stdin.write(opts.stdin);
-      child.stdin.end();
+    if (child.stdin) {
+      if (opts.stdin) child.stdin.write(opts.stdin);
+      child.stdin.end(); // always close — prevents input()/readline() from blocking forever
     }
   });
 }
