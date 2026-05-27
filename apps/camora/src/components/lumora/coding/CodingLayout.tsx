@@ -704,13 +704,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     if (isStreaming) autoGenRef.current = { active: true, attempts: 0 };
   }, [isStreaming]);
 
-  // Silent auto-fix: when auto-run finds failures after generation, fix
-  // silently and re-run. Surface the manual button only after 3 attempts.
+  // Silent auto-fix: iterate until all tests pass or we exhaust attempts.
+  // Loop stops naturally when handleRun finds allPassed (never sets showFixPrompt=true).
   useEffect(() => {
     if (!showFixPrompt) return;
     if (!autoGenRef.current.active) return;
-    if (autoGenRef.current.attempts >= 3) {
-      autoGenRef.current.active = false; // give up, show manual fix button
+    if (autoGenRef.current.attempts >= 7) {
+      autoGenRef.current.active = false; // give up after 7 tries, show manual button
       return;
     }
     autoGenRef.current.attempts++;

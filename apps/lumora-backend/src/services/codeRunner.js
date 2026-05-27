@@ -581,14 +581,29 @@ end
 }
 
 function buildBashRunner(code, testInput) {
-  const args = testInput
+  // Detect the first user-defined function (the entry point)
+  const fnMatch = code.match(/^([a-zA-Z_]\w*)\s*\(\s*\)\s*\{/m) ||
+                  code.match(/^function\s+([a-zA-Z_]\w*)\b/m);
+  const fnName = fnMatch?.[1] ?? null;
+
+  // Strip "varname = " prefix to get raw values
+  const argValues = testInput
     .trim()
     .split('\n')
-    .map(l => l.trim().replace(/^\[/, '').replace(/\]$/, ''))
+    .map(l => {
+      const eq = l.indexOf('=');
+      return (eq >= 0 ? l.slice(eq + 1) : l).trim();
+    })
     .filter(Boolean);
 
-  const quotedArgs = args.map(a => `'${a.replace(/'/g, `'\\''`)}'`).join(' ');
-  return `#!/bin/bash\nset -- ${quotedArgs}\n${code}`;
+  const quotedArgs = argValues.map(a => `'${a.replace(/'/g, `'\\''`)}'`).join(' ');
+
+  // set positional params, paste code, then call the detected entry function
+  let runner = `#!/bin/bash\nset -- ${quotedArgs}\n${code}`;
+  if (fnName) {
+    runner += `\n${fnName} "$@"`;
+  }
+  return runner;
 }
 
 const BUILDERS = {
