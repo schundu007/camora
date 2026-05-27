@@ -448,15 +448,15 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
 
   // ── Free-tier check ─────────────────────────────────────────────────────
   const planType = req.user.plan_type || 'free';
-  if (planType === 'free') {
+  if (planType === 'free' && !req.user.is_admin) {
     const quota = await checkFreeTierLimit(req.user.id);
     if (!quota.allowed) {
       return res.status(429).json({ error: quota.message });
     }
   }
 
-  // ── Paid users: soft daily cap to prevent abuse ─────────────────────────
-  if (planType !== 'free' && planType) {
+  // ── Paid users: soft daily cap to prevent abuse. Owners/admins bypass. ──
+  if (planType !== 'free' && planType && !req.user.is_admin) {
     const today = new Date().toISOString().slice(0, 10);
     const PAID_DAILY_LIMIT = 20;
     try {
