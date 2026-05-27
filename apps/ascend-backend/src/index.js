@@ -42,6 +42,7 @@ import referralRouter from './routes/referral.js';
 import goalCountdownRouter from './routes/goalCountdown.js';
 import gamificationRouter from './routes/gamification.js';
 import scoreCardsRouter from './routes/scoreCards.js';
+import problemsRouter from './routes/problems.js';
 import challengeRouter from './routes/challenge.js';
 import libraryRouter from './routes/library.js';
 // Jobs router copied from lumora-backend so the lumorab.cariara.com service
@@ -1335,6 +1336,7 @@ app.use('/api/credits', apiLimiter, creditsRouter);
 app.use('/api/company-preps', apiLimiter, companyPrepsRouter);
 app.use('/api/usage', apiLimiter, usageRouter);
 app.use('/api/v1/usage', apiLimiter, usageRouter);
+app.use('/api/v1/problems', apiLimiter, problemsRouter);
 
 // Jobs proxy — copied from lumora-backend. Returns 503 cleanly if
 // JOBS_DATABASE_URL is unset, so the frontend's /jobs page surfaces a
