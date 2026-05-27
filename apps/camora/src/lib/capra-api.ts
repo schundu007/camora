@@ -140,4 +140,67 @@ export const playgroundAPI = {
     }, token),
 };
 
+// ── LeetCode / DSA Problems ───────────────────────────────────────────────────
+
+export interface LcProblem {
+  id: number;
+  lc_id: number | null;
+  slug: string;
+  title: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  topic_tags: { name: string; slug: string }[];
+  company_tags: string[];
+  company_tags_locked?: boolean;
+  is_premium: boolean;
+  acceptance_rate: number | null;
+  source: 'leetcode' | 'custom';
+}
+
+export interface LcProblemDetail extends LcProblem {
+  content: string | null;
+  examples: { input: string; output: string; explanation?: string }[] | null;
+  constraints: string[] | null;
+  hints: string[] | null;
+  code_snippets: { lang: string; langSlug: string; code: string }[];
+}
+
+export interface ProblemsResponse {
+  problems: LcProblem[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+export interface ProblemsParams {
+  difficulty?: 'Easy' | 'Medium' | 'Hard';
+  tag?: string;
+  company?: string;
+  source?: 'leetcode' | 'custom';
+  q?: string;
+  page?: number;
+  limit?: number;
+}
+
+export async function getProblems(params: ProblemsParams = {}): Promise<ProblemsResponse> {
+  const qs = new URLSearchParams();
+  if (params.difficulty) qs.set('difficulty', params.difficulty);
+  if (params.tag)        qs.set('tag',        params.tag);
+  if (params.company)    qs.set('company',     params.company);
+  if (params.source)     qs.set('source',      params.source);
+  if (params.q)          qs.set('q',           params.q);
+  if (params.page)       qs.set('page',        String(params.page));
+  if (params.limit)      qs.set('limit',       String(params.limit));
+  const query = qs.toString();
+  return fetchCapra<ProblemsResponse>(`/api/v1/problems${query ? `?${query}` : ''}`);
+}
+
+export async function getProblem(slug: string): Promise<LcProblemDetail> {
+  return fetchCapra<LcProblemDetail>(`/api/v1/problems/${slug}`);
+}
+
+export async function getProblemTags(): Promise<{ topic_tags: string[]; company_tags: string[] }> {
+  return fetchCapra<{ topic_tags: string[]; company_tags: string[] }>('/api/v1/problems/tags');
+}
+
 export { CapraAPIError };
