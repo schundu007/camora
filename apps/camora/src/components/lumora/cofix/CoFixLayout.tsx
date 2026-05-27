@@ -787,14 +787,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         <Allotment.Pane minSize={220}>
         <div className="flex flex-col h-full border-r border-[var(--border)]">
           <div className="h-8 flex items-center justify-between px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
-            <span className="text-[10px] font-semibold tracking-wider text-[var(--cam-gold-leaf-dk)] uppercase">Input — Broken Code</span>
+            <span className="text-[10px] font-semibold tracking-wider text-[var(--cam-gold-leaf-dk)] uppercase">Broken Code</span>
             <button
               onClick={handleFix}
               disabled={inputCode.trim().length < 5 || isLoading}
               className="h-6 px-3 rounded text-[10px] font-bold uppercase tracking-[0.1em] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
               style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf)' }}
             >
-              {isLoading ? 'Analyzing…' : <><LogIconBolt color="currentColor" />{' Fix with CoFix'}</>}
+              {isLoading ? 'Analyzing…' : <><LogIconBolt color="currentColor" />{' CoFix'}</>}
             </button>
           </div>
 
@@ -860,23 +860,24 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                 >
                   Copy
                 </button>
-                <button
-                  onClick={() => setAutoFixEnabled(v => !v)}
-                  title={autoFixEnabled ? 'Auto-Fix on — errors trigger automatic re-fix' : 'Auto-Fix off'}
-                  className="text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-lg transition-all hover:opacity-90"
-                  style={{
-                    background: autoFixEnabled ? 'rgba(16,185,129,0.12)' : 'rgba(51,65,85,0.15)',
-                    border: `1px solid ${autoFixEnabled ? 'rgba(16,185,129,0.5)' : 'rgba(100,116,139,0.25)'}`,
-                    color: autoFixEnabled ? '#10b981' : 'var(--text-muted)',
-                  }}
-                >
-                  <LogIconBolt color="currentColor" />{' Auto-Fix'}
-                </button>
                 <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
               </>
             )}
-            <span className={`text-[10px] font-semibold tracking-wider uppercase ${fixedCode ? 'text-[var(--cam-gold-leaf)]' : 'text-[var(--cam-gold-leaf-dk)]'}`}>
-              {fixedCode ? '✓ Fixed Code' : 'Output — Fixed Code'}
+            {/* Auto-Fix status */}
+            {isLoading && (
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf)' }}>
+                <span className="w-2.5 h-2.5 rounded-full border-2 border-t-transparent animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
+                Fixing…
+              </span>
+            )}
+            {!isLoading && fixedCode && (
+              <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: '#10b981' }}>
+                <LogIconCheck /> Fixed
+              </span>
+            )}
+            <div className="flex-1" />
+            <span className="text-[10px] font-semibold tracking-wider uppercase" style={{ color: fixedCode ? 'var(--cam-gold-leaf)' : 'var(--cam-gold-leaf-dk)' }}>
+              Fixed Code
             </span>
           </div>
 
