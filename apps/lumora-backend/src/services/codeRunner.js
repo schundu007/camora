@@ -557,6 +557,33 @@ if (_funcMatch) {
         const _result = _fn(..._parseParams(_input));
         console.log(JSON.stringify(_result));
     }
+} else {
+    try {
+        const _lines = _input.trim().split('\\n').filter(l => l.trim());
+        let _ops, _simArgs;
+        if (_lines.length >= 2) {
+            _ops = JSON.parse(_lines[0]);
+            _simArgs = JSON.parse(_lines[1]);
+        } else if (_lines.length === 1) {
+            const _parsed = JSON.parse(_lines[0]);
+            if (Array.isArray(_parsed) && _parsed.length === 2 && Array.isArray(_parsed[0]) && Array.isArray(_parsed[1])) {
+                _ops = _parsed[0]; _simArgs = _parsed[1];
+            }
+        }
+        if (Array.isArray(_ops) && _ops.every(o => typeof o === 'string') &&
+            Array.isArray(_simArgs) && _simArgs.every(a => Array.isArray(a))) {
+            const _Cls = eval(_ops[0]);
+            if (typeof _Cls === 'function') {
+                let _obj = null;
+                const _results = [];
+                for (let _i = 0; _i < _ops.length; _i++) {
+                    if (_obj === null) { _obj = new _Cls(..._simArgs[_i]); _results.push(null); }
+                    else { const _r = _obj[_ops[_i]](..._simArgs[_i]); _results.push(_r !== undefined ? _r : null); }
+                }
+                console.log(JSON.stringify(_results));
+            }
+        }
+    } catch (_e) {}
 }
 `;
 }
@@ -620,6 +647,39 @@ elsif _methods.any?
   _params = _parse_params(_input)
   _result = send(_methods.last, *_params)
   puts _result.is_a?(Array) || _result.is_a?(Hash) ? _result.to_json : _result.inspect
+else
+  begin
+    _sim_lines = _input.strip.split("\\n").reject { |l| l.strip.empty? }
+    _sim_ops = _sim_args_s = nil
+    if _sim_lines.length >= 2
+      _sim_ops = JSON.parse(_sim_lines[0])
+      _sim_args_s = JSON.parse(_sim_lines[1])
+    elsif _sim_lines.length == 1
+      _sim_parsed = JSON.parse(_sim_lines[0])
+      if _sim_parsed.is_a?(Array) && _sim_parsed.length == 2 && _sim_parsed[0].is_a?(Array) && _sim_parsed[1].is_a?(Array)
+        _sim_ops, _sim_args_s = _sim_parsed
+      end
+    end
+    if _sim_ops.is_a?(Array) && _sim_ops.all? { |o| o.is_a?(String) } &&
+       _sim_args_s.is_a?(Array) && _sim_args_s.all? { |a| a.is_a?(Array) }
+      _sim_cls = Object.const_get(_sim_ops[0]) rescue nil
+      if _sim_cls
+        _sim_obj = nil
+        _sim_results = []
+        _sim_ops.zip(_sim_args_s).each do |_op, _arg|
+          if _sim_obj.nil?
+            _sim_obj = _sim_cls.new(*_arg)
+            _sim_results << nil
+          else
+            _sim_r = _sim_obj.send(_op, *_arg)
+            _sim_results << _sim_r
+          end
+        end
+        puts _sim_results.to_json
+      end
+    end
+  rescue => _sim_e
+  end
 end
 `;
 }
