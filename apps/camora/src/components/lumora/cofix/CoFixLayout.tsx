@@ -146,9 +146,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const [panelHeight, setPanelHeight] = useState(300);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const panelDragRef = useRef<{ startY: number; startH: number } | null>(null);
-  const [changesWidth, setChangesWidth] = useState(200);
-  const changesRef = useRef<HTMLDivElement | null>(null);
-  const changesDragRef = useRef<{ startX: number; startW: number } | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const cofixHoverDisposable = useRef<any>(null);
@@ -329,7 +326,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       onAnswer: (data: CoFixAnswer) => {
         clearTimeout(t3);
         addLog(<LogIconReceive />, `Receiving fixes… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`, 'success');
-        setFixedCode(data.fixed_code);
+        setFixedCode(data.fixed_code.split('\n').filter((l: string) => l.trim() !== '').join('\n'));
         setChanges(data.changes);
         setWalkthrough(data.walkthrough ?? []);
         setComplexity(data.complexity);
@@ -477,7 +474,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       token: token!,
       onAnswer: (data: CoFixAnswer) => {
         addLog(<LogIconWrench />, `Applying fix… (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`);
-        setFixedCode(data.fixed_code);
+        setFixedCode(data.fixed_code.split('\n').filter((l: string) => l.trim() !== '').join('\n'));
         setChanges(data.changes);
         setWalkthrough(data.walkthrough ?? []);
         setComplexity(data.complexity);
@@ -598,25 +595,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     window.addEventListener('mouseup', onUp);
   }, []);
 
-  const handleChangesDragStart = useCallback((e: React.MouseEvent) => {
-    if (!changesRef.current) return;
-    e.preventDefault();
-    const startX = e.clientX;
-    const startW = changesRef.current.offsetWidth;
-    changesDragRef.current = { startX, startW };
-    const onMove = (ev: MouseEvent) => {
-      if (!changesDragRef.current) return;
-      const delta = changesDragRef.current.startX - ev.clientX;
-      setChangesWidth(Math.max(120, Math.min(420, changesDragRef.current.startW + delta)));
-    };
-    const onUp = () => {
-      changesDragRef.current = null;
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-  }, []);
 
   const isErr = runOutput !== null && (runOutput.startsWith('Error:') || runOutput.startsWith('Traceback') || /^error:/i.test(runOutput));
 
@@ -794,7 +772,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
       {/* ── Split pane ── */}
       <div className="flex-1 min-h-0">
-      <Allotment defaultSizes={[50, 50]}>
+      <Allotment defaultSizes={[34, 33, 33]}>
 
         {/* LEFT — broken code input */}
         <Allotment.Pane minSize={220}>
@@ -982,19 +960,12 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
           )}
 
           </div>
-          {changes.length > 0 && (
-            <div ref={changesRef} className="flex-shrink-0 flex flex-row h-full" style={{ width: changesWidth }}>
-              {/* Left drag handle */}
-              <div
-                onMouseDown={handleChangesDragStart}
-                className="w-1.5 shrink-0 cursor-ew-resize h-full"
-                style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.35 }}
-                title="Drag to resize"
-              />
-              <AnnotationPanel changes={changes} walkthrough={walkthrough} width={changesWidth - 6} />
-            </div>
-          )}
         </div>
+        </Allotment.Pane>
+
+        {/* WALK-THROUGH / CHANGES — 3rd pane */}
+        <Allotment.Pane minSize={160}>
+          <AnnotationPanel changes={changes} walkthrough={walkthrough} />
         </Allotment.Pane>
 
       </Allotment>
