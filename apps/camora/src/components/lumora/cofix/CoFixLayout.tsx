@@ -794,7 +794,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               className="h-6 px-3 rounded text-[10px] font-bold uppercase tracking-[0.1em] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
               style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf)' }}
             >
-              {isLoading ? 'Analyzing…' : <><LogIconBolt color="currentColor" />{' CoFix'}</>}
+              {isLoading ? 'Analyzing…' : 'CoFix'}
             </button>
           </div>
 
