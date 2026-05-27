@@ -93,7 +93,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const monaco = useMonaco();
 
   const [inputCode, setInputCode] = useState('');
-  const [hint, setHint] = useState('');
   const [language, setLanguage] = useState('auto');
   const [isLoading, setIsLoading] = useState(false);
   const [fixedCode, setFixedCode] = useState('');
@@ -319,7 +318,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
     const controller = await streamCoFixResponse({
       code: inputCode,
-      hint: hint.trim() || undefined,
+      hint: undefined,
       company: activeAssistant?.company || undefined,
       language: effectiveLang,
       token: token!,
@@ -348,7 +347,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       },
     });
     abortRef.current = controller;
-  }, [inputCode, hint, effectiveLang, token, isLoading, activeAssistant]);
+  }, [inputCode, effectiveLang, token, isLoading, activeAssistant]);
 
   const runCustomTest = useCallback(async (id: string) => {
     const tc = customTests.find(t => t.id === id);
@@ -791,8 +790,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
             <button
               onClick={handleFix}
               disabled={inputCode.trim().length < 5 || isLoading}
-              className="h-6 px-3 rounded text-[10px] font-bold uppercase tracking-[0.1em] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
-              style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf)' }}
+              className="h-6 px-3 rounded text-[10px] font-bold uppercase tracking-[0.1em] disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }}
             >
               {isLoading ? 'Analyzing…' : 'CoFix'}
             </button>
@@ -814,16 +813,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               showLineNumbers
               fontSize={11}
               onMount={handleLeftEditorMount}
-            />
-          </div>
-
-          <div className="border-t border-[var(--border)] px-3 pt-2 pb-1 bg-[var(--bg-secondary)]">
-            <textarea
-              value={hint}
-              onChange={e => setHint(e.target.value)}
-              placeholder="Optional: describe what's wrong or what you expect"
-              rows={2}
-              className="w-full resize-none bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#0047AB]"
             />
           </div>
 
