@@ -1,0 +1,39 @@
+{
+  "title": "WhatsApp — Message Ordering",
+  "subtitle": "Strict total ordering per conversation",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "sender",
+          "label": "Multiple Senders",
+          "kind": "actor"
+        },
+        {
+          "id": "redis",
+          "label": "Redis Atomic INCR\nseq:{conversationId}",
+          "kind": "cache"
+        },
+        {
+          "id": "db",
+          "label": "Cassandra\nSorted by sequenceNum",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Why sequenceNum?",
+      "body": "Client clocks are unreliable.\nServer-assigned numbers ensure\nevery participant sees the same order."
+    },
+    {
+      "kind": "code",
+      "title": "Data Model",
+      "body": "Partition: conversationId\nClustering: sequenceNum DESC\n\nOptimized for 'Get latest 50'."
+    }
+  ]
+}

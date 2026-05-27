@@ -1,0 +1,77 @@
+{
+  "title": "WhatsApp — Online Message Flow",
+  "subtitle": "End-to-end delivery when both users are online",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "sender",
+          "label": "Sender\nEncrypt & Send",
+          "kind": "actor"
+        },
+        {
+          "id": "gate1",
+          "label": "Gateway 1\nAssign seqNum",
+          "kind": "gateway"
+        },
+        {
+          "id": "kafka",
+          "label": "Kafka\nRoute by recipientId",
+          "kind": "queue"
+        },
+        {
+          "id": "gate2",
+          "label": "Gateway 2\nFind recipient connection",
+          "kind": "gateway"
+        },
+        {
+          "id": "recipient",
+          "label": "Recipient\nDecrypt & ACK",
+          "kind": "actor"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "gate1",
+      "nodes": [
+        {
+          "id": "db",
+          "label": "Cassandra\nMessage Store",
+          "kind": "datastore"
+        },
+        {
+          "id": "redis",
+          "label": "Redis\nPresence lookup",
+          "kind": "cache"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "gate1",
+      "to": "sender",
+      "label": "SENT ACK ✓"
+    },
+    {
+      "from": "recipient",
+      "to": "gate2",
+      "label": "DELIVERED ACK ✓✓"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "The Tick State Machine",
+      "body": "1. Client → Server: ✓ (Sent)\n2. Server → Recipient: ✓✓ (Delivered)\n3. Recipient reads: ✓✓ (Read/Blue)"
+    },
+    {
+      "kind": "note",
+      "title": "Idempotency",
+      "body": "Client generates a UUID messageId.\nServer uses this to prevent duplicates\non network retries."
+    }
+  ]
+}

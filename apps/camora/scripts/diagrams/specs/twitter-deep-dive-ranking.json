@@ -1,0 +1,58 @@
+{
+  "title": "Twitter — Timeline Ranking ML Pipeline",
+  "subtitle": "Candidate generation and real-time scoring",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "sources",
+          "label": "Candidate Sources\nFollow graph, ICYMI,\nRecommended topics",
+          "kind": "datastore"
+        },
+        {
+          "id": "features",
+          "label": "Feature Service\nExtract engagement,\nrecency, and social signals",
+          "kind": "service"
+        },
+        {
+          "id": "model",
+          "label": "Scoring Model\nPredict probability of\nlike/retweet/reply",
+          "kind": "worker"
+        },
+        {
+          "id": "ranker",
+          "label": "Ranker & Filter\nDiversity, anti-spam,\nand pagination",
+          "kind": "service"
+        },
+        {
+          "id": "timeline",
+          "label": "Final Timeline\nHome Feed",
+          "kind": "actor"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "tradeoff",
+      "title": "Model Serving Latency",
+      "pros": [
+        "Personalized relevance",
+        "Higher user engagement",
+        "Better discovery"
+      ],
+      "cons": [
+        "Feature extraction overhead (50ms+)",
+        "Model inference latency (30ms+)",
+        "Heavy infrastructure cost"
+      ]
+    },
+    {
+      "kind": "note",
+      "title": "Feature Types",
+      "body": "- Author: Verification, follower count, history\n- Tweet: Media type, age, global engagement\n- User: Interested topics, active hours\n- Social: Follows who liked/retweeted"
+    }
+  ]
+}

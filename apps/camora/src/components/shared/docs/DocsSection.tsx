@@ -1,7 +1,10 @@
 import { ReactNode } from 'react';
 
-const NAVY = '#26619C';
-const GOLD = '#C9A227';
+const ACCENT = 'var(--accent)';
+const ACCENT_TEXT = 'var(--accent-text)';
+const EMERALD = '#10B981';
+const HEX_SM = 8;
+const HEX_LG = 12;
 
 export interface DocsSectionProps {
   /** Element id used for OnThisPage anchor links. */
@@ -17,10 +20,6 @@ export interface DocsSectionProps {
   children: ReactNode;
 }
 
-/**
- * LC-inspired page section: hexagon glyph + extrabold heading, gradient hairline
- * underneath, optional intro paragraph. Provides the anchor target for OnThisPage.
- */
 export default function DocsSection({
   id,
   title,
@@ -39,15 +38,15 @@ export default function DocsSection({
           <span
             className="block flex-shrink-0"
             style={{
-              width: 8,
-              height: 8,
-              background: GOLD,
+              width: HEX_SM,
+              height: HEX_SM,
+              background: EMERALD,
               clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
             }}
           />
           <div
             className="text-[10px] font-extrabold uppercase tracking-[0.16em]"
-            style={{ color: GOLD }}
+            style={{ color: EMERALD }}
           >
             {eyebrow}
           </div>
@@ -59,15 +58,15 @@ export default function DocsSection({
             <span
               className="block flex-shrink-0"
               style={{
-                width: 12,
-                height: 12,
-                background: NAVY,
+                width: HEX_LG,
+                height: HEX_LG,
+                background: EMERALD,
                 clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
               }}
             />
             <Heading
               className="text-[26px] font-extrabold leading-tight tracking-tight"
-              style={{ color: NAVY }}
+              style={{ color: ACCENT_TEXT }}
             >
               {title}
             </Heading>
@@ -75,14 +74,14 @@ export default function DocsSection({
           <div
             className="h-px mt-3"
             style={{
-              background: `linear-gradient(90deg, ${NAVY}50 0%, ${GOLD}30 50%, transparent 100%)`,
+              background: `linear-gradient(90deg, color-mix(in srgb, ${ACCENT} 50%, transparent) 0%, transparent 100%)`,
             }}
           />
         </div>
       ) : (
         <Heading
           className="text-[19px] font-bold leading-snug mb-3 scroll-mt-20"
-          style={{ color: NAVY }}
+          style={{ color: ACCENT_TEXT }}
         >
           {title}
         </Heading>

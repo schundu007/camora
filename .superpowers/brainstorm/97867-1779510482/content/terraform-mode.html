@@ -1,0 +1,38 @@
+<h2>What does "Terraform" mean in the playground?</h2>
+<p class="subtitle">Same question as Docker — what level of execution do you need?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Validate only — <code>terraform validate</code></h3>
+      <p>You type HCL (<code>.tf</code> content) in the left pane. Hit Run → runs <code>terraform init -backend=false</code> + <code>terraform validate</code>. Catches syntax errors and invalid references. No provider credentials needed.</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pro</h4><ul><li>Fast (&lt;3s), no cloud creds</li><li>Safe to run on server</li></ul></div>
+        <div class="cons"><h4>Con</h4><ul><li>Won't catch provider-level errors</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Plan with null provider</h3>
+      <p>Write HCL using the <code>null</code> or <code>random</code> provider (no real cloud). Hit Run → <code>terraform plan</code> output shows the full resource graph. Lets you practice plan reading.</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pro</h4><ul><li>Real plan output</li><li>No cloud credentials needed</li></ul></div>
+        <div class="cons"><h4>Con</h4><ul><li>Slower (provider download on first run)</li><li>Scoped to null/random providers only</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Lint only — <code>tflint</code></h3>
+      <p>Static analysis with <code>tflint</code>: catches deprecated syntax, missing required vars, best-practice violations. Similar to hadolint for Dockerfile — no Terraform binary needed.</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pro</h4><ul><li>Instant, zero infra cost</li><li>Good style feedback</li></ul></div>
+        <div class="cons"><h4>Con</h4><ul><li>Doesn't validate logic, only style/syntax</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

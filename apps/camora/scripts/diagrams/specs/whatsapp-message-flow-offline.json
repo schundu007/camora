@@ -1,0 +1,56 @@
+{
+  "title": "WhatsApp — Offline Message Flow",
+  "subtitle": "Store-and-forward pattern for disconnected users",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "sender",
+          "label": "Sender\nSend Message",
+          "kind": "actor"
+        },
+        {
+          "id": "gate",
+          "label": "Gateway\nLookup Recipient",
+          "kind": "gateway"
+        },
+        {
+          "id": "offline-queue",
+          "label": "Offline Queue\nCassandra TTL: 30d",
+          "kind": "datastore"
+        },
+        {
+          "id": "push",
+          "label": "Push Service\nFCM / APNs",
+          "kind": "worker"
+        },
+        {
+          "id": "reconnect",
+          "label": "Recipient\nReconnects",
+          "kind": "actor"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "reconnect",
+      "to": "offline-queue",
+      "label": "Flush Queue"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "issue",
+      "title": "Push Privacy",
+      "body": "Push notifications contain generic\n\"New Message\" alert. Content is only\ndelivered via WebSocket after reconnection\nto preserve E2E encryption."
+    },
+    {
+      "kind": "note",
+      "title": "Order Guaranteed",
+      "body": "Offline queue is sorted by sequenceNum.\nMessages are delivered in exact order\nto prevent context confusion."
+    }
+  ]
+}

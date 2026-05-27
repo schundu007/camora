@@ -1,0 +1,42 @@
+{
+  "title": "URL Shortener — Capacity Estimation",
+  "subtitle": "Traffic, Storage, and Memory Analysis",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "traffic",
+          "label": "200 Write QPS\n20K Read QPS",
+          "kind": "gateway",
+          "sub": "100:1 Read:Write"
+        },
+        {
+          "id": "storage",
+          "label": "15 TB Storage\n(5 Years)",
+          "kind": "datastore",
+          "sub": "30B total URLs"
+        },
+        {
+          "id": "cache",
+          "label": "170 GB Cache\nRedis Cluster",
+          "kind": "cache",
+          "sub": "20% Daily URLs"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Traffic Math",
+      "body": "Daily New URLs: 500M / 30 ≈ 16.7M\nWrite QPS: 16.7M / 86400 ≈ 200/s\n\nRead Ratio: 100x\nRead QPS: 200 * 100 = 20,000/s"
+    },
+    {
+      "kind": "code",
+      "title": "Storage Math",
+      "body": "Avg Record Size: 500 bytes\n5-Year URLs: 30 Billion\nTotal Storage: 30B * 500B = 15 TB\n\nBandwidth:\nIngress: 200 * 500B = 100 KB/s\nEgress: 20K * 500B = 10 MB/s"
+    }
+  ]
+}

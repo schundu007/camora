@@ -1,0 +1,55 @@
+{
+  "title": "Twitter — Problem Definition",
+  "subtitle": "Scope and core requirements for a global social network",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "users",
+          "label": "500M MAU\n200M DAU",
+          "kind": "actor",
+          "sub": "Scale"
+        },
+        {
+          "id": "core",
+          "label": "Core Actions\nPost, Read, Follow",
+          "kind": "service",
+          "sub": "In-Scope"
+        },
+        {
+          "id": "perf",
+          "label": "Performance\n<200ms Feed Load",
+          "kind": "gateway",
+          "sub": "Latency"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "In-Scope Features",
+      "body": "- Users can post tweets (280 chars max)\n- Users can follow/unfollow others\n- Users can view a home timeline of followed users\n- Search tweets by hashtag or keyword\n- Trending topics (real-time spikes)"
+    },
+    {
+      "kind": "issue",
+      "title": "Out-of-Scope",
+      "body": "- Direct Messaging (DM) system\n- Ad serving and auction platform\n- User mentions and notifications (simplified)\n- List management and circles"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Non-Functional Requirements",
+      "pros": [
+        "High availability (99.99%)",
+        "Low read latency (< 200ms)",
+        "Near-real-time consistency (seconds)"
+      ],
+      "cons": [
+        "Eventual consistency on fan-out",
+        "Write availability over strict consistency"
+      ]
+    }
+  ]
+}

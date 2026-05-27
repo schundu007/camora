@@ -1,0 +1,42 @@
+{
+  "title": "Uber — Capacity Estimation",
+  "subtitle": "GPS Stream, Matching, and WebSocket Analysis",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "gps",
+          "label": "GPS Ingress\n3.3M avg updates/s\n10M peak updates/s",
+          "kind": "gateway",
+          "sub": "Location stream"
+        },
+        {
+          "id": "match",
+          "label": "Match Requests\n500 avg /s\n2,500 peak /s",
+          "kind": "worker",
+          "sub": "Demand"
+        },
+        {
+          "id": "storage",
+          "label": "Data Storage\n2.8 TB / day",
+          "kind": "datastore",
+          "sub": "Location events"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Location Math",
+      "body": "10M Active Drivers\nUpdate every 3 seconds\n10M / 3 = 3.3M avg writes/s\n\nPeak Hours (3x):\n3.3M * 3 = 10M writes/s"
+    },
+    {
+      "kind": "code",
+      "title": "Connections & Storage",
+      "body": "WebSockets: ~20M concurrent\n(10M drivers + 10M active riders)\n\nRide Metadata: 42 GB/day\nGPS Metadata: 2.8 TB/day\n(Compressed in S3/Parquet)"
+    }
+  ]
+}

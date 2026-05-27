@@ -1,0 +1,55 @@
+{
+  "title": "Uber — Problem Definition",
+  "subtitle": "Real-time matching and geospatial scale challenges",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "users",
+          "label": "202M MAU\n42M Trips/day",
+          "kind": "actor",
+          "sub": "Scale"
+        },
+        {
+          "id": "core",
+          "label": "Core Actions\nMatch, Track, Pay",
+          "kind": "service",
+          "sub": "In-Scope"
+        },
+        {
+          "id": "perf",
+          "label": "Performance\n<30s Match Time",
+          "kind": "gateway",
+          "sub": "Latency"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Functional Requirements",
+      "body": "- Request ride (pickup/dropoff)\n- Real-time driver matching\n- GPS tracking during ride\n- Fare estimation & payments\n- Ratings & ride history\n- Surge pricing (dynamic demand)"
+    },
+    {
+      "kind": "issue",
+      "title": "Out-of-Scope",
+      "body": "- Uber Eats / Delivery logistics\n- Autonomous vehicle software\n- Driver onboarding & payroll\n- Freight & shipping services"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Technical Challenges",
+      "pros": [
+        "10M+ GPS updates/sec (peak)",
+        "Low-latency spatial indexing",
+        "Accurate ETA (Traffic aware)"
+      ],
+      "cons": [
+        "Cell boundary matching",
+        "High-concurrency WebSockets"
+      ]
+    }
+  ]
+}

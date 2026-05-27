@@ -1,0 +1,44 @@
+{
+  "title": "URL Shortener — Basic Implementation",
+  "subtitle": "Simple but non-scalable approach",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "user",
+          "label": "User",
+          "kind": "actor"
+        },
+        {
+          "id": "lb",
+          "label": "Load Balancer",
+          "kind": "gateway"
+        },
+        {
+          "id": "web",
+          "label": "Web Server",
+          "kind": "service"
+        },
+        {
+          "id": "cache",
+          "label": "Redis Counter\nSingle Node",
+          "kind": "cache"
+        },
+        {
+          "id": "db",
+          "label": "MySQL\nSingle Node",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "issue",
+      "title": "Flaws at Scale",
+      "body": "- Single point of failure (Cache & DB)\n- Counter bottleneck: every write hits Redis\n- Scalability: No Nosql or sharding\n- Collision risk: if Redis fails/resets without persistence, counter resets → Duplicate codes"
+    }
+  ]
+}

@@ -332,41 +332,41 @@ const GenericField = ({ label, val }: { label: string; val: any }) => {
 // visual language comes through regardless of the active app theme.
 // ─────────────────────────────────────────────────────────────────────────
 
-/** Camora palette — navy-gold two-role system.
- *  Navy (#26619C) = structural/informational. Gold (#C9A227) = caution/highlight.
+/** Camora palette — emerald primary with amber caution.
+ *  Emerald (#10B981) = structural/informational. Amber (#F59E0B) = caution/highlight.
  *  No rainbow. Section type is communicated by label, not hue. */
 const LC = {
   // Difficulty pills — semantic meaning, kept intentional
   easy:   { fg: '#34D399', bg: 'rgba(52,211,153,0.08)',  border: 'rgba(52,211,153,0.22)' },
-  medium: { fg: '#C9A227', bg: 'rgba(201,162,39,0.10)',  border: 'rgba(201,162,39,0.30)' },
+  medium: { fg: '#F59E0B', bg: 'rgba(245,158,11,0.10)',  border: 'rgba(245,158,11,0.30)' },
   hard:   { fg: '#EF4444', bg: 'rgba(239,68,68,0.08)',   border: 'rgba(239,68,68,0.22)' },
 
   // Brand tokens
-  navy:        '#26619C',
-  gold:        '#C9A227',
+  navy:        '#10B981',
+  gold:        '#F59E0B',
 
-  // All section accents → navy (informational) or gold (caution/watch-out)
-  problem:      '#26619C',
-  examples:     '#26619C',
-  approach:     '#26619C',
-  edge:         '#C9A227',  // watch-out → gold
-  mistake:      '#C9A227',  // watch-out → gold
-  followup:     '#26619C',
-  requirements: '#26619C',
-  capacity:     '#26619C',
-  architecture: '#26619C',
-  database:     '#26619C',
-  api:          '#26619C',
-  tradeoffs:    '#C9A227',  // trade-off emphasis → gold
-  scalability:  '#26619C',
-  clarify:      '#26619C',
+  // All section accents → emerald (informational) or amber (caution/watch-out)
+  problem:      '#10B981',
+  examples:     '#10B981',
+  approach:     '#10B981',
+  edge:         '#F59E0B',  // watch-out → amber
+  mistake:      '#F59E0B',  // watch-out → amber
+  followup:     '#10B981',
+  requirements: '#10B981',
+  capacity:     '#10B981',
+  architecture: '#10B981',
+  database:     '#10B981',
+  api:          '#10B981',
+  tradeoffs:    '#F59E0B',  // trade-off emphasis → amber
+  scalability:  '#10B981',
+  clarify:      '#10B981',
 
-  // STAR — action (the doing) → gold, rest → navy
+  // STAR — action (the doing) → amber, rest → emerald
   star: {
-    situation: '#26619C',
-    task:      '#26619C',
-    action:    '#C9A227',
-    result:    '#26619C',
+    situation: '#10B981',
+    task:      '#10B981',
+    action:    '#F59E0B',
+    result:    '#10B981',
   },
 
   // Code editor — VSCode dark, universally readable
@@ -376,15 +376,14 @@ const LC = {
   codeMuted: '#9CA3AF',
 
   paper:       'var(--bg-surface)',
-  paperBorder: 'rgba(38,97,156,0.22)',
-  pageRule:    'rgba(38,97,156,0.22)',
+  paperBorder: 'rgba(16,185,129,0.22)',
+  pageRule:    'rgba(16,185,129,0.22)',
 };
 
-/** Navy-gold card surface. Gold accent for caution sections (edge/mistake/tradeoff),
- *  navy for everything else. Both are subtle — hierarchy comes from labels, not color. */
+/** Card surface with accent tint. Emerald for informational, amber for caution sections. */
 const paperCard = (accent: string) => {
-  const isGold = accent === LC.gold;
-  const rgb = isGold ? '201,162,39' : '38,97,156';
+  const isAmber = accent === LC.gold;
+  const rgb = isAmber ? '245,158,11' : '16,185,129';
   return {
     background: `linear-gradient(180deg, rgba(${rgb},0.07) 0%, rgba(${rgb},0.03) 100%), var(--bg-surface)`,
     border: `1px solid rgba(${rgb},0.22)`,

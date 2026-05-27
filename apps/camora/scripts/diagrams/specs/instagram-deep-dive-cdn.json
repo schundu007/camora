@@ -1,0 +1,46 @@
+{
+  "title": "Instagram — CDN Hierarchy",
+  "subtitle": "Edge, Origin Shield, and Origin tiers",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "edge",
+          "label": "Edge PoPs\n95% hit rate",
+          "kind": "gateway"
+        },
+        {
+          "id": "shield",
+          "label": "Origin Shield\nCollapse requests",
+          "kind": "cache"
+        },
+        {
+          "id": "origin",
+          "label": "S3 Origin\n1% of traffic",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Cache Key Design",
+      "body": "/{postId}/{width}_{height}.{format}\n\nPredictable keys enable warming\nwithout DB lookups."
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Format Negotiate",
+      "pros": [
+        "WebP saves 30% bandwidth",
+        "Progressive JPEG: fast rendering"
+      ],
+      "cons": [
+        "Cache fragmentation",
+        "Origin storage 3x increase"
+      ]
+    }
+  ]
+}

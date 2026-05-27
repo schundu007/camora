@@ -1,0 +1,81 @@
+{
+  "title": "Twitter — Search Architecture",
+  "subtitle": "Near-real-time indexing with Elasticsearch",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "user",
+          "label": "User\nSearch Query",
+          "kind": "actor"
+        },
+        {
+          "id": "search-svc",
+          "label": "Search Service\nQuery Parsing\nRanking & Personalization",
+          "kind": "service"
+        },
+        {
+          "id": "es-cluster",
+          "label": "Elasticsearch Cluster\nLucene Segments\nSharded indices",
+          "kind": "datastore"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "es-cluster",
+      "cluster": "Indexing Pipeline",
+      "nodes": [
+        {
+          "id": "kafka",
+          "label": "Kafka\ntweets-index-stream",
+          "kind": "queue"
+        },
+        {
+          "id": "indexer",
+          "label": "Search Indexer\nAsynchronous workers",
+          "kind": "worker"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "search-svc",
+      "to": "es-cluster",
+      "label": "Scatter-Gather"
+    },
+    {
+      "from": "kafka",
+      "to": "indexer"
+    },
+    {
+      "from": "indexer",
+      "to": "es-cluster",
+      "label": "Write segments"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Search Query expansion",
+      "body": "from:elonmusk #tesla\n→ Filter: author_id = 123\n→ Must: text contains 'tesla'\n→ Sort: recency + engagement"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Real-time vs Batch Indexing",
+      "pros": [
+        "Near-real-time searchability (< 10s)",
+        "Elasticsearch scales horizontally",
+        "Decoupled from write path via Kafka"
+      ],
+      "cons": [
+        "Massive write amplification",
+        "Segment merging causes latency spikes",
+        "Archive indexing requires 100+ TB RAM"
+      ]
+    }
+  ]
+}

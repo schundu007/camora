@@ -1,0 +1,127 @@
+<h2>Playground UI — Camora Design System</h2>
+<p class="subtitle">Charcoal dark · Navy #0047AB accents · Emerald #10b981 Run · IBM Plex Mono</p>
+
+<div class="mockup" style="margin-top:16px;border:1px solid #1e293b">
+  <div class="mockup-header" style="background:#0047AB;color:#fff;font-family:'Plus Jakarta Sans',sans-serif">Lumora — Playground</div>
+  <div class="mockup-body" style="padding:0;background:#111318;font-family:'IBM Plex Mono',monospace">
+
+    <!-- Lumora shell top nav -->
+    <div style="display:flex;gap:0;border-bottom:1px solid #1e293b;background:#0d1117;padding:0 16px">
+      <div style="padding:8px 14px;color:#475569;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif">Interview</div>
+      <div style="padding:8px 14px;color:#475569;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif">Coding</div>
+      <div style="padding:8px 14px;color:#475569;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif">Design</div>
+      <div style="padding:8px 14px;color:#475569;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif">CoFix</div>
+      <div style="padding:8px 14px;color:#fff;border-bottom:2px solid #0047AB;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700">Playground</div>
+    </div>
+
+    <!-- Language tab bar -->
+    <div style="display:flex;gap:0;background:#0d1117;border-bottom:1px solid #1e293b;padding:0 16px">
+      <div style="padding:7px 16px;background:#0047AB;color:#fff;font-size:11px;border-radius:6px 6px 0 0;margin-top:5px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif">Python3</div>
+      <div style="padding:7px 16px;color:#475569;font-size:11px;margin-top:5px;font-family:'Plus Jakarta Sans',sans-serif">Bash</div>
+      <div style="padding:7px 16px;color:#475569;font-size:11px;margin-top:5px;font-family:'Plus Jakarta Sans',sans-serif">Docker</div>
+      <div style="padding:7px 16px;color:#475569;font-size:11px;margin-top:5px;font-family:'Plus Jakarta Sans',sans-serif">Terraform</div>
+    </div>
+
+    <!-- Toolbar -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 16px;background:#0d1117;border-bottom:1px solid #1e293b">
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="color:#334155;font-size:10px;font-family:'Plus Jakarta Sans',sans-serif;text-transform:uppercase;letter-spacing:1px">main.py</span>
+        <!-- Badges -->
+        <span style="background:#0f2537;color:#38bdf8;border:1px solid #1e3a5f;border-radius:999px;padding:1px 8px;font-size:9px;font-family:'Plus Jakarta Sans',sans-serif">Profile</span>
+        <span style="background:#0f2537;color:#38bdf8;border:1px solid #1e3a5f;border-radius:999px;padding:1px 8px;font-size:9px;font-family:'Plus Jakarta Sans',sans-serif">Memory</span>
+        <span style="background:#0f2537;color:#38bdf8;border:1px solid #1e3a5f;border-radius:999px;padding:1px 8px;font-size:9px;font-family:'Plus Jakarta Sans',sans-serif">Benchmark</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="color:#334155;font-size:10px;font-family:'Plus Jakarta Sans',sans-serif">⌘↵ Run · ⌘L Clear · ⌘D Format</span>
+        <button style="background:transparent;color:#475569;border:1px solid #1e293b;padding:4px 12px;border-radius:6px;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif">Format</button>
+        <button style="background:transparent;color:#475569;border:1px solid #1e293b;padding:4px 12px;border-radius:6px;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif">Snippets</button>
+        <button style="background:#10b981;color:#fff;border:none;padding:4px 16px;border-radius:6px;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700">▶ Run</button>
+      </div>
+    </div>
+
+    <!-- Split pane -->
+    <div style="display:flex;height:140px">
+      <!-- Editor (left) -->
+      <div style="flex:1;border-right:1px solid #1e293b;padding:12px;overflow:hidden">
+        <div style="font-size:11px;line-height:1.8;color:#94a3b8">
+          <span style="color:#7c3aed">def</span> <span style="color:#10b981">fibonacci</span><span style="color:#e2e8f0">(n: int) -> int:</span><br>
+          &nbsp;&nbsp;<span style="color:#7c3aed">if</span> n <span style="color:#f59e0b">&lt;=</span> <span style="color:#fb923c">1</span><span style="color:#e2e8f0">: return n</span><br>
+          &nbsp;&nbsp;<span style="color:#7c3aed">return</span> fibonacci(n<span style="color:#f59e0b">-</span><span style="color:#fb923c">1</span>) <span style="color:#f59e0b">+</span> fibonacci(n<span style="color:#f59e0b">-</span><span style="color:#fb923c">2</span>)<br><br>
+          <span style="color:#e2e8f0">result</span> <span style="color:#f59e0b">=</span> [fibonacci(i) <span style="color:#7c3aed">for</span> i <span style="color:#7c3aed">in</span> <span style="color:#10b981">range</span>(<span style="color:#fb923c">8</span>)]<br>
+          <span style="color:#10b981">print</span>(result)
+        </div>
+      </div>
+
+      <!-- Output (right) -->
+      <div style="flex:1;padding:12px;background:#0a0d12;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="color:#334155;font-size:9px;font-family:'Plus Jakarta Sans',sans-serif;text-transform:uppercase;letter-spacing:1px">stdout</span>
+          <span style="color:#10b981;font-size:9px;font-family:'Plus Jakarta Sans',sans-serif">exit 0 · 0.31s</span>
+        </div>
+        <div style="color:#10b981;font-size:11px">[0, 1, 1, 2, 3, 5, 8, 13]</div>
+        <!-- Complexity badge -->
+        <div style="margin-top:4px;display:flex;gap:6px;align-items:center">
+          <span style="background:#14532d;color:#4ade80;border-radius:4px;padding:2px 6px;font-size:9px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700">A · complexity 2</span>
+          <span style="color:#334155;font-size:9px;font-family:'Plus Jakarta Sans',sans-serif">6 LOC · peak 1.2 KB</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variable Inspector strip -->
+    <div style="border-top:1px solid #1e293b;padding:8px 16px;background:#0d1117;display:flex;gap:16px;align-items:center">
+      <span style="color:#334155;font-size:9px;font-family:'Plus Jakarta Sans',sans-serif;text-transform:uppercase;letter-spacing:1px">Variables</span>
+      <span style="background:#0f1a2e;border:1px solid #1e293b;border-radius:4px;padding:2px 8px;font-size:10px;color:#94a3b8"><span style="color:#0047AB">n</span> · int · 7</span>
+      <span style="background:#0f1a2e;border:1px solid #1e293b;border-radius:4px;padding:2px 8px;font-size:10px;color:#94a3b8"><span style="color:#0047AB">result</span> · list · [0,1,1,2,3,5,8,13]</span>
+    </div>
+
+    <!-- Test panel (collapsed) -->
+    <div style="border-top:1px solid #1e293b;padding:6px 16px;background:#0d1117;display:flex;align-items:center;gap:8px;cursor:pointer">
+      <span style="color:#334155;font-size:9px;font-family:'Plus Jakarta Sans',sans-serif;text-transform:uppercase;letter-spacing:1px">Tests ▸</span>
+      <span style="background:#14532d;color:#4ade80;border-radius:999px;padding:1px 8px;font-size:9px;font-family:'Plus Jakarta Sans',sans-serif">3/3 passed</span>
+      <span style="color:#334155;font-size:9px;font-family:'Plus Jakarta Sans',sans-serif">pytest · 0.08s</span>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:20px">
+  <h3>Complete feature set per decision</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+    <div style="background:#0d1117;border:1px solid #1e293b;border-radius:6px;padding:12px">
+      <div style="color:#0047AB;font-size:10px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Tier 1 · Foundation</div>
+      <ul style="color:#64748b;font-size:11px;line-height:2;margin:0;padding-left:14px">
+        <li>Ruff lint as-you-type (500ms debounce)</li>
+        <li>Error decoder (50+ traceback patterns)</li>
+        <li>Auto-format via Black</li>
+        <li>Keyboard shortcuts footer</li>
+      </ul>
+    </div>
+    <div style="background:#0d1117;border:1px solid #1e293b;border-radius:6px;padding:12px">
+      <div style="color:#10b981;font-size:10px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Tier 2 · Insight</div>
+      <ul style="color:#64748b;font-size:11px;line-height:2;margin:0;padding-left:14px">
+        <li>Variable Inspector strip</li>
+        <li>cProfile toggle (top-10 functions)</li>
+        <li>tracemalloc Memory toggle</li>
+        <li>Run History drawer (last 20)</li>
+      </ul>
+    </div>
+    <div style="background:#0d1117;border:1px solid #1e293b;border-radius:6px;padding:12px">
+      <div style="color:#a78bfa;font-size:10px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Tier 3 · TDD</div>
+      <ul style="color:#64748b;font-size:11px;line-height:2;margin:0;padding-left:14px">
+        <li>Collapsible Test panel (pytest -v)</li>
+        <li>McCabe complexity badge (radon)</li>
+        <li>Snippets library (60+ patterns)</li>
+      </ul>
+    </div>
+    <div style="background:#0d1117;border:1px solid #1e293b;border-radius:6px;padding:12px">
+      <div style="color:#f59e0b;font-size:10px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Tier 4 · Pro</div>
+      <ul style="color:#64748b;font-size:11px;line-height:2;margin:0;padding-left:14px">
+        <li>Big-O Visualiser (5× input sizes)</li>
+        <li>Share snippet (short URL)</li>
+        <li>REPL mode (persistent process)</li>
+        <li>Diff view (compare any 2 runs)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">All tiers included? Or drop any?</p>

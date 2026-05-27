@@ -1,0 +1,74 @@
+<h2>Playground UI Design</h2>
+<p class="subtitle">New route: <code>/lumora/playground</code> · Tab bar + split pane</p>
+
+<div class="mockup" style="margin-top:16px">
+  <div class="mockup-header">Lumora Shell — Playground tab active</div>
+  <div class="mockup-body" style="padding:0;font-family:monospace">
+
+    <!-- Lumora top nav -->
+    <div style="display:flex;gap:0;border-bottom:1px solid #1e3a5f;background:#0a1628;padding:0 12px">
+      <div style="padding:8px 14px;color:#64748b;font-size:11px;font-family:sans-serif">Interview</div>
+      <div style="padding:8px 14px;color:#64748b;font-size:11px;font-family:sans-serif">Coding</div>
+      <div style="padding:8px 14px;color:#64748b;font-size:11px;font-family:sans-serif">Design</div>
+      <div style="padding:8px 14px;color:#64748b;font-size:11px;font-family:sans-serif">CoFix</div>
+      <div style="padding:8px 14px;color:#60a5fa;border-bottom:2px solid #3b82f6;font-size:11px;font-family:sans-serif;font-weight:600">Playground</div>
+    </div>
+
+    <!-- Language tab bar -->
+    <div style="display:flex;gap:0;background:#0f172a;border-bottom:1px solid #1e3a5f;padding:0 12px">
+      <div style="padding:6px 14px;background:#1e3a5f;color:#60a5fa;font-size:11px;border-radius:4px 4px 0 0;margin-top:4px;font-weight:600">🐍 Python3</div>
+      <div style="padding:6px 14px;color:#475569;font-size:11px;margin-top:4px">$ Bash</div>
+      <div style="padding:6px 14px;color:#475569;font-size:11px;margin-top:4px">🐳 Docker</div>
+      <div style="padding:6px 14px;color:#475569;font-size:11px;margin-top:4px">◈ Terraform</div>
+    </div>
+
+    <!-- Toolbar -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#0f172a;border-bottom:1px solid #1e3a5f">
+      <span style="color:#475569;font-size:10px;font-family:sans-serif">main.py</span>
+      <div style="display:flex;gap:8px">
+        <button style="background:transparent;color:#475569;border:1px solid #334155;padding:3px 10px;border-radius:4px;font-size:11px;font-family:sans-serif">Clear</button>
+        <button style="background:#1d4ed8;color:#fff;border:none;padding:4px 14px;border-radius:4px;font-size:11px;font-family:sans-serif;font-weight:600">▶ Run</button>
+      </div>
+    </div>
+
+    <!-- Split pane -->
+    <div style="display:flex;height:160px">
+      <!-- Editor -->
+      <div style="flex:1;border-right:1px solid #1e3a5f;padding:10px;overflow:hidden">
+        <div style="color:#94a3b8;font-size:11px;line-height:1.7">
+          <span style="color:#60a5fa">def</span> <span style="color:#34d399">fibonacci</span><span style="color:#e2e8f0">(n):</span><br>
+          &nbsp;&nbsp;<span style="color:#60a5fa">if</span> n <span style="color:#f59e0b">&lt;=</span> <span style="color:#fb923c">1</span><span style="color:#e2e8f0">:</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#60a5fa">return</span> n<br>
+          &nbsp;&nbsp;<span style="color:#60a5fa">return</span> fibonacci(n<span style="color:#f59e0b">-</span><span style="color:#fb923c">1</span>) <span style="color:#f59e0b">+</span> fibonacci(n<span style="color:#f59e0b">-</span><span style="color:#fb923c">2</span>)<br><br>
+          <span style="color:#60a5fa">print</span>([fibonacci(i) <span style="color:#60a5fa">for</span> i <span style="color:#60a5fa">in</span> <span style="color:#60a5fa">range</span>(<span style="color:#fb923c">8</span>)])
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div style="flex:1;padding:10px;background:#020617">
+        <div style="color:#475569;font-size:9px;font-family:sans-serif;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Output · 0.3s</div>
+        <div style="color:#22c55e;font-size:11px">[0, 1, 1, 2, 3, 5, 8, 13]</div>
+        <div style="color:#475569;font-size:10px;margin-top:8px">Exit code: 0</div>
+      </div>
+    </div>
+
+    <!-- Error state example (Terraform) -->
+    <div style="border-top:1px solid #1e3a5f;padding:6px 12px;background:#0a0f1a">
+      <div style="color:#475569;font-size:9px;font-family:sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Stderr (exit 1)</div>
+      <div style="color:#f87171;font-size:10px">│ Error: Unsupported argument on line 3</div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:20px">
+  <h3>Design notes</h3>
+  <ul style="color:#94a3b8;font-size:13px;line-height:1.8">
+    <li>Each tab keeps its own editor content in component state (no cross-tab bleed)</li>
+    <li>Monaco syntax mode: <code>python</code> · <code>shell</code> · <code>dockerfile</code> · <code>hcl</code></li>
+    <li>Output pane: stdout in <span style="color:#22c55e">green</span>, stderr in <span style="color:#f87171">red</span>, exit code + duration in muted footer</li>
+    <li>Run button shows spinner while executing; disabled during in-flight request</li>
+    <li>Output scrolls independently from editor</li>
+  </ul>
+</div>
+
+<p class="subtitle" style="margin-top:16px">Does this UI look right?</p>

@@ -1,0 +1,44 @@
+{
+  "title": "YouTube — CDN Cache Hierarchy",
+  "subtitle": "Edge, Regional, and Origin tiers",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "edge",
+          "label": "Edge PoP\n(Top 1%)",
+          "kind": "gateway"
+        },
+        {
+          "id": "regional",
+          "label": "Regional Cache\n(Top 10%)",
+          "kind": "cache"
+        },
+        {
+          "id": "origin",
+          "label": "Origin Shield\nCollapse requests",
+          "kind": "gateway"
+        },
+        {
+          "id": "storage",
+          "label": "Origin Storage\nFull Catalog",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Pre-warming",
+      "body": "Predict viral hits (e.g. trailers)\nand push to edge BEFORE publish."
+    },
+    {
+      "kind": "code",
+      "title": "Hit Rates",
+      "body": "- Edge: 95% (Viral)\n- Regional: 4% (Long tail)\n- Origin: 1% (Rarely watched)"
+    }
+  ]
+}

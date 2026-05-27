@@ -1,0 +1,59 @@
+{
+  "title": "WhatsApp — Fan-out Strategy",
+  "subtitle": "Balancing latency vs write amplification",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "msg",
+          "label": "New Group Msg\nSize: N members",
+          "kind": "queue"
+        },
+        {
+          "id": "check",
+          "label": "Threshold\nN < 100?",
+          "kind": "decision"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "check",
+      "nodes": [
+        {
+          "id": "push",
+          "label": "Fan-out on Write\nImmediate push",
+          "kind": "worker",
+          "sub": "Online users"
+        },
+        {
+          "id": "pull",
+          "label": "Fan-out on Read\nLazy sync",
+          "kind": "worker",
+          "sub": "Offline users"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "The 100-Member Rule",
+      "body": "Most groups are small (< 20 members).\nPush model works for 99% of groups.\nLarge broadcast channels switch to pull."
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Hybrid Performance",
+      "pros": [
+        "Instant delivery for active chats",
+        "Minimal storage for large groups"
+      ],
+      "cons": [
+        "Complex client-side sync logic",
+        "Aggregate ACK tracking difficulty"
+      ]
+    }
+  ]
+}

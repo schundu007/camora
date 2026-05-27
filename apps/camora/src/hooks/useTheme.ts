@@ -17,12 +17,10 @@ type Theme = 'dark' | 'light';
 const STORAGE_KEY = 'camora-theme';
 
 function readInitialTheme(): Theme {
-  if (typeof window === 'undefined') return 'light';
+  if (typeof window === 'undefined') return 'dark';
   const stored = window.localStorage.getItem(STORAGE_KEY) as Theme | null;
   if (stored === 'dark' || stored === 'light') return stored;
-  // Honor system preference on first paint when the user hasn't chosen.
-  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
-  return prefersDark ? 'dark' : 'light';
+  return 'dark';
 }
 
 function applyTheme(theme: Theme): void {

@@ -1,0 +1,49 @@
+{
+  "title": "Uber — Ride Request Flow",
+  "subtitle": "Matching algorithm and dispatch logic",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "rider",
+          "label": "Rider\nPOST /api/rides",
+          "kind": "actor"
+        },
+        {
+          "id": "price",
+          "label": "Fare & Surge\nUpfront price gen",
+          "kind": "service"
+        },
+        {
+          "id": "match",
+          "label": "Match Engine\nGEOSEARCH k=5km",
+          "kind": "worker"
+        },
+        {
+          "id": "dispatch",
+          "label": "Dispatch\nSend Push to Driver",
+          "kind": "gateway"
+        },
+        {
+          "id": "accept",
+          "label": "Driver Accept\nWithin 15s",
+          "kind": "actor"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Matching Score Formula",
+      "body": "score = (1 / distance_m)\n        * (rating / 5.0)\n        * acceptance_rate\n        * (1.0 - absolute(heading_diff)/180)"
+    },
+    {
+      "kind": "note",
+      "title": "Batch Matching",
+      "body": "During peak hours (e.g. NYE):\n- Collect requests in 2s windows\n- Use Hungarian Algorithm for global\n  minimum wait time across all pairs."
+    }
+  ]
+}

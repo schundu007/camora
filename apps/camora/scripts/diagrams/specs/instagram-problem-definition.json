@@ -1,0 +1,55 @@
+{
+  "title": "Instagram — Problem Definition",
+  "subtitle": "Photo sharing at scale with personalized feeds",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "scale",
+          "label": "2B+ MAU\n100M photos/day",
+          "kind": "actor",
+          "sub": "Scale"
+        },
+        {
+          "id": "core",
+          "label": "Upload, Feed\nStories, Likes\nFollow System",
+          "kind": "service",
+          "sub": "In-Scope"
+        },
+        {
+          "id": "perf",
+          "label": "< 200ms Feed Load\n95% CDN Hit Rate",
+          "kind": "gateway",
+          "sub": "Latency"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Functional Requirements",
+      "body": "- Upload photos/videos with filters\n- User timelines and home feeds\n- Follow/unfollow and social graph\n- Like and comment interactions\n- Stories (24h ephemeral content)\n- Explore (recommendations)"
+    },
+    {
+      "kind": "issue",
+      "title": "Out-of-Scope",
+      "body": "- Direct Messaging (DMs)\n- Reels video engine (TikTok style)\n- Shopping and Marketplace\n- Ad serving platform\n- Live streaming"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Technical Challenges",
+      "pros": [
+        "High media availability",
+        "Low-latency feed ranking",
+        "Scale: 100:1 Read/Write ratio"
+      ],
+      "cons": [
+        "Eventual consistency on likes",
+        "Massive storage growth (PB/mo)"
+      ]
+    }
+  ]
+}

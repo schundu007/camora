@@ -1,0 +1,55 @@
+{
+  "title": "WhatsApp — Problem Definition",
+  "subtitle": "Global messaging at planetary scale with E2E encryption",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "scale",
+          "label": "2B+ MAU\n100B+ msgs/day",
+          "kind": "actor",
+          "sub": "Scale"
+        },
+        {
+          "id": "core",
+          "label": "1:1, Group Chat\nMedia, Presence\nDelivery Receipts",
+          "kind": "service",
+          "sub": "In-Scope"
+        },
+        {
+          "id": "security",
+          "label": "E2E Encryption\nSignal Protocol",
+          "kind": "gateway",
+          "sub": "Security"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Functional Requirements",
+      "body": "- 1:1 and Group real-time messaging\n- Delivery status (sent/delivered/read)\n- Presence (online/last seen)\n- Media sharing (images/video/docs)\n- End-to-end encryption (E2EE)"
+    },
+    {
+      "kind": "issue",
+      "title": "Out-of-Scope",
+      "body": "- Voice and video calling\n- Status/Stories (simplified)\n- Payment features\n- Business API and marketplace"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Technical Challenges",
+      "pros": [
+        "100B+ messages/day throughput",
+        "1B+ concurrent WebSocket connections",
+        "Strict message ordering per chat"
+      ],
+      "cons": [
+        "Server blind: no content moderation",
+        "Presence load (33M QPS heartbeats)"
+      ]
+    }
+  ]
+}

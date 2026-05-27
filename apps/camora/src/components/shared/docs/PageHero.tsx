@@ -16,14 +16,6 @@ export interface PageHeroProps {
   className?: string;
 }
 
-const NAVY = '#26619C';
-const GOLD = '#C9A227';
-
-/**
- * LC-inspired hero — gold→navy gradient accent rail on the left, gold eyebrow
- * with hexagon glyph, navy/gold gradient paper backdrop. Matches the prepkit
- * hero treatment so the whole product reads as one design system.
- */
 export default function PageHero({
   eyebrow,
   title,
@@ -44,14 +36,13 @@ export default function PageHero({
     <section
       className={`relative ${padY} px-6 md:px-10 ${className}`}
       style={{
-        background: `linear-gradient(135deg, ${NAVY}10 0%, ${GOLD}08 100%), var(--bg-surface)`,
-        borderBottom: `1px solid ${NAVY}30`,
+        background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, transparent 100%), var(--bg-surface)',
+        borderBottom: '1px solid color-mix(in srgb, var(--accent) 18%, transparent)',
       }}
     >
-      {/* Left accent rail — gold→navy */}
       <span
         className="absolute left-0 top-0 bottom-0 w-1"
-        style={{ background: `linear-gradient(180deg, ${GOLD} 0%, ${NAVY} 100%)` }}
+        style={{ background: 'var(--accent)' }}
       />
       <div className="max-w-[var(--page-max,1280px)] mx-auto">
         <div className={visual ? 'grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-8 md:gap-12 items-center' : ''}>
@@ -63,13 +54,13 @@ export default function PageHero({
                   style={{
                     width: 10,
                     height: 10,
-                    background: GOLD,
+                    background: '#10B981',
                     clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
                   }}
                 />
                 <p
                   className="text-[11px] font-extrabold uppercase tracking-[0.18em]"
-                  style={{ color: GOLD, fontFamily: 'var(--font-mono)' }}
+                  style={{ color: '#10B981', fontFamily: 'var(--font-mono)' }}
                 >
                   {eyebrow}
                 </p>
@@ -77,7 +68,7 @@ export default function PageHero({
             )}
             <h1
               className={`font-extrabold tracking-tight ${titleSize} ${titleLeading}`}
-              style={{ color: NAVY, fontFamily: 'var(--font-display)' }}
+              style={{ color: 'var(--accent-text)' }}
             >
               {title}
             </h1>

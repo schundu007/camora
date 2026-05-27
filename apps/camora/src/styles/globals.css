@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════
-   CAMORA v4 DESIGN SYSTEM — Dark-first, Railway-inspired
+   CAMORA v5 DESIGN SYSTEM — Developer Dark (kiro-inspired)
    ══════════════════════════════════════════════════════════════ */
 
 /* ── Satoshi — loaded via Fontshare in index.html (single source) ── */
@@ -7,104 +7,81 @@
 /* ── JetBrains Mono — Bunny.net CDN (canonical source for mono) ── */
 @import url('https://fonts.bunny.net/css?family=jetbrains-mono:400,500,700&display=swap');
 
-/* ── Caveat — hand-drawn diagram font (Excalidraw-style architecture
-       diagrams). Loaded once globally so DiagramSVG primitives + the
-       Lumora ArchitectureDiagram pick it up via font-family stack. ── */
-@import url('https://fonts.bunny.net/css?family=caveat:400,600,700&display=swap');
-
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
-
-/* ── Clash Display — local brand fonts ── */
-@font-face { font-family: 'Clash Display'; src: url('/fonts/ClashDisplay-Extralight.otf') format('opentype'); font-weight: 200; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Clash Display'; src: url('/fonts/ClashDisplay-Light.otf')      format('opentype'); font-weight: 300; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Clash Display'; src: url('/fonts/ClashDisplay-Regular.otf')    format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Clash Display'; src: url('/fonts/ClashDisplay-Medium.otf')     format('opentype'); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Clash Display'; src: url('/fonts/ClashDisplay-Semibold.otf')   format('opentype'); font-weight: 600; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Clash Display'; src: url('/fonts/ClashDisplay-Bold.otf')       format('opentype'); font-weight: 700; font-style: normal; font-display: swap; }
 
 /* ── Design Tokens ──────────────────────────────────────────── */
 @layer base {
   :root {
-    /* Backgrounds — pure white everywhere; elevated is a subtle neutral gray */
-    --bg-base: #FFFFFF;
-    --bg-app: #FFFFFF;
-    --bg-surface: #FFFFFF;
-    --bg-elevated: #F1F5F9;
-    --bg-overlay: rgba(10,30,60,0.35);
+    /* Backgrounds — deep near-black (kiro-style dark substrate) */
+    --bg-base:     #080A0D;
+    --bg-app:      #0D1015;
+    --bg-surface:  #161A22;
+    --bg-elevated: #1E2430;
+    --bg-overlay:  rgba(0,0,0,0.55);
 
-    /* Borders — neutral slate edges */
-    --border: #E2E8F0;
-    --border-hover: #CBD5E1;
-    --border-focus: #26619C;
+    /* Borders — cool slate that pops against the dark substrate */
+    --border:        #272D3A;
+    --border-hover:  #323A4A;
+    --border-focus:  #10B981;
 
-    /* Text — black-first on white; all four tokens stay above 7:1 (AAA)
-       primary    #000000   21:1   pure black for body + headings
-       secondary  #0F172A   19:1   near-black, tiny hierarchy drop
-       muted      #1E293B   15:1   slate-800, for captions / count chips
-       dimmed     #334155   11:1   slate-700, rare — only for disabled  */
-    /* Slate-tinted near-black instead of pure #000. Per impeccable
-       color law: every neutral should be tinted toward the brand hue
-       (chroma 0.005-0.01). Visually indistinguishable from #000 to
-       most users; restores the OKLCH-first design philosophy and
-       resolves a known DESIGN.md drift. */
-    --text-primary: oklch(15% 0.015 250);
-    --text-secondary: #0F172A;
-    --text-muted: #1E293B;
-    --text-dimmed: #334155;
+    /* Text — cool neutral whites (not cream-tinted). Clean developer
+       readability without the warm tint of the old Sapphire palette. */
+    --text-primary:  #F1F3F5;
+    --text-secondary:#B0B8C4;
+    --text-muted:    #6B7380;
+    --text-dimmed:   #4A515E;
 
-    /* Accent — Camora Sapphire Editorial (Lapis Lazuli) */
-    --accent: #26619C;
-    --accent-hover: #1A4F86;
-    --accent-subtle: rgba(38,97,156,0.10);
-    --accent-text: #1A4F86;
+    /* Accent — Emerald (developer ecosystem green). Replaces lapis + gold. */
+    --accent:        #10B981;
+    --accent-hover:  #34D399;
+    --accent-subtle: rgba(16,185,129,0.12);
+    --accent-text:   #34D399;
 
-    /* Semantic — Sapphire system. Success/info fold onto lapis (the
-       brand promise). Warning uses gold leaf for fills (badges, dots,
-       spinners, gradients) but `--warning-text` is its WCAG-AA-safe
-       sibling for text-on-white. Danger keeps plain red so error
-       states never collide with the brand colour. */
-    --success: #26619C;
-    --warning: #C9A227;
-    --warning-text: #7A5C0A;
+    /* Semantic — emerald for success/info, amber for warning, red for danger */
+    --success: #10B981;
+    --warning: #F59E0B;
+    --warning-text: #FBBF24;
     --danger:  #EF4444;
-    --info:    #26619C;
+    --info:    #10B981;
 
-    /* Difficulty — rank by weight in the chip, not by hue. */
-    --easy: #64748B;
-    --easy-bg: rgba(100,116,139,0.10);
-    --medium: #0F172A;
-    --medium-bg: rgba(15,23,42,0.06);
-    --hard: #26619C;
-    --hard-bg: rgba(38,97,156,0.10);
+    /* Difficulty — weight-driven, not hue-driven */
+    --easy:        #6B7280;
+    --easy-bg:     rgba(107,114,128,0.10);
+    --easy-border: rgba(107,114,128,0.25);
+    --medium:      #F1F3F5;
+    --medium-bg:   rgba(241,243,245,0.06);
+    --medium-border: rgba(241,243,245,0.15);
+    --hard:        #10B981;
+    --hard-bg:     rgba(16,185,129,0.10);
+    --hard-border: rgba(16,185,129,0.30);
 
-    /* Category — single accent. Pages with multiple categories distinguish
-       via typography and icons rather than color. */
-    --cat-primary: #26619C;
-    --cat-primary-bg: rgba(38,97,156,0.10);
+    /* Category */
+    --cat-primary:    #10B981;
+    --cat-primary-bg: rgba(16,185,129,0.10);
 
-    /* Fonts — Clash Display (headings/brand) + Satoshi (body/UI) + JetBrains Mono */
-    --font-sans: 'Satoshi', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-display: 'Clash Display', 'Satoshi', sans-serif;
-    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-    --font-brand: 'Clash Display', 'Satoshi', sans-serif;
-    /* Answer surface — Satoshi (body) + Source Serif 4 (headings).
-       Tuned at 16px/1.7 line-height for Lumora's answer panel
-       which routinely renders 200-800 word responses. */
-    --font-answer: 'Satoshi', 'Plus Jakarta Sans', -apple-system, sans-serif;
-    --font-answer-heading: 'Source Serif 4', Georgia, serif;
+    /* Fonts — Satoshi (all UI) + JetBrains Mono (code)
+       No Clash Display, no Source Serif, no decorative fonts. */
+    --font-sans: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-display: 'Satoshi', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-brand: 'Satoshi', sans-serif;
+    --font-answer: var(--font-sans);
+    --font-answer-heading: var(--font-sans);
     --fs-answer-body: 16px;
     --fs-answer-lead: 17px;
-    --fs-answer-heading: 19px;
+    --fs-answer-heading: 18px;
     --lh-answer: 1.7;
 
-    /* Shadows — soft lapis glow on the navy palette */
-    --shadow-xs: 0 1px 2px rgba(38,97,156,0.06);
-    --shadow-sm: 0 2px 6px rgba(38,97,156,0.08);
-    --shadow-md: 0 4px 12px rgba(38,97,156,0.10);
-    --shadow-lg: 0 8px 24px rgba(38,97,156,0.12);
-    --shadow-xl: 0 16px 48px rgba(38,97,156,0.15);
+    /* Shadows — dark-optimized (subtle, no colored tint on backgrounds) */
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-sm: 0 2px 6px rgba(0,0,0,0.35);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.45);
+    --shadow-xl: 0 16px 48px rgba(0,0,0,0.5);
     --card-shadow: var(--shadow-sm);
+    --shadow-emerald-xs: 0 1px 3px rgba(16,185,129,0.08), 0 4px 16px rgba(16,185,129,0.04);
+    --shadow-emerald-sm: 0 2px 8px rgba(16,185,129,0.12);
 
     /* Layout */
     --sidebar-width: 56px;
@@ -112,324 +89,226 @@
     --toc-width: 200px;
     --content-max: 720px;
     --page-max: 1280px;
-    /* SiteNav height — 56 nav + 28 challenge ticker. SiteNav.tsx
-       overrides this at runtime when the ticker is hidden. Default
-       matches the with-ticker case so sticky elements (Jobs page
-       category pills) don't read a stale 56 fallback before
-       SiteNav's setProperty lands. */
     --nav-h: 84px;
 
-    /* Legacy compat — only the aliases that still have external readers. */
-    --text-dim: var(--text-muted);          /* read by 21 files */
-    --nav-bg: var(--bg-surface);            /* read by AscendPrepModal */
+    /* Legacy compat aliases */
+    --text-dim: var(--text-muted);
+    --nav-bg: rgba(13,16,21,0.92);
     --nav-bg-secondary: var(--bg-elevated);
     --nav-border: var(--border);
     --nav-text: var(--text-primary);
     --nav-text-muted: var(--text-muted);
     --nav-hover: var(--bg-elevated);
 
-    /* ──────────────────────────────────────────────────────────
-       Camora brand system — Sapphire Editorial
-       Lapis Lazuli + Gold Leaf + cream + warm ink.
+    /* ── Camora brand system — Developer Dark ───────────────
+       Emerald accent on deep neutral dark. Single vibrant color
+       (no secondary accent). Inspired by kiro.dev, Linear,
+       Vercel developer tools.
 
-       Inspiration: Renaissance illuminated manuscripts, Vermeer,
-       Egyptian sarcophagi, Yale + Oxford academic regalia.
+       Emerald   = action, focus, success, the brand promise.
+       Dark      = substrate, terminal, developer environment.
+       White     = text, structure, contrast hierarchy.        */
+    --cam-primary:      #10B981;
+    --cam-primary-lt:   #34D399;
+    --cam-primary-dk:   #059669;
+    --cam-primary-900:  #022C22;
+    --cam-gold-leaf:    #10B981;
+    --cam-gold-leaf-lt: #34D399;
+    --cam-gold-leaf-dk: #059669;
+    --cam-gold-leaf-50: rgba(16,185,129,0.08);
+    --cam-gold-leaf-text:#34D399;
+    --cam-void:         #080A0D;
+    --cam-surface-lt:   #1E2430;
 
-       Lapis    = the verb (action, focus, the offer-winning promise).
-       Gold     = the noun (illumination, achievement, brass).
-       Amber    = the adjective (warm tertiary, badges, streaks).
-       Cream    = the air (substrate, breathing room).
-       Warm ink = the bones (text, structure).
-       ────────────────────────────────────────────────────────── */
-
-    /* PRIMARY accent — Lapis Lazuli (Renaissance pigment, ~Afghan mines) */
-    --cam-primary:      #26619C;
-    --cam-primary-lt:   #3C7AAB;
-    --cam-primary-dk:   #1A4F86;
-    --cam-primary-900:  #051C40;
-
-    /* SECONDARY accent — Gold Leaf (illuminated manuscript gold).
-       The copper-* and teal-* aliases are kept for back-compat with
-       components that still reference them; they now resolve to gold.
-       --cam-gold-leaf-text is the text-safe darkened gold for use on
-       white/cream surfaces (≥4.5:1 against #FFFFFF — passes WCAG AA). */
-    --cam-gold-leaf:    #C9A227;
-    --cam-gold-leaf-lt: #D9B543;
-    --cam-gold-leaf-dk: #A88817;
-    --cam-gold-leaf-50: #FBF6E3;
-    --cam-gold-leaf-text:#7A5C0A;
-
-    /* DARK SURFACE — deep-ocean lapis echo (used by ink-tone Sections) */
-    --cam-void:         #0F1B2D;
-
-    /* Painterly off-white substrate used by accent panels in tone="muted" */
-    --cam-surface-lt:   #FDFCF7;
-
-    /* Single source of truth (kept in sync with --accent above) */
-    --accent:           #26619C;
-    --accent-hover:     #1A4F86;
-    --accent-subtle:    rgba(38, 97, 156, 0.10);
-    --accent-text:      #1A4F86;
-
-    /* ── LeetCode-inspired hero gradients ──────────────────────
-       Rich multi-layer treatment used across every page hero:
-         · diagonal navy gradient (4 stops) — depth instead of flat
-         · two warm gold radial blobs — subtle off-axis warmth
-         · top-edge white glow — LeetCode signature halo
-         · gold mesh texture — 0.04 opacity, scannable but not loud
-       --cam-hero-bg    → tall heroes (Landing, Pricing, Challenge, etc.)
-       --cam-hero-strip → thin chrome (top bars, tab bars, sub-page heads) */
+    /* Hero gradients — simplified developer aesthetic.
+       No gold blobs, no navy mesh. Clean dark with emerald
+       radial hints and a neutral dark linear gradient base. */
     --cam-hero-bg:
-      radial-gradient(ellipse 55% 65% at 15% 25%, rgba(201,162,39,0.22), transparent 60%),
-      radial-gradient(ellipse 50% 55% at 85% 75%, rgba(201,162,39,0.18), transparent 65%),
-      radial-gradient(ellipse 90% 50% at 50% 0%, rgba(255,255,255,0.14), transparent 70%),
-      linear-gradient(135deg, #03132E 0%, #051C40 35%, var(--cam-primary-dk) 65%, #051C40 100%);
+      radial-gradient(ellipse 55% 65% at 15% 25%, rgba(16,185,129,0.12), transparent 60%),
+      radial-gradient(ellipse 50% 55% at 85% 75%, rgba(16,185,129,0.08), transparent 65%),
+      radial-gradient(ellipse 90% 50% at 50% 0%, rgba(255,255,255,0.06), transparent 70%),
+      linear-gradient(135deg, #080A0D 0%, #0D1015 35%, #161A22 65%, #0D1015 100%);
     --cam-hero-strip:
-      /* Strong gold radial bookends — left + right warm-light ribbons */
-      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(201,162,39,0.42), transparent 70%),
-      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(201,162,39,0.32), transparent 70%),
-      /* Center accent — soft white halo across the brighter navy waist */
-      radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.12), transparent 75%),
-      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(110,150,192,0.22), transparent 70%),
-      /* Horizontal navy gradient. Edges previously sat at #020617
-         (near-black), which made narrow strips read as a black bar
-         with a navy waist instead of a uniformly-navy strip. New
-         range stays in true navy from edge to edge so every strip
-         looks navy regardless of viewport width. */
-      linear-gradient(95deg, #051C40 0%, #0B2A5A 30%, var(--cam-primary-dk) 50%, #0B2A5A 70%, #051C40 100%);
+      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(16,185,129,0.18), transparent 70%),
+      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(16,185,129,0.12), transparent 70%),
+      radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.05), transparent 75%),
+      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(16,185,129,0.08), transparent 70%),
+      linear-gradient(95deg, #0D1015 0%, #161A22 30%, #1E2430 50%, #161A22 70%, #0D1015 100%);
 
-    /* Lumora topbar chrome — pill containers (tab strip, Back, quick-links).
-       Light mode: subtle navy tint so pills read as contained without the
-       full dark-navy hero-strip weight against a light topbar background. */
-    --lumora-chrome-bg:     rgba(0,71,171,0.07);
-    --lumora-chrome-border: rgba(26,79,134,0.22);
-    --lumora-chrome-shadow: inset 0 -2px 0 var(--cam-gold-leaf-dk);
-    --lumora-chrome-text:   rgba(26,79,134,0.82);
-    --lumora-chrome-hover:  rgba(0,71,171,0.11);
+    /* Lumora topbar chrome — dark immersive, emerald accents */
+    --lumora-chrome-bg:     var(--cam-hero-strip);
+    --lumora-chrome-border: rgba(16,185,129,0.30);
+    --lumora-chrome-shadow: inset 0 -2px 0 var(--accent);
+    --lumora-chrome-text:   rgba(241,243,245,0.85);
+    --lumora-chrome-hover:  rgba(241,243,245,0.08);
 
-    /* Near-black with brand tint — replaces bg-black in Lumora chrome */
-    --bg-near-black: oklch(11% 0.012 250);
+    /* Near-black for immersive surfaces */
+    --bg-near-black: #080A0D;
 
-    /* Navy-tinted shadows for Lumora surfaces */
-    --shadow-primary-xs: 0 1px 3px rgba(38,97,156,0.06), 0 4px 16px rgba(38,97,156,0.04);
-    --shadow-primary-sm: 0 2px 8px rgba(38,97,156,0.10);
+    /* Emerald-tinted shadows for Lumora surfaces */
+    --shadow-primary-xs: 0 1px 3px rgba(16,185,129,0.06), 0 4px 16px rgba(16,185,129,0.04);
+    --shadow-primary-sm: 0 2px 8px rgba(16,185,129,0.10);
   }
 
   /* ──────────────────────────────────────────────────────────
-     DARK THEME — opt-in via [data-theme="dark"] on <html>.
-     Mirror image of the light Sapphire Editorial palette:
-     deep ocean substrate + cream-tinted ink + brighter lapis.
+     LIGHT THEME — opt-in via [data-theme="light"] on <html>.
+     Clean, neutral light variant of the Developer Dark palette.
      Every contrast pair below ≥ 4.5:1 (WCAG AA).
      ────────────────────────────────────────────────────────── */
-  [data-theme="dark"] {
-    /* Backgrounds — neutral charcoal so the navy --cam-primary stays
-       reserved for brand accents (CTAs, links, highlights) instead of
-       painting every surface lapis. Linear / Stripe / Databricks-style:
-       slate-zinc neutrals, NOT navy gradients. */
-    --bg-base:     #0A0C10;
-    --bg-app:      #11141A;
-    --bg-surface:  #1A1E26;
-    --bg-elevated: #232830;
-    --bg-overlay:  rgba(0,0,0,0.55);
+  [data-theme="light"] {
+    --bg-base:     #FFFFFF;
+    --bg-app:      #F8F9FA;
+    --bg-surface:  #FFFFFF;
+    --bg-elevated: #F0F1F3;
+    --bg-overlay:  rgba(0,0,0,0.20);
 
-    /* Borders — neutral slate that pops against charcoal without tinting it. */
-    --border:        #2E343F;
-    --border-hover:  #3D4452;
-    --border-focus:  #87AAE0;
+    --border:        #DEE2E6;
+    --border-hover:  #C9CDD2;
+    --border-focus:  #059669;
 
-    /* Text — warm cream-tinted whites. Tightened so secondary copy and
-       chip counters don't read as washed-out tan against dark navy. */
-    --text-primary:  #F5F0E5;   /* 14.7:1 on bg-app */
-    --text-secondary:#E5DFD0;   /* 12.8:1 — was #D6CFC0 */
-    --text-muted:    #C8C2B0;   /*  9.6:1 — was #ADA68F (the "tan-on-navy" issue) */
-    --text-dimmed:   #ADA68F;   /*  6.4:1 — was #847C68 (now safely above AA-large) */
+    --text-primary:  #111318;
+    --text-secondary:#495057;
+    --text-muted:    #6C757D;
+    --text-dimmed:   #868E96;
 
-    /* Accent — bumped from lapis-300/500 → lapis-200 ramp for stronger
-       readability against the dark substrate. Was #6E96C0 (~5:1). */
-    --accent:        #87AAE0;   /* lapis-200, ~7.4:1 on bg-app */
-    --accent-hover:  #A3BFE7;
-    --accent-subtle: rgba(135,170,224,0.18);
-    --accent-text:   #B5CCEC;
+    --accent:        #059669;
+    --accent-hover:  #047857;
+    --accent-subtle: rgba(5,150,105,0.08);
+    --accent-text:   #047857;
 
-    /* Semantic — gold reads safely on the dark substrate */
-    --success: #6E96C0;
-    --warning: #D9B543;
-    --warning-text: #E6C75F;
-    --danger:  #F87171;
-    --info:    #6E96C0;
+    --success: #059669;
+    --warning: #D97706;
+    --warning-text: #92400E;
+    --danger:  #DC2626;
+    --info:    #059669;
 
-    /* Difficulty + category — match accent shift */
-    --hard:        #6E96C0;
-    --hard-bg:     rgba(110,150,192,0.15);
-    --hard-border: rgba(110,150,192,0.30);
-    --easy:        #94A3B8;
-    --easy-bg:     rgba(148,163,184,0.10);
-    --easy-border: rgba(148,163,184,0.25);
-    --medium:      #F5F0E5;
-    --medium-bg:   rgba(245,240,229,0.06);
-    --medium-border: rgba(245,240,229,0.15);
-    --cat-primary:    #6E96C0;
-    --cat-primary-bg: rgba(110,150,192,0.15);
+    --easy:        #6B7280;
+    --easy-bg:     rgba(107,114,128,0.06);
+    --easy-border: rgba(107,114,128,0.18);
+    --medium:      #111318;
+    --medium-bg:   rgba(17,19,24,0.04);
+    --medium-border: rgba(17,19,24,0.10);
+    --hard:        #059669;
+    --hard-bg:     rgba(5,150,105,0.08);
+    --hard-border: rgba(5,150,105,0.20);
 
-    /* Shadows — invisible on dark substrate; subtle white glow */
-    --shadow-xs: 0 1px 2px rgba(0,0,0,0.4);
-    --shadow-sm: 0 2px 6px rgba(0,0,0,0.4);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
-    --shadow-lg: 0 8px 24px rgba(0,0,0,0.55);
-    --shadow-xl: 0 16px 48px rgba(0,0,0,0.6);
+    --cat-primary:    #059669;
+    --cat-primary-bg: rgba(5,150,105,0.08);
+
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-sm: 0 2px 6px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
+    --shadow-xl: 0 16px 48px rgba(0,0,0,0.12);
     --card-shadow: var(--shadow-sm);
+    --shadow-emerald-xs: 0 1px 3px rgba(5,150,105,0.06), 0 4px 16px rgba(5,150,105,0.03);
+    --shadow-emerald-sm: 0 2px 8px rgba(5,150,105,0.08);
 
-    /* Camora brand tokens — flipped for dark */
-    --cam-primary:    #6E96C0;
-    --cam-primary-lt: #87AAE0;
-    --cam-primary-dk: #5985B6;
-    --cam-primary-900:#0A1320;
+    --cam-primary:      #059669;
+    --cam-primary-lt:   #10B981;
+    --cam-primary-dk:   #047857;
+    --cam-primary-900:  #022C22;
+    --cam-gold-leaf:    #059669;
+    --cam-gold-leaf-lt: #10B981;
+    --cam-gold-leaf-dk: #047857;
+    --cam-gold-leaf-50: rgba(5,150,105,0.06);
+    --cam-gold-leaf-text:#047857;
+    --cam-void:         #F8F9FA;
+    --cam-surface-lt:   #F0F1F3;
 
-    --cam-gold-leaf:    #D9B543;
-    --cam-gold-leaf-lt: #E6C75F;
-    --cam-gold-leaf-dk: #C9A227;
-    --cam-gold-leaf-50: #243450;
-    /* Dark-theme gold reads safely on the dark substrate as-is */
-    --cam-gold-leaf-text:#E6C75F;
+    --cam-hero-bg:
+      radial-gradient(ellipse 55% 65% at 15% 25%, rgba(5,150,105,0.06), transparent 60%),
+      radial-gradient(ellipse 50% 55% at 85% 75%, rgba(5,150,105,0.04), transparent 65%),
+      radial-gradient(ellipse 90% 50% at 50% 0%, rgba(0,0,0,0.02), transparent 70%),
+      linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 35%, #F0F1F3 65%, #F8F9FA 100%);
+    --cam-hero-strip:
+      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(5,150,105,0.08), transparent 70%),
+      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(5,150,105,0.06), transparent 70%),
+      radial-gradient(ellipse 80% 140% at 50% 0%, rgba(0,0,0,0.02), transparent 75%),
+      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(5,150,105,0.04), transparent 70%),
+      linear-gradient(95deg, #FFFFFF 0%, #F8F9FA 30%, #F0F1F3 50%, #F8F9FA 70%, #FFFFFF 100%);
 
-    --cam-void:         #0A1320;
-    --cam-surface-lt:   #243450;
+    --lumora-chrome-bg:     rgba(5,150,105,0.05);
+    --lumora-chrome-border: rgba(5,150,105,0.15);
+    --lumora-chrome-shadow: inset 0 -2px 0 var(--accent);
+    --lumora-chrome-text:   rgba(17,19,24,0.75);
+    --lumora-chrome-hover:  rgba(5,150,105,0.06);
 
-    /* Legacy compat — only the aliases that still have external readers. */
-    --text-dim:    var(--text-muted);
-    --nav-bg:  rgba(15,27,45,0.92);
-    --nav-bg-secondary: var(--bg-elevated);
-    --nav-border: var(--border);
-    --nav-text: var(--text-primary);
-    --nav-text-muted: var(--text-muted);
-    --nav-hover: var(--bg-elevated);
+    --bg-near-black: rgba(17,19,24,0.92);
+    --shadow-primary-xs: 0 1px 3px rgba(5,150,105,0.04), 0 4px 16px rgba(5,150,105,0.02);
+    --shadow-primary-sm: 0 2px 8px rgba(5,150,105,0.06);
 
-    /* Lumora topbar chrome — dark mode uses the full hero-strip gradient. */
-    --lumora-chrome-bg:     var(--cam-hero-strip);
-    --lumora-chrome-border: var(--cam-primary-dk);
-    --lumora-chrome-shadow: inset 0 -2px 0 var(--cam-gold-leaf);
-    --lumora-chrome-text:   rgba(255,255,255,0.85);
-    --lumora-chrome-hover:  rgba(255,255,255,0.10);
-
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   /* ──────────────────────────────────────────────────────────
      PRODUCT VISUAL IDENTITY
      Lumora = dark immersive cockpit (live interview AI)
-     Capra  = light editorial library (prep / study)
+     Capra  = study/prep surface (slightly wider content)
      ────────────────────────────────────────────────────────── */
 
-  /* ── Lumora: dark-immersive chrome + gold accents ──────── */
+  /* ── Lumora: always immersive — emerald chrome accents ── */
   [data-product="lumora"] {
-    /* Even in light mode, Lumora chrome is dark navy.
-       Surfaces stay at theme defaults for answer readability. */
     --lumora-chrome-bg:     var(--cam-hero-strip);
-    --lumora-chrome-border: rgba(201,162,39,0.35);
-    --lumora-chrome-shadow: inset 0 -2px 0 var(--cam-gold-leaf);
-    --lumora-chrome-text:   rgba(255,255,255,0.88);
-    --lumora-chrome-hover:  rgba(255,255,255,0.10);
+    --lumora-chrome-border: rgba(16,185,129,0.30);
+    --lumora-chrome-shadow: inset 0 -2px 0 var(--accent);
+    --lumora-chrome-text:   rgba(241,243,245,0.88);
+    --lumora-chrome-hover:  rgba(241,243,245,0.08);
   }
-  [data-product="lumora"] [data-theme="light"] .lumora-status-bar,
   [data-product="lumora"] .lumora-status-bar {
-    border-top-color: rgba(201,162,39,0.20);
-    box-shadow: 0 -1px 4px rgba(0,0,0,0.15);
+    border-top-color: rgba(16,185,129,0.15);
+    box-shadow: 0 -1px 4px rgba(0,0,0,0.20);
   }
-  /* Live recording pulse overlay — only in Lumora */
   [data-product="lumora"] .status-dot-listen {
-    box-shadow: 0 0 12px rgba(201,162,39,0.60);
+    box-shadow: 0 0 12px rgba(16,185,129,0.50);
   }
 
-  /* ── Capra: editorial library — serif reading, warm surfaces ── */
+  /* ── Capra: wider content measure for reading ──────────── */
   [data-product="capra"] {
     --content-max: 760px;
   }
-  /* Answer headings use serif for an academic reading feel */
-  [data-product="capra"] .block-answer h1,
-  [data-product="capra"] .block-answer h2,
-  [data-product="capra"] .block-answer h3,
-  [data-product="capra"] .docs-page h1,
-  [data-product="capra"] .docs-page h2,
-  [data-product="capra"] .docs-page h3,
-  [data-product="capra"] .prep-content h1,
-  [data-product="capra"] .prep-content h2,
-  [data-product="capra"] .prep-content h3 {
-    font-family: var(--font-answer-heading);
-  }
 
-  /* Dark-theme contrast guard: components that hard-coded `bg-white` (or
-     literal `background:white` inline styles) pair it with themed text
-     tokens like var(--text-primary), which becomes cream in dark mode →
-     cream-on-white = invisible. Remap the opaque white surface to the
-     dark surface token so the same markup stays readable in either theme.
-     Translucent variants (`bg-white/20`, `bg-white/30` overlays sitting
-     on dark gradient cards) are deliberate and keep their white tint
-     because Tailwind generates them as separate class names. */
-  [data-theme="dark"] .bg-white,
-  [data-theme="dark"] .bg-gray-50,
-  [data-theme="dark"] .bg-slate-50,
-  [data-theme="dark"] .bg-zinc-50,
-  [data-theme="dark"] .bg-neutral-50 { background-color: var(--bg-surface) !important; }
-  [data-theme="dark"] .bg-gray-100,
-  [data-theme="dark"] .bg-slate-100 { background-color: var(--bg-elevated) !important; }
-  /* Inline literal-white backgrounds are intentionally NOT remapped:
-     pages use them deliberately for white pill/CTA buttons sitting on
-     dark hero blocks (PricingPage hero CTA, etc) where flipping them
-     would make the button vanish against the dark parent. Components
-     that genuinely need theme-aware surfaces should use the bg-* class
-     or var(--bg-surface) directly. */
-  [data-theme="dark"] [style*="background: #F9FAFB"],
-  [data-theme="dark"] [style*="background:#F9FAFB"],
-  [data-theme="dark"] [style*="background: #f9fafb"],
-  [data-theme="dark"] [style*="background:#f9fafb"],
-  [data-theme="dark"] [style*="background: #F8FAFC"],
-  [data-theme="dark"] [style*="background:#F8FAFC"],
-  [data-theme="dark"] [style*="background: #f8fafc"],
-  [data-theme="dark"] [style*="background:#f8fafc"] { background-color: var(--bg-surface) !important; }
+  /* Light-theme contrast guard: components that hard-coded `bg-surface`
+     or dark background classes assume the dark default. Flip them to
+     light equivalents when data-theme="light" is set. */
+  [data-theme="light"] .bg-white,
+  [data-theme="light"] .bg-gray-50,
+  [data-theme="light"] .bg-slate-50,
+  [data-theme="light"] .bg-zinc-50,
+  [data-theme="light"] .bg-neutral-50 { background-color: #FFFFFF !important; }
+  [data-theme="light"] .bg-gray-100,
+  [data-theme="light"] .bg-slate-100 { background-color: #F8F9FA !important; }
 
-  /* Same root issue, text side: components hard-coded slate/gray Tailwind
-     text classes or inline hex literals like color:'#0F172A' assuming a
-     light substrate. After the bg-* remap above, those cards now have a
-     dark substrate but the text stays slate-900 → unreadable. Remap the
-     dark slate/gray ramp to the design tokens so it flips with theme.
-     The 700-900 band reads as primary; 500-600 as secondary; 400 as muted.
-     Lighter (50-300) and darker (950) are left alone — they're either
-     already light enough for dark mode or used as inverse text on dark
-     gradient cards where the original color was correct. */
-  [data-theme="dark"] .text-slate-700,
-  [data-theme="dark"] .text-slate-800,
-  [data-theme="dark"] .text-slate-900,
-  [data-theme="dark"] .text-gray-700,
-  [data-theme="dark"] .text-gray-800,
-  [data-theme="dark"] .text-gray-900,
-  [data-theme="dark"] .text-zinc-700,
-  [data-theme="dark"] .text-zinc-800,
-  [data-theme="dark"] .text-zinc-900,
-  [data-theme="dark"] .text-neutral-700,
-  [data-theme="dark"] .text-neutral-800,
-  [data-theme="dark"] .text-neutral-900 { color: var(--text-primary) !important; }
+  [data-theme="light"] .text-slate-700,
+  [data-theme="light"] .text-slate-800,
+  [data-theme="light"] .text-slate-900,
+  [data-theme="light"] .text-gray-700,
+  [data-theme="light"] .text-gray-800,
+  [data-theme="light"] .text-gray-900,
+  [data-theme="light"] .text-zinc-700,
+  [data-theme="light"] .text-zinc-800,
+  [data-theme="light"] .text-zinc-900,
+  [data-theme="light"] .text-neutral-700,
+  [data-theme="light"] .text-neutral-800,
+  [data-theme="light"] .text-neutral-900 { color: #111318 !important; }
 
-  [data-theme="dark"] .text-slate-500,
-  [data-theme="dark"] .text-slate-600,
-  [data-theme="dark"] .text-gray-500,
-  [data-theme="dark"] .text-gray-600,
-  [data-theme="dark"] .text-zinc-500,
-  [data-theme="dark"] .text-zinc-600,
-  [data-theme="dark"] .text-neutral-500,
-  [data-theme="dark"] .text-neutral-600 { color: var(--text-secondary) !important; }
+  [data-theme="light"] .text-slate-500,
+  [data-theme="light"] .text-slate-600,
+  [data-theme="light"] .text-gray-500,
+  [data-theme="light"] .text-gray-600,
+  [data-theme="light"] .text-zinc-500,
+  [data-theme="light"] .text-zinc-600,
+  [data-theme="light"] .text-neutral-500,
+  [data-theme="light"] .text-neutral-600 { color: #495057 !important; }
 
-  [data-theme="dark"] .text-slate-400,
-  [data-theme="dark"] .text-gray-400,
-  [data-theme="dark"] .text-zinc-400,
-  [data-theme="dark"] .text-neutral-400 { color: var(--text-muted) !important; }
+  [data-theme="light"] .text-slate-400,
+  [data-theme="light"] .text-gray-400,
+  [data-theme="light"] .text-zinc-400,
+  [data-theme="light"] .text-neutral-400 { color: #6C757D !important; }
 
-  /* Topic content PNG diagrams (apps/frontend/public/diagrams/**) were
-     authored against a white page background. On dark theme they read
-     as bright white cards floating on dark navy. Pull luminance + bump
-     contrast slightly so the paper sits naturally on the dark surface
-     — same technique MDN / GitHub Docs use for light-authored
-     diagrams in dark mode. */
-  [data-theme="dark"] .topic-content-diagram-img {
+  /* Topic content PNG diagrams were authored against a light background.
+     On the dark default they need slight luminance pull to blend. */
+  .topic-content-diagram-img {
     filter: brightness(0.94) contrast(1.06);
   }
 
@@ -443,6 +322,7 @@
   /* Legacy `.light-theme` class is now a no-op alias for the default
      (light) state. Components that still apply it won't break. */
   .light-theme { color-scheme: light; }
+  [data-theme="light"] .light-theme { color-scheme: light; }
 
   *, *::before, *::after {
     box-sizing: border-box;
@@ -450,16 +330,8 @@
 
   html {
     @apply antialiased scroll-smooth;
-    /* Allow horizontal scroll instead of clipping it. Hiding overflow only
-       masks broken layouts; pages that legitimately overflow need to
-       handle it locally with overflow-x-auto wrappers, not by hiding the
-       symptom site-wide. */
     width: 100%;
-    color-scheme: light;
-    /* No `zoom: 1.25` — global zoom shifts the effective viewport vs.
-       what Tailwind breakpoints test against, causing content to spill
-       at every window size. Use specific `text-Xl md:text-Yxl` patterns
-       instead of a global zoom. */
+    color-scheme: dark;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -481,10 +353,10 @@
     height: 100%;
   }
 
-  /* Display font on all headings — Clash Display */
+  /* Satoshi on all headings — clean developer typography */
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.008em;
+    letter-spacing: -0.012em;
   }
 
   .light-theme {
@@ -497,13 +369,15 @@
     min-width: 0;
   }
 
-  /* Scrollbar — dark theme */
+  /* Scrollbar — dark-first */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
-  .light-theme ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); }
-  .light-theme ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
+  .light-theme ::-webkit-scrollbar-thumb,
+  [data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.10); }
+  .light-theme ::-webkit-scrollbar-thumb:hover,
+  [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.20); }
 
   /* Hide scrollbars on horizontally-scrollable mobile toolbars
      (Coding "Description / Solution / New Problem" strip, Design
@@ -514,11 +388,11 @@
   .no-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
   /* Selection */
-  ::selection { background: rgba(38,97,156,0.35); color: #ffffff; }
+  ::selection { background: rgba(16,185,129,0.35); color: #ffffff; }
 
-  /* Focus ring — Lapis Navy */
+  /* Focus ring — Emerald */
   *:focus-visible {
-    outline: 2px solid rgba(38,97,156,0.55);
+    outline: 2px solid rgba(16,185,129,0.55);
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -543,7 +417,7 @@
   }
 }
 
-/* ── Subtle background mesh (navy-tinted) ───────────────────── */
+/* ── Subtle background mesh (emerald-tinted) ───────────────── */
 #root::after {
   content: '';
   position: fixed;
@@ -551,14 +425,15 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(38,97,156,0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(38,97,156,0.025) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(201,162,39,0.02) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(16,185,129,0.03) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(16,185,129,0.02) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(16,185,129,0.015) 0%, transparent 60%);
 }
-.light-theme #root::after {
+.light-theme #root::after,
+[data-theme="light"] #root::after {
   background:
-    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(38,97,156,0.03) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(38,97,156,0.018) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(5,150,105,0.025) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(5,150,105,0.015) 0%, transparent 60%);
 }
 
 /* ── Shepherd.js tour — dark theme ──────────────────────────── */
@@ -568,7 +443,7 @@
 .shepherd-text strong { color: var(--accent-hover) !important; font-weight: 700 !important; }
 .shepherd-footer { padding: 8px 16px 16px !important; border-top: none !important; }
 .shepherd-button { background: var(--accent) !important; color: #fff !important; border: none !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 700 !important; padding: 6px 16px !important; }
-.shepherd-button:hover { box-shadow: 0 2px 12px rgba(38,97,156,0.40) !important; }
+.shepherd-button:hover { box-shadow: 0 2px 12px rgba(16,185,129,0.30) !important; }
 .shepherd-button-secondary { background: transparent !important; color: var(--text-muted) !important; border: 1px solid var(--border) !important; }
 .shepherd-button-secondary:hover { color: var(--text-primary) !important; box-shadow: none !important; }
 .shepherd-cancel-icon span { color: var(--text-muted) !important; font-size: 20px !important; }
@@ -637,8 +512,7 @@
 .pill:hover { border-color: var(--border-hover); color: var(--text-primary); }
 
 /* Section label */
-.section-label { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cam-gold-leaf-text); }
-[data-theme="dark"] .section-label { color: var(--cam-gold-leaf-lt); }
+.section-label { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-text); }
 
 /* Typography */
 .heading-1 { font-size: 32px; font-weight: 700; letter-spacing: -0.022em; color: var(--text-primary); line-height: 1.12; }
@@ -695,15 +569,15 @@
 @media (min-width: 640px)  { .page-wrap { padding-left: 1.5rem; padding-right: 1.5rem; } }
 @media (min-width: 1024px) { .page-wrap { padding-left: 2rem;   padding-right: 2rem;   } }
 
-/* ── Segmented tab group — navy container + gold border + gold active ── */
+/* ── Segmented tab group — dark surface + emerald active ── */
 .tab-group {
   display: flex;
   align-items: center;
   gap: 2px;
   padding: 3px;
   border-radius: 10px;
-  background: rgba(3,19,46,0.88);
-  border: 1px solid rgba(201,162,39,0.50);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
   width: fit-content;
 }
 .tab-group-item {
@@ -711,22 +585,18 @@
   border-radius: 7px;
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255,255,255,0.82);
+  color: var(--text-secondary);
   background: transparent;
   border: none;
   cursor: pointer;
   white-space: nowrap;
   transition: color 0.15s ease-out, background-color 0.15s ease-out;
 }
-.tab-group-item:hover:not(.tab-group-item-active) { color: #ffffff; }
+.tab-group-item:hover:not(.tab-group-item-active) { color: var(--text-primary); }
 .tab-group-item-active {
-  background: var(--cam-gold-leaf);
-  color: #020617;
+  background: var(--accent);
+  color: #ffffff;
   font-weight: 700;
-}
-[data-theme="dark"] .tab-group-item-active {
-  background: var(--cam-gold-leaf);
-  color: #020617;
 }
 
 /* ── Underline tab bar ──────────────────────────────────────────── */
@@ -780,12 +650,11 @@
   color: var(--accent);
 }
 .chip-sm { padding: 3px 9px !important; font-size: 11px !important; }
-.chip-gold.chip-active {
-  background: color-mix(in oklab, var(--cam-gold-leaf) 12%, transparent);
-  border-color: color-mix(in oklab, var(--cam-gold-leaf) 35%, transparent);
-  color: var(--cam-gold-leaf-text);
+.chip-emerald.chip-active {
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 35%, transparent);
+  color: var(--accent-text);
 }
-[data-theme="dark"] .chip-gold.chip-active { color: var(--cam-gold-leaf-lt); }
 
 /* ── Badges ─────────────────────────────────────────────────────── */
 /* Compact read-only labels. NOT interactive — use .chip for toggleable. */
@@ -807,12 +676,11 @@
   color: var(--accent);
   border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent);
 }
-.badge-gold {
-  background: color-mix(in oklab, var(--cam-gold-leaf) 12%, transparent);
-  color: var(--cam-gold-leaf-text);
-  border: 1px solid color-mix(in oklab, var(--cam-gold-leaf) 30%, transparent);
+.badge-emerald {
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  color: var(--accent-text);
+  border: 1px solid color-mix(in oklab, var(--accent) 30%, transparent);
 }
-[data-theme="dark"] .badge-gold { color: var(--cam-gold-leaf-lt); }
 .badge-danger {
   background: color-mix(in oklab, var(--danger) 10%, transparent);
   color: var(--danger);
@@ -889,7 +757,7 @@
   .status-dot { @apply w-2 h-2 rounded-none flex-shrink-0 transition-all duration-300; }
   .status-dot-idle { background-color: var(--text-muted); }
   .status-dot-ready { background-color: var(--success); box-shadow: 0 0 8px rgba(70,167,88,0.6); }
-  .status-dot-listen { background-color: var(--accent); animation: pulse-dot 1.5s ease-in-out infinite; box-shadow: 0 0 8px rgba(38,97,156,0.55); }
+  .status-dot-listen { background-color: var(--accent); animation: pulse-dot 1.5s ease-in-out infinite; box-shadow: 0 0 8px rgba(16,185,129,0.50); }
   .status-dot-transcribe { background-color: var(--cam-gold-leaf); }
   .status-dot-write, .status-dot-search { background-color: var(--accent); animation: pulse-dot 1.5s ease-in-out infinite; }
   .status-dot-error { background-color: var(--danger); }
@@ -936,8 +804,8 @@
   /* Diagram block */
   .block-diagram {
     @apply border overflow-hidden relative p-3;
-    border-color: color-mix(in oklab, var(--cam-gold-leaf) 25%, transparent);
-    background: color-mix(in oklab, var(--cam-gold-leaf) 4%, transparent);
+    border-color: color-mix(in oklab, var(--accent) 20%, transparent);
+    background: color-mix(in oklab, var(--accent) 4%, transparent);
     border-radius: 8px; box-shadow: var(--card-shadow);
   }
   .diagram-art {
@@ -984,7 +852,7 @@
       transform 0.15s ease-out;
   }
   .btn:active { transform: scale(0.97); }
-  .btn:focus-visible { outline: 2px solid rgba(38,97,156,0.55); outline-offset: 2px; }
+  .btn:focus-visible { outline: 2px solid rgba(16,185,129,0.55); outline-offset: 2px; }
 
   /* Input styles */
   .input {
@@ -994,7 +862,7 @@
     transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
   }
   .input::placeholder { color: var(--text-muted); }
-  .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(38,97,156,0.18); }
+  .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(16,185,129,0.18); }
 
   /* Shimmer */
   .shimmer {
@@ -1020,8 +888,8 @@
 select { color-scheme: dark; border-radius: 6px; }
 select option { background-color: var(--bg-surface); color: var(--text-primary); padding: 8px; }
 select option:hover, select option:focus, select option:checked { background-color: var(--accent); color: white; }
-.light-theme select { color-scheme: light; }
-.light-theme select option { background-color: #ffffff; color: #111827; }
+[data-theme="light"] select { color-scheme: light; }
+[data-theme="light"] select option { background-color: #ffffff; color: #111318; }
 
 /* Highlight.js */
 .hljs { background: transparent !important; }
@@ -1243,9 +1111,9 @@ img { max-width: 100%; height: auto; }
   position: absolute;
   inset: -50%;
   background:
-    radial-gradient(ellipse 40% 40% at 25% 30%, rgba(38,97,156,0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 35% 50% at 75% 60%, rgba(201,162,39,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 30% at 50% 80%, rgba(38,97,156,0.06) 0%, transparent 60%);
+    radial-gradient(ellipse 40% 40% at 25% 30%, rgba(16,185,129,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 50% at 75% 60%, rgba(16,185,129,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 30% at 50% 80%, rgba(16,185,129,0.05) 0%, transparent 60%);
   animation: auroraShift 15s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 0;
@@ -1295,7 +1163,7 @@ img { max-width: 100%; height: auto; }
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(38,97,156,0.30), rgba(201,162,39,0.15), rgba(38,97,156,0.10));
+  background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(16,185,129,0.10), rgba(16,185,129,0.05));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -1308,8 +1176,8 @@ img { max-width: 100%; height: auto; }
   transition: box-shadow 0.4s ease, border-color 0.4s ease, transform 0.4s ease;
 }
 .ai-card-glow:hover {
-  box-shadow: 0 0 30px rgba(38,97,156,0.08), 0 0 60px rgba(38,97,156,0.04);
-  border-color: rgba(38,97,156,0.15) !important;
+  box-shadow: 0 0 30px rgba(16,185,129,0.08), 0 0 60px rgba(16,185,129,0.04);
+  border-color: rgba(16,185,129,0.15) !important;
   transform: translateY(-2px);
 }
 
@@ -1322,7 +1190,7 @@ img { max-width: 100%; height: auto; }
   position: absolute;
   inset: -3px;
   border-radius: 50%;
-  background: rgba(38,97,156,0.30);
+  background: rgba(16,185,129,0.25);
   animation: aiPulse 2s ease-in-out infinite;
   z-index: -1;
 }
@@ -1375,7 +1243,7 @@ img { max-width: 100%; height: auto; }
 }
 .card-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(38, 97, 156, 0.10), 0 2px 6px rgba(38, 97, 156, 0.06);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.08), 0 2px 6px rgba(16, 185, 129, 0.04);
   border-color: var(--accent);
 }
 
@@ -1403,7 +1271,7 @@ img { max-width: 100%; height: auto; }
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(38, 97, 156, 0.08) 50%,
+    rgba(16, 185, 129, 0.06) 50%,
     transparent 100%
   );
   animation: shimmer-sweep 1.6s ease-in-out infinite;
@@ -1437,8 +1305,8 @@ img { max-width: 100%; height: auto; }
 }
 .session-row:hover {
   transform: translateY(-2px);
-  border-color: rgba(38,97,156,0.40) !important;
-  box-shadow: 0 10px 28px rgba(38,97,156,0.22);
+  border-color: rgba(16,185,129,0.35) !important;
+  box-shadow: 0 10px 28px rgba(16,185,129,0.15);
 }
 /* Delete button in session rows — hover handled via CSS */
 .session-delete-btn:hover {
@@ -1451,9 +1319,9 @@ img { max-width: 100%; height: auto; }
 }
 .session-row:hover .session-badge-num {
   box-shadow:
-    0 0 0 2px rgba(201,162,39,0.55),
-    0 4px 14px rgba(38,97,156,0.42),
-    inset 0 1px 0 rgba(255,255,255,0.20);
+    0 0 0 2px rgba(16,185,129,0.50),
+    0 4px 14px rgba(16,185,129,0.30),
+    inset 0 1px 0 rgba(255,255,255,0.15);
 }
 @keyframes tab-fade-in {
   from { opacity: 0; transform: translateY(6px); }
@@ -1703,7 +1571,7 @@ img { max-width: 100%; height: auto; }
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  border-bottom: 1px solid var(--cam-gold-leaf);
+  border-bottom: 1px solid var(--accent);
   padding-bottom: 4px;
 }
 .answer-flow h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -1912,7 +1780,7 @@ figure:has(> .viz-caption) {
 .prep-content > section strong { color: var(--text-primary); font-weight: 700; }
 .docs-page em { color: var(--text-primary); }
 
-/* ── H2 — section heading: navy strip + gold-leaf hairline ───────── */
+/* ── H2 — section heading: emerald strip ────────────────────────── */
 .docs-page section > h2,
 .prep-content > h2,
 .prep-content > section > h2 {
@@ -1921,7 +1789,7 @@ figure:has(> .viz-caption) {
   line-height: 1.18;
   font-weight: 700;
   letter-spacing: -0.016em;
-  color: var(--cam-primary);
+  color: var(--accent-text);
   padding-left: 18px;
   margin-top: 3rem;
   margin-bottom: 1.1rem;
@@ -1940,9 +1808,7 @@ figure:has(> .viz-caption) {
   bottom: 0.25em;
   width: 4px;
   border-radius: 0 9999px 9999px 0;
-  background: linear-gradient(180deg,
-    var(--cam-primary) 0%,
-    var(--cam-primary-dk) 100%);
+  background: var(--accent);
 }
 .docs-page section > h2::after,
 .prep-content > h2::after,
@@ -1954,12 +1820,12 @@ figure:has(> .viz-caption) {
   margin-left: -18px;
   max-width: 18rem;
   background: linear-gradient(90deg,
-    color-mix(in srgb, var(--cam-primary) 50%, transparent) 0%,
-    color-mix(in srgb, var(--cam-gold-leaf) 55%, transparent) 38%,
+    color-mix(in srgb, var(--accent) 50%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 35%, transparent) 38%,
     transparent 100%);
 }
 
-/* ── H3 — subsection: gold hex glyph + navy text ─────────────────── */
+/* ── H3 — subsection: emerald hex glyph ──────────────────────────── */
 /*
  * In .prep-content, only fire on direct children, on h3 inside a marker
  * <section> wrapper, or on h3 explicitly marked with .prep-section-heading.
@@ -1977,7 +1843,7 @@ figure:has(> .viz-caption) {
   line-height: 1.32;
   font-weight: 700;
   letter-spacing: -0.010em;
-  color: var(--cam-primary);
+  color: var(--accent-text);
   padding-left: 18px;
   margin-top: 2rem;
   margin-bottom: 0.65rem;
@@ -1994,7 +1860,7 @@ figure:has(> .viz-caption) {
   top: 0.5em;
   width: 8px;
   height: 8px;
-  background: var(--cam-gold-leaf);
+  background: var(--accent);
   clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
 }
 
@@ -2005,7 +1871,7 @@ figure:has(> .viz-caption) {
   line-height: 1.18;
   font-weight: 700;
   letter-spacing: -0.016em;
-  color: var(--cam-primary);
+  color: var(--accent-text);
   padding-left: 18px;
   margin-top: 2.5rem;
   margin-bottom: 1.1rem;
@@ -2019,9 +1885,7 @@ figure:has(> .viz-caption) {
   bottom: 0.25em;
   width: 4px;
   border-radius: 0 9999px 9999px 0;
-  background: linear-gradient(180deg,
-    var(--cam-primary) 0%,
-    var(--cam-primary-dk) 100%);
+  background: var(--accent);
 }
 .prep-content h2.prep-section-heading::after {
   content: '';
@@ -2031,8 +1895,8 @@ figure:has(> .viz-caption) {
   margin-left: -18px;
   max-width: 18rem;
   background: linear-gradient(90deg,
-    color-mix(in srgb, var(--cam-primary) 50%, transparent) 0%,
-    color-mix(in srgb, var(--cam-gold-leaf) 55%, transparent) 38%,
+    color-mix(in srgb, var(--accent) 50%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 35%, transparent) 38%,
     transparent 100%);
 }
 
@@ -2050,7 +1914,7 @@ figure:has(> .viz-caption) {
   line-height: 1.4;
   font-weight: 700;
   letter-spacing: 0.005em;
-  color: var(--cam-primary-dk);
+  color: var(--accent-text);
   margin-top: 1.25rem;
   margin-bottom: 0.4rem;
 }
@@ -2079,21 +1943,14 @@ figure:has(> .viz-caption) {
   padding: 0.1em 0.4em;
   border-radius: 5px;
   background: var(--bg-elevated);
-  border: 1px solid color-mix(in srgb, var(--cam-gold-leaf) 30%, transparent);
-  color: var(--cam-primary-dk);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--accent-text);
   font-weight: 500;
   font-feature-settings: 'liga' 0;
   white-space: nowrap;
 }
-[data-theme='dark'] .docs-page :not(pre) > code,
-[data-theme='dark'] .prep-content > p code,
-[data-theme='dark'] .prep-content > li code,
-[data-theme='dark'] .prep-content > section > p code {
-  color: var(--cam-gold-leaf-text);
-  border-color: color-mix(in srgb, var(--cam-gold-leaf) 35%, transparent);
-}
 
-/* ── Pre / code blocks — navy strip + gold-leaf border ───────────── */
+/* ── Pre / code blocks — emerald accent strip ──────────────────── */
 .docs-page pre,
 .prep-content > pre,
 .prep-content > section > pre {
@@ -2101,10 +1958,7 @@ figure:has(> .viz-caption) {
   border-radius: 10px;
   padding: 14px 16px 14px 22px;
   background: var(--bg-elevated);
-  border: 1px solid color-mix(in srgb, var(--cam-gold-leaf) 28%, transparent);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--cam-gold-leaf) 18%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 25%, transparent);
+  border: 1px solid var(--border);
   overflow-x: auto;
   margin: 1.1rem 0;
 }
@@ -2118,7 +1972,7 @@ figure:has(> .viz-caption) {
   bottom: 8px;
   width: 3px;
   border-radius: 0 9999px 9999px 0;
-  background: var(--cam-primary);
+  background: var(--accent);
 }
 .docs-page pre code,
 .prep-content > pre code,
@@ -2133,21 +1987,13 @@ figure:has(> .viz-caption) {
   white-space: pre;
 }
 
-/* ── Fenced code blocks from FormattedContent — navy strip + gold border ─ */
-/*
- * FormattedContent wraps fenced code in <div><pre>, so the bare
- * `.prep-content > pre` selector above can't reach them. These classes
- * replicate the same navy-gold chrome for that wrapper shape.
- */
+/* ── Fenced code blocks from FormattedContent — emerald strip ──── */
 .prep-code-block {
   position: relative;
   margin: 0.75rem 0;
   border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--cam-gold-leaf) 28%, transparent);
+  border: 1px solid var(--border);
   overflow: hidden;
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--cam-gold-leaf) 18%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 25%, transparent);
 }
 .prep-code-block::before {
   content: '';
@@ -2156,7 +2002,7 @@ figure:has(> .viz-caption) {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: linear-gradient(180deg, var(--cam-primary) 0%, var(--cam-primary-dk) 100%);
+  background: var(--accent);
   z-index: 1;
   pointer-events: none;
 }
@@ -2167,13 +2013,9 @@ figure:has(> .viz-caption) {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--cam-primary-dk);
-  background: color-mix(in srgb, var(--cam-primary) 6%, var(--bg-elevated));
-  border-bottom: 1px solid color-mix(in srgb, var(--cam-gold-leaf) 25%, transparent);
-}
-[data-theme='dark'] .prep-code-lang {
-  color: var(--cam-gold-leaf-lt);
-  background: color-mix(in srgb, var(--cam-primary) 15%, var(--bg-elevated));
+  color: var(--accent-text);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-elevated));
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
 }
 .prep-code-pre {
   padding: 14px 16px 14px 22px;
@@ -2185,21 +2027,17 @@ figure:has(> .viz-caption) {
   overflow-x: auto;
 }
 
-/* ── Viz figure cards — gold-leaf border matches docs design system ─── */
+/* ── Viz figure cards — emerald-tinted border ──────────────────── */
 .viz-figure {
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
   overflow: hidden;
   background: var(--bg-surface);
   box-shadow:
-    0 0 0 0.5px color-mix(in srgb, var(--cam-gold-leaf) 12%, transparent),
+    0 0 0 0.5px color-mix(in srgb, var(--accent) 10%, transparent),
     0 1px 3px color-mix(in srgb, black 6%, transparent);
 }
-[data-theme='dark'] .viz-figure {
-  border-color: color-mix(in srgb, var(--cam-gold-leaf) 28%, transparent);
-}
-
-/* ── Q&A pairs — navy "Q" badge / gold "A" badge ───────────────────────── */
+/* ── Q&A pairs — emerald accent ─────────────────────────────────── */
 .qa-q,
 .qa-a {
   display: flex;
@@ -2212,19 +2050,13 @@ figure:has(> .viz-caption) {
   line-height: 1.55;
 }
 .qa-q {
-  background: color-mix(in srgb, var(--cam-primary) 7%, var(--bg-elevated));
-  border-left: 3px solid var(--cam-primary);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-elevated));
+  border-left: 3px solid var(--accent);
 }
 .qa-a {
-  background: color-mix(in srgb, var(--cam-gold-leaf) 8%, var(--bg-elevated));
-  border-left: 3px solid var(--cam-gold-leaf);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-elevated));
+  border-left: 3px solid var(--accent);
   margin-bottom: 0.75rem;
-}
-[data-theme='dark'] .qa-q {
-  background: color-mix(in srgb, var(--cam-primary) 18%, var(--bg-elevated));
-}
-[data-theme='dark'] .qa-a {
-  background: color-mix(in srgb, var(--cam-gold-leaf) 12%, var(--bg-elevated));
 }
 .qa-label {
   flex-shrink: 0;
@@ -2284,14 +2116,14 @@ figure:has(> .viz-caption) {
 .prep-content > section > li a:not([class]) {
   color: var(--accent);
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--cam-gold-leaf) 50%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--accent) 50%, transparent);
   text-underline-offset: 2px;
   transition: text-decoration-color 0.15s ease;
 }
 .docs-page a:not([class]):hover,
 .prep-content > p a:not([class]):hover,
 .prep-content > li a:not([class]):hover {
-  text-decoration-color: var(--cam-gold-leaf);
+  text-decoration-color: var(--accent);
 }
 
 /* ── Image sizing — soft bounds only, never break component layout ───
@@ -2315,26 +2147,25 @@ figure:has(> .viz-caption) {
   max-height: 720px;
 }
 
-/* ── Tables — gold-leaf header band ──────────────────────────────── */
+/* ── Tables — emerald-tinted header band ────────────────────────── */
 .docs-page table thead th {
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--cam-gold-leaf) 14%, var(--bg-elevated)) 0%,
+    color-mix(in srgb, var(--accent) 12%, var(--bg-elevated)) 0%,
     var(--bg-elevated) 100%);
-  color: var(--cam-primary-dk);
+  color: var(--accent-text);
   font-weight: 700;
   letter-spacing: 0.01em;
 }
 .docs-page table tbody tr:hover {
-  background: color-mix(in srgb, var(--cam-gold-leaf) 6%, transparent);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
 }
 
-/* ── Topic-highlight cards (link cards in the docs index, etc.) ──── */
+/* ── Topic-highlight cards ──────────────────────────────────────── */
 .docs-page .group:has(h3) {
   position: relative;
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   overflow: hidden;
 }
-/* Navy strip on the left edge of every topic card. */
 .docs-page .group:has(h3)::before {
   content: '';
   position: absolute;
@@ -2342,17 +2173,15 @@ figure:has(> .viz-caption) {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: linear-gradient(180deg,
-    var(--cam-primary) 0%,
-    var(--cam-primary-dk) 100%);
+  background: var(--accent);
   opacity: 0.65;
   transition: opacity 0.18s ease;
 }
 .docs-page .group:has(h3):hover {
-  border-color: var(--cam-gold-leaf) !important;
+  border-color: var(--accent) !important;
   box-shadow:
-    0 6px 20px -10px color-mix(in srgb, var(--cam-primary) 30%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--cam-gold-leaf) 25%, transparent);
+    0 6px 20px -10px color-mix(in srgb, var(--accent) 25%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 .docs-page .group:has(h3):hover::before { opacity: 1; }
 
@@ -2365,7 +2194,7 @@ figure:has(> .viz-caption) {
   font-size: 10.5px;
   letter-spacing: 0.16em;
   font-weight: 800;
-  color: var(--cam-gold-leaf-text);
+  color: var(--accent-text);
 }
 .docs-sidebar-shell nav a {
   position: relative;
@@ -2375,13 +2204,11 @@ figure:has(> .viz-caption) {
   transition: background 0.15s ease, color 0.15s ease;
 }
 .docs-sidebar-shell nav a:hover {
-  background: color-mix(in srgb, var(--cam-gold-leaf) 8%, transparent) !important;
+  background: color-mix(in srgb, var(--accent) 6%, transparent) !important;
 }
-/* Active sidebar link — full glassy pill capsule with gold-leaf border */
 .docs-sidebar-shell nav a[style*='--accent'][style*='border-left'] {
-  /* Keep existing inline navy left strip; add gold-leaf-50 wash */
-  background: color-mix(in srgb, var(--cam-gold-leaf) 12%, var(--bg-elevated)) !important;
-  border-left-color: var(--cam-primary) !important;
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-elevated)) !important;
+  border-left-color: var(--accent) !important;
   border-left-width: 3px !important;
 }
 
@@ -2393,11 +2220,11 @@ figure:has(> .viz-caption) {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 .docs-rail-shell > div > div:first-child > span {
-  color: var(--cam-gold-leaf-text) !important;
+  color: var(--accent-text) !important;
   letter-spacing: 0.18em;
 }
 .docs-rail-shell ul {
-  border-left: 1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, var(--border));
+  border-left: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
 }
 .docs-rail-shell ul a {
   font-size: 12.5px;
@@ -2405,9 +2232,8 @@ figure:has(> .viz-caption) {
   letter-spacing: 0.005em;
 }
 .docs-rail-shell ul a.font-semibold {
-  /* Active rail item gets navy strip + gold-leaf-50 wash for the pill feel */
-  background: color-mix(in srgb, var(--cam-gold-leaf) 10%, transparent);
-  border-left-color: var(--cam-primary) !important;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-left-color: var(--accent) !important;
   border-radius: 0 6px 6px 0;
 }
 
@@ -2425,15 +2251,14 @@ figure:has(> .viz-caption) {
 .cofix-line-fix { background-color: rgba(245, 158, 11, 0.12) !important; }
 .cofix-line-added { background-color: rgba(34, 197, 94, 0.12) !important; }
 
-/* ── Allotment sash — gold-leaf theme for CoFix split pane ── */
+/* ── Allotment sash — emerald accent for CoFix split pane ── */
 .split-view-view > .sash-container > .sash {
-  background: var(--cam-gold-leaf-dk) !important;
-  opacity: 0.35;
+  background: var(--accent) !important;
+  opacity: 0.25;
   transition: opacity 0.15s;
   width: 3px !important;
 }
 .split-view-view > .sash-container > .sash:hover,
 .split-view-view > .sash-container > .sash.active {
-  opacity: 1 !important;
-  background: var(--cam-gold-leaf) !important;
+  opacity: 0.7 !important;
 }

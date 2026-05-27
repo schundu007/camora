@@ -1,0 +1,57 @@
+{
+  "title": "WhatsApp — Connection Routing",
+  "subtitle": "Consistent hashing for 1B concurrent users",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "user",
+          "label": "User A\nuserId: 123",
+          "kind": "actor"
+        },
+        {
+          "id": "hash",
+          "label": "Hash(123) % Ring\nConsistent Hashing",
+          "kind": "worker"
+        },
+        {
+          "id": "server",
+          "label": "Chat Gateway 5\nPersistent WS",
+          "kind": "gateway"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "hash",
+      "nodes": [
+        {
+          "id": "redis",
+          "label": "Presence Redis\nuserId → serverId",
+          "kind": "cache"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Virtual Nodes",
+      "body": "Each physical server acts as 256\nvirtual nodes on the ring to ensure\neven distribution of connections."
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Scaling Events",
+      "pros": [
+        "Adding server only remaps 1/N users",
+        "No central routing bottleneck"
+      ],
+      "cons": [
+        "Connection storms on server failure",
+        "Hot spots for celebrity traffic"
+      ]
+    }
+  ]
+}

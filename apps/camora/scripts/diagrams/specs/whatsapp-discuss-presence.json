@@ -1,0 +1,51 @@
+{
+  "title": "WhatsApp — Presence System",
+  "subtitle": "Real-time online/last-seen tracking",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "client",
+          "label": "Heartbeat\nEvery 30s",
+          "kind": "actor"
+        },
+        {
+          "id": "gate",
+          "label": "Chat Gateway\nAggregation",
+          "kind": "gateway"
+        },
+        {
+          "id": "redis",
+          "label": "Redis Cluster\nTTL: 60s",
+          "kind": "cache"
+        },
+        {
+          "id": "sub",
+          "label": "Subscribers\n(Active Chats)",
+          "kind": "actor"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "redis",
+      "to": "sub",
+      "label": "Pub/Sub Fan-out"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Optimization",
+      "body": "Gateways batch heartbeats before\nupdating Redis to reduce 100K\nindividual writes to 1 pipeline."
+    },
+    {
+      "kind": "issue",
+      "title": "Lazy Presence",
+      "body": "Only track presence for users\nactive in the last 24 hours to\nkeep Redis working set lean."
+    }
+  ]
+}

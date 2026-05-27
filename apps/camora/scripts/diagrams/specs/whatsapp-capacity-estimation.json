@@ -1,0 +1,42 @@
+{
+  "title": "WhatsApp — Capacity Estimation",
+  "subtitle": "Traffic, Presence, and Storage Analysis",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "traffic",
+          "label": "Messaging\n580K avg WPS\n1.5M peak WPS",
+          "kind": "gateway",
+          "sub": "50B msgs/day"
+        },
+        {
+          "id": "presence",
+          "label": "Presence\n33M heartbeats/s",
+          "kind": "worker",
+          "sub": "1B DAU"
+        },
+        {
+          "id": "storage",
+          "label": "Text Storage\n10 TB / day",
+          "kind": "datastore",
+          "sub": "Cassandra"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Messaging Math",
+      "body": "Daily Messages: 50B\nWPS (Avg): 50B / 86400 ≈ 580K/s\nWPS (Peak): 1.5M/s (Holidays)\n\nPresence:\n1B users * 1 heartbeat / 30s\n= 33 Million heartbeats/sec"
+    },
+    {
+      "kind": "code",
+      "title": "Storage Math",
+      "body": "Avg Text Msg: 200 bytes\nDaily Text: 50B * 200B = 10 TB/day\nAnnual Text: 3.65 PB/year\n\nMedia:\n2B photos/day * 500KB = 1 PB/day\n(Stored in S3 with CDN delivery)"
+    }
+  ]
+}

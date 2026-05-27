@@ -1,0 +1,55 @@
+{
+  "title": "YouTube — View Counter",
+  "subtitle": "High-throughput counting and fraud detection",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "client",
+          "label": "Viewer Event",
+          "kind": "actor"
+        },
+        {
+          "id": "kafka",
+          "label": "Kafka\nview-stream",
+          "kind": "queue"
+        },
+        {
+          "id": "flink",
+          "label": "Flink\nDedup & Filter",
+          "kind": "worker"
+        },
+        {
+          "id": "db",
+          "label": "Metadata DB\nBatch Update",
+          "kind": "datastore"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "flink",
+      "nodes": [
+        {
+          "id": "redis",
+          "label": "Redis Shards\nHot viral counters",
+          "kind": "cache"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "issue",
+      "title": "Fraud Detection",
+      "body": "- IP rate limits\n- 30s min watch time\n- Mouse movement / Bot checks"
+    },
+    {
+      "kind": "note",
+      "title": "Hot Keys",
+      "body": "Viral videos shard across 100+\nRedis instances to avoid bottleneck."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "title": "Uber — Basic Implementation",
+  "subtitle": "Simplified location-based matching",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "rider",
+          "label": "Rider App",
+          "kind": "actor"
+        },
+        {
+          "id": "match-svc",
+          "label": "Matching Service\nGreedy radius search",
+          "kind": "service"
+        },
+        {
+          "id": "db",
+          "label": "PostgreSQL\nPostGIS Index",
+          "kind": "datastore"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "match-svc",
+      "nodes": [
+        {
+          "id": "driver",
+          "label": "Driver App\nGPS Update",
+          "kind": "actor"
+        },
+        {
+          "id": "loc-svc",
+          "label": "Location Service",
+          "kind": "service"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "driver",
+      "to": "loc-svc"
+    },
+    {
+      "from": "loc-svc",
+      "to": "db"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "issue",
+      "title": "Scaling Flaws",
+      "body": "- PostGIS queries slow at 1M+ updates/s\n- Single DB becomes write bottleneck\n- No real-time ETA or traffic overlay\n- Matching doesn't account for driver heading"
+    }
+  ]
+}

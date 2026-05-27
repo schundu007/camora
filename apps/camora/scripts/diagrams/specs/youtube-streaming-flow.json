@@ -1,0 +1,49 @@
+{
+  "title": "YouTube — Streaming Architecture",
+  "subtitle": "Adaptive Bitrate (ABR) delivery",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "viewer",
+          "label": "Viewer\nRequest Video",
+          "kind": "actor"
+        },
+        {
+          "id": "manifest",
+          "label": "Manifest Load\nM3U8 / MPD",
+          "kind": "gateway"
+        },
+        {
+          "id": "abr",
+          "label": "ABR Logic\nBandwidth probing",
+          "kind": "worker"
+        },
+        {
+          "id": "cdn",
+          "label": "CDN Edge\nSSD Cache",
+          "kind": "cache"
+        },
+        {
+          "id": "playback",
+          "label": "Video Playback\nSeamless quality switch",
+          "kind": "actor"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Adaptive Logic (ABR)",
+      "body": "if buffer_health < 5s:\n  switch to lower resolution\n\nif throughput > 15 Mbps AND\n   buffer_health > 15s:\n  switch to 4K resolution"
+    },
+    {
+      "kind": "note",
+      "title": "Cache Invalidation",
+      "body": "Videos rarely change after publish.\nCache TTL is high (weeks).\nDeletions trigger global CDN purge."
+    }
+  ]
+}

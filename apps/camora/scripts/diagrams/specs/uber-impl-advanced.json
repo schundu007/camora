@@ -1,0 +1,71 @@
+{
+  "title": "Uber — Advanced Architecture",
+  "subtitle": "Cell-based geospatial sharding (S2/H3)",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "Geographic Cell Shard",
+      "nodes": [
+        {
+          "id": "cell-gateway",
+          "label": "Cell Gateway\nS2/H3 router",
+          "kind": "gateway"
+        },
+        {
+          "id": "cell-svc",
+          "label": "Cell Service\nLocal Matching",
+          "kind": "service"
+        },
+        {
+          "id": "redis",
+          "label": "Redis Geo\nHot Driver Pool",
+          "kind": "cache"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "cell-gateway",
+      "nodes": [
+        {
+          "id": "kafka",
+          "label": "Kafka\nLocation Bus",
+          "kind": "queue"
+        },
+        {
+          "id": "analytics",
+          "label": "Analytics & ETA\nFlink processing",
+          "kind": "worker"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "cell-gateway",
+      "to": "kafka",
+      "label": "Async log"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "S2/H3 Cell Logic",
+      "body": "- City divided into ~1km² cells\n- Each cell shard is isolated (fault tolerance)\n- Redis GEOADD/GEOSEARCH handles hot lookups\n- Cross-cell matching queries adjacent shards"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Real-time Tracking",
+      "pros": [
+        "Horizontal scaling per city/region",
+        "Sub-ms matching within local shard",
+        "Eventual consistency for analytics"
+      ],
+      "cons": [
+        "Cell boundary coordination",
+        "Shard rebalancing complexity"
+      ]
+    }
+  ]
+}

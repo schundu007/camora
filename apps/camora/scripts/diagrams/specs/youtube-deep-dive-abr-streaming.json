@@ -1,0 +1,39 @@
+{
+  "title": "YouTube — ABR Streaming",
+  "subtitle": "Client-side bandwidth adaptation",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "player",
+          "label": "Video Player\nBuffer & Speed Check",
+          "kind": "actor"
+        },
+        {
+          "id": "manifest",
+          "label": "Manifest Load\nM3U8 / MPD",
+          "kind": "gateway"
+        },
+        {
+          "id": "cdn",
+          "label": "CDN Edge\nFetch Segments",
+          "kind": "cache"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Hysteresis Logic",
+      "body": "Switch Up: throughput > 150%\nSwitch Down: buffer < 5s\n\nAvoids quality oscillation."
+    },
+    {
+      "kind": "note",
+      "title": "HLS vs DASH",
+      "body": "HLS: Apple native, TS segments\nDASH: XML based, fMP4 segments"
+    }
+  ]
+}

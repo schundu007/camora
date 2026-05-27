@@ -1,0 +1,60 @@
+{
+  "title": "Uber — Location Pipeline",
+  "subtitle": "Processing 10M GPS updates per second",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "driver",
+          "label": "Driver App\nGPS capture (4s)",
+          "kind": "actor"
+        },
+        {
+          "id": "ingest",
+          "label": "Location Ingest\nUDP / gRPC",
+          "kind": "gateway"
+        },
+        {
+          "id": "redis",
+          "label": "Redis Geo\nO(log N) Index",
+          "kind": "cache"
+        },
+        {
+          "id": "kafka",
+          "label": "Kafka\nlocation-topic",
+          "kind": "queue"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "kafka",
+      "nodes": [
+        {
+          "id": "eta",
+          "label": "ETA Service\nLive traffic update",
+          "kind": "worker"
+        },
+        {
+          "id": "ws",
+          "label": "WS Gateway\nPush to Rider",
+          "kind": "gateway"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Hot/Cold Data Tiering",
+      "body": "- Hot: Redis (Last 5 min)\n- Warm: TimescaleDB (Last 24h)\n- Cold: S3 / Parquet (Historical)"
+    },
+    {
+      "kind": "note",
+      "title": "Fraud Detection",
+      "body": "- Reject updates with impossible speed\n- Cross-check against accelerometer\n- Snap-to-road to detect teleporting"
+    }
+  ]
+}

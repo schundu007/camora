@@ -1,0 +1,48 @@
+{
+  "title": "Instagram — Capacity Estimation",
+  "subtitle": "Traffic, Storage, and Egress Analysis",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "upload",
+          "label": "Photo Upload\n1,200 QPS Avg\n3,000 QPS Peak",
+          "kind": "gateway",
+          "sub": "100M / day"
+        },
+        {
+          "id": "feed",
+          "label": "Feed Read\n580K QPS Avg\n1M QPS Peak",
+          "kind": "worker",
+          "sub": "500M DAU"
+        },
+        {
+          "id": "storage",
+          "label": "Storage Growth\n600 TB / day\n219 PB / year",
+          "kind": "datastore",
+          "sub": "Replicated"
+        },
+        {
+          "id": "bandwidth",
+          "label": "CDN Egress\n230 GB / s\n95% hit rate",
+          "kind": "gateway",
+          "sub": "Edge PoPs"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Storage Math",
+      "body": "Daily Upload: 100M photos\nAvg Original: 2MB\nProcessed (3 sizes): +4MB total\n100M * 6MB = 600 TB / day"
+    },
+    {
+      "kind": "code",
+      "title": "Egress Math",
+      "body": "500M DAU * 50 photos/day\n= 25 Billion views/day\n25B * 500KB avg payload\n/ 86400s ≈ 144 GB/s Avg"
+    }
+  ]
+}

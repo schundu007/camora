@@ -1,0 +1,44 @@
+{
+  "title": "YouTube — Basic Architecture",
+  "subtitle": "Direct upload and simple streaming",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "creator",
+          "label": "Creator",
+          "kind": "actor"
+        },
+        {
+          "id": "upload",
+          "label": "Upload Server",
+          "kind": "service"
+        },
+        {
+          "id": "transcoder",
+          "label": "Single Node\nFFmpeg",
+          "kind": "worker"
+        },
+        {
+          "id": "storage",
+          "label": "Single Region\nObject Store",
+          "kind": "datastore"
+        },
+        {
+          "id": "viewer",
+          "label": "Viewer",
+          "kind": "actor"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "issue",
+      "title": "Production Flaws",
+      "body": "- Transcoding SPOF: queue grows exponentially\n- No Adaptive Bitrate (ABR): buffering on mobile\n- Global latency: viewers far from DC lag 500ms+\n- Storage cost: no hot/cold tiering"
+    }
+  ]
+}

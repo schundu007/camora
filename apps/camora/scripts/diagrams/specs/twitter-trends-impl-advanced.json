@@ -1,0 +1,67 @@
+{
+  "title": "Twitter Trends — Global Architecture",
+  "subtitle": "Hierarchical regional aggregation with anomaly detection",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "Regional Shards",
+      "nodes": [
+        {
+          "id": "regional-kafka",
+          "label": "Regional Kafka\nGeo-partitioned",
+          "kind": "queue"
+        },
+        {
+          "id": "regional-flink",
+          "label": "Regional Flink\nCity/Country Trends",
+          "kind": "worker"
+        }
+      ]
+    },
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "global-agg",
+          "label": "Global Aggregator\nCross-region merge",
+          "kind": "service"
+        },
+        {
+          "id": "redis-cluster",
+          "label": "Redis Cluster\nGlobal & Local Trends",
+          "kind": "cache"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "global-agg",
+      "nodes": [
+        {
+          "id": "batch-baseline",
+          "label": "Batch Layer\nHistorical baselines\n(Moving averages)",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "regional-flink",
+      "to": "global-agg"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Key Enhancements",
+      "body": "- Geo-partitioned streams for low latency\n- Hierarchical aggregation (City → Region → Country)\n- Fault-tolerant with Flink checkpointing\n- Anomaly detection via historical baselines"
+    },
+    {
+      "kind": "code",
+      "title": "Trend Scoring (Advanced)",
+      "body": "Z-score = (Current - Baseline) / StdDev\nFinal Score = Z-score * Log(Count) * e^(-λt)"
+    }
+  ]
+}
