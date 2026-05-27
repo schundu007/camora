@@ -330,10 +330,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [isResizingH, setIsResizingH] = useState(false);
   const [isResizingV, setIsResizingV] = useState(false);
   const [isOutputCollapsed, setIsOutputCollapsed] = useState(true); // Start collapsed — expands when test cases arrive
+  const [multiPageCapturing, setMultiPageCapturing] = useState(false);
+  const [multiPageCount, setMultiPageCount] = useState(0);
 
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const appendFileInputRef = useRef<HTMLInputElement>(null);
+  const multiPageCapturingRef = useRef(false);
+  const captureAutoGenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Store
   const { streamText, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache } = useSessionStore();
@@ -931,14 +935,56 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUrl, token]);
 
-  // F9 shortcut (Electron desktop): URL-first then OCR fallback.
-  // 1) Ask Electron for the active browser tab URL and try backend scraper.
-  // 2) If that fails or returns empty, fall back to OCR on the screenshot.
+  // Starts/resets the 8-second auto-generate timer used after multi-page captures.
+  // Each new page resets the clock; when it fires the combined text is submitted.
+  const scheduleAutoGenerate = useCallback(() => {
+    if (captureAutoGenTimerRef.current) clearTimeout(captureAutoGenTimerRef.current);
+    captureAutoGenTimerRef.current = setTimeout(() => {
+      const text = problemTextRef.current;
+      if (!text.trim()) return;
+      multiPageCapturingRef.current = false;
+      setMultiPageCapturing(false);
+      setMultiPageCount(0);
+      const lang = resolveLanguage(text);
+      setStreamError(null);
+      setTestResults([]);
+      setTestCases([]);
+      setOutput('');
+      setShowFixPrompt(false);
+      clearStreamChunks();
+      setParsedBlocks([]);
+      setJsonSolution(null);
+      setCode(getDefaultCode(lang));
+      setCollapsedCards(new Set());
+      setActiveSolutionIdx(0);
+      setIsOutputCollapsed(true);
+      setProblemTab('solution');
+      onSubmit(text, lang, undefined);
+    }, 8000);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolveLanguage, clearStreamChunks, onSubmit]);
+
+  // F9 shortcut (Electron desktop): multi-page aware, URL-first on first capture.
+  // Page 1: try active URL via backend scraper (generates immediately on success).
+  //         On OCR fallback: extract text, start multi-page session, start 8s timer.
+  // Page 2+: skip URL check, OCR and append, reset timer.
+  // Timer fires after 8s of no new captures → auto-generates combined problem.
   useEffect(() => {
     if (!pendingHackerrankCapture) return;
     onHackerrankCaptureConsumed?.();
     (async () => {
       try {
+        // Subsequent page in a multi-page session: append and reset timer.
+        if (multiPageCapturingRef.current) {
+          const blob = await (await fetch(pendingHackerrankCapture)).blob();
+          const file = new File([blob], 'hackerrank-capture.png', { type: blob.type || 'image/png' });
+          await extractAndAppend(file);
+          setMultiPageCount(c => c + 1);
+          scheduleAutoGenerate();
+          return;
+        }
+
+        // First capture: try URL-first (full problem via backend scraper).
         const camo = (window as any).camo;
         const activeUrl: string | null = camo?.getActiveBrowserUrl ? await camo.getActiveBrowserUrl() : null;
         if (activeUrl && token) {
@@ -953,6 +999,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               const data = await resp.json();
               const text = String(data.problem || '').trim();
               if (text) {
+                // Full problem from URL — generate immediately, no multi-page needed.
                 setProblemText(text);
                 setSnapChipCode(text);
                 setStarterCode(null);
@@ -978,12 +1025,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             // URL fetch failed — fall through to OCR
           }
         }
-        // Fallback: OCR the screenshot
+
+        // OCR first page: extract, start multi-page session, wait for more pages.
         const blob = await (await fetch(pendingHackerrankCapture)).blob();
         const file = new File([blob], 'hackerrank-capture.png', { type: blob.type || 'image/png' });
         setInputMode('image');
         setImagePreview(pendingHackerrankCapture);
-        await extractAndMaybeGenerate(file, true);
+        await extractAndMaybeGenerate(file, false); // false = don't auto-generate yet
+        multiPageCapturingRef.current = true;
+        setMultiPageCapturing(true);
+        setMultiPageCount(1);
+        scheduleAutoGenerate();
       } catch (err: any) {
         setError(err.message || 'Failed to process HackerRank screenshot.');
         // Reset dedup in main process so the next poll retries this URL.
@@ -1139,6 +1191,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   const handleGenerateSolution = () => {
     if (!problemText.trim()) { setError('Please enter a problem first'); return; }
+    // Clear any pending multi-page auto-generate timer.
+    if (captureAutoGenTimerRef.current) clearTimeout(captureAutoGenTimerRef.current);
+    multiPageCapturingRef.current = false;
+    setMultiPageCapturing(false);
+    setMultiPageCount(0);
     // Wipe previous solution state, fire the solver. No Sona on this
     // tab — every click runs the solver on the current problem text.
     setError(null);
@@ -1952,7 +2009,32 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                             className="w-full h-[140px] sm:h-[180px] md:h-[220px] max-h-[40dvh] rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-[var(--text-dimmed)] resize-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
                             style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }}
                           />
-                          {problemText.trim() && (
+                          {/* Multi-page capture session: auto-capture appending pages, generate after 8s idle */}
+                          {multiPageCapturing && (
+                            <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg"
+                              style={{ background: t.sectionBg, border: '1px solid var(--cam-gold-leaf)' }}>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-2 h-2 rounded-full bg-[var(--cam-gold-leaf)] animate-pulse shrink-0" />
+                                <span className="text-xs font-semibold truncate" style={{ color: t.text }}>
+                                  {multiPageCount} page{multiPageCount > 1 ? 's' : ''} captured — scroll for more
+                                </span>
+                              </div>
+                              <button type="button"
+                                onClick={() => {
+                                  if (captureAutoGenTimerRef.current) clearTimeout(captureAutoGenTimerRef.current);
+                                  multiPageCapturingRef.current = false;
+                                  setMultiPageCapturing(false);
+                                  setMultiPageCount(0);
+                                  handleGenerateSolution();
+                                }}
+                                className="px-2 py-1 text-xs font-bold rounded shrink-0 transition-opacity hover:opacity-80"
+                                style={{ background: 'var(--cam-primary)', color: 'white' }}>
+                                Generate Now
+                              </button>
+                            </div>
+                          )}
+                          {/* Manual add-page for web / non-auto flows */}
+                          {problemText.trim() && !multiPageCapturing && (
                             <>
                               <input ref={appendFileInputRef} type="file" accept="image/*" className="hidden"
                                 onChange={(e) => { const f = e.target.files?.[0]; if (f) void extractAndAppend(f); e.target.value = ''; }} />
