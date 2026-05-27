@@ -36,7 +36,7 @@
     /* Borders — neutral slate edges */
     --border: #E2E8F0;
     --border-hover: #CBD5E1;
-    --border-focus: #38BDF8;
+    --border-focus: #26619C;
 
     /* Text — black-first on white; all four tokens stay above 7:1 (AAA)
        primary    #000000   21:1   pure black for body + headings
@@ -94,16 +94,16 @@
     --font-answer: 'Satoshi', 'Plus Jakarta Sans', -apple-system, sans-serif;
     --font-answer-heading: 'Source Serif 4', Georgia, serif;
     --fs-answer-body: 16px;
-    --fs-answer-lead: 17px;     /* first paragraph / intro line */
-    --fs-answer-heading: 19px;  /* HEADLINE / section titles */
+    --fs-answer-lead: 17px;
+    --fs-answer-heading: 19px;
     --lh-answer: 1.7;
 
-    /* Shadows — soft blue glow on the navy palette */
-    --shadow-xs: 0 1px 2px rgba(56,189,248,0.06);
-    --shadow-sm: 0 2px 6px rgba(56,189,248,0.08);
-    --shadow-md: 0 4px 12px rgba(56,189,248,0.10);
-    --shadow-lg: 0 8px 24px rgba(56,189,248,0.12);
-    --shadow-xl: 0 16px 48px rgba(56,189,248,0.15);
+    /* Shadows — soft lapis glow on the navy palette */
+    --shadow-xs: 0 1px 2px rgba(38,97,156,0.06);
+    --shadow-sm: 0 2px 6px rgba(38,97,156,0.08);
+    --shadow-md: 0 4px 12px rgba(38,97,156,0.10);
+    --shadow-lg: 0 8px 24px rgba(38,97,156,0.12);
+    --shadow-xl: 0 16px 48px rgba(38,97,156,0.15);
     --card-shadow: var(--shadow-sm);
 
     /* Layout */
@@ -235,7 +235,7 @@
     /* Borders — neutral slate that pops against charcoal without tinting it. */
     --border:        #2E343F;
     --border-hover:  #3D4452;
-    --border-focus:  #5985B6;
+    --border-focus:  #87AAE0;
 
     /* Text — warm cream-tinted whites. Tightened so secondary copy and
        chip counters don't read as washed-out tan against dark navy. */
@@ -312,6 +312,49 @@
     --lumora-chrome-hover:  rgba(255,255,255,0.10);
 
     color-scheme: dark;
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     PRODUCT VISUAL IDENTITY
+     Lumora = dark immersive cockpit (live interview AI)
+     Capra  = light editorial library (prep / study)
+     ────────────────────────────────────────────────────────── */
+
+  /* ── Lumora: dark-immersive chrome + gold accents ──────── */
+  [data-product="lumora"] {
+    /* Even in light mode, Lumora chrome is dark navy.
+       Surfaces stay at theme defaults for answer readability. */
+    --lumora-chrome-bg:     var(--cam-hero-strip);
+    --lumora-chrome-border: rgba(201,162,39,0.35);
+    --lumora-chrome-shadow: inset 0 -2px 0 var(--cam-gold-leaf);
+    --lumora-chrome-text:   rgba(255,255,255,0.88);
+    --lumora-chrome-hover:  rgba(255,255,255,0.10);
+  }
+  [data-product="lumora"] [data-theme="light"] .lumora-status-bar,
+  [data-product="lumora"] .lumora-status-bar {
+    border-top-color: rgba(201,162,39,0.20);
+    box-shadow: 0 -1px 4px rgba(0,0,0,0.15);
+  }
+  /* Live recording pulse overlay — only in Lumora */
+  [data-product="lumora"] .status-dot-listen {
+    box-shadow: 0 0 12px rgba(201,162,39,0.60);
+  }
+
+  /* ── Capra: editorial library — serif reading, warm surfaces ── */
+  [data-product="capra"] {
+    --content-max: 760px;
+  }
+  /* Answer headings use serif for an academic reading feel */
+  [data-product="capra"] .block-answer h1,
+  [data-product="capra"] .block-answer h2,
+  [data-product="capra"] .block-answer h3,
+  [data-product="capra"] .docs-page h1,
+  [data-product="capra"] .docs-page h2,
+  [data-product="capra"] .docs-page h3,
+  [data-product="capra"] .prep-content h1,
+  [data-product="capra"] .prep-content h2,
+  [data-product="capra"] .prep-content h3 {
+    font-family: var(--font-answer-heading);
   }
 
   /* Dark-theme contrast guard: components that hard-coded `bg-white` (or
