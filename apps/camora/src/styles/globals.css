@@ -271,32 +271,34 @@
   }
 
   /* Dark-theme contrast guard (default): hardcoded Tailwind text colors like
-     text-slate-900 (#0f172a) are near-black. Remap to theme CSS vars. */
-  :root .text-slate-700,
-  :root .text-slate-800,
-  :root .text-slate-900,
-  :root .text-gray-700,
-  :root .text-gray-800,
-  :root .text-gray-900,
-  :root .text-zinc-700,
-  :root .text-zinc-800,
-  :root .text-zinc-900,
-  :root .text-neutral-700,
-  :root .text-neutral-800,
-  :root .text-neutral-900,
-  :root .text-stone-700,
-  :root .text-stone-800,
-  :root .text-stone-900 { color: var(--text-primary) !important; }
-  :root .text-slate-500,
-  :root .text-slate-600,
-  :root .text-gray-500,
-  :root .text-gray-600,
-  :root .text-zinc-500,
-  :root .text-zinc-600,
-  :root .text-neutral-500,
-  :root .text-neutral-600,
-  :root .text-stone-500,
-  :root .text-stone-600 { color: var(--text-secondary) !important; }
+     text-slate-900 (#0f172a) are near-black. Remap to theme CSS vars.
+     NOTE: inside :root block — CSS nesting prepends `:root`, making these
+     `:root .text-slate-900` — don't repeat the `:root` prefix. */
+  .text-slate-700,
+  .text-slate-800,
+  .text-slate-900,
+  .text-gray-700,
+  .text-gray-800,
+  .text-gray-900,
+  .text-zinc-700,
+  .text-zinc-800,
+  .text-zinc-900,
+  .text-neutral-700,
+  .text-neutral-800,
+  .text-neutral-900,
+  .text-stone-700,
+  .text-stone-800,
+  .text-stone-900 { color: var(--text-primary) !important; }
+  .text-slate-500,
+  .text-slate-600,
+  .text-gray-500,
+  .text-gray-600,
+  .text-zinc-500,
+  .text-zinc-600,
+  .text-neutral-500,
+  .text-neutral-600,
+  .text-stone-500,
+  .text-stone-600 { color: var(--text-secondary) !important; }
 
   /* Light-theme contrast guard: flip hardcoded dark bg/text classes. */
   [data-theme="light"] .bg-white,
