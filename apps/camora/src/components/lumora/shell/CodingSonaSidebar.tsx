@@ -81,6 +81,29 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
   const abortRef = useRef<AbortController | null>(null);
   // Citations accumulator for the in-flight stream.
   const pendingCitationsRef = useRef<Citation[]>([]);
+  // Track the previous context identity to detect problem changes.
+  const prevContextKeyRef = useRef<string | null>(null);
+
+  // Reset messages when a new problem is solved or the problem is cleared.
+  // liveSolveContext is set to null at the start of each generate, then to
+  // the new problem+solution when it completes. Either transition means the
+  // user moved to a different problem and Sona should start fresh.
+  useEffect(() => {
+    const key = liveSolveContext
+      ? `${liveSolveContext.surface}:${liveSolveContext.solvedAt}`
+      : null;
+    if (key !== prevContextKeyRef.current) {
+      prevContextKeyRef.current = key;
+      if (messages.length > 0) {
+        abortRef.current?.abort();
+        setMessages([]);
+        setStreamText('');
+        setError(null);
+        localStorage.removeItem(STORAGE_PREFIX + surface);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveSolveContext]);
 
   // Auto-scroll to bottom on new messages / streaming tokens
   useEffect(() => {
