@@ -995,7 +995,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
           ) : (
             <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>{user?.name?.[0] || '?'}</div>
           )}
-          <span className="text-sm font-medium text-white">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
+          <span className="text-sm font-medium text-[var(--text-hero)]">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
         </Link>
       </div>
     </header>
