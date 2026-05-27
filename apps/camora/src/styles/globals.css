@@ -29,6 +29,7 @@
        readability without the warm tint of the old Sapphire palette. */
     --text-primary:  #F1F3F5;
     --text-secondary:#B0B8C4;
+    --text-hero:     #F1F3F5;
     --text-muted:    #6B7380;
     --text-dimmed:   #4A515E;
 
@@ -168,6 +169,7 @@
 
     --text-primary:  #111318;
     --text-secondary:#495057;
+    --text-hero:     #111318;
     --text-muted:    #6C757D;
     --text-dimmed:   #868E96;
 
@@ -268,9 +270,35 @@
     --content-max: 760px;
   }
 
-  /* Light-theme contrast guard: components that hard-coded `bg-surface`
-     or dark background classes assume the dark default. Flip them to
-     light equivalents when data-theme="light" is set. */
+  /* Dark-theme contrast guard (default): hardcoded Tailwind text colors like
+     text-slate-900 (#0f172a) are near-black. Remap to theme CSS vars. */
+  :root .text-slate-700,
+  :root .text-slate-800,
+  :root .text-slate-900,
+  :root .text-gray-700,
+  :root .text-gray-800,
+  :root .text-gray-900,
+  :root .text-zinc-700,
+  :root .text-zinc-800,
+  :root .text-zinc-900,
+  :root .text-neutral-700,
+  :root .text-neutral-800,
+  :root .text-neutral-900,
+  :root .text-stone-700,
+  :root .text-stone-800,
+  :root .text-stone-900 { color: var(--text-primary) !important; }
+  :root .text-slate-500,
+  :root .text-slate-600,
+  :root .text-gray-500,
+  :root .text-gray-600,
+  :root .text-zinc-500,
+  :root .text-zinc-600,
+  :root .text-neutral-500,
+  :root .text-neutral-600,
+  :root .text-stone-500,
+  :root .text-stone-600 { color: var(--text-secondary) !important; }
+
+  /* Light-theme contrast guard: flip hardcoded dark bg/text classes. */
   [data-theme="light"] .bg-white,
   [data-theme="light"] .bg-gray-50,
   [data-theme="light"] .bg-slate-50,

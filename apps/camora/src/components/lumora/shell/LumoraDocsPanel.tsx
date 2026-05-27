@@ -2759,10 +2759,10 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           aria-label="Open prep sections"
         >
           <span className="flex items-center gap-2 min-w-0">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-white/70 shrink-0">Section</span>
-            <span className="text-[12px] font-bold text-white truncate">{activeSectionLabel}</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-hero)]/70 shrink-0">Section</span>
+            <span className="text-[12px] font-bold text-[var(--text-hero)] truncate">{activeSectionLabel}</span>
           </span>
-          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-white/85 shrink-0">
+          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-hero)]/85 shrink-0">
             Sections
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M6 9l6 6 6-6" />
@@ -2780,7 +2780,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
         {/* LeetCode-style sidebar header */}
         <div className="px-3 py-3" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[10px] font-bold uppercase tracking-wider text-white" style={{ fontFamily: "var(--font-sans)" }}>Prep</h2>
+            <h2 className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-hero)]" style={{ fontFamily: "var(--font-sans)" }}>Prep</h2>
             {/* Mobile-only collapse button so users can dismiss the
                 sidebar without picking a different section. Hidden on
                 ≥sm where the sidebar is permanent chrome. */}
