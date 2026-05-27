@@ -435,6 +435,34 @@ async function runMigrations() {
     await query('CREATE UNIQUE INDEX IF NOT EXISTS uq_refund_pending_per_topup ON topup_refund_requests(topup_id) WHERE status = \'pending\'');
     console.log('[Migrations] refund_requests table ensured');
 
+    // LeetCode problem catalog — populated by scripts/migrate-problems-json.js
+    // then enriched by scripts/scrape-leetcode.js. slug is the dedup key.
+    await query(`CREATE TABLE IF NOT EXISTS coding_problems (
+      id              SERIAL PRIMARY KEY,
+      lc_id           INTEGER UNIQUE,
+      slug            VARCHAR(255) UNIQUE NOT NULL,
+      title           VARCHAR(500) NOT NULL,
+      difficulty      VARCHAR(10) NOT NULL DEFAULT 'Medium',
+      content         TEXT,
+      examples        JSONB,
+      constraints     JSONB,
+      hints           JSONB,
+      topic_tags      JSONB,
+      company_tags    JSONB,
+      code_snippets   JSONB,
+      is_premium      BOOLEAN DEFAULT false,
+      acceptance_rate FLOAT,
+      source          VARCHAR(20) NOT NULL DEFAULT 'leetcode',
+      created_at      TIMESTAMPTZ DEFAULT NOW(),
+      updated_at      TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_coding_problems_difficulty ON coding_problems(difficulty)');
+    await query('CREATE INDEX IF NOT EXISTS idx_coding_problems_source ON coding_problems(source)');
+    await query('CREATE INDEX IF NOT EXISTS idx_coding_problems_lc_id ON coding_problems(lc_id)');
+    await query('CREATE INDEX IF NOT EXISTS idx_coding_problems_topic_tags ON coding_problems USING GIN(topic_tags)');
+    await query('CREATE INDEX IF NOT EXISTS idx_coding_problems_company_tags ON coding_problems USING GIN(company_tags)');
+    console.log('[Migrations] coding_problems table ensured');
+
     // Universal page-view tracking
     await query(`CREATE TABLE IF NOT EXISTS page_views (
       id SERIAL PRIMARY KEY,
