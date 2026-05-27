@@ -889,23 +889,23 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         <div className="flex h-full">
           {/* Code editor column */}
           <div className="flex flex-col flex-1 min-w-0 relative">
-          <div className="h-8 flex items-center gap-2 px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
+          <div className="h-8 flex items-center gap-1.5 px-2 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0 overflow-x-auto no-scrollbar">
             {fixedCode && (
               <>
                 <button
                   onClick={handleRun}
                   disabled={isRunning}
-                  className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
+                  className="shrink-0 flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
                   style={{
                     background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
                     color: '#0a0e1a',
                   }}
                 >
-                  {isRunning ? <><span className="w-3 h-3 border-2 border-[#0a0e1a]/40 border-t-[#0a0e1a] rounded-full animate-spin" />Running</> : <>▶ Run</>}
+                  {isRunning ? <><span className="w-2.5 h-2.5 border-2 border-[#0a0e1a]/40 border-t-[#0a0e1a] rounded-full animate-spin" />Run</> : <>▶ Run</>}
                 </button>
                 <button
                   onClick={handleCopy}
-                  className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-lg transition-opacity hover:opacity-90"
+                  className="shrink-0 text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md transition-opacity hover:opacity-90"
                   style={{
                     background: 'linear-gradient(135deg, rgba(0,47,120,0.55) 0%, rgba(10,14,26,0.85) 100%)',
                     border: '1px solid var(--cam-gold-leaf)',
@@ -917,7 +917,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                 <button
                   onClick={() => setShowRefinePopup(v => !v)}
                   disabled={isLoading}
-                  className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-40"
+                  className="shrink-0 text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40"
                   style={showRefinePopup ? {
                     background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
                     color: '#0a0e1a',
@@ -927,25 +927,24 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                     color: 'var(--cam-gold-leaf-dk)',
                   }}
                 >
-                  ✦ Refine
+                  Refine
                 </button>
                 <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
               </>
             )}
             {/* Auto-Fix status */}
             {isLoading && (
-              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf)' }}>
-                <span className="w-2.5 h-2.5 rounded-full border-2 border-t-transparent animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
-                Fixing…
+              <span className="shrink-0 flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf)' }}>
+                <span className="w-2.5 h-2.5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
               </span>
             )}
             {!isLoading && fixedCode && (
-              <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: '#10b981' }}>
-                <LogIconCheck /> Fixed
+              <span className="shrink-0 flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: '#10b981' }}>
+                <LogIconCheck />
               </span>
             )}
-            <div className="flex-1" />
-            <span className="text-[10px] font-semibold tracking-wider uppercase" style={{ color: fixedCode ? 'var(--cam-gold-leaf)' : 'var(--cam-gold-leaf-dk)' }}>
+            <div className="flex-1 min-w-0" />
+            <span className="shrink-0 text-[10px] font-semibold tracking-wider uppercase" style={{ color: fixedCode ? 'var(--cam-gold-leaf)' : 'var(--cam-gold-leaf-dk)' }}>
               Fixed Code
             </span>
           </div>
