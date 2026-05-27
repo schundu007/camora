@@ -522,8 +522,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     if (showRefinePopup) setTimeout(() => refineTextareaRef.current?.focus(), 50);
   }, [showRefinePopup]);
 
-  const handleRefine = useCallback(async () => {
-    if (!fixedCode || !refinePrompt.trim() || isLoading) return;
+  const handleRefine = useCallback(async (promptOverride?: string) => {
+    const prompt = promptOverride ?? refinePrompt;
+    if (!fixedCode || !prompt.trim() || isLoading) return;
     setShowRefinePopup(false);
 
     abortRef.current?.abort();
@@ -540,13 +541,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     setRunOutput(null);
     decorationCollectionRef.current = null;
 
-    addLog(<LogIconSpark />, `Refining: "${refinePrompt.slice(0, 50)}${refinePrompt.length > 50 ? '…' : ''}"`);
+    addLog(<LogIconSpark />, `Refining: "${prompt.slice(0, 50)}${prompt.length > 50 ? '…' : ''}"`);
     const t1 = setTimeout(() => addLog(<LogIconScan />, 'Applying changes…'), 600);
     const t2 = setTimeout(() => addLog(<LogIconSpark />, 'Querying AI model…'), 1200);
 
     const controller = await streamCoFixResponse({
       code: fixedCode,
-      hint: refinePrompt,
+      hint: prompt,
       company: activeAssistant?.company || undefined,
       language: effectiveLang,
       token: token!,
@@ -571,7 +572,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         autoRunRef.current = true;
         pendingAnalyzeRef.current = true;
         setIsLoading(false);
-        setRefinePrompt('');
+        if (!promptOverride) setRefinePrompt('');
         logHideTimerRef.current = setTimeout(() => setShowLogPopup(false), 2500);
       },
     });
@@ -1015,6 +1016,26 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   </div>
                   {/* Body */}
                   <div className="px-3 py-3 flex flex-col gap-2.5">
+                    {/* Quick-action chips — one click submits immediately */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { label: '+ Print steps', prompt: `Add print() statements before and after each key step to show intermediate values` },
+                        { label: '+ Type hints', prompt: `Add type hints to all function parameters and return types` },
+                        { label: '+ Docstrings', prompt: `Add a concise docstring to every function` },
+                        { label: '+ Error handling', prompt: `Wrap the main logic in try/except and print a clear error message on failure` },
+                        { label: '+ Comments', prompt: `Add a short inline comment on every non-obvious line` },
+                      ].map(({ label, prompt }) => (
+                        <button
+                          key={label}
+                          onClick={() => handleRefine(prompt)}
+                          disabled={isLoading}
+                          className="text-[9.5px] font-bold uppercase tracking-[0.08em] px-2.5 py-1 rounded-full transition-opacity hover:opacity-90 disabled:opacity-40"
+                          style={{ background: 'rgba(196,160,60,0.12)', border: '1px solid rgba(196,160,60,0.35)', color: 'var(--cam-gold-leaf)' }}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
                     <textarea
                       ref={refineTextareaRef}
                       value={refinePrompt}
