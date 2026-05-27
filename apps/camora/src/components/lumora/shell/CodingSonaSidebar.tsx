@@ -317,7 +317,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
             className="flex items-center gap-2 h-10 px-3 shrink-0"
             style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
           >
-            <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase text-white">
+            <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase text-[var(--text-hero)]">
               Sona · Follow-ups
             </span>
             <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.65)' }}>
@@ -398,7 +398,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
                       className="flex items-center gap-2 px-3 py-1.5"
                       style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
                     >
-                      <span className="font-display text-[10px] font-bold tracking-[0.14em] uppercase text-white">Sona</span>
+                      <span className="font-display text-[10px] font-bold tracking-[0.14em] uppercase text-[var(--text-hero)]">Sona</span>
                       {m.fromCache && (
                         <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.15)', color: 'var(--cam-gold-leaf-lt)' }}>
                           cached
@@ -425,7 +425,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
                   className="flex items-center gap-2 px-3 py-1.5"
                   style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
                 >
-                  <span className="font-display text-[10px] font-bold tracking-[0.14em] uppercase text-white">Sona is answering…</span>
+                  <span className="font-display text-[10px] font-bold tracking-[0.14em] uppercase text-[var(--text-hero)]">Sona is answering…</span>
                   <span className="ml-auto w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--cam-gold-leaf-lt)' }} />
                 </div>
                 <div className="p-3 text-[12px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
