@@ -301,6 +301,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Analysis tabs — Explain / Issues / Deep Dive generated from the active solution code
   const [analysisTab, setAnalysisTab] = useState<'code' | 'explain' | 'issues' | 'deepdive'>('code');
   const [analysisCache, setAnalysisCache] = useState<Record<string, string>>({});
+  const analysisCacheRef = useRef(analysisCache);
+  useEffect(() => { analysisCacheRef.current = analysisCache; }, [analysisCache]);
   const [analysisLoading, setAnalysisLoading] = useState<string | null>(null);
   const analysisAbortRef = useRef<AbortController | null>(null);
   const autoAnalysisFiredForRef = useRef<number>(-1);
@@ -368,7 +370,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       || code;
     if (!solCode?.trim() || !token) return;
     const cacheKey = `${activeSolutionIdx}_${tab}`;
-    if (analysisCache[cacheKey]) { setAnalysisTab(tab); return; }
+    if (analysisCacheRef.current[cacheKey]) { setAnalysisTab(tab); return; }
     analysisAbortRef.current?.abort();
     const abort = new AbortController();
     analysisAbortRef.current = abort;
@@ -414,7 +416,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     } finally {
       setAnalysisLoading(null);
     }
-  }, [jsonSolution, activeSolutionIdx, analysisCache, code, token, resolveLanguage]);
+  }, [jsonSolution, activeSolutionIdx, code, token, resolveLanguage]);
 
   // Regenerate — re-submit the same problem with bypass_cache=true so
   // the backend skips the answer cache lookup and produces a fresh
@@ -1531,7 +1533,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     } finally {
       setIsProcessing(false);
     }
-  }, [token, language, setLanguage, clearStreamChunks, onSubmit]);
+  }, [token, setLanguage, clearStreamChunks, onSubmit]);
 
   // OCR a supplemental screenshot and APPEND its text to the existing problem.
   // Used for multi-page problems: take a 2nd/3rd screenshot and add to current

@@ -385,12 +385,29 @@ Order: Solution 1 = Brute Force / Naive (simplest, easiest to explain)
 Respond with valid JSON in EXACTLY this format (no text before/after):
 {
   "language": "${language}",
-  "solutions": [
+  "solutions": ${singleSolution
+  ? `[
+    {
+      "name": "Approach name",
+      "patternTag": "Canonical pattern tag — MUST be one of: Two Pointers, Sliding Window, Fast & Slow Pointers, Hash Map, Hash Set, Binary Search, BFS, DFS, Topological Sort, Union-Find, DP - Memoization, DP - Tabulation, Greedy, Backtracking, Heap, Priority Queue, Trie, Bit Manipulation, Divide & Conquer, Monotonic Stack, Monotonic Queue, Matrix Traversal, Linked List, Prefix Sum, Math, Simulation, Brute Force. Pick the single most accurate tag for THIS solution.",
+      "approach": "Brief 1-2 sentence description of HOW this approach works",
+      "code": "complete runnable code with \\\\n for newlines",
+      "complexity": { "time": "O(...)", "space": "O(...)" },
+      "narration": "First-person spoken script the candidate can read ALOUD to the interviewer. 4-6 sentences. Natural speaking tone (contractions OK). Structure: hook → core insight → walk through the approach → complexity note. NO markdown, NO code blocks, NO bullet points — just plain conversational prose.",
+      "trace": [
+        {"step": 1, "action": "Short description of what happens this step", "state": "variable=value, array=[...], counter=0"}
+      ],
+      "explanations": [
+        {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
+      ]
+    }
+  ]`
+  : `[
     {
       "name": "Approach name (e.g. Brute Force, Hash Map, Two Pointers)",
       "patternTag": "Canonical pattern tag — MUST be one of: Two Pointers, Sliding Window, Fast & Slow Pointers, Hash Map, Hash Set, Binary Search, BFS, DFS, Topological Sort, Union-Find, DP - Memoization, DP - Tabulation, Greedy, Backtracking, Heap, Priority Queue, Trie, Bit Manipulation, Divide & Conquer, Monotonic Stack, Monotonic Queue, Matrix Traversal, Linked List, Prefix Sum, Math, Simulation, Brute Force. Pick the single most accurate tag for THIS solution.",
       "approach": "Brief 1-2 sentence description of HOW this approach works",
-      "code": "complete runnable code for this approach with \\n for newlines",
+      "code": "complete runnable code for this approach with \\\\n for newlines",
       "complexity": { "time": "O(...)", "space": "O(...)" },
       "narration": "First-person spoken script the candidate can read ALOUD to the interviewer. 4-6 sentences. Natural speaking tone (contractions OK). Structure: hook → core insight → walk through the approach → complexity note. NO markdown, NO code blocks, NO bullet points — just plain conversational prose. Example: 'So my first instinct here is to brute-force it by comparing every pair — that's O(n squared). But we can do better: as I scan the array, I'll track values I've already seen in a hash map. For each element, I check if its complement — target minus current — is already in the map. That drops us to O(n) time with O(n) extra space for the map.'",
       "trace": [
@@ -422,14 +439,22 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
         {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
       ]
     }
-  ],
-  "pitch": {
+  ]`},
+  "pitch": ${singleSolution
+  ? `{
+    "opener": "One sentence summary of the approach",
+    "approach": "Brief explanation of the chosen strategy",
+    "keyPoints": ["Key insight 1", "Key insight 2", "Key insight 3"],
+    "tradeoffs": ["Tradeoff 1", "Tradeoff 2"],
+    "edgeCases": ["Edge case 1", "Edge case 2", "Edge case 3"]
+  }`
+  : `{
     "opener": "One sentence hook comparing the approaches",
     "approach": "Summary of the 3 approaches and why you'd pick each",
     "keyPoints": ["Key insight 1", "Key insight 2", "Key insight 3"],
     "tradeoffs": ["Tradeoff between approach 1 vs 2", "Tradeoff between approach 2 vs 3"],
     "edgeCases": ["Edge case 1", "Edge case 2", "Edge case 3"]
-  },
+  }`},
   "examples": [
     {"input": "nums = [2,7,11,15], target = 9", "expected": "[0, 1]"},
     {"input": "nums = [3,2,4], target = 6", "expected": "[1, 2]"}
@@ -590,10 +615,10 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     });
   }
 
-  // ── Free-tier check (atomic: check + insert in one CTE) ─────────────────
+  // ── Free-tier check (atomic: check + insert in one CTE). Admins bypass. ─
   const planType = req.user.plan_type || 'free';
   let freeTierReservationId = null;
-  if (planType === 'free') {
+  if (planType === 'free' && !req.user.is_admin) {
     const quota = await checkAndReserveFreeTierSlot(req.user.id, lang);
     if (!quota.allowed) {
       return res.status(429).json({ error: quota.message });
@@ -601,8 +626,8 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     freeTierReservationId = quota.reservationId;
   }
 
-  // ── Paid users: soft daily cap to prevent abuse ─────────────────────────
-  if (planType !== 'free' && planType) {
+  // ── Paid users: soft daily cap to prevent abuse. Owners/admins bypass. ──
+  if (planType !== 'free' && planType && !req.user.is_admin) {
     const today = new Date().toISOString().slice(0, 10);
     const PAID_DAILY_LIMIT = 20;
     try {
