@@ -1626,7 +1626,7 @@ Return ONLY this JSON (no markdown fences, no extra text):
     {"input": "function_name(arg1, arg2)", "output": "result", "explanation": "why this output"}
   ],
   "test_cases": [
-    {"input": "function_name(val)", "expected": "result"}
+    {"input": "print(function_name(val))", "expected": "result"}
   ],
   "steps": [
     {"code": "line or short block", "text": "plain English for someone who has never coded"}
@@ -1636,7 +1636,7 @@ Return ONLY this JSON (no markdown fences, no extra text):
 
 Rules:
 - examples: 2-3 with varied inputs
-- test_cases: 3-5 covering normal + edge cases (empty, zero, negative, boundary)
+- test_cases: 3-5 covering normal + edge cases (empty, zero, negative, boundary). CRITICAL: test_cases[].input MUST be a complete runnable ${language} statement — always wrap in print() e.g. print(function_name(arg)). Never put raw arguments or keyword assignments.
 - steps: walk through each key line/block explaining what it does like the reader is brand new to programming
 - concepts: list ${language} concepts used that a beginner should learn (e.g. "for loops", "if statements", "dictionaries", "return values")
 - Keep steps concise — no more than 8 steps total`;
