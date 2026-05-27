@@ -964,7 +964,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       {/* Left: mode indicator */}
       <div className="flex items-center gap-1.5">
         <div className="w-2 h-2 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)' }} />
-        <span className="text-sm font-semibold text-white">{currentMode.label}</span>
+        <span className="text-sm font-semibold text-[var(--text-hero)]">{currentMode.label}</span>
       </div>
 
       {/* Center: APPA tabs */}
@@ -1146,7 +1146,7 @@ function CodingLayout({
         >
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
-            <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">
+            <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)] whitespace-nowrap">
               {ascendMode === 'system-design' ? 'System Design' : 'Problem'}
             </h2>
             {ascendMode === 'system-design' && (
@@ -1280,7 +1280,7 @@ function CodingLayout({
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
-                    <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">System Design</h2>
+                    <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)] whitespace-nowrap">System Design</h2>
                     <button
                       onClick={onSavedDesignsClick}
                       aria-label="View saved designs"

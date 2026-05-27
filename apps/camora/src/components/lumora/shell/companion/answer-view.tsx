@@ -44,7 +44,7 @@ const LcStripHeader = ({ icon, label, hint, count, right }: {
       {icon ?? (
         <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)' }} />
       )}
-      <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase text-white">
+      <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase text-[var(--text-hero)]">
         {label}
       </span>
       {hint && (
@@ -459,7 +459,7 @@ const RichText = ({ text }: { text: string }) => {
           <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(201,162,39,0.85)' }} />
           <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(217,181,67,0.85)' }} />
         </span>
-        <span className="font-mono text-[10px] font-bold tracking-[0.16em] uppercase text-white">
+        <span className="font-mono text-[10px] font-bold tracking-[0.16em] uppercase text-[var(--text-hero)]">
           {lang || 'code'}
         </span>
         <button

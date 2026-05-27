@@ -26,7 +26,7 @@ export const LumoraCalendar = ({ onClose }: { onClose: () => void }) => {
       {/* Header — LeetCode navy + gold underline */}
       <div className="flex items-center justify-between px-4 h-12 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-sans)' }}>Session Calendar</span>
+          <span className="text-sm font-bold text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-sans)' }}>Session Calendar</span>
           {/* View toggle */}
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.1)' }}>
             <button onClick={() => setView('week')}

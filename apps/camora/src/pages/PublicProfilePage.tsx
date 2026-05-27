@@ -159,7 +159,7 @@ export default function PublicProfilePage() {
             )}
 
             <div className="text-center sm:text-left">
-              <h1 className="text-2xl font-bold text-white tracking-tight">{profile.name}</h1>
+              <h1 className="text-2xl font-bold text-[var(--text-hero)] tracking-tight">{profile.name}</h1>
               <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>@{profile.username}</p>
               <div className="flex items-center gap-3 mt-3 justify-center sm:justify-start">
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>

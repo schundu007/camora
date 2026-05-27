@@ -1242,7 +1242,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
           {!embedded && <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-              <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">Prep</h2>
+              <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)] whitespace-nowrap">Prep</h2>
             </div>
             <div className="flex items-center gap-2">
               {!isDedicatedWindow && (
@@ -1761,7 +1761,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
-                <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">Job Description</h2>
+                <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)] whitespace-nowrap">Job Description</h2>
                 <span
                   className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
                   style={{
