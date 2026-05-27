@@ -1019,66 +1019,49 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   </div>
                 </div>
               )}
-              {/* Refine popup */}
+              {/* Refine modal — fixed so parent overflow never clips it */}
               {showRefinePopup && (
-                <div
-                  className="absolute top-2 left-2 right-2 z-30 rounded-xl overflow-hidden shadow-2xl"
-                  style={{ background: '#080c17', border: '1px solid var(--cam-gold-leaf)' }}
-                >
-                  {/* Header */}
-                  <div className="flex items-center gap-2 px-3 py-2 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid rgba(196,160,60,0.3)' }}>
-                    <LogIconSpark />
-                    <span className="flex-1 text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: "'IBM Plex Mono', monospace" }}>
-                      Refine Fixed Code
-                    </span>
-                    <button
-                      onClick={() => setShowRefinePopup(false)}
-                      className="text-[13px] opacity-50 hover:opacity-100 transition-opacity"
-                      style={{ color: 'var(--cam-gold-leaf-dk)' }}
-                    >✕</button>
-                  </div>
-                  {/* Body */}
-                  <div className="px-3 py-3 flex flex-col gap-2.5">
-                    <textarea
-                      ref={refineTextareaRef}
-                      value={refinePrompt}
-                      onChange={e => setRefinePrompt(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleRefine(); } }}
-                      placeholder={`Describe how to change the fixed code…\nExamples:\n  • Add print statements before and after each step\n  • Add type hints to all function parameters\n  • Add docstring to each function`}
-                      rows={5}
-                      className="w-full resize-none rounded-lg px-3 py-2.5 text-[11px] leading-relaxed focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--cam-gold-leaf)]"
-                      style={{
-                        fontFamily: "'IBM Plex Mono', monospace",
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(196,160,60,0.35)',
-                        color: 'rgba(255,255,255,0.9)',
-                      }}
-                    />
-                    <div className="flex items-center gap-2 justify-end">
-                      <span className="text-[9.5px] opacity-40 mr-auto" style={{ color: 'var(--cam-gold-leaf)', fontFamily: "'IBM Plex Mono', monospace" }}>
-                        ⌘↵ to submit
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowRefinePopup(false)} />
+                  <div
+                    className="fixed z-50 w-[440px] max-w-[92vw] rounded-xl overflow-hidden shadow-2xl"
+                    style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#080c17', border: '1px solid var(--cam-gold-leaf)' }}
+                  >
+                    <div className="flex items-center gap-2 px-3 py-2 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid rgba(196,160,60,0.3)' }}>
+                      <LogIconSpark />
+                      <span className="flex-1 text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: "'IBM Plex Mono', monospace" }}>
+                        Refine Fixed Code
                       </span>
-                      <button
-                        onClick={() => setShowRefinePopup(false)}
-                        className="text-[10px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                        style={{ border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.55)' }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleRefine}
-                        disabled={!refinePrompt.trim()}
-                        className="text-[10px] font-bold uppercase tracking-[0.1em] px-4 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                        style={{
-                          background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
-                          color: '#0a0e1a',
-                        }}
-                      >
-                        Apply
-                      </button>
+                      <button onClick={() => setShowRefinePopup(false)} className="text-[13px] opacity-50 hover:opacity-100 transition-opacity" style={{ color: 'var(--cam-gold-leaf-dk)' }}>✕</button>
+                    </div>
+                    <div className="px-3 py-3 flex flex-col gap-2.5">
+                      <textarea
+                        ref={refineTextareaRef}
+                        value={refinePrompt}
+                        onChange={e => setRefinePrompt(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleRefine(); } }}
+                        placeholder={`Describe how to change the fixed code…\nExamples:\n  • Always try to reduce the no of code lines\n  • Replace recursion with iteration\n  • Rename variables to be more descriptive`}
+                        rows={5}
+                        className="w-full resize-none rounded-lg px-3 py-2.5 text-[11px] leading-relaxed focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--cam-gold-leaf)]"
+                        style={{ fontFamily: "'IBM Plex Mono', monospace", background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(196,160,60,0.35)', color: 'rgba(255,255,255,0.9)' }}
+                      />
+                      <div className="flex items-center gap-2 justify-end">
+                        <span className="text-[9.5px] opacity-40 mr-auto" style={{ color: 'var(--cam-gold-leaf)', fontFamily: "'IBM Plex Mono', monospace" }}>⌘↵ to submit</span>
+                        <button
+                          onClick={() => setShowRefinePopup(false)}
+                          className="text-[10px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                          style={{ border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.55)' }}
+                        >Cancel</button>
+                        <button
+                          onClick={handleRefine}
+                          disabled={!refinePrompt.trim()}
+                          className="text-[10px] font-bold uppercase tracking-[0.1em] px-4 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                          style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }}
+                        >Apply</button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </>
               )}
 
               {error && !isLoading && (
