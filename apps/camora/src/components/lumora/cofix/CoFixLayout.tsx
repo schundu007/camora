@@ -123,6 +123,10 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const [panelTab, setPanelTab] = useState<'problem' | 'learn'>('problem');
   const [customTests, setCustomTests] = useState<CustomTest[]>([mkTest()]);
 
+  const [showRefinePopup, setShowRefinePopup] = useState(false);
+  const [refinePrompt, setRefinePrompt] = useState('');
+  const refineTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
   const [outputHeight, setOutputHeight] = useState<number | null>(null);
   const outputPanelRef = useRef<HTMLDivElement | null>(null);
   const outputDragRef = useRef<{ startY: number; startH: number } | null>(null);
@@ -512,6 +516,67 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     }
   }, [isRunning, isLoading, runAutoFix]);
 
+  // Focus refine textarea when popup opens
+  useEffect(() => {
+    if (showRefinePopup) setTimeout(() => refineTextareaRef.current?.focus(), 50);
+  }, [showRefinePopup]);
+
+  const handleRefine = useCallback(async () => {
+    if (!fixedCode || !refinePrompt.trim() || isLoading) return;
+    setShowRefinePopup(false);
+
+    abortRef.current?.abort();
+    if (logHideTimerRef.current) clearTimeout(logHideTimerRef.current);
+    logStartRef.current = Date.now();
+    setLogLines([]);
+    setShowLogPopup(true);
+    setIsLoading(true);
+    setChanges([]);
+    setWalkthrough([]);
+    setComplexity(null);
+    setHackerrankCompatible(null);
+    setError(null);
+    setRunOutput(null);
+    decorationCollectionRef.current = null;
+
+    addLog(<LogIconSpark />, `Refining: "${refinePrompt.slice(0, 50)}${refinePrompt.length > 50 ? '…' : ''}"`);
+    const t1 = setTimeout(() => addLog(<LogIconScan />, 'Applying changes…'), 600);
+    const t2 = setTimeout(() => addLog(<LogIconSpark />, 'Querying AI model…'), 1200);
+
+    const controller = await streamCoFixResponse({
+      code: fixedCode,
+      hint: refinePrompt,
+      company: activeAssistant?.company || undefined,
+      language: effectiveLang,
+      token: token!,
+      onAnswer: (data: CoFixAnswer) => {
+        clearTimeout(t2);
+        addLog(<LogIconReceive />, `Refinement applied (${data.changes.length} change${data.changes.length !== 1 ? 's' : ''})`, 'success');
+        setFixedCode(data.fixed_code.split('\n').filter((l: string) => l.trim() !== '').join('\n'));
+        setChanges(data.changes);
+        setWalkthrough(data.walkthrough ?? []);
+        setComplexity(data.complexity);
+        setHackerrankCompatible(data.hackerrank_compatible);
+      },
+      onError: ({ msg }) => {
+        clearTimeout(t1); clearTimeout(t2);
+        addLog(<LogIconError />, `Refinement failed: ${msg}`, 'error');
+        setError(msg);
+        setIsLoading(false);
+      },
+      onComplete: () => {
+        clearTimeout(t1); clearTimeout(t2);
+        addLog(<LogIconCheck />, 'Refinement complete', 'success');
+        autoRunRef.current = true;
+        pendingAnalyzeRef.current = true;
+        setIsLoading(false);
+        setRefinePrompt('');
+        logHideTimerRef.current = setTimeout(() => setShowLogPopup(false), 2500);
+      },
+    });
+    abortRef.current = controller;
+  }, [fixedCode, refinePrompt, isLoading, effectiveLang, token, activeAssistant, addLog]);
+
   const guessEdgeCases = (inputFormat: string): string[] => {
     const f = inputFormat.toLowerCase();
     if (/list|array/.test(f)) return ['print(solution([]))', 'print(solution([1]))'];
@@ -823,7 +888,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         <Allotment.Pane minSize={220}>
         <div className="flex h-full">
           {/* Code editor column */}
-          <div className="flex flex-col flex-1 min-w-0">
+          <div className="flex flex-col flex-1 min-w-0 relative">
           <div className="h-8 flex items-center gap-2 px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
             {fixedCode && (
               <>
@@ -848,6 +913,21 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   }}
                 >
                   Copy
+                </button>
+                <button
+                  onClick={() => setShowRefinePopup(v => !v)}
+                  disabled={isLoading}
+                  className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-40"
+                  style={showRefinePopup ? {
+                    background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
+                    color: '#0a0e1a',
+                  } : {
+                    background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
+                    border: '1px solid var(--cam-gold-leaf-dk)',
+                    color: 'var(--cam-gold-leaf-dk)',
+                  }}
+                >
+                  ✦ Refine
                 </button>
                 <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
               </>
@@ -905,6 +985,68 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   </div>
                 </div>
               )}
+              {/* Refine popup */}
+              {showRefinePopup && (
+                <div
+                  className="absolute top-2 left-2 right-2 z-30 rounded-xl overflow-hidden shadow-2xl"
+                  style={{ background: '#080c17', border: '1px solid var(--cam-gold-leaf)' }}
+                >
+                  {/* Header */}
+                  <div className="flex items-center gap-2 px-3 py-2 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid rgba(196,160,60,0.3)' }}>
+                    <LogIconSpark />
+                    <span className="flex-1 text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: "'IBM Plex Mono', monospace" }}>
+                      Refine Fixed Code
+                    </span>
+                    <button
+                      onClick={() => setShowRefinePopup(false)}
+                      className="text-[13px] opacity-50 hover:opacity-100 transition-opacity"
+                      style={{ color: 'var(--cam-gold-leaf-dk)' }}
+                    >✕</button>
+                  </div>
+                  {/* Body */}
+                  <div className="px-3 py-3 flex flex-col gap-2.5">
+                    <textarea
+                      ref={refineTextareaRef}
+                      value={refinePrompt}
+                      onChange={e => setRefinePrompt(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleRefine(); } }}
+                      placeholder={`Describe how to change the fixed code…\nExamples:\n  • Add print statements before and after each step\n  • Add type hints to all function parameters\n  • Add docstring to each function`}
+                      rows={5}
+                      className="w-full resize-none rounded-lg px-3 py-2.5 text-[11px] leading-relaxed focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--cam-gold-leaf)]"
+                      style={{
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(196,160,60,0.35)',
+                        color: 'rgba(255,255,255,0.9)',
+                      }}
+                    />
+                    <div className="flex items-center gap-2 justify-end">
+                      <span className="text-[9.5px] opacity-40 mr-auto" style={{ color: 'var(--cam-gold-leaf)', fontFamily: "'IBM Plex Mono', monospace" }}>
+                        ⌘↵ to submit
+                      </span>
+                      <button
+                        onClick={() => setShowRefinePopup(false)}
+                        className="text-[10px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                        style={{ border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.55)' }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleRefine}
+                        disabled={!refinePrompt.trim()}
+                        className="text-[10px] font-bold uppercase tracking-[0.1em] px-4 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{
+                          background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
+                          color: '#0a0e1a',
+                        }}
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {error && !isLoading && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[var(--bg-primary)]">
                   <p className="text-[12px] text-red-400 text-center px-6">{error}</p>
