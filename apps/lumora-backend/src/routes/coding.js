@@ -1101,27 +1101,36 @@ router.post('/fix', authenticate, checkUsage('questions'), async (req, res) => {
       messages: [
         {
           role: 'user',
-          content: `Fix this ${language} code. ALL of the following test failures must be resolved.
+          content: `Fix this ${language} code so every test produces the EXACT expected output.
 ${problemContext}
 CODE:
 \`\`\`${language}
 ${code}
 \`\`\`
 
-FAILING TESTS:
+FAILING TESTS (Input | Expected | Got):
 ${feedback}
 
-Return ONLY a JSON object (no markdown fences) with:
+${language === 'bash' || language === 'shell' ? `BASH EXECUTION CONTEXT:
+- The runner calls: set -- <arg1> <arg2> ...  then invokes your top-level function with "$@"
+- Each argument is a raw value string (e.g. '[[2,3,1],[4,5,1],[1,5,2]]')
+- Your function receives $1, $2, ... as quoted strings — parse them yourself
+- echo the final answer to stdout — that is what gets compared to Expected
+- If input is a Python-style list string in $1, parse it with sed/awk or use mapfile
+` : ''}
+Return ONLY a JSON object (no markdown fences):
 {
-  "code": "the complete fixed code as a string",
-  "explanation": "brief summary of what was wrong and how you fixed it"
+  "code": "the complete fixed code as a string with \\n for newlines",
+  "explanation": "one sentence: what was wrong and how you fixed it"
 }
 
-IMPORTANT:
+RULES:
+- Produce code whose stdout matches Expected EXACTLY for every test
 - Fix ALL failing tests, not just the first one
 - Do NOT add comments in the code
-- Return the COMPLETE function, not a partial snippet
-- Keep the same function signature`,
+- Return the COMPLETE runnable code, not a partial snippet
+- Keep the same function signature
+- No extra blank lines in the output`,
         },
       ],
     });
