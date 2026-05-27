@@ -14,6 +14,11 @@ if (!SESSION || !CSRF) {
   process.exit(1);
 }
 
+if (!process.env.DATABASE_URL) {
+  console.error('Set DATABASE_URL env var');
+  process.exit(1);
+}
+
 const HEADERS = {
   'Content-Type': 'application/json',
   'Cookie': `LEETCODE_SESSION=${SESSION}; csrftoken=${CSRF}`,
@@ -31,6 +36,10 @@ if (!listRes.ok) {
 }
 const listData = await listRes.json();
 const allProblems = listData.stat_status_pairs;
+if (!Array.isArray(allProblems)) {
+  console.error('Unexpected API response shape:', JSON.stringify(listData).slice(0, 300));
+  process.exit(1);
+}
 console.log(`Found ${allProblems.length} problems on LeetCode`);
 
 // ── Determine which slugs to fetch ───────────────────────────────────────────
@@ -76,23 +85,38 @@ const GQL = `query questionData($titleSlug: String!) {
 
 async function fetchOne(slug, retries = 3) {
   for (let attempt = 0; attempt < retries; attempt++) {
-    const res = await fetch('https://leetcode.com/graphql', {
-      method: 'POST',
-      headers: HEADERS,
-      body: JSON.stringify({ query: GQL, variables: { titleSlug: slug } }),
-    });
-    if (res.status === 429) {
-      const wait = Math.pow(2, attempt + 1) * 1000;
-      console.warn(`  [429] ${slug} — retrying in ${wait}ms`);
-      await new Promise(r => setTimeout(r, wait));
-      continue;
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 30_000);
+    try {
+      const res = await fetch('https://leetcode.com/graphql', {
+        method: 'POST',
+        headers: HEADERS,
+        body: JSON.stringify({ query: GQL, variables: { titleSlug: slug } }),
+        signal: ac.signal,
+      });
+      clearTimeout(timer);
+      if (res.status === 429) {
+        if (attempt < retries - 1) {
+          const wait = Math.pow(2, attempt + 1) * 1000;
+          console.warn(`  [429] ${slug} — retrying in ${wait}ms`);
+          await new Promise(r => setTimeout(r, wait));
+        }
+        continue;
+      }
+      if (!res.ok) {
+        console.warn(`  [${res.status}] ${slug} — skipping`);
+        return null;
+      }
+      const data = await res.json();
+      return data.data?.question ?? null;
+    } catch (err) {
+      clearTimeout(timer);
+      if (err.name === 'AbortError') {
+        console.warn(`  [timeout] ${slug} — attempt ${attempt + 1}`);
+        continue;
+      }
+      throw err;
     }
-    if (!res.ok) {
-      console.warn(`  [${res.status}] ${slug} — skipping`);
-      return null;
-    }
-    const data = await res.json();
-    return data.data?.question ?? null;
   }
   return null;
 }
