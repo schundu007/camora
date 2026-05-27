@@ -74,6 +74,8 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
   const [streamText, setStreamText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [micStartTrigger, setMicStartTrigger] = useState(0);
+  const [sidebarWidth, setSidebarWidth] = useState(360);
+  const dragRef = useRef<{ startX: number; startW: number } | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -244,25 +246,48 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
     setError(null);
   }, []);
 
-  const placeholder = useMemo(() => liveSolveContext
-    ? `Ask Sona about this ${surface}…\n(e.g., What's the time complexity? Why this data structure?)`
-    : `Solve a ${surface} problem first — then ask Sona about it.`,
-    [liveSolveContext, surface]);
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = sidebarWidth;
+    dragRef.current = { startX, startW };
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const delta = dragRef.current.startX - ev.clientX;
+      setSidebarWidth(Math.max(280, Math.min(700, dragRef.current.startW + delta)));
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, [sidebarWidth]);
+
+  const placeholder = useMemo(() => `Ask Sona about this ${surface}…`, [surface]);
 
   return (
     <aside
-      className="shrink-0 flex flex-col border-l overflow-hidden"
+      className="shrink-0 flex flex-col border-l overflow-hidden relative"
       style={{
-        width: open ? 360 : 0,
+        width: open ? sidebarWidth : 0,
         background: 'var(--bg-surface)',
         borderColor: 'var(--border)',
-        transition: 'width 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        transition: dragRef.current ? 'none' : 'width 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         willChange: 'width',
       }}
       aria-hidden={!open}
     >
       {open && (
         <>
+          {/* Drag handle — left edge, 6px wide, ew-resize cursor */}
+          <div
+            onMouseDown={handleDragStart}
+            className="absolute left-0 top-0 h-full z-10 cursor-ew-resize"
+            style={{ width: 6, background: 'transparent' }}
+            title="Drag to resize"
+          />
           {/* Header — navy hero strip + gold underline, matches the
               app's other tool-window chrome. */}
           <div
@@ -327,9 +352,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
                   No follow-ups yet
                 </p>
                 <p className="mt-1 text-[11px] leading-relaxed">
-                  {liveSolveContext
-                    ? `Ask anything about your ${surface} solution.`
-                    : `Solve a ${surface} problem to enable grounded Q&A.`}
+                  {`Ask Sona anything about your ${surface} solution.`}
                 </p>
               </div>
             )}
