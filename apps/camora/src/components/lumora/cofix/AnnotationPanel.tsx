@@ -3,7 +3,6 @@ import type { CoFixChange, CoFixWalkStep } from '@/lib/sse-client';
 interface AnnotationPanelProps {
   changes: CoFixChange[];
   walkthrough?: CoFixWalkStep[];
-  width?: number;
 }
 
 // Render **bold** and `code` inline spans
@@ -28,17 +27,13 @@ const inlineFormat = (text: string) => {
   return nodes;
 };
 
-export const AnnotationPanel = ({ changes, walkthrough = [], width }: AnnotationPanelProps) => {
+export const AnnotationPanel = ({ changes, walkthrough = [] }: AnnotationPanelProps) => {
   const hasChanges = changes.length > 0;
   const hasWalkthrough = walkthrough.length > 0;
-  if (!hasChanges && !hasWalkthrough) return null;
-
-  const panelW = width ?? 200;
 
   return (
     <div
-      className="flex-shrink-0 overflow-y-auto border-l border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-primary)]"
-      style={{ width: panelW }}
+      className="w-full h-full overflow-y-auto border-l border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-primary)]"
     >
       {/* Walk-Through section */}
       {hasWalkthrough && (
