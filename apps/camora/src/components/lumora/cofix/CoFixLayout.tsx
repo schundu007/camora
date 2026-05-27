@@ -982,11 +982,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
             title="Drag to resize"
           />
 
-          {/* Two-column body */}
-          <div className="flex flex-1 min-h-0">
+          {/* Two-column body — Allotment for drag-resize */}
+          <div className="flex-1 min-h-0">
+          <Allotment defaultSizes={[40, 60]}>
 
             {/* ── LEFT: Problem / Learn ── */}
-            <div className="flex flex-col min-w-0" style={{ width: '50%', borderRight: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
+            <Allotment.Pane minSize={120}>
+            <div className="flex flex-col h-full" style={{ borderRight: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
               <div className="flex items-center shrink-0" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
                 {(['problem', 'learn'] as const).map(tab => (
                   <button key={tab} onClick={() => setPanelTab(tab)}
@@ -1105,9 +1107,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                 )}
               </div>
             </div>
+            </Allotment.Pane>
 
             {/* ── RIGHT: Tests | Output (2 sub-columns) ── */}
-            <div className="flex flex-row flex-1 min-w-0 min-h-0">
+            <Allotment.Pane minSize={160}>
+            <div className="flex flex-row h-full min-w-0">
 
               {/* Tests column */}
               <div className="flex flex-col min-w-0 min-h-0" style={{ width: '50%', borderRight: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
@@ -1233,7 +1237,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               </div>
 
             </div>
+            </Allotment.Pane>
 
+          </Allotment>
           </div>
         </div>
       )}
