@@ -9,7 +9,7 @@
  * means changing this file in both backends, not three middlewares each.
  */
 
-export const PAID_PLAN_TYPES = new Set(['pro_monthly', 'pro_yearly', 'team']);
+export const PAID_PLAN_TYPES = new Set(['pro_monthly', 'pro_yearly', 'team', 'lifetime']);
 
 export const ALL_PLAN_TYPES = new Set([...PAID_PLAN_TYPES, 'free', 'admin']);
 
