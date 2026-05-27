@@ -346,7 +346,7 @@ export default function ProblemPage({ slug, onBack }) {
               </button>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-mono" style={{ color: 'rgba(255,255,255,0.7)' }}>#{problem.id}</span>
-                <h1 className="text-xl font-bold text-white">{problem.name}</h1>
+                <h1 className="text-xl font-bold text-[var(--text-hero)]">{problem.name}</h1>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>
                   {problem.difficulty}
                 </span>

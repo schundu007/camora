@@ -32,7 +32,7 @@ export default function CapraLandingPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
           </svg>
         </div>
-        <h1 className="text-3xl font-bold text-white mb-2">Capra</h1>
+        <h1 className="text-3xl font-bold text-[var(--text-hero)] mb-2">Capra</h1>
         <p className="mb-6" style={{ color: 'rgba(255,255,255,0.85)' }}>Interview preparation powered by AI</p>
         <Link
           to="/capra/prepare"

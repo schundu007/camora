@@ -18,7 +18,7 @@ export default function NotFoundPage() {
         <div className="relative z-10 text-center max-w-md">
           {/* 404 */}
           <div className="font-mono text-8xl font-extrabold mb-4 tracking-tight" style={{ color: 'var(--cam-gold-leaf-lt)' }}>404</div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white mb-3">Page not found</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-[var(--text-hero)] mb-3">Page not found</h1>
           <p className="text-sm leading-relaxed mb-10" style={{ color: 'rgba(255,255,255,0.8)' }}>
             The page you are looking for does not exist or has been moved.
           </p>
