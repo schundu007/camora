@@ -1250,12 +1250,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
             </div>
             </Allotment.Pane>
 
-            {/* ── RIGHT: Tests | Output (2 sub-columns) ── */}
+            {/* ── RIGHT: Tests | Output (drag-resizable) ── */}
             <Allotment.Pane minSize={160}>
-            <div className="flex flex-row h-full min-w-0">
+            <Allotment defaultSizes={[50, 50]}>
 
               {/* Tests column */}
-              <div className="flex flex-col min-w-0 min-h-0" style={{ width: '50%', borderRight: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
+              <Allotment.Pane minSize={120}>
+              <div className="flex flex-col h-full" style={{ borderRight: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
                 <div className="flex items-center shrink-0 gap-2 px-3" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
                   <span className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf)' }}>
                     Tests
@@ -1347,9 +1348,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   })}
                 </div>
               </div>
+              </Allotment.Pane>
 
               {/* Output column */}
-              <div className="flex flex-col flex-1 min-w-0 min-h-0">
+              <Allotment.Pane minSize={100}>
+              <div className="flex flex-col h-full">
                 <div className="flex items-center shrink-0 px-4" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
                   <span className={`text-[11px] font-bold uppercase tracking-[0.1em] ${isErr ? 'text-red-400' : runOutput !== null ? 'text-emerald-400' : ''}`}
                     style={{ color: runOutput === null ? 'var(--cam-gold-leaf-dk)' : undefined }}>
@@ -1376,8 +1379,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   )}
                 </div>
               </div>
+              </Allotment.Pane>
 
-            </div>
+            </Allotment>
             </Allotment.Pane>
 
           </Allotment>
