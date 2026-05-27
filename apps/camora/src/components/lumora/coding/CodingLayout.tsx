@@ -1199,6 +1199,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     multiPageCapturingRef.current = false;
     setMultiPageCapturing(false);
     setMultiPageCount(0);
+    // Clear live-solve context so Sona sidebar resets to the new problem.
+    useSessionStore.getState().setLiveSolveContext(null);
     // Wipe previous solution state, fire the solver. No Sona on this
     // tab — every click runs the solver on the current problem text.
     setError(null);
