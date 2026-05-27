@@ -2,19 +2,14 @@
 import { Router } from 'express';
 import { query } from '../lib/shared-db.js';
 import { optionalJwtAuth, jwtAuth } from '../middleware/jwtAuth.js';
+import { PAID_PLAN_TYPES } from '../lib/plans.js';
 
 const router = Router();
 
-const PAID_PLAN_TYPES = new Set(['pro_monthly', 'pro_yearly', 'team', 'lifetime']);
 const OWNER_EMAILS = new Set(
   (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
     .split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
 );
-
-function isPaidUser(req) {
-  return (!!req.user?.planType && PAID_PLAN_TYPES.has(req.user.planType))
-    || (!!req.user?.email && OWNER_EMAILS.has(req.user.email.toLowerCase()));
-}
 
 // GET /api/v1/problems/tags — no auth needed
 router.get('/tags', async (req, res) => {
@@ -66,8 +61,8 @@ router.get('/', optionalJwtAuth, async (req, res) => {
       conditions.push(`source = $${params.length}`);
     }
     if (tag) {
-      params.push(`%"name":"${tag}"%`);
-      conditions.push(`topic_tags::text ILIKE $${params.length}`);
+      params.push(JSON.stringify([{ name: tag }]));
+      conditions.push(`topic_tags @> $${params.length}::jsonb`);
     }
     if (company) {
       params.push(company);
@@ -97,8 +92,16 @@ router.get('/', optionalJwtAuth, async (req, res) => {
       params
     );
 
-    // Strip company_tags for free/unauthenticated users
-    const paid = isPaidUser(req);
+    // Check paid status via DB (req.user.planType is not populated by optionalJwtAuth)
+    let paid = OWNER_EMAILS.has((req.user?.email ?? '').toLowerCase());
+    if (!paid && req.user?.id) {
+      const { rows: subRows } = await query(
+        "SELECT plan_type FROM ascend_subscriptions WHERE user_id = $1 AND status = 'active'",
+        [req.user.id]
+      );
+      paid = PAID_PLAN_TYPES.has(subRows[0]?.plan_type ?? '');
+    }
+
     const problems = rows.map(r => ({
       ...r,
       company_tags: paid ? r.company_tags : [],
@@ -126,12 +129,14 @@ router.get('/:slug', jwtAuth, async (req, res) => {
     // Premium problems gated behind paid subscription
     if (prob.is_premium) {
       const { rows: subRows } = await query(
-        "SELECT plan_type FROM ascend_subscriptions WHERE user_id = $1 AND status = 'active'",
+        "SELECT plan_type, trial_ends_at FROM ascend_subscriptions WHERE user_id = $1 AND status = 'active'",
         [req.user.id]
       );
-      const planType = subRows[0]?.plan_type ?? 'free';
-      const isOwner  = OWNER_EMAILS.has((req.user.email ?? '').toLowerCase());
-      if (!isOwner && !PAID_PLAN_TYPES.has(planType)) {
+      const sub = subRows[0];
+      const planType = sub?.plan_type ?? 'free';
+      const hasActiveTrial = planType === 'free' && sub?.trial_ends_at && new Date(sub.trial_ends_at) > new Date();
+      const isOwner = OWNER_EMAILS.has((req.user.email ?? '').toLowerCase());
+      if (!isOwner && !PAID_PLAN_TYPES.has(planType) && !hasActiveTrial) {
         return res.status(403).json({ error: 'Premium problem — upgrade to access', code: 'SUBSCRIPTION_REQUIRED' });
       }
     }
