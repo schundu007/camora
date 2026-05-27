@@ -1,0 +1,77 @@
+{
+  "title": "Twitter — Media Storage & Delivery",
+  "subtitle": "Global delivery for images and video",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "upload",
+          "label": "User\nUpload Media",
+          "kind": "actor"
+        },
+        {
+          "id": "media-svc",
+          "label": "Media Service\nSigned URLs\nValidation",
+          "kind": "service"
+        },
+        {
+          "id": "s3",
+          "label": "Object Store (S3)\nOriginal Assets",
+          "kind": "datastore"
+        },
+        {
+          "id": "cdn",
+          "label": "Global CDN\nEdge Caching",
+          "kind": "gateway"
+        },
+        {
+          "id": "viewer",
+          "label": "Follower\nViews Media",
+          "kind": "actor"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "s3",
+      "nodes": [
+        {
+          "id": "transcoder",
+          "label": "Transcoder\nffmpeg workers\nHLS/DASH",
+          "kind": "worker"
+        },
+        {
+          "id": "thumb-gen",
+          "label": "Thumbnail Gen\nMultiple sizes",
+          "kind": "worker"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "transcoder",
+      "to": "s3",
+      "label": "Store chunks"
+    },
+    {
+      "from": "cdn",
+      "to": "s3",
+      "label": "Origin Fetch"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Media Optimization",
+      "body": "- Lazy loading: fetch only when in viewport\n- Adaptive Bitrate: adjust quality to connection\n- Image formats: WebP / AVIF for 30% savings\n- CDN Purging: remove deleted media from edge"
+    },
+    {
+      "kind": "note",
+      "title": "Storage Costs",
+      "body": "Daily media volume: ~1 PB\nRetention policy: Archive rarely viewed\nmedia to Glacier/Deep Archive after 90 days."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "title": "Twitter — Read Timeline Flow",
+  "subtitle": "Personalized feed assembly (Hybrid Merge)",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "user",
+          "label": "User\nGET /api/timeline",
+          "kind": "actor"
+        },
+        {
+          "id": "timeline-svc",
+          "label": "Timeline Service\nCoordinator",
+          "kind": "service"
+        },
+        {
+          "id": "redis",
+          "label": "Redis Timelines\nPre-computed feed\n(Fan-out on Write)",
+          "kind": "datastore"
+        },
+        {
+          "id": "merge-rank",
+          "label": "Merge & Rank\nSort by Snowflake ID\nApply cursor",
+          "kind": "worker"
+        },
+        {
+          "id": "tweet-db",
+          "label": "Tweet DB\nHydrate tweet IDs\nwith full content",
+          "kind": "datastore"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "timeline-svc",
+      "nodes": [
+        {
+          "id": "social-graph",
+          "label": "Social Graph\nGet list of celebrities\nfollowed by user",
+          "kind": "datastore"
+        },
+        {
+          "id": "celebrity-cache",
+          "label": "Celebrity Cache\nPull recent tweets from\nfollowed celebrities",
+          "kind": "cache"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "celebrity-cache",
+      "to": "merge-rank",
+      "label": "Pull Data",
+      "style": "dashed"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Read Path Optimization",
+      "lang": "redis",
+      "body": "1. ZREVRANGE user_timeline:123 0 199\n2. Get followed celebs: [1000, 2000]\n3. MGET celeb_tweets:1000 celeb_tweets:2000\n4. Merge and sort in application layer\n5. Paginate using cursor (Snowflake ID)"
+    },
+    {
+      "kind": "issue",
+      "title": "Latency Considerations",
+      "body": "Pre-computed Redis reads are < 2ms.\nPulling from 50+ celebrities adds N network calls.\n\nMitigation: Heavily cache celebrity tweet lists\nand hydrate full tweet content (text/media)\nonly for the top 20 visible tweets."
+    }
+  ]
+}

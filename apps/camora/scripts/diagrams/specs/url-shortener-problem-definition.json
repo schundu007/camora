@@ -1,0 +1,55 @@
+{
+  "title": "URL Shortener — Problem Definition",
+  "subtitle": "Scope and core requirements for a global URL shortening service",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "scale",
+          "label": "500M URLs/mo\n20K Redirects/sec",
+          "kind": "actor",
+          "sub": "Scale"
+        },
+        {
+          "id": "features",
+          "label": "Shorten & Redirect\nCustom Aliases\nExpiration",
+          "kind": "service",
+          "sub": "In-Scope"
+        },
+        {
+          "id": "perf",
+          "label": "< 100ms Latency\n99.99% Availability",
+          "kind": "gateway",
+          "sub": "SLA"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Functional Requirements",
+      "body": "- Shorten long URLs to 7-char codes\n- Redirect short URLs to original (301/302)\n- Support custom aliases (vanity URLs)\n- Link analytics (click counts, referer)\n- URL expiration (cleanup background job)"
+    },
+    {
+      "kind": "issue",
+      "title": "Out-of-Scope",
+      "body": "- User authentication/accounts\n- QR code generation\n- Link-in-bio page builders\n- Advanced API rate limiting details"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Key Challenges",
+      "pros": [
+        "Distributed ID generation (no collisions)",
+        "High availability for redirects",
+        "Global CDN caching (CloudFront)"
+      ],
+      "cons": [
+        "Eventual consistency on URL creation",
+        "Write amplification for analytics"
+      ]
+    }
+  ]
+}

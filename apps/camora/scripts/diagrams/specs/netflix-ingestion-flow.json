@@ -1,0 +1,66 @@
+{
+  "title": "Netflix — Content Ingestion Pipeline",
+  "subtitle": "Processing masters into 1,200+ streaming variants",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "master",
+          "label": "Studio Master\n8K ProRes (100GB/hr)",
+          "kind": "datastore"
+        },
+        {
+          "id": "analysis",
+          "label": "Shot Analysis\nVisual complexity",
+          "kind": "worker"
+        },
+        {
+          "id": "encode",
+          "label": "Per-Shot Encode\nGPU-accelerated",
+          "kind": "worker"
+        },
+        {
+          "id": "quality",
+          "label": "VMAF Scoring\nPerceptual check",
+          "kind": "service"
+        },
+        {
+          "id": "package",
+          "label": "Manifest Gen\nDASH / HLS",
+          "kind": "gateway"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "encode",
+      "cluster": "Security & CDN",
+      "nodes": [
+        {
+          "id": "drm",
+          "label": "DRM Wrap\nWidevine/FairPlay",
+          "kind": "worker"
+        },
+        {
+          "id": "cdn-fill",
+          "label": "Predictive Placement\nOvernight ISP Fill",
+          "kind": "worker"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Per-Shot Encoding",
+      "body": "- Simple scenes: 2 Mbps\n- Action scenes: 8 Mbps\n- Animation: 1.5 Mbps\n\nTotal quality constant, bits variable."
+    },
+    {
+      "kind": "note",
+      "title": "Off-peak Fill",
+      "body": "CDN updates happen at 2 AM local time\nper region to avoid impacting ISP\nbandwidth during peak hours."
+    }
+  ]
+}

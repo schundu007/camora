@@ -1,0 +1,68 @@
+{
+  "title": "Instagram — Feed Generation",
+  "subtitle": "Hybrid Fan-out Strategy",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "post",
+          "label": "New Post\nCheck followers",
+          "kind": "queue"
+        },
+        {
+          "id": "check",
+          "label": "Celebrity?\nN > 10K",
+          "kind": "decision"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "check",
+      "nodes": [
+        {
+          "id": "push",
+          "label": "Push (Write)\nPre-compute feeds",
+          "kind": "worker"
+        },
+        {
+          "id": "pull",
+          "label": "Pull (Read)\nMerge at runtime",
+          "kind": "worker"
+        }
+      ]
+    },
+    {
+      "lane": "main",
+      "from": "check",
+      "nodes": [
+        {
+          "id": "redis",
+          "label": "Feed Cache\nRedis cluster",
+          "kind": "cache"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "The Celebrity Problem",
+      "body": "If a user has 100M followers,\npushing to all caches takes 15m.\nCelebrity content is pulled on-demand\nto keep writes fast."
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Hybrid Performance",
+      "pros": [
+        "Instant load for 99% of feeds",
+        "Wastes no space on inactive users"
+      ],
+      "cons": [
+        "Read-time merge latency",
+        "Complex cache invalidation"
+      ]
+    }
+  ]
+}

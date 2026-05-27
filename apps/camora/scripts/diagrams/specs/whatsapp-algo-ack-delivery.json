@@ -1,0 +1,52 @@
+{
+  "title": "WhatsApp — ACK Protocol",
+  "subtitle": "Guaranteed at-least-once delivery",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "send",
+          "label": "Gateway\nDelivers WS Frame",
+          "kind": "gateway"
+        },
+        {
+          "id": "timer",
+          "label": "ACK Timer\n30s wait",
+          "kind": "worker"
+        },
+        {
+          "id": "retry",
+          "label": "Retry Flow\nExp. Backoff",
+          "kind": "worker"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "send",
+      "nodes": [
+        {
+          "id": "ack",
+          "label": "Client ACK\nUUID received",
+          "kind": "actor"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "ack",
+      "to": "timer",
+      "label": "Cancel Timer"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Deduplication",
+      "body": "Clients keep a sliding window of\nreceived UUIDs to drop duplicates\ncaused by network-level retries."
+    }
+  ]
+}

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Camora — LinkedIn Slide</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1200px;
+    height: 628px;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  .slide {
+    width: 1200px;
+    height: 628px;
+    position: relative;
+    background: #0047AB;
+    background: linear-gradient(135deg, #002F7A 0%, #0047AB 40%, #0A1228 100%);
+    color: #ffffff;
+    overflow: hidden;
+  }
+
+  /* Subtle grid overlay */
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 80% at 20% 30%, black, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 80% at 20% 30%, black, transparent 70%);
+  }
+
+  /* Gold radial accent */
+  .slide::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 55% 60% at 15% 15%, rgba(212,175,55,0.18), transparent 60%),
+      radial-gradient(ellipse 40% 50% at 85% 75%, rgba(0,71,171,0.6), transparent 55%);
+    pointer-events: none;
+  }
+
+  /* ── Layout ── */
+  .inner {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 52px 0;
+  }
+
+  /* ── Top bar ── */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .wordmark {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wordmark-name {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #ffffff;
+    line-height: 1;
+  }
+
+  .wordmark-tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #D4AF37;
+    margin-top: 4px;
+  }
+
+  .top-divider {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%);
+    margin: 0 32px;
+  }
+
+  .top-badge {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+  }
+
+  /* ── Body ── */
+  .body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 0 56px;
+    align-items: center;
+    padding-bottom: 8px;
+  }
+
+  /* Hero stat block */
+  .hero-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-number {
+    font-size: 96px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: #ffffff;
+    /* gold underline accent */
+    background: linear-gradient(90deg, #ffffff 0%, #E8D08A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-label {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #D4AF37;
+    margin-top: 10px;
+    line-height: 1.4;
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.52);
+    font-weight: 500;
+    margin-top: 6px;
+    letter-spacing: 0.01em;
+  }
+
+  .gold-rule {
+    width: 48px;
+    height: 3px;
+    background: #D4AF37;
+    border-radius: 2px;
+    margin-top: 18px;
+  }
+
+  /* APPA grid */
+  .appa-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .appa-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 18px 20px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .appa-step {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #D4AF37;
+    line-height: 1;
+  }
+
+  .appa-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-top: 6px;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .appa-desc {
+    font-size: 12px;
+    color: rgba(255,255,255,0.58);
+    margin-top: 5px;
+    line-height: 1.45;
+    font-weight: 500;
+  }
+
+  /* Icon dots */
+  .appa-icon {
+    width: 28px;
+    height: 28px;
+    background: rgba(212,175,55,0.15);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+  .appa-icon svg {
+    width: 14px;
+    height: 14px;
+    stroke: #D4AF37;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ── Bottom strip ── */
+  .bottom-strip {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255,255,255,0.10);
+    padding: 14px 0 18px;
+  }
+
+  .domains {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .domain-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin-right: 20px;
+  }
+
+  .domain-chips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.72);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 3px 12px;
+    letter-spacing: 0.04em;
+  }
+
+  .site-url {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.38);
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-left: 24px;
+  }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="inner">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="wordmark">
+        <span class="wordmark-name">CAMORA</span>
+        <span class="wordmark-tag">AI Interview Platform</span>
+      </div>
+      <div class="top-divider"></div>
+      <span class="top-badge">Apply &middot; Prepare &middot; Practice &middot; Attend</span>
+    </div>
+
+    <!-- Body: hero stat + APPA grid -->
+    <div class="body">
+
+      <!-- Hero stat -->
+      <div class="hero-stat">
+        <div class="hero-number">9,063</div>
+        <div class="gold-rule"></div>
+        <div class="hero-label">Unique Practice<br>Problems</div>
+        <div class="hero-sub">6,292 coding &middot; 2,771 MCQ</div>
+      </div>
+
+      <!-- APPA 2×2 grid -->
+      <div class="appa-grid">
+
+        <div class="appa-card">
+          <div class="appa-icon">
+            <svg viewBox="0 0 24 24">
+              <rect x="4" y="4" width="16" height="16" rx="2"/>
+              <path d="M9 12h6M9 8h6M9 16h3"/>
+            </svg>
+          </div>
+          <div class="appa-step">Apply</div>
+          <div class="appa-title">Matched Roles</div>
+          <div class="appa-desc">1,000+ engineering roles with AI-powered skill matching</div>
+        </div>
+
+        <div class="appa-card">
+          <div class="appa-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+          </div>
+          <div class="appa-step">Prepare</div>
+          <div class="appa-title">Study Topics</div>
+          <div class="appa-desc">1,400+ curated topics — system design, DSA, behavioral & more</div>
+        </div>
+
+        <div class="appa-card">
+          <div class="appa-icon">
+            <svg viewBox="0 0 24 24">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+              <line x1="14.5" y1="4" x2="9.5" y2="20"/>
+            </svg>
+          </div>
+          <div class="appa-step">Practice</div>
+          <div class="appa-title">9,000+ Problems</div>
+          <div class="appa-desc">Across 50+ domains with AI scoring on every dimension</div>
+        </div>
+
+        <div class="appa-card">
+          <div class="appa-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+          </div>
+          <div class="appa-step">Attend</div>
+          <div class="appa-title">Real-Time AI</div>
+          <div class="appa-desc">Live transcription &amp; instant AI answers during the interview</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bottom strip -->
+    <div class="bottom-strip">
+      <div class="domains">
+        <span class="domain-label">Domains</span>
+        <div class="domain-chips">
+          <span class="chip">DSA</span>
+          <span class="chip">System Design</span>
+          <span class="chip">MCQ</span>
+          <span class="chip">SQL</span>
+          <span class="chip">Behavioral</span>
+          <span class="chip">LLD</span>
+        </div>
+      </div>
+      <span class="site-url">cariara.com</span>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

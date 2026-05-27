@@ -1,0 +1,39 @@
+{
+  "title": "Twitter Trends — Single Region Architecture",
+  "subtitle": "Real-time pipeline for a single geographic area",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "ingest",
+          "label": "Tweet Ingestion\nKafka stream",
+          "kind": "queue"
+        },
+        {
+          "id": "filter",
+          "label": "Basic Filter\nSpam & Rate limits",
+          "kind": "service"
+        },
+        {
+          "id": "flink",
+          "label": "Apache Flink\nWindowed aggregation",
+          "kind": "worker"
+        },
+        {
+          "id": "redis",
+          "label": "Redis\nTrends Cache",
+          "kind": "cache"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "issue",
+      "title": "Limitations",
+      "body": "- Single region only (no geo-specific trends)\n- Flink is a single cluster (SPOF)\n- No historical baseline for anomalous spike detection\n- Basic spam filtering can be gamed"
+    }
+  ]
+}

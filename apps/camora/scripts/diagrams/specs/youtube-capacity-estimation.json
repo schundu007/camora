@@ -1,0 +1,48 @@
+{
+  "title": "YouTube — Capacity Estimation",
+  "subtitle": "Ingress, Storage, and Egress Analysis",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "ingress",
+          "label": "Ingress\n500 hrs / min\n~720 TB raw / day",
+          "kind": "gateway",
+          "sub": "Upload path"
+        },
+        {
+          "id": "compute",
+          "label": "Compute\n1.4M GPU-hours / day\nTranscoding",
+          "kind": "worker",
+          "sub": "Processing"
+        },
+        {
+          "id": "storage",
+          "label": "Storage\n3.6 PB / day\n100+ PB / month",
+          "kind": "datastore",
+          "sub": "Transcoded blobs"
+        },
+        {
+          "id": "egress",
+          "label": "Egress\n175 Tbps Peak\n1B hours watched / day",
+          "kind": "gateway",
+          "sub": "Playback path"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Storage Math",
+      "body": "Daily Upload: 720,000 hours\nTranscoded (5 resolutions + 3 codecs):\nAvg 5GB per hour total across all\n720K * 5GB = 3.6 PB / day"
+    },
+    {
+      "kind": "code",
+      "title": "Bandwidth Math",
+      "body": "1B Hours / Day = 11.5K hours / sec\nAvg Quality (5 Mbps):\n11.5K * 5 Mbps = 57.5 Gbps Avg\nPeak Multiplier (3x) = 175 Tbps"
+    }
+  ]
+}

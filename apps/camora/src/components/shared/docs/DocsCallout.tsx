@@ -29,7 +29,7 @@ const VARIANTS: Record<
   },
   note: {
     label: 'Note',
-    color: '#26619C',
+    color: '#10B981',
     icon: (
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="10" />
@@ -40,7 +40,7 @@ const VARIANTS: Record<
   },
   warning: {
     label: 'Warning',
-    color: '#C9A227',
+    color: '#F59E0B',
     icon: (
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -84,21 +84,18 @@ export default function DocsCallout({
       className="my-5 relative rounded-xl overflow-hidden pl-5 pr-4 py-3.5"
       style={{
         background: `linear-gradient(180deg, ${v.color}10 0%, ${v.color}05 100%)`,
-        border: '1px solid var(--cam-gold-leaf)',
+        border: '1px solid color-mix(in srgb, var(--accent) 22%, transparent)',
         boxShadow:
-          `0 1px 0 color-mix(in srgb, var(--cam-gold-leaf) 18%, transparent),` +
+          `0 1px 0 color-mix(in srgb, var(--accent) 12%, transparent),` +
           ` 0 6px 18px -12px ${v.color}40,` +
           ` inset 0 1px 0 rgba(255,255,255,0.3)`,
       }}
     >
-      {/* Navy strip — sits on the left edge, slightly inset top/bottom */}
+      {/* Accent strip — sits on the left edge, slightly inset top/bottom */}
       <span
         aria-hidden="true"
         className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full"
-        style={{
-          background:
-            'linear-gradient(180deg, var(--cam-primary) 0%, var(--cam-primary-dk) 100%)',
-        }}
+        style={{ background: 'var(--accent)' }}
       />
 
       {/* Glassy pill label */}
@@ -107,7 +104,7 @@ export default function DocsCallout({
           className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-[0.12em]"
           style={{
             background: 'var(--bg-elevated)',
-            border: `1px solid color-mix(in srgb, ${v.color} 45%, var(--cam-gold-leaf))`,
+            border: `1px solid color-mix(in srgb, ${v.color} 45%, rgba(16,185,129,0.4))`,
             color: v.color,
             boxShadow: `0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.45)`,
             backdropFilter: 'blur(6px)',

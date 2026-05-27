@@ -21,7 +21,7 @@ interface HexColorSpec {
 const COLOR_MAP: Record<HexColor, HexColorSpec> = {
   navy:    { fill: 'var(--cam-primary)',     ring: 'var(--cam-primary-dk)', fg: '#FFFFFF' },
   'navy-lt': { fill: 'var(--cam-primary-lt)', ring: 'var(--cam-primary)',    fg: '#FFFFFF' },
-  'navy-dk': { fill: 'var(--cam-primary-dk)', ring: 'var(--cam-primary-900, #051C40)', fg: '#FFFFFF' },
+  'navy-dk': { fill: 'var(--cam-primary-dk)', ring: 'var(--cam-primary-900, #022C22)', fg: '#FFFFFF' },
   gold:    { fill: 'var(--cam-gold-leaf)',   ring: 'var(--cam-gold-leaf-dk)', fg: '#FFFFFF' },
   red:     { fill: 'var(--danger)',          ring: '#991B1B', fg: '#FFFFFF' },
   cream:   { fill: 'var(--bg-elevated)',     ring: 'var(--border)',         fg: 'var(--text-primary)' },

@@ -1,0 +1,42 @@
+{
+  "title": "Netflix — Capacity Estimation",
+  "subtitle": "Traffic, Bandwidth, and Storage Analysis",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "traffic",
+          "label": "500M+ hrs/day\n100M Peak Streams",
+          "kind": "gateway",
+          "sub": "Planetary load"
+        },
+        {
+          "id": "bandwidth",
+          "label": "500 Tbps Total\n15% Global Web",
+          "kind": "gateway",
+          "sub": "Aggregate"
+        },
+        {
+          "id": "storage",
+          "label": "100+ PB Storage\n1,200+ files/title",
+          "kind": "datastore",
+          "sub": "Encoded variants"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Bandwidth Math",
+      "body": "100M concurrent viewers\nx 5 Mbps avg bitrate\n= 500 Tbps Aggregate\n\nISP Local (95%): 475 Tbps\nInternet (5%): 25 Tbps"
+    },
+    {
+      "kind": "code",
+      "title": "Encoding Storage",
+      "body": "1 Title → 1,200 versions\n(10 res x 4 codecs x 5 bitrates)\nAvg size/title: 500 GB total\n17,000 titles * 500GB ≈ 8.5 PB raw\nReplicated (10x+): ~100 PB"
+    }
+  ]
+}

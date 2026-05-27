@@ -1,0 +1,80 @@
+{
+  "title": "URL Shortener — Redirect Flow",
+  "subtitle": "Read path: high-concurrency redirect logic",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "user",
+          "label": "User\nGET /dK9v2Tx",
+          "kind": "actor"
+        },
+        {
+          "id": "cdn",
+          "label": "Global CDN\nEdge Cache",
+          "kind": "gateway"
+        },
+        {
+          "id": "redis",
+          "label": "Redis Cluster\nHot URL cache",
+          "kind": "cache"
+        },
+        {
+          "id": "db",
+          "label": "NoSQL Store\nPrimary Source",
+          "kind": "datastore"
+        },
+        {
+          "id": "user-redirect",
+          "label": "301 Redirect\nLocation: original.com",
+          "kind": "actor"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "cdn",
+      "cluster": "Async Analytics",
+      "nodes": [
+        {
+          "id": "kafka",
+          "label": "Kafka\nclick-events",
+          "kind": "queue"
+        },
+        {
+          "id": "clickhouse",
+          "label": "ClickHouse\nAnalytics DB",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "cdn",
+      "to": "kafka",
+      "label": "Fire & Forget"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "tradeoff",
+      "title": "301 vs 302 Redirect",
+      "pros": [
+        "301: Browser caches (subsequent hits skip our servers)",
+        "302: Server sees every hit (perfect analytics)"
+      ],
+      "cons": [
+        "301: Limited real-time analytics",
+        "302: Higher server cost (20K QPS is heavy)"
+      ]
+    },
+    {
+      "kind": "note",
+      "title": "Cache Sizing",
+      "body": "80/20 Rule:\nTop 20% of daily URLs serve 80% of traffic.\n~170GB Redis Cluster fits entire active set."
+    }
+  ]
+}

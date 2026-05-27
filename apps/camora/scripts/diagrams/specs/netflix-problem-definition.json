@@ -1,0 +1,55 @@
+{
+  "title": "Netflix — Problem Definition",
+  "subtitle": "Global video streaming at planetary scale",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "scale",
+          "label": "260M Subscribers\n500M+ hrs/day",
+          "kind": "actor",
+          "sub": "Scale"
+        },
+        {
+          "id": "core",
+          "label": "Ingest, Transcode\nOpen Connect (CDN)\nABR, Recommendations",
+          "kind": "service",
+          "sub": "In-Scope"
+        },
+        {
+          "id": "perf",
+          "label": "< 3s Start Time\nZero Buffering",
+          "kind": "gateway",
+          "sub": "Latency"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Functional Requirements",
+      "body": "- Multi-device streaming (TV, Mobile, Web)\n- Adaptive Bitrate (ABR) switching\n- Personalized rows and ranking\n- Offline downloads (DRM protected)\n- Profiles and watch history sync"
+    },
+    {
+      "kind": "issue",
+      "title": "Out-of-Scope",
+      "body": "- Real-time live sports/streaming\n- Content licensing & legal workflows\n- Payment gateway internals\n- Social features (comments/sharing)"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Technical Challenges",
+      "pros": [
+        "Open Connect: 95% cache hit rate",
+        "Per-shot encoding: 20% bit savings",
+        "Control/Data plane separation"
+      ],
+      "cons": [
+        "100+ PB encoded asset storage",
+        "Massive AWS compute costs (GPU)"
+      ]
+    }
+  ]
+}

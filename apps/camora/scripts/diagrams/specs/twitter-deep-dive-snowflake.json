@@ -1,0 +1,67 @@
+{
+  "title": "Twitter — Snowflake ID Generation",
+  "subtitle": "Globally unique, time-sortable 64-bit IDs",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "zk",
+          "label": "ZooKeeper\nWorker ID Coordination\nLease management",
+          "kind": "datastore"
+        },
+        {
+          "id": "snowflake",
+          "label": "Snowflake Worker\nHigh-throughput\nID Generation",
+          "kind": "service"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "snowflake",
+      "cluster": "64-bit ID Layout",
+      "nodes": [
+        {
+          "id": "bit0",
+          "label": "1 bit\nSign (0)",
+          "kind": "note"
+        },
+        {
+          "id": "bits1-41",
+          "label": "41 bits\nTimestamp (ms)\n69 years total",
+          "kind": "note"
+        },
+        {
+          "id": "bits42-51",
+          "label": "10 bits\nMachine ID\n1,024 nodes",
+          "kind": "note"
+        },
+        {
+          "id": "bits52-63",
+          "label": "12 bits\nSequence\n4,096 per ms",
+          "kind": "note"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "snowflake",
+      "to": "bit0"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Why Snowflake?",
+      "body": "- 64-bit fits in a signed long\n- Time-sortable: range queries on primary keys are efficient\n- No single point of failure (unlike DB auto-increment)\n- 4 million IDs/sec per worker node throughput"
+    },
+    {
+      "kind": "issue",
+      "title": "Clock Drift Problem",
+      "body": "If the system clock drifts backwards (NTP adjustment),\nthe worker refuses to generate IDs until the\nclock catches up to the last timestamp used.\n\nPrevents ID collisions within a millisecond."
+    }
+  ]
+}

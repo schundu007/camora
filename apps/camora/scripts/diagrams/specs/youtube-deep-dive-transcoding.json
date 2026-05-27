@@ -1,0 +1,44 @@
+{
+  "title": "YouTube — Transcoding Pipeline",
+  "subtitle": "Distributed GPU fleet for multi-resolution encoding",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "raw",
+          "label": "Raw Upload\nChunked S3",
+          "kind": "datastore"
+        },
+        {
+          "id": "gpu-fleet",
+          "label": "GPU Fleet\nFFmpeg Workers",
+          "kind": "worker"
+        },
+        {
+          "id": "formats",
+          "label": "Multi-format Blobs\nH.264, VP9, AV1",
+          "kind": "datastore"
+        },
+        {
+          "id": "cdn",
+          "label": "CDN Distribution",
+          "kind": "gateway"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Per-Title Encoding",
+      "body": "- Animation: Lower bitrate (simple scenes)\n- Sports: Higher bitrate (fast motion)\n- Resolution: 360p (fast) → 4K (slow)"
+    },
+    {
+      "kind": "note",
+      "title": "Parallel Strategy",
+      "body": "Videos are split into 4s segments.\nThousands of workers process segments\nin parallel for all resolutions."
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+<h2>Advanced Learning Features — Beginner → Pro</h2>
+<p class="subtitle">Grouped by tier. No AI — all tool-backed. Select the tiers you want.</p>
+
+<div class="options" data-multiselect>
+
+  <div class="option" data-choice="tier1" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Tier 1 · Real-time Feedback <span style="color:#22c55e;font-size:11px">Foundation</span></h3>
+      <ul style="margin:6px 0 0 0;padding-left:16px;font-size:12px;line-height:1.9;color:#94a3b8">
+        <li><strong style="color:#e2e8f0">Ruff linting as-you-type</strong> — debounced 500ms, inline squiggles + gutter icons before you even hit Run. Catches undefined vars, bad imports, style issues instantly.</li>
+        <li><strong style="color:#e2e8f0">Error decoder</strong> — when a run fails, the stderr panel auto-parses Python tracebacks and appends a plain-English "What went wrong" block. Lookup table of 50+ common errors (NameError, IndexError, RecursionError…). No AI, just rules.</li>
+        <li><strong style="color:#e2e8f0">Keyboard shortcuts</strong> — <code>⌘+Enter</code> to run, <code>⌘+L</code> to clear, <code>⌘+D</code> to format. Shown in a persistent footer chip.</li>
+        <li><strong style="color:#e2e8f0">Auto-format (Black)</strong> — a "Format" button pipes code through <code>black -</code> on the backend and replaces the editor content. Teaches idiomatic Python style.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="option" data-choice="tier2" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Tier 2 · Program Insight <span style="color:#60a5fa;font-size:11px">Intermediate</span></h3>
+      <ul style="margin:6px 0 0 0;padding-left:16px;font-size:12px;line-height:1.9;color:#94a3b8">
+        <li><strong style="color:#e2e8f0">Variable Inspector</strong> — after every run, backend wraps code to capture <code>locals()</code> at script end, returns as JSON. Right pane shows a table: name · type · value. Teaches what's in memory.</li>
+        <li><strong style="color:#e2e8f0">Execution Profiler</strong> — toggle button "Profile". Wraps code in <code>cProfile</code>, returns top-10 functions by cumtime as a sortable table. Teaches where time is spent.</li>
+        <li><strong style="color:#e2e8f0">Memory Tracker</strong> — second toggle "Memory". Wraps code in <code>tracemalloc</code>, shows peak memory + top 5 allocations by file/line. Teaches memory awareness.</li>
+        <li><strong style="color:#e2e8f0">Run History</strong> — last 20 runs saved in <code>localStorage</code> per language tab. Drawer on the right shows timestamp + first line of code + exit code. Click any to restore. Teaches iteration habits.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="option" data-choice="tier3" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>Tier 3 · Test-Driven Mindset <span style="color:#a78bfa;font-size:11px">Advanced</span></h3>
+      <ul style="margin:6px 0 0 0;padding-left:16px;font-size:12px;line-height:1.9;color:#94a3b8">
+        <li><strong style="color:#e2e8f0">Test Harness panel</strong> — second collapsible editor below main code (labelled "Tests"). Backend runs both files as <code>pytest -v --tb=short</code>. Output shows pass ✓ / fail ✗ per test function with assertion diff. Teaches TDD.</li>
+        <li><strong style="color:#e2e8f0">Complexity Badge</strong> — after each run, backend uses <code>radon</code> to compute McCabe complexity + LOC. Shows a badge: A (simple) → F (spaghetti). Click for per-function breakdown. Teaches clean code.</li>
+        <li><strong style="color:#e2e8f0">Snippets Library</strong> — slide-out panel with 60+ categorised snippets: List Comprehensions, Decorators, Generators, Context Managers, Dataclasses, Async/Await, Type Hints, Functools, Itertools. Click to insert at cursor. Teaches patterns by example.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="option" data-choice="tier4" onclick="toggleSelect(this)">
+    <div class="letter">4</div>
+    <div class="content">
+      <h3>Tier 4 · Pro Tooling <span style="color:#f59e0b;font-size:11px">Expert</span></h3>
+      <ul style="margin:6px 0 0 0;padding-left:16px;font-size:12px;line-height:1.9;color:#94a3b8">
+        <li><strong style="color:#e2e8f0">Big-O Visualiser</strong> — "Benchmark" button. Backend runs your function 5× with input sizes [10, 100, 1k, 10k, 100k], records time for each. Right pane plots a sparkline + classifies curve as O(1) / O(log n) / O(n) / O(n²). Teaches algorithmic thinking.</li>
+        <li><strong style="color:#e2e8f0">Share snippet</strong> — "Share" button persists code to DB, returns a short URL (<code>/playground/s/abc123</code>). URL loads the code pre-filled. Teaches collaboration.</li>
+        <li><strong style="color:#e2e8f0">REPL mode</strong> — toggle between "Script" (full file) and "REPL" (line-by-line). In REPL mode, <code>Enter</code> sends one expression to a persistent Python process, output appends below. State accumulates across lines. Teaches exploratory coding.</li>
+        <li><strong style="color:#e2e8f0">Diff view</strong> — "Compare runs" — select any two entries from Run History and view a side-by-side code diff + output diff. Teaches how changes affect behaviour.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px">Select all tiers you want — or pick just some. Recommended: all 4 for a complete learning arc.</p>

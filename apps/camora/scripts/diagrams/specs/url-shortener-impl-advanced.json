@@ -1,0 +1,82 @@
+{
+  "title": "URL Shortener — Advanced Implementation",
+  "subtitle": "Distributed range allocation with ZooKeeper",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "user",
+          "label": "User",
+          "kind": "actor"
+        },
+        {
+          "id": "lb",
+          "label": "Load Balancer",
+          "kind": "gateway"
+        },
+        {
+          "id": "web",
+          "label": "Web Servers\nStateless cluster",
+          "kind": "service"
+        },
+        {
+          "id": "db",
+          "label": "NoSQL (Cassandra)\nDistributed store",
+          "kind": "datastore"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "web",
+      "nodes": [
+        {
+          "id": "zk",
+          "label": "ZooKeeper\nRange Allocator",
+          "kind": "service",
+          "sub": "Allocates 1M ID ranges"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "lb",
+      "nodes": [
+        {
+          "id": "redis",
+          "label": "Redis Cache\nHot URLs only",
+          "kind": "cache"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "lb",
+      "to": "redis",
+      "label": "Check cache"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "ZooKeeper Range Allocation",
+      "body": "1. Server A asks ZK for a range (e.g., 1–1,000,000).\n2. Server A generates IDs locally without any network calls.\n3. When 1M is hit, A asks ZK for the next range.\n4. Server B gets 1,000,001–2,000,000.\n\nResult: High throughput, zero collisions, no SPOF."
+    },
+    {
+      "kind": "tradeoff",
+      "title": "NoSQL Benefits",
+      "pros": [
+        "Horizontal scaling (add nodes)",
+        "High write throughput",
+        "Tunable consistency"
+      ],
+      "cons": [
+        "No complex JOINs",
+        "Eventual consistency artifacts"
+      ]
+    }
+  ]
+}

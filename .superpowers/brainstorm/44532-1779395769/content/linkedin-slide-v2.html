@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camora — LinkedIn Slide + Landing Stats</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; font-family: 'Segoe UI', system-ui, sans-serif; padding: 32px; color: white; }
+  .label { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #94a3b8; margin-bottom: 12px; }
+
+  /* ─── SLIDE ─────────────────────────────────────────── */
+  .slide {
+    width: 100%; max-width: 900px; margin: 0 auto 48px;
+    background: linear-gradient(135deg, #07112A 0%, #0D1E42 60%, #0A1228 100%);
+    border-radius: 16px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+  }
+  .slide::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 70% 60% at 5% 20%, rgba(201,162,39,0.13), transparent 55%),
+      radial-gradient(ellipse 50% 50% at 95% 80%, rgba(38,97,156,0.22), transparent 55%);
+    pointer-events: none;
+  }
+  .slide-inner { position: relative; padding: 40px 48px; }
+
+  .slide-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+  .slide-logo { font-size: 13px; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; color: #C9A227; }
+  .slide-tag { font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 0.1em; }
+
+  .hero { text-align: center; margin-bottom: 34px; }
+  .hero-num { font-size: 80px; font-weight: 900; color: #C9A227; line-height: 1; letter-spacing: -3px; }
+  .hero-plus { font-size: 44px; color: rgba(201,162,39,0.7); }
+  .hero-lbl { font-size: 15px; color: rgba(255,255,255,0.6); margin-top: 8px; letter-spacing: 0.04em; }
+  .hero-sub { font-size: 10.5px; color: rgba(255,255,255,0.28); margin-top: 5px; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+  .stat-card {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 12px; padding: 18px; text-align: center;
+  }
+  .stat-num { font-size: 30px; font-weight: 800; color: white; letter-spacing: -1px; }
+  .stat-num sup { font-size: 16px; color: #C9A227; vertical-align: super; }
+  .stat-lbl { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.42); text-transform: uppercase; letter-spacing: 0.14em; margin-top: 5px; }
+  .stat-src { font-size: 9px; color: rgba(255,255,255,0.22); margin-top: 3px; line-height: 1.4; }
+
+  .appa-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 28px; }
+  .appa-card { border-radius: 10px; padding: 14px 13px; }
+  .appa-card.a { background: rgba(201,162,39,0.09); border: 1px solid rgba(201,162,39,0.22); }
+  .appa-card.p1 { background: rgba(59,130,246,0.09); border: 1px solid rgba(59,130,246,0.22); }
+  .appa-card.p2 { background: rgba(16,185,129,0.09); border: 1px solid rgba(16,185,129,0.22); }
+  .appa-card.p3 { background: rgba(168,85,247,0.09); border: 1px solid rgba(168,85,247,0.22); }
+
+  .appa-letter { font-size: 9px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 7px; }
+  .appa-card.a .appa-letter { color: #C9A227; }
+  .appa-card.p1 .appa-letter { color: #60a5fa; }
+  .appa-card.p2 .appa-letter { color: #34d399; }
+  .appa-card.p3 .appa-letter { color: #c084fc; }
+  .appa-title { font-size: 13px; font-weight: 700; color: white; margin-bottom: 5px; }
+  .appa-desc { font-size: 10px; color: rgba(255,255,255,0.42); line-height: 1.45; }
+
+  .cat-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 28px; }
+  .cat-pill {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px; padding: 4px 12px;
+    font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.5); letter-spacing: 0.04em;
+  }
+
+  .slide-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.07); padding-top: 14px; }
+  .footer-note { font-size: 9.5px; color: rgba(255,255,255,0.22); }
+  .footer-url { font-size: 10px; font-weight: 700; color: #C9A227; letter-spacing: 0.1em; }
+
+  /* ─── LANDING STATS SECTION ─────────────────────────── */
+  .landing { max-width: 900px; margin: 0 auto; }
+  .landing-box { background: #fff; border-radius: 16px; padding: 44px 48px; color: #0f172a; }
+
+  .l-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #0047AB; margin-bottom: 10px; }
+  .l-heading { font-size: 30px; font-weight: 900; color: #0a1628; line-height: 1.15; margin-bottom: 10px; }
+  .l-lead { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 32px; max-width: 580px; }
+
+  .big-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  .bstat {
+    border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 16px;
+    background: #f8fafc;
+  }
+  .bstat-num { font-size: 34px; font-weight: 900; color: #0047AB; letter-spacing: -1.5px; line-height: 1; }
+  .bstat-num em { font-style: normal; font-size: 20px; color: #C9A227; }
+  .bstat-lbl { font-size: 12px; font-weight: 700; color: #1e293b; margin-top: 8px; }
+  .bstat-sub { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+
+  /* Dedup breakdown table */
+  .dedup-box {
+    background: #f0f7ff; border: 1px solid #bfdbfe; border-radius: 12px;
+    padding: 22px 24px; margin-bottom: 26px;
+  }
+  .dedup-hdr { font-size: 11px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #1e40af; margin-bottom: 14px; }
+  .dedup-row {
+    display: grid; grid-template-columns: 1fr auto auto;
+    gap: 12px; align-items: center;
+    padding: 7px 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 12.5px;
+  }
+  .dedup-row:last-child { border-bottom: none; font-weight: 800; font-size: 13px; color: #0047AB; margin-top: 4px; }
+  .src { color: #374151; }
+  .raw { color: #94a3b8; font-variant-numeric: tabular-nums; font-size: 11.5px; text-align: right; }
+  .net { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+  .net.minus { color: #ef4444; }
+  .net.plus  { color: #16a34a; }
+  .net.total { color: #0047AB; }
+  .dedup-col-hdr { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #94a3b8; margin-bottom: 6px; }
+
+  /* Category grid */
+  .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .cat-item {
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 10px; padding: 13px 14px;
+  }
+  .cat-name { font-size: 12px; font-weight: 700; color: #1e293b; }
+  .cat-cnt  { font-size: 11px; color: #0047AB; font-weight: 600; margin-top: 3px; }
+  .cat-desc { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ══ PART 1: LinkedIn Slide ══ -->
+<div class="label">Part 1 — LinkedIn Slide (screenshot & post)</div>
+<div class="slide">
+  <div class="slide-inner">
+
+    <div class="slide-header">
+      <div class="slide-logo">CAMORA</div>
+      <div class="slide-tag">Apply · Prepare · Practice · Attend · cariara.com</div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-num">9,096<span class="hero-plus">+</span></div>
+      <div class="hero-lbl">Unique Practice Problems — Deduplicated Across All Sources</div>
+      <div class="hero-sub">HackerRank · CoderPad · In-house DSA · Blind75 · SQL (111 problems) · MCQ</div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-num">6,325<sup>+</sup></div>
+        <div class="stat-lbl">Coding Problems</div>
+        <div class="stat-src">HackerRank + CoderPad + In-house DSA<br>Blind75 + SQL · 78 dupes removed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">2,771<sup>+</sup></div>
+        <div class="stat-lbl">MCQ Problems</div>
+        <div class="stat-src">CoderPad · 30+ technology domains<br>Separate from coding track</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">1,400<sup>+</sup></div>
+        <div class="stat-lbl">Study Topics</div>
+        <div class="stat-src">13 categories · AI diagrams<br>Company-specific prep</div>
+      </div>
+    </div>
+
+    <div class="appa-row">
+      <div class="appa-card a">
+        <div class="appa-letter">Apply</div>
+        <div class="appa-title">1,000+ Roles</div>
+        <div class="appa-desc">AI-matched to your skills. Auto-generate tailored resumes & cover letters.</div>
+      </div>
+      <div class="appa-card p1">
+        <div class="appa-letter">Prepare</div>
+        <div class="appa-title">1,400+ Topics</div>
+        <div class="appa-desc">13 categories. Architecture diagrams. Company-specific study plans.</div>
+      </div>
+      <div class="appa-card p2">
+        <div class="appa-letter">Practice</div>
+        <div class="appa-title">9,096+ Problems</div>
+        <div class="appa-desc">Coding, MCQ, System Design. AI feedback scored on every dimension.</div>
+      </div>
+      <div class="appa-card p3">
+        <div class="appa-letter">Attend</div>
+        <div class="appa-title">Live AI Copilot</div>
+        <div class="appa-desc">Real-time voice transcription & AI answers during your actual interview.</div>
+      </div>
+    </div>
+
+    <div class="cat-row">
+      <span class="cat-pill">DSA &amp; Coding</span>
+      <span class="cat-pill">System Design</span>
+      <span class="cat-pill">Low-Level Design</span>
+      <span class="cat-pill">Behavioral</span>
+      <span class="cat-pill">DevOps</span>
+      <span class="cat-pill">SRE</span>
+      <span class="cat-pill">Databases &amp; SQL · 111</span>
+      <span class="cat-pill">Microservices</span>
+      <span class="cat-pill">Projects</span>
+      <span class="cat-pill">Concurrency</span>
+      <span class="cat-pill">Roadmaps</span>
+      <span class="cat-pill">Eng Blogs</span>
+      <span class="cat-pill">AIOps</span>
+    </div>
+
+    <div class="slide-footer">
+      <div class="footer-note">All problem counts cross-source deduplicated · 78 duplicates removed · May 2026</div>
+      <div class="footer-url">CARIARA.COM</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ PART 2: Landing Page Stats Section ══ -->
+<div class="label" style="margin-top: 8px;">Part 2 — Landing Page "By the Numbers" Section</div>
+<div class="landing">
+  <div class="landing-box">
+
+    <div class="l-eyebrow">By the numbers</div>
+    <div class="l-heading">The most complete<br>engineer prep library.</div>
+    <div class="l-lead">Every problem counted once. Deduplicated across HackerRank, CoderPad, our in-house DSA library, Blind75, and 111 SQL problems — then organized into 13 structured categories with AI explanations and architecture diagrams.</div>
+
+    <div class="big-stats">
+      <div class="bstat">
+        <div class="bstat-num">9,096<em>+</em></div>
+        <div class="bstat-lbl">Unique Problems</div>
+        <div class="bstat-sub">After cross-source dedup</div>
+      </div>
+      <div class="bstat">
+        <div class="bstat-num">6,325<em>+</em></div>
+        <div class="bstat-lbl">Coding Problems</div>
+        <div class="bstat-sub">DSA · System Design · LLD · SQL</div>
+      </div>
+      <div class="bstat">
+        <div class="bstat-num">2,771<em>+</em></div>
+        <div class="bstat-lbl">MCQ Problems</div>
+        <div class="bstat-sub">30+ technology domains</div>
+      </div>
+      <div class="bstat">
+        <div class="bstat-num">13</div>
+        <div class="bstat-lbl">Prep Categories</div>
+        <div class="bstat-sub">With AI diagrams</div>
+      </div>
+    </div>
+
+    <div class="dedup-box">
+      <div class="dedup-hdr">How we count — deduplicated across every source</div>
+      <div class="dedup-col-hdr">
+        <span>Source</span><span style="text-align:right">Raw</span><span style="text-align:right">Unique</span>
+      </div>
+      <div class="dedup-row">
+        <span class="src">HackerRank interview problems</span>
+        <span class="raw">4,984</span>
+        <span class="net">4,817</span>
+      </div>
+      <div class="dedup-row">
+        <span class="src">CoderPad real-company problems (CODE + SOLO)</span>
+        <span class="raw">355</span>
+        <span class="net">355</span>
+      </div>
+      <div class="dedup-row">
+        <span class="src">In-house DSA library (full test cases + solutions)</span>
+        <span class="raw">1,105</span>
+        <span class="net">1,100</span>
+      </div>
+      <div class="dedup-row">
+        <span class="src">Blind75 curated problems</span>
+        <span class="raw">75</span>
+        <span class="net">2 net new</span>
+      </div>
+      <div class="dedup-row">
+        <span class="src">SQL problems (practice + topic exercises)</span>
+        <span class="raw">111</span>
+        <span class="net">51 net new</span>
+      </div>
+      <div class="dedup-row">
+        <span class="src minus" style="color:#ef4444">− Cross-source duplicates removed</span>
+        <span class="raw"></span>
+        <span class="net minus">−78</span>
+      </div>
+      <div class="dedup-row">
+        <span class="src" style="color:#374151">CoderPad MCQ (30+ domains — separate track)</span>
+        <span class="raw">2,857</span>
+        <span class="net">2,771</span>
+      </div>
+      <div class="dedup-row">
+        <span class="src">= Total unique problems on platform</span>
+        <span class="raw"></span>
+        <span class="net total">9,096</span>
+      </div>
+    </div>
+
+    <div class="cat-grid">
+      <div class="cat-item">
+        <div class="cat-name">DSA &amp; Coding</div>
+        <div class="cat-cnt">6,325 problems</div>
+        <div class="cat-desc">Arrays, DP, Graphs, Trees, and more</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-name">System Design</div>
+        <div class="cat-cnt">523 problems</div>
+        <div class="cat-desc">HLD + architecture diagrams</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-name">Low-Level Design</div>
+        <div class="cat-cnt">60 problems</div>
+        <div class="cat-desc">OOP, design patterns, LLD interviews</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-name">Behavioral</div>
+        <div class="cat-cnt">212 questions</div>
+        <div class="cat-desc">STAR method, leadership, conflict</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-name">DevOps</div>
+        <div class="cat-cnt">836 questions</div>
+        <div class="cat-desc">CI/CD, IaC, containers, pipelines</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-name">SRE</div>
+        <div class="cat-cnt">187 questions</div>
+        <div class="cat-desc">Reliability, SLOs, incident response</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-name">Databases &amp; SQL</div>
+        <div class="cat-cnt">111 problems</div>
+        <div class="cat-desc">SQL, NoSQL, query optimization</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-name">MCQ Library</div>
+        <div class="cat-cnt">2,771 questions</div>
+        <div class="cat-desc">30+ domains, timed assessments</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-name">Microservices</div>
+        <div class="cat-cnt">110 questions</div>
+        <div class="cat-desc">Patterns, resilience, API design</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-name">Projects</div>
+        <div class="cat-cnt">133 questions</div>
+        <div class="cat-desc">End-to-end system builds</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-name">Concurrency</div>
+        <div class="cat-cnt">8 deep-dives</div>
+        <div class="cat-desc">Threads, locks, async patterns</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-name">Roadmaps + Blogs</div>
+        <div class="cat-cnt">145 guides</div>
+        <div class="cat-desc">Curated learning paths</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-name">AIOps</div>
+        <div class="cat-cnt">Growing</div>
+        <div class="cat-desc">ML for operations, observability AI</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,65 @@
+{
+  "title": "YouTube — Video Upload Pipeline",
+  "subtitle": "From raw file to multi-resolution manifest",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "creator",
+          "label": "Creator\nChunked Upload",
+          "kind": "actor"
+        },
+        {
+          "id": "assembler",
+          "label": "Assembler\nMerge & Verify",
+          "kind": "service"
+        },
+        {
+          "id": "queue",
+          "label": "Job Queue\nPriority tiered",
+          "kind": "queue"
+        },
+        {
+          "id": "transcoder",
+          "label": "Transcoder Fleet\nParallel by Quality",
+          "kind": "worker"
+        },
+        {
+          "id": "manifest",
+          "label": "Packager\nHLS/DASH manifest",
+          "kind": "gateway"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "transcoder",
+      "nodes": [
+        {
+          "id": "thumb",
+          "label": "Thumbnail Gen\nAI Scene Selection",
+          "kind": "worker"
+        },
+        {
+          "id": "metadata",
+          "label": "Metadata Index\nElasticsearch",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Parallel Transcoding",
+      "body": "Video split into 5-min chunks.\nChunk 1 → [360p, 720p, 1080p]\nChunk 2 → [360p, 720p, 1080p]\n...\n\nResult: 360p available for first\n5 minutes almost instantly."
+    },
+    {
+      "kind": "note",
+      "title": "Content ID",
+      "body": "Audio/Visual fingerprinting occurs\nduring transcoding. Block/Monetize\ndecisions applied before READY state."
+    }
+  ]
+}

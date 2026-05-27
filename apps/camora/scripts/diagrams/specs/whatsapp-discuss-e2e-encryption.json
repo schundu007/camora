@@ -1,0 +1,44 @@
+{
+  "title": "WhatsApp — E2E Encryption",
+  "subtitle": "Signal Protocol: X3DH and Double Ratchet",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "keys",
+          "label": "Pre-key Bundles\nStored on server",
+          "kind": "datastore"
+        },
+        {
+          "id": "x3dh",
+          "label": "X3DH Handshake\nEstablish session",
+          "kind": "worker"
+        },
+        {
+          "id": "ratchet",
+          "label": "Double Ratchet\nNew key per msg",
+          "kind": "worker"
+        },
+        {
+          "id": "cipher",
+          "label": "AES-256-CBC\nEncrypted Payload",
+          "kind": "service"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Forward Secrecy",
+      "body": "Compromising the current key does\nnot reveal past messages. Each\nmessage has its own unique key."
+    },
+    {
+      "kind": "issue",
+      "title": "Server's Role",
+      "body": "The server stores encrypted blobs.\nIt cannot decrypt content as it\nnever sees the private keys."
+    }
+  ]
+}

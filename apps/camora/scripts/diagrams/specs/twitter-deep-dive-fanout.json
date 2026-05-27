@@ -1,0 +1,44 @@
+{
+  "title": "Twitter — Fan-out Service Architecture",
+  "subtitle": "High-throughput distributed write pipeline",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "tweet-svc",
+          "label": "Tweet Service\nProducer",
+          "kind": "service"
+        },
+        {
+          "id": "kafka",
+          "label": "Kafka Topic\nPartitions: 256\nKey: authorId",
+          "kind": "queue"
+        },
+        {
+          "id": "fanout-worker",
+          "label": "Fan-out Workers\n1,000+ consumers\nParallel processing",
+          "kind": "worker"
+        },
+        {
+          "id": "redis",
+          "label": "Redis Cluster\nTimeline shards\nKey: timeline:{userId}",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Worker Logic (Pseudo-code)",
+      "body": "on(tweet_event):\n  followers = social_graph.get(author_id)\n  for f in followers:\n    if f.is_active():\n      redis_shard = get_shard(f)\n      redis_shard.LPUSH(f, tweet_id)\n      redis_shard.LTRIM(f, 0, 799)"
+    },
+    {
+      "kind": "issue",
+      "title": "Scaling Challenges",
+      "body": "Backpressure: If Kafka lag > 5s, workers\nslow down or drop non-essential tasks.\n\nHot shards: Frequent celebrity mentions\ncan saturate specific Redis instances.\n\nSolution: Use consistent hashing and\ndedicated clusters for high-traffic shards."
+    }
+  ]
+}

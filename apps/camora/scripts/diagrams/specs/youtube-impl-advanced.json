@@ -1,0 +1,95 @@
+{
+  "title": "YouTube — Production Architecture",
+  "subtitle": "Scalable ingestion, processing, and tiered delivery",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "cluster": "Ingestion & Processing",
+      "nodes": [
+        {
+          "id": "upload-svc",
+          "label": "Upload Service\nResumable chunks",
+          "kind": "service"
+        },
+        {
+          "id": "raw-s3",
+          "label": "Raw Storage (S3)",
+          "kind": "datastore"
+        },
+        {
+          "id": "gpu-fleet",
+          "label": "GPU Workers\nParallel Transcode",
+          "kind": "worker"
+        }
+      ]
+    },
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "origin",
+          "label": "Origin Storage\nFull Catalog",
+          "kind": "datastore"
+        },
+        {
+          "id": "cdn-regional",
+          "label": "Regional CDN\n(Top 10%)",
+          "kind": "cache"
+        },
+        {
+          "id": "cdn-edge",
+          "label": "Edge PoPs\n(Top 1%)",
+          "kind": "gateway"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "gpu-fleet",
+      "nodes": [
+        {
+          "id": "content-id",
+          "label": "Content ID\nCopyright Scan",
+          "kind": "worker"
+        },
+        {
+          "id": "metadata-db",
+          "label": "Metadata (Vitess)\nSharded SQL",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "cdn-edge",
+      "to": "cdn-regional",
+      "label": "Origin Fetch"
+    },
+    {
+      "from": "cdn-regional",
+      "to": "origin"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Tiered CDN Strategy",
+      "body": "- Edge (100+ PoPs): 95% hit rate for viral content\n- Regional (20 PoPs): Handles long-tail growth\n- Origin (3 DCs): Source of truth for all videos"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Transcoding Logic",
+      "pros": [
+        "Parallel resolution processing (360p first)",
+        "Per-title bitrate optimization",
+        "Resumable chunked uploads (max 256GB)"
+      ],
+      "cons": [
+        "Massive compute cost (AV1 takes 10x longer)",
+        "Storage amplification (5-10x per upload)"
+      ]
+    }
+  ]
+}

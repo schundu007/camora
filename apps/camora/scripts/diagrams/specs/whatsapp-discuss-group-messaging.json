@@ -1,0 +1,44 @@
+{
+  "title": "WhatsApp — Group Messaging",
+  "subtitle": "Fan-out on write with Sender Keys",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "sender",
+          "label": "Sender\nGroup Message",
+          "kind": "actor"
+        },
+        {
+          "id": "group-svc",
+          "label": "Group Service\nMember List",
+          "kind": "service"
+        },
+        {
+          "id": "fanout",
+          "label": "Fan-out\nParallel Delivery",
+          "kind": "worker"
+        },
+        {
+          "id": "members",
+          "label": "N Recipients\n(Up to 1,024)",
+          "kind": "actor"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Sender Keys Protocol",
+      "body": "- Sender generates 1 symmetric key\n- Shares with all group members\n- Encrypts message ONCE\n- Members decrypt with sender key"
+    },
+    {
+      "kind": "note",
+      "title": "Large Groups",
+      "body": "Hybrid approach: Push for online,\nPull for offline to avoid storage\namplification (N-fold writes)."
+    }
+  ]
+}

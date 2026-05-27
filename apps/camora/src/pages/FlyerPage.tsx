@@ -15,16 +15,9 @@ const VALUE_PROPS = [
   { headline: 'Team plans', body: 'Bootcamps, study groups, recruiting teams — pool hours across up to 10 mates.' },
 ];
 
-/**
- * Marketing flyer renderer. Renders a single visual at exact pixel dimensions
- * for the chosen platform — Twitter (1200×630), Instagram square (1080×1080),
- * Instagram story (1080×1920). Use the platform picker, then take a screenshot
- * with macOS Cmd+Shift+4 → spacebar → click on the flyer card to grab the
- * exact area. Or print the page to PDF and crop.
- *
- * Outside the flyer itself, the page chrome is intentionally minimal so the
- * downloaded screenshot only includes the visual.
- */
+const ACCENT = '#10B981';
+const ACCENT_DK = '#047857';
+
 export default function FlyerPage() {
   const [format, setFormat] = useState<Format>('landscape');
 
@@ -34,8 +27,6 @@ export default function FlyerPage() {
 
   const config = FORMATS.find((f) => f.value === format)!;
 
-  // Layout differs by aspect ratio — landscape uses a 60/40 split, square
-  // stacks vertically, portrait is the most stacked with bigger hero.
   const isLandscape = format === 'landscape';
   const isSquare = format === 'square';
   const isPortrait = format === 'portrait';
@@ -51,7 +42,7 @@ export default function FlyerPage() {
             onClick={() => setFormat(f.value)}
             className="px-3 py-1.5 text-[12px] font-bold rounded-full transition-[background-color,color,opacity] duration-150 active:scale-[0.98]"
             style={{
-              background: format === f.value ? '#C9A227' : 'rgba(255,255,255,0.08)',
+              background: format === f.value ? ACCENT : 'rgba(255,255,255,0.08)',
               color: format === f.value ? '#020617' : '#FFFFFF',
               border: '1px solid rgba(255,255,255,0.14)',
             }}
@@ -64,19 +55,18 @@ export default function FlyerPage() {
         </span>
       </div>
 
-      {/* The flyer itself — fixed pixel dimensions matching the chosen format */}
       <div className="flex-1 flex items-center justify-center p-8 overflow-auto">
         <div
           className={`${config.dims} relative overflow-hidden flex flex-col`}
           style={{
-            background: 'linear-gradient(135deg, #020617 0%, #051C40 50%, #0F172A 100%)',
+            background: 'linear-gradient(135deg, #020617 0%, #0A1F1A 50%, #0F172A 100%)',
             borderRadius: 0,
             boxShadow: '0 40px 80px rgba(0,0,0,0.5)',
             color: '#FFFFFF',
             fontFamily: "var(--font-sans)",
           }}
         >
-          {/* Decorative gold radial — top-right */}
+          {/* Decorative emerald radial — top-right */}
           <div
             aria-hidden="true"
             className="absolute pointer-events-none"
@@ -85,7 +75,7 @@ export default function FlyerPage() {
               right: '-15%',
               width: '60%',
               height: '60%',
-              background: 'radial-gradient(circle, rgba(201,162,39,0.25) 0%, rgba(201,162,39,0) 60%)',
+              background: `radial-gradient(circle, ${ACCENT}30 0%, ${ACCENT}00 60%)`,
               filter: 'blur(40px)',
             }}
           />
@@ -98,7 +88,7 @@ export default function FlyerPage() {
               left: 0,
               right: 0,
               height: 8,
-              background: '#C9A227',
+              background: ACCENT,
             }}
           />
 
@@ -110,7 +100,7 @@ export default function FlyerPage() {
                   width: 48,
                   height: 48,
                   borderRadius: 12,
-                  background: 'linear-gradient(135deg, #C9A227 0%, #B08D1F 100%)',
+                  background: `linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT_DK} 100%)`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -127,11 +117,10 @@ export default function FlyerPage() {
 
           {/* Main content area */}
           <div className={`relative z-10 flex-1 flex ${isLandscape ? 'flex-row' : 'flex-col'} ${isLandscape ? 'px-12 pb-12 gap-12' : isSquare ? 'px-16 pb-16 gap-10' : 'px-20 pb-20 gap-14'}`}>
-            {/* Left/top: hero */}
             <div className={`${isLandscape ? 'flex-1' : ''} flex flex-col justify-center`}>
               <p
                 className={`font-black uppercase tracking-[0.2em] mb-4`}
-                style={{ color: '#C9A227', fontSize: isLandscape ? 14 : isSquare ? 16 : 20 }}
+                style={{ color: ACCENT, fontSize: isLandscape ? 14 : isSquare ? 16 : 20 }}
               >
                 AI interview co-pilot
               </p>
@@ -143,7 +132,7 @@ export default function FlyerPage() {
                 }}
               >
                 Land<br />
-                <span style={{ color: '#C9A227' }}>the offer.</span>
+                <span style={{ color: ACCENT }}>the offer.</span>
               </h1>
               <p
                 className="leading-snug"
@@ -168,7 +157,7 @@ export default function FlyerPage() {
                 >
                   <p
                     className="font-bold mb-1.5"
-                    style={{ fontSize: isLandscape ? 16 : isSquare ? 20 : 26, color: '#C9A227' }}
+                    style={{ fontSize: isLandscape ? 16 : isSquare ? 20 : 26, color: ACCENT }}
                   >
                     {vp.headline}
                   </p>
@@ -186,7 +175,7 @@ export default function FlyerPage() {
             </div>
           </div>
 
-          {/* Footer: pricing teaser + URL */}
+          {/* Footer */}
           <div
             className={`relative z-10 flex ${isPortrait ? 'flex-col gap-4' : 'flex-row'} items-center justify-between ${isLandscape ? 'px-12 pb-10' : isSquare ? 'px-16 pb-14' : 'px-20 pb-20'}`}
             style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: isLandscape ? 24 : isSquare ? 32 : 40, marginTop: 'auto' }}
@@ -196,7 +185,7 @@ export default function FlyerPage() {
                 className="font-bold"
                 style={{ fontSize: isLandscape ? 16 : isSquare ? 20 : 28, color: '#FFFFFF' }}
               >
-                Start free · Plans from <span style={{ color: '#C9A227' }}>$29/mo</span>
+                Start free · Plans from <span style={{ color: ACCENT }}>$29/mo</span>
               </p>
               <p
                 style={{ fontSize: isLandscape ? 12 : isSquare ? 14 : 18, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}
@@ -208,11 +197,7 @@ export default function FlyerPage() {
               className="font-black tracking-tight"
               style={{
                 fontSize: isLandscape ? 20 : isSquare ? 26 : 36,
-                color: '#FFFFFF',
-                background: 'linear-gradient(135deg, #C9A227 0%, transparent 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: '#FFFFFF',
-                padding: '8px 0',
+                color: ACCENT,
               }}
             >
               camora.cariara.com

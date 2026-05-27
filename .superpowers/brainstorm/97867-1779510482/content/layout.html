@@ -1,0 +1,81 @@
+<h2>How should the 4 languages be organised?</h2>
+<p class="subtitle">Each option uses the same split-pane (editor left, output right)</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Language tab bar across the top</h3>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-header">Playground</div>
+        <div class="mockup-body" style="padding:0">
+          <div style="display:flex;gap:0;border-bottom:1px solid #334155;background:#0f172a">
+            <div style="padding:8px 16px;background:#1e40af;color:#fff;font-size:12px;font-weight:600">Python3</div>
+            <div style="padding:8px 16px;color:#94a3b8;font-size:12px">Bash</div>
+            <div style="padding:8px 16px;color:#94a3b8;font-size:12px">Docker</div>
+            <div style="padding:8px 16px;color:#94a3b8;font-size:12px">Terraform</div>
+          </div>
+          <div style="display:flex;height:80px">
+            <div style="flex:1;border-right:1px solid #334155;padding:8px;font-size:11px;color:#94a3b8;font-family:monospace">print("hello")</div>
+            <div style="flex:1;padding:8px;font-size:11px;color:#22c55e;font-family:monospace">hello</div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top:6px;font-size:13px">One active tab at a time. Switching tabs clears the editor (or remembers per-tab state).</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Language dropdown in the editor toolbar</h3>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-header">Playground</div>
+        <div class="mockup-body" style="padding:0">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#0f172a;border-bottom:1px solid #334155">
+            <select style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:4px;padding:3px 8px;font-size:12px">
+              <option>Python3</option>
+            </select>
+            <button style="background:#1e40af;color:#fff;border:none;padding:4px 12px;border-radius:4px;font-size:12px">▶ Run</button>
+          </div>
+          <div style="display:flex;height:80px">
+            <div style="flex:1;border-right:1px solid #334155;padding:8px;font-size:11px;color:#94a3b8;font-family:monospace">print("hello")</div>
+            <div style="flex:1;padding:8px;font-size:11px;color:#22c55e;font-family:monospace">hello</div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top:6px;font-size:13px">Compact. No tabs — just a dropdown. Monaco syntax highlighting changes to match language.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Four permanent panels (2×2 grid)</h3>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-header">Playground</div>
+        <div class="mockup-body" style="padding:4px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;height:100px">
+            <div style="background:#0f172a;border:1px solid #334155;border-radius:4px;padding:6px;font-size:10px">
+              <span style="color:#60a5fa;font-weight:600">Python3</span>
+              <div style="color:#94a3b8;font-family:monospace;margin-top:2px">print("hi")</div>
+            </div>
+            <div style="background:#0f172a;border:1px solid #334155;border-radius:4px;padding:6px;font-size:10px">
+              <span style="color:#34d399;font-weight:600">Bash</span>
+              <div style="color:#94a3b8;font-family:monospace;margin-top:2px">echo "hi"</div>
+            </div>
+            <div style="background:#0f172a;border:1px solid #334155;border-radius:4px;padding:6px;font-size:10px">
+              <span style="color:#f59e0b;font-weight:600">Docker</span>
+              <div style="color:#94a3b8;font-family:monospace;margin-top:2px">FROM ubuntu…</div>
+            </div>
+            <div style="background:#0f172a;border:1px solid #334155;border-radius:4px;padding:6px;font-size:10px">
+              <span style="color:#a78bfa;font-weight:600">Terraform</span>
+              <div style="color:#94a3b8;font-family:monospace;margin-top:2px">resource "null"…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top:6px;font-size:13px">All four visible at once. Each has its own Run button. Cramped on smaller screens.</p>
+    </div>
+  </div>
+</div>

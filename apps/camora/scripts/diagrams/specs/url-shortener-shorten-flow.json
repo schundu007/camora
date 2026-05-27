@@ -1,0 +1,49 @@
+{
+  "title": "URL Shortener — Shorten URL Flow",
+  "subtitle": "Write path: from long URL to short code",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "user",
+          "label": "User\nPOST /shorten",
+          "kind": "actor"
+        },
+        {
+          "id": "web",
+          "label": "Web Server\nValidate & Rate Limit",
+          "kind": "service"
+        },
+        {
+          "id": "range",
+          "label": "ID Gen\nLocal range pool",
+          "kind": "worker"
+        },
+        {
+          "id": "db",
+          "label": "NoSQL Store\nSave mapping",
+          "kind": "datastore"
+        },
+        {
+          "id": "redis",
+          "label": "Redis\nPre-warm cache",
+          "kind": "cache"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Base62 Encoding",
+      "body": "ID: 8742910553\n\nEncode(8742910553, 62)\n→ \"dK9v2Tx\"\n\nResult: 7 character code"
+    },
+    {
+      "kind": "note",
+      "title": "Rate Limiting",
+      "body": "Token Bucket at Gateway:\n- 100 requests / hour per IP\n- Prevents ID exhaustion by bots"
+    }
+  ]
+}

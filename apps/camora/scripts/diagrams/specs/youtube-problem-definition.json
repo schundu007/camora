@@ -1,0 +1,55 @@
+{
+  "title": "YouTube — Problem Definition",
+  "subtitle": "Global video processing and delivery at petabyte scale",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "scale",
+          "label": "2.7B MAU\n500+ hrs upload/min",
+          "kind": "actor",
+          "sub": "Scale"
+        },
+        {
+          "id": "core",
+          "label": "Upload, Transcode\nStream (ABR)\nSearch & Recommend",
+          "kind": "service",
+          "sub": "In-Scope"
+        },
+        {
+          "id": "perf",
+          "label": "< 500ms Start Time\n175 Tbps Bandwidth",
+          "kind": "gateway",
+          "sub": "QoS"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Functional Requirements",
+      "body": "- Resumable chunked video upload\n- Multi-resolution transcoding (360p - 4K)\n- Adaptive Bitrate (ABR) streaming (HLS/DASH)\n- Recommendation engine (collaborative/content)\n- Content ID (copyright) & analytics"
+    },
+    {
+      "kind": "issue",
+      "title": "Out-of-Scope",
+      "body": "- Live streaming infrastructure (dedicated pipe)\n- YouTube Music / TV specific features\n- Ad serving & real-time auctions\n- Advanced content moderation workflows"
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Technical Challenges",
+      "pros": [
+        "Distributed GPU transcoding fleet",
+        "Global multi-tier CDN (100+ PoPs)",
+        "Petabyte-scale object storage"
+      ],
+      "cons": [
+        "High encoding cost for AV1/VP9",
+        "Long-tail storage vs delivery cost"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "title": "WhatsApp — Media Pipeline",
+  "subtitle": "Resumable uploads and encrypted blobs",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "client",
+          "label": "Client\nLocal Encrypt",
+          "kind": "actor"
+        },
+        {
+          "id": "upload",
+          "label": "Media Service\nResumable chunks",
+          "kind": "service"
+        },
+        {
+          "id": "s3",
+          "label": "S3\nEncrypted Blobs",
+          "kind": "datastore"
+        },
+        {
+          "id": "cdn",
+          "label": "CDN\nGlobal Delivery",
+          "kind": "gateway"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Separate Flow",
+      "body": "Media is uploaded to S3 first.\nThe message only contains the\nmediaUrl and the decryption key."
+    },
+    {
+      "kind": "code",
+      "title": "Deduplication",
+      "body": "Content-addressable storage (SHA-256)\nensures identical forwarded files\nare stored only once in S3."
+    }
+  ]
+}

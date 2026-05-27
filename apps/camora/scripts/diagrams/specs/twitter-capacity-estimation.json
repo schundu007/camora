@@ -1,0 +1,39 @@
+{
+  "title": "Twitter — Capacity Estimation",
+  "subtitle": "Traffic, Storage, and Fan-out Analysis",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "traffic",
+          "label": "Traffic\n6K Write QPS\n300K Read QPS",
+          "kind": "gateway"
+        },
+        {
+          "id": "fanout",
+          "label": "Fan-out\n100B writes/day\n1.2M QPS peak",
+          "kind": "worker"
+        },
+        {
+          "id": "storage",
+          "label": "Storage\n500 GB/day\n180 TB/year",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Traffic Math",
+      "body": "Daily Tweets: 500M\nWrites/sec: 500M / 86400 ≈ 6K QPS\n\nRead/Write ratio: 50:1\nRead QPS: 6K x 50 = 300K QPS\n\nFan-out factor: Avg 200 followers\nRedis Writes: 6K x 200 = 1.2M QPS"
+    },
+    {
+      "kind": "code",
+      "title": "Storage Math",
+      "body": "Avg Tweet Size: 1 KB (text + metadata)\nDaily Storage: 500M x 1KB = 500 GB\n\nAnnual Storage: 500GB x 365 ≈ 180 TB\n5-year Storage: ~1 PB\n\nMedia (Images/Video): ~1 PB per day\n(Stored in S3 with CDN delivery)"
+    }
+  ]
+}

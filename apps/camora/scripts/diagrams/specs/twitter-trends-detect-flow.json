@@ -1,0 +1,54 @@
+{
+  "title": "Twitter Trends — Trend Detection Flow",
+  "subtitle": "Step-by-step processing from tweet to trending topic",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "ingest",
+          "label": "Ingest\nRaw tweet stream",
+          "kind": "queue"
+        },
+        {
+          "id": "filter",
+          "label": "Filter\nSpam & Credibility",
+          "kind": "service"
+        },
+        {
+          "id": "extract",
+          "label": "Extract\nHashtags & Phrases",
+          "kind": "worker"
+        },
+        {
+          "id": "count",
+          "label": "Count\nCMS (Volume)\nHLL (Unique Users)",
+          "kind": "datastore"
+        },
+        {
+          "id": "score",
+          "label": "Score\nZ-score vs Baseline",
+          "kind": "worker"
+        },
+        {
+          "id": "publish",
+          "label": "Publish\nRedis & WebSockets",
+          "kind": "gateway"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Step 2: Spam Weighted Count",
+      "body": "Instead of count += 1:\n\ncount += credibility_score\n\n- New account: 0.1\n- Verified: 1.0\n- History of spam: 0.0"
+    },
+    {
+      "kind": "note",
+      "title": "Windowing (Step 6)",
+      "body": "Every 5 minutes, we compare the current\nsketch volume against the historical\nmoving average for that time-of-day."
+    }
+  ]
+}

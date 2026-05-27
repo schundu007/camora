@@ -1,0 +1,44 @@
+{
+  "title": "Twitter — Earlybird Search Engine",
+  "subtitle": "Real-time inverted index for time-sensitive queries",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "kafka",
+          "label": "Kafka\ntweets-stream",
+          "kind": "queue"
+        },
+        {
+          "id": "earlybird",
+          "label": "Earlybird Node\nSearch Shard",
+          "kind": "service"
+        },
+        {
+          "id": "active-segment",
+          "label": "Active Segment\nIn-RAM\nLock-free indexing",
+          "kind": "cache"
+        },
+        {
+          "id": "ssd-segments",
+          "label": "SSD Segments\nImmutable blocks\nSorted by Snowflake ID",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Query scatter-gather",
+      "body": "1. Search Service scatters to all Earlybird nodes\n2. Nodes scan local segments (RAM then SSD)\n3. Ranking: P(engagement) x recency_score\n4. Global top-K gathered and re-ranked"
+    },
+    {
+      "kind": "note",
+      "title": "Time-based Sharding",
+      "body": "- Real-time tier: tweets from last 24h\n- Recent tier: last 7 days\n- Archive tier: full history (sharded by year)\n\n90% of queries hit the Real-time tier."
+    }
+  ]
+}

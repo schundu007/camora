@@ -1,0 +1,85 @@
+{
+  "title": "Twitter — Post Tweet Flow",
+  "subtitle": "Write path with Snowflake ID and hybrid fanout logic",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "user",
+          "label": "User\nPOST /api/tweets",
+          "kind": "actor"
+        },
+        {
+          "id": "tweet-svc",
+          "label": "Tweet Service\nValidate content\nSnowflake ID gen",
+          "kind": "service"
+        },
+        {
+          "id": "fanout-check",
+          "label": "Follower Check\n< 10K followers?",
+          "kind": "decision"
+        },
+        {
+          "id": "fanout-worker",
+          "label": "Fan-out Service\nEnqueue tasks\nLPUSH to followers",
+          "kind": "worker"
+        },
+        {
+          "id": "redis",
+          "label": "Redis Timelines\nfollower_timeline:{id}",
+          "kind": "datastore"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "tweet-svc",
+      "nodes": [
+        {
+          "id": "tweet-db",
+          "label": "Tweet DB\nMySQL sharded\nby userId",
+          "kind": "datastore"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "fanout-check",
+      "nodes": [
+        {
+          "id": "celebrity-cache",
+          "label": "Celebrity Cache\nStore recent tweets\n(Fan-out on Read)",
+          "kind": "cache"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "fanout-check",
+      "to": "fanout-worker",
+      "label": "Yes"
+    },
+    {
+      "from": "fanout-check",
+      "to": "celebrity-cache",
+      "label": "No",
+      "style": "dashed"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Snowflake ID Generation",
+      "lang": "plain",
+      "body": "64-bit ID:\n- 1 bit: 0\n- 41 bits: Timestamp (ms)\n- 10 bits: Machine/Worker ID\n- 12 bits: Sequence number\n\nResult: globally unique, time-sortable"
+    },
+    {
+      "kind": "note",
+      "title": "Hybrid Strategy",
+      "body": "99% of users follow < 10K accounts.\nPush model (Fan-out on Write) works for most.\n\nCelebrities (>10K followers) use Pull model\nto avoid 'fan-out storms' that overwhelm Redis."
+    }
+  ]
+}

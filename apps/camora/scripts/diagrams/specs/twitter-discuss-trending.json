@@ -1,0 +1,49 @@
+{
+  "title": "Twitter — Trending Topics Detection",
+  "subtitle": "Real-time stream processing and spike detection",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "kafka",
+          "label": "Kafka\ntweets-stream",
+          "kind": "queue"
+        },
+        {
+          "id": "flink",
+          "label": "Flink / Heron\nStream Processor",
+          "kind": "worker"
+        },
+        {
+          "id": "cms",
+          "label": "Count-Min Sketch\nApproximate counts\nin 5-min windows",
+          "kind": "datastore"
+        },
+        {
+          "id": "analyzer",
+          "label": "Trend Analyzer\nSpike detection logic",
+          "kind": "worker"
+        },
+        {
+          "id": "redis",
+          "label": "Redis Trends\nTop 10 per region",
+          "kind": "cache"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Spike Detection Algorithm",
+      "body": "score = (current_count - avg_24h) / std_dev_24h\n\nIf score > 5.0 AND count > 1000:\n  Mark as Trending Candidate\n\nApply Time Decay:\n  final_score = score * e^(-lambda * age)"
+    },
+    {
+      "kind": "note",
+      "title": "Count-Min Sketch",
+      "body": "Probabilistic data structure used to track\nmillions of unique hashtags in constant memory.\n\nMemory: ~280KB per sketch\nAccuracy: 99.9% (small overcount is OK)"
+    }
+  ]
+}

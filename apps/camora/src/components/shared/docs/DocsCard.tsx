@@ -1,8 +1,12 @@
 import { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
-const NAVY = '#26619C';
-const GOLD = '#C9A227';
+const ACCENT = 'var(--accent)';
+const ACCENT_TEXT = 'var(--accent-text)';
+const ACCENT_50 = 'rgba(16,185,129,0.08)';
+
+const EMERALD = '#10B981';
+const HEX_SIZE = 8;
 
 export interface DocsCardProps {
   children: ReactNode;
@@ -44,14 +48,14 @@ export default function DocsCard({
     className;
 
   const baseStyle = {
-    background: `linear-gradient(180deg, ${NAVY}08 0%, ${NAVY}03 100%)`,
-    border: `1px solid ${NAVY}30`,
-    boxShadow: `0 1px 0 ${NAVY}10`,
+    background: `linear-gradient(180deg, ${ACCENT_50} 0%, transparent 100%)`,
+    border: '1px solid color-mix(in srgb, var(--accent) 18%, transparent)',
+    boxShadow: '0 1px 0 color-mix(in srgb, var(--accent) 8%, transparent)',
   } as const;
 
   const hoverStyle = interactive
     ? ({
-        ['--card-hover-border' as any]: `${GOLD}60`,
+        ['--card-hover-border' as any]: 'color-mix(in srgb, var(--accent) 38%, transparent)',
       } as const)
     : {};
 
@@ -62,19 +66,19 @@ export default function DocsCard({
           <span
             className="block flex-shrink-0"
             style={{
-              width: 8,
-              height: 8,
-              background: GOLD,
+              width: HEX_SIZE,
+              height: HEX_SIZE,
+              background: EMERALD,
               clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
             }}
           />
-          <div className="text-[10px] font-extrabold uppercase tracking-[0.14em]" style={{ color: GOLD }}>
+          <div className="text-[10px] font-extrabold uppercase tracking-[0.14em]" style={{ color: EMERALD }}>
             {eyebrow}
           </div>
         </div>
       )}
       {title && (
-        <div className="text-[15.5px] font-bold mb-1.5 leading-snug" style={{ color: NAVY }}>
+        <div className="text-[15.5px] font-bold mb-1.5 leading-snug" style={{ color: ACCENT_TEXT }}>
           {title}
         </div>
       )}
@@ -82,7 +86,7 @@ export default function DocsCard({
         {children}
       </div>
       {interactive && (
-        <div className="mt-3 flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: NAVY }}>
+        <div className="mt-3 flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: ACCENT_TEXT }}>
           <span>Read more</span>
           <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M3 6h6M6 3l3 3-3 3" />

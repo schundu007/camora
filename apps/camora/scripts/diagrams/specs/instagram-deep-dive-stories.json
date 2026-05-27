@@ -1,0 +1,44 @@
+{
+  "title": "Instagram — Stories Architecture",
+  "subtitle": "Ephemeral storage with TTL-based cleanup",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "post",
+          "label": "Story Upload",
+          "kind": "actor"
+        },
+        {
+          "id": "redis",
+          "label": "Redis Sorted Set\nScore: expiresAt",
+          "kind": "cache"
+        },
+        {
+          "id": "tray",
+          "label": "Story Tray API\nGroup by User",
+          "kind": "service"
+        },
+        {
+          "id": "viewer",
+          "label": "Follower View",
+          "kind": "actor"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Auto-Expiration",
+      "body": "Redis: ZREMRANGEBYSCORE 0 NOW\nS3: Lifecycle Policy (48h delete)\n\nZero manual cleanup needed."
+    },
+    {
+      "kind": "code",
+      "title": "Story Tray Sorting",
+      "body": "1. Unseen from Close Friends\n2. Unseen from others\n3. Seen (moved to end)\n4. Ranked by relationship"
+    }
+  ]
+}

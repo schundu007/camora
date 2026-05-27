@@ -1,0 +1,165 @@
+[
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "GET",
+    "hasCourseData": false,
+    "preview": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/edc3f1eed5756679.css\" data-precedence=\"next\"/><link rel=\"stylesheet\" href=\"/_next/static/css/0f5278f3ab5980db.css\" data-precedence=\"next\"/><link rel=\"stylesheet\" href=\"/_next/static/css/8e3555ec5e67c01d.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/webpack-f05690b468a53712.js\"/><script src=\"/_next/static/chunks/4bd1b696-182b6b13bdad92e3.js\" async=\"\"></script><",
+    "keys": [],
+    "nextAction": null
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": true,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:{\"hasUnread\":false,\"items\":[{\"id\":\"cml4l7jj4002bl104u5mh28fe\",\"iconType\":\"broadcast\",\"message\":\"Welcome to CodeSignal! Ready to level up your skills? Find your ideal learning path with a quick chat.\",\"targetUrl\":\"https://codesignal.com/learn/cosmo-guide\",\"read\":true,\"createdAt\":\"$D2026-02-02T03:05:27.717Z\"}],\"hasMore\":false}\n",
+    "keys": [],
+    "nextAction": "00220a84f9203ff85a9587c1c84ad443669cd1d76f",
+    "postData": "[]"
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": false,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:{\"hasMobile\":false,\"hasWebIndividual\":false,\"hasWebCompany\":false,\"isAdmin\":false}\n",
+    "keys": [],
+    "nextAction": "00b8e7e50c4c48ae98fd9363378238b3ead6c193c9",
+    "postData": "[]"
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": false,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:{\"type\":\"success\",\"data\":{\"didActivityToday\":false,\"currentStreak\":0}}\n",
+    "keys": [],
+    "nextAction": "00d75024405e1223657f1a0cd5d37f3f8c2481513f",
+    "postData": "[]"
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": true,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:{\"hasUnread\":false,\"items\":[{\"id\":\"cml4l7jj4002bl104u5mh28fe\",\"iconType\":\"broadcast\",\"message\":\"Welcome to CodeSignal! Ready to level up your skills? Find your ideal learning path with a quick chat.\",\"targetUrl\":\"https://codesignal.com/learn/cosmo-guide\",\"read\":true,\"createdAt\":\"$D2026-02-02T03:05:27.717Z\"}],\"hasMore\":false}\n",
+    "keys": [],
+    "nextAction": "00220a84f9203ff85a9587c1c84ad443669cd1d76f",
+    "postData": "[]"
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": false,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:{\"hasMobile\":false,\"hasWebIndividual\":false,\"hasWebCompany\":false,\"isAdmin\":false}\n",
+    "keys": [],
+    "nextAction": "00b8e7e50c4c48ae98fd9363378238b3ead6c193c9",
+    "postData": "[]"
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": false,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:\"$undefined\"\n",
+    "keys": [],
+    "nextAction": "406a97f0290c269348d6bde5991e42f812df5501b0",
+    "postData": "[\"America/Los_Angeles\"]"
+  },
+  {
+    "url": "https://codesignal.com/learn/experiment-flags",
+    "method": "GET",
+    "hasCourseData": false,
+    "preview": "{\"no-free-trial\":\"off\"}",
+    "keys": [
+      "no-free-trial"
+    ],
+    "nextAction": null
+  },
+  {
+    "url": "https://codesignal.com/api/auth/session",
+    "method": "GET",
+    "hasCourseData": false,
+    "preview": "{\"user\":{\"name\":\"Sudhakar Chundu\",\"email\":\"chundubabu@gmail.com\",\"image\":\"https://codesignal-profile-content.s3.amazonaws.com/avatar-gSb3nqKzicWb24hhP\",\"id\":\"cml4l7jil002al104clmxojc1\",\"firstName\":\"Sudhakar\",\"fullName\":\"Sudhakar Chundu\"},\"expires\":\"2026-06-22T20:48:32.478Z\"}",
+    "keys": [
+      "user",
+      "expires"
+    ],
+    "nextAction": null
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": false,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:{\"workspaces\":[{\"type\":\"personal\",\"name\":\"Personal\",\"image\":\"https://codesignal-profile-content.s3.amazonaws.com/avatar-gSb3nqKzicWb24hhP\",\"memberId\":null,\"id\":null}],\"initWorkspace\":{\"type\":\"personal\",\"id\":null}}\n",
+    "keys": [],
+    "nextAction": "003f73c94816794892b1a63f183aabb66210781eb6",
+    "postData": "[]"
+  },
+  {
+    "url": "https://identity.codesignal.com/auth/session-health",
+    "method": "GET",
+    "hasCourseData": false,
+    "preview": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/c0727a5b0423a624.css\" data-precedence=\"next\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/348a8108830cf6f3.css\" data-precedence=\"next\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/a56d94f42cf84073.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/080978919b9fb2d2.js\"/><script src=\"/_next/static/chunks/8e6e572debcc2b8e.js\" async=\"\"></script><script s",
+    "keys": [],
+    "nextAction": null
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": false,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:{\"key\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJydC5pbm5nZXN0LmNvbSIsInN1YiI6IjA5ZTM2MDFjLWNmZjEtNDhlYS1iM2QyLTk0MmNmMTRmODc0ZCIsImV4cCI6MTc3OTU2OTM3MywiaWF0IjoxNzc5NTY5MzEzLCJqdGkiOiIwMUtTQjlISDc5UzVQNTBZOEIwQVcyQVZUNyIsImVudiI6IjlkN2ZkYjkxLWJhNDItNGY1YS1hMTdlLThiNjUyMzc2ZDg3MCIsInRvcGljcyI6W3sia2luZCI6InJ1biIsImVudl9pZCI6IjlkN2ZkYjkxLWJhNDItNGY1YS1hMTdlLThiNjUyMzc2ZDg3MCIsImNoYW5uZWwiOiJ1c2VyOmNtbDRsN2ppbDAwMmFsMTA0Y2xteG9qYzEiLCJuYW1lIjoibG9nb3V0In1dLCJwdWJsaXNoIjpmYWxzZX0.6BkXQp7_cYMOzsBYE4QPqRp-DV3EvHzB0G8MNhlS6XA\",\"apiBaseUrl\":\"h",
+    "keys": [],
+    "nextAction": "00a573f53890afc350acb6e8c8be4b01f8b8c65672",
+    "postData": "[]"
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": false,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:{\"hasMobile\":false,\"hasWebIndividual\":false,\"hasWebCompany\":false,\"isAdmin\":false}\n",
+    "keys": [],
+    "nextAction": "00b8e7e50c4c48ae98fd9363378238b3ead6c193c9",
+    "postData": "[]"
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": false,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:{\"hasMobile\":false,\"hasWebIndividual\":false,\"hasWebCompany\":false,\"isAdmin\":false}\n",
+    "keys": [],
+    "nextAction": "00b8e7e50c4c48ae98fd9363378238b3ead6c193c9",
+    "postData": "[]"
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": true,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:{\"hasUnread\":false,\"items\":[{\"id\":\"cml4l7jj4002bl104u5mh28fe\",\"iconType\":\"broadcast\",\"message\":\"Welcome to CodeSignal! Ready to level up your skills? Find your ideal learning path with a quick chat.\",\"targetUrl\":\"https://codesignal.com/learn/cosmo-guide\",\"read\":true,\"createdAt\":\"$D2026-02-02T03:05:27.717Z\"}],\"hasMore\":false}\n",
+    "keys": [],
+    "nextAction": "00220a84f9203ff85a9587c1c84ad443669cd1d76f",
+    "postData": "[]"
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": false,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:{\"hasMobile\":false,\"hasWebIndividual\":false,\"hasWebCompany\":false,\"isAdmin\":false}\n",
+    "keys": [],
+    "nextAction": "00b8e7e50c4c48ae98fd9363378238b3ead6c193c9",
+    "postData": "[]"
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": false,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:{\"hasMobile\":false,\"hasWebIndividual\":false,\"hasWebCompany\":false,\"isAdmin\":false}\n",
+    "keys": [],
+    "nextAction": "00b8e7e50c4c48ae98fd9363378238b3ead6c193c9",
+    "postData": "[]"
+  },
+  {
+    "url": "https://codesignal.com/learn/course-paths/introduction-to-programming-with-python",
+    "method": "POST",
+    "hasCourseData": false,
+    "preview": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"wv5-e_SjVakoE6lK6_zGl\"}\n1:{\"hasMobile\":false,\"hasWebIndividual\":false,\"hasWebCompany\":false,\"isAdmin\":false}\n",
+    "keys": [],
+    "nextAction": "00b8e7e50c4c48ae98fd9363378238b3ead6c193c9",
+    "postData": "[]"
+  }
+]

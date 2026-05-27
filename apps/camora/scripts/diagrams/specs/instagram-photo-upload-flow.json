@@ -1,0 +1,65 @@
+{
+  "title": "Instagram — Photo Upload Flow",
+  "subtitle": "Processing and CDN distribution",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "client",
+          "label": "Client\nOriginal Image",
+          "kind": "actor"
+        },
+        {
+          "id": "upload",
+          "label": "Upload Service\nPre-signed S3 URL",
+          "kind": "service"
+        },
+        {
+          "id": "kafka",
+          "label": "Processing Queue\nImage metadata",
+          "kind": "queue"
+        },
+        {
+          "id": "worker",
+          "label": "Resize Worker\n4 Sizes (WebP)",
+          "kind": "worker"
+        },
+        {
+          "id": "cdn",
+          "label": "Global CDN\nEdge warming",
+          "kind": "gateway"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "worker",
+      "nodes": [
+        {
+          "id": "s3",
+          "label": "S3 Storage\nProcessed Assets",
+          "kind": "datastore"
+        },
+        {
+          "id": "moderate",
+          "label": "ML Moderation\nNudity/Spam check",
+          "kind": "worker"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Generated Resolutions",
+      "body": "- 150px (Thumbnail)\n- 320px (Mobile List)\n- 640px (Mobile Detail)\n- 1080px (Desktop)"
+    },
+    {
+      "kind": "note",
+      "title": "Blur Hash",
+      "body": "Inline low-res placeholder\n(20x20px) is sent with feed API\nso UI feels instant while high-res\nloads from CDN."
+    }
+  ]
+}

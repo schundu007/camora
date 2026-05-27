@@ -1,0 +1,55 @@
+{
+  "title": "Instagram — Image Pipeline",
+  "subtitle": "Parallel resize, format conversion, and moderation",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "raw",
+          "label": "Raw S3 Ingress",
+          "kind": "datastore"
+        },
+        {
+          "id": "kafka",
+          "label": "Kafka Topic\nPartitions by userId",
+          "kind": "queue"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "kafka",
+      "nodes": [
+        {
+          "id": "resize",
+          "label": "Resize Worker\nLanczos Resampling",
+          "kind": "worker"
+        },
+        {
+          "id": "format",
+          "label": "Format Engine\nWebP & JPEG",
+          "kind": "worker"
+        },
+        {
+          "id": "moderate",
+          "label": "ML Moderation\nCNN Classification",
+          "kind": "worker"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Failure Handling",
+      "body": "Dead letter queue for 3x fails.\nServes original resolution until\nprocessing completes to avoid\nbroken UI states."
+    },
+    {
+      "kind": "code",
+      "title": "Output Fan-out",
+      "body": "1 Upload → 8 Files\n(4 sizes x 2 formats)\n\nResult: Bilions of small\nfiles in S3."
+    }
+  ]
+}

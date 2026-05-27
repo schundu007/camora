@@ -1,0 +1,39 @@
+{
+  "title": "WhatsApp — Double Ratchet",
+  "subtitle": "Self-healing per-message encryption",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "dh",
+          "label": "Diffie-Hellman\nRatchet (New keys)",
+          "kind": "worker"
+        },
+        {
+          "id": "kdf",
+          "label": "Symmetric KDF\nRatchet (Derive)",
+          "kind": "worker"
+        },
+        {
+          "id": "msg",
+          "label": "Encrypted Msg\nAES-256-GCM",
+          "kind": "service"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Break-in Recovery",
+      "body": "If one key is leaked, the next DH\nexchange creates a new secret that\nthe attacker cannot predict."
+    },
+    {
+      "kind": "code",
+      "title": "Signal Protocol",
+      "body": "- Identity Keys (Long-term)\n- Signed Pre-keys (Medium)\n- One-time Pre-keys (Short)"
+    }
+  ]
+}

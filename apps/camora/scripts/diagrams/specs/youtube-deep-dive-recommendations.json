@@ -1,0 +1,51 @@
+{
+  "title": "YouTube — Recommendation Engine",
+  "subtitle": "Candidate generation and ranking",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "history",
+          "label": "User History\nEmbeddings",
+          "kind": "datastore"
+        },
+        {
+          "id": "candidates",
+          "label": "Candidate Gen\nTop 1,000",
+          "kind": "service"
+        },
+        {
+          "id": "ranking",
+          "label": "Neural Ranker\nTop 50",
+          "kind": "worker"
+        },
+        {
+          "id": "feed",
+          "label": "Home Feed",
+          "kind": "actor"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Metric Optimization",
+      "body": "Optimize for Expected Watch Time\ninstead of Click-Through Rate (CTR)\nto reduce clickbait."
+    },
+    {
+      "kind": "tradeoff",
+      "title": "Explore vs Exploit",
+      "pros": [
+        "Freshness: Show new videos",
+        "Relevance: Show what they like"
+      ],
+      "cons": [
+        "Filter bubbles",
+        "Cold start for new creators"
+      ]
+    }
+  ]
+}

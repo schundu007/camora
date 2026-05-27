@@ -1,0 +1,68 @@
+{
+  "title": "Netflix — Video Playback Flow",
+  "subtitle": "Control plane coordination and data plane delivery",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "client",
+          "label": "Client\nGET /playback",
+          "kind": "actor"
+        },
+        {
+          "id": "api",
+          "label": "API Gateway\nZuul Auth",
+          "kind": "gateway"
+        },
+        {
+          "id": "play-svc",
+          "label": "Playback Service\nDRM & Entitlement",
+          "kind": "service"
+        },
+        {
+          "id": "steering",
+          "label": "Steering Service\nISP/Peering lookup",
+          "kind": "worker"
+        },
+        {
+          "id": "oca",
+          "label": "Open Connect\n(Local ISP Node)",
+          "kind": "gateway"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "play-svc",
+      "nodes": [
+        {
+          "id": "history",
+          "label": "Watch History\nCassandra Resume",
+          "kind": "datastore"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "client",
+      "to": "oca",
+      "label": "Fetch Segments",
+      "style": "dashed"
+    }
+  ],
+  "panels": [
+    {
+      "kind": "note",
+      "title": "Steering Logic",
+      "body": "1. Find OCA in user's ISP\n2. Check OCA health and load\n3. Verify title is cached on node\n4. Return DNS/IP for direct connection"
+    },
+    {
+      "kind": "code",
+      "title": "Adaptive Start",
+      "body": "manifest.mpd → ABR Controller\n- First segment: 720p (Fast)\n- Buffer > 30s: 4K (Quality)\n- Heartbeat every 30s to AWS"
+    }
+  ]
+}

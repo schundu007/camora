@@ -1,0 +1,38 @@
+<h2>What does "Docker" mean in the playground?</h2>
+<p class="subtitle">Docker has a few distinct use-cases — pick the one that matches your practice goal</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Write & build a Dockerfile</h3>
+      <p>You type a Dockerfile in the left pane. Hit Run → the right pane shows the live <code>docker build</code> output (layer-by-layer). Good for practicing image creation.</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pro</h4><ul><li>Real image build feedback</li><li>Closest to real workflow</li></ul></div>
+        <div class="cons"><h4>Con</h4><ul><li>Slow (pulls base images)</li><li>Fills disk over time</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Validate / lint only (no build)</h3>
+      <p>You type a Dockerfile. Hit Run → the right pane shows <code>hadolint</code> or <code>dockerfile-lint</code> output — syntax errors, best-practice warnings. Fast, no Docker daemon needed.</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pro</h4><ul><li>Instant feedback, safe</li><li>No image bloat</li></ul></div>
+        <div class="cons"><h4>Con</h4><ul><li>Doesn't catch runtime issues</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Run docker CLI commands</h3>
+      <p>Left pane is a shell script of docker commands (<code>docker run</code>, <code>docker ps</code>, <code>docker exec</code>…). Hit Run → output on the right. Like a Docker-flavoured Bash scratch pad.</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pro</h4><ul><li>Flexible, practice any docker command</li></ul></div>
+        <div class="cons"><h4>Con</h4><ul><li>Full daemon access = security risk on server</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

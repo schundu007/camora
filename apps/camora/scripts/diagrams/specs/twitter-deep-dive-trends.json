@@ -1,0 +1,65 @@
+{
+  "title": "Twitter — Trends Detection Pipeline",
+  "subtitle": "Spike detection using stream processing",
+  "theme": "dark",
+  "flow": [
+    {
+      "lane": "main",
+      "nodes": [
+        {
+          "id": "kafka",
+          "label": "Kafka\ntweets-stream",
+          "kind": "queue"
+        },
+        {
+          "id": "flink",
+          "label": "Flink / Heron\nStream Processor",
+          "kind": "worker"
+        },
+        {
+          "id": "cms",
+          "label": "Count-Min Sketch\nProbabilistic counts\n5-min windows",
+          "kind": "datastore"
+        },
+        {
+          "id": "analyzer",
+          "label": "Trend Analyzer\nSpike Detection",
+          "kind": "worker"
+        },
+        {
+          "id": "redis",
+          "label": "Redis Cache\nTop trends by region",
+          "kind": "cache"
+        }
+      ]
+    },
+    {
+      "lane": "side",
+      "from": "analyzer",
+      "nodes": [
+        {
+          "id": "baseline",
+          "label": "24h Baseline\nMoving average\nper token",
+          "kind": "datastore"
+        },
+        {
+          "id": "geo",
+          "label": "Geo Service\nMap tokens to regions\nvia GeoIP/Profile",
+          "kind": "service"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "kind": "code",
+      "title": "Trend Scoring Formula",
+      "body": "Z-Score = (X - μ) / σ\n\nX: current 5-min count\nμ: 24h moving average\nσ: 24h standard deviation\n\nRank by Z-Score x Log(TotalCount)"
+    },
+    {
+      "kind": "issue",
+      "title": "Anti-Spam Filtering",
+      "body": "Bot detection: If 90% of a trend's\nvolume comes from accounts < 1 day old,\nor without profile pics, suppress the trend.\n\nPrevents coordinated bot manipulation."
+    }
+  ]
+}
