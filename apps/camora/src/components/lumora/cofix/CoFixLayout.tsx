@@ -961,6 +961,29 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
             </span>
           </div>
 
+          {/* Quick-refine chip strip — always visible when fixed code exists */}
+          {fixedCode && (
+            <div className="flex items-center gap-1.5 px-2 shrink-0 overflow-x-auto no-scrollbar" style={{ height: 28, borderBottom: '1px solid rgba(196,160,60,0.18)', background: 'rgba(196,160,60,0.04)' }}>
+              {[
+                { label: '+ Print steps',    prompt: 'Add print() statements before and after each key step to show intermediate values' },
+                { label: '+ Type hints',     prompt: 'Add type hints to all function parameters and return types' },
+                { label: '+ Docstrings',     prompt: 'Add a concise docstring to every function' },
+                { label: '+ Error handling', prompt: 'Wrap the main logic in try/except and print a clear error message on failure' },
+                { label: '+ Comments',       prompt: 'Add a short inline comment on every non-obvious line' },
+              ].map(({ label, prompt }) => (
+                <button
+                  key={label}
+                  onClick={() => handleRefine(prompt)}
+                  disabled={isLoading}
+                  className="shrink-0 text-[9px] font-bold uppercase tracking-[0.08em] px-2 py-0.5 rounded-full transition-opacity hover:opacity-90 disabled:opacity-40 whitespace-nowrap"
+                  style={{ background: 'rgba(196,160,60,0.10)', border: '1px solid rgba(196,160,60,0.28)', color: 'var(--cam-gold-leaf-dk)' }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="flex flex-1 min-h-0">
             {/* Monaco editor — read-only with line decorations */}
             <div className="flex-1 min-w-0 relative">
@@ -1016,26 +1039,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   </div>
                   {/* Body */}
                   <div className="px-3 py-3 flex flex-col gap-2.5">
-                    {/* Quick-action chips — one click submits immediately */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {[
-                        { label: '+ Print steps', prompt: `Add print() statements before and after each key step to show intermediate values` },
-                        { label: '+ Type hints', prompt: `Add type hints to all function parameters and return types` },
-                        { label: '+ Docstrings', prompt: `Add a concise docstring to every function` },
-                        { label: '+ Error handling', prompt: `Wrap the main logic in try/except and print a clear error message on failure` },
-                        { label: '+ Comments', prompt: `Add a short inline comment on every non-obvious line` },
-                      ].map(({ label, prompt }) => (
-                        <button
-                          key={label}
-                          onClick={() => handleRefine(prompt)}
-                          disabled={isLoading}
-                          className="text-[9.5px] font-bold uppercase tracking-[0.08em] px-2.5 py-1 rounded-full transition-opacity hover:opacity-90 disabled:opacity-40"
-                          style={{ background: 'rgba(196,160,60,0.12)', border: '1px solid rgba(196,160,60,0.35)', color: 'var(--cam-gold-leaf)' }}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
                     <textarea
                       ref={refineTextareaRef}
                       value={refinePrompt}
