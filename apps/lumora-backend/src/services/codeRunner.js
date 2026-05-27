@@ -417,6 +417,48 @@ _has_ll = 'arrayToList' in dir()
 
 _kind, _fn_name = _find_target_func(_user_code)
 
+import json as _json_mod
+
+def _try_simulation():
+    lines = [l.strip() for l in _input.strip().splitlines() if l.strip()]
+    if not lines:
+        return False
+    try:
+        if len(lines) >= 2:
+            _ops_s = _json_mod.loads(lines[0])
+            _args_s = _json_mod.loads(lines[1])
+        elif len(lines) == 1:
+            _parsed = _json_mod.loads(lines[0])
+            if (isinstance(_parsed, list) and len(_parsed) == 2 and
+                    isinstance(_parsed[0], list) and isinstance(_parsed[1], list)):
+                _ops_s, _args_s = _parsed[0], _parsed[1]
+            else:
+                return False
+        else:
+            return False
+        if not (isinstance(_ops_s, list) and len(_ops_s) > 0 and
+                all(isinstance(o, str) for o in _ops_s)):
+            return False
+        if not (isinstance(_args_s, list) and all(isinstance(a, list) for a in _args_s)):
+            return False
+        _cls_name = _ops_s[0]
+        _cls = globals().get(_cls_name)
+        if not (_cls and callable(_cls)):
+            return False
+        _obj = None
+        _results = []
+        for _op, _arg in zip(_ops_s, _args_s):
+            if _obj is None:
+                _obj = _cls(*_arg)
+                _results.append(None)
+            else:
+                _r = getattr(_obj, _op)(*_arg)
+                _results.append(_r)
+        print(_json_mod.dumps(_results))
+        return True
+    except Exception:
+        return False
+
 if _kind == 'solution_method':
     _sol = Solution()
     _method = getattr(_sol, _fn_name)
@@ -452,6 +494,8 @@ elif _kind == 'standalone':
     if _has_ll and hasattr(_result, 'val'):
         _result = listToArray(_result)
     print(_result)
+else:
+    _try_simulation()
 `;
 }
 
