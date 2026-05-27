@@ -289,8 +289,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     }
   }, [token]);
 
-  const handleFix = useCallback(async () => {
-    if (inputCode.trim().length < 5 || isLoading) return;
+  const handleFix = useCallback(async (codeOverride?: string) => {
+    const code = codeOverride ?? inputCode;
+    if (code.trim().length < 5 || isLoading) return;
     autoFixAttemptsRef.current = 0;
 
     abortRef.current?.abort();
@@ -321,7 +322,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     setPanelTab('problem');
 
     const controller = await streamCoFixResponse({
-      code: inputCode,
+      code,
       hint: undefined,
       company: activeAssistant?.company || undefined,
       language: effectiveLang,
@@ -892,6 +893,16 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
           <div className="h-8 flex items-center gap-1.5 px-2 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0 overflow-x-auto no-scrollbar">
             {fixedCode && (
               <>
+                <button
+                  onClick={() => { setInputCode(fixedCode); handleFix(fixedCode); }}
+                  disabled={isLoading}
+                  className="shrink-0 text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }}
+                  title="Run CoFix again on this fixed code"
+                >
+                  {isLoading ? 'Analyzing…' : 'CoFix'}
+                </button>
+                <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
                 <button
                   onClick={handleRun}
                   disabled={isRunning}
