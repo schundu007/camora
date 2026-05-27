@@ -458,7 +458,6 @@ async function runMigrations() {
     )`);
     await query('CREATE INDEX IF NOT EXISTS idx_coding_problems_difficulty ON coding_problems(difficulty)');
     await query('CREATE INDEX IF NOT EXISTS idx_coding_problems_source ON coding_problems(source)');
-    await query('CREATE INDEX IF NOT EXISTS idx_coding_problems_lc_id ON coding_problems(lc_id)');
     await query('CREATE INDEX IF NOT EXISTS idx_coding_problems_topic_tags ON coding_problems USING GIN(topic_tags)');
     await query('CREATE INDEX IF NOT EXISTS idx_coding_problems_company_tags ON coding_problems USING GIN(company_tags)');
     console.log('[Migrations] coding_problems table ensured');
