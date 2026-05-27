@@ -180,6 +180,7 @@ interface CodingLayoutProps {
   initialProblem?: string;
   /** Pre-fill the URL input and auto-fetch the problem on mount (e.g. from ?url= query param) */
   initialUrl?: string;
+  initialStarterCode?: string | null;
   /** When true, hides internal header and uses flex-1 instead of h-screen (for embedding in LumoraShell) */
   embedded?: boolean;
   /** Ref that parent sets to receive voice transcriptions as problem input */
@@ -246,7 +247,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, pendingHackerrankDataUrls, onHackerrankDataUrlsConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, initialStarterCode, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, pendingHackerrankDataUrls, onHackerrankDataUrlsConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -273,7 +274,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [starterCode, setStarterCode] = useState<string | null>(null);
+  const [starterCode, setStarterCode] = useState<string | null>(initialStarterCode ?? null);
   const [error, setError] = useState<string | null>(null);
   const [testCases, setTestCases] = useState<Array<{ input: string; expected: string }>>([{ input: '', expected: '' }]);
   const [testResults, setTestResults] = useState<TestResult[]>([]);

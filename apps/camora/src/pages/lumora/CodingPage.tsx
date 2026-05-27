@@ -12,6 +12,7 @@ const CodingPageContent = () => {
 
   const initialProblem = searchParams.get('problem') || '';
   const initialUrl = searchParams.get('url') || '';
+  const initialStarterCode = searchParams.get('starter_code') || null;
 
   return (
     <CodingLayout
@@ -20,6 +21,7 @@ const CodingPageContent = () => {
       onBack={() => navigate('/lumora')}
       initialProblem={initialProblem}
       initialUrl={initialUrl}
+      initialStarterCode={initialStarterCode}
     />
   );
 }
