@@ -3,7 +3,7 @@
  *
  * Supports interpreted, compiled, and special-case languages.
  * Uses child_process.execFile (not exec) for sandboxed execution.
- * Timeout: 10s per run, 15s for compilation.
+ * Timeout: 20s per run, 20s for compilation.
  */
 import { execFile } from 'node:child_process';
 import { writeFile, unlink, mkdir, rm } from 'node:fs/promises';
@@ -12,8 +12,8 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { which } from '../utils/which.js';
 
-const TIMEOUT_MS = 10_000;
-const COMPILE_TIMEOUT_MS = 15_000;
+const TIMEOUT_MS = 20_000;
+const COMPILE_TIMEOUT_MS = 20_000;
 
 // ---------------------------------------------------------------------------
 // Language → runtime mapping
@@ -93,7 +93,7 @@ function runCommand(cmd, args = [], opts = {}) {
       env: { ...process.env, PATH: process.env.PATH },
     }, (error, stdout, stderr) => {
       if (error?.killed) {
-        resolve({ stdout: '', stderr: 'Execution timed out (10s limit)', exitCode: 1 });
+        resolve({ stdout: '', stderr: 'Execution timed out (20s limit)', exitCode: 1 });
       } else {
         resolve({
           stdout: stdout || '',
