@@ -17,7 +17,6 @@ import SharedPricingCards from '../../shared/PricingCards';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useCelebration } from '../../shared/Celebration';
 import { generateSlug, getProblemBySlug } from '../../../data/capra/problems.js';
-import problemsFull from '../../../data/capra/problems-full.json';
 import { useCloudFormatter } from '../../../hooks/useCloudFormatter.ts';
 import CloudProviderSelector from '../../shared/CloudProviderSelector.tsx';
 import {
@@ -1577,8 +1576,7 @@ export default function TopicDetail({
                   const problemData = getProblemBySlug(slug);
                   const difficulty = typeof problem === 'object' ? problem.difficulty : (problemData?.difficulty || null);
 
-                  const fullProblem = problemsFull[slug];
-                  const problemText = fullProblem?.description || problemData?.description || `Solve: ${problemName}`;
+                  const problemText = problemData?.description || `Solve: ${problemName}`;
                   const isSqlTopic = activePage === 'sql' || (typeof selectedTopic === 'string' && selectedTopic.startsWith('sql-'));
                   const href = isSqlTopic
                     ? `/capra/practice?view=sql-editor&sqlProblem=${encodeURIComponent(problemName)}`
