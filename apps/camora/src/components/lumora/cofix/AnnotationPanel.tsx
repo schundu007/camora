@@ -16,7 +16,7 @@ const inlineFormat = (text: string) => {
       nodes.push(<strong key={key++} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{m[1]}</strong>);
     } else {
       nodes.push(
-        <code key={key++} style={{ padding: '1px 4px', borderRadius: 3, background: 'rgba(20,184,166,0.15)', color: '#2dd4bf', fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, letterSpacing: '-0.01em' }}>
+        <code key={key++} style={{ padding: '1px 4px', borderRadius: 3, background: 'color-mix(in oklab, var(--accent) 15%, transparent)', color: 'var(--accent)', fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, letterSpacing: '-0.01em' }}>
           {m[2]}
         </code>
       );
@@ -33,7 +33,7 @@ export const AnnotationPanel = ({ changes, walkthrough = [] }: AnnotationPanelPr
 
   return (
     <div
-      className="w-full h-full overflow-y-auto border-l border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-primary)]"
+      className="w-full h-full overflow-y-auto border-l border-[var(--cam-gold-leaf-dk)]"
     >
       {/* Walk-Through section */}
       {hasWalkthrough && (
