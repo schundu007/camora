@@ -147,6 +147,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     ? `/api/v1/inference/conversations/${conversationId}/stream`
     : '/api/v1/stream';
 
+  let silenceTimedOut = false;
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   try {
     const response = await fetchWithConnectRetry(`${API_URL}${endpoint}`, {
@@ -190,7 +191,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     let currentData = '';
 
     while (true) {
-      const silenceTimer = setTimeout(() => abortController.abort(), SILENCE_TIMEOUT_MS);
+      const silenceTimer = setTimeout(() => { silenceTimedOut = true; abortController.abort(); }, SILENCE_TIMEOUT_MS);
       const { done, value } = await reader.read().finally(() => clearTimeout(silenceTimer));
 
       if (done) {
@@ -237,9 +238,15 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
       }
     }
   } catch (error: any) {
-    if (error.name !== 'AbortError') {
+    if (error.name === 'AbortError') {
+      // Silence timeout: show a user-visible error so the UI doesn't freeze.
+      // User-initiated cancel (externalSignal): stay silent — caller cleans up.
+      if (silenceTimedOut) onError?.({ msg: 'Sona took too long to respond — please try again' });
+    } else {
       onError?.({ msg: error.message || 'Stream error' });
     }
+    // Always clear streaming state regardless of how the stream ended.
+    onComplete?.();
   } finally {
     // Release the stream reader on every exit path so the underlying network
     // connection can be torn down and memory reclaimed — previously abort
@@ -350,6 +357,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
     }
   }
 
+  let silenceTimedOut = false;
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   try {
     const response = await fetchWithConnectRetry(`${API_URL}/api/v1/coding/stream`, {
@@ -389,7 +397,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
     let currentData = '';
 
     while (true) {
-      const silenceTimer = setTimeout(() => abortController.abort(), SILENCE_TIMEOUT_MS);
+      const silenceTimer = setTimeout(() => { silenceTimedOut = true; abortController.abort(); }, SILENCE_TIMEOUT_MS);
       const { done, value } = await reader.read().finally(() => clearTimeout(silenceTimer));
 
       if (done) {
@@ -436,9 +444,12 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
       }
     }
   } catch (error: any) {
-    if (error.name !== 'AbortError') {
+    if (error.name === 'AbortError') {
+      if (silenceTimedOut) onError?.({ msg: 'Sona took too long to respond — please try again' });
+    } else {
       onError?.({ msg: error.message || 'Stream error' });
     }
+    onComplete?.();
   } finally {
     try { await reader?.cancel(); } catch { /* already released */ }
   }
@@ -500,6 +511,7 @@ export async function streamCoFixResponse(options: CoFixStreamOptions): Promise<
     }
   }
 
+  let silenceTimedOut = false;
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   try {
     const response = await fetchWithConnectRetry(`${API_URL}/api/v1/coding/cofix/stream`, {
@@ -537,7 +549,7 @@ export async function streamCoFixResponse(options: CoFixStreamOptions): Promise<
     let currentData = '';
 
     while (true) {
-      const silenceTimer = setTimeout(() => abortController.abort(), SILENCE_TIMEOUT_MS);
+      const silenceTimer = setTimeout(() => { silenceTimedOut = true; abortController.abort(); }, SILENCE_TIMEOUT_MS);
       const { done, value } = await reader.read().finally(() => clearTimeout(silenceTimer));
 
       if (done) {
@@ -588,9 +600,12 @@ export async function streamCoFixResponse(options: CoFixStreamOptions): Promise<
       }
     }
   } catch (error: any) {
-    if (error.name !== 'AbortError') {
+    if (error.name === 'AbortError') {
+      if (silenceTimedOut) onError?.({ msg: 'CoFix took too long to respond — please try again' });
+    } else {
       onError?.({ msg: error.message || 'CoFix stream error' });
     }
+    onComplete?.();
   } finally {
     try { await reader?.cancel(); } catch { /* already released */ }
   }
