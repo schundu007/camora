@@ -395,7 +395,7 @@ export const AskLayout = () => {
           {messages.map((m, i) => (
             <div key={i} className={`mb-6 ${m.role === 'user' ? 'flex justify-end' : ''}`}>
               {m.role === 'user' ? (
-                <div className="max-w-[75%] px-4 py-2.5 rounded-2xl text-[14px]" style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf-dk)', color: 'var(--text-hero)', ...sans }}>
+                <div className="max-w-[75%] px-4 py-2.5 rounded-2xl text-[14px]" style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf-dk)', color: '#FFFFFF', ...sans }}>
                   {m.content}
                 </div>
               ) : (

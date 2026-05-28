@@ -789,7 +789,7 @@ export default function PracticePage() {
                 <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                 <div className="relative p-6 md:p-8">
                   <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>PRACTICE</p>
-                  <h1 className="font-bold tracking-tight text-3xl md:text-5xl mb-3 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.05 }}>
+                  <h1 className="font-bold tracking-tight text-3xl md:text-5xl mb-3 text-white" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.05 }}>
                     {user?.name
                       ? <>Welcome back, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>{user.name.split(' ')[0]}</span>.</>
                       : <>Your practice, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>sharpened.</span></>}

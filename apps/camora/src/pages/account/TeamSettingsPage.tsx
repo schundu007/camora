@@ -459,7 +459,7 @@ export default function TeamSettingsPage() {
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative page-wrap pt-16 pb-20" style={{ maxWidth: '56rem' }}>
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--cam-gold-leaf-lt)' }}>ACCOUNT</p>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--text-hero)]">Team <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>sharing</span></h1>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">Team <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>sharing</span></h1>
           <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
             Pool your AI hours with up to {team ? team.seat_limit : 5} mates. Per-member usage is broken out below.
           </p>

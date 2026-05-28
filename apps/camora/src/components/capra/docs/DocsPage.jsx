@@ -864,7 +864,7 @@ export default function DocsPage({ onBack }) {
                             <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>
                               PREPARE
                             </p>
-                            <h1 className="font-bold tracking-tight text-3xl md:text-5xl lg:text-6xl mb-3 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.05 }}>
+                            <h1 className="font-bold tracking-tight text-3xl md:text-5xl lg:text-6xl mb-3 text-white" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.05 }}>
                               {user?.name ? <>Welcome back, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>{user.name.split(' ')[0]}</span>.</> : <>Your prep, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>organized.</span></>}
                             </h1>
                           </div>
@@ -974,7 +974,7 @@ export default function DocsPage({ onBack }) {
                           }}
                         >
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)]">Topic Categories</span>
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Topic Categories</span>
                           <span
                             className="ml-auto text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
                             style={{
@@ -1035,7 +1035,7 @@ export default function DocsPage({ onBack }) {
                       <div className="mb-8">
                         <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)]">Learning Path</span>
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Learning Path</span>
                         </div>
                         <div className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
@@ -1070,7 +1070,7 @@ export default function DocsPage({ onBack }) {
                       <div className="mb-8">
                         <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)]">Learning Resources</span>
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Learning Resources</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
@@ -1113,7 +1113,7 @@ export default function DocsPage({ onBack }) {
                       <div className="mb-8">
                         <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)]">Checklist</span>
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Checklist</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
@@ -1166,7 +1166,7 @@ export default function DocsPage({ onBack }) {
                           <div className="mb-8">
                             <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                               <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                              <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)]">Continue Where You Left Off</span>
+                              <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Continue Where You Left Off</span>
                             </div>
                             <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
                               {recentItems.map((topic) => (
@@ -1317,7 +1317,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="cpu" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Arrays & Hashing', 'Trees & Graphs', 'Dynamic Programming', 'Sliding Window', 'Binary Search', 'Backtracking'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1338,7 +1338,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="systemDesign" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)' }}>System Design</h2>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>System Design</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Scalability', 'Load Balancing', 'Caching', 'Database Sharding', 'Message Queues', 'CAP Theorem'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1359,7 +1359,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="users" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)' }}>Behavioral Questions</h2>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Behavioral Questions</h2>
                             <div className="flex flex-wrap gap-2">
                               {['STAR Method', 'Leadership', 'Conflict Resolution', 'Teamwork', 'Failure Stories', 'Company Research'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1380,7 +1380,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="layers" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
                             <div className="flex flex-wrap gap-2">
                               {['OOP Principles', 'SOLID', 'Design Patterns', 'Class Diagrams', 'UML', 'Clean Architecture'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1401,7 +1401,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="grid" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Service Mesh', 'Circuit Breakers', 'Event Sourcing', 'CQRS', 'API Gateway', 'Saga Pattern'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1422,7 +1422,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="database" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Indexing', 'Replication', 'Sharding', 'ACID vs BASE', 'Window Functions', 'CTEs', 'Complex Joins', 'Query Optimization'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1443,7 +1443,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="code" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Full-Stack Apps', 'API Design', 'CI/CD', 'Testing', 'Documentation', 'Open Source'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1464,7 +1464,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="trendingUp" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Frontend', 'Backend', 'Full-Stack', 'DevOps', 'ML Engineering', 'Staff Engineer'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1485,7 +1485,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="bookOpen" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Netflix Tech', 'Uber Engineering', 'Stripe Blog', 'Meta Engineering', 'AWS Architecture', 'Google SRE'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1506,7 +1506,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="shield" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)' }}>Site Reliability Engineering</h2>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Site Reliability Engineering</h2>
                             <div className="flex flex-wrap gap-2">
                               {['SLOs & SLAs', 'Error Budgets', 'Incident Response', 'Observability', 'On-Call', 'Capacity Planning'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1527,7 +1527,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="gitMerge" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)' }}>DevOps</h2>
+                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>DevOps</h2>
                             <div className="flex flex-wrap gap-2">
                               {['CI/CD', 'Infrastructure as Code', 'Containers & Kubernetes', 'Monitoring', 'Cloud Native', 'DevSecOps'].map(tag => (
                                 <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
@@ -1808,7 +1808,7 @@ export default function DocsPage({ onBack }) {
                             <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)' }}>
                               <Icon name={category.icon} size={12} style={{ color: 'var(--cam-gold-leaf-lt)' }} />
                             </div>
-                            <h3 className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)] whitespace-nowrap landing-display">{category.name}</h3>
+                            <h3 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap landing-display">{category.name}</h3>
                             <span
                               className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
                               style={{

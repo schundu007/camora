@@ -71,7 +71,7 @@ export default function CompanyQuestionsPage() {
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative lg:max-w-[85%] mx-auto text-center">
           <img src={company.logo} alt={`${company.name} logo`} className="w-16 h-16 rounded-xl object-contain mx-auto bg-white p-2" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-          <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[var(--text-hero)] tracking-tight">
+          <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
             {company.name} <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Practice Questions</span>
           </h1>
           <p className="mt-2 text-lg" style={{ color: 'rgba(255,255,255,0.85)' }}>{company.tagline}</p>

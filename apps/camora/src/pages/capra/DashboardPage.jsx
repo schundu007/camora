@@ -964,7 +964,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       {/* Left: mode indicator */}
       <div className="flex items-center gap-1.5">
         <div className="w-2 h-2 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)' }} />
-        <span className="text-sm font-semibold text-[var(--text-hero)]">{currentMode.label}</span>
+        <span className="text-sm font-semibold text-white">{currentMode.label}</span>
       </div>
 
       {/* Center: APPA tabs */}
@@ -995,7 +995,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
           ) : (
             <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>{user?.name?.[0] || '?'}</div>
           )}
-          <span className="text-sm font-medium text-[var(--text-hero)]">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
+          <span className="text-sm font-medium text-white">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
         </Link>
       </div>
     </header>
@@ -1082,7 +1082,7 @@ function CopyToast() {
         <div className="w-7 h-7 rounded-lg bg-[var(--bg-surface)]/20 flex items-center justify-center backdrop-blur-sm">
           <svg className="w-4 h-4 text-[var(--text-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
         </div>
-        <span className="text-sm font-semibold text-white" aria-live="polite">Code copied to clipboard!</span>
+        <span className="text-sm font-semibold text-[var(--text-primary)]" aria-live="polite">Code copied to clipboard!</span>
       </div>
     </div>
   );
@@ -1146,7 +1146,7 @@ function CodingLayout({
         >
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
-            <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)] whitespace-nowrap">
+            <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">
               {ascendMode === 'system-design' ? 'System Design' : 'Problem'}
             </h2>
             {ascendMode === 'system-design' && (
@@ -1280,7 +1280,7 @@ function CodingLayout({
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
-                    <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)] whitespace-nowrap">System Design</h2>
+                    <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">System Design</h2>
                     <button
                       onClick={onSavedDesignsClick}
                       aria-label="View saved designs"

@@ -589,7 +589,7 @@ const ArchitectureCard = ({ question }: { question: string }) => {
         }}
       >
         <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--cam-gold-leaf-lt)]" />
-        <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-[var(--text-hero)]">
+        <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-white">
           Architecture
         </span>
       </div>

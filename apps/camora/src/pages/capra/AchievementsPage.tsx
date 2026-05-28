@@ -15,7 +15,7 @@ export default function AchievementsPage() {
       <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative page-wrap pt-12 pb-16">
-          <h1 className="landing-display font-extrabold text-2xl md:text-3xl tracking-tight text-[var(--text-hero)]">
+          <h1 className="landing-display font-extrabold text-2xl md:text-3xl tracking-tight text-white">
             <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Achievements</span>
           </h1>
           <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.85)' }}>Badges, leaderboard, and your progress milestones.</p>

@@ -1834,7 +1834,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             <span className="hidden sm:inline">Back</span>
           </button>
           <div className="h-4 w-px" style={{ background: 'rgba(255,255,255,0.25)' }} />
-          <span className="font-extrabold text-xs md:text-sm text-[var(--text-hero)]" style={{ fontFamily: "var(--font-sans)" }}>Coding</span>
+          <span className="font-extrabold text-xs md:text-sm text-white" style={{ fontFamily: "var(--font-sans)" }}>Coding</span>
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-2">
@@ -1842,7 +1842,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           {timerDuration > 0 ? (
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-500/15 border-red-500/30 text-red-300' :
-              timerSeconds === 0 ? 'bg-white/10 border-white/20 text-[var(--text-hero)] opacity-70' :
+              timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white opacity-70' :
               'bg-[rgba(38,97,156,0.15)] border-[rgba(38,97,156,0.3)] text-[var(--accent-text)]'
             }`}>
               <div className="relative w-4 h-4">
@@ -1853,7 +1853,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 </svg>
               </div>
               <span>{formatTime(timerSeconds)}</span>
-              <button onClick={stopTimer} className="ml-1 text-[var(--text-hero)] opacity-75 hover:text-red-400 transition-colors" title="Stop timer">
+              <button onClick={stopTimer} className="ml-1 text-white opacity-75 hover:text-red-400 transition-colors" title="Stop timer">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -1863,7 +1863,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             <div className="flex items-center">
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
-                  className="px-1.5 py-0.5 text-[10px] font-mono text-[var(--text-hero)] opacity-75 hover:text-[var(--text-hero)] hover:bg-white/10 rounded transition-colors"
+                  className="px-1.5 py-0.5 text-[10px] font-mono text-white opacity-75 hover:text-white hover:bg-white/10 rounded transition-colors"
                   title={`${m} min timer`}>
                   {m}m
                 </button>
@@ -1887,7 +1887,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                   animation: 'coding-pulse-ring 1.4s ease-out infinite',
                 }}
               />
-              <span className="text-[var(--text-hero)] text-[10px] md:text-xs font-bold uppercase tracking-wider">Generating</span>
+              <span className="text-white text-[10px] md:text-xs font-bold uppercase tracking-wider">Generating</span>
             </div>
           )}
 

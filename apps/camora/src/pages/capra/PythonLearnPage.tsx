@@ -195,7 +195,7 @@ export default function PythonLearnPage() {
             </div>
             <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)' }}>Learning Library</span>
           </div>
-          <h1 className="text-4xl font-bold text-[var(--text-hero)] mb-2">Python <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Mastery</span></h1>
+          <h1 className="text-4xl font-bold text-white mb-2">Python <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Mastery</span></h1>
           <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.7)' }}>From variables to async — {PYTHON_TOPICS.length} topics, ~{Math.round(totalMins / 60)}h of material</p>
           <div className="flex items-center gap-3 flex-wrap">
             {[

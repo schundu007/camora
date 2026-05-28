@@ -142,7 +142,7 @@ export const LumoraProfilePage = () => {
             </div>
           )}
           <div>
-            <h2 className="text-xl font-bold text-[var(--text-hero)]">{user?.name || 'User'}</h2>
+            <h2 className="text-xl font-bold text-white">{user?.name || 'User'}</h2>
             <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>{user?.email}</p>
           </div>
         </div>
@@ -326,7 +326,7 @@ export const AssistantsPage = () => {
       <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <div className="max-w-5xl mx-auto px-6 py-6 w-full flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-[var(--text-hero)]">Interview <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Assistants</span></h2>
+            <h2 className="text-xl font-bold text-white">Interview <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Assistants</span></h2>
             <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Role + Resume + JD profiles for personalized AI</p>
           </div>
           <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full transition-[transform,box-shadow] duration-150 hover:scale-[1.02] active:scale-[0.98]" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>

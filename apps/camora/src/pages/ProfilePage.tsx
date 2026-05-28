@@ -305,7 +305,7 @@ export default function ProfilePage() {
       <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative page-wrap pt-24 pb-16">
-          <h1 className="text-3xl font-bold text-[var(--text-hero)]">Your <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Profile</span></h1>
+          <h1 className="text-3xl font-bold text-white">Your <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Profile</span></h1>
           <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>{user?.email || 'Manage account, achievements, and referrals'}</p>
         </div>
         <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" className="absolute left-0 bottom-0 w-full pointer-events-none" style={{ height: '5vh', display: 'block' }}>
