@@ -96,6 +96,14 @@ GOOD (1-3 lines):
 - Your solution must be GENUINELY CORRECT through proper logic, not by cheating
 - If you cannot solve it correctly, say so - do not fake the output
 
+CRITICAL — NETWORK / API / EXTERNAL DATA PROBLEMS:
+When the problem involves HTTP requests, external APIs, file I/O, or external data:
+  1. Write code that actually makes those HTTP/API calls (urllib, requests, fetch, etc.)
+  2. NEVER look at expected test-case values and reverse-engineer them as hardcoded data
+  3. The test case expected output shows FORMAT — not data for you to hardcode
+  4. If you see expected output like "✓ alice: #1 Fix bug" — do NOT create a PR list
+     with those exact values hardcoded. Make the real API call and parse the response.
+
 ##############################################################################
 # RULE #2.6: COMPLETE STARTER CODE TEMPLATES - DO NOT REWRITE
 ##############################################################################

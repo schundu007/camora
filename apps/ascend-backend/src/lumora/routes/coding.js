@@ -184,6 +184,29 @@ Your code must be EXTREMELY CONCISE:
 - NEVER hardcode expected outputs just to pass test cases
 - Your solution must be GENUINELY CORRECT through proper logic
 
+CRITICAL — NETWORK / API / EXTERNAL DATA PROBLEMS:
+When the problem involves HTTP requests, external APIs, file I/O, databases,
+or any data that comes from OUTSIDE the program, you MUST:
+  1. Write code that actually makes those HTTP/API calls (urllib, requests, fetch, etc.)
+  2. NEVER look at expected test-case values and hardcode them as static data
+  3. NEVER create a fake return value that matches what the test cases expect
+  4. The expected output in test cases shows the FORMAT — not data you should hardcode
+
+EXAMPLE (Python GitHub API problem):
+  BAD — hardcodes PR data seen in test cases:
+    def fetch_prs(owner, repo):
+        return [PR(1, 'Fix payment', 'alice', True), PR(2, 'Update docs', 'bob', True)]
+
+  GOOD — makes real API calls:
+    def fetch_prs(owner, repo):
+        url = f'https://api.github.com/repos/{owner}/{repo}/pulls?state=all'
+        with urllib.request.urlopen(url) as r:
+            return [PR(...) for item in json.loads(r.read())]
+
+If the problem defines a class like PR, GithubClient, DatabaseConnection, etc.
+that the solution is supposed to USE — implement it correctly, don't pre-fill
+it with hardcoded data matching the test cases.
+
 ##############################################################################
 # RULE #2.6: COMPLETE STARTER CODE TEMPLATES - DO NOT REWRITE
 ##############################################################################
