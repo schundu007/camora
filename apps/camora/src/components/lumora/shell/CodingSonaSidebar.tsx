@@ -27,6 +27,7 @@ import { Citations } from '@/components/lumora/Citations';
 import { SonaMicButton } from './SonaMicButton';
 import { Icon } from '@/components/shared/Icons';
 import { dialogConfirm } from '@/components/shared/Dialog';
+import Chip from '@/components/shared/ui/Chip';
 import type { Citation } from '@/types';
 
 interface ChatMessage {
@@ -400,9 +401,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
                     >
                       <span className="font-display text-[10px] font-bold tracking-[0.14em] uppercase text-white">Sona</span>
                       {m.fromCache && (
-                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.15)', color: 'var(--cam-gold-leaf-lt)' }}>
-                          cached
-                        </span>
+                        <Chip variant="gold">cached</Chip>
                       )}
                     </div>
                     <div className="p-3">

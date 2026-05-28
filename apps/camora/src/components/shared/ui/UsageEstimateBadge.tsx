@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
+import Chip from './Chip';
 
 const API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -60,10 +61,10 @@ export function UsageEstimateBadge({ surface, className = '' }: { surface: strin
     : `Will use about ${formatDuration(data.estimate_seconds)} of your AI hours`;
 
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[11px] ${className}`} style={{ color: 'var(--text-muted)' }}>
+    <Chip variant="default" className={className}>
       <span className="w-1.5 h-1.5 rounded-full" style={{ background: dotColor }} aria-hidden="true" />
       <span>{message}</span>
-    </span>
+    </Chip>
   );
 }
 

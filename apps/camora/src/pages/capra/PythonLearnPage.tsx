@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
 import { PYTHON_TOPICS, type Topic } from '../../data/python-curriculum';
+import Chip from '@/components/shared/ui/Chip';
 
 const CodeBlock = ({ code }: { code: string }) => {
   const [copied, setCopied] = useState(false);
@@ -69,7 +70,7 @@ const TopicView = ({ topic }: { topic: Topic }) => {
         <div className="px-6 py-4 flex items-center justify-between" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
           <div className="flex items-center gap-3">
             <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>{topic.title}</span>
-            <span className="font-mono text-[10px] px-2 py-0.5 rounded-full capitalize" style={{ background: topic.track === 'beginner' ? 'color-mix(in oklab, var(--cam-primary) 15%, var(--bg-elevated))' : 'color-mix(in oklab, var(--cam-gold-leaf) 15%, var(--bg-elevated))', color: topic.track === 'beginner' ? 'var(--cam-primary)' : 'var(--cam-gold-leaf-dk)' }}>{topic.track}</span>
+            <Chip>{topic.track}</Chip>
           </div>
           <span className="font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>~{topic.estimatedMins} min</span>
         </div>
@@ -199,12 +200,12 @@ export default function PythonLearnPage() {
           <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.7)' }}>From variables to async — {PYTHON_TOPICS.length} topics, ~{Math.round(totalMins / 60)}h of material</p>
           <div className="flex items-center gap-3 flex-wrap">
             {[
-              { label: `${beginnerTopics.length} Beginner Topics`, color: 'var(--cam-primary)' },
-              { label: `${advancedTopics.length} Advanced Topics`, color: 'var(--cam-gold-leaf)' },
-              { label: 'Real-world Examples', color: 'rgba(255,255,255,0.7)' },
-              { label: 'Google · Netflix · NVIDIA', color: 'rgba(255,255,255,0.5)' },
+              { label: `${beginnerTopics.length} Beginner Topics`, variant: 'success' as const },
+              { label: `${advancedTopics.length} Advanced Topics`, variant: 'gold' as const },
+              { label: 'Real-world Examples', variant: 'default' as const },
+              { label: 'Google · Netflix · NVIDIA', variant: 'default' as const },
             ].map(b => (
-              <span key={b.label} className="text-xs font-medium px-3 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.07)', color: b.color, border: '1px solid rgba(255,255,255,0.12)' }}>{b.label}</span>
+              <Chip key={b.label} variant={b.variant}>{b.label}</Chip>
             ))}
           </div>
         </div>

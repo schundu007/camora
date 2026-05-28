@@ -6,6 +6,7 @@ import SiteFooter from '../../components/shared/SiteFooter';
 import SEO from '../../components/shared/SEO';
 import { dialogConfirm, dialogAlert } from '../../components/shared/Dialog';
 import { isOwner } from '../../lib/owner';
+import Chip from '@/components/shared/ui/Chip';
 
 const API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -216,9 +217,7 @@ export default function AdminTeamsPage() {
           <section className="mb-8">
             <h2 className="text-base font-bold mb-3 flex items-center gap-2">
               Pending refund requests
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(217, 119, 6, 0.15)', color: '#b45309' }}>
-                {refundRequests.length}
-              </span>
+              <Chip variant="warning">{refundRequests.length}</Chip>
             </h2>
             <div className="rounded-xl divide-y" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
               {refundRequests.map((rr) => (

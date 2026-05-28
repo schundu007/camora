@@ -1,3 +1,4 @@
+import Chip from '../../shared/ui/Chip';
 import CamoraLogo from '../../shared/CamoraLogo';
 
 interface ScoreCardProps {
@@ -101,9 +102,7 @@ export default function ScoreCard({
         </div>
 
         {/* Category pill */}
-        <span className="shrink-0 text-[11px] font-medium text-[var(--accent)] bg-[var(--accent)]/10 px-2 py-0.5 rounded-full">
-          {category}
-        </span>
+        <Chip className="shrink-0">{category}</Chip>
       </div>
     );
   }

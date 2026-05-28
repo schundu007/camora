@@ -10,6 +10,7 @@ import { prepAPI } from '../../../lib/api-client';
 import { sectionsToPrepSections, downloadPrepAsPdf, downloadPrepAsDocx } from '../../../lib/prepDownload';
 import { useCloudProvider } from '../../../hooks/useCloudProvider';
 import CloudProviderSelector from '../../shared/CloudProviderSelector';
+import Chip from '@/components/shared/ui/Chip';
 
 const STORAGE_KEY = 'lumora_prep_v8'; // v8: fix rawContent unwrapping
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -391,35 +392,15 @@ const paperCard = (accent: string) => {
   };
 }
 
-/** Difficulty pill — Easy/Medium/Hard with LC's exact colors. */
 const DifficultyPill = ({ value }: { value: string }) => {
   const v = String(value).toLowerCase();
   const senior = ['senior', 'staff', 'principal'].some((s) => v.includes(s));
-  const tone = v.includes('hard') || senior
-    ? LC.hard
-    : v.includes('medium') || v.includes('mid')
-      ? LC.medium
-      : LC.easy;
-  return (
-    <span
-      className="inline-flex items-center text-[11px] font-bold px-2.5 py-0.5 rounded-full"
-      style={{ background: tone.bg, color: tone.fg, border: `1px solid ${tone.border}` }}
-    >
-      {value}
-    </span>
-  );
+  const variant = v.includes('hard') || senior ? 'hard' : v.includes('medium') || v.includes('mid') ? 'medium' : 'easy';
+  return <Chip variant={variant}>{value}</Chip>;
 }
 
-/** Tag chip — navy pill for category/topic/value. */
-const TagChip = ({ label, color = LC.navy }: { label: string; color?: string }) => {
-  return (
-    <span
-      className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded"
-      style={{ background: `${color}14`, color, border: `1px solid ${color}35` }}
-    >
-      {label}
-    </span>
-  );
+const TagChip = ({ label }: { label: string; color?: string }) => {
+  return <Chip variant="default">{label}</Chip>;
 }
 
 /** Complexity badge — O(n), O(log n) — LC's time/space pill, dark mono on any theme. */
@@ -568,12 +549,7 @@ const ApproachCard = ({ approach, index }: { approach: any; index: number }) => 
         style={{ background: `${LC.approach}10`, borderBottom: `1px solid ${LC.approach}33` }}
       >
         <div className="flex items-baseline gap-2 flex-wrap mb-2">
-          <span
-            className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
-            style={{ background: `${LC.approach}20`, color: LC.approach }}
-          >
-            Approach {index + 1}
-          </span>
+          <Chip variant="default">Approach {index + 1}</Chip>
           <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{approach.name}</span>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -1372,15 +1348,8 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
     mark('technologies');
     const importancePill = (imp: any) => {
       const v = String(imp || '').toLowerCase();
-      const tone = v === 'high' || v === 'critical' ? LC.hard : v === 'medium' || v === 'mid' ? LC.medium : LC.easy;
-      return (
-        <span
-          className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-          style={{ background: tone.bg, color: tone.fg, border: `1px solid ${tone.border}` }}
-        >
-          {safeText(imp)}
-        </span>
-      );
+      const variant = v === 'high' || v === 'critical' ? 'hard' : v === 'medium' || v === 'mid' ? 'warning' : 'easy';
+      return <Chip variant={variant}>{safeText(imp)}</Chip>;
     };
     els.push(
       <div key="technologies" className="space-y-4">
@@ -1442,9 +1411,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                     {tech.questions.filter((q: any) => q && typeof q === 'object').map((q: any, qi: number) => (
                       <div key={qi} className="rounded-lg overflow-hidden" style={paperCard(LC.approach)}>
                         <div className="px-3 py-2 flex items-baseline gap-2 flex-wrap" style={{ background: `${LC.approach}14`, borderBottom: `1px solid ${LC.approach}25` }}>
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: `${LC.approach}20`, color: LC.approach }}>
-                            Q{qi + 1}
-                          </span>
+                          <Chip variant="default">Q{qi + 1}</Chip>
                           <span className="text-sm font-bold flex-1" style={{ color: 'var(--text-primary)' }}>{safeText(q.question)}</span>
                           {q.difficulty && <DifficultyPill value={q.difficulty} />}
                         </div>
@@ -1573,14 +1540,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
         {f.pill ? (
           <div className="flex flex-wrap gap-1.5">
             {formatted.map((it: { label: string; sub?: string }, i: number) => (
-              <span
-                key={i}
-                title={it.sub}
-                className="text-xs px-2.5 py-1 rounded-full"
-                style={{ background: `${f.color}10`, color: f.color, border: `1px solid ${f.color}30` }}
-              >
-                {it.label}
-              </span>
+              <Chip key={i} variant="default" title={it.sub}>{it.label}</Chip>
             ))}
           </div>
         ) : (
@@ -1636,9 +1596,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
       <div key="abbr">
         <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Abbreviations</div>
         <div className="flex flex-wrap gap-1.5">{data.abbreviations.map((a: any, i: number) => (
-          <span key={i} className="text-[10px] px-2 py-1 rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
-            <strong>{a.term || a.abbr || a.name}</strong>: {a.definition || a.full || a.meaning}
-          </span>
+          <Chip key={i} variant="default"><strong>{a.term || a.abbr || a.name}</strong>: {a.definition || a.full || a.meaning}</Chip>
         ))}</div>
       </div>
     );
@@ -2135,20 +2093,7 @@ const FormattedJD = ({ text }: { text: string }) => {
           style={cardChrome}
         >
           <NavyStrip />
-          <span
-            className="inline-flex items-center px-3 py-1 mb-3 rounded-full text-[10.5px] font-extrabold uppercase tracking-[0.18em]"
-            style={{
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--cam-gold-leaf)',
-              color: 'var(--cam-gold-leaf-text)',
-              boxShadow:
-                '0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.45)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-            }}
-          >
-            Position
-          </span>
+          <Chip variant="gold" className="mb-3">Position</Chip>
           <h3
             className="text-[22px] md:text-[26px] font-extrabold leading-tight tracking-tight"
             style={{ color: 'var(--cam-primary)' }}
@@ -2228,22 +2173,10 @@ const FormattedJD = ({ text }: { text: string }) => {
                   borderBottom: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 30%, transparent)',
                 }}
               >
-                {/* Glassy pill capsule label — gold-leaf border, gold-leaf-text colour */}
-                <span
-                  className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-[0.14em]"
-                  style={{
-                    background: 'var(--bg-elevated)',
-                    border: '1px solid var(--cam-gold-leaf)',
-                    color: 'var(--cam-gold-leaf-text)',
-                    boxShadow:
-                      '0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.45)',
-                    backdropFilter: 'blur(6px)',
-                    WebkitBackdropFilter: 'blur(6px)',
-                  }}
-                >
+                <Chip variant="gold" className="gap-2">
                   <span aria-hidden style={{ fontSize: 11 }}>{icon}</span>
                   {sec.title.replace(/^[a-z]/, (c) => c.toUpperCase())}
-                </span>
+                </Chip>
                 <span className="flex-1" />
                 <span
                   className="text-[10px] font-mono font-bold"
@@ -2934,7 +2867,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 )}
                 <span className="flex-1">{s.label}</span>
                 {sectionStatus[s.id] === 'pending' && generating && (
-                  <span className="text-[8px] px-1 py-0.5 rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>queued</span>
+                  <Chip variant="default" className="text-[8px]">queued</Chip>
                 )}
               </button>
             );
@@ -3109,7 +3042,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
               </h3>
               <div className="flex items-center gap-2">
                 {state.sections[activeSection] && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)' }}>Generated</span>
+                  <Chip variant="success">Generated</Chip>
                 )}
                 {hasRequiredDocs && (
                   <button

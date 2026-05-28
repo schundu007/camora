@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useMemo } from 'react';
+import Chip from '@/components/shared/ui/Chip';
 import SiteNav from '@/components/shared/SiteNav';
 import SiteFooter from '@/components/shared/SiteFooter';
 import { COMPANY_SEO_DATA, COMPANY_SLUGS } from '@/data/capra/companies/companyData';
@@ -8,12 +9,6 @@ const TYPE_COLORS: Record<string, { bg: string; text: string; label: string }> =
   coding: { bg: 'bg-[var(--cat-primary-bg)]', text: 'text-[var(--cat-primary)]', label: 'Coding' },
   'system-design': { bg: 'bg-[var(--cat-primary-bg)]', text: 'text-[var(--cat-primary)]', label: 'System Design' },
   behavioral: { bg: 'bg-[var(--cat-primary-bg)]', text: 'text-[var(--cat-primary)]', label: 'Behavioral' },
-};
-
-const DIFF_COLORS: Record<string, { bg: string; text: string }> = {
-  Easy: { bg: 'bg-[var(--easy-bg)]', text: 'text-[var(--easy)]' },
-  Medium: { bg: 'bg-[var(--medium-bg)]', text: 'text-[var(--medium)]' },
-  Hard: { bg: 'bg-[var(--hard-bg)]', text: 'text-[var(--hard)]' },
 };
 
 function getRelatedCompanies(currentSlug: string, count = 4): string[] {
@@ -77,15 +72,9 @@ export default function CompanyQuestionsPage() {
           <p className="mt-2 text-lg" style={{ color: 'rgba(255,255,255,0.85)' }}>{company.tagline}</p>
 
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>
-              {company.difficulty}
-            </span>
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.1)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)' }}>
-              {company.avgSalary}
-            </span>
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.1)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)' }}>
-              {company.interviewRounds} rounds
-            </span>
+            <Chip variant="gold">{company.difficulty}</Chip>
+            <Chip variant="default" className="!bg-white/10 !text-white border border-white/20">{company.avgSalary}</Chip>
+            <Chip variant="default" className="!bg-white/10 !text-white border border-white/20">{company.interviewRounds} rounds</Chip>
           </div>
         </div>
         <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" className="absolute left-0 bottom-0 w-full pointer-events-none" style={{ height: '6vh', display: 'block' }}>
@@ -129,7 +118,6 @@ export default function CompanyQuestionsPage() {
           <div className="space-y-3">
             {company.sampleQuestions.map((question, i) => {
               const typeStyle = TYPE_COLORS[question.type] ?? TYPE_COLORS.coding;
-              const qDiffColor = DIFF_COLORS[question.difficulty] ?? DIFF_COLORS.Medium;
               const isBlurred = i >= 3;
 
               return (
@@ -148,12 +136,8 @@ export default function CompanyQuestionsPage() {
                     </div>
                   )}
                   <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${typeStyle.bg} ${typeStyle.text}`}>
-                      {typeStyle.label}
-                    </span>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${qDiffColor.bg} ${qDiffColor.text}`}>
-                      {question.difficulty}
-                    </span>
+                    <Chip variant="default">{typeStyle.label}</Chip>
+                    <Chip variant={question.difficulty.toLowerCase()}>{question.difficulty}</Chip>
                   </div>
                   <p className="text-[var(--text-primary)] font-medium">{question.q}</p>
                 </div>

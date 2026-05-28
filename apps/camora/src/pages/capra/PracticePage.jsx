@@ -9,6 +9,7 @@ import { getAuthHeaders } from '../../utils/authHeaders.js';
 import { SectionCard } from '../../components/capra/ui';
 import { SessionTimer } from '../../components/shared/timer/SessionTimer';
 import { useWhiteboardState } from '../../hooks/useWhiteboardState';
+import Chip from '@/components/shared/ui/Chip';
 
 const ExcalidrawWhiteboard = lazy(() => import('../../components/shared/diagrams/ExcalidrawWhiteboard'));
 const DashboardPage = lazy(() => import('./DashboardPage'));
@@ -683,7 +684,6 @@ export default function PracticePage() {
   // Daily challenge — stable across re-renders (computed once per mount)
   const [dailyChallenge] = useState(() => getDailyChallenge());
   const dailyCategory = getDailyCategory(dailyChallenge);
-  const dc = diffColor(dailyChallenge.difficulty);
 
   const readiness = getReadiness(stats);
   const modeConfig = MODES.find(m => m.id === mode);
@@ -943,16 +943,10 @@ export default function PracticePage() {
                     actions={
                       <>
                         {scoreTrend.length >= 2 && (
-                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
-                            style={{
-                              background: 'rgba(255,255,255,0.08)',
-                              border: '1px solid rgba(255,255,255,0.16)',
-                              borderRadius: 999,
-                              color: 'rgba(255,255,255,0.85)',
-                            }}>
+                          <Chip variant="default" className="gap-1.5">
                             <span>Trend</span>
                             <Sparkline data={scoreTrend} width={48} height={14} />
-                          </span>
+                          </Chip>
                         )}
                         <button
                           onClick={async () => {
@@ -967,23 +961,15 @@ export default function PracticePage() {
                               setStats(getStats());
                             }
                           }}
-                          className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
-                          style={{
-                            background: 'rgba(255,255,255,0.06)',
-                            border: '1px solid rgba(255,255,255,0.16)',
-                            borderRadius: 999,
-                            color: 'rgba(255,255,255,0.9)',
-                            cursor: 'pointer',
-                          }}
+                          className="bg-transparent border-none p-0 cursor-pointer"
                         >
-                          Reset
+                          <Chip>Reset</Chip>
                         </button>
                       </>
                     }
                   >
                     <div style={{ display: 'grid', gap: 10, padding: 16 }}>
                     {stats.history.slice(0, 10).map((h, i) => {
-                      const hDC = diffColor(h.difficulty || 'medium');
                       const companyObj = COMPANIES.find(c => c.id === h.company);
                       return (
                         <div key={i} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', boxShadow: 'none' }}>
@@ -992,9 +978,9 @@ export default function PracticePage() {
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{catLabel(h.category || 'coding')}</span>
-                                <span style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', padding: '1px 6px', borderRadius: 99, background: hDC.bg, color: hDC.text }}>{h.difficulty || 'medium'}</span>
+                                <Chip variant={h.difficulty || 'medium'}>{h.difficulty || 'medium'}</Chip>
                                 {companyObj && companyObj.id !== 'all' && (
-                                  <span style={{ fontSize: 10, fontWeight: 500, padding: '1px 6px', borderRadius: 99, background: `${companyObj.color}15`, color: companyObj.color }}>{companyObj.label}</span>
+                                  <Chip variant="default">{companyObj.label}</Chip>
                                 )}
                               </div>
                               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
@@ -1058,17 +1044,17 @@ export default function PracticePage() {
               {/* Question card */}
               <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, marginBottom: 16, boxShadow: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', padding: '2px 8px', borderRadius: 99, background: diffColor(questions[currentIdx].difficulty).bg, color: diffColor(questions[currentIdx].difficulty).text }}>{questions[currentIdx].difficulty}</span>
-                  <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 99, background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>{catLabel(category)}</span>
-                  {questions[currentIdx].companies?.slice(0, 3).map(co => {
-                    const coObj = COMPANIES.find(c => c.id === co);
-                    return coObj ? (
-                      <span key={co} style={{ fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 99, background: `${coObj.color}10`, color: coObj.color }}>{coObj.label}</span>
-                    ) : null;
-                  })}
-                  {questions[currentIdx].topics?.slice(0, 2).map(t => (
-                    <span key={t} style={{ fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 99, background: 'var(--accent-subtle)', color: 'var(--accent)' }}>{t}</span>
-                  ))}
+                                  <Chip variant={questions[currentIdx].difficulty}>{questions[currentIdx].difficulty}</Chip>
+                                  <Chip>{catLabel(category)}</Chip>
+                                  {questions[currentIdx].companies?.slice(0, 3).map(co => {
+                                    const coObj = COMPANIES.find(c => c.id === co);
+                                    return coObj ? (
+                                      <Chip key={co} variant="default">{coObj.label}</Chip>
+                                    ) : null;
+                                  })}
+                                  {questions[currentIdx].topics?.slice(0, 2).map(t => (
+                                    <Chip key={t}>{t}</Chip>
+                                  ))}
                 </div>
                 <h2 className="practice-display" style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px' }}>
                   {questions[currentIdx].q}
@@ -1536,11 +1522,9 @@ export default function PracticePage() {
                     Focus Areas
                   </h3>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {[...new Set(aiModelAnswers.flatMap(a => a.improvementTips || []))].slice(0, 5).map((tip, i) => (
-                      <span key={i} style={{ fontSize: 12, color: 'var(--warning-text)', padding: '5px 12px', borderRadius: 99, background: 'var(--bg-elevated)', fontWeight: 500 }}>
-                        {tip}
-                      </span>
-                    ))}
+                                  {[...new Set(aiModelAnswers.flatMap(a => a.improvementTips || []))].slice(0, 5).map((tip, i) => (
+                                    <Chip key={i} variant="warning">{tip}</Chip>
+                                  ))}
                   </div>
                 </div>
               )}

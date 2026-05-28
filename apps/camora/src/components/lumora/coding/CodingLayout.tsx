@@ -6,6 +6,7 @@ import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import { LANGUAGES, getLanguageById } from '@/data/languages';
 import { dialogAlert } from '@/components/shared/Dialog';
+import Chip from '@/components/shared/ui/Chip';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
@@ -2466,9 +2467,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                                 {sd.pitch.keyPoints?.length > 0 && (
                                   <div className="flex flex-wrap gap-1.5 pt-1">
                                     {sd.pitch.keyPoints.map((p: string, j: number) => (
-                                      <span key={j} className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-full" style={{ background: t.badgeBg, color: t.badgeText, border: `1px solid ${t.cardBorder}` }}>
+                                      <Chip key={j} variant="default" className="gap-1">
                                         <span className="w-1 h-1 rounded-full" style={{ background: t.dotColor }} />{p}
-                                      </span>
+                                      </Chip>
                                     ))}
                                   </div>
                                 )}
@@ -2493,9 +2494,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           {sd.pitch.keyPoints?.length > 0 && (
                             <div className="flex flex-wrap gap-1.5 pt-1">
                               {sd.pitch.keyPoints.map((p: string, i: number) => (
-                                <span key={i} className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-full" style={{ background: t.badgeBg, color: t.badgeText, border: `1px solid ${t.cardBorder}` }}>
+                                <Chip key={i} variant="default" className="gap-1">
                                   <span className="w-1 h-1 rounded-full" style={{ background: t.dotColor }} />{p}
-                                </span>
+                                </Chip>
                               ))}
                             </div>
                           )}

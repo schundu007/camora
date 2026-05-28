@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../components/shared/Icons.jsx';
 import { PROGRAMIZ_PATHS } from '../../data/capra/programizPaths.js';
+import Chip from '@/components/shared/ui/Chip';
 
 type Level = 'beginner' | 'intermediate' | 'advanced';
 
@@ -80,9 +81,7 @@ function PathCard({ path }: { path: LearnPath }) {
       <span className="text-[13px] font-semibold leading-snug flex-1" style={{ color: 'var(--text-primary)' }}>
         {path.title}
       </span>
-      <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full capitalize self-start" style={{ background: chip.bg, color: chip.text }}>
-        {path.level}
-      </span>
+      <Chip>{path.level}</Chip>
     </button>
   );
 }
@@ -143,9 +142,7 @@ export default function ProgramizLearnPage() {
           <h1 className="text-[15px] font-bold" style={{ color: 'var(--cam-gold-leaf)' }}>
             Programiz Python
           </h1>
-          <span className="font-mono text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)', color: 'var(--cam-gold-leaf)' }}>
-            {PROGRAMIZ_PATHS.length} tutorials
-          </span>
+          <Chip variant="gold">{PROGRAMIZ_PATHS.length} tutorials</Chip>
         </div>
         <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
           Curated Python tutorials from Programiz — from basics to advanced topics.

@@ -5,6 +5,7 @@ import { useTheme } from '../../hooks/useTheme';
 import CamoraLogo from './CamoraLogo';
 import UserDropdown from './UserDropdown';
 import { HourMeterChip } from './ui/HourMeterChip';
+import Chip from '@/components/shared/ui/Chip';
 import { cn } from '../../utils/cn';
 import { NAV_LINKS } from '../../lib/constants';
 
@@ -66,15 +67,16 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
             <button
               type="button"
               onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
-              className="hidden sm:flex items-center gap-1 ml-3 px-2.5 py-1.5 rounded-full text-[12px] font-semibold transition-colors"
-              style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(3,19,46,0.88)', border: '1px solid rgba(201,162,39,0.50)' }}
+              className="hidden sm:flex items-center ml-3"
               title="Back"
               aria-label="Back"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-              <span>Back</span>
+              <Chip variant="default" className="gap-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+                <span>Back</span>
+              </Chip>
             </button>
           )}
 

@@ -8,6 +8,7 @@ import CamoraLogo from '../shared/CamoraLogo';
 // systemDesignTopics, behavioralTopics). It's only opened on Cmd+K, so
 // loading those eagerly inflates every page that mounts TopBar.
 const CommandPalette = lazy(() => import('./CommandPalette'));
+import Chip from '@/components/shared/ui/Chip';
 import { NAV_LINKS } from '../../lib/constants';
 
 interface TopBarProps {
@@ -87,15 +88,16 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             <button
               type="button"
               onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
-              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[12px] font-semibold transition-colors"
-              style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(3,19,46,0.88)', border: '1px solid rgba(201,162,39,0.50)' }}
+              className="hidden sm:flex items-center"
               title="Back"
               aria-label="Back"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-              <span>Back</span>
+              <Chip variant="default" className="gap-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+                <span>Back</span>
+              </Chip>
             </button>
           )}
 

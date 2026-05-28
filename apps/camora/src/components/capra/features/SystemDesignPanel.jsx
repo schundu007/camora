@@ -7,6 +7,7 @@ import { useCloudFormatter } from '../../../hooks/useCloudFormatter.ts';
 import CloudProviderSelector from '../../shared/CloudProviderSelector.tsx';
 import { SectionCard } from '../ui';
 import { resolvePreGeneratedDiagram } from '../../../lib/preGeneratedDiagrams.ts';
+import Chip from '@/components/shared/ui/Chip';
 
 
 /**
@@ -146,7 +147,7 @@ function CollapsibleSection({ title, icon, color, children, defaultOpen = true, 
       >
         <span className="text-xs font-semibold uppercase tracking-wide flex items-center gap-2 text-[var(--text-secondary)]">
           {title}
-          {badge && <span className="px-1.5 py-0.5 bg-brand-400/10 text-brand-400 border border-brand-400/30 rounded text-xs font-medium">{badge}</span>}
+          {badge && <Chip variant="success">{badge}</Chip>}
         </span>
         <svg
           className={`w-3.5 h-3.5 text-[var(--text-muted)] transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -568,17 +569,9 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
               Cloud Architecture
             </span>
             {diagramData?.cloudProvider && (
-              <span
-                className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
-                style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.16)',
-                  borderRadius: 999,
-                  color: 'rgba(255,255,255,0.85)',
-                }}
-              >
+              <Chip variant="default" className="text-[10px] font-bold uppercase tracking-wider">
                 {diagramData.cloudProvider}
-              </span>
+              </Chip>
             )}
           </div>
           {diagramData && (
@@ -791,10 +784,10 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
               <SectionCard title="Scalability" className="col-span-full" accent="var(--cam-gold-leaf)">
                 <div className="flex flex-wrap gap-1.5">
                   {systemDesign.scalability.map((item, i) => (
-                    <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border)]" title={item}>
+                    <Chip key={i} variant="default" title={item}>
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0" />
                       {item}
-                    </span>
+                    </Chip>
                   ))}
                 </div>
               </SectionCard>
@@ -859,9 +852,9 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
               <SectionCard title="Architecture Components" className="col-span-full" accent="var(--cam-gold-leaf)">
                 <div className="flex flex-wrap gap-1 mb-2">
                   {systemDesign.architecture.components?.map((component, i) => (
-                    <span key={i} className="px-1.5 py-0.5 bg-[var(--bg-elevated)] text-[var(--text-primary)] text-xs rounded border border-[var(--border)]">
+                    <Chip key={i} variant="default">
                       {component}
-                    </span>
+                    </Chip>
                   ))}
                 </div>
                 {systemDesign.architecture.description && (
@@ -878,13 +871,13 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   {systemDesign.apiDesign.map((api, i) => (
                     <div key={i} className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded p-2">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`px-1.5 py-0.5 text-xs font-bold rounded ${
-                          api.method === 'GET' ? 'bg-blue-100 text-blue-700' :
-                          api.method === 'POST' ? 'bg-[var(--success)]/10 text-[var(--success)]' :
-                          api.method === 'PUT' ? 'bg-yellow-100 text-yellow-700' :
-                          api.method === 'DELETE' ? 'bg-red-100 text-red-700' :
-                          'bg-[var(--bg-elevated)] text-[var(--text-secondary)]'
-                        }`}>{api.method}</span>
+                        <Chip variant={
+                          api.method === 'GET' ? 'default' :
+                          api.method === 'POST' ? 'success' :
+                          api.method === 'PUT' ? 'warning' :
+                          api.method === 'DELETE' ? 'danger' :
+                          'default'
+                        } className="text-xs font-bold">{api.method}</Chip>
                         <code className="text-xs font-mono text-[var(--text-primary)]">{api.endpoint}</code>
                       </div>
                       <p className="text-xs text-[var(--text-secondary)] leading-snug">{fmtCloud(api.description)}</p>
@@ -992,8 +985,8 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                   {systemDesign.techJustifications.map((item, i) => (
                     <div key={i} className="rounded-lg p-3 bg-[var(--bg-elevated)] border border-[var(--border)] hover:border-[var(--accent)] transition-colors">
                       <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                        <span className="px-2 py-0.5 bg-[var(--accent)] text-white text-xs font-semibold rounded-md">{item.tech}</span>
-                        {item.category && <span className="px-2 py-0.5 bg-[var(--bg-surface)] text-[var(--text-secondary)] text-xs font-medium rounded-md border border-[var(--border)]">{item.category}</span>}
+                        <Chip variant="default">{item.tech}</Chip>
+                        {item.category && <Chip variant="default">{item.category}</Chip>}
                       </div>
                       <p className="text-sm text-[var(--text-primary)] leading-snug line-clamp-3">{item.why}</p>
                       {item.alternatives && <p className="text-xs text-[var(--text-muted)] mt-1.5 truncate"><span className="font-semibold text-[var(--text-secondary)]">Alt:</span> {item.alternatives}</p>}

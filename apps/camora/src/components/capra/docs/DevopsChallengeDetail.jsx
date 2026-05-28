@@ -1,5 +1,6 @@
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import Chip from '@/components/shared/ui/Chip';
 
 const DIFFICULTY_STYLES = {
   Easy:         { color: '#22c55e', bg: 'rgba(34,197,94,0.12)',   border: 'rgba(34,197,94,0.25)' },
@@ -28,57 +29,16 @@ const SKILL_COLORS = {
 };
 
 function DifficultyPill({ difficulty }) {
-  const s = DIFFICULTY_STYLES[difficulty] || DIFFICULTY_STYLES.Easy;
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '3px 10px',
-        borderRadius: '9999px',
-        fontSize: 12,
-        fontWeight: 600,
-        color: s.color,
-        background: s.bg,
-        border: `1px solid ${s.border}`,
-        letterSpacing: '0.01em',
-      }}
-    >
-      {difficulty}
-    </span>
-  );
+  return <Chip variant={difficulty.toLowerCase()}>{difficulty}</Chip>;
 }
 
 function SkillBadge({ skill }) {
   const color = SKILL_COLORS[skill] || '#6b7280';
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 5,
-        padding: '3px 10px',
-        borderRadius: '9999px',
-        fontSize: 12,
-        fontWeight: 600,
-        color,
-        background: `${color}1A`,
-        border: `1px solid ${color}40`,
-        letterSpacing: '0.01em',
-      }}
-    >
-      <span
-        style={{
-          width: 7,
-          height: 7,
-          borderRadius: '50%',
-          background: color,
-          display: 'inline-block',
-          flexShrink: 0,
-        }}
-      />
+    <Chip variant="default">
+      <span className="inline-block w-[7px] h-[7px] rounded-full shrink-0 mr-1" style={{ background: color }} />
       {skill}
-    </span>
+    </Chip>
   );
 }
 

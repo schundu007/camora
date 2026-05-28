@@ -8,6 +8,7 @@ import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import TopicIllustration from './TopicIllustration';
 import { DatabricksThumb } from '../../shared/DatabricksThumb';
 import { SectionHero, CategoryHeader } from '../ui';
+import Chip from '@/components/shared/ui/Chip';
 
 /* ── Per-category color family for DatabricksThumb tiles on the
    Prepare overview. Stays inside the existing Camora palette —
@@ -770,13 +771,13 @@ export default function DocsPage({ onBack }) {
                   if (window.history.length > 1) navigate(-1);
                   else navigate('/');
                 }}
-                className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full font-semibold text-xs transition-colors"
-                style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(3,19,46,0.88)', border: '1px solid rgba(201,162,39,0.50)' }}
                 title="Back"
                 aria-label="Back"
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-                Back
+                <Chip variant="default" className="flex items-center gap-1 cursor-pointer">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                  Back
+                </Chip>
               </button>
               {/* Breadcrumb */}
               <div className="flex items-center gap-2 text-sm min-w-0 flex-1">
@@ -975,17 +976,7 @@ export default function DocsPage({ onBack }) {
                         >
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
                           <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Topic Categories</span>
-                          <span
-                            className="ml-auto text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
-                            style={{
-                              background: 'rgba(255,255,255,0.08)',
-                              border: '1px solid rgba(255,255,255,0.16)',
-                              borderRadius: 999,
-                              color: 'rgba(255,255,255,0.85)',
-                            }}
-                          >
-                            Browse
-                          </span>
+                          <Chip className="ml-auto">Browse</Chip>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                           {overviewCategories.map((cat) => {
@@ -1093,9 +1084,7 @@ export default function DocsPage({ onBack }) {
                                     icon={<Icon name={resource.icon} size={22} style={{ color: '#FFFFFF' }} />}
                                     title={resource.title}
                                   />
-                                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
-                                    {resource.badge}
-                                  </span>
+                                  <Chip>{resource.badge}</Chip>
                                 </div>
                                 <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{resource.title}</h3>
                                 <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{resource.desc}</p>
@@ -1136,7 +1125,7 @@ export default function DocsPage({ onBack }) {
                                 />
                                 <div>
                                   <h3 className="landing-display text-sm font-bold text-[var(--text-primary)]">{card.title}</h3>
-                                  <span className="text-[10px] font-bold landing-mono px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', color: 'var(--accent)' }}>{card.step}</span>
+                                  <Chip>{card.step}</Chip>
                                 </div>
                               </div>
                               <div className="flex flex-col gap-2.5">
@@ -1293,7 +1282,7 @@ export default function DocsPage({ onBack }) {
                         <div className="px-4 pb-3 flex flex-wrap gap-1.5 items-center">
                           <span className="text-[10px] text-[var(--accent-hover)] font-semibold uppercase tracking-wider landing-mono mr-1">Focus areas:</span>
                           {focusTags.map((tag) => (
-                            <span key={tag} className="text-xs px-2 py-0.5 rounded-md bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--accent-hover)] landing-body font-medium">{tag}</span>
+                            <Chip key={tag}>{tag}</Chip>
                           ))}
                         </div>
                       )}
@@ -1320,7 +1309,7 @@ export default function DocsPage({ onBack }) {
                             <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Arrays & Hashing', 'Trees & Graphs', 'Dynamic Programming', 'Sliding Window', 'Binary Search', 'Backtracking'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <Chip key={tag}>{tag}</Chip>
                               ))}
                             </div>
                           </div>
@@ -1341,7 +1330,7 @@ export default function DocsPage({ onBack }) {
                             <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>System Design</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Scalability', 'Load Balancing', 'Caching', 'Database Sharding', 'Message Queues', 'CAP Theorem'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <Chip key={tag}>{tag}</Chip>
                               ))}
                             </div>
                           </div>
@@ -1362,7 +1351,7 @@ export default function DocsPage({ onBack }) {
                             <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Behavioral Questions</h2>
                             <div className="flex flex-wrap gap-2">
                               {['STAR Method', 'Leadership', 'Conflict Resolution', 'Teamwork', 'Failure Stories', 'Company Research'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <Chip key={tag}>{tag}</Chip>
                               ))}
                             </div>
                           </div>
@@ -1383,7 +1372,7 @@ export default function DocsPage({ onBack }) {
                             <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
                             <div className="flex flex-wrap gap-2">
                               {['OOP Principles', 'SOLID', 'Design Patterns', 'Class Diagrams', 'UML', 'Clean Architecture'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <Chip key={tag}>{tag}</Chip>
                               ))}
                             </div>
                           </div>
@@ -1404,7 +1393,7 @@ export default function DocsPage({ onBack }) {
                             <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Service Mesh', 'Circuit Breakers', 'Event Sourcing', 'CQRS', 'API Gateway', 'Saga Pattern'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <Chip key={tag}>{tag}</Chip>
                               ))}
                             </div>
                           </div>
@@ -1425,7 +1414,7 @@ export default function DocsPage({ onBack }) {
                             <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Indexing', 'Replication', 'Sharding', 'ACID vs BASE', 'Window Functions', 'CTEs', 'Complex Joins', 'Query Optimization'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <Chip key={tag}>{tag}</Chip>
                               ))}
                             </div>
                           </div>
@@ -1446,7 +1435,7 @@ export default function DocsPage({ onBack }) {
                             <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Full-Stack Apps', 'API Design', 'CI/CD', 'Testing', 'Documentation', 'Open Source'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <Chip key={tag}>{tag}</Chip>
                               ))}
                             </div>
                           </div>
@@ -1467,7 +1456,7 @@ export default function DocsPage({ onBack }) {
                             <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Frontend', 'Backend', 'Full-Stack', 'DevOps', 'ML Engineering', 'Staff Engineer'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <Chip key={tag}>{tag}</Chip>
                               ))}
                             </div>
                           </div>
@@ -1488,7 +1477,7 @@ export default function DocsPage({ onBack }) {
                             <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Netflix Tech', 'Uber Engineering', 'Stripe Blog', 'Meta Engineering', 'AWS Architecture', 'Google SRE'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <Chip key={tag}>{tag}</Chip>
                               ))}
                             </div>
                           </div>
@@ -1509,7 +1498,7 @@ export default function DocsPage({ onBack }) {
                             <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Site Reliability Engineering</h2>
                             <div className="flex flex-wrap gap-2">
                               {['SLOs & SLAs', 'Error Budgets', 'Incident Response', 'Observability', 'On-Call', 'Capacity Planning'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <Chip key={tag}>{tag}</Chip>
                               ))}
                             </div>
                           </div>
@@ -1530,7 +1519,7 @@ export default function DocsPage({ onBack }) {
                             <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>DevOps</h2>
                             <div className="flex flex-wrap gap-2">
                               {['CI/CD', 'Infrastructure as Code', 'Containers & Kubernetes', 'Monitoring', 'Cloud Native', 'DevSecOps'].map(tag => (
-                                <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                                <Chip key={tag}>{tag}</Chip>
                               ))}
                             </div>
                           </div>
@@ -1621,16 +1610,14 @@ export default function DocsPage({ onBack }) {
                                 const hard = topic.commonProblems.filter(p => p.difficulty === 'Hard').length;
                                 return (
                                   <div className="flex items-center gap-1">
-                                    {easy > 0 && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ color: '#16a34a', background: 'rgba(22,163,74,0.08)' }}>{easy}E</span>}
-                                    {med > 0 && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ color: '#b45309', background: 'rgba(180,83,9,0.08)' }}>{med}M</span>}
-                                    {hard > 0 && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ color: '#dc2626', background: 'rgba(220,38,38,0.08)' }}>{hard}H</span>}
+                                    {easy > 0 && <Chip variant="easy">{easy}E</Chip>}
+                                    {med > 0 && <Chip variant="medium">{med}M</Chip>}
+                                    {hard > 0 && <Chip variant="hard">{hard}H</Chip>}
                                   </div>
                                 );
                               })()}
                               {!topic.commonProblems && (
-                                <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
-                                  {topic.keyQuestions?.length || 0}Q
-                                </span>
+                                <Chip>{topic.keyQuestions?.length || 0}Q</Chip>
                               )}
                               <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-[color,transform] duration-150" />
                             </div>
@@ -1670,9 +1657,7 @@ export default function DocsPage({ onBack }) {
                                   <td className="py-2 landing-mono text-xs text-[var(--accent)]">{item.complexity}</td>
                                   <td className="py-2 text-[var(--text-primary)] landing-body">{item.desc}</td>
                                   <td className="py-2 text-right">
-                                    <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border font-medium ${item.cls}`}>
-                                      {item.rating}
-                                    </span>
+                                    <Chip>{item.rating}</Chip>
                                   </td>
                                 </tr>
                               ))}
@@ -1755,9 +1740,9 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
+                                  <Chip>
                                     {locked ? <Icon name="lock" size={9} /> : (topic.keyQuestions?.length || topic.questions || 0) + 'Q'}
-                                  </span>
+                                  </Chip>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
@@ -1790,11 +1775,6 @@ export default function DocsPage({ onBack }) {
                         : systemDesigns;
                       const categoryDesigns = filteredDesigns.filter(d => systemDesignProblemCategoryMap[d.id] === category.id);
                       if (categoryDesigns.length === 0) return null;
-                      const difficultyStyles = {
-                        'Easy': 'font-medium text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border)]',
-                        'Medium': 'font-semibold text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border)]',
-                        'Hard': 'font-bold text-[var(--accent)] bg-[var(--bg-surface)] border border-[var(--border)]',
-                      };
                       return (
                         <div key={category.id} className="rounded overflow-hidden border-0">
                           {/* Category Header — global navy-strip + gold-leaf chrome */}
@@ -1809,22 +1789,12 @@ export default function DocsPage({ onBack }) {
                               <Icon name={category.icon} size={12} style={{ color: 'var(--cam-gold-leaf-lt)' }} />
                             </div>
                             <h3 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap landing-display">{category.name}</h3>
-                            <span
-                              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
-                              style={{
-                                background: 'rgba(255,255,255,0.08)',
-                                border: '1px solid rgba(255,255,255,0.16)',
-                                borderRadius: 999,
-                                color: 'rgba(255,255,255,0.85)',
-                              }}
-                            >
-                              {categoryDesigns.length} systems
-                            </span>
+                            <Chip>{categoryDesigns.length} systems</Chip>
                           </div>
                           {/* Designs in Category */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryDesigns.map((design) => {
-                              const diffStyle = difficultyStyles[design.difficulty] || difficultyStyles['Medium'];
+                              const diffVariant = ({ Easy: 'easy', Medium: 'medium', Hard: 'hard' })[design.difficulty] || 'medium';
                               const designProblem = `Design ${design.title}. ${design.description || design.subtitle || ''}`;
                               const designLocked = contentAccess.isTopicLocked(activePage, design.id);
                               return (
@@ -1846,14 +1816,12 @@ export default function DocsPage({ onBack }) {
                                     )}
                                     <div>
                                       <span className="text-sm landing-body font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-hover)] transition-colors">{design.title}</span>
-                                      {design.isNew && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 ml-2 font-bold">NEW</span>}
+                                      {design.isNew && <Chip variant="success" className="ml-2">NEW</Chip>}
                                       <span className="text-[var(--text-muted)] text-xs ml-2 hidden md:inline landing-body">{design.subtitle}</span>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border font-medium ${diffStyle}`}>
-                                      {design.difficulty}
-                                    </span>
+                                    <Chip variant={diffVariant}>{design.difficulty}</Chip>
                                     <Link
                                       to={`/capra/design?problem=${encodeURIComponent(designProblem)}&autosolve=true`}
                                       className="px-3 py-1.5 rounded text-xs font-semibold bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-1.5 landing-body"
@@ -1898,7 +1866,7 @@ export default function DocsPage({ onBack }) {
                           />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'font-medium text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border)]', Medium: 'font-semibold text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border)]', Hard: 'font-bold text-[var(--accent)] bg-[var(--bg-surface)] border border-[var(--border)]' }[problem.difficulty] || 'font-medium text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border)]';
+                              const diffVariant = { Easy: 'easy', Medium: 'medium', Hard: 'hard' }[problem.difficulty] || 'medium';
                               return (
                                 <div
                                   key={problem.id}
@@ -1916,14 +1884,12 @@ export default function DocsPage({ onBack }) {
                                     )}
                                     <div>
                                       <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{problem.title}</span>
-                                      {problem.isNew && <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 ml-2 font-bold">NEW</span>}
+                                      {problem.isNew && <Chip variant="success" className="ml-2">NEW</Chip>}
                                       <span className="text-[var(--text-muted)] text-xs ml-2 hidden md:inline landing-body">{problem.subtitle}</span>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border font-medium ${diffStyle}`}>
-                                      {problem.difficulty}
-                                    </span>
+                                    <Chip variant={diffVariant}>{problem.difficulty}</Chip>
                                     <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                   </div>
                                 </div>
@@ -1973,9 +1939,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
-                                    {topic.keyQuestions?.length || 0}Q
-                                  </span>
+                                  <Chip>{topic.keyQuestions?.length || 0}Q</Chip>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
@@ -2024,9 +1988,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
-                                    {topic.keyQuestions?.length || 0}Q
-                                  </span>
+                                  <Chip>{topic.keyQuestions?.length || 0}Q</Chip>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
@@ -2075,9 +2037,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
-                                    {topic.keyQuestions?.length || 0}Q
-                                  </span>
+                                  <Chip>{topic.keyQuestions?.length || 0}Q</Chip>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
@@ -2126,9 +2086,7 @@ export default function DocsPage({ onBack }) {
                                   <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
-                                    {topic.keyQuestions?.length || 0}Q
-                                  </span>
+                                  <Chip>{topic.keyQuestions?.length || 0}Q</Chip>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
@@ -2166,9 +2124,7 @@ export default function DocsPage({ onBack }) {
                               <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
                             </div>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
-                                {topic.concepts?.length || topic.primitives?.length || topic.problems?.length || 0} items
-                              </span>
+                              <Chip>{topic.concepts?.length || topic.primitives?.length || topic.problems?.length || 0} items</Chip>
                               <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                             </div>
                           </div>
@@ -2252,9 +2208,9 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
+                                  <Chip>
                                     {locked ? <Icon name="lock" size={9} /> : (topic.keyQuestions?.length || topic.questions || 0) + 'Q'}
-                                  </span>
+                                  </Chip>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
@@ -2291,7 +2247,7 @@ export default function DocsPage({ onBack }) {
                           />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryProblems.map((problem) => {
-                              const diffStyle = { Easy: 'font-medium text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border)]', Medium: 'font-semibold text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border)]', Hard: 'font-bold text-[var(--accent)] bg-[var(--bg-surface)] border border-[var(--border)]' }[problem.difficulty] || 'font-medium text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border)]';
+                              const diffVariant = { Easy: 'easy', Medium: 'medium', Hard: 'hard' }[problem.difficulty] || 'medium';
                               return (
                                 <div
                                   key={problem.id}
@@ -2313,7 +2269,7 @@ export default function DocsPage({ onBack }) {
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded border font-medium ${diffStyle}`}>{problem.difficulty}</span>
+                                    <Chip variant={diffVariant}>{problem.difficulty}</Chip>
                                     <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                   </div>
                                 </div>
@@ -2404,7 +2360,7 @@ export default function DocsPage({ onBack }) {
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5">
                                 <span className="text-xs font-bold landing-display" style={{ color: 'var(--accent)' }}>{step.title}</span>
-                                <span className="text-[9px] landing-mono px-1 py-px rounded-full font-medium" style={{ color: 'var(--accent)', background: 'var(--bg-elevated)' }}>{step.timing}</span>
+                                <Chip>{step.timing}</Chip>
                               </div>
                               <p className="text-[11px] text-[var(--text-muted)] landing-body leading-tight truncate">{step.desc}</p>
                             </div>
@@ -2460,9 +2416,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
-                                    {topic.keyQuestions?.length || topic.sampleQuestions?.length || 0}Q
-                                  </span>
+                                  <Chip>{topic.keyQuestions?.length || topic.sampleQuestions?.length || 0}Q</Chip>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
@@ -2507,21 +2461,15 @@ export default function DocsPage({ onBack }) {
                                 <p className="landing-body text-[var(--text-muted)] text-xs mt-0.5">{company.subtitle}</p>
                               </div>
                             </div>
-                            <span className="text-[10px] landing-mono px-2 py-0.5 rounded-full border text-[var(--accent)] flex-shrink-0" style={{ borderColor: 'rgba(38,97,156,0.2)', background: 'var(--bg-elevated)' }}>
-                              {company.keyQuestions?.length || 0}Q
-                            </span>
+                            <Chip className="flex-shrink-0">{company.keyQuestions?.length || 0}Q</Chip>
                           </div>
                           {company.principles && company.principles.length > 0 && (
                             <div className="flex flex-wrap gap-1.5">
                               {company.principles.slice(0, 5).map((principle, i) => (
-                                <span key={i} className="landing-mono text-[10px] px-2 py-0.5 rounded-full border text-[var(--text-muted)]" style={{ borderColor: 'rgba(38,97,156,0.15)', background: 'transparent' }}>
-                                  {principle}
-                                </span>
+                                <Chip key={i}>{principle}</Chip>
                               ))}
                               {company.principles.length > 5 && (
-                                <span className="landing-mono text-[10px] px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--text-muted)]">
-                                  +{company.principles.length - 5}
-                                </span>
+                                <Chip>+{company.principles.length - 5}</Chip>
                               )}
                             </div>
                           )}
@@ -2552,7 +2500,7 @@ export default function DocsPage({ onBack }) {
                             <div className="w-8 h-8 rounded flex items-center justify-center transition-colors" style={{ background: 'var(--bg-elevated)' }}>
                               <Icon name={tip.icon} size={14} style={{ color: 'var(--accent)' }} />
                             </div>
-                            <span className="text-[10px] landing-mono font-bold px-2 py-0.5 rounded-full" style={{ color: 'var(--accent)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>{tip.metric}</span>
+                            <Chip>{tip.metric}</Chip>
                           </div>
                           <h3 className="landing-display font-semibold text-sm text-[var(--text-primary)] mb-1">{tip.title}</h3>
                           <p className="landing-body text-xs text-[var(--text-muted)] leading-relaxed">{tip.desc}</p>
@@ -2602,9 +2550,7 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
-                                    {topic.keyQuestions?.length || 0}Q
-                                  </span>
+                                  <Chip>{topic.keyQuestions?.length || 0}Q</Chip>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
@@ -2654,9 +2600,9 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
+                                  <Chip>
                                     {locked ? <Icon name="lock" size={9} /> : (topic.keyQuestions?.length || topic.questions || 0) + 'Q'}
-                                  </span>
+                                  </Chip>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
@@ -2699,9 +2645,9 @@ export default function DocsPage({ onBack }) {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
+                                  <Chip>
                                     {locked ? <Icon name="lock" size={9} /> : (topic.keyQuestions?.length || topic.questions || 0) + 'Q'}
-                                  </span>
+                                  </Chip>
                                   <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                 </div>
                               </div>
@@ -2767,14 +2713,10 @@ export default function DocsPage({ onBack }) {
                                       </div>
                                       <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{topic.description}</p>
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <span className={`text-[10px] landing-mono px-1.5 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border)] uppercase tracking-[0.1em] ${
-                                          topic.difficulty === 'beginner' ? 'font-medium text-[var(--text-muted)]' :
-                                          topic.difficulty === 'intermediate' ? 'font-semibold text-[var(--text-primary)]' :
-                                          'font-bold text-[var(--accent)]'
-                                        }`}>{topic.difficulty}</span>
+                                        <Chip variant={topic.difficulty === 'beginner' ? 'easy' : topic.difficulty === 'intermediate' ? 'medium' : 'hard'}>{topic.difficulty}</Chip>
                                         <span className="text-[10px] landing-mono text-[var(--text-muted)]">{topic.estimatedTime}</span>
                                         {topic.techStack?.slice(0, 3).map(tech => (
-                                          <span key={tech} className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1 py-0.5 rounded">{tech}</span>
+                                          <Chip key={tech}>{tech}</Chip>
                                         ))}
                                       </div>
                                     </div>
@@ -2846,9 +2788,7 @@ export default function DocsPage({ onBack }) {
                                       </div>
                                       <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{topic.description}</p>
                                       <div className="flex items-center gap-2">
-                                        <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded border border-[var(--border)] font-semibold">
-                                          {topic.phases?.length || 0} phases
-                                        </span>
+                                        <Chip>{topic.phases?.length || 0} phases</Chip>
                                         <span className="text-[10px] landing-mono text-[var(--text-muted)]">
                                           {topic.phases?.reduce((acc, p) => acc + p.topics.length, 0) || 0} topics
                                         </span>
@@ -2956,9 +2896,7 @@ export default function DocsPage({ onBack }) {
                                       </div>
                                       <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{topic.description}</p>
                                       <div className="flex items-center gap-2">
-                                        <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ color: 'var(--accent)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                                          {topic.articles?.length || topic.questions} articles
-                                        </span>
+                                        <Chip>{topic.articles?.length || topic.questions} articles</Chip>
                                         {topic.blogUrl && (
                                           <a href={topic.blogUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-[10px] landing-mono text-[var(--accent)] hover:underline">
                                             blog
@@ -3030,9 +2968,7 @@ export default function DocsPage({ onBack }) {
                                         {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
                                       </div>
                                       <div className="flex items-center gap-2 mt-1.5">
-                                        <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ color: 'var(--accent)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                                          {topic.questions} questions
-                                        </span>
+                                        <Chip>{topic.questions} questions</Chip>
                                         {topic.visualizations?.length > 0 && (
                                           <span className="text-[10px] landing-mono text-[var(--text-muted)]">
                                             {topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}
@@ -3102,9 +3038,7 @@ export default function DocsPage({ onBack }) {
                                         {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
                                       </div>
                                       <div className="flex items-center gap-2 mt-1.5">
-                                        <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded font-semibold" style={{ color: 'var(--accent)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                                          {topic.questions} questions
-                                        </span>
+                                        <Chip>{topic.questions} questions</Chip>
                                         {topic.visualizations?.length > 0 && (
                                           <span className="text-[10px] landing-mono text-[var(--text-muted)]">
                                             {topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}

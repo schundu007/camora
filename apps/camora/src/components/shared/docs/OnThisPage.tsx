@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Chip from '@/components/shared/ui/Chip';
 
 export interface OnThisPageItem {
   /** Element id to scroll to. Must match an `id` rendered in the content. */
@@ -79,17 +80,7 @@ export default function OnThisPage({
           className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r-full"
           style={{ background: 'var(--cam-primary)' }}
         />
-        <span
-          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.16em]"
-          style={{
-            background: 'var(--bg-elevated)',
-            border: '1px solid var(--cam-gold-leaf)',
-            color: 'var(--cam-gold-leaf-text)',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.45)',
-          }}
-        >
-          {title}
-        </span>
+        <Chip variant="default">{title}</Chip>
       </div>
 
       <ul className="border-l border-[var(--border)]">

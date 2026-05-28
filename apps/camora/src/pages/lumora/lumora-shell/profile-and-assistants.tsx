@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { dialogConfirm, dialogAlert } from '../../../components/shared/Dialog';
 import type { LumoraStory } from '../../../lib/lumora-assistant';
+import Chip from '@/components/shared/ui/Chip';
 
 /* ── Format plain text into readable HTML ── */
 export const FormatTextPreview = ({ text, label }: { text: string; label: string }) => {
@@ -35,7 +36,7 @@ export const FormatTextPreview = ({ text, label }: { text: string; label: string
     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
       <div className="px-4 py-2 flex items-center justify-between" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
         <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{label}</span>
-        <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>{lines.length} lines</span>
+        <Chip>{lines.length} lines</Chip>
       </div>
       <div className="px-4 py-3 max-h-[500px] overflow-auto text-[13px] leading-[1.8]" style={{ color: 'var(--text-secondary)' }}>
         {sections.map((section, si) => (
@@ -165,11 +166,11 @@ export const LumoraProfilePage = () => {
             </div>
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Plan</span>
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: plan === 'free' ? 'var(--bg-elevated)' : 'var(--accent-subtle)', color: plan === 'free' ? 'var(--text-muted)' : 'var(--cam-primary)' }}>{planLabel}</span>
+              <Chip variant={plan === 'free' ? 'default' : 'success'}>{planLabel}</Chip>
             </div>
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Status</span>
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--success)' }}>{subscription?.status || 'Active'}</span>
+              <Chip variant="success">{subscription?.status || 'Active'}</Chip>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DevopsChallengeDetail from './DevopsChallengeDetail.jsx';
+import Chip from '@/components/shared/ui/Chip';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -50,59 +51,16 @@ function useOutsideClick(ref, handler) {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function DifficultyPill({ difficulty }) {
-  const s = DIFFICULTY_STYLES[difficulty] || DIFFICULTY_STYLES.Easy;
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '2px 9px',
-        borderRadius: '9999px',
-        fontSize: 11,
-        fontWeight: 600,
-        color: s.color,
-        background: s.bg,
-        border: `1px solid ${s.border}`,
-        letterSpacing: '0.01em',
-        flexShrink: 0,
-      }}
-    >
-      {difficulty}
-    </span>
-  );
+  return <Chip variant={difficulty.toLowerCase()}>{difficulty}</Chip>;
 }
 
 function SkillBadge({ skill }) {
   const color = SKILL_COLORS[skill] || '#6b7280';
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 5,
-        padding: '2px 9px',
-        borderRadius: '9999px',
-        fontSize: 11,
-        fontWeight: 600,
-        color,
-        background: `${color}1A`,
-        border: `1px solid ${color}40`,
-        letterSpacing: '0.01em',
-        flexShrink: 0,
-      }}
-    >
-      <span
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: '50%',
-          background: color,
-          display: 'inline-block',
-          flexShrink: 0,
-        }}
-      />
+    <Chip variant="default">
+      <span className="inline-block w-[6px] h-[6px] rounded-full shrink-0 mr-1" style={{ background: color }} />
       {skill}
-    </span>
+    </Chip>
   );
 }
 

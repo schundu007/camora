@@ -10,6 +10,7 @@ import go from 'react-syntax-highlighter/dist/esm/languages/hljs/go';
 import sql from 'react-syntax-highlighter/dist/esm/languages/hljs/sql';
 import cpp from 'react-syntax-highlighter/dist/esm/languages/hljs/cpp';
 import bash from 'react-syntax-highlighter/dist/esm/languages/hljs/bash';
+import Chip from '@/components/shared/ui/Chip';
 
 SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('py', python);
@@ -460,16 +461,11 @@ export const AskLayout = () => {
                   setStreamText('');
                   setShowHistory(false);
                 }}
-                className="px-3 py-1 text-[11px] rounded-full font-semibold transition-all"
-                style={{
-                  ...sans,
-                  background: provider === p ? 'var(--cam-gold-leaf)' : 'var(--bg-elevated)',
-                  color: provider === p ? '#020617' : 'var(--text-muted)',
-                  border: `1px solid ${provider === p ? 'var(--cam-gold-leaf)' : 'var(--border)'}`,
-                  boxShadow: provider === p ? '0 0 0 1px rgba(217,181,67,0.4), 0 2px 8px rgba(217,181,67,0.2)' : 'none',
-                }}
+                className="transition-all"
               >
-                {p === 'claude' ? '✦ Claude' : '◆ Gemini'}
+                <Chip variant={provider === p ? 'gold' : 'default'}>
+                  {p === 'claude' ? '✦ Claude' : '◆ Gemini'}
+                </Chip>
               </button>
             ))}
           </div>
