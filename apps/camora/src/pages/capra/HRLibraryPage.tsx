@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MUST_DO_PROBLEMS } from '../../data/capra/mustDoProblems.js';
 import { Icon } from '../../components/shared/Icons.jsx';
 import { getProblems, getProblemTags, getProblem, type LcProblem } from '../../lib/capra-api';
 
@@ -81,7 +80,7 @@ const TAB_GROUPS: Record<string, string[]> = {
 };
 
 const TAB_LABELS: Record<string, string> = {
-  all: 'All', mcq: 'MCQ', coding: 'Coding', design: 'Design', 'must-do': 'Must Do', dsa: 'LeetCode',
+  all: 'All', mcq: 'MCQ', coding: 'Coding', design: 'Design', dsa: 'LeetCode',
 };
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -493,7 +492,7 @@ export default function HRLibraryPage() {
     params.set('page',  String(page));
     params.set('limit', String(PAGE_LIMIT));
 
-    if (activeTab === 'must-do' || activeTab === 'dsa') { setLoading(false); setProblems([]); setTotal(0); setPages(1); return; }
+    if (activeTab === 'dsa') { setLoading(false); setProblems([]); setTotal(0); setPages(1); return; }
 
     setLoading(true);
     fetch(`${API}/api/library?${params}`)
@@ -654,7 +653,7 @@ export default function HRLibraryPage() {
           borderRadius: 10,
           marginBottom: 14,
         }}>
-          {(['all', 'mcq', 'coding', 'design', 'must-do', 'dsa'] as const).map(tab => (
+          {(['all', 'mcq', 'coding', 'design', 'dsa'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -671,12 +670,7 @@ export default function HRLibraryPage() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {tab === 'must-do' ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <Icon name="starFilled" size={11} style={{ flexShrink: 0 }} />
-                  Must Do
-                </span>
-              ) : TAB_LABELS[tab]}
+              {TAB_LABELS[tab]}
             </button>
           ))}
         </div>
@@ -782,43 +776,7 @@ export default function HRLibraryPage() {
 
       {/* ── Problem list — full width, no max-width container ─────────────── */}
       <div>
-        {activeTab === 'must-do' ? (
-          <div style={{ padding: '28px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
-            {MUST_DO_PROBLEMS.map((p: { slug: string; label: string; description: string; category?: string }) => (
-              <button
-                key={p.slug}
-                onClick={() => navigate(`/capra/coding?problem=${encodeURIComponent(p.description)}`)}
-                style={{
-                  display: 'flex', flexDirection: 'column', gap: 10,
-                  padding: '16px', borderRadius: 10, textAlign: 'left',
-                  background: 'var(--bg-surface)', border: '1px solid var(--border)',
-                  cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s',
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'color-mix(in oklab, var(--cam-gold-leaf) 60%, transparent)';
-                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-elevated)';
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)';
-                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface)';
-                }}
-              >
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.3 }}>
-                  {p.label}
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{
-                    fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
-                    padding: '2px 8px', borderRadius: 999,
-                    background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, var(--bg-elevated))',
-                    color: 'var(--cam-gold-leaf)',
-                  }}>Must Do</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>{p.category ?? 'DSA'}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        ) : activeTab === 'dsa' ? (
+        {activeTab === 'dsa' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {/* DSA filter bar */}
             <div style={{ display: 'flex', gap: 8, padding: '8px 16px', flexWrap: 'wrap', borderBottom: '1px solid rgba(196,160,60,0.18)' }}>
