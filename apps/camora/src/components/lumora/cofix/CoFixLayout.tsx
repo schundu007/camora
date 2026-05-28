@@ -439,7 +439,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
   const handleLeftEditorMount = useCallback((editor: any) => {
     editor.updateOptions({
-      fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
+      fontFamily: 'var(--font-mono)',
       fontLigatures: true,
       letterSpacing: -0.3,
     });
@@ -686,7 +686,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
             onChange={e => setLanguage(e.target.value)}
             className="text-[12px] rounded px-2 py-1 cursor-pointer focus:outline-none"
             style={{
-              background: 'linear-gradient(135deg, rgba(0,47,120,0.55) 0%, rgba(10,14,26,0.85) 100%)',
+              background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 15%, transparent) 0%, var(--bg-elevated) 100%)',
               border: '1px solid var(--cam-gold-leaf-dk)',
               color: 'var(--cam-gold-leaf)',
             }}
@@ -703,13 +703,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
           onClick={() => setExplainMode(v => !v)}
           className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90 shrink-0"
           style={explainMode ? {
-            fontFamily: 'Plus Jakarta Sans, sans-serif',
+            fontFamily: 'var(--font-sans)',
             background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)',
             border: '1px solid var(--cam-gold-leaf)',
             color: '#0a0e1a',
           } : {
-            fontFamily: 'Plus Jakarta Sans, sans-serif',
-            background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
+            fontFamily: 'var(--font-sans)',
+            background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 10%, transparent) 0%, var(--bg-elevated) 100%)',
             border: '1px solid var(--cam-gold-leaf-dk)',
             color: 'var(--cam-gold-leaf-dk)',
           }}
@@ -718,7 +718,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         </button>
 
         {explainMode && (
-          <span className="text-[11px] italic shrink-0 animate-pulse" style={{ color: 'var(--cam-gold-leaf-dk)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+          <span className="text-[11px] italic shrink-0 animate-pulse" style={{ color: 'var(--cam-gold-leaf-dk)', fontFamily: 'var(--font-sans)' }}>
             hover any line →
           </span>
         )}
@@ -758,7 +758,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               onClick={handleSendToCoding}
               className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90 whitespace-nowrap"
               style={{
-                background: 'linear-gradient(135deg, rgba(0,47,120,0.55) 0%, rgba(10,14,26,0.85) 100%)',
+                background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 15%, transparent) 0%, var(--bg-elevated) 100%)',
                 border: '1px solid var(--cam-gold-leaf-dk)',
                 color: 'var(--cam-gold-leaf-dk)',
               }}
@@ -779,8 +779,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
             title={snapState === 'error' ? 'Snap failed' : 'Snap screen'}
             className={pillBase}
             style={snapState === 'error'
-              ? { background: '#ef4444', color: '#fff' }
-              : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.18)' }
+              ? { background: 'var(--danger)', color: '#ffffff' }
+              : { background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
             }
           >
             {snapState === 'capturing'
@@ -795,18 +795,18 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
         {/* Pending snap thumbnails */}
         {pendingSnapIds.map(pid => (
-          <div key={pid} className="w-10 h-7 rounded shrink-0 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)' }}>
-            <div className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+          <div key={pid} className="w-10 h-7 rounded shrink-0 flex items-center justify-center" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            <div className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: 'color-mix(in oklab, var(--text-primary) 25%, transparent)', borderTopColor: 'var(--text-primary)' }} />
           </div>
         ))}
 
         {/* Completed thumbnails */}
         {screenshots.map((s, i) => (
           <div key={s.id} className="relative group shrink-0" title={s.text ? `Page ${i + 1}: ${s.text.slice(0, 80)}…` : `Page ${i + 1}`}>
-            <img src={s.dataUrl} alt={`Screenshot ${i + 1}`} className="h-7 w-10 object-cover rounded" style={{ border: '1px solid rgba(255,255,255,0.20)' }} />
+            <img src={s.dataUrl} alt={`Screenshot ${i + 1}`} className="h-7 w-10 object-cover rounded" style={{ border: '1px solid var(--border-hover)' }} />
             <span className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>{i + 1}</span>
             {onRemove && (
-              <button onClick={() => onRemove(s.id)} className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex" style={{ background: '#ef4444', color: '#fff' }} title="Remove">
+              <button onClick={() => onRemove(s.id)} className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex" style={{ background: 'var(--danger)', color: '#ffffff' }} title="Remove">
                 <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
             )}
@@ -815,7 +815,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
         {/* AudioCapture */}
         {onTranscription && (
-          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md shrink-0" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)' }}>
+          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md shrink-0" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
             <AudioCapture onTranscription={onTranscription} autoStart={false} active={isTabActive} compact />
           </div>
         )}
@@ -831,7 +831,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
             className={pillBase}
             style={isStealthActive
               ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }
-              : { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }
+              : { background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
             }
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
@@ -865,7 +865,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
           </div>
 
           {lineCount > 500 && (
-            <div className="px-4 py-1.5 bg-amber-500/10 border-b border-amber-500/20 text-[11px] text-amber-400">
+            <div className="px-4 py-1.5 border-b text-[11px]" style={{ background: 'color-mix(in oklab, var(--warning) 10%, transparent)', borderColor: 'color-mix(in oklab, var(--warning) 20%, transparent)', color: 'var(--warning-text)' }}>
               Large paste — CoFix works best on focused snippets.
             </div>
           )}
@@ -919,7 +919,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   onClick={handleCopy}
                   className="shrink-0 text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md transition-opacity hover:opacity-90"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(0,47,120,0.55) 0%, rgba(10,14,26,0.85) 100%)',
+                    background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 15%, transparent) 0%, var(--bg-elevated) 100%)',
                     border: '1px solid var(--cam-gold-leaf)',
                     color: 'var(--cam-gold-leaf)',
                   }}
@@ -934,7 +934,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                     background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
                     color: '#0a0e1a',
                   } : {
-                    background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
+                    background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 10%, transparent) 0%, var(--bg-elevated) 100%)',
                     border: '1px solid var(--cam-gold-leaf-dk)',
                     color: 'var(--cam-gold-leaf-dk)',
                   }}
@@ -951,7 +951,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               </span>
             )}
             {!isLoading && fixedCode && (
-              <span className="shrink-0 flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: '#10b981' }}>
+              <span className="shrink-0 flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--accent)' }}>
                 <LogIconCheck />
               </span>
             )}
@@ -963,7 +963,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
           {/* Quick-refine chip strip — always visible when fixed code exists */}
           {fixedCode && (
-            <div className="flex items-center gap-1.5 px-2 shrink-0 overflow-x-auto no-scrollbar" style={{ height: 28, borderBottom: '1px solid rgba(196,160,60,0.18)', background: 'rgba(196,160,60,0.04)' }}>
+            <div className="flex items-center gap-1.5 px-2 shrink-0 overflow-x-auto no-scrollbar" style={{ height: 28, borderBottom: '1px solid color-mix(in oklab, var(--accent) 18%, transparent)', background: 'color-mix(in oklab, var(--accent) 4%, transparent)' }}>
               {[
                 { label: '+ Print steps',    prompt: 'Add print() statements before and after each key step to show intermediate values' },
                 { label: '+ Type hints',     prompt: 'Add type hints to all function parameters and return types' },
@@ -976,7 +976,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   onClick={() => handleRefine(prompt)}
                   disabled={isLoading}
                   className="shrink-0 text-[9px] font-bold uppercase tracking-[0.08em] px-2 py-0.5 rounded-full transition-opacity hover:opacity-90 disabled:opacity-40 whitespace-nowrap"
-                  style={{ background: 'rgba(196,160,60,0.10)', border: '1px solid rgba(196,160,60,0.28)', color: 'var(--cam-gold-leaf-dk)' }}
+                  style={{ background: 'color-mix(in oklab, var(--accent) 10%, transparent)', border: '1px solid color-mix(in oklab, var(--accent) 28%, transparent)', color: 'var(--cam-gold-leaf-dk)' }}
                 >
                   {label}
                 </button>
@@ -990,11 +990,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               {/* Streaming log popup */}
               {showLogPopup && (
                 <div className="absolute top-3 right-3 z-20 w-72 flex flex-col rounded-lg overflow-hidden shadow-2xl"
-                  style={{ background: '#080c17', border: '1px solid var(--cam-gold-leaf)', opacity: 0.97 }}>
+                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--cam-gold-leaf)' }}>
                   {/* Title bar */}
-                  <div className="flex items-center gap-2 px-3 py-1.5 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid rgba(196,160,60,0.3)' }}>
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: isLoading ? 'var(--cam-gold-leaf)' : '#22c55e', boxShadow: isLoading ? '0 0 6px var(--cam-gold-leaf)' : '0 0 6px #22c55e' }} />
-                    <span className="flex-1 text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: "'IBM Plex Mono', monospace" }}>CoFix Log</span>
+                  <div className="flex items-center gap-2 px-3 py-1.5 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab, var(--accent) 30%, transparent)' }}>
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: isLoading ? 'var(--cam-gold-leaf)' : 'var(--accent-text)', boxShadow: isLoading ? '0 0 6px var(--cam-gold-leaf)' : '0 0 6px var(--accent-text)' }} />
+                    <span className="flex-1 text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>CoFix Log</span>
                     {!isLoading && (
                       <button onClick={() => setShowLogPopup(false)} className="text-[11px] opacity-50 hover:opacity-100 transition-opacity" style={{ color: 'var(--cam-gold-leaf-dk)' }}>✕</button>
                     )}
@@ -1003,15 +1003,15 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   <div ref={logScrollRef} className="flex flex-col gap-0.5 px-3 py-2 max-h-48 overflow-y-auto">
                     {logLines.map((line, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <span className="text-[9px] shrink-0 tabular-nums" style={{ color: 'rgba(196,160,60,0.45)', fontFamily: "'IBM Plex Mono', monospace" }}>{line.elapsed}</span>
+                        <span className="text-[9px] shrink-0 tabular-nums" style={{ color: 'color-mix(in oklab, var(--accent) 45%, transparent)', fontFamily: 'var(--font-mono)' }}>{line.elapsed}</span>
                         <span className="shrink-0 flex items-center">{line.icon}</span>
-                        <span className="text-[10px] leading-relaxed" style={{ color: line.status === 'error' ? '#f87171' : line.status === 'success' ? '#4ade80' : 'rgba(255,255,255,0.8)', fontFamily: "'IBM Plex Mono', monospace" }}>{line.msg}</span>
+                        <span className="text-[10px] leading-relaxed" style={{ color: line.status === 'error' ? 'var(--danger)' : line.status === 'success' ? 'var(--accent-text)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{line.msg}</span>
                       </div>
                     ))}
                     {isLoading && (
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[9px] tabular-nums" style={{ color: 'rgba(196,160,60,0.45)', fontFamily: "'IBM Plex Mono', monospace" }}>…</span>
-                        <span className="w-3 h-px flex-1 overflow-hidden relative" style={{ background: 'rgba(196,160,60,0.15)' }}>
+                        <span className="text-[9px] tabular-nums" style={{ color: 'color-mix(in oklab, var(--accent) 45%, transparent)', fontFamily: 'var(--font-mono)' }}>…</span>
+                        <span className="w-3 h-px flex-1 overflow-hidden relative" style={{ background: 'color-mix(in oklab, var(--accent) 15%, transparent)' }}>
                           <span className="absolute inset-y-0 left-0 w-1/3 animate-[shimmer_1s_ease-in-out_infinite]" style={{ background: 'var(--cam-gold-leaf)', animation: 'pulse 1s ease-in-out infinite' }} />
                         </span>
                       </div>
@@ -1025,11 +1025,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   <div className="fixed inset-0 z-40" onClick={() => setShowRefinePopup(false)} />
                   <div
                     className="fixed z-50 w-[440px] max-w-[92vw] rounded-xl overflow-hidden shadow-2xl"
-                    style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#080c17', border: '1px solid var(--cam-gold-leaf)' }}
+                    style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'var(--bg-elevated)', border: '1px solid var(--cam-gold-leaf)' }}
                   >
-                    <div className="flex items-center gap-2 px-3 py-2 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid rgba(196,160,60,0.3)' }}>
+                    <div className="flex items-center gap-2 px-3 py-2 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab, var(--accent) 30%, transparent)' }}>
                       <LogIconSpark />
-                      <span className="flex-1 text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: "'IBM Plex Mono', monospace" }}>
+                      <span className="flex-1 text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>
                         Refine Fixed Code
                       </span>
                       <button onClick={() => setShowRefinePopup(false)} className="text-[13px] opacity-50 hover:opacity-100 transition-opacity" style={{ color: 'var(--cam-gold-leaf-dk)' }}>✕</button>
@@ -1043,14 +1043,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                         placeholder={`Describe how to change the fixed code…\nExamples:\n  • Always try to reduce the no of code lines\n  • Replace recursion with iteration\n  • Rename variables to be more descriptive`}
                         rows={5}
                         className="w-full resize-none rounded-lg px-3 py-2.5 text-[11px] leading-relaxed focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--cam-gold-leaf)]"
-                        style={{ fontFamily: "'IBM Plex Mono', monospace", background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(196,160,60,0.35)', color: 'rgba(255,255,255,0.9)' }}
+                        style={{ fontFamily: 'var(--font-mono)', background: 'var(--bg-elevated)', border: '1px solid color-mix(in oklab, var(--accent) 35%, transparent)', color: 'var(--text-primary)' }}
                       />
                       <div className="flex items-center gap-2 justify-end">
-                        <span className="text-[9.5px] opacity-40 mr-auto" style={{ color: 'var(--cam-gold-leaf)', fontFamily: "'IBM Plex Mono', monospace" }}>⌘↵ to submit</span>
+                        <span className="text-[9.5px] opacity-40 mr-auto" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>⌘↵ to submit</span>
                         <button
                           onClick={() => setShowRefinePopup(false)}
                           className="text-[10px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                          style={{ border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.55)' }}
+                          style={{ border: '1px solid var(--border)', color: 'var(--text-muted)' }}
                         >Cancel</button>
                         <button
                           onClick={handleRefine}
@@ -1084,7 +1084,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   minimap: { enabled: false },
                   lineNumbers: 'on',
                   fontSize: 11,
-                  fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
+                  fontFamily: 'var(--font-mono)',
                   fontLigatures: true,
                   letterSpacing: -0.3,
                   lineHeight: 19,
@@ -1110,7 +1110,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                 Space: <span className="text-[var(--text-primary)] font-mono">{complexity.space}</span>
               </span>
               {hackerrankCompatible !== null && (
-                <span className={hackerrankCompatible ? 'text-emerald-400' : 'text-amber-400'}>
+                <span style={{ color: hackerrankCompatible ? "var(--accent-text)" : "var(--warning-text)" }}>
                   {hackerrankCompatible ? '✓ HackerRank Compatible' : '⚠ Strip I/O boilerplate before submitting'}
                 </span>
               )}
@@ -1253,7 +1253,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                           <div className="flex-1 min-w-0">
                             {s.code && (
                               <code className="block text-[11px] px-2.5 py-1.5 rounded mb-1.5 leading-relaxed"
-                                style={{ fontFamily: "'IBM Plex Mono', monospace", color: '#e6edf3', background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', background: 'var(--bg-app)', border: '1px solid var(--border)' }}>
                                 {s.code}
                               </code>
                             )}
@@ -1314,7 +1314,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                             placeholder="print(my_function(arg1, arg2))"
                             rows={2}
                             className="flex-1 resize-none bg-transparent focus:outline-none placeholder:opacity-30"
-                            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: 'var(--text-primary)', lineHeight: 1.6 }}
+                            style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--text-primary)', lineHeight: 1.6 }}
                           />
                           <div className="flex flex-col gap-1 shrink-0 pt-0.5">
                             <button
@@ -1339,24 +1339,22 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                             onChange={e => setCustomTests(prev => prev.map(t => t.id === tc.id ? { ...t, expected: e.target.value } : t))}
                             placeholder="expected (optional)"
                             className="flex-1 bg-transparent focus:outline-none placeholder:opacity-25"
-                            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: 'var(--cam-gold-leaf-dk)' }}
+                            style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--cam-gold-leaf-dk)' }}
                           />
                         </div>
                         {tc.result !== null && (
                           <div className="px-2.5 pb-2 pt-1.5" style={{ borderTop: '1px solid var(--border)' }}>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-[9px] font-bold uppercase tracking-wider ${tc.isErr ? 'text-red-400' : hasFailed ? 'text-amber-400' : 'text-emerald-400'}`}>
+                              <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: tc.isErr ? 'var(--danger)' : hasFailed ? 'var(--warning-text)' : 'var(--accent-text)' }}>
                                 {tc.isErr ? '✕ Error' : hasFailed ? '≠ Mismatch' : '✓ Output'}
                               </span>
                               {tc.expected && !tc.isErr && (
-                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${hasPassed ? 'text-emerald-400' : 'text-amber-400'}`}
-                                  style={{ background: hasPassed ? 'rgba(34,197,94,0.12)' : 'rgba(251,191,36,0.12)' }}>
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ color: hasPassed ? 'var(--accent-text)' : 'var(--warning-text)', background: hasPassed ? 'color-mix(in oklab, var(--accent) 12%, transparent)' : 'color-mix(in oklab, var(--warning) 12%, transparent)' }}>
                                   {hasPassed ? 'PASS' : 'FAIL'}
                                 </span>
                               )}
                             </div>
-                            <pre className={`text-[10.5px] whitespace-pre-wrap m-0 ${tc.isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}
-                              style={{ fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.6 }}>
+                            <pre className="text-[10.5px] whitespace-pre-wrap m-0" style={{ color: tc.isErr ? 'var(--danger)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)', lineHeight: 1.6 }}>
                               {tc.result}
                             </pre>
                           </div>
@@ -1372,8 +1370,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               <Allotment.Pane minSize={100}>
               <div className="flex flex-col h-full">
                 <div className="flex items-center shrink-0 px-4" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
-                  <span className={`text-[11px] font-bold uppercase tracking-[0.1em] ${isErr ? 'text-red-400' : runOutput !== null ? 'text-emerald-400' : ''}`}
-                    style={{ color: runOutput === null ? 'var(--cam-gold-leaf-dk)' : undefined }}>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.1em]"
+                    style={{ color: isErr ? 'var(--danger)' : runOutput !== null ? 'var(--accent-text)' : 'var(--cam-gold-leaf-dk)' }}>
                     {isErr ? '✕ Runtime Error' : runOutput !== null ? '✓ Output' : 'Output'}
                   </span>
                   {isRunning && (
@@ -1389,8 +1387,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                     </div>
                   ) : (
                     <pre
-                      className={`px-4 py-3 whitespace-pre-wrap h-full ${isErr ? 'text-red-400' : 'text-[var(--text-primary)]'}`}
-                      style={{ fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace", fontSize: 11, lineHeight: 1.65, letterSpacing: '-0.02em', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}
+                      className="px-4 py-3 whitespace-pre-wrap h-full"
+                      style={{ color: isErr ? 'var(--danger)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontSize: 11, lineHeight: 1.65, letterSpacing: '-0.02em' }}
                     >
                       {runOutput}
                     </pre>

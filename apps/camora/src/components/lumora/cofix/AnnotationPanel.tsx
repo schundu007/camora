@@ -16,7 +16,7 @@ const inlineFormat = (text: string) => {
       nodes.push(<strong key={key++} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{m[1]}</strong>);
     } else {
       nodes.push(
-        <code key={key++} style={{ padding: '1px 4px', borderRadius: 3, background: 'color-mix(in oklab, var(--accent) 15%, transparent)', color: 'var(--accent)', fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, letterSpacing: '-0.01em' }}>
+        <code key={key++} style={{ padding: '1px 4px', borderRadius: 3, background: 'color-mix(in oklab, var(--accent) 15%, transparent)', color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: '-0.01em' }}>
           {m[2]}
         </code>
       );
@@ -38,7 +38,7 @@ export const AnnotationPanel = ({ changes, walkthrough = [] }: AnnotationPanelPr
       {/* Walk-Through section */}
       {hasWalkthrough && (
         <div className="px-3 pt-3 pb-2">
-          <p className="text-[9px] font-bold tracking-[0.12em] uppercase mb-2.5" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+          <p className="text-[9px] font-bold tracking-[0.12em] uppercase mb-2.5" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-sans)' }}>
             Walk-Through
             <span className="ml-1.5 normal-case font-normal text-[8.5px] opacity-60" style={{ letterSpacing: '0.03em' }}>say to interviewer</span>
           </p>
@@ -46,7 +46,7 @@ export const AnnotationPanel = ({ changes, walkthrough = [] }: AnnotationPanelPr
             {walkthrough.map((step, i) => (
               <div key={i} className="flex items-start gap-1.5">
                 <span className="mt-[4px] shrink-0 w-1 h-1 rounded-full" style={{ background: 'var(--cam-primary)' }} />
-                <p className="text-[10px] leading-relaxed" style={{ color: 'var(--text-primary)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                <p className="text-[10px] leading-relaxed" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>
                   <strong style={{ color: 'var(--text-primary)' }}>
                     {`Line${step.lines.includes('-') || step.lines.includes(',') ? 's' : ''} ${step.lines}`}
                     {step.context ? ` (${step.context})` : ''}:

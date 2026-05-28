@@ -18,6 +18,8 @@
     --bg-app:      #0D1015;
     --bg-surface:  #161A22;
     --bg-elevated: #1E2430;
+    --bg-primary: var(--bg-surface);
+    --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.55);
 
     /* Borders — cool slate that pops against the dark substrate */
@@ -161,6 +163,8 @@
     --bg-app:      #F8F9FA;
     --bg-surface:  #FFFFFF;
     --bg-elevated: #F0F1F3;
+    --bg-primary: var(--bg-surface);
+    --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.20);
 
     --border:        #DEE2E6;
