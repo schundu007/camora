@@ -80,7 +80,7 @@ const TAB_GROUPS: Record<string, string[]> = {
 };
 
 const TAB_LABELS: Record<string, string> = {
-  all: 'All', mcq: 'MCQ', coding: 'Coding', design: 'Design', dsa: 'LeetCode',
+  all: 'All', mcq: 'MCQ', coding: 'Coding', design: 'Design',
 };
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -258,10 +258,7 @@ function ProblemCard({ problem, onClick }: { problem: Problem; onClick: () => vo
         transition: 'background 0.1s',
       }}
     >
-      {/* Main content */}
       <div style={{ flex: 1, minWidth: 0 }}>
-
-        {/* Line 1: name + dark type pill + colored difficulty */}
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
           <span style={{
             fontSize: 15, fontWeight: 700, letterSpacing: '-0.1px',
@@ -270,7 +267,6 @@ function ProblemCard({ problem, onClick }: { problem: Problem; onClick: () => vo
           }}>
             {problem.name}
           </span>
-          {/* Type — dark pill, matches HackerRank "Pro Plan" / "Starter Plan" style */}
           <span style={{
             padding: '2px 10px', borderRadius: 4,
             background: 'rgba(255,255,255,0.08)',
@@ -280,7 +276,6 @@ function ProblemCard({ problem, onClick }: { problem: Problem; onClick: () => vo
           }}>
             {typeLabel}
           </span>
-          {/* Difficulty — plain colored text, no border/pill, matches HackerRank */}
           {diffColor && (
             <span style={{ fontSize: 13, fontWeight: 600, color: diffColor }}>
               {problem.difficulty}
@@ -288,7 +283,6 @@ function ProblemCard({ problem, onClick }: { problem: Problem; onClick: () => vo
           )}
         </div>
 
-        {/* Line 2: description — 2-line natural wrap, not truncated to single line */}
         {description && (
           <p style={{
             margin: '0 0 12px',
@@ -305,7 +299,6 @@ function ProblemCard({ problem, onClick }: { problem: Problem; onClick: () => vo
           </p>
         )}
 
-        {/* Line 3: metadata icons — matches HackerRank's icon row */}
         <div style={{
           display: 'flex', alignItems: 'center',
           gap: 20, fontSize: 12, color: 'var(--text-muted)',
@@ -329,7 +322,6 @@ function ProblemCard({ problem, onClick }: { problem: Problem; onClick: () => vo
         </div>
       </div>
 
-      {/* Solve button — always visible on right, like HackerRank's Upgrade */}
       <div style={{ flexShrink: 0, paddingTop: 4, alignSelf: 'center' }}>
         <span style={{
           display: 'inline-block',
@@ -347,40 +339,89 @@ function ProblemCard({ problem, onClick }: { problem: Problem; onClick: () => vo
   );
 }
 
-// ─── DsaProblemRow ────────────────────────────────────────────────────────────
+// ─── LeetCode enterprise table ─────────────────────────────────────────────────
 
 const DIFF_COLORS: Record<string, string> = { Easy: '#22c55e', Medium: '#f59e0b', Hard: '#ef4444' };
+const DSA_GRID = '52px 1fr 210px 84px 64px';
+
+function DsaTableHeader() {
+  const cell: React.CSSProperties = {
+    fontSize: 10, fontWeight: 700, color: 'var(--text-muted)',
+    letterSpacing: '0.07em', textTransform: 'uppercase',
+  };
+  return (
+    <div style={{
+      display: 'grid', gridTemplateColumns: DSA_GRID,
+      padding: '7px 28px', borderBottom: '1px solid var(--border)',
+      background: 'rgba(0,0,0,0.18)', gap: 0,
+    }}>
+      <span style={cell}>#</span>
+      <span style={cell}>Title</span>
+      <span style={cell}>Topics</span>
+      <span style={{ ...cell, textAlign: 'right', paddingRight: 16 }}>Difficulty</span>
+      <span style={{ ...cell, textAlign: 'right' }}>Accept.</span>
+    </div>
+  );
+}
 
 function DsaProblemRow({ problem, onClick }: { problem: LcProblem; onClick: () => void }) {
+  const [hovered, setHovered] = useState(false);
   return (
     <div
       onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '10px 16px', cursor: 'pointer',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
-        transition: 'background 0.15s',
+        display: 'grid', gridTemplateColumns: DSA_GRID,
+        padding: '0 28px', height: 42, alignItems: 'center', gap: 0,
+        cursor: 'pointer', borderBottom: '1px solid var(--border)',
+        background: hovered ? 'rgba(255,255,255,0.035)' : 'transparent',
+        transition: 'background 0.1s',
       }}
-      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(196,160,60,0.07)'; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
     >
-      {problem.lc_id != null && (
-        <span style={{ width: 40, flexShrink: 0, fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-          {problem.lc_id}
-        </span>
-      )}
-      <span style={{ flex: 1, fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>
-        {problem.title}
-        {problem.is_premium && <span style={{ marginLeft: 6, fontSize: 10, color: '#f59e0b' }}>⭐</span>}
+      <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+        {problem.lc_id ?? '—'}
       </span>
-      <span style={{ fontSize: 11, color: DIFF_COLORS[problem.difficulty] ?? 'var(--text-muted)', width: 50, textAlign: 'right' }}>
+      <span style={{
+        fontSize: 13, fontWeight: 500, paddingRight: 20,
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        color: hovered ? 'var(--cam-gold-leaf)' : 'var(--text-primary)',
+        transition: 'color 0.12s',
+      }}>
+        {problem.title}
+        {problem.is_premium && (
+          <span style={{
+            marginLeft: 7, fontSize: 9, fontWeight: 700, color: '#f59e0b',
+            background: 'rgba(245,158,11,0.12)', padding: '1px 5px', borderRadius: 3,
+            verticalAlign: 'middle',
+          }}>PRO</span>
+        )}
+      </span>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center', overflow: 'hidden', paddingRight: 10 }}>
+        {problem.topic_tags.slice(0, 2).map(tag => (
+          <span key={tag.slug} style={{
+            padding: '2px 7px', borderRadius: 3, flexShrink: 0,
+            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)',
+            fontSize: 10, color: 'var(--text-muted)', whiteSpace: 'nowrap',
+          }}>
+            {tag.name}
+          </span>
+        ))}
+        {problem.topic_tags.length > 2 && (
+          <span style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0 }}>
+            +{problem.topic_tags.length - 2}
+          </span>
+        )}
+      </div>
+      <span style={{
+        fontSize: 12, fontWeight: 600, textAlign: 'right', paddingRight: 16,
+        color: DIFF_COLORS[problem.difficulty] ?? 'var(--text-muted)',
+      }}>
         {problem.difficulty}
       </span>
-      {problem.acceptance_rate != null && (
-        <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 42, textAlign: 'right' }}>
-          {(problem.acceptance_rate * 100).toFixed(0)}%
-        </span>
-      )}
+      <span style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'right', fontFamily: 'var(--font-mono)' }}>
+        {problem.acceptance_rate != null ? `${(problem.acceptance_rate * 100).toFixed(0)}%` : '—'}
+      </span>
     </div>
   );
 }
@@ -422,15 +463,13 @@ export default function HRLibraryPage() {
   const [metaTypes, setMetaTypes]   = useState<string[]>([]);
   const metaDebounceRef             = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [dsaProblems, setDsaProblems]     = useState<LcProblem[]>([]);
-  const [dsaTotal, setDsaTotal]           = useState(0);
-  const [dsaPages, setDsaPages]           = useState(1);
-  const [dsaPage, setDsaPage]             = useState(1);
-  const [dsaDifficulty, setDsaDifficulty] = useState('');
-  const [dsaTag, setDsaTag]               = useState('');
-  const [dsaQ, setDsaQ]                   = useState('');
-  const [dsaLoading, setDsaLoading]       = useState(false);
-  const [dsaTags, setDsaTags]             = useState<{ topic_tags: string[]; company_tags: string[] }>({ topic_tags: [], company_tags: [] });
+  const [dsaProblems, setDsaProblems] = useState<LcProblem[]>([]);
+  const [dsaTotal, setDsaTotal]       = useState(0);
+  const [dsaPages, setDsaPages]       = useState(1);
+  const [dsaPage, setDsaPage]         = useState(1);
+  const [dsaTag, setDsaTag]           = useState('');
+  const [dsaLoading, setDsaLoading]   = useState(false);
+  const [dsaTags, setDsaTags]         = useState<{ topic_tags: string[]; company_tags: string[] }>({ topic_tags: [], company_tags: [] });
 
   const q              = searchParams.get('q')          || '';
   const selectedRoles  = searchParams.get('role')       ? searchParams.get('role')!.split(',')       : [];
@@ -441,19 +480,23 @@ export default function HRLibraryPage() {
   const page           = parseInt(searchParams.get('page') || '1');
   const activeTab      = searchParams.get('tab') || 'all';
 
-  // Types sent to the API: explicit type selection OR the active tab's type group
   const tabTypes       = TAB_GROUPS[activeTab] ?? [];
   const effectiveTypes = selectedTypes.length > 0 ? selectedTypes : tabTypes;
 
-  // Type dropdown options: narrowed to the active tab's group, further filtered by cascaded meta
   const typeOptions = activeTab !== 'all'
     ? (TAB_GROUPS[activeTab] ?? []).filter(t => metaTypes.length === 0 || metaTypes.includes(t))
     : (metaTypes.length > 0 ? metaTypes : ALL_TYPES);
 
+  // LeetCode problems appear in All and Coding tabs
+  const showDsa = activeTab === 'all' || activeTab === 'coding';
+
+  // Pass first selected difficulty to DSA (API takes one value)
+  const dsaEffectiveDiff = selectedDiffs.length > 0 ? selectedDiffs[0] : '';
+
   const [searchInput, setSearchInput] = useState(q);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Reactive meta fetch — re-fires when any filter changes, returns narrowed options
+  // Reactive meta fetch
   useEffect(() => {
     if (metaDebounceRef.current) clearTimeout(metaDebounceRef.current);
     metaDebounceRef.current = setTimeout(() => {
@@ -480,7 +523,7 @@ export default function HRLibraryPage() {
       selectedRoles.join(','), effectiveTypes.join(','), selectedDiffs.join(','),
       selectedSkills.join(','), selectedDurs.join(',')]);
 
-
+  // HR problems fetch
   useEffect(() => {
     const params = new URLSearchParams();
     if (q)                      params.set('q',          q);
@@ -491,8 +534,6 @@ export default function HRLibraryPage() {
     if (selectedDurs.length)    params.set('duration',   selectedDurs.join(','));
     params.set('page',  String(page));
     params.set('limit', String(PAGE_LIMIT));
-
-    if (activeTab === 'dsa') { setLoading(false); setProblems([]); setTotal(0); setPages(1); return; }
 
     setLoading(true);
     fetch(`${API}/api/library?${params}`)
@@ -508,18 +549,28 @@ export default function HRLibraryPage() {
     selectedRoles.join(','), effectiveTypes.join(','), selectedDiffs.join(','),
     selectedSkills.join(','), selectedDurs.join(','), page]);
 
+  // LeetCode fetch — runs whenever All or Coding tab is active
   useEffect(() => {
-    if (activeTab !== 'dsa') return;
+    if (!showDsa) return;
     setDsaLoading(true);
-    getProblems({ difficulty: (dsaDifficulty as 'Easy' | 'Medium' | 'Hard') || undefined, tag: dsaTag || undefined, q: dsaQ || undefined, page: dsaPage, limit: 50 })
+    getProblems({
+      difficulty: (dsaEffectiveDiff as 'Easy' | 'Medium' | 'Hard') || undefined,
+      tag: dsaTag || undefined,
+      q: q || undefined,
+      page: dsaPage,
+      limit: 50,
+    })
       .then(data => { setDsaProblems(data.problems); setDsaTotal(data.total); setDsaPages(data.pages); })
       .catch(err => console.error('[dsa fetch]', err))
       .finally(() => setDsaLoading(false));
-  }, [activeTab, dsaDifficulty, dsaTag, dsaQ, dsaPage]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, dsaEffectiveDiff, dsaTag, q, dsaPage]);
 
+  // LeetCode tags fetch once per tab activation
   useEffect(() => {
-    if (activeTab !== 'dsa') return;
+    if (!showDsa || dsaTags.topic_tags.length > 0) return;
     getProblemTags().then(setDsaTags).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   function setActiveTab(tab: string) {
@@ -530,6 +581,8 @@ export default function HRLibraryPage() {
       next.delete('page');
       return next;
     });
+    setDsaPage(1);
+    setDsaTag('');
   }
 
   function updateParam(key: string, value: string | null) {
@@ -550,7 +603,10 @@ export default function HRLibraryPage() {
   function handleSearch(val: string) {
     setSearchInput(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => updateParam('q', val || null), 350);
+    debounceRef.current = setTimeout(() => {
+      updateParam('q', val || null);
+      setDsaPage(1);
+    }, 350);
   }
 
   function openProblem(p: Problem) {
@@ -594,6 +650,20 @@ export default function HRLibraryPage() {
     }
   }
 
+  async function openLcProblem(p: LcProblem) {
+    try {
+      const detail = await getProblem(p.slug);
+      const pySnippet = detail.code_snippets?.find(s => s.langSlug === 'python3') ?? detail.code_snippets?.[0];
+      const starterCode = pySnippet?.code ?? '';
+      const content = detail.content
+        ? detail.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+        : p.title;
+      navigate(`/lumora/coding?problem=${encodeURIComponent(content)}&starter_code=${encodeURIComponent(starterCode)}`);
+    } catch {
+      navigate(`/lumora/coding?problem=${encodeURIComponent(p.title)}`);
+    }
+  }
+
   const activeCount = selectedRoles.length + selectedTypes.length + selectedDiffs.length +
                       selectedSkills.length + selectedDurs.length + (q ? 1 : 0);
 
@@ -621,7 +691,7 @@ export default function HRLibraryPage() {
           </div>
         </div>
 
-        {/* Full-width search bar */}
+        {/* Search */}
         <div style={{ position: 'relative', marginBottom: 14 }}>
           <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }}
             width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
@@ -644,30 +714,24 @@ export default function HRLibraryPage() {
           />
         </div>
 
-        {/* ── Tab bar ──────────────────────────────────────────────────────── */}
+        {/* ── Tab bar — 4 tabs ─────────────────────────────────────────────── */}
         <div style={{
-          display: 'flex', gap: 2,
-          padding: 3,
+          display: 'flex', gap: 2, padding: 3,
           background: 'rgba(3,19,46,0.88)',
           border: '1px solid rgba(201,162,39,0.50)',
-          borderRadius: 10,
-          marginBottom: 14,
+          borderRadius: 10, marginBottom: 14,
         }}>
-          {(['all', 'mcq', 'coding', 'design', 'dsa'] as const).map(tab => (
+          {(['all', 'mcq', 'coding', 'design'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               style={{
                 padding: '6px 16px',
                 background: activeTab === tab ? 'var(--cam-gold-leaf)' : 'transparent',
-                border: 'none',
-                borderRadius: 7,
+                border: 'none', borderRadius: 7,
                 color: activeTab === tab ? '#020617' : 'rgba(255,255,255,0.85)',
-                fontSize: 12,
-                fontWeight: activeTab === tab ? 700 : 600,
-                cursor: 'pointer',
-                transition: 'all 0.12s',
-                whiteSpace: 'nowrap',
+                fontSize: 12, fontWeight: activeTab === tab ? 700 : 600,
+                cursor: 'pointer', transition: 'all 0.12s', whiteSpace: 'nowrap',
               }}
             >
               {TAB_LABELS[tab]}
@@ -675,12 +739,11 @@ export default function HRLibraryPage() {
           ))}
         </div>
 
-        {/* Filter row — pill filters left, count + sort right */}
+        {/* ── Filter row ───────────────────────────────────────────────────── */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           gap: 8, paddingBottom: 16, flexWrap: 'wrap',
         }}>
-          {/* Left pills — Role first (like HackerRank), then Skill, Type, Difficulty, Duration */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             {metaRoles.length > 0 && (
               <FilterDropdown
@@ -709,10 +772,9 @@ export default function HRLibraryPage() {
               onToggle={v => toggleList('duration', v, selectedDurs)}
               renderLabel={v => <span>{DURATION_LABELS[v] ?? v}</span>}
             />
-            {/* Clear-all filter icon */}
             {activeCount > 0 && (
               <button
-                onClick={() => { setSearchInput(''); setSearchParams({}); }}
+                onClick={() => { setSearchInput(''); setSearchParams({}); setDsaPage(1); setDsaTag(''); }}
                 title="Clear all filters"
                 style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -729,7 +791,7 @@ export default function HRLibraryPage() {
             )}
           </div>
 
-          {/* Right: count | sort | Start Quiz */}
+          {/* Count + Sort + Start Quiz */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
             {loading ? <span>Loading…</span> : (
               <>
@@ -742,7 +804,6 @@ export default function HRLibraryPage() {
                 <span>Sort by <strong style={{ color: 'var(--text-secondary)' }}>Relevance</strong></span>
               </>
             )}
-            {/* Start Quiz — only visible when the MCQ tab is active */}
             {(activeTab === 'mcq' || activeTab === 'all') && (
               <button
                 onClick={() => {
@@ -774,85 +835,115 @@ export default function HRLibraryPage() {
       {/* Divider */}
       <div style={{ borderTop: '1px solid var(--border)' }}/>
 
-      {/* ── Problem list — full width, no max-width container ─────────────── */}
+      {/* ── Problem list ─────────────────────────────────────────────────────── */}
       <div>
-        {activeTab === 'dsa' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-            {/* DSA filter bar */}
-            <div style={{ display: 'flex', gap: 8, padding: '8px 16px', flexWrap: 'wrap', borderBottom: '1px solid rgba(196,160,60,0.18)' }}>
-              <select
-                value={dsaDifficulty}
-                onChange={e => { setDsaDifficulty(e.target.value); setDsaPage(1); }}
-                style={{ background: '#0d1117', color: 'var(--text-primary)', border: '1px solid rgba(196,160,60,0.3)', borderRadius: 6, padding: '4px 8px', fontSize: 12 }}
-              >
-                <option value="">All Difficulties</option>
-                <option value="Easy">Easy</option>
-                <option value="Medium">Medium</option>
-                <option value="Hard">Hard</option>
-              </select>
-              <select
-                value={dsaTag}
-                onChange={e => { setDsaTag(e.target.value); setDsaPage(1); }}
-                style={{ background: '#0d1117', color: 'var(--text-primary)', border: '1px solid rgba(196,160,60,0.3)', borderRadius: 6, padding: '4px 8px', fontSize: 12 }}
-              >
-                <option value="">All Topics</option>
-                {dsaTags.topic_tags.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-              <input
-                type="text"
-                placeholder="Search..."
-                value={dsaQ}
-                onChange={e => { setDsaQ(e.target.value); setDsaPage(1); }}
-                style={{ background: '#0d1117', color: 'var(--text-primary)', border: '1px solid rgba(196,160,60,0.3)', borderRadius: 6, padding: '4px 8px', fontSize: 12, width: 160 }}
-              />
-              <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)', alignSelf: 'center' }}>{dsaTotal} problems</span>
+        {/* HR problems */}
+        {loading
+          ? Array.from({ length: PAGE_LIMIT }).map((_, i) => <SkeletonCard key={i} i={i} />)
+          : problems.length === 0 && !showDsa
+            ? (
+              <div style={{ padding: '80px 28px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>No problems found</div>
+                <div style={{ fontSize: 13 }}>Try adjusting your search or filters</div>
+              </div>
+            )
+            : problems.map(p => (
+              <ProblemCard key={p.id} problem={p} onClick={() => openProblem(p)} />
+            ))
+        }
+
+        {/* ── LeetCode section ─────────────────────────────────────────────── */}
+        {showDsa && (
+          <div>
+            {/* Section separator + header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '10px 28px',
+              background: 'rgba(0,0,0,0.18)',
+              borderTop: problems.length > 0 ? '2px solid rgba(201,162,39,0.3)' : undefined,
+              borderBottom: '1px solid var(--border)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{
+                  fontSize: 11, fontWeight: 700, color: 'var(--cam-gold-leaf)',
+                  textTransform: 'uppercase', letterSpacing: '0.08em',
+                }}>
+                  LeetCode
+                </span>
+                {/* Topic filter */}
+                <select
+                  value={dsaTag}
+                  onChange={e => { setDsaTag(e.target.value); setDsaPage(1); }}
+                  style={{
+                    background: 'var(--bg-surface)', color: 'var(--text-secondary)',
+                    border: '1px solid var(--border)', borderRadius: 6,
+                    padding: '3px 8px', fontSize: 11, cursor: 'pointer', outline: 'none',
+                  }}
+                >
+                  <option value="">All Topics</option>
+                  {dsaTags.topic_tags.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+                {dsaTag && (
+                  <button onClick={() => { setDsaTag(''); setDsaPage(1); }} style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontSize: 11, color: 'var(--text-muted)', padding: '2px 4px',
+                  }}>✕ clear</button>
+                )}
+              </div>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                {dsaTotal.toLocaleString()} problems
+              </span>
             </div>
-            {/* Problem rows */}
+
+            {/* Table header */}
+            <DsaTableHeader />
+
+            {/* Rows */}
             {dsaLoading ? (
-              <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Loading...</div>
+              <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                Loading…
+              </div>
+            ) : dsaProblems.length === 0 ? (
+              <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                No LeetCode problems match
+              </div>
             ) : dsaProblems.map(p => (
-              <DsaProblemRow
-                key={p.slug}
-                problem={p}
-                onClick={async () => {
-                  try {
-                    const detail = await getProblem(p.slug);
-                    const pySnippet = detail.code_snippets?.find(s => s.langSlug === 'python3') ?? detail.code_snippets?.[0];
-                    const starterCode = pySnippet?.code ?? '';
-                    const content = detail.content
-                      ? detail.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-                      : p.title;
-                    navigate(`/lumora/coding?problem=${encodeURIComponent(content)}&starter_code=${encodeURIComponent(starterCode)}`);
-                  } catch {
-                    navigate(`/lumora/coding?problem=${encodeURIComponent(p.title)}`);
-                  }
-                }}
-              />
+              <DsaProblemRow key={p.slug} problem={p} onClick={() => openLcProblem(p)} />
             ))}
+
             {/* DSA pagination */}
             {dsaPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 4, padding: '8px 0' }}>
-                <button disabled={dsaPage <= 1} onClick={() => setDsaPage(p => p - 1)} style={{ padding: '5px 14px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: dsaPage <= 1 ? 'var(--text-muted)' : 'var(--text-primary)', cursor: dsaPage <= 1 ? 'not-allowed' : 'pointer', fontSize: 13 }}>← Prev</button>
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', alignSelf: 'center' }}>{dsaPage} / {dsaPages}</span>
-                <button disabled={dsaPage >= dsaPages} onClick={() => setDsaPage(p => p + 1)} style={{ padding: '5px 14px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: dsaPage >= dsaPages ? 'var(--text-muted)' : 'var(--text-primary)', cursor: dsaPage >= dsaPages ? 'not-allowed' : 'pointer', fontSize: 13 }}>Next →</button>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 4, padding: '12px 0' }}>
+                <button
+                  disabled={dsaPage <= 1}
+                  onClick={() => setDsaPage(p => p - 1)}
+                  style={{
+                    padding: '5px 14px', borderRadius: 6, border: '1px solid var(--border)',
+                    background: 'var(--bg-surface)', fontSize: 13,
+                    color: dsaPage <= 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                    cursor: dsaPage <= 1 ? 'not-allowed' : 'pointer',
+                  }}
+                >← Prev</button>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', alignSelf: 'center', padding: '0 8px' }}>
+                  {dsaPage} / {dsaPages}
+                </span>
+                <button
+                  disabled={dsaPage >= dsaPages}
+                  onClick={() => setDsaPage(p => p + 1)}
+                  style={{
+                    padding: '5px 14px', borderRadius: 6, border: '1px solid var(--border)',
+                    background: 'var(--bg-surface)', fontSize: 13,
+                    color: dsaPage >= dsaPages ? 'var(--text-muted)' : 'var(--text-primary)',
+                    cursor: dsaPage >= dsaPages ? 'not-allowed' : 'pointer',
+                  }}
+                >Next →</button>
               </div>
             )}
           </div>
-        ) : loading ? (
-          Array.from({ length: PAGE_LIMIT }).map((_, i) => <SkeletonCard key={i} i={i} />)
-        ) : problems.length === 0 ? (
-          <div style={{ padding: '80px 28px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>No problems found</div>
-            <div style={{ fontSize: 13 }}>Try adjusting your search or filters</div>
-          </div>
-        ) : (
-          problems.map(p => (
-            <ProblemCard key={p.id} problem={p} onClick={() => openProblem(p)} />
-          ))
         )}
       </div>
 
-      {/* ── Pagination ────────────────────────────────────────────────────── */}
+      {/* ── HR Pagination ─────────────────────────────────────────────────────── */}
       {pages > 1 && (
         <div style={{
           display: 'flex', justifyContent: 'center', gap: 6,
