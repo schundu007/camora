@@ -56,8 +56,8 @@ const MONACO_LANG: Record<string, string> = {
 const toMonacoLang = (lang: string): string => MONACO_LANG[lang] ?? lang;
 
 const LANGUAGES = [
-  { id: 'auto', label: 'Auto-detect' },
   { id: 'python', label: 'Python 3' },
+  { id: 'auto', label: 'Auto-detect' },
   { id: 'javascript', label: 'JavaScript' },
   { id: 'typescript', label: 'TypeScript' },
   { id: 'java', label: 'Java' },
@@ -96,7 +96,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const monaco = useMonaco();
 
   const [inputCode, setInputCode] = useState('');
-  const [language, setLanguage] = useState('auto');
+  const [language, setLanguage] = useState('python');
   const [isLoading, setIsLoading] = useState(false);
   const [fixedCode, setFixedCode] = useState('');
   const [changes, setChanges] = useState<CoFixChange[]>([]);

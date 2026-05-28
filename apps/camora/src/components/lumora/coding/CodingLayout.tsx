@@ -48,6 +48,24 @@ function detectLanguage(text: string): string {
   return 'python';
 }
 
+/**
+ * Detect language from a problem description (rather than code).
+ * Only returns non-null when there is an unambiguous, explicit signal —
+ * avoids false positives from common English words like "go" or "c".
+ */
+function detectLangFromDescription(text: string): string | null {
+  const t = text.toLowerCase();
+  if (/\bpython\s*3?\b/.test(t)) return 'python';
+  if (/\btypescript\b/.test(t)) return 'typescript';
+  if (/\bjavascript\b/.test(t)) return 'javascript';
+  if (/\bjava\b/.test(t) && !/javascript/.test(t)) return 'java';
+  if (/\bc\+\+\b|\bcpp\b/.test(t)) return 'cpp';
+  if (/\bgolang\b/.test(t)) return 'go';
+  if (/\brust\b/.test(t)) return 'rust';
+  if (/\bsql\b/.test(t)) return 'sql';
+  return null;
+}
+
 type ProblemTab = 'description' | 'solution';
 type OutputTab = 'testcases' | 'output';
 type InputMode = 'paste' | 'url' | 'image';
@@ -254,7 +272,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const t = useTheme(globalTheme === 'dark');
 
   // Core state
-  const [language, setLanguage] = useState('auto');
+  const [language, setLanguage] = useState('python');
   const [problemTab, setProblemTab] = useState<ProblemTab>('description');
   const [outputTab, setOutputTab] = useState<OutputTab>('testcases');
   const [inputMode, _setInputModeLocal] = useState<InputMode>(externalInputMode ?? 'paste');
@@ -359,6 +377,18 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     if (lang !== 'auto') return lang;
     return detectLanguage(text ?? problemTextRef.current);
   }, []);
+
+  // Auto-detect language from problem description when a problem is loaded.
+  // Only fires when problemText changes; only overrides if there is a clear
+  // unambiguous signal so generic LeetCode prompts stay on the Python default.
+  const lastAutoDetectedForRef = useRef('');
+  useEffect(() => {
+    const trimmed = problemText.trim();
+    if (!trimmed || trimmed === lastAutoDetectedForRef.current) return;
+    lastAutoDetectedForRef.current = trimmed;
+    const detected = detectLangFromDescription(trimmed);
+    if (detected) setLanguage(detected);
+  }, [problemText]);
 
   // Analysis tabs — declared here (before the useEffect at ~line 666 that lists it
   // as a dependency) to prevent TDZ: Rolldown converts const to actual const, so the
