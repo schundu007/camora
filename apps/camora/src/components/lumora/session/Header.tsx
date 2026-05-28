@@ -322,7 +322,7 @@ export const Header = ({ inputValue, onInputChange, onSubmit, onTranscription, s
               onKeyDown={handleTextareaKeyDown}
               placeholder="Paste a coding problem or system design prompt... (Cmd+Enter to send)"
               rows={4}
-              className="font-code flex-1 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 resize-y outline-none focus:ring-1 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)]/50 min-h-[80px] max-h-[300px]"
+              className="font-code flex-1 rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-gray-500 resize-y outline-none focus:ring-1 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)]/50 min-h-[80px] max-h-[300px]"
               style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
             />
             <div className="flex flex-col gap-1.5 shrink-0">
@@ -339,7 +339,7 @@ export const Header = ({ inputValue, onInputChange, onSubmit, onTranscription, s
               </button>
               <button
                 onClick={() => setIsExpanded(false)}
-                className="font-display flex items-center justify-center px-4 py-2 text-gray-400 text-xs font-medium rounded-xl hover:bg-white/5 hover:text-white transition-[background-color,color] active:scale-[0.98]"
+                className="font-display flex items-center justify-center px-4 py-2 text-gray-400 text-xs font-medium rounded-xl hover:bg-white/5 hover:text-[var(--text-primary)] transition-[background-color,color] active:scale-[0.98]"
               >
                 Collapse
               </button>

@@ -564,7 +564,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           }}
         >
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)] whitespace-nowrap">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">
               Cloud Architecture
             </span>
             {diagramData?.cloudProvider && (
@@ -724,7 +724,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           borderBottom: '1px solid var(--cam-gold-leaf)',
         }}
       >
-        <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--text-hero)]">System Design</span>
+        <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white">System Design</span>
         {/* Cloud-platform selector — same instance as the docs header,
             backed by useCloudProvider so a flip here propagates to every
             other diagram surface in the same browser. */}

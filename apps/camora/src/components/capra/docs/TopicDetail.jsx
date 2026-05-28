@@ -765,7 +765,7 @@ export default function TopicDetail({
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-[22px] font-bold text-[var(--text-hero)] landing-display tracking-tight" style={{ textWrap: 'balance' }}>{topicDetails.title}</h1>
+                <h1 className="text-[22px] font-bold text-white landing-display tracking-tight" style={{ textWrap: 'balance' }}>{topicDetails.title}</h1>
                 {topicDetails.isNew && (
                   <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 landing-mono"
                     style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 999, color: 'rgba(255,255,255,0.9)' }}>
@@ -1617,7 +1617,7 @@ export default function TopicDetail({
                 pills={[topicDetails.theoryQuestions.length]}
                 actions={
                   <button
-                    className="text-[10px] landing-mono text-[var(--text-hero)]/85 hover:text-[var(--text-hero)] transition-colors font-medium"
+                    className="text-[10px] landing-mono text-white/85 hover:text-white transition-colors font-medium"
                     onClick={() => {
                       const newVal = !codingAllQsExpanded;
                       setCodingAllQsExpanded(newVal);
@@ -2573,7 +2573,7 @@ export default function TopicDetail({
                           }
                           setSdAllQsExpanded(!sdAllQsExpanded);
                         }}
-                        className="text-[11px] font-medium text-[var(--text-hero)]/85 hover:text-[var(--text-hero)] transition-colors landing-mono flex items-center gap-1"
+                        className="text-[11px] font-medium text-white/85 hover:text-white transition-colors landing-mono flex items-center gap-1"
                       >
                         {sdAllQsExpanded ? 'Collapse all' : 'Expand all'}
                         <svg className={`w-3 h-3 transition-transform ${sdAllQsExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>

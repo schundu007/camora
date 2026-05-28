@@ -173,7 +173,7 @@ export const LivePage = () => {
                         <button onClick={() => setIsExpanded(false)} className="text-xs transition-colors px-2 py-1" style={{ color: 'var(--text-muted)' }}>Collapse</button>
                         <button onClick={handleInputSubmit} disabled={!inputValue.trim() || isStreaming}
                           className="px-4 py-1.5 rounded-lg text-xs font-bold disabled:opacity-30 transition-[background-color,color,opacity] duration-150 active:scale-[0.98]"
-                          style={{ background: inputValue.trim() ? 'linear-gradient(135deg, var(--accent), var(--accent))' : 'var(--border)', color: '#FFFFFF' }}>
+                          style={{ background: inputValue.trim() ? 'linear-gradient(135deg, var(--accent), var(--accent))' : 'var(--border)', color: inputValue.trim() ? '#FFFFFF' : 'var(--text-muted)' }}>
                           Send
                         </button>
                       </div>

@@ -610,7 +610,7 @@ export default function HRLibraryPage() {
                 <Icon name="code" size={24} style={{ color: 'var(--cam-primary-dk)' }} />
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-2xl font-extrabold mb-3 text-[var(--text-hero)]" style={{ fontFamily: 'var(--font-display)' }}>Problem Library</h1>
+                <h1 className="text-2xl font-extrabold mb-3 text-white" style={{ fontFamily: 'var(--font-display)' }}>Problem Library</h1>
                 <div className="flex flex-wrap gap-2">
                   {['Coding', 'Database', 'MCQ', 'Full Stack', 'Behavioral', 'Whiteboard'].map(tag => (
                     <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>

@@ -5760,7 +5760,7 @@ export default function Blind75PracticePage() {
             Blind 75
           </Link>
           <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.25)' }} />
-          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-hero)' }}>{problem.title}</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#FFFFFF' }}>{problem.title}</span>
           <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 6, color: 'var(--cam-primary-dk)', background: 'var(--cam-gold-leaf)' }}>
             {problem.difficulty}
           </span>
