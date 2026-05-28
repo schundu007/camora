@@ -124,6 +124,12 @@ export const HEAVY_TOPIC_LOADERS = {
  */
 const cache = new Map();
 
+export function getCachedTopicsForPage(page) {
+  const loader = HEAVY_TOPIC_LOADERS[page];
+  if (!loader) return undefined;
+  return cache.get(page);
+}
+
 export async function loadTopicsForPage(page) {
   const loader = HEAVY_TOPIC_LOADERS[page];
   if (!loader) return {};

@@ -50,7 +50,7 @@ import { ROLE_TOPIC_MAP, ONBOARDING_ROLE_TO_TOPIC_KEY } from '../../../data/capr
 // Heavy data — coding (~830 kB), system-design (~4 MB), low-level (~790 kB),
 // behavioral (~280 kB), projects (~360 kB) — load on demand keyed off
 // activePage. See loader.js for the chunk boundaries.
-import { loadTopicsForPage } from '../../../data/capra/topics/loader.js';
+import { loadTopicsForPage, getCachedTopicsForPage } from '../../../data/capra/topics/loader.js';
 
 // REVERTED from lazy() — the lazy + Suspense boundary appeared to
 // interact with the scroll-spy + repeated React renders to trigger
@@ -108,16 +108,40 @@ export default function DocsPage({ onBack }) {
 
   // Heavy topic data is dynamically imported per category. This object holds
   // whatever has been loaded so far; references below default to empty
-  // arrays/maps until the corresponding category's chunk lands. The
-  // 'no-topics' state during the brief load is acceptable — Vite caches
-  // chunks so subsequent visits are instant.
-  const [heavyData, setHeavyData] = useState({});
+  // arrays/maps until the corresponding category's chunk lands.
+  //
+  // When on the overview page we eagerly preload ALL heavy categories so the
+  // overview counts (computed from topic-array lengths) are accurate from the
+  // first render. Without this, categories whose data lives in dynamic chunks
+  // (coding, system-design, behavioral, low-level, sre, devops, projects)
+  // report 0 topics until the user explicitly visits each page.
+  const [heavyData, setHeavyData] = useState(() => {
+    const CACHE_PAGES = ['coding', 'system-design', 'behavioral', 'low-level', 'sre', 'devops', 'projects'];
+    const initial = {};
+    for (const page of CACHE_PAGES) {
+      const cached = getCachedTopicsForPage(page);
+      if (cached) Object.assign(initial, cached);
+    }
+    return initial;
+  });
   useEffect(() => {
     let cancelled = false;
-    loadTopicsForPage(activePage).then((data) => {
-      if (cancelled || Object.keys(data).length === 0) return;
-      setHeavyData((prev) => ({ ...prev, ...data }));
-    }).catch(() => { /* network error — leave previous state in place */ });
+
+    if (activePage === 'overview') {
+      const HEAVY_PAGES = ['coding', 'system-design', 'behavioral', 'low-level', 'sre', 'devops', 'projects'];
+      Promise.all(HEAVY_PAGES.map(loadTopicsForPage)).then((results) => {
+        if (cancelled) return;
+        const merged = {};
+        results.forEach((data) => { if (Object.keys(data).length > 0) Object.assign(merged, data); });
+        if (Object.keys(merged).length > 0) setHeavyData((prev) => ({ ...prev, ...merged }));
+      }).catch(() => {});
+    } else {
+      loadTopicsForPage(activePage).then((data) => {
+        if (cancelled || Object.keys(data).length === 0) return;
+        setHeavyData((prev) => ({ ...prev, ...data }));
+      }).catch(() => { /* network error — leave previous state in place */ });
+    }
+
     return () => { cancelled = true; };
   }, [activePage]);
 
@@ -1064,11 +1088,15 @@ export default function DocsPage({ onBack }) {
                           <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Learning Resources</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          {[
-                            { href: '/capra/prepare?page=coding', illustration: 'coding', icon: 'list', hexColor: 'navy',    title: 'Study Cheatsheet', desc: '17 topics covering 117 curated questions from top tech companies', badge: '117 Q' },
-                            { href: '/handbook', icon: 'code', illustration: 'low-level',                    hexColor: 'navy-dk', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
-                            { href: '/capra/practice', icon: 'behavioral', illustration: 'behavioral',       hexColor: 'gold',    title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership challenges', badge: 'Practice' },
-                          ].map(resource => (
+                          {(() => {
+                            const ct = codingTopics.length || 57;
+                            const qs = ct > 57 ? codingTopics.reduce((s, t) => s + (t.questions || 0), 0) : 50;
+                            return [
+                              { href: '/capra/prepare?page=coding', illustration: 'coding', icon: 'list', hexColor: 'navy',    title: 'Study Cheatsheet', desc: `${ct} topics covering ${qs > 50 ? qs : 'curated'} problems from top tech companies`, badge: `${ct} topics` },
+                              { href: '/handbook', icon: 'code', illustration: 'low-level',                    hexColor: 'navy-dk', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
+                              { href: '/capra/practice', icon: 'behavioral', illustration: 'behavioral',       hexColor: 'gold',    title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership challenges', badge: 'Practice' },
+                            ];
+                          })().map(resource => (
                             <a
                               key={resource.title}
                               href={resource.href}
@@ -2289,6 +2317,32 @@ export default function DocsPage({ onBack }) {
                 <>
                   {/* Preparation Readiness Dashboard */}
                   {(() => {
+                    if (behavioralTopics.length === 0) {
+                      return (
+                        <div className="rounded overflow-hidden mb-6" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}>
+                          <div className="px-5 py-4">
+                            <div className="animate-pulse space-y-4">
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="space-y-2">
+                                  <div className="h-3 w-20 rounded" style={{ background: 'var(--bg-elevated)' }} />
+                                  <div className="h-5 w-28 rounded" style={{ background: 'var(--bg-elevated)' }} />
+                                </div>
+                                <div className="space-y-1 text-right">
+                                  <div className="h-7 w-16 rounded" style={{ background: 'var(--bg-elevated)' }} />
+                                  <div className="h-3 w-24 rounded" style={{ background: 'var(--bg-elevated)' }} />
+                                </div>
+                              </div>
+                              <div className="h-2 w-full rounded" style={{ background: 'var(--bg-elevated)' }} />
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {[1,2,3,4].map(i => (
+                                  <div key={i} className="h-14 rounded" style={{ background: 'var(--bg-elevated)' }} />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
                     const allBehavioralTopics = [...behavioralTopics, ...companyPrep];
                     const totalTopics = behavioralTopics.length;
                     const completedCount = behavioralTopics.filter(t => completedTopics[t.id]).length;

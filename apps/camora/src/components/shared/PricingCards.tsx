@@ -222,9 +222,9 @@ export function useCheckout() {
   return { checkout, loading };
 }
 
-/* ── Single solo plan card — Team-style visual language ──
- * Each card has identity bar, mono price formula, stat callout panel,
- * features list, distinctive CTA. Monthly = light/navy-accent, Yearly = navy/gold.
+/* ── Single solo plan card — refined, hairline-border approach ──
+ * Cards use border + border-color for hover state instead of shadow lifts.
+ * Monthly = bg-surface, Yearly = accent-dk. Both use accent for checkmarks/CTAs.
  */
 function PlanCardView({ plan, prices, checkout, loading, navigate }: {
   plan: PlanCard;
@@ -236,47 +236,44 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
   const priceId = prices?.[plan.priceKey]?.priceId || '';
   const isYearly = plan.id === 'yearly';
 
-  // Per-plan stat callouts
   const stats = isYearly
     ? { included: '5 AI hours included', equiv: '$8.25 / month', save: 'Save $129 a year' }
     : { included: '2 AI hours included', equiv: 'Add more at $15/hr', save: 'Cancel any time' };
 
   if (isYearly) {
-    // Yearly = navy card, gold accents (mirrors Team identity)
     return (
       <div
-        className="rounded-2xl overflow-hidden flex flex-col transition-[transform,box-shadow] duration-200 active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-lg"
-        style={{ background: 'var(--cam-primary-dk)', border: '2px solid var(--cam-primary-dk)' }}
+        className="rounded-2xl overflow-hidden flex flex-col transition-colors duration-200 active:scale-[0.98]"
+        style={{ background: 'color-mix(in oklab, var(--accent) 12%, var(--bg-surface))', border: '1px solid color-mix(in oklab, var(--accent) 30%, transparent)' }}
       >
-        <div className="p-6 flex flex-col flex-1 text-white">
+        <div className="p-6 flex flex-col flex-1 text-[var(--text-primary)]">
           <div className="flex items-center gap-2 mb-3">
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>BEST VALUE</span>
-            <span className="text-[10px] uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)' }}>solo · billed yearly</span>
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-white" style={{ background: 'var(--accent)' }}>BEST VALUE</span>
+            <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>solo · billed yearly</span>
           </div>
           <h3 className="text-[22px] font-extrabold leading-tight mb-1" style={{ fontFamily: 'var(--font-display)' }}>
             One charge. A year of edge.
           </h3>
-          <p className="text-[12.5px] leading-relaxed mb-4" style={{ color: 'rgba(255,255,255,0.72)' }}>{plan.description}</p>
+          <p className="text-[12.5px] leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>{plan.description}</p>
 
-          {/* Price + stat panel (Team-style nested surface) */}
-          <div className="rounded-xl p-4 mb-4" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+          <div className="rounded-xl p-4 mb-4" style={{ background: 'color-mix(in oklab, var(--accent) 6%, var(--bg-surface))', border: '1px solid color-mix(in oklab, var(--accent) 15%, transparent)' }}>
             <div className="flex items-baseline justify-between mb-1">
-              <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-mono)' }}>YOUR PLAN</span>
-              <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-mono)' }}>{stats.equiv}</span>
+              <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>YOUR PLAN</span>
+              <span className="text-[10px]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{stats.equiv}</span>
             </div>
             <div className="flex items-baseline gap-1.5 mb-1">
-              <span className="text-5xl font-extrabold leading-none text-white" style={{ fontFamily: 'var(--font-display)' }}>{plan.price}</span>
-              <span className="text-[13px] font-medium" style={{ color: 'rgba(255,255,255,0.55)' }}>{plan.period}</span>
+              <span className="text-5xl font-extrabold leading-none" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>{plan.price}</span>
+              <span className="text-[13px] font-medium" style={{ color: 'var(--text-muted)' }}>{plan.period}</span>
             </div>
-            <div className="text-[11.5px]" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>
+            <div className="text-[11.5px]" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
               {stats.included} · {stats.save}
             </div>
           </div>
 
-          <ul className="space-y-2 flex-1 mb-4 text-[12.5px]" style={{ color: 'rgba(255,255,255,0.92)' }}>
+          <ul className="space-y-2 flex-1 mb-4 text-[12.5px]">
             {plan.features.map((f, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="var(--cam-gold-leaf)" strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              <li key={i} className="flex items-start gap-2" style={{ color: 'var(--text-secondary)' }}>
+                <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 <span>{f}</span>
               </li>
             ))}
@@ -285,12 +282,12 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
           <button
             onClick={() => priceId ? checkout(priceId, plan.name) : navigate('/pricing')}
             disabled={loading === plan.name}
-            className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-[transform,background-color,box-shadow,opacity] duration-150 active:scale-[0.98] disabled:opacity-50 hover:scale-[1.01]"
-            style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', border: '1px solid var(--cam-gold-leaf)' }}
+            className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-[background-color,opacity] duration-150 active:scale-[0.98] disabled:opacity-50"
+            style={{ background: 'var(--accent)', color: '#FFFFFF', border: '1px solid var(--accent)' }}
           >
             {loading === plan.name ? 'Processing…' : `${plan.cta} — ${plan.price}${plan.period}`}
           </button>
-          <p className="text-[10.5px] text-center mt-2.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          <p className="text-[10.5px] text-center mt-2.5" style={{ color: 'var(--text-muted)' }}>
             Cancel any time · Renews yearly
           </p>
         </div>
@@ -298,15 +295,14 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
     );
   }
 
-  // Monthly = light card, navy accents
   return (
     <div
-      className="rounded-2xl overflow-hidden flex flex-col transition-[transform,box-shadow] duration-200 active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-lg"
+      className="rounded-2xl overflow-hidden flex flex-col transition-[border-color] duration-200 active:scale-[0.98] hover:[border-color:var(--accent)]"
       style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
     >
       <div className="p-6 flex flex-col flex-1">
         <div className="flex items-center gap-2 mb-3">
-          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>POPULAR</span>
+          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-white" style={{ background: 'var(--accent)' }}>POPULAR</span>
           <span className="text-[10px] uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>solo · billed monthly</span>
         </div>
         <h3 className="text-[22px] font-extrabold leading-tight mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
@@ -314,7 +310,6 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
         </h3>
         <p className="text-[12.5px] leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>{plan.description}</p>
 
-        {/* Price + stat panel (mirrors Yearly/Team) */}
         <div className="rounded-xl p-4 mb-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <div className="flex items-baseline justify-between mb-1">
             <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>YOUR PLAN</span>
@@ -324,7 +319,7 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
             <span className="text-5xl font-extrabold leading-none" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>{plan.price}</span>
             <span className="text-[13px] font-medium" style={{ color: 'var(--text-muted)' }}>{plan.period}</span>
           </div>
-          <div className="text-[11.5px]" style={{ color: 'var(--cam-primary-dk)', fontFamily: 'var(--font-mono)' }}>
+          <div className="text-[11.5px]" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
             {stats.included} · {stats.save}
           </div>
         </div>
@@ -341,8 +336,8 @@ function PlanCardView({ plan, prices, checkout, loading, navigate }: {
         <button
           onClick={() => priceId ? checkout(priceId, plan.name) : navigate('/pricing')}
           disabled={loading === plan.name}
-          className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-[transform,background-color,box-shadow,opacity] duration-150 active:scale-[0.98] disabled:opacity-50 hover:scale-[1.01]"
-          style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)' }}
+          className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-[background-color,opacity] duration-150 active:scale-[0.98] disabled:opacity-50"
+          style={{ background: 'var(--accent)', color: '#FFFFFF', border: '1px solid var(--accent)' }}
         >
           {loading === plan.name ? 'Processing…' : `${plan.cta} — ${plan.price}${plan.period}`}
         </button>
