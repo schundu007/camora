@@ -435,12 +435,6 @@ export const MUST_DO_PROBLEMS = [
   },
   // ── Strings ───────────────────────────────────────────────────────────────
   {
-    slug: 'longest-palindromic-substring-string',
-    label: 'Longest Palindromic Substring',
-    category: 'Strings',
-    description: "Given a string s, return the longest palindromic substring. A palindrome reads the same forward and backward. Example: 'babad' → 'bab' (or 'aba'), 'cbbd' → 'bb'. Use expand-around-center approach.",
-  },
-  {
     slug: 'encode-and-decode-strings',
     label: 'Encode and Decode Strings',
     category: 'Strings',
