@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import Chip from '@/components/shared/ui/Chip';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -452,17 +453,11 @@ export default function LearnTopicPage() {
           </h1>
           <div className="flex items-center gap-2 flex-wrap shrink-0">
             {category && (
-              <span className="font-mono text-[10px] px-2 py-0.5 rounded-full capitalize" style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.75)' }}>
-                {category.replace(/-/g, ' ')}
-              </span>
+              <Chip>{category.replace(/-/g, ' ')}</Chip>
             )}
-            <span className="font-mono text-[10px] px-2 py-0.5 rounded-full capitalize font-bold" style={{ background: levelChip.bg, color: levelChip.text }}>
-              {level}
-            </span>
+            <Chip>{level}</Chip>
             {count && (
-              <span className="font-mono text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab,var(--cam-gold-leaf) 15%,transparent)', color: 'var(--cam-gold-leaf)' }}>
-                {count} tasks
-              </span>
+              <Chip variant="gold">{count} tasks</Chip>
             )}
           </div>
         </div>
@@ -472,9 +467,7 @@ export default function LearnTopicPage() {
             {source === 'programiz' ? 'Python Programming' : 'CodeSignal Learn'} · Learning guide
           </p>
           {fromCache && (
-            <span className="font-mono text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab,#10b981 15%,transparent)', color: '#10b981' }}>
-              cached
-            </span>
+            <Chip variant="success">cached</Chip>
           )}
           {streaming && (
             <span className="flex items-center gap-1.5 text-[11px]" style={{ color: 'rgba(255,255,255,0.4)' }}>

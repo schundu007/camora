@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
+import Chip from '../components/shared/ui/Chip';
 import { dialogConfirm, dialogAlert } from '../components/shared/Dialog';
 import SiteNav from '../components/shared/SiteNav';
 
@@ -546,13 +547,13 @@ export default function AnalyticsPage() {
                                 <span className="text-xs text-[var(--text-secondary)]">{location}</span>
                               </td>
                               <td className="px-4 py-2.5 whitespace-nowrap">
-                                <span className="font-mono text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in oklab, var(--cam-primary) 10%, var(--bg-elevated))', color: 'var(--cam-primary)' }}>{maskedIp}</span>
+                                <Chip variant="default" className="font-mono">{maskedIp}</Chip>
                               </td>
                               <td className="px-4 py-2.5">
-                                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab, var(--cam-primary) 12%, var(--bg-elevated))', color: 'var(--cam-primary)' }}>{browser}</span>
+                                <Chip variant="default">{browser}</Chip>
                               </td>
                               <td className="px-4 py-2.5">
-                                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab, var(--border) 80%, transparent)', color: 'var(--text-secondary)' }}>{os}</span>
+                                <Chip variant="default">{os}</Chip>
                               </td>
                               <td className="px-4 py-2.5">
                                 <span className="font-mono text-[12px] font-bold tabular-nums text-[var(--text-primary)]">{v.views}</span>

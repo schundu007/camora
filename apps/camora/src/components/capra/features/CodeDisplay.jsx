@@ -3,6 +3,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
+import Chip from '../../shared/ui/Chip';
 import SystemDesignPanel from './SystemDesignPanel';
 import LanguageSelectorModal from './LanguageSelectorModal';
 
@@ -402,11 +403,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
             >
               {approach.name || `Approach ${i + 1}`}
               {approach.complexity?.time && (
-                <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded ${
-                  activeApproach === i ? 'bg-[var(--accent)]/20 text-[var(--accent)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
-                }`}>
-                  {approach.complexity.time}
-                </span>
+                <Chip variant="default" className="ml-1.5">{approach.complexity.time}</Chip>
               )}
             </button>
           ))}
@@ -457,9 +454,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold px-3 py-1.5 rounded-md bg-[var(--bg-elevated)] text-brand-400 border border-[var(--border)]">
-            {normalizedLanguage}
-          </span>
+          <Chip variant="default">{normalizedLanguage}</Chip>
           <button
             onClick={handleCopy}
             className="px-3 py-1 text-xs font-medium rounded-md transition-all hover:bg-[var(--bg-elevated)]"
@@ -602,9 +597,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
                 {output.success ? 'Output' : 'Error'}
               </span>
               {autoRunOutput && output === autoRunOutput && (
-                <span className="text-xs px-1 py-0.5 rounded font-medium bg-brand-400/10 text-brand-400">
-                  Auto
-                </span>
+                <Chip variant="default">Auto</Chip>
               )}
               <span className="text-xs text-[var(--text-muted)]">
                 {(output.success ? output.output : (output.error || output.stderr || output.output))?.split('\n').length || 0} lines
@@ -674,9 +667,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
                 <span className="text-sm font-semibold text-[var(--text-primary)]">
                   {output.success ? 'Program Output' : 'Error Output'}
                 </span>
-                <span className="text-xs px-2.5 py-1 rounded-md font-medium bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
-                  {(output.success ? output.output : (output.error || output.stderr || output.output))?.split('\n').length || 0} lines
-                </span>
+                <Chip variant="default">{(output.success ? output.output : (output.error || output.stderr || output.output))?.split('\n').length || 0} lines</Chip>
               </div>
               <div className="flex items-center gap-2">
                 <button

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import Chip from '@/components/shared/ui/Chip';
 import { Icon } from '../../components/shared/Icons.jsx';
 import { getProblems, getProblemTags, getProblem, type LcProblem } from '../../lib/capra-api';
 
@@ -267,15 +268,7 @@ function ProblemCard({ problem, onClick }: { problem: Problem; onClick: () => vo
           }}>
             {problem.name}
           </span>
-          <span style={{
-            padding: '2px 10px', borderRadius: 4,
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            color: 'var(--text-secondary)',
-            fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', letterSpacing: '0.02em',
-          }}>
-            {typeLabel}
-          </span>
+          <Chip>{typeLabel}</Chip>
           {diffColor && (
             <span style={{ fontSize: 13, fontWeight: 600, color: diffColor }}>
               {problem.difficulty}
@@ -389,23 +382,13 @@ function DsaProblemRow({ problem, onClick }: { problem: LcProblem; onClick: () =
         transition: 'color 0.12s',
       }}>
         {problem.title}
-        {problem.is_premium && (
-          <span style={{
-            marginLeft: 7, fontSize: 9, fontWeight: 700, color: '#f59e0b',
-            background: 'rgba(245,158,11,0.12)', padding: '1px 5px', borderRadius: 3,
-            verticalAlign: 'middle',
-          }}>PRO</span>
-        )}
+          {problem.is_premium && (
+            <Chip variant="gold" className="ml-1.5 leading-none" style={{ fontSize: 9, padding: '1px 5px', verticalAlign: 'middle' }}>PRO</Chip>
+          )}
       </span>
       <div style={{ display: 'flex', gap: 4, alignItems: 'center', overflow: 'hidden', paddingRight: 10 }}>
         {problem.topic_tags.slice(0, 2).map(tag => (
-          <span key={tag.slug} style={{
-            padding: '2px 7px', borderRadius: 3, flexShrink: 0,
-            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)',
-            fontSize: 10, color: 'var(--text-muted)', whiteSpace: 'nowrap',
-          }}>
-            {tag.name}
-          </span>
+          <Chip key={tag.slug}>{tag.name}</Chip>
         ))}
         {problem.topic_tags.length > 2 && (
           <span style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0 }}>
@@ -683,7 +666,7 @@ export default function HRLibraryPage() {
                 <h1 className="text-2xl font-extrabold mb-3 text-white" style={{ fontFamily: 'var(--font-display)' }}>Problem Library</h1>
                 <div className="flex flex-wrap gap-2">
                   {['Coding', 'Database', 'MCQ', 'Full Stack', 'Behavioral', 'Whiteboard'].map(tag => (
-                    <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{tag}</span>
+                    <Chip key={tag}>{tag}</Chip>
                   ))}
                 </div>
               </div>

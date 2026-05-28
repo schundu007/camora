@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import Chip from '@/components/shared/ui/Chip';
 
 export type CalloutVariant = 'tip' | 'note' | 'warning' | 'caution';
 
@@ -100,17 +101,7 @@ export default function DocsCallout({
 
       {/* Glassy pill label */}
       <div className="flex items-center gap-2 mb-1.5">
-        <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-[0.12em]"
-          style={{
-            background: 'var(--bg-elevated)',
-            border: `1px solid color-mix(in srgb, ${v.color} 45%, rgba(16,185,129,0.4))`,
-            color: v.color,
-            boxShadow: `0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.45)`,
-            backdropFilter: 'blur(6px)',
-            WebkitBackdropFilter: 'blur(6px)',
-          }}
-        >
+        <Chip variant="default" className="gap-1.5">
           <span
             className="inline-flex items-center justify-center"
             style={{ width: 16, height: 16, color: v.color }}
@@ -119,7 +110,7 @@ export default function DocsCallout({
             {v.icon}
           </span>
           {label ?? v.label}
-        </span>
+        </Chip>
       </div>
 
       {/* Body content */}

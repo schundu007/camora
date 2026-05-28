@@ -17,6 +17,7 @@ import { useTheme, formatTime } from './theme';
 import { useTheme as useGlobalTheme } from '@/hooks/useTheme';
 import { ScaleCalculator } from './scale-calculator';
 import { SectionCopyBtn } from './section-helpers';
+import Chip from '@/components/shared/ui/Chip';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -1195,7 +1196,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                         <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                           <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, var(--cam-gold-leaf-lt), var(--cam-gold-leaf))` }} />
                           <h2 className="text-sm font-bold text-white">Functional</h2>
-                          <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{functionalClean.length}</span>
+                          <Chip variant="default" className="ml-auto">{functionalClean.length}</Chip>
                           <SectionCopyBtn getText={() => functionalClean.map((r, i) => `${i + 1}. ${r}`).join('\n')} title="Copy functional requirements" />
                         </div>
                         <div className="px-4 py-3">
@@ -1214,7 +1215,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                         <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                           <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, var(--cam-gold-leaf-lt), var(--cam-gold-leaf))` }} />
                           <h2 className="text-sm font-bold text-white">Non-Functional</h2>
-                          <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{nonFunctionalClean.length}</span>
+                          <Chip variant="default" className="ml-auto">{nonFunctionalClean.length}</Chip>
                           <SectionCopyBtn getText={() => nonFunctionalClean.join('\n')} title="Copy non-functional requirements" />
                         </div>
                         <div className="px-4 py-3">
@@ -1388,7 +1389,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
                     <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, var(--warning))` }} />
                     <h2 className="text-sm font-bold text-white">Follow-up Q&A</h2>
-                    <span className="ml-auto text-[10px] font-mono rounded-full px-2 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.headerBorder}` }}>{followupsClean.length}</span>
+                    <Chip variant="default" className="ml-auto">{followupsClean.length}</Chip>
                     <SectionCopyBtn getText={() => followupsClean.map((f, i) => `Q${i + 1}: ${f.question}\nA: ${f.answer}`).join('\n\n')} title="Copy follow-up Q&A" />
                   </div>
                   <div className="px-4 py-3">

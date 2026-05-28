@@ -12,6 +12,7 @@ import { useStreamingSession } from '../../hooks/useStreamingSession';
 import { useSessionStore } from '../../stores/session-store';
 import { useLumoraTour } from '../../hooks/useLumoraTour';
 import CamoraLogo from '../../components/shared/CamoraLogo';
+import Chip from '@/components/shared/ui/Chip';
 // UserDropdown moved to sidebar
 import { LumoraIconRail } from '../../components/lumora/shell/LumoraIconRail';
 import type { LumoraTab } from '../../components/lumora/shell/LumoraIconRail';
@@ -927,7 +928,7 @@ export const LumoraShellPage = () => {
                   </div>
                   <div className="w-px h-5 shrink-0" style={{ background: 'var(--border)' }} />
                   <div className="flex items-center gap-1.5 ml-auto">
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(38,97,156,0.12)', color: 'var(--accent)', border: '1px solid rgba(38,97,156,0.25)' }}>Active</span>
+                    <Chip variant="success">Active</Chip>
                     <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>subscription</span>
                   </div>
                 </div>

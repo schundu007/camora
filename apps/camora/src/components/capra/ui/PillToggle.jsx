@@ -14,6 +14,8 @@
  *   </PillToggleGroup>
  */
 
+import Chip from '@/components/shared/ui/Chip';
+
 export function PillToggleGroup({ children, className = '' }) {
   return (
     <div
@@ -65,16 +67,8 @@ export function PillToggle({ active, onClick, children, title, className = '' })
  */
 export function GlassPill({ children, className = '' }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 ${className}`}
-      style={{
-        background: 'rgba(255,255,255,0.08)',
-        border: '1px solid rgba(255,255,255,0.16)',
-        borderRadius: 999,
-        color: 'rgba(255,255,255,0.85)',
-      }}
-    >
+    <Chip variant="default" className={`gap-1.5 ${className}`}>
       {children}
-    </span>
+    </Chip>
   );
 }

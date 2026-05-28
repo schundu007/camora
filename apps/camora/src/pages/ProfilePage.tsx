@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Chip from '../components/shared/ui/Chip';
 import { getAuthHeaders } from '../utils/authHeaders';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
@@ -272,7 +273,7 @@ function ContributionsTab() {
                   <div className="px-4 py-2.5 text-[var(--text-primary)]">{c.company}</div>
                   <div className="px-4 py-2.5 text-[var(--text-muted)]">{c.role_level}</div>
                   <div className="px-4 py-2.5 text-[var(--text-muted)]">{c.round_type}</div>
-                  <div className="px-4 py-2.5"><span className="text-xs px-2 py-0.5 rounded-full" style={c.status === 'approved' ? { background: 'var(--accent-subtle)', color: 'var(--accent-text)' } : c.status === 'rejected' ? { background: 'var(--bg-elevated)', color: 'var(--danger)' } : { background: 'var(--bg-elevated)', color: 'var(--warning-text)' }}>{c.status}</span></div>
+                  <div className="px-4 py-2.5"><Chip variant={c.status === 'approved' ? 'success' : c.status === 'rejected' ? 'danger' : 'warning'}>{c.status}</Chip></div>
                   <div className="px-4 py-2.5 text-[var(--text-muted)]">{c.submitted}</div>
                 </div>
               ))

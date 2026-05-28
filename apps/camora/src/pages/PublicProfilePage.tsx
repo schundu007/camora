@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import Chip from '../components/shared/ui/Chip';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 import ScoreCard from '../components/capra/features/ScoreCard';
@@ -162,12 +163,12 @@ export default function PublicProfilePage() {
               <h1 className="text-2xl font-bold text-white tracking-tight">{profile.name}</h1>
               <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>@{profile.username}</p>
               <div className="flex items-center gap-3 mt-3 justify-center sm:justify-start">
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>
+                <Chip variant="gold">
                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
                   </svg>
                   Level {profile.level}
-                </span>
+                </Chip>
                 <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
                   {profile.xp.toLocaleString()} XP
                 </span>
@@ -282,12 +283,12 @@ export default function PublicProfilePage() {
 
         {/* CTA */}
         <div className="border-t border-[var(--border)] pt-10 text-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[rgba(38,97,156,0.08)] text-[var(--accent)] text-xs font-medium rounded-full mb-4">
+          <Chip variant="default" className="bg-[rgba(38,97,156,0.08)] text-[var(--accent)]">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
             </svg>
             Smart Prep
-          </div>
+          </Chip>
           <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Join Camora</h2>
           <p className="mt-2 text-sm text-[var(--text-muted)] max-w-sm mx-auto leading-relaxed">
             Apply. Prepare. Practice. Attend. Build your public profile, earn badges, and land your dream job.

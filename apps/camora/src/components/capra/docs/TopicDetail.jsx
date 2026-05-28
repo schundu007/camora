@@ -25,6 +25,7 @@ import {
 } from './TopicVisuals.jsx';
 import TopicComments from './TopicComments';
 import { ContentHeading, GlassPill } from '../ui';
+import Chip from '@/components/shared/ui/Chip';
 
 /**
  * NumberChip — gold-leaf numbered capsule used for ordered lists across
@@ -767,16 +768,10 @@ export default function TopicDetail({
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-[22px] font-bold text-white landing-display tracking-tight" style={{ textWrap: 'balance' }}>{topicDetails.title}</h1>
                 {topicDetails.isNew && (
-                  <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 landing-mono"
-                    style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 999, color: 'rgba(255,255,255,0.9)' }}>
-                    NEW
-                  </span>
+                  <Chip>NEW</Chip>
                 )}
                 {topicDetails.difficulty && (
-                  <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 landing-mono"
-                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, color: 'rgba(255,255,255,0.85)' }}>
-                    {topicDetails.difficulty}
-                  </span>
+                  <Chip>{topicDetails.difficulty}</Chip>
                 )}
                 {(() => {
                   // Derive the count from the content actually rendered so
@@ -789,10 +784,7 @@ export default function TopicDetail({
                   const count = actual || (typeof topicDetails.questions === 'number' ? topicDetails.questions : 0);
                   if (!count) return null;
                   return (
-                    <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 landing-mono"
-                      style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, color: 'rgba(255,255,255,0.85)' }}>
-                      {count} {count === 1 ? 'problem' : 'problems'}
-                    </span>
+                    <Chip>{count} {count === 1 ? 'problem' : 'problems'}</Chip>
                   );
                 })()}
                 {isSDStyle && <CloudProviderSelector variant="compact" className="ml-1" />}
@@ -930,9 +922,7 @@ export default function TopicDetail({
               <ContentHeading title="Key Concepts" />
               <div className="p-3 flex flex-wrap gap-1.5">
                 {topicDetails.concepts.map((concept, i) => (
-                  <span key={i} className="px-2.5 py-1 rounded text-xs landing-mono font-medium text-[var(--text-secondary)] bg-[var(--bg-elevated)] border border-[var(--border)]">
-                    {concept}
-                  </span>
+                  <Chip key={i}>{concept}</Chip>
                 ))}
               </div>
             </div>
@@ -1046,7 +1036,7 @@ export default function TopicDetail({
               <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)] flex items-center gap-2">
                 <Icon name="bookOpen" size={14} className="text-[var(--text-muted)]" />
                 <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{topicDetails.title}</h3>
-                <span className="text-[10px] landing-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">{topicDetails.articles?.length || topicDetails.questions} articles</span>
+                <Chip>{topicDetails.articles?.length || topicDetails.questions} articles</Chip>
               </div>
               <div className="pt-2">
                 <div className="text-[15px] leading-[1.75] text-[var(--text-secondary)] landing-body">
@@ -1230,11 +1220,11 @@ export default function TopicDetail({
             <div className="pt-2">
               {/* Difficulty + Time badges */}
               <div className="flex items-center gap-2 flex-wrap mb-3">
-                <span className={`text-[10px] uppercase tracking-[0.12em] landing-mono px-2 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-surface)] ${
-                  topicDetails.difficulty === 'beginner' ? 'font-medium text-[var(--text-muted)]' :
-                  topicDetails.difficulty === 'intermediate' ? 'font-semibold text-[var(--text-primary)]' :
-                  'font-bold text-[var(--accent)]'
-                }`}>{topicDetails.difficulty}</span>
+                <Chip variant={
+                  topicDetails.difficulty === 'beginner' ? 'easy' :
+                  topicDetails.difficulty === 'intermediate' ? 'medium' :
+                  'hard'
+                }>{topicDetails.difficulty}</Chip>
                 {topicDetails.estimatedTime && (
                   <span className="text-xs landing-mono text-[var(--text-muted)] flex items-center gap-1">
                     <Icon name="clock" size={12} />
@@ -1246,7 +1236,7 @@ export default function TopicDetail({
               {topicDetails.techStack && (
                 <div className="flex items-center gap-1.5 flex-wrap mb-4">
                   {topicDetails.techStack.map(tech => (
-                    <span key={tech} className="text-xs landing-mono px-2 py-1 rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]">{tech}</span>
+                    <Chip key={tech}>{tech}</Chip>
                   ))}
                 </div>
               )}
@@ -1350,9 +1340,7 @@ export default function TopicDetail({
               <div className="pt-2">
                 <div className="flex flex-wrap gap-2">
                   {topicDetails.keyPatterns.map((pattern, i) => (
-                    <span key={i} className="px-2.5 py-1 rounded text-xs font-medium landing-mono text-[var(--text-secondary)] bg-[var(--bg-elevated)] border border-[var(--border)]">
-                      {pattern}
-                    </span>
+                    <Chip key={i}>{pattern}</Chip>
                   ))}
                 </div>
               </div>
@@ -1592,15 +1580,15 @@ export default function TopicDetail({
                       <span className="text-sm text-[var(--text-primary)] truncate group-hover:text-[var(--accent)] transition-colors landing-body pr-2">{problemName}</span>
                       <span className="flex justify-center">
                         {difficulty ? (
-                          <span className={`text-[10px] uppercase tracking-[0.12em] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-surface)] ${
-                            difficulty === 'Easy' ? 'font-medium text-[var(--text-muted)]' :
-                            difficulty === 'Medium' ? 'font-semibold text-[var(--text-primary)]' :
-                            'font-bold text-[var(--accent)]'
-                          }`}>{difficulty}</span>
+                          <Chip variant={
+                            difficulty === 'Easy' ? 'easy' :
+                            difficulty === 'Medium' ? 'medium' :
+                            'hard'
+                          }>{difficulty}</Chip>
                         ) : <span className="text-[var(--text-muted)] text-xs">—</span>}
                       </span>
                       <span className="flex justify-center">
-                        <span className="text-[10px] font-bold text-[var(--accent)] bg-[var(--accent)]/10 border border-[var(--accent)]/20 px-2.5 py-1 rounded-md group-hover:bg-[var(--accent)]/20 transition-colors landing-mono uppercase tracking-wide">Solve</span>
+                        <Chip variant="default">Solve</Chip>
                       </span>
                     </Link>
                   );
@@ -1645,11 +1633,11 @@ export default function TopicDetail({
                           <span className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] landing-mono bg-[var(--bg-elevated)] text-[var(--text-secondary)] font-bold flex-shrink-0">{i + 1}</span>
                           <span className="text-[var(--text-primary)] text-sm font-medium flex-1 landing-body">{q.question}</span>
                           {q.difficulty && (
-                            <span className={`text-[10px] uppercase tracking-[0.12em] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-surface)] flex-shrink-0 ${
-                              q.difficulty === 'Easy' ? 'font-medium text-[var(--text-muted)]' :
-                              q.difficulty === 'Medium' ? 'font-semibold text-[var(--text-primary)]' :
-                              'font-bold text-[var(--accent)]'
-                            }`}>{q.difficulty}</span>
+                            <Chip variant={
+                              q.difficulty === 'Easy' ? 'easy' :
+                              q.difficulty === 'Medium' ? 'medium' :
+                              'hard'
+                            } className="flex-shrink-0">{q.difficulty}</Chip>
                           )}
                           <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -1790,9 +1778,7 @@ export default function TopicDetail({
                   <ContentHeading title="Key Concepts" />
                   <div className="p-3 flex flex-wrap gap-1.5">
                     {topicDetails.concepts.map((concept, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded text-xs landing-mono font-medium text-[var(--text-secondary)] bg-[var(--bg-elevated)] border border-[var(--border)]">
-                        {concept}
-                      </span>
+                      <Chip key={i}>{concept}</Chip>
                     ))}
                   </div>
                 </div>
@@ -1844,9 +1830,7 @@ export default function TopicDetail({
                                 <span className="text-[var(--text-secondary)] text-sm landing-body leading-relaxed flex-1">{req}</span>
                               </div>
                               {metricMatch && (
-                                <span className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-[var(--bg-elevated)] text-[var(--text-primary)] landing-mono border border-[var(--border)]/60">
-                                  {metricMatch[1].trim()}
-                                </span>
+                                <Chip className="flex-shrink-0">{metricMatch[1].trim()}</Chip>
                               )}
                             </div>
                           );
@@ -1944,7 +1928,7 @@ export default function TopicDetail({
                             {layer.components && (
                               <div className="mt-1.5 flex flex-wrap gap-1">
                                 {layer.components.map((comp, j) => (
-                                  <span key={j} className="text-[10px] font-medium px-1.5 py-0.5 rounded landing-mono" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>{comp}</span>
+                                  <Chip key={j}>{comp}</Chip>
                                 ))}
                               </div>
                             )}
@@ -2253,9 +2237,7 @@ export default function TopicDetail({
                       <div className="pt-2">
                         <div className="flex flex-wrap gap-2">
                           {topicDetails.components.map((comp, i) => (
-                            <span key={i} className="text-[10px] landing-mono px-2 py-1 rounded border bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20 font-semibold">
-                              {comp}
-                            </span>
+                            <Chip key={i}>{comp}</Chip>
                           ))}
                         </div>
                       </div>
@@ -3353,7 +3335,7 @@ export default function TopicDetail({
                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                 >
                   {t.difficulty && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{t.difficulty}</span>
+                    <Chip className="mb-1.5">{t.difficulty}</Chip>
                   )}
                   <h4 className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{t.title}</h4>
                   {t.description && (

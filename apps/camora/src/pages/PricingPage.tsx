@@ -13,6 +13,7 @@ import {
   Pill,
 } from '../components/marketing/primitives';
 import { cn } from '../utils/cn';
+import Chip from '@/components/shared/ui/Chip';
 
 /* ── Comparison matrix ───────────────────────────────────────
  * Cell tokens:
@@ -399,9 +400,7 @@ function CompareCell({ value, accent: isAccent = false }: { value: string; accen
           <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--cam-primary-dk)] text-white">
             <CheckIcon size={11} />
           </span>
-          <span className="rounded-full bg-[var(--cam-gold-leaf)] px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--cam-primary-dk)]">
-            {label}
-          </span>
+          <Chip variant="gold">{label}</Chip>
         </span>
       </td>
     );

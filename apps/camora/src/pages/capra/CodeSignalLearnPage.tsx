@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../components/shared/Icons.jsx';
 import { CODESIGNAL_LEARN_PATHS } from '../../data/capra/codesignalLearnPaths.js';
+import Chip from '@/components/shared/ui/Chip';
 
 type Difficulty = 'easy' | 'medium' | 'hard';
 
@@ -85,13 +86,9 @@ function PathCard({ path }: { path: LearnPath }) {
         {path.title}
       </span>
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full capitalize" style={{ background: diff.bg, color: diff.text }}>
-          {path.difficulty}
-        </span>
+        <Chip variant={path.difficulty}>{path.difficulty}</Chip>
         {path.practiceCount > 0 && (
-          <span className="font-mono text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
-            {path.practiceCount} tasks
-          </span>
+          <Chip>{path.practiceCount} tasks</Chip>
         )}
       </div>
     </button>
@@ -154,9 +151,7 @@ export default function CodeSignalLearnPage() {
           <h1 className="text-[15px] font-bold" style={{ color: 'var(--cam-gold-leaf)' }}>
             CodeSignal Learn
           </h1>
-          <span className="font-mono text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)', color: 'var(--cam-gold-leaf)' }}>
-            {(CODESIGNAL_LEARN_PATHS as LearnPath[]).length} paths
-          </span>
+          <Chip variant="gold">{(CODESIGNAL_LEARN_PATHS as LearnPath[]).length} paths</Chip>
         </div>
         <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
           421 learning paths from CodeSignal. Use the search or filter to find topics.
