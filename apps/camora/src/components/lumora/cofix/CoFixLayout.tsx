@@ -9,6 +9,7 @@ import { streamCoFixResponse } from '@/lib/sse-client';
 import { playgroundAPI } from '@/lib/capra-api';
 import type { CoFixAnswer, CoFixChange, CoFixWalkStep } from '@/lib/sse-client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/hooks/useTheme';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT } from '@/lib/companyContext';
 import { dialogAlert } from '@/components/shared/Dialog';
@@ -83,6 +84,8 @@ const pillBase = 'flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-b
 
 export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped, onRemove, onTranscription, isTabActive }: CoFixLayoutProps) => {
   const { token } = useAuth();
+  const { theme } = useTheme();
+  const monacoTheme = theme === 'light' ? 'vs' : 'vs-dark';
   const isStealthActive = useSessionStore(s => s.isStealthActive);
   const setIsStealthActive = useSessionStore(s => s.setIsStealthActive);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
@@ -880,6 +883,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               showLineNumbers
               fontSize={11}
               onMount={handleLeftEditorMount}
+              theme={monacoTheme === 'vs' ? 'light' : 'vs-dark'}
             />
           </div>
 
@@ -1078,7 +1082,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               <Editor
                 value={fixedCode}
                 language={toMonacoLang(effectiveLang)}
-                theme="vs-dark"
+                theme={monacoTheme}
                 options={{
                   readOnly: true,
                   minimap: { enabled: false },
