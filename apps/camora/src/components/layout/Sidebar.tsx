@@ -284,7 +284,6 @@ const sections: NavSection[] = [
     items: [
       { label: 'Practice', path: '/capra/practice', icon: icons.terminal },
       { label: 'Problem Library', path: '/capra/library', icon: icons.library },
-      { label: 'Blind 75', path: '/handbook', icon: icons.badge },
     ],
   },
   {
