@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Allotment } from 'allotment';
 import 'allotment/dist/style.css';
@@ -1023,8 +1024,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                   </div>
                 </div>
               )}
-              {/* Refine modal — fixed so parent overflow never clips it */}
-              {showRefinePopup && (
+              {/* Refine modal — portal so Allotment transforms don't break fixed positioning */}
+              {showRefinePopup && createPortal(
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowRefinePopup(false)} />
                   <div
@@ -1058,14 +1059,15 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                         >Cancel</button>
                         <button
                           onClick={handleRefine}
-                          disabled={!refinePrompt.trim()}
+                          disabled={!refinePrompt.trim() || isLoading}
                           className="text-[10px] font-bold uppercase tracking-[0.1em] px-4 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                           style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }}
                         >Apply</button>
                       </div>
                     </div>
                   </div>
-                </>
+                </>,
+                document.body
               )}
 
               {error && !isLoading && (
