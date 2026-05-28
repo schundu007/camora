@@ -119,8 +119,7 @@ export default function PricingPage() {
             <Pill tone="inverse" withDot>Pricing</Pill>
 
             <h1 className="mt-6 font-display text-[40px] sm:text-[52px] md:text-[64px] font-semibold tracking-tight leading-[1.04] text-white">
-              Pay for hours,
-              <br />
+              Pay for hours,{' '}
               <span className="text-[var(--accent)]">
                 not seats.
               </span>
