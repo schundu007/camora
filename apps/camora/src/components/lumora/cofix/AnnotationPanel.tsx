@@ -46,7 +46,7 @@ export const AnnotationPanel = ({ changes, walkthrough = [] }: AnnotationPanelPr
             {walkthrough.map((step, i) => (
               <div key={i} className="flex items-start gap-1.5">
                 <span className="mt-[4px] shrink-0 w-1 h-1 rounded-full" style={{ background: 'var(--cam-primary)' }} />
-                <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                <p className="text-[10px] leading-relaxed" style={{ color: 'var(--text-primary)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                   <strong style={{ color: 'var(--text-primary)' }}>
                     {`Line${step.lines.includes('-') || step.lines.includes(',') ? 's' : ''} ${step.lines}`}
                     {step.context ? ` (${step.context})` : ''}:
