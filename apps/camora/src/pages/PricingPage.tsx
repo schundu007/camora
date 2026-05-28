@@ -15,15 +15,6 @@ import {
 import { cn } from '../utils/cn';
 import Chip from '@/components/shared/ui/Chip';
 
-/* ── Comparison matrix ───────────────────────────────────────
- * Cell tokens:
- *   '✓'             — green checkmark
- *   '—'             — dash (not included)
- *   'pill:<label>'  — checkmark + small pill
- *   'mono:<text>'   — mono + accent (formula)
- *   'muted:<text>'  — muted body (limit / qualifier)
- *   anything else   — plain text
- */
 type CompareRow = { label: string; free: string; monthly: string; yearly: string; team: string };
 type CompareSection = { title: string; rows: CompareRow[] };
 
@@ -116,37 +107,27 @@ export default function PricingPage() {
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 70% 55% at 50% 0%, rgba(255,255,255,0.10), transparent 60%),' +
-              'radial-gradient(ellipse 55% 60% at 12% 30%, rgba(201,162,39,0.18), transparent 60%),' +
-              'radial-gradient(ellipse 50% 60% at 88% 70%, rgba(38,97,156,0.30), transparent 60%),' +
+              'radial-gradient(ellipse 70% 55% at 50% 0%, rgba(255,255,255,0.08), transparent 60%),' +
+              'radial-gradient(ellipse 50% 60% at 12% 30%, rgba(16,185,129,0.15), transparent 60%),' +
+              'radial-gradient(ellipse 45% 55% at 88% 70%, rgba(16,185,129,0.10), transparent 55%),' +
               'linear-gradient(135deg, #07112A 0%, #0B1A3D 50%, #0A1228 100%)',
-          }}
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 opacity-[0.16]"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
-            backgroundSize: '54px 54px',
-            maskImage: 'radial-gradient(ellipse 60% 50% at 50% 30%, black, transparent 75%)',
           }}
         />
 
         <Container className="relative pt-16 pb-20 md:pt-24 md:pb-24">
           <div className="mx-auto max-w-3xl text-center">
-            <Pill tone="inverse" withDot>Pricing · v3.2</Pill>
+            <Pill tone="inverse" withDot>Pricing</Pill>
 
             <h1 className="mt-6 font-display text-[40px] sm:text-[52px] md:text-[64px] font-semibold tracking-tight leading-[1.04] text-white">
               Pay for hours,
               <br />
-              <span className="bg-gradient-to-r from-[var(--cam-gold-leaf-lt)] via-[var(--cam-gold-leaf)] to-[var(--cam-gold-leaf-lt)] bg-clip-text text-transparent">
+              <span className="text-[var(--accent)]">
                 not seats.
               </span>
             </h1>
 
-            <p className="mt-6 mx-auto max-w-2xl text-base md:text-lg leading-relaxed text-white/72">
-              One hour free, no card. Plans from $19/mo with 2 included AI hours. Teams of 5–50 with pooled hours and a single invoice. Top-ups at $15/hr that never expire.
+            <p className="mt-6 mx-auto max-w-2xl text-base md:text-lg leading-relaxed text-white/65">
+              One hour free, no card. Plans from $19/mo with 2 included AI hours. Teams of 5-50 with pooled hours and a single invoice. Top-ups at $15/hr that never expire.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
@@ -163,12 +144,12 @@ export default function PricingPage() {
           <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-5 max-w-3xl mx-auto">
             {TRUST_POINTS.map((p, i) => (
               <div key={i} className="flex items-start gap-2.5 text-left">
-                <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[var(--cam-gold-leaf)]/20 text-[var(--cam-gold-leaf-lt)]">
-                  <CheckIcon size={12} />
+                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full" style={{ border: '1px solid rgba(16,185,129,0.35)' }}>
+                  <CheckIcon size={10} className="text-[var(--accent)]" />
                 </span>
                 <div className="min-w-0">
                   <div className="text-[13px] font-semibold leading-tight text-white">{p.title}</div>
-                  <div className="mt-0.5 text-[11.5px] text-white/55">{p.sub}</div>
+                  <div className="mt-0.5 text-[11.5px] text-white/50">{p.sub}</div>
                 </div>
               </div>
             ))}
@@ -189,16 +170,16 @@ export default function PricingPage() {
           <SectionHeading
             align="center"
             eyebrow="Compare"
-            title={<>Everything, <span className="text-[var(--cam-primary)]">side by side.</span></>}
+            title={<>Everything, <span className="text-[var(--accent)]">side by side.</span></>}
           />
 
-          <div className="mt-12 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-[0_2px_4px_rgba(15,23,42,0.04),0_16px_40px_-20px_rgba(15,23,42,0.18)]">
+          <div className="mt-12 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)]">
             <div className="overflow-x-auto">
               <table className="w-full pricing-compare-table" style={{ tableLayout: 'fixed', minWidth: 760, borderCollapse: 'collapse' }}>
                 <style>{`
                   .pricing-compare-table tr > *:nth-child(5),
                   .pricing-compare-table .team-tint-keep {
-                    background: var(--accent-subtle);
+                    background: color-mix(in oklab, var(--accent) 6%, var(--bg-surface));
                   }
                 `}</style>
                 <colgroup>
@@ -209,19 +190,19 @@ export default function PricingPage() {
                   <col style={{ width: '17%' }} />
                 </colgroup>
                 <thead>
-                  <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))' }}>
-                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--cam-primary)' }}>Feature</th>
-                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--cam-primary)' }}>Free</th>
-                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--cam-primary)' }}>Monthly</th>
-                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--cam-primary)' }}>Yearly</th>
+                  <tr>
+                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-[var(--accent)]">Feature</th>
+                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-[var(--accent)]">Free</th>
+                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-[var(--accent)]">Monthly</th>
+                    <th className="px-5 pt-5 pb-1 text-left font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-[var(--accent)]">Yearly</th>
                     <th className="px-5 pt-3 pb-1 text-left">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--cam-primary-dk)] px-2.5 py-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.18em] text-white">
-                        <span className="h-1 w-1 rounded-full bg-[var(--cam-gold-leaf-lt)]" />
-                        Team · Recommended
+                      <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.18em]" style={{ background: 'color-mix(in oklab, var(--accent) 20%, var(--bg-surface))', color: 'var(--accent)', border: '1px solid color-mix(in oklab, var(--accent) 30%, transparent)' }}>
+                        <span className="h-1 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
+                        Team
                       </span>
                     </th>
                   </tr>
-                  <tr className="border-b-2 border-[var(--border)] bg-[var(--bg-surface)]">
+                  <tr className="border-b border-[var(--border)] bg-[var(--bg-surface)]">
                     <th className="px-5 pb-4 pt-2"></th>
                     <PriceHead name="Trial" sub="$0 · 7 days" />
                     <PriceHead name="Monthly" sub="$19 / mo" />
@@ -243,7 +224,7 @@ export default function PricingPage() {
                           key={`${si}-${ri}`}
                           className={cn(
                             'border-t border-[var(--border)]',
-                            ri % 2 === 1 && 'bg-[rgba(15,27,45,0.02)]',
+                            ri % 2 === 1 && 'opacity-[0.96]',
                           )}
                         >
                           <td className="px-5 py-3.5 text-[13.5px] font-medium text-[var(--text-primary)]">{row.label}</td>
@@ -271,7 +252,7 @@ export default function PricingPage() {
           <SectionHeading
             align="center"
             eyebrow="FAQ"
-            title={<>Common <span className="text-[var(--cam-primary)]">questions.</span></>}
+            title={<>Common <span className="text-[var(--accent)]">questions.</span></>}
           />
 
           <div className="mt-10 border-t border-[var(--border)]">
@@ -280,10 +261,11 @@ export default function PricingPage() {
                 <button
                   type="button"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="flex w-full items-center justify-between py-5 text-left transition-colors hover:text-[var(--cam-primary)]"
+                  className="flex w-full items-center justify-between py-5 text-left transition-colors duration-150"
+                  style={{ color: 'var(--text-primary)' }}
                   aria-expanded={openFaq === i}
                 >
-                  <span className="pr-4 text-[15px] font-semibold text-[var(--text-primary)]">{faq.q}</span>
+                  <span className="pr-4 text-[15px] font-semibold">{faq.q}</span>
                   <svg
                     width="18"
                     height="18"
@@ -294,15 +276,16 @@ export default function PricingPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     className={cn(
-                      'flex-shrink-0 text-[var(--text-muted)] transition-transform duration-200',
+                      'flex-shrink-0 transition-transform duration-200',
                       openFaq === i && 'rotate-180',
                     )}
+                    style={{ color: openFaq === i ? 'var(--accent)' : 'var(--text-muted)' }}
                   >
                     <path d="M6 9l6 6 6-6" />
                   </svg>
                 </button>
                 {openFaq === i && (
-                  <p className="-mt-1 pb-5 pr-8 text-[14px] leading-relaxed text-[var(--text-secondary)]">
+                  <p className="-mt-1 pb-5 pr-8 text-[14px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                     {faq.a}
                   </p>
                 )}
@@ -315,25 +298,15 @@ export default function PricingPage() {
       {/* ═══════════ FINAL CTA ═══════════ */}
       <Section tone="muted" spacing="sm">
         <Container size="md">
-          <div className="relative overflow-hidden rounded-3xl bg-[#0A1228] px-8 py-12 md:px-14 text-white">
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 opacity-[0.16]"
-              style={{
-                backgroundImage:
-                  'linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)',
-                backgroundSize: '54px 54px',
-                maskImage: 'radial-gradient(ellipse 70% 60% at 30% 30%, black, transparent 75%)',
-              }}
-            />
+          <div className="relative overflow-hidden rounded-2xl border border-[color-mix(in oklab,var(--accent)15%,transparent)] bg-[#0A1228] px-8 py-12 md:px-14 text-white">
             <div className="relative flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
               <div>
                 <Eyebrow tone="inverse">Ready to go</Eyebrow>
                 <h2 className="mt-2 font-display text-2xl md:text-3xl font-semibold tracking-tight">
                   Start free.{' '}
-                  <span className="text-[var(--cam-gold-leaf-lt)]">Pay for results.</span>
+                  <span className="text-[var(--accent)]">Pay for results.</span>
                 </h2>
-                <p className="mt-2 text-[14px] text-white/65">
+                <p className="mt-2 text-[14px] text-white/60">
                   Free hour, no card. Pick a plan when you're ready.
                 </p>
               </div>
@@ -358,10 +331,10 @@ export default function PricingPage() {
 function PriceHead({ name, sub, accent = false }: { name: string; sub: string; accent?: boolean }) {
   return (
     <th className="px-5 pb-4 pt-2 text-left">
-      <div className={cn('font-display text-[14px] font-semibold', accent ? 'text-[var(--cam-primary-dk)]' : 'text-[var(--text-primary)]')}>
+      <div className={cn('font-display text-[14px] font-semibold', accent ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]')}>
         {name}
       </div>
-      <div className={cn('font-mono text-[11px]', accent ? 'text-[var(--cam-primary-dk)]/75' : 'text-[var(--text-muted)]')}>
+      <div className={cn('font-mono text-[11px]', accent ? 'text-[var(--accent)]/70' : 'text-[var(--text-muted)]')}>
         {sub}
       </div>
     </th>
@@ -377,8 +350,9 @@ function CompareCell({ value, accent: isAccent = false }: { value: string; accen
         <span
           className={cn(
             'inline-flex h-5 w-5 items-center justify-center rounded-full',
-            isAccent ? 'bg-[var(--cam-primary-dk)] text-white' : 'bg-[rgba(16,185,129,0.12)] text-[#10b981]',
+            isAccent ? 'text-white' : '',
           )}
+          style={{ background: isAccent ? 'var(--accent)' : 'color-mix(in oklab, var(--accent) 12%, transparent)', color: isAccent ? '#FFFFFF' : 'var(--accent)' }}
         >
           <CheckIcon size={11} />
         </span>
@@ -397,8 +371,8 @@ function CompareCell({ value, accent: isAccent = false }: { value: string; accen
     return (
       <td className={cellPad}>
         <span className="inline-flex items-center gap-1.5">
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--cam-primary-dk)] text-white">
-            <CheckIcon size={11} />
+          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full" style={{ background: 'var(--accent)' }}>
+            <CheckIcon size={11} className="text-white" />
           </span>
           <Chip variant="gold">{label}</Chip>
         </span>
@@ -408,7 +382,7 @@ function CompareCell({ value, accent: isAccent = false }: { value: string; accen
   if (value.startsWith('mono:')) {
     return (
       <td className={cellPad}>
-        <span className="font-mono text-[12.5px] font-bold text-[var(--cam-primary-dk)]">{value.slice(5)}</span>
+        <span className="font-mono text-[12.5px] font-bold" style={{ color: isAccent ? 'var(--accent)' : 'var(--text-secondary)' }}>{value.slice(5)}</span>
       </td>
     );
   }
@@ -421,7 +395,7 @@ function CompareCell({ value, accent: isAccent = false }: { value: string; accen
   }
   return (
     <td className={cellPad}>
-      <span className={cn('text-[13px] font-medium', isAccent ? 'text-[var(--cam-primary-dk)]' : 'text-[var(--text-secondary)]')}>
+      <span className={cn('text-[13px] font-medium', isAccent ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]')}>
         {value}
       </span>
     </td>

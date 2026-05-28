@@ -48,15 +48,15 @@ const APPA: Step[] = [
   },
   {
     key: 'prepare', label: 'Prepare', href: '/capra/prepare',
-    headline: '1,800+ curated study topics',
+    headline: '600+ curated study topics',
     desc: 'System design, DSA, behavioral, databases. Each with AI explanations and architecture diagrams.',
     Anim: PrepareAnim,
     icon: Glyph(<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>),
   },
   {
     key: 'practice', label: 'Practice', href: '/capra/practice',
-    headline: '5,000+ problems with AI feedback',
-    desc: 'Coding, DSA, MCQ, system design, SQL — 5,000+ unique problems across 50+ domains with AI scoring.',
+    headline: '1,300+ problems with AI feedback',
+    desc: 'Coding, DSA, MCQ, system design, SQL — 1,300+ unique problems across 50+ domains with AI scoring.',
     Anim: PracticeAnim,
     icon: Glyph(<><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></>),
   },
@@ -93,7 +93,7 @@ const FEATURES = [
   },
   {
     label: 'Prep',
-    title: '1,800+ topics with diagrams',
+    title: '600+ topics with diagrams',
     desc: 'System design, DSA, behavioral, databases — each with AI explanations and company-specific prep.',
     Anim: FeaturePrepAnim,
   },
@@ -164,23 +164,60 @@ export default function LandingPage() {
 
       {/* ═══════════ HERO ═══════════ */}
       <section className="relative overflow-hidden bg-[#0A1228] text-white">
+        {/* Animated aurora gradient orbs */}
         <div
           aria-hidden="true"
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 80% 90% at 0% 55%, rgba(255,255,255,0.07), transparent 55%),' +
-              'radial-gradient(ellipse 60% 80% at 12% 25%, rgba(201,162,39,0.18), transparent 60%),' +
-              'radial-gradient(ellipse 50% 60% at 92% 65%, rgba(38,97,156,0.28), transparent 60%),' +
+              'radial-gradient(ellipse 90% 70% at 5% 40%, rgba(16,185,129,0.12), transparent 55%),' +
+              'radial-gradient(ellipse 60% 80% at 12% 25%, rgba(201,162,39,0.15), transparent 60%),' +
+              'radial-gradient(ellipse 50% 60% at 92% 65%, rgba(16,185,129,0.18), transparent 60%),' +
+              'radial-gradient(ellipse 40% 50% at 50% 80%, rgba(201,162,39,0.06), transparent 55%),' +
               'linear-gradient(135deg, #07112A 0%, #0B1A3D 50%, #0A1228 100%)',
+            animation: 'heroOrbs 18s ease-in-out infinite alternate',
           }}
         />
+        {/* Drifting accent orb 1 */}
+        <div aria-hidden="true" className="absolute pointer-events-none opacity-20"
+          style={{
+            width: 500, height: 500, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(16,185,129,0.25) 0%, transparent 70%)',
+            top: '-10%', left: '-5%',
+            animation: 'heroDrift1 25s ease-in-out infinite alternate',
+          }}
+        />
+        {/* Drifting accent orb 2 */}
+        <div aria-hidden="true" className="absolute pointer-events-none opacity-15"
+          style={{
+            width: 400, height: 400, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(201,162,39,0.15) 0%, transparent 70%)',
+            bottom: '-8%', right: '10%',
+            animation: 'heroDrift2 20s ease-in-out infinite alternate',
+          }}
+        />
+        {/* Floating decorative tech nodes */}
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
+          {['top-[12%] left-[8%] w-3 h-3 delay-0', 'top-[30%] right-[15%] w-2 h-2 delay-[2s]',
+            'bottom-[20%] left-[20%] w-2.5 h-2.5 delay-[4s]', 'top-[60%] right-[8%] w-1.5 h-1.5 delay-[1s]',
+            'bottom-[35%] right-[35%] w-2 h-2 delay-[3s]', 'top-[8%] right-[30%] w-1.5 h-1.5 delay-[5s]',
+          ].map((pos, i) => (
+            <span key={i} className={`absolute rounded-full ${pos}`}
+              style={{
+                background: i % 2 === 0 ? 'rgba(16,185,129,0.5)' : 'rgba(201,162,39,0.4)',
+                boxShadow: i % 2 === 0 ? '0 0 12px rgba(16,185,129,0.3)' : '0 0 12px rgba(201,162,39,0.25)',
+                animation: `heroFloat ${4 + (i % 3) * 2}s ease-in-out ${i * 0.5}s infinite`,
+              }}
+            />
+          ))}
+        </div>
+        {/* Grid overlay */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 opacity-[0.18]"
+          className="absolute inset-0 opacity-[0.15]"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+              'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
             backgroundSize: '56px 56px',
             maskImage: 'radial-gradient(ellipse 60% 70% at 20% 30%, black, transparent 80%)',
           }}
@@ -215,7 +252,7 @@ export default function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
               >
-                1,000+ matched roles, 1,800+ study topics, 5,000+ practice problems, and a live AI copilot in real time: everything from first application to final offer.
+                 1,000+ matched roles, 600+ study topics, 1,300+ practice problems, and a live AI copilot in real time: everything from first application to final offer.
               </motion.p>
 
               <motion.div
@@ -254,6 +291,29 @@ export default function LandingPage() {
 
           </div>
         </Container>
+
+        <style>{`
+          @keyframes heroOrbs {
+            0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
+            33%  { transform: translate(3%, -2%) rotate(1.5deg) scale(1.03); }
+            66%  { transform: translate(-2%, 3%) rotate(-1deg) scale(0.97); }
+            100% { transform: translate(2%, -2%) rotate(0.5deg) scale(1.02); }
+          }
+          @keyframes heroDrift1 {
+            0%   { transform: translate(0, 0) scale(1); }
+            50%  { transform: translate(8%, 6%) scale(1.12); }
+            100% { transform: translate(-4%, -3%) scale(0.95); }
+          }
+          @keyframes heroDrift2 {
+            0%   { transform: translate(0, 0) scale(1); }
+            50%  { transform: translate(-6%, -8%) scale(1.08); }
+            100% { transform: translate(5%, 4%) scale(0.92); }
+          }
+          @keyframes heroFloat {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 1; }
+            50%      { transform: translateY(-18px) scale(1.15); opacity: 0.7; }
+          }
+        `}</style>
       </section>
 
       {/* ═══════════ LOGO STRIP ═══════════ */}
@@ -300,9 +360,9 @@ export default function LandingPage() {
                 <Reveal key={step.key} delay={i * 0.06}>
                   <Link
                     to={step.href}
-                    className="group flex h-full items-start gap-4 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] transition-[transform,border-color,box-shadow] duration-200 active:scale-[0.98] hover:-translate-y-0.5 hover:border-[var(--border-hover)] hover:shadow-[0_4px_8px_rgba(15,23,42,0.06),0_16px_32px_-12px_rgba(15,23,42,0.16)]"
+                    className="group flex h-full items-start gap-4 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] transition-all duration-200 active:scale-[0.98] hover:-translate-y-1 hover:border-[var(--cam-primary)]/25 hover:shadow-[0_0_0_1px_rgba(16,185,129,0.08),0_4px_12px_rgba(16,185,129,0.06),0_16px_32px_-12px_rgba(15,23,42,0.16)]"
                   >
-                    <span className="shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--cam-primary)]">
+                    <span className="shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--cam-primary)] transition-colors duration-200 group-hover:bg-[var(--cam-primary)]/12 group-hover:text-[var(--cam-primary-lt)]">
                       {step.icon}
                     </span>
                     <div className="min-w-0">
@@ -326,13 +386,13 @@ export default function LandingPage() {
               <Reveal key={step.key} delay={0.12}>
                 <Link
                   to={step.href}
-                  className="group flex flex-col h-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] transition-[transform,border-color,box-shadow] duration-200 active:scale-[0.98] hover:-translate-y-0.5 hover:border-[var(--border-hover)] hover:shadow-[0_4px_8px_rgba(15,23,42,0.06),0_16px_32px_-12px_rgba(15,23,42,0.16)]"
+                  className="group flex flex-col h-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] transition-all duration-200 active:scale-[0.98] hover:-translate-y-1 hover:border-[var(--cam-primary)]/25 hover:shadow-[0_0_0_1px_rgba(16,185,129,0.08),0_4px_12px_rgba(16,185,129,0.06),0_16px_32px_-12px_rgba(15,23,42,0.16)]"
                 >
-                  <div className="relative h-48 sm:h-56 overflow-hidden bg-[var(--bg-elevated)] shrink-0">
+                  <div className="relative h-48 sm:h-56 overflow-hidden bg-[var(--bg-elevated)] shrink-0 transition-all duration-200 group-hover:brightness-110">
                     <step.Anim />
                   </div>
                   <div className="flex flex-col flex-1 p-7">
-                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--cam-primary)]">
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--cam-primary)] transition-colors duration-200 group-hover:bg-[var(--cam-primary)]/12 group-hover:text-[var(--cam-primary-lt)]">
                       {step.icon}
                     </span>
                     <p className="mt-4 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-[var(--cam-primary)]">
@@ -404,7 +464,7 @@ export default function LandingPage() {
               const wide = f.label === 'Live AI' || f.label === 'Mock Interviews';
               return (
                 <Reveal key={f.title} delay={i * 0.06} className={wide ? 'md:col-span-2' : ''}>
-                  <SurfaceCard interactive padding="lg" className="h-full">
+                  <SurfaceCard interactive padding="lg" className="h-full group">
                     <Eyebrow tone="accent">{f.label}</Eyebrow>
                     <h3 className="mt-2 font-display text-[20px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
                       {f.title}
@@ -412,7 +472,12 @@ export default function LandingPage() {
                     <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--text-secondary)]">
                       {f.desc}
                     </p>
-                    <div className="mt-5 -mx-2 h-32 md:h-36 overflow-hidden rounded-xl bg-[var(--bg-elevated)] relative">
+                    <div className={cn(
+                      "mt-5 -mx-2 h-32 md:h-36 overflow-hidden rounded-xl relative transition-all duration-300",
+                      wide
+                        ? "bg-gradient-to-br from-[var(--cam-primary)]/[0.03] via-[var(--bg-elevated)] to-[var(--cam-gold-leaf)]/[0.02] group-hover:from-[var(--cam-primary)]/[0.06] group-hover:to-[var(--cam-gold-leaf)]/[0.04]"
+                        : "bg-[var(--bg-elevated)]",
+                    )}>
                       <f.Anim />
                     </div>
                   </SurfaceCard>
@@ -483,7 +548,7 @@ export default function LandingPage() {
             <AudienceCard
               eyebrow="For engineers"
               title="Roles, practice & live AI"
-              body="1,000+ engineering roles matched to your skills, 1,800+ curated study topics with diagrams, and 5,000+ problems with AI feedback. Then live transcription assistance during the session itself: the moment that decides the offer."
+               body="1,000+ engineering roles matched to your skills, 600+ curated study topics with diagrams, and 1,300+ problems with AI feedback. Then live transcription assistance during the session itself: the moment that decides the offer."
               ctaLabel={isAuthenticated ? 'Open dashboard' : 'Start free'}
               ctaHref="/capra/prepare"
             />
@@ -503,9 +568,22 @@ export default function LandingPage() {
       <Section tone="surface" spacing="md">
         <Container>
           <div className="relative overflow-hidden rounded-3xl bg-[#0A1228] px-8 py-14 md:px-14 md:py-16 text-white">
+            {/* Animated aurora gradient */}
             <div
               aria-hidden="true"
-              className="absolute inset-0 opacity-[0.18]"
+              className="absolute inset-0 opacity-70"
+              style={{
+                background:
+                  'radial-gradient(ellipse 80% 60% at 30% 20%, rgba(16,185,129,0.10), transparent 55%),' +
+                  'radial-gradient(ellipse 50% 60% at 70% 80%, rgba(201,162,39,0.08), transparent 55%),' +
+                  'radial-gradient(ellipse 60% 50% at 90% 10%, rgba(16,185,129,0.06), transparent 50%)',
+                animation: 'ctaAurora 14s ease-in-out infinite alternate',
+              }}
+            />
+            {/* Grid overlay */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 opacity-[0.15]"
               style={{
                 backgroundImage:
                   'linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)',
@@ -513,6 +591,31 @@ export default function LandingPage() {
                 maskImage: 'radial-gradient(ellipse 70% 60% at 30% 30%, black, transparent 75%)',
               }}
             />
+            {/* Decorative glow ring */}
+            <div
+              aria-hidden="true"
+              className="absolute pointer-events-none"
+              style={{
+                width: 320, height: 320, borderRadius: '50%',
+                border: '1px solid rgba(16,185,129,0.06)',
+                top: '50%', right: '20%',
+                transform: 'translateY(-50%)',
+                animation: 'ctaRing 8s ease-in-out infinite alternate',
+                boxShadow: '0 0 60px rgba(16,185,129,0.04), inset 0 0 60px rgba(16,185,129,0.02)',
+              }}
+            />
+            {/* Floating decorative particles */}
+            <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
+              <span className="absolute top-[22%] right-[12%] w-2 h-2 rounded-full"
+                style={{ background: 'rgba(16,185,129,0.35)', animation: 'ctaFloat 5s ease-in-out 0s infinite' }}
+              />
+              <span className="absolute top-[60%] right-[25%] w-1.5 h-1.5 rounded-full"
+                style={{ background: 'rgba(201,162,39,0.3)', animation: 'ctaFloat 6s ease-in-out 1s infinite' }}
+              />
+              <span className="absolute top-[35%] right-[40%] w-2.5 h-2.5 rounded-full"
+                style={{ background: 'rgba(16,185,129,0.2)', animation: 'ctaFloat 7s ease-in-out 2s infinite' }}
+              />
+            </div>
             <div className="relative flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
               <div>
                 <Eyebrow tone="inverse">Ready when you are</Eyebrow>
@@ -537,6 +640,21 @@ export default function LandingPage() {
                 </MagneticCTA>
               </div>
             </div>
+            <style>{`
+              @keyframes ctaAurora {
+                0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
+                50%  { transform: translate(2%, -2%) rotate(1deg) scale(1.04); }
+                100% { transform: translate(-1%, 1%) rotate(-0.5deg) scale(0.97); }
+              }
+              @keyframes ctaRing {
+                0%   { transform: translateY(-50%) scale(0.9); opacity: 0.4; }
+                100% { transform: translateY(-50%) scale(1.15); opacity: 1; }
+              }
+              @keyframes ctaFloat {
+                0%, 100% { transform: translateY(0) scale(1); opacity: 0.5; }
+                50%      { transform: translateY(-16px) scale(1.2); opacity: 1; }
+              }
+            `}</style>
           </div>
         </Container>
       </Section>
