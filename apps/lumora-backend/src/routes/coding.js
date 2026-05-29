@@ -364,6 +364,19 @@ BASH RULES:
   write the complete config/query directly`}
 
 ##############################################################################
+# RULE #3.5: PYTHON — USE STDLIB FOR HTTP, NOT THIRD-PARTY PACKAGES
+##############################################################################
+${language === 'python' || language === 'python3' ? `The execution sandbox has Python stdlib only. Third-party packages are NOT installed.
+- HTTP requests: use urllib.request — NEVER import requests, httpx, or aiohttp
+- JSON parsing: use json (stdlib)
+- Do NOT import: requests, httpx, boto3, aiohttp, flask, fastapi
+Example of correct HTTP call:
+  import urllib.request, json
+  req = urllib.request.Request(url, headers={'Accept': 'application/json', 'User-Agent': 'app'})
+  with urllib.request.urlopen(req) as r:
+      data = json.loads(r.read())` : ''}
+
+##############################################################################
 # RULE #4: PLAIN TEXT IN EXPLANATIONS - NO CODE BLOCKS
 ##############################################################################
 - The "pitch" field MUST be plain text - NO code blocks, NO markdown
