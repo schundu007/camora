@@ -191,17 +191,47 @@ or any data that comes from OUTSIDE the program, you MUST:
   2. NEVER look at expected test-case values and hardcode them as static data
   3. NEVER create a fake return value that matches what the test cases expect
   4. The expected output in test cases shows the FORMAT — not data you should hardcode
+  5. It is ACCEPTABLE for your code to raise a network error or auth error when run without
+     real credentials — that is correct behavior, not a bug. A real API call that fails
+     at runtime is FAR better than fake data that "passes" in the sandbox.
+
+THE MOST COMMON VIOLATION — pre-populated sample variable:
+  The SINGLE most frequent cheating pattern is assigning fake data to a variable
+  BEFORE returning it. ALL of these are EQUALLY WRONG:
+    sample = [PR(...), PR(...)]               # BAD
+    sample = {PR(...), PR(...)}               # BAD
+    mock_data = [{'pr': 1, 'user': 'alice'}] # BAD
+    data = fetch_hardcoded_prs()             # BAD (hidden fake function)
+    test_data = simulate_api_response()      # BAD
+
+  It does NOT matter whether you call the variable sample, mock, data,
+  test, dummy, placeholder, fixture, stub, fake, or any other name.
+  If the data values were not fetched from a real external source, it is FAKE.
 
 EXAMPLE (Python GitHub API problem):
-  BAD — hardcodes PR data seen in test cases:
+  BAD — assigns PR data to a variable before returning (still hardcoded!):
+    def fetch_prs(owner, repo):
+        sample = {
+            PR(1, 'Fix payment', 'alice', 'a'*40, True),
+            PR(2, 'Update docs', 'bob', 'b'*40, True),
+        }
+        return sample
+
+  BAD — returns hardcoded list directly:
     def fetch_prs(owner, repo):
         return [PR(1, 'Fix payment', 'alice', True), PR(2, 'Update docs', 'bob', True)]
 
-  GOOD — makes real API calls:
+  GOOD — makes real API calls (may raise URLError without credentials — that is fine):
     def fetch_prs(owner, repo):
         url = f'https://api.github.com/repos/{owner}/{repo}/pulls?state=all'
         with urllib.request.urlopen(url) as r:
             return [PR(...) for item in json.loads(r.read())]
+
+NOTE on the "Simulation" patternTag:
+  "Simulation" refers to the DS&A pattern of simulating a deterministic process
+  (e.g., simulate a queue, simulate a board game, simulate robot movement on a grid).
+  It does NOT mean "simulate the API by returning fake data." If the problem
+  requires a real HTTP call, the code MUST make that call regardless of patternTag.
 
 If the problem defines a class like PR, GithubClient, DatabaseConnection, etc.
 that the solution is supposed to USE — implement it correctly, don't pre-fill
