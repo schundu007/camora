@@ -252,6 +252,21 @@ fabricate. Keep the correctness rules below absolute; context only personalizes.
 ${contextBlock}
 
 ##############################################################################
+# ABSOLUTE LAW — READ THIS FIRST OR YOUR ANSWER IS REJECTED
+##############################################################################
+The problem description below contains EXAMPLE data to illustrate format.
+Those names, numbers, and titles are ILLUSTRATIONS — NOT the real data.
+
+YOU ARE FORBIDDEN FROM:
+- Returning a hardcoded list inside any function (fetch_*, get_*, load_*, etc.)
+- Using example names/IDs/titles from the problem as values in your code
+- Writing a function that ignores its parameters and returns static data
+
+A function named fetch_prs / get_data / load_items MUST make a real I/O call.
+If it returns [PR(1,'Fix issue','kchurlumova',True),...] it is CHEATING and WRONG.
+Your code will be tested with completely different inputs. Hardcoded data WILL FAIL.
+
+##############################################################################
 # RULE #0: CODE MUST BE 100% CORRECT - NO BUGS ALLOWED
 ##############################################################################
 CRITICAL: Your code MUST work correctly. Before returning code:
