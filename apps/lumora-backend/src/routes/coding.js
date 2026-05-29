@@ -609,6 +609,37 @@ function extractJsonFromText(text) {
 }
 
 // ---------------------------------------------------------------------------
+// Hardcoding detector
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true if the generated code contains hardcoded example data instead
+ * of making real API/IO calls. Catches two common cheating patterns:
+ *   1. _MOCK_ / MOCK_ / FAKE_ module-level variables
+ *   2. fetch_*/get_*/load_* functions that return a static list without IO
+ */
+function detectsHardcoding(code) {
+  if (!code || typeof code !== 'string') return false;
+  if (/\b(_?MOCK_|_?FAKE_|HARDCODED_)/i.test(code)) return true;
+  const fnRe = /def\s+(fetch|get|load|retrieve)\w*\s*\([^)]*\)\s*(?:->[^:]+)?:([\s\S]*?)(?=\ndef\s|\nclass\s|$)/gi;
+  let m;
+  while ((m = fnRe.exec(code)) !== null) {
+    const body = m[2];
+    const hasIO = /urllib|http\.client|urlopen|socket\.|requests\.|httpx\.|aiohttp\.|subprocess/.test(body);
+    const hasStaticReturn = /return\s*[\[\(]/.test(body);
+    if (hasStaticReturn && !hasIO) return true;
+  }
+  return false;
+}
+
+function getCodeFromParsed(parsed) {
+  if (!parsed) return '';
+  if (parsed.code) return parsed.code;
+  if (Array.isArray(parsed.solutions) && parsed.solutions.length > 0) return parsed.solutions[0].code || '';
+  return '';
+}
+
+// ---------------------------------------------------------------------------
 // Free-tier daily limit check
 // ---------------------------------------------------------------------------
 
@@ -856,6 +887,21 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   const STRICT_JSON_REMINDER =
     'IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object matching the schema above. No preamble, no markdown fences, no prose. Start with { and end with }. Every string must be properly closed. The "solutions" array must contain exactly 1 complete solution object.';
 
+  const ANTI_CHEAT_REJECTION =
+    'REJECTED — your solution cheated by returning hardcoded example data.\n\n' +
+    'You did one of these forbidden things:\n' +
+    '  • Created a _MOCK_* / MOCK_* / FAKE_* variable with hardcoded objects\n' +
+    '  • Wrote fetch_prs / get_* that returns list(...) without calling urllib/http\n\n' +
+    'The ONLY correct fetch pattern is:\n' +
+    '  import urllib.request, json\n' +
+    '  def fetch_prs(owner, repo):\n' +
+    '      req = urllib.request.Request(f\'https://api.github.com/repos/{owner}/{repo}/pulls?state=all&per_page=100\', headers={\'Accept\': \'application/vnd.github+json\', \'User-Agent\': \'app\'})\n' +
+    '      with urllib.request.urlopen(req) as r:\n' +
+    '          return json.loads(r.read())\n\n' +
+    'Write a real implementation now. Return ONLY the JSON object — no preamble.';
+
+  let hardcodingDetected = false;
+
   // ── Pass 1: streaming primary attempt with transport-error retries ──────
   let transportAttempt = 0;
   while (true) {
@@ -929,7 +975,11 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
         `[coding/solve] parse_failed pass=primary_stream model=${primaryModel} rawLen=${rawAnswer.length} ` +
         `head=${JSON.stringify(truncateForLog(rawAnswer.slice(0, 1024), 1024))} tail=${JSON.stringify(truncateForLog(rawAnswer.slice(-1024), 1024))} ua=${JSON.stringify(userAgent)}`,
       );
-      parsedJson = null; // force fallthrough to Pass 2
+      parsedJson = null;
+    } else if (detectsHardcoding(getCodeFromParsed(parsedJson))) {
+      console.error(`[coding/solve] hardcoding_detected pass=primary_stream model=${primaryModel} — rejecting and retrying`);
+      hardcodingDetected = true;
+      parsedJson = null;
     }
   }
 
@@ -939,11 +989,10 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     sendEvent('status', { state: 'warn', msg: 'Polishing solution — one more moment…' });
     const passStart = performance.now();
     try {
-      const strictMessages = [
-        ...messages,
-        { role: 'assistant', content: rawAnswer || '(no output)' },
-        { role: 'user', content: STRICT_JSON_REMINDER },
-      ];
+      const pass2Reminder = hardcodingDetected ? ANTI_CHEAT_REJECTION : STRICT_JSON_REMINDER;
+      const strictMessages = hardcodingDetected
+        ? [...messages, { role: 'user', content: pass2Reminder }]
+        : [...messages, { role: 'assistant', content: rawAnswer || '(no output)' }, { role: 'user', content: pass2Reminder }];
       const resp = await client.messages.create({
         model: primaryModel,
         max_tokens: MAX_TOKENS,
@@ -961,10 +1010,15 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
         `rawLen=${strictRaw.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
       );
       if (strictParsed && (strictParsed.code || strictParsed.solutions)) {
-        parsedJson = strictParsed;
-        rawAnswer = strictRaw;
-        modelUsed = primaryModel;
-        terminalFailure = null;
+        if (detectsHardcoding(getCodeFromParsed(strictParsed))) {
+          console.error(`[coding/solve] hardcoding_detected pass=primary_strict model=${primaryModel} — falling to pass 3`);
+          hardcodingDetected = true;
+        } else {
+          parsedJson = strictParsed;
+          rawAnswer = strictRaw;
+          modelUsed = primaryModel;
+          terminalFailure = null;
+        }
       } else {
         console.error(
           `[coding/solve] parse_failed pass=primary_strict model=${primaryModel} rawLen=${strictRaw.length} ` +
@@ -995,7 +1049,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     try {
       const fbMessages = [
         ...messages,
-        { role: 'user', content: STRICT_JSON_REMINDER },
+        { role: 'user', content: hardcodingDetected ? ANTI_CHEAT_REJECTION : STRICT_JSON_REMINDER },
       ];
       const resp = await client.messages.create({
         model: fbModel,
@@ -1014,10 +1068,15 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
         `rawLen=${fbRaw.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
       );
       if (fbParsed && (fbParsed.code || fbParsed.solutions)) {
-        parsedJson = fbParsed;
-        rawAnswer = fbRaw;
-        modelUsed = fbModel;
-        terminalFailure = null;
+        if (detectsHardcoding(getCodeFromParsed(fbParsed))) {
+          console.error(`[coding/solve] hardcoding_detected pass=fallback_model model=${fbModel} — all passes exhausted`);
+          terminalFailure = { msg: 'Generated solution contained hardcoded data on all attempts. Please tap Regenerate.', category: 'hardcoding' };
+        } else {
+          parsedJson = fbParsed;
+          rawAnswer = fbRaw;
+          modelUsed = fbModel;
+          terminalFailure = null;
+        }
       } else {
         console.error(
           `[coding/solve] parse_failed pass=fallback_model model=${fbModel} rawLen=${fbRaw.length} ` +
