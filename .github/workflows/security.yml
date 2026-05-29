@@ -1,0 +1,126 @@
+name: Security Scan
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'   # Every Monday 02:00 UTC
+  push:
+    branches: [main]
+    paths:
+      - '**/package.json'
+      - '**/requirements.txt'
+      - '**/Dockerfile'
+      - 'pnpm-lock.yaml'
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Node.js audit ─────────────────────────────────────────────────────────
+  audit-node:
+    name: Node.js dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: pnpm audit (high + critical)
+        run: pnpm audit --audit-level=high 2>&1 || true
+
+      - name: Audit lumora-backend
+        working-directory: apps/lumora-backend
+        run: |
+          npm audit --audit-level=high --json > /tmp/audit-lumora.json 2>&1 || true
+          python3 -c "
+import json, sys
+try:
+  data = json.load(open('/tmp/audit-lumora.json'))
+  vulns = data.get('metadata', {}).get('vulnerabilities', {})
+  high = vulns.get('high', 0) + vulns.get('critical', 0)
+  print(f'lumora-backend: {high} high/critical vulnerabilities')
+except: print('could not parse audit output')
+"
+
+      - name: Audit ascend-backend
+        working-directory: apps/ascend-backend
+        run: |
+          npm audit --audit-level=high --json > /tmp/audit-ascend.json 2>&1 || true
+          python3 -c "
+import json, sys
+try:
+  data = json.load(open('/tmp/audit-ascend.json'))
+  vulns = data.get('metadata', {}).get('vulnerabilities', {})
+  high = vulns.get('high', 0) + vulns.get('critical', 0)
+  print(f'ascend-backend: {high} high/critical vulnerabilities')
+except: print('could not parse audit output')
+"
+
+  # ── Python audit ──────────────────────────────────────────────────────────
+  audit-python:
+    name: Python dependency audit (ai-services)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit ai-services
+        working-directory: apps/ai-services
+        run: pip-audit -r requirements.txt --format markdown 2>&1 || true
+
+  # ── Secret detection ──────────────────────────────────────────────────────
+  scan-secrets:
+    name: Secret detection (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  # ── CodeQL static analysis ────────────────────────────────────────────────
+  codeql:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, python]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+
+      - uses: github/codeql-action/autobuild@v3
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: codeql-${{ matrix.language }}
