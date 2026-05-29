@@ -782,17 +782,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     handleRun();
   }, [isStreaming, code, testCases, isRunning, handleRun]);
 
-  // Auto-generate all analysis tabs when solution stream finishes
-  useEffect(() => {
-    if (isStreaming || !jsonSolution) return;
-    if (autoAnalysisFiredForRef.current === activeSolutionIdx) return;
-    autoAnalysisFiredForRef.current = activeSolutionIdx;
-    (async () => {
-      await handleAnalysis('explain');
-      await handleAnalysis('issues');
-      await handleAnalysis('deepdive');
-    })();
-  }, [isStreaming, jsonSolution, activeSolutionIdx, handleAnalysis]);
+  // Analysis tabs load lazily on first click and are cached per solution.
+  // (Auto-firing all 3 on every solve wasted tokens and caused abort conflicts
+  // when manual clicks raced with the sequential auto-fetch.)
 
   // ── Parse solution from stream ──────────────────────────────────────────
 
