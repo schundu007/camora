@@ -616,7 +616,7 @@ function extractJsonFromText(text) {
  * Returns true if the generated code contains hardcoded example data instead
  * of making real API/IO calls. Catches two common cheating patterns:
  *   1. _MOCK_ / MOCK_ / FAKE_ module-level variables
- *   2. fetch_*/get_*/load_* functions that return a static list without IO
+ *   2. fetch_X / get_X / load_X functions that return a static list without IO
  */
 function detectsHardcoding(code) {
   if (!code || typeof code !== 'string') return false;
