@@ -278,9 +278,12 @@ ${starterCode
 - Use the LATEST modern idioms and built-in features of ${language}
 - Combine operations where possible
 - NO helper functions unless absolutely required for recursion/DP
-- NO unnecessary imports - prefer built-ins
+- NO unnecessary imports - prefer built-ins. Every import must be USED.
 - NO intermediate variables if you can inline
 - NO comments, NO debug prints
+- NO defensive try/except blocks unless the problem explicitly requires error handling
+- NO pagination unless the problem says "handle multiple pages" — a single page=1 fetch is fine
+- Prefer dataclasses or named tuples over verbose class definitions with __init__
 
 ##############################################################################
 # RULE #2: OUTPUT MUST MATCH EXACTLY
