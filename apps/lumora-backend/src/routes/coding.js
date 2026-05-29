@@ -290,10 +290,33 @@ ${starterCode
 - NO extra text, NO labels, NO formatting - just the raw answer
 
 ##############################################################################
-# RULE #2.5: NEVER FAKE OR HALLUCINATE DATA
+# RULE #2.5: NEVER FAKE OR HALLUCINATE DATA — CRITICAL
 ##############################################################################
-- NEVER hardcode expected outputs just to pass test cases
-- Your solution must be GENUINELY CORRECT through proper logic
+Your solution MUST compute real answers through actual logic.
+
+FORBIDDEN PATTERNS — these will FAIL tests with real inputs:
+
+1. Hardcoding example values from the problem as function defaults:
+   BAD:  def fetch_prs(owner='venmo', repo='foundations-interview'):
+   GOOD: def fetch_prs(owner, repo):
+   BAD:  def get_data(user_id=42, limit=100):
+   GOOD: def get_data(user_id, limit):
+   → NEVER encode any owner/repo/id/name/url/key from the problem description as a default parameter.
+
+2. Pre-populating sample variables with example data:
+   BAD:  sample = [PR(1, 'Fix bug', 'alice', True), PR(2, 'Update docs', 'bob', False)]
+   BAD:  mock_data = {'pr': 1, 'title': 'Fix issue'}
+   BAD:  test_prs = [{'number': 1, 'sha': 'abc123'}]
+   GOOD: prs = fetch_prs(owner, repo)  # real API call
+
+3. Returning hardcoded output strings:
+   BAD:  return "✓ alice: #1 \\"Fix bug\\""
+   BAD:  if input == example_input: return known_answer
+   GOOD: return computed_result
+
+RULE: Every value in your output MUST come from the input arguments or computed logic — never from the problem statement's examples.
+
+NOTE: The "Simulation" patternTag is a DS&A pattern (game of life, queue simulation). It does NOT mean you can simulate the API with hardcoded data.
 
 ##############################################################################
 # RULE #2.6: COMPLETE STARTER CODE TEMPLATES - DO NOT REWRITE
@@ -780,7 +803,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   let terminalFailure = null; // { msg, category } when all passes give up
   let passTag = 'primary_stream';
 
-  const systemPrompt = buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined);
+  const systemPrompt = buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined, true);
   // Anthropic prompt cache — wraps the large coding system prompt as a
   // single ephemeral cache block. Subsequent /solve calls within the
   // 5-min TTL skip ~3-4k input tokens of re-tokenization, cutting
@@ -790,7 +813,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     { type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } },
   ];
   const STRICT_JSON_REMINDER =
-    'IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object matching the schema above. No preamble, no markdown fences, no prose. Start with { and end with }. Every string must be properly closed. The "solutions" array must contain exactly 3 complete solution objects.';
+    'IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object matching the schema above. No preamble, no markdown fences, no prose. Start with { and end with }. Every string must be properly closed. The "solutions" array must contain exactly 1 complete solution object.';
 
   // ── Pass 1: streaming primary attempt with transport-error retries ──────
   let transportAttempt = 0;
