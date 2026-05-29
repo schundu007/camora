@@ -71,17 +71,18 @@ function getModelForUser(req) {
 }
 
 // Returns { provider, model } for the user's plan.
-// Paid users → o4-mini (OpenAI). Free users → Haiku (Anthropic).
+// Paid users → Opus 4.7 (most capable). Free users → Haiku (cheap).
 function getProviderForUser(req) {
   const plan = req.user?.plan_type || 'free';
   if (plan === 'free' || !plan) return { provider: 'anthropic', model: 'claude-haiku-4-5-20251001' };
-  return { provider: 'openai', model: process.env.OPENAI_CODING_MODEL || 'o4-mini' };
+  return { provider: 'anthropic', model: process.env.CLAUDE_CODING_MODEL || 'claude-opus-4-7' };
 }
 
-// Cross-provider fallback: o4-mini → gpt-4o-mini; Haiku ↔ Sonnet.
+// Fallback: Opus → Sonnet → Haiku.
 function fallbackFor({ provider, model }) {
-  if (provider === 'openai') return { provider: 'openai', model: 'gpt-4o-mini' };
-  return { provider: 'anthropic', model: model.includes('haiku') ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001' };
+  if (model.includes('opus')) return { provider: 'anthropic', model: 'claude-sonnet-4-6' };
+  if (model.includes('sonnet')) return { provider: 'anthropic', model: 'claude-haiku-4-5-20251001' };
+  return { provider: 'anthropic', model: 'claude-sonnet-4-6' };
 }
 
 // Streaming completion — yields tokens via onToken(), returns { rawAnswer, inputTokens, outputTokens }.
@@ -338,93 +339,54 @@ CODE STYLE REQUIREMENTS:
 Target language: ${language}
 
 ##############################################################################
-# CRITICAL: EXACTLY 3 SOLUTIONS REQUIRED
+# SOLUTION: 1 BEST, COMPLETE, CORRECT SOLUTION
 ##############################################################################
-You MUST return a "solutions" array with EXACTLY 3 objects.
-Do NOT return a single "code" field. Use "solutions" array ONLY.
+Return the single BEST solution — the approach a strong engineer would
+reach for in production or at a top-company interview. Pick the cleanest,
+most idiomatic, most correct approach for this specific problem.
 
-The 3 solutions MUST be WIDELY RECOGNIZED approaches that engineers
-actually use in interviews and production. Pick from well-known patterns:
-
-For array/string problems: Brute Force, Sorting, Hash Map, Two Pointers,
-  Sliding Window, Binary Search, Prefix Sum, Stack, Monotonic Stack
-For graph/tree problems: BFS, DFS, Union-Find, Topological Sort, Dijkstra
-For DP problems: Recursion+Memoization, Bottom-Up DP, Space-Optimized DP
-For design problems: Naive, Optimized Data Structure, Production-Grade
-For math problems: Brute Force, Mathematical Formula, Bit Manipulation
-
-Order: Solution 1 = Brute Force / Naive (simplest, easiest to explain)
-       Solution 2 = Standard Optimized (what most candidates should know)
-       Solution 3 = Most Optimal / Clever (what top candidates present)
+DO NOT return multiple approaches. DO NOT return brute force first.
+Return the ONE solution that is genuinely correct and you are most confident in.
 
 Respond with valid JSON in EXACTLY this format (no text before/after):
 {
   "language": "${language}",
   "solutions": [
     {
-      "name": "Approach name (e.g. Brute Force, Hash Map, Two Pointers)",
-      "patternTag": "Canonical pattern tag — MUST be one of: Two Pointers, Sliding Window, Fast & Slow Pointers, Hash Map, Hash Set, Binary Search, BFS, DFS, Topological Sort, Union-Find, DP - Memoization, DP - Tabulation, Greedy, Backtracking, Heap, Priority Queue, Trie, Bit Manipulation, Divide & Conquer, Monotonic Stack, Monotonic Queue, Matrix Traversal, Linked List, Prefix Sum, Math, Simulation, Brute Force. Pick the single most accurate tag for THIS solution.",
-      "approach": "Brief 1-2 sentence description of HOW this approach works",
-      "code": "complete runnable code for this approach with \\n for newlines",
+      "name": "Approach name (e.g. Hash Map, Two Pointers, BFS)",
+      "patternTag": "Canonical pattern — MUST be one of: Two Pointers, Sliding Window, Fast & Slow Pointers, Hash Map, Hash Set, Binary Search, BFS, DFS, Topological Sort, Union-Find, DP - Memoization, DP - Tabulation, Greedy, Backtracking, Heap, Priority Queue, Trie, Bit Manipulation, Divide & Conquer, Monotonic Stack, Monotonic Queue, Matrix Traversal, Linked List, Prefix Sum, Math, Simulation, Brute Force",
+      "approach": "1-2 sentences: what is the core insight and how does the solution work",
+      "code": "complete, runnable, correct code with \\n for newlines",
       "complexity": { "time": "O(...)", "space": "O(...)" },
-      "narration": "First-person spoken script the candidate can read ALOUD to the interviewer. 4-6 sentences. Natural speaking tone (contractions OK). Structure: hook → core insight → walk through the approach → complexity note. NO markdown, NO code blocks, NO bullet points — just plain conversational prose. Example: 'So my first instinct here is to brute-force it by comparing every pair — that's O(n squared). But we can do better: as I scan the array, I'll track values I've already seen in a hash map. For each element, I check if its complement — target minus current — is already in the map. That drops us to O(n) time with O(n) extra space for the map.'",
+      "narration": "First-person spoken script the candidate reads ALOUD. 4-6 sentences, natural speech, no markdown. Hook → core insight → walk through → complexity. Example: 'My approach is a hash map so I can look up complements in O(1). As I scan the array I store each value and its index. For every element I check if target minus that value is already stored — if yes, I return both indices immediately. This gives O(n) time and O(n) space.'",
       "trace": [
-        {"step": 1, "action": "Short description of what happens this step", "state": "variable=value, array=[...], counter=0"}
+        {"step": 1, "action": "short verb phrase describing this step", "state": "key=value, key=value"}
       ],
       "explanations": [
-        {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
-      ]
-    },
-    {
-      "name": "Second approach name",
-      "patternTag": "Canonical pattern tag from the list above",
-      "approach": "Brief description",
-      "code": "complete runnable code for second approach",
-      "complexity": { "time": "O(...)", "space": "O(...)" },
-      "narration": "First-person spoken script, 4-6 sentences, conversational prose",
-      "explanations": [
-        {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
-      ]
-    },
-    {
-      "name": "Third approach name (most optimal)",
-      "patternTag": "Canonical pattern tag from the list above",
-      "approach": "Brief description",
-      "code": "complete runnable code for third approach",
-      "complexity": { "time": "O(...)", "space": "O(...)" },
-      "narration": "First-person spoken script, 4-6 sentences, conversational prose",
-      "explanations": [
-        {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
+        {"line": 1, "code": "exact code line", "explanation": "PLAIN TEXT — what this line does and why"}
       ]
     }
   ],
   "pitch": {
-    "opener": "One sentence hook comparing the approaches",
-    "approach": "Summary of the 3 approaches and why you'd pick each",
-    "keyPoints": ["Key insight 1", "Key insight 2", "Key insight 3"],
-    "tradeoffs": ["Tradeoff between approach 1 vs 2", "Tradeoff between approach 2 vs 3"],
-    "edgeCases": ["Edge case 1", "Edge case 2", "Edge case 3"]
+    "opener": "One sentence: the key insight that makes this solution work",
+    "keyPoints": ["Why this approach", "Time/space tradeoff", "Edge case handled"],
+    "edgeCases": ["Empty input", "Single element", "Duplicates or overflow"]
   },
   "examples": [
-    {"input": "nums = [2,7,11,15], target = 9", "expected": "[0, 1]"},
-    {"input": "nums = [3,2,4], target = 6", "expected": "[1, 2]"}
+    {"input": "exact input as given in problem", "expected": "exact expected output"}
   ]
 }
 
 Rules:
-- You MUST provide exactly 3 solutions with DIFFERENT approaches (e.g. brute force -> optimized -> most optimal)
-- Each solution MUST have complete, runnable code — not pseudocode
-- Each solution MUST have a patternTag from the canonical list above (pick the single most accurate one)
-- Each solution MUST have a narration field — first-person spoken script the candidate will READ OUT LOUD during the interview (4-6 sentences, natural speech, no markdown)
-- Each solution MUST have a trace field — 4-10 step-by-step dry-run entries showing variable state as the algorithm runs on examples[0]. Each step: { step: number, action: short verb phrase, state: key variables formatted as 'name=value' joined with commas }. No code in state, just names and values. Shows the candidate how to talk through the first test case at a whiteboard.
+- "solutions" array MUST contain EXACTLY 1 object — one correct solution
+- The code MUST be complete and runnable — not pseudocode, not partial
+- MENTALLY TRACE through your code with the examples before outputting — if it fails, fix it
+- The trace MUST have 4-10 steps dry-running examples[0] through the algorithm
+- narration and explanations MUST be plain text — no markdown, no code blocks
 - Do NOT add comments in the code
 - Do NOT add main blocks or hard-coded test calls
-- The pitch should compare the 3 approaches conversationally
-- Generate COMPLETE, RUNNABLE code that includes all necessary imports for each solution
-- Examples must have exact input/output pairs
-- ALL 3 solutions must produce correct output for the given examples
-- Use the LATEST modern patterns and APIs for ${language}
-- Order solutions from simplest (brute force) to most optimal`;
+- Include all necessary imports
+- Use the LATEST modern idioms for ${language}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -681,7 +643,7 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
 
   const systemPrompt = buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined);
   const STRICT_JSON_REMINDER =
-    'IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object matching the schema above. No preamble, no markdown fences, no prose. Start with { and end with }. Every string must be properly closed. The "solutions" array must contain exactly 3 complete solution objects.';
+    'IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object. No preamble, no markdown fences, no prose. Start with { and end with }. The "solutions" array must contain exactly 1 complete solution object with code, trace, narration, and explanations fields.';
 
   // ── Pass 1: streaming primary attempt with transport-error retries ──────
   let transportAttempt = 0;
