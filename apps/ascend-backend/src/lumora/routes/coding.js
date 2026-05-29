@@ -8,6 +8,7 @@
  * POST /execute — Run code against test cases (Python, JS, Ruby).
  */
 import { Router } from 'express';
+import OpenAI from 'openai';
 import { getAnthropicClient } from '../lib/_shared/llm.js';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
@@ -15,10 +16,9 @@ import { checkUsage } from '../middleware/usageLimits.js';
 
 const router = Router();
 
-// Process-wide singleton via shared-llm. Avoids the per-request `new
-// Anthropic()` pattern that would otherwise re-initialize connection pools
-// + rate-limit state on every request.
+// Process-wide singletons — one per provider.
 const anthropicClient = getAnthropicClient();
+const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -53,16 +53,100 @@ const FREE_TIER_DAILY_LIMIT = parseInt(process.env.FREE_CODING_DAILY_LIMIT || '2
 // Backoff is intentionally tight so the whole recovery path stays
 // within the ~15 s hard budget (8 s happy path + up to 7 s recovery).
 const CLAUDE_MAX_TRANSPORT_RETRIES = 2;
-const CLAUDE_TRANSPORT_BACKOFFS_MS = [500, 1500]; // per reinforcement note
-const FALLBACK_MODEL_PAID = 'claude-haiku-4-5-20251001';
-const FALLBACK_MODEL_FREE = 'claude-sonnet-4-6';
+const CLAUDE_TRANSPORT_BACKOFFS_MS = [500, 1500];
 
-function isRetryableClaudeError(err) {
+function isRetryableError(err) {
   if (!err) return false;
   const status = err.status || err.statusCode || err?.response?.status;
   if (status === 529 || status === 503 || status === 502 || status === 504 || status === 429) return true;
   const msg = (err.message || '').toLowerCase();
   return /overloaded|timeout|timed out|econnreset|fetch failed|socket hang up|network/.test(msg);
+}
+
+// Claude model for non-solve endpoints (analyze, extract, etc.) that stay on Anthropic.
+function getModelForUser(req) {
+  const plan = req.user?.plan_type || 'free';
+  if (plan === 'free' || !plan) return 'claude-haiku-4-5-20251001';
+  return process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
+}
+
+// Returns { provider, model } for the user's plan.
+// Paid users → o4-mini (OpenAI). Free users → Haiku (Anthropic).
+function getProviderForUser(req) {
+  const plan = req.user?.plan_type || 'free';
+  if (plan === 'free' || !plan) return { provider: 'anthropic', model: 'claude-haiku-4-5-20251001' };
+  return { provider: 'openai', model: process.env.OPENAI_CODING_MODEL || 'o4-mini' };
+}
+
+// Cross-provider fallback: o4-mini → gpt-4o-mini; Haiku ↔ Sonnet.
+function fallbackFor({ provider, model }) {
+  if (provider === 'openai') return { provider: 'openai', model: 'gpt-4o-mini' };
+  return { provider: 'anthropic', model: model.includes('haiku') ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001' };
+}
+
+// Streaming completion — yields tokens via onToken(), returns { rawAnswer, inputTokens, outputTokens }.
+async function streamTokens({ provider, model }, systemPrompt, messages, abortSignal, onToken) {
+  if (provider === 'openai') {
+    const oaiMessages = [{ role: 'system', content: systemPrompt }, ...messages];
+    const stream = await openaiClient.chat.completions.create(
+      { model, messages: oaiMessages, max_completion_tokens: MAX_TOKENS, stream: true },
+      { signal: abortSignal },
+    );
+    const chunks = [];
+    let promptTokens = 0, completionTokens = 0;
+    for await (const chunk of stream) {
+      const tok = chunk.choices[0]?.delta?.content || '';
+      if (tok) { chunks.push(tok); onToken(tok); }
+      if (chunk.usage) {
+        promptTokens = chunk.usage.prompt_tokens || 0;
+        completionTokens = chunk.usage.completion_tokens || 0;
+      }
+    }
+    return { rawAnswer: chunks.join(''), inputTokens: promptTokens, outputTokens: completionTokens };
+  }
+  // Anthropic
+  const stream = await anthropicClient.messages.stream(
+    { model, max_tokens: MAX_TOKENS, system: systemPrompt, messages },
+    { signal: abortSignal },
+  );
+  const chunks = [];
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+      const tok = event.delta.text;
+      chunks.push(tok);
+      onToken(tok);
+    }
+  }
+  const final = await stream.finalMessage();
+  return {
+    rawAnswer: chunks.join(''),
+    inputTokens: final.usage?.input_tokens || 0,
+    outputTokens: final.usage?.output_tokens || 0,
+  };
+}
+
+// Non-streaming completion — returns { rawAnswer, inputTokens, outputTokens }.
+async function completeOnce({ provider, model }, systemPrompt, messages) {
+  if (provider === 'openai') {
+    const oaiMessages = [{ role: 'system', content: systemPrompt }, ...messages];
+    const resp = await openaiClient.chat.completions.create(
+      { model, messages: oaiMessages, max_completion_tokens: MAX_TOKENS },
+    );
+    return {
+      rawAnswer: resp.choices[0]?.message?.content || '',
+      inputTokens: resp.usage?.prompt_tokens || 0,
+      outputTokens: resp.usage?.completion_tokens || 0,
+    };
+  }
+  // Anthropic
+  const resp = await anthropicClient.messages.create(
+    { model, max_tokens: MAX_TOKENS, system: systemPrompt, messages },
+  );
+  return {
+    rawAnswer: resp.content?.map(b => b.text || '').join('') || '',
+    inputTokens: resp.usage?.input_tokens || 0,
+    outputTokens: resp.usage?.output_tokens || 0,
+  };
 }
 
 function sleep(ms) {
@@ -79,27 +163,6 @@ function truncateForLog(text, max = 2048) {
   return s.length > max ? s.slice(0, max) + `…(+${s.length - max} chars)` : s;
 }
 
-/**
- * Select the Claude model based on the user's subscription plan.
- * Free users get Haiku (cheaper), paid users get Sonnet (more capable).
- */
-function getModelForUser(req) {
-  const plan = req.user?.plan_type || 'free';
-  if (plan === 'free' || !plan) return 'claude-haiku-4-5-20251001';
-  return process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
-}
-
-/**
- * Opposite-tier model used as the final fallback when the primary model
- * has failed JSON validation twice. Paid users running Sonnet fall back
- * to Haiku (faster, usually still correct); free users on Haiku fall
- * back to Sonnet (more capable, acceptable one-off cost when Haiku
- * couldn't produce parseable JSON even with a strict reminder).
- */
-function fallbackModelFor(primaryModel) {
-  if (!primaryModel) return FALLBACK_MODEL_PAID;
-  return primaryModel.includes('haiku') ? FALLBACK_MODEL_FREE : FALLBACK_MODEL_PAID;
-}
 
 /**
  * All 51 supported languages.
@@ -596,17 +659,12 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
   //     - Last-resort. Paid Sonnet users drop to Haiku, free Haiku
   //       users jump to Sonnet. Still better than a dead-state error.
   //
-  // Telemetry: every failure mode is logged server-side with model,
-  // duration, raw-head/tail (truncated to ~2 KB), user-agent, and
-  // parse error so we can diagnose recurring failure patterns.
-  const client = anthropicClient;
   const startTime = performance.now();
   const userAgent = req.get?.('user-agent') || req.headers?.['user-agent'] || 'unknown';
-  const primaryModel = getModelForUser(req);
+  const primarySpec = getProviderForUser(req);
 
-  // Wire client disconnect to an AbortController so the Anthropic stream tears
-  // down immediately instead of burning through 15s+ of tokens the browser will
-  // never see. Checked at stream-loop boundaries below.
+  // Abort when client disconnects — propagated via AbortController into both
+  // the Anthropic and OpenAI SDK streaming calls.
   const abortController = new AbortController();
   let clientDisconnected = false;
   req.on('close', () => {
@@ -617,8 +675,8 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
   let rawAnswer = '';
   let inputTokens = 0;
   let outputTokens = 0;
-  let modelUsed = primaryModel;
-  let terminalFailure = null; // { msg, category } when all passes give up
+  let modelUsed = primarySpec.model;
+  let terminalFailure = null;
   let passTag = 'primary_stream';
 
   const systemPrompt = buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined);
@@ -630,61 +688,36 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
   while (true) {
     try {
       const passStart = performance.now();
-      const chunks = [];
-      const stream = await client.messages.stream({
-        model: primaryModel,
-        max_tokens: MAX_TOKENS,
-        system: systemPrompt,
-        messages,
-      }, { signal: abortController.signal });
-
-      for await (const event of stream) {
-        if (clientDisconnected) { try { stream.controller?.abort(); } catch {} break; }
-        if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-          const token = event.delta.text;
-          chunks.push(token);
-          sendEvent('token', { t: token });
-        }
-      }
+      const { rawAnswer: ans, inputTokens: it, outputTokens: ot } = await streamTokens(
+        primarySpec, systemPrompt, messages, abortController.signal,
+        tok => sendEvent('token', { t: tok }),
+      );
       if (clientDisconnected) return;
-
-      const finalMessage = await stream.finalMessage();
-      if (finalMessage.usage) {
-        inputTokens = finalMessage.usage.input_tokens;
-        outputTokens = finalMessage.usage.output_tokens;
-      }
-      rawAnswer = chunks.join('');
-      modelUsed = primaryModel;
+      rawAnswer = ans;
+      inputTokens = it;
+      outputTokens = ot;
+      modelUsed = primarySpec.model;
       console.log(
-        `[coding/solve] pass=primary_stream model=${primaryModel} attempt=${transportAttempt + 1} ok=true ` +
+        `[coding/solve] pass=primary_stream model=${primarySpec.model} provider=${primarySpec.provider} attempt=${transportAttempt + 1} ok=true ` +
         `rawLen=${rawAnswer.length} tokens=${inputTokens}+${outputTokens} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
       );
-      break; // stream succeeded, fall through to parse
+      break;
     } catch (err) {
-      const retryable = isRetryableClaudeError(err);
+      const retryable = isRetryableError(err);
       const status = err?.status || err?.statusCode || err?.response?.status || 'unknown';
       console.error(
-        `[coding/solve] pass=primary_stream model=${primaryModel} attempt=${transportAttempt + 1} ok=false ` +
+        `[coding/solve] pass=primary_stream model=${primarySpec.model} provider=${primarySpec.provider} attempt=${transportAttempt + 1} ok=false ` +
         `status=${status} retryable=${retryable} msg=${JSON.stringify(err?.message || String(err))} ua=${JSON.stringify(userAgent)}`,
       );
       if (retryable && transportAttempt < CLAUDE_MAX_TRANSPORT_RETRIES) {
         const delay = CLAUDE_TRANSPORT_BACKOFFS_MS[transportAttempt] ?? 1500;
         transportAttempt++;
-        sendEvent('status', {
-          state: 'warn',
-          msg: `Recovering — retry ${transportAttempt}/${CLAUDE_MAX_TRANSPORT_RETRIES}…`,
-        });
+        sendEvent('status', { state: 'warn', msg: `Recovering — retry ${transportAttempt}/${CLAUDE_MAX_TRANSPORT_RETRIES}…` });
         await sleep(delay);
         continue;
       }
-      // Transport failure is terminal for Pass 1. Pass 2 will try
-      // non-streaming which sometimes succeeds where streaming doesn't
-      // (different upstream edge), using the same model, strict prompt.
       rawAnswer = '';
-      terminalFailure = {
-        msg: err?.message || 'Claude API error',
-        category: retryable ? 'overloaded' : 'api_error',
-      };
+      terminalFailure = { msg: err?.message || 'AI API error', category: retryable ? 'overloaded' : 'api_error' };
       break;
     }
   }
@@ -695,10 +728,10 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
     parsedJson = extractJsonFromText(rawAnswer);
     if (!parsedJson || (!parsedJson.code && !parsedJson.solutions)) {
       console.error(
-        `[coding/solve] parse_failed pass=primary_stream model=${primaryModel} rawLen=${rawAnswer.length} ` +
+        `[coding/solve] parse_failed pass=primary_stream model=${primarySpec.model} rawLen=${rawAnswer.length} ` +
         `head=${JSON.stringify(truncateForLog(rawAnswer.slice(0, 1024), 1024))} tail=${JSON.stringify(truncateForLog(rawAnswer.slice(-1024), 1024))} ua=${JSON.stringify(userAgent)}`,
       );
-      parsedJson = null; // force fallthrough to Pass 2
+      parsedJson = null;
     }
   }
 
@@ -713,36 +746,28 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
         { role: 'assistant', content: rawAnswer || '(no output)' },
         { role: 'user', content: STRICT_JSON_REMINDER },
       ];
-      const resp = await client.messages.create({
-        model: primaryModel,
-        max_tokens: MAX_TOKENS,
-        system: systemPrompt,
-        messages: strictMessages,
-      });
-      const strictRaw = resp.content?.map(b => b.text || '').join('') || '';
-      if (resp.usage) {
-        inputTokens += resp.usage.input_tokens || 0;
-        outputTokens += resp.usage.output_tokens || 0;
-      }
+      const { rawAnswer: strictRaw, inputTokens: it, outputTokens: ot } = await completeOnce(primarySpec, systemPrompt, strictMessages);
+      inputTokens += it;
+      outputTokens += ot;
       const strictParsed = extractJsonFromText(strictRaw);
       console.log(
-        `[coding/solve] pass=primary_strict model=${primaryModel} ok=${!!(strictParsed && (strictParsed.code || strictParsed.solutions))} ` +
+        `[coding/solve] pass=primary_strict model=${primarySpec.model} provider=${primarySpec.provider} ok=${!!(strictParsed && (strictParsed.code || strictParsed.solutions))} ` +
         `rawLen=${strictRaw.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
       );
       if (strictParsed && (strictParsed.code || strictParsed.solutions)) {
         parsedJson = strictParsed;
         rawAnswer = strictRaw;
-        modelUsed = primaryModel;
+        modelUsed = primarySpec.model;
         terminalFailure = null;
       } else {
         console.error(
-          `[coding/solve] parse_failed pass=primary_strict model=${primaryModel} rawLen=${strictRaw.length} ` +
+          `[coding/solve] parse_failed pass=primary_strict model=${primarySpec.model} rawLen=${strictRaw.length} ` +
           `head=${JSON.stringify(truncateForLog(strictRaw.slice(0, 1024), 1024))} tail=${JSON.stringify(truncateForLog(strictRaw.slice(-1024), 1024))} ua=${JSON.stringify(userAgent)}`,
         );
       }
     } catch (err) {
       console.error(
-        `[coding/solve] pass=primary_strict model=${primaryModel} ok=false ` +
+        `[coding/solve] pass=primary_strict model=${primarySpec.model} provider=${primarySpec.provider} ok=false ` +
         `msg=${JSON.stringify(err?.message || String(err))} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
       );
     }
@@ -751,53 +776,39 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
   // ── Pass 3: fallback-tier model with strict reminder ────────────────────
   if (!parsedJson) {
     passTag = 'fallback_model';
-    const fbModel = fallbackModelFor(primaryModel);
+    const fbSpec = fallbackFor(primarySpec);
     sendEvent('status', { state: 'warn', msg: 'Switching to backup model…' });
     const passStart = performance.now();
     try {
-      const fbMessages = [
-        ...messages,
-        { role: 'user', content: STRICT_JSON_REMINDER },
-      ];
-      const resp = await client.messages.create({
-        model: fbModel,
-        max_tokens: MAX_TOKENS,
-        system: systemPrompt,
-        messages: fbMessages,
-      });
-      const fbRaw = resp.content?.map(b => b.text || '').join('') || '';
-      if (resp.usage) {
-        inputTokens += resp.usage.input_tokens || 0;
-        outputTokens += resp.usage.output_tokens || 0;
-      }
+      const fbMessages = [...messages, { role: 'user', content: STRICT_JSON_REMINDER }];
+      const { rawAnswer: fbRaw, inputTokens: it, outputTokens: ot } = await completeOnce(fbSpec, systemPrompt, fbMessages);
+      inputTokens += it;
+      outputTokens += ot;
       const fbParsed = extractJsonFromText(fbRaw);
       console.log(
-        `[coding/solve] pass=fallback_model model=${fbModel} ok=${!!(fbParsed && (fbParsed.code || fbParsed.solutions))} ` +
+        `[coding/solve] pass=fallback_model model=${fbSpec.model} provider=${fbSpec.provider} ok=${!!(fbParsed && (fbParsed.code || fbParsed.solutions))} ` +
         `rawLen=${fbRaw.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
       );
       if (fbParsed && (fbParsed.code || fbParsed.solutions)) {
         parsedJson = fbParsed;
         rawAnswer = fbRaw;
-        modelUsed = fbModel;
+        modelUsed = fbSpec.model;
         terminalFailure = null;
       } else {
         console.error(
-          `[coding/solve] parse_failed pass=fallback_model model=${fbModel} rawLen=${fbRaw.length} ` +
+          `[coding/solve] parse_failed pass=fallback_model model=${fbSpec.model} rawLen=${fbRaw.length} ` +
           `head=${JSON.stringify(truncateForLog(fbRaw.slice(0, 1024), 1024))} tail=${JSON.stringify(truncateForLog(fbRaw.slice(-1024), 1024))} ua=${JSON.stringify(userAgent)}`,
         );
-        terminalFailure = {
-          msg: "Couldn't generate a structured solution. Tap retry to try again.",
-          category: 'parse_failure',
-        };
+        terminalFailure = { msg: "Couldn't generate a structured solution. Tap retry to try again.", category: 'parse_failure' };
       }
     } catch (err) {
       console.error(
-        `[coding/solve] pass=fallback_model model=${fbModel} ok=false ` +
+        `[coding/solve] pass=fallback_model model=${fbSpec.model} provider=${fbSpec.provider} ok=false ` +
         `msg=${JSON.stringify(err?.message || String(err))} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
       );
       terminalFailure = {
         msg: err?.message || 'Fallback model also failed. Tap retry to try again.',
-        category: isRetryableClaudeError(err) ? 'overloaded' : 'api_error',
+        category: isRetryableError(err) ? 'overloaded' : 'api_error',
       };
     }
   }
