@@ -1,0 +1,239 @@
+name: Docker Build & Push
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/lumora-backend/**'
+      - 'apps/ascend-backend/**'
+      - 'apps/ai-services/**'
+      - 'packages/shared-db/**'
+      - 'packages/shared-auth/**'
+      - 'packages/shared-llm/**'
+      - 'packages/shared-types/**'
+
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to build (all | lumora-backend | ascend-backend | ai-services)'
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - lumora-backend
+          - ascend-backend
+          - ai-services
+
+concurrency:
+  group: docker-build-${{ github.sha }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  OWNER: ${{ github.repository_owner }}
+
+jobs:
+  # ── lumora-backend ────────────────────────────────────────────────────────
+  build-lumora-backend:
+    name: Build & push lumora-backend
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'push' ||
+      github.event.inputs.service == 'all' ||
+      github.event.inputs.service == 'lumora-backend'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ env.OWNER }}/camora/lumora-backend
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          labels: |
+            org.opencontainers.image.title=Camora Lumora Backend
+            org.opencontainers.image.description=Live interview API (Express 5 + Node.js 20)
+            org.opencontainers.image.vendor=Camora
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: apps/lumora-backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=lumora-backend
+          cache-to: type=gha,mode=max,scope=lumora-backend
+          provenance: true
+          sbom: true
+
+      - name: Summarise image
+        run: |
+          echo "### lumora-backend image" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo '${{ steps.meta.outputs.tags }}' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  # ── ascend-backend ────────────────────────────────────────────────────────
+  build-ascend-backend:
+    name: Build & push ascend-backend
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'push' ||
+      github.event.inputs.service == 'all' ||
+      github.event.inputs.service == 'ascend-backend'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ env.OWNER }}/camora/ascend-backend
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          labels: |
+            org.opencontainers.image.title=Camora Ascend Backend
+            org.opencontainers.image.description=Interview prep API (Express 5 + Node.js 20 + Python 3.11)
+            org.opencontainers.image.vendor=Camora
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: apps/ascend-backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=ascend-backend
+          cache-to: type=gha,mode=max,scope=ascend-backend
+          provenance: true
+          sbom: true
+
+      - name: Summarise image
+        run: |
+          echo "### ascend-backend image" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo '${{ steps.meta.outputs.tags }}' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  # ── ai-services ───────────────────────────────────────────────────────────
+  build-ai-services:
+    name: Build & push ai-services
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'push' ||
+      github.event.inputs.service == 'all' ||
+      github.event.inputs.service == 'ai-services'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ env.OWNER }}/camora/ai-services
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          labels: |
+            org.opencontainers.image.title=Camora AI Services
+            org.opencontainers.image.description=Speaker verification + diagram generation (FastAPI Python 3.11)
+            org.opencontainers.image.vendor=Camora
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: apps/ai-services
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=ai-services
+          cache-to: type=gha,mode=max,scope=ai-services
+          provenance: true
+          sbom: true
+
+      - name: Summarise image
+        run: |
+          echo "### ai-services image" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo '${{ steps.meta.outputs.tags }}' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  # ── Vulnerability scanning ─────────────────────────────────────────────────
+  scan-images:
+    name: Trivy scan — ${{ matrix.service }}
+    needs: [build-lumora-backend, build-ascend-backend, build-ai-services]
+    if: always() && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [lumora-backend, ascend-backend, ai-services]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ env.OWNER }}/camora/${{ matrix.service }}:latest
+          format: sarif
+          output: trivy-${{ matrix.service }}.sarif
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+
+      - name: Upload Trivy SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-${{ matrix.service }}.sarif
+          category: trivy-${{ matrix.service }}

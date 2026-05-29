@@ -1,0 +1,87 @@
+name: Build Mobile (EAS)
+
+on:
+  push:
+    tags:
+      - 'mobile-v[0-9]+.[0-9]+.[0-9]+'
+
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build
+        required: true
+        default: all
+        type: choice
+        options: [all, ios, android]
+      profile:
+        description: EAS build profile
+        required: true
+        default: production
+        type: choice
+        options: [development, preview, production]
+
+concurrency:
+  group: mobile-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  eas-build:
+    name: EAS Build (${{ github.event.inputs.platform || 'all' }}, ${{ github.event.inputs.profile || 'production' }})
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: .
+
+      - uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build iOS
+        if: >
+          github.event.inputs.platform == 'ios' ||
+          github.event.inputs.platform == 'all' ||
+          github.event_name == 'push'
+        run: |
+          eas build \
+            --platform ios \
+            --profile ${{ github.event.inputs.profile || 'production' }} \
+            --non-interactive \
+            --no-wait
+
+      - name: Build Android
+        if: >
+          github.event.inputs.platform == 'android' ||
+          github.event.inputs.platform == 'all' ||
+          github.event_name == 'push'
+        run: |
+          eas build \
+            --platform android \
+            --profile ${{ github.event.inputs.profile || 'production' }} \
+            --non-interactive \
+            --no-wait
+
+      - name: Build summary
+        run: |
+          echo "### EAS Build Submitted" >> $GITHUB_STEP_SUMMARY
+          echo "- Platform: ${{ github.event.inputs.platform || 'all' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Profile: ${{ github.event.inputs.profile || 'production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Tag: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Monitor at: https://expo.dev/accounts/YOUR_ACCOUNT/projects/camora/builds" >> $GITHUB_STEP_SUMMARY
