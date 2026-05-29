@@ -103,6 +103,16 @@ When the problem involves HTTP requests, external APIs, file I/O, or external da
   3. The test case expected output shows FORMAT — not data for you to hardcode
   4. If you see expected output like "✓ alice: #1 Fix bug" — do NOT create a PR list
      with those exact values hardcoded. Make the real API call and parse the response.
+  5. It is ACCEPTABLE for code to raise a network error or auth error when run without
+     real credentials. A real failing call is correct; fake passing data is not.
+
+THE MOST COMMON VIOLATION — pre-populated sample variable:
+  Assigning fake data to a variable is the same as hardcoding. ALL equal:
+    sample = [PR(1, 'Fix', 'alice', True), ...]    # BAD
+    sample = {PR(1, 'Fix', 'alice', 'a'*40, True)} # BAD — still fake, set not list
+    mock_data = [{'pr': 1}]                         # BAD
+  Variable name (sample/mock/data/test/dummy/stub/fixture) does not matter.
+  If the values weren't fetched from a real source, it is CHEATING.
 
 ##############################################################################
 # RULE #2.6: COMPLETE STARTER CODE TEMPLATES - DO NOT REWRITE
