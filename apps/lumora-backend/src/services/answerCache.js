@@ -108,8 +108,8 @@ export function buildAnswerCacheKey(parts) {
     sk: parts.starterCode ? crypto.createHash('sha1').update(String(parts.starterCode)).digest('hex').slice(0, 12) : null,
   });
   const h = crypto.createHash('sha256').update(normalized).digest('hex');
-  // v5: added mode field to key — busts v4 entries that crossed mode boundaries.
-  return `lumora:answer:v5:${h}`;
+  // v6: busts v5 entries cached before anti-hardcoding prompt fixes (2026-05-29).
+  return `lumora:answer:v6:${h}`;
 }
 
 export async function cacheGet(key) {
