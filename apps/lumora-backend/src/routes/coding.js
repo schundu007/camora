@@ -293,33 +293,43 @@ ${starterCode
 - NO extra text, NO labels, NO formatting - just the raw answer
 
 ##############################################################################
-# RULE #2.5: NEVER FAKE OR HALLUCINATE DATA — CRITICAL
+# RULE #2.5: NEVER FAKE OR HALLUCINATE DATA — THE MOST CRITICAL RULE
 ##############################################################################
-Your solution MUST compute real answers through actual logic.
+The examples in the problem description are ILLUSTRATIONS ONLY.
+NEVER copy those names, numbers, titles, or values into your code.
+Your solution must work for ANY valid input, not just the examples shown.
 
-FORBIDDEN PATTERNS — these will FAIL tests with real inputs:
+FORBIDDEN PATTERNS — all of these are the SAME cheating violation:
 
-1. Hardcoding example values from the problem as function defaults:
-   BAD:  def fetch_prs(owner='venmo', repo='foundations-interview'):
-   GOOD: def fetch_prs(owner, repo):
-   BAD:  def get_data(user_id=42, limit=100):
-   GOOD: def get_data(user_id, limit):
-   → NEVER encode any owner/repo/id/name/url/key from the problem description as a default parameter.
+❌ RETURNING HARDCODED DATA FROM A FETCH FUNCTION (most common cheat):
+   def fetch_prs(owner, repo):
+       return [
+           PR(1, 'Fix issue with payment processing', 'kchurlumova', True),
+           PR(2, 'Update documentation', 'kakvong', True),
+           PR(3, 'Refactor payment module', 'ynimkar', False),
+       ]
+   → This is FAKE. fetch_* / get_* / load_* functions MUST make a real I/O call.
+   → A function that ignores its arguments and returns a static list is ALWAYS wrong.
 
-2. Pre-populating sample variables with example data:
-   BAD:  sample = [PR(1, 'Fix bug', 'alice', True), PR(2, 'Update docs', 'bob', False)]
-   BAD:  mock_data = {'pr': 1, 'title': 'Fix issue'}
-   BAD:  test_prs = [{'number': 1, 'sha': 'abc123'}]
-   GOOD: prs = fetch_prs(owner, repo)  # real API call
+❌ HARDCODING EXAMPLE VALUES AS DEFAULT PARAMETERS:
+   def fetch_prs(owner='venmo', repo='foundations-interview'):  # BAD
+   GOOD: def fetch_prs(owner, repo):  # takes real args, no defaults from problem
 
-3. Returning hardcoded output strings:
-   BAD:  return "✓ alice: #1 \\"Fix bug\\""
-   BAD:  if input == example_input: return known_answer
-   GOOD: return computed_result
+❌ ASSIGNING EXAMPLE DATA TO A VARIABLE THEN RETURNING IT:
+   data = [PR(1, 'Fix bug', 'alice', True)]  # BAD — still fake
+   mock_data = {'pr': 1, 'title': 'Fix issue'}  # BAD
 
-RULE: Every value in your output MUST come from the input arguments or computed logic — never from the problem statement's examples.
+❌ RETURNING HARDCODED OUTPUT STRINGS:
+   return "✓ kchurlumova: #1 \\"Fix issue with payment processing\\""  # BAD
 
-NOTE: The "Simulation" patternTag is a DS&A pattern (game of life, queue simulation). It does NOT mean you can simulate the API with hardcoded data.
+✅ THE ONLY CORRECT PATTERN for fetch/get functions:
+   def fetch_prs(owner, repo):
+       raw = _get(f'https://api.github.com/repos/{owner}/{repo}/pulls?state=all&per_page=100')
+       return [PR(p['number'], p['title'], p['user']['login'], check_passed(owner, repo, p)) for p in raw]
+
+RULE: Every value in your output MUST come from input arguments or real computation.
+If your function ignores its parameters, it is wrong.
+NOTE: "Simulation" patternTag = DS&A pattern (game of life, queue sim). NOT a license to return fake API data.
 
 ##############################################################################
 # RULE #2.6: COMPLETE STARTER CODE TEMPLATES - DO NOT REWRITE
