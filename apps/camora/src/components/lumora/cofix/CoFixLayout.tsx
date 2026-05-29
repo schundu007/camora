@@ -371,7 +371,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         body: JSON.stringify({ code: testCode, language: effectiveLang, test_cases: [] }),
       });
       const data = await resp.json();
-      const output = (data.direct_output || data.output || '(no output)').trim();
+      const rawOut = (data.direct_output || data.output || '(no output)').trim();
+      const output = rawOut.startsWith('(no output) —') ? '(no output)' : rawOut;
       const err = !resp.ok || output.startsWith('Error:') || output.startsWith('Traceback') || /^error:/i.test(output);
       setCustomTests(prev => prev.map(t => t.id === id ? { ...t, running: false, result: output, isErr: err } : t));
     } catch (e: any) {
@@ -403,7 +404,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || data.detail || `Error ${response.status}`);
-      const runResult = data.direct_output || data.output || '(no output)';
+      const rawResult = data.direct_output || data.output || '(no output)';
+      const runResult = rawResult.startsWith('(no output) —') ? '(no output)' : rawResult;
       const hasRunError =
         runResult.startsWith('Error:') || runResult.startsWith('Traceback') ||
         /^error:/i.test(runResult) ||
