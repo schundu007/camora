@@ -1,33 +1,13 @@
 name: Docker Build & Push
 
-# Builds all three backend service images and pushes to every container
-# registry for which credentials are configured in GitHub Secrets.
+# Builds all backend service images and pushes to every configured registry.
 #
-# ── Registry guide ─────────────────────────────────────────────────────────
+# Registry configuration lives in .github/registries.json — add new registries
+# there; this workflow needs no changes.
 #
-#  GHCR (always on — no extra secrets needed):
-#    ghcr.io/<org>/camora/<service>:<tag>
-#
-#  AWS ECR (add these secrets to enable):
-#    AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, AWS_ACCOUNT_ID
-#    → <account>.dkr.ecr.<region>.amazonaws.com/<service>:<tag>
-#    ECR repositories are auto-created if missing.
-#
-#  Azure Container Registry (add these secrets to enable):
-#    ACR_LOGIN_SERVER, ACR_USERNAME, ACR_PASSWORD
-#    → <login-server>/<service>:<tag>
-#
-#  Google Artifact Registry (add these secrets to enable):
-#    GAR_JSON_KEY (service account JSON), GCP_PROJECT_ID, GCP_REGION, GAR_REPOSITORY
-#    → <region>-docker.pkg.dev/<project>/<repository>/<service>:<tag>
-#    One-time setup: gcloud artifacts repositories create <GAR_REPOSITORY> \
-#      --repository-format=docker --location=<GCP_REGION> --project=<GCP_PROJECT_ID>
-#
-#  Docker Hub (add these secrets to enable):
-#    DOCKERHUB_USERNAME, DOCKERHUB_TOKEN
-#    → <username>/<service>:<tag>
-#
-# ───────────────────────────────────────────────────────────────────────────
+# To enable a registry, add the required secrets in:
+#   GitHub → Settings → Secrets and variables → Actions
+# The preflight job will report which are active before each build.
 
 on:
   push:
@@ -39,6 +19,8 @@ on:
       - 'packages/shared-db/**'
       - 'packages/shared-auth/**'
       - 'packages/shared-types/**'
+      - '.github/registries.json'
+      - '.github/scripts/**'
       - '.github/workflows/docker-build-push.yml'
 
   pull_request:
@@ -55,133 +37,104 @@ on:
         required: true
         default: all
         type: choice
-        options:
-          - all
-          - lumora-backend
-          - ascend-backend
-          - ai-services
+        options: [all, lumora-backend, ascend-backend, ai-services]
       platforms:
         description: 'Target platforms'
         required: false
         default: 'linux/amd64'
         type: choice
-        options:
-          - linux/amd64
-          - linux/amd64,linux/arm64
+        options: ['linux/amd64', 'linux/amd64,linux/arm64']
 
 concurrency:
   group: docker-build-${{ github.sha }}
   cancel-in-progress: false
 
-env:
-  OWNER: ${{ github.repository_owner }}
-
 # ─────────────────────────────────────────────────────────────────────────────
-# PREFLIGHT — detect which registries are configured and report readiness
+# PREFLIGHT — reads .github/registries.json, reports which are active
 # ─────────────────────────────────────────────────────────────────────────────
 jobs:
   preflight:
     name: Pre-flight checks
     runs-on: ubuntu-latest
     outputs:
-      push_ghcr: ${{ steps.check.outputs.push_ghcr }}
-      push_ecr: ${{ steps.check.outputs.push_ecr }}
-      push_acr: ${{ steps.check.outputs.push_acr }}
-      push_gar: ${{ steps.check.outputs.push_gar }}
-      push_dockerhub: ${{ steps.check.outputs.push_dockerhub }}
       do_push: ${{ steps.check.outputs.do_push }}
       platforms: ${{ steps.check.outputs.platforms }}
     steps:
-      - name: Detect configured registries
+      - uses: actions/checkout@v4
+
+      - name: Check active registries
         id: check
+        # Pass every possible registry secret as an env var so the script can
+        # inspect presence without ever printing values (GitHub masks them).
         env:
-          # Evaluate secret presence as boolean strings — secret values are never printed
-          HAS_ECR: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' && secrets.AWS_ACCOUNT_ID != '' && secrets.AWS_REGION != '' }}
-          HAS_ACR: ${{ secrets.ACR_LOGIN_SERVER != '' && secrets.ACR_USERNAME != '' && secrets.ACR_PASSWORD != '' }}
-          HAS_GAR: ${{ secrets.GAR_JSON_KEY != '' && secrets.GCP_PROJECT_ID != '' && secrets.GCP_REGION != '' && secrets.GAR_REPOSITORY != '' }}
-          HAS_DOCKERHUB: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
-          IS_PR: ${{ github.event_name == 'pull_request' }}
-          INPUT_PLATFORMS: ${{ inputs.platforms }}
+          # AWS ECR
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          # Azure ACR
+          ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+          # Google Artifact Registry
+          GAR_JSON_KEY: ${{ secrets.GAR_JSON_KEY }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_REGION: ${{ secrets.GCP_REGION }}
+          GAR_REPOSITORY: ${{ secrets.GAR_REPOSITORY }}
+          # Docker Hub
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          # Harbor
+          HARBOR_URL: ${{ secrets.HARBOR_URL }}
+          HARBOR_USERNAME: ${{ secrets.HARBOR_USERNAME }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+          # Quay.io
+          QUAY_REGISTRY: ${{ secrets.QUAY_REGISTRY }}
+          QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
+          QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
+          # JFrog Artifactory
+          JFROG_REGISTRY: ${{ secrets.JFROG_REGISTRY }}
+          JFROG_USERNAME: ${{ secrets.JFROG_USERNAME }}
+          JFROG_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
         run: |
-          set -euo pipefail
+          bash .github/scripts/registry-preflight.sh
 
-          echo "╔══════════════════════════════════════════════════════════════╗"
-          echo "║            Docker Build & Push — Pre-flight Check            ║"
-          echo "╚══════════════════════════════════════════════════════════════╝"
-          echo ""
-          echo "  Event    : ${{ github.event_name }}"
-          echo "  Branch   : ${{ github.ref_name }}"
-          echo "  SHA      : ${GITHUB_SHA::8}"
-          echo "  Mode     : $([[ "$IS_PR" == "true" ]] && echo "DRY RUN (PR — build only, no push)" || echo "LIVE (will push to all enabled registries)")"
-          echo ""
-          echo "── Configured registries ───────────────────────────────────────"
+          DO_PUSH=$([[ "${{ github.event_name }}" == "pull_request" ]] && echo "false" || echo "true")
+          PLATFORMS="${{ inputs.platforms || 'linux/amd64' }}"
 
-          # GHCR is always available via GITHUB_TOKEN
-          echo "push_ghcr=true"   >> $GITHUB_OUTPUT
-          echo "✅  GHCR         ghcr.io/${{ env.OWNER }}/camora/<service>"
-
-          if [[ "$HAS_ECR" == "true" ]]; then
-            echo "push_ecr=true"  >> $GITHUB_OUTPUT
-            echo "✅  AWS ECR     <account>.dkr.ecr.<region>.amazonaws.com/<service>"
-          else
-            echo "push_ecr=false" >> $GITHUB_OUTPUT
-            echo "⬜  AWS ECR     (secrets needed: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_ACCOUNT_ID, AWS_REGION)"
-          fi
-
-          if [[ "$HAS_ACR" == "true" ]]; then
-            echo "push_acr=true"  >> $GITHUB_OUTPUT
-            echo "✅  Azure ACR   <login-server>/<service>"
-          else
-            echo "push_acr=false" >> $GITHUB_OUTPUT
-            echo "⬜  Azure ACR   (secrets needed: ACR_LOGIN_SERVER, ACR_USERNAME, ACR_PASSWORD)"
-          fi
-
-          if [[ "$HAS_GAR" == "true" ]]; then
-            echo "push_gar=true"  >> $GITHUB_OUTPUT
-            echo "✅  Google GAR  <region>-docker.pkg.dev/<project>/<repo>/<service>"
-          else
-            echo "push_gar=false" >> $GITHUB_OUTPUT
-            echo "⬜  Google GAR  (secrets needed: GAR_JSON_KEY, GCP_PROJECT_ID, GCP_REGION, GAR_REPOSITORY)"
-          fi
-
-          if [[ "$HAS_DOCKERHUB" == "true" ]]; then
-            echo "push_dockerhub=true"  >> $GITHUB_OUTPUT
-            echo "✅  Docker Hub  <username>/<service>"
-          else
-            echo "push_dockerhub=false" >> $GITHUB_OUTPUT
-            echo "⬜  Docker Hub  (secrets needed: DOCKERHUB_USERNAME, DOCKERHUB_TOKEN)"
-          fi
-
-          # do_push=false on PRs — build runs but nothing is published
-          DO_PUSH=$([[ "$IS_PR" == "true" ]] && echo "false" || echo "true")
           echo "do_push=${DO_PUSH}" >> $GITHUB_OUTPUT
-
-          # Resolve target platforms
-          PLATFORMS="${INPUT_PLATFORMS:-linux/amd64}"
           echo "platforms=${PLATFORMS}" >> $GITHUB_OUTPUT
-
           echo ""
-          echo "── Build config ────────────────────────────────────────────────"
-          echo "  Platforms : ${PLATFORMS}"
-          echo "  Push      : ${DO_PUSH}"
-          echo ""
-          echo "Pre-flight complete."
+          echo "Push mode : $([[ "$DO_PUSH" == "false" ]] && echo "DRY RUN (PR)" || echo "LIVE")"
+          echo "Platforms : ${PLATFORMS}"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# BUILD — lumora-backend
+# BUILD — matrix over services; registry logic is entirely in the scripts
 # ─────────────────────────────────────────────────────────────────────────────
-  build-lumora-backend:
-    name: lumora-backend
+  build:
+    name: ${{ matrix.service }}
     needs: preflight
     runs-on: ubuntu-latest
     if: >
       github.event_name != 'workflow_dispatch' ||
-      github.event.inputs.service == 'all' ||
-      github.event.inputs.service == 'lumora-backend'
+      inputs.service == 'all' ||
+      inputs.service == matrix.service
     permissions:
       contents: read
-      packages: write
-      id-token: write
+      packages: write   # push to GHCR
+      id-token: write   # OIDC for future keyless signing
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: lumora-backend
+            context: apps/lumora-backend
+          - service: ascend-backend
+            context: apps/ascend-backend
+          - service: ai-services
+            context: apps/ai-services
+
     steps:
       - uses: actions/checkout@v4
 
@@ -191,439 +144,89 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
-      # ── Registry logins ──────────────────────────────────────────────────
-
-      - name: Login → GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure AWS credentials
-        if: needs.preflight.outputs.push_ecr == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Login → AWS ECR
-        if: needs.preflight.outputs.push_ecr == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Ensure ECR repository exists
-        if: needs.preflight.outputs.push_ecr == 'true' && needs.preflight.outputs.do_push == 'true'
-        run: |
-          aws ecr describe-repositories --repository-names lumora-backend \
-            --region "${{ secrets.AWS_REGION }}" 2>/dev/null \
-          || aws ecr create-repository \
-               --repository-name lumora-backend \
-               --region "${{ secrets.AWS_REGION }}" \
-               --image-scanning-configuration scanOnPush=true \
-               --image-tag-mutability MUTABLE
-          echo "✅ ECR repository 'lumora-backend' ready"
-
-      - name: Login → Azure ACR
-        if: needs.preflight.outputs.push_acr == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.ACR_LOGIN_SERVER }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-
-      - name: Login → Google Artifact Registry
-        if: needs.preflight.outputs.push_gar == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.GCP_REGION }}-docker.pkg.dev
-          username: _json_key
-          password: ${{ secrets.GAR_JSON_KEY }}
-
-      - name: Login → Docker Hub
-        if: needs.preflight.outputs.push_dockerhub == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      # ── Tags (one call to metadata-action per registry, merged below) ────
-
-      - name: Generate tags
+      # One step — the script handles login for every configured registry
+      - name: Login to registries + generate tags
         id: tags
         env:
-          PUSH_ECR: ${{ needs.preflight.outputs.push_ecr }}
-          PUSH_ACR: ${{ needs.preflight.outputs.push_acr }}
-          PUSH_GAR: ${{ needs.preflight.outputs.push_gar }}
-          PUSH_HUB: ${{ needs.preflight.outputs.push_dockerhub }}
-          DO_PUSH:  ${{ needs.preflight.outputs.do_push }}
+          SERVICE: ${{ matrix.service }}
+          DO_PUSH: ${{ needs.preflight.outputs.do_push }}
+          # GITHUB_TOKEN + GITHUB_ACTOR are built-in
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # AWS ECR
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-          ACR_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+          # Azure ACR
+          ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+          # Google Artifact Registry
+          GAR_JSON_KEY: ${{ secrets.GAR_JSON_KEY }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_REGION: ${{ secrets.GCP_REGION }}
-          GCP_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
-          GAR_REPO: ${{ secrets.GAR_REPOSITORY }}
-          HUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          GAR_REPOSITORY: ${{ secrets.GAR_REPOSITORY }}
+          # Docker Hub
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          # Harbor
+          HARBOR_URL: ${{ secrets.HARBOR_URL }}
+          HARBOR_USERNAME: ${{ secrets.HARBOR_USERNAME }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+          # Quay.io
+          QUAY_REGISTRY: ${{ secrets.QUAY_REGISTRY }}
+          QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
+          QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
+          # JFrog Artifactory
+          JFROG_REGISTRY: ${{ secrets.JFROG_REGISTRY }}
+          JFROG_USERNAME: ${{ secrets.JFROG_USERNAME }}
+          JFROG_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
         run: |
-          SHORT="${GITHUB_SHA::7}"
+          SHORT_SHA="${GITHUB_SHA::7}"
           BRANCH="${GITHUB_REF_NAME//\//-}"
-          IS_MAIN=$([[ "$GITHUB_REF_NAME" == "main" ]] && echo true || echo false)
-          SVC="lumora-backend"
+          IS_MAIN=$([[ "$GITHUB_REF_NAME" == "main" ]] && echo "true" || echo "false")
 
-          add() {
-            local base="$1"
-            T+=("${base}:sha-${SHORT}" "${base}:${BRANCH}")
-            [[ "$IS_MAIN" == "true" ]] && T+=("${base}:latest")
-          }
+          bash .github/scripts/registry-build.sh \
+            "$SERVICE" "$SHORT_SHA" "$BRANCH" "$IS_MAIN" "$DO_PUSH"
 
-          T=()
-          add "ghcr.io/${{ env.OWNER }}/camora/${SVC}"
-          [[ "$PUSH_ECR" == "true" && "$DO_PUSH" == "true" && -n "$AWS_ACCOUNT_ID" ]] && \
-            add "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${SVC}"
-          [[ "$PUSH_ACR" == "true" && "$DO_PUSH" == "true" && -n "$ACR_SERVER" ]] && \
-            add "${ACR_SERVER}/${SVC}"
-          [[ "$PUSH_GAR" == "true" && "$DO_PUSH" == "true" && -n "$GCP_PROJECT" ]] && \
-            add "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${GAR_REPO}/${SVC}"
-          [[ "$PUSH_HUB" == "true" && "$DO_PUSH" == "true" && -n "$HUB_USER" ]] && \
-            add "${HUB_USER}/${SVC}"
-
-          JOINED=$(IFS=,; echo "${T[*]}")
-          echo "tags=${JOINED}" >> $GITHUB_OUTPUT
-          echo "Tags:"; printf '  %s\n' "${T[@]}"
-
-      - uses: docker/build-push-action@v6
+      - name: Build and push ${{ matrix.service }}
         id: build
+        uses: docker/build-push-action@v6
         with:
-          context: apps/lumora-backend
+          context: ${{ matrix.context }}
           platforms: ${{ needs.preflight.outputs.platforms }}
           push: ${{ needs.preflight.outputs.do_push == 'true' }}
-          tags: ${{ steps.tags.outputs.tags }}
-          cache-from: type=gha,scope=lumora-backend
-          cache-to: type=gha,mode=max,scope=lumora-backend
+          tags: ${{ steps.tags.outputs.DOCKER_TAGS }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
           provenance: true
           sbom: true
           labels: |
-            org.opencontainers.image.title=Camora Lumora Backend
-            org.opencontainers.image.description=Live interview API (Express 5 + Node.js 20)
-            org.opencontainers.image.vendor=Camora
+            org.opencontainers.image.title=Camora ${{ matrix.service }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.vendor=Camora
 
       - name: Job summary
         if: always()
         run: |
           {
-            echo "## lumora-backend"
+            echo "## ${{ matrix.service }}"
             echo "**Status:** $([[ "${{ steps.build.outcome }}" == "success" ]] && echo "✅ Success" || echo "❌ Failed")"
-            [[ -n "${{ steps.build.outputs.digest }}" ]] && echo "**Digest:** \`${{ steps.build.outputs.digest }}\`"
-            echo ""; echo "**Tags:**"
-            echo '${{ steps.tags.outputs.tags }}' | tr ',' '\n' | sed 's/^/- `/' | sed 's/$/`/'
+            [[ -n "${{ steps.build.outputs.digest }}" ]] && \
+              echo "**Digest:** \`${{ steps.build.outputs.digest }}\`"
+            echo ""
+            echo "**Tags:**"
+            echo '${{ steps.tags.outputs.DOCKER_TAGS }}' | \
+              tr ',' '\n' | sed 's/^/- `/' | sed 's/$/`/'
           } >> $GITHUB_STEP_SUMMARY
 
 # ─────────────────────────────────────────────────────────────────────────────
-# BUILD — ascend-backend
-# ─────────────────────────────────────────────────────────────────────────────
-  build-ascend-backend:
-    name: ascend-backend
-    needs: preflight
-    runs-on: ubuntu-latest
-    if: >
-      github.event_name != 'workflow_dispatch' ||
-      github.event.inputs.service == 'all' ||
-      github.event.inputs.service == 'ascend-backend'
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        if: needs.preflight.outputs.platforms != 'linux/amd64'
-        uses: docker/setup-qemu-action@v3
-
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Login → GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure AWS credentials
-        if: needs.preflight.outputs.push_ecr == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Login → AWS ECR
-        if: needs.preflight.outputs.push_ecr == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Ensure ECR repository exists
-        if: needs.preflight.outputs.push_ecr == 'true' && needs.preflight.outputs.do_push == 'true'
-        run: |
-          aws ecr describe-repositories --repository-names ascend-backend \
-            --region "${{ secrets.AWS_REGION }}" 2>/dev/null \
-          || aws ecr create-repository \
-               --repository-name ascend-backend \
-               --region "${{ secrets.AWS_REGION }}" \
-               --image-scanning-configuration scanOnPush=true \
-               --image-tag-mutability MUTABLE
-          echo "✅ ECR repository 'ascend-backend' ready"
-
-      - name: Login → Azure ACR
-        if: needs.preflight.outputs.push_acr == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.ACR_LOGIN_SERVER }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-
-      - name: Login → Google Artifact Registry
-        if: needs.preflight.outputs.push_gar == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.GCP_REGION }}-docker.pkg.dev
-          username: _json_key
-          password: ${{ secrets.GAR_JSON_KEY }}
-
-      - name: Login → Docker Hub
-        if: needs.preflight.outputs.push_dockerhub == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Generate tags
-        id: tags
-        env:
-          PUSH_ECR: ${{ needs.preflight.outputs.push_ecr }}
-          PUSH_ACR: ${{ needs.preflight.outputs.push_acr }}
-          PUSH_GAR: ${{ needs.preflight.outputs.push_gar }}
-          PUSH_HUB: ${{ needs.preflight.outputs.push_dockerhub }}
-          DO_PUSH:  ${{ needs.preflight.outputs.do_push }}
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          ACR_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
-          GCP_REGION: ${{ secrets.GCP_REGION }}
-          GCP_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
-          GAR_REPO: ${{ secrets.GAR_REPOSITORY }}
-          HUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
-        run: |
-          SHORT="${GITHUB_SHA::7}"
-          BRANCH="${GITHUB_REF_NAME//\//-}"
-          IS_MAIN=$([[ "$GITHUB_REF_NAME" == "main" ]] && echo true || echo false)
-          SVC="ascend-backend"
-
-          add() {
-            local base="$1"
-            T+=("${base}:sha-${SHORT}" "${base}:${BRANCH}")
-            [[ "$IS_MAIN" == "true" ]] && T+=("${base}:latest")
-          }
-
-          T=()
-          add "ghcr.io/${{ env.OWNER }}/camora/${SVC}"
-          [[ "$PUSH_ECR" == "true" && "$DO_PUSH" == "true" && -n "$AWS_ACCOUNT_ID" ]] && \
-            add "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${SVC}"
-          [[ "$PUSH_ACR" == "true" && "$DO_PUSH" == "true" && -n "$ACR_SERVER" ]] && \
-            add "${ACR_SERVER}/${SVC}"
-          [[ "$PUSH_GAR" == "true" && "$DO_PUSH" == "true" && -n "$GCP_PROJECT" ]] && \
-            add "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${GAR_REPO}/${SVC}"
-          [[ "$PUSH_HUB" == "true" && "$DO_PUSH" == "true" && -n "$HUB_USER" ]] && \
-            add "${HUB_USER}/${SVC}"
-
-          JOINED=$(IFS=,; echo "${T[*]}")
-          echo "tags=${JOINED}" >> $GITHUB_OUTPUT
-          echo "Tags:"; printf '  %s\n' "${T[@]}"
-
-      - uses: docker/build-push-action@v6
-        id: build
-        with:
-          context: apps/ascend-backend
-          platforms: ${{ needs.preflight.outputs.platforms }}
-          push: ${{ needs.preflight.outputs.do_push == 'true' }}
-          tags: ${{ steps.tags.outputs.tags }}
-          cache-from: type=gha,scope=ascend-backend
-          cache-to: type=gha,mode=max,scope=ascend-backend
-          provenance: true
-          sbom: true
-          labels: |
-            org.opencontainers.image.title=Camora Ascend Backend
-            org.opencontainers.image.description=Interview prep API (Express 5 + Node.js 20 + Python 3.11)
-            org.opencontainers.image.vendor=Camora
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
-
-      - name: Job summary
-        if: always()
-        run: |
-          {
-            echo "## ascend-backend"
-            echo "**Status:** $([[ "${{ steps.build.outcome }}" == "success" ]] && echo "✅ Success" || echo "❌ Failed")"
-            [[ -n "${{ steps.build.outputs.digest }}" ]] && echo "**Digest:** \`${{ steps.build.outputs.digest }}\`"
-            echo ""; echo "**Tags:**"
-            echo '${{ steps.tags.outputs.tags }}' | tr ',' '\n' | sed 's/^/- `/' | sed 's/$/`/'
-          } >> $GITHUB_STEP_SUMMARY
-
-# ─────────────────────────────────────────────────────────────────────────────
-# BUILD — ai-services
-# ─────────────────────────────────────────────────────────────────────────────
-  build-ai-services:
-    name: ai-services
-    needs: preflight
-    runs-on: ubuntu-latest
-    if: >
-      github.event_name != 'workflow_dispatch' ||
-      github.event.inputs.service == 'all' ||
-      github.event.inputs.service == 'ai-services'
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        if: needs.preflight.outputs.platforms != 'linux/amd64'
-        uses: docker/setup-qemu-action@v3
-
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Login → GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure AWS credentials
-        if: needs.preflight.outputs.push_ecr == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Login → AWS ECR
-        if: needs.preflight.outputs.push_ecr == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Ensure ECR repository exists
-        if: needs.preflight.outputs.push_ecr == 'true' && needs.preflight.outputs.do_push == 'true'
-        run: |
-          aws ecr describe-repositories --repository-names ai-services \
-            --region "${{ secrets.AWS_REGION }}" 2>/dev/null \
-          || aws ecr create-repository \
-               --repository-name ai-services \
-               --region "${{ secrets.AWS_REGION }}" \
-               --image-scanning-configuration scanOnPush=true \
-               --image-tag-mutability MUTABLE
-          echo "✅ ECR repository 'ai-services' ready"
-
-      - name: Login → Azure ACR
-        if: needs.preflight.outputs.push_acr == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.ACR_LOGIN_SERVER }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-
-      - name: Login → Google Artifact Registry
-        if: needs.preflight.outputs.push_gar == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.GCP_REGION }}-docker.pkg.dev
-          username: _json_key
-          password: ${{ secrets.GAR_JSON_KEY }}
-
-      - name: Login → Docker Hub
-        if: needs.preflight.outputs.push_dockerhub == 'true' && needs.preflight.outputs.do_push == 'true'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Generate tags
-        id: tags
-        env:
-          PUSH_ECR: ${{ needs.preflight.outputs.push_ecr }}
-          PUSH_ACR: ${{ needs.preflight.outputs.push_acr }}
-          PUSH_GAR: ${{ needs.preflight.outputs.push_gar }}
-          PUSH_HUB: ${{ needs.preflight.outputs.push_dockerhub }}
-          DO_PUSH:  ${{ needs.preflight.outputs.do_push }}
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          ACR_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
-          GCP_REGION: ${{ secrets.GCP_REGION }}
-          GCP_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
-          GAR_REPO: ${{ secrets.GAR_REPOSITORY }}
-          HUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
-        run: |
-          SHORT="${GITHUB_SHA::7}"
-          BRANCH="${GITHUB_REF_NAME//\//-}"
-          IS_MAIN=$([[ "$GITHUB_REF_NAME" == "main" ]] && echo true || echo false)
-          SVC="ai-services"
-
-          add() {
-            local base="$1"
-            T+=("${base}:sha-${SHORT}" "${base}:${BRANCH}")
-            [[ "$IS_MAIN" == "true" ]] && T+=("${base}:latest")
-          }
-
-          T=()
-          add "ghcr.io/${{ env.OWNER }}/camora/${SVC}"
-          [[ "$PUSH_ECR" == "true" && "$DO_PUSH" == "true" && -n "$AWS_ACCOUNT_ID" ]] && \
-            add "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${SVC}"
-          [[ "$PUSH_ACR" == "true" && "$DO_PUSH" == "true" && -n "$ACR_SERVER" ]] && \
-            add "${ACR_SERVER}/${SVC}"
-          [[ "$PUSH_GAR" == "true" && "$DO_PUSH" == "true" && -n "$GCP_PROJECT" ]] && \
-            add "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${GAR_REPO}/${SVC}"
-          [[ "$PUSH_HUB" == "true" && "$DO_PUSH" == "true" && -n "$HUB_USER" ]] && \
-            add "${HUB_USER}/${SVC}"
-
-          JOINED=$(IFS=,; echo "${T[*]}")
-          echo "tags=${JOINED}" >> $GITHUB_OUTPUT
-          echo "Tags:"; printf '  %s\n' "${T[@]}"
-
-      - uses: docker/build-push-action@v6
-        id: build
-        with:
-          context: apps/ai-services
-          platforms: ${{ needs.preflight.outputs.platforms }}
-          push: ${{ needs.preflight.outputs.do_push == 'true' }}
-          tags: ${{ steps.tags.outputs.tags }}
-          cache-from: type=gha,scope=ai-services
-          cache-to: type=gha,mode=max,scope=ai-services
-          provenance: true
-          sbom: true
-          labels: |
-            org.opencontainers.image.title=Camora AI Services
-            org.opencontainers.image.description=Speaker verification + diagram generation (FastAPI Python 3.11)
-            org.opencontainers.image.vendor=Camora
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
-
-      - name: Job summary
-        if: always()
-        run: |
-          {
-            echo "## ai-services"
-            echo "**Status:** $([[ "${{ steps.build.outcome }}" == "success" ]] && echo "✅ Success" || echo "❌ Failed")"
-            [[ -n "${{ steps.build.outputs.digest }}" ]] && echo "**Digest:** \`${{ steps.build.outputs.digest }}\`"
-            echo ""; echo "**Tags:**"
-            echo '${{ steps.tags.outputs.tags }}' | tr ',' '\n' | sed 's/^/- `/' | sed 's/$/`/'
-          } >> $GITHUB_STEP_SUMMARY
-
-# ─────────────────────────────────────────────────────────────────────────────
-# SCAN — Trivy vulnerability scan on all pushed images
+# SCAN — Trivy vulnerability scan (runs after successful push to main)
 # ─────────────────────────────────────────────────────────────────────────────
   scan-images:
-    name: Trivy scan — ${{ matrix.service }}
-    needs: [preflight, build-lumora-backend, build-ascend-backend, build-ai-services]
+    name: Trivy — ${{ matrix.service }}
+    needs: [preflight, build]
     if: always() && needs.preflight.outputs.do_push == 'true'
     runs-on: ubuntu-latest
     permissions:
@@ -643,17 +246,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run Trivy vulnerability scan
+      - name: Trivy scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/${{ env.OWNER }}/camora/${{ matrix.service }}:latest
+          image-ref: ghcr.io/${{ github.repository_owner }}/camora/${{ matrix.service }}:latest
           format: sarif
           output: trivy-${{ matrix.service }}.sarif
           severity: CRITICAL,HIGH
           exit-code: '0'
 
-      - name: Upload Trivy SARIF results
-        uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: trivy-${{ matrix.service }}.sarif
