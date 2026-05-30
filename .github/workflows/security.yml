@@ -43,29 +43,13 @@ jobs:
         working-directory: apps/lumora-backend
         run: |
           npm audit --audit-level=high --json > /tmp/audit-lumora.json 2>&1 || true
-          python3 -c "
-import json, sys
-try:
-  data = json.load(open('/tmp/audit-lumora.json'))
-  vulns = data.get('metadata', {}).get('vulnerabilities', {})
-  high = vulns.get('high', 0) + vulns.get('critical', 0)
-  print(f'lumora-backend: {high} high/critical vulnerabilities')
-except: print('could not parse audit output')
-"
+          python3 -c "import json; d=json.load(open('/tmp/audit-lumora.json')); v=d.get('metadata',{}).get('vulnerabilities',{}); print('lumora-backend:',v.get('high',0)+v.get('critical',0),'high/critical')" 2>/dev/null || echo 'lumora-backend: could not parse audit output'
 
       - name: Audit ascend-backend
         working-directory: apps/ascend-backend
         run: |
           npm audit --audit-level=high --json > /tmp/audit-ascend.json 2>&1 || true
-          python3 -c "
-import json, sys
-try:
-  data = json.load(open('/tmp/audit-ascend.json'))
-  vulns = data.get('metadata', {}).get('vulnerabilities', {})
-  high = vulns.get('high', 0) + vulns.get('critical', 0)
-  print(f'ascend-backend: {high} high/critical vulnerabilities')
-except: print('could not parse audit output')
-"
+          python3 -c "import json; d=json.load(open('/tmp/audit-ascend.json')); v=d.get('metadata',{}).get('vulnerabilities',{}); print('ascend-backend:',v.get('high',0)+v.get('critical',0),'high/critical')" 2>/dev/null || echo 'ascend-backend: could not parse audit output'
 
   # ── Python audit ──────────────────────────────────────────────────────────
   audit-python:

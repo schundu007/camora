@@ -38,17 +38,19 @@ RUN apt-get update \
 RUN npm install -g typescript
 
 # hadolint — Dockerfile linter for playground /run endpoint
-RUN curl -fsSL https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64 \
+# --retry: GitHub releases occasionally returns 5xx transiently
+RUN curl -fsSL --retry 3 --retry-delay 5 \
+    https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64 \
     -o /usr/local/bin/hadolint \
  && chmod +x /usr/local/bin/hadolint
 
-# shfmt — Bash formatter for playground /format endpoint
-RUN curl -fsSL https://github.com/mvdan/sh/releases/download/v3.8.0/shfmt_v3.8.0_linux_amd64 \
-    -o /usr/local/bin/shfmt \
- && chmod +x /usr/local/bin/shfmt
+# shfmt — Bash formatter; available in bookworm repos (avoids flaky GitHub download)
+RUN apt-get update && apt-get install -y --no-install-recommends shfmt \
+ && rm -rf /var/lib/apt/lists/*
 
 # Terraform — validate + plan for playground /run endpoint
-RUN curl -fsSL https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip \
+RUN curl -fsSL --retry 3 --retry-delay 5 \
+    https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip \
     -o /tmp/terraform.zip \
  && unzip /tmp/terraform.zip -d /usr/local/bin \
  && rm /tmp/terraform.zip \

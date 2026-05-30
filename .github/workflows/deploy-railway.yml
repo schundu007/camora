@@ -34,9 +34,7 @@ jobs:
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
       (github.event_name == 'workflow_dispatch' &&
        (github.event.inputs.service == 'all' || github.event.inputs.service == 'lumora-backend'))
-    environment:
-      name: production
-      url: ${{ secrets.LUMORA_API_URL }}
+    environment: production
     steps:
       - name: Trigger Railway deploy
         run: |
@@ -55,9 +53,7 @@ jobs:
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
       (github.event_name == 'workflow_dispatch' &&
        (github.event.inputs.service == 'all' || github.event.inputs.service == 'ascend-backend'))
-    environment:
-      name: production
-      url: ${{ secrets.ASCEND_API_URL }}
+    environment: production
     steps:
       - name: Trigger Railway deploy
         run: |
@@ -76,9 +72,7 @@ jobs:
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
       (github.event_name == 'workflow_dispatch' &&
        (github.event.inputs.service == 'all' || github.event.inputs.service == 'ai-services'))
-    environment:
-      name: production
-      url: ${{ secrets.AI_SERVICES_URL }}
+    environment: production
     steps:
       - name: Trigger Railway deploy
         run: |
