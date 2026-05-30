@@ -1,0 +1,75 @@
+{
+  "registries": [
+    {
+      "id": "ghcr",
+      "label": "GitHub Container Registry",
+      "type": "ghcr",
+      "always_enabled": true,
+      "image_format": "ghcr.io/__GITHUB_REPOSITORY_OWNER__/camora/__SERVICE__"
+    },
+    {
+      "id": "ecr",
+      "label": "AWS ECR",
+      "type": "aws-ecr",
+      "required_env": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_ACCOUNT_ID", "AWS_REGION"],
+      "image_format": "__AWS_ACCOUNT_ID__.dkr.ecr.__AWS_REGION__.amazonaws.com/__SERVICE__"
+    },
+    {
+      "id": "acr",
+      "label": "Azure Container Registry",
+      "type": "docker-login",
+      "registry_var": "ACR_LOGIN_SERVER",
+      "username_var": "ACR_USERNAME",
+      "password_var": "ACR_PASSWORD",
+      "required_env": ["ACR_LOGIN_SERVER", "ACR_USERNAME", "ACR_PASSWORD"],
+      "image_format": "__ACR_LOGIN_SERVER__/__SERVICE__"
+    },
+    {
+      "id": "gar",
+      "label": "Google Artifact Registry",
+      "type": "gcp-gar",
+      "required_env": ["GAR_JSON_KEY", "GCP_PROJECT_ID", "GCP_REGION", "GAR_REPOSITORY"],
+      "image_format": "__GCP_REGION__-docker.pkg.dev/__GCP_PROJECT_ID__/__GAR_REPOSITORY__/__SERVICE__"
+    },
+    {
+      "id": "dockerhub",
+      "label": "Docker Hub",
+      "type": "docker-login",
+      "registry_var": "",
+      "username_var": "DOCKERHUB_USERNAME",
+      "password_var": "DOCKERHUB_TOKEN",
+      "required_env": ["DOCKERHUB_USERNAME", "DOCKERHUB_TOKEN"],
+      "image_format": "__DOCKERHUB_USERNAME__/__SERVICE__"
+    },
+    {
+      "id": "harbor",
+      "label": "Harbor",
+      "type": "docker-login",
+      "registry_var": "HARBOR_URL",
+      "username_var": "HARBOR_USERNAME",
+      "password_var": "HARBOR_PASSWORD",
+      "required_env": ["HARBOR_URL", "HARBOR_USERNAME", "HARBOR_PASSWORD"],
+      "image_format": "__HARBOR_URL__/camora/__SERVICE__"
+    },
+    {
+      "id": "quay",
+      "label": "Quay.io",
+      "type": "docker-login",
+      "registry_var": "QUAY_REGISTRY",
+      "username_var": "QUAY_USERNAME",
+      "password_var": "QUAY_PASSWORD",
+      "required_env": ["QUAY_REGISTRY", "QUAY_USERNAME", "QUAY_PASSWORD"],
+      "image_format": "__QUAY_REGISTRY__/camora/__SERVICE__"
+    },
+    {
+      "id": "jfrog",
+      "label": "JFrog Artifactory",
+      "type": "docker-login",
+      "registry_var": "JFROG_REGISTRY",
+      "username_var": "JFROG_USERNAME",
+      "password_var": "JFROG_PASSWORD",
+      "required_env": ["JFROG_REGISTRY", "JFROG_USERNAME", "JFROG_PASSWORD"],
+      "image_format": "__JFROG_REGISTRY__/camora/__SERVICE__"
+    }
+  ]
+}
