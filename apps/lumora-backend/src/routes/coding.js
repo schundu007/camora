@@ -9,6 +9,7 @@
  */
 import { Router } from 'express';
 import multer from 'multer';
+import OpenAI from 'openai';
 import { getAnthropicClient, getOpenAIClient } from '../lib/_shared/llm.js';
 
 // Lazy-load sharp. The native binary fails to resolve on some Railway
@@ -91,6 +92,26 @@ const router = Router();
 const anthropicClient = getAnthropicClient();
 const openaiClient = getOpenAIClient();
 
+// OpenRouter client — OpenAI-SDK compatible, routes to Qwen/DeepSeek/etc.
+// Preferred fallback over OpenAI direct because it's significantly cheaper.
+const openrouterClient = process.env.OPENROUTER_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENROUTER_API_KEY,
+      baseURL: 'https://openrouter.ai/api/v1',
+      defaultHeaders: { 'HTTP-Referer': 'https://cariara.com', 'X-Title': 'Camora CoFix' },
+    })
+  : null;
+
+// Fallback model priority when Anthropic is exhausted:
+//   1. Qwen2.5-Coder-32B via OpenRouter (best code quality, cheap)
+//   2. DeepSeek-Coder-V2 via OpenRouter (strong alternative)
+//   3. GPT-4o via OpenAI direct (more expensive, last resort)
+const FALLBACK_PROVIDERS = [
+  openrouterClient && { client: openrouterClient, model: 'qwen/qwen2.5-coder-32b-instruct',  label: 'Qwen2.5-Coder' },
+  openrouterClient && { client: openrouterClient, model: 'deepseek/deepseek-coder-v2',         label: 'DeepSeek-Coder-V2' },
+  process.env.OPENAI_API_KEY && { client: openaiClient, model: 'gpt-4o',                       label: 'GPT-4o' },
+].filter(Boolean);
+
 // Detects Anthropic "spending limit reached" errors (returned as 400
 // invalid_request_error, distinct from transient 429/529 errors).
 function isApiExhaustedError(err) {
@@ -99,7 +120,7 @@ function isApiExhaustedError(err) {
   const msg = (err.message || err.error?.message || '').toLowerCase();
   return (
     (status === 400 || status === 429) &&
-    (msg.includes('usage limit') || msg.includes('spending limit') || msg.includes('quota'))
+    (msg.includes('usage limit') || msg.includes('spending limit') || msg.includes('quota') || msg.includes('regain access'))
   );
 }
 
@@ -1464,37 +1485,33 @@ RULES:
     clearInterval(keepaliveTimer);
     if (clientDisconnected) return;
 
-    if (isApiExhaustedError(err) && process.env.OPENAI_API_KEY) {
-      console.warn('[cofix] Claude exhausted — falling back to OpenAI:', err.message);
-      sendEvent('status', { state: 'warn', msg: 'Switching to backup AI…' });
-      try {
-        const oaiStream = await openaiClient.chat.completions.create({
-          model: 'gpt-4o',
-          max_tokens: 8192,
-          stream: true,
-          messages: [{ role: 'user', content: cofixUserContent }],
-        });
-        let fullText = '';
-        for await (const chunk of oaiStream) {
-          if (clientDisconnected) break;
-          const token = chunk.choices[0]?.delta?.content || '';
-          if (token) {
-            fullText += token;
-            sendEvent('token', { chunk: token });
-          }
-        }
-        if (clientDisconnected) return;
+    if (isApiExhaustedError(err) && FALLBACK_PROVIDERS.length > 0) {
+      console.warn('[cofix] Claude exhausted — trying fallback providers:', err.message);
+      for (const provider of FALLBACK_PROVIDERS) {
+        sendEvent('status', { state: 'warn', msg: `Switching to ${provider.label}…` });
         try {
+          const fbStream = await provider.client.chat.completions.create({
+            model: provider.model,
+            max_tokens: 8192,
+            stream: true,
+            messages: [{ role: 'user', content: cofixUserContent }],
+          });
+          let fullText = '';
+          for await (const chunk of fbStream) {
+            if (clientDisconnected) break;
+            const token = chunk.choices[0]?.delta?.content || '';
+            if (token) { fullText += token; sendEvent('token', { chunk: token }); }
+          }
+          if (clientDisconnected) return;
           await parseAndEmitCofix(fullText);
-        } catch {
-          sendEvent('error', { message: 'Failed to parse CoFix response — try again' });
-          res.end();
+          console.log(`[cofix] ${provider.label} fallback succeeded`);
+          return;
+        } catch (fbErr) {
+          console.warn(`[cofix] ${provider.label} fallback failed:`, fbErr.message);
         }
-      } catch (oaiErr) {
-        console.error('[cofix] OpenAI fallback also failed:', oaiErr.message);
-        sendEvent('error', { message: 'All AI providers unavailable — please try again shortly.' });
-        res.end();
       }
+      sendEvent('error', { message: 'All AI providers unavailable — please try again shortly.' });
+      res.end();
       return;
     }
 
