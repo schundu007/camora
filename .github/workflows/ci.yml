@@ -194,12 +194,7 @@ jobs:
       - name: Check all jobs passed
         run: |
           RESULTS='${{ toJSON(needs) }}'
-          FAILED=$(echo "$RESULTS" | python3 -c "
-import json,sys
-needs=json.load(sys.stdin)
-failed=[k for k,v in needs.items() if v['result']=='failure']
-print(' '.join(failed))
-")
+          FAILED=$(echo "$RESULTS" | python3 -c "import json,sys; needs=json.load(sys.stdin); print(' '.join(k for k,v in needs.items() if v.get('result')=='failure'))")
           if [ -n "$FAILED" ]; then
             echo "Failed jobs: $FAILED"
             exit 1
