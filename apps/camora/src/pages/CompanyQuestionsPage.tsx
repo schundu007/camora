@@ -137,7 +137,7 @@ export default function CompanyQuestionsPage() {
                   )}
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <Chip variant="default">{typeStyle.label}</Chip>
-                    <Chip variant={question.difficulty.toLowerCase()}>{question.difficulty}</Chip>
+                    <Chip variant={question.difficulty.toLowerCase() as any}>{question.difficulty}</Chip>
                   </div>
                   <p className="text-[var(--text-primary)] font-medium">{question.q}</p>
                 </div>

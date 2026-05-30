@@ -2084,7 +2084,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                               placeholder="https://leetcode.com/problems/two-sum/"
                               className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm placeholder:text-[var(--text-dimmed)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
                               style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
-                            <button type="button" onClick={handleFetchFromUrl} disabled={isProcessing || !problemUrl.trim()}
+                            <button type="button" onClick={() => handleFetchFromUrl()} disabled={isProcessing || !problemUrl.trim()}
                               className="px-4 py-2 bg-[var(--accent)] text-white text-xs font-semibold rounded-lg hover:bg-[var(--accent-hover)] disabled:opacity-50 transition-colors">
                               {isProcessing ? 'Loading...' : 'Fetch'}
                             </button>

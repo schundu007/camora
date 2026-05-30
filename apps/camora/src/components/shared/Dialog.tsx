@@ -23,7 +23,7 @@ export type AlertOpts = {
   title?: string;
   message: string;
   okLabel?: string;
-  tone?: 'default' | 'danger' | 'success';
+  tone?: 'default' | 'danger' | 'success' | 'warning';
 };
 
 type PendingConfirm = { kind: 'confirm'; opts: ConfirmOpts; resolve: (v: boolean) => void };

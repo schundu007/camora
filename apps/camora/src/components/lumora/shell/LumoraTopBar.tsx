@@ -69,7 +69,7 @@ export const LumoraTopBar = ({ onTranscription, inline = false }: LumoraTopBarPr
         <VoiceEnrollment disabled={false} />
         <ContextBadge variant="light" />
         <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-medium" style={{ background: C.elevated, border: `1px solid ${C.border}`, color: C.muted }}>
-          {status === 'recording' ? <><span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />Recording</> : 'Ready to assist'}
+          {status.state === 'listen' ? <><span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />Recording</> : 'Ready to assist'}
         </div>
         <ThemeToggleButton />
         <button onClick={() => setShowSettings(true)} className="p-1.5 rounded-lg transition-colors" style={{ color: C.muted }} title="Settings">

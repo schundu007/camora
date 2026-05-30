@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Excalidraw } from '@excalidraw/excalidraw';
 import '@excalidraw/excalidraw/index.css';
-import type { ExcalidrawImperativeAPI, ExcalidrawElement } from '@excalidraw/excalidraw/types';
+import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
+import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 
 interface ExcalidrawWhiteboardProps {
   initialElements?: readonly ExcalidrawElement[];
@@ -121,7 +122,7 @@ export default function ExcalidrawWhiteboard({
             theme: 'light',
             viewBackgroundColor: '#ffffff',
             currentItemFontFamily: 1,
-            gridSize: null,
+            gridSize: undefined,
             openSidebar: null,
           },
         }}

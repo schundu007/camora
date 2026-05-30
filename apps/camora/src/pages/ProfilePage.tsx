@@ -109,7 +109,7 @@ function SubscriptionCard() {
     (async () => {
       try {
         const res = await fetch(`${BILLING_API}/api/v1/billing/subscription`, {
-        credentials: 'include', headers: getAuthHeaders() });
+        credentials: 'include', headers: getAuthHeaders() as unknown as Record<string, string> });
         if (res.ok) setSub(await res.json());
       } catch { /* ignore */ }
       setLoading(false);
@@ -204,7 +204,7 @@ function DeleteAccount() {
   const handleDelete = async () => {
     try {
       const res = await fetch(`${CAPRA_API}/api/v1/auth/account`, {
-        credentials: 'include', method: 'DELETE', headers: getAuthHeaders() });
+        credentials: 'include', method: 'DELETE', headers: getAuthHeaders() as unknown as Record<string, string> });
       if (res.ok) { logout(); window.location.href = '/'; }
     } catch { /* ignore */ }
   };

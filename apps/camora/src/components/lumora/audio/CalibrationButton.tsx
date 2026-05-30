@@ -59,7 +59,7 @@ export const CalibrationButton = ({ deviceId, disabled, variant = 'dark' }: Cali
           </>
         )}
       </button>
-      {isLight && vadThreshold > 0 && (
+      {isLight && vadThreshold != null && vadThreshold > 0 && (
         <span className="text-xs font-medium" style={{ color: 'var(--cam-primary)' }}>
           Current threshold: {vadThreshold.toFixed(4)}
         </span>

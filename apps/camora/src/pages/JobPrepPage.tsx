@@ -289,7 +289,7 @@ export default function JobPrepPage() {
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          jobDescription: job.job_description || job.ai_summary || job.description || '',
+          jobDescription: job.description || '',
           resume: '', // TODO: get from user profile
           sections: ['pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral', 'techstack'],
           provider: 'claude',

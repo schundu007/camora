@@ -35,6 +35,7 @@ interface SessionState {
   // Audio
   audioLevel: number;
   threshold: number;
+  vadThreshold?: number;
   isRecording: boolean;
 
   // Timers (in milliseconds)
@@ -122,6 +123,12 @@ interface SessionState {
     language: string;
     solvedAt: number;
   } | null;
+
+  // Follow-up popup visibility
+  popupVisible: boolean;
+  popupMinimized: boolean;
+  setPopupVisible: (visible: boolean) => void;
+  setPopupMinimized: (minimized: boolean) => void;
 
   // Stealth mode — hides live answers on-screen during sessions
   isStealthActive: boolean;
@@ -225,6 +232,8 @@ const initialState = {
   lastFromCache: null as boolean | null,
   liveSolveContext: null as SessionState['liveSolveContext'],
   isStealthActive: false,
+  popupVisible: false,
+  popupMinimized: false,
   answerMode: 'short' as const,
   sonaExport: null as (() => void) | null,
   sonaClear: null as (() => void) | null,
@@ -351,6 +360,8 @@ export const useSessionStore = create<SessionState>()(
   setPreferredModel: (preferredModel) => set({ preferredModel }),
 
   setIsStealthActive: (v) => set({ isStealthActive: v }),
+  setPopupVisible: (visible) => set({ popupVisible: visible }),
+  setPopupMinimized: (minimized) => set({ popupMinimized: minimized }),
   setAnswerMode: (mode) => set({ answerMode: mode }),
   setSonaActions: ({ export: exp, clear, close, hasMessages }) => set({
     sonaExport: exp,

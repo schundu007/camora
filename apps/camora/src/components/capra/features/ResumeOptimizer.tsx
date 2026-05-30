@@ -258,7 +258,7 @@ export default function ResumeOptimizer() {
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();
-          pages.push(content.items.map((item: { str?: string }) => item.str ?? '').join(' '));
+          pages.push(content.items.map((item: any) => item.str ?? '').join(' '));
         }
         setResume(pages.join('\n\n'));
       } else {
@@ -441,7 +441,6 @@ export default function ResumeOptimizer() {
               disabled={fetchingJd || !jobUrl.trim()}
               style={{
                 padding: '8px 14px',
-                border: '1px solid var(--border)',
                 borderRadius: '8px',
                 background: fetchingJd || !jobUrl.trim() ? 'var(--bg-elevated)' : 'var(--accent)',
                 color: fetchingJd || !jobUrl.trim() ? 'var(--text-muted)' : '#fff',

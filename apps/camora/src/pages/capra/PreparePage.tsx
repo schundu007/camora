@@ -29,7 +29,7 @@ export default function PreparePage() {
 
   return (
     <Suspense fallback={<DocsLoading />}>
-      <DocsPage />
+      <DocsPage onBack={() => {}} />
     </Suspense>
   );
 }

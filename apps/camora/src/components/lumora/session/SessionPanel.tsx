@@ -57,6 +57,8 @@ interface SessionPanelProps {
   onAskQuestion?: (question: string) => void;
   onSwitchToCoding?: (problem?: string) => void;
   onSwitchToDesign?: (problem?: string) => void;
+  focusedEntry?: number | null;
+  onClearFocus?: () => void;
 }
 
 export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: SessionPanelProps) => {

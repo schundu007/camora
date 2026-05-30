@@ -25,6 +25,7 @@ interface Problem {
 interface Category {
   name: string;
   color: string;
+  colorText?: string;
   problems: Problem[];
 }
 

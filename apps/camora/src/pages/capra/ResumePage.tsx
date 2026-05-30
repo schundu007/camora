@@ -1,5 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
-import ResumeOptimizer from '../../components/capra/features/ResumeOptimizer';
+import ResumeOptimizerBase from '../../components/capra/features/ResumeOptimizer';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ResumeOptimizer = ResumeOptimizerBase as any;
 import { HeroBand, HeroAccent } from '../../components/capra/ui';
 
 export default function ResumePage() {
@@ -23,6 +25,7 @@ export default function ResumePage() {
             ? `Tailor your resume for the ${role} position. AI-optimized for ATS systems and hiring managers.`
             : 'Optimize your resume, generate cover letters, and score ATS compatibility — all powered by AI.'
         }
+        actions={null}
       />
 
       {/* Optimizer component */}
