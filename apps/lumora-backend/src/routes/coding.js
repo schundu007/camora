@@ -9,7 +9,7 @@
  */
 import { Router } from 'express';
 import multer from 'multer';
-import { getAnthropicClient } from '../lib/_shared/llm.js';
+import { getAnthropicClient, getOpenAIClient } from '../lib/_shared/llm.js';
 
 // Lazy-load sharp. The native binary fails to resolve on some Railway
 // build images (linux-x64 vs darwin-arm64 mismatch in the lockfile),
@@ -89,6 +89,19 @@ const router = Router();
 // Anthropic()` pattern that would otherwise re-initialize connection pools
 // + rate-limit state on every request.
 const anthropicClient = getAnthropicClient();
+const openaiClient = getOpenAIClient();
+
+// Detects Anthropic "spending limit reached" errors (returned as 400
+// invalid_request_error, distinct from transient 429/529 errors).
+function isApiExhaustedError(err) {
+  if (!err) return false;
+  const status = err.status || err.statusCode || err?.response?.status;
+  const msg = (err.message || err.error?.message || '').toLowerCase();
+  return (
+    (status === 400 || status === 429) &&
+    (msg.includes('usage limit') || msg.includes('spending limit') || msg.includes('quota'))
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -1358,14 +1371,7 @@ router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, 
     try { abortController.abort(); } catch {}
   });
 
-  try {
-    const stream = await anthropicClient.messages.stream({
-      model,
-      max_tokens: 8192,
-      messages: [
-        {
-          role: 'user',
-          content: `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}${companySection}
+  const cofixUserContent = `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}${companySection}
 
 CODE:
 \`\`\`${lang}
@@ -1405,9 +1411,35 @@ RULES:
 - Return the COMPLETE fixed code, not a partial snippet
 - Do NOT add comments inside the code (changes[] documents everything)
 - CONCISENESS: Eliminate every unnecessary line. Merge multi-line expressions into one where readable. Use list comprehensions, ternaries, and built-ins instead of verbose loops. The fixed code must be the shortest correct version that still passes all cases.
-- walkthrough: cover every non-trivial line or logical block (3-8 entries). Write in first person ("I iterate…", "I seed…"). Group consecutive related lines ("35-38"). Use backticks for variable/code refs. One sentence per entry, max 30 words.`,
-        },
-      ],
+- walkthrough: cover every non-trivial line or logical block (3-8 entries). Write in first person ("I iterate…", "I seed…"). Group consecutive related lines ("35-38"). Use backticks for variable/code refs. One sentence per entry, max 30 words.`;
+
+  // Shared JSON parse + emit helper used by both Claude and OpenAI paths
+  async function parseAndEmitCofix(fullText) {
+    const fenced = fullText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    let jsonStr = fenced ? fenced[1] : fullText.trim();
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      const lastBrace = jsonStr.lastIndexOf('}');
+      if (lastBrace !== -1) {
+        parsed = JSON.parse(jsonStr.slice(0, lastBrace + 1));
+      } else {
+        throw new Error('no closing brace');
+      }
+    }
+    sendEvent('answer', parsed);
+    sendEvent('done', {});
+    try { await recordCodingUsage(req.user.id, lang, 0, 0, 0); } catch {}
+    clearInterval(keepaliveTimer);
+    res.end();
+  }
+
+  try {
+    const stream = await anthropicClient.messages.stream({
+      model,
+      max_tokens: 8192,
+      messages: [{ role: 'user', content: cofixUserContent }],
     }, { signal: abortController.signal });
 
     let fullText = '';
@@ -1421,44 +1453,51 @@ RULES:
 
     if (clientDisconnected) { clearInterval(keepaliveTimer); return; }
 
-    // Parse accumulated JSON — strip optional markdown fences, then attempt
-    // recovery by trimming to the last closing brace if JSON.parse fails.
-    let parsed;
     try {
-      const fenced = fullText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      let jsonStr = fenced ? fenced[1] : fullText.trim();
-      try {
-        parsed = JSON.parse(jsonStr);
-      } catch {
-        // Attempt recovery: truncate to the last '}' to handle partial streams
-        const lastBrace = jsonStr.lastIndexOf('}');
-        if (lastBrace !== -1) {
-          parsed = JSON.parse(jsonStr.slice(0, lastBrace + 1));
-        } else {
-          throw new Error('no closing brace');
-        }
-      }
+      await parseAndEmitCofix(fullText);
     } catch {
       sendEvent('error', { message: 'Failed to parse CoFix response — try again' });
       clearInterval(keepaliveTimer);
-      return res.end();
+      res.end();
     }
-
-    sendEvent('answer', parsed);
-    sendEvent('done', {});
-
-    // Fire-and-forget usage recording — DB hiccup must not break the response.
-    try {
-      await recordCodingUsage(req.user.id, lang, 0, 0, 0);
-    } catch (err) {
-      console.error('[cofix] Failed to record usage:', err.message);
-    }
-
-    clearInterval(keepaliveTimer);
-    res.end();
   } catch (err) {
     clearInterval(keepaliveTimer);
     if (clientDisconnected) return;
+
+    if (isApiExhaustedError(err) && process.env.OPENAI_API_KEY) {
+      console.warn('[cofix] Claude exhausted — falling back to OpenAI:', err.message);
+      sendEvent('status', { state: 'warn', msg: 'Switching to backup AI…' });
+      try {
+        const oaiStream = await openaiClient.chat.completions.create({
+          model: 'gpt-4o',
+          max_tokens: 8192,
+          stream: true,
+          messages: [{ role: 'user', content: cofixUserContent }],
+        });
+        let fullText = '';
+        for await (const chunk of oaiStream) {
+          if (clientDisconnected) break;
+          const token = chunk.choices[0]?.delta?.content || '';
+          if (token) {
+            fullText += token;
+            sendEvent('token', { chunk: token });
+          }
+        }
+        if (clientDisconnected) return;
+        try {
+          await parseAndEmitCofix(fullText);
+        } catch {
+          sendEvent('error', { message: 'Failed to parse CoFix response — try again' });
+          res.end();
+        }
+      } catch (oaiErr) {
+        console.error('[cofix] OpenAI fallback also failed:', oaiErr.message);
+        sendEvent('error', { message: 'All AI providers unavailable — please try again shortly.' });
+        res.end();
+      }
+      return;
+    }
+
     console.error('CoFix stream error:', err);
     sendEvent('error', { message: err.message || 'CoFix failed' });
     res.end();
