@@ -1876,8 +1876,8 @@ Rules:
     const raw = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
     return res.json(parseAnalyzeResponse(raw));
   } catch (err) {
-    if (isApiExhaustedError(err) && FALLBACK_PROVIDERS.length > 0) {
-      console.warn('[analyze] Claude exhausted — trying fallback providers');
+    if (FALLBACK_PROVIDERS.length > 0) {
+      console.warn('[analyze] Anthropic failed — trying fallback providers:', err.message);
       for (const provider of FALLBACK_PROVIDERS) {
         try {
           const resp = await provider.client.chat.completions.create({
