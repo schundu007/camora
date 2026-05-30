@@ -167,7 +167,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: apps/ai-services
-        run: pip install -r requirements.txt ruff
+        run: python3 -m pip install -r requirements.txt ruff
 
       - name: Lint with ruff
         working-directory: apps/ai-services
