@@ -3,6 +3,7 @@
  * Sidebar sections + upload zones + Generate button.
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
+import type { JSX } from 'react';
 import hljs from 'highlight.js';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getAuthHeaders } from '../../../utils/authHeaders';

@@ -447,7 +447,7 @@ export default function TeamSettingsPage() {
     } catch { /* swallow */ }
   }
 
-  const isOwner = !!team && !!user && team.owner_user_id === user.id;
+  const isOwner = !!team && !!user && team.owner_user_id === Number(user.id);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>

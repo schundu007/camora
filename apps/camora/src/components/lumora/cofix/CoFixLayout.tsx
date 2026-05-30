@@ -861,7 +861,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
           <div className="h-8 flex items-center justify-between px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
             <span className="text-[10px] font-semibold tracking-wider text-[var(--cam-gold-leaf-dk)] uppercase">Broken Code</span>
             <button
-              onClick={handleFix}
+              onClick={() => handleFix()}
               disabled={inputCode.trim().length < 5 || isLoading}
               className="h-6 px-3 rounded text-[10px] font-bold uppercase tracking-[0.1em] disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
               style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }}
@@ -1060,7 +1060,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                           style={{ border: '1px solid var(--border)', color: 'var(--text-muted)' }}
                         >Cancel</button>
                         <button
-                          onClick={handleRefine}
+                          onClick={() => handleRefine()}
                           disabled={!refinePrompt.trim() || isLoading}
                           className="text-[10px] font-bold uppercase tracking-[0.1em] px-4 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                           style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }}
@@ -1076,7 +1076,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[var(--bg-primary)]">
                   <p className="text-[12px] text-red-400 text-center px-6">{error}</p>
                   <button
-                    onClick={handleFix}
+                    onClick={() => handleFix()}
                     className="text-[12px] px-4 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[#0047AB] transition-colors"
                   >
                     Retry

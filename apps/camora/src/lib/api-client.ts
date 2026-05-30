@@ -88,6 +88,7 @@ export const transcriptionAPI = {
     skipped?: boolean;
     reason?: string;
     similarity?: number;
+    interviewer_ratio?: number;
   }> => {
     const formData = new FormData();
     formData.append('file', audioBlob, filename);

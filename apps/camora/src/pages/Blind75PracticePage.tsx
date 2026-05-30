@@ -5687,7 +5687,7 @@ export default function Blind75PracticePage() {
     try {
       const res = await fetch(`${CAPRA_API_URL}/api/run`, {
         credentials: 'include',
-        headers: { ...getAuthHeaders() }, method: 'POST', headers, body: JSON.stringify({ code, language, input: '', problem: problem?.title || `Problem #${id}` }) });
+        method: 'POST', headers, body: JSON.stringify({ code, language, input: '', problem: problem?.title || `Problem #${id}` }) });
       if (!res.ok) throw new Error(`Server error (${res.status})`);
       const data = await res.json();
       setOutput(data.output || data.stdout || data.stderr || 'No output');
@@ -5702,7 +5702,6 @@ export default function Blind75PracticePage() {
     try {
       const res = await fetch(`${CAPRA_API_URL}/api/solve/stream`, {
         credentials: 'include',
-        headers: { ...getAuthHeaders() },
         method: 'POST',
         headers,
         body: JSON.stringify({ problem: problem?.title || `Problem #${id}`, language }),

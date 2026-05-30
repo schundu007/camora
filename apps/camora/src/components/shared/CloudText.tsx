@@ -1,3 +1,5 @@
+import React from 'react';
+import type { JSX } from 'react';
 import { useCloudFormatter } from '@/hooks/useCloudFormatter';
 
 interface CloudTextProps {
@@ -5,7 +7,7 @@ interface CloudTextProps {
    *  cloud's equivalents. Empty/null is rendered as null (matches React
    *  expectations for conditional render sites). */
   children?: string | null;
-  as?: keyof JSX.IntrinsicElements;
+  as?: React.ElementType;
   className?: string;
   style?: React.CSSProperties;
 }

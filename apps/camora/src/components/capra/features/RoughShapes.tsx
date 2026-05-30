@@ -77,7 +77,7 @@ export function RoughBox({ x, y, width, height, label, color = 'var(--accent)', 
       <rect x={x} y={y} width={width} height={height} rx="6" fill="var(--bg-surface)" stroke="none" />
       {/* Rough outline — uses passed `color` so categories can still
           differentiate, but text sits on the guaranteed surface fill. */}
-      {drawable.sets.map((set, i) => (
+      {drawable.sets.map((set: any, i: number) => (
         <path
           key={i}
           d={opsToPath(set.ops)}
@@ -129,7 +129,7 @@ export function RoughDiamond({ x, y, size, label, color = 'var(--accent)', seed 
   return (
     <g>
       <polygon points={fillPoints} fill="var(--bg-surface)" stroke="none" />
-      {drawable.sets.map((set, i) => (
+      {drawable.sets.map((set: any, i: number) => (
         <path
           key={i}
           d={opsToPath(set.ops)}

@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import atomOneDark from 'react-syntax-highlighter/dist/esm/styles/hljs/atom-one-dark';
 import python from 'react-syntax-highlighter/dist/esm/languages/hljs/python';
 import javascript from 'react-syntax-highlighter/dist/esm/languages/hljs/javascript';
 import typescript from 'react-syntax-highlighter/dist/esm/languages/hljs/typescript';

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import type { JSX } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';

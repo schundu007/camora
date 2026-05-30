@@ -383,7 +383,7 @@ function DsaProblemRow({ problem, onClick }: { problem: LcProblem; onClick: () =
       }}>
         {problem.title}
           {problem.is_premium && (
-            <Chip variant="gold" className="ml-1.5 leading-none" style={{ fontSize: 9, padding: '1px 5px', verticalAlign: 'middle' }}>PRO</Chip>
+            <Chip variant="gold" className="ml-1.5 leading-none">PRO</Chip>
           )}
       </span>
       <div style={{ display: 'flex', gap: 4, alignItems: 'center', overflow: 'hidden', paddingRight: 10 }}>

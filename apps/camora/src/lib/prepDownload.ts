@@ -834,7 +834,7 @@ function buildCallout(label: string, body: string, tone: 'info' | 'warn'): any {
   const accent = tone === 'warn' ? 'C77A00' : '0047AB';
   const fill = tone === 'warn' ? 'FFF8EC' : 'EEF4FB';
   const lines = body.split('\n');
-  const paragraphs: Paragraph[] = [
+  const paragraphs: InstanceType<typeof Paragraph>[] = [
     new Paragraph({
       spacing: { after: 80 },
       children: [new TextRun({ text: label.toUpperCase(), bold: true, color: accent, size: 16, characterSpacing: 22 })],
@@ -866,7 +866,7 @@ function buildCallout(label: string, body: string, tone: 'info' | 'warn'): any {
 
 // ── Q&A pair as styled paragraphs ───────────────────────────────────────
 function buildQA(question: string, answer: string): any[] {
-  const out: Paragraph[] = [];
+  const out: InstanceType<typeof Paragraph>[] = [];
   out.push(new Paragraph({
     spacing: { before: 200, after: 80 },
     indent: { left: 360 },
@@ -900,7 +900,7 @@ function buildLead(text: string): any {
 }
 
 function blocksToDocxChildren(blocks: DocxBlock[]): any[] {
-  const children: (Paragraph | Table)[] = [];
+  const children: (InstanceType<typeof Paragraph> | InstanceType<typeof Table>)[] = [];
   for (const b of blocks) {
     const t = docxSafe(b.text);
     const lbl = docxSafe(b.label || '');
@@ -956,7 +956,7 @@ async function browserSaveDocx(fullTitle: string, sections: PrepSection[], filen
   const today = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
   // Cover page — its own section with no header/footer.
-  const coverChildren: (Paragraph | Table)[] = [
+  const coverChildren: (InstanceType<typeof Paragraph> | InstanceType<typeof Table>)[] = [
     new Paragraph({ spacing: { before: 1200, after: 0 }, children: [new TextRun({ text: 'CAMORA · INTERVIEW PREP', bold: true, color: '0047AB', size: 20, characterSpacing: 32 })] }),
     new Paragraph({ spacing: { before: 200, after: 600 }, border: { bottom: { style: BorderStyle.SINGLE, size: 24, color: '0047AB', space: 1 } }, children: [new TextRun({ text: '' })] }),
     new Paragraph({ spacing: { before: 2400, after: 0 }, children: [new TextRun({ text: 'BRIEFING', bold: true, color: '0047AB', size: 18, characterSpacing: 32 })] }),
@@ -967,7 +967,7 @@ async function browserSaveDocx(fullTitle: string, sections: PrepSection[], filen
   ];
 
   // Table of contents.
-  const tocChildren: (Paragraph | Table)[] = [
+  const tocChildren: (InstanceType<typeof Paragraph> | InstanceType<typeof Table>)[] = [
     new Paragraph({ spacing: { before: 480, after: 100 }, children: [new TextRun({ text: 'TABLE OF CONTENTS', bold: true, color: '0047AB', size: 20, characterSpacing: 32 })] }),
     new Paragraph({ spacing: { after: 240 }, children: [new TextRun({ text: 'Inside this briefing', bold: true, color: '0A0A0A', size: 56 })] }),
     new Paragraph({ spacing: { after: 320 }, border: { bottom: { style: BorderStyle.SINGLE, size: 24, color: '0047AB', space: 1 } }, children: [new TextRun({ text: '' })] }),
@@ -1012,7 +1012,7 @@ async function browserSaveDocx(fullTitle: string, sections: PrepSection[], filen
       new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: docxSafe(s.heading), bold: true, color: '0A0A0A', size: 60 })] }),
       new Paragraph({ spacing: { after: 320 }, border: { bottom: { style: BorderStyle.SINGLE, size: 24, color: '0047AB', space: 1 } }, children: [new TextRun({ text: '' })] }),
       ...blocksToDocxChildren(s.blocks),
-    ] as (Paragraph | Table)[],
+    ] as (InstanceType<typeof Paragraph> | InstanceType<typeof Table>)[],
   }));
 
   const doc = new Document({
