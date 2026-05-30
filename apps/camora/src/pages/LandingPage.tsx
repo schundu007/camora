@@ -163,18 +163,18 @@ export default function LandingPage() {
       <SiteNav />
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative overflow-hidden bg-[#0A1228] text-white">
+      <section className="relative overflow-hidden bg-[#0B0D11] text-white">
         {/* Animated aurora gradient orbs */}
         <div
           aria-hidden="true"
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 90% 70% at 5% 40%, rgba(16,185,129,0.12), transparent 55%),' +
+              'radial-gradient(ellipse 90% 70% at 5% 40%, rgba(30,77,120,0.12), transparent 55%),' +
               'radial-gradient(ellipse 60% 80% at 12% 25%, rgba(201,162,39,0.15), transparent 60%),' +
-              'radial-gradient(ellipse 50% 60% at 92% 65%, rgba(16,185,129,0.18), transparent 60%),' +
+              'radial-gradient(ellipse 50% 60% at 92% 65%, rgba(30,77,120,0.18), transparent 60%),' +
               'radial-gradient(ellipse 40% 50% at 50% 80%, rgba(201,162,39,0.06), transparent 55%),' +
-              'linear-gradient(135deg, #07112A 0%, #0B1A3D 50%, #0A1228 100%)',
+              'linear-gradient(135deg, #0B0D11 0%, #0F1217 50%, #171B24 100%)',
             animation: 'heroOrbs 18s ease-in-out infinite alternate',
           }}
         />
@@ -182,7 +182,7 @@ export default function LandingPage() {
         <div aria-hidden="true" className="absolute pointer-events-none opacity-20"
           style={{
             width: 500, height: 500, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(16,185,129,0.25) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(30,77,120,0.25) 0%, transparent 70%)',
             top: '-10%', left: '-5%',
             animation: 'heroDrift1 25s ease-in-out infinite alternate',
           }}
@@ -204,8 +204,8 @@ export default function LandingPage() {
           ].map((pos, i) => (
             <span key={i} className={`absolute rounded-full ${pos}`}
               style={{
-                background: i % 2 === 0 ? 'rgba(16,185,129,0.5)' : 'rgba(201,162,39,0.4)',
-                boxShadow: i % 2 === 0 ? '0 0 12px rgba(16,185,129,0.3)' : '0 0 12px rgba(201,162,39,0.25)',
+                background: i % 2 === 0 ? 'rgba(30,77,120,0.5)' : 'rgba(201,162,39,0.4)',
+                boxShadow: i % 2 === 0 ? '0 0 12px rgba(30,77,120,0.3)' : '0 0 12px rgba(201,162,39,0.25)',
                 animation: `heroFloat ${4 + (i % 3) * 2}s ease-in-out ${i * 0.5}s infinite`,
               }}
             />
@@ -360,7 +360,7 @@ export default function LandingPage() {
                 <Reveal key={step.key} delay={i * 0.06}>
                   <Link
                     to={step.href}
-                    className="group flex h-full items-start gap-4 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] transition-all duration-200 active:scale-[0.98] hover:-translate-y-1 hover:border-[var(--cam-primary)]/25 hover:shadow-[0_0_0_1px_rgba(16,185,129,0.08),0_4px_12px_rgba(16,185,129,0.06),0_16px_32px_-12px_rgba(15,23,42,0.16)]"
+                    className="group flex h-full items-start gap-4 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[0_1px_2px_rgba(11,13,17,0.04),0_8px_24px_-12px_rgba(11,13,17,0.08)] transition-all duration-200 active:scale-[0.98] hover:-translate-y-1 hover:border-[var(--cam-primary)]/25 hover:shadow-[0_0_0_1px_rgba(30,77,120,0.08),0_4px_12px_rgba(30,77,120,0.06),0_16px_32px_-12px_rgba(11,13,17,0.16)]"
                   >
                     <span className="shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--cam-primary)] transition-colors duration-200 group-hover:bg-[var(--cam-primary)]/12 group-hover:text-[var(--cam-primary-lt)]">
                       {step.icon}
@@ -386,7 +386,7 @@ export default function LandingPage() {
               <Reveal key={step.key} delay={0.12}>
                 <Link
                   to={step.href}
-                  className="group flex flex-col h-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] transition-all duration-200 active:scale-[0.98] hover:-translate-y-1 hover:border-[var(--cam-primary)]/25 hover:shadow-[0_0_0_1px_rgba(16,185,129,0.08),0_4px_12px_rgba(16,185,129,0.06),0_16px_32px_-12px_rgba(15,23,42,0.16)]"
+                  className="group flex flex-col h-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-[0_1px_2px_rgba(11,13,17,0.04),0_8px_24px_-12px_rgba(11,13,17,0.08)] transition-all duration-200 active:scale-[0.98] hover:-translate-y-1 hover:border-[var(--cam-primary)]/25 hover:shadow-[0_0_0_1px_rgba(30,77,120,0.08),0_4px_12px_rgba(30,77,120,0.06),0_16px_32px_-12px_rgba(11,13,17,0.16)]"
                 >
                   <div className="relative h-48 sm:h-56 overflow-hidden bg-[var(--bg-elevated)] shrink-0 transition-all duration-200 group-hover:brightness-110">
                     <step.Anim />
@@ -574,9 +574,9 @@ export default function LandingPage() {
               className="absolute inset-0 opacity-70"
               style={{
                 background:
-                  'radial-gradient(ellipse 80% 60% at 30% 20%, rgba(16,185,129,0.10), transparent 55%),' +
+                  'radial-gradient(ellipse 80% 60% at 30% 20%, rgba(30,77,120,0.10), transparent 55%),' +
                   'radial-gradient(ellipse 50% 60% at 70% 80%, rgba(201,162,39,0.08), transparent 55%),' +
-                  'radial-gradient(ellipse 60% 50% at 90% 10%, rgba(16,185,129,0.06), transparent 50%)',
+                  'radial-gradient(ellipse 60% 50% at 90% 10%, rgba(30,77,120,0.06), transparent 50%)',
                 animation: 'ctaAurora 14s ease-in-out infinite alternate',
               }}
             />
@@ -597,23 +597,23 @@ export default function LandingPage() {
               className="absolute pointer-events-none"
               style={{
                 width: 320, height: 320, borderRadius: '50%',
-                border: '1px solid rgba(16,185,129,0.06)',
+                border: '1px solid rgba(30,77,120,0.06)',
                 top: '50%', right: '20%',
                 transform: 'translateY(-50%)',
                 animation: 'ctaRing 8s ease-in-out infinite alternate',
-                boxShadow: '0 0 60px rgba(16,185,129,0.04), inset 0 0 60px rgba(16,185,129,0.02)',
+                boxShadow: '0 0 60px rgba(30,77,120,0.04), inset 0 0 60px rgba(30,77,120,0.02)',
               }}
             />
             {/* Floating decorative particles */}
             <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
               <span className="absolute top-[22%] right-[12%] w-2 h-2 rounded-full"
-                style={{ background: 'rgba(16,185,129,0.35)', animation: 'ctaFloat 5s ease-in-out 0s infinite' }}
+                style={{ background: 'rgba(30,77,120,0.35)', animation: 'ctaFloat 5s ease-in-out 0s infinite' }}
               />
               <span className="absolute top-[60%] right-[25%] w-1.5 h-1.5 rounded-full"
                 style={{ background: 'rgba(201,162,39,0.3)', animation: 'ctaFloat 6s ease-in-out 1s infinite' }}
               />
               <span className="absolute top-[35%] right-[40%] w-2.5 h-2.5 rounded-full"
-                style={{ background: 'rgba(16,185,129,0.2)', animation: 'ctaFloat 7s ease-in-out 2s infinite' }}
+                style={{ background: 'rgba(30,77,120,0.2)', animation: 'ctaFloat 7s ease-in-out 2s infinite' }}
               />
             </div>
             <div className="relative flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
@@ -677,7 +677,7 @@ function AudienceCard({
           'relative h-full overflow-hidden rounded-3xl border p-8 md:p-10',
           dark
             ? 'bg-[#0A1228] border-white/10 text-white'
-            : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-primary)] shadow-[0_2px_4px_rgba(15,23,42,0.04),0_12px_32px_-16px_rgba(15,23,42,0.12)]',
+            : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-primary)] shadow-[0_2px_4px_rgba(11,13,17,0.04),0_12px_32px_-16px_rgba(11,13,17,0.12)]',
         )}
       >
         {dark && (

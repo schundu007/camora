@@ -93,7 +93,7 @@ const inlineMarkdown = (raw: string): React.ReactNode[] => {
     if (m[1] !== undefined) {
       nodes.push(<strong key={m.index} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{m[1]}</strong>);
     } else {
-      nodes.push(<code key={m.index} style={{ padding: '1px 5px', background: 'rgba(16,185,129,0.12)', borderRadius: 4, color: '#10b981', fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '-0.02em' }}>{m[2]}</code>);
+      nodes.push(<code key={m.index} style={{ padding: '1px 5px', background: 'rgba(30,77,120,0.12)', borderRadius: 4, color: '#1e4d78', fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '-0.02em' }}>{m[2]}</code>);
     }
     last = m.index + m[0].length;
   }

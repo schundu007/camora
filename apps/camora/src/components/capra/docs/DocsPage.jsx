@@ -596,6 +596,7 @@ export default function DocsPage({ onBack }) {
   };
 
   const getFilteredTopics = () => {
+    // eslint-disable-next-line no-useless-assignment
     let topics = [];
     if (activePage === 'coding') topics = codingTopics;
     // System-design and Low-level pages render multiple topic arrays merged

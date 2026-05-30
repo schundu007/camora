@@ -150,7 +150,7 @@ const ctaSize = {
 
 const ctaVariant = {
   primary:
-    'bg-[var(--cam-primary)] text-white shadow-[0_4px_14px_-4px_rgba(38,97,156,0.45)] hover:bg-[var(--cam-primary-dk)] hover:shadow-[0_8px_22px_-6px_rgba(38,97,156,0.55)]',
+    'bg-[var(--cam-primary)] text-white shadow-[0_4px_14px_-4px_rgba(30,77,120,0.45)] hover:bg-[var(--cam-primary-dk)] hover:shadow-[0_8px_22px_-6px_rgba(30,77,120,0.55)]',
   secondary:
     'bg-transparent text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--cam-primary)] hover:text-[var(--cam-primary)]',
   ghost:
@@ -224,8 +224,8 @@ export const SurfaceCard = forwardRef<HTMLDivElement, SurfaceCardProps>(
     <div
       ref={ref}
       className={cn(
-        'rounded-2xl bg-[var(--bg-surface)] border border-[var(--border)] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]',
-        interactive && 'transition-[transform,border-color,box-shadow] duration-200 active:scale-[0.98] hover:-translate-y-0.5 hover:border-[var(--border-hover)] hover:shadow-[0_4px_8px_rgba(15,23,42,0.06),0_16px_32px_-12px_rgba(15,23,42,0.16)]',
+        'rounded-2xl bg-[var(--bg-surface)] border border-[var(--border)] shadow-[0_1px_2px_rgba(11,13,17,0.04),0_8px_24px_-12px_rgba(11,13,17,0.08)]',
+        interactive && 'transition-[transform,border-color,box-shadow] duration-200 active:scale-[0.98] hover:-translate-y-0.5 hover:border-[var(--border-hover)] hover:shadow-[0_4px_8px_rgba(11,13,17,0.06),0_16px_32px_-12px_rgba(11,13,17,0.16)]',
         padding === 'sm' && 'p-4',
         padding === 'md' && 'p-6',
         padding === 'lg' && 'p-8',
@@ -250,7 +250,7 @@ export function Pill({ className, tone = 'neutral', withDot = false, children, .
         tone === 'neutral' && 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]',
         tone === 'accent' && 'bg-[var(--accent-subtle)] text-[var(--cam-primary-dk)] border border-[var(--cam-primary)]/20',
         tone === 'gold' && 'bg-[rgba(201,162,39,0.12)] text-[var(--cam-gold-leaf-text)] border border-[var(--cam-gold-leaf)]/30',
-        tone === 'success' && 'bg-[rgba(16,185,129,0.10)] text-[#067A55] border border-[#10b981]/25',
+        tone === 'success' && 'bg-[var(--accent-subtle)] text-[var(--accent-text)] border border-[var(--accent)]/25',
         tone === 'inverse' && 'bg-white/8 text-white/80 border border-white/15',
         className,
       )}

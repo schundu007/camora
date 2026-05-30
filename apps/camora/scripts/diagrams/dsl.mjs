@@ -185,7 +185,7 @@ function panelLabel(panel, theme) {
     const escaped = panel.body
       .split('\n')
       .map((l) => l.replace(/^( +)/, (_m, sp) => ' '.repeat(sp.length))) // keep indent
-      .map((l) => escapeHtml(l).replace(/ /g, '&nbsp;'))
+      .map((l) => escapeHtml(l).replace(/\u00a0/g, '&nbsp;'))
       .join('<BR ALIGN="LEFT"/>');
     bodyRows =
       `<TR><TD ALIGN="LEFT" CELLPADDING="10">` +

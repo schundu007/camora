@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 
 const ACCENT = 'var(--accent)';
 const ACCENT_TEXT = 'var(--accent-text)';
-const EMERALD = '#10B981';
+const NAVY = '#1E4D78';
 const HEX_SM = 8;
 const HEX_LG = 12;
 
@@ -40,13 +40,13 @@ export default function DocsSection({
             style={{
               width: HEX_SM,
               height: HEX_SM,
-              background: EMERALD,
+              background: NAVY,
               clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
             }}
           />
           <div
             className="text-[10px] font-extrabold uppercase tracking-[0.16em]"
-            style={{ color: EMERALD }}
+            style={{ color: NAVY }}
           >
             {eyebrow}
           </div>
@@ -60,7 +60,7 @@ export default function DocsSection({
               style={{
                 width: HEX_LG,
                 height: HEX_LG,
-                background: EMERALD,
+                background: NAVY,
                 clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
               }}
             />

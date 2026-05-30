@@ -144,7 +144,7 @@ async function callClaude(client, topic) {
   try {
     parsed = JSON.parse(cleaned);
   } catch (e) {
-    throw new Error(`Bad JSON from model for topic=${topic.id}: ${cleaned.slice(0, 200)}`);
+    throw new Error(`Bad JSON from model for topic=${topic.id}: ${cleaned.slice(0, 200)}`, { cause: e });
   }
   if (!parsed || !Array.isArray(parsed.layeredDesign)) {
     throw new Error(`Missing layeredDesign array for topic=${topic.id}`);

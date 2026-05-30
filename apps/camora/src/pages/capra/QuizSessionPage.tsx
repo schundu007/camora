@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/static-components */
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import mcqData from '../../data/capra/mcq-problems.json';

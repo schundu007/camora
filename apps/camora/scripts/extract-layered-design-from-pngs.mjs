@@ -133,7 +133,7 @@ async function callVision(client, topicId, pngPath) {
   try {
     parsed = JSON.parse(cleaned);
   } catch (e) {
-    throw new Error(`Bad JSON for topic=${topicId}: ${cleaned.slice(0, 200)}`);
+    throw new Error(`Bad JSON for topic=${topicId}: ${cleaned.slice(0, 200)}`, { cause: e });
   }
   if (!parsed || !Array.isArray(parsed.layeredDesign)) {
     throw new Error(`Missing layeredDesign for topic=${topicId}`);

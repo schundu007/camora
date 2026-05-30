@@ -69,8 +69,8 @@ export function cleanTags(text: string): string {
   }
 
   // Drop any dangling structural crumbs that survived.
-  t = t.replace(/^[\s`]*(?:json|JSON)?\s*[\{\[]/, '');     // leading { or [
-  t = t.replace(/[\}\]][\s`]*$/, '');                      // trailing } or ]
+  t = t.replace(/^[\s`]*(?:json|JSON)?\s*[{[]/, '');     // leading { or [
+  t = t.replace(/[}\]][\s`]*$/, '');                      // trailing } or ]
   t = t.replace(/"[A-Za-z_][A-Za-z0-9_]*"\s*:\s*(?:\[|\{)/g, ''); // `"key": {` / `"key": [`
   t = t.replace(/^\s*"|"\s*,?\s*$/gm, '');                 // stray quote-wrapped lines
 

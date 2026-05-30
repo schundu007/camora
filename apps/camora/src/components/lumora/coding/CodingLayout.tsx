@@ -1669,7 +1669,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     // Also strip remaining unpaired [CODE] openers and all closing [/TAG] forms.
     const normalized = content
       .replace(
-        /\[CODE(?:\s+lang=([\w-]+))?\]\s*([\s\S]*?)\s*\[\/CODE\]((?:\n[^\[\n][^\n]*)*)/gi,
+        /\[CODE(?:\s+lang=([\w-]+))?\]\s*([\s\S]*?)\s*\[\/CODE\]((?:\n[^[\n][^\n]*)*)/gi,
         (_: string, lang: string | undefined, inner: string, after: string) => {
           const raw = (inner + after).trim();
           if (!raw) return '';
@@ -2599,7 +2599,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                   <LegacySolutionCards
                     blocks={parsedBlocks}
                     collapsedCards={collapsedCards}
-                    onToggle={(t) => { const n = new Set(collapsedCards); n.has(t) ? n.delete(t) : n.add(t); setCollapsedCards(n); }}
+                    onToggle={(t) => { const n = new Set(collapsedCards); if (n.has(t)) n.delete(t); else n.add(t); setCollapsedCards(n); }}
                     onTestCaseClick={(input, expected) => {
                       const hasEmpty = testCases.some(tc => !tc.input.trim());
                       if (hasEmpty) {

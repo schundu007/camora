@@ -3225,7 +3225,7 @@ export default function TopicDetail({
                                   // text and bullets indented under the
                                   // rail (PPT-style) instead of every line
                                   // starting at the same column.
-                                  const accentMap = { Situation: '#16A34A', Task: '#2563EB', Action: '#D97706', Result: '#059669' };
+                                  const accentMap = { Situation: '#2B6394', Task: '#1E4D78', Action: '#D4A043', Result: '#3B82B9' };
                                   const accent = accentMap[kw] || 'var(--cam-gold-leaf)';
                                   return <div key={bi} className="mt-4 first:mt-0">
                                     <div className="text-[10px] font-bold uppercase tracking-[0.16em] landing-mono mb-1.5" style={{ color: accent }}>{kw}</div>

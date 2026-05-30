@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * Scrapes full question data for HR library problems that currently lack question_body.
  * 

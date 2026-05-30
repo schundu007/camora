@@ -964,7 +964,7 @@ const std::string URLShortener::CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
           id: 'tech-stack',
           title: 'Technology Stack',
           icon: 'layers',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: 'ZooKeeper (ID Gen)', value: '1M IDs/range', bar: 80 },
             { label: 'Redis (Cache)', value: '170 GB / 20K QPS', bar: 95 },
@@ -978,7 +978,7 @@ const std::string URLShortener::CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '500M URLs/month', value: 'New URLs shortened', bar: 70 },
             { label: '200 writes/sec', value: 'Shorten QPS', bar: 30 },
@@ -991,7 +991,7 @@ const std::string URLShortener::CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
       ],
       evolutionSteps: [
         { step: 1, title: 'Single Server', description: 'One web server with a local database and in-memory counter for Base62 encoding.', color: '#94a3b8', icon: 'server', capacity: '~1K URLs/day', rps: '10', pros: ['Simple to build and deploy', 'No distributed systems complexity', 'Easy to debug'], cons: ['Single point of failure', 'Database bottleneck under load', 'No fault tolerance'] },
-        { step: 2, title: 'Cache + Replicas', description: 'Add Redis cache for hot URLs and read replicas for the database. Cache-aside pattern with LRU eviction.', color: '#10B981', icon: 'layers', capacity: '~10M URLs', rps: '5K', pros: ['Sub-ms redirect latency for cached URLs', 'Read replicas handle redirect traffic', 'Database write load stays low'], cons: ['Cache invalidation complexity', 'Read replicas have replication lag', 'Still single-region'] },
+        { step: 2, title: 'Cache + Replicas', description: 'Add Redis cache for hot URLs and read replicas for the database. Cache-aside pattern with LRU eviction.', color: '#1E4D78', icon: 'layers', capacity: '~10M URLs', rps: '5K', pros: ['Sub-ms redirect latency for cached URLs', 'Read replicas handle redirect traffic', 'Database write load stays low'], cons: ['Cache invalidation complexity', 'Read replicas have replication lag', 'Still single-region'] },
         { step: 3, title: 'Distributed ID Generation', description: 'ZooKeeper allocates ID ranges to multiple app servers. Database sharded by short_code using consistent hashing.', color: '#f59e0b', icon: 'zap', capacity: '~1B URLs', rps: '50K', pros: ['Zero collision ID generation', 'Horizontal write scaling', 'No per-request coordination'], cons: ['ZooKeeper ops complexity', 'Shard rebalancing during growth', 'Cross-shard queries limited'] },
         { step: 4, title: 'Global CDN', description: 'CloudFront/Cloudflare caches redirect responses at edge locations worldwide. 80% of traffic never reaches origin.', color: '#10b981', icon: 'globe', capacity: '~30B URLs', rps: '200K+', pros: ['Sub-50ms redirects globally', '80% traffic offloaded to CDN', 'Regional fault isolation'], cons: ['Cache invalidation across edge nodes', 'Higher infrastructure cost', '301 redirects cached in browsers too'] },
         { step: 5, title: 'Analytics + Optimization', description: 'Kafka async analytics pipeline, ClickHouse for dashboards, bloom filters for cache optimization, multi-region active-active deployment.', color: '#7c3aed', icon: 'cpu', capacity: '30B+ URLs', rps: '500K+', pros: ['Full click analytics without redirect latency', 'Cost-efficient storage tiering', 'Active-active multi-region'], cons: ['Complex data pipeline to maintain', 'Analytics lag of 5-10 minutes', 'Multi-region consistency challenges'] },
@@ -1777,7 +1777,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           id: 'tech-stack',
           title: 'Technology Stack',
           icon: 'layers',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: 'Snowflake (ID Gen)', value: '4B IDs/sec capacity', bar: 80 },
             { label: 'Redis (Timeline Cache)', value: '1.28 TB / 3.5M QPS', bar: 100 },
@@ -1791,7 +1791,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '500M MAU', value: 'Monthly active users', bar: 85 },
             { label: '200M DAU', value: 'Daily active users', bar: 70 },
@@ -1804,7 +1804,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
       ],
       evolutionSteps: [
         { step: 1, title: 'Single MySQL', description: 'Monolithic Ruby on Rails app with a single MySQL database. Fan-out implemented as N INSERT queries per tweet.', color: '#94a3b8', icon: 'server', capacity: '~10K users', rps: '100', pros: ['Simple to build (startup speed)', 'Strong consistency (ACID)', 'Easy to debug'], cons: ['Database is the bottleneck', 'Fan-out blocks on write', 'Cannot scale horizontally'] },
-        { step: 2, title: 'Redis Timeline Cache', description: 'Add Redis sorted sets for pre-computed timelines. Fan-out writes to cache instead of DB queries on read.', color: '#10B981', icon: 'layers', capacity: '~10M users', rps: '50K', pros: ['O(1) timeline reads from cache', 'Massive read latency improvement', 'Database load reduced 100x'], cons: ['Fan-out on write for all users', 'Celebrity problem emerges', 'Cache warming on cold start'] },
+        { step: 2, title: 'Redis Timeline Cache', description: 'Add Redis sorted sets for pre-computed timelines. Fan-out writes to cache instead of DB queries on read.', color: '#1E4D78', icon: 'layers', capacity: '~10M users', rps: '50K', pros: ['O(1) timeline reads from cache', 'Massive read latency improvement', 'Database load reduced 100x'], cons: ['Fan-out on write for all users', 'Celebrity problem emerges', 'Cache warming on cold start'] },
         { step: 3, title: 'Hybrid Fan-out + Kafka', description: 'Hybrid fan-out strategy with celebrity threshold. Kafka decouples tweet creation from fan-out processing.', color: '#f59e0b', icon: 'zap', capacity: '~100M users', rps: '500K', pros: ['Celebrity problem solved', 'Async fan-out via Kafka', 'Horizontal scaling of workers'], cons: ['Complex merge logic on read', 'Kafka ops overhead', 'Fan-out lag during spikes'] },
         { step: 4, title: 'ML-Ranked Timeline', description: 'Machine learning model ranks timeline candidates by predicted engagement. Multiple candidate sources beyond follow graph.', color: '#10b981', icon: 'globe', capacity: '~300M users', rps: '2M', pros: ['Higher user engagement', 'Personalized experience', 'Content discovery beyond follows'], cons: ['ML model training pipeline needed', 'Feature store infrastructure', 'Latency budget for inference'] },
         { step: 5, title: 'Global Scale', description: 'Multi-region deployment with regional data centers, Snowflake IDs, Earlybird search, real-time trending via Flink, and CDN for media.', color: '#7c3aed', icon: 'cpu', capacity: '500M+ users', rps: '3.5M+', pros: ['Global low-latency access', 'Real-time search and trends', 'Handles any viral event'], cons: ['Enormous infrastructure cost', 'Complex cross-region consistency', 'Thousands of microservices to maintain'] },
@@ -3976,7 +3976,7 @@ Why Cassandra wins for messages:
           id: 'tech-stack',
           title: 'Technology Stack',
           icon: 'layers',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: 'Gateway (Erlang)', value: '2M conn/server', bar: 95 },
             { label: 'Kafka (Message Bus)', value: '1.5M QPS', bar: 85 },
@@ -3990,7 +3990,7 @@ Why Cassandra wins for messages:
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '2B+ MAU', value: 'Monthly active users', bar: 100 },
             { label: '1B DAU', value: 'Daily active users', bar: 85 },
@@ -4070,7 +4070,7 @@ Why Cassandra wins for messages:
       ],
       evolutionSteps: [
         { step: 1, title: 'Single Server', description: 'One chat server handling all WebSocket connections with a single database.', color: '#94a3b8', icon: 'server', capacity: '~10K users', rps: '100', pros: ['Simple to build and deploy', 'Easy to debug and monitor', 'No network partitions'], cons: ['Single point of failure', 'Cannot scale beyond one machine', 'All connections on one server'] },
-        { step: 2, title: 'Horizontal Scaling', description: 'Multiple chat servers behind a load balancer with Redis for session mapping.', color: '#10B981', icon: 'layers', capacity: '~1M users', rps: '10K', pros: ['Handles more connections', 'Server failures are survivable', 'Redis provides fast lookups'], cons: ['Cross-server routing needed', 'Session affinity complexity', 'Redis becomes bottleneck'] },
+        { step: 2, title: 'Horizontal Scaling', description: 'Multiple chat servers behind a load balancer with Redis for session mapping.', color: '#1E4D78', icon: 'layers', capacity: '~1M users', rps: '10K', pros: ['Handles more connections', 'Server failures are survivable', 'Redis provides fast lookups'], cons: ['Cross-server routing needed', 'Session affinity complexity', 'Redis becomes bottleneck'] },
         { step: 3, title: 'Message Queue', description: 'Kafka for cross-server routing and guaranteed delivery. Offline message queue for reliability.', color: '#f59e0b', icon: 'zap', capacity: '~100M users', rps: '500K', pros: ['Guaranteed message delivery', 'Decoupled services', 'Handles offline users'], cons: ['Added latency from queue', 'Kafka ops complexity', 'Message ordering challenges'] },
         { step: 4, title: 'Global Distribution', description: 'Regional clusters with CDN for media and cross-region Kafka replication.', color: '#10b981', icon: 'globe', capacity: '~1B users', rps: '1.5M', pros: ['Low latency globally', 'Regional fault isolation', 'CDN offloads media'], cons: ['Cross-region consistency', 'Complex deployment', 'Higher infrastructure cost'] },
         { step: 5, title: 'Optimization', description: 'Erlang gateways (2M conn/server), hot/cold storage, presence batching, sender keys.', color: '#7c3aed', icon: 'cpu', capacity: '2B+ users', rps: '1.5M+', pros: ['2M connections per server', 'Cost-efficient storage', 'Optimized encryption'], cons: ['Erlang expertise required', 'Complex migration path', 'Custom tooling needed'] },
@@ -5149,7 +5149,7 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '2B MAU', value: 'Monthly active users', bar: 100 },
             { label: '500M DAU', value: 'Daily active users', bar: 85 },
@@ -5163,7 +5163,7 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
       // ── Evolution Steps ──
       evolutionSteps: [
         { step: 1, title: 'Single Server', description: 'One Django server with PostgreSQL. All photos stored on local disk. Feed generated by querying followed users posts at read time.', color: '#94a3b8', icon: 'server', capacity: '~10K users', rps: '100', pros: ['Simple to build and deploy', 'Single database, no sharding', 'Easy to debug'], cons: ['Feed query is O(N) per followed user', 'Local disk limits photo storage', 'Single point of failure'] },
-        { step: 2, title: 'S3 + CDN + Read Replicas', description: 'Move photos to S3 with CloudFront CDN. Add PostgreSQL read replicas for feed queries. Introduce Redis for session caching.', color: '#10B981', icon: 'layers', capacity: '~1M users', rps: '10K', pros: ['CDN offloads image serving', 'Read replicas handle feed queries', 'Photos durably stored in S3'], cons: ['Feed still generated on-demand (slow)', 'No image processing pipeline', 'Celebrity follows create hot queries'] },
+        { step: 2, title: 'S3 + CDN + Read Replicas', description: 'Move photos to S3 with CloudFront CDN. Add PostgreSQL read replicas for feed queries. Introduce Redis for session caching.', color: '#1E4D78', icon: 'layers', capacity: '~1M users', rps: '10K', pros: ['CDN offloads image serving', 'Read replicas handle feed queries', 'Photos durably stored in S3'], cons: ['Feed still generated on-demand (slow)', 'No image processing pipeline', 'Celebrity follows create hot queries'] },
         { step: 3, title: 'Feed Pre-computation + Image Pipeline', description: 'Introduce fan-out on write for feed generation. Add async image processing pipeline (resize, WebP, moderate). Shard PostgreSQL by userId.', color: '#f59e0b', icon: 'zap', capacity: '~100M users', rps: '200K', pros: ['Feed reads are instant (pre-computed)', 'Multiple image sizes for all devices', 'Database load distributed across shards'], cons: ['Celebrity fan-out is expensive', 'Image processing queue can backlog', 'Sharding adds operational complexity'] },
         { step: 4, title: 'Hybrid Fan-out + ML Ranking', description: 'Switch to hybrid fan-out (push for <10K followers, pull for celebrities). Add ML-based feed ranking. Deploy Cassandra for write-heavy workloads. Multi-tier CDN.', color: '#10b981', icon: 'globe', capacity: '~1B users', rps: '500K', pros: ['Celebrity problem solved', 'Engagement-optimized feeds', 'Write throughput scales with Cassandra'], cons: ['ML ranking adds latency (~50ms)', 'Two code paths (push + pull) increase complexity', 'Cache invalidation across tiers'] },
         { step: 5, title: 'Global Scale Optimization', description: 'Multi-region deployment with regional CDN warming. Explore page powered by deep learning recommendations. Stories on dedicated ephemeral storage. Counter sharding for viral posts.', color: '#7c3aed', icon: 'cpu', capacity: '2B+ users', rps: '1M+', pros: ['<50ms image delivery globally', 'ML-powered discovery (Explore)', 'Handles viral content gracefully'], cons: ['Complex ML infrastructure', 'Multi-region consistency challenges', 'Massive storage costs (~219 PB/year)'] },
@@ -6854,7 +6854,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '260M+ subscribers', value: 'Paid memberships', bar: 100 },
             { label: '500M+ hrs/day', value: 'Video hours streamed', bar: 95 },
@@ -6868,7 +6868,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
       // ── Evolution Steps ──
       evolutionSteps: [
         { step: 1, title: 'DVD-by-Mail', description: 'Original Netflix model: mail DVDs to subscribers. No streaming infrastructure. Content catalog managed in a simple database with warehouse inventory tracking.', color: '#94a3b8', icon: 'server', capacity: '~10M subscribers', rps: '100', pros: ['Simple logistics model', 'No streaming infrastructure needed', 'Physical media is universal'], cons: ['Multi-day delivery time', 'Physical inventory limits catalog', 'No instant gratification'] },
-        { step: 2, title: 'Basic Streaming + Third-Party CDN', description: 'Launch streaming with Silverlight player. Content hosted on AWS S3, delivered via third-party CDN (Akamai/Limelight). Single quality level per title.', color: '#10B981', icon: 'layers', capacity: '~30M subscribers', rps: '10K', pros: ['Instant content access', 'No physical infrastructure needed', 'Global reach via CDN vendor'], cons: ['Expensive CDN costs at scale', 'Limited quality control', 'No adaptive bitrate'] },
+        { step: 2, title: 'Basic Streaming + Third-Party CDN', description: 'Launch streaming with Silverlight player. Content hosted on AWS S3, delivered via third-party CDN (Akamai/Limelight). Single quality level per title.', color: '#1E4D78', icon: 'layers', capacity: '~30M subscribers', rps: '10K', pros: ['Instant content access', 'No physical infrastructure needed', 'Global reach via CDN vendor'], cons: ['Expensive CDN costs at scale', 'Limited quality control', 'No adaptive bitrate'] },
         { step: 3, title: 'Open Connect CDN + ABR', description: 'Build custom CDN (Open Connect) with appliances at ISPs. Implement adaptive bitrate streaming with multiple quality levels. Begin microservices migration from monolith.', color: '#f59e0b', icon: 'zap', capacity: '~100M subscribers', rps: '100K', pros: ['95% traffic served locally', 'Adaptive quality for all networks', 'Control over delivery infrastructure'], cons: ['Massive hardware investment', 'ISP partnership complexity', 'Microservices migration is multi-year'] },
         { step: 4, title: 'Per-Shot Encoding + ML Recommendations', description: 'Per-shot encoding for 20% bandwidth savings. ML-powered recommendations driving 80% of discovery. Personalized artwork per user. Chaos engineering (Simian Army) for resilience.', color: '#10b981', icon: 'globe', capacity: '~200M subscribers', rps: '500K', pros: ['Better quality at lower bandwidth', 'Highly personalized experience', '99.99% availability via chaos testing'], cons: ['Enormous encoding compute costs', 'ML model complexity', 'Multi-region architecture overhead'] },
         { step: 5, title: 'Global Scale + AV1 + Edge Intelligence', description: '230M+ subscribers across 190 countries. AV1 codec rollout for 20% more compression. 17,000+ CDN servers at 6,000+ locations. Edge computing for real-time ABR optimization.', color: '#7c3aed', icon: 'cpu', capacity: '230M+ subscribers', rps: '1M+', pros: ['15% of global internet traffic', 'Best-in-class streaming quality', '1,200+ versions per title'], cons: ['~100 PB encoded content storage', 'Content licensing per-country complexity', 'Continued CDN hardware investment'] },
@@ -7958,7 +7958,7 @@ cart {
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '310M+ customers', value: 'Active accounts', bar: 100 },
             { label: '12M+ products', value: 'In catalog', bar: 85 },
@@ -7977,7 +7977,7 @@ cart {
       ],
       evolutionSteps: [
         { step: 1, title: 'Monolith', description: 'Single application server with one relational database handling all e-commerce functions.', color: '#94a3b8', icon: 'server', capacity: '~10K products', rps: '100', pros: ['Simple to build and deploy', 'Single database for consistency', 'Easy debugging'], cons: ['Cannot scale services independently', 'Database becomes bottleneck', 'Full-table scans for search'] },
-        { step: 2, title: 'Service Split', description: 'Decompose into microservices (Product, Cart, Order, Payment) with dedicated databases per service.', color: '#10B981', icon: 'layers', capacity: '~1M products', rps: '5K', pros: ['Independent scaling per domain', 'Technology choice per service', 'Fault isolation'], cons: ['Distributed transaction complexity', 'Service discovery needed', 'Network latency between services'] },
+        { step: 2, title: 'Service Split', description: 'Decompose into microservices (Product, Cart, Order, Payment) with dedicated databases per service.', color: '#1E4D78', icon: 'layers', capacity: '~1M products', rps: '5K', pros: ['Independent scaling per domain', 'Technology choice per service', 'Fault isolation'], cons: ['Distributed transaction complexity', 'Service discovery needed', 'Network latency between services'] },
         { step: 3, title: 'Search + Cache', description: 'Elasticsearch for product search, Redis for cart and inventory caching, CDN for static assets.', color: '#f59e0b', icon: 'zap', capacity: '~10M products', rps: '50K', pros: ['Sub-200ms search results', 'Cart reads in <1ms', 'CDN offloads 80% of static traffic'], cons: ['Cache invalidation complexity', 'Elasticsearch index lag', 'More infrastructure to manage'] },
         { step: 4, title: 'Event-Driven', description: 'Kafka for async order processing, Saga orchestrator for checkout, CDC for cross-service data sync.', color: '#10b981', icon: 'globe', capacity: '~100M products', rps: '100K', pros: ['Handles Prime Day traffic spikes', 'Loose coupling between services', 'Reliable async processing'], cons: ['Eventual consistency complexity', 'Kafka operational overhead', 'Debugging distributed sagas'] },
         { step: 5, title: 'Global Scale', description: 'Multi-region deployment, DynamoDB Global Tables, regional inventory pools, ML-powered recommendations.', color: '#7c3aed', icon: 'cpu', capacity: '350M+ products', rps: '100K+', pros: ['Low latency globally', 'Regional fault isolation', 'AI-powered personalization'], cons: ['Cross-region consistency challenges', 'Complex deployment orchestration', 'High infrastructure cost'] },
@@ -8753,7 +8753,7 @@ presence {
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '1B+ users', value: 'Google Workspace users', bar: 100 },
             { label: 'Millions concurrent', value: 'Active editors', bar: 85 },
@@ -8772,7 +8772,7 @@ presence {
       ],
       evolutionSteps: [
         { step: 1, title: 'Save & Refresh', description: 'Simple document editor with manual save. No collaboration — last save wins.', color: '#94a3b8', icon: 'server', capacity: '~1K documents', rps: '10', pros: ['Simple to build', 'No conflict resolution needed', 'Standard CRUD'], cons: ['Data loss from concurrent edits', 'No real-time collaboration', 'Manual save required'] },
-        { step: 2, title: 'Polling Sync', description: 'Client polls server every few seconds for changes. Basic collaboration with visible lag.', color: '#10B981', icon: 'layers', capacity: '~100K documents', rps: '1K', pros: ['Basic collaboration works', 'Simple HTTP polling', 'No WebSocket needed'], cons: ['1-5 second lag between edits', 'High server load from polling', 'Merge conflicts possible'] },
+        { step: 2, title: 'Polling Sync', description: 'Client polls server every few seconds for changes. Basic collaboration with visible lag.', color: '#1E4D78', icon: 'layers', capacity: '~100K documents', rps: '1K', pros: ['Basic collaboration works', 'Simple HTTP polling', 'No WebSocket needed'], cons: ['1-5 second lag between edits', 'High server load from polling', 'Merge conflicts possible'] },
         { step: 3, title: 'OT + WebSocket', description: 'Operational Transformation engine with persistent WebSocket connections for real-time editing.', color: '#f59e0b', icon: 'zap', capacity: '~10M documents', rps: '100K', pros: ['True real-time collaboration', 'Automatic conflict resolution', 'Sub-100ms latency'], cons: ['OT implementation complexity', 'Sticky sessions required', 'Single-region limitation'] },
         { step: 4, title: 'Global Scale', description: 'Multi-region deployment, Cassandra operation log, periodic snapshots, offline editing support.', color: '#10b981', icon: 'globe', capacity: '~1B documents', rps: '500K', pros: ['Global low-latency access', 'Offline editing works', 'Version history at scale'], cons: ['Cross-region OT complexity', 'Snapshot management overhead', 'Higher infrastructure cost'] },
         { step: 5, title: 'Enterprise', description: 'Advanced permissions, audit logging, compliance features, real-time commenting and suggestions.', color: '#7c3aed', icon: 'cpu', capacity: '10B+ documents', rps: '2M+', pros: ['Enterprise-grade security', 'Rich collaboration features', 'Compliance-ready'], cons: ['Permission model complexity', 'Feature interaction edge cases', 'Cost of global infrastructure'] },
@@ -9562,7 +9562,7 @@ Step 2 — Merchant payout:
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '$1T+/year', value: 'Transaction volume', bar: 100 },
             { label: '65K peak TPS', value: 'Black Friday peak', bar: 95 },
@@ -9575,7 +9575,7 @@ Step 2 — Merchant payout:
       ],
       evolutionSteps: [
         { step: 1, title: 'Direct Integration', description: 'Single server calling card network API directly with card data stored in main database.', color: '#94a3b8', icon: 'server', capacity: '~100 TPS', rps: '100', pros: ['Simple to build', 'Single database', 'Fast to market'], cons: ['PCI violation (card data in main DB)', 'No idempotency (double charges)', 'No fraud detection'] },
-        { step: 2, title: 'Tokenization', description: 'PCI-compliant card vault with tokenization. Separate Cardholder Data Environment.', color: '#10B981', icon: 'layers', capacity: '~1K TPS', rps: '1K', pros: ['PCI compliant', 'Card data isolated', 'Tokens reduce risk'], cons: ['Vault adds latency', 'HSM cost', 'Still no fraud detection'] },
+        { step: 2, title: 'Tokenization', description: 'PCI-compliant card vault with tokenization. Separate Cardholder Data Environment.', color: '#1E4D78', icon: 'layers', capacity: '~1K TPS', rps: '1K', pros: ['PCI compliant', 'Card data isolated', 'Tokens reduce risk'], cons: ['Vault adds latency', 'HSM cost', 'Still no fraud detection'] },
         { step: 3, title: 'Ledger + Idempotency', description: 'Double-entry bookkeeping ledger, idempotency keys for exactly-once processing, Saga pattern.', color: '#f59e0b', icon: 'zap', capacity: '~10K TPS', rps: '10K', pros: ['Exactly-once processing', 'Auditable ledger', 'Distributed transaction handling'], cons: ['Saga complexity', 'Reconciliation overhead', 'Ledger storage growth'] },
         { step: 4, title: 'Fraud + Multi-Network', description: 'Real-time ML fraud scoring, multi-network routing (Visa/MC/Amex), webhook delivery system.', color: '#10b981', icon: 'globe', capacity: '~50K TPS', rps: '50K', pros: ['Fraud prevention', 'Optimal network routing', 'Reliable merchant notifications'], cons: ['ML model maintenance', 'Multi-network complexity', 'Webhook reliability engineering'] },
         { step: 5, title: 'Global Platform', description: 'Multi-region deployment, multi-currency with FX, regulatory compliance across jurisdictions.', color: '#7c3aed', icon: 'cpu', capacity: '65K+ TPS', rps: '65K+', pros: ['Global availability', 'Local acquiring reduces fees', 'Full regulatory compliance'], cons: ['Jurisdictional complexity', 'FX risk management', 'Massive infrastructure cost'] },
@@ -10291,7 +10291,7 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '8.5B queries/day', value: 'Search volume', bar: 100 },
             { label: '100K+ QPS', value: 'Peak query rate', bar: 95 },
@@ -10304,7 +10304,7 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
       ],
       evolutionSteps: [
         { step: 1, title: 'Single Machine', description: 'One server with a local inverted index and basic keyword matching.', color: '#94a3b8', icon: 'server', capacity: '~1M pages', rps: '10', pros: ['Simple to build', 'Easy to debug', 'No network overhead'], cons: ['Cannot index beyond one disk', 'No redundancy', 'Slow for large indexes'] },
-        { step: 2, title: 'Distributed Index', description: 'Index sharded across multiple servers with parallel query execution and result merging.', color: '#10B981', icon: 'layers', capacity: '~1B pages', rps: '10K', pros: ['Horizontal scaling', 'Parallel query execution', 'Redundancy via replication'], cons: ['Network overhead for scatter-gather', 'Shard management complexity', 'No ML ranking yet'] },
+        { step: 2, title: 'Distributed Index', description: 'Index sharded across multiple servers with parallel query execution and result merging.', color: '#1E4D78', icon: 'layers', capacity: '~1B pages', rps: '10K', pros: ['Horizontal scaling', 'Parallel query execution', 'Redundancy via replication'], cons: ['Network overhead for scatter-gather', 'Shard management complexity', 'No ML ranking yet'] },
         { step: 3, title: 'ML Ranking + Cache', description: 'Multi-stage ranking pipeline (BM25 then ML), query result caching, and distributed crawling.', color: '#f59e0b', icon: 'zap', capacity: '~10B pages', rps: '50K', pros: ['Much better result quality', '60% cache hit rate', 'Automated crawl prioritization'], cons: ['ML model training pipeline needed', 'Cache invalidation complexity', 'Higher compute cost'] },
         { step: 4, title: 'Global Scale', description: 'Multi-datacenter deployment, tiered index (hot/warm/cold), real-time freshness pipeline.', color: '#10b981', icon: 'globe', capacity: '~100B pages', rps: '100K', pros: ['Low latency globally', 'Breaking news in minutes', 'Regional fault isolation'], cons: ['Cross-region index sync', 'Enormous infrastructure cost', 'Complex deployment'] },
         { step: 5, title: 'Semantic Search', description: 'Neural ranking models (BERT), query intent understanding, personalization, and knowledge graph integration.', color: '#7c3aed', icon: 'cpu', capacity: '100B+ pages', rps: '300K+', pros: ['Understands meaning, not just keywords', 'Rich result types', 'Personalized experience'], cons: ['GPU inference cost', 'Training data requirements', 'Bias and fairness concerns'] },
@@ -10952,7 +10952,7 @@ Each priority level has independent auto-scaling based on queue depth. Urgent qu
           id: 'tech-stack',
           title: 'Technology Stack',
           icon: 'layers',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: 'Kafka (Queues)', value: '100+ partitions/priority', bar: 95 },
             { label: 'FCM/APNs (Push)', value: '6B push/day', bar: 90 },
@@ -10979,7 +10979,7 @@ Each priority level has independent auto-scaling based on queue depth. Urgent qu
       ],
       evolutionSteps: [
         { step: 1, title: 'Single Queue + Direct Send', description: 'One message queue with workers sending directly to FCM/SendGrid. No priority handling, no user preferences.', color: '#94a3b8', icon: 'server', capacity: '~10K notifs/day', rps: '1', pros: ['Simple to build and deploy', 'Works for a single channel', 'Easy to debug'], cons: ['No priority handling', 'Single provider = single point of failure', 'No preference management'] },
-        { step: 2, title: 'Multi-Channel + Preferences', description: 'Add email, SMS, in-app channels. User preference service with quiet hours. Template engine for consistent messaging.', color: '#10B981', icon: 'layers', capacity: '~1M notifs/day', rps: '50', pros: ['Multi-channel delivery', 'Users control their preferences', 'Consistent templates'], cons: ['Still single queue (head-of-line blocking)', 'No retry mechanism', 'No analytics'] },
+        { step: 2, title: 'Multi-Channel + Preferences', description: 'Add email, SMS, in-app channels. User preference service with quiet hours. Template engine for consistent messaging.', color: '#1E4D78', icon: 'layers', capacity: '~1M notifs/day', rps: '50', pros: ['Multi-channel delivery', 'Users control their preferences', 'Consistent templates'], cons: ['Still single queue (head-of-line blocking)', 'No retry mechanism', 'No analytics'] },
         { step: 3, title: 'Priority Queues + Retry', description: 'Kafka priority queues (urgent/normal/batch). Exponential backoff retries. Dead letter queue. Provider failover.', color: '#f59e0b', icon: 'zap', capacity: '~100M notifs/day', rps: '5K', pros: ['OTP delivered in <1 second', 'Reliable delivery with retries', 'Provider failover'], cons: ['Queue management complexity', 'Multiple consumer groups to monitor', 'Cost of secondary providers'] },
         { step: 4, title: 'Global Scale + Analytics', description: 'Geo-distributed workers for low latency. Real-time analytics (delivery/open/click). Batch API for bulk sends. Circuit breaker per provider.', color: '#10b981', icon: 'globe', capacity: '~5B notifs/day', rps: '100K', pros: ['Global low-latency delivery', 'Rich analytics dashboard', 'Handles marketing campaigns'], cons: ['Complex monitoring across regions', 'Email deliverability management', 'SMS costs at scale'] },
         { step: 5, title: 'ML-Optimized Delivery', description: 'ML models predict optimal send time per user. Smart batching into digests. A/B testing notification content. Fraud detection for notification abuse.', color: '#7c3aed', icon: 'cpu', capacity: '10B+ notifs/day', rps: '350K+', pros: ['Higher open rates via smart timing', 'Reduced notification fatigue', 'Automated content optimization'], cons: ['ML infrastructure overhead', 'Privacy considerations with behavioral data', 'Complex A/B testing framework'] },
@@ -11637,7 +11637,7 @@ Rules evaluated in order: specific overrides general.
           id: 'tech-stack',
           title: 'Technology Stack',
           icon: 'layers',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: 'Redis Cluster', value: '6 nodes (3 primary + 3 replica)', bar: 95 },
             { label: 'Lua Scripts', value: 'Atomic check-and-decrement', bar: 90 },
@@ -11664,7 +11664,7 @@ Rules evaluated in order: specific overrides general.
       ],
       evolutionSteps: [
         { step: 1, title: 'In-Process Counter', description: 'Simple in-memory counter per user in the application process. No external dependencies.', color: '#94a3b8', icon: 'server', capacity: '~1K users', rps: '10K', pros: ['Zero latency overhead', 'No external dependencies', 'Simple to implement'], cons: ['Not shared across servers', 'Lost on process restart', 'Each server enforces independently'] },
-        { step: 2, title: 'Single Redis Instance', description: 'Centralized Redis for distributed rate limiting. Lua scripts for atomicity. Fixed window counters.', color: '#10B981', icon: 'layers', capacity: '~100K users', rps: '100K', pros: ['Accurate distributed counting', 'Atomic via Lua scripts', 'Shared across all servers'], cons: ['Single point of failure', 'Network hop adds ~1ms', 'Fixed window boundary problem'] },
+        { step: 2, title: 'Single Redis Instance', description: 'Centralized Redis for distributed rate limiting. Lua scripts for atomicity. Fixed window counters.', color: '#1E4D78', icon: 'layers', capacity: '~100K users', rps: '100K', pros: ['Accurate distributed counting', 'Atomic via Lua scripts', 'Shared across all servers'], cons: ['Single point of failure', 'Network hop adds ~1ms', 'Fixed window boundary problem'] },
         { step: 3, title: 'Redis Cluster + Token Bucket', description: 'Redis Cluster with 3 primaries and 3 replicas. Token bucket algorithm allows bursts. Local cache for hot keys.', color: '#f59e0b', icon: 'zap', capacity: '~10M users', rps: '500K', pros: ['No single point of failure', 'Burst-friendly rate limiting', 'Sub-ms with local cache'], cons: ['Redis Cluster ops complexity', 'Eventual consistency on failover', 'Local cache adds memory'] },
         { step: 4, title: 'Multi-Tier + Dynamic Rules', description: 'Edge rate limiting (CDN/WAF) + application-level (Redis). Dynamic rule updates via Pub/Sub. Per-tier limits (free/pro/enterprise).', color: '#10b981', icon: 'globe', capacity: '~100M users', rps: '1M+', pros: ['DDoS protection at edge', 'Dynamic rules without restart', 'Per-customer limit tiers'], cons: ['Two-tier complexity', 'Rule propagation lag', 'Testing across tiers'] },
         { step: 5, title: 'ML-Adaptive Rate Limiting', description: 'ML models detect anomalous traffic patterns and auto-adjust limits. Predictive scaling during anticipated spikes. Cost-aware limiting for usage-based billing.', color: '#7c3aed', icon: 'cpu', capacity: '1B+ users', rps: '10M+', pros: ['Auto-detects novel attack patterns', 'Predictive capacity management', 'Revenue-aware limiting'], cons: ['ML model training overhead', 'False positives block legitimate traffic', 'Complex observability requirements'] },
@@ -12276,12 +12276,12 @@ queue_positions {
         { id: 'seat-selection', title: 'Seat Selection Flow', description: 'Seat hold and release lifecycle', src: '/diagrams/ticketmaster/seat-selection-flow.svg', type: 'flow' },
       ],
       visualCards: [
-        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#10B981', items: [{ label: 'Redis (Seat Locks)', value: 'SETNX with TTL per seat', bar: 95 }, { label: 'PostgreSQL (Bookings)', value: 'Optimistic locking + ACID', bar: 90 }, { label: 'WebSocket (Real-Time)', value: 'Seat map + queue updates', bar: 85 }, { label: 'CDN (Static Assets)', value: '99% of page loads cached', bar: 80 }, { label: 'Stripe (Payments)', value: 'PaymentIntent with holds', bar: 75 }, { label: 'Kafka (Events)', value: 'Booking + analytics stream', bar: 65 }] },
+        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#1E4D78', items: [{ label: 'Redis (Seat Locks)', value: 'SETNX with TTL per seat', bar: 95 }, { label: 'PostgreSQL (Bookings)', value: 'Optimistic locking + ACID', bar: 90 }, { label: 'WebSocket (Real-Time)', value: 'Seat map + queue updates', bar: 85 }, { label: 'CDN (Static Assets)', value: '99% of page loads cached', bar: 80 }, { label: 'Stripe (Payments)', value: 'PaymentIntent with holds', bar: 75 }, { label: 'Kafka (Events)', value: 'Booking + analytics stream', bar: 65 }] },
         { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#026CDF', items: [{ label: '500M tickets/yr', value: 'Annual ticket volume', bar: 90 }, { label: '14M concurrent', value: 'Peak users (Taylor Swift)', bar: 100 }, { label: '3.5B requests', value: 'Peak day system load', bar: 95 }, { label: '10K shoppers', value: 'Concurrent in checkout', bar: 40 }, { label: '200K events/yr', value: 'Events managed', bar: 60 }, { label: '<10 min hold', value: 'Seat reservation TTL', bar: 30 }] }
       ],
       evolutionSteps: [
         { step: 1, title: 'Simple Booking DB', description: 'Single PostgreSQL with seats table. No locking. Race conditions cause double-bookings.', color: '#94a3b8', icon: 'server', capacity: '~1K seats/event', rps: '50', pros: ['Simple to build', 'Works for low-demand events', 'Standard SQL'], cons: ['Double-booking race conditions', 'No queue for high demand', 'Crashes under load'] },
-        { step: 2, title: 'Redis Locks + Hold TTL', description: 'Redis SETNX for seat holds with 10-minute TTL. Optimistic locking in PostgreSQL. Background sweeper.', color: '#10B981', icon: 'layers', capacity: '~50K seats/event', rps: '5K', pros: ['Zero double-bookings', 'Auto-release on timeout', 'Fast seat checks'], cons: ['No queue for spikes', 'Bots can grab seats', 'Single-region'] },
+        { step: 2, title: 'Redis Locks + Hold TTL', description: 'Redis SETNX for seat holds with 10-minute TTL. Optimistic locking in PostgreSQL. Background sweeper.', color: '#1E4D78', icon: 'layers', capacity: '~50K seats/event', rps: '5K', pros: ['Zero double-bookings', 'Auto-release on timeout', 'Fast seat checks'], cons: ['No queue for spikes', 'Bots can grab seats', 'Single-region'] },
         { step: 3, title: 'Virtual Queue + Bot Prevention', description: 'Virtual waiting room with random positions. CAPTCHA + fingerprinting. Controlled admission. WebSocket updates.', color: '#f59e0b', icon: 'zap', capacity: '~100K seats, 1M users', rps: '50K', pros: ['Fair access for fans', 'Blocks 95% of bots', 'Controlled load'], cons: ['Queue adds wait time', 'Complex WS infra', 'Verified Fan needed'] },
         { step: 4, title: 'Dedicated Event Sharding', description: 'Hot events get dedicated DB instances. Per-event Redis clusters. CDN seat maps + WS deltas.', color: '#10b981', icon: 'globe', capacity: '~100K seats, 14M users', rps: '100K+', pros: ['Handles Taylor Swift scale', 'Per-event isolation', 'Global access'], cons: ['Complex provisioning', 'Per-event infra cost', 'War room needed'] },
         { step: 5, title: 'Dynamic Pricing + ML', description: 'Dynamic pricing from demand signals. ML bot detection. Best-available algorithm. Verified Fan scoring.', color: '#7c3aed', icon: 'cpu', capacity: 'Unlimited events', rps: '500K+', pros: ['Optimized revenue', 'Sophisticated bot detection', 'Personalized experiences'], cons: ['Pricing controversy', 'ML maintenance', 'Complex fairness'] },
@@ -12738,12 +12738,12 @@ Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (
         { id: 'suggestion-flow', title: 'Suggestion Flow', description: 'Keystroke through trie lookup to rendered suggestions', src: '/diagrams/typeahead/suggestion-flow.svg', type: 'flow' },
       ],
       visualCards: [
-        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#10B981', items: [{ label: 'In-Memory Trie', value: '~10 GB compressed', bar: 95 }, { label: 'CDN Edge Cache', value: '99% hit for short prefixes', bar: 90 }, { label: 'Redis (Personalization)', value: 'Per-user search history', bar: 70 }, { label: 'Flink (Trending)', value: '1-min window detection', bar: 65 }, { label: 'Spark (Rebuild)', value: 'Weekly trie construction', bar: 55 }, { label: 'Kafka (Logs)', value: '500M searches/day', bar: 80 }] },
+        { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#1E4D78', items: [{ label: 'In-Memory Trie', value: '~10 GB compressed', bar: 95 }, { label: 'CDN Edge Cache', value: '99% hit for short prefixes', bar: 90 }, { label: 'Redis (Personalization)', value: 'Per-user search history', bar: 70 }, { label: 'Flink (Trending)', value: '1-min window detection', bar: 65 }, { label: 'Spark (Rebuild)', value: 'Weekly trie construction', bar: 55 }, { label: 'Kafka (Logs)', value: '500M searches/day', bar: 80 }] },
         { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#22C55E', items: [{ label: '100K+ QPS', value: 'Suggestion requests/sec', bar: 80 }, { label: '<50ms P99', value: 'Target response latency', bar: 100 }, { label: '100M+ prefixes', value: 'Unique prefix entries', bar: 85 }, { label: '500M searches/day', value: 'Daily search volume', bar: 75 }, { label: '99% CDN hits', value: 'Short prefix cache rate', bar: 95 }, { label: '~26 shards', value: 'Trie service shards', bar: 40 }] }
       ],
       evolutionSteps: [
         { step: 1, title: 'Database LIKE Query', description: 'Simple SQL LIKE prefix% query against a queries table. No caching. High latency (50-200ms).', color: '#94a3b8', icon: 'server', capacity: '~10K queries', rps: '100', pros: ['Simple to implement', 'Uses existing database', 'Easy to update'], cons: ['High latency (50-200ms)', 'Full table scan for prefix', 'No ranking capability'] },
-        { step: 2, title: 'In-Memory Trie', description: 'Trie data structure loaded in application memory. Pre-computed top-K per node. Sub-millisecond lookups.', color: '#10B981', icon: 'layers', capacity: '~1M queries', rps: '10K', pros: ['<1ms lookup latency', 'Memory-efficient with compression', 'Pre-computed rankings'], cons: ['Single server memory limit', 'Batch updates only', 'No personalization'] },
+        { step: 2, title: 'In-Memory Trie', description: 'Trie data structure loaded in application memory. Pre-computed top-K per node. Sub-millisecond lookups.', color: '#1E4D78', icon: 'layers', capacity: '~1M queries', rps: '10K', pros: ['<1ms lookup latency', 'Memory-efficient with compression', 'Pre-computed rankings'], cons: ['Single server memory limit', 'Batch updates only', 'No personalization'] },
         { step: 3, title: 'Distributed Trie + CDN', description: 'Trie sharded across multiple servers. CDN caching for short prefixes. Trending overlay updated every minute.', color: '#f59e0b', icon: 'zap', capacity: '~100M queries', rps: '100K', pros: ['Horizontal scaling', '99% CDN hit rate', 'Near-real-time trending'], cons: ['Shard management complexity', 'CDN invalidation lag', 'No personalization yet'] },
         { step: 4, title: 'Personalized + Multi-Entity', description: 'Per-user suggestion overlay from Redis. Multi-entity results (queries + products + people). Spell correction via BK-tree.', color: '#10b981', icon: 'globe', capacity: '~500M queries', rps: '500K', pros: ['Personalized suggestions', 'Rich entity results', 'Fuzzy matching for typos'], cons: ['Redis memory for user profiles', 'Entity index maintenance', 'Ranking complexity'] },
         { step: 5, title: 'ML-Ranked + Multilingual', description: 'ML model predicts suggestion engagement. Multi-language tries with transliteration. A/B testing framework for ranking. Content safety classifiers.', color: '#7c3aed', icon: 'cpu', capacity: '1B+ queries', rps: '1M+', pros: ['Optimal suggestion quality', 'Global language support', 'Automated content safety'], cons: ['ML serving infrastructure', 'Multi-language trie memory', 'Complex A/B testing'] },
@@ -13342,7 +13342,7 @@ When a channel receives messages faster than members can consume, the gateway ap
           id: 'tech-stack',
           title: 'Technology Stack',
           icon: 'layers',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: 'Vitess (Slack) / ScyllaDB (Discord)', value: 'Message storage', bar: 95 },
             { label: 'Redis Pub/Sub', value: 'Cross-gateway fan-out', bar: 90 },
@@ -13356,7 +13356,7 @@ When a channel receives messages faster than members can consume, the gateway ap
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '47M DAU (Slack)', value: 'Daily active users', bar: 70 },
             { label: '1.5B msgs/day', value: '17K writes/sec avg', bar: 85 },
@@ -13375,7 +13375,7 @@ When a channel receives messages faster than members can consume, the gateway ap
       ],
       evolutionSteps: [
         { step: 1, title: 'Single Server Chat', description: 'One WebSocket server with PostgreSQL. All connections on one machine, messages stored in a single database.', color: '#94a3b8', icon: 'server', capacity: '~10K connections', rps: '100', pros: ['Simple to build and deploy', 'No distributed systems complexity', 'Easy to debug message ordering'], cons: ['Single point of failure', 'Limited to one server memory for connections', 'No search capability'] },
-        { step: 2, title: 'Multi-Gateway + Redis', description: 'Multiple WebSocket gateways with Redis Pub/Sub for cross-server fan-out. Connection registry in Redis maps users to gateways.', color: '#10B981', icon: 'layers', capacity: '~500K connections', rps: '5K', pros: ['Horizontal scaling of connections', 'Stateless gateways with easy failover', 'Redis Pub/Sub handles fan-out'], cons: ['Redis becomes bottleneck for large channels', 'No full-text search yet', 'Single-region only'] },
+        { step: 2, title: 'Multi-Gateway + Redis', description: 'Multiple WebSocket gateways with Redis Pub/Sub for cross-server fan-out. Connection registry in Redis maps users to gateways.', color: '#1E4D78', icon: 'layers', capacity: '~500K connections', rps: '5K', pros: ['Horizontal scaling of connections', 'Stateless gateways with easy failover', 'Redis Pub/Sub handles fan-out'], cons: ['Redis becomes bottleneck for large channels', 'No full-text search yet', 'Single-region only'] },
         { step: 3, title: 'Sharded DB + Search', description: 'Database sharded by channel_id (Vitess or ScyllaDB). Elasticsearch added for full-text message search. Kafka for async indexing.', color: '#f59e0b', icon: 'zap', capacity: '~5M connections', rps: '50K', pros: ['Horizontal write scaling', 'Full-text search across all messages', 'Async processing pipeline'], cons: ['Operational complexity of sharded DB', 'Search indexing lag (1-5 seconds)', 'Cross-shard queries limited'] },
         { step: 4, title: 'Global Distribution', description: 'Multi-region deployment with regional WebSocket gateways. Messages replicated across regions. CDN for file delivery.', color: '#10b981', icon: 'globe', capacity: '~20M connections', rps: '200K', pros: ['Sub-50ms latency in every region', 'Regional fault isolation', 'CDN offloads file traffic'], cons: ['Cross-region message consistency challenges', 'Higher infrastructure cost', 'Complex deployment orchestration'] },
         { step: 5, title: 'Enterprise Scale', description: 'Compliance features (retention, e-discovery), advanced presence optimization, bot platform, and hot-warm-cold storage tiering for message archives.', color: '#7c3aed', icon: 'cpu', capacity: '50M+ connections', rps: '500K+', pros: ['Enterprise compliance and audit trails', 'Cost-efficient storage tiering', 'Rich integration ecosystem'], cons: ['Massive operational complexity', 'Multi-tenant isolation challenges', 'Regulatory requirements vary by region'] },
@@ -13948,7 +13948,7 @@ Not all photos are equal. The "primary photo" for a business listing is selected
           id: 'tech-stack',
           title: 'Technology Stack',
           icon: 'layers',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: 'QuadTree (In-Memory)', value: '1.71 GB / 7.74M biz', bar: 90 },
             { label: 'Elasticsearch', value: 'Geo + text search', bar: 95 },
@@ -13962,7 +13962,7 @@ Not all photos are equal. The "primary photo" for a business listing is selected
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '178M visitors/month', value: 'Monthly unique visitors', bar: 80 },
             { label: '344 search/sec', value: 'Peak search QPS', bar: 50 },
@@ -13975,7 +13975,7 @@ Not all photos are equal. The "primary photo" for a business listing is selected
       ],
       evolutionSteps: [
         { step: 1, title: 'Single DB + PostGIS', description: 'PostgreSQL with PostGIS extension for geospatial queries. All data in one database. Simple but limited scale.', color: '#94a3b8', icon: 'server', capacity: '~100K businesses', rps: '50', pros: ['Simple architecture', 'PostGIS handles basic geo queries', 'Easy to develop and test'], cons: ['Single database bottleneck', 'No full-text search', 'Slow for complex geo + filter queries'] },
-        { step: 2, title: 'Elasticsearch + Cache', description: 'Add Elasticsearch for combined geo + text search. Redis cache for hot business profiles. CDN for photos.', color: '#10B981', icon: 'layers', capacity: '~1M businesses', rps: '500', pros: ['Fast combined geo + text search', 'Cache reduces database load', 'CDN handles photo traffic'], cons: ['Elasticsearch operational overhead', 'Cache invalidation complexity', 'Still single-region'] },
+        { step: 2, title: 'Elasticsearch + Cache', description: 'Add Elasticsearch for combined geo + text search. Redis cache for hot business profiles. CDN for photos.', color: '#1E4D78', icon: 'layers', capacity: '~1M businesses', rps: '500', pros: ['Fast combined geo + text search', 'Cache reduces database load', 'CDN handles photo traffic'], cons: ['Elasticsearch operational overhead', 'Cache invalidation complexity', 'Still single-region'] },
         { step: 3, title: 'QuadTree + Fraud Detection', description: 'In-memory QuadTree for sub-50ms proximity search. ML pipeline for review fraud detection. Async rating aggregation.', color: '#f59e0b', icon: 'zap', capacity: '~10M businesses', rps: '2K', pros: ['Sub-50ms proximity search in memory', 'Automated fraud filtering', 'Decoupled write path from search'], cons: ['QuadTree rebuild on business additions', 'ML model requires training data and monitoring', 'Multiple systems to operate'] },
         { step: 4, title: 'Regional Sharding', description: 'Elasticsearch sharded by metro area. Regional search servers with local QuadTrees. Global routing layer for traveling users.', color: '#10b981', icon: 'globe', capacity: '~50M businesses', rps: '10K', pros: ['Search latency stays low as data grows', 'Regional fault isolation', 'Efficient resource utilization per region'], cons: ['Cross-region search adds complexity', 'Data rebalancing on region changes', 'Higher infrastructure cost'] },
         { step: 5, title: 'Personalization + ML Ranking', description: 'Personalized search ranking based on user history. Real-time "open now" computation. Advanced photo ranking and content moderation.', color: '#7c3aed', icon: 'cpu', capacity: '100M+ businesses', rps: '50K+', pros: ['Highly relevant personalized results', 'Real-time business status', 'High-quality content curation'], cons: ['Cold start for new users', 'ML model drift requires continuous monitoring', 'Privacy concerns with personalization'] },
@@ -14687,7 +14687,7 @@ The first 24 hours of swipe data from other users seeing the new profile provide
           id: 'tech-stack',
           title: 'Technology Stack',
           icon: 'layers',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: 'S2 Geometry', value: 'Geospatial indexing', bar: 95 },
             { label: 'Redis', value: 'Match detection + rec stacks', bar: 95 },
@@ -14701,7 +14701,7 @@ The first 24 hours of swipe data from other users seeing the new profile provide
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '75M MAU', value: 'Monthly active users', bar: 80 },
             { label: '1.6B swipes/day', value: '18.5K swipes/sec', bar: 95 },
@@ -14714,7 +14714,7 @@ The first 24 hours of swipe data from other users seeing the new profile provide
       ],
       evolutionSteps: [
         { step: 1, title: 'Single Server MVP', description: 'PostgreSQL with PostGIS for location queries. Simple SQL query for recommendations. Direct database check for match detection.', color: '#94a3b8', icon: 'server', capacity: '~50K users', rps: '100', pros: ['Simple to build and iterate', 'PostGIS handles basic geo queries', 'No external dependencies'], cons: ['Complex recommendation query on every request', 'Slow match detection (DB lookup per swipe)', 'No personalization'] },
-        { step: 2, title: 'Redis + Geospatial Index', description: 'Add Redis for O(1) match detection with SADD/SISMEMBER. S2 or Geohash index for efficient proximity queries. Pre-computed recommendation stacks.', color: '#10B981', icon: 'layers', capacity: '~5M users', rps: '5K', pros: ['Instant match detection via Redis', 'Sub-100ms recommendation serving', 'Geospatial queries efficient'], cons: ['Redis memory costs grow with users', 'Recommendation staleness between regenerations', 'Single-region only'] },
+        { step: 2, title: 'Redis + Geospatial Index', description: 'Add Redis for O(1) match detection with SADD/SISMEMBER. S2 or Geohash index for efficient proximity queries. Pre-computed recommendation stacks.', color: '#1E4D78', icon: 'layers', capacity: '~5M users', rps: '5K', pros: ['Instant match detection via Redis', 'Sub-100ms recommendation serving', 'Geospatial queries efficient'], cons: ['Redis memory costs grow with users', 'Recommendation staleness between regenerations', 'Single-region only'] },
         { step: 3, title: 'ML Ranking + Sharding', description: 'ELO/ML-based recommendation ranking. Database sharded by S2 cell region. Bloom filters for swipe deduplication.', color: '#f59e0b', icon: 'zap', capacity: '~30M users', rps: '20K', pros: ['Personalized recommendations', 'Horizontal scaling via geo-sharding', 'Memory-efficient dedup'], cons: ['ML model requires training pipeline', 'Cross-shard queries for border users', 'ELO score calibration complexity'] },
         { step: 4, title: 'Global Distribution', description: 'Multi-region deployment with regional recommendation engines. CDN for photo delivery. Cross-region matching for Passport feature.', color: '#10b981', icon: 'globe', capacity: '~75M users', rps: '55K', pros: ['Low latency in every region', 'Photos served from nearest edge', 'Regional fault isolation'], cons: ['Cross-region match consistency', 'Data sovereignty requirements', 'Higher infrastructure cost'] },
         { step: 5, title: 'Safety + Premium', description: 'ML-based abuse detection, photo verification, harassment filtering. Premium features (Boost, Passport, See Who Liked You) with separate serving paths.', color: '#7c3aed', icon: 'cpu', capacity: '100M+ users', rps: '100K+', pros: ['Automated safety at scale', 'Revenue from premium features', 'Trust and retention improvement'], cons: ['ML model false positives frustrate users', 'Premium features add complexity', 'Privacy concerns with verification data'] },
@@ -15385,7 +15385,7 @@ When a user has zero listening history, recommendations must still feel relevant
           id: 'tech-stack',
           title: 'Technology Stack',
           icon: 'layers',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: 'CDN (Global Edge)', value: '95% cache hit rate', bar: 95 },
             { label: 'Kafka (Events)', value: '1B+ events/day', bar: 90 },
@@ -15412,7 +15412,7 @@ When a user has zero listening history, recommendations must still feel relevant
       ],
       evolutionSteps: [
         { step: 1, title: 'Single Server + S3', description: 'One API server serving audio files directly from S3. PostgreSQL for metadata. No caching, no recommendations.', color: '#94a3b8', icon: 'server', capacity: '~10K users', rps: '100', pros: ['Simple to build and deploy', 'S3 handles storage durability', 'Easy to debug and monitor'], cons: ['High latency for distant users', 'No adaptive bitrate', 'S3 egress costs are high'] },
-        { step: 2, title: 'CDN + Adaptive Bitrate', description: 'Add CloudFront/Akamai CDN for audio delivery. Transcode tracks to 3 quality tiers. Redis cache for hot metadata.', color: '#10B981', icon: 'layers', capacity: '~1M users', rps: '5K', pros: ['Sub-200ms playback start', 'Adaptive quality prevents buffering', '95% CDN cache hit rate'], cons: ['CDN costs scale with streams', 'No personalization yet', 'Single-region backend'] },
+        { step: 2, title: 'CDN + Adaptive Bitrate', description: 'Add CloudFront/Akamai CDN for audio delivery. Transcode tracks to 3 quality tiers. Redis cache for hot metadata.', color: '#1E4D78', icon: 'layers', capacity: '~1M users', rps: '5K', pros: ['Sub-200ms playback start', 'Adaptive quality prevents buffering', '95% CDN cache hit rate'], cons: ['CDN costs scale with streams', 'No personalization yet', 'Single-region backend'] },
         { step: 3, title: 'Microservices + Recommendations', description: 'Split into Catalog, Playlist, Search, and Recommendation services. Collaborative filtering on Spark. Kafka event streaming.', color: '#f59e0b', icon: 'zap', capacity: '~50M users', rps: '50K', pros: ['Personalized Discover Weekly', 'Services scale independently', 'Real-time stream counting'], cons: ['Distributed system complexity', 'Recommendation cold start', 'Cross-service data consistency'] },
         { step: 4, title: 'Global Scale + Spotify Connect', description: 'Multi-region CDN with edge pre-warming. Cross-device playback via Connect protocol. Offline DRM downloads. 100M+ track catalog.', color: '#10b981', icon: 'globe', capacity: '~300M users', rps: '200K', pros: ['Global <200ms latency', 'Seamless device switching', 'Offline mode works everywhere'], cons: ['DRM licensing complexity', 'Multi-region data sync', 'Device limit management'] },
         { step: 5, title: 'AI-Powered Platform', description: 'Deep learning recommendations (embeddings, transformers). Real-time personalization. Lossless audio tier. Podcast and audiobook integration. DJ AI feature.', color: '#7c3aed', icon: 'cpu', capacity: '675M+ users', rps: '500K+', pros: ['Hyper-personalized experience', 'Multi-format audio platform', 'AI DJ and mood detection'], cons: ['Massive ML infrastructure cost', 'Content moderation at scale', 'Balancing discovery vs familiarity'] },
@@ -16142,7 +16142,7 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
           id: 'tech-stack',
           title: 'Technology Stack',
           icon: 'layers',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: 'Elasticsearch', value: 'Geo search + filters', bar: 95 },
             { label: 'PostgreSQL', value: 'Bookings + calendar', bar: 90 },
@@ -16156,7 +16156,7 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '200M+ users', value: 'Global user base', bar: 80 },
             { label: '8M+ listings', value: 'Active properties', bar: 75 },
@@ -16175,7 +16175,7 @@ Updating 2.92B availability rows in Elasticsearch would be prohibitively expensi
       ],
       evolutionSteps: [
         { step: 1, title: 'Monolith + PostgreSQL', description: 'Single Rails/Django app with PostgreSQL. PostGIS for basic geo queries. Simple booking with row-level locks.', color: '#94a3b8', icon: 'server', capacity: '~10K listings', rps: '50', pros: ['Simple to build and iterate', 'PostGIS handles basic geo queries', 'Strong consistency by default'], cons: ['Slow search with complex JOINs', 'Lock contention on popular listings', 'No caching layer'] },
-        { step: 2, title: 'Elasticsearch + Cache', description: 'Add Elasticsearch for geo + text search. Redis cache for listing details and availability. CDN for photos.', color: '#10B981', icon: 'layers', capacity: '~500K listings', rps: '500', pros: ['Fast combined geo + text search', 'Cache reduces database load', 'Photos served from CDN'], cons: ['ES sync lag for new listings', 'Cache invalidation on booking', 'Still single-region'] },
+        { step: 2, title: 'Elasticsearch + Cache', description: 'Add Elasticsearch for geo + text search. Redis cache for listing details and availability. CDN for photos.', color: '#1E4D78', icon: 'layers', capacity: '~500K listings', rps: '500', pros: ['Fast combined geo + text search', 'Cache reduces database load', 'Photos served from CDN'], cons: ['ES sync lag for new listings', 'Cache invalidation on booking', 'Still single-region'] },
         { step: 3, title: 'Optimistic Locking + Microservices', description: 'Split into Booking, Calendar, Search, and Payment services. Optimistic locking with soft-hold pattern. Stripe Connect integration.', color: '#f59e0b', icon: 'zap', capacity: '~2M listings', rps: '2K', pros: ['No double-bookings', 'Services scale independently', 'Proper payment flow'], cons: ['Distributed transaction complexity', 'Service coordination overhead', 'More operational complexity'] },
         { step: 4, title: 'Global Distribution', description: 'Multi-region Elasticsearch clusters. Calendar DB sharded by region. CDN with 160 TB of photos. Multi-currency payment support.', color: '#10b981', icon: 'globe', capacity: '~8M listings', rps: '10K', pros: ['Sub-500ms search globally', 'Regional fault isolation', 'Multi-currency support'], cons: ['Cross-region availability sync', 'Currency conversion complexity', 'Regional compliance requirements'] },
         { step: 5, title: 'ML Ranking + Smart Pricing', description: 'ML-based search ranking with personalization. Dynamic pricing engine. Dual-blind review system. Trust and safety ML models.', color: '#7c3aed', icon: 'cpu', capacity: '20M+ listings', rps: '50K+', pros: ['Highly relevant search results', 'Optimized host revenue via pricing', 'Automated trust and safety'], cons: ['ML model training infrastructure', 'A/B testing at scale', 'Balancing host and guest interests'] },
@@ -16970,7 +16970,7 @@ Constraints:
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '46M Customers', value: 'Active users', bar: 90 },
             { label: '7M Orders/Day', value: 'Daily volume', bar: 85 },
@@ -17523,7 +17523,7 @@ Where credibility considers:
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '556M DAU', value: 'Daily active users', bar: 100 },
             { label: '500M tweets/day', value: 'Ingestion volume', bar: 90 },
@@ -18071,7 +18071,7 @@ Cons: Storage not immediately reclaimed
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '100M+ active pastes', value: 'Total content', bar: 100 },
             { label: '1M new/day', value: 'Write volume', bar: 50 },
@@ -18459,7 +18459,7 @@ Bloom filter for fast "definitely not seen" checks before expensive hash lookups
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '1B pages/day', value: 'Crawl target', bar: 100 },
             { label: '400B+ index docs', value: 'Total indexed pages', bar: 95 },
@@ -19213,7 +19213,7 @@ When a normal user (<10K followers) posts:
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '2.1B DAU', value: 'Daily active users', bar: 100 },
             { label: '1B+ Posts/Day', value: 'Daily content creation', bar: 90 },
@@ -19744,7 +19744,7 @@ Merkle Tree sync:
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '1M+ ops/sec', value: 'Total throughput', bar: 100 },
             { label: '<10ms p99', value: 'Read latency', bar: 85 },
@@ -20359,7 +20359,7 @@ No coordination, but:
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '4M IDs/s/machine', value: 'Per-instance throughput', bar: 100 },
             { label: '4B IDs/s cluster', value: '1,024 machines combined', bar: 95 },
@@ -21312,7 +21312,7 @@ Monitor and alert on:
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '100M DAU', value: 'Daily active users', bar: 90 },
             { label: '5M articles/day', value: 'Ingested from 20K+ sources', bar: 80 },
@@ -21326,7 +21326,7 @@ Monitor and alert on:
 
       evolutionSteps: [
         { step: 1, title: 'RSS Aggregator', description: 'Simple cron job polls RSS feeds, stores articles in PostgreSQL, displays chronologically.', color: '#94a3b8', icon: 'server', capacity: '~100 sources', rps: '10', pros: ['Simple to build and understand', 'No ML dependencies', 'Standard SQL queries'], cons: ['No deduplication', 'No personalization', 'Cannot handle breaking news'] },
-        { step: 2, title: 'Dedup + Categories', description: 'Add SimHash deduplication, basic topic classification, and Elasticsearch for search.', color: '#10B981', icon: 'layers', capacity: '~5K sources', rps: '500', pros: ['Eliminates obvious duplicates', 'Category-based browsing', 'Full-text search'], cons: ['Paraphrased duplicates still slip through', 'No story clustering', 'Sequential polling is slow'] },
+        { step: 2, title: 'Dedup + Categories', description: 'Add SimHash deduplication, basic topic classification, and Elasticsearch for search.', color: '#1E4D78', icon: 'layers', capacity: '~5K sources', rps: '500', pros: ['Eliminates obvious duplicates', 'Category-based browsing', 'Full-text search'], cons: ['Paraphrased duplicates still slip through', 'No story clustering', 'Sequential polling is slow'] },
         { step: 3, title: 'NLP + Clustering', description: 'Distributed crawlers with Kafka, embedding-based story clustering, entity extraction.', color: '#f59e0b', icon: 'zap', capacity: '~20K sources', rps: '3K', pros: ['Semantic story grouping', 'Named entity recognition', 'Parallel ingestion at scale'], cons: ['GPU costs for NLP pipeline', 'Clustering accuracy tuning', 'Complex debugging'] },
         { step: 4, title: 'Personalization', description: 'User interest profiles, two-stage personalized feed generation, collaborative filtering.', color: '#10b981', icon: 'globe', capacity: '100M DAU', rps: '10K', pros: ['Relevant feeds per user', 'Filter bubble prevention', 'Engagement metrics improve 40%'], cons: ['Cold start for new users', 'Profile storage and compute cost', 'Recommendation model maintenance'] },
         { step: 5, title: 'Global Multi-Language', description: 'Cross-lingual story linking, per-country CDN caching, real-time breaking news pipeline with push notifications.', color: '#7c3aed', icon: 'cpu', capacity: '50K+ sources', rps: '20K+', pros: ['Worldwide coverage in 40+ languages', 'Sub-5-minute breaking news detection', 'CDN offloads 40% of traffic'], cons: ['Cross-lingual model accuracy varies', 'Per-country regulatory compliance', 'Operational complexity at global scale'] },
@@ -22182,7 +22182,7 @@ DEL temp:friends:player123 temp:result
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '100M+ players', value: 'Total registered players', bar: 90 },
             { label: '50K writes/sec', value: 'Score updates per second', bar: 85 },
@@ -22199,7 +22199,7 @@ DEL temp:friends:player123 temp:result
 
       evolutionSteps: [
         { step: 1, title: 'SQL Leaderboard', description: 'PostgreSQL table with score column, ORDER BY for rankings. Simple but O(N) rank queries.', color: '#94a3b8', icon: 'server', capacity: '~10K players', rps: '100', pros: ['Simple to implement', 'ACID guarantees', 'Rich query support'], cons: ['O(N) rank computation', 'Cannot handle real-time updates at scale', 'Slow for large player bases'] },
-        { step: 2, title: 'Redis Sorted Set', description: 'Single Redis instance with sorted set for O(log N) operations. In-memory speed for rank lookups.', color: '#10B981', icon: 'layers', capacity: '~10M players', rps: '10K', pros: ['O(log N) rank lookup and update', 'Sub-millisecond latency', 'Purpose-built Redis commands'], cons: ['Single point of failure', 'No durability without AOF', 'Memory-limited'] },
+        { step: 2, title: 'Redis Sorted Set', description: 'Single Redis instance with sorted set for O(log N) operations. In-memory speed for rank lookups.', color: '#1E4D78', icon: 'layers', capacity: '~10M players', rps: '10K', pros: ['O(log N) rank lookup and update', 'Sub-millisecond latency', 'Purpose-built Redis commands'], cons: ['Single point of failure', 'No durability without AOF', 'Memory-limited'] },
         { step: 3, title: 'Cluster + Persistence', description: 'Redis Cluster with Sentinel failover, async PostgreSQL backup, Kafka write buffering.', color: '#f59e0b', icon: 'zap', capacity: '~100M players', rps: '50K', pros: ['Horizontal scaling across shards', 'Automatic failover', 'Durable score history'], cons: ['Cross-shard queries for global rank', 'Kafka adds latency', 'Operational complexity'] },
         { step: 4, title: 'CDN + Approximate Rank', description: 'CDN caching for top-N, approximate ranking for tail players, composite scores for tie-breaking.', color: '#10b981', icon: 'globe', capacity: '~500M players', rps: '200K', pros: ['80% read traffic offloaded to CDN', 'Sub-ms rank for all players', 'Clean tie-breaking'], cons: ['Stale CDN data (10s TTL)', 'Approximate ranks less satisfying for mid-tier players', 'Composite score encoding complexity'] },
         { step: 5, title: 'Global Multi-Game Platform', description: 'Per-game sharding, friends leaderboards, historical analytics, anti-cheat ML pipeline, multi-region deployment.', color: '#7c3aed', icon: 'cpu', capacity: '1B+ players', rps: '500K+', pros: ['Supports thousands of games simultaneously', 'Rich social features', 'ML-powered cheat detection'], cons: ['Multi-region consistency challenges', 'Complex capacity planning per game', 'High operational overhead'] },
@@ -23150,7 +23150,7 @@ Every layer is safe to retry independently.
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '31M listings', value: 'Hotels and properties worldwide', bar: 95 },
             { label: '560M visits/month', value: 'Monthly website/app visits', bar: 90 },
@@ -23169,7 +23169,7 @@ Every layer is safe to retry independently.
 
       evolutionSteps: [
         { step: 1, title: 'Single-DB Booking', description: 'PostgreSQL with geo-queries, availability joins, and pessimistic locking. Works for small inventory.', color: '#94a3b8', icon: 'server', capacity: '~10K hotels', rps: '50', pros: ['Simple architecture', 'Strong consistency', 'Easy to reason about'], cons: ['Slow search (geo + availability joins)', 'Database bottleneck', 'No caching'] },
-        { step: 2, title: 'Search + Cache', description: 'Add Elasticsearch for geo-search, Redis for hotel detail caching, two-phase search with availability verification.', color: '#10B981', icon: 'layers', capacity: '~500K hotels', rps: '2K', pros: ['Sub-500ms search results', 'Hotel details cached at edge', 'Separation of read/write paths'], cons: ['Availability index can be stale', 'Cache invalidation complexity', 'Two systems to maintain'] },
+        { step: 2, title: 'Search + Cache', description: 'Add Elasticsearch for geo-search, Redis for hotel detail caching, two-phase search with availability verification.', color: '#1E4D78', icon: 'layers', capacity: '~500K hotels', rps: '2K', pros: ['Sub-500ms search results', 'Hotel details cached at edge', 'Separation of read/write paths'], cons: ['Availability index can be stale', 'Cache invalidation complexity', 'Two systems to maintain'] },
         { step: 3, title: 'Reservation Holds', description: 'Implement hold pattern with TTL, optimistic locking, Kafka for async notifications, Stripe for payments.', color: '#f59e0b', icon: 'zap', capacity: '~5M hotels', rps: '10K', pros: ['No more "booked while you paid" failures', 'Idempotent payment flow', 'Async notification delivery'], cons: ['Hold management adds complexity', 'Expired holds need cleanup', 'Saga pattern for failure recovery'] },
         { step: 4, title: 'Dynamic Pricing', description: 'Rule-based dynamic pricing engine, demand monitoring, competitor rate scraping, yield management algorithms.', color: '#10b981', icon: 'globe', capacity: '~20M hotels', rps: '30K', pros: ['15-20% revenue uplift', 'Real-time demand response', 'Rate parity enforcement'], cons: ['Complex pricing rules to maintain', 'Price display consistency challenges', 'Competitor scraping reliability'] },
         { step: 5, title: 'Global Multi-Channel', description: 'Channel manager for Expedia/Hotels.com sync, ML pricing, sharded inventory, multi-region deployment with active-active.', color: '#7c3aed', icon: 'cpu', capacity: '31M+ listings', rps: '100K+', pros: ['Full channel distribution', 'ML-optimized revenue management', 'Global low-latency search'], cons: ['Cross-channel sync latency (30s window)', 'Multi-region consistency', 'Extremely complex operations'] },
@@ -24128,7 +24128,7 @@ Compared to PostGIS ST_DWithin: S2 cell range queries can be 10x faster for larg
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '2B+ MAU', value: 'Monthly active users worldwide', bar: 95 },
             { label: '10B tiles/day', value: 'Map tile requests served', bar: 90 },
@@ -24147,7 +24147,7 @@ Compared to PostGIS ST_DWithin: S2 cell range queries can be 10x faster for larg
 
       evolutionSteps: [
         { step: 1, title: 'Static Map Server', description: 'Pre-rendered raster tiles served from object storage via CDN. Dijkstra routing on full road graph.', color: '#94a3b8', icon: 'server', capacity: '~1M users', rps: '1K', pros: ['Simple tile serving infrastructure', 'Correct shortest paths', 'CDN handles read scale'], cons: ['Petabytes of pre-rendered tiles', 'Slow routing (seconds per query)', 'No traffic awareness'] },
-        { step: 2, title: 'Vector Tiles + A*', description: 'Switch to vector tiles for 60% bandwidth savings. A* routing with heuristics for faster queries.', color: '#10B981', icon: 'layers', capacity: '~50M users', rps: '10K', pros: ['Dynamic styling and dark mode', 'Smaller tile downloads', 'Faster routing with heuristics'], cons: ['Client GPU required for rendering', 'Still slow for long routes', 'No real-time traffic'] },
+        { step: 2, title: 'Vector Tiles + A*', description: 'Switch to vector tiles for 60% bandwidth savings. A* routing with heuristics for faster queries.', color: '#1E4D78', icon: 'layers', capacity: '~50M users', rps: '10K', pros: ['Dynamic styling and dark mode', 'Smaller tile downloads', 'Faster routing with heuristics'], cons: ['Client GPU required for rendering', 'Still slow for long routes', 'No real-time traffic'] },
         { step: 3, title: 'Contraction Hierarchies', description: 'Pre-computed routing shortcuts enable sub-ms query times. Graph partitioned across servers.', color: '#f59e0b', icon: 'zap', capacity: '~500M users', rps: '50K', pros: ['<1ms routing queries', 'Cross-country routes in milliseconds', 'Partitioned for horizontal scaling'], cons: ['Hours of preprocessing on graph changes', 'Traffic integration requires special handling', 'Complex graph update pipeline'] },
         { step: 4, title: 'Real-time Traffic', description: 'Crowdsourced GPS data processed via Flink, map-matching with HMM, traffic-aware routing and ETA.', color: '#10b981', icon: 'globe', capacity: '~1B users', rps: '100K', pros: ['Live traffic conditions on map', 'Accurate ETAs with traffic', 'Automatic rerouting during navigation'], cons: ['Privacy concerns (anonymization needed)', 'Coverage gaps in low-adoption areas', 'High-throughput stream processing cost'] },
         { step: 5, title: 'Global Platform', description: 'ML ETA prediction, offline maps with differential updates, S2 spatial indexing, multi-region active-active with 200+ CDN edge locations.', color: '#7c3aed', icon: 'cpu', capacity: '2B+ users', rps: '500K+', pros: ['Sub-200ms tile load globally', 'ML-enhanced ETA accuracy', 'Offline navigation for any region'], cons: ['20+ PB of map data to maintain', 'Complex multi-region consistency', 'Enormous operational surface area'] },
@@ -24687,7 +24687,7 @@ For very large meetings (webinars):
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '300M daily participants', value: 'Platform reach', bar: 100 },
             { label: '3.3T meeting min/year', value: 'Total usage', bar: 95 },
@@ -25338,7 +25338,7 @@ Privacy: Option to view anonymously (hides viewer)
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '1.2B members', value: 'Total registered', bar: 100 },
             { label: '310M MAU', value: 'Monthly active users', bar: 80 },
@@ -25764,7 +25764,7 @@ aggregated_clicks (OLAP store) {
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '500M clicks/day', value: 'Ingestion volume', bar: 100 },
             { label: '100B impressions', value: 'Daily ad delivery', bar: 95 },
@@ -26173,7 +26173,7 @@ trending_queries (real-time) {
           id: 'scale-numbers',
           title: 'Scale at a Glance',
           icon: 'trendingUp',
-          color: '#10B981',
+          color: '#1E4D78',
           items: [
             { label: '8.5B searches/day', value: 'Total search volume', bar: 100 },
             { label: '800K suggestion QPS', value: 'Autocomplete queries', bar: 90 },
@@ -26452,7 +26452,7 @@ If version mismatch, retry. If quantity = 0, sold out.
       ],
       visualCards: [
         { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#ff9900', items: [{ label: 'Elasticsearch', value: '600M products indexed', bar: 90 }, { label: 'Redis (Cart + Tokens)', value: '100 GB active carts', bar: 70 }, { label: 'PostgreSQL (Orders)', value: '500 GB/month', bar: 60 }, { label: 'Kafka (Events)', value: 'Order status streaming', bar: 50 }, { label: 'ML Recommendations', value: '200 GPU hours/day', bar: 40 }, { label: 'CDN (Images)', value: 'Product images globally', bar: 80 }] },
-        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '12M orders/day', value: 'Transaction volume', bar: 100 }, { label: '600M products', value: 'Catalog size', bar: 95 }, { label: '$1.75B daily revenue', value: 'GMV', bar: 90 }, { label: '35K search QPS', value: 'Product searches', bar: 80 }, { label: '<3s checkout', value: 'End-to-end latency', bar: 85 }, { label: '~40% US market', value: 'Market dominance', bar: 75 }] }
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#1E4D78', items: [{ label: '12M orders/day', value: 'Transaction volume', bar: 100 }, { label: '600M products', value: 'Catalog size', bar: 95 }, { label: '$1.75B daily revenue', value: 'GMV', bar: 90 }, { label: '35K search QPS', value: 'Product searches', bar: 80 }, { label: '<3s checkout', value: 'End-to-end latency', bar: 85 }, { label: '~40% US market', value: 'Market dominance', bar: 75 }] }
       ],
       staticDiagrams: [
         { id: 'capacity-est', title: 'Capacity Estimation', description: 'Back-of-envelope calculations for ecommerce platform scale', src: '/diagrams/ecommerce-platform/capacity-estimation.svg', type: 'estimation' },
@@ -26710,7 +26710,7 @@ messages {
       ],
       visualCards: [
         { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#25d366', items: [{ label: 'Chat Servers', value: '10,000+ (100K conn each)', bar: 95 }, { label: 'Kafka', value: 'Cross-server routing', bar: 80 }, { label: 'Redis', value: 'Presence + sessions + seq', bar: 85 }, { label: 'Cassandra', value: 'Message storage (10 TB/day)', bar: 90 }, { label: 'S3 + CDN', value: 'Media storage', bar: 60 }, { label: 'FCM/APNs', value: 'Push notifications', bar: 40 }] },
-        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '1B DAU', value: 'Daily active users', bar: 100 }, { label: '100B msgs/day', value: 'Message volume', bar: 95 }, { label: '1.5M peak QPS', value: 'Write throughput', bar: 85 }, { label: '33M QPS', value: 'Presence heartbeats', bar: 90 }, { label: '<500ms delivery', value: 'Online message latency', bar: 80 }, { label: '10 TB/day', value: 'Text storage growth', bar: 70 }] }
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#1E4D78', items: [{ label: '1B DAU', value: 'Daily active users', bar: 100 }, { label: '100B msgs/day', value: 'Message volume', bar: 95 }, { label: '1.5M peak QPS', value: 'Write throughput', bar: 85 }, { label: '33M QPS', value: 'Presence heartbeats', bar: 90 }, { label: '<500ms delivery', value: 'Online message latency', bar: 80 }, { label: '10 TB/day', value: 'Text storage growth', bar: 70 }] }
       ],
       evolutionSteps: [
         { step: 1, title: 'Single Server', description: 'One WebSocket server with in-memory message store.', color: '#94a3b8', icon: 'server', capacity: '~10K users', rps: '100', pros: ['Simple to build', 'No coordination', 'Low latency'], cons: ['Single point of failure', 'Memory limited', 'No offline delivery'] },
@@ -26952,7 +26952,7 @@ alert_rules {
       ],
       visualCards: [
         { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#632ca6', items: [{ label: 'Collection Agents', value: '10K+ hosts', bar: 80 }, { label: 'Kafka Buffer', value: '5 TB retention', bar: 50 }, { label: 'Time-Series DB', value: '120 TB (13 months)', bar: 90 }, { label: 'Query Engine', value: '<1s dashboard queries', bar: 75 }, { label: 'Alert Manager', value: '50K rules, 30s eval', bar: 70 }, { label: 'Notification Service', value: 'Slack, PagerDuty, email', bar: 40 }] },
-        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '10M pts/sec', value: 'Ingestion throughput', bar: 100 }, { label: '1M+ time series', value: 'Unique metrics tracked', bar: 85 }, { label: '10x compression', value: 'Delta + XOR encoding', bar: 90 }, { label: '<30s alert eval', value: 'Detection latency', bar: 80 }, { label: '13 months', value: 'Retention with downsampling', bar: 70 }, { label: '~1.4 bytes/point', value: 'Compressed storage', bar: 95 }] }
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#1E4D78', items: [{ label: '10M pts/sec', value: 'Ingestion throughput', bar: 100 }, { label: '1M+ time series', value: 'Unique metrics tracked', bar: 85 }, { label: '10x compression', value: 'Delta + XOR encoding', bar: 90 }, { label: '<30s alert eval', value: 'Detection latency', bar: 80 }, { label: '13 months', value: 'Retention with downsampling', bar: 70 }, { label: '~1.4 bytes/point', value: 'Compressed storage', bar: 95 }] }
       ],
       evolutionSteps: [
         { step: 1, title: 'Log Files', description: 'Metrics written to local log files, grepped for debugging.', color: '#94a3b8', icon: 'server', capacity: '~10 hosts', rps: '100', pros: ['Zero infrastructure', 'Simple to start', 'No dependencies'], cons: ['No aggregation', 'No alerting', 'Manual analysis'] },
@@ -27214,7 +27214,7 @@ Every payment creates balanced debit + credit entries:
       ],
       visualCards: [
         { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#635bff', items: [{ label: 'Payment API', value: '27K+ peak TPS', bar: 90 }, { label: 'Fraud ML Model', value: '2M inferences/sec', bar: 85 }, { label: 'Tokenization Vault', value: 'HSM-backed encryption', bar: 70 }, { label: 'Double-Entry Ledger', value: '1B entries/day', bar: 80 }, { label: 'Card Network', value: 'Visa/MC/Amex', bar: 60 }, { label: 'Webhook Dispatcher', value: '500M/day', bar: 50 }] },
-        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '$1.9T/year', value: 'Payment volume', bar: 100 }, { label: '500M API req/day', value: 'Request throughput', bar: 90 }, { label: '99.999% success', value: 'API reliability', bar: 100 }, { label: '<2s processing', value: 'Payment latency', bar: 85 }, { label: '27K peak TPS', value: 'Black Friday peak', bar: 80 }, { label: 'T+2 settlement', value: 'Merchant payout speed', bar: 60 }] }
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#1E4D78', items: [{ label: '$1.9T/year', value: 'Payment volume', bar: 100 }, { label: '500M API req/day', value: 'Request throughput', bar: 90 }, { label: '99.999% success', value: 'API reliability', bar: 100 }, { label: '<2s processing', value: 'Payment latency', bar: 85 }, { label: '27K peak TPS', value: 'Black Friday peak', bar: 80 }, { label: 'T+2 settlement', value: 'Merchant payout speed', bar: 60 }] }
       ],
       evolutionSteps: [
         { step: 1, title: 'Single Processor', description: 'Integrate one card processor (Stripe) via their SDK.', color: '#94a3b8', icon: 'creditCard', capacity: '~100 TPS', rps: '100', pros: ['Fastest time to market', 'PCI handled by processor', 'Simple integration'], cons: ['Vendor lock-in', 'Higher fees', 'Limited control'] },
@@ -27451,7 +27451,7 @@ quadtree_node {
       ],
       visualCards: [
         { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#d32323', items: [{ label: 'PostGIS', value: '200M businesses indexed', bar: 90 }, { label: 'Redis GEO', value: 'Hot area cache', bar: 60 }, { label: 'Geohash Index', value: 'B-tree on prefix', bar: 75 }, { label: 'CDN', value: 'Business detail pages', bar: 40 }, { label: 'Haversine Calculator', value: '~50 per query', bar: 30 }, { label: 'API Servers', value: '15K peak QPS', bar: 50 }] },
-        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '200M+ businesses', value: 'Global coverage', bar: 100 }, { label: '100K+ QPS', value: 'Proximity queries', bar: 85 }, { label: '<200ms latency', value: 'Search response', bar: 80 }, { label: '9-cell query', value: 'Boundary coverage', bar: 50 }, { label: '~1.2km precision', value: 'Geohash 6-char', bar: 60 }, { label: '0.5-50km radius', value: 'Variable search range', bar: 70 }] }
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#1E4D78', items: [{ label: '200M+ businesses', value: 'Global coverage', bar: 100 }, { label: '100K+ QPS', value: 'Proximity queries', bar: 85 }, { label: '<200ms latency', value: 'Search response', bar: 80 }, { label: '9-cell query', value: 'Boundary coverage', bar: 50 }, { label: '~1.2km precision', value: 'Geohash 6-char', bar: 60 }, { label: '0.5-50km radius', value: 'Variable search range', bar: 70 }] }
       ],
       evolutionSteps: [
         { step: 1, title: 'Brute Force', description: 'Calculate distance to every business in the database.', color: '#94a3b8', icon: 'server', capacity: '~1K businesses', rps: '10', pros: ['No index needed', 'Exact distances', 'Simple SQL'], cons: ['O(N) per query', 'Unusable at scale', 'No filtering'] },
@@ -27667,7 +27667,7 @@ Two main approaches exist: counter-based (using a distributed counter like ZooKe
       ],
       visualCards: [
         { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#10b981', items: [{ label: 'CDN', value: 'Global edge caching', bar: 90 }, { label: 'Redis (L2 Cache)', value: '100M URLs cached', bar: 80 }, { label: 'Cassandra', value: 'URL mapping store', bar: 70 }, { label: 'ZooKeeper', value: 'Counter range allocation', bar: 30 }, { label: 'Kafka (Analytics)', value: 'Click event streaming', bar: 50 }, { label: 'Safe Browsing API', value: 'Abuse prevention', bar: 25 }] },
-        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '1B redirects/day', value: 'Read throughput', bar: 100 }, { label: '10M new URLs/day', value: 'Write throughput', bar: 60 }, { label: '<50ms redirect', value: 'Response latency', bar: 95 }, { label: '99.5% cache hit', value: 'Cache efficiency', bar: 90 }, { label: '3.5T keyspace', value: '960+ years capacity', bar: 50 }, { label: '100:1 read ratio', value: 'Read-heavy workload', bar: 80 }] }
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#1E4D78', items: [{ label: '1B redirects/day', value: 'Read throughput', bar: 100 }, { label: '10M new URLs/day', value: 'Write throughput', bar: 60 }, { label: '<50ms redirect', value: 'Response latency', bar: 95 }, { label: '99.5% cache hit', value: 'Cache efficiency', bar: 90 }, { label: '3.5T keyspace', value: '960+ years capacity', bar: 50 }, { label: '100:1 read ratio', value: 'Read-heavy workload', bar: 80 }] }
       ],
       evolutionSteps: [
         { step: 1, title: 'Single Server', description: 'Auto-increment database ID with Base62 encoding on one server.', color: '#94a3b8', icon: 'server', capacity: '~1K URLs/day', rps: '1', pros: ['Simplest possible', 'No collisions', 'Easy to debug'], cons: ['Single point of failure', 'No caching', 'No analytics'] },
@@ -27915,7 +27915,7 @@ topk:songs:hourly:2024-06-05-14  -- expires after 48 hours
       ],
       visualCards: [
         { id: 'tech-stack', title: 'Technology Stack', icon: 'layers', color: '#f59e0b', items: [{ label: 'Redis Sorted Sets', value: '12 GB (4 windows)', bar: 80 }, { label: 'Kafka (Buffer)', value: '50 MB/s throughput', bar: 60 }, { label: 'Score Aggregator', value: '50K updates/sec', bar: 75 }, { label: 'PostgreSQL', value: 'Hourly snapshots', bar: 40 }, { label: 'API Gateway', value: '40K QPS read + write', bar: 70 }, { label: 'CMS (Optional)', value: 'Billions-scale approx', bar: 30 }] },
-        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#10B981', items: [{ label: '100M+ items', value: 'Total tracked entries', bar: 100 }, { label: '50K updates/sec', value: 'Score event throughput', bar: 85 }, { label: '<50ms top-K', value: 'Query response time', bar: 90 }, { label: '<10ms rank lookup', value: 'Individual rank', bar: 95 }, { label: '4 time windows', value: 'Hourly/daily/weekly/all', bar: 50 }, { label: '~12 GB Redis', value: 'Total memory footprint', bar: 40 }] }
+        { id: 'scale-numbers', title: 'Scale at a Glance', icon: 'trendingUp', color: '#1E4D78', items: [{ label: '100M+ items', value: 'Total tracked entries', bar: 100 }, { label: '50K updates/sec', value: 'Score event throughput', bar: 85 }, { label: '<50ms top-K', value: 'Query response time', bar: 90 }, { label: '<10ms rank lookup', value: 'Individual rank', bar: 95 }, { label: '4 time windows', value: 'Hourly/daily/weekly/all', bar: 50 }, { label: '~12 GB Redis', value: 'Total memory footprint', bar: 40 }] }
       ],
       evolutionSteps: [
         { step: 1, title: 'SQL ORDER BY', description: 'Sort all items by score in the database on every query.', color: '#94a3b8', icon: 'database', capacity: '~10K items', rps: '10', pros: ['No extra infrastructure', 'Exact results', 'Simple SQL'], cons: ['Full table scan', 'Slow at scale', 'No real-time updates'] },

@@ -30,7 +30,7 @@ const VARIANTS: Record<
   },
   note: {
     label: 'Note',
-    color: '#10B981',
+    color: '#2B6394',
     icon: (
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="10" />

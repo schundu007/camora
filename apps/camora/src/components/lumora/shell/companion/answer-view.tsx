@@ -70,7 +70,7 @@ export type Archetype = typeof ARCHETYPES[number];
 
 const extractArchetype = (text: string): { archetype: Archetype | null; stripped: string } => {
   if (!text) return { archetype: null, stripped: text };
-  const m = text.match(/^\s*ARCHETYPE\s*:\s*([A-Za-z\/ -]+)\s*\n/);
+  const m = text.match(/^\s*ARCHETYPE\s*:\s*([A-Za-z/ -]+)\s*\n/);
   if (!m) return { archetype: null, stripped: text };
   const raw = m[1].trim();
   const found = ARCHETYPES.find(a => a.toLowerCase() === raw.toLowerCase()) || null;

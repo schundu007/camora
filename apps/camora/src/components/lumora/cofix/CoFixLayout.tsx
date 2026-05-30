@@ -1221,7 +1221,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                           <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-primary)' }}>{ex.input}</code>
                           <span style={{ color: 'var(--text-muted)' }}>→</span>
                           <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-gold-leaf)', fontWeight: 600 }}>{ex.output}</code>
-                          {ex.explanation && <span className="italic text-[11px]" style={{ color: 'var(--text-muted)' }}>// {ex.explanation}</span>}
+                          {ex.explanation && <span className="italic text-[11px]" style={{ color: 'var(--text-muted)' }}>{'// '}{ex.explanation}</span>}
                         </div>
                       ))}
                     </div>

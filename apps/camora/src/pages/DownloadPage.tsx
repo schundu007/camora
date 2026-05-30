@@ -553,7 +553,7 @@ function RequirementsCard({
         <ul className="space-y-3">
           {reqs.map((item) => (
             <li key={item} className="flex items-start gap-2.5 text-[13.5px] text-[var(--text-secondary)]">
-              <span className="mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[rgba(16,185,129,0.12)] text-[#10b981]">
+              <span className="mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[rgba(30,77,120,0.12)] text-[#1e4d78]">
                 <CheckIcon />
               </span>
               {item}

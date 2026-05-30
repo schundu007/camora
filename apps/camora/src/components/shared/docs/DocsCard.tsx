@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 
 const ACCENT = 'var(--accent)';
 const ACCENT_TEXT = 'var(--accent-text)';
-const ACCENT_50 = 'rgba(16,185,129,0.08)';
+const ACCENT_50 = 'rgba(30,77,120,0.08)';
 
-const EMERALD = '#10B981';
+const NAVY = '#1E4D78';
 const HEX_SIZE = 8;
 
 export interface DocsCardProps {
@@ -68,11 +68,11 @@ export default function DocsCard({
             style={{
               width: HEX_SIZE,
               height: HEX_SIZE,
-              background: EMERALD,
+              background: NAVY,
               clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
             }}
           />
-          <div className="text-[10px] font-extrabold uppercase tracking-[0.14em]" style={{ color: EMERALD }}>
+          <div className="text-[10px] font-extrabold uppercase tracking-[0.14em]" style={{ color: NAVY }}>
             {eyebrow}
           </div>
         </div>

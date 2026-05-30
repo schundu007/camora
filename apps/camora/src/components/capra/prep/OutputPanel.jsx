@@ -1185,7 +1185,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                     .replace(/"([^"]+)":/g, '\n**$1:**')  // Convert keys to bold headers
                     .replace(/","/g, '", "')  // Add spaces after commas
                     .replace(/\\n/g, '\n')  // Convert escaped newlines
-                    .replace(/[\[\]{}]/g, '')  // Remove remaining brackets
+                    .replace(/[[\]{}]/g, '')  // Remove remaining brackets
                     .replace(/",?\s*$/gm, '')  // Remove trailing quotes
                     .replace(/^"/gm, '')  // Remove leading quotes
                     .trim();

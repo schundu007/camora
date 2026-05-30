@@ -100,7 +100,7 @@ export default function AscendModeSelector({
           onClose={() => setShowLanguageModal(false)}
           selectedLanguage={codingLanguage || 'auto'}
           onSelect={(lang) => {
-            onLanguageChange && onLanguageChange(lang);
+            if (onLanguageChange) onLanguageChange(lang);
             setShowLanguageModal(false);
           }}
         />

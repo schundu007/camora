@@ -15,8 +15,8 @@ const VALUE_PROPS = [
   { headline: 'Team plans', body: 'Bootcamps, study groups, recruiting teams — pool hours across up to 10 mates.' },
 ];
 
-const ACCENT = '#10B981';
-const ACCENT_DK = '#047857';
+const ACCENT = '#1E4D78';
+const ACCENT_DK = '#153A5E';
 
 export default function FlyerPage() {
   const [format, setFormat] = useState<Format>('landscape');

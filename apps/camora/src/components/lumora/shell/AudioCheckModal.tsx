@@ -252,7 +252,7 @@ export const AudioCheckModal = ({ isOpen, onClose }: Props) => {
   if (!isOpen) return null;
 
   const levelPct = Math.round(level * 100);
-  const levelColor = level < 0.15 ? 'var(--text-dimmed)' : level < 0.6 ? '#10B981' : level < 0.85 ? '#F59E0B' : 'var(--danger)';
+  const levelColor = level < 0.15 ? 'var(--text-dimmed)' : level < 0.6 ? '#1E4D78' : level < 0.85 ? '#D4A043' : 'var(--danger)';
 
   return (
     <div

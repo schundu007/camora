@@ -34,7 +34,7 @@ function renderMarkdown(text: string) {
   };
 
   const codes: { lang: string; code: string }[] = [];
-  let processed = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_m, lang, code) => {
+  const processed = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_m, lang, code) => {
     codes.push({ lang: lang || 'code', code: code.trim() });
     return `__CODE_${codes.length - 1}__`;
   });
