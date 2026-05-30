@@ -32,12 +32,6 @@ on:
 
   workflow_dispatch:
     inputs:
-      service:
-        description: 'Service to build (all | lumora-backend | ascend-backend | ai-services)'
-        required: true
-        default: all
-        type: choice
-        options: [all, lumora-backend, ascend-backend, ai-services]
       platforms:
         description: 'Target platforms'
         required: false
@@ -115,10 +109,6 @@ jobs:
     name: ${{ matrix.service }}
     needs: preflight
     runs-on: ubuntu-latest
-    if: >
-      github.event_name != 'workflow_dispatch' ||
-      inputs.service == 'all' ||
-      inputs.service == matrix.service
     permissions:
       contents: read
       packages: write   # push to GHCR
