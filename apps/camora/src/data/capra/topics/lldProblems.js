@@ -6,7 +6,7 @@ export const lldProblems = [
       title: 'LRU Cache',
       subtitle: 'Least Recently Used Cache',
       icon: 'database',
-      color: '#059669',
+      color: '#1E4D78',
       difficulty: 'Medium',
       description: 'Design a data structure that stores key-value pairs with automatic eviction of least recently accessed items.',
 
@@ -3751,7 +3751,7 @@ class DiskManager:
       title: 'Account Balance Tracker',
       subtitle: 'Financial Ledger',
       icon: 'dollarSign',
-      color: '#047857',
+      color: '#0B1A3D',
       difficulty: 'Easy',
       description: 'Design an account balance tracker with deposits, withdrawals, transfers, and transaction history.',
 

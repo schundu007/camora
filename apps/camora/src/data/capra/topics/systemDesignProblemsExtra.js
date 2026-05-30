@@ -7187,7 +7187,7 @@ Phase 3 (Fetch):
     title: 'Blob Store',
     subtitle: 'S3-Like Object Storage',
     icon: 'database',
-    color: '#059669',
+    color: '#1E4D78',
     difficulty: 'Hard',
     description: 'Design an object storage system similar to S3 with chunking, deduplication, and 11-nines durability.',
 
@@ -8378,7 +8378,7 @@ typeahead_index: prefix, suggestions[] (query completions + entity matches), sco
     title: 'Price Tracking Service',
     subtitle: 'Product Price Monitoring & Alert Platform',
     icon: 'tag',
-    color: '#059669',
+    color: '#1E4D78',
     difficulty: 'Easy',
     description: 'Design a service that monitors product prices across e-commerce sites and alerts users when prices drop.',
 

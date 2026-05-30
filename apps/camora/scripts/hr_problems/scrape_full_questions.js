@@ -149,8 +149,9 @@ async function main() {
         if (data.__status) { start += LIMIT; continue; }
 
         const qs = data?.model?.questions || data?.questions || [];
-        if (qs.length === 0) { pageEmpty = true; break; }
+        if (qs.length === 0) { break; }
 
+        // eslint-disable-next-line no-useless-assignment
         let pageCaptures = 0;
         for (const q of qs) {
           if (!q.id || !missingIds.has(q.id)) continue;

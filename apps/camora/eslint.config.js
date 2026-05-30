@@ -13,7 +13,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['**/*.{ts,tsx,js,jsx}'],
+    files: ['**/*.{ts,tsx,js,jsx,mjs,cjs}'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
@@ -45,6 +45,12 @@ export default tseslint.config(
       'no-empty': ['warn', { allowEmptyCatch: true }],
       'no-unused-vars': 'off',
       'no-undef': 'off',
+      // react-hooks v7 strict rules — too broad for this codebase
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/immutability': 'off',
+      'react-hooks/purity': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/use-memo': 'off',
     },
   },
 );

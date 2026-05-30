@@ -1356,9 +1356,9 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         )}
         {embedded && !voiceBannerDismissed && (() => {
           const tone = !voiceEnrolled ? 'red' : (!voiceFilterEnabled || enrollmentStale) ? 'amber' : 'green';
-          const chipColor = tone === 'red' ? '#ef4444' : tone === 'amber' ? '#f59e0b' : '#10b981';
-          const chipBg = tone === 'red' ? 'rgba(239,68,68,0.12)' : tone === 'amber' ? 'rgba(245,158,11,0.12)' : 'rgba(16,185,129,0.12)';
-          const chipBorder = tone === 'red' ? 'rgba(239,68,68,0.40)' : tone === 'amber' ? 'rgba(245,158,11,0.40)' : 'rgba(16,185,129,0.40)';
+          const chipColor = tone === 'red' ? '#ef4444' : tone === 'amber' ? '#f59e0b' : '#1e4d78';
+          const chipBg = tone === 'red' ? 'rgba(239,68,68,0.12)' : tone === 'amber' ? 'rgba(245,158,11,0.12)' : 'rgba(30,77,120,0.12)';
+          const chipBorder = tone === 'red' ? 'rgba(239,68,68,0.40)' : tone === 'amber' ? 'rgba(245,158,11,0.40)' : 'rgba(30,77,120,0.40)';
           const statusLabel = !voiceEnrolled ? 'Not enrolled'
             : !voiceFilterEnabled ? 'Filter off'
             : enrollmentStale ? `Profile stale (${enrollmentAgeDays}d)`

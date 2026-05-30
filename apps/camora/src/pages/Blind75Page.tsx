@@ -1192,7 +1192,7 @@ export default function Blind75Page() {
                       borderRadius: '20px',
                       background: 'var(--accent-subtle)',
                       color: 'var(--accent)',
-                      border: '1px solid rgba(16,185,129,0.3)',
+                      border: '1px solid rgba(30,77,120,0.3)',
                       whiteSpace: 'nowrap',
                     }}>
                       {techniqueCount} techniques

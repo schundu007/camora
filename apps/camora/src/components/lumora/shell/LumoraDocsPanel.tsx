@@ -333,41 +333,41 @@ const GenericField = ({ label, val }: { label: string; val: any }) => {
 // visual language comes through regardless of the active app theme.
 // ─────────────────────────────────────────────────────────────────────────
 
-/** Camora palette — emerald primary with amber caution.
- *  Emerald (#10B981) = structural/informational. Amber (#F59E0B) = caution/highlight.
+/** Camora palette — navy primary with gold caution.
+ *  Navy (#1E4D78) = structural/informational. Gold (#D4A043) = caution/highlight.
  *  No rainbow. Section type is communicated by label, not hue. */
 const LC = {
   // Difficulty pills — semantic meaning, kept intentional
-  easy:   { fg: '#34D399', bg: 'rgba(52,211,153,0.08)',  border: 'rgba(52,211,153,0.22)' },
-  medium: { fg: '#F59E0B', bg: 'rgba(245,158,11,0.10)',  border: 'rgba(245,158,11,0.30)' },
+  easy:   { fg: '#3B82B9', bg: 'rgba(59,130,185,0.08)',  border: 'rgba(59,130,185,0.22)' },
+  medium: { fg: '#D4A043', bg: 'rgba(212,160,67,0.10)',  border: 'rgba(212,160,67,0.30)' },
   hard:   { fg: '#EF4444', bg: 'rgba(239,68,68,0.08)',   border: 'rgba(239,68,68,0.22)' },
 
   // Brand tokens
-  navy:        '#10B981',
-  gold:        '#F59E0B',
+  navy:        '#1E4D78',
+  gold:        '#D4A043',
 
-  // All section accents → emerald (informational) or amber (caution/watch-out)
-  problem:      '#10B981',
-  examples:     '#10B981',
-  approach:     '#10B981',
-  edge:         '#F59E0B',  // watch-out → amber
-  mistake:      '#F59E0B',  // watch-out → amber
-  followup:     '#10B981',
-  requirements: '#10B981',
-  capacity:     '#10B981',
-  architecture: '#10B981',
-  database:     '#10B981',
-  api:          '#10B981',
-  tradeoffs:    '#F59E0B',  // trade-off emphasis → amber
-  scalability:  '#10B981',
-  clarify:      '#10B981',
+  // All section accents → navy (informational) or gold (caution/watch-out)
+  problem:      '#2B6394',
+  examples:     '#2B6394',
+  approach:     '#2B6394',
+  edge:         '#D4A043',  // watch-out → gold
+  mistake:      '#D4A043',  // watch-out → gold
+  followup:     '#2B6394',
+  requirements: '#2B6394',
+  capacity:     '#2B6394',
+  architecture: '#2B6394',
+  database:     '#2B6394',
+  api:          '#2B6394',
+  tradeoffs:    '#D4A043',  // trade-off emphasis → gold
+  scalability:  '#2B6394',
+  clarify:      '#2B6394',
 
-  // STAR — action (the doing) → amber, rest → emerald
+  // STAR — action (the doing) → gold, rest → navy
   star: {
-    situation: '#10B981',
-    task:      '#10B981',
-    action:    '#F59E0B',
-    result:    '#10B981',
+    situation: '#2B6394',
+    task:      '#2B6394',
+    action:    '#D4A043',
+    result:    '#2B6394',
   },
 
   // Code editor — VSCode dark, universally readable
@@ -377,8 +377,8 @@ const LC = {
   codeMuted: '#9CA3AF',
 
   paper:       'var(--bg-surface)',
-  paperBorder: 'rgba(16,185,129,0.22)',
-  pageRule:    'rgba(16,185,129,0.22)',
+  paperBorder: 'rgba(30,77,120,0.22)',
+  pageRule:    'rgba(30,77,120,0.22)',
 };
 
 /** Card surface with accent tint. Emerald for informational, amber for caution sections. */
@@ -888,10 +888,9 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                 {(q.situation || q.task || q.action || q.result) && (() => {
                   qRendered.add('situation'); qRendered.add('task'); qRendered.add('action'); qRendered.add('result');
                   const stars = [
-                    { key: 'situation', label: 'Situation', accent: '#16A34A' },
-                    { key: 'task',      label: 'Task',      accent: '#2563EB' },
-                    { key: 'action',    label: 'Action',    accent: '#D97706' },
-                    { key: 'result',    label: 'Result',    accent: '#059669' },
+    { key: 'situation', label: 'Situation', accent: '#2B6394' },
+
+    { key: 'result',    label: 'Result',    accent: '#1E4D78' },
                   ];
                   return (
                     <div>
@@ -2069,18 +2068,6 @@ const FormattedJD = ({ text }: { text: string }) => {
       ' inset 0 1px 0 rgba(255,255,255,0.35)',
   };
 
-  // The navy strip on the left edge — same recipe as the docs hero card.
-  const NavyStrip = () => (
-    <span
-      aria-hidden="true"
-      className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full pointer-events-none"
-      style={{
-        background:
-          'linear-gradient(180deg, var(--cam-primary) 0%, var(--cam-primary-dk) 100%)',
-      }}
-    />
-  );
-
   // Single column flow — the multi-column grid we tried earlier hurt
   // readability across web / desktop / mobile (cards squashed, bullets
   // truncated, hierarchy lost). Reverted to a clean vertical stack;
@@ -2188,7 +2175,7 @@ const FormattedJD = ({ text }: { text: string }) => {
             )}
             <div className="px-5 pl-7 py-4 flex flex-col gap-1.5">
               {sec.items.map((item, j) => {
-                const isNumberedHeading = /^\d+[\.\)]\s/.test(item);
+                const isNumberedHeading = /^\d+[.)]\s/.test(item);
                 if (isNumberedHeading) {
                   return (
                     <div
@@ -2244,6 +2231,14 @@ const FormattedJD = ({ text }: { text: string }) => {
     </div>
   );
 }
+
+const NavyStrip = () => (
+  <span
+    aria-hidden="true"
+    className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full pointer-events-none"
+    style={{ background: 'linear-gradient(180deg, var(--cam-primary) 0%, var(--cam-primary-dk) 100%)' }}
+  />
+);
 
 export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void }) => {
   const { token } = useAuth();
@@ -2759,7 +2754,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                     !token ? 'rgba(255,255,255,0.35)'
                     : syncStatus === 'error'  ? '#F87171'
                     : syncStatus === 'saving' ? '#FCD34D'
-                    : syncStatus === 'saved'  ? '#34D399'
+                    : syncStatus === 'saved'  ? '#3B82B9'
                     : 'rgba(255,255,255,0.35)',
                 }}
               />

@@ -18,7 +18,7 @@ const categorize = (q: string, isCodingFlag = false, isDesignFlag = false): Ques
   // Coding submits prefix the displayTitle with [LANGUAGE] (see
   // useStreamingSession.handleCodingSubmit). A trailing word like
   // [PYTHON] / [TYPESCRIPT] is the signal.
-  if (/^\[[A-Z+#.\-]{2,16}\]/.test(t)) return 'coding';
+  if (/^\[[A-Z+#.-]{2,16}\]/.test(t)) return 'coding';
   return 'behavioral';
 }
 const CATEGORY_LABEL: Record<QuestionCategory, string> = {

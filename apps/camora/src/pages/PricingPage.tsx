@@ -108,9 +108,9 @@ export default function PricingPage() {
           style={{
             background:
               'radial-gradient(ellipse 70% 55% at 50% 0%, rgba(255,255,255,0.08), transparent 60%),' +
-              'radial-gradient(ellipse 50% 60% at 12% 30%, rgba(16,185,129,0.15), transparent 60%),' +
-              'radial-gradient(ellipse 45% 55% at 88% 70%, rgba(16,185,129,0.10), transparent 55%),' +
-              'linear-gradient(135deg, #07112A 0%, #0B1A3D 50%, #0A1228 100%)',
+              'radial-gradient(ellipse 50% 60% at 12% 30%, rgba(30,77,120,0.15), transparent 60%),' +
+              'radial-gradient(ellipse 45% 55% at 88% 70%, rgba(30,77,120,0.10), transparent 55%),' +
+              'linear-gradient(135deg, #0B0D11 0%, #0F1217 50%, #171B24 100%)',
           }}
         />
 
@@ -143,7 +143,7 @@ export default function PricingPage() {
           <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-5 max-w-3xl mx-auto">
             {TRUST_POINTS.map((p, i) => (
               <div key={i} className="flex items-start gap-2.5 text-left">
-                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full" style={{ border: '1px solid rgba(16,185,129,0.35)' }}>
+                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full" style={{ border: '1px solid rgba(43,99,148,0.35)' }}>
                   <CheckIcon size={10} className="text-[var(--accent)]" />
                 </span>
                 <div className="min-w-0">

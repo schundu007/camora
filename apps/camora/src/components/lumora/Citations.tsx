@@ -92,17 +92,17 @@ const CitationRow = ({ c, index }: { c: Citation; index: number }) => {
               background: isKb
                 ? 'var(--accent-subtle)'
                 : isCode
-                ? 'rgba(16,185,129,0.12)'
+                ? 'rgba(30,77,120,0.12)'
                 : 'rgba(201,162,39,0.12)',
               color: isKb
                 ? 'var(--cam-primary-dk)'
                 : isCode
-                ? 'var(--success, #059669)'
+                ? 'var(--success, #1E4D78)'
                 : 'var(--cam-gold-leaf-text, var(--cam-gold-leaf))',
               border: isKb
                 ? '1px solid rgba(0,71,171,0.18)'
                 : isCode
-                ? '1px solid rgba(16,185,129,0.28)'
+                ? '1px solid rgba(30,77,120,0.28)'
                 : '1px solid rgba(201,162,39,0.28)',
             }}
           >

@@ -73,9 +73,9 @@ export const LumoraBottomBar = ({ onTranscription }: LumoraBottomBarProps) => {
   }, [voiceEnrolled, voiceEnrolledAt]);
 
   const tone = !voiceEnrolled ? 'red' : (!voiceFilterEnabled || enrollmentStale) ? 'amber' : 'green';
-  const bg = tone === 'red' ? 'rgba(220,38,38,0.08)' : tone === 'amber' ? 'rgba(245,158,11,0.10)' : 'rgba(16,185,129,0.08)';
-  const border = tone === 'red' ? 'rgba(220,38,38,0.35)' : tone === 'amber' ? 'rgba(245,158,11,0.40)' : 'rgba(16,185,129,0.35)';
-  const stroke = tone === 'red' ? '#dc2626' : tone === 'amber' ? '#d97706' : '#10b981';
+  const bg = tone === 'red' ? 'rgba(220,38,38,0.08)' : tone === 'amber' ? 'rgba(245,158,11,0.10)' : 'rgba(30,77,120,0.08)';
+  const border = tone === 'red' ? 'rgba(220,38,38,0.35)' : tone === 'amber' ? 'rgba(245,158,11,0.40)' : 'rgba(30,77,120,0.35)';
+  const stroke = tone === 'red' ? '#dc2626' : tone === 'amber' ? '#d97706' : '#1e4d78';
   const title = !voiceEnrolled ? 'Enroll your voice to filter it out' :
                 !voiceFilterEnabled ? 'Your voice is being transcribed' :
                 enrollmentStale ? 'Refresh your voice profile' :

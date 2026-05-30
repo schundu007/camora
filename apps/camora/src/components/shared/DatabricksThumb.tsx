@@ -17,10 +17,10 @@ interface PaletteSpec {
 }
 
 const PALETTE: Record<DatabricksColor, PaletteSpec> = {
-  'navy':    { from: 'var(--cam-primary-lt)',  mid: 'var(--cam-primary)',     to: 'var(--cam-primary-dk)',          shadow: 'rgba(16,185,129,0.20)' },
-  'navy-lt': { from: 'var(--cam-primary)',     mid: 'var(--cam-primary-lt)',  to: 'var(--cam-primary)',             shadow: 'rgba(52,211,153,0.18)' },
-  'navy-dk': { from: 'var(--cam-primary)',     mid: 'var(--cam-primary-dk)',  to: 'var(--cam-primary-900,#022C22)', shadow: 'rgba(2,44,34,0.28)' },
-  'gold':    { from: 'var(--cam-gold-leaf-lt)', mid: 'var(--cam-gold-leaf)',  to: 'var(--cam-gold-leaf-dk)',        shadow: 'rgba(16,185,129,0.22)' },
+  'navy':    { from: 'var(--cam-primary-lt)',  mid: 'var(--cam-primary)',     to: 'var(--cam-primary-dk)',          shadow: 'rgba(30,77,120,0.20)' },
+  'navy-lt': { from: 'var(--cam-primary)',     mid: 'var(--cam-primary-lt)',  to: 'var(--cam-primary)',             shadow: 'rgba(59,130,185,0.18)' },
+  'navy-dk': { from: 'var(--cam-primary)',     mid: 'var(--cam-primary-dk)',  to: 'var(--cam-primary-900,#0B1A3D)', shadow: 'rgba(11,26,61,0.28)' },
+  'gold':    { from: 'var(--cam-gold-leaf-lt)', mid: 'var(--cam-gold-leaf)',  to: 'var(--cam-gold-leaf-dk)',        shadow: 'rgba(212,160,67,0.22)' },
   'red':     { from: '#F87171',                mid: 'var(--danger)',          to: '#991B1B',                        shadow: 'rgba(239,68,68,0.25)' },
 };
 

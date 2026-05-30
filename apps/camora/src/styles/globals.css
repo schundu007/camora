@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════
-   CAMORA v5 DESIGN SYSTEM — Developer Dark (kiro-inspired)
+   CAMORA v6 DESIGN SYSTEM — Navy Atlas (enterprise palette)
    ══════════════════════════════════════════════════════════════ */
 
 /* ── Satoshi — loaded via Fontshare in index.html (single source) ── */
@@ -13,58 +13,65 @@
 /* ── Design Tokens ──────────────────────────────────────────── */
 @layer base {
   :root {
-    /* Backgrounds — deep near-black (kiro-style dark substrate) */
-    --bg-base:     #080A0D;
-    --bg-app:      #0D1015;
-    --bg-surface:  #161A22;
+    /* Backgrounds — warm deep charcoal (editorial dark substrate) */
+    --bg-base:     #0B0D11;
+    --bg-app:      #0F1217;
+    --bg-surface:  #171B24;
     --bg-elevated: #1E2430;
     --bg-primary: var(--bg-surface);
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.55);
 
-    /* Borders — cool slate that pops against the dark substrate */
-    --border:        #272D3A;
-    --border-hover:  #323A4A;
-    --border-focus:  #10B981;
+    /* Borders — warm slate, lower contrast than before */
+    --border:        #262C38;
+    --border-hover:  #303847;
+    --border-focus:  #2B6394;
 
-    /* Text — cool neutral whites (not cream-tinted). Clean developer
-       readability without the warm tint of the old Sapphire palette. */
-    --text-primary:  #F1F3F5;
-    --text-secondary:#B0B8C4;
-    --text-hero:     #F1F3F5;
-    --text-muted:    #6B7380;
+    /* Text — warm whites for editorial readability */
+    --text-primary:  #EBE9E4;
+    --text-secondary:#A8AEB8;
+    --text-hero:     #EBE9E4;
+    --text-muted:    #68707D;
     --text-dimmed:   #4A515E;
 
-    /* Accent — Emerald (developer ecosystem green). Replaces lapis + gold. */
-    --accent:        #10B981;
-    --accent-hover:  #34D399;
-    --accent-subtle: rgba(16,185,129,0.12);
-    --accent-text:   #34D399;
+    /* Primary accent — Deep Navy (structure, actions, authority).
+       Replaces emerald. One accent, one role. */
+    --accent:        #1E4D78;
+    --accent-hover:  #2B6394;
+    --accent-subtle: color-mix(in oklab, var(--accent) 10%, transparent);
+    --accent-text:   #5B93C4;
 
-    /* Semantic — emerald for success/info, amber for warning, red for danger */
-    --success: #10B981;
-    --warning: #F59E0B;
-    --warning-text: #FBBF24;
+    /* Secondary accent — Warm Gold (signal, momentum, highlights).
+       Restored from DESIGN.md: gold marks what's next, problem counts,
+       agenda numerals. Never structural. */
+    --accent-secondary:        #D4A043;
+    --accent-secondary-hover:  #E0B155;
+    --accent-secondary-subtle: color-mix(in oklab, var(--accent-secondary) 10%, transparent);
+    --accent-secondary-text:   #B88930;
+
+    /* Semantic — navy for success/info, gold for warning, red for danger */
+    --success: #1E4D78;
+    --warning: #D4A043;
+    --warning-text: #E0B155;
     --danger:  #EF4444;
-    --info:    #10B981;
+    --info:    #1E4D78;
 
     /* Difficulty — weight-driven, not hue-driven */
     --easy:        #6B7280;
     --easy-bg:     rgba(107,114,128,0.10);
     --easy-border: rgba(107,114,128,0.25);
-    --medium:      #F1F3F5;
-    --medium-bg:   rgba(241,243,245,0.06);
-    --medium-border: rgba(241,243,245,0.15);
-    --hard:        #10B981;
-    --hard-bg:     rgba(16,185,129,0.10);
-    --hard-border: rgba(16,185,129,0.30);
+    --medium:      #EBE9E4;
+    --medium-bg:   rgba(235,233,228,0.06);
+    --medium-border: rgba(235,233,228,0.15);
+    --hard:        #D4A043;
+    --hard-bg:     color-mix(in oklab, var(--hard) 10%, transparent);
+    --hard-border: color-mix(in oklab, var(--hard) 25%, transparent);
 
     /* Category */
-    --cat-primary:    #10B981;
-    --cat-primary-bg: rgba(16,185,129,0.10);
+    --cat-primary:    #1E4D78;
+    --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 10%, transparent);
 
-    /* Fonts — Satoshi (all UI) + JetBrains Mono (code)
-       No Clash Display, no Source Serif, no decorative fonts. */
+    /* Fonts — Satoshi (all UI) + JetBrains Mono (code) */
     --font-sans: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-display: 'Satoshi', sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -76,15 +83,17 @@
     --fs-answer-heading: 18px;
     --lh-answer: 1.7;
 
-    /* Shadows — dark-optimized (subtle, no colored tint on backgrounds) */
+    /* Shadows — dark-optimized, navy-tinted for ambient cast */
     --shadow-xs: 0 1px 2px rgba(0,0,0,0.3);
     --shadow-sm: 0 2px 6px rgba(0,0,0,0.35);
     --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
     --shadow-lg: 0 8px 24px rgba(0,0,0,0.45);
     --shadow-xl: 0 16px 48px rgba(0,0,0,0.5);
     --card-shadow: var(--shadow-sm);
-    --shadow-emerald-xs: 0 1px 3px rgba(16,185,129,0.08), 0 4px 16px rgba(16,185,129,0.04);
-    --shadow-emerald-sm: 0 2px 8px rgba(16,185,129,0.12);
+    --shadow-accent-xs: 0 1px 3px rgba(30,77,120,0.10), 0 4px 16px rgba(30,77,120,0.06);
+    --shadow-accent-sm: 0 2px 8px rgba(30,77,120,0.14);
+    --shadow-gold-xs: 0 1px 3px rgba(212,160,67,0.08), 0 4px 16px rgba(212,160,67,0.04);
+    --shadow-gold-sm: 0 2px 8px rgba(212,160,67,0.12);
 
     /* Layout */
     --sidebar-width: 56px;
@@ -96,61 +105,59 @@
 
     /* Legacy compat aliases */
     --text-dim: var(--text-muted);
-    --nav-bg: rgba(13,16,21,0.92);
+    --nav-bg: rgba(15,18,23,0.92);
     --nav-bg-secondary: var(--bg-elevated);
     --nav-border: var(--border);
     --nav-text: var(--text-primary);
     --nav-text-muted: var(--text-muted);
     --nav-hover: var(--bg-elevated);
 
-    /* ── Camora brand system — Developer Dark ───────────────
-       Emerald accent on deep neutral dark. Single vibrant color
-       (no secondary accent). Inspired by kiro.dev, Linear,
-       Vercel developer tools.
+    /* ── Camora brand system — Navy Atlas ──────────────────
+       Deep navy for structure and authority. Warm gold for
+       signal and momentum. Editorial dark for the substrate.
 
-       Emerald   = action, focus, success, the brand promise.
-       Dark      = substrate, terminal, developer environment.
-       White     = text, structure, contrast hierarchy.        */
-    --cam-primary:      #10B981;
-    --cam-primary-lt:   #34D399;
-    --cam-primary-dk:   #059669;
-    --cam-primary-900:  #022C22;
-    --cam-gold-leaf:    #10B981;
-    --cam-gold-leaf-lt: #34D399;
-    --cam-gold-leaf-dk: #059669;
-    --cam-gold-leaf-50: rgba(16,185,129,0.08);
-    --cam-gold-leaf-text:#34D399;
-    --cam-void:         #080A0D;
+       Navy  = action, focus, success, the institution.
+       Gold  = signal, highlights, what's next.
+       Warm  = editorial comfort, reduced fatigue.            */
+    --cam-primary:      #1E4D78;
+    --cam-primary-lt:   #2B6394;
+    --cam-primary-dk:   #153A5E;
+    --cam-primary-900:  #071830;
+    --cam-gold-leaf:    #D4A043;
+    --cam-gold-leaf-lt: #E0B155;
+    --cam-gold-leaf-dk: #B88930;
+    --cam-gold-leaf-50: color-mix(in oklab, var(--cam-gold-leaf) 8%, transparent);
+    --cam-gold-leaf-text: #C99A2E;
+    --cam-void:         #0B0D11;
     --cam-surface-lt:   #1E2430;
 
-    /* Hero gradients — simplified developer aesthetic.
-       No gold blobs, no navy mesh. Clean dark with emerald
-       radial hints and a neutral dark linear gradient base. */
+    /* Hero gradients — navy + gold atmosphere.
+       Warm dark base with navy and gold radial hints. */
     --cam-hero-bg:
-      radial-gradient(ellipse 55% 65% at 15% 25%, rgba(16,185,129,0.12), transparent 60%),
-      radial-gradient(ellipse 50% 55% at 85% 75%, rgba(16,185,129,0.08), transparent 65%),
-      radial-gradient(ellipse 90% 50% at 50% 0%, rgba(255,255,255,0.06), transparent 70%),
-      linear-gradient(135deg, #080A0D 0%, #0D1015 35%, #161A22 65%, #0D1015 100%);
+      radial-gradient(ellipse 55% 65% at 15% 25%, rgba(30,77,120,0.15), transparent 60%),
+      radial-gradient(ellipse 40% 45% at 85% 75%, rgba(212,160,67,0.06), transparent 65%),
+      radial-gradient(ellipse 90% 50% at 50% 0%, rgba(255,255,255,0.05), transparent 70%),
+      linear-gradient(135deg, #0B0D11 0%, #0F1217 35%, #171B24 65%, #0F1217 100%);
     --cam-hero-strip:
-      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(16,185,129,0.18), transparent 70%),
-      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(16,185,129,0.12), transparent 70%),
+      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(30,77,120,0.18), transparent 70%),
+      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(212,160,67,0.10), transparent 70%),
       radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.05), transparent 75%),
-      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(16,185,129,0.08), transparent 70%),
-      linear-gradient(95deg, #0D1015 0%, #161A22 30%, #1E2430 50%, #161A22 70%, #0D1015 100%);
+      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(30,77,120,0.08), transparent 70%),
+      linear-gradient(95deg, #0F1217 0%, #171B24 30%, #1E2430 50%, #171B24 70%, #0F1217 100%);
 
-    /* Lumora topbar chrome — dark immersive, emerald accents */
+    /* Lumora topbar chrome — dark immersive, navy accents */
     --lumora-chrome-bg:     var(--cam-hero-strip);
-    --lumora-chrome-border: rgba(16,185,129,0.30);
+    --lumora-chrome-border: rgba(43,99,148,0.30);
     --lumora-chrome-shadow: inset 0 -2px 0 var(--accent);
-    --lumora-chrome-text:   rgba(241,243,245,0.85);
-    --lumora-chrome-hover:  rgba(241,243,245,0.08);
+    --lumora-chrome-text:   rgba(235,233,228,0.85);
+    --lumora-chrome-hover:  rgba(235,233,228,0.08);
 
     /* Near-black for immersive surfaces */
-    --bg-near-black: #080A0D;
+    --bg-near-black: #0B0D11;
 
-    /* Emerald-tinted shadows for Lumora surfaces */
-    --shadow-primary-xs: 0 1px 3px rgba(16,185,129,0.06), 0 4px 16px rgba(16,185,129,0.04);
-    --shadow-primary-sm: 0 2px 8px rgba(16,185,129,0.10);
+    /* Navy-tinted shadows for Lumora surfaces */
+    --shadow-primary-xs: 0 1px 3px rgba(30,77,120,0.08), 0 4px 16px rgba(30,77,120,0.04);
+    --shadow-primary-sm: 0 2px 8px rgba(30,77,120,0.12);
   }
 
   /* ──────────────────────────────────────────────────────────
@@ -160,46 +167,51 @@
      ────────────────────────────────────────────────────────── */
   [data-theme="light"] {
     --bg-base:     #FFFFFF;
-    --bg-app:      #F8F9FA;
+    --bg-app:      #F4F3F0;
     --bg-surface:  #FFFFFF;
-    --bg-elevated: #F0F1F3;
+    --bg-elevated: #EEEDEA;
     --bg-primary: var(--bg-surface);
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.20);
 
-    --border:        #DEE2E6;
-    --border-hover:  #C9CDD2;
-    --border-focus:  #059669;
+    --border:        #D6D5D0;
+    --border-hover:  #C2C0BA;
+    --border-focus:  #2B6394;
 
-    --text-primary:  #111318;
-    --text-secondary:#495057;
-    --text-hero:     #111318;
-    --text-muted:    #6C757D;
+    --text-primary:  #12141A;
+    --text-secondary:#464B54;
+    --text-hero:     #12141A;
+    --text-muted:    #6B717C;
     --text-dimmed:   #868E96;
 
-    --accent:        #059669;
-    --accent-hover:  #047857;
-    --accent-subtle: rgba(5,150,105,0.08);
-    --accent-text:   #047857;
+    --accent:        #1A4885;
+    --accent-hover:  #2B5E99;
+    --accent-subtle: color-mix(in oklab, var(--accent) 8%, transparent);
+    --accent-text:   #3673B5;
 
-    --success: #059669;
-    --warning: #D97706;
-    --warning-text: #92400E;
+    --accent-secondary:        #C2963E;
+    --accent-secondary-hover:  #D4A84A;
+    --accent-secondary-subtle: color-mix(in oklab, var(--accent-secondary) 8%, transparent);
+    --accent-secondary-text:   #7A5C0A;
+
+    --success: #1A4885;
+    --warning: #C2963E;
+    --warning-text: #7A5C0A;
     --danger:  #DC2626;
-    --info:    #059669;
+    --info:    #1A4885;
 
     --easy:        #6B7280;
     --easy-bg:     rgba(107,114,128,0.06);
     --easy-border: rgba(107,114,128,0.18);
-    --medium:      #111318;
-    --medium-bg:   rgba(17,19,24,0.04);
-    --medium-border: rgba(17,19,24,0.10);
-    --hard:        #059669;
-    --hard-bg:     rgba(5,150,105,0.08);
-    --hard-border: rgba(5,150,105,0.20);
+    --medium:      #12141A;
+    --medium-bg:   rgba(18,20,26,0.04);
+    --medium-border: rgba(18,20,26,0.10);
+    --hard:        #C2963E;
+    --hard-bg:     color-mix(in oklab, var(--hard) 8%, transparent);
+    --hard-border: color-mix(in oklab, var(--hard) 20%, transparent);
 
-    --cat-primary:    #059669;
-    --cat-primary-bg: rgba(5,150,105,0.08);
+    --cat-primary:    #1A4885;
+    --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 8%, transparent);
 
     --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
     --shadow-sm: 0 2px 6px rgba(0,0,0,0.06);
@@ -207,30 +219,32 @@
     --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
     --shadow-xl: 0 16px 48px rgba(0,0,0,0.12);
     --card-shadow: var(--shadow-sm);
-    --shadow-emerald-xs: 0 1px 3px rgba(5,150,105,0.06), 0 4px 16px rgba(5,150,105,0.03);
-    --shadow-emerald-sm: 0 2px 8px rgba(5,150,105,0.08);
+    --shadow-accent-xs: 0 1px 3px rgba(26,72,133,0.06), 0 4px 16px rgba(26,72,133,0.03);
+    --shadow-accent-sm: 0 2px 8px rgba(26,72,133,0.08);
+    --shadow-gold-xs: 0 1px 3px rgba(194,150,62,0.04), 0 4px 16px rgba(194,150,62,0.02);
+    --shadow-gold-sm: 0 2px 8px rgba(194,150,62,0.06);
 
-    --cam-primary:      #059669;
-    --cam-primary-lt:   #10B981;
-    --cam-primary-dk:   #047857;
-    --cam-primary-900:  #022C22;
-    --cam-gold-leaf:    #059669;
-    --cam-gold-leaf-lt: #10B981;
-    --cam-gold-leaf-dk: #047857;
-    --cam-gold-leaf-50: rgba(5,150,105,0.06);
-    --cam-gold-leaf-text:#047857;
-    --cam-void:         #F8F9FA;
-    --cam-surface-lt:   #F0F1F3;
+    --cam-primary:      #1A4885;
+    --cam-primary-lt:   #2B5E99;
+    --cam-primary-dk:   #143566;
+    --cam-primary-900:  #091B36;
+    --cam-gold-leaf:    #C2963E;
+    --cam-gold-leaf-lt: #D4A84A;
+    --cam-gold-leaf-dk: #A8832E;
+    --cam-gold-leaf-50: color-mix(in oklab, var(--cam-gold-leaf) 6%, transparent);
+    --cam-gold-leaf-text:#8A6B2A;
+    --cam-void:         #F4F3F0;
+    --cam-surface-lt:   #EEEDEA;
 
     --lumora-chrome-bg:     var(--cam-hero-strip);
-    --lumora-chrome-border: rgba(5,150,105,0.15);
+    --lumora-chrome-border: rgba(43,99,148,0.15);
     --lumora-chrome-shadow: inset 0 -2px 0 var(--accent);
-    --lumora-chrome-text:   rgba(17,19,24,0.75);
-    --lumora-chrome-hover:  rgba(5,150,105,0.06);
+    --lumora-chrome-text:   rgba(18,20,26,0.75);
+    --lumora-chrome-hover:  rgba(30,77,120,0.06);
 
-    --bg-near-black: rgba(17,19,24,0.92);
-    --shadow-primary-xs: 0 1px 3px rgba(5,150,105,0.04), 0 4px 16px rgba(5,150,105,0.02);
-    --shadow-primary-sm: 0 2px 8px rgba(5,150,105,0.06);
+    --bg-near-black: rgba(18,20,26,0.92);
+    --shadow-primary-xs: 0 1px 3px rgba(26,72,133,0.04), 0 4px 16px rgba(26,72,133,0.02);
+    --shadow-primary-sm: 0 2px 8px rgba(26,72,133,0.06);
 
     color-scheme: light;
   }
@@ -241,20 +255,20 @@
      Capra  = study/prep surface (slightly wider content)
      ────────────────────────────────────────────────────────── */
 
-  /* ── Lumora: always immersive — emerald chrome accents ── */
+  /* ── Lumora: always immersive — navy chrome accents ── */
   [data-product="lumora"] {
     --lumora-chrome-bg:     var(--cam-hero-strip);
-    --lumora-chrome-border: rgba(16,185,129,0.30);
+    --lumora-chrome-border: rgba(43,99,148,0.30);
     --lumora-chrome-shadow: inset 0 -2px 0 var(--accent);
-    --lumora-chrome-text:   rgba(241,243,245,0.88);
-    --lumora-chrome-hover:  rgba(241,243,245,0.08);
+    --lumora-chrome-text:   rgba(235,233,228,0.88);
+    --lumora-chrome-hover:  rgba(235,233,228,0.08);
   }
   [data-product="lumora"] .lumora-status-bar {
-    border-top-color: rgba(16,185,129,0.15);
+    border-top-color: rgba(43,99,148,0.15);
     box-shadow: 0 -1px 4px rgba(0,0,0,0.20);
   }
   [data-product="lumora"] .status-dot-listen {
-    box-shadow: 0 0 12px rgba(16,185,129,0.50);
+    box-shadow: 0 0 12px rgba(43,99,148,0.50);
   }
 
   /* ── Capra: wider content measure for reading ──────────── */
@@ -410,11 +424,11 @@
   .no-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
   /* Selection */
-  ::selection { background: rgba(16,185,129,0.35); color: #ffffff; }
+  ::selection { background: rgba(43,99,148,0.40); color: #ffffff; }
 
-  /* Focus ring — Emerald */
+  /* Focus ring — Navy */
   *:focus-visible {
-    outline: 2px solid rgba(16,185,129,0.55);
+    outline: 2px solid rgba(43,99,148,0.55);
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -439,7 +453,7 @@
   }
 }
 
-/* ── Subtle background mesh (emerald-tinted) ───────────────── */
+/* ── Subtle background mesh (navy-tinted) ──────────────────── */
 #root::after {
   content: '';
   position: fixed;
@@ -447,15 +461,15 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(16,185,129,0.03) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(16,185,129,0.02) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(16,185,129,0.015) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(30,77,120,0.03) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(212,160,67,0.015) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(30,77,120,0.015) 0%, transparent 60%);
 }
 .light-theme #root::after,
 [data-theme="light"] #root::after {
   background:
-    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(5,150,105,0.025) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(5,150,105,0.015) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(26,72,133,0.025) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(194,150,62,0.015) 0%, transparent 60%);
 }
 
 /* ── Shepherd.js tour — dark theme ──────────────────────────── */
@@ -465,7 +479,7 @@
 .shepherd-text strong { color: var(--accent-hover) !important; font-weight: 700 !important; }
 .shepherd-footer { padding: 8px 16px 16px !important; border-top: none !important; }
 .shepherd-button { background: var(--accent) !important; color: #fff !important; border: none !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 700 !important; padding: 6px 16px !important; }
-.shepherd-button:hover { box-shadow: 0 2px 12px rgba(16,185,129,0.30) !important; }
+.shepherd-button:hover { box-shadow: 0 2px 12px rgba(30,77,120,0.40) !important; }
 .shepherd-button-secondary { background: transparent !important; color: var(--text-muted) !important; border: 1px solid var(--border) !important; }
 .shepherd-button-secondary:hover { color: var(--text-primary) !important; box-shadow: none !important; }
 .shepherd-cancel-icon span { color: var(--text-muted) !important; font-size: 20px !important; }
@@ -591,7 +605,7 @@
 @media (min-width: 640px)  { .page-wrap { padding-left: 1.5rem; padding-right: 1.5rem; } }
 @media (min-width: 1024px) { .page-wrap { padding-left: 2rem;   padding-right: 2rem;   } }
 
-/* ── Segmented tab group — dark surface + emerald active ── */
+/* ── Segmented tab group — dark surface + accent active ── */
 .tab-group {
   display: flex;
   align-items: center;
@@ -779,7 +793,7 @@
   .status-dot { @apply w-2 h-2 rounded-none flex-shrink-0 transition-all duration-300; }
   .status-dot-idle { background-color: var(--text-muted); }
   .status-dot-ready { background-color: var(--success); box-shadow: 0 0 8px rgba(70,167,88,0.6); }
-  .status-dot-listen { background-color: var(--accent); animation: pulse-dot 1.5s ease-in-out infinite; box-shadow: 0 0 8px rgba(16,185,129,0.50); }
+  .status-dot-listen { background-color: var(--accent); animation: pulse-dot 1.5s ease-in-out infinite; box-shadow: 0 0 8px rgba(43,99,148,0.50); }
   .status-dot-transcribe { background-color: var(--cam-gold-leaf); }
   .status-dot-write, .status-dot-search { background-color: var(--accent); animation: pulse-dot 1.5s ease-in-out infinite; }
   .status-dot-error { background-color: var(--danger); }
@@ -874,7 +888,7 @@
       transform 0.15s ease-out;
   }
   .btn:active { transform: scale(0.97); }
-  .btn:focus-visible { outline: 2px solid rgba(16,185,129,0.55); outline-offset: 2px; }
+  .btn:focus-visible { outline: 2px solid rgba(43,99,148,0.55); outline-offset: 2px; }
 
   /* Input styles */
   .input {
@@ -884,7 +898,7 @@
     transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
   }
   .input::placeholder { color: var(--text-muted); }
-  .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(16,185,129,0.18); }
+  .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(43,99,148,0.18); }
 
   /* Shimmer */
   .shimmer {
@@ -1133,9 +1147,9 @@ img { max-width: 100%; height: auto; }
   position: absolute;
   inset: -50%;
   background:
-    radial-gradient(ellipse 40% 40% at 25% 30%, rgba(16,185,129,0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 35% 50% at 75% 60%, rgba(16,185,129,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 30% at 50% 80%, rgba(16,185,129,0.05) 0%, transparent 60%);
+    radial-gradient(ellipse 40% 40% at 25% 30%, rgba(30,77,120,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 50% at 75% 60%, rgba(212,160,67,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 30% at 50% 80%, rgba(30,77,120,0.05) 0%, transparent 60%);
   animation: auroraShift 15s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 0;
@@ -1185,7 +1199,7 @@ img { max-width: 100%; height: auto; }
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(16,185,129,0.10), rgba(16,185,129,0.05));
+  background: linear-gradient(135deg, rgba(30,77,120,0.25), rgba(30,77,120,0.10), rgba(212,160,67,0.05));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -1198,8 +1212,8 @@ img { max-width: 100%; height: auto; }
   transition: box-shadow 0.4s ease, border-color 0.4s ease, transform 0.4s ease;
 }
 .ai-card-glow:hover {
-  box-shadow: 0 0 30px rgba(16,185,129,0.08), 0 0 60px rgba(16,185,129,0.04);
-  border-color: rgba(16,185,129,0.15) !important;
+  box-shadow: 0 0 30px rgba(30,77,120,0.10), 0 0 60px rgba(30,77,120,0.05);
+  border-color: rgba(43,99,148,0.20) !important;
   transform: translateY(-2px);
 }
 
@@ -1212,7 +1226,7 @@ img { max-width: 100%; height: auto; }
   position: absolute;
   inset: -3px;
   border-radius: 50%;
-  background: rgba(16,185,129,0.25);
+  background: rgba(43,99,148,0.25);
   animation: aiPulse 2s ease-in-out infinite;
   z-index: -1;
 }
@@ -1234,9 +1248,9 @@ img { max-width: 100%; height: auto; }
 }
 .ai-float { animation: float 4s ease-in-out infinite; }
 
-/* Gradient text on dark backgrounds */
+/* Gradient text on dark backgrounds — navy to gold sweep */
 .ai-gradient-text {
-  background: linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, var(--cam-primary-lt) 100%);
+  background: linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, var(--cam-gold-leaf) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1265,7 +1279,7 @@ img { max-width: 100%; height: auto; }
 }
 .card-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.08), 0 2px 6px rgba(16, 185, 129, 0.04);
+  box-shadow: 0 6px 20px rgba(30, 77, 120, 0.10), 0 2px 6px rgba(30, 77, 120, 0.05);
   border-color: var(--accent);
 }
 
@@ -1293,7 +1307,7 @@ img { max-width: 100%; height: auto; }
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(16, 185, 129, 0.06) 50%,
+    rgba(43, 99, 148, 0.06) 50%,
     transparent 100%
   );
   animation: shimmer-sweep 1.6s ease-in-out infinite;
@@ -1327,8 +1341,8 @@ img { max-width: 100%; height: auto; }
 }
 .session-row:hover {
   transform: translateY(-2px);
-  border-color: rgba(16,185,129,0.35) !important;
-  box-shadow: 0 10px 28px rgba(16,185,129,0.15);
+  border-color: rgba(43,99,148,0.35) !important;
+  box-shadow: 0 10px 28px rgba(30,77,120,0.15);
 }
 /* Delete button in session rows — hover handled via CSS */
 .session-delete-btn:hover {
@@ -1341,8 +1355,8 @@ img { max-width: 100%; height: auto; }
 }
 .session-row:hover .session-badge-num {
   box-shadow:
-    0 0 0 2px rgba(16,185,129,0.50),
-    0 4px 14px rgba(16,185,129,0.30),
+    0 0 0 2px rgba(43,99,148,0.50),
+    0 4px 14px rgba(30,77,120,0.30),
     inset 0 1px 0 rgba(255,255,255,0.15);
 }
 @keyframes tab-fade-in {
@@ -1802,7 +1816,7 @@ figure:has(> .viz-caption) {
 .prep-content > section strong { color: var(--text-primary); font-weight: 700; }
 .docs-page em { color: var(--text-primary); }
 
-/* ── H2 — section heading: emerald strip ────────────────────────── */
+/* ── H2 — section heading: navy strip ───────────────────────────── */
 .docs-page section > h2,
 .prep-content > h2,
 .prep-content > section > h2 {
@@ -1847,7 +1861,7 @@ figure:has(> .viz-caption) {
     transparent 100%);
 }
 
-/* ── H3 — subsection: emerald hex glyph ──────────────────────────── */
+/* ── H3 — subsection: navy hex glyph ─────────────────────────────── */
 /*
  * In .prep-content, only fire on direct children, on h3 inside a marker
  * <section> wrapper, or on h3 explicitly marked with .prep-section-heading.
@@ -1972,7 +1986,7 @@ figure:has(> .viz-caption) {
   white-space: nowrap;
 }
 
-/* ── Pre / code blocks — emerald accent strip ──────────────────── */
+/* ── Pre / code blocks — navy accent strip ──────────────────────── */
 .docs-page pre,
 .prep-content > pre,
 .prep-content > section > pre {
@@ -2009,7 +2023,7 @@ figure:has(> .viz-caption) {
   white-space: pre;
 }
 
-/* ── Fenced code blocks from FormattedContent — emerald strip ──── */
+/* ── Fenced code blocks from FormattedContent — navy strip ──────── */
 .prep-code-block {
   position: relative;
   margin: 0.75rem 0;
@@ -2049,7 +2063,7 @@ figure:has(> .viz-caption) {
   overflow-x: auto;
 }
 
-/* ── Viz figure cards — emerald-tinted border ──────────────────── */
+/* ── Viz figure cards — navy-tinted border ──────────────────────── */
 .viz-figure {
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
@@ -2059,7 +2073,7 @@ figure:has(> .viz-caption) {
     0 0 0 0.5px color-mix(in srgb, var(--accent) 10%, transparent),
     0 1px 3px color-mix(in srgb, black 6%, transparent);
 }
-/* ── Q&A pairs — emerald accent ─────────────────────────────────── */
+/* ── Q&A pairs — navy accent ────────────────────────────────────── */
 .qa-q,
 .qa-a {
   display: flex;
@@ -2169,7 +2183,7 @@ figure:has(> .viz-caption) {
   max-height: 720px;
 }
 
-/* ── Tables — emerald-tinted header band ────────────────────────── */
+/* ── Tables — navy-tinted header band ────────────────────────────── */
 .docs-page table thead th {
   background: linear-gradient(180deg,
     color-mix(in srgb, var(--accent) 12%, var(--bg-elevated)) 0%,
@@ -2273,7 +2287,7 @@ figure:has(> .viz-caption) {
 .cofix-line-fix { background-color: rgba(245, 158, 11, 0.12) !important; }
 .cofix-line-added { background-color: rgba(34, 197, 94, 0.12) !important; }
 
-/* ── Allotment sash — emerald accent for CoFix split pane ── */
+/* ── Allotment sash — navy accent for CoFix split pane ── */
 .split-view-view > .sash-container > .sash {
   background: var(--accent) !important;
   opacity: 0.25;

@@ -77,7 +77,6 @@ export default function FormattedContent({ content, inline = false }) {
       if (quoteMatch && quoteMatch.index < matchIndex) {
         nextMatch = quoteMatch;
         matchType = 'quote';
-        matchIndex = quoteMatch.index;
       }
 
       if (nextMatch) {

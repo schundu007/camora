@@ -328,6 +328,7 @@ export const AudioSetupWizard = ({
     const tryAcquire = (constraints: MediaStreamConstraints) =>
       navigator.mediaDevices.getUserMedia(constraints);
 
+    // eslint-disable-next-line no-useless-assignment
     let stream: MediaStream | null = null;
     try {
       // `ideal` (not `exact`) so a stale/missing saved deviceId falls

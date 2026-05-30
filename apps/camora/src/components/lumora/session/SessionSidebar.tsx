@@ -16,7 +16,7 @@ type QuestionCategory = 'behavioral' | 'coding' | 'design';
 const categorize = (q: string): QuestionCategory  => {
   const t = (q || '').trim();
   if (/^\[SYSTEM DESIGN\]/i.test(t)) return 'design';
-  if (/^\[[A-Z+#.\-]{2,16}\]/.test(t)) return 'coding';
+  if (/^\[[A-Z+#.-]{2,16}\]/.test(t)) return 'coding';
   return 'behavioral';
 }
 const CATEGORY_LABEL: Record<QuestionCategory, string> = {

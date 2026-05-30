@@ -1793,8 +1793,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
             {/* Content */}
             <div className="px-6 pb-6">
               <div
-                className="rounded-2xl overflow-hidden"
-                className="bg-[var(--bg-elevated)] border border-[var(--border)]"
+                className="rounded-2xl overflow-hidden bg-[var(--bg-elevated)] border border-[var(--border)]"
                 style={{
                   maxHeight: '60vh'
                 }}

@@ -16,6 +16,17 @@ const OPENAI_MODELS = [
   { id: 'o3-mini', name: 'o3-mini', description: 'Latest reasoning' },
 ];
 
+function Toggle({ enabled, onChange }) {
+  return (
+    <button
+      onClick={onChange}
+      className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${enabled ? 'bg-[var(--accent)]' : 'bg-[var(--bg-elevated)]'}`}
+    >
+      <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-[var(--bg-surface)] shadow-md transition-all duration-200 ${enabled ? 'left-[22px]' : 'left-0.5'}`} />
+    </button>
+  );
+}
+
 export default function SettingsPanel({ onClose, provider, model, onProviderChange, onModelChange, onOpenPlatforms, autoSwitch, onAutoSwitchChange, editorSettings, onEditorSettingsChange }) {
   const tabs = [
     { id: 'ai', label: 'AI Provider', icon: 'sparkles' },
@@ -48,15 +59,6 @@ export default function SettingsPanel({ onClose, provider, model, onProviderChan
     };
     return <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">{icons[name]}</svg>;
   };
-
-  const Toggle = ({ enabled, onChange }) => (
-    <button
-      onClick={onChange}
-      className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${enabled ? 'bg-[var(--accent)]' : 'bg-[var(--bg-elevated)]'}`}
-    >
-      <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-[var(--bg-surface)] shadow-md transition-all duration-200 ${enabled ? 'left-[22px]' : 'left-0.5'}`} />
-    </button>
-  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true">

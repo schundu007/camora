@@ -243,8 +243,7 @@ export default function PrepPlanPage() {
                 <div className="h-2.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
-                    style={{ background: 'var(--cam-gold-leaf)' }}
-                    style={{ width: `${completion_pct}%` }}
+                    style={{ background: 'var(--cam-gold-leaf)', width: `${completion_pct}%` }}
                   />
                 </div>
                 <p className="text-xs text-[var(--text-muted)] mt-1">{completed_tasks} of {total_tasks} tasks completed</p>
