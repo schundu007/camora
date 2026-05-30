@@ -103,12 +103,12 @@ const openrouterClient = process.env.OPENROUTER_API_KEY
   : null;
 
 // Fallback model priority when Anthropic is exhausted:
-//   1. Qwen2.5-Coder-32B via OpenRouter (best code quality, cheap)
-//   2. DeepSeek-Coder-V2 via OpenRouter (strong alternative)
-//   3. GPT-4o via OpenAI direct (more expensive, last resort)
+//   1. DeepSeek-V3 via OpenRouter (excellent code quality, very cheap)
+//   2. Qwen2.5-Coder-32B via OpenRouter (strong alternative)
+//   3. GPT-4o via OpenAI direct (last resort)
 const FALLBACK_PROVIDERS = [
-  openrouterClient && { client: openrouterClient, model: 'qwen/qwen2.5-coder-32b-instruct',  label: 'Qwen2.5-Coder' },
-  openrouterClient && { client: openrouterClient, model: 'deepseek/deepseek-coder-v2',         label: 'DeepSeek-Coder-V2' },
+  openrouterClient && { client: openrouterClient, model: 'deepseek/deepseek-chat-v3-0324',     label: 'DeepSeek-V3' },
+  openrouterClient && { client: openrouterClient, model: 'qwen/qwen-2.5-coder-32b-instruct',   label: 'Qwen2.5-Coder' },
   process.env.OPENAI_API_KEY && { client: openaiClient, model: 'gpt-4o',                       label: 'GPT-4o' },
 ].filter(Boolean);
 
@@ -1855,6 +1855,18 @@ Rules:
 - concepts: list ${language} concepts used that a beginner should learn (e.g. "for loops", "if statements", "dictionaries", "return values")
 - Keep steps concise — no more than 8 steps total`;
 
+  function parseAnalyzeResponse(raw) {
+    const jsonStr = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    const match = jsonStr.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('no JSON in response');
+    try {
+      return JSON.parse(match[0]);
+    } catch {
+      const truncFixed = match[0].replace(/,\s*$/, '').replace(/\[\s*$/, '[]').replace(/\{\s*$/, '{}') + '}';
+      return JSON.parse(truncFixed);
+    }
+  }
+
   try {
     const msg = await anthropicClient.messages.create({
       model: 'claude-haiku-4-5-20251001',
@@ -1862,19 +1874,25 @@ Rules:
       messages: [{ role: 'user', content: prompt }],
     });
     const raw = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
-    const jsonStr = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-    const match = jsonStr.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('no JSON in response');
-    let parsed;
-    try {
-      parsed = JSON.parse(match[0]);
-    } catch {
-      // Attempt to recover a truncated JSON by capping arrays
-      const truncFixed = match[0].replace(/,\s*$/, '').replace(/\[\s*$/, '[]').replace(/\{\s*$/, '{}') + '}';
-      parsed = JSON.parse(truncFixed);
-    }
-    res.json(parsed);
+    return res.json(parseAnalyzeResponse(raw));
   } catch (err) {
+    if (isApiExhaustedError(err) && FALLBACK_PROVIDERS.length > 0) {
+      console.warn('[analyze] Claude exhausted — trying fallback providers');
+      for (const provider of FALLBACK_PROVIDERS) {
+        try {
+          const resp = await provider.client.chat.completions.create({
+            model: provider.model,
+            max_tokens: 2500,
+            messages: [{ role: 'user', content: prompt }],
+          });
+          const raw = (resp.choices[0]?.message?.content || '').trim();
+          console.log(`[analyze] ${provider.label} fallback succeeded`);
+          return res.json(parseAnalyzeResponse(raw));
+        } catch (fbErr) {
+          console.warn(`[analyze] ${provider.label} fallback failed:`, fbErr.message);
+        }
+      }
+    }
     console.error('[analyze]', err?.message);
     res.status(500).json({ error: 'Analysis failed' });
   }
