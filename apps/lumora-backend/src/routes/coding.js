@@ -1736,19 +1736,25 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
       throw new Error('Page is JavaScript-rendered or empty — try Capture (screenshot) instead.');
     }
 
-    // Use Claude to clean and extract just the problem description
-    const client = anthropicClient;
-    const msg = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: `Extract ONLY the coding problem description from this text. Return just the problem statement, constraints, and examples. No solutions.\n\n${textContent}` }],
-    });
-
-    const problem = msg.content[0]?.type === 'text' ? msg.content[0].text : textContent.slice(0, 2000);
+    // Use Claude to clean and extract just the problem description (optional step)
+    let problem = textContent.slice(0, 2000);
+    try {
+      const msg = await anthropicClient.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: `Extract ONLY the coding problem description from this text. Return just the problem statement, constraints, and examples. No solutions.\n\n${textContent}` }],
+      });
+      problem = msg.content[0]?.type === 'text' ? msg.content[0].text : problem;
+    } catch (claudeErr) {
+      console.warn('[fetch-problem] Claude unavailable, returning raw text:', claudeErr.message?.slice(0, 120));
+    }
     res.json({ problem, source: url });
   } catch (err) {
     console.error('fetch-problem error:', err.message);
-    res.status(400).json({ error: err.message || 'Failed to fetch problem' });
+    const msg = isApiExhaustedError(err)
+      ? 'AI service is at capacity. Please try again in a moment.'
+      : (err.message || 'Failed to fetch problem');
+    res.status(400).json({ error: msg });
   }
 });
 
@@ -1879,7 +1885,7 @@ Critical rules:
   } catch (err) {
     console.error('extract-from-image error:', err?.message || err);
     const exhausted = isApiExhaustedError(err);
-    const status = exhausted ? 503 : (err?.statusCode || 500);
+    const status = exhausted ? 503 : (err?.status || err?.statusCode || 500);
     const detail = exhausted
       ? 'AI service is at capacity. Please try again in a moment.'
       : 'Image extraction failed';
