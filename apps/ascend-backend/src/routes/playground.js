@@ -8,6 +8,7 @@ import { tmpdir, platform } from 'os';
 import { randomUUID, createHash } from 'crypto';
 import { query } from '../config/database.js';
 import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 
 const execFileAsync = promisify(execFile);
 const router = Router();
@@ -67,6 +68,18 @@ const getAnthropic = () => {
   return _anthropic;
 };
 
+let _openrouter = null;
+const getOpenRouter = () => {
+  if (!_openrouter && process.env.OPENROUTER_API_KEY) {
+    _openrouter = new OpenAI({
+      apiKey: process.env.OPENROUTER_API_KEY,
+      baseURL: 'https://openrouter.ai/api/v1',
+      defaultHeaders: { 'HTTP-Referer': 'https://cariara.com', 'X-Title': 'Camora Playground' },
+    });
+  }
+  return _openrouter;
+};
+
 async function callGemini(prompt) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY not set');
@@ -88,16 +101,29 @@ async function callGemini(prompt) {
 
 async function callExplain(prompt) {
   if (process.env.GEMINI_API_KEY) {
-    try { return await callGemini(prompt); } catch { /* fall through to Claude */ }
+    try { return await callGemini(prompt); } catch { /* fall through */ }
   }
-  const client = getAnthropic();
-  if (!client) throw new Error('No AI provider configured');
-  const msg = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 150,
-    messages: [{ role: 'user', content: prompt }],
-  });
-  return msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : '';
+  const anthropic = getAnthropic();
+  if (anthropic) {
+    try {
+      const msg = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 150,
+        messages: [{ role: 'user', content: prompt }],
+      });
+      return msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : '';
+    } catch { /* fall through to OpenRouter */ }
+  }
+  const or = getOpenRouter();
+  if (or) {
+    const res = await or.chat.completions.create({
+      model: 'qwen/qwen-2.5-72b-instruct',
+      max_tokens: 150,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    return res.choices[0]?.message?.content?.trim() ?? '';
+  }
+  throw new Error('No AI provider configured for explain');
 }
 
 // Wrapper reads code.py from disk — avoids any string-escaping issues.
