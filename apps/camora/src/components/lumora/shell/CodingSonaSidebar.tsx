@@ -370,13 +370,14 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
           {/* Chat scroll area */}
           <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-3">
             {messages.length === 0 && !streaming && (
-              <div className="flex flex-col items-center justify-center h-full text-center px-4 py-10" style={{ color: 'var(--text-muted)' }}>
-                <Icon name="messageSquare" size={32} strokeWidth={1.4} style={{ opacity: 0.5 }} aria-hidden="true" />
-                <p className="mt-3 text-[12px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: "var(--font-sans)" }}>
-                  No follow-ups yet
-                </p>
-                <p className="mt-1 text-[11px] leading-relaxed">
-                  {`Ask Sona anything about your ${surface} solution.`}
+              <div className="flex flex-col items-center justify-center h-full gap-3 px-6 text-center">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" style={{ color: 'var(--text-muted)', opacity: 0.45 }}>
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                <p className="text-[12px] leading-relaxed" style={{ fontFamily: 'var(--font-sans)', color: 'var(--text-muted)' }}>
+                  {liveSolveContext
+                    ? `Ask Sona anything about this ${surface} solution`
+                    : `Solve a ${surface} problem first, then ask Sona follow-up questions here`}
                 </p>
               </div>
             )}
