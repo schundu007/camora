@@ -316,7 +316,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     addLog(<LogIconBolt />, 'Starting CoFix…');
     const t1 = setTimeout(() => addLog(<LogIconSearch />, `Parsing ${effectiveLang} code…`), 300);
     const t2 = setTimeout(() => addLog(<LogIconScan />, 'Scanning for issues…'), 800);
-    const t3 = setTimeout(() => addLog(<LogIconSpark />, 'Querying AI model…'), 1400);
+    const t3 = setTimeout(() => addLog(<LogIconSpark />, 'Querying…'), 1400);
 
     // Reset panel — analyze will fire with fixedCode once fix stream completes
     setAnalysis(null);
@@ -549,7 +549,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
 
     addLog(<LogIconSpark />, `Refining: "${prompt.slice(0, 50)}${prompt.length > 50 ? '…' : ''}"`);
     const t1 = setTimeout(() => addLog(<LogIconScan />, 'Applying changes…'), 600);
-    const t2 = setTimeout(() => addLog(<LogIconSpark />, 'Querying AI model…'), 1200);
+    const t2 = setTimeout(() => addLog(<LogIconSpark />, 'Querying…'), 1200);
 
     const controller = await streamCoFixResponse({
       code: fixedCode,
