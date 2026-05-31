@@ -308,22 +308,29 @@ router.post('/stream', async (req, res) => {
         full = '';
         const oai = getOpenAI();
         if (oai) {
-          const oaiStream = await oai.chat.completions.create({
-            model: 'gpt-4o-mini',
-            max_tokens: 8000,
-            stream: true,
-            messages: [
-              { role: 'system', content: claudeSystem },
-              ...msgs.map(m => ({ role: m.role, content: m.content })),
-            ],
-          });
-          for await (const chunk of oaiStream) {
-            const text = chunk.choices[0]?.delta?.content || '';
-            if (text) { full += text; res.write(`data: ${JSON.stringify({ text })}\n\n`); }
+          try {
+            const oaiStream = await oai.chat.completions.create({
+              model: 'gpt-4o-mini',
+              max_tokens: 8000,
+              stream: true,
+              messages: [
+                { role: 'system', content: claudeSystem },
+                ...msgs.map(m => ({ role: m.role, content: m.content })),
+              ],
+            });
+            for await (const chunk of oaiStream) {
+              const text = chunk.choices[0]?.delta?.content || '';
+              if (text) { full += text; res.write(`data: ${JSON.stringify({ text })}\n\n`); }
+            }
+          } catch (oaiErr) {
+            console.error('[Ask/OpenAI] stream error:', oaiErr.message);
+            res.write(`data: ${JSON.stringify({ error: 'AI service is temporarily unavailable. Please try again in a moment.' })}\n\n`);
+            res.write('data: [DONE]\n\n');
+            res.end();
+            return;
           }
         } else {
-          const errMsg = 'AI service is temporarily unavailable. Please try again in a moment.';
-          res.write(`data: ${JSON.stringify({ error: errMsg })}\n\n`);
+          res.write(`data: ${JSON.stringify({ error: 'AI service is temporarily unavailable. Please try again in a moment.' })}\n\n`);
           res.write('data: [DONE]\n\n');
           res.end();
           return;
