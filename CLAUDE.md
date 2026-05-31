@@ -174,6 +174,16 @@ cd apps/camora && npx eslint .
 - **Ascend Backend**: Railway (Nixpacks — `nodejs_20` + `python3` + `graphviz` + `go` + `rustc` + `openjdk17`, healthcheck at `/health`)
 - **AI Services**: Railway (Dockerfile, `python:3.11-slim` + `graphviz` + `ffmpeg`, healthcheck at `/health`)
 
+## Code Pasted in Chat
+
+When the user pastes code into the conversation (any multi-line block that looks like source code), **immediately strip all comments and empty lines** before analyzing or responding:
+- Remove `//` line comments (JS/TS/Java/Go/C++)
+- Remove `#` line comments (Python/Ruby/Shell/YAML)
+- Remove `/* ... */` and `/** ... */` block comments
+- Remove `<!-- ... -->` HTML comments
+- Remove all blank/whitespace-only lines
+Show the cleaned code first, then proceed with the analysis or task.
+
 ## Database Notes
 
 - **No migration tool**: Both backends use inline `CREATE TABLE IF NOT EXISTS` / `ALTER TABLE ADD COLUMN IF NOT EXISTS` on startup — idempotent but manual
