@@ -303,28 +303,27 @@ router.post('/stream', async (req, res) => {
         full = '';
       }
 
-      // OpenAI fallback when Claude fails
+      // OpenAI fallback when Claude fails (non-streaming for reliability)
       if (!claudeOk || !full) {
         full = '';
         const oai = getOpenAI();
         if (oai) {
           try {
-            const oaiStream = await oai.chat.completions.create({
+            const oaiResp = await oai.chat.completions.create({
               model: 'gpt-4o-mini',
               max_tokens: 8000,
-              stream: true,
+              stream: false,
               messages: [
                 { role: 'system', content: claudeSystem },
                 ...msgs.map(m => ({ role: m.role, content: m.content })),
               ],
             });
-            for await (const chunk of oaiStream) {
-              const text = chunk.choices[0]?.delta?.content || '';
-              if (text) { full += text; res.write(`data: ${JSON.stringify({ text })}\n\n`); }
-            }
+            full = oaiResp.choices?.[0]?.message?.content || '';
+            if (full) res.write(`data: ${JSON.stringify({ text: full })}\n\n`);
           } catch (oaiErr) {
-            console.error('[Ask/OpenAI] stream error:', oaiErr.message);
-            res.write(`data: ${JSON.stringify({ error: 'AI service is temporarily unavailable. Please try again in a moment.' })}\n\n`);
+            console.error('[Ask/OpenAI] error:', oaiErr.message);
+            const errMsg = `AI unavailable: ${oaiErr.message?.slice(0, 120) || 'unknown error'}`;
+            res.write(`data: ${JSON.stringify({ error: errMsg })}\n\n`);
             res.write('data: [DONE]\n\n');
             res.end();
             return;
