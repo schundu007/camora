@@ -26,7 +26,7 @@ SyntaxHighlighter.registerLanguage('c', cpp);
 SyntaxHighlighter.registerLanguage('bash', bash);
 SyntaxHighlighter.registerLanguage('sh', bash);
 
-const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
+const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 interface Msg { role: 'user' | 'assistant'; content: string; }
 interface Conv { id: string; title: string; provider: string; updated_at: string; }
