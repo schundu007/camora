@@ -1811,19 +1811,39 @@ Critical rules:
 - Return ONLY valid JSON. No preamble, no explanation, no markdown fences.
 - NEVER describe the image — output JSON only.`;
 
-    const msg = await anthropicClient.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2000,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType, data } },
-          { type: 'text', text: prompt },
-        ],
-      }],
-    });
-
-    const rawText = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+    let rawText = '';
+    try {
+      const msg = await anthropicClient.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data } },
+            { type: 'text', text: prompt },
+          ],
+        }],
+      });
+      rawText = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+    } catch (claudeErr) {
+      if (isApiExhaustedError(claudeErr) && process.env.OPENAI_API_KEY) {
+        console.warn('[extract-from-image] Claude exhausted — falling back to GPT-4o vision');
+        const oaiMsg = await openaiClient.chat.completions.create({
+          model: 'gpt-4o',
+          max_tokens: 2000,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image_url', image_url: { url: `data:${mediaType};base64,${data}` } },
+              { type: 'text', text: prompt },
+            ],
+          }],
+        });
+        rawText = (oaiMsg.choices?.[0]?.message?.content || '').trim();
+      } else {
+        throw claudeErr;
+      }
+    }
     console.log(`[extract-from-image] imgBytes=${req.file.buffer.length} rawText=${rawText.slice(0, 400)}`);
 
     let problem = 'NO_PROBLEM_FOUND';
@@ -1858,8 +1878,12 @@ Critical rules:
     res.json({ problem, starter_code: starterCode, kind, detected_language: detectedLanguage });
   } catch (err) {
     console.error('extract-from-image error:', err?.message || err);
-    const status = err?.statusCode || 500;
-    res.status(status).json({ detail: err?.message || 'Image extraction failed' });
+    const exhausted = isApiExhaustedError(err);
+    const status = exhausted ? 503 : (err?.statusCode || 500);
+    const detail = exhausted
+      ? 'AI service is at capacity. Please try again in a moment.'
+      : 'Image extraction failed';
+    res.status(status).json({ detail });
   }
 });
 
