@@ -29,6 +29,7 @@ export async function* streamResponseOpenAI(question, history, options = {}) {
     retrievedContext = null,
     responseFormat = null,
     model = DEFAULT_MODEL,
+    client: clientOverride = null,
     signal = null,
   } = options;
 
@@ -81,7 +82,7 @@ export async function* streamResponseOpenAI(question, history, options = {}) {
   const chunks = [];
 
   try {
-    const client = getOpenAIClient();
+    const client = clientOverride || getOpenAIClient();
     const stream = await client.chat.completions.create({
       model,
       max_tokens: maxTokens,
