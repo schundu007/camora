@@ -526,15 +526,6 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       sendSSE(res, evt.event, evt.data);
     }
 
-    // Persist successful answers to the cache for future repeats. Skip
-    // when the client bailed early or the answer never arrived (model
-    // error, parse failure, etc.).
-    if (finalAnswer && !clientDisconnected) {
-      cacheSet(cacheKey, finalAnswer).catch((err) => {
-        console.warn('[inference/stream] cache write failed:', err.message);
-      });
-    }
-
     // Save messages
     if (finalAnswer && !clientDisconnected) {
       const userMsgId = uuidv4();
@@ -588,6 +579,11 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       sendSSE(res, 'message_saved', {
         message_id: assistantMsgId,
         conversation_id: conversationId,
+      });
+
+      // Cache after DB persist succeeds — never before.
+      cacheSet(cacheKey, finalAnswer).catch((err) => {
+        console.warn('[inference/stream] cache write failed:', err.message);
       });
     }
 
