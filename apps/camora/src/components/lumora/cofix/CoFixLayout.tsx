@@ -1,4 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import AnsiToHtml from 'ansi-to-html';
+const _ansi = new AnsiToHtml({ escapeXML: true, newline: false });
+const ansiHtml = (s: string) => _ansi.toHtml(s);
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Allotment } from 'allotment';
@@ -1362,9 +1365,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                                 </span>
                               )}
                             </div>
-                            <pre className="text-[10.5px] whitespace-pre-wrap m-0" style={{ color: tc.isErr ? 'var(--danger)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)', lineHeight: 1.6 }}>
-                              {tc.result}
-                            </pre>
+                            <pre className="text-[10.5px] whitespace-pre-wrap m-0" style={{ color: tc.isErr ? 'var(--danger)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)', lineHeight: 1.6 }}
+                              dangerouslySetInnerHTML={{ __html: ansiHtml(tc.result ?? '') }}
+                            />
                           </div>
                         )}
                       </div>
@@ -1397,9 +1400,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                     <pre
                       className="px-4 py-3 whitespace-pre-wrap h-full"
                       style={{ color: isErr ? 'var(--danger)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontSize: 11, lineHeight: 1.65, letterSpacing: '-0.02em' }}
-                    >
-                      {runOutput}
-                    </pre>
+                      dangerouslySetInnerHTML={{ __html: ansiHtml(runOutput ?? '') }}
+                    />
                   )}
                 </div>
               </div>
