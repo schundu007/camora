@@ -400,7 +400,10 @@ router.post('/lint', async (req, res, next) => {
   }
 });
 
+const stripEmptyLines = (s) => s.split('\n').filter(l => l.trim() !== '').join('\n');
+
 // POST /format  — black (python3), shfmt (bash), terraform fmt (terraform)
+// Always strips empty/blank lines from the result.
 router.post('/format', async (req, res, next) => {
   try {
     const { code, language = 'python3' } = req.body;
@@ -418,13 +421,13 @@ router.post('/format', async (req, res, next) => {
     } else if (lang === 'terraform') {
       result = await spawnWithStdin('terraform', ['fmt', '-'], code, 10000);
     } else {
-      return res.json({ code });
+      return res.json({ code: stripEmptyLines(code) });
     }
 
     if (result.exitCode === 0) {
-      res.json({ code: result.stdout });
+      res.json({ code: stripEmptyLines(result.stdout) });
     } else {
-      res.json({ code, error: result.stderr || `${lang} formatter failed` });
+      res.json({ code: stripEmptyLines(code), error: result.stderr || `${lang} formatter failed` });
     }
   } catch (err) {
     next(err);
