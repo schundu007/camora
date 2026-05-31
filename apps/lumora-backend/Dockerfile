@@ -37,7 +37,7 @@ RUN apt-get update \
       # Audio + diagnostics
       ffmpeg curl ca-certificates bash git \
       # Always-needed core
-      python3 python3-venv \
+      python3 python3-venv python3-pip \
       ruby \
       gcc g++ build-essential \
       openjdk-17-jdk-headless \
