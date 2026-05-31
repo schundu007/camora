@@ -113,6 +113,8 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
         const text = data.text || data.problem_text || '';
         onSnappedRef.current({ ...tempEntry, text });
       } catch {
+        setSnapState('error');
+        setTimeout(() => setSnapState('idle'), 3000);
         onSnappedRef.current({ ...tempEntry, text: '' });
       } finally {
         setPendingIds(prev => prev.filter(pid => pid !== id));
