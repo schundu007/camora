@@ -52,7 +52,7 @@ function hashProblem(text) {
  * req.user.is_admin from users.is_admin, this still works.
  */
 const OWNER_EMAILS = new Set(
-  ((process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || 'chundubabu@gmail.com,babuchundu@gmail.com')
+  ((process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
     .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)),
 );
 function isAdminUser(user) {

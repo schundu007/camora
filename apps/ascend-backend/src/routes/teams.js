@@ -444,7 +444,7 @@ router.delete('/:teamId/members/:userId', jwtAuth, async (req, res) => {
 // Admin endpoints — owner-emails-only. Used by /admin/teams ops dashboard.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'chundubabu@gmail.com,babuchundu@gmail.com')
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || process.env.OWNER_EMAILS || '')
   .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
 
 async function adminGate(req, res, next) {

@@ -10,6 +10,7 @@
 import { Router } from 'express';
 import OpenAI from 'openai';
 import { getAnthropicClient } from '../lib/_shared/llm.js';
+import dns from 'node:dns/promises';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage } from '../middleware/usageLimits.js';
@@ -1002,10 +1003,34 @@ Respond with ONLY the translated code inside a single \`\`\`${target} code block
  * POST /fetch-problem
  * Fetch a coding problem from a URL (LeetCode, HackerRank, etc.)
  */
+function isPrivateIp(ip) {
+  if (!ip) return true;
+  if (ip === '127.0.0.1' || ip === '::1') return true;
+  if (ip.startsWith('169.254.')) return true;
+  if (ip.startsWith('10.')) return true;
+  if (ip.startsWith('192.168.')) return true;
+  if (ip.startsWith('172.')) { const n = parseInt(ip.split('.')[1], 10); if (n >= 16 && n <= 31) return true; }
+  if (ip.startsWith('100.')) { const n = parseInt(ip.split('.')[1], 10); if (n >= 64 && n <= 127) return true; }
+  if (ip === '0.0.0.0') return true;
+  if (ip.startsWith('::ffff:')) return isPrivateIp(ip.slice(7));
+  if (ip.toLowerCase().startsWith('fc') || ip.toLowerCase().startsWith('fd')) return true;
+  if (ip.toLowerCase().startsWith('fe80:')) return true;
+  return false;
+}
+async function assertPublicHost(rawUrl) {
+  const parsed = new URL(rawUrl);
+  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('blocked: bad protocol');
+  let addrs;
+  try { addrs = await dns.lookup(parsed.hostname, { all: true }); } catch { throw new Error('blocked: dns'); }
+  for (const a of addrs) { if (isPrivateIp(a.address)) throw new Error('blocked: private ip'); }
+}
+
 router.post('/fetch-problem', authenticate, async (req, res) => {
   try {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: 'URL is required' });
+
+    try { await assertPublicHost(url); } catch { return res.status(400).json({ error: 'URL is not allowed.' }); }
 
     const response = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Camora/1.0)' },

@@ -10,7 +10,7 @@ const AUTO_TOPUP_DEADLINE_MS = 4000;
 // product. Source of truth: OWNER_EMAILS env (preferred) or ADMIN_EMAILS
 // (existing var) so a single change in Railway keeps both gates aligned.
 const OWNER_EMAILS = new Set(
-  ((process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || 'chundubabu@gmail.com,babuchundu@gmail.com')
+  ((process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
     .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)),
 );
 function isOwnerEmail(email) {
