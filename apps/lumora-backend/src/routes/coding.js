@@ -907,6 +907,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   let outputTokens = 0;
   let modelUsed = primaryModel;
   let terminalFailure = null; // { msg, category } when all passes give up
+  let anthropicExhausted = false; // true when Anthropic spending/quota limit hit
   let passTag = 'primary_stream';
 
   const systemPrompt = buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined, true);
@@ -992,6 +993,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
       // non-streaming which sometimes succeeds where streaming doesn't
       // (different upstream edge), using the same model, strict prompt.
       rawAnswer = '';
+      if (isApiExhaustedError(err)) anthropicExhausted = true;
       terminalFailure = {
         msg: err?.message || 'Claude API error',
         category: retryable ? 'overloaded' : 'api_error',
@@ -1018,7 +1020,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   }
 
   // ── Pass 2: non-streaming primary model with strict reminder ────────────
-  if (!parsedJson) {
+  if (!parsedJson && !anthropicExhausted) {
     passTag = 'primary_strict';
     sendEvent('status', { state: 'warn', msg: 'Polishing solution — one more moment…' });
     const passStart = performance.now();
@@ -1075,7 +1077,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   // not on every request, and uses the same MAX_TOKENS cap. Spend
   // protection now lives at the Anthropic console daily-cap layer
   // instead of in code where it caused outages.
-  if (!parsedJson) {
+  if (!parsedJson && !anthropicExhausted) {
     passTag = 'fallback_model';
     const fbModel = fallbackModelFor(primaryModel);
     sendEvent('status', { state: 'warn', msg: 'Switching to backup model…' });
@@ -1134,6 +1136,40 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   }
 
   const latencyMs = Math.round(performance.now() - startTime);
+
+  // ── Pass 4: OpenRouter fallback when Anthropic spending limit hit ──────
+  if (!parsedJson && anthropicExhausted && FALLBACK_PROVIDERS.length > 0) {
+    const oaiMessages = [
+      { role: 'system', content: systemPrompt },
+      ...messages.map(m => ({ role: m.role, content: Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : m.content })),
+    ];
+    for (const provider of FALLBACK_PROVIDERS) {
+      if (clientDisconnected) break;
+      sendEvent('status', { state: 'warn', msg: `Switching to ${provider.label}…` });
+      try {
+        const fbResp = await provider.client.chat.completions.create({
+          model: provider.model,
+          max_tokens: MAX_TOKENS,
+          stream: false,
+          messages: oaiMessages,
+        });
+        const fbRaw = fbResp.choices?.[0]?.message?.content || '';
+        const fbParsed = extractJsonFromText(fbRaw);
+        if (fbParsed && (fbParsed.code || fbParsed.solutions)) {
+          console.log(`[coding/solve] pass=openrouter_fallback provider=${provider.label} ok=true rawLen=${fbRaw.length}`);
+          parsedJson = fbParsed;
+          rawAnswer = fbRaw;
+          modelUsed = provider.model;
+          passTag = 'openrouter_fallback';
+          terminalFailure = null;
+          break;
+        }
+        console.warn(`[coding/solve] pass=openrouter_fallback provider=${provider.label} parse_failed rawLen=${fbRaw.length}`);
+      } catch (fbErr) {
+        console.warn(`[coding/solve] pass=openrouter_fallback provider=${provider.label} error=${fbErr.message}`);
+      }
+    }
+  }
 
   // ── Terminal failure path ───────────────────────────────────────────────
   if (!parsedJson) {
