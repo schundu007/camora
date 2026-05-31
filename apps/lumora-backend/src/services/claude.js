@@ -18,13 +18,10 @@ const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 // in Sona behavioral. Override with CLAUDE_MODEL_PAID env if needed.
 const MODEL_PAID = process.env.CLAUDE_MODEL_PAID || 'claude-sonnet-4-6';
 
-/** Select model by plan. Paid users on coding/design get Sonnet for accuracy;
- *  behavioral stays on Haiku (fast, cheap, quality is fine for short STAR). */
+/** Select model by plan. Paid users get Sonnet for all question types. */
 function selectModel(plan, questionType) {
   const paid = plan && plan !== 'free';
   if (!paid) return MODEL;
-  // Behavioral stays on Haiku — STAR answers don't benefit from Sonnet
-  if (questionType === 'behavioral') return MODEL;
   return MODEL_PAID;
 }
 const MAX_TOKENS_QUICK = parseInt(process.env.MAX_TOKENS_QUICK || '2000', 10);
@@ -740,7 +737,7 @@ For technical questions, map STAR to the technical context (Situation = the prob
       // which JD requirement to lead with. Combined with the v2
       // answer cache, repeat questions either hit the cache verbatim
       // or regenerate to nearly the same answer.
-      temperature: 0.2,
+      temperature: isShortMode ? 0.35 : 0.2,
       system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages,
     }, signal ? { signal } : undefined);
