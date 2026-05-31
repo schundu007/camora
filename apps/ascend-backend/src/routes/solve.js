@@ -20,7 +20,7 @@ const PAID_DAILY_LIMIT = 15;
 
 // Owner accounts bypass the daily solve cap. Comma-separated env override.
 const OWNER_EMAILS = new Set(
-  (process.env.OWNER_EMAILS || 'chundubabu@gmail.com')
+  (process.env.OWNER_EMAILS || '')
     .split(',')
     .map(e => e.trim().toLowerCase())
     .filter(Boolean)
