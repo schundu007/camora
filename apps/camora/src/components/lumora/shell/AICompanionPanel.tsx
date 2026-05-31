@@ -603,6 +603,17 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     setMessages(prev => [...prev, { role: 'user', text: question.trim(), time: new Date() }]);
     setStreaming(true);
     setStreamText('');
+
+    const safetyTimer = setTimeout(() => {
+      setStreaming(s => {
+        if (s) {
+          setMessages(m => [...m, { role: 'ai' as const, text: 'Response timed out. Please try again.', time: new Date() }]);
+          setStreamText('');
+        }
+        return false;
+      });
+    }, 60_000);
+
     // Reset the pending citations for this new question's stream.
     pendingCitationsRef.current = [];
 
@@ -650,6 +661,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
           }
         },
         onError: (data: any) => {
+          clearTimeout(safetyTimer);
           // Backend SSE error frames vary in field name (msg/message/detail/error).
           // Earlier code read only `data.message` so every error rendered as the
           // useless "Something went wrong" — the real reason was being thrown
@@ -662,9 +674,10 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
           setStreamText('');
           setStreaming(false);
         },
-        onComplete: () => { setStreaming(false); },
+        onComplete: () => { clearTimeout(safetyTimer); setStreaming(false); },
       });
     } catch {
+      clearTimeout(safetyTimer);
       setMessages(prev => [...prev, { role: 'ai', text: 'Connection failed. Try again.', time: new Date() }]);
       setStreamText('');
       setStreaming(false);
