@@ -82,7 +82,7 @@ export const LumoraShellPage = () => {
     try { localStorage.setItem('lumora_meeting_platform', meetingPlatform); } catch {}
   }, [meetingPlatform]);
   const { handleSubmit, handleCodingSubmit } = useStreamingSession();
-  const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, threshold: vadThreshold } = useSessionStore();
+  const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, threshold: vadThreshold, question, isDesignQuestion } = useSessionStore();
   // Persist the Settings-tip dismissal so it's a true one-time hint,
   // not a banner that re-appears on every page load and re-eats
   // ~40 vertical px on phones. Once dismissed, never shown again on
@@ -626,6 +626,7 @@ export const LumoraShellPage = () => {
                 onAskQuestion={(q) => navigate(q ? `/lumora/behavioral?q=${encodeURIComponent(q)}` : '/lumora/behavioral')}
                 onSwitchToCoding={(p) => navigate(p ? `/lumora/coding?problem=${encodeURIComponent(p)}` : '/lumora/coding')}
                 onSwitchToDesign={(p) => navigate(p ? `/lumora/design?problem=${encodeURIComponent(p)}` : '/lumora/design')}
+                onRetry={() => { if (question) handleSubmit(question, isDesignQuestion, true); }}
               />
             </ErrorBoundary>
           </div>
