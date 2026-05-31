@@ -436,6 +436,16 @@ const PORT = config.port;
 // Migrations now run in the background. They're idempotent
 // (CREATE TABLE IF NOT EXISTS) so retrying on the next deploy is
 // safe; a runtime failure surfaces in logs but doesn't block boot.
+// Fail fast on missing critical env vars — better a clear boot error
+// than a cryptic API failure on the first live request.
+const REQUIRED_ENV = ['ANTHROPIC_API_KEY', 'DATABASE_URL', 'JWT_SECRET'];
+for (const v of REQUIRED_ENV) {
+  if (!process.env[v]) {
+    logger.error({ var: v }, `Missing required environment variable: ${v}`);
+    process.exit(1);
+  }
+}
+
 const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info({ port: PORT }, 'Lumora backend listening (migrations running in background)');
 });
