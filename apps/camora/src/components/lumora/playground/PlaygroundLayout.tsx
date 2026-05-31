@@ -64,6 +64,7 @@ export const PlaygroundLayout = () => {
   const [activeTab, setActiveTab]   = useState<PlaygroundLanguage>('python3');
   const [running, setRunning]       = useState(false);
   const [formatting, setFormatting] = useState(false);
+  const [copied, setCopied]         = useState(false);
   const [explainMode, setExplainMode] = useState(false);
   const [rightTab, setRightTab]     = useState<'output' | 'explain'>('output');
   const [result, setResult]         = useState<PlaygroundRunResult | null>(null);
@@ -145,6 +146,14 @@ export const PlaygroundLayout = () => {
     }
   }, [activeTab]);
 
+  const handleCopy = useCallback(() => {
+    const code = editorRef.current?.getValue() ?? codeRef.current[activeTab];
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }, [activeTab]);
+
   const handleClear = useCallback(() => {
     setResult(null);
     setError(null);
@@ -206,6 +215,23 @@ export const PlaygroundLayout = () => {
               {formatting ? 'Formatting…' : 'Format'}
             </button>
           )}
+          <button
+            onClick={handleCopy}
+            className="text-[11px] font-semibold px-3 py-1 rounded-md transition-all hover:opacity-90"
+            style={copied ? {
+              ...sans,
+              background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)',
+              border: '1px solid var(--cam-gold-leaf)',
+              color: '#0a0e1a',
+            } : {
+              ...sans,
+              background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
+              border: '1px solid var(--cam-gold-leaf-dk)',
+              color: 'var(--cam-gold-leaf-dk)',
+            }}
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
           <button
             onClick={handleToggleExplain}
             className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90"
