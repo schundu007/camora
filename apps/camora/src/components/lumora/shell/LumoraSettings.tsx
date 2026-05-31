@@ -24,7 +24,7 @@ const PLATFORMS = [
 
 export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
   const [platform, setPlatform] = useState('teams');
-  const { voiceMode, setVoiceMode, setAutoEnrollPending, setVoiceFilterEnabled, preferredModel, setPreferredModel } = useSessionStore();
+  const { voiceMode, setVoiceMode, setAutoEnrollPending, setVoiceFilterEnabled, preferredModel, setPreferredModel, vadThreshold } = useSessionStore();
   const { selectedDeviceId } = useAudioDevices();
   const { token } = useAuth();
 
@@ -165,8 +165,13 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                   title="Calibrate"
                   description="Measure ambient noise for better voice detection."
                 >
-                  <div className="mt-3">
+                  <div className="mt-3 flex items-center gap-3">
                     <CalibrationButton deviceId={selectedDeviceId} disabled={false} variant="light" />
+                    {typeof vadThreshold === 'number' && vadThreshold > 0 && (
+                      <span className="text-[11px] tabular-nums" style={{ fontFamily: 'var(--font-code)', color: 'var(--text-muted)' }}>
+                        Floor: {(vadThreshold * 100).toFixed(1)}%
+                      </span>
+                    )}
                   </div>
                 </SettingCard>
               </div>
