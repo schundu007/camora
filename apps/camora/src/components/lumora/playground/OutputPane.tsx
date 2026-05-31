@@ -1,5 +1,11 @@
+import AnsiToHtml from 'ansi-to-html';
 import { decodeError } from './ErrorDecoder';
 import type { PlaygroundRunResult, PlaygroundLanguage } from '../../../lib/capra-api';
+
+const ansiConverter = new AnsiToHtml({ escapeXML: true, newline: false });
+function toHtml(text: string): string {
+  return ansiConverter.toHtml(text);
+}
 
 interface Props {
   result: PlaygroundRunResult | null;
@@ -60,9 +66,11 @@ export const OutputPane = ({ result, error, language }: Props) => {
       {stdout && (
         <div className="px-4 py-3 border-b border-[#1e293b]">
           {eyebrow('stdout')}
-          <pre className="mt-1 text-[#10b981] text-[11px] whitespace-pre-wrap break-words leading-relaxed" style={monoStyle}>
-            {stdout}
-          </pre>
+          <pre
+            className="mt-1 text-[#10b981] text-[11px] whitespace-pre-wrap break-words leading-relaxed"
+            style={monoStyle}
+            dangerouslySetInnerHTML={{ __html: toHtml(stdout) }}
+          />
         </div>
       )}
 
@@ -70,9 +78,11 @@ export const OutputPane = ({ result, error, language }: Props) => {
       {stderr && (
         <div className="px-4 py-3 border-b border-[#1e293b]">
           {eyebrow('stderr')}
-          <pre className="mt-1 text-[#f87171] text-[11px] whitespace-pre-wrap break-words leading-relaxed" style={monoStyle}>
-            {stderr}
-          </pre>
+          <pre
+            className="mt-1 text-[#f87171] text-[11px] whitespace-pre-wrap break-words leading-relaxed"
+            style={monoStyle}
+            dangerouslySetInnerHTML={{ __html: toHtml(stderr) }}
+          />
         </div>
       )}
 
