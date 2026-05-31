@@ -65,7 +65,7 @@ export function useStreamingSession() {
     setError(null);
   }, [clearStreamChunks, setParsedBlocks, setActiveCitations, setError]);
 
-  const handleSubmit = useCallback(async (question: string, forceDesign?: boolean) => {
+  const handleSubmit = useCallback(async (question: string, forceDesign?: boolean, bypassCache?: boolean) => {
     const validation = validateInput(question);
     if (!validation.valid) {
       setError(validation.error || 'Invalid input');
@@ -108,6 +108,7 @@ export function useStreamingSession() {
         model: preferredModel || undefined,
         token,
         signal: controller.signal,
+        bypassCache: bypassCache || undefined,
         onStreamStart: (data: any) => {
           setIsDesignQuestion(data.isDesign ?? data.is_design ?? false);
           setIsCodingQuestion(data.isCoding ?? data.is_coding ?? false);

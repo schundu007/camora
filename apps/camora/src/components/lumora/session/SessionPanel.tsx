@@ -59,9 +59,10 @@ interface SessionPanelProps {
   onSwitchToDesign?: (problem?: string) => void;
   focusedEntry?: number | null;
   onClearFocus?: () => void;
+  onRetry?: () => void;
 }
 
-export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: SessionPanelProps) => {
+export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onRetry }: SessionPanelProps) => {
   const {
     question,
     isStreaming,
@@ -190,7 +191,18 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
               </svg>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-sans)', color: 'var(--danger)' }}>{error}</p>
-                <button onClick={() => setError(null)} className="mt-1.5 text-xs hover:underline" style={{ fontFamily: 'var(--font-code)', color: 'var(--danger)' }}>Dismiss</button>
+                <div className="flex items-center gap-3 mt-1.5">
+                  {onRetry && question && (
+                    <button
+                      onClick={() => { setError(null); onRetry(); }}
+                      className="text-xs font-semibold hover:underline"
+                      style={{ fontFamily: 'var(--font-code)', color: 'var(--danger)' }}
+                    >
+                      Retry
+                    </button>
+                  )}
+                  <button onClick={() => setError(null)} className="text-xs hover:underline" style={{ fontFamily: 'var(--font-code)', color: 'var(--danger)' }}>Dismiss</button>
+                </div>
               </div>
             </div>
           )}
