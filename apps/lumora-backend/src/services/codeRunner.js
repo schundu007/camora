@@ -161,24 +161,38 @@ async function directExecute(code, runtime) {
   if (INTERPRETED[runtime]) {
     const { cmd, ext } = INTERPRETED[runtime];
     const srcPath = `${tmpBase}${ext}`;
+    const tmpDir  = join(tmpdir(), `lumora-nm-${id}`); // node_modules dir for JS
     await writeFile(srcPath, code, 'utf8');
     try {
       const bin = await which(cmd);
       if (!bin) throw new Error(`Runtime '${cmd}' not found on server`);
-      let result = await runCommand(cmd, [srcPath]);
+      let runOpts = {};
+      let result = await runCommand(cmd, [srcPath], runOpts);
       // Auto-install missing packages and retry (up to 5 different imports)
       for (let attempt = 0; attempt < 5 && result.exitCode !== 0; attempt++) {
-        const mod = missingModule(result.stderr);
-        if (!mod) break;
-        const ok = await pipInstall(mod);
-        if (!ok) break;
-        result = await runCommand(cmd, [srcPath]);
+        if (runtime === 'python') {
+          const mod = missingModule(result.stderr);
+          if (!mod) break;
+          const ok = await pipInstall(mod);
+          if (!ok) break;
+        } else if (runtime === 'javascript') {
+          const mod = missingNodeModule(result.stderr);
+          if (!mod) break;
+          await mkdir(tmpDir, { recursive: true });
+          const ok = await npmInstall(mod, tmpDir);
+          if (!ok) break;
+          runOpts = { env: { ...process.env, NODE_PATH: join(tmpDir, 'node_modules') } };
+        } else {
+          break;
+        }
+        result = await runCommand(cmd, [srcPath], runOpts);
       }
       if (result.exitCode !== 0) return { direct_output: result.stderr ? `Error:\n${result.stderr}` : 'Execution failed' };
       const out = result.stderr ? `${result.stdout}\n[stderr]: ${result.stderr}` : result.stdout;
       return { direct_output: out.trim() || emptyOutputHint(code, runtime) };
     } finally {
       await unlink(srcPath).catch(() => {});
+      await rm(tmpDir, { recursive: true }).catch(() => {});
     }
   }
 
@@ -751,31 +765,86 @@ function compareOutput(expected, actual) {
 // Auto-install missing Python packages
 // ---------------------------------------------------------------------------
 
-const PIP_TIMEOUT_MS = 30_000;
+const PIP_TIMEOUT_MS = 90_000; // boto3 + deps can take 60s+
 // Known import→package name mismatches
 const PIP_ALIAS = {
-  cv2: 'opencv-python',
-  PIL: 'Pillow',
-  sklearn: 'scikit-learn',
-  bs4: 'beautifulsoup4',
-  yaml: 'PyYAML',
-  dotenv: 'python-dotenv',
-  Crypto: 'pycryptodome',
-  google: 'google-api-python-client',
+  cv2:        'opencv-python',
+  PIL:        'Pillow',
+  sklearn:    'scikit-learn',
+  bs4:        'beautifulsoup4',
+  yaml:       'PyYAML',
+  dotenv:     'python-dotenv',
+  Crypto:     'pycryptodome',
+  google:     'google-api-python-client',
+  serial:     'pyserial',
+  usb:        'pyusb',
+  gi:         'PyGObject',
+  wx:         'wxPython',
+  dateutil:   'python-dateutil',
+  jwt:        'PyJWT',
+  paramiko:   'paramiko',
+  MySQLdb:    'mysqlclient',
+  psycopg2:   'psycopg2-binary',
+  redis:      'redis',
+  pymongo:    'pymongo',
+  celery:     'celery',
+  pydantic:   'pydantic',
+  aiohttp:    'aiohttp',
+  httpx:      'httpx',
+  attr:       'attrs',
+  click:      'click',
+  rich:       'rich',
+  loguru:     'loguru',
 };
 
 async function pipInstall(importName) {
-  // Only allow safe package name characters
   if (!/^[a-zA-Z0-9._-]+$/.test(importName)) return false;
   const pkgName = PIP_ALIAS[importName] ?? importName;
   const pip = await which('pip3') ?? await which('pip');
   if (!pip) return false;
-  const result = await runCommand(pip, ['install', '--quiet', '--user', pkgName], { timeout: PIP_TIMEOUT_MS });
+  // Debian bookworm marks system Python as "externally managed" — need
+  // --break-system-packages to install into the system site-packages.
+  // Fall back to --user if that flag isn't recognised (older images).
+  let result = await runCommand(
+    pip, ['install', '--quiet', '--break-system-packages', pkgName],
+    { timeout: PIP_TIMEOUT_MS },
+  );
+  if (result.exitCode !== 0) {
+    result = await runCommand(
+      pip, ['install', '--quiet', '--user', pkgName],
+      { timeout: PIP_TIMEOUT_MS },
+    );
+  }
+  if (result.exitCode === 0) {
+    console.log(`[codeRunner] pip installed: ${pkgName}`);
+  } else {
+    console.warn(`[codeRunner] pip install failed for ${pkgName}:`, result.stderr?.slice(0, 200));
+  }
   return result.exitCode === 0;
 }
 
 function missingModule(stderr) {
   return stderr?.match(/ModuleNotFoundError: No module named '([\w.]+)'/)?.[1]?.split('.')?.[0] ?? null;
+}
+
+function missingNodeModule(stderr) {
+  return stderr?.match(/Cannot find (?:module|package) '([@\w/.-]+)'/)?.[1] ?? null;
+}
+
+async function npmInstall(pkgName, cwd) {
+  if (!/^[@\w/.-]+$/.test(pkgName)) return false;
+  const npm = await which('npm');
+  if (!npm) return false;
+  const result = await runCommand(
+    npm, ['install', '--no-save', '--quiet', pkgName],
+    { timeout: 60_000, cwd },
+  );
+  if (result.exitCode === 0) {
+    console.log(`[codeRunner] npm installed: ${pkgName} in ${cwd}`);
+  } else {
+    console.warn(`[codeRunner] npm install failed for ${pkgName}:`, result.stderr?.slice(0, 200));
+  }
+  return result.exitCode === 0;
 }
 
 // ---------------------------------------------------------------------------
