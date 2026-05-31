@@ -1,10 +1,19 @@
 // apps/ascend-backend/src/routes/ask.js
 import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { query } from '../config/database.js';
 
 const router = Router();
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+let _openrouter = null;
+function getOpenRouter() {
+  if (!_openrouter && process.env.OPENROUTER_API_KEY) {
+    _openrouter = new OpenAI({ apiKey: process.env.OPENROUTER_API_KEY, baseURL: 'https://openrouter.ai/api/v1' });
+  }
+  return _openrouter;
+}
 
 const CODE_RE = /\b(fill|missing|complete|fix|write|implement|function|class|bug|error|code|loop|array|list|dict|string|algorithm|sort|search|tree|graph|dp|dynamic)\b/i;
 
@@ -274,16 +283,51 @@ router.post('/stream', async (req, res) => {
 
     // ── Claude final stream (coding always; non-coding when not Gemini-only) ──
     if (!full) {
-      const stream = anthropic.messages.stream({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 8000,
-        system: claudeSystem,
-        messages: msgs,
-      });
-      for await (const chunk of stream) {
-        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-          full += chunk.delta.text;
-          res.write(`data: ${JSON.stringify({ text: chunk.delta.text })}\n\n`);
+      let claudeOk = false;
+      try {
+        const stream = anthropic.messages.stream({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 8000,
+          system: claudeSystem,
+          messages: msgs,
+        });
+        for await (const chunk of stream) {
+          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+            full += chunk.delta.text;
+            res.write(`data: ${JSON.stringify({ text: chunk.delta.text })}\n\n`);
+          }
+        }
+        claudeOk = true;
+      } catch (claudeErr) {
+        console.error('[Ask/Claude] stream error:', claudeErr.message);
+        full = '';
+      }
+
+      // OpenRouter fallback when Claude fails
+      if (!claudeOk || !full) {
+        full = '';
+        const or = getOpenRouter();
+        if (or) {
+          const orStream = await or.chat.completions.create({
+            model: 'qwen/qwen-2.5-72b-instruct',
+            max_tokens: 8000,
+            stream: true,
+            messages: [
+              { role: 'system', content: claudeSystem },
+              ...msgs.map(m => ({ role: m.role, content: m.content })),
+            ],
+          });
+          for await (const chunk of orStream) {
+            const text = chunk.choices[0]?.delta?.content || '';
+            if (text) { full += text; res.write(`data: ${JSON.stringify({ text })}\n\n`); }
+          }
+        } else {
+          // No fallback available — surface a readable error
+          const errMsg = 'AI service is temporarily unavailable. Please try again in a moment.';
+          res.write(`data: ${JSON.stringify({ error: errMsg })}\n\n`);
+          res.write('data: [DONE]\n\n');
+          res.end();
+          return;
         }
       }
     }
