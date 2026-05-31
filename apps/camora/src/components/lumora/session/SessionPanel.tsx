@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSessionStore } from '@/stores/session-store';
 import { StreamingAnswer } from './StreamingAnswer';
+import { AnswerBlocks } from './AnswerBlocks';
 import { Citations } from '@/components/lumora/Citations';
 import { DatabricksThumb, type DatabricksColor } from '@/components/shared/DatabricksThumb';
 
@@ -71,6 +72,7 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
     streamText,
     parsedBlocks,
     activeCitations,
+    lastFromCache,
     error,
     setError,
     history,
@@ -180,6 +182,35 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
                   the `citations` SSE event lands (before first token).
                   Collapsed by default; click "Sources N" to expand. */}
               <Citations citations={activeCitations} />
+            </div>
+          )}
+
+          {/* Completed answer — rendered from parsedBlocks once streaming ends */}
+          {!isStreaming && parsedBlocks.length > 0 && (
+            <div className="shrink-0 mt-1">
+              <AnswerBlocks
+                blocks={parsedBlocks}
+                isDesign={isDesignQuestion}
+                isCoding={isCodingQuestion}
+                question={question || undefined}
+              />
+              <Citations citations={activeCitations} />
+              {lastFromCache && onRetry && (
+                <div className="flex justify-end px-1 mt-0.5 mb-2">
+                  <button
+                    onClick={onRetry}
+                    className="text-[10px] font-semibold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
+                    style={{
+                      fontFamily: 'var(--font-code)',
+                      color: 'var(--text-muted)',
+                      border: '1px solid var(--border)',
+                      background: 'var(--bg-elevated)',
+                    }}
+                  >
+                    ↺ Regenerate
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
