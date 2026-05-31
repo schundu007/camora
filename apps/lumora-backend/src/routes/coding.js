@@ -1149,7 +1149,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
       try {
         const fbResp = await provider.client.chat.completions.create({
           model: provider.model,
-          max_tokens: MAX_TOKENS,
+          max_tokens: 8000,
           stream: false,
           messages: oaiMessages,
         });
@@ -1164,7 +1164,10 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
           terminalFailure = null;
           break;
         }
-        console.warn(`[coding/solve] pass=openrouter_fallback provider=${provider.label} parse_failed rawLen=${fbRaw.length}`);
+        console.warn(
+          `[coding/solve] pass=openrouter_fallback provider=${provider.label} parse_failed rawLen=${fbRaw.length} ` +
+          `head=${JSON.stringify(fbRaw.slice(0, 300))} tail=${JSON.stringify(fbRaw.slice(-300))}`,
+        );
       } catch (fbErr) {
         console.warn(`[coding/solve] pass=openrouter_fallback provider=${provider.label} error=${fbErr.message}`);
       }
@@ -1173,10 +1176,17 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
 
   // ── Terminal failure path ───────────────────────────────────────────────
   if (!parsedJson) {
-    const msg = terminalFailure?.msg || "Couldn't generate a solution. Please tap retry.";
+    // Never surface raw Anthropic SDK error bodies (they contain 400 JSON blobs).
+    // Show a human-readable message instead.
+    let msg = terminalFailure?.msg || "Couldn't generate a solution. Please tap retry.";
+    if (anthropicExhausted) {
+      msg = 'AI service is at capacity right now. Tap Regenerate to retry — it will use a backup model.';
+    } else if (msg.startsWith('4') && msg.includes('"type"')) {
+      msg = "Couldn't generate a solution. Please tap retry.";
+    }
     console.error(
       `[coding/solve] TERMINAL_FAILURE lang=${lang} model=${modelUsed} pass=${passTag} ` +
-      `durMs=${latencyMs} category=${terminalFailure?.category || 'unknown'} ua=${JSON.stringify(userAgent)}`,
+      `durMs=${latencyMs} category=${terminalFailure?.category || 'unknown'} exhausted=${anthropicExhausted} ua=${JSON.stringify(userAgent)}`,
     );
     sendEvent('error', {
       msg,
