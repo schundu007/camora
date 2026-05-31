@@ -7,12 +7,12 @@ import { query } from '../config/database.js';
 const router = Router();
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-let _openrouter = null;
-function getOpenRouter() {
-  if (!_openrouter && process.env.OPENROUTER_API_KEY) {
-    _openrouter = new OpenAI({ apiKey: process.env.OPENROUTER_API_KEY, baseURL: 'https://openrouter.ai/api/v1' });
+let _openai = null;
+function getOpenAI() {
+  if (!_openai && process.env.OPENAI_API_KEY) {
+    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   }
-  return _openrouter;
+  return _openai;
 }
 
 const CODE_RE = /\b(fill|missing|complete|fix|write|implement|function|class|bug|error|code|loop|array|list|dict|string|algorithm|sort|search|tree|graph|dp|dynamic)\b/i;
@@ -303,13 +303,13 @@ router.post('/stream', async (req, res) => {
         full = '';
       }
 
-      // OpenRouter fallback when Claude fails
+      // OpenAI fallback when Claude fails
       if (!claudeOk || !full) {
         full = '';
-        const or = getOpenRouter();
-        if (or) {
-          const orStream = await or.chat.completions.create({
-            model: 'qwen/qwen-2.5-72b-instruct',
+        const oai = getOpenAI();
+        if (oai) {
+          const oaiStream = await oai.chat.completions.create({
+            model: 'gpt-4o-mini',
             max_tokens: 8000,
             stream: true,
             messages: [
@@ -317,12 +317,11 @@ router.post('/stream', async (req, res) => {
               ...msgs.map(m => ({ role: m.role, content: m.content })),
             ],
           });
-          for await (const chunk of orStream) {
+          for await (const chunk of oaiStream) {
             const text = chunk.choices[0]?.delta?.content || '';
             if (text) { full += text; res.write(`data: ${JSON.stringify({ text })}\n\n`); }
           }
         } else {
-          // No fallback available — surface a readable error
           const errMsg = 'AI service is temporarily unavailable. Please try again in a moment.';
           res.write(`data: ${JSON.stringify({ error: errMsg })}\n\n`);
           res.write('data: [DONE]\n\n');
