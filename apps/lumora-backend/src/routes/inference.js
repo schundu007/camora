@@ -58,6 +58,8 @@ function getQuestionType(answer) {
 router.post('/conversations/:conversationId/stream', authenticate, checkUsage('questions'), async (req, res) => {
   const { conversationId } = req.params;
   let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', mode = 'general', design_kind: designKind = null, response_format: responseFormat = null, model: preferredModel = null } = req.body;
+  const VALID_MODES = ['general', 'coding', 'design', 'behavioral'];
+  if (!VALID_MODES.includes(mode)) mode = 'general';
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -285,6 +287,8 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 // ---------------------------------------------------------------------------
 router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
   let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null, response_format: responseFormat = null, model: preferredModel = null } = req.body;
+  const VALID_MODES = ['general', 'coding', 'design', 'behavioral'];
+  if (!VALID_MODES.includes(mode)) mode = 'general';
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
