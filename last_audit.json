@@ -1,0 +1,389 @@
+{
+  "audit_date": "2026-06-01",
+  "summary": {
+    "CRITICAL": 0,
+    "HIGH": 5,
+    "MEDIUM": 32,
+    "LOW": 16
+  },
+  "findings": [
+    {
+      "area": "AUTH",
+      "severity": "HIGH",
+      "file": "apps/lumora-backend/src/routes/auth.js",
+      "line": 141,
+      "description": "POST /refresh does not carry forward gen claim — token revocation bypass if user calls lumora /refresh after ascend /revoke-all-sessions"
+    },
+    {
+      "area": "AUTH",
+      "severity": "HIGH",
+      "file": "apps/lumora-backend/src/middleware/authenticate.js",
+      "line": 97,
+      "description": "Admin flag is env-only with no persistent DB role column — misconfigured deploy silently demotes all admins"
+    },
+    {
+      "area": "AUTH",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/lib/owner.ts",
+      "line": 19,
+      "description": "Hardcoded fallback admin emails in source — remove OWNER_FALLBACK, use VITE_OWNER_EMAILS only"
+    },
+    {
+      "area": "AUTH",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/pages/AnalyticsPage.tsx",
+      "line": 0,
+      "description": "EXCLUDE array hardcodes owner emails — move exclusion logic to backend or env variable"
+    },
+    {
+      "area": "AUTH",
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/config/index.js",
+      "line": 13,
+      "description": "CORS_ORIGIN defaults to '*' wildcard — remove fallback, require env var in production"
+    },
+    {
+      "area": "AUTH",
+      "severity": "LOW",
+      "file": "packages/shared-auth/src/index.js",
+      "line": 33,
+      "description": "Canonical authenticate() in shared-auth lacks payload.type === 'access' check — add to match inlined copies"
+    },
+    {
+      "area": "AUTH",
+      "severity": "LOW",
+      "file": "apps/ascend-backend/src/routes/auth.js",
+      "line": 504,
+      "description": "POST /auth/admin/grant-subscription relies on ADMIN_SECRET alone, no authenticate middleware — add authenticated user check"
+    },
+    {
+      "area": "STRIPE",
+      "severity": "HIGH",
+      "file": "packages/shared-db/src/plans.js",
+      "line": 14,
+      "description": "PAID_PLAN_TYPES missing 'lifetime' — lifetime subscribers treated as free tier on paywall checks using this constant"
+    },
+    {
+      "area": "STRIPE",
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/routes/billing.js",
+      "line": 395,
+      "description": "Static solo prices omit explicit tax_behavior in code — risk of checkout failure if Stripe automatic_tax enabled"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "HIGH",
+      "file": "apps/ascend-backend/src/services/autoTopupService.js",
+      "line": 223,
+      "description": "Stripe charge can succeed while ai_hour_topups INSERT fails — user billed but receives no hours; needs idempotency/retry"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/routes/learnTopic.js",
+      "line": 15,
+      "description": "DELETE /:slug route lacks try/catch — unhandled async errors will crash handler"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/routes/gamification.js",
+      "line": 7,
+      "description": "GET /profile, GET /badges, GET /leaderboard lack try/catch blocks — async errors crash handler"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/routes/fetch.js",
+      "line": 10,
+      "description": "GET /cache/stats and GET /cache/:slug routes lack try/catch error handling"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/routes/problems.js",
+      "line": 10,
+      "description": "GET /tags route lacks try/catch — unhandled errors crash handler"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/routes/usage.js",
+      "line": 8,
+      "description": "GET /free-status route lacks try/catch — async errors can crash handler"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/routes/jobAnalyze.js",
+      "line": 15,
+      "description": "POST /fetch-text route lacks try/catch — async errors will crash handler"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/routes/topicReads.js",
+      "line": 10,
+      "description": "POST / route for topic reads lacks try/catch block"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/routes/companyPreps.js",
+      "line": 15,
+      "description": "PUT /:id route lacks try/catch block for error handling"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/routes/voice.js",
+      "line": 20,
+      "description": "POST /ask route lacks try/catch — unhandled async errors will crash"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/routes/scoreCards.js",
+      "line": 12,
+      "description": "DELETE /:shareToken route lacks try/catch — async errors uncaught"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/routes/goalCountdown.js",
+      "line": 15,
+      "description": "DELETE /plan route lacks try/catch for error handling"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "LOW",
+      "file": "apps/ascend-backend/src/lumora/routes/transcription.js",
+      "line": 63,
+      "description": "Multipart MIME boundary uses Math.random() — not security-critical for internal service calls, but replace with crypto.randomBytes for correctness"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "LOW",
+      "file": "apps/ascend-backend/src/lumora/routes/transcription.js",
+      "line": 104,
+      "description": "Multipart MIME boundary in diarizeSpeaker uses Math.random() — replace with crypto.randomBytes"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "LOW",
+      "file": "apps/lumora-backend/src/routes/transcription.js",
+      "line": 62,
+      "description": "Multipart MIME boundary in verifySpeaker uses Math.random() — replace with crypto.randomBytes"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "LOW",
+      "file": "apps/lumora-backend/src/routes/transcription.js",
+      "line": 100,
+      "description": "Multipart MIME boundary in diarizeSpeaker uses Math.random() — replace with crypto.randomBytes"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "LOW",
+      "file": "apps/camora/src/pages/JobPrepPage.tsx",
+      "line": 1,
+      "description": "TODO comment: 'get from user profile' for resume field — incomplete implementation placeholder"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "HIGH",
+      "file": "apps/camora/src/components/shared/UserDropdown.tsx",
+      "line": 93,
+      "description": "White text hardcoded on var(--accent) which may be light-themed — use theme-aware contrast color instead"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/ask/AskLayout.tsx",
+      "line": 67,
+      "description": "Hardcoded font 'Plus Jakarta Sans, sans-serif' — replace with var(--font-display)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/ask/AskLayout.tsx",
+      "line": 76,
+      "description": "Hardcoded font 'IBM Plex Mono' — replace with var(--font-mono)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/ask/AskLayout.tsx",
+      "line": 96,
+      "description": "Hardcoded hex #1e4d78 and font 'IBM Plex Mono' — replace with CSS variables"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/ask/AskLayout.tsx",
+      "line": 171,
+      "description": "Hardcoded font 'Plus Jakarta Sans, sans-serif' — replace with var(--font-display)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/ask/AskLayout.tsx",
+      "line": 314,
+      "description": "Hardcoded font 'Plus Jakarta Sans, sans-serif' — replace with var(--font-display)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/design/DesignLayout.tsx",
+      "line": 925,
+      "description": "Hardcoded font 'IBM Plex Mono' — replace with var(--font-mono)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/design/DesignLayout.tsx",
+      "line": 936,
+      "description": "Hardcoded font 'IBM Plex Mono' — replace with var(--font-mono)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/playground/OutputPane.tsx",
+      "line": 17,
+      "description": "Hardcoded font 'IBM Plex Mono' — replace with var(--font-mono)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/playground/OutputPane.tsx",
+      "line": 26,
+      "description": "Hardcoded font 'Plus Jakarta Sans, sans-serif' — replace with var(--font-display)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/playground/OutputPane.tsx",
+      "line": 34,
+      "description": "Hardcoded font 'Plus Jakarta Sans' and hex #334155 — replace with CSS variables"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/playground/OutputPane.tsx",
+      "line": 59,
+      "description": "Hardcoded font 'Plus Jakarta Sans, sans-serif' — replace with var(--font-display)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/playground/OutputPane.tsx",
+      "line": 92,
+      "description": "Hardcoded font 'Plus Jakarta Sans, sans-serif' — replace with var(--font-display)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/playground/OutputPane.tsx",
+      "line": 95,
+      "description": "Hardcoded font 'Plus Jakarta Sans, sans-serif' — replace with var(--font-display)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/playground/OutputPane.tsx",
+      "line": 103,
+      "description": "Hardcoded font 'Plus Jakarta Sans, sans-serif' — replace with var(--font-display)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/cofix/AnnotationPanel.tsx",
+      "line": 71,
+      "description": "Hardcoded font 'Plus Jakarta Sans, sans-serif' — replace with var(--font-display)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/playground/PlaygroundLayout.tsx",
+      "line": 16,
+      "description": "Hardcoded font 'Plus Jakarta Sans, sans-serif' — replace with var(--font-display)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/playground/LanguageTabs.tsx",
+      "line": 35,
+      "description": "Hardcoded font 'Plus Jakarta Sans, sans-serif' — replace with var(--font-display)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "MEDIUM",
+      "file": "apps/camora/src/components/lumora/coding/CodingLayout.tsx",
+      "line": 2705,
+      "description": "Hardcoded fonts 'IBM Plex Mono', 'Cascadia Code', monospace — replace with var(--font-mono)"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "LOW",
+      "file": "apps/camora/src/components/lumora/ask/AskLayout.tsx",
+      "line": 59,
+      "description": "Hardcoded hex #1e222a for code block background — add CSS variable for dark surface color"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "LOW",
+      "file": "apps/camora/src/components/lumora/ask/AskLayout.tsx",
+      "line": 60,
+      "description": "Hardcoded hex #61afef for code language tag — add CSS variable"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "LOW",
+      "file": "apps/camora/src/components/lumora/ask/AskLayout.tsx",
+      "line": 351,
+      "description": "Hardcoded hex #f87171 for error text — use var(--color-error) or Tailwind class"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "LOW",
+      "file": "apps/camora/src/components/lumora/ask/AskLayout.tsx",
+      "line": 381,
+      "description": "Hardcoded hex #f87171 for error text — use CSS variable"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "LOW",
+      "file": "apps/camora/src/components/lumora/audio/SilentStreamBanner.tsx",
+      "line": 102,
+      "description": "Hardcoded hex #f59e0b and #000 — use CSS variables for warning and text colors"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "LOW",
+      "file": "apps/camora/src/components/lumora/shell/ScreenshotStrip.tsx",
+      "line": 148,
+      "description": "Hardcoded hex #00ea64 for recording indicator — use CSS variable"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "LOW",
+      "file": "apps/camora/src/components/lumora/shell/ScreenshotStrip.tsx",
+      "line": 171,
+      "description": "Hardcoded hex #00ea64 for platform label color — use CSS variable"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "LOW",
+      "file": "apps/camora/src/components/lumora/audio/AudioSetupWizard.tsx",
+      "line": 595,
+      "description": "Hardcoded hex #F59E0B for warning indicator — use CSS variable"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "LOW",
+      "file": "apps/camora/src/components/lumora/audio/AudioSetupWizard.tsx",
+      "line": 789,
+      "description": "Hardcoded hex #dc2626 for error text — use var(--color-error)"
+    }
+  ]
+}
