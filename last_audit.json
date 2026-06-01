@@ -1,12 +1,26 @@
 {
   "audit_date": "2026-06-01",
   "summary": {
-    "CRITICAL": 0,
-    "HIGH": 5,
-    "MEDIUM": 32,
+    "CRITICAL": 2,
+    "HIGH": 7,
+    "MEDIUM": 33,
     "LOW": 16
   },
   "findings": [
+    {
+      "area": "STRIPE",
+      "severity": "CRITICAL",
+      "file": "apps/ascend-backend/src/index.js",
+      "line": 383,
+      "description": "ascend_stripe_events table is referenced for webhook idempotency but never created in startup migrations — all webhook events fail with 'relation does not exist'"
+    },
+    {
+      "area": "STRIPE",
+      "severity": "CRITICAL",
+      "file": "apps/ascend-backend/src/routes/billing.js",
+      "line": 1093,
+      "description": "handleInvoicePaid skips billing_reason='subscription_create' — solo plan users receive 0 AI hours for their entire first billing period until the first renewal invoice"
+    },
     {
       "area": "AUTH",
       "severity": "HIGH",
@@ -20,6 +34,34 @@
       "file": "apps/lumora-backend/src/middleware/authenticate.js",
       "line": 97,
       "description": "Admin flag is env-only with no persistent DB role column — misconfigured deploy silently demotes all admins"
+    },
+    {
+      "area": "STRIPE",
+      "severity": "HIGH",
+      "file": "packages/shared-db/src/plans.js",
+      "line": 14,
+      "description": "PAID_PLAN_TYPES missing 'lifetime' — lifetime subscribers treated as free tier on paywall checks using this constant"
+    },
+    {
+      "area": "STRIPE",
+      "severity": "HIGH",
+      "file": "apps/ascend-backend/src/routes/billing.js",
+      "line": 995,
+      "description": "PRICE_TO_PLAN references undefined STRIPE_PRICES.TEAM — team checkout priceId resolves to undefined, making team plan detection fragile"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "HIGH",
+      "file": "apps/ascend-backend/src/services/autoTopupService.js",
+      "line": 223,
+      "description": "Stripe charge can succeed while ai_hour_topups INSERT fails — user billed but receives no hours; needs idempotency/retry"
+    },
+    {
+      "area": "DESIGN",
+      "severity": "HIGH",
+      "file": "apps/camora/src/components/shared/UserDropdown.tsx",
+      "line": 93,
+      "description": "White text hardcoded on var(--accent) which may be light-themed — use theme-aware contrast color instead"
     },
     {
       "area": "AUTH",
@@ -43,25 +85,11 @@
       "description": "CORS_ORIGIN defaults to '*' wildcard — remove fallback, require env var in production"
     },
     {
-      "area": "AUTH",
-      "severity": "LOW",
-      "file": "packages/shared-auth/src/index.js",
-      "line": 33,
-      "description": "Canonical authenticate() in shared-auth lacks payload.type === 'access' check — add to match inlined copies"
-    },
-    {
-      "area": "AUTH",
-      "severity": "LOW",
-      "file": "apps/ascend-backend/src/routes/auth.js",
-      "line": 504,
-      "description": "POST /auth/admin/grant-subscription relies on ADMIN_SECRET alone, no authenticate middleware — add authenticated user check"
-    },
-    {
       "area": "STRIPE",
-      "severity": "HIGH",
-      "file": "packages/shared-db/src/plans.js",
-      "line": 14,
-      "description": "PAID_PLAN_TYPES missing 'lifetime' — lifetime subscribers treated as free tier on paywall checks using this constant"
+      "severity": "MEDIUM",
+      "file": "apps/ascend-backend/src/routes/billing.js",
+      "line": 1019,
+      "description": "handleCheckoutComplete grants initial hours_pool_total for teams but not solo — solo relies on invoice.paid which skips the initial invoice"
     },
     {
       "area": "STRIPE",
@@ -69,13 +97,6 @@
       "file": "apps/ascend-backend/src/routes/billing.js",
       "line": 395,
       "description": "Static solo prices omit explicit tax_behavior in code — risk of checkout failure if Stripe automatic_tax enabled"
-    },
-    {
-      "area": "ROBUSTNESS",
-      "severity": "HIGH",
-      "file": "apps/ascend-backend/src/services/autoTopupService.js",
-      "line": 223,
-      "description": "Stripe charge can succeed while ai_hour_topups INSERT fails — user billed but receives no hours; needs idempotency/retry"
     },
     {
       "area": "ROBUSTNESS",
@@ -153,48 +174,6 @@
       "file": "apps/ascend-backend/src/routes/goalCountdown.js",
       "line": 15,
       "description": "DELETE /plan route lacks try/catch for error handling"
-    },
-    {
-      "area": "ROBUSTNESS",
-      "severity": "LOW",
-      "file": "apps/ascend-backend/src/lumora/routes/transcription.js",
-      "line": 63,
-      "description": "Multipart MIME boundary uses Math.random() — not security-critical for internal service calls, but replace with crypto.randomBytes for correctness"
-    },
-    {
-      "area": "ROBUSTNESS",
-      "severity": "LOW",
-      "file": "apps/ascend-backend/src/lumora/routes/transcription.js",
-      "line": 104,
-      "description": "Multipart MIME boundary in diarizeSpeaker uses Math.random() — replace with crypto.randomBytes"
-    },
-    {
-      "area": "ROBUSTNESS",
-      "severity": "LOW",
-      "file": "apps/lumora-backend/src/routes/transcription.js",
-      "line": 62,
-      "description": "Multipart MIME boundary in verifySpeaker uses Math.random() — replace with crypto.randomBytes"
-    },
-    {
-      "area": "ROBUSTNESS",
-      "severity": "LOW",
-      "file": "apps/lumora-backend/src/routes/transcription.js",
-      "line": 100,
-      "description": "Multipart MIME boundary in diarizeSpeaker uses Math.random() — replace with crypto.randomBytes"
-    },
-    {
-      "area": "ROBUSTNESS",
-      "severity": "LOW",
-      "file": "apps/camora/src/pages/JobPrepPage.tsx",
-      "line": 1,
-      "description": "TODO comment: 'get from user profile' for resume field — incomplete implementation placeholder"
-    },
-    {
-      "area": "DESIGN",
-      "severity": "HIGH",
-      "file": "apps/camora/src/components/shared/UserDropdown.tsx",
-      "line": 93,
-      "description": "White text hardcoded on var(--accent) which may be light-themed — use theme-aware contrast color instead"
     },
     {
       "area": "DESIGN",
@@ -321,6 +300,55 @@
       "file": "apps/camora/src/components/lumora/coding/CodingLayout.tsx",
       "line": 2705,
       "description": "Hardcoded fonts 'IBM Plex Mono', 'Cascadia Code', monospace — replace with var(--font-mono)"
+    },
+    {
+      "area": "AUTH",
+      "severity": "LOW",
+      "file": "packages/shared-auth/src/index.js",
+      "line": 33,
+      "description": "Canonical authenticate() in shared-auth lacks payload.type === 'access' check — add to match inlined copies"
+    },
+    {
+      "area": "AUTH",
+      "severity": "LOW",
+      "file": "apps/ascend-backend/src/routes/auth.js",
+      "line": 504,
+      "description": "POST /auth/admin/grant-subscription relies on ADMIN_SECRET alone, no authenticate middleware — add authenticated user check"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "LOW",
+      "file": "apps/ascend-backend/src/lumora/routes/transcription.js",
+      "line": 63,
+      "description": "Multipart MIME boundary uses Math.random() — not security-critical for internal calls, but replace with crypto.randomBytes for correctness"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "LOW",
+      "file": "apps/ascend-backend/src/lumora/routes/transcription.js",
+      "line": 104,
+      "description": "Multipart MIME boundary in diarizeSpeaker uses Math.random() — replace with crypto.randomBytes"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "LOW",
+      "file": "apps/lumora-backend/src/routes/transcription.js",
+      "line": 62,
+      "description": "Multipart MIME boundary in verifySpeaker uses Math.random() — replace with crypto.randomBytes"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "LOW",
+      "file": "apps/lumora-backend/src/routes/transcription.js",
+      "line": 100,
+      "description": "Multipart MIME boundary in diarizeSpeaker uses Math.random() — replace with crypto.randomBytes"
+    },
+    {
+      "area": "ROBUSTNESS",
+      "severity": "LOW",
+      "file": "apps/camora/src/pages/JobPrepPage.tsx",
+      "line": 1,
+      "description": "TODO comment: 'get from user profile' for resume field — incomplete implementation placeholder"
     },
     {
       "area": "DESIGN",
