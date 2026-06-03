@@ -314,9 +314,13 @@ export const LumoraShellPage = () => {
       // LivePage UI is hidden, so routing through useStreamingSession
       // would stream the answer to a surface no one can see. Forward the
       // interviewer's question to the panel via a custom event instead.
-      // Gate on isQuestion() so background chatter doesn't fire Sona,
-      // unless the press was manual (intent overrides heuristic).
-      if (!opts?.manual && !isQuestion(trimmed)) return;
+      // No isQuestion() gate here: in an active behavioral interview the
+      // user wants Sona to answer every interviewer utterance, even ones
+      // that don't hit the heuristic's question-starters ("Take me
+      // through…", "And what did you do…"). AudioCapture's isLikelyRealSpeech
+      // filter already drops noise + Whisper hallucinations upstream, so
+      // forwarding everything transcribed is safe. (This preserves the
+      // behavior of the panel's old embedded mic, which bypassed the gate.)
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
       return;
     }

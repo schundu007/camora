@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT, setActiveCompanyKey } from '@/lib/companyContext';
-import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { dialogConfirm } from '@/components/shared/Dialog';
 import { isQuestion } from '@/lib/questionDetector';
@@ -623,6 +622,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         token,
         useSearch: false,
         systemContext,
+        // Behavioral fullscreen → tell the backend so retrieval biases to
+        // the capra-behavioral STAR sources (modeSourceFilter). The
+        // floating Sona handles mixed coding/design follow-ups, so it
+        // stays on the default 'general' retrieval.
+        ...(embedded ? { mode: 'behavioral' as const } : {}),
         onCitations: (citations) => {
           pendingCitationsRef.current = citations;
         },
@@ -682,7 +686,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       setStreamText('');
       setStreaming(false);
     }
-  }, [token, streaming, answerMode, systemContext, addHistoryEntry]);
+  }, [token, streaming, answerMode, systemContext, addHistoryEntry, embedded]);
 
   const handleSubmit = useCallback(() => {
     if (input.trim()) { ask(input); setInput(''); }
@@ -1384,11 +1388,8 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: chipColor }} />
                 {statusLabel}
               </span>
-              {/* AUTO / mic chip — navy-gold to match toolbar */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full shrink-0"
-                style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-primary-dk)', boxShadow: 'inset 0 -2px 0 var(--cam-gold-leaf)' }}>
-                <AudioCapture onTranscription={handleAutoTranscription} compact active={embedded} />
-              </div>
+              {/* AUTO / mic lives in the ScreenshotStrip top toolbar for
+                  behavioral (single source of truth) — no duplicate here. */}
               {/* Enrollment action chips */}
               <VoiceEnrollment disabled={false} variant="light" />
               {/* Minimize */}

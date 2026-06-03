@@ -342,7 +342,11 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           className="flex items-center gap-1.5 px-2 py-1 rounded-lg shrink-0"
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)' }}
         >
-          <AudioCapture onTranscription={onTranscription} autoStart={false} active={isTabActive} compact />
+          {/* Behavioral auto-listens from this single toolbar control (the
+              embedded Sona panel no longer renders its own AUTO chip).
+              Coding/Design stay manual (AUTO starts off). `key={surface}`
+              remounts on tab switch so autoStart re-initialises per surface. */}
+          <AudioCapture key={surface} onTranscription={onTranscription} autoStart={surface === 'behavioral'} active={isTabActive} compact />
         </div>
       )}
 

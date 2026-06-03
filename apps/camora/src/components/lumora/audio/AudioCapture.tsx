@@ -228,11 +228,25 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
   // AUTO. With this we force-flush after a hard ceiling so Q&A
   // streams continuously even when the user keeps speaking.
   const accumulationStartedAtRef = useRef<number>(0);
-  // Hard cap on how long we'll hold an accumulation. 3.5 s keeps the
-  // user's perceived latency low (one VAD silence + brief grace
-  // window) while still allowing a short mid-thought pause to glue
-  // two chunks into one question.
-  const MAX_ACCUM_MS = 3500;
+  // Last wall-clock instant the speaker crossed the speech threshold.
+  // The flush logic uses this to keep a question open while the
+  // interviewer is mid-sentence — so an utterance spoken across a pause
+  // longer than the VAD silence window survives as ONE question instead
+  // of being split into truncated fragments.
+  const lastSpeechAtRef = useRef(0);
+  // Hard cap on how long we'll hold an accumulation before force-flushing.
+  // Generous enough to glue a question spoken across several VAD segments
+  // (each segment ends after ~2.5 s of silence), bounded so a runaway hot
+  // mic can never hold the accumulator open forever.
+  const MAX_ACCUM_MS = 15000;
+  // How long after the speaker's last audible moment we keep a flush
+  // pending. For a short, unpunctuated fragment ("Tell me about a time…")
+  // we wait GLUE_HOLD_MS — long enough to bridge a full VAD silence +
+  // transcription round-trip so the rest of the sentence glues on. For a
+  // complete-looking utterance we only wait SHORT_HOLD_MS so Sona still
+  // answers fast in the common case.
+  const GLUE_HOLD_MS = 4000;
+  const SHORT_HOLD_MS = 900;
 
   const flushAccumulatedText = useCallback(() => {
     const text = accumulatedTextRef.current.trim();
@@ -281,12 +295,21 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
 
     const accumulated = accumulatedTextRef.current.trim();
     const lastChar = accumulated.slice(-1);
+    const endsSentence = lastChar === '?' || lastChar === '!' || lastChar === '.';
     const looksQuestion = isQuestion(accumulated);
     const longEnough = accumulated.length > 140;
+    const wordCount = accumulated ? accumulated.split(/\s+/).length : 0;
+    // A short, unpunctuated capture is most likely the front half of a
+    // sentence the speaker hasn't finished — e.g. the VAD cut "Tell me
+    // about a time" off at a thinking pause. Hold these open longer so the
+    // rest of the question can glue on; everything else flushes at
+    // conversational speed.
+    const likelyFragment = !endsSentence && wordCount < 6;
     const wait =
       lastChar === '?' || lastChar === '!' ? 400 :
       lastChar === '.' && looksQuestion ? 500 :
       lastChar === '.' ? 800 :
+      likelyFragment ? 700 :
       longEnough && looksQuestion ? 600 :
       looksQuestion ? 900 :
       1200;
@@ -297,11 +320,31 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
     const remainingToCeiling = Math.max(200, MAX_ACCUM_MS - heldFor);
     const effectiveWait = Math.min(wait, remainingToCeiling);
 
-    questionCheckTimerRef.current = window.setTimeout(() => {
-      if (accumulatedTextRef.current.trim().length > 5) {
-        flushAccumulatedText();
+    // Hold window after the speaker's last audible moment. Fragments wait
+    // out a full VAD silence + transcription round-trip so a resumed
+    // sentence glues on; complete utterances barely wait at all.
+    const holdMs = likelyFragment ? GLUE_HOLD_MS : SHORT_HOLD_MS;
+
+    // Self-polling flush: only commit the question once the speaker has
+    // actually stopped (no audible speech for `holdMs`). While they're
+    // still talking we re-check every 300 ms, bounded by MAX_ACCUM_MS so
+    // the accumulator can never hang. This is what lets one question
+    // survive a pause longer than the 2.5 s VAD silence window — the next
+    // VAD segment's text appends (via handleAudioData → scheduleQuestionCheck)
+    // before this ever flushes a half-question.
+    const attemptFlush = () => {
+      if (accumulatedTextRef.current.trim().length <= 5) return;
+      const held = accumulationStartedAtRef.current
+        ? Date.now() - accumulationStartedAtRef.current
+        : 0;
+      if (Date.now() - lastSpeechAtRef.current < holdMs && held < MAX_ACCUM_MS) {
+        questionCheckTimerRef.current = window.setTimeout(attemptFlush, 300);
+        return;
       }
-    }, effectiveWait);
+      flushAccumulatedText();
+    };
+
+    questionCheckTimerRef.current = window.setTimeout(attemptFlush, effectiveWait);
   }, [flushAccumulatedText]);
 
   // Auto-enroll user's voice from first audio chunk in record-speaker mode
@@ -491,6 +534,13 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
     // bumps, the heartbeat effect treats the recorder as stalled and
     // forces a fresh restart.
     lastHealthyAtRef.current = Date.now();
+    // Track when the speaker is actually talking so the question
+    // accumulator can hold a flush open across a mid-question pause and
+    // glue the resumed sentence on. Mirror the VAD's own threshold
+    // (floored at 0.003) so "speech" here means the same thing it does to
+    // the recorder's silence gate.
+    const speechRms = Math.max(useSessionStore.getState().threshold ?? 0.01, 0.003);
+    if (level > speechRms) lastSpeechAtRef.current = Date.now();
   }, [setAudioLevel]);
 
   const handleRecordingStop = useCallback(() => {
