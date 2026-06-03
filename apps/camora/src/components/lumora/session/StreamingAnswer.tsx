@@ -68,7 +68,7 @@ export const StreamingAnswer = ({ chunks, isDesign, isCoding }: StreamingAnswerP
 const StreamingQAView = ({ blocks }: { blocks: Record<string, ParsedBlock> }) => {
   return (
     <div className="flex flex-col gap-2">
-      {/* Headline */}
+      {/* Headline — full width */}
       <div className="px-2 py-1.5 border border-primary/20 bg-primary/[0.03] rounded">
         {blocks.HEADLINE ? (
           <span className="text-base text-primary font-semibold leading-tight">
@@ -80,33 +80,36 @@ const StreamingQAView = ({ blocks }: { blocks: Record<string, ParsedBlock> }) =>
         )}
       </div>
 
-      {/* Answer Card — LeetCode header */}
-      <div className="rounded-md border border-[var(--accent)]/15 overflow-hidden">
-        <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--cam-gold-leaf-lt)]" />
-          <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">KEY POINTS</span>
+      {/* 2-column: Answer (left) + Follow-up (right) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {/* Answer Card */}
+        <div className="rounded-md border border-[var(--accent)]/15 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--cam-gold-leaf-lt)]" />
+            <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">KEY POINTS</span>
+          </div>
+          <div className="bg-[var(--accent)]/[0.02] p-3">
+            {blocks.ANSWER ? (
+              <StreamingAnswerList content={blocks.ANSWER.content} isComplete={blocks.ANSWER.isComplete} />
+            ) : (
+              <ShimmerBlock lines={4} />
+            )}
+          </div>
         </div>
-        <div className="bg-[var(--accent)]/[0.02] p-3">
-          {blocks.ANSWER ? (
-            <StreamingAnswerList content={blocks.ANSWER.content} isComplete={blocks.ANSWER.isComplete} />
-          ) : (
-            <ShimmerBlock lines={4} />
-          )}
-        </div>
-      </div>
 
-      {/* Follow-up Card — LeetCode header */}
-      <div className="rounded-md border border-[var(--warning)]/15 overflow-hidden">
-        <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
-          <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--warning-text, var(--cam-gold-leaf-lt))' }} />
-          <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">FOLLOW-UP Q&amp;A</span>
-        </div>
-        <div className="bg-[var(--warning)]/[0.02] p-3">
-          {blocks.FOLLOWUP ? (
-            <StreamingFollowupList content={blocks.FOLLOWUP.content} isComplete={blocks.FOLLOWUP.isComplete} />
-          ) : (
-            <ShimmerBlock lines={3} />
-          )}
+        {/* Follow-up Card */}
+        <div className="rounded-md border border-[var(--warning)]/15 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+            <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--warning-text, var(--cam-gold-leaf-lt))' }} />
+            <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">FOLLOW-UP Q&amp;A</span>
+          </div>
+          <div className="bg-[var(--warning)]/[0.02] p-3">
+            {blocks.FOLLOWUP ? (
+              <StreamingFollowupList content={blocks.FOLLOWUP.content} isComplete={blocks.FOLLOWUP.isComplete} />
+            ) : (
+              <ShimmerBlock lines={3} />
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -114,7 +117,11 @@ const StreamingQAView = ({ blocks }: { blocks: Record<string, ParsedBlock> }) =>
 }
 
 const StreamingAnswerList = ({ content, isComplete }: { content: string; isComplete: boolean }) => {
-  const lines = content.split('\n').map(l => cleanText(l).replace(/^[•\-*]\s*/, '')).filter(Boolean);
+  // Skip table rows and heading markers during streaming — they render properly
+  // in RichContent once streaming ends and AnswerBlocks takes over.
+  const lines = content.split('\n')
+    .map(l => cleanText(l).replace(/^[•\-*]\s*/, ''))
+    .filter(l => l && !l.trim().startsWith('|'));
 
   if (lines.length === 0) return <ShimmerBlock lines={3} />;
 

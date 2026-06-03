@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import hljs from 'highlight.js';
 import type { ParsedBlock } from '@/types';
 import { MermaidDiagram } from './MermaidDiagram';
@@ -38,14 +38,30 @@ export const AnswerBlocks = ({ blocks, isDesign, isCoding, question }: AnswerBlo
     return <CodingView blocks={blocks} />;
   }
 
+  return <BehavioralView blocks={blocks} />;
+}
+
+const BehavioralView = ({ blocks }: { blocks: ParsedBlock[] }) => {
+  const headline = blocks.find(b => b.type === 'HEADLINE');
+  const answer = blocks.find(b => b.type === 'ANSWER');
+  const followup = blocks.find(b => b.type === 'FOLLOWUP');
+  const others = blocks.filter(b => b.type !== 'HEADLINE' && b.type !== 'ANSWER' && b.type !== 'FOLLOWUP');
+
   return (
-    <div className="flex flex-col gap-3">
-      {blocks.map((block, i) => (
-        <Block key={i} block={block} delay={i * 60} />
-      ))}
+    <div className="flex flex-col gap-2">
+      {headline && <Block block={headline} delay={0} />}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div className="flex flex-col gap-2">
+          {answer && <Block block={answer} delay={60} />}
+          {others.map((b, i) => <Block key={i} block={b} delay={(i + 2) * 60} />)}
+        </div>
+        <div>
+          {followup && <Block block={followup} delay={120} />}
+        </div>
+      </div>
     </div>
   );
-}
+};
 
 const Block = ({ block, delay }: { block: ParsedBlock; delay: number }) => {
   const codeRef = useRef<HTMLElement>(null);
@@ -85,42 +101,10 @@ const Block = ({ block, delay }: { block: ParsedBlock; delay: number }) => {
       );
 
     case 'ANSWER': {
-      const lines = (block.content || '')
-        .split('\n')
-        .map((l) => cleanText(l).replace(/^[•\-*]\s*/, ''))
-        .filter(Boolean);
       return (
         <div className="animate-fade-up" style={wrap}>
-          <GridCard title={`Key Points (${lines.length})`} titleColor="text-[var(--accent)]" collapsible={false}>
-            <div className="space-y-2.5">
-              {lines.map((line, i) => {
-                const colonIdx = line.indexOf(':');
-                const hasLabel = colonIdx > 0 && colonIdx < 40;
-                const label = hasLabel ? line.slice(0, colonIdx).trim() : null;
-                const text = hasLabel ? line.slice(colonIdx + 1).trim() : line;
-                return (
-                  <div key={i} className="flex items-start gap-3">
-                    <span
-                      className="flex items-center justify-center w-5 h-5 rounded-md text-[10px] font-bold shrink-0 mt-0.5 font-mono"
-                      style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}
-                    >
-                      {i + 1}
-                    </span>
-                    <div
-                      style={{
-                        fontFamily: 'var(--font-answer)',
-                        fontSize: 'var(--fs-answer-body)',
-                        lineHeight: 'var(--lh-answer)',
-                        color: 'var(--text-primary)',
-                      }}
-                    >
-                      {label && <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{label}: </span>}
-                      {text}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          <GridCard title="Key Points" titleColor="text-[var(--accent)]" collapsible={false}>
+            <RichContent content={block.content} />
           </GridCard>
         </div>
       );
@@ -877,6 +861,199 @@ const Shimmer = () => {
     </div>
   );
 }
+
+// ─── Rich markdown content renderer ─────────────────────────────────────────
+// Handles the LLM's markdown output inside ANSWER blocks: ## section headers,
+// | pipe tables |, - bullet points, and plain text — rendering each properly
+// instead of as raw characters.
+
+type RichSeg =
+  | { kind: 'heading'; text: string }
+  | { kind: 'subheading'; text: string }
+  | { kind: 'table'; rows: string[][] }
+  | { kind: 'bullet'; text: string; label?: string }
+  | { kind: 'text'; text: string };
+
+const parseRichContent = (raw: string): RichSeg[] => {
+  const lines = (raw || '').split('\n');
+  const out: RichSeg[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const trimmed = lines[i].trim();
+    i++;
+    if (!trimmed) continue;
+
+    // ## heading
+    const hm = trimmed.match(/^#{1,4}\s+(.+)/);
+    if (hm) {
+      const text = hm[1].replace(/\*\*/g, '').replace(/\*/g, '').trim();
+      if (text) out.push({ kind: 'heading', text });
+      continue;
+    }
+
+    // --- divider: collapse silently (headings already separate sections)
+    if (/^\s*[-*]{3,}\s*$/.test(trimmed)) continue;
+
+    // | table row |
+    if (trimmed.startsWith('|')) {
+      i--; // re-read as table block
+      const tableRows: string[][] = [];
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        const row = lines[i].trim();
+        i++;
+        if (/^\|[\s\-:|]+\|$/.test(row)) continue; // separator row
+        const cells = row.split('|').slice(1, -1).map(c => c.trim());
+        if (cells.some(c => c)) tableRows.push(cells);
+      }
+      if (tableRows.length > 0) out.push({ kind: 'table', rows: tableRows });
+      continue;
+    }
+
+    // - bullet / * bullet / • bullet
+    const bm = trimmed.match(/^[•\-*]\s+(.+)/);
+    if (bm) {
+      const t = bm[1].replace(/\*\*/g, '').replace(/\*/g, '').trim();
+      if (t) {
+        const ci = t.indexOf(':');
+        const hasL = ci > 0 && ci < 60;
+        out.push({ kind: 'bullet', text: hasL ? t.slice(ci + 1).trim() : t, label: hasL ? t.slice(0, ci).trim() : undefined });
+      }
+      continue;
+    }
+
+    // 1. numbered item
+    const nm = trimmed.match(/^\d+[.)]\s+(.+)/);
+    if (nm) {
+      const t = nm[1].replace(/\*\*/g, '').replace(/\*/g, '').trim();
+      if (t) {
+        const ci = t.indexOf(':');
+        const hasL = ci > 0 && ci < 60;
+        out.push({ kind: 'bullet', text: hasL ? t.slice(ci + 1).trim() : t, label: hasL ? t.slice(0, ci).trim() : undefined });
+      }
+      continue;
+    }
+
+    // ALL CAPS subheading (e.g. "CLASSIFICATION MODELS (DEFECT DETECTION):")
+    if (/^[A-Z][A-Z\s,():\-]{3,}$/.test(trimmed)) {
+      out.push({ kind: 'subheading', text: trimmed.replace(/:$/, '') });
+      continue;
+    }
+
+    // Regular text / labeled line
+    const text = trimmed.replace(/\*\*/g, '').replace(/\*/g, '').trim();
+    if (text) {
+      const ci = text.indexOf(':');
+      const hasL = ci > 0 && ci < 60 && !text.startsWith('http');
+      if (hasL) {
+        out.push({ kind: 'bullet', text: text.slice(ci + 1).trim(), label: text.slice(0, ci).trim() });
+      } else {
+        out.push({ kind: 'text', text });
+      }
+    }
+  }
+
+  return out;
+};
+
+const RichTable = ({ rows }: { rows: string[][] }) => {
+  if (rows.length === 0) return null;
+  const [header, ...dataRows] = rows;
+  return (
+    <div className="overflow-x-auto rounded-md border my-1" style={{ borderColor: 'var(--border)' }}>
+      <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
+        {header && header.length > 0 && (
+          <thead>
+            <tr style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+              {header.map((cell, ci) => (
+                <th key={ci} className="font-mono text-[9px] font-bold tracking-wider uppercase px-3 py-2 text-white whitespace-nowrap">
+                  {cell}
+                </th>
+              ))}
+            </tr>
+          </thead>
+        )}
+        <tbody>
+          {dataRows.map((row, ri) => (
+            <tr key={ri} className="border-t" style={{ borderColor: 'var(--border)', background: ri % 2 ? 'rgba(38,97,156,0.025)' : 'transparent' }}>
+              {row.map((cell, ci) => (
+                <td key={ci} className="px-3 py-1.5"
+                  style={{
+                    fontSize: '12px',
+                    color: ci === 0 ? 'var(--text-primary)' : 'var(--text-secondary)',
+                    fontWeight: ci === 0 ? 600 : 400,
+                    fontFamily: ci === 0 ? 'var(--font-code)' : 'var(--font-answer)',
+                  }}>
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const RichContent = ({ content }: { content: string }) => {
+  const { segments, bulletMap } = useMemo(() => {
+    const segs = parseRichContent(content);
+    const bm = new Map<number, number>();
+    let n = 0;
+    segs.forEach((s, i) => { if (s.kind === 'bullet') bm.set(i, ++n); });
+    return { segments: segs, bulletMap: bm };
+  }, [content]);
+
+  return (
+    <div className="space-y-2">
+      {segments.map((seg, idx) => {
+        if (seg.kind === 'heading') {
+          return (
+            <div key={idx} className="flex items-center gap-2 pt-1.5 pb-0.5 first:pt-0">
+              <span className="h-px flex-1" style={{ background: 'var(--border)' }} />
+              <span className="font-mono text-[9px] font-bold tracking-widest uppercase px-2 shrink-0"
+                style={{ color: 'var(--cam-gold-leaf-lt)' }}>
+                {seg.text}
+              </span>
+              <span className="h-px flex-1" style={{ background: 'var(--border)' }} />
+            </div>
+          );
+        }
+        if (seg.kind === 'subheading') {
+          return (
+            <div key={idx} className="font-mono text-[9px] font-bold tracking-widest uppercase mt-2 mb-0.5"
+              style={{ color: 'var(--text-muted)' }}>
+              {seg.text}
+            </div>
+          );
+        }
+        if (seg.kind === 'table') {
+          return <RichTable key={idx} rows={seg.rows} />;
+        }
+        if (seg.kind === 'bullet') {
+          const n = bulletMap.get(idx) ?? 1;
+          return (
+            <div key={idx} className="flex items-start gap-3">
+              <span className="flex items-center justify-center w-5 h-5 rounded-md text-[10px] font-bold shrink-0 mt-0.5 font-mono"
+                style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
+                {n}
+              </span>
+              <div style={{ fontFamily: 'var(--font-answer)', fontSize: 'var(--fs-answer-body)', lineHeight: 'var(--lh-answer)', color: 'var(--text-primary)' }}>
+                {seg.label && <span className="font-semibold">{seg.label}:{' '}</span>}
+                {seg.text}
+              </div>
+            </div>
+          );
+        }
+        return (
+          <p key={idx} style={{ fontFamily: 'var(--font-answer)', fontSize: 'var(--fs-answer-body)', lineHeight: 'var(--lh-answer)', color: 'var(--text-primary)' }}>
+            {(seg as { kind: string; text: string }).text}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
 
 // Helpers
 const parseFollowups = (content: string): { question: string; answer: string }[] => {
