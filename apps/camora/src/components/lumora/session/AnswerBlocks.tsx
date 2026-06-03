@@ -935,7 +935,7 @@ const parseRichContent = (raw: string): RichSeg[] => {
     }
 
     // ALL CAPS subheading (e.g. "CLASSIFICATION MODELS (DEFECT DETECTION):")
-    if (/^[A-Z][A-Z\s,():\-]{3,}$/.test(trimmed)) {
+    if (/^[A-Z][A-Z\s,():-]{3,}$/.test(trimmed)) {
       out.push({ kind: 'subheading', text: trimmed.replace(/:$/, '') });
       continue;
     }

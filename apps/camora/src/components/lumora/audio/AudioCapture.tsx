@@ -68,7 +68,7 @@ const isLikelyRealSpeech = (raw: string): boolean  => {
     if (Math.max(...Object.values(freq)) >= 4) return false;
   }
   // Foreign-language hallucination: non-ASCII > 8% means Whisper drifted language
-  const nonAscii = (text.match(/[^\x00-\x7F]/g) || []).length;
+  const nonAscii = [...text].filter(c => c.charCodeAt(0) > 0x7f).length;
   if (nonAscii / text.length > 0.08) return false;
   const last = text.slice(-1);
   if (last === '?' || last === '!') return true;
