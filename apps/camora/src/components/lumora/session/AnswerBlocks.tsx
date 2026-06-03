@@ -103,7 +103,7 @@ const Block = ({ block, delay }: { block: ParsedBlock; delay: number }) => {
     case 'ANSWER': {
       return (
         <div className="animate-fade-up" style={wrap}>
-          <GridCard title="Key Points" titleColor="text-[var(--accent)]" collapsible={false}>
+          <GridCard title="Key Points" titleColor="text-[var(--accent)]" collapsible={false} className="h-full">
             <RichContent content={block.content} />
           </GridCard>
         </div>
@@ -868,7 +868,7 @@ const Shimmer = () => {
 // instead of as raw characters.
 
 type RichSeg =
-  | { kind: 'heading'; text: string }
+  | { kind: 'heading'; text: string; level: number }
   | { kind: 'subheading'; text: string }
   | { kind: 'table'; rows: string[][] }
   | { kind: 'bullet'; text: string; label?: string }
@@ -884,11 +884,11 @@ const parseRichContent = (raw: string): RichSeg[] => {
     i++;
     if (!trimmed) continue;
 
-    // ## heading
-    const hm = trimmed.match(/^#{1,4}\s+(.+)/);
+    // ## heading (capture level so ## vs #### render differently)
+    const hm = trimmed.match(/^(#{1,4})\s+(.+)/);
     if (hm) {
-      const text = hm[1].replace(/\*\*/g, '').replace(/\*/g, '').trim();
-      if (text) out.push({ kind: 'heading', text });
+      const text = hm[2].replace(/\*\*/g, '').replace(/\*/g, '').trim();
+      if (text) out.push({ kind: 'heading', text, level: hm[1].length });
       continue;
     }
 
@@ -1008,14 +1008,35 @@ const RichContent = ({ content }: { content: string }) => {
     <div className="space-y-2">
       {segments.map((seg, idx) => {
         if (seg.kind === 'heading') {
+          if (seg.level <= 2) {
+            // ## Major section — navy-tinted bar with gold left border (slide section divider)
+            return (
+              <div key={idx} className="flex items-center gap-3 px-3 py-2 mt-4 mb-1.5 rounded-sm first:mt-0"
+                style={{ background: 'rgba(38,97,156,0.08)', borderLeft: '3px solid var(--cam-gold-leaf)' }}>
+                <span className="font-mono text-[10px] font-bold tracking-widest uppercase"
+                  style={{ color: 'var(--text-primary)', letterSpacing: '0.12em' }}>
+                  {seg.text.replace(/:$/, '')}
+                </span>
+              </div>
+            );
+          }
+          // #### Numbered subsection (e.g. "8. Responsible AI Baselines:")
+          const numMatch = seg.text.match(/^(\d+)[.)]\s+(.+)/);
+          const num = numMatch ? numMatch[1] : null;
+          const title = (numMatch ? numMatch[2] : seg.text).replace(/:$/, '');
           return (
-            <div key={idx} className="flex items-center gap-2 pt-1.5 pb-0.5 first:pt-0">
-              <span className="h-px flex-1" style={{ background: 'var(--border)' }} />
-              <span className="font-mono text-[9px] font-bold tracking-widest uppercase px-2 shrink-0"
-                style={{ color: 'var(--cam-gold-leaf-lt)' }}>
-                {seg.text}
+            <div key={idx} className="flex items-center gap-2 mt-3 mb-1"
+              style={{ borderLeft: '2px solid var(--accent)', paddingLeft: '8px' }}>
+              {num && (
+                <span className="flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold font-mono shrink-0"
+                  style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
+                  {num}
+                </span>
+              )}
+              <span className="text-[12px] font-semibold"
+                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)', letterSpacing: '-0.01em' }}>
+                {title}
               </span>
-              <span className="h-px flex-1" style={{ background: 'var(--border)' }} />
             </div>
           );
         }
