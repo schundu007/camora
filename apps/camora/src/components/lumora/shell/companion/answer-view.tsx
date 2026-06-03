@@ -369,367 +369,140 @@ export const StoryBankPanel = ({ stories, activeArchetype }: { stories?: LumoraS
   );
 }
 
-/* ── RichText — renders markdown with proper code blocks. Scaled up to a
-   readable 14 px / 1.65 textbook treatment with stronger heading
-   hierarchy and LeetCode-style inline labels. */
+/* ── RichText — single-pass markdown renderer.
+   Parses ## headings, | tables |, - bullets, ``` code ```, numbered lists,
+   and plain paragraphs into typed segments, then renders each one. */
 const RichText = ({ text }: { text: string }) => {
   if (!text) return null;
 
-  // Split into blocks: fenced code blocks vs regular text.
-  const blocks: { type: 'code' | 'text'; lang?: string; content: string }[] = [];
-  const codeRegex = /```(\w*)\n?([\s\S]*?)```/g;
-  let lastIdx = 0;
-  let match;
+  const BOLD: React.CSSProperties = { color: TEXT_PRIMARY, fontWeight: 700 };
+  const ICODE: React.CSSProperties = { background: 'var(--bg-elevated)', color: 'var(--cam-primary-dk)', padding: '1px 6px', borderRadius: 4, fontSize: 12.5, fontFamily: 'var(--font-mono)', border: '1px solid var(--border)' };
+  const inline = (s: string) => renderInlineSafe(s, { bold: BOLD, code: ICODE, link: { color: 'var(--cam-primary)', textDecoration: 'underline' }, allowLinks: true });
 
-  while ((match = codeRegex.exec(text)) !== null) {
-    if (match.index > lastIdx) blocks.push({ type: 'text', content: text.slice(lastIdx, match.index) });
-    blocks.push({ type: 'code', lang: match[1] || 'python', content: match[2].trim() });
-    lastIdx = match.index + match[0].length;
-  }
-  if (lastIdx < text.length) blocks.push({ type: 'text', content: text.slice(lastIdx) });
-
-  /** Detect if a line looks like code (indented, has code syntax) */
-  const isCodeLine = (line: string): boolean => {
-    const t = line.trimEnd();
-    if (!t) return false;
-    if (/^(\s{4,}|\t)/.test(line) && !line.trim().startsWith('-') && !line.trim().startsWith('•')) return true;
-    if (/^(class |def |function |const |let |var |import |from |if |for |while |return |self\.|print\(|console\.)/.test(t.trim())) return true;
-    if (/[{};]$/.test(t.trim()) || /^\s*(else|elif|except|finally|catch|try):?\s*$/.test(t.trim())) return true;
-    if (/^\s*(slow|fast|head|node|prev|curr|next)\s*[=.]/.test(t.trim())) return true;
-    return false;
-  };
-
-  /** Group consecutive lines into code blocks, | table | blocks, or text blocks */
-  type SubBlock = { type: 'code' | 'text'; content: string } | { type: 'table'; rows: string[][] };
-
-  const processTextBlock = (content: string): SubBlock[] => {
-    const lines = content.split('\n');
-    const result: SubBlock[] = [];
-    let codeLines: string[] = [];
-    let textLines: string[] = [];
-    let tableRows: string[][] = [];
-
-    const flushCode = () => { if (codeLines.length > 0) { result.push({ type: 'code', content: codeLines.join('\n') }); codeLines = []; } };
-    const flushText = () => { if (textLines.length > 0) { result.push({ type: 'text', content: textLines.join('\n') }); textLines = []; } };
-    const flushTable = () => { if (tableRows.length > 0) { result.push({ type: 'table', rows: [...tableRows] }); tableRows = []; } };
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (trimmed.startsWith('|')) {
-        flushCode();
-        flushText();
-        if (/^\|[\s\-:|]+\|$/.test(trimmed)) continue; // skip separator rows |---|
-        const cells = trimmed.split('|').slice(1, -1).map(c => c.trim());
-        if (cells.some(c => c)) tableRows.push(cells);
-      } else if (isCodeLine(line)) {
-        flushTable();
-        flushText();
-        codeLines.push(line);
-      } else {
-        if (codeLines.length > 0 && trimmed === '') {
-          codeLines.push(line);
-        } else {
-          flushCode();
-          flushTable();
-          textLines.push(line);
-        }
-      }
-    }
-    flushCode();
-    flushText();
-    flushTable();
-    return result;
-  };
-
-  const RICH_BOLD: React.CSSProperties = { color: TEXT_PRIMARY, fontWeight: 700 };
-  const RICH_CODE: React.CSSProperties = {
-    background: 'var(--bg-elevated)',
-    color: 'var(--cam-primary-dk)',
-    padding: '1px 6px',
-    borderRadius: 4,
-    fontSize: 12.5,
-    fontFamily: 'var(--font-mono)',
-    border: '1px solid var(--border)',
-  };
-  const RICH_LINK: React.CSSProperties = { color: 'var(--cam-primary)', textDecoration: 'underline' };
-  const renderInline = (s: string) => renderInlineSafe(s, { bold: RICH_BOLD, code: RICH_CODE, link: RICH_LINK, allowLinks: true });
-
-  /* Table block — navy header row + alternating stripe rows, matching
-     the RichContent table style used in AnswerBlocks. */
-  const renderTableBlock = (rows: string[][], key: string | number) => {
-    if (rows.length === 0) return null;
-    const [header, ...dataRows] = rows;
-    return (
-      <div key={key} className="overflow-x-auto rounded-md border my-2" style={{ borderColor: 'var(--border)' }}>
-        <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
-              {header.map((cell, ci) => (
-                <th key={ci} className="font-mono text-[9px] font-bold tracking-wider uppercase px-3 py-2 text-white whitespace-nowrap">
-                  {cell.replace(/\*\*/g, '').replace(/\*/g, '')}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {dataRows.map((row, ri) => (
-              <tr key={ri} className="border-t" style={{ borderColor: 'var(--border)', background: ri % 2 ? 'rgba(38,97,156,0.025)' : 'transparent' }}>
-                {row.map((cell, ci) => (
-                  <td key={ci} className="px-3 py-1.5"
-                    style={{
-                      fontSize: '12.5px',
-                      lineHeight: '1.5',
-                      color: ci === 0 ? TEXT_PRIMARY : TEXT_SECONDARY,
-                      fontWeight: ci === 0 ? 600 : 400,
-                      fontFamily: ci === 0 ? 'var(--font-mono)' : FONT_ANSWER,
-                    }}>
-                    {renderInline(cell.replace(/^\*\*(.+)\*\*$/, '$1'))}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
-  /* Code block — full LeetCode chrome: cam-hero-strip header, mac
-     traffic-light dots, gold lang tag, copy button, dark-navy body
-     with cyan token color so the code reads as a clear surface. */
   const renderCodeBlock = (content: string, lang?: string, key?: number | string) => (
-    <div
-      key={key}
-      className="rounded-lg overflow-hidden my-3"
-      style={{ border: '1px solid var(--border)', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}
-    >
-      <div
-        className="flex items-center gap-2 px-3 py-1.5"
-        style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
-      >
+    <div key={key} className="rounded-lg overflow-hidden my-3" style={{ border: '1px solid var(--border)', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>
+      <div className="flex items-center gap-2 px-3 py-1.5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <span className="flex gap-1 items-center">
           <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(239,68,68,0.65)' }} />
           <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(201,162,39,0.85)' }} />
           <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(217,181,67,0.85)' }} />
         </span>
-        <span className="font-mono text-[10px] font-bold tracking-[0.16em] uppercase text-white">
-          {lang || 'code'}
-        </span>
-        <button
-          onClick={() => navigator.clipboard.writeText(content)}
-          className="ml-auto text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-[background-color,color,transform] active:scale-[0.98]"
-          style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.20)' }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-        >
-          Copy
-        </button>
+        <span className="font-mono text-[10px] font-bold tracking-[0.16em] uppercase text-white">{lang || 'code'}</span>
+        <button onClick={() => navigator.clipboard.writeText(content)} className="ml-auto text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-[background-color,color,transform] active:scale-[0.98]" style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.20)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>Copy</button>
       </div>
-      <pre
-        className="px-4 py-3 overflow-x-auto"
-        style={{
-          background: '#0F1B2D',
-          color: '#E6F4FF',
-          fontSize: '12.5px',
-          lineHeight: '1.65',
-          fontFamily: 'var(--font-mono)',
-        }}
-      >
-        <code>{content}</code>
-      </pre>
+      <pre className="px-4 py-3 overflow-x-auto" style={{ background: '#0F1B2D', color: '#E6F4FF', fontSize: '12.5px', lineHeight: '1.65', fontFamily: 'var(--font-mono)' }}><code>{content}</code></pre>
     </div>
   );
 
-  /* Headings — Source Sans 3 / Source Serif 4 family for "studied
-     textbook" feel. Section titles get a subtle gold underline that
-     matches the LeetCode active-tab grammar. */
-  const headingBase: React.CSSProperties = {
-    color: TEXT_PRIMARY,
-    fontFamily: "var(--font-answer-heading)",
-    letterSpacing: '-0.01em',
-    fontWeight: 700,
+  // Typed segment union
+  type Seg =
+    | { s: 'h1'; text: string } | { s: 'h2'; text: string }
+    | { s: 'h3'; num: string | null; text: string }
+    | { s: 'divider' }
+    | { s: 'table'; rows: string[][] }
+    | { s: 'bullet'; text: string } | { s: 'num'; n: string; text: string }
+    | { s: 'label'; label: string; body: string } | { s: 'step'; step: string; body: string }
+    | { s: 'para'; text: string };
+
+  const parseSegs = (raw: string): Seg[] => {
+    const lines = raw.split('\n');
+    const out: Seg[] = [];
+    let tRows: string[][] = [];
+    const flushT = () => { if (tRows.length > 0) { out.push({ s: 'table', rows: [...tRows] }); tRows = []; } };
+    const LBRE = /^(SITUATION|TASK|ACTION|RESULT|LEARNING|SUMMARY|TIP|NOTE|WARNING|TIME|SPACE|APPROACH|COMPLEXITY|EXAMPLE|CONSTRAINTS|EDGE CASES|Q\d+|A\d+)[:\s]+\s*(.*)/i;
+    const STRE = /^(Step\s+\d+)[:\s]+\s*(.*)/i;
+
+    for (const line of lines) {
+      const t = line.trim();
+      if (t.startsWith('|')) {
+        if (/^\|[\s\-:|]+\|$/.test(t)) continue;
+        const cells = t.split('|').slice(1, -1).map(c => c.trim());
+        if (cells.some(c => c)) tRows.push(cells);
+        continue;
+      }
+      flushT();
+      if (!t) continue;
+      const hm = t.match(/^(#{1,6})\s+(.*)/);
+      if (hm) {
+        const lvl = hm[1].length;
+        const r = hm[2].replace(/\*\*/g, '').replace(/\*/g, '').trim().replace(/:$/, '');
+        if (lvl === 1) { out.push({ s: 'h1', text: r }); continue; }
+        if (lvl === 2) { out.push({ s: 'h2', text: r }); continue; }
+        const nm = r.match(/^(\d+)[.)]\s+(.*)/);
+        out.push({ s: 'h3', num: nm ? nm[1] : null, text: nm ? nm[2].replace(/:$/, '') : r });
+        continue;
+      }
+      if (t === '---' || t === '***') { out.push({ s: 'divider' }); continue; }
+      if (t.startsWith('- ') || t.startsWith('• ') || t.startsWith('* ')) { out.push({ s: 'bullet', text: t.slice(2) }); continue; }
+      const nm2 = t.match(/^(\d+)\.\s+(.*)/);
+      if (nm2) { out.push({ s: 'num', n: nm2[1], text: nm2[2] }); continue; }
+      const lm = t.match(LBRE);
+      if (lm) { out.push({ s: 'label', label: lm[1].toUpperCase(), body: lm[2] }); continue; }
+      const sm = t.match(STRE);
+      if (sm) { out.push({ s: 'step', step: sm[1], body: sm[2] }); continue; }
+      out.push({ s: 'para', text: t });
+    }
+    flushT();
+    return out;
   };
 
-  const renderTextLine = (line: string, key: string) => {
-    const t = line.trim();
-    if (!t) return <div key={key} className="h-1" />;
-
-    // #### numbered subsection (e.g. "#### 8. Responsible AI Baselines:")
-    if (t.startsWith('#### ') || t.startsWith('###')) {
-      const raw = t.replace(/^#{3,6}\s+/, '');
-      const numMatch = raw.match(/^(\d+)[.)]\s+(.+)/);
-      const num = numMatch ? numMatch[1] : null;
-      const title = (numMatch ? numMatch[2] : raw).replace(/:$/, '');
-      return (
-        <div key={key} className="flex items-center gap-2 mt-3 mb-1"
-          style={{ borderLeft: '2px solid var(--accent)', paddingLeft: '8px' }}>
-          {num && (
-            <span className="flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold font-mono shrink-0"
-              style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)' }}>
-              {num}
-            </span>
-          )}
-          <span className="text-[13px] font-semibold" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ANSWER }}>
-            {title}
-          </span>
+  const renderSeg = (seg: Seg, key: string): React.ReactNode => {
+    switch (seg.s) {
+      case 'h1': return <div key={key} className="flex items-center gap-3 px-3 py-2.5 mt-4 mb-2 rounded-sm first:mt-0" style={{ background: 'rgba(38,97,156,0.12)', borderLeft: '3px solid var(--cam-gold-leaf)' }}><span className="font-mono text-[11px] font-bold tracking-widest uppercase" style={{ color: TEXT_PRIMARY }}>{seg.text}</span></div>;
+      case 'h2': return <div key={key} className="flex items-center gap-3 px-3 py-2 mt-3 mb-1.5 rounded-sm first:mt-0" style={{ background: 'rgba(38,97,156,0.08)', borderLeft: '3px solid var(--cam-gold-leaf)' }}><span className="font-mono text-[10px] font-bold tracking-widest uppercase" style={{ color: TEXT_PRIMARY }}>{seg.text}</span></div>;
+      case 'h3': return (
+        <div key={key} className="flex items-center gap-2 mt-2.5 mb-1" style={{ borderLeft: '2px solid var(--accent)', paddingLeft: '8px' }}>
+          {seg.num && <span className="flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold font-mono shrink-0" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)' }}>{seg.num}</span>}
+          <span className="text-[13px] font-semibold" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ANSWER }}>{seg.text}</span>
         </div>
       );
+      case 'divider': return <div key={key} className="my-3 h-px" style={{ background: 'var(--cam-gold-leaf)', opacity: 0.4 }} />;
+      case 'table': {
+        if (seg.rows.length === 0) return null;
+        const [hdr, ...body] = seg.rows;
+        return (
+          <div key={key} className="overflow-x-auto rounded-md border my-2" style={{ borderColor: 'var(--border)' }}>
+            <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
+              <thead><tr style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>{hdr.map((c, ci) => <th key={ci} className="font-mono text-[9px] font-bold tracking-wider uppercase px-3 py-2 text-white whitespace-nowrap">{c}</th>)}</tr></thead>
+              <tbody>{body.map((row, ri) => <tr key={ri} className="border-t" style={{ borderColor: 'var(--border)', background: ri % 2 ? 'rgba(38,97,156,0.025)' : 'transparent' }}>{row.map((c, ci) => <td key={ci} className="px-3 py-1.5" style={{ fontSize: '12.5px', lineHeight: '1.5', color: ci === 0 ? TEXT_PRIMARY : TEXT_SECONDARY, fontWeight: ci === 0 ? 600 : 400, fontFamily: ci === 0 ? 'var(--font-mono)' : FONT_ANSWER }}>{inline(c)}</td>)}</tr>)}</tbody>
+            </table>
+          </div>
+        );
+      }
+      case 'bullet': return <div key={key} className="flex gap-2.5 items-start mt-1"><span className="shrink-0 mt-[10px] w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} /><span style={{ fontSize: '14px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(seg.text)}</span></div>;
+      case 'num': return <div key={key} className="flex gap-2.5 items-start mt-1"><span className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-bold tabular-nums mt-[1px]" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)', fontFamily: FONT_ANSWER }}>{seg.n}</span><span style={{ fontSize: '14px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(seg.text)}</span></div>;
+      case 'label': return <div key={key} className="mt-2 flex gap-2.5 items-baseline"><span className="shrink-0 font-mono font-bold text-[10px] tracking-[0.14em] uppercase px-2 py-0.5 rounded" style={{ background: 'var(--cam-primary-dk)', color: 'var(--cam-gold-leaf-lt)' }}>{seg.label}</span><span style={{ fontSize: '13.5px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(seg.body)}</span></div>;
+      case 'step': return <div key={key} className="mt-1.5 flex gap-2 items-baseline"><span className="shrink-0 inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-[0.12em]" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)' }}>{seg.step}</span><span style={{ fontSize: '13.5px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(seg.body)}</span></div>;
+      case 'para': return /^(Input|Output)[:\s]/i.test(seg.text)
+        ? <div key={key} className="mt-1.5 px-3 py-1.5 rounded-md" style={{ background: '#0F1B2D', color: '#E6F4FF', fontFamily: 'var(--font-mono)', fontSize: '12.5px', lineHeight: '1.6' }}>{seg.text}</div>
+        : <p key={key} style={{ fontSize: '14px', lineHeight: '1.7', color: TEXT_PRIMARY }}>{inline(seg.text)}</p>;
     }
-    // ## section — navy-tinted bar with gold left border (slide section divider)
-    if (t.startsWith('## ')) {
-      return (
-        <div key={key} className="flex items-center gap-3 px-3 py-2 mt-4 mb-1.5 rounded-sm"
-          style={{ background: 'rgba(38,97,156,0.08)', borderLeft: '3px solid var(--cam-gold-leaf)' }}>
-          <span className="font-mono text-[10px] font-bold tracking-widest uppercase"
-            style={{ color: TEXT_PRIMARY, letterSpacing: '0.12em' }}>
-            {t.slice(3).replace(/:$/, '')}
-          </span>
-        </div>
-      );
-    }
-    // # h1 — stronger section bar
-    if (t.startsWith('# ')) {
-      return (
-        <div key={key} className="flex items-center gap-3 px-3 py-2.5 mt-4 mb-2 rounded-sm"
-          style={{ background: 'rgba(38,97,156,0.12)', borderLeft: '3px solid var(--cam-gold-leaf)' }}>
-          <span className="font-mono text-[11px] font-bold tracking-widest uppercase"
-            style={{ color: TEXT_PRIMARY, letterSpacing: '0.12em' }}>
-            {t.slice(2).replace(/:$/, '')}
-          </span>
-        </div>
-      );
-    }
-
-    // ALL-CAPS labels (TIME:, SPACE:, APPROACH:, etc.) — render as a
-    // navy chip + body, like a LeetCode mini-card row.
-    const labelMatch = t.match(/^(SITUATION|TASK|ACTION|RESULT|LEARNING|SUMMARY|TIP|NOTE|WARNING|TIME|SPACE|APPROACH|COMPLEXITY|EXAMPLE|INPUT|OUTPUT|CONSTRAINTS|EDGE CASES|Q\d+|A\d+)[:\s]+\s*(.*)/i);
-    if (labelMatch) {
-      return (
-        <div key={key} className="mt-2 flex gap-2.5 items-baseline">
-          <span
-            className="shrink-0 font-mono font-bold text-[10px] tracking-[0.14em] uppercase px-2 py-0.5 rounded"
-            style={{
-              background: 'var(--cam-primary-dk)',
-              color: 'var(--cam-gold-leaf-lt)',
-              letterSpacing: '0.12em',
-            }}
-          >
-            {labelMatch[1].toUpperCase()}
-          </span>
-          <span style={{ fontSize: '13.5px', lineHeight: '1.65', color: TEXT_PRIMARY }}>
-            {renderInline(labelMatch[2])}
-          </span>
-        </div>
-      );
-    }
-
-    // Step N: pattern.
-    const stepMatch = t.match(/^(Step\s+\d+)[:\s]+\s*(.*)/i);
-    if (stepMatch) {
-      return (
-        <div key={key} className="mt-1.5 flex gap-2 items-baseline">
-          <span
-            className="shrink-0 inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-[0.12em]"
-            style={{
-              background: 'var(--accent-subtle)',
-              color: 'var(--cam-primary-dk)',
-              border: '1px solid var(--border)',
-            }}
-          >
-            {stepMatch[1]}
-          </span>
-          <span style={{ fontSize: '13.5px', lineHeight: '1.65', color: TEXT_PRIMARY }}>
-            {renderInline(stepMatch[2])}
-          </span>
-        </div>
-      );
-    }
-
-    // Numbered list — chip-style number tile to anchor the eye.
-    const numMatch = t.match(/^(\d+)\.\s+(.*)/);
-    if (numMatch) {
-      return (
-        <div key={key} className="flex gap-2.5 items-start mt-1">
-          <span
-            className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-bold tabular-nums mt-[1px]"
-            style={{
-              background: 'var(--accent-subtle)',
-              color: 'var(--cam-primary-dk)',
-              border: '1px solid var(--border)',
-              fontFamily: FONT_ANSWER,
-            }}
-          >
-            {numMatch[1]}
-          </span>
-          <span style={{ fontSize: '14px', lineHeight: '1.65', color: TEXT_PRIMARY }}>
-            {renderInline(numMatch[2])}
-          </span>
-        </div>
-      );
-    }
-
-    // Bullets — gold-leaf dots, generous spacing.
-    if (t.startsWith('- ') || t.startsWith('• ') || t.startsWith('* ')) {
-      return (
-        <div key={key} className="flex gap-2.5 items-start mt-1">
-          <span
-            className="shrink-0 mt-[10px] w-1.5 h-1.5 rounded-full"
-            style={{ background: 'var(--cam-gold-leaf)' }}
-          />
-          <span style={{ fontSize: '14px', lineHeight: '1.65', color: TEXT_PRIMARY }}>
-            {renderInline(t.slice(2))}
-          </span>
-        </div>
-      );
-    }
-
-    // Input/Output lines — wrap as a navy code-card row.
-    if (/^(Input|Output)[:\s]/.test(t)) {
-      return (
-        <div
-          key={key}
-          className="mt-1.5 px-3 py-1.5 rounded-md"
-          style={{
-            background: '#0F1B2D',
-            color: '#E6F4FF',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '12.5px',
-            lineHeight: '1.6',
-          }}
-        >
-          {t}
-        </div>
-      );
-    }
-
-    // Horizontal rule — gold-leaf accent line.
-    if (t === '---' || t === '***') {
-      return <div key={key} className="my-4 h-px" style={{ background: 'var(--cam-gold-leaf)', opacity: 0.5 }} />;
-    }
-
-    // Regular paragraph — textbook body type.
-    return (
-      <p key={key} style={{ fontSize: '14px', lineHeight: '1.7', color: TEXT_PRIMARY }}>
-        {renderInline(t)}
-      </p>
-    );
   };
+
+  // Split on fenced code blocks, then parse each text chunk with parseSegs
+  type Chunk = { k: 'code'; lang: string; content: string } | { k: 'text'; content: string };
+  const chunks: Chunk[] = [];
+  const fenceRe = /```(\w*)\n?([\s\S]*?)```/g;
+  let lastIdx = 0;
+  let match;
+
+  while ((match = fenceRe.exec(text)) !== null) {
+    if (match.index > lastIdx) chunks.push({ k: 'text', content: text.slice(lastIdx, match.index) });
+    chunks.push({ k: 'code', lang: match[1] || 'python', content: match[2].trim() });
+    lastIdx = match.index + match[0].length;
+  }
+  if (lastIdx < text.length) chunks.push({ k: 'text', content: text.slice(lastIdx) });
 
   return (
     <div className="flex flex-col gap-1" style={{ fontFamily: FONT_ANSWER }}>
-      {blocks.map((block, bi) => {
-        if (block.type === 'code') return renderCodeBlock(block.content, block.lang, bi);
-
-        const subBlocks = processTextBlock(block.content);
-        return subBlocks.map((sub, si) => {
-          if (sub.type === 'code') return renderCodeBlock(sub.content, 'python', `${bi}-code-${si}`);
-          if (sub.type === 'table') return renderTableBlock(sub.rows, `${bi}-table-${si}`);
-          return (sub as { type: 'text'; content: string }).content.split('\n').map((line, li) => renderTextLine(line, `${bi}-${si}-${li}`));
-        });
-      })}
+      {chunks.map((chunk, ci) => chunk.k === 'code'
+        ? renderCodeBlock(chunk.content, chunk.lang, ci)
+        : parseSegs(chunk.content).map((seg, si) => renderSeg(seg, `${ci}-${si}`))
+      )}
     </div>
   );
 }
+
 
 /* ── AnswerView — picks STAR cards for behavioral, RichText otherwise ── */
 export const AnswerView = ({ text, streaming }: { text: string; streaming?: boolean }) => {
