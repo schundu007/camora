@@ -492,7 +492,14 @@ export const AudioSetupWizard = ({
         URL.revokeObjectURL(audio.src);
       };
       await audio.play();
-    } catch (err) {
+    } catch (err: any) {
+      // AbortError fires when play() is interrupted by an implicit pause()
+      // (e.g. component unmounts before the promise resolves). Not a real
+      // failure — just clean up state silently.
+      if (err?.name === 'AbortError') {
+        setSpeakerTestPlaying(false);
+        return;
+      }
       console.error('[AudioWizard] sound test failed', err);
       setSpeakerTestPlaying(false);
     }
