@@ -346,7 +346,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
               embedded Sona panel no longer renders its own AUTO chip).
               Coding/Design stay manual (AUTO starts off). `key={surface}`
               remounts on tab switch so autoStart re-initialises per surface. */}
-          <AudioCapture key={surface} onTranscription={onTranscription} autoStart={surface === 'behavioral'} active={isTabActive} compact />
+          <AudioCapture key={surface} onTranscription={onTranscription} autoStart={surface === 'behavioral'} active={isTabActive} compact locked={surface === 'behavioral'} />
         </div>
       )}
 

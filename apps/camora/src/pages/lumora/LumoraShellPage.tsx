@@ -26,7 +26,6 @@ import { isQuestion } from '../../lib/questionDetector';
 import { LumoraProfilePage, AssistantsPage } from './lumora-shell/profile-and-assistants';
 import { HistoryAnswerViewer, TabLoading } from './lumora-shell/history-viewer';
 import { ScreenshotStrip, type ScreenshotEntry } from '../../components/lumora/shell/ScreenshotStrip';
-import CompanyContextPicker from '../../components/lumora/shell/CompanyContextPicker';
 
 // Lazy load heavy layouts — only mounted on first tab activation
 const CodingLayout = lazy(() => import('../../components/lumora/coding/CodingLayout').then(m => ({ default: m.CodingLayout })));
@@ -561,11 +560,6 @@ export const LumoraShellPage = () => {
               we don't render a duplicate here; mobile users still get it
               from the hamburger sheet below. */}
           <div className="flex items-center gap-2 shrink-0">
-
-            {/* Company context — visible on all Lumora AI tabs */}
-            <div className="hidden md:block">
-              <CompanyContextPicker />
-            </div>
 
             {/* Mobile hamburger — pinned right, matches SiteNav and TopBar.
                 Opens a dropdown with secondary Lumora destinations and
