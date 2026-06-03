@@ -399,32 +399,45 @@ const RichText = ({ text }: { text: string }) => {
     return false;
   };
 
-  /** Group consecutive code-like lines into code blocks */
-  const processTextBlock = (content: string): { type: 'code' | 'text'; content: string }[] => {
+  /** Group consecutive lines into code blocks, | table | blocks, or text blocks */
+  type SubBlock = { type: 'code' | 'text'; content: string } | { type: 'table'; rows: string[][] };
+
+  const processTextBlock = (content: string): SubBlock[] => {
     const lines = content.split('\n');
-    const result: { type: 'code' | 'text'; content: string }[] = [];
+    const result: SubBlock[] = [];
     let codeLines: string[] = [];
     let textLines: string[] = [];
+    let tableRows: string[][] = [];
 
     const flushCode = () => { if (codeLines.length > 0) { result.push({ type: 'code', content: codeLines.join('\n') }); codeLines = []; } };
     const flushText = () => { if (textLines.length > 0) { result.push({ type: 'text', content: textLines.join('\n') }); textLines = []; } };
+    const flushTable = () => { if (tableRows.length > 0) { result.push({ type: 'table', rows: [...tableRows] }); tableRows = []; } };
 
     for (const line of lines) {
-      if (isCodeLine(line)) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('|')) {
+        flushCode();
+        flushText();
+        if (/^\|[\s\-:|]+\|$/.test(trimmed)) continue; // skip separator rows |---|
+        const cells = trimmed.split('|').slice(1, -1).map(c => c.trim());
+        if (cells.some(c => c)) tableRows.push(cells);
+      } else if (isCodeLine(line)) {
+        flushTable();
         flushText();
         codeLines.push(line);
       } else {
-        // Allow blank lines inside code blocks.
-        if (codeLines.length > 0 && line.trim() === '') {
+        if (codeLines.length > 0 && trimmed === '') {
           codeLines.push(line);
         } else {
           flushCode();
+          flushTable();
           textLines.push(line);
         }
       }
     }
     flushCode();
     flushText();
+    flushTable();
     return result;
   };
 
@@ -440,6 +453,46 @@ const RichText = ({ text }: { text: string }) => {
   };
   const RICH_LINK: React.CSSProperties = { color: 'var(--cam-primary)', textDecoration: 'underline' };
   const renderInline = (s: string) => renderInlineSafe(s, { bold: RICH_BOLD, code: RICH_CODE, link: RICH_LINK, allowLinks: true });
+
+  /* Table block — navy header row + alternating stripe rows, matching
+     the RichContent table style used in AnswerBlocks. */
+  const renderTableBlock = (rows: string[][], key: string | number) => {
+    if (rows.length === 0) return null;
+    const [header, ...dataRows] = rows;
+    return (
+      <div key={key} className="overflow-x-auto rounded-md border my-2" style={{ borderColor: 'var(--border)' }}>
+        <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+              {header.map((cell, ci) => (
+                <th key={ci} className="font-mono text-[9px] font-bold tracking-wider uppercase px-3 py-2 text-white whitespace-nowrap">
+                  {cell.replace(/\*\*/g, '').replace(/\*/g, '')}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {dataRows.map((row, ri) => (
+              <tr key={ri} className="border-t" style={{ borderColor: 'var(--border)', background: ri % 2 ? 'rgba(38,97,156,0.025)' : 'transparent' }}>
+                {row.map((cell, ci) => (
+                  <td key={ci} className="px-3 py-1.5"
+                    style={{
+                      fontSize: '12.5px',
+                      lineHeight: '1.5',
+                      color: ci === 0 ? TEXT_PRIMARY : TEXT_SECONDARY,
+                      fontWeight: ci === 0 ? 600 : 400,
+                      fontFamily: ci === 0 ? 'var(--font-mono)' : FONT_ANSWER,
+                    }}>
+                    {renderInline(cell.replace(/^\*\*(.+)\*\*$/, '$1'))}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   /* Code block — full LeetCode chrome: cam-hero-strip header, mac
      traffic-light dots, gold lang tag, copy button, dark-navy body
@@ -501,25 +554,49 @@ const RichText = ({ text }: { text: string }) => {
     const t = line.trim();
     if (!t) return <div key={key} className="h-1" />;
 
-    if (t.startsWith('### ')) {
+    // #### numbered subsection (e.g. "#### 8. Responsible AI Baselines:")
+    if (t.startsWith('#### ') || t.startsWith('###')) {
+      const raw = t.replace(/^#{3,6}\s+/, '');
+      const numMatch = raw.match(/^(\d+)[.)]\s+(.+)/);
+      const num = numMatch ? numMatch[1] : null;
+      const title = (numMatch ? numMatch[2] : raw).replace(/:$/, '');
       return (
-        <h4 key={key} className="mt-4 mb-1.5 pb-1" style={{ ...headingBase, fontSize: '14px', borderBottom: '1px solid var(--border)' }}>
-          {t.slice(4)}
-        </h4>
+        <div key={key} className="flex items-center gap-2 mt-3 mb-1"
+          style={{ borderLeft: '2px solid var(--accent)', paddingLeft: '8px' }}>
+          {num && (
+            <span className="flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold font-mono shrink-0"
+              style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)' }}>
+              {num}
+            </span>
+          )}
+          <span className="text-[13px] font-semibold" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ANSWER }}>
+            {title}
+          </span>
+        </div>
       );
     }
+    // ## section — navy-tinted bar with gold left border (slide section divider)
     if (t.startsWith('## ')) {
       return (
-        <h3 key={key} className="mt-5 mb-2 pb-1.5" style={{ ...headingBase, fontSize: '15.5px', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
-          {t.slice(3)}
-        </h3>
+        <div key={key} className="flex items-center gap-3 px-3 py-2 mt-4 mb-1.5 rounded-sm"
+          style={{ background: 'rgba(38,97,156,0.08)', borderLeft: '3px solid var(--cam-gold-leaf)' }}>
+          <span className="font-mono text-[10px] font-bold tracking-widest uppercase"
+            style={{ color: TEXT_PRIMARY, letterSpacing: '0.12em' }}>
+            {t.slice(3).replace(/:$/, '')}
+          </span>
+        </div>
       );
     }
+    // # h1 — stronger section bar
     if (t.startsWith('# ')) {
       return (
-        <h2 key={key} className="mt-5 mb-2 pb-1.5" style={{ ...headingBase, fontSize: '17px', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
-          {t.slice(2)}
-        </h2>
+        <div key={key} className="flex items-center gap-3 px-3 py-2.5 mt-4 mb-2 rounded-sm"
+          style={{ background: 'rgba(38,97,156,0.12)', borderLeft: '3px solid var(--cam-gold-leaf)' }}>
+          <span className="font-mono text-[11px] font-bold tracking-widest uppercase"
+            style={{ color: TEXT_PRIMARY, letterSpacing: '0.12em' }}>
+            {t.slice(2).replace(/:$/, '')}
+          </span>
+        </div>
       );
     }
 
@@ -646,7 +723,8 @@ const RichText = ({ text }: { text: string }) => {
         const subBlocks = processTextBlock(block.content);
         return subBlocks.map((sub, si) => {
           if (sub.type === 'code') return renderCodeBlock(sub.content, 'python', `${bi}-code-${si}`);
-          return sub.content.split('\n').map((line, li) => renderTextLine(line, `${bi}-${si}-${li}`));
+          if (sub.type === 'table') return renderTableBlock(sub.rows, `${bi}-table-${si}`);
+          return (sub as { type: 'text'; content: string }).content.split('\n').map((line, li) => renderTextLine(line, `${bi}-${si}-${li}`));
         });
       })}
     </div>
