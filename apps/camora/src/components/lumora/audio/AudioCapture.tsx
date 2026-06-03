@@ -55,14 +55,21 @@ const dlog = (event: string, data?: Record<string, unknown>) => {
 // a fuller sentence. False positives (passing through "lanja") wreck
 // the QUESTIONS panel and waste an LLM call.
 const isLikelyRealSpeech = (raw: string): boolean  => {
-  // Defensive: if a non-string slips through (Whisper backend edge
-  // case — see the matching guard in lumora-backend transcription.js),
-  // reject. Whisper has never legitimately produced "[object Object]"
-  // text; if it appears, it is upstream pollution, not speech.
   if (typeof raw !== 'string') return false;
   const text = raw.trim();
   if (!text) return false;
   if (text.includes('[object Object]')) return false;
+  // Repetition hallucination: Whisper loops on a single word from silence
+  // ("Marvin, Marvin, Marvin…"). Any word appearing 4+ times = loop.
+  const allWords = text.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z]/g, '')).filter(w => w.length > 2);
+  if (allWords.length > 0) {
+    const freq: Record<string, number> = {};
+    for (const w of allWords) freq[w] = (freq[w] || 0) + 1;
+    if (Math.max(...Object.values(freq)) >= 4) return false;
+  }
+  // Foreign-language hallucination: non-ASCII > 8% means Whisper drifted language
+  const nonAscii = (text.match(/[^\x00-\x7F]/g) || []).length;
+  if (nonAscii / text.length > 0.08) return false;
   const last = text.slice(-1);
   if (last === '?' || last === '!') return true;
   const words = text.split(/\s+/);
@@ -244,13 +251,12 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
   // mic can never hold the accumulator open forever.
   const MAX_ACCUM_MS = 15000;
   // How long after the speaker's last audible moment we keep a flush
-  // pending. For a short, unpunctuated fragment ("Tell me about a time…")
-  // we wait GLUE_HOLD_MS — long enough to bridge a full VAD silence +
-  // transcription round-trip so the rest of the sentence glues on. For a
-  // complete-looking utterance we only wait SHORT_HOLD_MS so Sona still
-  // answers fast in the common case.
-  const GLUE_HOLD_MS = 4000;
-  const SHORT_HOLD_MS = 900;
+  // pending. Reduced from 4000/900 ms — the original values were tuned
+  // for the user answering a question (long pauses, mid-thought gaps)
+  // but behavioral uses this for the *interviewer* asking, where
+  // questions are complete sentences. Faster flush = faster Sona answer.
+  const GLUE_HOLD_MS = 1500;
+  const SHORT_HOLD_MS = 350;
 
   const flushAccumulatedText = useCallback(() => {
     const text = accumulatedTextRef.current.trim();

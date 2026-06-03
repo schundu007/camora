@@ -251,8 +251,23 @@ router.post(
       const hasTerminalPunct = /[?!.]$/.test(trimmed);
       const isShortNoise = wordCount <= 1 && trimmed.length < 14 && !hasTerminalPunct;
 
-      if (isHallucinationByPattern || isShortNoise) {
-        console.info(`[Whisper] Filtered hallucination: "${trimmed}" (pattern=${isHallucinationByPattern}, shortNoise=${isShortNoise})`);
+      // Repetition hallucination: Whisper locks onto a single word/name from
+      // silence and repeats it many times ("Marvin, Marvin, are you there
+      // Marvin?"). Any word appearing 4+ times in the transcript is a loop.
+      const allWords = trimmed.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z]/g, '')).filter(w => w.length > 2);
+      const wordFreq = {};
+      for (const w of allWords) wordFreq[w] = (wordFreq[w] || 0) + 1;
+      const maxRepeat = allWords.length ? Math.max(...Object.values(wordFreq)) : 0;
+      const isRepetitionHallucination = maxRepeat >= 4;
+
+      // Foreign-language hallucination: despite language:'en', Whisper sometimes
+      // produces German/Japanese/etc. on background noise. Reject if non-ASCII
+      // characters make up more than 8% of the text.
+      const nonAsciiCount = (trimmed.match(/[^\x00-\x7F]/g) || []).length;
+      const isForeignHallucination = trimmed.length > 0 && (nonAsciiCount / trimmed.length) > 0.08;
+
+      if (isHallucinationByPattern || isShortNoise || isRepetitionHallucination || isForeignHallucination) {
+        console.info(`[Whisper] Filtered hallucination: "${trimmed.slice(0, 80)}" (pattern=${isHallucinationByPattern}, shortNoise=${isShortNoise}, repeat=${isRepetitionHallucination}, foreign=${isForeignHallucination})`);
         return res.json({ text: '', latency_ms: latencyMs, skipped: true, reason: 'hallucination_filtered' });
       }
 
