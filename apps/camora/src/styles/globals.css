@@ -1,8 +1,9 @@
 /* ══════════════════════════════════════════════════════════════
-   CAMORA v6 DESIGN SYSTEM — Navy Atlas (enterprise palette)
+   CAMORA v7 DESIGN SYSTEM — iximiuz-inspired clean redesign
+   Fonts: Inter (UI) + JetBrains Mono (code) + Source Code Pro
+   Light mode: clean white/slate inspired by labs.iximiuz.com
+   Dark mode: refined Navy Atlas with semantic difficulty colors
    ══════════════════════════════════════════════════════════════ */
-
-/* ── Satoshi — loaded via Fontshare in index.html (single source) ── */
 
 /* ── JetBrains Mono — Bunny.net CDN (canonical source for mono) ── */
 @import url('https://fonts.bunny.net/css?family=jetbrains-mono:400,500,700&display=swap');
@@ -56,26 +57,26 @@
     --danger:  #EF4444;
     --info:    #1E4D78;
 
-    /* Difficulty — weight-driven, not hue-driven */
-    --easy:        #6B7280;
-    --easy-bg:     rgba(107,114,128,0.10);
-    --easy-border: rgba(107,114,128,0.25);
-    --medium:      #EBE9E4;
-    --medium-bg:   rgba(235,233,228,0.06);
-    --medium-border: rgba(235,233,228,0.15);
-    --hard:        #D4A043;
-    --hard-bg:     color-mix(in oklab, var(--hard) 10%, transparent);
-    --hard-border: color-mix(in oklab, var(--hard) 25%, transparent);
+    /* Difficulty — semantic hues (iximiuz: green/orange/red) */
+    --easy:        #34D399;
+    --easy-bg:     rgba(52,211,153,0.12);
+    --easy-border: rgba(52,211,153,0.30);
+    --medium:      #FBBF24;
+    --medium-bg:   rgba(251,191,36,0.12);
+    --medium-border: rgba(251,191,36,0.30);
+    --hard:        #F87171;
+    --hard-bg:     rgba(248,113,113,0.12);
+    --hard-border: rgba(248,113,113,0.30);
 
     /* Category */
     --cat-primary:    #1E4D78;
     --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 10%, transparent);
 
-    /* Fonts — Satoshi (all UI) + JetBrains Mono (code) */
-    --font-sans: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-display: 'Satoshi', sans-serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-    --font-brand: 'Satoshi', sans-serif;
+    /* Fonts — Inter (all UI, iximiuz-inspired) + JetBrains Mono (code) */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-display: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-brand: 'Inter', sans-serif;
     --font-answer: var(--font-sans);
     --font-answer-heading: var(--font-sans);
     --fs-answer-body: 16px;
@@ -102,6 +103,12 @@
     --content-max: 720px;
     --page-max: 1280px;
     --nav-h: 84px;
+
+    /* Topbar tokens — surface bg + clean 1px border (iximiuz style) */
+    --topbar-bg:     var(--bg-surface);
+    --topbar-border: var(--border);
+    --topbar-text:   var(--text-primary);
+    --topbar-muted:  var(--text-muted);
 
     /* Legacy compat aliases */
     --text-dim: var(--text-muted);
@@ -161,90 +168,107 @@
   }
 
   /* ──────────────────────────────────────────────────────────
-     LIGHT THEME — opt-in via [data-theme="light"] on <html>.
-     Clean, neutral light variant of the Developer Dark palette.
-     Every contrast pair below ≥ 4.5:1 (WCAG AA).
+     LIGHT THEME — iximiuz-inspired clean palette
+     White surfaces · slate text · #1A62FF accent
+     Semantic difficulty: emerald / amber / red
+     Every contrast pair ≥ 4.5:1 (WCAG AA).
      ────────────────────────────────────────────────────────── */
   [data-theme="light"] {
-    --bg-base:     #FFFFFF;
-    --bg-app:      #F4F3F0;
+    /* Backgrounds — pure white surfaces, mist app background */
+    --bg-base:     #F8F9FB;
+    --bg-app:      #F8F9FB;
     --bg-surface:  #FFFFFF;
-    --bg-elevated: #EEEDEA;
+    --bg-elevated: #EEF1F6;
     --bg-primary: var(--bg-surface);
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.20);
 
-    --border:        #D6D5D0;
-    --border-hover:  #C2C0BA;
-    --border-focus:  #2B6394;
+    /* Borders — clean slate-200/300 */
+    --border:        #E2E8F0;
+    --border-hover:  #CBD5E1;
+    --border-focus:  #1A62FF;
 
-    --text-primary:  #12141A;
-    --text-secondary:#464B54;
-    --text-hero:     #12141A;
-    --text-muted:    #6B717C;
-    --text-dimmed:   #868E96;
+    /* Text — near-black, slate scale */
+    --text-primary:  #0E0F11;
+    --text-secondary:#475569;
+    --text-hero:     #0E0F11;
+    --text-muted:    #94A3B8;
+    --text-dimmed:   #CBD5E1;
 
-    --accent:        #1A4885;
-    --accent-hover:  #2B5E99;
-    --accent-subtle: color-mix(in oklab, var(--accent) 8%, transparent);
-    --accent-text:   #3673B5;
+    /* Accent — iximiuz electric blue */
+    --accent:        #1A62FF;
+    --accent-hover:  #1453E8;
+    --accent-subtle: rgba(26,98,255,0.08);
+    --accent-text:   #1A62FF;
 
-    --accent-secondary:        #C2963E;
-    --accent-secondary-hover:  #D4A84A;
-    --accent-secondary-subtle: color-mix(in oklab, var(--accent-secondary) 8%, transparent);
-    --accent-secondary-text:   #7A5C0A;
+    /* Secondary accent — keep amber for warmth */
+    --accent-secondary:        #D97706;
+    --accent-secondary-hover:  #B45309;
+    --accent-secondary-subtle: rgba(217,119,6,0.08);
+    --accent-secondary-text:   #92400E;
 
-    --success: #1A4885;
-    --warning: #C2963E;
-    --warning-text: #7A5C0A;
+    /* Semantic */
+    --success: #059669;
+    --warning: #D97706;
+    --warning-text: #92400E;
     --danger:  #DC2626;
-    --info:    #1A4885;
+    --info:    #1A62FF;
 
-    --easy:        #6B7280;
-    --easy-bg:     rgba(107,114,128,0.06);
-    --easy-border: rgba(107,114,128,0.18);
-    --medium:      #12141A;
-    --medium-bg:   rgba(18,20,26,0.04);
-    --medium-border: rgba(18,20,26,0.10);
-    --hard:        #C2963E;
-    --hard-bg:     color-mix(in oklab, var(--hard) 8%, transparent);
-    --hard-border: color-mix(in oklab, var(--hard) 20%, transparent);
+    /* Difficulty — full semantic iximiuz palette */
+    --easy:        #059669;
+    --easy-bg:     #D1FAE5;
+    --easy-border: rgba(5,150,105,0.30);
+    --medium:      #D97706;
+    --medium-bg:   #FEF3C7;
+    --medium-border: rgba(217,119,6,0.30);
+    --hard:        #DC2626;
+    --hard-bg:     #FEE2E2;
+    --hard-border: rgba(220,38,38,0.30);
 
-    --cat-primary:    #1A4885;
-    --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 8%, transparent);
+    /* Category */
+    --cat-primary:    #1A62FF;
+    --cat-primary-bg: rgba(26,98,255,0.08);
 
-    --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-sm: 0 2px 6px rgba(0,0,0,0.06);
+    /* Shadows — clean, barely-there */
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
     --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
     --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
     --shadow-xl: 0 16px 48px rgba(0,0,0,0.12);
     --card-shadow: var(--shadow-sm);
-    --shadow-accent-xs: 0 1px 3px rgba(26,72,133,0.06), 0 4px 16px rgba(26,72,133,0.03);
-    --shadow-accent-sm: 0 2px 8px rgba(26,72,133,0.08);
-    --shadow-gold-xs: 0 1px 3px rgba(194,150,62,0.04), 0 4px 16px rgba(194,150,62,0.02);
-    --shadow-gold-sm: 0 2px 8px rgba(194,150,62,0.06);
+    --shadow-accent-xs: 0 1px 3px rgba(26,98,255,0.06), 0 4px 16px rgba(26,98,255,0.03);
+    --shadow-accent-sm: 0 2px 8px rgba(26,98,255,0.10);
+    --shadow-gold-xs: 0 1px 3px rgba(217,119,6,0.04);
+    --shadow-gold-sm: 0 2px 8px rgba(217,119,6,0.08);
 
-    --cam-primary:      #1A4885;
-    --cam-primary-lt:   #2B5E99;
-    --cam-primary-dk:   #143566;
-    --cam-primary-900:  #091B36;
-    --cam-gold-leaf:    #C2963E;
-    --cam-gold-leaf-lt: #D4A84A;
-    --cam-gold-leaf-dk: #A8832E;
-    --cam-gold-leaf-50: color-mix(in oklab, var(--cam-gold-leaf) 6%, transparent);
-    --cam-gold-leaf-text:#8A6B2A;
-    --cam-void:         #F4F3F0;
-    --cam-surface-lt:   #EEEDEA;
+    /* Camora brand — blue primary in light mode */
+    --cam-primary:      #1A62FF;
+    --cam-primary-lt:   #4080FF;
+    --cam-primary-dk:   #1453E8;
+    --cam-primary-900:  #0B3DB5;
+    --cam-gold-leaf:    #D97706;
+    --cam-gold-leaf-lt: #F59E0B;
+    --cam-gold-leaf-dk: #B45309;
+    --cam-gold-leaf-50: rgba(217,119,6,0.08);
+    --cam-gold-leaf-text:#92400E;
+    --cam-void:         #F8F9FB;
+    --cam-surface-lt:   #EEF1F6;
+
+    /* Topbar — clean white in light, dark surface in dark */
+    --topbar-bg:     #FFFFFF;
+    --topbar-border: #E2E8F0;
+    --topbar-text:   #0E0F11;
+    --topbar-muted:  #64748B;
 
     --lumora-chrome-bg:     var(--cam-hero-strip);
-    --lumora-chrome-border: rgba(43,99,148,0.15);
+    --lumora-chrome-border: rgba(26,98,255,0.15);
     --lumora-chrome-shadow: inset 0 -2px 0 var(--accent);
-    --lumora-chrome-text:   rgba(18,20,26,0.75);
-    --lumora-chrome-hover:  rgba(30,77,120,0.06);
+    --lumora-chrome-text:   rgba(14,15,17,0.80);
+    --lumora-chrome-hover:  rgba(26,98,255,0.06);
 
-    --bg-near-black: rgba(18,20,26,0.92);
-    --shadow-primary-xs: 0 1px 3px rgba(26,72,133,0.04), 0 4px 16px rgba(26,72,133,0.02);
-    --shadow-primary-sm: 0 2px 8px rgba(26,72,133,0.06);
+    --bg-near-black: rgba(14,15,17,0.92);
+    --shadow-primary-xs: 0 1px 3px rgba(26,98,255,0.04), 0 4px 16px rgba(26,98,255,0.02);
+    --shadow-primary-sm: 0 2px 8px rgba(26,98,255,0.08);
 
     color-scheme: light;
   }
