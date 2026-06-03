@@ -87,9 +87,13 @@ interface AudioCaptureProps {
   // Coding/Design toolbars are already navy — the box-in-a-box creates
   // an unwanted "overlay" look.
   compact?: boolean;
+  // When true, AUTO is always on and the toggle button is replaced with a
+  // non-interactive LIVE indicator. Used for behavioral tab so the user
+  // can never accidentally toggle off listening during an interview.
+  locked?: boolean;
 }
 
-export const AudioCapture = ({ onTranscription, autoStart = true, active, compact }: AudioCaptureProps) => {
+export const AudioCapture = ({ onTranscription, autoStart = true, active, compact, locked }: AudioCaptureProps) => {
   // Use centralized auth
   const { token } = useAuth();
 
@@ -1071,6 +1075,7 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
     audioLevel={audioLevel}
     handleModeToggle={handleModeToggle}
     compact={compact}
+    locked={locked}
   />;
 }
 
@@ -1087,12 +1092,13 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
  */
 const UnifiedMicButton = ({
   continuousMode, audioLevel,
-  handleModeToggle, compact,
+  handleModeToggle, compact, locked,
 }: {
   continuousMode: boolean;
   audioLevel: number;
   handleModeToggle: () => void;
   compact?: boolean;
+  locked?: boolean;
 }) => {
   const isAutoOn = continuousMode;
 
@@ -1109,30 +1115,48 @@ const UnifiedMicButton = ({
         </span>
       )}
 
-      {/* AUTO toggle */}
-      <button
-        type="button"
-        onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
-        className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors"
-        style={{
-          color: isAutoOn ? '#0a0e1a' : 'rgba(255,255,255,0.85)',
-          background: isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
-          border: `1px solid ${isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.18)'}`,
-          fontFamily: 'var(--font-mono)',
-          boxShadow: isAutoOn ? '0 0 0 2px rgba(201,162,39,0.45)' : 'none',
-        }}
-        title={isAutoOn
-          ? 'AUTO is ON — Sona listens continuously. Click or press ` to stop.'
-          : 'Turn on AUTO — Sona listens continuously and answers each question. Click or press `.'}
-        aria-pressed={isAutoOn}
-      >
-        {isAutoOn ? (
-          <span className="inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
-            AUTO
-          </span>
-        ) : 'AUTO'}
-      </button>
+      {/* Behavioral locked mode — always-on LIVE pill, not a toggle */}
+      {locked ? (
+        <span
+          className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded select-none"
+          style={{
+            color: '#0a0e1a',
+            background: 'var(--cam-gold-leaf)',
+            border: '1px solid var(--cam-gold-leaf)',
+            fontFamily: 'var(--font-mono)',
+            boxShadow: '0 0 0 2px rgba(201,162,39,0.45)',
+          }}
+          title="Sona is always listening during behavioral interviews"
+        >
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
+          LIVE
+        </span>
+      ) : (
+        /* AUTO toggle — coding/design tabs */
+        <button
+          type="button"
+          onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
+          className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors"
+          style={{
+            color: isAutoOn ? '#0a0e1a' : 'rgba(255,255,255,0.85)',
+            background: isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
+            border: `1px solid ${isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.18)'}`,
+            fontFamily: 'var(--font-mono)',
+            boxShadow: isAutoOn ? '0 0 0 2px rgba(201,162,39,0.45)' : 'none',
+          }}
+          title={isAutoOn
+            ? 'AUTO is ON — Sona listens continuously. Click or press ` to stop.'
+            : 'Turn on AUTO — Sona listens continuously and answers each question. Click or press `.'}
+          aria-pressed={isAutoOn}
+        >
+          {isAutoOn ? (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
+              AUTO
+            </span>
+          ) : 'AUTO'}
+        </button>
+      )}
 
       {/* Audio-level meter */}
       <div
