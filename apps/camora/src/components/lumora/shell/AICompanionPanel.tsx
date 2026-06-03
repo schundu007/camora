@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT, setActiveCompanyKey } from '@/lib/companyContext';
-import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { dialogConfirm } from '@/components/shared/Dialog';
 import { isQuestion } from '@/lib/questionDetector';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
@@ -194,65 +193,10 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // LivePage history and Behavioral chats vanished on tab close.
   const addHistoryEntry = useSessionStore(s => s.addHistoryEntry);
 
-  // Voice-filter state — surfaces directly in the input area so users can
-  // tell whether their own voice is being transcribed. Behavioral has no
-  // LumoraTopBar (only coding/design tabs do), so this is the ONLY place
-  // the user can see/toggle the filter from inside this view.
-  const voiceEnrolled = useSessionStore(s => s.voiceEnrolled);
-  const voiceFilterEnabled = useSessionStore(s => s.voiceFilterEnabled);
-  const voiceEnrolledAt = useSessionStore(s => s.voiceEnrolledAt);
-  const ensureVoiceEnrolledAt = useSessionStore(s => s.ensureVoiceEnrolledAt);
-
-  // Voice-enroll banner dismissal — persisted in localStorage so a
-  // user who has seen and dismissed the prompt doesn't get re-nagged
-  // on every page load. The mic + filter toggle live elsewhere; this
-  // banner is purely an onboarding nudge for users who haven't
-  // enrolled yet, so it should only show once per device.
-  const [voiceBannerDismissed, setVoiceBannerDismissedState] = useState<boolean>(() => {
-    try { return localStorage.getItem('lumora_voice_banner_dismissed') === '1'; } catch { return false; }
-  });
-  // Cross-surface sync — both the BottomBar and this panel dismiss the
-  // same banner. Without an event subscription each surface kept stale
-  // local React state until remount, so dismissing on Coding then
-  // switching to Behavioral re-showed the banner.
-  useEffect(() => {
-    const sync = () => {
-      try { setVoiceBannerDismissedState(localStorage.getItem('lumora_voice_banner_dismissed') === '1'); } catch {}
-    };
-    window.addEventListener('lumora:voice-banner-dismissed', sync);
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'lumora_voice_banner_dismissed') sync();
-    };
-    window.addEventListener('storage', onStorage);
-    return () => {
-      window.removeEventListener('lumora:voice-banner-dismissed', sync);
-      window.removeEventListener('storage', onStorage);
-    };
-  }, []);
-  const dismissVoiceBanner = () => {
-    setVoiceBannerDismissedState(true);
-    try { localStorage.setItem('lumora_voice_banner_dismissed', '1'); } catch {}
-    try { window.dispatchEvent(new Event('lumora:voice-banner-dismissed')); } catch {}
-  };
-  const restoreVoiceBanner = () => {
-    setVoiceBannerDismissedState(false);
-    try { localStorage.setItem('lumora_voice_banner_dismissed', '0'); } catch {}
-    try { window.dispatchEvent(new Event('lumora:voice-banner-dismissed')); } catch {}
-  };
-
-  // Backfill the enrollment timestamp for users who enrolled before
-  // we tracked it. Without this, they'd have voiceEnrolled=true but a
-  // null timestamp forever, and the stale-nudge would never fire.
-  useEffect(() => { ensureVoiceEnrolledAt(); }, [ensureVoiceEnrolledAt]);
-
-  // Stale enrollment — Resemblyzer embeddings drift over time as the
-  // user's mic, room, and even voice change. After ~7d we nudge the
-  // user to refresh. Days-since-enroll feeds the inline banner copy.
-  const enrollmentAgeDays = useMemo(() => {
-    if (!voiceEnrolled || !voiceEnrolledAt) return null;
-    return Math.floor((Date.now() - voiceEnrolledAt) / (1000 * 60 * 60 * 24));
-  }, [voiceEnrolled, voiceEnrolledAt]);
-  const enrollmentStale = enrollmentAgeDays !== null && enrollmentAgeDays >= 7;
+  // Voice enrollment / filter status is shown and controlled from the
+  // ScreenshotStrip top toolbar for behavioral (single <VoiceEnrollment>
+  // instance, backed by session-store). The old duplicate status banner
+  // that used to live in this panel's input row was removed.
 
   // Persist Behavioral messages per-assistant in sessionStorage so refresh doesn't
   // wipe an in-progress interview. Cleared when the user explicitly clears chat.
@@ -1344,70 +1288,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       <div className="px-3 pt-2 shrink-0 flex flex-col items-center gap-2 lumora-companion-input-row"
         data-embedded={embedded ? 'true' : 'false'}
       >
-        {/* Voice-filter banner — Behavioral has no LumoraTopBar, so the
-            voice-filter status was invisible here and Sona was answering
-            the candidate's own voice. This row makes the state explicit:
-              · Not enrolled       → red warning + Enroll My Voice
-              · Enrolled, off      → amber warning + Filter Off toggle
-              · Enrolled, on       → quiet green confirmation
-              · Enrolled, on, ≥7d  → amber stale-nudge: refresh enrollment
-            The VoiceEnrollment component handles enroll / toggle / unenroll. */}
-        {/* Embedded + dismissed → ScreenshotStrip already shows AudioCapture
-            and VoiceEnrollment in the top bar, so only render the restore
-            chevron here to avoid duplicating those controls. */}
-        {embedded && voiceBannerDismissed && (
-          <div className="w-full flex items-center justify-center py-0.5">
-            <button
-              type="button"
-              onClick={restoreVoiceBanner}
-              className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-black/10 dark:hover:bg-white/10"
-              style={{ color: 'var(--text-muted)' }}
-              aria-label="Show voice-filter status"
-              title="Show voice-filter status"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 15l6-6 6 6" />
-              </svg>
-            </button>
-          </div>
-        )}
-        {embedded && !voiceBannerDismissed && (() => {
-          const tone = !voiceEnrolled ? 'red' : (!voiceFilterEnabled || enrollmentStale) ? 'amber' : 'green';
-          const chipColor = tone === 'red' ? '#ef4444' : tone === 'amber' ? '#f59e0b' : '#1e4d78';
-          const chipBg = tone === 'red' ? 'rgba(239,68,68,0.12)' : tone === 'amber' ? 'rgba(245,158,11,0.12)' : 'rgba(30,77,120,0.12)';
-          const chipBorder = tone === 'red' ? 'rgba(239,68,68,0.40)' : tone === 'amber' ? 'rgba(245,158,11,0.40)' : 'rgba(30,77,120,0.40)';
-          const statusLabel = !voiceEnrolled ? 'Not enrolled'
-            : !voiceFilterEnabled ? 'Filter off'
-            : enrollmentStale ? `Profile stale (${enrollmentAgeDays}d)`
-            : 'Voice filtered';
-          return (
-            <div className="w-full flex flex-wrap items-center gap-1.5 py-0.5">
-              {/* Status chip */}
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 select-none"
-                style={{ background: chipBg, border: `1px solid ${chipBorder}`, color: chipColor }}>
-                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: chipColor }} />
-                {statusLabel}
-              </span>
-              {/* AUTO / mic lives in the ScreenshotStrip top toolbar for
-                  behavioral (single source of truth) — no duplicate here. */}
-              {/* Enrollment action chips */}
-              <VoiceEnrollment disabled={false} variant="light" />
-              {/* Minimize */}
-              <button
-                type="button"
-                onClick={dismissVoiceBanner}
-                className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-black/10 dark:hover:bg-white/10 ml-auto"
-                style={{ color: 'var(--text-muted)' }}
-                aria-label="Minimize"
-                title="Minimize"
-              >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </button>
-            </div>
-          );
-        })()}
+        {/* Voice enrollment / filter status lives in the ScreenshotStrip top
+            toolbar for behavioral (the single <VoiceEnrollment> instance,
+            backed by session-store). The old duplicate banner that used to
+            render here ("Not enrolled · Enroll My Voice") was removed — it
+            shared the same store state, so the toolbar chip is authoritative. */}
         {/* Text input — hidden in embedded behavioral mode; voice is the input */}
         {!embedded && (
           <div className="flex items-center gap-2 px-3 h-12 md:h-9 rounded-xl w-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
