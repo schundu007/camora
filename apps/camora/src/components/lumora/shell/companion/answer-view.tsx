@@ -112,7 +112,14 @@ const parseStar = (text: string): { sections: { label: StarLabel; body: string }
     const { label, startLine } = found[k];
     const endLine = k + 1 < found.length ? found[k + 1].startLine : lines.length;
     const firstLine = lines[startLine].replace(/^\s*\*?\*?\s*(SITUATION|TASK|ACTION|RESULT)\s*[:\-—]\s*/i, '');
-    const body = [firstLine, ...lines.slice(startLine + 1, endLine)].join('\n').trim();
+    const body = [firstLine, ...lines.slice(startLine + 1, endLine)]
+      .join('\n')
+      // Strip stray leading ** Claude emits before section bodies.
+      // Valid bold (**word**) has no space after the opener — safe to remove
+      // "** " (asterisks + space) and standalone "**" lines.
+      .replace(/^\*\* ?/gm, '')
+      .replace(/^\*\*$/gm, '')
+      .trim();
     sections.push({ label, body });
   }
   // Enforce canonical order S → T → A → R for display.
