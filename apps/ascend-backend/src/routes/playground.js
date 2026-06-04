@@ -101,7 +101,7 @@ async function callGemini(prompt) {
 
 async function callExplain(prompt) {
   if (process.env.GEMINI_API_KEY) {
-    try { return await callGemini(prompt); } catch { /* fall through */ }
+    try { return await callGemini(prompt); } catch (e) { console.warn('[explain] Gemini failed:', e.message); }
   }
   const anthropic = getAnthropic();
   if (anthropic) {
@@ -112,18 +112,20 @@ async function callExplain(prompt) {
         messages: [{ role: 'user', content: prompt }],
       });
       return msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : '';
-    } catch { /* fall through to OpenRouter */ }
+    } catch (e) { console.warn('[explain] Anthropic failed:', e.message); }
   }
   const or = getOpenRouter();
   if (or) {
-    const res = await or.chat.completions.create({
-      model: 'qwen/qwen-2.5-72b-instruct',
-      max_tokens: 150,
-      messages: [{ role: 'user', content: prompt }],
-    });
-    return res.choices[0]?.message?.content?.trim() ?? '';
+    try {
+      const res = await or.chat.completions.create({
+        model: 'qwen/qwen-2.5-72b-instruct',
+        max_tokens: 150,
+        messages: [{ role: 'user', content: prompt }],
+      });
+      return res.choices[0]?.message?.content?.trim() ?? '';
+    } catch (e) { console.warn('[explain] OpenRouter failed:', e.message); }
   }
-  throw new Error('No AI provider configured for explain');
+  return null;
 }
 
 // Wrapper reads code.py from disk — avoids any string-escaping issues.
@@ -355,7 +357,8 @@ router.post('/explain', async (req, res, next) => {
     }
 
     const prompt = `Explain what line ${lineNumber} does in this ${language} code in 1-2 concise sentences. Focus on the purpose, not just restating the syntax.\n\nCode:\n\`\`\`${language}\n${code}\n\`\`\`\n\nLine ${lineNumber}: ${lineContent}`;
-    const explanation = await callExplain(prompt);
+    const explanation = await callExplain(prompt) ?? '';
+    if (!explanation) return res.json({ explanation: '' });
 
     if (EXPLAIN_CACHE.size >= EXPLAIN_CACHE_MAX) {
       EXPLAIN_CACHE.delete(EXPLAIN_CACHE.keys().next().value);
