@@ -701,6 +701,9 @@ function startHackerrankAutoDetect() {
       const info = await getActiveBrowserInfo();
       if (!info) return;
       const { url } = info;
+      // Never auto-detect codepair sessions — these are live interviews where
+      // the user is the interviewer, not a candidate solving a problem.
+      if (url.includes('hackerrank.com/codepair') || url.includes('codepair.hackerrank.com')) return;
       let matched = false;
       if (_codingPlatform === 'auto') {
         matched = Object.values(PLATFORM_URL_MATCH).some(fn => fn(url));
