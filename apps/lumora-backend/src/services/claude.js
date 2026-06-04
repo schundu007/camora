@@ -277,6 +277,10 @@ export function buildDesignPrompt(resume, technical, detailLevel = null, cloudPr
     : isFull
     ? `DETAIL MODE: FULL — emit every section. 4-6 bullets per section, with numbers in SCALEMATH and named technologies in DEEPDESIGN.`
     : `DETAIL MODE: STANDARD — emit every section. 3-4 bullets per section.`;
+  // Progressive disclosure: emit HEADLINE + REQUIREMENTS first so the
+  // candidate can start speaking immediately while DEEPDESIGN streams.
+  // This matches the "agentic multi-step" pattern from awesome-llm-apps —
+  // produce useful output at each stage rather than waiting for the full answer.
   // Cloud-platform hint goes BEFORE the rest of the prompt so the model
   // treats service naming as a hard constraint (Cosmos DB, not DynamoDB,
   // when Azure is selected). Empty for AWS — the existing prompt is
@@ -357,6 +361,13 @@ VOICE — NON-NEGOTIABLE:
 - NEVER write "you" / "your solution" / "the candidate". The PROBLEM section restates the prompt; the APPROACH is "I'd...", code is the candidate's own work.
 - ALWAYS respond in English — regardless of the language of the question or transcription.
 
+THINK BEFORE YOU CODE (agentic reasoning):
+Before writing any code, silently verify:
+1. What is the optimal data structure? (array, hashmap, heap, tree?)
+2. What is the time/space tradeoff? Is O(n log n) or O(n) achievable?
+3. What edge cases will break a naive solution? (empty, single element, duplicates, overflow)
+4. Write code ONLY after this mental check — the [APPROACH] section is your verbal confirmation.
+
 FORMAT:
 
 [PROBLEM]
@@ -364,7 +375,7 @@ Restate the problem: inputs, outputs, constraints.
 [/PROBLEM]
 
 [APPROACH]
-My approach in 2-3 sentences - why this works.
+My approach in 2-3 sentences - why this works and the complexity tradeoff chosen.
 [/APPROACH]
 
 [CODE lang=python]
@@ -480,6 +491,7 @@ export async function* streamResponse(question, history, options = {}) {
     detailLevel = null,
     responseFormat = null,
     plan = 'free',
+    userId = null,
     // Cloud platform the candidate is interviewing for — drives service-name
     // choice in design answers (Cosmos DB vs DynamoDB vs Firestore). Sent
     // by the frontend from useCloudProvider; defaults to 'aws' to match
@@ -586,6 +598,16 @@ Write the pitch now. Treat it as the most important 90 seconds of the candidate'
     // breathing room without inviting filler.
     maxTokens = 1500;
   } else if (isShortMode) {
+    // Load behavioral story anchor — inject the best pre-parsed STAR story for
+    // the detected archetype so Claude uses the exact right experience/metric
+    // rather than re-discovering it from raw resume text. Fails silently.
+    let storyAnchorBlock = '';
+    try {
+      const { buildStoryAnchorBlock } = await import('./storyAnchor.js');
+      const anchor = await buildStoryAnchorBlock(userId, cleanQuestion);
+      storyAnchorBlock = anchor.block;
+    } catch {}
+
     // Ultra-concise mode — copilot sidebar during live interviews
     systemPrompt = `You ARE the candidate in an ACTIVE interview RIGHT NOW. You are NOT an assistant or coach watching from the side — you are speaking AS the candidate, in their voice, so they can read your answer aloud verbatim without changing a single word.
 
@@ -620,7 +642,7 @@ ABSOLUTE RULES:
 ${resume ? `CANDIDATE BACKGROUND:\n${resume}` : ''}
 ${technical ? `TECHNICAL KNOWLEDGE:\n${technical}` : ''}
 ${cultureFrame}${companyBriefing}
-
+${storyAnchorBlock}
 Think: What would fit on a sticky note that helps someone ace this question?`;
     // Raised from 600 → 1200: 600 truncated full STAR answers (Action = 3 bullets +
     // Result with metric + Follow-up) mid-sentence during live interviews.

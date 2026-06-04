@@ -181,6 +181,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       cloudProvider,
       designKind,
       plan: userPlan,
+      userId: user.id,
       model: preferredModel || null,
       signal: abortController.signal,
     })) {
@@ -513,6 +514,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       cloudProvider,
       designKind,
       plan: userPlan,
+      userId: user.id,
       model: preferredModel || null,
       signal: abortController.signal,
     })) {

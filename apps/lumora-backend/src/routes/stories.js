@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import { authenticate } from '../middleware/authenticate.js';
+import { saveUserStories } from '../services/storyAnchor.js';
 
 const router = Router();
 
@@ -80,6 +81,12 @@ router.post('/parse', authenticate, async (req, res) => {
           .slice(0, 3),
         impact: String(s.impact || '').slice(0, 80),
       }));
+
+    // Persist stories so behavioral answers can inject the best story
+    // by archetype without re-discovering it from raw resume text.
+    if (req.user?.id) {
+      saveUserStories(req.user.id, stories).catch(() => {});
+    }
 
     return res.json({ stories });
   } catch (err) {
