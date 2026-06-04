@@ -436,57 +436,9 @@ end tell`);
 async function extractProblemTextFromBrowser(browser, url) {
   let jsCode;
   if (url.includes('hackerrank.com')) {
-    // Exhaustive HackerRank DOM extraction — captures full problem text regardless
-    // of scroll position, tab state, or DOM version. Tries modern selectors first,
-    // then legacy ones, then falls back to the entire main content area.
-    jsCode = `(function(){
-  var selectors=[
-    '.challenge-description-body .hackdown-content',
-    '.challenge-description-body',
-    '[class*="challenge-description"]',
-    '[class*="problem-statement"]',
-    '.problem-statement',
-    '[data-testid="challenge-description"]',
-    '.hr-monaco-editor-container ~ div',
-    '.questions-container',
-    '[class*="challengeDescription"]',
-    '[class*="problemDescription"]',
-    '.content-area .hackdown-content',
-    '.challenge-body-html',
-    '#challenge-page-description',
-    '.challenge-text',
-    '.statement-container',
-    'section[class*="statement"]',
-    '.content section',
-    'main [class*="description"]',
-    'main [class*="content"]',
-    '.interview-pad-content',
-    '.codepair-editor ~ div',
-    '[id*="description"]',
-    '[id*="statement"]',
-  ];
-  for(var i=0;i<selectors.length;i++){
-    try{
-      var e=document.querySelector(selectors[i]);
-      if(e){
-        var t=(e.innerText||e.textContent||'').trim();
-        if(t.length>80)return t;
-      }
-    }catch(ex){}
-  }
-  // Last resort: grab all <p> and <pre> inside main or article
-  try{
-    var root=document.querySelector('main')||document.querySelector('article')||document.body;
-    var parts=[];
-    root.querySelectorAll('p,pre,li,h1,h2,h3,h4,code').forEach(function(el){
-      var t=(el.innerText||el.textContent||'').trim();
-      if(t)parts.push(t);
-    });
-    var full=parts.join('\\n').trim();
-    if(full.length>100)return full;
-  }catch(ex){}
-  return null;
-})()`;
+    // Single-line IIFE — NO literal newlines (AppleScript breaks on them).
+    // Tries 15+ selectors then falls back to full-page text sweep.
+    jsCode = '(function(){var ss=[".challenge-description-body .hackdown-content",".challenge-description-body","[class*=\'challenge-description\']","[class*=\'problem-statement\']",".problem-statement","[data-testid=\'challenge-description\']",".questions-container","[class*=\'challengeDescription\']","[class*=\'problemDescription\']",".challenge-body-html","#challenge-page-description",".statement-container","[id*=\'description\']","[id*=\'statement\']","main"];for(var i=0;i<ss.length;i++){try{var e=document.querySelector(ss[i]);if(e){var t=(e.innerText||e.textContent||"").trim();if(t.length>80)return t;}}catch(ex){}}try{var root=document.querySelector("main")||document.querySelector("article")||document.body;var parts=[];root.querySelectorAll("p,pre,li,h1,h2,h3,h4").forEach(function(el){var t=(el.innerText||el.textContent||"").trim();if(t)parts.push(t);});var full=parts.join(" ").trim();if(full.length>100)return full;}catch(ex){}return null;})()';
   } else if (url.includes('leetcode.com')) {
     jsCode = `(function(){var ss=['[data-track-load="description_content"]','.elfjS','.description__24sA'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
   } else if (url.includes('coderpad.io')) {
@@ -494,14 +446,26 @@ async function extractProblemTextFromBrowser(browser, url) {
   } else {
     return null;
   }
-  // Escape " so the JS can be safely embedded inside an AppleScript "..." string.
-  const escapedJs = jsCode.replace(/"/g, '\\"');
+  // Escape for AppleScript string embedding: quotes AND newlines/tabs.
+  const escapedJs = jsCode.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '').replace(/\t/g, ' ');
+  // Search ALL windows of the browser for a tab whose URL contains hackerrank/leetcode/coderpad,
+  // then inject into THAT tab — not just the front window (which may be Camora after clicking URL chip).
+  const urlFragment = url.includes('hackerrank') ? 'hackerrank' : url.includes('leetcode') ? 'leetcode' : 'coderpad';
   try {
     const raw = await runAppleScript(`
 tell application "${browser}"
-  set r to execute active tab of front window javascript "${escapedJs}"
-  if r is missing value then return ""
-  return r as string
+  set winCount to count of windows
+  repeat with w from 1 to winCount
+    try
+      set tabUrl to URL of active tab of window w
+      if tabUrl contains "${urlFragment}" then
+        set r to execute active tab of window w javascript "${escapedJs}"
+        if r is missing value then return ""
+        return r as string
+      end if
+    end try
+  end repeat
+  return ""
 end tell`);
     const text = (raw || '').trim();
     return text.length > 50 ? text : null;
