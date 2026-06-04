@@ -1732,21 +1732,6 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: 'URL is required' });
 
-    // Known JS-rendered / auth-gated platforms that will never scrape cleanly.
-    // Return a helpful message immediately instead of burning 10s on a timeout.
-    const knownSpa = [
-      /hackerrank\.com/i,   // always auth-gated — desktop DOM injection handles it
-      /coderpad\.io\//i,
-      /replit\.com\//i,
-      /codingame\.com\//i,
-    ];
-    if (knownSpa.some(re => re.test(url))) {
-      return res.status(400).json({
-        error: 'auth-gated',
-        hint: 'desktop-dom',
-      });
-    }
-
     try { await assertPublicHost(url); } catch { return res.status(400).json({ error: 'URL is not allowed.' }); }
 
     // LeetCode SPAs need the GraphQL path — raw fetch returns no content.
