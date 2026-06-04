@@ -1823,13 +1823,13 @@ export default function DocsPage({ onBack }) {
                           {/* Designs in Category */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryDesigns.map((design) => {
-                              const diffVariant = ({ Easy: 'easy', Medium: 'medium', Hard: 'hard' })[design.difficulty] || 'medium';
                               const designProblem = `Design ${design.title}. ${design.description || design.subtitle || ''}`;
                               const designLocked = contentAccess.isTopicLocked(activePage, design.id);
+                              const diffBtnStyle = { Easy: { background: 'var(--easy)', color: '#fff' }, Medium: { background: 'var(--medium)', color: 'var(--bg-base)' }, Hard: { background: 'var(--hard)', color: '#fff' } }[design.difficulty] || { background: 'var(--accent)', color: '#fff' };
                               return (
                                 <div
                                   key={design.id}
-                                  className={`group rounded p-3 flex items-center justify-between transition-colors duration-200   min-w-0 overflow-hidden ${designLocked ? 'opacity-60' : ''}`}
+                                  className={`group rounded p-3 flex items-center justify-between transition-colors duration-200 min-w-0 overflow-hidden ${designLocked ? 'opacity-60' : ''}`}
                                   style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                                 >
                                   <div
@@ -1845,15 +1845,14 @@ export default function DocsPage({ onBack }) {
                                     )}
                                     <div>
                                       <span className="text-sm landing-body font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-hover)] transition-colors">{design.title}</span>
-                                      {design.isNew && <Chip variant="success" className="ml-2">NEW</Chip>}
                                       <span className="text-[var(--text-muted)] text-xs ml-2 hidden md:inline landing-body">{design.subtitle}</span>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <Chip variant={diffVariant}>{design.difficulty}</Chip>
+                                  <div className="flex-shrink-0">
                                     <Link
                                       to={`/capra/design?problem=${encodeURIComponent(designProblem)}&autosolve=true`}
-                                      className="px-3 py-1.5 rounded text-xs font-semibold bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-1.5 landing-body"
+                                      className="px-3 py-1.5 rounded text-xs font-semibold transition-opacity flex items-center gap-1.5 landing-body hover:opacity-85"
+                                      style={diffBtnStyle}
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                       <Icon name="zap" size={12} />
@@ -1895,12 +1894,11 @@ export default function DocsPage({ onBack }) {
                           />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryProblems.map((problem) => {
-                              const diffVariant = { Easy: 'easy', Medium: 'medium', Hard: 'hard' }[problem.difficulty] || 'medium';
                               return (
                                 <div
                                   key={problem.id}
                                   onClick={() => setSelectedTopic(problem.id)}
-                                  className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
+                                  className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200"
                                   style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                                 >
                                   <div className="flex items-center gap-2.5">
@@ -1913,14 +1911,10 @@ export default function DocsPage({ onBack }) {
                                     )}
                                     <div>
                                       <span className="text-[var(--text-primary)] text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors">{problem.title}</span>
-                                      {problem.isNew && <Chip variant="success" className="ml-2">NEW</Chip>}
                                       <span className="text-[var(--text-muted)] text-xs ml-2 hidden md:inline landing-body">{problem.subtitle}</span>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <Chip variant={diffVariant}>{problem.difficulty}</Chip>
-                                    <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
-                                  </div>
+                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors flex-shrink-0" />
                                 </div>
                               );
                             })}
@@ -2276,12 +2270,11 @@ export default function DocsPage({ onBack }) {
                           />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                             {categoryProblems.map((problem) => {
-                              const diffVariant = { Easy: 'easy', Medium: 'medium', Hard: 'hard' }[problem.difficulty] || 'medium';
                               return (
                                 <div
                                   key={problem.id}
                                   onClick={() => setSelectedTopic(problem.id)}
-                                  className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200  "
+                                  className="group rounded p-3 flex items-center justify-between cursor-pointer transition-colors duration-200"
                                   style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 22%, transparent)' }}
                                 >
                                   <div className="flex items-center gap-2.5">
@@ -2297,10 +2290,7 @@ export default function DocsPage({ onBack }) {
                                       {problem.subtitle && <span className="text-[var(--text-muted)] text-xs ml-2 hidden md:inline landing-body">{problem.subtitle}</span>}
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <Chip variant={diffVariant}>{problem.difficulty}</Chip>
-                                    <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
-                                  </div>
+                                  <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors flex-shrink-0" />
                                 </div>
                               );
                             })}
