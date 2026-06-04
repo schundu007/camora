@@ -583,14 +583,11 @@ async function doHackerrankScrape() {
     return { ok: true, text, starterCode, url };
   }
 
-  // DOM extraction failed. Guide the user to use SNAP instead of auto-capturing
-  // screenshots (which capture the wrong window and generate 422 errors).
-  console.log('[hr-auto] DOM extraction failed — returning guidance to use SNAP');
-  return {
-    ok: false,
-    useSNAP: true,
-    error: 'Could not extract the problem text automatically.\n\nUse the SNAP button to screenshot the problem panel, then click Coding.',
-  };
+  // DOM extraction failed — fall back to a single screenshot of the browser window.
+  console.log('[hr-auto] DOM extraction failed, falling back to single screenshot');
+  const dataUrl = await captureExactBrowserWindow(windowTitle);
+  if (dataUrl) return { ok: true, dataUrl, url };
+  return { ok: false, error: 'Could not extract the problem text. Make sure the HackerRank tab is visible and try again.' };
 }
 
 // Capture a specific browser window by matching its EXACT title from AppleScript.
