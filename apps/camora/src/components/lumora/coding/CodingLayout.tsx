@@ -1381,16 +1381,33 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         if (result.needsScreenPermission) camo.openSystemPrivacy?.('screen');
         return;
       }
-      if (result.dataUrls) {
+      if (result.text) {
+        // DOM injection got the full problem text — use directly, no screenshot needed
+        const lang = resolveLanguage(result.text);
+        setProblemText(result.text);
+        if (result.starterCode) setStarterCode(result.starterCode);
+        setInputMode('paste');
+        setStreamError(null); setTestResults([]); setTestCases([]); setOutput('');
+        setShowFixPrompt(false); clearStreamChunks(); setParsedBlocks([]); setJsonSolution(null);
+        setCode(getDefaultCode(lang));
+        setCollapsedCards(new Set()); setActiveSolutionIdx(0); setIsOutputCollapsed(true);
+        setProblemTab('solution');
+        onSubmit(result.text, lang, result.starterCode ? { starterCode: result.starterCode } : undefined);
+      } else if (result.dataUrls) {
         // multi-page auto-scroll capture — OCR each page and concatenate
         await extractAndGenerateFromDataUrls(result.dataUrls);
-      } else {
-        // single screenshot — run through existing Claude Vision OCR pipeline
+      } else if (result.dataUrl) {
+        // single screenshot — start multi-page session (don't auto-generate yet;
+        // user can snap more pages or wait for idle timer)
         const blob = await (await fetch(result.dataUrl)).blob();
         const file = new File([blob], 'hackerrank-capture.png', { type: blob.type || 'image/png' });
         setInputMode('image');
         setImagePreview(result.dataUrl);
-        await extractAndMaybeGenerate(file, true);
+        await extractAndMaybeGenerate(file, false);
+        multiPageCapturingRef.current = true;
+        setMultiPageCapturing(true);
+        setMultiPageCount(1);
+        scheduleAutoGenerate();
       }
     } catch (err: any) {
       await dialogAlert({ title: 'HackerRank fetch error', message: err.message || 'Unknown error' });

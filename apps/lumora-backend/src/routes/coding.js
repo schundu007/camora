@@ -1735,15 +1735,15 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
     // Known JS-rendered / auth-gated platforms that will never scrape cleanly.
     // Return a helpful message immediately instead of burning 10s on a timeout.
     const knownSpa = [
-      /hackerrank\.com\/codepair\//i,
-      /hackerrank\.com\/contests\//i,
+      /hackerrank\.com/i,   // always auth-gated — desktop DOM injection handles it
       /coderpad\.io\//i,
       /replit\.com\//i,
       /codingame\.com\//i,
     ];
     if (knownSpa.some(re => re.test(url))) {
       return res.status(400).json({
-        error: 'Live coding sessions and authenticated platforms can\'t be scraped. Paste the problem text in the Text tab, or use the Image tab to screenshot it.',
+        error: 'auth-gated',
+        hint: 'desktop-dom',
       });
     }
 

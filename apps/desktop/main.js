@@ -436,7 +436,57 @@ end tell`);
 async function extractProblemTextFromBrowser(browser, url) {
   let jsCode;
   if (url.includes('hackerrank.com')) {
-    jsCode = `(function(){var ss=['.challenge-description-body .hackdown-content','.challenge-description-body','.problem-statement'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
+    // Exhaustive HackerRank DOM extraction — captures full problem text regardless
+    // of scroll position, tab state, or DOM version. Tries modern selectors first,
+    // then legacy ones, then falls back to the entire main content area.
+    jsCode = `(function(){
+  var selectors=[
+    '.challenge-description-body .hackdown-content',
+    '.challenge-description-body',
+    '[class*="challenge-description"]',
+    '[class*="problem-statement"]',
+    '.problem-statement',
+    '[data-testid="challenge-description"]',
+    '.hr-monaco-editor-container ~ div',
+    '.questions-container',
+    '[class*="challengeDescription"]',
+    '[class*="problemDescription"]',
+    '.content-area .hackdown-content',
+    '.challenge-body-html',
+    '#challenge-page-description',
+    '.challenge-text',
+    '.statement-container',
+    'section[class*="statement"]',
+    '.content section',
+    'main [class*="description"]',
+    'main [class*="content"]',
+    '.interview-pad-content',
+    '.codepair-editor ~ div',
+    '[id*="description"]',
+    '[id*="statement"]',
+  ];
+  for(var i=0;i<selectors.length;i++){
+    try{
+      var e=document.querySelector(selectors[i]);
+      if(e){
+        var t=(e.innerText||e.textContent||'').trim();
+        if(t.length>80)return t;
+      }
+    }catch(ex){}
+  }
+  // Last resort: grab all <p> and <pre> inside main or article
+  try{
+    var root=document.querySelector('main')||document.querySelector('article')||document.body;
+    var parts=[];
+    root.querySelectorAll('p,pre,li,h1,h2,h3,h4,code').forEach(function(el){
+      var t=(el.innerText||el.textContent||'').trim();
+      if(t)parts.push(t);
+    });
+    var full=parts.join('\\n').trim();
+    if(full.length>100)return full;
+  }catch(ex){}
+  return null;
+})()`;
   } else if (url.includes('leetcode.com')) {
     jsCode = `(function(){var ss=['[data-track-load="description_content"]','.elfjS','.description__24sA'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
   } else if (url.includes('coderpad.io')) {
