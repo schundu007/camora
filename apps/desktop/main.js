@@ -583,49 +583,14 @@ async function doHackerrankScrape() {
     return { ok: true, text, starterCode, url };
   }
 
-  // Fallback: multi-page screenshot with keyboard-based scrolling (no JS permissions needed).
-  // Scrolls the browser window via Page Down keystrokes — works even when
-  // "Allow JavaScript from Apple Events" is disabled in Chrome.
-  console.log('[hr-auto] DOM extraction failed, using keyboard-scroll screenshot fallback');
-  const dataUrls = [];
-
-  // Scroll to top first so we always start from the beginning of the problem.
-  try {
-    await runAppleScript(`
-tell application "${browser}" to activate
-delay 0.2
-tell application "System Events"
-  key code 115 using command down
-end tell
-delay 0.4`);
-  } catch {}
-
-  const firstDataUrl = await captureExactBrowserWindow(windowTitle);
-  if (!firstDataUrl) return { ok: false, error: 'Could not capture the HackerRank browser window. Make sure it is visible on screen.' };
-  dataUrls.push(firstDataUrl);
-
-  // Take up to 5 more pages using Page Down. We always scroll — if the page
-  // is short, duplicate screenshots are harmless (OCR deduplicates repeated content).
-  for (let page = 1; page <= 4; page++) {
-    try {
-      await runAppleScript(`
-tell application "${browser}" to activate
-delay 0.15
-tell application "System Events"
-  key code 121
-end tell
-delay 0.5`);
-    } catch { break; }
-    const next = await captureExactBrowserWindow(windowTitle);
-    if (!next) break;
-    dataUrls.push(next);
-    // Stop if we've taken 5 screenshots — enough for any reasonable problem.
-    if (dataUrls.length >= 5) break;
-  }
-
-  _lastHrUrl = url;
-  // Always return dataUrls array so frontend accumulates all pages before generating.
-  return { ok: true, dataUrls, url };
+  // DOM extraction failed. Guide the user to use SNAP instead of auto-capturing
+  // screenshots (which capture the wrong window and generate 422 errors).
+  console.log('[hr-auto] DOM extraction failed — returning guidance to use SNAP');
+  return {
+    ok: false,
+    useSNAP: true,
+    error: 'Could not extract the problem text automatically.\n\nUse the SNAP button to screenshot the problem panel, then click Coding.',
+  };
 }
 
 // Capture a specific browser window by matching its EXACT title from AppleScript.
