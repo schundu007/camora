@@ -292,6 +292,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [jsonSolution, setJsonSolution] = useState<any>(null);
   const [, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // Thumbnails for IMAGE chip collection (upload + screenshot accumulation)
+  const [snapImageUrls, setSnapImageUrls] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [starterCode, setStarterCode] = useState<string | null>(initialStarterCode ?? null);
   const [error, setError] = useState<string | null>(null);
@@ -1648,16 +1650,71 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Keep ref in sync so handleSnap (defined above) always calls the latest version
   acceptImageRef.current = acceptImage;
 
+  // Add a dataUrl to the IMAGE chip collection and update display state.
+  const addToSnapCollection = useCallback((dataUrl: string) => {
+    const newUrls = [...pendingSnapUrlsRef.current, dataUrl];
+    pendingSnapUrlsRef.current = newUrls;
+    setSnapImageUrls(newUrls);
+    setImagePreview(dataUrl);
+    multiPageCapturingRef.current = true;
+    setMultiPageCapturing(true);
+    setMultiPageCount(newUrls.length);
+  }, []);
+
+  // Remove one screenshot from the collection by index.
+  const removeSnapImage = useCallback((idx: number) => {
+    const newUrls = pendingSnapUrlsRef.current.filter((_, i) => i !== idx);
+    pendingSnapUrlsRef.current = newUrls;
+    setSnapImageUrls(newUrls);
+    setMultiPageCount(newUrls.length);
+    if (newUrls.length === 0) {
+      multiPageCapturingRef.current = false;
+      setMultiPageCapturing(false);
+      setImagePreview(null);
+    } else {
+      setImagePreview(newUrls[newUrls.length - 1]);
+    }
+  }, []);
+
+  // + Screenshot button in IMAGE chip — captures active browser window.
+  const handleAddScreenshot = useCallback(async () => {
+    const camo = (window as any).camo;
+    if (!camo?.snapActiveBrowser) {
+      fileInputRef.current?.click(); // web fallback: open file picker
+      return;
+    }
+    setIsProcessing(true);
+    setError(null);
+    try {
+      const result = await camo.snapActiveBrowser();
+      if (!result?.ok || !result.dataUrl) throw new Error(result?.error || 'Could not capture screenshot. Make sure Chrome/Brave is open on the problem page.');
+      addToSnapCollection(result.dataUrl);
+    } catch (err: any) {
+      setError(err.message || 'Screenshot failed');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [addToSnapCollection]);
+
+  // File input — add uploaded file to collection (don't OCR immediately).
   const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) acceptImage(file);
-  }, [acceptImage]);
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => { addToSnapCollection(reader.result as string); };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }, [addToSnapCollection]);
 
+  // Drag-and-drop — same as file input.
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file) acceptImage(file);
-  }, [acceptImage]);
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => { addToSnapCollection(reader.result as string); };
+    reader.readAsDataURL(file);
+  }, [addToSnapCollection]);
 
   const addTestCase = () => { if (testCases.length < MAX_TEST_CASES) setTestCases([...testCases, { input: '', expected: '' }]); };
   const removeTestCase = (i: number) => { if (testCases.length > 1) setTestCases(testCases.filter((_, j) => j !== i)); };
@@ -2140,29 +2197,59 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       )}
 
                       {inputMode === 'image' && (
-                        <div className="space-y-2">
-                          <div onClick={() => fileInputRef.current?.click()} onDrop={handleDrop} onDragOver={(e) => e.preventDefault()}
-                            className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-[var(--accent)]/50 transition-[border-color,background-color]"
-                            style={{ borderColor: t.inputBorder }}>
-                            <input ref={fileInputRef} type="file" id="problem-image" name="problem-image" accept="image/*" onChange={handleImageSelect} className="hidden" />
-                            {imagePreview ? (
-                              <img src={imagePreview} alt="Problem" className="max-h-32 mx-auto rounded-lg" />
-                            ) : (
-                              <div className="space-y-2">
-                                <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center" style={{ background: t.sectionBg }}>
-                                  <svg className="w-5 h-5" style={{ color: t.textDim }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                  </svg>
-                                </div>
-                                <p className="text-xs" style={{ color: t.textDim }}>Drop image or click — auto-extracts and answers</p>
-                              </div>
-                            )}
+                        <div className="space-y-3">
+                          {/* Hidden file input */}
+                          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+
+                          {/* Two action buttons */}
+                          <div className="flex gap-2">
+                            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-lg border transition-colors disabled:opacity-50"
+                              style={{ borderColor: t.inputBorder, color: t.textDim, background: t.sectionBg }}>
+                              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                              Upload from Storage
+                            </button>
+                            <button type="button" onClick={handleAddScreenshot} disabled={isProcessing}
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition-colors disabled:opacity-60"
+                              style={{ background: 'var(--accent)', color: 'white' }}>
+                              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                              {isProcessing ? 'Capturing…' : 'Screenshot'}
+                            </button>
                           </div>
+
+                          {/* Thumbnail grid — one tile per added screenshot */}
+                          {snapImageUrls.length > 0 ? (
+                            <div className="space-y-2">
+                              <div className="flex flex-wrap gap-2">
+                                {snapImageUrls.map((url, i) => (
+                                  <div key={i} className="relative group w-20 h-14 rounded overflow-hidden flex-shrink-0"
+                                    style={{ border: '1px solid var(--border)' }}>
+                                    <img src={url} alt={`Page ${i+1}`} className="w-full h-full object-cover" />
+                                    <span className="absolute top-0.5 left-0.5 text-[9px] font-bold px-1 rounded leading-4"
+                                      style={{ background: 'var(--accent)', color: '#fff' }}>{i + 1}</span>
+                                    <button type="button" onClick={() => removeSnapImage(i)}
+                                      className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-white text-[11px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                                      style={{ background: 'var(--danger)' }}>×</button>
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="text-[11px]" style={{ color: t.textDim }}>
+                                {snapImageUrls.length} screenshot{snapImageUrls.length > 1 ? 's' : ''} — click <strong>Coding</strong> when all pages are captured
+                              </p>
+                            </div>
+                          ) : (
+                            /* Drop zone when empty */
+                            <div onDrop={handleDrop} onDragOver={(e) => e.preventDefault()}
+                              className="border-2 border-dashed rounded-lg py-4 text-center"
+                              style={{ borderColor: t.inputBorder }}>
+                              <p className="text-xs" style={{ color: t.textDim }}>or drag & drop an image here</p>
+                            </div>
+                          )}
+
                           {isProcessing && (
-                            <div className="w-full py-2 text-xs font-medium rounded-lg flex items-center justify-center gap-2"
-                              style={{ background: t.sectionBg, color: t.text }}>
+                            <div className="flex items-center justify-center gap-2 py-1 text-xs" style={{ color: t.text }}>
                               <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                              Reading the problem…
+                              Capturing screenshot…
                             </div>
                           )}
                         </div>
@@ -2182,8 +2269,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       setMultiPageCount(0);
                       const snapUrls = pendingSnapUrlsRef.current;
                       pendingSnapUrlsRef.current = [];
+                      setSnapImageUrls([]);
+                      setImagePreview(null);
                       if (snapUrls.length) {
-                        // fromImageSnap=true → completeness check
                         void extractAndGenerateFromDataUrls(snapUrls, true);
                       } else {
                         handleGenerateSolution();
