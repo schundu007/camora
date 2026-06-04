@@ -360,6 +360,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const appendFileInputRef = useRef<HTMLInputElement>(null);
   const multiPageCapturingRef = useRef(false);
   const captureAutoGenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Accumulated screenshot dataUrls — filled synchronously on each snap,
+  // processed all-at-once when the idle timer fires or Coding is clicked.
+  const pendingSnapUrlsRef = useRef<string[]>([]);
 
   // Store
   const { streamText, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache } = useSessionStore();
@@ -1119,28 +1122,26 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   useEffect(() => {
     const camo = (window as any).camo;
     if (!camo?.onScreenshotWatcher) return;
-    const handler = async ({ dataUrl, filename }: { dataUrl: string; filename: string }) => {
-      try {
-        const blob = await (await fetch(dataUrl)).blob();
-        const file = new File([blob], filename, { type: blob.type || 'image/png' });
-        setInputMode('image');
-        setImagePreview(dataUrl);
-        if (multiPageCapturingRef.current) {
-          // Subsequent page: append extracted text, bump count, reset idle timer
-          await extractAndAppend(file);
-          setMultiPageCount(c => c + 1);
-          scheduleAutoGenerate();
-        } else {
-          // First page: extract text, open multi-page session, start idle timer
-          await extractAndMaybeGenerate(file, false);
-          multiPageCapturingRef.current = true;
-          setMultiPageCapturing(true);
-          setMultiPageCount(1);
-          scheduleAutoGenerate();
-        }
-      } catch (err: any) {
-        setError(err.message || 'Failed to process screenshot.');
-      }
+    // Collect dataUrls synchronously — no per-screenshot OCR.
+    // Processing happens all-at-once when the idle timer fires or Coding is clicked.
+    const handler = ({ dataUrl }: { dataUrl: string }) => {
+      pendingSnapUrlsRef.current = [...pendingSnapUrlsRef.current, dataUrl];
+      const count = pendingSnapUrlsRef.current.length;
+      setInputMode('image');
+      setImagePreview(dataUrl);
+      multiPageCapturingRef.current = true;
+      setMultiPageCapturing(true);
+      setMultiPageCount(count);
+      // Reset idle timer — fires 6s after the LAST screenshot
+      if (captureAutoGenTimerRef.current) clearTimeout(captureAutoGenTimerRef.current);
+      captureAutoGenTimerRef.current = setTimeout(() => {
+        const urls = pendingSnapUrlsRef.current;
+        pendingSnapUrlsRef.current = [];
+        multiPageCapturingRef.current = false;
+        setMultiPageCapturing(false);
+        setMultiPageCount(0);
+        if (urls.length) void extractAndGenerateFromDataUrls(urls);
+      }, 6000);
     };
     const unwatch = camo.onScreenshotWatcher(handler);
     return () => camo.offScreenshotWatcher?.(unwatch);
@@ -2163,14 +2164,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                   {/* Generate Button */}
                   <button
                     onClick={() => {
-                      if (multiPageCapturing) {
-                        // User clicked while accumulating — cancel timer, generate now
-                        if (captureAutoGenTimerRef.current) clearTimeout(captureAutoGenTimerRef.current);
-                        multiPageCapturingRef.current = false;
-                        setMultiPageCapturing(false);
-                        setMultiPageCount(0);
+                      if (captureAutoGenTimerRef.current) clearTimeout(captureAutoGenTimerRef.current);
+                      multiPageCapturingRef.current = false;
+                      setMultiPageCapturing(false);
+                      setMultiPageCount(0);
+                      const snapUrls = pendingSnapUrlsRef.current;
+                      pendingSnapUrlsRef.current = [];
+                      if (snapUrls.length) {
+                        void extractAndGenerateFromDataUrls(snapUrls);
+                      } else {
+                        handleGenerateSolution();
                       }
-                      handleGenerateSolution();
                     }}
                     disabled={isLoading || (!problemText.trim() && !multiPageCapturing)}
                     className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2"
