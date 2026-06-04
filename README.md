@@ -46,3 +46,7 @@
 - **AI**: Claude (Anthropic), GPT-4o (OpenAI), Gemini (Google)
 - **Auth**: Google OAuth → JWT → `cariara_sso` cookie
 - **Payments**: Stripe subscriptions
+- **RAG**: pgvector hybrid search (BM25 + cosine), HyDE, Cohere reranking, CRAG chunk grading, session warm-kit
+- **AI providers**: Claude (primary), Gemini, Qwen-2.5-72B, DeepSeek-V3, GPT-4o-mini (auto-fallback chain)
+- **Voice**: Whisper transcription → sentence-boundary streaming → SSE token delivery
+- **Behavioral**: Resume story parser → archetype-matched story anchor injection per question
