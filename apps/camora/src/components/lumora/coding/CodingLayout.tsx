@@ -1140,7 +1140,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         multiPageCapturingRef.current = false;
         setMultiPageCapturing(false);
         setMultiPageCount(0);
-        if (urls.length) void extractAndGenerateFromDataUrls(urls);
+        // fromImageSnap=true → completeness check before generating
+        if (urls.length) void extractAndGenerateFromDataUrls(urls, true);
       }, 6000);
     };
     const unwatch = camo.onScreenshotWatcher(handler);
@@ -1310,8 +1311,20 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     return () => { onScreenshotAppendRef.current = null; };
   }, [onScreenshotAppendRef]);
 
-  // Multi-page screenshot OCR: extracts each page, concatenates problem texts, generates.
-  const extractAndGenerateFromDataUrls = useCallback(async (urls: string[]) => {
+  // Heuristic: does this OCR'd text look like a complete coding problem?
+  // Checks for input/output sections, examples, constraints, or sufficient length.
+  const looksComplete = (text: string): boolean => {
+    if (!text || text.length < 150) return false;
+    const t = text.toLowerCase();
+    if (t.includes('constraint') || t.includes('sample input') || t.includes('sample output')) return true;
+    if ((t.includes('input') && t.includes('output')) || t.includes('example')) return true;
+    return text.length > 700; // long enough to probably be complete
+  };
+
+  // Multi-page screenshot OCR: extracts each page, concatenates, generates.
+  // fromImageSnap=true → check completeness and prompt for more if cut off.
+  // fromImageSnap=false (URL flow) → trust the screenshots, always generate.
+  const extractAndGenerateFromDataUrls = useCallback(async (urls: string[], fromImageSnap = false) => {
     if (!token) { setError('Not authenticated'); return; }
     setIsProcessing(true);
     setError(null);
@@ -1334,37 +1347,44 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       }));
       const valid = results.filter(Boolean);
       if (!valid.length) throw new Error('Could not extract problem from screenshots — try a clearer screenshot');
-      const combinedText = valid.map(r => String(r.problem || '').trim()).filter(Boolean).join('\n\n---\n\n');
+      const combinedText = valid.map(r => String(r.problem || '').trim()).filter(Boolean).join('\n\n');
       const extractedStarterCode = valid.map(r => r.starter_code).find(Boolean) || null;
       const detectedLang: string | null = valid.map(r => r.detected_language).find(Boolean) || null;
       const effectiveLang = detectedLang || resolveLanguage(combinedText);
+
+      // Image flow completeness check: if the extracted text looks cut off,
+      // re-enter the multi-page session and ask the user for more screenshots.
+      if (fromImageSnap && !looksComplete(combinedText)) {
+        setProblemText(combinedText);
+        setInputMode('image');
+        multiPageCapturingRef.current = true;
+        setMultiPageCapturing(true);
+        setMultiPageCount(urls.length);
+        setError('Problem appears cut off — snap more screenshots to capture the rest, then click Coding.');
+        setIsProcessing(false);
+        return;
+      }
+
       setProblemText(combinedText);
       setSnapChipCode(combinedText);
       setStarterCode(extractedStarterCode);
       if (detectedLang) setLanguage(detectedLang);
       setInputMode('paste');
       if (combinedText) {
-        setStreamError(null);
-        setTestResults([]);
-        setTestCases([]);
-        setOutput('');
-        setShowFixPrompt(false);
-        clearStreamChunks();
-        setParsedBlocks([]);
-        setJsonSolution(null);
+        setStreamError(null); setTestResults([]); setTestCases([]); setOutput('');
+        setShowFixPrompt(false); clearStreamChunks(); setParsedBlocks([]); setJsonSolution(null);
         setCode(getDefaultCode(effectiveLang));
-        setCollapsedCards(new Set());
-        setActiveSolutionIdx(0);
-        setIsOutputCollapsed(true);
+        setCollapsedCards(new Set()); setActiveSolutionIdx(0); setIsOutputCollapsed(true);
         setProblemTab('solution');
         onSubmit(combinedText, effectiveLang, extractedStarterCode ? { starterCode: extractedStarterCode } : undefined);
       }
     } catch (err: any) {
-      setProblemText(prevProblemText); // restore previous text on OCR failure
+      setProblemText(prevProblemText);
       setError(err.message);
     } finally {
       setIsProcessing(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, resolveLanguage, setLanguage, clearStreamChunks, setParsedBlocks, setStreamError, onSubmit, getDefaultCode]);
 
   const handleHackerrankFetch = async () => {
@@ -1395,20 +1415,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         setProblemTab('solution');
         onSubmit(result.text, lang, result.starterCode ? { starterCode: result.starterCode } : undefined);
       } else if (result.dataUrls) {
-        // multi-page auto-scroll capture — OCR each page and concatenate
-        await extractAndGenerateFromDataUrls(result.dataUrls);
+        // URL flow: keyboard-scroll captured all pages — OCR and generate.
+        // fromImageSnap=false → skip completeness check, always generate.
+        await extractAndGenerateFromDataUrls(result.dataUrls, false);
       } else if (result.dataUrl) {
-        // single screenshot — start multi-page session (don't auto-generate yet;
-        // user can snap more pages or wait for idle timer)
-        const blob = await (await fetch(result.dataUrl)).blob();
-        const file = new File([blob], 'hackerrank-capture.png', { type: blob.type || 'image/png' });
-        setInputMode('image');
-        setImagePreview(result.dataUrl);
-        await extractAndMaybeGenerate(file, false);
-        multiPageCapturingRef.current = true;
-        setMultiPageCapturing(true);
-        setMultiPageCount(1);
-        scheduleAutoGenerate();
+        // URL flow single-page fallback — treat as complete, generate directly.
+        await extractAndGenerateFromDataUrls([result.dataUrl], false);
       }
     } catch (err: any) {
       await dialogAlert({ title: 'HackerRank fetch error', message: err.message || 'Unknown error' });
@@ -2171,7 +2183,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       const snapUrls = pendingSnapUrlsRef.current;
                       pendingSnapUrlsRef.current = [];
                       if (snapUrls.length) {
-                        void extractAndGenerateFromDataUrls(snapUrls);
+                        // fromImageSnap=true → completeness check
+                        void extractAndGenerateFromDataUrls(snapUrls, true);
                       } else {
                         handleGenerateSolution();
                       }
