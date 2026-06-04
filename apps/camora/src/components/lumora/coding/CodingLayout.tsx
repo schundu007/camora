@@ -1125,7 +1125,19 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         const file = new File([blob], filename, { type: blob.type || 'image/png' });
         setInputMode('image');
         setImagePreview(dataUrl);
-        await extractAndMaybeGenerate(file, true);
+        if (multiPageCapturingRef.current) {
+          // Subsequent page: append extracted text, bump count, reset idle timer
+          await extractAndAppend(file);
+          setMultiPageCount(c => c + 1);
+          scheduleAutoGenerate();
+        } else {
+          // First page: extract text, open multi-page session, start idle timer
+          await extractAndMaybeGenerate(file, false);
+          multiPageCapturingRef.current = true;
+          setMultiPageCapturing(true);
+          setMultiPageCount(1);
+          scheduleAutoGenerate();
+        }
       } catch (err: any) {
         setError(err.message || 'Failed to process screenshot.');
       }
@@ -2132,10 +2144,24 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                   )}
 
                   {/* Generate Button */}
-                  <button onClick={handleGenerateSolution} disabled={isLoading || !problemText.trim()}
-                    className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}>
+                  <button
+                    onClick={() => {
+                      if (multiPageCapturing) {
+                        // User clicked while accumulating — cancel timer, generate now
+                        if (captureAutoGenTimerRef.current) clearTimeout(captureAutoGenTimerRef.current);
+                        multiPageCapturingRef.current = false;
+                        setMultiPageCapturing(false);
+                        setMultiPageCount(0);
+                      }
+                      handleGenerateSolution();
+                    }}
+                    disabled={isLoading || (!problemText.trim() && !multiPageCapturing)}
+                    className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2"
+                    style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}>
                     {isLoading ? (
                       <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
+                    ) : multiPageCapturing ? (
+                      <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Coding ({multiPageCount} page{multiPageCount > 1 ? 's' : ''})</>
                     ) : (
                       <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Coding</>
                     )}
