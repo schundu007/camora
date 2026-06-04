@@ -110,7 +110,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
         });
         if (!resp.ok) throw new Error(`OCR failed: ${resp.status}`);
         const data = await resp.json();
-        const text = data.text || data.problem_text || '';
+        const text = data.problem || data.text || data.problem_text || '';
         onSnappedRef.current({ ...tempEntry, text });
       } catch {
         setSnapState('error');
