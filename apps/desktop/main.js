@@ -436,9 +436,25 @@ end tell`);
 async function extractProblemTextFromBrowser(browser, url) {
   let jsCode;
   if (url.includes('hackerrank.com')) {
-    // Single-line IIFE — NO literal newlines (AppleScript breaks on them).
-    // Tries 15+ selectors then falls back to full-page text sweep.
-    jsCode = '(function(){var ss=[".challenge-description-body .hackdown-content",".challenge-description-body","[class*=\'challenge-description\']","[class*=\'problem-statement\']",".problem-statement","[data-testid=\'challenge-description\']",".questions-container","[class*=\'challengeDescription\']","[class*=\'problemDescription\']",".challenge-body-html","#challenge-page-description",".statement-container","[id*=\'description\']","[id*=\'statement\']","main"];for(var i=0;i<ss.length;i++){try{var e=document.querySelector(ss[i]);if(e){var t=(e.innerText||e.textContent||"").trim();if(t.length>80)return t;}}catch(ex){}}try{var root=document.querySelector("main")||document.querySelector("article")||document.body;var parts=[];root.querySelectorAll("p,pre,li,h1,h2,h3,h4").forEach(function(el){var t=(el.innerText||el.textContent||"").trim();if(t)parts.push(t);});var full=parts.join(" ").trim();if(full.length>100)return full;}catch(ex){}return null;})()';
+    // Extract ONLY the problem description — explicitly exclude the code editor.
+    // HackerRank renders the problem on the left and Monaco/CodeMirror on the right.
+    // Using single quotes throughout so no " escaping is needed inside the AppleScript string.
+    jsCode = "(function(){" +
+      // Step 1: try known HackerRank problem-description selectors (left panel only)
+      "var ss=['.challenge-description-body .hackdown-content','.challenge-description-body','.problem-statement','.hackdown-content','[data-testid=\"challenge-description\"]','#challenge-page-description','.challenge-body-html','.statement-container','[class*=\"challenge-description\"]','[class*=\"problem-statement\"]','[class*=\"challengeDescription\"]'];" +
+      "for(var i=0;i<ss.length;i++){try{var e=document.querySelector(ss[i]);if(e){var t=(e.innerText||e.textContent||'').trim();if(t.length>80&&!t.match(/^\\s*\\d+\\s*\\n/))return t;}}catch(x){}}" +
+      // Step 2: clone body, strip ALL editor/nav/code elements, get remaining text
+      "try{" +
+        "var clone=document.body.cloneNode(true);" +
+        "var bad=clone.querySelectorAll('.monaco-editor,.CodeMirror,[class*=\"editor\"],[class*=\"Editor\"],[class*=\"code-area\"],[class*=\"codeArea\"],script,style,nav,header,[role=\"navigation\"],[class*=\"navbar\"],[class*=\"sidebar\"],[id*=\"editor\"],[id*=\"code\"]');" +
+        "for(var j=0;j<bad.length;j++){if(bad[j].parentNode)bad[j].parentNode.removeChild(bad[j]);}" +
+        "var t=(clone.innerText||clone.textContent||'').trim();" +
+        // Reject if it looks like code (starts with line numbers or import statements)
+        "if(t.length>80&&!t.match(/^(\\d+\\s+from|\\d+\\s+import|\\d+\\s+class|\\d+\\s+def|from typing)/))return t.slice(0,12000);" +
+      "}catch(x){}" +
+      "return null;" +
+    "})()";
+
   } else if (url.includes('leetcode.com')) {
     jsCode = `(function(){var ss=['[data-track-load="description_content"]','.elfjS','.description__24sA'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
   } else if (url.includes('coderpad.io')) {
