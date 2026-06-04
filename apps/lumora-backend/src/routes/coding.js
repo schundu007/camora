@@ -302,21 +302,38 @@ If it returns [PR(1,'Fix issue','kchurlumova',True),...] it is CHEATING and WRON
 Your code will be tested with completely different inputs. Hardcoded data WILL FAIL.
 
 ##############################################################################
-# RULE #0: CODE MUST BE 100% CORRECT - NO BUGS ALLOWED
+# RULE #0: CODE MUST BE 100% CORRECT — VERIFY BEFORE YOU OUTPUT
 ##############################################################################
-CRITICAL: Your code MUST work correctly. Before returning code:
-1. MENTALLY TRACE through your code with the example inputs
-2. VERIFY each line does exactly what you intend
-3. CHECK variable types - don't access dict keys on strings or vice versa
-4. CHECK loop variables - ensure you're iterating over the right data
-5. Test edge cases mentally: empty input, single element, large numbers
+YOUR CODE WILL BE EXECUTED. If it crashes or produces wrong output, you FAIL.
 
-Common bugs to AVOID:
-- Off-by-one errors in loops and indices
-- Not handling None/null values
-- Type mismatches (string vs int, list vs dict)
+MANDATORY REASONING SEQUENCE — do this in your head before writing any code:
 
-YOUR CODE WILL BE RUN. If it crashes or gives wrong output, you have FAILED.
+STEP A — UNDERSTAND THE ALGORITHM
+  • Identify the data structures, key invariants, and edge cases.
+  • Write pseudocode for the algorithm in plain English.
+  • Confirm the pseudocode satisfies all problem constraints.
+
+STEP B — TRACE THE EXAMPLE
+  • Run your pseudocode step-by-step on example input #1.
+  • Write the exact state of all key variables after each step.
+  • Confirm final output matches expected output EXACTLY.
+  • If trace fails → redesign the algorithm, repeat from STEP A.
+
+STEP C — TRANSLATE TO CODE
+  • Only after the trace succeeds, write the actual code.
+  • Each line must correspond to a traced step.
+
+STEP D — RE-TRACE THE CODE
+  • Run the ACTUAL CODE (not pseudocode) on example input #1 mentally.
+  • Verify output matches. If not → fix the bug, re-trace, repeat.
+
+Common fatal bugs that WILL cause runtime errors:
+- Off-by-one in loop bounds or index slicing
+- Wrong variable used inside a loop (copy-paste shadow)
+- Mutating a container while iterating it
+- Missing base case in recursion
+- Returning before all branches are handled
+- Type mismatch: treating a string as int or a list as a dict key
 
 ##############################################################################
 # RULE #1: MINIMAL CODE - AS FEW LINES AS POSSIBLE
@@ -944,12 +961,18 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     try {
       const passStart = performance.now();
       const chunks = [];
-      const stream = await client.messages.stream({
+      // Extended thinking — forces internal chain-of-thought before writing
+      // code. Cuts logic errors on complex scheduling/graph/DP problems.
+      // Thinking blocks are internal only; we skip them, forward text only.
+      const useThinking = primaryModel.includes('opus');
+      const streamParams = {
         model: primaryModel,
-        max_tokens: MAX_TOKENS,
+        max_tokens: useThinking ? MAX_TOKENS + 10000 : MAX_TOKENS,
         system: systemBlocks,
         messages,
-      }, { signal: abortController.signal });
+        ...(useThinking ? { thinking: { type: 'enabled', budget_tokens: 10000 } } : {}),
+      };
+      const stream = await client.messages.stream(streamParams, { signal: abortController.signal });
 
       for await (const event of stream) {
         if (clientDisconnected) { try { stream.controller?.abort(); } catch {} break; }
