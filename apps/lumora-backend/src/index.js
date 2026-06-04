@@ -297,6 +297,16 @@ async function runMigrations() {
          ON lumora_retrieval_logs (created_at DESC)`,
       `CREATE INDEX IF NOT EXISTS lumora_retrieval_logs_user_created
          ON lumora_retrieval_logs (user_id, created_at DESC)`,
+
+      // ── Behavioral story anchor (awesome-llm-apps memory pattern) ──
+      // Stores pre-parsed STAR stories per user so behavioral answers
+      // inject the exact right story/metric rather than re-discovering
+      // it from raw resume text on every request.
+      `CREATE TABLE IF NOT EXISTS lumora_user_stories (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        stories_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`,
     ];
 
     // Postgres error codes for "already exists" — the legitimate swallow

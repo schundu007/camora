@@ -12,6 +12,7 @@
  */
 import { hybridSearchKb, hybridSearchUserDocs, hybridSearchUserCode } from './hybridRetrieval.js';
 import { sourcesForMode } from './modeSourceFilter.js';
+import { gradeChunks } from './chunkGrader.js';
 
 const DEFAULT_TIMEOUT_MS = 250;
 // When rerank is on, we cast a wider candidate net — Cohere will trim
@@ -147,7 +148,11 @@ export async function retrieve(opts) {
       return { chunks: [], timedOut: true, latencyMs, lowConfidence: true };
     }
     const { chunks, usedKit } = winner;
-    const lowConfidence = detectLowConfidence(chunks);
+    // CRAG: grade chunks for relevance before injecting into prompt.
+    // Runs only when RAG_USE_GRADING=true; fails open on timeout.
+    const gradedChunks = await gradeChunks(question, chunks);
+
+    const lowConfidence = detectLowConfidence(gradedChunks);
     import('./retrievalLogger.js').then(({ logRetrieval }) =>
       logRetrieval({
         userId,
@@ -160,7 +165,7 @@ export async function retrieve(opts) {
         usedRerank: willRerank,
       }).catch(() => {}),
     );
-    return { chunks, timedOut: false, latencyMs, lowConfidence };
+    return { chunks: gradedChunks, timedOut: false, latencyMs, lowConfidence };
   } finally {
     clearTimeout(timer);
   }
