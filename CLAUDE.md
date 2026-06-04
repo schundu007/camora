@@ -87,8 +87,12 @@ cd apps/camora && npx eslint .
 - ES6+ JavaScript (no TypeScript), Express 5
 - Routes mounted at `/api/v1/*` in `src/index.js`
 - Key services: `claude.js` (Anthropic SDK), `transcription.js` (OpenAI Whisper + ffmpeg), `aiServiceProxy.js` (proxies to Python ai-services)
+- Multi-provider fallback chain in `provider-stream.js`: Claude → Gemini 1.5 Flash → Qwen-2.5-72B (OpenRouter) → DeepSeek-V3 (OpenRouter) → GPT-4o-mini. Fallback triggers only when a provider errors before any tokens stream.
+- RAG pipeline: `retrieval.js` → `hybridRetrieval.js` (BM25 + vector) → optional `hyde.js` (HyDE rewriting) → optional `reranker.js` (Cohere) → optional `chunkGrader.js` (CRAG relevance filter)
+- Behavioral story anchor: `storyAnchor.js` persists parsed STAR stories per user (`lumora_user_stories` table) and injects the best archetype-matched story into the prompt so Claude uses the exact experience/metric rather than re-discovering from raw resume text.
+- Answer caching: `answerCache.js` hashes question + plan + context; cache hits replay the full answer SSE without hitting the LLM.
 - Runs DB migrations on startup (idempotent `CREATE TABLE IF NOT EXISTS`)
-- Tables: `lumora_conversations`, `lumora_messages`, `lumora_usage_logs`, `lumora_bookmarks`, `lumora_quotas`, `coding_usage`
+- Tables: `lumora_conversations`, `lumora_messages`, `lumora_usage_logs`, `lumora_bookmarks`, `lumora_quotas`, `coding_usage`, `lumora_completion_marks`, `lumora_prep_state`, `lumora_company_context`, `lumora_audio_preferences`, `lumora_kb_chunks`, `lumora_user_doc_chunks`, `lumora_user_code_chunks`, `lumora_session_kit`, `lumora_retrieval_logs`, `lumora_user_stories`
 
 ### Ascend Backend (`apps/ascend-backend`)
 
@@ -133,6 +137,9 @@ cd apps/camora && npx eslint .
 - `RAG_USE_HYDE` — optional `'true'`/`'false'`. Enables HyDE query rewriting (Haiku-generated hypothetical answer embedded for retrieval). Default off.
 - `RAG_USE_RERANK` — optional `'true'`/`'false'`. Enables Cohere reranker (also requires `COHERE_API_KEY`). Default off.
 - `RAG_USE_WARM_KIT` — optional `'true'`/`'false'`. Enables session-warm prefetch read in retrieve(). **Default ON** (set to `'false'` to disable). The kit is built on Prep save and skips live retrieval at question time.
+- `RAG_AUTO_WEB_SEARCH` — optional `'true'`. Auto-enables web search when retrieval returns low-confidence chunks (without the user toggling the search button).
+- `RAG_USE_GRADING` — optional `'true'`. Enables CRAG-style chunk relevance grading via Haiku before prompt injection. Off by default. Adds ~50ms per request (parallel grading, 300ms budget, fails open).
+- `OPENROUTER_API_KEY` — optional. Enables Qwen-2.5-72B and DeepSeek-V3 as fallback providers in `provider-stream.js`.
 
 ## Conventions
 
