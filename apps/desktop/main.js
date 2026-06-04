@@ -540,45 +540,66 @@ async function doHackerrankScrape() {
   if (!info) return { ok: false, error: 'No browser window found. Open Chrome/Brave with HackerRank.' };
   const { url, windowTitle, browser } = info;
   console.log('[hr-auto] active browser URL:', url, '| window title:', windowTitle);
-  const activePlatform = _codingPlatform !== 'none' ? _codingPlatform : 'hackerrank';
-  const matchFn = PLATFORM_URL_MATCH[activePlatform];
-  if (!matchFn?.(url)) {
-    const names = { hackerrank: 'HackerRank', leetcode: 'LeetCode', coderpad: 'CoderPad' };
-    return { ok: false, error: `Active tab is not ${names[activePlatform] || 'the selected platform'}.\nCurrent URL: ${url}` };
+
+  // Bug fix: _codingPlatform='auto' had no entry in PLATFORM_URL_MATCH → always failed.
+  // When auto, accept any supported platform URL.
+  const anyPlatformMatch = Object.values(PLATFORM_URL_MATCH).some(fn => fn(url));
+  if (!anyPlatformMatch) {
+    return { ok: false, error: `Active tab is not a supported coding platform.\nCurrent URL: ${url}` };
   }
-  // Try DOM text extraction first — gets the full problem regardless of scroll
-  // position and bypasses HackerRank's copy-paste restrictions.
+
+  // Try DOM text extraction first — gets the full problem regardless of scroll position.
+  // Requires "Allow JavaScript from Apple Events" in Chrome Develop menu.
   const text = await extractProblemTextFromBrowser(browser, url);
   if (text) {
-    console.log('[hr-auto] DOM text extraction succeeded, skipping screenshot OCR');
-    // Also extract the editor starter code so the backend can preserve the
-    // exact input-reading template (e.g. readarray, Scanner, etc.) instead
-    // of generating it from scratch.
+    console.log('[hr-auto] DOM text extraction succeeded, len=' + text.length);
     const starterCode = await extractStarterCodeFromBrowser(browser, url);
-    if (starterCode) console.log('[hr-auto] starter code extracted, len=' + starterCode.length);
     _lastHrUrl = url;
     return { ok: true, text, starterCode, url };
   }
-  // Fall back to screenshot → OCR pipeline with auto-scroll multi-page capture.
-  // Captures up to 6 pages, scrolling between each to cover long problem descriptions.
-  console.log('[hr-auto] DOM text extraction failed, falling back to multi-page screenshot');
+
+  // Fallback: multi-page screenshot with keyboard-based scrolling (no JS permissions needed).
+  // Scrolls the browser window via Page Down keystrokes — works even when
+  // "Allow JavaScript from Apple Events" is disabled in Chrome.
+  console.log('[hr-auto] DOM extraction failed, using keyboard-scroll screenshot fallback');
   const dataUrls = [];
+
+  // Scroll to top first so we always start from the beginning of the problem.
+  try {
+    await runAppleScript(`
+tell application "${browser}" to activate
+delay 0.2
+tell application "System Events"
+  key code 115 using command down
+end tell
+delay 0.4`);
+  } catch {}
+
   const firstDataUrl = await captureExactBrowserWindow(windowTitle);
-  if (!firstDataUrl) return { ok: false, error: 'Could not capture the HackerRank browser window. Make sure it is visible (not minimised or behind other windows).' };
+  if (!firstDataUrl) return { ok: false, error: 'Could not capture the HackerRank browser window. Make sure it is visible on screen.' };
   dataUrls.push(firstDataUrl);
 
-  for (let page = 1; page < 6; page++) {
-    const hasMore = await checkHasMoreContent(browser);
-    if (!hasMore) break;
-    await scrollDownProblem(browser);
-    await new Promise(r => setTimeout(r, 600)); // let scroll settle + repaint
+  // Take up to 5 more pages using Page Down. We always scroll — if the page
+  // is short, duplicate screenshots are harmless (OCR deduplicates repeated content).
+  for (let page = 1; page <= 4; page++) {
+    try {
+      await runAppleScript(`
+tell application "${browser}" to activate
+delay 0.15
+tell application "System Events"
+  key code 121
+end tell
+delay 0.5`);
+    } catch { break; }
     const next = await captureExactBrowserWindow(windowTitle);
     if (!next) break;
     dataUrls.push(next);
+    // Stop if we've taken 5 screenshots — enough for any reasonable problem.
+    if (dataUrls.length >= 5) break;
   }
 
   _lastHrUrl = url;
-  if (dataUrls.length === 1) return { ok: true, dataUrl: dataUrls[0], url };
+  // Always return dataUrls array so frontend accumulates all pages before generating.
   return { ok: true, dataUrls, url };
 }
 
