@@ -1309,9 +1309,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       setProblemText(prev => prev ? `${prev}\n\n--- Page Break ---\n\n${text}` : text);
       setInputMode('paste');
       setIsInputCollapsed(false);
+      scheduleAutoGenerate();
     };
     return () => { onScreenshotAppendRef.current = null; };
-  }, [onScreenshotAppendRef]);
+  }, [onScreenshotAppendRef, scheduleAutoGenerate]);
 
   // Heuristic: does this OCR'd text look like a complete coding problem?
   // Checks for input/output sections, examples, constraints, or sufficient length.
