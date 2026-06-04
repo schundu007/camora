@@ -344,10 +344,10 @@ function SidebarSection({
           onClick={() => setOpen((v) => !v)}
           className="flex items-center justify-between w-full mb-1 px-2 cursor-pointer select-none group"
           style={{
-            fontSize: '11px',
-            fontWeight: 600,
+            fontSize: '10px',
+            fontWeight: 700,
             textTransform: 'uppercase',
-            letterSpacing: '0.08em',
+            letterSpacing: '0.12em',
             color: 'var(--text-muted)',
             background: 'none',
             border: 'none',
@@ -355,11 +355,10 @@ function SidebarSection({
         >
           <span>{section.title}</span>
           <span
-            className="transition-transform duration-200"
+            className="transition-transform duration-150"
             style={{
               transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
               color: 'var(--text-muted)',
-              opacity: 0.6,
             }}
           >
             {icons.chevron}
@@ -374,24 +373,25 @@ function SidebarSection({
             const active = isActive(item.path, pathname);
 
             const linkStyles: React.CSSProperties = collapsed ? {
-              height: '34px',
-              width: '34px',
+              height: '36px',
+              width: '36px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '1px auto',
+              margin: '2px auto',
               color: active ? 'var(--accent)' : 'var(--text-secondary)',
               background: active ? 'var(--accent-subtle)' : 'transparent',
               borderRadius: '8px',
-              transition: 'background 0.15s, color 0.15s',
+              transition: 'background 0.12s, color 0.12s',
             } : {
-              height: '34px',
-              fontSize: '13.5px',
-              fontWeight: active ? 600 : 450,
-              color: active ? 'var(--accent-text)' : 'var(--text-secondary)',
+              height: '32px',
+              fontSize: '13px',
+              fontWeight: active ? 600 : 500,
+              color: active ? 'var(--accent)' : 'var(--text-secondary)',
               background: active ? 'var(--accent-subtle)' : 'transparent',
-              borderRadius: '8px',
-              transition: 'background 0.15s, color 0.15s',
+              borderLeft: active ? '2px solid var(--accent)' : '2px solid transparent',
+              borderRadius: '6px',
+              transition: 'background 0.12s, color 0.12s',
             };
 
             const iconEl = (
@@ -580,8 +580,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           read as one layer above the panel in either theme. */}
       <style>{`
         .sidebar-item:hover {
-          background: var(--accent-subtle) !important;
-          color: var(--accent-text) !important;
+          background: var(--bg-elevated) !important;
+          color: var(--text-primary) !important;
         }
       `}</style>
     </>

@@ -61,11 +61,14 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
       <header
         className="flex items-center justify-between px-4 sm:px-6 shrink-0 z-50 no-scrollbar"
         style={{
-          height: 56,
-          background: 'var(--topbar-bg)',
-          borderBottom: '1px solid var(--topbar-border)',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-          color: 'var(--topbar-text)',
+          height: 60,
+          // Dark navy chrome — same look in both light and dark themes,
+          // near-black so it sits visibly above the brighter cam-primary
+          // hero gradients below. 3px gold-leaf underline.
+          background: 'var(--cam-hero-strip)',
+          borderBottom: '3px solid var(--cam-gold-leaf)',
+          boxShadow: '0 6px 22px rgba(0,0,0,0.45)',
+          color: '#FFFFFF',
           fontFamily: 'var(--font-sans)',
         }}
       >
@@ -103,9 +106,9 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             className="hidden lg:flex items-center gap-0.5 ml-4"
             style={{
               padding: 3,
-              border: '1px solid var(--border)',
+              border: '1px solid rgba(201,162,39,0.50)',
               borderRadius: 999,
-              background: 'var(--bg-elevated)',
+              background: 'rgba(3,19,46,0.88)',
             }}
           >
             {NAV_LINKS.filter(l => l.href !== '/pricing').map((link) => {
@@ -116,9 +119,9 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
                   to={link.href}
                   className="px-3.5 py-1.5 text-sm rounded-full transition-[background-color,color] duration-150 active:scale-[0.98] no-underline"
                   style={{
-                    color: active ? '#ffffff' : 'var(--text-secondary)',
-                    fontWeight: 600,
-                    background: active ? 'var(--accent)' : 'transparent',
+                    color: active ? '#020617' : 'rgba(255,255,255,0.85)',
+                    fontWeight: 700,
+                    background: active ? 'var(--cam-gold-leaf)' : 'transparent',
                   }}
                 >
                   {link.label}
@@ -187,12 +190,12 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex items-center justify-center w-8 h-8 transition-[background-color,transform] duration-150 active:scale-[0.97]"
+            className="flex items-center justify-center w-10 h-10 min-h-[40px] transition-[background-color,transform] duration-150 active:scale-[0.98] hover:bg-white/15"
             style={{
-              color: 'var(--topbar-muted)',
-              border: '1px solid var(--border)',
-              borderRadius: 8,
-              background: 'var(--bg-elevated)',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255,255,255,0.25)',
+              borderRadius: 999,
+              background: 'rgba(255,255,255,0.08)',
             }}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
@@ -252,7 +255,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           </button>
 
           {/* Avatar — user dropdown menu */}
-          <UserDropdown variant="default" />
+          <UserDropdown variant="dark" />
 
           {/* Mobile hamburger — pinned right, matches SiteNav and Lumora.
               Opens a dropdown directly below the TopBar with NAV_LINKS
@@ -260,8 +263,8 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
-            className="md:hidden flex items-center justify-center w-8 h-8 rounded-md transition-colors"
-            style={{ color: 'var(--topbar-muted)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+            className="md:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors hover:bg-white/10"
+            style={{ color: '#FFFFFF' }}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
           >
