@@ -439,19 +439,28 @@ async function extractProblemTextFromBrowser(browser, url) {
     // Extract ONLY the problem description — explicitly exclude the code editor.
     // HackerRank renders the problem on the left and Monaco/CodeMirror on the right.
     // Using single quotes throughout so no " escaping is needed inside the AppleScript string.
+    // Helper to strip editor elements from a cloned node and return its text.
+    // Written as a function string embedded in the IIFE — no newlines, single quotes only.
     jsCode = "(function(){" +
-      // Step 1: try known HackerRank problem-description selectors (left panel only)
-      "var ss=['.challenge-description-body .hackdown-content','.challenge-description-body','.problem-statement','.hackdown-content','[data-testid=\"challenge-description\"]','#challenge-page-description','.challenge-body-html','.statement-container','[class*=\"challenge-description\"]','[class*=\"problem-statement\"]','[class*=\"challengeDescription\"]'];" +
-      "for(var i=0;i<ss.length;i++){try{var e=document.querySelector(ss[i]);if(e){var t=(e.innerText||e.textContent||'').trim();if(t.length>80&&!t.match(/^\\s*\\d+\\s*\\n/))return t;}}catch(x){}}" +
-      // Step 2: clone body, strip ALL editor/nav/code elements, get remaining text
-      "try{" +
-        "var clone=document.body.cloneNode(true);" +
-        "var bad=clone.querySelectorAll('.monaco-editor,.CodeMirror,[class*=\"editor\"],[class*=\"Editor\"],[class*=\"code-area\"],[class*=\"codeArea\"],script,style,nav,header,[role=\"navigation\"],[class*=\"navbar\"],[class*=\"sidebar\"],[id*=\"editor\"],[id*=\"code\"]');" +
-        "for(var j=0;j<bad.length;j++){if(bad[j].parentNode)bad[j].parentNode.removeChild(bad[j]);}" +
-        "var t=(clone.innerText||clone.textContent||'').trim();" +
-        // Reject if it looks like code (starts with line numbers or import statements)
-        "if(t.length>80&&!t.match(/^(\\d+\\s+from|\\d+\\s+import|\\d+\\s+class|\\d+\\s+def|from typing)/))return t.slice(0,12000);" +
-      "}catch(x){}" +
+      "function strip(node){var c=node.cloneNode(true);c.querySelectorAll('.monaco-editor,.CodeMirror,[class*=\"editor\"],[class*=\"Editor\"],script,style').forEach(function(x){if(x.parentNode)x.parentNode.removeChild(x);});return(c.innerText||c.textContent||'').trim();}" +
+      // Strategy 1: find a parent container that has MULTIPLE problem sections (all 3 pages).
+      // Walk up from the first matched description element until we find a node with ≥2 section markers.
+      "var anchor=document.querySelector('.challenge-description-body,.hackdown-content,.problem-statement,[class*=\"challenge-description\"],[class*=\"challengeDescription\"]');" +
+      "if(anchor){" +
+        "var node=anchor;" +
+        "for(var k=0;k<8;k++){" +
+          "var p=node.parentElement;" +
+          "if(!p||p===document.body||p===document.documentElement)break;" +
+          "var subs=p.querySelectorAll('.hackdown-content,.challenge-constraints,.challenge-sample-input,.challenge-sample-output,.challenge-input-format,[class*=\"constraints\"],[class*=\"sampleInput\"],[class*=\"inputFormat\"]');" +
+          "if(subs.length>=2){var t=strip(p);if(t.length>200)return t.slice(0,25000);}" +
+          "node=p;" +
+        "}" +
+        // Parent walk didn't find multi-section container — return anchor's parent text
+        "var t=strip(anchor.parentElement||anchor);if(t.length>80)return t.slice(0,25000);" +
+      "}" +
+      // Strategy 2: top-level left-panel containers
+      "var panels=['.challenge-tab-body','.challenge-view','.content-body','[class*=\"challenge-tab\"]','[class*=\"challenge-view\"]','[class*=\"challengeView\"]'];" +
+      "for(var i=0;i<panels.length;i++){try{var e=document.querySelector(panels[i]);if(e){var t=strip(e);if(t.length>200)return t.slice(0,25000);}}catch(x){}}" +
       "return null;" +
     "})()";
 
