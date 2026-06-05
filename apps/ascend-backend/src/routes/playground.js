@@ -52,28 +52,15 @@ function missingModule(stderr = '') {
   return stderr.match(/ModuleNotFoundError: No module named '([\w.]+)'/)?.[1]?.split('.')?.[0] ?? null;
 }
 
-async function findPip() {
-  const whichCmd = platform() === 'win32' ? 'where' : 'which';
-  for (const pip of ['pip3', 'pip']) {
-    try {
-      const { stdout } = await execFileAsync(whichCmd, [pip], { timeout: 3000, encoding: 'utf8' });
-      const p = stdout.trim().split('\n')[0];
-      if (p) return p;
-    } catch { /* try next */ }
-  }
-  return null;
-}
-
 async function pipInstall(importName) {
   if (!/^[a-zA-Z0-9._-]+$/.test(importName)) return false;
   const pkgName = PIP_ALIAS[importName] ?? importName;
-  const pip = await findPip();
-  if (!pip) return false;
-  // Try --break-system-packages first (Debian bookworm "externally managed" Python).
-  // Fall back to --user if that flag isn't recognised on older images.
+  // Use `python3 -m pip` — guaranteed to find the right pip for whatever
+  // Python binary is on PATH, regardless of whether pip3/pip are symlinked.
   for (const flag of ['--break-system-packages', '--user']) {
     try {
-      await execFileAsync(pip, ['install', '--quiet', flag, pkgName], { timeout: 90000, encoding: 'utf8' });
+      await execFileAsync('python3', ['-m', 'pip', 'install', '--quiet', flag, pkgName],
+        { timeout: 90000, encoding: 'utf8' });
       console.log(`[playground] pip installed: ${pkgName} (${flag})`);
       return true;
     } catch { /* try next flag */ }
@@ -162,7 +149,23 @@ async function callExplain(prompt) {
 // Single shared namespace (_ns) is critical: exec with separate globals/locals
 // breaks cross-references between top-level classes/functions and prevents
 // `if __name__ == '__main__':` from ever being true.
-const PYTHON_WRAPPER = `import json as _j, sys as _s, traceback as _t, io as _io
+const PYTHON_WRAPPER = `import json as _j, sys as _s, traceback as _t, io as _io, re as _re, subprocess as _sp
+
+def _auto_install(mod_name):
+    _pkg = {
+        'cv2': 'opencv-python', 'PIL': 'Pillow', 'sklearn': 'scikit-learn',
+        'bs4': 'beautifulsoup4', 'yaml': 'PyYAML', 'dotenv': 'python-dotenv',
+        'Crypto': 'pycryptodome', 'dateutil': 'python-dateutil', 'jwt': 'PyJWT',
+        'psycopg2': 'psycopg2-binary', 'attr': 'attrs', 'faker': 'Faker',
+    }.get(mod_name, mod_name)
+    for _flag in ['--break-system-packages', '--user']:
+        try:
+            _sp.check_call([_s.executable, '-m', 'pip', 'install', '--quiet', _flag, _pkg],
+                           stdout=_sp.DEVNULL, stderr=_sp.DEVNULL, timeout=90)
+            return True
+        except Exception:
+            pass
+    return False
 
 with open('code.py', 'r') as _f:
     _src = _f.read()
@@ -171,14 +174,28 @@ _cap = _io.StringIO()
 _s.stdout = _cap
 _ns = {'__name__': '__main__'}
 
-try:
-    exec(compile(_src, 'code.py', 'exec'), _ns)
-except Exception:
-    _s.stdout = _s.__stdout__
-    _s.stdout.write(_cap.getvalue())
-    _s.stderr.write(_t.format_exc())
-    _s.stderr.flush()
-    _s.exit(1)
+_MAX_RETRIES = 5
+for _attempt in range(_MAX_RETRIES + 1):
+    try:
+        exec(compile(_src, 'code.py', 'exec'), _ns)
+        break
+    except ModuleNotFoundError as _e:
+        _s.stdout = _s.__stdout__
+        _mod = _re.search(r"No module named '([\\w.]+)'", str(_e))
+        _mod = _mod.group(1).split('.')[0] if _mod else None
+        if not _mod or _attempt == _MAX_RETRIES or not _auto_install(_mod):
+            _s.stdout.write(_cap.getvalue())
+            _s.stderr.write(_t.format_exc())
+            _s.stderr.flush()
+            _s.exit(1)
+        _cap = _io.StringIO()
+        _s.stdout = _cap
+    except Exception:
+        _s.stdout = _s.__stdout__
+        _s.stdout.write(_cap.getvalue())
+        _s.stderr.write(_t.format_exc())
+        _s.stderr.flush()
+        _s.exit(1)
 
 _s.stdout = _s.__stdout__
 _s.stdout.write(_cap.getvalue())
