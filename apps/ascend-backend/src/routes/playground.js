@@ -18,13 +18,34 @@ const router = Router();
 // ---------------------------------------------------------------------------
 
 const PIP_ALIAS = {
-  cv2: 'opencv-python',
-  PIL: 'Pillow',
-  sklearn: 'scikit-learn',
-  bs4: 'beautifulsoup4',
-  yaml: 'PyYAML',
-  dotenv: 'python-dotenv',
-  Crypto: 'pycryptodome',
+  cv2:        'opencv-python',
+  PIL:        'Pillow',
+  sklearn:    'scikit-learn',
+  bs4:        'beautifulsoup4',
+  yaml:       'PyYAML',
+  dotenv:     'python-dotenv',
+  Crypto:     'pycryptodome',
+  google:     'google-api-python-client',
+  serial:     'pyserial',
+  dateutil:   'python-dateutil',
+  jwt:        'PyJWT',
+  MySQLdb:    'mysqlclient',
+  psycopg2:   'psycopg2-binary',
+  redis:      'redis',
+  pymongo:    'pymongo',
+  pydantic:   'pydantic',
+  aiohttp:    'aiohttp',
+  httpx:      'httpx',
+  attr:       'attrs',
+  click:      'click',
+  rich:       'rich',
+  loguru:     'loguru',
+  tabulate:   'tabulate',
+  arrow:      'arrow',
+  pendulum:   'pendulum',
+  tqdm:       'tqdm',
+  faker:      'Faker',
+  colorama:   'colorama',
 };
 
 function missingModule(stderr = '') {
@@ -48,10 +69,17 @@ async function pipInstall(importName) {
   const pkgName = PIP_ALIAS[importName] ?? importName;
   const pip = await findPip();
   if (!pip) return false;
-  try {
-    await execFileAsync(pip, ['install', '--quiet', '--user', pkgName], { timeout: 30000, encoding: 'utf8' });
-    return true;
-  } catch { return false; }
+  // Try --break-system-packages first (Debian bookworm "externally managed" Python).
+  // Fall back to --user if that flag isn't recognised on older images.
+  for (const flag of ['--break-system-packages', '--user']) {
+    try {
+      await execFileAsync(pip, ['install', '--quiet', flag, pkgName], { timeout: 90000, encoding: 'utf8' });
+      console.log(`[playground] pip installed: ${pkgName} (${flag})`);
+      return true;
+    } catch { /* try next flag */ }
+  }
+  console.warn(`[playground] pip install failed for ${pkgName}`);
+  return false;
 }
 
 const CODE_LIMIT = 50 * 1024; // 50KB
