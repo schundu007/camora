@@ -747,9 +747,10 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
-  // Auto-start recording on mount when token is available
+  // Auto-start recording on mount. Token is NOT required here — getUserMedia
+  // needs no auth. handleAudioData guards on token when it sends to the API.
   useEffect(() => {
-    if (autoStart && token && !hasAutoStarted && startRecordingRef.current && !storeIsRecording && continuousMode) {
+    if (autoStart && !hasAutoStarted && startRecordingRef.current && !storeIsRecording && continuousMode) {
       setHasAutoStarted(true);
       // Delay to ensure everything is ready
       const timer = setTimeout(() => {
@@ -763,7 +764,7 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [autoStart, token, hasAutoStarted, storeIsRecording, continuousMode, setIsRecording, startListenTimer, setStatus, setRecordingMode]);
+  }, [autoStart, hasAutoStarted, storeIsRecording, continuousMode, setIsRecording, startListenTimer, setStatus, setRecordingMode]);
 
   // Heartbeat: detect when Auto is on but the recorder has actually
   // stopped (encoder error swallowed, MediaRecorder internal failure,
