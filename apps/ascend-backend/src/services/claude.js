@@ -695,6 +695,7 @@ CRITICAL: For EVERY technology/service you include, you MUST explain:
 1. WHY this technology is needed (what problem it solves)
 2. WHY this specific choice over alternatives
 3. What happens WITHOUT this component
+IMPORTANT: Each "why" field MUST be ONE sentence only (max 15 words) — no paragraphs, no sub-bullets, no newlines inside the string.
 
 IMPORTANT: Do NOT generate code. Focus entirely on system design.
 
@@ -735,13 +736,11 @@ For TYPE B (full system design) ONLY, respond with valid JSON in exactly this fo
       "description": "Detailed multi-region architecture with failover"
     },
     "techJustifications": [
-      {"tech": "Kafka", "category": "Message Queue", "why": "High-throughput event streaming (millions/sec), durability with replication, replay capability for data recovery", "without": "Direct DB writes would bottleneck at 10K writes/sec, losing async processing capability", "alternatives": "RabbitMQ (lower throughput), SQS (simpler but AWS-only), Redis Streams (lighter but less durable)"},
-      {"tech": "Redis Cluster", "category": "Cache", "why": "Sub-millisecond reads (<1ms), reduces DB load by 90%, supports distributed locking and rate limiting", "without": "DB would handle 10x more reads, p99 latency jumps from 5ms to 50ms+", "alternatives": "Memcached (no persistence), Hazelcast (more features, more complex)"},
-      {"tech": "PostgreSQL", "category": "Primary Database", "why": "ACID transactions, complex queries with JOINs, strong consistency for financial/user data, mature replication", "without": "NoSQL would require application-level transactions, eventual consistency issues", "alternatives": "MySQL (similar), CockroachDB (distributed SQL), Vitess (MySQL sharding)"},
-      {"tech": "Elasticsearch", "category": "Search", "why": "Full-text search with relevance scoring, sub-100ms search across billions of documents, faceted search", "without": "SQL LIKE queries are O(n), unusable beyond 1M rows", "alternatives": "Solr (similar), Algolia (managed, expensive), PostgreSQL FTS (limited scale)"},
-      {"tech": "InfluxDB", "category": "Time-Series DB", "why": "Optimized for time-series writes (100K+ points/sec), automatic downsampling, efficient range queries", "without": "PostgreSQL time-series queries are 10-100x slower, storage 5x larger", "alternatives": "TimescaleDB (PostgreSQL extension), Prometheus (pull-based), ClickHouse (analytics)"},
-      {"tech": "CDN", "category": "Edge Cache", "why": "Serves static content from 200+ edge locations, reduces origin load by 95%, improves global latency from 200ms to 20ms", "without": "All requests hit origin, 10x higher infrastructure cost, poor global UX", "alternatives": "CloudFront, Fastly, Akamai - all similar capabilities"},
-      {"tech": "Load Balancer", "category": "Traffic Management", "why": "Distributes load across servers, health checks with automatic failover, SSL termination, rate limiting", "without": "Single server = single point of failure, no horizontal scaling", "alternatives": "HAProxy (OSS), Nginx (OSS), cloud LBs (managed)"}
+      {"tech": "Kafka", "category": "Message Queue", "why": "High-throughput async event streaming with replay and durability.", "without": "Direct DB writes bottleneck under load.", "alternatives": "RabbitMQ, SQS, Redis Streams"},
+      {"tech": "Redis Cluster", "category": "Cache", "why": "Sub-millisecond reads that absorb 90% of DB traffic.", "without": "DB handles all reads; p99 latency jumps 10x.", "alternatives": "Memcached, Hazelcast"},
+      {"tech": "PostgreSQL", "category": "Primary Database", "why": "ACID transactions for strong consistency on critical data.", "without": "NoSQL requires application-level transactions.", "alternatives": "MySQL, CockroachDB"},
+      {"tech": "CDN", "category": "Edge Cache", "why": "Serves static assets from edge, cutting origin load by 95%.", "without": "All traffic hits origin; global latency degrades.", "alternatives": "CloudFront, Fastly, Akamai"},
+      {"tech": "Load Balancer", "category": "Traffic Management", "why": "Distributes traffic and provides automatic failover.", "without": "Single server = single point of failure.", "alternatives": "HAProxy, Nginx, cloud LBs"}
     ],
     "scalability": ["Horizontal scaling with auto-scaling groups", "Database sharding by user_id", "Redis cache layer for hot data", "Async processing via message queues"],
     "tradeoffs": [
