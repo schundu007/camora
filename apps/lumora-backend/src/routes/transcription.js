@@ -258,7 +258,19 @@ router.post(
       const wordFreq = {};
       for (const w of allWords) wordFreq[w] = (wordFreq[w] || 0) + 1;
       const maxRepeat = allWords.length ? Math.max(...Object.values(wordFreq)) : 0;
-      const isRepetitionHallucination = maxRepeat >= 4;
+      const isWordRepetition = maxRepeat >= 4;
+      // Trigram repetition: "tell me about yourself tell me about yourself"
+      // has max word freq = 2 (passes the word check) but repeats a phrase.
+      let isTrigramRepetition = false;
+      if (allWords.length >= 6) {
+        const seen = new Set();
+        for (let i = 0; i <= allWords.length - 3; i++) {
+          const tg = `${allWords[i]} ${allWords[i+1]} ${allWords[i+2]}`;
+          if (seen.has(tg)) { isTrigramRepetition = true; break; }
+          seen.add(tg);
+        }
+      }
+      const isRepetitionHallucination = isWordRepetition || isTrigramRepetition;
 
       // Foreign-language hallucination: despite language:'en', Whisper sometimes
       // produces German/Japanese/etc. on background noise. Reject if non-ASCII

@@ -219,7 +219,7 @@ const MAX_JD_CHARS = 20_000;
 const MAX_PER_DOC_CHARS = 20_000;
 const MAX_TOTAL_STUDY_CHARS = 60_000;
 
-export function buildSystemContext(assistant: LumoraAssistant | null): string | undefined {
+export function buildSystemContext(assistant: LumoraAssistant | null, opts?: { skipStudyDocs?: boolean }): string | undefined {
   if (!assistant) return undefined;
   const parts: string[] = [];
   if (assistant.company || assistant.role) {
@@ -227,7 +227,7 @@ export function buildSystemContext(assistant: LumoraAssistant | null): string | 
   }
   if (assistant.resume) parts.push(`CANDIDATE RESUME:\n${assistant.resume.slice(0, MAX_RESUME_CHARS)}`);
   if (assistant.jobDescription) parts.push(`JOB DESCRIPTION:\n${assistant.jobDescription.slice(0, MAX_JD_CHARS)}`);
-  if (assistant.studyDocs && assistant.studyDocs.length > 0) {
+  if (!opts?.skipStudyDocs && assistant.studyDocs && assistant.studyDocs.length > 0) {
     let totalChars = 0;
     const cappedDocs: string[] = [];
     for (const d of assistant.studyDocs) {

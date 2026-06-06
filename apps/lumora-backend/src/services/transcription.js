@@ -1,19 +1,5 @@
-/**
- * Transcription service using OpenAI Whisper API.
- *
- * Migrated from Python: lumora/backend/app/services/transcription.py
- */
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
-import { randomUUID } from 'crypto';
 import OpenAI from 'openai';
 
-const execFileAsync = promisify(execFile);
-
-// Technical vocabulary prompt to improve Whisper accuracy on tech terms
 const TECHNICAL_PROMPT = `
 Transcribe accurately with technical terms: Kubernetes, Docker, Terraform, Ansible,
 Jenkins, GitLab, GitHub, AWS, Azure, GCP, EC2, S3, EKS, AKS, GKE, Helm, ArgoCD,
@@ -28,80 +14,36 @@ CAP theorem, ACID, BASE, eventual consistency, sharding, replication,
 load balancer, reverse proxy, CDN, cache, queue, pub-sub, event-driven.
 `.trim();
 
+// Groq as primary (whisper-large-v3-turbo, ~100ms), OpenAI as fallback
+const groq = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: 'https://api.groq.com/openai/v1',
+});
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-/**
- * Convert an audio file to 16 kHz mono WAV using ffmpeg.
- *
- * @param {string} inputPath  - Path to the source audio file.
- * @param {string} outputPath - Destination path for the WAV file.
- */
-async function convertToWav(inputPath, outputPath) {
-  await execFileAsync('ffmpeg', [
-    '-y', '-i', inputPath,
-    '-ar', '16000',
-    '-ac', '1',
-    '-f', 'wav',
-    outputPath,
-  ]);
+async function callWhisper(client, model, audioBuffer, filename) {
+  const file = new File([audioBuffer], filename, { type: 'audio/webm' });
+  const response = await client.audio.transcriptions.create({
+    model,
+    file,
+    language: 'en',
+    prompt: TECHNICAL_PROMPT,
+  });
+
+  if (typeof response === 'string') return response.trim();
+  if (typeof response?.text === 'string') return response.text.trim();
+  console.warn('[Whisper] Unexpected response shape, dropping chunk:', typeof response);
+  return '';
 }
 
-/**
- * Transcribe an audio buffer via OpenAI Whisper.
- *
- * @param {Buffer} audioBuffer - Raw audio bytes (WebM, WAV, MP3, etc.).
- * @param {string} filename    - Original filename with extension (e.g. "audio.webm").
- * @returns {Promise<string>}  - Transcribed text.
- */
 export async function transcribe(audioBuffer, filename = 'audio.webm') {
-  const ext = path.extname(filename) || '.webm';
-  const id = randomUUID();
-  const tmpDir = os.tmpdir();
-  const inputPath = path.join(tmpDir, `transcribe-${id}${ext}`);
-  const wavPath = path.join(tmpDir, `transcribe-${id}.wav`);
-
-  try {
-    // Write audio to a temp file
-    await fs.promises.writeFile(inputPath, audioBuffer);
-
-    // Try WAV conversion first, fall back to sending original if ffmpeg fails
-    let audioFile = inputPath;
+  if (process.env.GROQ_API_KEY) {
     try {
-      await convertToWav(inputPath, wavPath);
-      const wavSize = (await fs.promises.stat(wavPath)).size;
-      if (wavSize > 1000) audioFile = wavPath;
-    } catch {
-      // ffmpeg failed — send original format
+      return await callWhisper(groq, 'whisper-large-v3-turbo', audioBuffer, filename);
+    } catch (err) {
+      console.warn('[Transcription] Groq failed, falling back to OpenAI:', err.message);
     }
-
-    // Send to OpenAI Whisper
-    const response = await openai.audio.transcriptions.create({
-      model: 'whisper-1',
-      file: fs.createReadStream(audioFile),
-      language: 'en',
-      prompt: TECHNICAL_PROMPT,
-    });
-
-    // Handle both string response (response_format: text) and object response.
-    // The OpenAI SDK normally returns `{ text: "..." }`; on transient
-    // API hiccups it has been observed to return objects without a
-    // `text` field. The previous fallback ran `String(response).trim()`
-    // which produced the literal `"[object Object]"` — that bypassed
-    // every hallucination filter and ended up flushed as a "question"
-    // in the Lumora accumulator. Return empty for unknown shapes so
-    // the route's hallucination filter drops the chunk cleanly.
-    let text = '';
-    if (typeof response === 'string') {
-      text = response.trim();
-    } else if (typeof response?.text === 'string') {
-      text = response.text.trim();
-    } else {
-      console.warn('[Whisper] Unexpected response shape, dropping chunk:', typeof response);
-    }
-    return text;
-  } finally {
-    // Clean up temp files
-    await fs.promises.unlink(inputPath).catch(() => {});
-    await fs.promises.unlink(wavPath).catch(() => {});
   }
+  return await callWhisper(openai, 'whisper-1', audioBuffer, filename);
 }

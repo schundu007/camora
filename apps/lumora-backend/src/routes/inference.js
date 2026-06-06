@@ -299,9 +299,12 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
     return res.status(400).json({ error: 'Question too long. Max 50,000 characters.' });
   }
 
-  const MAX_SYSTEM_CONTEXT_CHARS = 120_000;
+  // Behavioral mode only needs resume + JD for grounding — study docs add
+  // ~15k tokens to the prompt with no benefit (RAG already selects relevant
+  // behavioral snippets). Cap aggressively to cut TTFT from ~20s → ~5s.
+  const MAX_SYSTEM_CONTEXT_CHARS = mode === 'behavioral' ? 45_000 : 120_000;
   if (typeof systemContext === 'string' && systemContext.length > MAX_SYSTEM_CONTEXT_CHARS) {
-    console.warn(`[inference] systemContext truncated ${systemContext.length} → ${MAX_SYSTEM_CONTEXT_CHARS} chars for user ${user.id}`);
+    console.warn(`[inference] systemContext truncated ${systemContext.length} → ${MAX_SYSTEM_CONTEXT_CHARS} chars (mode=${mode}) for user ${user.id}`);
     systemContext = systemContext.slice(0, MAX_SYSTEM_CONTEXT_CHARS);
   }
 

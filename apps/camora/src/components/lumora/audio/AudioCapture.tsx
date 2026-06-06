@@ -66,6 +66,15 @@ const isLikelyRealSpeech = (raw: string): boolean  => {
     const freq: Record<string, number> = {};
     for (const w of allWords) freq[w] = (freq[w] || 0) + 1;
     if (Math.max(...Object.values(freq)) >= 4) return false;
+    // Trigram repetition — Whisper repeats a phrase: "tell me about yourself tell me about yourself"
+    if (allWords.length >= 6) {
+      const seen = new Set<string>();
+      for (let i = 0; i <= allWords.length - 3; i++) {
+        const tg = `${allWords[i]} ${allWords[i+1]} ${allWords[i+2]}`;
+        if (seen.has(tg)) return false;
+        seen.add(tg);
+      }
+    }
   }
   // Foreign-language hallucination: non-ASCII > 8% means Whisper drifted language
   const nonAscii = [...text].filter(c => c.charCodeAt(0) > 0x7f).length;
@@ -246,17 +255,20 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
   // of being split into truncated fragments.
   const lastSpeechAtRef = useRef(0);
   // Hard cap on how long we'll hold an accumulation before force-flushing.
-  // Generous enough to glue a question spoken across several VAD segments
-  // (each segment ends after ~2.5 s of silence), bounded so a runaway hot
-  // mic can never hold the accumulator open forever.
-  const MAX_ACCUM_MS = 15000;
+  // Behavioral (locked): 6 s ceiling — interviewer questions are short; a
+  // 6 s hard cap means the worst-case flush is 6 s after the first chunk,
+  // not 15 s. Coding/design keep 15 s to handle long mid-thought pauses.
+  const MAX_ACCUM_MS = locked ? 6000 : 15000;
   // How long after the speaker's last audible moment we keep a flush
   // pending. Reduced from 4000/900 ms — the original values were tuned
   // for the user answering a question (long pauses, mid-thought gaps)
   // but behavioral uses this for the *interviewer* asking, where
   // questions are complete sentences. Faster flush = faster Sona answer.
-  const GLUE_HOLD_MS = 1500;
-  const SHORT_HOLD_MS = 350;
+  // Behavioral mode (locked=true) flushes faster: the interviewer speaks
+  // in complete sentences with no mid-thought gaps, so the 1500/350 ms
+  // coding/design defaults add dead time without benefit.
+  const GLUE_HOLD_MS = locked ? 600 : 1500;
+  const SHORT_HOLD_MS = locked ? 250 : 350;
 
   const flushAccumulatedText = useCallback(() => {
     const text = accumulatedTextRef.current.trim();
@@ -315,14 +327,23 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
     // rest of the question can glue on; everything else flushes at
     // conversational speed.
     const likelyFragment = !endsSentence && wordCount < 6;
-    const wait =
+    const wait = locked ? (
+      lastChar === '?' || lastChar === '!' ? 200 :
+      lastChar === '.' && looksQuestion ? 250 :
+      lastChar === '.' ? 400 :
+      likelyFragment ? 350 :
+      longEnough && looksQuestion ? 300 :
+      looksQuestion ? 450 :
+      600
+    ) : (
       lastChar === '?' || lastChar === '!' ? 400 :
       lastChar === '.' && looksQuestion ? 500 :
       lastChar === '.' ? 800 :
       likelyFragment ? 700 :
       longEnough && looksQuestion ? 600 :
       looksQuestion ? 900 :
-      1200;
+      1200
+    );
 
     // Backstop timer in case heldFor catches up to MAX_ACCUM_MS in
     // the gap between chunks: cap the per-chunk wait so even if no
@@ -673,7 +694,10 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
     // Manual mode: 3 s silence window — long enough to ride through
     // natural mid-thought pauses but short enough that the recording
     // closes itself when the user is genuinely done speaking.
-    silenceDuration: continuousMode ? 2500 : 3000,
+    // Behavioral (locked): 1 s silence window — interviewer questions
+    // end cleanly; shorter window means the chunk fires faster and Sona
+    // can start answering sooner. Other modes keep the longer windows.
+    silenceDuration: locked ? 2000 : (continuousMode ? 2500 : 3000),
     minSpeechDuration: 300,
     // Auto mode: 30 s ceiling. The prior 5 s ceiling force-fragmented
     // every behavioral question (which routinely run 20-45 s) and made
