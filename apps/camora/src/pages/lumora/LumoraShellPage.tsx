@@ -309,10 +309,10 @@ export const LumoraShellPage = () => {
       return;
     }
     if (tab === 'behavioral') {
-      // Gate on isQuestion() so background noise and stray conversation
-      // ("Ten minutes to go.", "I can be forever. Awesome.") don't fire
-      // Sona. Manual mic press bypasses the gate — user intent is clear.
-      if (!opts?.manual && !isQuestion(trimmed)) return;
+      // No isQuestion() gate here: in an active behavioral interview the
+      // user wants Sona to answer every interviewer utterance. AudioCapture's
+      // isLikelyRealSpeech() already drops noise + Whisper hallucinations
+      // upstream, so forwarding everything transcribed is safe.
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
       return;
     }
