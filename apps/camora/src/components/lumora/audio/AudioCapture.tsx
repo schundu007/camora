@@ -54,19 +54,31 @@ const dlog = (event: string, data?: Record<string, unknown>) => {
 // legitimate "what?" follow-up) are recoverable — the user just speaks
 // a fuller sentence. False positives (passing through "lanja") wreck
 // the QUESTIONS panel and waste an LLM call.
+// Minimal set of common English words that appear in virtually every real
+// interview question. Used to reject Whisper garbage that passes length/
+// punctuation checks (e.g. "Totserrk 3P-1-2" — 2 tokens, no common words).
+const COMMON_EN = new Set([
+  'a','an','the','is','are','was','were','be','been','have','has','had',
+  'do','does','did','can','could','would','should','will','may','might',
+  'how','what','when','where','why','who','which','tell','me','you','your',
+  'we','our','i','my','to','for','with','in','on','at','and','or','not',
+  'its','this','that','it','if','as','but','by','from','so','let','go',
+  'get','make','use','give','take','say','know','see','think','work','try',
+  'run','help','need','want','like','just','then','more','about','also',
+  'some','any','all','one','please','describe','explain','walk','share',
+  'talk','discuss','time','experience','team','project','example','situation',
+]);
+
 const isLikelyRealSpeech = (raw: string): boolean  => {
   if (typeof raw !== 'string') return false;
   const text = raw.trim();
   if (!text) return false;
   if (text.includes('[object Object]')) return false;
-  // Repetition hallucination: Whisper loops on a single word from silence
-  // ("Marvin, Marvin, Marvin…"). Any word appearing 4+ times = loop.
-  const allWords = text.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z]/g, '')).filter(w => w.length > 2);
+  const allWords = text.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z]/g, '')).filter(w => w.length > 1);
   if (allWords.length > 0) {
     const freq: Record<string, number> = {};
     for (const w of allWords) freq[w] = (freq[w] || 0) + 1;
     if (Math.max(...Object.values(freq)) >= 4) return false;
-    // Trigram repetition — Whisper repeats a phrase: "tell me about yourself tell me about yourself"
     if (allWords.length >= 6) {
       const seen = new Set<string>();
       for (let i = 0; i <= allWords.length - 3; i++) {
@@ -76,11 +88,14 @@ const isLikelyRealSpeech = (raw: string): boolean  => {
       }
     }
   }
-  // Foreign-language hallucination: non-ASCII > 8% means Whisper drifted language
   const nonAscii = [...text].filter(c => c.charCodeAt(0) > 0x7f).length;
   if (nonAscii / text.length > 0.08) return false;
   const last = text.slice(-1);
   if (last === '?' || last === '!') return true;
+  // Require at least one common English word for short unponctated text.
+  // Filters garbage like "Totserrk 3P-1-2" that has no real English words.
+  const hasCommonWord = allWords.some(w => COMMON_EN.has(w));
+  if (!hasCommonWord && allWords.length <= 5) return false;
   const words = text.split(/\s+/);
   if (words.length >= 3) return true;
   if (text.length >= 14) return true;
@@ -92,6 +107,9 @@ interface AudioCaptureProps {
   // intent is unambiguous, so downstream `isQuestion()` filters MUST be
   // bypassed. Manual press = direct user action; auto = system guess.
   onTranscription?: (text: string, opts?: { manual?: boolean }) => void;
+  // Fires after every accepted Whisper chunk with the current running
+  // accumulation so the UI can show a live preview before the final flush.
+  onLiveTranscription?: (accumulated: string) => void;
   autoStart?: boolean;
   // When false: suppresses all keyboard shortcuts and immediately releases
   // the mic if it was recording. When it flips back to true, AUTO resumes
@@ -109,7 +127,7 @@ interface AudioCaptureProps {
   locked?: boolean;
 }
 
-export const AudioCapture = ({ onTranscription, autoStart = true, active, compact, locked }: AudioCaptureProps) => {
+export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart = true, active, compact, locked }: AudioCaptureProps) => {
   // Use centralized auth
   const { token } = useAuth();
 
@@ -272,6 +290,8 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
 
   const flushAccumulatedText = useCallback(() => {
     const text = accumulatedTextRef.current.trim();
+    onLiveTranscription?.(''); // clear live preview
+    if (locked) window.dispatchEvent(new CustomEvent('lumora:behavioral-live-transcript', { detail: { text: '' } }));
     if (text.length > 5) {
       onTranscription?.(text);
       setStatus('ready', 'Question sent');
@@ -499,7 +519,10 @@ export const AudioCapture = ({ onTranscription, autoStart = true, active, compac
           }
           accumulatedTextRef.current += ' ' + result.text;
           lastChunkTimeRef.current = Date.now();
-          setStatus('listen', `Heard: "${accumulatedTextRef.current.trim().slice(-60)}..."`);
+          const accumulated = accumulatedTextRef.current.trim();
+          setStatus('listen', `Heard: "${accumulated.slice(-60)}..."`);
+          onLiveTranscription?.(accumulated);
+          if (locked) window.dispatchEvent(new CustomEvent('lumora:behavioral-live-transcript', { detail: { text: accumulated } }));
           dlog('chunk_accepted', { len: result.text.length, accumLen: accumulatedTextRef.current.length });
           scheduleQuestionCheck();
         } else if (result.text) {
