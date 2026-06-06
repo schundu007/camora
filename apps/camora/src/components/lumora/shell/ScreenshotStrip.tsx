@@ -336,25 +336,21 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
         </div>
       )}
 
-      {/* AudioCapture — all AI tabs */}
-      {onTranscription && (
+      {/* AudioCapture + VoiceEnrollment — behavioral only.
+          Coding and Design already have Sona; mic controls don't belong there. */}
+      {onTranscription && surface === 'behavioral' && (
         <div
           className="flex items-center gap-1.5 px-2 py-1 rounded-lg shrink-0"
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)' }}
         >
-          {/* Behavioral auto-listens from this single toolbar control (the
-              embedded Sona panel no longer renders its own AUTO chip).
-              Coding/Design stay manual (AUTO starts off). `key={surface}`
-              remounts on tab switch so autoStart re-initialises per surface. */}
-          <AudioCapture key={surface} onTranscription={onTranscription} autoStart={surface === 'behavioral'} active={isTabActive} compact locked={surface === 'behavioral'} />
+          <AudioCapture key={surface} onTranscription={onTranscription} autoStart={true} active={isTabActive} compact locked={true} />
         </div>
       )}
 
-      {/* Voice enrollment — all AI tabs */}
-      {onTranscription && <VoiceEnrollment disabled={false} variant="light" />}
+      {onTranscription && surface === 'behavioral' && <VoiceEnrollment disabled={false} variant="light" />}
 
-      {/* Stealth — desktop only */}
-      {!!(window as any).camo?.isDesktop && (
+      {/* Stealth — desktop only, behavioral only */}
+      {surface === 'behavioral' && !!(window as any).camo?.isDesktop && (
         <button
           onClick={handleStealthMode}
           title={isStealthActive ? 'Stealth ON — mouse tracking blocked app-wide' : 'Block mouse tracking (app-wide)'}
