@@ -723,6 +723,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       console.warn('[Sona] handleAutoTranscription received non-string:', text);
       return;
     }
+    setLiveTranscript(''); // question is committed — clear live preview
     if (opts?.manual || embedded) {
       askRef.current?.(text);
       return;
@@ -756,6 +757,16 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     return () => window.removeEventListener('lumora:behavioral-question', handler);
   }, [embedded]);
 
+  useEffect(() => {
+    if (!embedded) return;
+    const handler = (e: Event) => {
+      const text = (e as CustomEvent<{ text?: string }>).detail?.text ?? '';
+      setLiveTranscript(text);
+    };
+    window.addEventListener('lumora:behavioral-live-transcript', handler);
+    return () => window.removeEventListener('lumora:behavioral-live-transcript', handler);
+  }, [embedded]);
+
   // Embedded mode = render inline, skip minimized/floating
   useEffect(() => {
     if (embedded) setMinimized(false);
@@ -766,6 +777,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // Auto-closes when a question is tapped from the drawer so the user
   // returns to the answer view immediately.
   const [mobileRailOpen, setMobileRailOpen] = useState(false);
+  const [liveTranscript, setLiveTranscript] = useState('');
   useEffect(() => { if (!embedded) setMobileRailOpen(false); }, [embedded]);
 
   // Minimized = floating icon button. Draggable: shares the same
@@ -1052,6 +1064,18 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                         onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.borderColor = 'var(--cam-primary)'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--border)'; }}>{s}</button>
                     ))}
+                  </div>
+                </div>
+              )}
+              {/* Live preview — shows each Whisper chunk immediately as it
+                  arrives, before the accumulation flush fires. Clears
+                  automatically when the question is sent. */}
+              {liveTranscript && (
+                <div className="px-3 py-2.5 md:py-2 rounded-lg text-[13px] md:text-[11px] font-medium flex items-start gap-2 animate-pulse"
+                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--cam-primary)', color: 'var(--text-secondary)', opacity: 0.85 }}>
+                  <div className="flex-1 min-w-0">
+                    <p className="break-words">{liveTranscript}</p>
+                    <span className="text-[8px] mt-1 block" style={{ color: 'var(--cam-primary)' }}>listening…</span>
                   </div>
                 </div>
               )}
