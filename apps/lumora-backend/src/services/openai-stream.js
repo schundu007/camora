@@ -8,6 +8,7 @@ import {
   isDesignQuestion,
   isCodingQuestion,
   buildGeneralPrompt,
+  buildDesignPrompt,
   CODING_SYSTEM_PROMPT,
   getDefaultResumeContext,
   getDefaultTechnicalContext,
@@ -55,7 +56,7 @@ export async function* streamResponseOpenAI(question, history, options = {}) {
     systemPrompt = codingGrounding + CODING_SYSTEM_PROMPT;
     maxTokens = MAX_TOKENS_DESIGN;
   } else if (isDesign) {
-    systemPrompt = buildGeneralPrompt(resume, technical);
+    systemPrompt = buildDesignPrompt(resume, technical);
     maxTokens = MAX_TOKENS_DESIGN;
   } else {
     const basePrompt = buildGeneralPrompt(resume, technical);
