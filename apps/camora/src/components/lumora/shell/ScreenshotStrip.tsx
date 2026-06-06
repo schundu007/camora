@@ -343,14 +343,14 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           className="flex items-center gap-1.5 px-2 py-1 rounded-lg shrink-0"
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)' }}
         >
-          <AudioCapture key={surface} onTranscription={onTranscription} autoStart={true} active={isTabActive} compact locked={true} />
+          <AudioCapture key={surface} onTranscription={onTranscription} autoStart={true} active={isTabActive} compact />
         </div>
       )}
 
       {onTranscription && surface === 'behavioral' && <VoiceEnrollment disabled={false} variant="light" />}
 
-      {/* Stealth — desktop only, behavioral only */}
-      {surface === 'behavioral' && !!(window as any).camo?.isDesktop && (
+      {/* Stealth — desktop only, all tabs (global tool) */}
+      {!!(window as any).camo?.isDesktop && (
         <button
           onClick={handleStealthMode}
           title={isStealthActive ? 'Stealth ON — mouse tracking blocked app-wide' : 'Block mouse tracking (app-wide)'}
