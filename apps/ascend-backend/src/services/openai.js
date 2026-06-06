@@ -291,7 +291,7 @@ For FULL/DETAILED system design (TYPE B only):
 - Add CDN, edge caching, global load balancing
 - Include FAILURE HANDLING, circuit breakers, retry logic
 - Add RATE LIMITING, monitoring, observability
-- Provide DETAILED scalability analysis with numbers
+- Scalability: 4-5 HIGH-LEVEL bullet points only (horizontal scaling, sharding, caching, async queue) — NO deep LLD, no capacity numbers, no tier breakdowns
 - Consider data consistency models (eventual vs strong)
 - Include message queues for async processing
 - Add backup and disaster recovery strategies
