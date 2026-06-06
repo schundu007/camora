@@ -39,7 +39,7 @@ export function useAudioCapture(options: AudioCaptureOptions = {}) {
     onRecordingStop,
     onRecorderError,
     silenceThreshold = 0.01,
-    silenceDuration = 1200, // ms of silence before stopping
+    silenceDuration = 600, // ms of silence before stopping
     minSpeechDuration = 400, // ms minimum speech
     maxRecordingDuration = 45000, // max 45s recording as safety fallback
     deviceId = null,

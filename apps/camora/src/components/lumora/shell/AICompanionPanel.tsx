@@ -151,7 +151,9 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     return () => window.removeEventListener(ASSISTANT_UPDATED_EVENT, onUpdate);
   }, []);
   const activeAssistant = useMemo(() => getActiveAssistant(), [assistantVersion]);
-  const baseSystemContext = useMemo(() => buildSystemContext(activeAssistant), [activeAssistant]);
+  // Behavioral embedded mode skips study docs — they add ~15k tokens with
+  // no benefit (RAG handles retrieval). Cuts TTFT from ~20s to ~5s.
+  const baseSystemContext = useMemo(() => buildSystemContext(activeAssistant, { skipStudyDocs: embedded }), [activeAssistant, embedded]);
 
   // Live solve context — when the user just solved a coding/design
   // problem on a sibling tab, append the problem + chosen solution
@@ -333,6 +335,10 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
 
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState('');
+  // Abort controller for the active LLM stream. Behavioural mode aborts
+  // the current answer when a new question arrives so Sona responds
+  // immediately instead of waiting for the previous answer to finish.
+  const streamAbortRef = useRef<AbortController | null>(null);
   // Citations accumulator for the in-flight stream. Populated by the
   // `citations` SSE event and attached to the AI message on `onAnswer`.
   // Using a ref (not state) so it doesn't trigger a re-render — the
@@ -537,7 +543,16 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     const trimmed = question.trim();
     if (!trimmed || !token) return;
     if (streaming) {
-      pendingQuestionRef.current = trimmed;
+      // Behavioural mode: abort the live stream and queue the new question
+      // so Sona starts answering immediately instead of waiting for the
+      // previous answer to finish. The abort triggers onComplete/catch →
+      // setStreaming(false) → the drain useEffect fires the queued question.
+      if (embedded) {
+        pendingQuestionRef.current = trimmed;
+        streamAbortRef.current?.abort();
+      } else {
+        pendingQuestionRef.current = trimmed;
+      }
       return;
     }
 
@@ -561,9 +576,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     pendingCitationsRef.current = [];
 
     try {
+      const streamAbort = new AbortController();
+      streamAbortRef.current = streamAbort;
       await streamResponse({
         question: modePrefix + question.trim(),
         token,
+        signal: streamAbort.signal,
         useSearch: false,
         systemContext,
         // Behavioral fullscreen → tell the backend so retrieval biases to
