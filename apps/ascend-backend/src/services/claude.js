@@ -686,7 +686,7 @@ For FULL/DETAILED system design (TYPE B only):
 - Add CDN, edge caching, global load balancing
 - Include FAILURE HANDLING, circuit breakers, retry logic
 - Add RATE LIMITING, monitoring, observability
-- Provide DETAILED scalability analysis with numbers
+- Scalability: 4-5 HIGH-LEVEL bullet points only (horizontal scaling, sharding, caching, async queue) — NO deep LLD, no capacity numbers, no tier breakdowns
 - Consider data consistency models (eventual vs strong)
 - Include message queues for async processing
 - Add backup and disaster recovery strategies
@@ -743,7 +743,7 @@ For TYPE B (full system design) ONLY, respond with valid JSON in exactly this fo
       {"tech": "CDN", "category": "Edge Cache", "why": "Serves static content from 200+ edge locations, reduces origin load by 95%, improves global latency from 200ms to 20ms", "without": "All requests hit origin, 10x higher infrastructure cost, poor global UX", "alternatives": "CloudFront, Fastly, Akamai - all similar capabilities"},
       {"tech": "Load Balancer", "category": "Traffic Management", "why": "Distributes load across servers, health checks with automatic failover, SSL termination, rate limiting", "without": "Single server = single point of failure, no horizontal scaling", "alternatives": "HAProxy (OSS), Nginx (OSS), cloud LBs (managed)"}
     ],
-    "scalability": ["Horizontal scaling with auto-scaling groups", "Database sharding by user_id/hash", "Cache cluster with consistent hashing", "CDN for static content", "Async processing via message queues", "Read replicas for read-heavy workloads"],
+    "scalability": ["Horizontal scaling with auto-scaling groups", "Database sharding by user_id", "Redis cache layer for hot data", "Async processing via message queues"],
     "tradeoffs": [
       "Tradeoff 1: Strong vs eventual consistency - chose eventual for availability but requires conflict resolution",
       "Tradeoff 2: Multi-region complexity vs latency - higher ops cost but sub-100ms global latency",
