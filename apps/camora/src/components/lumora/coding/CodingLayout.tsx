@@ -8,6 +8,7 @@ import { LANGUAGES, getLanguageById } from '@/data/languages';
 import { dialogAlert } from '@/components/shared/Dialog';
 import Chip from '@/components/shared/ui/Chip';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
+import { ProblemCaptureStrip } from '@/components/lumora/shared/ProblemCaptureStrip';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -2199,6 +2200,19 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
                       {inputMode === 'image' && (
                         <div className="space-y-3">
+                          {/* Multi-page window capture — desktop only */}
+                          <ProblemCaptureStrip
+                            kind="coding"
+                            onProblemBuilt={(problem, starterCode, lang) => {
+                              setProblemText(problem);
+                              if (starterCode) setStarterCode(starterCode);
+                              if (lang) setLanguage(lang);
+                              setIsInputCollapsed(false);
+                            }}
+                          />
+
+                          <div className="w-full h-px" style={{ background: 'var(--border)', opacity: 0.5 }} />
+
                           {/* Hidden file input */}
                           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
 

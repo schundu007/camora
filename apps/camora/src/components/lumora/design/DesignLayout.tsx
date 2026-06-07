@@ -18,6 +18,7 @@ import { useTheme as useGlobalTheme } from '@/hooks/useTheme';
 import { ScaleCalculator } from './scale-calculator';
 import { SectionCopyBtn } from './section-helpers';
 import Chip from '@/components/shared/ui/Chip';
+import { ProblemCaptureStrip } from '@/components/lumora/shared/ProblemCaptureStrip';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -945,9 +946,17 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               </div>
             )}
             {inputTab === 'image' && (
-              <div
-                onClick={() => imageInputRef.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              <div className="space-y-3">
+                {/* Multi-page window capture — desktop only */}
+                <ProblemCaptureStrip
+                  kind="design"
+                  onProblemBuilt={(problem) => setProblemText(problem)}
+                />
+
+                {/* Single-image drag/drop upload */}
+                <div
+                  onClick={() => imageInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                 onDrop={(e) => {
                   e.preventDefault();
                   const file = e.dataTransfer.files?.[0];
@@ -978,6 +987,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     <p className="text-[var(--text-dimmed)] text-xs">Drop image or click to upload</p>
                   </div>
                 )}
+                </div>
               </div>
             )}
             {errorMsg && !isLoading && (
