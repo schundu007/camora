@@ -110,7 +110,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const [error, setError] = useState<string | null>(null);
 
   const [isRunning, setIsRunning] = useState(false);
-  const [runOutput, setRunOutput] = useState<string | null>(null);
+  const [runOutputLog, setRunOutputLog] = useState<Array<{ts: Date; text: string}>>([]);
   const [explainMode, setExplainMode] = useState(false);
 
   // Analysis panel state
@@ -313,7 +313,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     setComplexity(null);
     setHackerrankCompatible(null);
     setError(null);
-    setRunOutput(null);
+    setRunOutputLog([]);
     decorationCollectionRef.current = null;
 
     addLog(<LogIconBolt />, 'Starting CoFix…');
@@ -397,7 +397,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     setIsRunning(true);
     setOutputHeight(null);
     setOutputCollapsed(false);
-    setRunOutput('Running…');
     try {
       const response = await fetch(`${API_URL}/api/v1/coding/execute`, {
         method: 'POST',
@@ -415,16 +414,15 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         /SyntaxError|NameError|TypeError|ValueError|AttributeError|RuntimeError/.test(runResult);
       if (autoFixEnabled && hasRunError && autoFixAttemptsRef.current < 1) {
         autoFixAttemptsRef.current += 1;
-        setRunOutput('Error detected — auto-fixing…');
         pendingAutoFixRef2.current = {
           code: fixedCode,
           hint: `Runtime error:\n${runResult.slice(0, 600)}\n\nFix the code so it runs without errors.`,
         };
       } else {
-        setRunOutput(runResult);
+        setRunOutputLog(prev => [...prev, { ts: new Date(), text: runResult }]);
       }
     } catch (err: any) {
-      setRunOutput(`Error: ${err.message}`);
+      setRunOutputLog(prev => [...prev, { ts: new Date(), text: `Error: ${err.message}` }]);
     } finally {
       setIsRunning(false);
     }
@@ -483,7 +481,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     if (isLoading) return;
     setIsLoading(true);
     setError(null);
-    setRunOutput(null);
+    setRunOutputLog([]);
     logStartRef.current = Date.now();
     setLogLines([]);
     setShowLogPopup(true);
@@ -547,7 +545,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     setComplexity(null);
     setHackerrankCompatible(null);
     setError(null);
-    setRunOutput(null);
+    setRunOutputLog([]);
     decorationCollectionRef.current = null;
 
     addLog(<LogIconSpark />, `Refining: "${prompt.slice(0, 50)}${prompt.length > 50 ? '…' : ''}"`);
@@ -680,7 +678,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   }, []);
 
 
-  const isErr = runOutput !== null && (runOutput.startsWith('Error:') || runOutput.startsWith('Traceback') || /^error:/i.test(runOutput));
+  const lastRun = runOutputLog[runOutputLog.length - 1];
+  const isErr = lastRun !== undefined && (lastRun.text.startsWith('Error:') || lastRun.text.startsWith('Traceback') || /^error:/i.test(lastRun.text));
 
   return (
     <div className="flex flex-col h-full">
@@ -1380,28 +1379,56 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               {/* Output column */}
               <Allotment.Pane minSize={100}>
               <div className="flex flex-col h-full">
-                <div className="flex items-center shrink-0 px-4" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.1em]"
-                    style={{ color: isErr ? 'var(--danger)' : runOutput !== null ? 'var(--accent-text)' : 'var(--cam-gold-leaf-dk)' }}>
-                    {isErr ? '✕ Runtime Error' : runOutput !== null ? '✓ Output' : 'Output'}
+                <div className="flex items-center shrink-0 px-4 gap-2" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.1em] flex-1"
+                    style={{ color: isErr ? 'var(--danger)' : runOutputLog.length > 0 ? 'var(--accent-text)' : 'var(--cam-gold-leaf-dk)' }}>
+                    {isErr ? '✕ Runtime Error' : runOutputLog.length > 0 ? '✓ Output' : 'Output'}
                   </span>
                   {isRunning && (
-                    <span className="ml-2 w-2.5 h-2.5 rounded-full border-2 border-t-transparent animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
+                    <span className="w-2.5 h-2.5 rounded-full border-2 border-t-transparent animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
+                  )}
+                  {runOutputLog.length > 0 && !isRunning && (
+                    <button
+                      onClick={() => setRunOutputLog([])}
+                      className="text-[10px] font-semibold shrink-0 opacity-50 hover:opacity-90 transition-opacity"
+                      style={{ color: 'var(--cam-gold-leaf-dk)', fontFamily: 'var(--font-sans)' }}
+                    >Clear</button>
                   )}
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                  {runOutput === null ? (
+                  {runOutputLog.length === 0 && !isRunning ? (
                     <div className="flex items-center justify-center h-full">
                       <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
-                        {fixedCode ? 'Click Run to execute' : 'Run CoFix first'}
+                        {fixedCode ? 'Click ▶ Run to execute' : 'Run CoFix first'}
                       </span>
                     </div>
                   ) : (
-                    <pre
-                      className="px-4 py-3 whitespace-pre-wrap h-full"
-                      style={{ color: isErr ? 'var(--danger)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontSize: 11, lineHeight: 1.65, letterSpacing: '-0.02em' }}
-                      dangerouslySetInnerHTML={{ __html: ansiHtml(runOutput ?? '') }}
-                    />
+                    <>
+                      {runOutputLog.map((entry, i) => {
+                        const entryIsErr = entry.text.startsWith('Error:') || entry.text.startsWith('Traceback') || /^error:/i.test(entry.text);
+                        return (
+                          <div key={i}>
+                            <div className="flex items-center gap-2 px-4 py-1.5">
+                              <span className="text-[9px] tabular-nums shrink-0" style={{ color: 'color-mix(in oklab, var(--text-muted) 60%, transparent)', fontFamily: 'var(--font-mono)' }}>
+                                {entry.ts.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}
+                              </span>
+                              <div className="flex-1 h-px" style={{ background: 'color-mix(in oklab, var(--accent) 12%, transparent)' }} />
+                            </div>
+                            <pre
+                              className="px-4 pb-3 whitespace-pre-wrap"
+                              style={{ color: entryIsErr ? 'var(--danger)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontSize: 11, lineHeight: 1.65, letterSpacing: '-0.02em' }}
+                              dangerouslySetInnerHTML={{ __html: ansiHtml(entry.text) }}
+                            />
+                          </div>
+                        );
+                      })}
+                      {isRunning && (
+                        <div className="flex items-center gap-2 px-4 py-2">
+                          <span className="w-2 h-2 rounded-full border-2 border-t-transparent animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
+                          <span className="text-[11px] italic" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Executing…</span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

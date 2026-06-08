@@ -289,6 +289,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [problemUrl, setProblemUrl] = useState('');
   const [code, setCode] = useState(getDefaultCode('python'));
   const [output, setOutput] = useState('');
+  const [outputLog, setOutputLog] = useState<Array<{ts: Date; text: string}>>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [jsonSolution, setJsonSolution] = useState<any>(null);
   const [, setImageFile] = useState<File | null>(null);
@@ -491,6 +492,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setProblemTab('description');
     setInputMode('paste');
     setOutput('');
+    setOutputLog([]);
     setIsRunning(false);
     setJsonSolution(null);
     setImageFile(null);
@@ -602,6 +604,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
     if (!token) {
       setOutput('ERROR: Not authenticated.');
+      setOutputLog(prev => [...prev, { ts: new Date(), text: 'ERROR: Not authenticated.' }]);
       setIsRunning(false);
       return;
     }
@@ -640,6 +643,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         let outputStr = `${passed}/${data.results.length} Passed`;
         if (data.direct_output) outputStr += `\n\n${'─'.repeat(40)}\n${data.direct_output}`;
         setOutput(outputStr);
+        setOutputLog(prev => [...prev, { ts: new Date(), text: outputStr }]);
 
         // Offer auto-fix instead of doing it silently
         const allPassed = data.results.every((r: TestResult) => r.passed);
@@ -662,12 +666,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           setShowFixPrompt(true);
         }
       } else if (data.direct_output !== undefined && data.direct_output !== null) {
-        setOutput(data.direct_output || '(no output)');
+        const directOut = data.direct_output || '(no output)';
+        setOutput(directOut);
+        setOutputLog(prev => [...prev, { ts: new Date(), text: directOut }]);
       } else {
         setOutput('(no output)');
+        setOutputLog(prev => [...prev, { ts: new Date(), text: '(no output)' }]);
       }
     } catch (err: any) {
       setOutput(`Error: ${err.message}`);
+      setOutputLog(prev => [...prev, { ts: new Date(), text: `Error: ${err.message}` }]);
     } finally {
       setIsRunning(false);
     }
@@ -675,7 +683,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   const handleAutoFix = useCallback(async (silent = false) => {
     if (!token) {
-      if (!silent) setOutput(prev => prev + '\nAuto-fix: not authenticated');
+      if (!silent) {
+        setOutput(prev => prev + '\nAuto-fix: not authenticated');
+        setOutputLog(prev => [...prev, { ts: new Date(), text: 'Auto-fix: not authenticated' }]);
+      }
       return;
     }
     setShowFixPrompt(false);
@@ -697,16 +708,26 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       const data = await resp.json();
       if (data.code) {
         setCode(data.code);
-        if (!silent) setOutput('Code fixed! Click Run to test again.' + (data.explanation ? `\n\nFix: ${data.explanation}` : ''));
+        if (!silent) {
+          const fixMsg = 'Code fixed! Click Run to test again.' + (data.explanation ? `\n\nFix: ${data.explanation}` : '');
+          setOutput(fixMsg);
+          setOutputLog(prev => [...prev, { ts: new Date(), text: fixMsg }]);
+        }
         if (silent) {
           // Re-run via ref so we get the handleRun that has the just-set code
           setTimeout(() => handleRunRef.current?.(), 80);
         }
       } else {
-        if (!silent) setOutput('Auto-fix returned no code. Try editing manually.');
+        if (!silent) {
+          setOutput('Auto-fix returned no code. Try editing manually.');
+          setOutputLog(prev => [...prev, { ts: new Date(), text: 'Auto-fix returned no code. Try editing manually.' }]);
+        }
       }
     } catch (err: any) {
-      if (!silent) setOutput(`Auto-fix failed: ${err.message || 'Unknown error'}. Try editing the code manually.`);
+      if (!silent) {
+        setOutput(`Auto-fix failed: ${err.message || 'Unknown error'}. Try editing the code manually.`);
+        setOutputLog(prev => [...prev, { ts: new Date(), text: `Auto-fix failed: ${err.message || 'Unknown error'}. Try editing the code manually.` }]);
+      }
     }
   }, [token, code, language, fixError, problemText, handleRun]);
 
@@ -2909,6 +2930,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 </button>
               </div>
               <div className="flex items-center gap-1.5">
+                {outputLog.length > 0 && (
+                  <button
+                    onClick={() => { setOutputLog([]); setOutput(''); }}
+                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded transition-opacity opacity-50 hover:opacity-90"
+                    style={{ color: t.textMuted }}
+                  >Clear</button>
+                )}
                 <button onClick={() => setIsOutputCollapsed(!isOutputCollapsed)}
                   className="p-1 rounded transition-colors" style={{ color: t.textMuted }}>
                   <svg className={`w-3 h-3 transition-transform ${isOutputCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2999,19 +3027,42 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
                     {/* Auto-fix prompt — moved to header next to Run button */}
 
-                    {/* Raw output */}
-                    {output && !testResults.length && (
-                      <pre className="font-mono text-xs whitespace-pre-wrap p-2 rounded-lg min-h-[40px]" style={{ color: t.text, background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>{output}</pre>
-                    )}
-                    {output && testResults.length > 0 && output.includes('─') && (
-                      <pre className="font-mono text-[10px] whitespace-pre-wrap p-2 rounded-lg" style={{ color: t.textMuted, background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
-                        {output.split('─'.repeat(40))[1]?.trim()}
-                      </pre>
-                    )}
-                    {!output && !testResults.length && (
-                      <div className="text-center py-4 text-xs" style={{ color: t.textDim }}>
-                        Click <span className="font-bold">Run</span> to execute your code <span className="font-mono" style={{ color: t.textDim }}>(Ctrl+Enter)</span>
-                      </div>
+                    {/* Output log */}
+                    {outputLog.length > 0 ? (
+                      outputLog.map((entry, i) => {
+                        const hasDivider = entry.text.includes('─'.repeat(40));
+                        const displayText = hasDivider ? entry.text.split('─'.repeat(40))[1]?.trim() : entry.text;
+                        const isErrEntry = !hasDivider && (entry.text.startsWith('Error:') || entry.text.startsWith('ERROR:') || entry.text.startsWith('Traceback') || /^error:/i.test(entry.text));
+                        return (
+                          <div key={i}>
+                            <div className="flex items-center gap-2 py-1">
+                              <span className="font-mono text-[9px] tabular-nums shrink-0" style={{ color: t.textDim }}>
+                                {entry.ts.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}
+                              </span>
+                              <div className="flex-1 h-px" style={{ background: t.cardBorder }} />
+                            </div>
+                            {displayText && (
+                              <pre className="font-mono text-xs whitespace-pre-wrap p-2 rounded-lg" style={{ color: isErrEntry ? 'var(--danger)' : hasDivider ? t.textMuted : t.text, background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
+                                {displayText}
+                              </pre>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <>
+                        {isRunning && (
+                          <div className="flex items-center gap-2 py-2 text-xs italic" style={{ color: t.textDim }}>
+                            <span className="w-2.5 h-2.5 border-2 border-t-transparent rounded-full animate-spin shrink-0" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
+                            Executing…
+                          </div>
+                        )}
+                        {!isRunning && !testResults.length && (
+                          <div className="text-center py-4 text-xs" style={{ color: t.textDim }}>
+                            Click <span className="font-bold">Run</span> to execute your code <span className="font-mono" style={{ color: t.textDim }}>(Ctrl+Enter)</span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
