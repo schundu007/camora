@@ -74,6 +74,11 @@ contextBridge.exposeInMainWorld('camo', {
   // Cmd+Shift+4 or focus change required. Returns { ok, error? }.
   takeScreenshot: () => ipcRenderer.invoke('take-screenshot'),
 
+  // Interactive window-picker screenshot — minimises app, shows macOS window
+  // picker, saves to session folder (or ~/Documents/Company Interview/).
+  // Returns { ok, dataUrl, filePath } — thumbnail-ready immediately.
+  takeScreenshotWindow: () => ipcRenderer.invoke('take-screenshot-window'),
+
   // Desktop screenshot watcher — fires when user takes a macOS screenshot
   // (Cmd+Shift+3/4) while HackerRank is on screen. Renderer calls extractAndMaybeGenerate
   // on the received dataUrl, same as the F9 / auto-detect pipeline.

@@ -298,8 +298,7 @@ VOICE — NON-NEGOTIABLE:
 CRITICAL RULES:
 - ${detailRules}
 - Each bullet: ONE short sentence (under 15 words).
-- ${isBasic ? 'Only include the sections listed above in DETAIL MODE' : 'Include ALL sections below'} but keep them SHORT.
-- Total answer must be readable in under 30 seconds.
+- ${isBasic ? 'Only include the sections listed above in DETAIL MODE. Total answer must be readable in under 30 seconds.' : 'EVERY section below is REQUIRED — you MUST emit ALL of them: HEADLINE, REQUIREMENTS, SCALEMATH, SCALECALC, DEEPDESIGN, EDGECASES, TRADEOFFS, FOLLOWUP. Skipping any section is not allowed.'}
 - ALWAYS respond in English — regardless of the language of the question or transcription.
 
 === MY BACKGROUND ===

@@ -135,7 +135,7 @@ const parseStar = (text: string): { sections: { label: StarLabel; body: string }
 const StarBody = ({ text }: { text: string }) => {
   if (!text) return null;
   const STAR_BOLD: React.CSSProperties = { color: TEXT_PRIMARY, fontWeight: 700 };
-  const STAR_CODE: React.CSSProperties = { background: 'var(--bg-elevated)', color: 'var(--cam-primary-dk)', padding: '1px 6px', borderRadius: 4, fontSize: 12.5, fontFamily: 'var(--font-mono)', border: '1px solid var(--border)' };
+  const STAR_CODE: React.CSSProperties = { background: 'var(--bg-elevated)', color: 'var(--accent-text)', padding: '1px 6px', borderRadius: 4, fontSize: 12.5, fontFamily: 'var(--font-mono)', border: '1px solid var(--border)' };
   const inline = (s: string) => renderInlineSafe(s, { bold: STAR_BOLD, code: STAR_CODE });
   const lines = text.split('\n');
   const out: React.ReactNode[] = [];
@@ -383,8 +383,8 @@ const RichText = ({ text }: { text: string }) => {
   if (!text) return null;
 
   const BOLD: React.CSSProperties = { color: TEXT_PRIMARY, fontWeight: 700 };
-  const ICODE: React.CSSProperties = { background: 'var(--bg-elevated)', color: 'var(--cam-primary-dk)', padding: '1px 6px', borderRadius: 4, fontSize: 12.5, fontFamily: 'var(--font-mono)', border: '1px solid var(--border)' };
-  const inline = (s: string) => renderInlineSafe(s, { bold: BOLD, code: ICODE, link: { color: 'var(--cam-primary)', textDecoration: 'underline' }, allowLinks: true });
+  const ICODE: React.CSSProperties = { background: 'var(--bg-elevated)', color: 'var(--accent-text)', padding: '1px 6px', borderRadius: 4, fontSize: 12.5, fontFamily: 'var(--font-mono)', border: '1px solid var(--border)' };
+  const inline = (s: string) => renderInlineSafe(s, { bold: BOLD, code: ICODE, link: { color: 'var(--accent-text)', textDecoration: 'underline' }, allowLinks: true });
 
   const renderCodeBlock = (content: string, lang?: string, key?: number | string) => (
     <div key={key} className="rounded-lg overflow-hidden my-3" style={{ border: '1px solid var(--border)', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>

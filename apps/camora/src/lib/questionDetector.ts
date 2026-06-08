@@ -170,6 +170,12 @@ export function isQuestion(raw: string): boolean {
 
   // Too short to be a meaningful question ("ok", "yeah sure", etc.)
   if (text.length < 12) return false;
+
+  // Utterances that trail off with a pleasantry ("...? Thank you very much.")
+  // are background conversation — interviewer wrapping up small talk or
+  // thanking someone else. Block even when the text starts with a question word.
+  if (/(?:thank you|thanks|thank u)(?:\s+(?:very|so)\s+much)?[\s.,!]*$/i.test(text)) return false;
+
   // Ends with "?" — obvious question (checked before word count so "Why two pointers?" passes)
   if (text.endsWith('?')) return true;
 
@@ -210,6 +216,7 @@ export function questionReason(raw: string): { isQuestion: boolean; reason: stri
   if (!text) return { isQuestion: false, reason: 'empty' };
   if (isWhisperHallucination(text)) return { isQuestion: false, reason: 'whisper hallucination' };
   if (text.length < 12) return { isQuestion: false, reason: 'too short' };
+  if (/(?:thank you|thanks|thank u)(?:\s+(?:very|so)\s+much)?[\s.,!]*$/i.test(text)) return { isQuestion: false, reason: 'pleasantry close' };
   if (text.endsWith('?')) return { isQuestion: true, reason: 'ends with ?' };
   if (text.split(/\s+/).length < 4) return { isQuestion: false, reason: 'too few words' };
   let strippedQ = text;

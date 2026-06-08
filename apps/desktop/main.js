@@ -78,6 +78,7 @@ function createWindow() {
     },
   });
 
+  mainWindow.setContentProtection(true);
   mainWindow.loadURL(APP_URL);
 
   mainWindow.on('close', (e) => {
@@ -1260,6 +1261,37 @@ ipcMain.handle('take-screenshot', async () => {
     return { ok: true };
   } catch (err) {
     console.error('[take-screenshot] failed:', err);
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+// ── IPC: window-picker screenshot for problem capture ──────────────────────
+// Interactive screencapture -W lets the user click any open window.
+// Saved to session folder (or ~/Documents/Company Interview/ as fallback).
+// Returns { ok, dataUrl, filePath } so renderer shows a thumbnail immediately.
+ipcMain.handle('take-screenshot-window', async () => {
+  if (process.platform !== 'darwin') return { ok: false, error: 'macOS only' };
+  const folder = _sessionFolder || path.join(os.homedir(), 'Documents', 'Company Interview');
+  try {
+    fs.mkdirSync(folder, { recursive: true });
+    const filename = `problem-${Date.now()}.png`;
+    const dest = path.join(folder, filename);
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.minimize();
+    await new Promise((resolve, reject) => {
+      execFile('/usr/sbin/screencapture', ['-W', dest], (err) => {
+        if (err) reject(err); else resolve();
+      });
+    });
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) { mainWindow.restore(); mainWindow.focus(); }
+    }, 400);
+    const buf = fs.readFileSync(dest);
+    return { ok: true, dataUrl: `data:image/png;base64,${buf.toString('base64')}`, filePath: dest };
+  } catch (err) {
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) { mainWindow.restore(); mainWindow.focus(); }
+    }, 400);
+    console.error('[take-screenshot-window] failed:', err);
     return { ok: false, error: String(err?.message || err) };
   }
 });
