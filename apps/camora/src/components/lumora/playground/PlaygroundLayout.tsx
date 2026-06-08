@@ -3,8 +3,8 @@ import { useMonaco } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor';
 import { LanguageTabs } from './LanguageTabs';
 import { PlaygroundEditor } from './PlaygroundEditor';
-import { OutputPane } from './OutputPane';
-import { playgroundAPI, type PlaygroundLanguage, type PlaygroundRunResult } from '../../../lib/capra-api';
+import { OutputPane, type RunEntry } from './OutputPane';
+import { playgroundAPI, type PlaygroundLanguage } from '../../../lib/capra-api';
 
 const DEFAULT_CODE: Record<PlaygroundLanguage, string> = {
   python3:   'print("Hello, World!")\n',
@@ -182,8 +182,7 @@ export const PlaygroundLayout = () => {
   const [copied, setCopied]         = useState(false);
   const [explainMode, setExplainMode] = useState(false);
   const [rightTab, setRightTab]     = useState<'output' | 'explain'>('output');
-  const [result, setResult]         = useState<PlaygroundRunResult | null>(null);
-  const [error, setError]           = useState<string | null>(null);
+  const [runs, setRuns]             = useState<RunEntry[]>([]);
   const [explain, setExplain]       = useState<ExplainState>({ text: '', loading: false, line: 0, error: null });
   const [inputModal, setInputModal] = useState<{ labels: string[]; values: string[] } | null>(null);
 
@@ -235,13 +234,12 @@ export const PlaygroundLayout = () => {
   // Core execution — called with the final stdin string
   const doRun = useCallback(async (code: string, stdin: string) => {
     setRunning(true);
-    setError(null);
     setRightTab('output');
     try {
       const r = await playgroundAPI.run({ language: activeTab, code, stdin });
-      setResult(r);
+      setRuns(prev => [...prev, { ts: new Date(), result: r, error: null }]);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Execution failed');
+      setRuns(prev => [...prev, { ts: new Date(), result: null, error: err instanceof Error ? err.message : 'Execution failed' }]);
     } finally {
       setRunning(false);
     }
@@ -303,8 +301,7 @@ export const PlaygroundLayout = () => {
   }, [activeTab]);
 
   const handleClear = useCallback(() => {
-    setResult(null);
-    setError(null);
+    setRuns([]);
   }, []);
 
   const handleEditorMount = useCallback((editor: Monaco.editor.IStandaloneCodeEditor) => {
@@ -318,8 +315,7 @@ export const PlaygroundLayout = () => {
 
   const handleTabChange = useCallback((lang: PlaygroundLanguage) => {
     setActiveTab(lang);
-    setResult(null);
-    setError(null);
+    setRuns([]);
     setInputModal(null);
   }, []);
 
@@ -464,7 +460,7 @@ export const PlaygroundLayout = () => {
             {rightTab === 'explain' && explainMode ? (
               <ExplainPane {...explain} />
             ) : (
-              <OutputPane result={result} error={error} language={activeTab} />
+              <OutputPane runs={runs} language={activeTab} onClear={() => setRuns([])} />
             )}
           </div>
         </div>

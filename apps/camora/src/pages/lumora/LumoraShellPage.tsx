@@ -71,6 +71,17 @@ export const LumoraShellPage = () => {
   });
 
   // Sync coding platform to desktop main process and persist to localStorage.
+  // Stealth is always-on: enable on mount so entering the interview re-arms it
+  // even if the user turned it off elsewhere (e.g. for a screenshot).
+  useEffect(() => {
+    const camo = (window as any).camo;
+    if (camo?.setStealthMode) {
+      camo.setStealthMode(true);
+      setIsStealthActive(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Run immediately on mount to push the persisted value into main.js,
   // then again whenever the user changes the dropdown.
   useEffect(() => {
@@ -81,7 +92,7 @@ export const LumoraShellPage = () => {
     try { localStorage.setItem('lumora_meeting_platform', meetingPlatform); } catch {}
   }, [meetingPlatform]);
   const { handleSubmit, handleCodingSubmit } = useStreamingSession();
-  const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, threshold: vadThreshold, question, isDesignQuestion } = useSessionStore();
+  const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, threshold: vadThreshold, question, isDesignQuestion, setIsStealthActive } = useSessionStore();
   // Persist the Settings-tip dismissal so it's a true one-time hint,
   // not a banner that re-appears on every page load and re-eats
   // ~40 vertical px on phones. Once dismissed, never shown again on
@@ -309,17 +320,10 @@ export const LumoraShellPage = () => {
       return;
     }
     if (tab === 'behavioral') {
-      // Behavioral fullscreen renders the embedded AICompanionPanel — the
-      // LivePage UI is hidden, so routing through useStreamingSession
-      // would stream the answer to a surface no one can see. Forward the
-      // interviewer's question to the panel via a custom event instead.
       // No isQuestion() gate here: in an active behavioral interview the
-      // user wants Sona to answer every interviewer utterance, even ones
-      // that don't hit the heuristic's question-starters ("Take me
-      // through…", "And what did you do…"). AudioCapture's isLikelyRealSpeech
-      // filter already drops noise + Whisper hallucinations upstream, so
-      // forwarding everything transcribed is safe. (This preserves the
-      // behavior of the panel's old embedded mic, which bypassed the gate.)
+      // user wants Sona to answer every interviewer utterance. AudioCapture's
+      // isLikelyRealSpeech() already drops noise + Whisper hallucinations
+      // upstream, so forwarding everything transcribed is safe.
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
       return;
     }

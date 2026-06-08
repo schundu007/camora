@@ -1493,7 +1493,10 @@ Return ONLY a JSON object (no markdown fences) with this exact structure:
 }
 
 RULES:
-- Fix ONLY what is broken or missing — preserve all existing logic exactly
+- Fix ONLY what is factually broken (syntax error, wrong operator, off-by-one, missing return, undefined variable, etc.)
+- NEVER substitute a different algorithm, built-in, or idiom for what the user wrote — even if yours is "better". all() stays all(), any() stays any(), a loop stays a loop.
+- NEVER rewrite or restructure code that already works correctly. Edit the minimum number of characters needed.
+- Preserve variable names, indentation style, string quotes, f-string prefixes, and every other stylistic choice exactly.
 - Respect existing code style and naming conventions
 - line numbers refer to the FIXED code, not the original
 - type "fix" = correcting an existing line; type "added" = newly inserted line
@@ -1501,7 +1504,6 @@ RULES:
 - If code has no issues, return changes: [] and fixed_code equal to the input
 - Return the COMPLETE fixed code, not a partial snippet
 - Do NOT add comments inside the code (changes[] documents everything)
-- CONCISENESS: Eliminate every unnecessary line. Merge multi-line expressions into one where readable. Use list comprehensions, ternaries, and built-ins instead of verbose loops. The fixed code must be the shortest correct version that still passes all cases.
 - walkthrough: cover every non-trivial line or logical block (3-8 entries). Write in first person ("I iterate…", "I seed…"). Group consecutive related lines ("35-38"). Use backticks for variable/code refs. One sentence per entry, max 30 words.`;
 
   // Shared JSON parse + emit helper used by both Claude and OpenAI paths
@@ -1923,6 +1925,60 @@ Critical rules:
       ? 'AI service is at capacity. Please try again in a moment.'
       : 'Image extraction failed';
     res.status(status).json({ detail });
+  }
+});
+
+// POST /api/v1/coding/construct-from-images — build a full problem statement from up to 5 screenshots
+// Accepts multipart with field "images" (up to 5 files) and optional body field "kind" (coding|design).
+// Returns same shape as extract-from-image so callers can populate problemText identically.
+router.post('/construct-from-images', authenticate, checkUsage('questions'), imageUpload.array('images', 5), async (req, res) => {
+  const files = req.files;
+  if (!files || files.length === 0) {
+    return res.status(400).json({ error: 'No images uploaded (expected multipart field "images")' });
+  }
+  const kind = (req.body?.kind || 'coding').trim();
+
+  const contentBlocks = [];
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    const rawMediaType = f.mimetype.startsWith('image/') ? f.mimetype : 'image/png';
+    const [resizedData, resizedType] = await ensureImageWithinAnthropicLimit(
+      f.buffer.toString('base64'), rawMediaType
+    );
+    if (i > 0) contentBlocks.push({ type: 'text', text: `--- Page ${i + 1} ---` });
+    contentBlocks.push({ type: 'image', source: { type: 'base64', media_type: resizedType, data: resizedData } });
+  }
+
+  const isDesign = kind === 'design';
+  contentBlocks.push({
+    type: 'text',
+    text: isDesign
+      ? 'These screenshots show a system design interview problem (possibly across multiple pages/scrolls). Construct the complete problem statement by combining all pages into one coherent description. Return ONLY valid JSON: {"problem": "full problem statement"}'
+      : 'These screenshots show a coding interview problem (possibly across multiple pages/scrolls). Construct the complete problem statement by combining all pages. Include constraints, examples, and starter code if visible. Return ONLY valid JSON: {"problem": "full problem statement", "starter_code": "code or null", "detected_language": "python|java|javascript|etc or null"}',
+  });
+
+  try {
+    const response = await anthropicClient.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 2048,
+      system: 'You extract interview problems from screenshots. Return valid JSON only, no prose.',
+      messages: [{ role: 'user', content: contentBlocks }],
+    });
+    const raw = response.content[0]?.text?.trim() || '';
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    const problem = parsed?.problem || raw || '(could not extract problem)';
+    if (isDesign) return res.json({ problem });
+    const starterCode = parsed?.starter_code || null;
+    const rawLang = (parsed?.detected_language || '').toLowerCase().trim();
+    const detectedLanguage = SUPPORTED_LANGUAGES.includes(rawLang) ? rawLang : detectLangFromCode(starterCode || '');
+    return res.json({ problem, starter_code: starterCode, detected_language: detectedLanguage });
+  } catch (err) {
+    console.error('construct-from-images error:', err?.message || err);
+    const exhausted = isApiExhaustedError(err);
+    return res.status(exhausted ? 503 : 500).json({
+      detail: exhausted ? 'AI service at capacity. Try again in a moment.' : 'Image construction failed',
+    });
   }
 });
 

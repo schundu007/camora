@@ -231,7 +231,7 @@ const initialState = {
   activeCitations: [] as Citation[],
   lastFromCache: null as boolean | null,
   liveSolveContext: null as SessionState['liveSolveContext'],
-  isStealthActive: false,
+  isStealthActive: true,
   popupVisible: false,
   popupMinimized: false,
   answerMode: 'short' as const,

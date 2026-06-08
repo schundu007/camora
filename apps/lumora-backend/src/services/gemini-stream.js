@@ -8,6 +8,7 @@ import {
   isDesignQuestion,
   isCodingQuestion,
   buildGeneralPrompt,
+  buildDesignPrompt,
   CODING_SYSTEM_PROMPT,
   getDefaultResumeContext,
   getDefaultTechnicalContext,
@@ -75,7 +76,7 @@ export async function* streamResponseGemini(question, history, options = {}) {
     systemInstruction = codingGrounding + CODING_SYSTEM_PROMPT;
     maxOutputTokens = MAX_TOKENS_DESIGN;
   } else if (isDesign) {
-    systemInstruction = buildGeneralPrompt(resume, technical);
+    systemInstruction = buildDesignPrompt(resume, technical);
     maxOutputTokens = MAX_TOKENS_DESIGN;
   } else {
     const basePrompt = buildGeneralPrompt(resume, technical);

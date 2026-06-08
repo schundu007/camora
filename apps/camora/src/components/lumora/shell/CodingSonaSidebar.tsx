@@ -75,6 +75,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
   const [streamText, setStreamText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [micStartTrigger, setMicStartTrigger] = useState(0);
+  const [micToggleTrigger, setMicToggleTrigger] = useState(0);
   const [sidebarWidth, setSidebarWidth] = useState(360);
   const dragRef = useRef<{ startX: number; startW: number } | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -245,11 +246,22 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
   }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      send(input);
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); }
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send(input); }
   }, [input, send]);
+
+  // Cmd+M toggles mic when sidebar is open
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'm' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setMicToggleTrigger(n => n + 1);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open]);
 
   const clearHistory = useCallback(async () => {
     // Project memory: never window.confirm/alert/prompt. Always
@@ -468,6 +480,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
               <SonaMicButton
                 disabled={streaming}
                 startTrigger={micStartTrigger}
+                toggleTrigger={micToggleTrigger}
                 onText={(t) => {
                   const full = input ? `${input.trimEnd()} ${t}` : t;
                   setInput(full);
@@ -476,7 +489,8 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
               />
               <span className="hidden md:inline text-[10px] leading-tight self-center" style={{ color: 'var(--text-muted)' }}>
                 <kbd className="font-mono">Enter</kbd> to send <span aria-hidden="true">·</span>{' '}
-                <kbd className="font-mono">Shift+Enter</kbd> for newline
+                <kbd className="font-mono">⌘M</kbd> mic <span aria-hidden="true">·</span>{' '}
+                <kbd className="font-mono">Shift+Enter</kbd> newline
               </span>
             </div>
           </div>
