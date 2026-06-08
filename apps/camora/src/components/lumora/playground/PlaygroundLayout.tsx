@@ -287,7 +287,6 @@ export const PlaygroundLayout = () => {
   const handleCodeChange = useCallback((value: string) => {
     codeRef.current[activeTab] = value;
     if (explainMode) {
-      setExplain(prev => ({ ...prev, rich: null, error: null }));
       fetchExplain(currentLineRef.current, value, activeTab);
     }
   }, [activeTab, explainMode, fetchExplain]);
