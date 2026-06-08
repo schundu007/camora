@@ -1493,7 +1493,10 @@ Return ONLY a JSON object (no markdown fences) with this exact structure:
 }
 
 RULES:
-- Fix ONLY what is broken or missing — preserve all existing logic exactly
+- Fix ONLY what is factually broken (syntax error, wrong operator, off-by-one, missing return, undefined variable, etc.)
+- NEVER substitute a different algorithm, built-in, or idiom for what the user wrote — even if yours is "better". all() stays all(), any() stays any(), a loop stays a loop.
+- NEVER rewrite or restructure code that already works correctly. Edit the minimum number of characters needed.
+- Preserve variable names, indentation style, string quotes, f-string prefixes, and every other stylistic choice exactly.
 - Respect existing code style and naming conventions
 - line numbers refer to the FIXED code, not the original
 - type "fix" = correcting an existing line; type "added" = newly inserted line
@@ -1501,7 +1504,6 @@ RULES:
 - If code has no issues, return changes: [] and fixed_code equal to the input
 - Return the COMPLETE fixed code, not a partial snippet
 - Do NOT add comments inside the code (changes[] documents everything)
-- CONCISENESS: Eliminate every unnecessary line. Merge multi-line expressions into one where readable. Use list comprehensions, ternaries, and built-ins instead of verbose loops. The fixed code must be the shortest correct version that still passes all cases.
 - walkthrough: cover every non-trivial line or logical block (3-8 entries). Write in first person ("I iterate…", "I seed…"). Group consecutive related lines ("35-38"). Use backticks for variable/code refs. One sentence per entry, max 30 words.`;
 
   // Shared JSON parse + emit helper used by both Claude and OpenAI paths
