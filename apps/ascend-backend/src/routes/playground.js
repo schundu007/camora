@@ -105,7 +105,7 @@ async function callGemini(prompt) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 150, temperature: 0.1 },
+        generationConfig: { maxOutputTokens: 700, temperature: 0.1 },
       }),
     }
   );
@@ -123,7 +123,7 @@ async function callExplain(prompt) {
     try {
       const msg = await anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 150,
+        max_tokens: 700,
         messages: [{ role: 'user', content: prompt }],
       });
       return msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : '';
@@ -134,7 +134,7 @@ async function callExplain(prompt) {
     try {
       const res = await or.chat.completions.create({
         model: 'qwen/qwen-2.5-72b-instruct',
-        max_tokens: 150,
+        max_tokens: 700,
         messages: [{ role: 'user', content: prompt }],
       });
       return res.choices[0]?.message?.content?.trim() ?? '';
@@ -425,19 +425,54 @@ router.post('/explain', async (req, res, next) => {
       .digest('hex');
 
     if (EXPLAIN_CACHE.has(cacheKey)) {
-      return res.json({ explanation: EXPLAIN_CACHE.get(cacheKey) });
+      return res.json(EXPLAIN_CACHE.get(cacheKey));
     }
 
-    const prompt = `Explain what line ${lineNumber} does in this ${language} code in 1-2 concise sentences. Focus on the purpose, not just restating the syntax.\n\nCode:\n\`\`\`${language}\n${code}\n\`\`\`\n\nLine ${lineNumber}: ${lineContent}`;
-    const explanation = await callExplain(prompt) ?? '';
-    if (!explanation) return res.json({ explanation: '' });
+    const prompt = `You are a beginner-friendly coding tutor. Explain line ${lineNumber} from the ${language} code below.
+
+Code:
+\`\`\`${language}
+${code}
+\`\`\`
+
+Line ${lineNumber}: ${lineContent}
+
+Return ONLY a JSON object (no markdown fences). Schema:
+{
+  "what": "One plain sentence — what this specific line does. No jargon.",
+  "how": [
+    { "code": "the snippet or sub-expression", "text": "plain English for a complete beginner" }
+  ],
+  "trace": "Show the variable state change this line causes, e.g. 'Before: x = 5  →  After: x = 8'. Omit if the line has no state change (import, comment, def, etc.).",
+  "analogy": "A real-world comparison that makes the concept click for a total beginner. One sentence.",
+  "concepts": ["concept1", "concept2"]
+}
+
+Rules:
+- how: 2-4 entries breaking the line into its meaningful parts (sub-expressions, operator, keyword)
+- trace: use actual variable names and example values from the surrounding code context
+- analogy: avoid tech metaphors — use everyday objects (drawers, sticky notes, recipe cards)
+- concepts: 2-4 ${language} concept names a beginner should look up (e.g. "dictionary", "f-string", "for loop")
+- If the line is blank, a comment, or a lone bracket, still return the full schema with brief values`;
+
+    const raw = await callExplain(prompt) ?? '';
+    if (!raw) return res.json({ what: '', how: [], concepts: [] });
+
+    let result;
+    try {
+      const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+      const match = cleaned.match(/\{[\s\S]*\}/);
+      result = JSON.parse(match ? match[0] : cleaned);
+    } catch {
+      result = { what: raw, how: [], concepts: [] };
+    }
 
     if (EXPLAIN_CACHE.size >= EXPLAIN_CACHE_MAX) {
       EXPLAIN_CACHE.delete(EXPLAIN_CACHE.keys().next().value);
     }
-    EXPLAIN_CACHE.set(cacheKey, explanation);
+    EXPLAIN_CACHE.set(cacheKey, result);
 
-    res.json({ explanation });
+    res.json(result);
   } catch (err) {
     next(err);
   }

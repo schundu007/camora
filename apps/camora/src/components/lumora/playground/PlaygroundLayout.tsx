@@ -4,7 +4,7 @@ import type * as Monaco from 'monaco-editor';
 import { LanguageTabs } from './LanguageTabs';
 import { PlaygroundEditor } from './PlaygroundEditor';
 import { OutputPane, type RunEntry } from './OutputPane';
-import { playgroundAPI, type PlaygroundLanguage } from '../../../lib/capra-api';
+import { playgroundAPI, type PlaygroundLanguage, type ExplainResult } from '../../../lib/capra-api';
 
 const DEFAULT_CODE: Record<PlaygroundLanguage, string> = {
   python3:   'print("Hello, World!")\n',
@@ -127,13 +127,13 @@ const InputModal = ({ labels, values, onChange, onRun, onCancel }: InputModalPro
 // ---------------------------------------------------------------------------
 
 interface ExplainState {
-  text: string;
+  rich: ExplainResult | null;
   loading: boolean;
   line: number;
   error: string | null;
 }
 
-const ExplainPane = ({ text, loading, line, error }: ExplainState) => {
+const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
   if (!line) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-2" style={{ color: '#475569', ...sans }}>
@@ -146,23 +146,80 @@ const ExplainPane = ({ text, loading, line, error }: ExplainState) => {
   return (
     <div className="flex flex-col h-full bg-[#0a0d12] overflow-auto">
       <div className="px-4 py-2 border-b border-[#1e293b] sticky top-0 bg-[#0a0d12] flex items-center gap-2">
-        <span className="text-[9px] uppercase tracking-widest text-[#334155] font-medium" style={sans}>
-          Line {line}
-        </span>
+        <span className="text-[9px] uppercase tracking-widest text-[#334155] font-medium" style={sans}>Line {line}</span>
         {loading && (
-          <span
-            className="w-2.5 h-2.5 border-2 border-t-transparent rounded-full animate-spin"
-            style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }}
-          />
+          <span className="w-2.5 h-2.5 border-2 border-t-transparent rounded-full animate-spin"
+            style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
         )}
       </div>
-      <div className="px-4 py-4 flex-1">
+
+      <div className="px-4 py-4 flex-1 space-y-5">
         {error ? (
           <p className="text-[#f87171] text-[12px] leading-relaxed" style={sans}>{error}</p>
         ) : loading ? (
-          <p className="text-[#475569] text-[11px] italic" style={sans}>Fetching explanation…</p>
-        ) : text ? (
-          <p className="text-[#e2e8f0] text-[14px] leading-relaxed" style={sans}>{text}</p>
+          <p className="text-[#475569] text-[11px] italic" style={sans}>Analysing…</p>
+        ) : rich ? (
+          <>
+            {/* What it does */}
+            {(rich.what || rich.explanation) && (
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#3b82f6', ...sans }}>What it does</div>
+                <p className="text-[13px] leading-relaxed" style={{ color: '#cbd5e1', ...sans }}>{rich.what || rich.explanation}</p>
+              </div>
+            )}
+
+            {/* How it works */}
+            {rich.how && rich.how.length > 0 && (
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: '#3b82f6', ...sans }}>How it works</div>
+                <div className="rounded-lg overflow-hidden border border-[#1e293b]">
+                  {rich.how.map((step, i) => (
+                    <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 1.4fr', borderTop: i > 0 ? '1px solid #1e293b' : 'none' }}>
+                      <div className="px-3 py-2.5" style={{ background: '#0d1117', borderRight: '1px solid #1e293b' }}>
+                        <pre className="text-[11px] leading-relaxed" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{step.code}</pre>
+                      </div>
+                      <div className="px-3 py-2.5 flex items-start gap-2">
+                        <span className="shrink-0 mt-0.5 text-[9px] font-bold w-4 h-4 rounded flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)', color: '#3b82f6', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
+                        <span className="text-[12px] leading-relaxed" style={{ color: '#94a3b8', ...sans }}>{step.text}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* State trace */}
+            {rich.trace && (
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#d97706', ...sans }}>State trace</div>
+                <div className="rounded-lg px-3 py-2.5" style={{ background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.25)' }}>
+                  <pre className="text-[11px] leading-relaxed" style={{ fontFamily: 'var(--font-mono)', color: '#fcd34d', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{rich.trace}</pre>
+                </div>
+              </div>
+            )}
+
+            {/* Analogy */}
+            {rich.analogy && (
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#a78bfa', ...sans }}>Think of it as…</div>
+                <div className="rounded-lg px-3 py-2.5" style={{ background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.2)' }}>
+                  <p className="text-[12px] leading-relaxed" style={{ color: '#c4b5fd', ...sans }}>{rich.analogy}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Concepts */}
+            {rich.concepts && rich.concepts.length > 0 && (
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#334155', ...sans }}>Concepts used</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {rich.concepts.map((c, i) => (
+                    <span key={i} className="px-2 py-0.5 rounded text-[10px] font-medium" style={{ background: 'rgba(51,65,85,0.6)', color: '#94a3b8', ...sans }}>{c}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <p className="text-[#475569] text-[11px] italic" style={sans}>No explanation yet</p>
         )}
@@ -183,7 +240,7 @@ export const PlaygroundLayout = () => {
   const [explainMode, setExplainMode] = useState(false);
   const [rightTab, setRightTab]     = useState<'output' | 'explain'>('output');
   const [runs, setRuns]             = useState<RunEntry[]>([]);
-  const [explain, setExplain]       = useState<ExplainState>({ text: '', loading: false, line: 0, error: null });
+  const [explain, setExplain]       = useState<ExplainState>({ rich: null, loading: false, line: 0, error: null });
   const [inputModal, setInputModal] = useState<{ labels: string[]; values: string[] } | null>(null);
 
   const codeRef        = useRef<Record<PlaygroundLanguage, string>>({ ...DEFAULT_CODE });
@@ -198,9 +255,9 @@ export const PlaygroundLayout = () => {
       setExplain(prev => ({ ...prev, loading: true, error: null }));
       try {
         const r = await playgroundAPI.explain(code, line, lang);
-        setExplain(prev => ({ ...prev, text: r.explanation || '', loading: false }));
+        setExplain(prev => ({ ...prev, rich: r, loading: false }));
       } catch {
-        setExplain(prev => ({ ...prev, error: 'Explanation unavailable.', loading: false, text: '' }));
+        setExplain(prev => ({ ...prev, error: 'Explanation unavailable.', loading: false, rich: null }));
       }
     }, 500);
   }, []);
@@ -220,8 +277,8 @@ export const PlaygroundLayout = () => {
         const code = editorRef.current?.getValue() || codeRef.current[activeTab];
         setExplain(s => ({ ...s, line, loading: true, error: null }));
         playgroundAPI.explain(code, line, activeTab)
-          .then(r => setExplain(s => ({ ...s, text: r.explanation || '', loading: false })))
-          .catch(() => setExplain(s => ({ ...s, error: 'Explanation unavailable.', loading: false, text: '' })));
+          .then(r => setExplain(s => ({ ...s, rich: r, loading: false })))
+          .catch(() => setExplain(s => ({ ...s, error: 'Explanation unavailable.', loading: false, rich: null })));
       }
       return next;
     });
