@@ -417,25 +417,48 @@ router.post('/explain', async (req, res, next) => {
     }
 
     const lineNumber = Number(line);
-    const lineContent = code.split('\n')[lineNumber - 1] ?? '';
-    if (!lineContent.trim()) return res.json({ explanation: '' });
+    const allLines = code.split('\n');
+    const rawContent = allLines[lineNumber - 1] ?? '';
+    if (!rawContent.trim()) return res.json({ explanation: '' });
+
+    // Strip comment-only lines so the LLM sees only active code
+    const activeLines = allLines.filter(l => !/^\s*#/.test(l));
+    const activeCode = activeLines.join('\n').trim();
+    if (!activeCode) return res.json({ what: '', how: [], concepts: [] });
+
+    // If cursor is on a comment line, find nearest active line below then above
+    let targetContent = rawContent;
+    let targetLineNumber = lineNumber;
+    if (/^\s*#/.test(rawContent)) {
+      const below = allLines.slice(lineNumber).findIndex(l => l.trim() && !/^\s*#/.test(l));
+      const above = allLines.slice(0, lineNumber - 1).reverse().findIndex(l => l.trim() && !/^\s*#/.test(l));
+      if (below !== -1) {
+        targetLineNumber = lineNumber + below + 1;
+        targetContent = allLines[targetLineNumber - 1];
+      } else if (above !== -1) {
+        targetLineNumber = lineNumber - above - 1;
+        targetContent = allLines[targetLineNumber - 1];
+      } else {
+        return res.json({ what: '', how: [], concepts: [] });
+      }
+    }
 
     const cacheKey = createHash('sha256')
-      .update(`${code}:${lineNumber}:${language}`)
+      .update(`${activeCode}:${targetContent}:${language}`)
       .digest('hex');
 
     if (EXPLAIN_CACHE.has(cacheKey)) {
       return res.json(EXPLAIN_CACHE.get(cacheKey));
     }
 
-    const prompt = `You are a beginner-friendly coding tutor. Explain line ${lineNumber} from the ${language} code below.
+    const prompt = `You are a beginner-friendly coding tutor. Explain this line from the ${language} code below.
 
-Code:
+Code (active lines only):
 \`\`\`${language}
-${code}
+${activeCode}
 \`\`\`
 
-Line ${lineNumber}: ${lineContent}
+Target line: ${targetContent}
 
 Return ONLY a JSON object (no markdown fences). Schema:
 {
@@ -452,8 +475,7 @@ Rules:
 - how: 2-4 entries breaking the line into its meaningful parts (sub-expressions, operator, keyword)
 - trace: use actual variable names and example values from the surrounding code context
 - analogy: avoid tech metaphors — use everyday objects (drawers, sticky notes, recipe cards)
-- concepts: 2-4 ${language} concept names a beginner should look up (e.g. "dictionary", "f-string", "for loop")
-- If the line is blank, a comment, or a lone bracket, still return the full schema with brief values`;
+- concepts: 2-4 ${language} concept names a beginner should look up (e.g. "dictionary", "f-string", "for loop")`;
 
     const raw = await callExplain(prompt) ?? '';
     if (!raw) return res.json({ what: '', how: [], concepts: [] });
