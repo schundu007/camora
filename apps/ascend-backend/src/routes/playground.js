@@ -230,18 +230,40 @@ async function withTmpDir(fn) {
   }
 }
 
-async function runPython(code) {
+function spawnPython(dir, stdinData = '') {
+  return new Promise((resolve, reject) => {
+    const child = spawn('python3', ['main.py'], { cwd: dir, stdio: ['pipe', 'pipe', 'pipe'] });
+    let stdout = '', stderr = '';
+    const timer = setTimeout(() => child.kill('SIGKILL'), 10000);
+    child.stdout.on('data', d => { stdout += d; });
+    child.stderr.on('data', d => { stderr += d; });
+    if (stdinData) child.stdin.write(stdinData, 'utf8');
+    child.stdin.end();
+    child.on('close', (code, signal) => {
+      clearTimeout(timer);
+      if (code === 0) {
+        resolve({ stdout, stderr });
+      } else {
+        const msg = signal === 'SIGKILL'
+          ? 'Execution timed out (10s limit)'
+          : 'Command failed: python3 main.py';
+        reject(Object.assign(new Error(msg), { stdout, stderr, code: code ?? 1 }));
+      }
+    });
+    child.on('error', e => { clearTimeout(timer); reject(e); });
+  });
+}
+
+async function runPython(code, stdinData = '') {
   return withTmpDir(async (dir) => {
     await writeFile(join(dir, 'code.py'), code, 'utf8');
     await writeFile(join(dir, 'main.py'), PYTHON_WRAPPER, 'utf8');
     const start = Date.now();
 
-    const exec = () => execFileAsync('python3', ['main.py'], { cwd: dir, timeout: 10000, ...EXEC_OPTS });
-
     let lastErr = null;
     for (let attempt = 0; attempt <= 5; attempt++) {
       try {
-        const { stdout, stderr } = await exec();
+        const { stdout, stderr } = await spawnPython(dir, stdinData);
         const { cleanStderr, variables } = parseVarsSentinel(stderr);
         return { stdout, stderr: cleanStderr, exitCode: 0, duration: Date.now() - start, variables };
       } catch (err) {
@@ -253,7 +275,7 @@ async function runPython(code) {
       }
     }
 
-    const { cleanStderr, variables } = parseVarsSentinel(lastErr.stderr);
+    const { cleanStderr, variables } = parseVarsSentinel(lastErr.stderr ?? '');
     return {
       stdout: lastErr.stdout || '',
       stderr: cleanStderr || lastErr.message,
@@ -428,9 +450,10 @@ router.post('/run', async (req, res, next) => {
     }
 
     const lang = String(language || '').toLowerCase();
+    const stdin = typeof req.body.stdin === 'string' ? req.body.stdin : '';
     let result;
     switch (lang) {
-      case 'python3': result = await runPython(code); break;
+      case 'python3': result = await runPython(code, stdin); break;
       case 'bash':    result = await runBash(code);   break;
       case 'docker':  result = await runDockerLint(code); break;
       case 'terraform': result = await runTerraform(code); break;
