@@ -31,6 +31,10 @@ const RULES: ErrorRule[] = [
     explain: () => `You're accessing an index that doesn't exist. Remember lists are 0-indexed — if your list has N items, valid indices are 0 to N-1.`,
   },
   {
+    pattern: /KeyError: 'DISPLAY'|_display = Display\(os\.environ\['DISPLAY'\]\)/,
+    explain: () => `This library requires a graphical display (monitor/screen), which isn't available in this cloud sandbox. GUI automation libraries like pyautogui and tkinter only work on a local machine with a screen attached.`,
+  },
+  {
     pattern: /KeyError: (.+)/,
     explain: m => `Key ${m[1]} doesn't exist in the dictionary. Use .get(key) to return None instead of raising an error, or check with 'if key in d' first.`,
   },
