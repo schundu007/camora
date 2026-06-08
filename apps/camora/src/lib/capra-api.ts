@@ -83,6 +83,7 @@ export const playgroundAPI = {
     payload: {
       language: PlaygroundLanguage;
       code: string;
+      stdin?: string;
       testsCode?: string;
       profile?: boolean;
       memory?: boolean;

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, CSSProperties } from 'react';
+import { useState, useRef, useCallback, CSSProperties, useEffect } from 'react';
 import { useMonaco } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor';
 import { LanguageTabs } from './LanguageTabs';
@@ -14,6 +14,117 @@ const DEFAULT_CODE: Record<PlaygroundLanguage, string> = {
 };
 
 const sans: CSSProperties = { fontFamily: 'Plus Jakarta Sans, sans-serif' };
+const mono: CSSProperties = { fontFamily: "'IBM Plex Mono', monospace" };
+
+// ---------------------------------------------------------------------------
+// Detect input() calls in Python code — returns one label per call
+// ---------------------------------------------------------------------------
+
+function detectInputCalls(code: string): string[] {
+  const labels: string[] = [];
+  const re = /\binput\s*\(([^)]*)\)/g;
+  let m: RegExpExecArray | null;
+  let n = 1;
+  while ((m = re.exec(code)) !== null) {
+    const arg = m[1].trim();
+    const strMatch = arg.match(/^(['"`])([\s\S]*?)\1$/);
+    const label = strMatch
+      ? strMatch[2].replace(/:?\s*$/, '').trim() || `Input ${n}`
+      : `Input ${n}`;
+    labels.push(label);
+    n++;
+  }
+  return labels;
+}
+
+// ---------------------------------------------------------------------------
+// Stdin input modal
+// ---------------------------------------------------------------------------
+
+interface InputModalProps {
+  labels: string[];
+  values: string[];
+  onChange: (idx: number, val: string) => void;
+  onRun: () => void;
+  onCancel: () => void;
+}
+
+const InputModal = ({ labels, values, onChange, onRun, onCancel }: InputModalProps) => {
+  const firstRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { firstRef.current?.focus(); }, []);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: 'rgba(0,0,0,0.75)' }}
+      onClick={e => { if (e.target === e.currentTarget) onCancel(); }}
+    >
+      <div
+        className="w-full max-w-sm rounded-xl p-6 shadow-2xl"
+        style={{ background: '#0a0e1a', border: '1px solid var(--cam-gold-leaf)' }}
+      >
+        <p className="text-[11px] uppercase tracking-widest font-semibold mb-4" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>
+          Provide Input Values
+        </p>
+
+        <div className="flex flex-col gap-3">
+          {labels.map((label, i) => (
+            <div key={i}>
+              <label className="block text-[10px] uppercase tracking-widest mb-1" style={{ color: '#475569', ...sans }}>
+                {label}
+              </label>
+              <input
+                ref={i === 0 ? firstRef : undefined}
+                type="text"
+                value={values[i] ?? ''}
+                onChange={e => onChange(i, e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    if (i === labels.length - 1) onRun();
+                    else (e.currentTarget.closest('.flex')?.querySelector(`input:nth-of-type(${i + 2})`) as HTMLInputElement | null)?.focus();
+                  }
+                  if (e.key === 'Escape') onCancel();
+                }}
+                className="w-full px-3 py-2 rounded-md text-sm outline-none"
+                style={{
+                  background: '#111827',
+                  border: '1px solid #1e293b',
+                  color: '#e2e8f0',
+                  ...mono,
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end gap-2 mt-5">
+          <button
+            onClick={onCancel}
+            className="px-4 py-1.5 text-xs rounded-md"
+            style={{ background: 'transparent', border: '1px solid #334155', color: '#64748b', ...sans }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onRun}
+            className="px-5 py-1.5 text-xs font-bold rounded-md"
+            style={{
+              background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
+              color: '#0a0e1a',
+              ...sans,
+            }}
+          >
+            ▶ Run
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Explain pane
+// ---------------------------------------------------------------------------
 
 interface ExplainState {
   text: string;
@@ -60,6 +171,10 @@ const ExplainPane = ({ text, loading, line, error }: ExplainState) => {
   );
 };
 
+// ---------------------------------------------------------------------------
+// Main layout
+// ---------------------------------------------------------------------------
+
 export const PlaygroundLayout = () => {
   const [activeTab, setActiveTab]   = useState<PlaygroundLanguage>('python3');
   const [running, setRunning]       = useState(false);
@@ -70,11 +185,12 @@ export const PlaygroundLayout = () => {
   const [result, setResult]         = useState<PlaygroundRunResult | null>(null);
   const [error, setError]           = useState<string | null>(null);
   const [explain, setExplain]       = useState<ExplainState>({ text: '', loading: false, line: 0, error: null });
+  const [inputModal, setInputModal] = useState<{ labels: string[]; values: string[] } | null>(null);
 
-  const codeRef       = useRef<Record<PlaygroundLanguage, string>>({ ...DEFAULT_CODE });
-  const editorRef     = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
-  const monacoInst    = useMonaco();
-  const explainTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const codeRef        = useRef<Record<PlaygroundLanguage, string>>({ ...DEFAULT_CODE });
+  const editorRef      = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const monacoInst     = useMonaco();
+  const explainTimer   = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentLineRef = useRef(1);
 
   const fetchExplain = useCallback((line: number, code: string, lang: PlaygroundLanguage) => {
@@ -116,13 +232,13 @@ export const PlaygroundLayout = () => {
     codeRef.current[activeTab] = value;
   }, [activeTab]);
 
-  const handleRun = useCallback(async () => {
-    const code = codeRef.current[activeTab];
+  // Core execution — called with the final stdin string
+  const doRun = useCallback(async (code: string, stdin: string) => {
     setRunning(true);
     setError(null);
     setRightTab('output');
     try {
-      const r = await playgroundAPI.run({ language: activeTab, code });
+      const r = await playgroundAPI.run({ language: activeTab, code, stdin });
       setResult(r);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Execution failed');
@@ -130,6 +246,38 @@ export const PlaygroundLayout = () => {
       setRunning(false);
     }
   }, [activeTab]);
+
+  const handleRun = useCallback(async () => {
+    const code = codeRef.current[activeTab];
+
+    // For Python, detect input() calls and prompt user before running
+    if (activeTab === 'python3') {
+      const labels = detectInputCalls(code);
+      if (labels.length > 0) {
+        setInputModal({ labels, values: new Array(labels.length).fill('') });
+        return;
+      }
+    }
+
+    doRun(code, '');
+  }, [activeTab, doRun]);
+
+  const handleModalRun = useCallback(() => {
+    if (!inputModal) return;
+    const code = codeRef.current[activeTab];
+    const stdin = inputModal.values.map(v => v + '\n').join('');
+    setInputModal(null);
+    doRun(code, stdin);
+  }, [inputModal, activeTab, doRun]);
+
+  const handleModalChange = useCallback((idx: number, val: string) => {
+    setInputModal(prev => {
+      if (!prev) return prev;
+      const values = [...prev.values];
+      values[idx] = val;
+      return { ...prev, values };
+    });
+  }, []);
 
   const handleFormat = useCallback(async () => {
     if (activeTab === 'docker') return;
@@ -172,6 +320,7 @@ export const PlaygroundLayout = () => {
     setActiveTab(lang);
     setResult(null);
     setError(null);
+    setInputModal(null);
   }, []);
 
   const tabBtn = (label: string, tab: 'output' | 'explain') => (
@@ -190,6 +339,16 @@ export const PlaygroundLayout = () => {
 
   return (
     <div className="flex flex-col h-full bg-[#111318] text-white">
+      {inputModal && (
+        <InputModal
+          labels={inputModal.labels}
+          values={inputModal.values}
+          onChange={handleModalChange}
+          onRun={handleModalRun}
+          onCancel={() => setInputModal(null)}
+        />
+      )}
+
       <LanguageTabs active={activeTab} onChange={handleTabChange} />
 
       {/* Toolbar */}
@@ -295,7 +454,6 @@ export const PlaygroundLayout = () => {
 
         {/* Right pane: Output | Explain */}
         <div className="w-1/2 overflow-hidden flex flex-col">
-          {/* Tab bar — always visible when explain mode on, hidden otherwise */}
           {explainMode && (
             <div className="flex border-b border-[#1e293b] bg-[#0a0d12] shrink-0">
               {tabBtn('Output', 'output')}
