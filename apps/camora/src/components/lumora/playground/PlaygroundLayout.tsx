@@ -22,10 +22,11 @@ const mono: CSSProperties = { fontFamily: "'IBM Plex Mono', monospace" };
 
 function detectInputCalls(code: string): string[] {
   const labels: string[] = [];
+  const stripped = code.split('\n').filter(l => !/^\s*#/.test(l)).join('\n');
   const re = /\binput\s*\(([^)]*)\)/g;
   let m: RegExpExecArray | null;
   let n = 1;
-  while ((m = re.exec(code)) !== null) {
+  while ((m = re.exec(stripped)) !== null) {
     const arg = m[1].trim();
     const strMatch = arg.match(/^(['"`])([\s\S]*?)\1$/);
     const label = strMatch
