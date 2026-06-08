@@ -259,7 +259,7 @@ export const PlaygroundLayout = () => {
       } catch {
         setExplain(prev => ({ ...prev, error: 'Explanation unavailable.', loading: false, rich: null }));
       }
-    }, 500);
+    }, 2000);
   }, []);
 
   const handleCursorChange = useCallback((line: number, code: string) => {

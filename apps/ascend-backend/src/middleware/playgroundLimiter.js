@@ -46,7 +46,7 @@ function createLimiter(options) {
  */
 export const playgroundLimiter = createLimiter({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 30, // 30 playground requests per minute
+  max: 120, // lint+explain fire on every edit; 120/min accommodates normal typing
   message: 'Too many playground requests. Try again in a minute.',
 });
 
