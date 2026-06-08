@@ -65,7 +65,7 @@ const TopicView = ({ topic }: { topic: Topic }) => {
 
   return (
     <article className="space-y-6">
-      {/* Header */}
+      {/* Header + intro */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="px-6 py-4 flex items-center justify-between" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
           <div className="flex items-center gap-3">
@@ -75,23 +75,38 @@ const TopicView = ({ topic }: { topic: Topic }) => {
           <span className="font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>~{topic.estimatedMins} min</span>
         </div>
         <div className="px-6 py-5">
-          <p className="text-[14px] leading-relaxed text-[var(--text-secondary)]">{topic.summary}</p>
+          <p className="text-[15px] leading-relaxed text-[var(--text-secondary)]">{topic.intro}</p>
         </div>
       </div>
 
-      {/* Key Points */}
+      {/* Reference Code */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-          <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Key Points</span>
+          <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Reference Code</span>
         </div>
-        <ul className="divide-y divide-[var(--border)]/40">
-          {topic.keyPoints.map((pt, i) => (
-            <li key={i} className="flex items-start gap-3 px-6 py-3">
-              <span className="font-mono text-[11px] font-bold mt-0.5 shrink-0 w-5 h-5 rounded flex items-center justify-center" style={{ background: 'color-mix(in oklab, var(--cam-primary) 12%, var(--bg-elevated))', color: 'var(--cam-primary)' }}>{i + 1}</span>
-              <span className="text-[13px] text-[var(--text-secondary)] leading-relaxed">{pt}</span>
-            </li>
+        <div className="p-4">
+          <CodeBlock code={topic.cleanCode} />
+        </div>
+      </div>
+
+      {/* How It Works — line-by-line walkthrough */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+          <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>How It Works — Line by Line</span>
+        </div>
+        <div className="divide-y divide-[var(--border)]/40">
+          {topic.walkthrough.map((step, i) => (
+            <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+              <div className="px-4 py-3" style={{ background: '#0d1117', borderRight: '1px solid color-mix(in oklab, var(--cam-primary) 15%, transparent)' }}>
+                <pre className="text-[12px] leading-relaxed overflow-x-auto" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}><code>{step.code}</code></pre>
+              </div>
+              <div className="px-5 py-3 flex items-start gap-2.5">
+                <span className="font-mono text-[10px] font-bold mt-1 shrink-0 w-4 h-4 rounded flex items-center justify-center" style={{ background: 'color-mix(in oklab, var(--cam-primary) 12%, var(--bg-elevated))', color: 'var(--cam-primary)' }}>{i + 1}</span>
+                <span className="text-[13px] leading-relaxed text-[var(--text-secondary)]">{step.explain}</span>
+              </div>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
 
       {/* Code Examples */}
@@ -116,6 +131,21 @@ const TopicView = ({ topic }: { topic: Topic }) => {
         </div>
       </div>
 
+      {/* Edge Cases */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in oklab, #f59e0b 20%, var(--border))' }}>
+        <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, #f59e0b 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, #f59e0b 15%, var(--border))' }}>
+          <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: '#d97706' }}>Edge Cases to Know</span>
+        </div>
+        <ul className="divide-y divide-[var(--border)]/40">
+          {topic.edgeCases.map((ec, i) => (
+            <li key={i} className="flex items-start gap-3 px-6 py-3">
+              <span className="shrink-0 mt-1 text-[11px]" style={{ color: '#d97706' }}>▸</span>
+              <span className="text-[13px] leading-relaxed text-[var(--text-secondary)]">{ec}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       {/* Gotcha + Tip */}
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in oklab, #ef4444 20%, var(--border))' }}>
@@ -129,17 +159,6 @@ const TopicView = ({ topic }: { topic: Topic }) => {
             <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf-dk)' }}>Pro Tip</span>
           </div>
           <p className="px-5 py-4 text-[13px] leading-relaxed text-[var(--text-secondary)]">{topic.tip}</p>
-        </div>
-      </div>
-
-      {/* Real-world */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in oklab, var(--cam-primary) 15%, var(--border))' }}>
-        <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 15%, var(--border))' }}>
-          <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Real-World Usage</span>
-        </div>
-        <div className="px-6 py-4 flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-sm font-bold mt-0.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 15%, var(--bg-elevated))', color: 'var(--cam-primary)' }}>🌐</div>
-          <p className="text-[13px] leading-relaxed text-[var(--text-secondary)]">{topic.realWorldNote}</p>
         </div>
       </div>
     </article>
@@ -166,7 +185,7 @@ export default function PythonLearnPage() {
   const filtered = useMemo(() => {
     if (!search.trim()) return null;
     const q = search.toLowerCase();
-    return PYTHON_TOPICS.filter(t => t.title.toLowerCase().includes(q) || t.summary.toLowerCase().includes(q));
+    return PYTHON_TOPICS.filter(t => t.title.toLowerCase().includes(q) || t.intro.toLowerCase().includes(q));
   }, [search]);
 
   const totalMins = PYTHON_TOPICS.reduce((s, t) => s + t.estimatedMins, 0);
