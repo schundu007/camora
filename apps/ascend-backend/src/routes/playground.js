@@ -246,13 +246,12 @@ function spawnPython(dir, stdinData = '') {
     child.stdin.end();
     child.on('close', (code, signal) => {
       clearTimeout(timer);
-      if (code === 0) {
+      if (signal === 'SIGKILL') {
+        resolve({ stdout, stderr: stderr + '\n[Execution timed out after 10s — showing partial output]', timedOut: true });
+      } else if (code === 0) {
         resolve({ stdout, stderr });
       } else {
-        const msg = signal === 'SIGKILL'
-          ? 'Execution timed out (10s limit)'
-          : 'Command failed: python3 main.py';
-        reject(Object.assign(new Error(msg), { stdout, stderr, code: code ?? 1 }));
+        reject(Object.assign(new Error('Command failed: python3 main.py'), { stdout, stderr, code: code ?? 1 }));
       }
     });
     child.on('error', e => { clearTimeout(timer); reject(e); });
@@ -268,9 +267,9 @@ async function runPython(code, stdinData = '') {
     let lastErr = null;
     for (let attempt = 0; attempt <= 5; attempt++) {
       try {
-        const { stdout, stderr } = await spawnPython(dir, stdinData);
+        const { stdout, stderr, timedOut } = await spawnPython(dir, stdinData);
         const { cleanStderr, variables } = parseVarsSentinel(stderr);
-        return { stdout, stderr: cleanStderr, exitCode: 0, duration: Date.now() - start, variables };
+        return { stdout, stderr: cleanStderr, exitCode: timedOut ? 1 : 0, duration: Date.now() - start, variables };
       } catch (err) {
         lastErr = err;
         const mod = missingModule(err.stderr);
