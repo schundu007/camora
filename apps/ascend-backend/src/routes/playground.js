@@ -172,6 +172,11 @@ with open('code.py', 'r') as _f:
 
 _cap = _io.StringIO()
 _s.stdout = _cap
+import builtins as _bi
+_orig_input = _bi.input
+def _silent_input(prompt=''):
+    return _orig_input()
+_bi.input = _silent_input
 _ns = {'__name__': '__main__'}
 
 _MAX_RETRIES = 5
