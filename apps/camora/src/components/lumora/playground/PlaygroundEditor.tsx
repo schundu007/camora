@@ -30,7 +30,7 @@ export const PlaygroundEditor = ({ language, defaultValue, onChange, onMount, on
     onChange(v);
     if (language === 'python3' && monaco) {
       if (lintTimer.current) clearTimeout(lintTimer.current);
-      lintTimer.current = setTimeout(() => runLint(v), 500);
+      lintTimer.current = setTimeout(() => runLint(v), 2000);
     }
   }
 
