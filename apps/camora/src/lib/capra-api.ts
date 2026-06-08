@@ -78,6 +78,15 @@ export interface LintDiagnostic {
 
 export type PlaygroundLanguage = 'python3' | 'bash' | 'docker' | 'terraform';
 
+export interface ExplainResult {
+  what?: string;
+  how?: { code: string; text: string }[];
+  trace?: string;
+  analogy?: string;
+  concepts?: string[];
+  explanation?: string; // fallback for plain-text parse failures
+}
+
 export const playgroundAPI = {
   run: (
     payload: {
@@ -134,7 +143,7 @@ export const playgroundAPI = {
     line: number,
     language: string,
     token?: string
-  ): Promise<{ explanation: string }> =>
+  ): Promise<ExplainResult> =>
     fetchCapra('/api/v1/playground/explain', {
       method: 'POST',
       body: JSON.stringify({ code, line, language }),
