@@ -359,7 +359,7 @@ import githubRouter from './routes/github.js';
 
 // Per-IP rate limiting — previously only ascend had limits. Transcribe/speaker/
 // diagram were wide open to abuse before this.
-import { authLimiter, apiLimiter, aiLimiter, codingLimiter } from './middleware/rateLimiter.js';
+import { authLimiter, apiLimiter, aiLimiter, codingLimiter, transcriptionLimiter } from './middleware/rateLimiter.js';
 import { authenticate } from './middleware/authenticate.js';
 import { requirePaidSubscription } from './middleware/requirePaidSubscription.js';
 
@@ -389,8 +389,8 @@ app.use('/api/v1/coding', codingLimiter, authenticate, requirePaidSubscription, 
 // users can also build their kit, so this skips requirePaidSubscription;
 // the daily free limit on Capra solves provides the rate floor.
 app.use('/api/v1/usercode', apiLimiter, authenticate, usercodeRouter);
-app.use('/api/v1/transcribe', aiLimiter, authenticate, requirePaidSubscription, transcriptionRouter);
-app.use('/api/v1/speaker', aiLimiter, authenticate, requirePaidSubscription, speakerRouter);
+app.use('/api/v1/transcribe', transcriptionLimiter, authenticate, requirePaidSubscription, transcriptionRouter);
+app.use('/api/v1/speaker', transcriptionLimiter, authenticate, requirePaidSubscription, speakerRouter);
 app.use('/api/v1/diagram', aiLimiter, authenticate, requirePaidSubscription, diagramRouter);
 
 // Non-AI routes — open to authenticated users. Apply `authenticate`

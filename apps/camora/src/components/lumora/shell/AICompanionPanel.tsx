@@ -543,6 +543,10 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     if (!trimmed || !token) return;
     if (streaming) {
       pendingQuestionRef.current.push(trimmed);
+      // Behavioral: abort current stream so Sona starts on the new question
+      // immediately. The abort fires onComplete → streaming=false → FIFO drain
+      // picks the next question from the queue in order.
+      if (embedded) streamAbortRef.current?.abort();
       return;
     }
 
