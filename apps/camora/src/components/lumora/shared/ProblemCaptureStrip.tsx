@@ -17,7 +17,6 @@ export function ProblemCaptureStrip({ kind, onProblemBuilt }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const isDesktop = !!(window as any).camo?.takeScreenshotWindow;
-  if (!isDesktop) return null;
 
   const handleCapture = useCallback(async () => {
     if (captures.length >= MAX_CAPTURES || isCapturing) return;
@@ -72,6 +71,8 @@ export function ProblemCaptureStrip({ kind, onProblemBuilt }: Props) {
       setIsBuilding(false);
     }
   }, [captures, isBuilding, kind, token, onProblemBuilt]);
+
+  if (!isDesktop) return null;
 
   return (
     <div className="space-y-2">
