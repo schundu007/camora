@@ -720,7 +720,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     // Behavioral (locked): 1 s silence window — interviewer questions
     // end cleanly; shorter window means the chunk fires faster and Sona
     // can start answering sooner. Other modes keep the longer windows.
-    silenceDuration: locked ? 2000 : (continuousMode ? 2500 : 3000),
+    silenceDuration: locked ? 2000 : (continuousMode ? 7000 : 3000),
     minSpeechDuration: 300,
     // Auto mode: 30 s ceiling. The prior 5 s ceiling force-fragmented
     // every behavioral question (which routinely run 20-45 s) and made

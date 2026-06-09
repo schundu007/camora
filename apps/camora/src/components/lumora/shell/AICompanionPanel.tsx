@@ -525,10 +525,9 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [messages, streamText, isOpen]);
   useEffect(() => { if (isOpen) setTimeout(() => inputRef.current?.focus(), 100); }, [isOpen]);
 
-  // Holds the most recent question captured while Sona is still streaming.
-  // Only the latest is kept — older pending questions are overwritten — so
-  // the queue drains to exactly one follow-up when the current answer ends.
-  const pendingQuestionRef = useRef<string | null>(null);
+  // FIFO queue of questions captured while Sona is streaming. All questions
+  // are preserved and drained one-by-one as each answer completes.
+  const pendingQuestionRef = useRef<string[]>([]);
 
   // Ask a question — streams independently
   const ask = useCallback(async (question: string) => {
@@ -543,16 +542,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     const trimmed = question.trim();
     if (!trimmed || !token) return;
     if (streaming) {
-      // Behavioural mode: abort the live stream and queue the new question
-      // so Sona starts answering immediately instead of waiting for the
-      // previous answer to finish. The abort triggers onComplete/catch →
-      // setStreaming(false) → the drain useEffect fires the queued question.
-      if (embedded) {
-        pendingQuestionRef.current = trimmed;
-        streamAbortRef.current?.abort();
-      } else {
-        pendingQuestionRef.current = trimmed;
-      }
+      pendingQuestionRef.current.push(trimmed);
       return;
     }
 
@@ -692,20 +682,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     return () => { sonaRegistry.setOpen(false); };
   }, [embedded]);
 
-  // Drain the queued question when the current answer finishes streaming.
-  // Auto-mic can capture follow-ups while Sona is mid-stream — we hold only
-  // the latest in `pendingQuestionRef` and fire it here.
-  //
-  // Fire SYNCHRONOUSLY — the previous setTimeout(…, 0) introduced a race
-  // where streaming flipping false plus a manual press at the same instant
-  // could fire the same question twice (manual fires direct via ask;
-  // drain fires the queued copy via the timer). Synchronous flush
-  // ensures the pending ref is null'd in the same microtask and any
-  // immediate manual press sees an empty queue.
+  // Drain the FIFO queue when each answer finishes streaming.
+  // Questions captured mid-stream are answered in order, none dropped.
   useEffect(() => {
-    if (!streaming && pendingQuestionRef.current) {
-      const q = pendingQuestionRef.current;
-      pendingQuestionRef.current = null;
+    if (!streaming && pendingQuestionRef.current.length > 0) {
+      const q = pendingQuestionRef.current.shift()!;
       askRef.current?.(q);
     }
   }, [streaming]);
