@@ -97,8 +97,8 @@ const isLikelyRealSpeech = (raw: string): boolean  => {
   const hasCommonWord = allWords.some(w => COMMON_EN.has(w));
   if (!hasCommonWord && allWords.length <= 5) return false;
   const words = text.split(/\s+/);
-  if (words.length >= 3) return true;
-  if (text.length >= 14) return true;
+  if (words.length >= 2) return true;
+  if (text.length >= 8) return true;
   return false;
 }
 
@@ -276,7 +276,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
   // Behavioral (locked): 6 s ceiling — interviewer questions are short; a
   // 6 s hard cap means the worst-case flush is 6 s after the first chunk,
   // not 15 s. Coding/design keep 15 s to handle long mid-thought pauses.
-  const MAX_ACCUM_MS = locked ? 6000 : 15000;
+  const MAX_ACCUM_MS = locked ? 6000 : 45000;
   // How long after the speaker's last audible moment we keep a flush
   // pending. Reduced from 4000/900 ms — the original values were tuned
   // for the user answering a question (long pauses, mid-thought gaps)
