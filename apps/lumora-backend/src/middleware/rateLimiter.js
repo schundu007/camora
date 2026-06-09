@@ -41,8 +41,17 @@ export const apiLimiter = createLimiter({
 
 export const aiLimiter = createLimiter({
   windowMs: 60 * 1000,
-  max: 20,
+  max: 60,
   message: 'Too many AI requests, please wait a moment',
+});
+
+// Transcription fires once per audio chunk — behavioral mode generates
+// 10-20 calls/min. Dedicated limit prevents transcription from consuming
+// the inference budget and causing 429s on stream calls.
+export const transcriptionLimiter = createLimiter({
+  windowMs: 60 * 1000,
+  max: 120,
+  message: 'Too many transcription requests, please wait a moment',
 });
 
 export const paymentLimiter = createLimiter({
