@@ -119,7 +119,7 @@ jobs:
 
       - name: Run tests
         working-directory: apps/lumora-backend
-        run: pnpm test --run
+        run: pnpm test -- --run
         env:
           NODE_ENV: test
 
@@ -146,7 +146,7 @@ jobs:
 
       - name: Run tests
         working-directory: apps/ascend-backend
-        run: pnpm test --run
+        run: pnpm test -- --run
         env:
           NODE_ENV: test
 
