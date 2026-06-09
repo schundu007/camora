@@ -46,6 +46,8 @@ export const LumoraShellPage = () => {
   const [copilotQuestion, setCopilotQuestion] = useState<string | undefined>();
   const [copilotFullscreen, setCopilotFullscreen] = useState(false);
   const [focusedEntry, setFocusedEntry] = useState<number | null>(null);
+  const behavioralBufferRef = useRef<string[]>([]);
+  const behavioralTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pendingHackerrankCapture, setPendingHackerrankCapture] = useState<string | null>(null);
   const [pendingHackerrankText, setPendingHackerrankText] = useState<string | null>(null);
   const [pendingHackerrankStarterCode, setPendingHackerrankStarterCode] = useState<string | null>(null);
@@ -320,11 +322,17 @@ export const LumoraShellPage = () => {
       return;
     }
     if (tab === 'behavioral') {
-      // No isQuestion() gate here: in an active behavioral interview the
-      // user wants Sona to answer every interviewer utterance. AudioCapture's
-      // isLikelyRealSpeech() already drops noise + Whisper hallucinations
-      // upstream, so forwarding everything transcribed is safe.
-      window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
+      // Buffer fragments — interviewers pause mid-sentence (1-3s) causing
+      // AudioCapture to flush each sentence as a separate chunk. Accumulate
+      // all chunks and dispatch ONE question after 5s of silence.
+      behavioralBufferRef.current.push(trimmed);
+      if (behavioralTimerRef.current) clearTimeout(behavioralTimerRef.current);
+      behavioralTimerRef.current = setTimeout(() => {
+        const full = behavioralBufferRef.current.join(' ').trim();
+        behavioralBufferRef.current = [];
+        behavioralTimerRef.current = null;
+        if (full) window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: full } }));
+      }, 5000);
       return;
     }
     // Interview tab: gate on isQuestion() so background noise doesn't fire the LLM.
