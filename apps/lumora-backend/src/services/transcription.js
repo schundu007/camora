@@ -14,18 +14,13 @@ CAP theorem, ACID, BASE, eventual consistency, sharding, replication,
 load balancer, reverse proxy, CDN, cache, queue, pub-sub, event-driven.
 `.trim();
 
-// Groq as primary (whisper-large-v3-turbo, ~100ms), OpenAI as fallback
-const groq = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: 'https://api.groq.com/openai/v1',
-});
-
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-async function callWhisper(client, model, audioBuffer, filename) {
-  const file = new File([audioBuffer], filename, { type: 'audio/webm' });
-  const response = await client.audio.transcriptions.create({
-    model,
+export async function transcribe(audioBuffer, filename = 'audio.webm') {
+  const mime = filename.endsWith('.wav') ? 'audio/wav' : 'audio/webm';
+  const file = new File([audioBuffer], filename, { type: mime });
+  const response = await openai.audio.transcriptions.create({
+    model: 'whisper-1',
     file,
     language: 'en',
     prompt: TECHNICAL_PROMPT,
@@ -35,15 +30,4 @@ async function callWhisper(client, model, audioBuffer, filename) {
   if (typeof response?.text === 'string') return response.text.trim();
   console.warn('[Whisper] Unexpected response shape, dropping chunk:', typeof response);
   return '';
-}
-
-export async function transcribe(audioBuffer, filename = 'audio.webm') {
-  if (process.env.GROQ_API_KEY) {
-    try {
-      return await callWhisper(groq, 'whisper-large-v3-turbo', audioBuffer, filename);
-    } catch (err) {
-      console.warn('[Transcription] Groq failed, falling back to OpenAI:', err.message);
-    }
-  }
-  return await callWhisper(openai, 'whisper-1', audioBuffer, filename);
 }
