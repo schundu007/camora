@@ -101,16 +101,16 @@ export default function PricingPage() {
       <SiteNav />
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative overflow-hidden bg-[#0A1228] text-white">
+      <section className="relative overflow-hidden bg-[var(--bg-base)] text-white">
         <div
           aria-hidden="true"
           className="absolute inset-0"
           style={{
             background:
               'radial-gradient(ellipse 70% 55% at 50% 0%, rgba(255,255,255,0.08), transparent 60%),' +
-              'radial-gradient(ellipse 50% 60% at 12% 30%, rgba(30,77,120,0.15), transparent 60%),' +
-              'radial-gradient(ellipse 45% 55% at 88% 70%, rgba(30,77,120,0.10), transparent 55%),' +
-              'linear-gradient(135deg, #0B0D11 0%, #0F1217 50%, #171B24 100%)',
+              'radial-gradient(ellipse 50% 60% at 12% 30%, rgba(37,99,235,0.18), transparent 60%),' +
+              'radial-gradient(ellipse 45% 55% at 88% 70%, rgba(37,99,235,0.12), transparent 55%),' +
+              'linear-gradient(135deg, #080A0F 0%, #0F1217 50%, #181D2A 100%)',
           }}
         />
 
@@ -118,7 +118,7 @@ export default function PricingPage() {
           <div className="mx-auto max-w-3xl text-center">
             <Pill tone="inverse" withDot>Pricing</Pill>
 
-            <h1 className="mt-6 font-display text-[40px] sm:text-[52px] md:text-[64px] font-semibold tracking-tight leading-[1.04] text-white">
+            <h1 className="mt-6 font-display text-[44px] sm:text-[58px] md:text-[72px] font-semibold tracking-tight leading-[1.02] text-white">
               Pay for hours,{' '}
               <span className="text-[var(--accent)]">
                 not seats.
@@ -143,7 +143,7 @@ export default function PricingPage() {
           <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-5 max-w-3xl mx-auto">
             {TRUST_POINTS.map((p, i) => (
               <div key={i} className="flex items-start gap-2.5 text-left">
-                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full" style={{ border: '1px solid rgba(43,99,148,0.35)' }}>
+                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full" style={{ border: '1px solid rgba(37,99,235,0.35)' }}>
                   <CheckIcon size={10} className="text-[var(--accent)]" />
                 </span>
                 <div className="min-w-0">
@@ -297,7 +297,7 @@ export default function PricingPage() {
       {/* ═══════════ FINAL CTA ═══════════ */}
       <Section tone="muted" spacing="sm">
         <Container size="md">
-          <div className="relative overflow-hidden rounded-2xl border border-[color-mix(in oklab,var(--accent)15%,transparent)] bg-[#0A1228] px-8 py-12 md:px-14 text-white">
+          <div className="relative overflow-hidden rounded-2xl border border-[color-mix(in oklab,var(--accent)15%,transparent)] bg-[var(--bg-base)] px-8 py-12 md:px-14 text-white">
             <div className="relative flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
               <div>
                 <Eyebrow tone="inverse">Ready to go</Eyebrow>
