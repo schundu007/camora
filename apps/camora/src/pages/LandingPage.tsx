@@ -164,18 +164,18 @@ export default function LandingPage() {
       <SiteNav />
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative overflow-hidden bg-[#0B0D11] text-white">
+      <section className="relative overflow-hidden bg-[#0A0C10] text-white">
         {/* Animated aurora gradient orbs */}
         <div
           aria-hidden="true"
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 90% 70% at 5% 40%, rgba(30,77,120,0.12), transparent 55%),' +
-              'radial-gradient(ellipse 60% 80% at 12% 25%, rgba(201,162,39,0.15), transparent 60%),' +
-              'radial-gradient(ellipse 50% 60% at 92% 65%, rgba(30,77,120,0.18), transparent 60%),' +
-              'radial-gradient(ellipse 40% 50% at 50% 80%, rgba(201,162,39,0.06), transparent 55%),' +
-              'linear-gradient(135deg, #0B0D11 0%, #0F1217 50%, #171B24 100%)',
+              'radial-gradient(ellipse 90% 70% at 5% 40%, rgba(37,99,235,0.16), transparent 55%),' +
+              'radial-gradient(ellipse 60% 80% at 12% 25%, rgba(212,160,67,0.15), transparent 60%),' +
+              'radial-gradient(ellipse 50% 60% at 92% 65%, rgba(37,99,235,0.22), transparent 60%),' +
+              'radial-gradient(ellipse 40% 50% at 50% 80%, rgba(212,160,67,0.06), transparent 55%),' +
+              'linear-gradient(135deg, #0A0C10 0%, #0E1119 50%, #141823 100%)',
             animation: 'heroOrbs 18s ease-in-out infinite alternate',
           }}
         />
@@ -183,7 +183,7 @@ export default function LandingPage() {
         <div aria-hidden="true" className="absolute pointer-events-none opacity-20"
           style={{
             width: 500, height: 500, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(30,77,120,0.25) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(37,99,235,0.30) 0%, transparent 70%)',
             top: '-10%', left: '-5%',
             animation: 'heroDrift1 25s ease-in-out infinite alternate',
           }}
@@ -205,8 +205,8 @@ export default function LandingPage() {
           ].map((pos, i) => (
             <span key={i} className={`absolute rounded-full ${pos}`}
               style={{
-                background: i % 2 === 0 ? 'rgba(30,77,120,0.5)' : 'rgba(201,162,39,0.4)',
-                boxShadow: i % 2 === 0 ? '0 0 12px rgba(30,77,120,0.3)' : '0 0 12px rgba(201,162,39,0.25)',
+                background: i % 2 === 0 ? 'rgba(37,99,235,0.55)' : 'rgba(212,160,67,0.4)',
+                boxShadow: i % 2 === 0 ? '0 0 12px rgba(37,99,235,0.35)' : '0 0 12px rgba(212,160,67,0.25)',
                 animation: `heroFloat ${4 + (i % 3) * 2}s ease-in-out ${i * 0.5}s infinite`,
               }}
             />
@@ -236,19 +236,19 @@ export default function LandingPage() {
               </motion.div>
 
               <motion.h1
-                className="mt-6 font-display text-[40px] sm:text-[52px] md:text-[60px] lg:text-[64px] font-semibold tracking-tight leading-[1.02]"
+                className="mt-6 font-display text-[44px] sm:text-[56px] md:text-[64px] lg:text-[72px] font-bold tracking-tight leading-[1.0]"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.32, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
               >
-                <span className="block text-white">All your prep.</span>
+                <span className="block text-[#F0EEE9]">All your prep.</span>
                 <span className="block text-[var(--cam-gold-leaf)]">
                   One trusted platform.
                 </span>
               </motion.h1>
 
               <motion.p
-                className="mt-6 max-w-[520px] text-base md:text-lg leading-relaxed text-white/72"
+                className="mt-6 max-w-[540px] text-[18px] md:text-[20px] leading-relaxed text-[#9CA3AF]"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
@@ -361,16 +361,16 @@ export default function LandingPage() {
                 <Reveal key={step.key} delay={i * 0.06}>
                   <Link
                     to={step.href}
-                    className="group flex h-full items-start gap-4 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-[0_1px_2px_rgba(11,13,17,0.04),0_8px_24px_-12px_rgba(11,13,17,0.08)] transition-all duration-200 active:scale-[0.98] hover:-translate-y-1 hover:border-[var(--cam-primary)]/25 hover:shadow-[0_0_0_1px_rgba(30,77,120,0.08),0_4px_12px_rgba(30,77,120,0.06),0_16px_32px_-12px_rgba(11,13,17,0.16)]"
+                    className="group flex h-full items-start gap-4 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.25)] transition-all duration-200 active:scale-[0.98] hover:-translate-y-1 hover:border-[var(--cam-primary)]/40 hover:shadow-[0_0_0_1px_rgba(37,99,235,0.18),0_8px_24px_-8px_rgba(37,99,235,0.22)]"
                   >
                     <span className="shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--cam-primary)] transition-colors duration-200 group-hover:bg-[var(--cam-primary)]/12 group-hover:text-[var(--cam-primary-lt)]">
                       {step.icon}
                     </span>
                     <div className="min-w-0">
-                      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--cam-primary)]">
+                      <p className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--cam-primary)]">
                         {step.label}
                       </p>
-                      <h3 className="mt-0.5 font-display text-[15px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
+                      <h3 className="mt-1 font-display text-[16px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
                         {step.headline}
                       </h3>
                       <p className="mt-1.5 text-[12.5px] leading-relaxed text-[var(--text-secondary)]">
@@ -387,16 +387,16 @@ export default function LandingPage() {
               <Reveal key={step.key} delay={0.12}>
                 <Link
                   to={step.href}
-                  className="group flex flex-col h-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-[0_1px_2px_rgba(11,13,17,0.04),0_8px_24px_-12px_rgba(11,13,17,0.08)] transition-all duration-200 active:scale-[0.98] hover:-translate-y-1 hover:border-[var(--cam-primary)]/25 hover:shadow-[0_0_0_1px_rgba(30,77,120,0.08),0_4px_12px_rgba(30,77,120,0.06),0_16px_32px_-12px_rgba(11,13,17,0.16)]"
+                  className="group flex flex-col h-full overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[0_1px_2px_rgba(0,0,0,0.25)] transition-all duration-200 active:scale-[0.98] hover:-translate-y-1 hover:border-[var(--cam-primary)]/40 hover:shadow-[0_0_0_1px_rgba(37,99,235,0.18),0_12px_32px_-10px_rgba(37,99,235,0.24)]"
                 >
-                  <div className="relative h-48 sm:h-56 overflow-hidden bg-[var(--bg-elevated)] shrink-0 transition-all duration-200 group-hover:brightness-110">
+                  <div className="relative h-48 sm:h-56 overflow-hidden bg-[var(--bg-app)] shrink-0 transition-all duration-200 group-hover:brightness-110">
                     <step.Anim />
                   </div>
                   <div className="flex flex-col flex-1 p-7">
                     <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--cam-primary)] transition-colors duration-200 group-hover:bg-[var(--cam-primary)]/12 group-hover:text-[var(--cam-primary-lt)]">
                       {step.icon}
                     </span>
-                    <p className="mt-4 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-[var(--cam-primary)]">
+                    <p className="mt-4 font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-[var(--cam-primary)]">
                       {step.label}
                     </p>
                     <h3 className="mt-1.5 font-display text-[24px] md:text-[28px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
@@ -568,16 +568,16 @@ export default function LandingPage() {
       {/* ═══════════ FINAL CTA ═══════════ */}
       <Section tone="surface" spacing="md">
         <Container>
-          <div className="relative overflow-hidden rounded-3xl bg-[#0A1228] px-8 py-14 md:px-14 md:py-16 text-white">
+          <div className="relative overflow-hidden rounded-3xl bg-[#0A0E1A] px-8 py-14 md:px-14 md:py-16 text-white">
             {/* Animated aurora gradient */}
             <div
               aria-hidden="true"
               className="absolute inset-0 opacity-70"
               style={{
                 background:
-                  'radial-gradient(ellipse 80% 60% at 30% 20%, rgba(30,77,120,0.10), transparent 55%),' +
-                  'radial-gradient(ellipse 50% 60% at 70% 80%, rgba(201,162,39,0.08), transparent 55%),' +
-                  'radial-gradient(ellipse 60% 50% at 90% 10%, rgba(30,77,120,0.06), transparent 50%)',
+                  'radial-gradient(ellipse 80% 60% at 30% 20%, rgba(37,99,235,0.16), transparent 55%),' +
+                  'radial-gradient(ellipse 50% 60% at 70% 80%, rgba(212,160,67,0.09), transparent 55%),' +
+                  'radial-gradient(ellipse 60% 50% at 90% 10%, rgba(37,99,235,0.10), transparent 50%)',
                 animation: 'ctaAurora 14s ease-in-out infinite alternate',
               }}
             />
@@ -598,23 +598,23 @@ export default function LandingPage() {
               className="absolute pointer-events-none"
               style={{
                 width: 320, height: 320, borderRadius: '50%',
-                border: '1px solid rgba(30,77,120,0.06)',
+                border: '1px solid rgba(37,99,235,0.12)',
                 top: '50%', right: '20%',
                 transform: 'translateY(-50%)',
                 animation: 'ctaRing 8s ease-in-out infinite alternate',
-                boxShadow: '0 0 60px rgba(30,77,120,0.04), inset 0 0 60px rgba(30,77,120,0.02)',
+                boxShadow: '0 0 60px rgba(37,99,235,0.08), inset 0 0 60px rgba(37,99,235,0.04)',
               }}
             />
             {/* Floating decorative particles */}
             <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
               <span className="absolute top-[22%] right-[12%] w-2 h-2 rounded-full"
-                style={{ background: 'rgba(30,77,120,0.35)', animation: 'ctaFloat 5s ease-in-out 0s infinite' }}
+                style={{ background: 'rgba(37,99,235,0.45)', animation: 'ctaFloat 5s ease-in-out 0s infinite' }}
               />
               <span className="absolute top-[60%] right-[25%] w-1.5 h-1.5 rounded-full"
-                style={{ background: 'rgba(201,162,39,0.3)', animation: 'ctaFloat 6s ease-in-out 1s infinite' }}
+                style={{ background: 'rgba(212,160,67,0.3)', animation: 'ctaFloat 6s ease-in-out 1s infinite' }}
               />
               <span className="absolute top-[35%] right-[40%] w-2.5 h-2.5 rounded-full"
-                style={{ background: 'rgba(30,77,120,0.2)', animation: 'ctaFloat 7s ease-in-out 2s infinite' }}
+                style={{ background: 'rgba(37,99,235,0.28)', animation: 'ctaFloat 7s ease-in-out 2s infinite' }}
               />
             </div>
             <div className="relative flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
@@ -677,8 +677,8 @@ function AudienceCard({
         className={cn(
           'relative h-full overflow-hidden rounded-3xl border p-8 md:p-10',
           dark
-            ? 'bg-[#0A1228] border-white/10 text-white'
-            : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-primary)] shadow-[0_2px_4px_rgba(11,13,17,0.04),0_12px_32px_-16px_rgba(11,13,17,0.12)]',
+            ? 'bg-[#0A0E1A] border-white/10 text-white'
+            : 'bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--text-primary)] shadow-[0_2px_4px_rgba(0,0,0,0.25),0_12px_32px_-16px_rgba(0,0,0,0.35)]',
         )}
       >
         {dark && (

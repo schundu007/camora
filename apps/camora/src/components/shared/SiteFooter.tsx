@@ -13,16 +13,19 @@ export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | '
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto bg-[#11141A] text-white border-t border-[rgba(201,162,39,0.32)]">
-      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 py-14">
+    <footer
+      className="mt-auto border-t"
+      style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)', borderTopColor: 'var(--accent-secondary)' }}
+    >
+      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-2 gap-10 md:grid-cols-12">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-4">
             <Link to="/" className="inline-flex items-center gap-2.5" aria-label="Camora — home">
               <CamoraLogo size={32} />
-              <span className="font-display text-[18px] font-semibold tracking-tight">Camora</span>
+              <span className="font-display text-[18px] font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>Camora</span>
             </Link>
-            <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed text-white/65">
+            <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               The career platform for engineers. Apply, prepare, practice and attend — with live AI in the room when it counts.
             </p>
             <div className="mt-5 flex items-center gap-2">
@@ -43,21 +46,22 @@ export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | '
 
           {FOOTER_COLUMNS.map((col) => (
             <div key={col.heading} className="md:col-span-2">
-              <h3 className="font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-white/55">{col.heading}</h3>
+              <h3 className="font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--text-secondary)' }}>{col.heading}</h3>
               <ul className="mt-4 space-y-2.5">
                 {col.links.map((l) => (
                   <li key={l.label}>
                     {l.external ? (
                       <a
                         href={l.href}
-                        className="text-[13px] font-medium text-white/72 hover:text-white transition-colors"
+                        className="footer-link text-[13px] font-medium transition-colors"
+                        style={{ color: 'var(--text-secondary)' }}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
                         {l.label}
                       </a>
                     ) : (
-                      <Link to={l.href} className="text-[13px] font-medium text-white/72 hover:text-white transition-colors">
+                      <Link to={l.href} className="footer-link text-[13px] font-medium transition-colors" style={{ color: 'var(--text-secondary)' }}>
                         {l.label}
                       </Link>
                     )}
@@ -70,16 +74,16 @@ export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | '
       </div>
 
       {/* Legal strip */}
-      <div className="border-t border-white/8">
+      <div className="border-t" style={{ borderTopColor: 'var(--border)' }}>
         <div className="mx-auto flex max-w-7xl flex-col-reverse items-center justify-between gap-3 px-5 py-5 sm:px-6 lg:px-8 md:flex-row">
-          <p className="font-mono text-[11px] text-white/55">
+          <p className="font-mono text-[11px]" style={{ color: 'var(--text-secondary)' }}>
             &copy; {year} Cariara, Inc. All rights reserved.
           </p>
-          <div className="flex items-center gap-5 text-[12px] text-white/65">
-            <Link to="/legal/terms" className="hover:text-white transition-colors">Terms</Link>
-            <Link to="/legal/privacy" className="hover:text-white transition-colors">Privacy</Link>
-            <Link to="/legal/security" className="hover:text-white transition-colors">Security</Link>
-            <a href="mailto:support@cariara.com" className="hover:text-white transition-colors">Support</a>
+          <div className="flex items-center gap-5 text-[12px]" style={{ color: 'var(--text-secondary)' }}>
+            <Link to="/legal/terms" className="footer-link transition-colors" style={{ color: 'var(--text-secondary)' }}>Terms</Link>
+            <Link to="/legal/privacy" className="footer-link transition-colors" style={{ color: 'var(--text-secondary)' }}>Privacy</Link>
+            <Link to="/legal/security" className="footer-link transition-colors" style={{ color: 'var(--text-secondary)' }}>Security</Link>
+            <a href="mailto:support@cariara.com" className="footer-link transition-colors" style={{ color: 'var(--text-secondary)' }}>Support</a>
           </div>
         </div>
       </div>
@@ -128,7 +132,8 @@ function SocialIcon({ href, label, children }: { href: string; label: string; ch
       target={isExternal ? '_blank' : undefined}
       rel={isExternal ? 'noopener noreferrer' : undefined}
       aria-label={label}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/75 transition-colors hover:bg-white/10 hover:text-white"
+      className="footer-social inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors"
+      style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}
     >
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         {children}
