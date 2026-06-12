@@ -51,6 +51,7 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const translateStart = useRef({ x: 0, y: 0 });
 
@@ -177,6 +178,12 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
             <span className="text-xs font-mono text-gray-400 min-w-[3ch] text-center">{Math.round(scale * 100)}%</span>
             <button onClick={() => setScale(s => Math.max(s - 0.25, 0.3))} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">-</button>
             <button onClick={resetView} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1">Fit</button>
+            <button onClick={() => setIsFullscreen(true)} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1" title="View full size">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+                <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+              </svg>
+            </button>
           </div>
         )}
       </div>
@@ -245,7 +252,7 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
       {imageUrl && !loading && !generating && (
         <div ref={containerRef}
           className="rounded-lg select-none flex items-center justify-center"
-          style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '500px', maxHeight: '70vh', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '300px', maxHeight: '65vh', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
           onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
           <img src={imageUrl} alt={`Architecture: ${question.slice(0, 50)}`} draggable={false}
             style={{
@@ -256,6 +263,44 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
               objectFit: 'contain',
               height: 'auto',
             }} />
+        </div>
+      )}
+
+      {/* Fullscreen overlay — click backdrop or ✕ to close */}
+      {isFullscreen && imageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col"
+          style={{ background: 'rgba(0,0,0,0.93)' }}
+          onClick={() => setIsFullscreen(false)}
+        >
+          <div
+            className="flex items-center justify-between px-4 py-2 shrink-0"
+            style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <span className="text-white text-xs font-mono font-bold uppercase tracking-wider">Architecture Diagram</span>
+            <div className="flex items-center gap-1 text-[var(--text-muted)]">
+              <span className="text-[10px] font-mono mr-2 opacity-60">Click outside to close</span>
+              <button
+                onClick={() => setIsFullscreen(false)}
+                className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 text-white transition-colors"
+                title="Close"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+          <div
+            className="flex-1 overflow-auto flex items-start justify-center p-6"
+            onClick={e => e.stopPropagation()}
+          >
+            <img
+              src={imageUrl}
+              alt={`Architecture: ${question.slice(0, 80)}`}
+              draggable={false}
+              style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}
+            />
+          </div>
         </div>
       )}
 
