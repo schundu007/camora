@@ -206,18 +206,19 @@ def _build_infrastructure_prompt(question: str, detail_text: str) -> str:
     plane vs data plane, network paths. Avoids the multi-tier app
     stack — this is one infra component, drawn at protocol level.
     """
+    infra_imports = (
+        "from diagrams.generic.compute import Rack\n"
+        "from diagrams.generic.storage import Storage\n"
+        "from diagrams.generic.network import Subnet, Switch, Router, Firewall\n"
+        "from diagrams.generic.database import SQL\n"
+        "from diagrams.programming.flowchart import Action"
+    )
     return f"""You are an expert distributed-systems engineer. Generate Python code using the `diagrams` library to draw the TOPOLOGY of a single infrastructure component (CDN, message queue, distributed cache, rate limiter, load balancer, etc.).
 
 REQUIREMENTS:
 1. This is an INFRASTRUCTURE COMPONENT — show shards/replicas, the data plane, and a separate control plane. Do NOT draw a multi-tier app stack (no "App Servers" → "Cache" → "DB" sequence; that's product-system design).
 2. Use `from diagrams import Diagram, Cluster, Edge` and these provider-agnostic shape modules:
-{
-"from diagrams.generic.compute import Rack\n"
-"from diagrams.generic.storage import Storage\n"
-"from diagrams.generic.network import Subnet, Switch, Router, Firewall\n"
-"from diagrams.generic.database import SQL\n"
-"from diagrams.programming.flowchart import Action"
-}
+{infra_imports}
 3. Use TWO Clusters: one for the DATA PLANE (the shards/replicas serving requests) and one for the CONTROL PLANE (config/coordination, e.g. ZK, etcd, gossip).
 4. Use `Edge(label="replicate", style="dashed")` for replication links between data-plane nodes.
 5. Use `Edge(label="…")` with descriptive labels on the request hot path (e.g. "consistent hash → shard").
