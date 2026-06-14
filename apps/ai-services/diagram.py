@@ -171,16 +171,17 @@ def _build_application_prompt(question: str, detail_text: str) -> str:
     structure, not infrastructure. Boxes are classes / modules /
     interfaces; edges are method calls or data flow between them.
     """
+    app_imports = (
+        "from diagrams.programming.flowchart import Action, Decision, Document, InputOutput, StartEnd, Database\n"
+        "from diagrams.generic.storage import Storage\n"
+        "from diagrams.generic.compute import Rack"
+    )
     return f"""You are an expert software designer. Generate Python code using the `diagrams` library to create a CLASS / COMPONENT diagram for an application or OOP design.
 
 REQUIREMENTS:
 1. This is an APPLICATION DESIGN — show classes, methods, and module relationships. Do NOT draw a cloud architecture (no CDN, no Load Balancer, no S3).
 2. Use `from diagrams import Diagram, Cluster, Edge` and these provider-agnostic shape modules:
-{
-"from diagrams.programming.flowchart import Action, Decision, Document, InputOutput, StartEnd, Database\n"
-"from diagrams.generic.storage import Storage\n"
-"from diagrams.generic.compute import Rack"
-}
+{app_imports}
 3. Each `Action(...)` represents a class or component (label = class name + ":<method>" if useful).
 4. Use `Cluster` to group classes that belong to the same module / package.
 5. Use `Edge(label="…")` to show method calls, data flow, or composition relationships ("uses", "creates", "stores in").
