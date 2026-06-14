@@ -46,9 +46,10 @@ const router = Router();
 
 // SECURITY: Allowed redirect domains for Stripe checkout/portal callbacks
 const ALLOWED_REDIRECT_DOMAINS = [
+  'app.cariara.com',
+  'camora.cariara.com',
   'capra.cariara.com',
   'www.capra.cariara.com',
-  'camora.cariara.com',
   'cariara.com',
   'www.cariara.com',
   'localhost',
