@@ -8,29 +8,41 @@ import { query } from '../lib/shared-db.js';
 const FREE_DAILY_LIMIT = 10;
 
 /**
- * Check whether a free-tier user has exceeded the daily request limit (10/day).
+ * Atomically check the daily free-tier limit and reserve a slot.
  *
- * Counts today's successful entries in the usage_logs table.
+ * Uses a CTE that checks the count and inserts a placeholder row in one
+ * query, eliminating the TOCTOU race where concurrent requests both pass
+ * the SELECT-then-INSERT check before either records usage.
  *
- * @param {string} userId
- * @returns {Promise<{allowed: boolean, used: number, limit: number, remaining?: number, message?: string}>}
+ * Returns reservationId (the placeholder row's id) on success so the
+ * caller can UPDATE it with real token/latency data when the request completes.
  */
-export async function checkDailyFreeLimit(userId) {
+export async function checkAndReserveInferenceSlot(userId) {
   const result = await query(
-    `SELECT COUNT(*) AS cnt
-       FROM lumora_usage_logs
-      WHERE user_id = $1
-        AND created_at >= (CURRENT_DATE AT TIME ZONE 'UTC')
-        AND success = true`,
-    [userId],
+    `WITH daily AS (
+       SELECT COUNT(*) AS cnt
+         FROM lumora_usage_logs
+        WHERE user_id = $1
+          AND created_at >= (CURRENT_DATE AT TIME ZONE 'UTC')
+          AND success = true
+     ),
+     ins AS (
+       INSERT INTO lumora_usage_logs (user_id, endpoint, question_type, tokens_used, latency_ms, success)
+       SELECT $1, 'stream', 'pending', 0, 0, true
+         FROM daily WHERE cnt < $2
+       RETURNING id
+     )
+     SELECT daily.cnt, (SELECT id FROM ins) AS reservation_id FROM daily`,
+    [userId, FREE_DAILY_LIMIT],
   );
 
-  const todayCount = parseInt(result.rows[0]?.cnt ?? '0', 10);
+  const { cnt, reservation_id } = result.rows[0];
+  const used = parseInt(cnt, 10);
 
-  if (todayCount >= FREE_DAILY_LIMIT) {
+  if (!reservation_id) {
     return {
       allowed: false,
-      used: todayCount,
+      used,
       limit: FREE_DAILY_LIMIT,
       message: `Free tier limit reached (${FREE_DAILY_LIMIT}/day). Upgrade to Pro for unlimited.`,
     };
@@ -38,8 +50,9 @@ export async function checkDailyFreeLimit(userId) {
 
   return {
     allowed: true,
-    used: todayCount,
+    used,
     limit: FREE_DAILY_LIMIT,
-    remaining: FREE_DAILY_LIMIT - todayCount,
+    remaining: Math.max(0, FREE_DAILY_LIMIT - used - 1),
+    reservationId: reservation_id,
   };
 }

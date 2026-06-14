@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage, recordUsageCount } from '../middleware/usageLimits.js';
-import { checkDailyFreeLimit } from '../services/quota.js';
+import { checkAndReserveInferenceSlot } from '../services/quota.js';
 import { streamResponse, MODEL } from '../services/claude.js';
 import { streamResponseAny } from '../services/provider-stream.js';
 import { recordUsage as recordAiHours } from '../services/aiHoursMeter.js';
@@ -35,12 +35,21 @@ function sendSSE(res, event, data) {
 /**
  * Record usage in lumora_usage_logs.
  */
-async function recordUsage({ userId, endpoint, questionType, tokensUsed, latencyMs, success = true, errorMessage = null }) {
-  await query(
-    `INSERT INTO lumora_usage_logs (user_id, endpoint, question_type, tokens_used, latency_ms, success, error_message)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [userId, endpoint, questionType, tokensUsed, latencyMs, success, errorMessage],
-  );
+async function recordUsage({ userId, endpoint, questionType, tokensUsed, latencyMs, success = true, errorMessage = null, reservationId = null }) {
+  if (reservationId) {
+    await query(
+      `UPDATE lumora_usage_logs
+          SET endpoint = $2, question_type = $3, tokens_used = $4, latency_ms = $5, success = $6, error_message = $7
+        WHERE id = $8`,
+      [userId, endpoint, questionType, tokensUsed, latencyMs, success, errorMessage, reservationId],
+    );
+  } else {
+    await query(
+      `INSERT INTO lumora_usage_logs (user_id, endpoint, question_type, tokens_used, latency_ms, success, error_message)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [userId, endpoint, questionType, tokensUsed, latencyMs, success, errorMessage],
+    );
+  }
 }
 
 /**
@@ -76,14 +85,16 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
   }
 
   let keepaliveTimer = null;
+  let reservationId = null;
   try {
-    // Check daily free limit for free-tier users
+    // Check daily free limit for free-tier users (atomic: check + reserve in one CTE)
     const userPlan = user.plan_type || 'free';
     if (userPlan === 'free') {
-      const dailyCheck = await checkDailyFreeLimit(user.id);
+      const dailyCheck = await checkAndReserveInferenceSlot(user.id);
       if (!dailyCheck.allowed) {
         return res.status(429).json({ error: dailyCheck.message });
       }
+      reservationId = dailyCheck.reservationId;
     }
 
     // Verify conversation belongs to user
@@ -237,13 +248,14 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
         [conversationId],
       );
 
-      // Record usage
+      // Record usage (updates reservation row for free users, inserts for paid)
       await recordUsage({
         userId: user.id,
         endpoint: 'stream',
         questionType: getQuestionType(finalAnswer),
         tokensUsed: (finalAnswer.input_tokens || 0) + (finalAnswer.output_tokens || 0),
         latencyMs: finalAnswer.latency_ms || 0,
+        reservationId,
       });
       recordAiHours({
         userId: user.id,
@@ -308,14 +320,16 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
     systemContext = systemContext.slice(0, MAX_SYSTEM_CONTEXT_CHARS);
   }
 
+  let reservationId = null;
   try {
-    // Check daily free limit for free-tier users
+    // Check daily free limit for free-tier users (atomic: check + reserve in one CTE)
     const userPlan = user.plan_type || 'free';
     if (userPlan === 'free') {
-      const dailyCheck = await checkDailyFreeLimit(user.id);
+      const dailyCheck = await checkAndReserveInferenceSlot(user.id);
       if (!dailyCheck.allowed) {
         return res.status(429).json({ error: dailyCheck.message });
       }
+      reservationId = dailyCheck.reservationId;
     }
 
     // Clean title (strip internal prefixes)
@@ -381,6 +395,8 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       systemContext,
       detailLevel,
       plan: userPlan,
+      mode,
+      model: preferredModel || null,
       route: 'stream',
     });
     const cached = bypassCache ? null : await cacheGet(cacheKey);
@@ -443,7 +459,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
           questionType: cached.is_coding ? 'coding' : (cached.is_design ? 'design' : 'general'),
           tokensUsed: 0,
           latencyMs: 0,
-          fromCache: true,
+          reservationId,
         });
         recordAiHours({
           userId: user.id,
@@ -564,13 +580,14 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
         ],
       );
 
-      // Record usage (logs)
+      // Record usage (updates reservation row for free users, inserts for paid)
       await recordUsage({
         userId: user.id,
         endpoint: 'stream',
         questionType: getQuestionType(finalAnswer),
         tokensUsed: (finalAnswer.input_tokens || 0) + (finalAnswer.output_tokens || 0),
         latencyMs: finalAnswer.latency_ms || 0,
+        reservationId,
       });
       recordAiHours({
         userId: user.id,
