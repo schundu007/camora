@@ -1234,12 +1234,6 @@ const UnifiedMicButton = ({
         })}
       </div>
 
-      <style>{`
-        @keyframes mic-pulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 1; }
-        }
-      `}</style>
     </>
   );
 

@@ -46,7 +46,7 @@ async def _get_encoder_async() -> VoiceEncoder:
         return _encoder
     async with _encoder_lock:
         if _encoder is None:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             _encoder = await loop.run_in_executor(None, VoiceEncoder)
     return _encoder
 
@@ -146,7 +146,7 @@ def _embed_audio(audio_bytes: bytes, suffix: str = ".webm") -> np.ndarray:
 
 async def _embed_audio_async(audio_bytes: bytes, suffix: str = ".webm") -> np.ndarray:
     """Offload blocking CPU + ffmpeg work to a thread so FastAPI's event loop stays free."""
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, partial(_embed_audio, audio_bytes, suffix))
 
 
@@ -275,7 +275,7 @@ async def speaker_diarize(
         print(f"[Diarize] user={user_id}, file={fname}, size={len(audio_bytes)}")
 
         # Convert to WAV — run in thread so ffmpeg+preprocess_wav don't block the event loop
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         wav_path = await loop.run_in_executor(None, partial(_convert_to_wav, audio_bytes, suffix))
         try:
             wav = await loop.run_in_executor(None, preprocess_wav, wav_path)

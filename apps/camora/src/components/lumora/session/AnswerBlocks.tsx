@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import hljs from 'highlight.js';
 import type { ParsedBlock } from '@/types';
-import { MermaidDiagram } from './MermaidDiagram';
 import { GraphvizDiagram } from './GraphvizDiagram';
 import SharedDiagram from '@/components/shared/diagrams/SharedDiagram';
 
@@ -114,12 +113,15 @@ const Block = ({ block, delay }: { block: ParsedBlock; delay: number }) => {
       return (
         <div className="animate-fade-up" style={wrap}>
           <GridCard title="Flow" titleColor="text-[var(--accent)]" collapsible={false}>
-            {/* Sniff: if the LLM emitted Graphviz DOT, render server-side.
-                Falls through to client-side Mermaid for backwards compat
-                while AI prompts roll out — no flag, no regression. */}
+            {/* Render DOT content via Graphviz. Non-DOT diagram syntax is
+                shown as a code block — Mermaid is not used per project rules. */}
             {looksLikeDot(block.content)
               ? <GraphvizDiagram content={block.content} />
-              : <MermaidDiagram content={block.content} />}
+              : (
+                <pre className="p-3 overflow-x-auto rounded-md text-[12px] leading-relaxed font-mono" style={{ background: '#0F172A', color: '#94a3b8' }}>
+                  {block.content}
+                </pre>
+              )}
           </GridCard>
         </div>
       );

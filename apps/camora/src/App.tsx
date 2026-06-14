@@ -419,7 +419,7 @@ export const App = () => {
           <Route path="/capra/library" element={<ShellRoute><HRLibraryPage /></ShellRoute>} />
           <Route path="/capra/quiz"         element={<ShellRoute><MCQPage /></ShellRoute>} />
           <Route path="/capra/quiz/session" element={<ShellRoute><QuizSessionPage /></ShellRoute>} />
-          <Route path="/capra/learn/python" element={<PythonLearnPage />} />
+          <Route path="/capra/learn/python" element={<ShellRoute><PythonLearnPage /></ShellRoute>} />
           <Route path="/capra/learn/codesignal" element={<ShellRoute><CodeSignalLearnPage /></ShellRoute>} />
           <Route path="/capra/learn/programiz" element={<ShellRoute><ProgramizLearnPage /></ShellRoute>} />
           <Route path="/capra/learn/topic/:slug" element={<ShellRoute><LearnTopicPage /></ShellRoute>} />

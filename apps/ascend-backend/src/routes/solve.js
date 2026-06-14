@@ -116,10 +116,14 @@ router.post('/', validate('solve'), async (req, res, next) => {
     const service = provider === 'openai' ? openai : claude;
     const result = await service.solveProblem(problem, language, fast, userModel);
 
-    // Cache the result
+    // Cache the result — evict oldest 20% when at capacity
     if (solutionCache.size >= CACHE_MAX) {
-      const firstKey = solutionCache.keys().next().value;
-      solutionCache.delete(firstKey);
+      const evictCount = Math.ceil(CACHE_MAX * 0.2);
+      const iter = solutionCache.keys();
+      for (let i = 0; i < evictCount; i++) {
+        const k = iter.next().value;
+        if (k !== undefined) solutionCache.delete(k);
+      }
     }
     solutionCache.set(cacheKey, { data: result, timestamp: Date.now() });
 

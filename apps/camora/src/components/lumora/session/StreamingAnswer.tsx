@@ -135,7 +135,7 @@ const StreamingAnswerList = ({ content, isComplete }: { content: string; isCompl
 
         return (
           <div
-            key={i}
+            key={`${i}-${line.slice(0, 16)}`}
             style={{
               fontFamily: 'var(--font-answer)',
               fontSize: 'var(--fs-answer-body)',
@@ -293,7 +293,7 @@ const StreamingComplexityList = ({ content, isComplete }: { content: string; isC
           const isSpace = /space/i.test(label);
 
           return (
-            <div key={i} className="flex items-center gap-3 p-2 rounded bg-[var(--bg-elevated)]">
+            <div key={`${i}-${line.slice(0, 16)}`} className="flex items-center gap-3 p-2 rounded bg-[var(--bg-elevated)]">
               <span className={`font-mono text-base font-bold px-2 py-0.5 rounded ${isTime ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : isSpace ? 'bg-[var(--accent)]/10 text-[var(--text-secondary)]' : 'bg-[var(--bg-elevated)] text-text-dim'}`}>
                 {label}
               </span>
@@ -301,7 +301,7 @@ const StreamingComplexityList = ({ content, isComplete }: { content: string; isC
             </div>
           );
         }
-        return <div key={i} className="text-base text-[var(--text-muted)]">{line}</div>;
+        return <div key={`${i}-${line.slice(0, 16)}`} className="text-base text-[var(--text-muted)]">{line}</div>;
       })}
       {!isComplete && <Cursor />}
     </div>
@@ -319,7 +319,7 @@ const StreamingTestCasesList = ({ content, isComplete }: { content: string; isCo
         const arrowMatch = line.match(/Input:\s*(.+?)\s*[-→>]+\s*Output:\s*(.+)/i);
         if (arrowMatch) {
           return (
-            <div key={i} className="flex flex-col gap-1 p-2 rounded bg-[var(--bg-elevated)] border border-[var(--border)]">
+            <div key={`${i}-${line.slice(0, 16)}`} className="flex flex-col gap-1 p-2 rounded bg-[var(--bg-elevated)] border border-[var(--border)]">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-base font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-2 py-0.5 rounded">IN</span>
                 <code className="font-mono text-base text-[var(--text-muted)]">{arrowMatch[1]}</code>
@@ -331,7 +331,7 @@ const StreamingTestCasesList = ({ content, isComplete }: { content: string; isCo
             </div>
           );
         }
-        return <div key={i} className="text-base text-[var(--text-muted)] font-mono">{line}</div>;
+        return <div key={`${i}-${line.slice(0, 16)}`} className="text-base text-[var(--text-muted)] font-mono">{line}</div>;
       })}
       {!isComplete && <Cursor />}
     </div>

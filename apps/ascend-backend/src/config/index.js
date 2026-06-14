@@ -10,9 +10,10 @@ const requiredEnvVars = [
 const optionalEnvVars = {
   PORT: '3009',
   LOG_LEVEL: 'info',
-  CORS_ORIGIN: '*',
+  CORS_ORIGIN: 'https://app.cariara.com,https://camora.cariara.com,http://localhost:3000,http://localhost:5173',
   NODE_ENV: 'development',
   DATABASE_URL: '',
+  JWT_SECRET: '',
   JWT_SECRET_KEY: '',
   JWT_ALGORITHM: 'HS256',
   GOOGLE_CLIENT_ID: '',
@@ -45,6 +46,13 @@ function validateConfig() {
 
   // Convert PORT to number
   config.PORT = parseInt(config.PORT, 10);
+
+  // JWT_SECRET is canonical; JWT_SECRET_KEY is a legacy alias. Resolve to
+  // whichever is set, preferring the canonical name.
+  config.JWT_SECRET = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY || '';
+  if (!process.env.JWT_SECRET && process.env.JWT_SECRET_KEY) {
+    console.warn('[config] JWT_SECRET_KEY is deprecated — rename env var to JWT_SECRET.');
+  }
 
   // Warn about missing optional vars in development
   if (missing.length > 0 && config.NODE_ENV === 'development') {

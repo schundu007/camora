@@ -457,7 +457,7 @@ const PORT = config.port;
 // safe; a runtime failure surfaces in logs but doesn't block boot.
 // Fail fast on missing critical env vars — better a clear boot error
 // than a cryptic API failure on the first live request.
-const REQUIRED_ENV = ['ANTHROPIC_API_KEY', 'DATABASE_URL', 'JWT_SECRET'];
+const REQUIRED_ENV = ['ANTHROPIC_API_KEY', 'DATABASE_URL', 'JWT_SECRET', 'AI_SERVICES_API_KEY'];
 for (const v of REQUIRED_ENV) {
   if (!process.env[v]) {
     logger.error({ var: v }, `Missing required environment variable: ${v}`);
