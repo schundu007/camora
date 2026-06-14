@@ -28,14 +28,15 @@ export function PaywallGate({ children, requiredPlan: _requiredPlan = 'any_paid'
 
   const isCheckoutReturn = searchParams.get('checkout') === 'success';
 
-  // Access can come from THREE sources:
+  // Access requires one of:
   //   1. Owner email (always allowed — defense in depth)
-  //   2. Personal subscription is paid (Pro / Pro Max / Business)
-  //   3. User belongs to a team whose plan_type grants access (a free user
-  //      who accepted an invite to a Pro Max team should not be paywalled)
-  // hasTeamAccess (from AuthContext) collapses 2+3 into one boolean.
+  //   2. Active paid subscription — explicit plan type, NOT just "not free".
+  //      Trial users, admin-granted-free users, and expired subscribers blocked.
+  //   3. Active team membership with paid team plan
+  const PAID_PLANS = new Set(['pro_monthly', 'pro_yearly', 'team', 'lifetime']);
   const plan = subscription?.plan || 'free';
-  const personalAccess = plan !== 'free' && plan !== null && plan !== undefined && plan !== '';
+  const status = subscription?.status;
+  const personalAccess = PAID_PLANS.has(plan) && status === 'active';
   const hasAccess = isOwner(user) || personalAccess || hasTeamAccess;
 
   // After checkout success, poll for subscription activation (webhook
