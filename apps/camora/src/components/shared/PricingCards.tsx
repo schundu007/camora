@@ -201,6 +201,12 @@ export function useCheckout() {
             message: 'Hour top-ups are available to active subscribers. Pick Monthly, Yearly, or a Team plan to unlock per-hour purchases.',
             tone: 'warning',
           });
+        } else if (resp.status === 400 && body?.code === 'ALREADY_SUBSCRIBED') {
+          dialogAlert({
+            title: 'Already subscribed',
+            message: 'You already have an active subscription. Visit the billing portal to upgrade, downgrade, or cancel.',
+            tone: 'warning',
+          });
         } else if (resp.status === 503 || resp.status === 400) {
           dialogAlert({ title: 'Payment service unavailable', message: 'Please try again in a moment.', tone: 'danger' });
         } else if (body?.error) {
