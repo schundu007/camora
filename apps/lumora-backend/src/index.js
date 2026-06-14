@@ -458,10 +458,12 @@ const PORT = config.port;
 // Fail fast on missing critical env vars — better a clear boot error
 // than a cryptic API failure on the first live request.
 const REQUIRED_ENV = ['ANTHROPIC_API_KEY', 'DATABASE_URL', 'JWT_SECRET', 'AI_SERVICES_API_KEY'];
-for (const v of REQUIRED_ENV) {
-  if (!process.env[v]) {
-    logger.error({ var: v }, `Missing required environment variable: ${v}`);
-    process.exit(1);
+if (process.env.NODE_ENV !== 'test') {
+  for (const v of REQUIRED_ENV) {
+    if (!process.env[v]) {
+      logger.error({ var: v }, `Missing required environment variable: ${v}`);
+      process.exit(1);
+    }
   }
 }
 
