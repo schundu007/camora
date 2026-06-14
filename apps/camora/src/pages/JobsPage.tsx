@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Icon } from '../components/shared/Icons';
@@ -276,12 +276,15 @@ export default function JobsPage() {
   const [role, setRole] = useState('all');
   const [roleInitialized, setRoleInitialized] = useState(false);
   const [locationFilter, setLocationFilter] = useState('');
+  const [locCountry, setLocCountry] = useState('');
+  const [locState, setLocState] = useState('');
+  const [locCity, setLocCity] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
   const [workTypeFilter, setWorkTypeFilter] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
   const [experienceFilter, setExperienceFilter] = useState('');
-  const [postedWithinFilter, setPostedWithinFilter] = useState('');
+  const [postedWithinFilter, setPostedWithinFilter] = useState('7');
   const [salaryMinFilter, setSalaryMinFilter] = useState('');
   const [salaryMaxFilter, setSalaryMaxFilter] = useState('');
 
@@ -291,6 +294,58 @@ export default function JobsPage() {
   const [, setAvailableDepartments] = useState<FilterOption[]>([]);
   const [availableCompanies, setAvailableCompanies] = useState<FilterOption[]>([]);
   const [, setSalaryRange] = useState<{ min: number | null; max: number | null }>({ min: null, max: null });
+
+  // Parse availableLocations into Country → State → City hierarchy
+  const parsedLocations = useMemo(() => {
+    const countryCounts = new Map<string, number>();
+    const stateMap = new Map<string, Map<string, number>>();
+    const cityMap = new Map<string, Map<string, number>>();
+    let hasRemote = false;
+
+    for (const loc of availableLocations) {
+      const name = loc.name.trim();
+      if (/remote/i.test(name)) { hasRemote = true; continue; }
+
+      const parts = name.split(',').map((p) => p.trim()).filter(Boolean);
+      let country = '', state = '', city = '';
+
+      if (parts.length >= 3) {
+        city = parts[0]; state = parts[1]; country = parts.slice(2).join(', ');
+      } else if (parts.length === 2) {
+        if (/^[A-Z]{2}$/.test(parts[1])) {
+          city = parts[0]; state = parts[1]; country = 'United States';
+        } else {
+          state = parts[0]; country = parts[1];
+        }
+      } else if (parts.length === 1) {
+        country = parts[0];
+      }
+
+      if (!country) continue;
+      countryCounts.set(country, (countryCounts.get(country) || 0) + loc.count);
+      if (state) {
+        if (!stateMap.has(country)) stateMap.set(country, new Map());
+        const sm = stateMap.get(country)!;
+        sm.set(state, (sm.get(state) || 0) + loc.count);
+        if (city) {
+          if (!cityMap.has(state)) cityMap.set(state, new Map());
+          const cm = cityMap.get(state)!;
+          cm.set(city, (cm.get(city) || 0) + loc.count);
+        }
+      }
+    }
+
+    const sortDesc = (m: Map<string, number>) =>
+      [...m.entries()].sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }));
+
+    const statesByCountry = new Map<string, { name: string; count: number }[]>();
+    for (const [c, sm] of stateMap) statesByCountry.set(c, sortDesc(sm));
+
+    const citiesByState = new Map<string, { name: string; count: number }[]>();
+    for (const [s, cm] of cityMap) citiesByState.set(s, sortDesc(cm));
+
+    return { countries: sortDesc(countryCounts), statesByCountry, citiesByState, hasRemote };
+  }, [availableLocations]);
 
   // Set role from user profile once auth loads
   useEffect(() => {
@@ -491,9 +546,10 @@ export default function JobsPage() {
   const activeFilterCount = [locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter].filter(Boolean).length;
 
   const clearAllFilters = () => {
-    setLocationFilter(''); setSourceFilter(''); setWorkTypeFilter('');
+    setLocationFilter(''); setLocCountry(''); setLocState(''); setLocCity('');
+    setSourceFilter(''); setWorkTypeFilter('');
     setDepartmentFilter(''); setCompanyFilter(''); setExperienceFilter('');
-    setPostedWithinFilter(''); setSalaryMinFilter(''); setSalaryMaxFilter('');
+    setPostedWithinFilter('7'); setSalaryMinFilter(''); setSalaryMaxFilter('');
   };
 
   /* ── Fetch on filter change — debounce search text, instant for category clicks ── */
@@ -796,21 +852,81 @@ export default function JobsPage() {
                 />
               </div>
 
-              {/* Locations (free-text + datalist autocomplete) */}
-              <details className="jobs-filter-group">
-                <summary>Locations</summary>
-                <div className="jobs-filter-body">
-                  <input
-                    type="text"
-                    placeholder="Any location"
-                    value={locationFilter}
-                    onChange={(e) => setLocationFilter(e.target.value)}
-                    list="sidebar-location-options"
-                    className="jobs-sidebar-input"
-                  />
-                  <datalist id="sidebar-location-options">
-                    {availableLocations.map((l) => <option key={l.name} value={l.name}>{`${l.name} (${l.count})`}</option>)}
-                  </datalist>
+              {/* Locations — Country → State → City cascade */}
+              <details className="jobs-filter-group" open>
+                <summary>Location</summary>
+                <div className="jobs-filter-body" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {/* Remote shortcut */}
+                  {parsedLocations.hasRemote && (
+                    <label className="jobs-filter-radio">
+                      <input
+                        type="radio"
+                        name="loc_type"
+                        checked={locationFilter === 'remote'}
+                        onChange={() => { setLocCountry(''); setLocState(''); setLocCity(''); setLocationFilter('remote'); }}
+                      />
+                      <span>Remote</span>
+                    </label>
+                  )}
+                  {/* Country */}
+                  {parsedLocations.countries.length > 0 && (
+                    <select
+                      value={locationFilter === 'remote' ? '' : locCountry}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setLocCountry(v); setLocState(''); setLocCity('');
+                        setLocationFilter(v);
+                      }}
+                      className="jobs-sidebar-input"
+                    >
+                      <option value="">Country</option>
+                      {parsedLocations.countries.map((c) => (
+                        <option key={c.name} value={c.name}>{c.name} ({c.count})</option>
+                      ))}
+                    </select>
+                  )}
+                  {/* State / Province */}
+                  {locCountry && parsedLocations.statesByCountry.has(locCountry) && (
+                    <select
+                      value={locState}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setLocState(v); setLocCity('');
+                        setLocationFilter(v || locCountry);
+                      }}
+                      className="jobs-sidebar-input"
+                    >
+                      <option value="">State / Province</option>
+                      {(parsedLocations.statesByCountry.get(locCountry) || []).map((s) => (
+                        <option key={s.name} value={s.name}>{s.name} ({s.count})</option>
+                      ))}
+                    </select>
+                  )}
+                  {/* City */}
+                  {locState && parsedLocations.citiesByState.has(locState) && (
+                    <select
+                      value={locCity}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setLocCity(v);
+                        setLocationFilter(v ? `${v}, ${locState}` : locState);
+                      }}
+                      className="jobs-sidebar-input"
+                    >
+                      <option value="">City</option>
+                      {(parsedLocations.citiesByState.get(locState) || []).map((c) => (
+                        <option key={c.name} value={c.name}>{c.name} ({c.count})</option>
+                      ))}
+                    </select>
+                  )}
+                  {locationFilter && (
+                    <button
+                      onClick={() => { setLocationFilter(''); setLocCountry(''); setLocState(''); setLocCity(''); }}
+                      style={{ fontSize: '12px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}
+                    >
+                      Clear location
+                    </button>
+                  )}
                 </div>
               </details>
 
