@@ -12,6 +12,7 @@
  */
 
 import rateLimit from 'express-rate-limit';
+import { logger } from './requestLogger.js';
 
 function createLimiter({ windowMs, max, message }) {
   return rateLimit({
@@ -21,7 +22,7 @@ function createLimiter({ windowMs, max, message }) {
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res, _next, options) => {
-      console.warn(`[rate-limit] ip=${req.ip} path=${req.path} method=${req.method}`);
+      logger.warn({ ip: req.ip, path: req.path, method: req.method }, '[rate-limit] request blocked');
       res.status(429).json(options.message);
     },
   });

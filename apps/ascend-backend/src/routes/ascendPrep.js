@@ -366,6 +366,9 @@ router.post('/section', async (req, res) => {
 
 // Export to PDF
 router.post('/export/pdf', async (req, res) => {
+  const allowed = await checkFeatureAccess(req, res, 'design');
+  if (!allowed) return;
+
   const { sections, companyName } = req.body;
 
   if (!sections || Object.keys(sections).length === 0) {
@@ -386,6 +389,9 @@ router.post('/export/pdf', async (req, res) => {
 
 // Export to DOCX
 router.post('/export/docx', async (req, res) => {
+  const allowed = await checkFeatureAccess(req, res, 'design');
+  if (!allowed) return;
+
   const { sections, companyName } = req.body;
 
   if (!sections || Object.keys(sections).length === 0) {

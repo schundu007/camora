@@ -21,7 +21,6 @@ interface SessionState {
   isStreaming: boolean;
   isDesignQuestion: boolean;
   isCodingQuestion: boolean;
-  streamChunks: string[];  // kept for backward compat reads
   streamText: string;      // efficient string accumulator
   parsedBlocks: ParsedBlock[];
   error: string | null;
@@ -191,7 +190,6 @@ const initialState = {
   isStreaming: false,
   isDesignQuestion: false,
   isCodingQuestion: false,
-  streamChunks: [],
   streamText: '',
   parsedBlocks: [],
   error: null,
@@ -261,7 +259,7 @@ export const useSessionStore = create<SessionState>()(
       streamText: state.streamText + chunk,
     })),
 
-  clearStreamChunks: () => set({ streamChunks: [], streamText: '' }),
+  clearStreamChunks: () => set({ streamText: '' }),
 
   setParsedBlocks: (blocks) => set({ parsedBlocks: blocks }),
 
@@ -380,24 +378,40 @@ export const useSessionStore = create<SessionState>()(
         responseFormat: state.responseFormat,
         preferredModel: state.preferredModel,
         threshold: state.threshold,
-        history: state.history,
+        history: state.history.map(({ question, timestamp, messageId, conversationId }) => ({
+          question,
+          timestamp,
+          messageId,
+          conversationId,
+          blocks: [] as import('@/types').ParsedBlock[],
+        })),
         voiceMode: state.voiceMode,
         voiceEnrolled: state.voiceEnrolled,
         voiceEnrolledAt: state.voiceEnrolledAt,
         voiceFilterEnabled: state.voiceFilterEnabled,
         modelOverrides: state.modelOverrides,
+        isStealthActive: state.isStealthActive,
+        answerMode: state.answerMode,
       }),
       migrate: (old: any) => ({
         useSearch: old?.useSearch ?? false,
         responseFormat: old?.responseFormat ?? 'auto',
         preferredModel: old?.preferredModel ?? '',
         threshold: old?.threshold ?? 0.015,
-        history: old?.history ?? [],
+        history: (old?.history ?? []).map((e: any) => ({
+          question: e.question ?? '',
+          timestamp: e.timestamp ?? new Date(),
+          messageId: e.messageId,
+          conversationId: e.conversationId,
+          blocks: [],
+        })),
         voiceMode: old?.voiceMode ?? 'filter-candidate',
         voiceEnrolled: old?.voiceEnrolled ?? false,
         voiceEnrolledAt: old?.voiceEnrolledAt ?? null,
         voiceFilterEnabled: old?.voiceFilterEnabled ?? false,
         modelOverrides: old?.modelOverrides ?? { coding: '', behavioral: '', design: '', prep: '' },
+        isStealthActive: old?.isStealthActive ?? true,
+        answerMode: old?.answerMode ?? 'short',
       }),
     }
   )

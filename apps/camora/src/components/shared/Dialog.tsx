@@ -36,13 +36,15 @@ let _alertImpl: ((opts: AlertOpts) => Promise<void>) | null = null;
 export const dialogConfirm = (opts: ConfirmOpts | string): Promise<boolean>  => {
   const o: ConfirmOpts = typeof opts === 'string' ? { message: opts } : opts;
   if (_confirmImpl) return _confirmImpl(o);
-  // Fallback to native if the provider hasn't mounted yet
-  return Promise.resolve(window.confirm(o.message));
+  // DialogProvider has not mounted yet — log and return a safe default (no-op)
+  console.error('[Dialog] dialogConfirm called before DialogProvider mounted. Returning false.', o.message);
+  return Promise.resolve(false);
 }
 export const dialogAlert = (opts: AlertOpts | string): Promise<void>  => {
   const o: AlertOpts = typeof opts === 'string' ? { message: opts } : opts;
   if (_alertImpl) return _alertImpl(o);
-  window.alert(o.message);
+  // DialogProvider has not mounted yet — log and return silently
+  console.error('[Dialog] dialogAlert called before DialogProvider mounted.', o.message);
   return Promise.resolve();
 }
 

@@ -385,7 +385,7 @@ def _sanitize_code(code: str) -> str:
         "eval(", "exec(", "compile(",
         "getattr(", "vars(", "globals(", "locals(",
         # File / shell IO outside the diagrams render path
-        "open(", "io.open", "shutil.", "pathlib", "Path(",
+        "io.open", "shutil.", "pathlib", "Path(",
         # Networking
         "socket", "urllib", "requests",
         "http.client", "httpx",

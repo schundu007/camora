@@ -31,6 +31,10 @@ export function detectArchetype(question) {
   let bestCount = 0;
   for (const [archetype, keywords] of Object.entries(ARCHETYPE_KEYWORDS)) {
     const count = keywords.filter((kw) => q.includes(kw)).length;
+    // Tie-breaking: first archetype with the highest keyword count wins.
+    // If two archetypes match equally (e.g. Leadership + Influence both hit 2 keywords),
+    // whichever appears first in ARCHETYPE_KEYWORDS is selected. This is intentional
+    // (deterministic, fast) but means keyword ordering encodes implicit priority.
     if (count > bestCount) {
       bestCount = count;
       best = archetype;
@@ -78,7 +82,8 @@ export async function loadBestStory(userId, archetype) {
     }
     // No archetype match — use strongest story (first = highest ranked from parse)
     return stories.find((s) => s.impact) || stories[0];
-  } catch {
+  } catch (err) {
+    console.warn('[storyAnchor] parse error for user:', userId, err.message);
     return null;
   }
 }

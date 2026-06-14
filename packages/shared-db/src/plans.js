@@ -11,9 +11,9 @@
  * one of them and that file would treat paid users as free.
  */
 
-export const PAID_PLAN_TYPES = new Set(['pro_monthly', 'pro_yearly', 'team']);
+export const PAID_PLAN_TYPES = new Set(['pro_monthly', 'pro_yearly', 'team', 'lifetime']);
 
-export const ALL_PLAN_TYPES = new Set([...PAID_PLAN_TYPES, 'free', 'admin']);
+export const ALL_PLAN_TYPES = new Set([...PAID_PLAN_TYPES, 'free']);
 
 /**
  * @param {string|null|undefined} planType

@@ -11,7 +11,7 @@ export function getPool() {
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
-      ssl: process.env.DATABASE_URL?.includes('railway') ? { rejectUnauthorized: false } : undefined,
+      ssl: (process.env.DB_SSL === 'true' || process.env.DATABASE_URL?.includes('railway')) ? { rejectUnauthorized: false } : undefined,
     });
   }
   return pool;

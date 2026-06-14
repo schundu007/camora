@@ -31,7 +31,15 @@ interface AuthUser {
 function normalizeUser(u: any): AuthUser | null {
   if (!u || typeof u !== 'object') return null;
   const image = (u.image && String(u.image).trim()) || (u.picture && String(u.picture).trim()) || undefined;
-  return { ...u, image };
+  return {
+    id: u.id != null ? String(u.id) : '',
+    email: u.email ?? '',
+    name: u.name ?? undefined,
+    image,
+    picture: u.picture ?? undefined,
+    onboarding_completed: u.onboarding_completed ?? undefined,
+    job_roles: Array.isArray(u.job_roles) ? u.job_roles : undefined,
+  };
 }
 
 interface SubscriptionInfo {

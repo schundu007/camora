@@ -95,7 +95,6 @@ export async function generateDiagram({
       '--category', category,
       '--format', format,
       '--output-dir', OUTPUT_DIR,
-      '--api-key', apiKey,
       '--detail-level', detailLevel,
       '--direction', direction,
       '--design-kind', designKind,

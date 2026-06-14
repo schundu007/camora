@@ -20,11 +20,7 @@ import tempfile
 import uuid
 import traceback
 
-try:
-    import anthropic
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "anthropic", "-q"])
-    import anthropic
+import anthropic
 
 
 # ── Class-name aliases ─────────────────────────────────────────────────────
@@ -1234,7 +1230,7 @@ def main():
     parser.add_argument("--category", default="System Design")
     parser.add_argument("--format", default="png")
     parser.add_argument("--output-dir", required=True)
-    parser.add_argument("--api-key", required=True)
+    parser.add_argument("--api-key", required=False, default=None)
     parser.add_argument("--detail-level", default="overview")
     parser.add_argument("--direction", default="LR")
     parser.add_argument(
@@ -1267,10 +1263,13 @@ def main():
     else:
         provider = args.provider
     try:
+        api_key = args.api_key or os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY is not set in the environment")
         result = generate_diagram(
             question=args.question, provider=provider,
             detail_level=args.detail_level, direction=args.direction,
-            output_dir=args.output_dir, api_key=args.api_key,
+            output_dir=args.output_dir, api_key=api_key,
             design_kind=args.design_kind,
         )
         print(json.dumps(result))

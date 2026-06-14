@@ -64,10 +64,35 @@ async function fetchAPI<T>(
   return response.json();
 }
 
+// Shape returned by /api/v1/auth/me (lumora-backend: flat; ascend-backend: nested)
+interface AuthMeResponse {
+  // Flat fields (lumora-backend)
+  id?: string | number;
+  email?: string;
+  name?: string;
+  image?: string;
+  picture?: string;
+  plan_type?: string;
+  onboarding_completed?: boolean;
+  // Short-lived bearer token (both backends)
+  access_token?: string;
+  // Nested shape (ascend-backend)
+  authenticated?: boolean;
+  user?: {
+    id?: string | number;
+    email?: string;
+    name?: string;
+    image?: string;
+    picture?: string;
+    plan_type?: string;
+    onboarding_completed?: boolean;
+  };
+}
+
 // Auth API
 export const authAPI = {
   getMe: (token: string) =>
-    fetchAPI<any>('/api/v1/auth/me', {}, token),
+    fetchAPI<AuthMeResponse>('/api/v1/auth/me', {}, token),
 
   refreshToken: (token: string) =>
     fetchAPI<{ access_token: string }>('/api/v1/auth/refresh', {
@@ -229,10 +254,24 @@ export const documentsAPI = {
 // console and the user's network tab on every keystroke. Once we
 // see a 404 (route missing) or 410 (route deprecated) we stop
 // trying for the rest of the session and fall back to localStorage.
-let backendUnavailable = false;
+// Circuit breaker for the audio-prefs backend route. When set, records the
+// epoch ms at which it was tripped; resets automatically after 60 seconds
+// so a re-deploy that adds the route is picked up without a page reload.
+const BACKEND_UNAVAILABLE_TTL_MS = 60_000;
+let backendUnavailableSince: number | null = null;
+
+const isBackendUnavailable = () => {
+  if (backendUnavailableSince === null) return false;
+  if (Date.now() - backendUnavailableSince > BACKEND_UNAVAILABLE_TTL_MS) {
+    backendUnavailableSince = null;
+    return false;
+  }
+  return true;
+};
+
 export const audioPrefsAPI = {
   getState: async (token: string) => {
-    if (backendUnavailable) return { data: null, updated_at: null };
+    if (isBackendUnavailable()) return { data: null, updated_at: null };
     try {
       return await fetchAPI<{ data: unknown; updated_at: string | null }>(
         '/api/v1/audio-prefs/state',
@@ -241,14 +280,14 @@ export const audioPrefsAPI = {
       );
     } catch (err: any) {
       if (err?.status === 404 || err?.status === 410) {
-        backendUnavailable = true;
-        console.warn('[audioPrefs] backend route unavailable — using localStorage only.');
+        backendUnavailableSince = Date.now();
+        console.warn('[audioPrefs] backend route unavailable — using localStorage only. Will retry in 60s.');
       }
       return { data: null, updated_at: null };
     }
   },
   putState: async (token: string, data: unknown) => {
-    if (backendUnavailable) return { updated_at: '' };
+    if (isBackendUnavailable()) return { updated_at: '' };
     try {
       return await fetchAPI<{ updated_at: string }>(
         '/api/v1/audio-prefs/state',
@@ -257,8 +296,8 @@ export const audioPrefsAPI = {
       );
     } catch (err: any) {
       if (err?.status === 404 || err?.status === 410) {
-        backendUnavailable = true;
-        console.warn('[audioPrefs] backend route unavailable — switching to localStorage only.');
+        backendUnavailableSince = Date.now();
+        console.warn('[audioPrefs] backend route unavailable — switching to localStorage only. Will retry in 60s.');
       }
       return { updated_at: '' };
     }

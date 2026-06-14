@@ -1535,6 +1535,10 @@ img { max-width: 100%; height: auto; }
   50%  { transform: translate(8%,  4%); }
   100% { transform: translate(-8%, -4%); }
 }
+@keyframes mic-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .card-lift, .press, .ai-float, .ai-slow-spin, .shimmer, .shimmer::after,

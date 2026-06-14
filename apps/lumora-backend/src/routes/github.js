@@ -38,7 +38,7 @@ const MAX_EXTRA_DOCS = 4;
 function parseGitHubUrl(url) {
   try {
     const u = new URL(url.trim());
-    if (!u.hostname.includes('github.com')) return null;
+    if (u.hostname !== 'github.com' && u.hostname !== 'raw.githubusercontent.com') return null;
     const parts = u.pathname.replace(/^\//, '').split('/');
     if (parts.length < 2) return null;
     return { owner: parts[0], repo: parts[1].replace(/\.git$/, '') };
