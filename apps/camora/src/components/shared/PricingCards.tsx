@@ -247,7 +247,7 @@ export function useCheckout() {
     }
   };
 
-  return { checkout, loading };
+  return { checkout, loading, goToPortal };
 }
 
 /* ── Single solo plan card — refined, hairline-border approach ──
@@ -632,8 +632,38 @@ export default function PricingCards({
   variant?: 'compact' | 'default';
 } = {}) {
   const prices = usePlanPrices();
-  const { checkout, loading } = useCheckout();
+  const { checkout, loading, goToPortal } = useCheckout();
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  if (isOwner(user)) {
+    return (
+      <div
+        className="rounded-2xl p-8 flex flex-col items-center text-center gap-4"
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--cam-primary)', boxShadow: '0 0 0 4px color-mix(in oklab, var(--cam-primary) 10%, transparent)' }}
+      >
+        <span
+          className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest"
+          style={{ background: 'color-mix(in oklab, var(--cam-primary) 15%, var(--bg-surface))', color: 'var(--cam-primary)', border: '1px solid var(--cam-primary)' }}
+        >
+          Admin Access
+        </span>
+        <h3 className="text-xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
+          All features unlocked
+        </h3>
+        <p className="text-sm max-w-sm" style={{ color: 'var(--text-secondary)' }}>
+          Your account has owner-level access. Use the billing portal to view invoices, manage payment methods, or adjust subscriptions for your account.
+        </p>
+        <button
+          onClick={goToPortal}
+          className="mt-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-[transform,opacity] duration-150 hover:scale-[1.02] active:scale-[0.98]"
+          style={{ background: 'var(--cam-primary)', color: '#fff' }}
+        >
+          Open Billing Portal
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10">
