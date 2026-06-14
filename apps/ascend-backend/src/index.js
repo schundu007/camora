@@ -1396,7 +1396,7 @@ app.use('/api/voice', authenticate, voiceRouter);
 app.use('/api/v1/resume', aiLimiter, resumeRouter);
 
 // MCQ question generation — AI-generated questions from CoderPad metadata, DB-cached
-app.use('/api/v1/mcq', mcqRouter);
+app.use('/api/v1/mcq', authenticate, aiLimiter, mcqRouter);
 
 // Learn topic content — Redis L1 + Postgres L2 cache, auto-generated on first visit
 app.use('/api/v1/learn/topic', apiLimiter, learnTopicRouter);
