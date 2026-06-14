@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { dialogAlert } from './Dialog';
+import { isOwner } from '../../lib/owner';
 
 // Billing routes through ascend-backend (caprab) — single source of truth
 // for subscriptions, checkout, and webhooks. Lumora-backend billing routes
@@ -138,7 +139,7 @@ export function usePlanPrices() {
  * for up to 2 seconds before deciding we're truly unauthed.
  */
 export function useCheckout() {
-  const { token, isLoading: authLoading } = useAuth();
+  const { token, user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState('');
@@ -150,6 +151,23 @@ export function useCheckout() {
   useEffect(() => { tokenRef.current = token; }, [token]);
   useEffect(() => { authLoadingRef.current = authLoading; }, [authLoading]);
 
+  const goToPortal = async () => {
+    const currentToken = tokenRef.current;
+    if (!currentToken) return;
+    try {
+      const res = await fetch(`${BILLING_API}/api/v1/billing/portal`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${currentToken}` },
+        body: JSON.stringify({ returnUrl: window.location.href }),
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        window.location.href = url;
+      }
+    } catch { /* ignore */ }
+  };
+
   const checkout = async (
     priceId: string,
     planName: string,
@@ -157,6 +175,12 @@ export function useCheckout() {
   ) => {
     const isTeam = !!opts?.team;
     if (!isTeam && !priceId) { navigate('/pricing'); return; }
+
+    // Admins go straight to the portal — no checkout needed
+    if (isOwner(user)) {
+      await goToPortal();
+      return;
+    }
 
     setLoading(planName);
 
@@ -202,11 +226,9 @@ export function useCheckout() {
             tone: 'warning',
           });
         } else if (resp.status === 400 && body?.code === 'ALREADY_SUBSCRIBED') {
-          dialogAlert({
-            title: 'Already subscribed',
-            message: 'You already have an active subscription. Visit the billing portal to upgrade, downgrade, or cancel.',
-            tone: 'warning',
-          });
+          setLoading('');
+          await goToPortal();
+          return;
         } else if (resp.status === 503 || resp.status === 400) {
           dialogAlert({ title: 'Payment service unavailable', message: 'Please try again in a moment.', tone: 'danger' });
         } else if (body?.error) {
