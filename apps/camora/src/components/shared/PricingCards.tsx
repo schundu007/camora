@@ -151,7 +151,7 @@ export function useCheckout() {
   useEffect(() => { tokenRef.current = token; }, [token]);
   useEffect(() => { authLoadingRef.current = authLoading; }, [authLoading]);
 
-  const goToPortal = async () => {
+  const goToPortal = async (returnUrl?: string) => {
     const currentToken = tokenRef.current;
     if (!currentToken) return;
     try {
@@ -159,7 +159,7 @@ export function useCheckout() {
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${currentToken}` },
-        body: JSON.stringify({ returnUrl: window.location.href }),
+        body: JSON.stringify({ returnUrl: returnUrl || window.location.href }),
       });
       if (res.ok) {
         const { url } = await res.json();
@@ -167,6 +167,8 @@ export function useCheckout() {
       }
     } catch { /* ignore */ }
   };
+
+  const prepareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/capra/prepare`;
 
   const checkout = async (
     priceId: string,
@@ -178,7 +180,7 @@ export function useCheckout() {
 
     // Admins go straight to the portal — no checkout needed
     if (isOwner(user)) {
-      await goToPortal();
+      await goToPortal(prepareUrl);
       return;
     }
 
@@ -227,7 +229,7 @@ export function useCheckout() {
           });
         } else if (resp.status === 400 && body?.code === 'ALREADY_SUBSCRIBED') {
           setLoading('');
-          await goToPortal();
+          await goToPortal(prepareUrl);
           return;
         } else if (resp.status === 503 || resp.status === 400) {
           dialogAlert({ title: 'Payment service unavailable', message: 'Please try again in a moment.', tone: 'danger' });
@@ -247,7 +249,7 @@ export function useCheckout() {
     }
   };
 
-  return { checkout, loading, goToPortal };
+  return { checkout, loading, goToPortal, prepareUrl };
 }
 
 /* ── Single solo plan card — refined, hairline-border approach ──
@@ -632,7 +634,7 @@ export default function PricingCards({
   variant?: 'compact' | 'default';
 } = {}) {
   const prices = usePlanPrices();
-  const { checkout, loading, goToPortal } = useCheckout();
+  const { checkout, loading, goToPortal, prepareUrl } = useCheckout();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -655,7 +657,7 @@ export default function PricingCards({
           Your account has owner-level access. Use the billing portal to view invoices, manage payment methods, or adjust subscriptions for your account.
         </p>
         <button
-          onClick={goToPortal}
+          onClick={() => goToPortal(prepareUrl)}
           className="mt-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-[transform,opacity] duration-150 hover:scale-[1.02] active:scale-[0.98]"
           style={{ background: 'var(--cam-primary)', color: '#fff' }}
         >
