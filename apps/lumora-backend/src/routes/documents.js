@@ -1,15 +1,15 @@
 /**
  * Document upload and management API routes.
  *
- * Migrated from Python FastAPI → Node.js Express.
- * Stores prep documents as text files on the filesystem under prep_docs/{user_id}/.
- * All routes are scoped to the authenticated user (req.user.id).
+ * Stores prep documents in the lumora_user_documents PostgreSQL table.
+ * Previously stored on the filesystem (prep_docs/{user_id}/) which was
+ * ephemeral on Railway — documents were lost on every redeploy.
  */
 import { Router } from 'express';
 import multer from 'multer';
-import fs from 'fs/promises';
 import path from 'path';
 import { authenticate } from '../middleware/authenticate.js';
+import { query } from '../lib/shared-db.js';
 
 const router = Router();
 
@@ -22,10 +22,9 @@ router.use(authenticate);
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_EXTENSIONS = new Set(['.txt', '.docx', '.pdf', '.md']);
-const DOCS_BASE_DIR = path.resolve(process.cwd(), 'prep_docs');
 
 // ---------------------------------------------------------------------------
-// Multer configuration
+// Multer configuration (memory storage — content goes to DB, not disk)
 // ---------------------------------------------------------------------------
 
 const upload = multer({
@@ -44,37 +43,18 @@ const upload = multer({
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Return the per-user document directory, creating it if necessary. */
-async function getUserDir(userId) {
-  const userDir = path.join(DOCS_BASE_DIR, String(userId));
-  await fs.mkdir(userDir, { recursive: true });
-  return userDir;
-}
-
 /** Sanitize a filename to prevent path-traversal and odd characters. */
 function sanitizeFilename(raw) {
   return raw.replace(/[^\w\-.]/g, '_');
 }
 
-/**
- * Parse uploaded file bytes into plain text.
- *
- * For .txt and .md files the buffer is decoded directly.
- * For .docx and .pdf, the raw bytes are stored as-is (spec says "store as-is"
- * for non-txt formats), but we still attempt basic text extraction so that
- * keyword search works on the stored .txt copy.
- */
+/** Parse uploaded file bytes into plain text. */
 function parseDocument(filename, buffer) {
   const ext = path.extname(filename).toLowerCase();
-
   if (ext === '.txt' || ext === '.md') {
     return buffer.toString('utf-8');
   }
-
-  // For .docx and .pdf: store the raw bytes as-is is the spec, but we also
-  // write a .txt companion for searchability.  Since we don't want heavy
-  // native deps in the Node runtime, we do a best-effort UTF-8 decode and
-  // note that richer extraction can be layered on later.
+  // Best-effort UTF-8 decode for .docx/.pdf (no native deps)
   return buffer.toString('utf-8');
 }
 
@@ -95,7 +75,7 @@ function searchDocuments(documents, queryStr, maxResults = 5) {
     let score = 0;
 
     for (const word of queryWords) {
-      if (word.length <= 2) continue; // skip short words
+      if (word.length <= 2) continue;
       const regex = new RegExp(word, 'gi');
       const matches = contentLower.match(regex);
       if (matches) {
@@ -113,10 +93,7 @@ function searchDocuments(documents, queryStr, maxResults = 5) {
   return scored.slice(0, maxResults);
 }
 
-/**
- * Find the most relevant snippet from content — line-scoring approach
- * ported from the Python DocumentStore._find_best_snippet.
- */
+/** Find the most relevant snippet from content. */
 function findBestSnippet(content, queryWords, maxLen = 500) {
   const lines = content.split('\n');
   const lineScores = [];
@@ -160,6 +137,7 @@ function findBestSnippet(content, queryWords, maxLen = 500) {
  *
  * Accepts multipart/form-data with field name "file".
  * Max 5 MB, allowed types: .txt, .docx, .pdf, .md
+ * Re-uploading the same filename replaces the existing document.
  */
 router.post('/upload', upload.single('file'), async (req, res, next) => {
   try {
@@ -180,24 +158,20 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
       return res.status(400).json({ error: 'Could not extract text from document' });
     }
 
-    // Sanitize and convert extension to .txt for storage
+    // Sanitize and normalize extension to .txt
     let safeName = sanitizeFilename(originalName);
     const dotIdx = safeName.lastIndexOf('.');
-    if (dotIdx > 0) {
-      safeName = safeName.slice(0, dotIdx) + '.txt';
-    } else {
-      safeName = safeName + '.txt';
-    }
+    safeName = dotIdx > 0
+      ? safeName.slice(0, dotIdx) + '.txt'
+      : safeName + '.txt';
 
-    const userDir = await getUserDir(req.user.id);
-    const filePath = path.join(userDir, safeName);
-
-    // Guard against path traversal
-    if (!path.resolve(filePath).startsWith(path.resolve(userDir))) {
-      return res.status(400).json({ error: 'Invalid filename' });
-    }
-
-    await fs.writeFile(filePath, textContent, 'utf-8');
+    await query(
+      `INSERT INTO lumora_user_documents (user_id, filename, content, size)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (user_id, filename) DO UPDATE
+         SET content = EXCLUDED.content, size = EXCLUDED.size, created_at = NOW()`,
+      [req.user.id, safeName, textContent, textContent.length],
+    );
 
     console.log(`user=${req.user.id} uploaded document len=${textContent.length} name=[REDACTED]`);
 
@@ -217,32 +191,19 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
  */
 router.get('/list', async (req, res, next) => {
   try {
-    const userDir = await getUserDir(req.user.id);
+    const result = await query(
+      `SELECT filename, size, LEFT(content, 200) AS preview
+         FROM lumora_user_documents
+        WHERE user_id = $1
+        ORDER BY created_at DESC`,
+      [req.user.id],
+    );
 
-    let entries;
-    try {
-      entries = await fs.readdir(userDir);
-    } catch {
-      entries = [];
-    }
-
-    const documents = [];
-
-    for (const name of entries) {
-      if (!name.endsWith('.txt')) continue;
-
-      const filePath = path.join(userDir, name);
-      try {
-        const content = await fs.readFile(filePath, 'utf-8');
-        documents.push({
-          filename: name,
-          size: content.length,
-          preview: content.length > 200 ? content.slice(0, 200) + '...' : content,
-        });
-      } catch {
-        // skip unreadable files
-      }
-    }
+    const documents = result.rows.map((row) => ({
+      filename: row.filename,
+      size: row.size,
+      preview: row.size > 200 ? row.preview + '...' : row.preview,
+    }));
 
     res.json({ documents, count: documents.length });
   } catch (err) {
@@ -255,26 +216,19 @@ router.get('/list', async (req, res, next) => {
  */
 router.delete('/:filename', async (req, res, next) => {
   try {
-    const rawFilename = req.params.filename;
-    const safeName = sanitizeFilename(rawFilename);
-    const userDir = await getUserDir(req.user.id);
-    const filePath = path.join(userDir, safeName);
+    const safeName = sanitizeFilename(req.params.filename);
 
-    // Guard against path traversal
-    if (!path.resolve(filePath).startsWith(path.resolve(userDir))) {
-      return res.status(400).json({ error: 'Invalid filename' });
+    const result = await query(
+      `DELETE FROM lumora_user_documents WHERE user_id = $1 AND filename = $2 RETURNING id`,
+      [req.user.id, safeName],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: `Document '${req.params.filename}' not found` });
     }
 
-    try {
-      await fs.access(filePath);
-    } catch {
-      return res.status(404).json({ error: `Document '${rawFilename}' not found` });
-    }
-
-    await fs.unlink(filePath);
     console.log(`user=${req.user.id} deleted document`);
-
-    res.json({ success: true, message: `Document '${rawFilename}' deleted` });
+    res.json({ success: true, message: `Document '${req.params.filename}' deleted` });
   } catch (err) {
     next(err);
   }
@@ -293,28 +247,12 @@ router.post('/search', async (req, res, next) => {
       return res.status(400).json({ error: 'query is required' });
     }
 
-    const userDir = await getUserDir(req.user.id);
+    const result = await query(
+      `SELECT filename, content FROM lumora_user_documents WHERE user_id = $1`,
+      [req.user.id],
+    );
 
-    // Load all documents
-    let entries;
-    try {
-      entries = await fs.readdir(userDir);
-    } catch {
-      entries = [];
-    }
-
-    const documents = [];
-    for (const name of entries) {
-      if (!name.endsWith('.txt')) continue;
-      try {
-        const content = await fs.readFile(path.join(userDir, name), 'utf-8');
-        documents.push({ filename: name, content });
-      } catch {
-        // skip unreadable files
-      }
-    }
-
-    const results = searchDocuments(documents, searchQuery, 5);
+    const results = searchDocuments(result.rows, searchQuery, 5);
 
     res.json({
       results: results.map((r) => ({
@@ -343,7 +281,6 @@ router.use((err, _req, res, _next) => {
   if (err.message?.startsWith('Unsupported file type')) {
     return res.status(400).json({ error: err.message });
   }
-  // Re-throw unexpected errors to the global handler
   throw err;
 });
 

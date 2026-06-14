@@ -31,8 +31,7 @@ export function checkUsage(type) {
       next();
     } catch (err) {
       console.error('Usage check error:', err.message);
-      // Fail open — allow request if usage system is down (better UX than blocking)
-      next();
+      return res.status(503).json({ error: 'Usage service temporarily unavailable. Please retry.' });
     }
   };
 }
