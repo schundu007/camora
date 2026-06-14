@@ -9,11 +9,10 @@
  *
  * Allowed:
  *   - Owner emails (founders / staff bypass — same as ascend's pattern)
- *   - Active paid subscribers (plan_type ∈ {pro_monthly, pro_yearly, team})
- *   - Users with an unexpired free trial (1 hr / 7 days from signup)
+ *   - Active paid subscribers (plan_type ∈ PAID_PLAN_TYPES, status = active)
  *
- * Blocked: anyone else gets 402 Payment Required with a code the frontend
- * uses to render the paywall modal.
+ * Blocked: free users, trial users, expired subscribers, and any account
+ * manually reset to free via the admin analytics page. Fail closed on DB errors.
  *
  * Runs after `authenticate`, so req.user is always present.
  */
@@ -67,12 +66,6 @@ export async function requirePaidSubscription(req, res, next) {
     if (PAID_PLAN_TYPES.has(planType) && status === 'active') {
       return next();
     }
-
-    // Active trial (handled either via subscriptions.trial_ends_at or
-    // ascend_free_usage.trial_expires_at depending on which path provisioned it).
-    const now = new Date();
-    if (sub?.trial_ends_at && new Date(sub.trial_ends_at) > now) return next();
-    if (sub?.trial_expires_at && new Date(sub.trial_expires_at) > now) return next();
 
     return res.status(402).json({
       error: 'Active subscription required for AI features.',
