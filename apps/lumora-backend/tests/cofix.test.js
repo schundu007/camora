@@ -43,6 +43,13 @@ vi.mock('../src/middleware/requirePaidSubscription.js', () => ({
   requirePaidSubscription: (_req, _res, next) => next(),
 }));
 
+// Mock usageLimits — bypass quota check (shared-db mock returns empty rows,
+// which causes getOrCreateRow to return undefined and crash the usage service)
+vi.mock('../src/middleware/usageLimits.js', () => ({
+  checkUsage: () => (_req, _res, next) => next(),
+  recordUsageCount: () => Promise.resolve(),
+}));
+
 // Mock shared-db to avoid real DB connections
 vi.mock('../src/lib/shared-db.js', () => ({
   query: vi.fn().mockResolvedValue({ rows: [] }),
