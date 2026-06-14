@@ -425,7 +425,9 @@ export default function ProblemPage({ slug, onBack }) {
                               </code>
                             ) : (
                               <span key={j} dangerouslySetInnerHTML={{
-                                __html: part.replace(/\*\*(.*?)\*\*/g, '<strong class="text-[var(--text-primary)]">$1</strong>')
+                                __html: part
+                                  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                                  .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[var(--text-primary)]">$1</strong>')
                               }} />
                             )
                           )}

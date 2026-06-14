@@ -210,6 +210,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             void _at;
             setUser(normalizeUser(data.user ?? flat));
 
+            // Unblock the app immediately — token and user are set, the rest
+            // is secondary state that loads in the background.
+            if (!cancelled) setIsLoading(false);
+
             // Fetch onboarding status from Capra backend using the fresh token
             try {
               const onboardingRes = await fetch(`${CAPRA_API_URL}/api/onboarding/status`, {
@@ -218,7 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               });
               if (onboardingRes.ok) {
                 const o = await onboardingRes.json();
-                setOnboardingCompleted(o.onboarding_completed);
+                if (!cancelled) setOnboardingCompleted(o.onboarding_completed);
               }
             } catch { /* capra backend may not be available */ }
 
