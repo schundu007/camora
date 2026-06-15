@@ -71,6 +71,17 @@ const APPA: Step[] = [
 ];
 
 
+const APPA_ICON_PATHS: JSX.Element[] = [
+  /* Apply — document with lines */
+  <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></>,
+  /* Prepare — open book */
+  <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>,
+  /* Practice — code brackets */
+  <><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></>,
+  /* Attend — microphone */
+  <><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></>,
+];
+
 const LOGO_TOKEN = 'pk_VzK1OM-OQSCUuysDpOCzKw';
 const COMPANY_LOGOS = [
   'google', 'amazon', 'meta', 'apple', 'netflix', 'microsoft',
@@ -345,77 +356,80 @@ export default function LandingPage() {
       <Section tone="surface" spacing="lg">
         <Container>
           <Reveal>
-            <SectionHeading
-              align="center"
-              eyebrow="The process"
-              title={<>Your path to <span className="text-[var(--cam-primary)]">the offer.</span></>}
-              lead="Four surfaces, one continuous workflow: from the first job description to the live session."
-            />
-          </Reveal>
+            {/* dark navy card — dot-grid + corner brackets + 2×2 grid */}
+            <div
+              className="relative mx-auto max-w-[620px] rounded-2xl overflow-hidden"
+              style={{ background: 'radial-gradient(ellipse at 50% -10%, #1e2f6e 0%, #0d1535 55%, #070e1e 100%)' }}
+            >
+              {/* dot-grid overlay */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundImage: 'radial-gradient(circle, rgba(100,130,255,0.22) 1px, transparent 1px)',
+                  backgroundSize: '22px 22px',
+                }}
+              />
 
-          <div className="mt-14 grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-5 items-stretch">
+              {/* corner brackets */}
+              <div className="absolute top-4 left-4 w-6 h-6 border-t-[2px] border-l-[2px] border-[#22d3ee]/75 rounded-tl" />
+              <div className="absolute top-4 right-4 w-6 h-6 border-t-[2px] border-r-[2px] border-[#22d3ee]/75 rounded-tr" />
+              <div className="absolute bottom-4 left-4 w-6 h-6 border-b-[2px] border-l-[2px] border-[#22d3ee]/75 rounded-bl" />
+              <div className="absolute bottom-4 right-4 w-6 h-6 border-b-[2px] border-r-[2px] border-[#22d3ee]/75 rounded-br" />
 
-            {/* Left: Apply / Prepare / Practice — compact horizontal cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-5">
-              {APPA.filter(s => s.key !== 'attend').map((step, i) => (
-                <Reveal key={step.key} delay={i * 0.06}>
-                  <Link
-                    to={step.href}
-                    className="group flex h-full items-start gap-4 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.25)] transition-all duration-200 active:scale-[0.98] hover:-translate-y-1 hover:border-[var(--cam-primary)]/40 hover:shadow-[0_0_0_1px_rgba(37,99,235,0.18),0_8px_24px_-8px_rgba(37,99,235,0.22)]"
-                  >
-                    <span className="shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--cam-primary)] transition-colors duration-200 group-hover:bg-[var(--cam-primary)]/12 group-hover:text-[var(--cam-primary-lt)]">
-                      {step.icon}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--cam-primary)]">
-                        {step.label}
-                      </p>
-                      <h3 className="mt-1 font-display text-[16px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
-                        {step.headline}
-                      </h3>
-                      <p className="mt-1.5 text-[12.5px] leading-relaxed text-[var(--text-secondary)]">
-                        {step.desc}
-                      </p>
-                    </div>
-                  </Link>
-                </Reveal>
-              ))}
-            </div>
-
-            {/* Right: Attend — large feature card */}
-            {APPA.filter(s => s.key === 'attend').map(step => (
-              <Reveal key={step.key} delay={0.12}>
-                <Link
-                  to={step.href}
-                  className="group flex flex-col h-full overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[0_1px_2px_rgba(0,0,0,0.25)] transition-all duration-200 active:scale-[0.98] hover:-translate-y-1 hover:border-[var(--cam-primary)]/40 hover:shadow-[0_0_0_1px_rgba(37,99,235,0.18),0_12px_32px_-10px_rgba(37,99,235,0.24)]"
+              <div className="relative z-10 px-10 pt-10 pb-10">
+                {/* section title */}
+                <h2
+                  className="text-center text-[26px] font-bold text-white mb-10 tracking-tight"
+                  style={{ fontFamily: 'var(--font-display)' }}
                 >
-                  <div className="relative h-48 sm:h-56 overflow-hidden bg-[var(--bg-app)] shrink-0 transition-all duration-200 group-hover:brightness-110">
-                    <step.Anim />
-                  </div>
-                  <div className="flex flex-col flex-1 p-7">
-                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--cam-primary)] transition-colors duration-200 group-hover:bg-[var(--cam-primary)]/12 group-hover:text-[var(--cam-primary-lt)]">
-                      {step.icon}
-                    </span>
-                    <p className="mt-4 font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-[var(--cam-primary)]">
-                      {step.label}
-                    </p>
-                    <h3 className="mt-1.5 font-display text-[24px] md:text-[28px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
-                      {step.headline}
-                    </h3>
-                    <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-secondary)]">
-                      {step.desc}
-                    </p>
-                    <div className="mt-6">
-                      <CTAButton to={step.href} variant="primary" size="md" trailingArrow>
-                        Try live AI
-                      </CTAButton>
-                    </div>
-                  </div>
-                </Link>
-              </Reveal>
-            ))}
+                  Apply · Prepare · Practice · Attend
+                </h2>
 
-          </div>
+                {/* 2×2 grid */}
+                <div className="relative grid grid-cols-2">
+                  {/* center intersection dot */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <div className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_2px_rgba(52,211,153,0.55)]" />
+                  </div>
+
+                  {APPA.map((step, i) => (
+                    <Link
+                      key={step.key}
+                      to={step.href}
+                      className={cn(
+                        'group flex flex-col items-center text-center gap-5 px-8 py-9 transition-colors duration-200 hover:bg-white/[0.04]',
+                        i % 2 === 0 ? 'border-r border-[rgba(100,130,255,0.2)]' : '',
+                        i < 2 ? 'border-b border-[rgba(100,130,255,0.2)]' : '',
+                      )}
+                    >
+                      {/* gradient icon container */}
+                      <div
+                        className="w-[76px] h-[76px] rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105"
+                        style={{ background: 'linear-gradient(145deg, #6366f1 0%, #3b82f6 100%)' }}
+                      >
+                        <svg
+                          width="38" height="38" viewBox="0 0 24 24"
+                          fill="none" stroke="white" strokeWidth={1.6}
+                          strokeLinecap="round" strokeLinejoin="round"
+                        >
+                          {APPA_ICON_PATHS[i]}
+                        </svg>
+                      </div>
+                      {/* label + headline */}
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#22d3ee]/80 mb-1">
+                          {step.label}
+                        </p>
+                        <p className="text-white font-semibold text-[14px] leading-snug max-w-[150px]">
+                          {step.headline}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Reveal>
         </Container>
       </Section>
 
