@@ -287,6 +287,7 @@ export default function JobsPage() {
   const [postedWithinFilter, setPostedWithinFilter] = useState('7');
   const [salaryMinFilter, setSalaryMinFilter] = useState('');
   const [salaryMaxFilter, setSalaryMaxFilter] = useState('');
+  const [excludeVisaRestrictions, setExcludeVisaRestrictions] = useState(false);
 
   // Filter options from API
   const [availableSources, setAvailableSources] = useState<FilterOption[]>([]);
@@ -543,13 +544,14 @@ export default function JobsPage() {
     }
   }, [buildJobParams, token, offset, loadingMore, hasMore]);
 
-  const activeFilterCount = [locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter].filter(Boolean).length;
+  const activeFilterCount = [locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter].filter(Boolean).length + (excludeVisaRestrictions ? 1 : 0);
 
   const clearAllFilters = () => {
     setLocationFilter(''); setLocCountry(''); setLocState(''); setLocCity('');
     setSourceFilter(''); setWorkTypeFilter('');
     setDepartmentFilter(''); setCompanyFilter(''); setExperienceFilter('');
     setPostedWithinFilter('7'); setSalaryMinFilter(''); setSalaryMaxFilter('');
+    setExcludeVisaRestrictions(false);
   };
 
   /* ── Fetch on filter change — debounce search text, instant for category clicks ── */
@@ -572,8 +574,15 @@ export default function JobsPage() {
     window.scrollTo(0, 0);
   }, []);
 
-  /* ── Jobs from API — backend handles category filtering ── */
-  const filteredJobs = jobs;
+  const USC_GC_RE = /\b(us\s*citizen|u\.s\.\s*citizen|usc\s+only|must\s+be\s+(a\s+)?(us|u\.s\.)\s+citizen|green\s*card|permanent\s+resident|gc\s+required|gc\s+holder|requires?\s+citizenship|security\s+clearance|active\s+clearance|secret\s+clearance|top\s+secret|ts\s*\/\s*sci)\b/i;
+
+  /* ── Jobs from API — client-side visa filter applied on top ── */
+  const filteredJobs = excludeVisaRestrictions
+    ? jobs.filter((j) => {
+        const text = [j.title, j.description, j.ai_summary].filter(Boolean).join(' ');
+        return !USC_GC_RE.test(text);
+      })
+    : jobs;
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
@@ -983,6 +992,38 @@ export default function JobsPage() {
                   ))}
                 </div>
               </details>
+
+              {/* Visa / work auth */}
+              <div className="jobs-filter-group" style={{ borderBottom: '1px solid var(--border)', padding: '12px 0' }}>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', gap: 12 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    H1B friendly only
+                    <span style={{ display: 'block', fontSize: 11, fontWeight: 400, color: 'var(--text-muted)', marginTop: 2 }}>
+                      Excludes USC / Green Card / clearance required
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={excludeVisaRestrictions}
+                    onClick={() => setExcludeVisaRestrictions((v) => !v)}
+                    style={{
+                      flexShrink: 0,
+                      width: 36, height: 20, borderRadius: 999, border: 'none', cursor: 'pointer',
+                      background: excludeVisaRestrictions ? 'var(--cam-gold-leaf)' : 'var(--bg-elevated)',
+                      transition: 'background 0.2s',
+                      position: 'relative',
+                    }}
+                  >
+                    <span style={{
+                      position: 'absolute', top: 2, left: excludeVisaRestrictions ? 18 : 2,
+                      width: 16, height: 16, borderRadius: '50%',
+                      background: excludeVisaRestrictions ? 'var(--cam-primary-dk)' : 'var(--text-muted)',
+                      transition: 'left 0.2s',
+                    }} />
+                  </button>
+                </label>
+              </div>
 
               {/* Date posted */}
               <details className="jobs-filter-group">
