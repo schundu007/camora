@@ -117,10 +117,9 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="px-3.5 py-1.5 text-sm rounded-full transition-[background-color,color] duration-150 active:scale-[0.98] no-underline"
+                  className="px-3 py-1.5 text-[11px] font-bold font-mono uppercase tracking-wider rounded-full transition-[background-color,color] duration-150 active:scale-[0.98] no-underline"
                   style={{
-                    color: active ? '#020617' : 'rgba(255,255,255,0.85)',
-                    fontWeight: 700,
+                    color: active ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
                     background: active ? 'var(--cam-gold-leaf)' : 'transparent',
                   }}
                 >
