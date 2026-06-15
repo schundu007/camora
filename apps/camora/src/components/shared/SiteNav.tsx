@@ -96,10 +96,10 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
                 <Link
                   key={link.label}
                   to={link.href}
-                  className="px-3 py-1.5 rounded-full text-[13px] font-semibold transition-colors"
+                  className="px-3 py-1.5 rounded-full text-[11px] font-bold font-mono uppercase tracking-wider transition-colors no-underline"
                   style={{
                     background: active ? 'var(--cam-gold-leaf)' : 'transparent',
-                    color: active ? '#020617' : 'rgba(255,255,255,0.82)',
+                    color: active ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.82)',
                   }}
                 >
                   {link.label}
