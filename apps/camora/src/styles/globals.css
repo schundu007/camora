@@ -17,21 +17,21 @@
     --bg-base:     #080A0F;
     --bg-app:      #0C0F16;
     --bg-surface:  #111520;
-    --bg-elevated: #181D2A;
+    --bg-elevated: #1C2236;
     --bg-primary: var(--bg-surface);
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.62);
 
-    /* Borders — subtle slate, low contrast on dark substrate */
-    --border:        #1F2535;
-    --border-hover:  #2A3347;
+    /* Borders — visible slate, readable on dark substrate */
+    --border:        #252E44;
+    --border-hover:  #2E3D55;
     --border-focus:  #2563EB;
 
     /* Text — warm white headings, cool slate secondary */
     --text-primary:  #F0EEE9;
-    --text-secondary:#8B95A8;
+    --text-secondary:#9BAAB8;
     --text-hero:     #F0EEE9;
-    --text-muted:    #5A6478;
+    --text-muted:    #647084;
     --text-dimmed:   #434B5C;
 
     /* Primary accent — vivid saturated blue (CTAs, active states, links).
@@ -134,16 +134,16 @@
     /* Hero gradients — navy + gold atmosphere.
        Warm dark base with navy and gold radial hints. */
     --cam-hero-bg:
-      radial-gradient(ellipse 55% 65% at 15% 25%, rgba(37,99,235,0.18), transparent 60%),
-      radial-gradient(ellipse 40% 45% at 85% 75%, rgba(212,160,67,0.06), transparent 65%),
-      radial-gradient(ellipse 90% 50% at 50% 0%, rgba(255,255,255,0.05), transparent 70%),
+      radial-gradient(ellipse 55% 65% at 15% 25%, rgba(37,99,235,0.40), transparent 60%),
+      radial-gradient(ellipse 40% 45% at 85% 75%, rgba(212,160,67,0.18), transparent 65%),
+      radial-gradient(ellipse 90% 50% at 50% 0%, rgba(255,255,255,0.10), transparent 70%),
       linear-gradient(135deg, #080A0F 0%, #0C0F16 35%, #111520 65%, #0C0F16 100%);
     --cam-hero-strip:
-      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(37,99,235,0.20), transparent 70%),
-      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(212,160,67,0.10), transparent 70%),
-      radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.05), transparent 75%),
-      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(37,99,235,0.10), transparent 70%),
-      linear-gradient(95deg, #0C0F16 0%, #111520 30%, #181D2A 50%, #111520 70%, #0C0F16 100%);
+      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(37,99,235,0.38), transparent 70%),
+      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(212,160,67,0.18), transparent 70%),
+      radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.10), transparent 75%),
+      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(37,99,235,0.18), transparent 70%),
+      linear-gradient(95deg, #0C0F16 0%, #111520 30%, #1C2236 50%, #111520 70%, #0C0F16 100%);
 
     /* Lumora topbar chrome — dark immersive, blue accents */
     --lumora-chrome-bg:     var(--cam-hero-strip);
