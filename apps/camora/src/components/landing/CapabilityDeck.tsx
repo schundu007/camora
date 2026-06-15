@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 
 const ACCENT = 'var(--cam-primary)';
+const GOLD = 'var(--cam-gold-leaf)';
+const GOLD_DK = 'var(--cam-primary-dk)';
 const DANGER = 'var(--danger)';
 const SUCCESS = 'var(--accent)';
 const MONO = 'var(--font-mono)';
@@ -36,8 +38,8 @@ export default function CapabilityDeck() {
     <div
       className="rounded-xl overflow-hidden relative"
       style={{
-        background: 'linear-gradient(180deg, var(--cam-void) 0%, var(--cam-primary-dk) 100%)',
-        border: '1px solid var(--cam-primary-dk)',
+        background: 'linear-gradient(180deg, #0A0A0C 0%, #0D1117 100%)',
+        border: '1px solid rgba(201,162,39,0.35)',
         boxShadow: '0 30px 80px -20px rgba(15,23,42,0.4), 0 12px 30px -10px rgba(15,23,42,0.25)',
         minHeight: 560,
       }}
@@ -222,9 +224,9 @@ function SceneCompany() {
         {COS.map((c, i) => (
           <span key={c} style={{
             fontSize: 9, fontWeight: 800,
-            color: i === coIdx ? '#FFFFFF' : 'var(--text-muted)',
-            background: i === coIdx ? ACCENT : 'transparent',
-            border: `1px solid ${i === coIdx ? ACCENT : 'var(--cam-primary-dk)'}`,
+            color: i === coIdx ? GOLD_DK : 'var(--text-muted)',
+            background: i === coIdx ? GOLD : 'transparent',
+            border: `1px solid ${i === coIdx ? GOLD : 'rgba(201,162,39,0.25)'}`,
             padding: '4px 10px', borderRadius: 999, fontFamily: MONO, letterSpacing: '0.16em',
             transition: 'all 0.35s',
           }}>
@@ -235,21 +237,21 @@ function SceneCompany() {
 
       {/* Flavor line */}
       <div key={co} style={{ fontSize: 11, color: 'var(--text-dimmed)', fontFamily: DISPLAY, marginBottom: 10, opacity: 0, animation: 'cd-fade-up 0.35s ease-out 0.05s forwards' }}>
-        <span style={{ color: ACCENT, fontWeight: 700, letterSpacing: '0.1em', fontFamily: MONO, fontSize: 10 }}>{co} LOOP · </span>
+        <span style={{ color: GOLD, fontWeight: 700, letterSpacing: '0.1em', fontFamily: MONO, fontSize: 10 }}>{co} LOOP · </span>
         {FLAVOR[co]}
       </div>
 
       {/* 5 stages stacked */}
-      <div style={{ background: 'rgba(15,23,42,0.35)', border: '1px solid var(--cam-primary-dk)', borderRadius: 10, overflow: 'hidden' }}>
+      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,162,39,0.2)', borderRadius: 10, overflow: 'hidden' }}>
         {STAGES.map((s, i) => (
           <div key={s.n} style={{
             display: 'flex', alignItems: 'center', gap: 12, padding: '9px 14px',
-            borderBottom: i < STAGES.length - 1 ? '1px solid var(--cam-primary-dk)' : 'none',
+            borderBottom: i < STAGES.length - 1 ? '1px solid rgba(201,162,39,0.12)' : 'none',
             opacity: 0, animation: `cd-fade-up 0.35s ease-out ${0.15 + i * 0.12}s forwards`,
           }}>
             <span style={{
-              fontSize: 9, fontWeight: 800, color: ACCENT, fontFamily: MONO,
-              background: 'rgba(38,97,156,0.08)', border: '1px solid rgba(38,97,156,0.33)',
+              fontSize: 9, fontWeight: 800, color: GOLD, fontFamily: MONO,
+              background: 'rgba(201,162,39,0.08)', border: '1px solid rgba(201,162,39,0.3)',
               padding: '3px 6px', borderRadius: 4, letterSpacing: '0.14em',
             }}>
               {s.n}
