@@ -359,22 +359,22 @@ export default function LandingPage() {
             {/* dark navy card — dot-grid + corner brackets + 2×2 grid */}
             <div
               className="relative mx-auto max-w-[620px] rounded-2xl overflow-hidden"
-              style={{ background: 'radial-gradient(ellipse at 50% -10%, #1e2f6e 0%, #0d1535 55%, #070e1e 100%)' }}
+              style={{ background: 'var(--cam-hero-bg)' }}
             >
               {/* dot-grid overlay */}
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  backgroundImage: 'radial-gradient(circle, rgba(100,130,255,0.22) 1px, transparent 1px)',
+                  backgroundImage: 'radial-gradient(circle, color-mix(in oklab, var(--cam-primary) 22%, transparent) 1px, transparent 1px)',
                   backgroundSize: '22px 22px',
                 }}
               />
 
-              {/* corner brackets */}
-              <div className="absolute top-4 left-4 w-6 h-6 border-t-[2px] border-l-[2px] border-[#22d3ee]/75 rounded-tl" />
-              <div className="absolute top-4 right-4 w-6 h-6 border-t-[2px] border-r-[2px] border-[#22d3ee]/75 rounded-tr" />
-              <div className="absolute bottom-4 left-4 w-6 h-6 border-b-[2px] border-l-[2px] border-[#22d3ee]/75 rounded-bl" />
-              <div className="absolute bottom-4 right-4 w-6 h-6 border-b-[2px] border-r-[2px] border-[#22d3ee]/75 rounded-br" />
+              {/* corner brackets — gold leaf accent */}
+              <div className="absolute top-4 left-4 w-6 h-6 border-t-[2px] border-l-[2px] border-[var(--cam-gold-leaf)] rounded-tl opacity-80" />
+              <div className="absolute top-4 right-4 w-6 h-6 border-t-[2px] border-r-[2px] border-[var(--cam-gold-leaf)] rounded-tr opacity-80" />
+              <div className="absolute bottom-4 left-4 w-6 h-6 border-b-[2px] border-l-[2px] border-[var(--cam-gold-leaf)] rounded-bl opacity-80" />
+              <div className="absolute bottom-4 right-4 w-6 h-6 border-b-[2px] border-r-[2px] border-[var(--cam-gold-leaf)] rounded-br opacity-80" />
 
               <div className="relative z-10 px-10 pt-10 pb-10">
                 {/* section title */}
@@ -387,9 +387,12 @@ export default function LandingPage() {
 
                 {/* 2×2 grid */}
                 <div className="relative grid grid-cols-2">
-                  {/* center intersection dot */}
+                  {/* center intersection dot — gold leaf */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                    <div className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_2px_rgba(52,211,153,0.55)]" />
+                    <div
+                      className="w-3 h-3 rounded-full bg-[var(--cam-gold-leaf)]"
+                      style={{ boxShadow: '0 0 10px 2px color-mix(in oklab, var(--cam-gold-leaf) 55%, transparent)' }}
+                    />
                   </div>
 
                   {APPA.map((step, i) => (
@@ -398,14 +401,14 @@ export default function LandingPage() {
                       to={step.href}
                       className={cn(
                         'group flex flex-col items-center text-center gap-5 px-8 py-9 transition-colors duration-200 hover:bg-white/[0.04]',
-                        i % 2 === 0 ? 'border-r border-[rgba(100,130,255,0.2)]' : '',
-                        i < 2 ? 'border-b border-[rgba(100,130,255,0.2)]' : '',
+                        i % 2 === 0 ? 'border-r border-[color-mix(in_oklab,var(--cam-primary)_20%,transparent)]' : '',
+                        i < 2 ? 'border-b border-[color-mix(in_oklab,var(--cam-primary)_20%,transparent)]' : '',
                       )}
                     >
                       {/* gradient icon container */}
                       <div
                         className="w-[76px] h-[76px] rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105"
-                        style={{ background: 'linear-gradient(145deg, #6366f1 0%, #3b82f6 100%)' }}
+                        style={{ background: 'linear-gradient(145deg, var(--cam-primary-dk) 0%, var(--cam-primary-lt) 100%)' }}
                       >
                         <svg
                           width="38" height="38" viewBox="0 0 24 24"
@@ -417,7 +420,7 @@ export default function LandingPage() {
                       </div>
                       {/* label + headline */}
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#22d3ee]/80 mb-1">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--cam-gold-leaf-text)] mb-1">
                           {step.label}
                         </p>
                         <p className="text-white font-semibold text-[14px] leading-snug max-w-[150px]">
