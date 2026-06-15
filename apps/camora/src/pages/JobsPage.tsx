@@ -284,7 +284,7 @@ export default function JobsPage() {
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
   const [experienceFilter, setExperienceFilter] = useState('');
-  const [postedWithinFilter, setPostedWithinFilter] = useState('7');
+  const [postedWithinFilter, setPostedWithinFilter] = useState('3');
   const [salaryMinFilter, setSalaryMinFilter] = useState('');
   const [salaryMaxFilter, setSalaryMaxFilter] = useState('');
   const [excludeVisaRestrictions, setExcludeVisaRestrictions] = useState(false);
@@ -1186,6 +1186,12 @@ export default function JobsPage() {
                 const workType = detectWorkType(job.location);
                 const salary = formatSalary(job.salary_min, job.salary_max);
                 const posted = timeAgo(job.posted_date || job.date_found);
+                const postedDaysAgo = (() => {
+                  const d = job.posted_date || job.date_found;
+                  if (!d) return null;
+                  return Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+                })();
+                const isStale = postedDaysAgo !== null && postedDaysAgo > 7;
 
                 // Experience-level badge — LeetCode-difficulty analog
                 // mapped to navy/gold combinations:
@@ -1228,7 +1234,7 @@ export default function JobsPage() {
                     className="jobs-card"
                     style={{
                       background: 'var(--bg-surface)',
-                      border: '1px solid var(--border)',
+                      border: isStale ? '1px solid rgba(245,158,11,0.35)' : '1px solid var(--border)',
                       borderRadius: '8px',
                       padding: '20px 24px',
                       transition: 'border-color 0.15s, background 0.15s',
@@ -1291,7 +1297,11 @@ export default function JobsPage() {
                           {workType}
                         </span>
                       )}
-                      {posted && (
+                      {isStale ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#F59E0B', fontSize: 11, fontWeight: 700 }}>
+                          ⚠ {postedDaysAgo}d ago — may be filled
+                        </span>
+                      ) : posted && (
                         <span style={{ color: 'var(--text-muted)' }}>{posted}</span>
                       )}
                       {salary && (
