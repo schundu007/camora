@@ -13,18 +13,19 @@
 /* ── Design Tokens ──────────────────────────────────────────── */
 @layer base {
   :root {
-    /* Backgrounds — layered charcoal depth (Linear/Vercel editorial dark) */
-    --bg-base:     #080A0F;
-    --bg-app:      #0C0F16;
-    --bg-surface:  #111520;
-    --bg-elevated: #1C2236;
+    /* Backgrounds — neutral charcoal (Vercel/Linear). No blue hue in base;
+       blue/gold appear as accents on neutral substrate, not as the substrate. */
+    --bg-base:     #0A0A0C;
+    --bg-app:      #0E0E11;
+    --bg-surface:  #141417;
+    --bg-elevated: #1C1C22;
     --bg-primary: var(--bg-surface);
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.62);
 
-    /* Borders — visible slate, readable on dark substrate */
-    --border:        #252E44;
-    --border-hover:  #2E3D55;
+    /* Borders — neutral slate, visible against neutral dark */
+    --border:        #26262E;
+    --border-hover:  #32323C;
     --border-focus:  #2563EB;
 
     /* Text — warm white headings, cool slate secondary */
@@ -105,7 +106,7 @@
 
     /* Legacy compat aliases */
     --text-dim: var(--text-muted);
-    --nav-bg: rgba(12,15,22,0.92);
+    --nav-bg: rgba(14,14,17,0.92);
     --nav-bg-secondary: var(--bg-elevated);
     --nav-border: var(--border);
     --nav-text: var(--text-primary);
@@ -128,22 +129,22 @@
     --cam-gold-leaf-dk: #B88930;
     --cam-gold-leaf-50: color-mix(in oklab, var(--cam-gold-leaf) 8%, transparent);
     --cam-gold-leaf-text: #C99A2E;
-    --cam-void:         #080A0F;
-    --cam-surface-lt:   #181D2A;
+    --cam-void:         #0A0A0C;
+    --cam-surface-lt:   #1C1C22;
 
     /* Hero gradients — navy + gold atmosphere.
        Warm dark base with navy and gold radial hints. */
     --cam-hero-bg:
-      radial-gradient(ellipse 55% 65% at 15% 25%, rgba(37,99,235,0.40), transparent 60%),
-      radial-gradient(ellipse 40% 45% at 85% 75%, rgba(212,160,67,0.18), transparent 65%),
-      radial-gradient(ellipse 90% 50% at 50% 0%, rgba(255,255,255,0.10), transparent 70%),
-      linear-gradient(135deg, #080A0F 0%, #0C0F16 35%, #111520 65%, #0C0F16 100%);
+      radial-gradient(ellipse 55% 65% at 15% 25%, rgba(37,99,235,0.28), transparent 60%),
+      radial-gradient(ellipse 40% 45% at 85% 75%, rgba(212,160,67,0.14), transparent 65%),
+      radial-gradient(ellipse 90% 50% at 50% 0%, rgba(255,255,255,0.07), transparent 70%),
+      linear-gradient(135deg, #0A0A0C 0%, #0E0E11 35%, #141417 65%, #0E0E11 100%);
     --cam-hero-strip:
-      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(37,99,235,0.38), transparent 70%),
-      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(212,160,67,0.18), transparent 70%),
-      radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.10), transparent 75%),
-      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(37,99,235,0.18), transparent 70%),
-      linear-gradient(95deg, #0C0F16 0%, #111520 30%, #1C2236 50%, #111520 70%, #0C0F16 100%);
+      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(37,99,235,0.28), transparent 70%),
+      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(212,160,67,0.14), transparent 70%),
+      radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.07), transparent 75%),
+      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(37,99,235,0.12), transparent 70%),
+      linear-gradient(95deg, #0E0E11 0%, #141417 30%, #1C1C22 50%, #141417 70%, #0E0E11 100%);
 
     /* Lumora topbar chrome — dark immersive, blue accents */
     --lumora-chrome-bg:     var(--cam-hero-strip);
