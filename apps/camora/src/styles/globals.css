@@ -26,7 +26,7 @@
     /* Borders — neutral slate, visible against neutral dark */
     --border:        #26262E;
     --border-hover:  #32323C;
-    --border-focus:  #2563EB;
+    --border-focus:  #3683DC;
 
     /* Text — warm white headings, cool slate secondary */
     --text-primary:  #F0EEE9;
@@ -35,12 +35,11 @@
     --text-muted:    #647084;
     --text-dimmed:   #434B5C;
 
-    /* Primary accent — vivid saturated blue (CTAs, active states, links).
-       One accent, one role. */
-    --accent:        #2563EB;
-    --accent-hover:  #1D4ED8;
-    --accent-subtle: color-mix(in oklab, #2563EB 12%, transparent);
-    --accent-text:   #60A5FA;
+    /* Primary accent — Linode/Akamai blue */
+    --accent:        #3683DC;
+    --accent-hover:  #2265BF;
+    --accent-subtle: rgba(54,131,220,0.10);
+    --accent-text:   #4D94E8;
 
     /* Secondary accent — Warm Gold (signal, momentum, highlights).
        Restored from DESIGN.md: gold marks what's next, problem counts,
@@ -73,8 +72,8 @@
     --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 10%, transparent);
 
     /* Fonts — Satoshi (all UI) + JetBrains Mono (code) */
-    --font-sans: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-display: 'Satoshi', sans-serif;
+    --font-sans: 'Nunito Sans', 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-display: 'Nunito Sans', 'Satoshi', sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     --font-brand: 'Satoshi', sans-serif;
     --font-answer: var(--font-sans);
@@ -120,9 +119,9 @@
        Navy  = action, focus, success, the institution.
        Gold  = signal, highlights, what's next.
        Warm  = editorial comfort, reduced fatigue.            */
-    --cam-primary:      #2563EB;
-    --cam-primary-lt:   #3B82F6;
-    --cam-primary-dk:   #1D4ED8;
+    --cam-primary:      #3683DC;
+    --cam-primary-lt:   #4D94E8;
+    --cam-primary-dk:   #2265BF;
     --cam-primary-900:  #0B1B3F;
     --cam-gold-leaf:    #D4A043;
     --cam-gold-leaf-lt: #E0B155;
@@ -167,8 +166,8 @@
      Every contrast pair below ≥ 4.5:1 (WCAG AA).
      ────────────────────────────────────────────────────────── */
   [data-theme="light"] {
-    --bg-base:     #FFFFFF;
-    --bg-app:      #F4F3F0;
+    --bg-base:     #F4F5F6;
+    --bg-app:      #F4F5F6;
     --bg-surface:  #FFFFFF;
     --bg-elevated: #EEEDEA;
     --bg-primary: var(--bg-surface);
@@ -177,7 +176,7 @@
 
     --border:        #D6D5D0;
     --border-hover:  #C2C0BA;
-    --border-focus:  #2563EB;
+    --border-focus:  #3683DC;
 
     --text-primary:  #12141A;
     --text-secondary:#464B54;
@@ -185,10 +184,10 @@
     --text-muted:    #6B717C;
     --text-dimmed:   #868E96;
 
-    --accent:        #1D4ED8;
-    --accent-hover:  #1E40AF;
-    --accent-subtle: color-mix(in oklab, var(--accent) 8%, transparent);
-    --accent-text:   #2563EB;
+    --accent:        #3683DC;
+    --accent-hover:  #2265BF;
+    --accent-subtle: rgba(54,131,220,0.08);
+    --accent-text:   #2265BF;
 
     --accent-secondary:        #C2963E;
     --accent-secondary-hover:  #D4A84A;
@@ -225,9 +224,9 @@
     --shadow-gold-xs: 0 1px 3px rgba(194,150,62,0.04), 0 4px 16px rgba(194,150,62,0.02);
     --shadow-gold-sm: 0 2px 8px rgba(194,150,62,0.06);
 
-    --cam-primary:      #1D4ED8;
-    --cam-primary-lt:   #2563EB;
-    --cam-primary-dk:   #1E40AF;
+    --cam-primary:      #3683DC;
+    --cam-primary-lt:   #4D94E8;
+    --cam-primary-dk:   #2265BF;
     --cam-primary-900:  #0B1B3F;
     --cam-gold-leaf:    #C2963E;
     --cam-gold-leaf-lt: #D4A84A;
@@ -368,7 +367,7 @@
   html {
     @apply antialiased scroll-smooth;
     width: 100%;
-    color-scheme: dark;
+    color-scheme: light;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -425,11 +424,11 @@
   .no-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
   /* Selection */
-  ::selection { background: rgba(37,99,235,0.40); color: #ffffff; }
+  ::selection { background: rgba(54,131,220,0.40); color: #ffffff; }
 
   /* Focus ring — Navy */
   *:focus-visible {
-    outline: 2px solid rgba(37,99,235,0.55);
+    outline: 2px solid rgba(54,131,220,0.55);
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -621,8 +620,8 @@
   gap: 2px;
   padding: 3px;
   border-radius: 999px;
-  background: rgba(3,19,46,0.88);
-  border: 1px solid rgba(201,162,39,0.45);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
   width: fit-content;
 }
 .tab-group-item {
@@ -642,8 +641,8 @@
 }
 .tab-group-item:hover:not(.tab-group-item-active) { color: #ffffff; }
 .tab-group-item-active {
-  background: var(--cam-gold-leaf);
-  color: var(--cam-primary-dk);
+  background: #3683DC;
+  color: #ffffff;
   font-weight: 700;
 }
 
@@ -671,7 +670,7 @@
   transition: color 0.15s ease-out, border-color 0.15s ease-out;
 }
 .tab-bar-item:hover:not(.tab-bar-item-active) { color: var(--text-primary); }
-.tab-bar-item-active { color: var(--cam-gold-leaf-text); border-bottom-color: var(--cam-gold-leaf); }
+.tab-bar-item-active { color: #3683DC; border-bottom-color: #3683DC; }
 .tab-bar-item-sm { padding: 6px 12px !important; font-size: 12px !important; }
 
 /* ── Filter chips ───────────────────────────────────────────────── */
@@ -693,15 +692,15 @@
 }
 .chip:hover:not(.chip-active) { border-color: var(--border-hover); color: var(--text-primary); }
 .chip-active {
-  background: var(--cam-gold-leaf);
-  border-color: var(--cam-gold-leaf);
-  color: var(--cam-primary-dk);
+  background: #3683DC;
+  border-color: #3683DC;
+  color: #ffffff;
 }
 .chip-sm { padding: 3px 9px !important; font-size: 11px !important; }
 .chip-emerald.chip-active {
-  background: var(--cam-gold-leaf);
-  border-color: var(--cam-gold-leaf);
-  color: var(--cam-primary-dk);
+  background: #3683DC;
+  border-color: #3683DC;
+  color: #ffffff;
 }
 
 /* ── Badges ─────────────────────────────────────────────────────── */

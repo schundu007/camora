@@ -48,7 +48,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   return (
     <>
       <nav
-        className="fixed top-0 inset-x-0 z-50 bg-[#11141A] text-white border-b border-[rgba(201,162,39,0.32)] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.45)]"
+        className="fixed top-0 inset-x-0 z-50 bg-[#1D2126] text-white border-b border-[rgba(255,255,255,0.07)] shadow-[0_2px_8px_rgba(0,0,0,0.28)]"
         aria-label="Primary"
       >
         <div className="mx-auto flex h-[60px] items-center px-4 sm:px-6 lg:px-8 max-w-7xl">
@@ -81,25 +81,18 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           )}
 
           {/* Desktop links */}
-          <div
-            className="hidden md:flex items-center gap-0.5 ml-8"
-            style={{
-              padding: 3,
-              border: '1px solid rgba(201,162,39,0.50)',
-              borderRadius: 999,
-              background: 'rgba(3,19,46,0.88)',
-            }}
-          >
+          <div className="hidden md:flex items-center ml-6">
             {NAV_LINKS.map((link) => {
               const active = isActive(link.href);
               return (
                 <Link
                   key={link.label}
                   to={link.href}
-                  className="px-3 py-1.5 rounded-full text-[11px] font-bold font-mono uppercase tracking-wider transition-colors no-underline"
+                  className="flex items-center px-3 text-[13px] font-semibold transition-colors no-underline"
                   style={{
-                    background: active ? 'var(--cam-gold-leaf)' : 'transparent',
-                    color: active ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.82)',
+                    height: 60,
+                    color: active ? '#ffffff' : 'rgba(255,255,255,0.60)',
+                    borderBottom: active ? '2px solid #3683DC' : '2px solid transparent',
                   }}
                 >
                   {link.label}
@@ -113,7 +106,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/85 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cam-gold-leaf)]"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/85 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3683DC]"
               aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
@@ -133,7 +126,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
                 </Link>
                 <Link
                   to="/signup"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[var(--cam-gold-leaf)] px-4 py-1.5 text-[13px] font-bold text-[#11141A] shadow-[0_4px_14px_-4px_rgba(201,162,39,0.5)] hover:bg-[var(--cam-gold-leaf-lt)]"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#3683DC] px-4 py-1.5 text-[13px] font-bold text-white hover:bg-[#2265BF] transition-colors"
                 >
                   Start free
                 </Link>
