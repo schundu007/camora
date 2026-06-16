@@ -174,7 +174,7 @@ const ACCEPTED_TYPES = {
 const ACCEPTED_EXTENSIONS = ['.pdf', '.docx', '.txt'];
 
 export default function OnboardingPage() {
-  const { token: accessToken } = useAuth();
+  const { token: accessToken, markOnboardingComplete } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { celebrate } = useCelebration();
@@ -312,14 +312,14 @@ export default function OnboardingPage() {
         intended && intended.startsWith('/') && !intended.startsWith('//')
           ? intended
           : null;
+      markOnboardingComplete();
       celebrate({ title: 'Profile complete', subtitle: 'Welcome to Camora — your dashboard is ready.' });
-      // Brief delay so the celebration toast registers before nav unmounts it.
       setTimeout(() => navigate(safeIntended || '/capra/prepare'), 600);
     } catch (err) {
       setError(err.message || 'Something went wrong');
       setSubmitting(false);
     }
-  }, [accessToken, selectedRoles, resumeText, searchParams, navigate, celebrate]);
+  }, [accessToken, selectedRoles, resumeText, searchParams, navigate, celebrate, markOnboardingComplete]);
 
   const progressPercent = step === 1 ? 50 : 100;
 
