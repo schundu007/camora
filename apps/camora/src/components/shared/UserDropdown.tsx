@@ -23,6 +23,13 @@ interface UserDropdownProps {
 
 export default function UserDropdown({ variant = 'light', showName = true, compact = false, position = 'below-right' }: UserDropdownProps) {
   const { user, logout } = useAuth();
+  const CAPRA_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
+
+  const switchAccount = async () => {
+    setOpen(false);
+    try { await fetch(`${CAPRA_API}/api/auth/logout`, { method: 'POST', credentials: 'include' }); } catch { /* ignore */ }
+    window.location.href = '/login';
+  };
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -148,8 +155,20 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
               </Link>
             ))}
 
-            {/* Sign out */}
+            {/* Switch account + Sign out */}
             <div style={{ borderTop: '1px solid var(--border)' }}>
+              <button
+                onClick={switchAccount}
+                className="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] font-medium transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                </svg>
+                Switch account
+              </button>
               <button
                 onClick={() => { logout(); setOpen(false); }}
                 className="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] font-medium text-red-500 transition-colors hover:bg-red-500/10"
