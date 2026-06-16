@@ -11,13 +11,14 @@ import { logger } from '../middleware/requestLogger.js';
 import { PAID_PLAN_TYPES } from '../lib/plans.js';
 
 // Dynamic team pricing — single Stripe Product, ad-hoc Price per checkout.
-// Avoids creating a SKU for every (5..50) seat count. Formula matches
-// frontend: price = (seats × $20 − $1) / month.
+// Tiered: 5-25 seats at $10/seat above base $49; 26-50 seats at $4/seat above $249.
+// 5=$49, 10=$99, 25=$249, 50=$349 (matches frontend teamMonthlyPrice).
 const TEAM_SEATS_MIN = 5;
 const TEAM_SEATS_MAX = 50;
 function computeTeamPriceCents(seats) {
   const n = Math.max(TEAM_SEATS_MIN, Math.min(TEAM_SEATS_MAX, Math.floor(Number(seats) || 0)));
-  return (n * 20 - 1) * 100;
+  const dollars = n <= 25 ? 49 + (n - 5) * 10 : 249 + (n - 25) * 4;
+  return dollars * 100;
 }
 function computeTeamIncludedHours(seats) {
   const n = Math.max(TEAM_SEATS_MIN, Math.min(TEAM_SEATS_MAX, Math.floor(Number(seats) || 0)));
@@ -430,8 +431,7 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       cancel_url: cancelUrl,
       billing_address_collection: 'required',
       // tax_id_collection only supported in subscription mode; payment mode throws.
-      // 2025-03-31.basil also requires explicit `required` field.
-      ...(!isOneTime ? { tax_id_collection: { enabled: true, required: 'if_supported' } } : {}),
+      ...(!isOneTime ? { tax_id_collection: { enabled: true } } : {}),
       ...(process.env.STRIPE_AUTOMATIC_TAX === '1' ? { automatic_tax: { enabled: true } } : {}),
       ...(isOneTime ? {} : {
         subscription_data: {

@@ -192,7 +192,7 @@ export function useCheckout() {
         } else if (resp.status === 503 || resp.status === 400) {
           dialogAlert({ title: 'Payment service unavailable', message: 'Please try again in a moment.', tone: 'danger' });
         } else if (body?.error) {
-          dialogAlert({ title: 'Checkout failed', message: body.error, tone: 'danger' });
+          dialogAlert({ title: 'Checkout failed', message: body.detail || body.error, tone: 'danger' });
         }
         setLoading(''); return;
       }

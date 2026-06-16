@@ -9,7 +9,7 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 // → pool exhaustion → Railway proxy returns 502.
 export const stripe = stripeSecretKey
   ? new Stripe(stripeSecretKey, {
-      apiVersion: '2025-03-31.basil',
+      apiVersion: '2025-01-27.acacia',
       timeout: 5000,
       maxNetworkRetries: 1,
     })
