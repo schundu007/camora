@@ -6,24 +6,24 @@ import { isOwner } from '../../lib/owner';
 
 const BILLING_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
-// ── Linode/Akamai Cloud Manager tokens — light theme, Akamai blue, Nunito Sans
+// ── Design tokens — CSS variables so light/dark theme switches automatically
 const LN = {
-  bg:         '#F4F5F6',
-  surface:    '#FFFFFF',
-  card:       '#FFFFFF',
-  cardHover:  '#F8F9FA',
-  border:     '#D9DADB',
-  divider:    '#E8E9EA',
+  bg:         'var(--bg-base)',
+  surface:    'var(--bg-surface)',
+  card:       'var(--bg-surface)',
+  cardHover:  'var(--bg-elevated)',
+  border:     'var(--border)',
+  divider:    'var(--border)',
   blue:       '#3683DC',
   blueFade:   'rgba(54,131,220,0.10)',
   blueBorder: 'rgba(54,131,220,0.30)',
   blueDk:     '#2265BF',
-  text:       '#1A1A1A',
-  textSub:    '#606060',
-  muted:      '#909099',
-  dim:        '#C0C0C8',
-  font:       "'Nunito Sans', 'Inter', system-ui, sans-serif",
-  mono:       "'IBM Plex Mono', ui-monospace, monospace",
+  text:       'var(--text-primary)',
+  textSub:    'var(--text-secondary)',
+  muted:      'var(--text-muted)',
+  dim:        'var(--text-muted)',
+  font:       'var(--font-sans)',
+  mono:       'var(--font-mono)',
 } as const;
 
 // ── Types ────────────────────────────────────────────────────────────────────
