@@ -52,23 +52,56 @@ router.post('/upload-resume', authenticate, upload.single('resume'), async (req,
   }
 });
 
-// Get onboarding status
+// Get onboarding status (includes resume presence for profile page)
 router.get('/status', authenticate, async (req, res) => {
   try {
     const result = await query(
-      'SELECT onboarding_completed, job_roles FROM users WHERE id = $1',
+      'SELECT onboarding_completed, job_roles, resume_text FROM users WHERE id = $1',
       [req.user.id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
+    const row = result.rows[0];
     res.json({
-      onboarding_completed: result.rows[0].onboarding_completed || false,
-      job_roles: result.rows[0].job_roles || [],
+      onboarding_completed: row.onboarding_completed || false,
+      job_roles: row.job_roles || [],
+      has_resume: !!row.resume_text,
+      resume_snippet: row.resume_text ? row.resume_text.slice(0, 200) : null,
     });
   } catch (error) {
     console.error('Onboarding status error:', error);
     res.status(500).json({ error: 'Failed to get onboarding status' });
+  }
+});
+
+// Save pasted resume text post-onboarding (used by profile page)
+router.post('/save-resume-text', authenticate, async (req, res) => {
+  try {
+    const { resume_text } = req.body;
+    if (!resume_text || !String(resume_text).trim()) {
+      return res.status(400).json({ error: 'Resume text is required' });
+    }
+    await query('UPDATE users SET resume_text = $1 WHERE id = $2', [String(resume_text).trim(), req.user.id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Save resume text error:', error);
+    res.status(500).json({ error: 'Failed to save resume' });
+  }
+});
+
+// Update job roles post-onboarding (used by profile page)
+router.post('/update-roles', authenticate, async (req, res) => {
+  try {
+    const { job_roles } = req.body;
+    if (!job_roles || !Array.isArray(job_roles) || job_roles.length === 0) {
+      return res.status(400).json({ error: 'At least one job role is required' });
+    }
+    await query('UPDATE users SET job_roles = $1 WHERE id = $2', [JSON.stringify(job_roles), req.user.id]);
+    res.json({ success: true, job_roles });
+  } catch (error) {
+    console.error('Update roles error:', error);
+    res.status(500).json({ error: 'Failed to update roles' });
   }
 });
 
