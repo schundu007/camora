@@ -433,6 +433,10 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       // tax_id_collection only supported in subscription mode; payment mode throws.
       ...(!isOneTime ? { tax_id_collection: { enabled: true } } : {}),
       ...(process.env.STRIPE_AUTOMATIC_TAX === '1' ? { automatic_tax: { enabled: true } } : {}),
+      // Save the billing address the customer enters to the Customer object.
+      // Required when automatic_tax is enabled so Stripe can calculate tax
+      // on future invoices (and subscriptions) using a real address.
+      customer_update: { address: 'auto' },
       ...(isOneTime ? {} : {
         subscription_data: {
           metadata: { user_id: userId.toString(), type: purchaseType },
