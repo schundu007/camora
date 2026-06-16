@@ -137,28 +137,63 @@ const LoginPage = () => {
           </span>
         </div>
 
-        <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
+        <style>{`
+          @keyframes statCardGlow {
+            from { box-shadow: 0 0 0 1px rgba(54,131,220,0.12), 0 2px 8px rgba(0,0,0,0.12); }
+            to   { box-shadow: 0 0 0 1px rgba(212,160,67,0.28), 0 4px 20px rgba(54,131,220,0.18), 0 0 30px rgba(212,160,67,0.08); }
+          }
+          @keyframes badgePulse {
+            from { box-shadow: 0 2px 6px rgba(54,131,220,0.25); }
+            to   { box-shadow: 0 2px 12px rgba(212,160,67,0.45), 0 0 20px rgba(54,131,220,0.20); }
+          }
+          @keyframes goldShimmer {
+            0%   { background-position: -200% center; }
+            100% { background-position: 200% center; }
+          }
+        `}</style>
+        <div className="flex-1 flex flex-col justify-center items-center text-center max-w-md mx-auto w-full">
           <h2 className="text-[40px] font-bold leading-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
             Get the offer.<br />
-            <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Every step.</span>
+            <span style={{
+              background: 'linear-gradient(90deg, var(--cam-gold-leaf-lt) 0%, #FFF3C4 45%, var(--cam-gold-leaf-lt) 100%)',
+              backgroundSize: '200% auto',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              animation: 'goldShimmer 3s linear infinite',
+            }}>Every step.</span>
           </h2>
           <p className="mt-4 text-[15px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             From job discovery to live interview AI — one platform for every stage of your tech career.
           </p>
 
-          <div className="mt-8 grid grid-cols-2 gap-3">
-            {STATS.map(s => (
-              <div key={s.label} className="rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)' }}>
-                <p className="text-[22px] font-bold" style={{ color: 'var(--cam-primary-lt)', fontFamily: 'var(--font-display)' }}>{s.value}</p>
+          <div className="mt-8 grid grid-cols-2 gap-3 w-full">
+            {STATS.map((s, si) => (
+              <div key={s.label} className="rounded-xl px-4 py-3" style={{
+                background: 'linear-gradient(135deg, rgba(54,131,220,0.10) 0%, rgba(255,255,255,0.03) 50%, rgba(212,160,67,0.07) 100%)',
+                border: '1px solid rgba(54,131,220,0.15)',
+                animation: `statCardGlow ${2.5 + si * 0.4}s ease-in-out ${si * 0.3}s infinite alternate`,
+              }}>
+                <p className="text-[22px] font-bold" style={{
+                  fontFamily: 'var(--font-display)',
+                  background: 'linear-gradient(135deg, var(--cam-primary-lt) 0%, var(--cam-gold-leaf-lt) 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>{s.value}</p>
                 <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-8 space-y-3">
+          <div className="mt-8 space-y-3 text-left w-full">
             {STEPS.map((s, i) => (
               <div key={i} className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[11px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-lt)' }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[11px] font-bold" style={{
+                  background: 'linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-gold-leaf) 100%)',
+                  color: '#fff',
+                  animation: `badgePulse ${2 + i * 0.3}s ease-in-out ${i * 0.2}s infinite alternate`,
+                }}>
                   {s.letter}
                 </div>
                 <div>
