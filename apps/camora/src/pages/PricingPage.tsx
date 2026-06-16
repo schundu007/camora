@@ -71,7 +71,13 @@ const FAQS = [
 function CellValue({ value, isTeam }: { value: string; isTeam?: boolean }) {
   if (value === '✓') {
     return (
-      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: '50%', background: isTeam ? LN.blue : LN.blueFade }}>
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: 22, height: 22, borderRadius: '50%',
+        background: isTeam ? 'linear-gradient(135deg, #3683DC, #6366F1)' : 'rgba(54,131,220,0.10)',
+        boxShadow: isTeam ? '0 0 10px rgba(99,102,241,0.35), 0 0 4px rgba(54,131,220,0.50)' : 'none',
+        border: isTeam ? 'none' : '1px solid rgba(54,131,220,0.22)',
+      }}>
         <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke={isTeam ? '#fff' : LN.blue} strokeWidth={2.5} aria-hidden="true">
           <path d="M13 4 L6 11 L3 8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -84,8 +90,11 @@ function CellValue({ value, isTeam }: { value: string; isTeam?: boolean }) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 12 }}>
-      {children}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+      <div style={{ width: 3, height: 16, borderRadius: 2, background: 'linear-gradient(180deg, #3683DC 0%, #6366F1 100%)', flexShrink: 0 }} />
+      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: '#3683DC', fontFamily: LN.mono }}>
+        {children}
+      </span>
     </div>
   );
 }
@@ -122,7 +131,7 @@ export default function PricingPage() {
       {/* ── Page title ── */}
       <div style={{ background: LN.surface, borderBottom: `1px solid ${LN.border}`, padding: '28px 32px 24px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: LN.text, margin: '0 0 6px', letterSpacing: '-0.01em' }}>
+          <h1 style={{ fontSize: 30, fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.025em', background: 'linear-gradient(120deg, #1A1A1A 0%, #3683DC 55%, #6366F1 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             Plans & Pricing
           </h1>
           <p style={{ fontSize: 14, color: LN.muted, margin: 0 }}>
@@ -170,17 +179,17 @@ export default function PricingPage() {
             <SectionLabel>Feature comparison</SectionLabel>
             <div style={{ border: `1px solid ${LN.border}`, borderRadius: 4, overflow: 'hidden' }}>
               {/* Header row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: LN.surface, borderBottom: `1px solid ${LN.border}` }}>
-                <div style={{ padding: '10px 20px', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono }}>Feature</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: 'linear-gradient(135deg, #0C1120 0%, #141B2E 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)', fontFamily: LN.mono }}>Feature</div>
                 {[
                   { label: 'Free',    sub: '$0 · 7 days' },
                   { label: 'Monthly', sub: '$19 / mo' },
                   { label: 'Yearly',  sub: '$99 / yr' },
                   { label: 'Team',    sub: '5–50 seats', accent: true },
                 ].map(col => (
-                  <div key={col.label} style={{ padding: '10px 16px', textAlign: 'center', background: col.accent ? LN.blueFade : undefined }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: col.accent ? LN.blue : LN.text }}>{col.label}</div>
-                    <div style={{ fontSize: 11, color: col.accent ? '#2265BF' : LN.dim, fontFamily: LN.mono, marginTop: 2 }}>{col.sub}</div>
+                  <div key={col.label} style={{ padding: '12px 16px', textAlign: 'center', background: col.accent ? 'rgba(99,102,241,0.18)' : undefined }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: col.accent ? '#A5B4FC' : 'rgba(255,255,255,0.85)' }}>{col.label}</div>
+                    <div style={{ fontSize: 11, color: col.accent ? 'rgba(165,180,252,0.70)' : 'rgba(255,255,255,0.38)', fontFamily: LN.mono, marginTop: 2 }}>{col.sub}</div>
                   </div>
                 ))}
               </div>
@@ -188,12 +197,15 @@ export default function PricingPage() {
               {/* Data rows */}
               {COMPARE_SECTIONS.map((section, si) => (
                 <Fragment key={si}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: LN.bg, borderTop: si > 0 ? `1px solid ${LN.border}` : undefined }}>
-                    <div style={{ padding: '7px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: LN.dim, fontFamily: LN.mono }}>
-                      {section.title}
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: 'rgba(54,131,220,0.04)', borderTop: si > 0 ? `1px solid ${LN.border}` : undefined }}>
+                    <div style={{ padding: '8px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 16, height: 1.5, borderRadius: 1, background: 'linear-gradient(90deg, #3683DC, #6366F1)', flexShrink: 0 }} />
+                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#3683DC', fontFamily: LN.mono }}>
+                        {section.title}
+                      </span>
                     </div>
                     <div /><div /><div />
-                    <div style={{ background: LN.blueFade }} />
+                    <div style={{ background: 'rgba(99,102,241,0.08)' }} />
                   </div>
                   {section.rows.map((row, ri) => (
                     <div key={`${si}-${ri}`} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', borderTop: `1px solid ${LN.border}`, background: ri % 2 === 0 ? LN.card : LN.bg }}>

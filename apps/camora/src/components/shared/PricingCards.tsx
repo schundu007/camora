@@ -230,23 +230,23 @@ function SoloPlanTable({
       {/* Column header */}
       <div style={{
         display: 'grid', gridTemplateColumns: '1fr 180px 120px 200px',
-        padding: '8px 16px',
-        background: LN.bg,
+        padding: '10px 16px',
+        background: 'linear-gradient(135deg, #0C1120 0%, #141B2E 100%)',
         border: `1px solid ${LN.border}`,
         borderBottom: 'none',
-        borderRadius: '4px 4px 0 0',
+        borderRadius: '8px 8px 0 0',
       }}>
         {['Plan', 'AI Hours Included', 'Billing', 'Price'].map((col, i) => (
           <span key={col} style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-            textTransform: 'uppercase', color: LN.muted,
+            fontSize: 10, fontWeight: 700, letterSpacing: '0.14em',
+            textTransform: 'uppercase', color: 'rgba(255,255,255,0.50)',
             fontFamily: LN.mono, textAlign: i === 0 ? 'left' : 'right',
           }}>{col}</span>
         ))}
       </div>
 
       {/* Plan rows */}
-      <div style={{ border: `1px solid ${LN.border}`, borderRadius: '0 0 4px 4px', overflow: 'hidden' }}>
+      <div style={{ border: `1px solid ${LN.border}`, borderRadius: '0 0 8px 8px', overflow: 'hidden' }}>
         {SOLO_PLANS.map((plan, idx) => {
           const isSelected = selected === plan.id;
           const priceId = prices?.[plan.priceKey]?.priceId || '';
@@ -286,10 +286,11 @@ function SoloPlanTable({
                     {plan.badge && (
                       <span style={{
                         fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
-                        padding: '2px 6px', borderRadius: 2,
-                        background: isSelected ? LN.blue : LN.border,
+                        padding: '2px 7px', borderRadius: 3,
+                        background: isSelected ? 'linear-gradient(135deg, #3683DC, #6366F1)' : LN.border,
                         color: isSelected ? '#fff' : LN.muted,
-                        fontFamily: LN.mono, transition: 'all 0.1s',
+                        fontFamily: LN.mono, transition: 'all 0.15s',
+                        boxShadow: isSelected ? '0 2px 8px rgba(99,102,241,0.28)' : 'none',
                       }}>{plan.badge}</span>
                     )}
                   </div>
@@ -590,17 +591,18 @@ export default function PricingCards({
 
   return (
     <div style={{ fontFamily: LN.font }}>
-      {/* Linode-style underline tab bar */}
-      <div style={{ display: 'flex', borderBottom: `1px solid ${LN.border}`, marginBottom: 20 }}>
+      {/* Glass segmented pill tab bar */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, padding: 4, background: 'rgba(54,131,220,0.06)', border: '1px solid rgba(54,131,220,0.14)', borderRadius: 10, width: 'fit-content' }}>
         {TABS.map(tab => {
           const isActive = activeTab === tab;
           return (
             <button key={tab} onClick={() => setActiveTab(tab)} style={{
-              padding: '10px 20px', fontSize: 13, fontWeight: isActive ? 600 : 400,
+              padding: '8px 20px', fontSize: 13, fontWeight: isActive ? 700 : 500,
               color: isActive ? LN.blue : LN.muted,
-              background: 'transparent', border: 'none',
-              borderBottom: `2px solid ${isActive ? LN.blue : 'transparent'}`,
-              marginBottom: -1, cursor: 'pointer', transition: 'color 0.1s', whiteSpace: 'nowrap',
+              background: isActive ? '#FFFFFF' : 'transparent', border: 'none',
+              borderRadius: 7,
+              boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.10), 0 0 0 1px rgba(54,131,220,0.18)' : 'none',
+              cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
               fontFamily: LN.font,
             }}>{tab}</button>
           );
