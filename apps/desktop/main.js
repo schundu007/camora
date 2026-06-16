@@ -78,7 +78,6 @@ function createWindow() {
     },
   });
 
-  mainWindow.setContentProtection(true);
   mainWindow.loadURL(APP_URL);
 
   mainWindow.on('close', (e) => {
