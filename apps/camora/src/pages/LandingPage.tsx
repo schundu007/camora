@@ -56,8 +56,8 @@ const APPA: Step[] = [
   },
   {
     key: 'practice', label: 'Practice', href: '/capra/practice',
-    headline: '1,300+ problems with AI feedback',
-    desc: 'Coding, DSA, MCQ, system design, SQL — 1,300+ unique problems across 50+ domains with AI scoring.',
+    headline: '9,500+ problems with AI feedback',
+    desc: 'Coding, DSA, MCQ, system design, SQL — 9,500+ unique problems across 50+ domains with AI scoring.',
     Anim: PracticeAnim,
     icon: Glyph(<><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></>),
   },
@@ -299,7 +299,7 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
             >
-              1,000+ matched roles, 600+ study topics, 1,300+ practice problems, and a live AI copilot in real time — everything from first application to final offer.
+              1,000+ matched roles, 600+ study topics, 9,500+ practice problems, and a live AI copilot in real time — everything from first application to final offer.
             </motion.p>
 
             <motion.div
@@ -598,7 +598,7 @@ export default function LandingPage() {
             <AudienceCard
               eyebrow="For engineers"
               title="Roles, practice & live AI"
-               body="1,000+ engineering roles matched to your skills, 600+ curated study topics with diagrams, and 1,300+ problems with AI feedback. Then live transcription assistance during the session itself: the moment that decides the offer."
+               body="1,000+ engineering roles matched to your skills, 600+ curated study topics with diagrams, and 9,500+ problems with AI feedback. Then live transcription assistance during the session itself: the moment that decides the offer."
               ctaLabel={isAuthenticated ? 'Open dashboard' : 'Start free'}
               ctaHref="/capra/prepare"
             />
