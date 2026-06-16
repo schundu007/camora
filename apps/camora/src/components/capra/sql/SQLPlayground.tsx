@@ -342,6 +342,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
       setOutput(null);
     }
     setSubmitResult(null);
+    setShowSuccess(false);
   }, [db, code, problem, initProblemDb]);
 
   // ── Submit (check correctness) ──────────────────────────────────────────
