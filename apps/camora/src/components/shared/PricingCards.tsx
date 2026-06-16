@@ -231,7 +231,7 @@ function SoloPlanTable({
       <div style={{
         display: 'grid', gridTemplateColumns: '1fr 180px 120px 200px',
         padding: '10px 16px',
-        background: 'linear-gradient(135deg, #0C1120 0%, #141B2E 100%)',
+        background: '#0B1B3F',
         border: `1px solid ${LN.border}`,
         borderBottom: 'none',
         borderRadius: '8px 8px 0 0',
@@ -260,8 +260,8 @@ function SoloPlanTable({
                 display: 'grid', gridTemplateColumns: '1fr 180px 120px 200px',
                 padding: '14px 16px',
                 cursor: 'pointer',
-                background: isSelected ? LN.blueFade : LN.card,
-                borderLeft: `3px solid ${isSelected ? LN.blue : 'transparent'}`,
+                background: isSelected ? 'rgba(212,160,67,0.07)' : LN.card,
+                borderLeft: `3px solid ${isSelected ? 'var(--cam-gold-leaf)' : 'transparent'}`,
                 borderBottom: idx < SOLO_PLANS.length - 1 ? `1px solid ${LN.divider}` : 'none',
                 transition: 'background 0.1s',
                 alignItems: 'center',
@@ -273,8 +273,8 @@ function SoloPlanTable({
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
-                  border: `2px solid ${isSelected ? LN.blue : LN.dim}`,
-                  background: isSelected ? LN.blue : 'transparent',
+                  border: `2px solid ${isSelected ? 'var(--cam-gold-leaf)' : LN.dim}`,
+                  background: isSelected ? 'var(--cam-gold-leaf)' : 'transparent',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.1s',
                 }}>
@@ -287,10 +287,10 @@ function SoloPlanTable({
                       <span style={{
                         fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
                         padding: '2px 7px', borderRadius: 3,
-                        background: isSelected ? 'linear-gradient(135deg, #3683DC, #6366F1)' : LN.border,
+                        background: isSelected ? 'linear-gradient(135deg, var(--cam-gold-leaf), #B88930)' : LN.border,
                         color: isSelected ? '#fff' : LN.muted,
                         fontFamily: LN.mono, transition: 'all 0.15s',
-                        boxShadow: isSelected ? '0 2px 8px rgba(99,102,241,0.28)' : 'none',
+                        boxShadow: isSelected ? '0 2px 8px rgba(212,160,67,0.32)' : 'none',
                       }}>{plan.badge}</span>
                     )}
                   </div>
@@ -300,7 +300,7 @@ function SoloPlanTable({
 
               {/* AI Hours */}
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: 12, fontFamily: LN.mono, color: isSelected ? LN.blue : LN.muted }}>
+                <span style={{ fontSize: 12, fontFamily: LN.mono, color: isSelected ? 'var(--cam-gold-leaf-text)' : LN.muted }}>
                   {plan.aiHours}
                 </span>
               </div>
@@ -592,16 +592,16 @@ export default function PricingCards({
   return (
     <div style={{ fontFamily: LN.font }}>
       {/* Glass segmented pill tab bar */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, padding: 4, background: 'rgba(54,131,220,0.06)', border: '1px solid rgba(54,131,220,0.14)', borderRadius: 10, width: 'fit-content', margin: '0 auto 24px' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, padding: 4, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, width: 'fit-content', margin: '0 auto 24px' }}>
         {TABS.map(tab => {
           const isActive = activeTab === tab;
           return (
             <button key={tab} onClick={() => setActiveTab(tab)} style={{
               padding: '8px 20px', fontSize: 13, fontWeight: isActive ? 700 : 500,
-              color: isActive ? LN.blue : LN.muted,
-              background: isActive ? '#FFFFFF' : 'transparent', border: 'none',
+              color: isActive ? '#fff' : LN.muted,
+              background: isActive ? 'var(--cam-primary)' : 'transparent', border: 'none',
               borderRadius: 7,
-              boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.10), 0 0 0 1px rgba(54,131,220,0.18)' : 'none',
+              boxShadow: isActive ? '0 1px 6px rgba(54,131,220,0.35)' : 'none',
               cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
               fontFamily: LN.font,
             }}>{tab}</button>
