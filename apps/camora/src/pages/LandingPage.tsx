@@ -175,18 +175,19 @@ export default function LandingPage() {
       <SiteNav />
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative overflow-hidden bg-[#0A0C10] text-white">
+      <section className="relative overflow-hidden bg-[#080B14] text-white">
         {/* Animated aurora gradient orbs */}
         <div
           aria-hidden="true"
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 90% 70% at 5% 40%, rgba(37,99,235,0.16), transparent 55%),' +
-              'radial-gradient(ellipse 60% 80% at 12% 25%, rgba(212,160,67,0.15), transparent 60%),' +
-              'radial-gradient(ellipse 50% 60% at 92% 65%, rgba(37,99,235,0.22), transparent 60%),' +
-              'radial-gradient(ellipse 40% 50% at 50% 80%, rgba(212,160,67,0.06), transparent 55%),' +
-              'linear-gradient(135deg, #0A0C10 0%, #0E1119 50%, #141823 100%)',
+              'radial-gradient(ellipse 90% 70% at 5% 40%, rgba(54,131,220,0.24), transparent 55%),' +
+              'radial-gradient(ellipse 60% 80% at 12% 25%, rgba(139,92,246,0.22), transparent 60%),' +
+              'radial-gradient(ellipse 50% 60% at 92% 65%, rgba(54,131,220,0.30), transparent 60%),' +
+              'radial-gradient(ellipse 35% 45% at 72% 15%, rgba(34,211,238,0.12), transparent 50%),' +
+              'radial-gradient(ellipse 40% 50% at 50% 85%, rgba(139,92,246,0.08), transparent 55%),' +
+              'linear-gradient(135deg, #080B14 0%, #0C1120 50%, #10172E 100%)',
             animation: 'heroOrbs 18s ease-in-out infinite alternate',
           }}
         />
@@ -194,7 +195,7 @@ export default function LandingPage() {
         <div aria-hidden="true" className="absolute pointer-events-none opacity-20"
           style={{
             width: 500, height: 500, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(37,99,235,0.30) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(54,131,220,0.38) 0%, transparent 70%)',
             top: '-10%', left: '-5%',
             animation: 'heroDrift1 25s ease-in-out infinite alternate',
           }}
@@ -203,7 +204,7 @@ export default function LandingPage() {
         <div aria-hidden="true" className="absolute pointer-events-none opacity-15"
           style={{
             width: 400, height: 400, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(201,162,39,0.15) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(139,92,246,0.22) 0%, transparent 70%)',
             bottom: '-8%', right: '10%',
             animation: 'heroDrift2 20s ease-in-out infinite alternate',
           }}
@@ -216,8 +217,8 @@ export default function LandingPage() {
           ].map((pos, i) => (
             <span key={i} className={`absolute rounded-full ${pos}`}
               style={{
-                background: i % 2 === 0 ? 'rgba(37,99,235,0.55)' : 'rgba(212,160,67,0.4)',
-                boxShadow: i % 2 === 0 ? '0 0 12px rgba(37,99,235,0.35)' : '0 0 12px rgba(212,160,67,0.25)',
+                background: i % 2 === 0 ? 'rgba(54,131,220,0.70)' : 'rgba(139,92,246,0.60)',
+                boxShadow: i % 2 === 0 ? '0 0 18px rgba(54,131,220,0.55)' : '0 0 18px rgba(139,92,246,0.45)',
                 animation: `heroFloat ${4 + (i % 3) * 2}s ease-in-out ${i * 0.5}s infinite`,
               }}
             />
@@ -233,6 +234,33 @@ export default function LandingPage() {
             backgroundSize: '56px 56px',
             maskImage: 'radial-gradient(ellipse 60% 70% at 20% 30%, black, transparent 80%)',
           }}
+        />
+        {/* Noise texture for premium AI depth */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            opacity: 0.035,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+            backgroundSize: '200px 200px',
+          }}
+        />
+        {/* Diagonal light beam */}
+        <div
+          aria-hidden="true"
+          className="absolute pointer-events-none"
+          style={{
+            top: '-20%', left: '38%', width: 90, height: '140%',
+            background: 'linear-gradient(to bottom, transparent, rgba(54,131,220,0.12) 30%, rgba(139,92,246,0.08) 65%, transparent)',
+            transform: 'rotate(-18deg)',
+            filter: 'blur(32px)',
+          }}
+        />
+        {/* Bottom accent glow line */}
+        <div
+          aria-hidden="true"
+          className="absolute bottom-0 inset-x-0 h-px"
+          style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(54,131,220,0.55) 35%, rgba(139,92,246,0.45) 65%, transparent 95%)' }}
         />
 
         <Container className="relative pt-16 pb-20 md:pt-24 md:pb-28">
@@ -253,7 +281,15 @@ export default function LandingPage() {
                 transition={{ duration: 0.32, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
               >
                 <span className="block text-[#F0EEE9]">All your prep.</span>
-                <span className="block text-[var(--cam-gold-leaf)]">
+                <span
+                  className="block"
+                  style={{
+                    background: 'linear-gradient(120deg, #60A5FA 0%, #3683DC 30%, #A855F7 70%, #818CF8 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}
+                >
                   One trusted platform.
                 </span>
               </motion.h1>
