@@ -74,6 +74,7 @@ interface AuthContextType {
   accessLoading: boolean;
   refreshSubscription?: () => void;
   refreshTeam?: () => void;
+  markOnboardingComplete: () => void;
   logout: () => void;
 }
 
@@ -89,6 +90,7 @@ const AuthContext = createContext<AuthContextType>({
   teamLoading: true,
   hasTeamAccess: false,
   accessLoading: true,
+  markOnboardingComplete: () => {},
   logout: () => {},
 });
 
@@ -390,7 +392,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, subscription, subscriptionLoading, team, teamLoading, hasTeamAccess, accessLoading, refreshSubscription, refreshTeam, logout }}>
+    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, subscription, subscriptionLoading, team, teamLoading, hasTeamAccess, accessLoading, refreshSubscription, refreshTeam, markOnboardingComplete: () => setOnboardingCompleted(true), logout }}>
       {children}
     </AuthContext.Provider>
   );
