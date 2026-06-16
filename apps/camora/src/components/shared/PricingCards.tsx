@@ -6,22 +6,24 @@ import { isOwner } from '../../lib/owner';
 
 const BILLING_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
-// ── Linode cloud console design tokens ──────────────────────────────────────
+// ── Linode/Akamai Cloud Manager tokens — light theme, Akamai blue, Nunito Sans
 const LN = {
-  bg:          '#0D1017',
-  surface:     '#13161E',
-  card:        '#191D27',
-  cardHover:   '#1E2230',
-  border:      '#252A36',
-  borderHover: '#353B4C',
-  green:       '#02B159',
-  greenFade:   'rgba(2,177,89,0.10)',
-  greenBorder: 'rgba(2,177,89,0.25)',
-  greenDk:     '#019A4D',
-  text:        '#E4E7F0',
-  muted:       '#7C849C',
-  dim:         '#4A5168',
-  blue:        '#3683DC',
+  bg:         '#F4F5F6',
+  surface:    '#FFFFFF',
+  card:       '#FFFFFF',
+  cardHover:  '#F8F9FA',
+  border:     '#D9DADB',
+  divider:    '#E8E9EA',
+  blue:       '#3683DC',
+  blueFade:   'rgba(54,131,220,0.10)',
+  blueBorder: 'rgba(54,131,220,0.30)',
+  blueDk:     '#2265BF',
+  text:       '#1A1A1A',
+  textSub:    '#606060',
+  muted:      '#909099',
+  dim:        '#C0C0C8',
+  font:       "'Nunito Sans', 'Inter', system-ui, sans-serif",
+  mono:       "'IBM Plex Mono', ui-monospace, monospace",
 } as const;
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -92,7 +94,7 @@ const TEAM_SEATS_MAX = 50;
 const teamMonthlyPrice = (seats: number) => seats * 20 - 1;
 const teamIncludedHours = (seats: number) => Math.ceil(seats * 0.7);
 
-// ── Price fetching ───────────────────────────────────────────────────────────
+// ── Price fetching ────────────────────────────────────────────────────────────
 export function usePlanPrices() {
   const [prices, setPrices] = useState<Record<string, { priceId: string }> | null>(null);
   useEffect(() => {
@@ -120,7 +122,7 @@ export function usePlanPrices() {
   return prices;
 }
 
-// ── Checkout hook ────────────────────────────────────────────────────────────
+// ── Checkout hook ─────────────────────────────────────────────────────────────
 export function useCheckout() {
   const { token, user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -141,10 +143,7 @@ export function useCheckout() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${currentToken}` },
         body: JSON.stringify({ returnUrl: returnUrl || window.location.href }),
       });
-      if (res.ok) {
-        const { url } = await res.json();
-        window.location.href = url;
-      }
+      if (res.ok) { const { url } = await res.json(); window.location.href = url; }
     } catch { /* ignore */ }
   };
 
@@ -207,8 +206,8 @@ export function useCheckout() {
   return { checkout, loading, goToPortal, prepareUrl };
 }
 
-// ── Shared check icon ────────────────────────────────────────────────────────
-function Check({ size = 12, color = LN.green }: { size?: number; color?: string }) {
+// ── Checkmark icon ────────────────────────────────────────────────────────────
+function Check({ size = 12, color = LN.blue }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth={2.5} aria-hidden="true">
       <path d="M13 4 L6 11 L3 8" strokeLinecap="round" strokeLinejoin="round" />
@@ -216,11 +215,9 @@ function Check({ size = 12, color = LN.green }: { size?: number; color?: string 
   );
 }
 
-// ── Solo plan rows (Linode-style selectable table rows) ──────────────────────
+// ── Solo plan table rows — Linode-style selectable rows ───────────────────────
 function SoloPlanTable({
-  prices,
-  checkout,
-  loading,
+  prices, checkout, loading,
 }: {
   prices: Record<string, { priceId: string }> | null;
   checkout: (priceId: string, planName: string) => void;
@@ -229,31 +226,26 @@ function SoloPlanTable({
   const [selected, setSelected] = useState<'monthly' | 'yearly'>('monthly');
 
   return (
-    <div>
+    <div style={{ fontFamily: LN.font }}>
       {/* Column header */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 160px 120px 180px',
-        padding: '8px 20px',
-        background: LN.surface,
+        display: 'grid', gridTemplateColumns: '1fr 180px 120px 200px',
+        padding: '8px 16px',
+        background: LN.bg,
         border: `1px solid ${LN.border}`,
         borderBottom: 'none',
         borderRadius: '4px 4px 0 0',
       }}>
         {['Plan', 'AI Hours Included', 'Billing', 'Price'].map((col, i) => (
           <span key={col} style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: LN.muted,
-            fontFamily: 'IBM Plex Mono, monospace',
-            textAlign: i === 0 ? 'left' : 'right',
+            fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
+            textTransform: 'uppercase', color: LN.muted,
+            fontFamily: LN.mono, textAlign: i === 0 ? 'left' : 'right',
           }}>{col}</span>
         ))}
       </div>
 
-      {/* Rows */}
+      {/* Plan rows */}
       <div style={{ border: `1px solid ${LN.border}`, borderRadius: '0 0 4px 4px', overflow: 'hidden' }}>
         {SOLO_PLANS.map((plan, idx) => {
           const isSelected = selected === plan.id;
@@ -265,26 +257,25 @@ function SoloPlanTable({
               key={plan.id}
               onClick={() => setSelected(plan.id)}
               style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 160px 120px 180px',
-                padding: '16px 20px',
+                display: 'grid', gridTemplateColumns: '1fr 180px 120px 200px',
+                padding: '14px 16px',
                 cursor: 'pointer',
-                background: isSelected ? 'rgba(2,177,89,0.07)' : LN.card,
-                borderLeft: `3px solid ${isSelected ? LN.green : 'transparent'}`,
-                borderBottom: idx < SOLO_PLANS.length - 1 ? `1px solid ${LN.border}` : 'none',
+                background: isSelected ? LN.blueFade : LN.card,
+                borderLeft: `3px solid ${isSelected ? LN.blue : 'transparent'}`,
+                borderBottom: idx < SOLO_PLANS.length - 1 ? `1px solid ${LN.divider}` : 'none',
                 transition: 'background 0.1s',
                 alignItems: 'center',
               }}
               onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = LN.cardHover; }}
               onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = LN.card; }}
             >
-              {/* Plan name + radio */}
+              {/* Radio + plan name */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
-                  width: 16, height: 16, borderRadius: '50%',
-                  border: `2px solid ${isSelected ? LN.green : LN.dim}`,
-                  background: isSelected ? LN.green : 'transparent',
-                  flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
+                  border: `2px solid ${isSelected ? LN.blue : LN.dim}`,
+                  background: isSelected ? LN.blue : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.1s',
                 }}>
                   {isSelected && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff' }} />}
@@ -296,9 +287,9 @@ function SoloPlanTable({
                       <span style={{
                         fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
                         padding: '2px 6px', borderRadius: 2,
-                        background: isSelected ? LN.green : LN.border,
+                        background: isSelected ? LN.blue : LN.border,
                         color: isSelected ? '#fff' : LN.muted,
-                        fontFamily: 'IBM Plex Mono, monospace', transition: 'all 0.1s',
+                        fontFamily: LN.mono, transition: 'all 0.1s',
                       }}>{plan.badge}</span>
                     )}
                   </div>
@@ -308,20 +299,20 @@ function SoloPlanTable({
 
               {/* AI Hours */}
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: 12, fontFamily: 'IBM Plex Mono, monospace', color: isSelected ? LN.green : LN.muted }}>
+                <span style={{ fontSize: 12, fontFamily: LN.mono, color: isSelected ? LN.blue : LN.muted }}>
                   {plan.aiHours}
                 </span>
               </div>
 
               {/* Billing cycle */}
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: 12, color: LN.dim }}>{plan.id === 'monthly' ? 'Monthly' : 'Yearly'}</span>
+                <span style={{ fontSize: 12, color: LN.muted }}>{plan.id === 'monthly' ? 'Monthly' : 'Yearly'}</span>
               </div>
 
               {/* Price + CTA */}
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                 <div>
-                  <span style={{ fontSize: 20, fontWeight: 700, color: LN.text, fontFamily: 'IBM Plex Mono, monospace' }}>{plan.price}</span>
+                  <span style={{ fontSize: 20, fontWeight: 700, color: LN.text, fontFamily: LN.mono }}>{plan.price}</span>
                   <span style={{ fontSize: 11, color: LN.muted }}>/{plan.periodShort}</span>
                 </div>
                 {isSelected && (
@@ -330,8 +321,9 @@ function SoloPlanTable({
                     disabled={isLoading || !priceId}
                     style={{
                       padding: '7px 16px', fontSize: 12, fontWeight: 700, borderRadius: 3,
-                      background: LN.green, color: '#fff', border: 'none',
+                      background: LN.blue, color: '#fff', border: 'none',
                       cursor: isLoading ? 'wait' : 'pointer', opacity: isLoading ? 0.7 : 1,
+                      fontFamily: LN.font,
                     }}
                   >
                     {isLoading ? 'Processing…' : plan.cta}
@@ -343,19 +335,19 @@ function SoloPlanTable({
         })}
       </div>
 
-      {/* Feature breakdown for selected plan */}
+      {/* Feature list for selected plan */}
       {(() => {
         const plan = SOLO_PLANS.find(p => p.id === selected)!;
         return (
           <div style={{
-            marginTop: 10, padding: '12px 20px',
-            background: LN.surface, border: `1px solid ${LN.border}`, borderRadius: 4,
+            marginTop: 8, padding: '12px 16px',
+            background: LN.bg, border: `1px solid ${LN.border}`, borderRadius: 4,
             display: 'flex', flexWrap: 'wrap', gap: '6px 28px',
           }}>
             {plan.features.map((f, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                 <Check size={11} />
-                <span style={{ fontSize: 12, color: LN.muted }}>{f}</span>
+                <span style={{ fontSize: 12, color: LN.textSub }}>{f}</span>
               </div>
             ))}
           </div>
@@ -365,10 +357,9 @@ function SoloPlanTable({
   );
 }
 
-// ── Team plan panel ──────────────────────────────────────────────────────────
+// ── Team plan panel ───────────────────────────────────────────────────────────
 function TeamPlanSection({
-  checkout,
-  loading,
+  checkout, loading,
 }: {
   checkout: (priceId: string, planName: string, opts?: { team?: { seats: number } }) => void;
   loading: string;
@@ -384,65 +375,62 @@ function TeamPlanSection({
     <div style={{
       display: 'grid', gridTemplateColumns: '1fr 260px', gap: 1,
       background: LN.border, border: `1px solid ${LN.border}`, borderRadius: 4, overflow: 'hidden',
+      fontFamily: LN.font,
     }}>
-      {/* Configurator */}
       <div style={{ background: LN.card, padding: '24px 28px' }}>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 6 }}>Team Size</div>
-          <div style={{ fontSize: 13, color: LN.text, marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 6 }}>Team Size</div>
+          <div style={{ fontSize: 13, color: LN.textSub, marginBottom: 14 }}>
             Choose your seat count (5–50). Price and pooled hours update automatically.
           </div>
-
           <input
             type="range" min={TEAM_SEATS_MIN} max={TEAM_SEATS_MAX} step={1} value={seats}
             onChange={e => setSeats(parseInt(e.target.value, 10))}
-            style={{ width: '100%', accentColor: LN.green, marginBottom: 4 }}
+            style={{ width: '100%', accentColor: LN.blue, marginBottom: 4 }}
             aria-label="Team seats"
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: LN.dim, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: LN.dim, fontFamily: LN.mono, marginBottom: 14 }}>
             <span>5 seats</span><span>50 seats</span>
           </div>
-
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {presets.map(n => (
               <button key={n} onClick={() => setSeats(n)} style={{
-                padding: '5px 12px', fontSize: 12, fontWeight: 600, fontFamily: 'IBM Plex Mono, monospace',
-                borderRadius: 3, border: `1px solid ${n === seats ? LN.green : LN.border}`,
-                background: n === seats ? LN.greenFade : LN.surface,
-                color: n === seats ? LN.green : LN.muted, cursor: 'pointer',
+                padding: '5px 12px', fontSize: 12, fontWeight: 600, fontFamily: LN.mono,
+                borderRadius: 3,
+                border: `1px solid ${n === seats ? LN.blue : LN.border}`,
+                background: n === seats ? LN.blueFade : LN.bg,
+                color: n === seats ? LN.blue : LN.muted, cursor: 'pointer',
               }}>{n} seats</button>
             ))}
           </div>
         </div>
-
-        <div style={{ borderTop: `1px solid ${LN.border}`, paddingTop: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 10 }}>Included</div>
+        <div style={{ borderTop: `1px solid ${LN.divider}`, paddingTop: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 10 }}>Included</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 20px' }}>
             {['Pooled AI hours across team', 'Per-member usage breakdown', 'Single invoice, multiple seats', 'Pooled top-ups never expire', 'Live session AI co-pilot', 'All Camora features unlocked'].map((f, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <Check size={11} /><span style={{ fontSize: 12, color: LN.muted }}>{f}</span>
+                <Check size={11} /><span style={{ fontSize: 12, color: LN.textSub }}>{f}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Summary sidebar */}
-      <div style={{ background: LN.surface, padding: '24px 22px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 16 }}>Summary</div>
+      <div style={{ background: LN.bg, padding: '24px 22px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${LN.divider}` }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 16 }}>Summary</div>
         <div style={{ marginBottom: 16 }}>
           {[['Seats', `${seats}`], ['AI Hours / mo', `${hours} hrs`], ['Billing', 'Monthly']].map(([k, v], i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 13, color: LN.muted }}>{k}</span>
-              <span style={{ fontSize: 13, fontWeight: i === 1 ? 600 : 400, color: i === 1 ? LN.green : LN.text, fontFamily: 'IBM Plex Mono, monospace' }}>{v}</span>
+              <span style={{ fontSize: 13, fontWeight: i === 1 ? 600 : 400, color: i === 1 ? LN.blue : LN.text, fontFamily: LN.mono }}>{v}</span>
             </div>
           ))}
         </div>
-        <div style={{ borderTop: `1px solid ${LN.border}`, paddingTop: 14, marginBottom: 18 }}>
+        <div style={{ borderTop: `1px solid ${LN.divider}`, paddingTop: 14, marginBottom: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: LN.text }}>Total</span>
             <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: 26, fontWeight: 700, color: LN.text, fontFamily: 'IBM Plex Mono, monospace', lineHeight: 1 }}>${monthly}</span>
+              <span style={{ fontSize: 26, fontWeight: 700, color: LN.text, fontFamily: LN.mono, lineHeight: 1 }}>${monthly}</span>
               <div style={{ fontSize: 11, color: LN.muted }}>/month</div>
             </div>
           </div>
@@ -450,24 +438,22 @@ function TeamPlanSection({
         <button
           onClick={() => checkout('', planName, { team: { seats } })}
           disabled={isLoading}
-          style={{ width: '100%', padding: '10px 0', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.green, color: '#fff', border: 'none', cursor: isLoading ? 'wait' : 'pointer', opacity: isLoading ? 0.7 : 1 }}
+          style={{ width: '100%', padding: '10px 0', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.blue, color: '#fff', border: 'none', cursor: isLoading ? 'wait' : 'pointer', opacity: isLoading ? 0.7 : 1, fontFamily: LN.font }}
         >
           {isLoading ? 'Processing…' : 'Start Team Plan'}
         </button>
-        <p style={{ fontSize: 11, color: LN.dim, textAlign: 'center', marginTop: 8 }}>Cancel any time · Invite team after checkout</p>
+        <p style={{ fontSize: 11, color: LN.muted, textAlign: 'center', marginTop: 8 }}>Cancel any time · Invite team after checkout</p>
       </div>
     </div>
   );
 }
 
-// ── AI Hours panel ───────────────────────────────────────────────────────────
+// ── AI Hours panel ────────────────────────────────────────────────────────────
 const TOPUP_QTY_MIN = 1;
 const TOPUP_QTY_MAX = 50;
 
 function HoursSection({
-  prices,
-  checkout,
-  loading,
+  prices, checkout, loading,
 }: {
   prices: Record<string, { priceId: string }> | null;
   checkout: (priceId: string, planName: string, opts?: { quantity?: number }) => void;
@@ -485,66 +471,68 @@ function HoursSection({
     <div style={{
       display: 'grid', gridTemplateColumns: '1fr 260px', gap: 1,
       background: LN.border, border: `1px solid ${LN.border}`, borderRadius: 4, overflow: 'hidden',
+      fontFamily: LN.font,
     }}>
       <div style={{ background: LN.card, padding: '24px 28px' }}>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 6 }}>Quantity</div>
-          <div style={{ fontSize: 13, color: LN.text, marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 6 }}>Quantity</div>
+          <div style={{ fontSize: 13, color: LN.textSub, marginBottom: 14 }}>
             Add hours to your subscription. <span style={{ color: LN.muted }}>$15/hr · hours never expire.</span>
           </div>
           <input
             type="range" min={TOPUP_QTY_MIN} max={TOPUP_QTY_MAX} step={1} value={qty}
             onChange={e => setQty(parseInt(e.target.value, 10))}
-            style={{ width: '100%', accentColor: LN.green, marginBottom: 4 }}
+            style={{ width: '100%', accentColor: LN.blue, marginBottom: 4 }}
             aria-label="Hours quantity"
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: LN.dim, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: LN.dim, fontFamily: LN.mono, marginBottom: 14 }}>
             <span>1 hr</span><span>50 hrs</span>
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
             {presets.map(n => (
               <button key={n} onClick={() => setQty(n)} style={{
-                padding: '5px 12px', fontSize: 12, fontWeight: 600, fontFamily: 'IBM Plex Mono, monospace',
-                borderRadius: 3, border: `1px solid ${n === qty ? LN.green : LN.border}`,
-                background: n === qty ? LN.greenFade : LN.surface,
-                color: n === qty ? LN.green : LN.muted, cursor: 'pointer',
+                padding: '5px 12px', fontSize: 12, fontWeight: 600, fontFamily: LN.mono,
+                borderRadius: 3,
+                border: `1px solid ${n === qty ? LN.blue : LN.border}`,
+                background: n === qty ? LN.blueFade : LN.bg,
+                color: n === qty ? LN.blue : LN.muted, cursor: 'pointer',
               }}>{n}h</button>
             ))}
             <input
               type="number" min={TOPUP_QTY_MIN} max={TOPUP_QTY_MAX} value={qty}
               onChange={e => { const v = parseInt(e.target.value, 10); if (Number.isFinite(v)) setQty(Math.max(TOPUP_QTY_MIN, Math.min(TOPUP_QTY_MAX, v))); }}
-              style={{ width: 64, padding: '5px 8px', fontSize: 12, fontFamily: 'IBM Plex Mono, monospace', borderRadius: 3, border: `1px solid ${LN.border}`, background: LN.surface, color: LN.text, outline: 'none' }}
+              style={{ width: 64, padding: '5px 8px', fontSize: 12, fontFamily: LN.mono, borderRadius: 3, border: `1px solid ${LN.border}`, background: LN.card, color: LN.text, outline: 'none' }}
               aria-label="Hours numeric"
             />
           </div>
         </div>
-        <div style={{ borderTop: `1px solid ${LN.border}`, paddingTop: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 10 }}>Details</div>
+        <div style={{ borderTop: `1px solid ${LN.divider}`, paddingTop: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 10 }}>Details</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 20px' }}>
             {['One-time charge, no auto-renew', 'Hours never expire', 'Stack on any subscription', 'Available to subscribers only'].map((f, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <Check size={11} /><span style={{ fontSize: 12, color: LN.muted }}>{f}</span>
+                <Check size={11} /><span style={{ fontSize: 12, color: LN.textSub }}>{f}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div style={{ background: LN.surface, padding: '24px 22px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 16 }}>Summary</div>
+      <div style={{ background: LN.bg, padding: '24px 22px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${LN.divider}` }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 16 }}>Summary</div>
         <div style={{ marginBottom: 16 }}>
           {[['Hours', `${qty} ${qty === 1 ? 'hr' : 'hrs'}`], ['Rate', '$15/hr'], ['Expires', 'Never']].map(([k, v], i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 13, color: LN.muted }}>{k}</span>
-              <span style={{ fontSize: 13, fontWeight: i === 2 ? 600 : 400, color: i === 2 ? LN.green : LN.text, fontFamily: 'IBM Plex Mono, monospace' }}>{v}</span>
+              <span style={{ fontSize: 13, fontWeight: i === 2 ? 600 : 400, color: i === 2 ? LN.blue : LN.text, fontFamily: LN.mono }}>{v}</span>
             </div>
           ))}
         </div>
-        <div style={{ borderTop: `1px solid ${LN.border}`, paddingTop: 14, marginBottom: 18 }}>
+        <div style={{ borderTop: `1px solid ${LN.divider}`, paddingTop: 14, marginBottom: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: LN.text }}>Total</span>
             <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: 26, fontWeight: 700, color: LN.text, fontFamily: 'IBM Plex Mono, monospace', lineHeight: 1 }}>${total}</span>
+              <span style={{ fontSize: 26, fontWeight: 700, color: LN.text, fontFamily: LN.mono, lineHeight: 1 }}>${total}</span>
               <div style={{ fontSize: 11, color: LN.muted }}>one-time</div>
             </div>
           </div>
@@ -552,21 +540,21 @@ function HoursSection({
         <button
           onClick={() => priceId ? checkout(priceId, planName, { quantity: qty }) : navigate('/pricing')}
           disabled={isLoading || !priceId}
-          style={{ width: '100%', padding: '10px 0', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.green, color: '#fff', border: 'none', cursor: isLoading ? 'wait' : 'pointer', opacity: (isLoading || !priceId) ? 0.7 : 1 }}
+          style={{ width: '100%', padding: '10px 0', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.blue, color: '#fff', border: 'none', cursor: isLoading ? 'wait' : 'pointer', opacity: (isLoading || !priceId) ? 0.7 : 1, fontFamily: LN.font }}
         >
           {isLoading ? 'Processing…' : `Buy ${qty} ${qty === 1 ? 'Hour' : 'Hours'}`}
         </button>
-        <p style={{ fontSize: 11, color: LN.dim, textAlign: 'center', marginTop: 8 }}>Subscribers only · No auto-renew</p>
+        <p style={{ fontSize: 11, color: LN.muted, textAlign: 'center', marginTop: 8 }}>Subscribers only · No auto-renew</p>
       </div>
     </div>
   );
 }
 
-// ── Tab navigation ───────────────────────────────────────────────────────────
+// ── Tab navigation ────────────────────────────────────────────────────────────
 const TABS = ['Solo Plans', 'Team Plans', 'AI Hours'] as const;
 type Tab = typeof TABS[number];
 
-// ── Main PricingCards export ─────────────────────────────────────────────────
+// ── Main export ───────────────────────────────────────────────────────────────
 export default function PricingCards({
   showFree: _showFree,
   variant: _variant,
@@ -581,15 +569,19 @@ export default function PricingCards({
 
   if (isOwner(user)) {
     return (
-      <div style={{ padding: 32, background: LN.card, border: `1px solid ${LN.greenBorder}`, borderRadius: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 16 }}>
-        <span style={{ padding: '3px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', borderRadius: 2, background: LN.greenFade, color: LN.green, border: `1px solid ${LN.greenBorder}`, fontFamily: 'IBM Plex Mono, monospace' }}>
+      <div style={{
+        padding: 32, background: LN.card, border: `1px solid ${LN.blueBorder}`, borderRadius: 4,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 16,
+        fontFamily: LN.font,
+      }}>
+        <span style={{ padding: '3px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', borderRadius: 2, background: LN.blueFade, color: LN.blue, border: `1px solid ${LN.blueBorder}`, fontFamily: LN.mono }}>
           Admin Access
         </span>
         <h3 style={{ fontSize: 18, fontWeight: 700, color: LN.text, margin: 0 }}>All features unlocked</h3>
-        <p style={{ fontSize: 13, color: LN.muted, maxWidth: 400, margin: 0 }}>
+        <p style={{ fontSize: 13, color: LN.textSub, maxWidth: 400, margin: 0 }}>
           Your account has owner-level access. Use the billing portal to view invoices, manage payment methods, or adjust subscriptions.
         </p>
-        <button onClick={() => goToPortal(prepareUrl)} style={{ marginTop: 8, padding: '9px 24px', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.green, color: '#fff', border: 'none', cursor: 'pointer' }}>
+        <button onClick={() => goToPortal(prepareUrl)} style={{ marginTop: 8, padding: '9px 24px', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.blue, color: '#fff', border: 'none', cursor: 'pointer', fontFamily: LN.font }}>
           Open Billing Portal
         </button>
       </div>
@@ -597,24 +589,20 @@ export default function PricingCards({
   }
 
   return (
-    <div>
+    <div style={{ fontFamily: LN.font }}>
       {/* Linode-style underline tab bar */}
       <div style={{ display: 'flex', borderBottom: `1px solid ${LN.border}`, marginBottom: 20 }}>
         {TABS.map(tab => {
           const isActive = activeTab === tab;
           return (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              style={{
-                padding: '10px 20px', fontSize: 13, fontWeight: isActive ? 600 : 400,
-                color: isActive ? LN.text : LN.muted, background: 'transparent', border: 'none',
-                borderBottom: `2px solid ${isActive ? LN.green : 'transparent'}`,
-                marginBottom: -1, cursor: 'pointer', transition: 'color 0.1s', whiteSpace: 'nowrap',
-              }}
-            >
-              {tab}
-            </button>
+            <button key={tab} onClick={() => setActiveTab(tab)} style={{
+              padding: '10px 20px', fontSize: 13, fontWeight: isActive ? 600 : 400,
+              color: isActive ? LN.blue : LN.muted,
+              background: 'transparent', border: 'none',
+              borderBottom: `2px solid ${isActive ? LN.blue : 'transparent'}`,
+              marginBottom: -1, cursor: 'pointer', transition: 'color 0.1s', whiteSpace: 'nowrap',
+              fontFamily: LN.font,
+            }}>{tab}</button>
           );
         })}
       </div>
