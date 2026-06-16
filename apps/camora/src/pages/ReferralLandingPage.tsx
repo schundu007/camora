@@ -25,7 +25,7 @@ export default function ReferralLandingPage() {
   }, [code, navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0A1228] text-white font-sans">
+    <div className="min-h-screen flex flex-col font-sans" style={{ background: 'var(--cam-hero-bg)', color: 'var(--text-primary)' }}>
       <SiteNav />
       <div className="relative flex-1 flex flex-col items-center justify-center gap-4">
         <div
