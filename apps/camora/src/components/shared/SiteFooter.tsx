@@ -15,7 +15,7 @@ export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | '
   return (
     <footer
       className="mt-auto border-t"
-      style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)', borderTopColor: 'var(--accent-secondary)' }}
+      style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)', borderTopColor: 'var(--border)' }}
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-2 gap-10 md:grid-cols-12">
