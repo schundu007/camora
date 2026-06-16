@@ -436,7 +436,7 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       // Save the billing address the customer enters to the Customer object.
       // Required when automatic_tax is enabled so Stripe can calculate tax
       // on future invoices (and subscriptions) using a real address.
-      customer_update: { address: 'auto' },
+      customer_update: { address: 'auto', name: 'auto' },
       ...(isOneTime ? {} : {
         subscription_data: {
           metadata: { user_id: userId.toString(), type: purchaseType },
