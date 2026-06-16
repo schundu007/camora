@@ -602,7 +602,8 @@ export default function OnboardingPage() {
 
         {/* Footer */}
         <p className="text-center text-xs text-[var(--text-muted)] mt-6">
-          You can update these preferences anytime in Settings
+          You can update these preferences anytime in{' '}
+          <a href="/profile?tab=preferences" className="underline" style={{ color: 'inherit' }}>Profile → Preferences</a>
         </p>
       </div>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Chip from '../components/shared/ui/Chip';
@@ -17,10 +17,214 @@ const CAPRA_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.
 
 const TABS = [
   { key: 'general', label: 'General' },
+  { key: 'preferences', label: 'Preferences' },
   { key: 'achievements', label: 'Achievements' },
   { key: 'referrals', label: 'Referrals' },
   { key: 'contributions', label: 'Contributions' },
 ];
+
+const ALL_ROLES = [
+  'Backend Engineering', 'Frontend Engineering', 'Full Stack', 'DevOps / SRE',
+  'Data Engineering', 'ML / AI', 'Mobile', 'QA / Testing',
+  'Engineering Manager', 'Solutions Architect', 'Cloud Engineer', 'Platform Engineer',
+  'Security Engineering', 'Product Management', 'Technical Program Manager',
+  'Site Reliability Engineering', 'Database Administration', 'Embedded Systems',
+  'Game Development', 'Blockchain / Web3',
+];
+
+function PreferencesTab() {
+  const { token } = useAuth();
+  const [status, setStatus] = useState<{
+    onboarding_completed: boolean;
+    job_roles: string[];
+    has_resume: boolean;
+    resume_snippet: string | null;
+  } | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState(true);
+  const [resumeTab, setResumeTab] = useState<'upload' | 'text'>('upload');
+  const [resumeText, setResumeText] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [savingText, setSavingText] = useState(false);
+  const [resumeSaved, setResumeSaved] = useState(false);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [savingRoles, setSavingRoles] = useState(false);
+  const [rolesSaved, setRolesSaved] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch(`${CAPRA_API}/api/onboarding/status`, {
+      credentials: 'include',
+      headers: getAuthHeaders() as unknown as Record<string, string>,
+    })
+      .then(r => r.json())
+      .then(data => { setStatus(data); setSelectedRoles(data.job_roles || []); })
+      .catch(console.error)
+      .finally(() => setLoadingStatus(false));
+  }, [token]);
+
+  const handleFileUpload = async (file: File) => {
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('resume', file);
+    try {
+      const res = await fetch(`${CAPRA_API}/api/onboarding/upload-resume`, {
+        method: 'POST', credentials: 'include',
+        headers: getAuthHeaders() as unknown as Record<string, string>,
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setStatus(prev => prev ? { ...prev, has_resume: true, resume_snippet: (data.text || '').slice(0, 200) } : prev);
+        setResumeSaved(true);
+        setTimeout(() => setResumeSaved(false), 3000);
+      }
+    } finally { setUploading(false); }
+  };
+
+  const handleSaveResumeText = async () => {
+    if (!resumeText.trim()) return;
+    setSavingText(true);
+    try {
+      const res = await fetch(`${CAPRA_API}/api/onboarding/save-resume-text`, {
+        method: 'POST', credentials: 'include',
+        headers: { ...(getAuthHeaders() as object), 'Content-Type': 'application/json' } as Record<string, string>,
+        body: JSON.stringify({ resume_text: resumeText }),
+      });
+      if (res.ok) {
+        setStatus(prev => prev ? { ...prev, has_resume: true, resume_snippet: resumeText.slice(0, 200) } : prev);
+        setResumeSaved(true);
+        setTimeout(() => setResumeSaved(false), 3000);
+      }
+    } finally { setSavingText(false); }
+  };
+
+  const handleSaveRoles = async () => {
+    if (selectedRoles.length === 0) return;
+    setSavingRoles(true);
+    try {
+      const res = await fetch(`${CAPRA_API}/api/onboarding/update-roles`, {
+        method: 'POST', credentials: 'include',
+        headers: { ...(getAuthHeaders() as object), 'Content-Type': 'application/json' } as Record<string, string>,
+        body: JSON.stringify({ job_roles: selectedRoles }),
+      });
+      if (res.ok) {
+        setStatus(prev => prev ? { ...prev, job_roles: selectedRoles } : prev);
+        setRolesSaved(true);
+        setTimeout(() => setRolesSaved(false), 3000);
+      }
+    } finally { setSavingRoles(false); }
+  };
+
+  const cardHeader = (title: string, badge?: React.ReactNode, saved?: boolean) => (
+    <div className="px-5 py-3 flex items-center justify-between"
+      style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+      <div className="flex items-center gap-3">
+        <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>{title}</h3>
+        {badge}
+      </div>
+      {saved && <span className="text-[11px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
+    </div>
+  );
+
+  if (loadingStatus) return (
+    <div className="py-16 text-center text-sm" style={{ color: 'var(--text-muted)' }}>Loading preferences…</div>
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* ── Job Roles ─────────────────────────────────────────── */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        {cardHeader('Job Roles', undefined, rolesSaved)}
+        <div className="px-5 py-4">
+          <p className="text-[13px] mb-4" style={{ color: 'var(--text-secondary)' }}>
+            Select the roles you're actively interviewing for. Camora tailors AI coaching and practice questions to these tracks.
+          </p>
+          <div className="flex flex-wrap gap-2 mb-5">
+            {ALL_ROLES.map(role => {
+              const active = selectedRoles.includes(role);
+              return (
+                <button key={role} onClick={() => setSelectedRoles(prev => active ? prev.filter(r => r !== role) : [...prev, role])}
+                  className="px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors border"
+                  style={active
+                    ? { background: 'var(--cam-primary)', color: '#fff', borderColor: 'var(--cam-primary)' }
+                    : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }
+                  }>
+                  {role}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={handleSaveRoles} disabled={savingRoles || selectedRoles.length === 0}
+              className="px-4 py-2 rounded-lg text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
+              style={{ background: 'var(--cam-primary)' }}>
+              {savingRoles ? 'Saving…' : 'Save Roles'}
+            </button>
+            {selectedRoles.length > 0 && (
+              <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{selectedRoles.length} selected</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Resume ────────────────────────────────────────────── */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        {cardHeader(
+          'Resume',
+          status?.has_resume
+            ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={{ background: 'rgba(22,163,74,0.08)', color: '#16a34a', borderColor: 'rgba(22,163,74,0.3)' }}>On file</span>
+            : <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={{ background: 'rgba(217,119,6,0.08)', color: '#d97706', borderColor: 'rgba(217,119,6,0.3)' }}>Not uploaded</span>,
+          resumeSaved,
+        )}
+        <div className="px-5 py-4">
+          <p className="text-[13px] mb-4" style={{ color: 'var(--text-secondary)' }}>
+            Your resume lets Sona give role-specific answers grounded in your actual experience.
+          </p>
+          {status?.has_resume && status.resume_snippet && (
+            <div className="mb-4 p-3 rounded-lg text-[12px] font-mono" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {status.resume_snippet}…
+            </div>
+          )}
+          <div className="flex gap-1 mb-4">
+            {(['upload', 'text'] as const).map(t => (
+              <button key={t} onClick={() => setResumeTab(t)}
+                className="px-3 py-1 rounded text-[11px] font-bold uppercase tracking-wide transition-colors"
+                style={resumeTab === t
+                  ? { background: 'var(--cam-primary)', color: '#fff' }
+                  : { background: 'var(--bg-elevated)', color: 'var(--text-muted)' }
+                }>
+                {t === 'upload' ? 'Upload File' : 'Paste Text'}
+              </button>
+            ))}
+          </div>
+          {resumeTab === 'upload' ? (
+            <>
+              <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt" className="sr-only"
+                onChange={e => { const f = e.target.files?.[0]; if (f) { handleFileUpload(f); e.target.value = ''; } }} />
+              <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                className="w-full py-10 rounded-xl text-[13px] font-medium transition-colors disabled:opacity-50"
+                style={{ border: '2px dashed var(--border)', color: 'var(--text-muted)', background: 'var(--bg-elevated)' }}>
+                {uploading ? 'Uploading…' : '↑  Click to upload PDF, DOCX, or TXT  ·  max 5 MB'}
+              </button>
+            </>
+          ) : (
+            <>
+              <textarea value={resumeText} onChange={e => setResumeText(e.target.value)}
+                placeholder="Paste your full resume here…" rows={9}
+                className="w-full p-3 rounded-lg text-[13px] resize-none outline-none"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              <button onClick={handleSaveResumeText} disabled={savingText || !resumeText.trim()}
+                className="mt-2 px-4 py-2 rounded-lg text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
+                style={{ background: 'var(--cam-primary)' }}>
+                {savingText ? 'Saving…' : 'Save Resume'}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* ── Activity Heatmap ─────────────────────────────────── */
 function ActivityHeatmap() {
@@ -349,6 +553,8 @@ export default function ProfilePage() {
             <DeleteAccount />
           </div>
         )}
+
+        {activeTab === 'preferences' && <PreferencesTab />}
 
         {activeTab === 'achievements' && (
           <div className="space-y-6">
