@@ -429,7 +429,9 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       success_url: successUrl,
       cancel_url: cancelUrl,
       billing_address_collection: 'required',
-      tax_id_collection: { enabled: true },
+      // tax_id_collection only supported in subscription mode; payment mode throws.
+      // 2025-03-31.basil also requires explicit `required` field.
+      ...(!isOneTime ? { tax_id_collection: { enabled: true, required: 'if_supported' } } : {}),
       ...(process.env.STRIPE_AUTOMATIC_TAX === '1' ? { automatic_tax: { enabled: true } } : {}),
       ...(isOneTime ? {} : {
         subscription_data: {
@@ -455,8 +457,8 @@ router.post('/checkout', jwtAuth, async (req, res) => {
       url: session.url,
     });
   } catch (error) {
-    logger.error({ error: error.message }, 'Checkout session creation failed');
-    res.status(500).json({ error: 'Failed to create checkout session' });
+    logger.error({ error: error.message, type: error.type, code: error.code }, 'Checkout session creation failed');
+    res.status(500).json({ error: 'Failed to create checkout session', detail: error.message });
   }
 });
 
