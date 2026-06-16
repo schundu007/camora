@@ -463,7 +463,11 @@ function HoursSection({
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const priceId = prices?.['topup_1h']?.priceId || '';
-  const total = HOUR_RATE_USD * qty;
+  const hasBulkDiscount = qty >= 10;
+  const discountRate = 0.30;
+  const ratePerHour = hasBulkDiscount ? HOUR_RATE_USD * (1 - discountRate) : HOUR_RATE_USD;
+  const total = Math.round(ratePerHour * qty * 100) / 100;
+  const fullTotal = HOUR_RATE_USD * qty;
   const presets = [1, 5, 10, 25, 50];
   const planName = `${qty}h Top-up`;
   const isLoading = loading === planName;
@@ -477,8 +481,13 @@ function HoursSection({
       <div style={{ background: LN.card, padding: '24px 28px' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 6 }}>Quantity</div>
-          <div style={{ fontSize: 13, color: LN.textSub, marginBottom: 14 }}>
-            Add hours to your subscription. <span style={{ color: LN.muted }}>$15/hr · hours never expire.</span>
+          <div style={{ fontSize: 13, color: LN.textSub, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span>Add hours to your subscription. <span style={{ color: LN.muted }}>$15/hr · hours never expire.</span></span>
+            {!hasBulkDiscount && (
+              <span style={{ fontSize: 11, color: LN.muted, background: LN.bg, border: `1px solid ${LN.border}`, borderRadius: 3, padding: '2px 8px', fontFamily: LN.mono }}>
+                Buy 10+ hrs → <strong style={{ color: LN.blue }}>30% off</strong>
+              </span>
+            )}
           </div>
           <input
             type="range" min={TOPUP_QTY_MIN} max={TOPUP_QTY_MAX} step={1} value={qty}
@@ -521,20 +530,46 @@ function HoursSection({
 
       <div style={{ background: LN.bg, padding: '24px 22px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${LN.divider}` }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 16 }}>Summary</div>
+        {hasBulkDiscount && (
+          <div style={{
+            marginBottom: 14, padding: '8px 12px', borderRadius: 4,
+            background: 'rgba(37,99,235,0.12)', border: `1px solid ${LN.blue}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: LN.blue }}>Bulk discount applied</span>
+            <span style={{ fontSize: 14, fontWeight: 800, color: LN.blue, fontFamily: LN.mono }}>30% OFF</span>
+          </div>
+        )}
         <div style={{ marginBottom: 16 }}>
-          {[['Hours', `${qty} ${qty === 1 ? 'hr' : 'hrs'}`], ['Rate', '$15/hr'], ['Expires', 'Never']].map(([k, v], i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 13, color: LN.muted }}>{k}</span>
-              <span style={{ fontSize: 13, fontWeight: i === 2 ? 600 : 400, color: i === 2 ? LN.blue : LN.text, fontFamily: LN.mono }}>{v}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontSize: 13, color: LN.muted }}>Hours</span>
+            <span style={{ fontSize: 13, color: LN.text, fontFamily: LN.mono }}>{qty} {qty === 1 ? 'hr' : 'hrs'}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontSize: 13, color: LN.muted }}>Rate</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {hasBulkDiscount && (
+                <span style={{ fontSize: 12, color: LN.dim, fontFamily: LN.mono, textDecoration: 'line-through' }}>$15/hr</span>
+              )}
+              <span style={{ fontSize: 13, fontWeight: 700, color: hasBulkDiscount ? LN.blue : LN.text, fontFamily: LN.mono }}>
+                ${ratePerHour.toFixed(2).replace('.00', '')}/hr
+              </span>
             </div>
-          ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontSize: 13, color: LN.muted }}>Expires</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: LN.blue, fontFamily: LN.mono }}>Never</span>
+          </div>
         </div>
         <div style={{ borderTop: `1px solid ${LN.divider}`, paddingTop: 14, marginBottom: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: LN.text }}>Total</span>
             <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: 26, fontWeight: 700, color: LN.text, fontFamily: LN.mono, lineHeight: 1 }}>${total}</span>
-              <div style={{ fontSize: 11, color: LN.muted }}>one-time</div>
+              {hasBulkDiscount && (
+                <div style={{ fontSize: 13, color: LN.dim, fontFamily: LN.mono, textDecoration: 'line-through', marginBottom: 2 }}>${fullTotal}</div>
+              )}
+              <span style={{ fontSize: 26, fontWeight: 700, color: hasBulkDiscount ? LN.blue : LN.text, fontFamily: LN.mono, lineHeight: 1 }}>${total}</span>
+              <div style={{ fontSize: 11, color: LN.muted }}>one-time{hasBulkDiscount ? ` · save $${fullTotal - total}` : ''}</div>
             </div>
           </div>
         </div>
