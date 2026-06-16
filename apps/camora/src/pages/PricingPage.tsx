@@ -6,22 +6,22 @@ import SiteFooter from '../components/shared/SiteFooter';
 import SharedPricingCards from '../components/shared/PricingCards';
 import { useAuth } from '../contexts/AuthContext';
 
-// ── Linode/Akamai Cloud Manager tokens — light theme, Akamai blue, Nunito Sans
+// ── Design tokens — CSS variables so light/dark theme switches automatically
 const LN = {
-  bg:         '#F4F5F6',
-  surface:    '#FFFFFF',
-  card:       '#FFFFFF',
-  border:     '#D9DADB',
-  divider:    '#E8E9EA',
+  bg:         'var(--bg-base)',
+  surface:    'var(--bg-surface)',
+  card:       'var(--bg-surface)',
+  border:     'var(--border)',
+  divider:    'var(--border)',
   blue:       '#3683DC',
   blueFade:   'rgba(54,131,220,0.10)',
   blueBorder: 'rgba(54,131,220,0.30)',
-  text:       '#1A1A1A',
-  textSub:    '#606060',
-  muted:      '#909099',
-  dim:        '#C0C0C8',
-  font:       "'Nunito Sans', 'Inter', system-ui, sans-serif",
-  mono:       "'IBM Plex Mono', ui-monospace, monospace",
+  text:       'var(--text-primary)',
+  textSub:    'var(--text-secondary)',
+  muted:      'var(--text-muted)',
+  dim:        'var(--text-muted)',
+  font:       'var(--font-sans)',
+  mono:       'var(--font-mono)',
 } as const;
 
 // ── Comparison table data ────────────────────────────────────────────────────
@@ -131,7 +131,7 @@ export default function PricingPage() {
       {/* ── Page title ── */}
       <div style={{ background: LN.surface, borderBottom: `1px solid ${LN.border}`, padding: '36px 32px 30px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
-          <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.025em', background: 'linear-gradient(120deg, #1A1A1A 0%, #3683DC 55%, #6366F1 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.025em', background: 'linear-gradient(120deg, #60A5FA 0%, #3683DC 45%, #6366F1 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             Plans & Pricing
           </h1>
           <p style={{ fontSize: 15, color: LN.muted, margin: 0 }}>
