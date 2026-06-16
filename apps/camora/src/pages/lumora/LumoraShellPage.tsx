@@ -71,16 +71,6 @@ export const LumoraShellPage = () => {
   });
 
   // Sync coding platform to desktop main process and persist to localStorage.
-  // Stealth is always-on: enable on mount so entering the interview re-arms it
-  // even if the user turned it off elsewhere (e.g. for a screenshot).
-  useEffect(() => {
-    const camo = (window as any).camo;
-    if (camo?.setStealthMode) {
-      camo.setStealthMode(true);
-      setIsStealthActive(true);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Run immediately on mount to push the persisted value into main.js,
   // then again whenever the user changes the dropdown.
