@@ -4,46 +4,40 @@ import { useAuth } from '../../contexts/AuthContext';
 import { dialogAlert } from './Dialog';
 import { isOwner } from '../../lib/owner';
 
-// Billing routes through ascend-backend (caprab) — single source of truth
-// for subscriptions, checkout, and webhooks. Lumora-backend billing routes
-// were retired to eliminate dual-truth state divergence.
 const BILLING_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
-/* ── Pricing v3.2 — solo + dynamic team + per-hour topup ─────────────────
- *
- * Three buckets:
- *
- *   Solo
- *     · Monthly         — $19/month, 2 included AI hrs/cycle (popular)
- *     · Yearly          — $99/year, 5 included AI hrs/cycle (best value)
- *
- *   Team (5..50 seats, billed monthly)
- *     · Single dynamic SKU. Price = (seats × $20 − $1) / month.
- *       Included AI hrs = ⌈seats × 0.7⌉ / cycle.
- *       Examples: 5→$99/4h, 10→$199/7h, 15→$299/11h, 50→$999/35h.
- *     · No fixed Stripe SKU per seat — single product + price_data per checkout.
- *
- *   AI Hours (top-up, paid users only)
- *     · 1 hour at $15. Quantity selector — Stripe charges $15 × N.
- *       Hours never expire. Free users get a "subscribe first" prompt.
- *
- *   Free trial
- *     · 1 hour, expires 7 days from signup.
- *
- * Backend price keys (kept in stripe.js / billing.js):
- *   pro_monthly, pro_yearly, team (dynamic), topup_1h.
- */
+// ── Linode cloud console design tokens ──────────────────────────────────────
+const LN = {
+  bg:          '#0D1017',
+  surface:     '#13161E',
+  card:        '#191D27',
+  cardHover:   '#1E2230',
+  border:      '#252A36',
+  borderHover: '#353B4C',
+  green:       '#02B159',
+  greenFade:   'rgba(2,177,89,0.10)',
+  greenBorder: 'rgba(2,177,89,0.25)',
+  greenDk:     '#019A4D',
+  text:        '#E4E7F0',
+  muted:       '#7C849C',
+  dim:         '#4A5168',
+  blue:        '#3683DC',
+} as const;
 
+// ── Types ────────────────────────────────────────────────────────────────────
 export interface PlanCard {
   id: 'monthly' | 'yearly';
   name: string;
   price: string;
+  priceNum: number;
   period: string;
+  periodShort: string;
   priceKey: string;
   description: string;
+  aiHours: string;
   features: string[];
   cta: string;
-  highlight?: 'popular' | 'best';
+  badge?: string;
   bucket: 'solo';
 }
 
@@ -52,35 +46,40 @@ export const SOLO_PLANS: PlanCard[] = [
     id: 'monthly',
     name: 'Monthly',
     price: '$19',
+    priceNum: 19,
     period: '/month',
+    periodShort: 'mo',
     priceKey: 'pro_monthly',
-    description: '2 AI hours included. Buy more at $15/hr, never expire.',
+    description: '2 AI hours included every cycle.',
+    aiHours: '2 hrs / month',
     features: [
-      '2 AI hours included every month',
-      'Live session AI + coding solver',
-      'System design generator + voice filter',
-      'Prep · 1,400+ topics (unlimited browsing)',
-      'Top-ups at $15/hr if you need more',
+      'Live session AI co-pilot',
+      'Coding solver + system design',
+      'Voice filter + architecture diagrams',
+      'Prep — 1,400+ topics (unlimited)',
+      'Top-ups at $15/hr, never expire',
     ],
     cta: 'Start Monthly',
-    highlight: 'popular',
+    badge: 'Popular',
     bucket: 'solo',
   },
   {
     id: 'yearly',
     name: 'Yearly',
     price: '$99',
+    priceNum: 99,
     period: '/year',
+    periodShort: 'yr',
     priceKey: 'pro_yearly',
     description: 'Same access. Pay once, save $129.',
+    aiHours: '5 hrs / year',
     features: [
-      '5 AI hours included every year',
       'Everything in Monthly',
       'Works out to $8.25 / month',
-      'Top-ups at $15/hr if you need more',
+      'Top-ups at $15/hr, never expire',
     ],
     cta: 'Start Yearly',
-    highlight: 'best',
+    badge: 'Best Value',
     bucket: 'solo',
   },
 ];
@@ -88,19 +87,14 @@ export const SOLO_PLANS: PlanCard[] = [
 export const PLANS: PlanCard[] = [...SOLO_PLANS];
 
 const HOUR_RATE_USD = 15;
-const HOUR_RATE_DISPLAY = `$${HOUR_RATE_USD}`;
-
-// Dynamic team formulas — must match backend (computeTeamPriceCents /
-// computeTeamIncludedHours in routes/billing.js).
 const TEAM_SEATS_MIN = 5;
 const TEAM_SEATS_MAX = 50;
 const teamMonthlyPrice = (seats: number) => seats * 20 - 1;
 const teamIncludedHours = (seats: number) => Math.ceil(seats * 0.7);
 
-/* ── Shared price fetching hook ── */
+// ── Price fetching ───────────────────────────────────────────────────────────
 export function usePlanPrices() {
   const [prices, setPrices] = useState<Record<string, { priceId: string }> | null>(null);
-
   useEffect(() => {
     fetch(`${BILLING_API}/api/v1/billing/prices`)
       .then(r => r.json())
@@ -123,29 +117,15 @@ export function usePlanPrices() {
       })
       .catch(err => console.error('Failed to load plans:', err));
   }, []);
-
   return prices;
 }
 
-/* ── Shared checkout handler ──
- * Two shapes:
- *   (a) Fixed SKU:  checkout(priceId, name, { quantity? })  — solo + topup
- *   (b) Team:       checkout('', name, { team: { seats } }) — dynamic price_data
- *
- * AuthContext hydration race: when a user lands on /pricing and clicks a
- * plan card before AuthContext finishes loading the SSO cookie, `token`
- * is briefly null and the old code redirected straight to /login — even
- * though the user was logged in. We now poll a ref of the current token
- * for up to 2 seconds before deciding we're truly unauthed.
- */
+// ── Checkout hook ────────────────────────────────────────────────────────────
 export function useCheckout() {
   const { token, user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState('');
-
-  // Mirror token + auth-loading into refs so the async checkout function
-  // reads the latest value (closure would capture the value at click time).
   const tokenRef = useRef(token);
   const authLoadingRef = useRef(authLoading);
   useEffect(() => { tokenRef.current = token; }, [token]);
@@ -177,31 +157,15 @@ export function useCheckout() {
   ) => {
     const isTeam = !!opts?.team;
     if (!isTeam && !priceId) { navigate('/pricing'); return; }
-
-    // Admins go straight to the portal — no checkout needed
-    if (isOwner(user)) {
-      await goToPortal(prepareUrl);
-      return;
-    }
-
+    if (isOwner(user)) { await goToPortal(prepareUrl); return; }
     setLoading(planName);
-
-    // If AuthContext is still hydrating (cookie → /me → token roundtrip),
-    // give it up to 2s to resolve before redirecting to login. Otherwise
-    // a fast click on /pricing → "Start Monthly" lands the user on /login
-    // even though their cookie is valid.
     let waited = 0;
     while (!tokenRef.current && authLoadingRef.current && waited < 2000) {
       await new Promise(r => setTimeout(r, 100));
       waited += 100;
     }
     const currentToken = tokenRef.current;
-    if (!currentToken) {
-      setLoading('');
-      navigate('/login?redirect=/pricing');
-      return;
-    }
-
+    if (!currentToken) { setLoading(''); navigate('/login?redirect=/pricing'); return; }
     const raw = searchParams.get('returnTo');
     const returnTo = raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/lumora';
     const sep = returnTo.includes('?') ? '&' : '?';
@@ -222,173 +186,291 @@ export function useCheckout() {
       if (!resp.ok) {
         const body = await resp.json().catch(() => ({}));
         if (resp.status === 403 && body?.code === 'SUBSCRIPTION_REQUIRED_FOR_TOPUP') {
-          dialogAlert({
-            title: 'Subscribe first',
-            message: 'Hour top-ups are available to active subscribers. Pick Monthly, Yearly, or a Team plan to unlock per-hour purchases.',
-            tone: 'warning',
-          });
+          dialogAlert({ title: 'Subscribe first', message: 'Hour top-ups are available to active subscribers. Pick a plan to unlock per-hour purchases.', tone: 'warning' });
         } else if (resp.status === 400 && body?.code === 'ALREADY_SUBSCRIBED') {
-          setLoading('');
-          await goToPortal(prepareUrl);
-          return;
+          setLoading(''); await goToPortal(prepareUrl); return;
         } else if (resp.status === 503 || resp.status === 400) {
           dialogAlert({ title: 'Payment service unavailable', message: 'Please try again in a moment.', tone: 'danger' });
         } else if (body?.error) {
           dialogAlert({ title: 'Checkout failed', message: body.error, tone: 'danger' });
         }
-        setLoading('');
-        return;
+        setLoading(''); return;
       }
       const data = await resp.json();
       if (data.url) window.location.href = data.url;
       else dialogAlert({ title: 'Could not start checkout', message: 'Please try again.', tone: 'danger' });
     } catch {
       dialogAlert({ title: 'Payment service error', message: 'Please try again later.', tone: 'danger' });
-    } finally {
-      setLoading('');
-    }
+    } finally { setLoading(''); }
   };
 
   return { checkout, loading, goToPortal, prepareUrl };
 }
 
-/* ── Single solo plan card — refined, hairline-border approach ──
- * Cards use border + border-color for hover state instead of shadow lifts.
- * Monthly = bg-surface, Yearly = accent-dk. Both use accent for checkmarks/CTAs.
- */
-function PlanCardView({ plan, prices, checkout, loading, navigate }: {
-  plan: PlanCard;
+// ── Shared check icon ────────────────────────────────────────────────────────
+function Check({ size = 12, color = LN.green }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth={2.5} aria-hidden="true">
+      <path d="M13 4 L6 11 L3 8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// ── Solo plan rows (Linode-style selectable table rows) ──────────────────────
+function SoloPlanTable({
+  prices,
+  checkout,
+  loading,
+}: {
   prices: Record<string, { priceId: string }> | null;
-  checkout: (priceId: string, planName: string, opts?: { quantity?: number; team?: { seats: number } }) => void;
+  checkout: (priceId: string, planName: string) => void;
   loading: string;
-  navigate: ReturnType<typeof useNavigate>;
 }) {
-  const priceId = prices?.[plan.priceKey]?.priceId || '';
-  const isYearly = plan.id === 'yearly';
-
-  const stats = isYearly
-    ? { included: '5 AI hours included', equiv: '$8.25 / month', save: 'Save $129 a year' }
-    : { included: '2 AI hours included', equiv: 'Add more at $15/hr', save: 'Cancel any time' };
-
-  if (isYearly) {
-    return (
-      <div
-        className="rounded-2xl overflow-hidden flex flex-col transition-colors duration-200 active:scale-[0.98]"
-        style={{ background: 'color-mix(in oklab, var(--accent) 12%, var(--bg-surface))', border: '1px solid color-mix(in oklab, var(--accent) 30%, transparent)' }}
-      >
-        <div className="p-6 flex flex-col flex-1 text-[var(--text-primary)]">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-white" style={{ background: 'var(--accent)' }}>BEST VALUE</span>
-            <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>solo · billed yearly</span>
-          </div>
-          <h3 className="text-[22px] font-extrabold leading-tight mb-1" style={{ fontFamily: 'var(--font-display)' }}>
-            One charge. A year of edge.
-          </h3>
-          <p className="text-[12.5px] leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>{plan.description}</p>
-
-          <div className="rounded-xl p-4 mb-4" style={{ background: 'color-mix(in oklab, var(--accent) 6%, var(--bg-surface))', border: '1px solid color-mix(in oklab, var(--accent) 15%, transparent)' }}>
-            <div className="flex items-baseline justify-between mb-1">
-              <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>YOUR PLAN</span>
-              <span className="text-[10px]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{stats.equiv}</span>
-            </div>
-            <div className="flex items-baseline gap-1.5 mb-1">
-              <span className="text-5xl font-extrabold leading-none" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>{plan.price}</span>
-              <span className="text-[13px] font-medium" style={{ color: 'var(--text-muted)' }}>{plan.period}</span>
-            </div>
-            <div className="text-[11.5px]" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
-              {stats.included} · {stats.save}
-            </div>
-          </div>
-
-          <ul className="space-y-2 flex-1 mb-4 text-[12.5px]">
-            {plan.features.map((f, i) => (
-              <li key={i} className="flex items-start gap-2" style={{ color: 'var(--text-secondary)' }}>
-                <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                <span>{f}</span>
-              </li>
-            ))}
-          </ul>
-
-          <button
-            onClick={() => priceId ? checkout(priceId, plan.name) : navigate('/pricing')}
-            disabled={loading === plan.name}
-            className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-[background-color,opacity] duration-150 active:scale-[0.98] disabled:opacity-50"
-            style={{ background: 'var(--accent)', color: '#FFFFFF', border: '1px solid var(--accent)' }}
-          >
-            {loading === plan.name ? 'Processing…' : `${plan.cta} — ${plan.price}${plan.period}`}
-          </button>
-          <p className="text-[10.5px] text-center mt-2.5" style={{ color: 'var(--text-muted)' }}>
-            Cancel any time · Renews yearly
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const [selected, setSelected] = useState<'monthly' | 'yearly'>('monthly');
 
   return (
-    <div
-      className="rounded-2xl overflow-hidden flex flex-col transition-[border-color] duration-200 active:scale-[0.98] hover:[border-color:var(--accent)]"
-      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
-    >
-      <div className="p-6 flex flex-col flex-1">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-white" style={{ background: 'var(--accent)' }}>POPULAR</span>
-          <span className="text-[10px] uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>solo · billed monthly</span>
-        </div>
-        <h3 className="text-[22px] font-extrabold leading-tight mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
-          Full access. No commitment.
-        </h3>
-        <p className="text-[12.5px] leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>{plan.description}</p>
+    <div>
+      {/* Column header */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 160px 120px 180px',
+        padding: '8px 20px',
+        background: LN.surface,
+        border: `1px solid ${LN.border}`,
+        borderBottom: 'none',
+        borderRadius: '4px 4px 0 0',
+      }}>
+        {['Plan', 'AI Hours Included', 'Billing', 'Price'].map((col, i) => (
+          <span key={col} style={{
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: LN.muted,
+            fontFamily: 'IBM Plex Mono, monospace',
+            textAlign: i === 0 ? 'left' : 'right',
+          }}>{col}</span>
+        ))}
+      </div>
 
-        <div className="rounded-xl p-4 mb-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>YOUR PLAN</span>
-            <span className="text-[10px]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{stats.equiv}</span>
+      {/* Rows */}
+      <div style={{ border: `1px solid ${LN.border}`, borderRadius: '0 0 4px 4px', overflow: 'hidden' }}>
+        {SOLO_PLANS.map((plan, idx) => {
+          const isSelected = selected === plan.id;
+          const priceId = prices?.[plan.priceKey]?.priceId || '';
+          const isLoading = loading === plan.name;
+
+          return (
+            <div
+              key={plan.id}
+              onClick={() => setSelected(plan.id)}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 160px 120px 180px',
+                padding: '16px 20px',
+                cursor: 'pointer',
+                background: isSelected ? 'rgba(2,177,89,0.07)' : LN.card,
+                borderLeft: `3px solid ${isSelected ? LN.green : 'transparent'}`,
+                borderBottom: idx < SOLO_PLANS.length - 1 ? `1px solid ${LN.border}` : 'none',
+                transition: 'background 0.1s',
+                alignItems: 'center',
+              }}
+              onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = LN.cardHover; }}
+              onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = LN.card; }}
+            >
+              {/* Plan name + radio */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 16, height: 16, borderRadius: '50%',
+                  border: `2px solid ${isSelected ? LN.green : LN.dim}`,
+                  background: isSelected ? LN.green : 'transparent',
+                  flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.1s',
+                }}>
+                  {isSelected && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff' }} />}
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: LN.text }}>{plan.name}</span>
+                    {plan.badge && (
+                      <span style={{
+                        fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+                        padding: '2px 6px', borderRadius: 2,
+                        background: isSelected ? LN.green : LN.border,
+                        color: isSelected ? '#fff' : LN.muted,
+                        fontFamily: 'IBM Plex Mono, monospace', transition: 'all 0.1s',
+                      }}>{plan.badge}</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12, color: LN.muted, marginTop: 2 }}>{plan.description}</div>
+                </div>
+              </div>
+
+              {/* AI Hours */}
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: 12, fontFamily: 'IBM Plex Mono, monospace', color: isSelected ? LN.green : LN.muted }}>
+                  {plan.aiHours}
+                </span>
+              </div>
+
+              {/* Billing cycle */}
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: 12, color: LN.dim }}>{plan.id === 'monthly' ? 'Monthly' : 'Yearly'}</span>
+              </div>
+
+              {/* Price + CTA */}
+              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                <div>
+                  <span style={{ fontSize: 20, fontWeight: 700, color: LN.text, fontFamily: 'IBM Plex Mono, monospace' }}>{plan.price}</span>
+                  <span style={{ fontSize: 11, color: LN.muted }}>/{plan.periodShort}</span>
+                </div>
+                {isSelected && (
+                  <button
+                    onClick={e => { e.stopPropagation(); if (priceId) checkout(priceId, plan.name); }}
+                    disabled={isLoading || !priceId}
+                    style={{
+                      padding: '7px 16px', fontSize: 12, fontWeight: 700, borderRadius: 3,
+                      background: LN.green, color: '#fff', border: 'none',
+                      cursor: isLoading ? 'wait' : 'pointer', opacity: isLoading ? 0.7 : 1,
+                    }}
+                  >
+                    {isLoading ? 'Processing…' : plan.cta}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Feature breakdown for selected plan */}
+      {(() => {
+        const plan = SOLO_PLANS.find(p => p.id === selected)!;
+        return (
+          <div style={{
+            marginTop: 10, padding: '12px 20px',
+            background: LN.surface, border: `1px solid ${LN.border}`, borderRadius: 4,
+            display: 'flex', flexWrap: 'wrap', gap: '6px 28px',
+          }}>
+            {plan.features.map((f, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <Check size={11} />
+                <span style={{ fontSize: 12, color: LN.muted }}>{f}</span>
+              </div>
+            ))}
           </div>
-          <div className="flex items-baseline gap-1.5 mb-1">
-            <span className="text-5xl font-extrabold leading-none" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>{plan.price}</span>
-            <span className="text-[13px] font-medium" style={{ color: 'var(--text-muted)' }}>{plan.period}</span>
+        );
+      })()}
+    </div>
+  );
+}
+
+// ── Team plan panel ──────────────────────────────────────────────────────────
+function TeamPlanSection({
+  checkout,
+  loading,
+}: {
+  checkout: (priceId: string, planName: string, opts?: { team?: { seats: number } }) => void;
+  loading: string;
+}) {
+  const [seats, setSeats] = useState(10);
+  const monthly = teamMonthlyPrice(seats);
+  const hours = teamIncludedHours(seats);
+  const presets = [5, 10, 25, 50];
+  const planName = `Team (${seats} seats)`;
+  const isLoading = loading === planName;
+
+  return (
+    <div style={{
+      display: 'grid', gridTemplateColumns: '1fr 260px', gap: 1,
+      background: LN.border, border: `1px solid ${LN.border}`, borderRadius: 4, overflow: 'hidden',
+    }}>
+      {/* Configurator */}
+      <div style={{ background: LN.card, padding: '24px 28px' }}>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 6 }}>Team Size</div>
+          <div style={{ fontSize: 13, color: LN.text, marginBottom: 14 }}>
+            Choose your seat count (5–50). Price and pooled hours update automatically.
           </div>
-          <div className="text-[11.5px]" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
-            {stats.included} · {stats.save}
+
+          <input
+            type="range" min={TEAM_SEATS_MIN} max={TEAM_SEATS_MAX} step={1} value={seats}
+            onChange={e => setSeats(parseInt(e.target.value, 10))}
+            style={{ width: '100%', accentColor: LN.green, marginBottom: 4 }}
+            aria-label="Team seats"
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: LN.dim, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 14 }}>
+            <span>5 seats</span><span>50 seats</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {presets.map(n => (
+              <button key={n} onClick={() => setSeats(n)} style={{
+                padding: '5px 12px', fontSize: 12, fontWeight: 600, fontFamily: 'IBM Plex Mono, monospace',
+                borderRadius: 3, border: `1px solid ${n === seats ? LN.green : LN.border}`,
+                background: n === seats ? LN.greenFade : LN.surface,
+                color: n === seats ? LN.green : LN.muted, cursor: 'pointer',
+              }}>{n} seats</button>
+            ))}
           </div>
         </div>
 
-        <ul className="space-y-2 flex-1 mb-4 text-[12.5px]">
-          {plan.features.map((f, i) => (
-            <li key={i} className="flex items-start gap-2">
-              <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
-            </li>
+        <div style={{ borderTop: `1px solid ${LN.border}`, paddingTop: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 10 }}>Included</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 20px' }}>
+            {['Pooled AI hours across team', 'Per-member usage breakdown', 'Single invoice, multiple seats', 'Pooled top-ups never expire', 'Live session AI co-pilot', 'All Camora features unlocked'].map((f, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <Check size={11} /><span style={{ fontSize: 12, color: LN.muted }}>{f}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Summary sidebar */}
+      <div style={{ background: LN.surface, padding: '24px 22px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 16 }}>Summary</div>
+        <div style={{ marginBottom: 16 }}>
+          {[['Seats', `${seats}`], ['AI Hours / mo', `${hours} hrs`], ['Billing', 'Monthly']].map(([k, v], i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: 13, color: LN.muted }}>{k}</span>
+              <span style={{ fontSize: 13, fontWeight: i === 1 ? 600 : 400, color: i === 1 ? LN.green : LN.text, fontFamily: 'IBM Plex Mono, monospace' }}>{v}</span>
+            </div>
           ))}
-        </ul>
-
+        </div>
+        <div style={{ borderTop: `1px solid ${LN.border}`, paddingTop: 14, marginBottom: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: LN.text }}>Total</span>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ fontSize: 26, fontWeight: 700, color: LN.text, fontFamily: 'IBM Plex Mono, monospace', lineHeight: 1 }}>${monthly}</span>
+              <div style={{ fontSize: 11, color: LN.muted }}>/month</div>
+            </div>
+          </div>
+        </div>
         <button
-          onClick={() => priceId ? checkout(priceId, plan.name) : navigate('/pricing')}
-          disabled={loading === plan.name}
-          className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-[background-color,opacity] duration-150 active:scale-[0.98] disabled:opacity-50"
-          style={{ background: 'var(--accent)', color: '#FFFFFF', border: '1px solid var(--accent)' }}
+          onClick={() => checkout('', planName, { team: { seats } })}
+          disabled={isLoading}
+          style={{ width: '100%', padding: '10px 0', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.green, color: '#fff', border: 'none', cursor: isLoading ? 'wait' : 'pointer', opacity: isLoading ? 0.7 : 1 }}
         >
-          {loading === plan.name ? 'Processing…' : `${plan.cta} — ${plan.price}${plan.period}`}
+          {isLoading ? 'Processing…' : 'Start Team Plan'}
         </button>
-        <p className="text-[10.5px] text-center mt-2.5" style={{ color: 'var(--text-muted)' }}>
-          Cancel any time · No long-term lock-in
-        </p>
+        <p style={{ fontSize: 11, color: LN.dim, textAlign: 'center', marginTop: 8 }}>Cancel any time · Invite team after checkout</p>
       </div>
     </div>
   );
 }
 
-/* ── Hour top-up card — Team-style split layout
- * Always shows the buy form. Backend returns SUBSCRIPTION_REQUIRED_FOR_TOPUP
- * (handled in useCheckout) with a clear "Subscribe first" dialog for non-subs.
- */
+// ── AI Hours panel ───────────────────────────────────────────────────────────
 const TOPUP_QTY_MIN = 1;
 const TOPUP_QTY_MAX = 50;
 
-function HourTopupCard({ prices, checkout, loading }: {
+function HoursSection({
+  prices,
+  checkout,
+  loading,
+}: {
   prices: Record<string, { priceId: string }> | null;
-  checkout: (priceId: string, planName: string, opts?: { quantity?: number; team?: { seats: number } }) => void;
+  checkout: (priceId: string, planName: string, opts?: { quantity?: number }) => void;
   loading: string;
 }) {
   const navigate = useNavigate();
@@ -397,235 +479,94 @@ function HourTopupCard({ prices, checkout, loading }: {
   const total = HOUR_RATE_USD * qty;
   const presets = [1, 5, 10, 25, 50];
   const planName = `${qty}h Top-up`;
+  const isLoading = loading === planName;
 
   return (
-    <div
-      className="rounded-2xl overflow-hidden"
-      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
-    >
-      <div className="p-7 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-7">
-        {/* Left: identity + plain-language pitch */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>HOURS</span>
-            <span className="text-[10px] uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>add-on for subscribers</span>
+    <div style={{
+      display: 'grid', gridTemplateColumns: '1fr 260px', gap: 1,
+      background: LN.border, border: `1px solid ${LN.border}`, borderRadius: 4, overflow: 'hidden',
+    }}>
+      <div style={{ background: LN.card, padding: '24px 28px' }}>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 6 }}>Quantity</div>
+          <div style={{ fontSize: 13, color: LN.text, marginBottom: 14 }}>
+            Add hours to your subscription. <span style={{ color: LN.muted }}>$15/hr · hours never expire.</span>
           </div>
-          <h3 className="text-2xl md:text-[26px] font-extrabold mb-2 leading-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
-            Need more AI hours? Add them.
-          </h3>
-          <p className="text-[13px] leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
-            $15 per hour, one-time charge. Hours stack on top of your Monthly, Yearly, or Team plan and never expire. Not subscribed yet? Pick a plan above first — then come back here to add hours.
-          </p>
-
-          <ul className="space-y-2 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>
-            {[
-              'Buy 1–50 hours at a time',
-              'Hours never expire',
-              'Stack on top of any subscription',
-              'One-time charge, no auto-renew',
-            ].map((f, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                <span>{f}</span>
-              </li>
+          <input
+            type="range" min={TOPUP_QTY_MIN} max={TOPUP_QTY_MAX} step={1} value={qty}
+            onChange={e => setQty(parseInt(e.target.value, 10))}
+            style={{ width: '100%', accentColor: LN.green, marginBottom: 4 }}
+            aria-label="Hours quantity"
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: LN.dim, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 14 }}>
+            <span>1 hr</span><span>50 hrs</span>
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            {presets.map(n => (
+              <button key={n} onClick={() => setQty(n)} style={{
+                padding: '5px 12px', fontSize: 12, fontWeight: 600, fontFamily: 'IBM Plex Mono, monospace',
+                borderRadius: 3, border: `1px solid ${n === qty ? LN.green : LN.border}`,
+                background: n === qty ? LN.greenFade : LN.surface,
+                color: n === qty ? LN.green : LN.muted, cursor: 'pointer',
+              }}>{n}h</button>
             ))}
-          </ul>
-        </div>
-
-        {/* Right: live buy form (backend gates non-subscribers with a dialog) */}
-        <div className="rounded-xl p-5 md:p-6 flex flex-col" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>YOUR PURCHASE</span>
-            <span className="text-[10px]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{HOUR_RATE_DISPLAY}/hr</span>
-          </div>
-          <div className="flex items-baseline gap-1.5 mb-1">
-            <span className="text-5xl md:text-6xl font-extrabold leading-none" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
-              ${total}
-            </span>
-            <span className="text-[13px] font-medium" style={{ color: 'var(--text-muted)' }}>one-time</span>
-          </div>
-          <div className="text-[11.5px] mb-5" style={{ color: 'var(--cam-primary-dk)' }}>
-            {qty} {qty === 1 ? 'hour' : 'hours'} added to your subscription
-          </div>
-
-          {/* Slider */}
-          <div className="mb-3">
             <input
-              type="range"
-              min={TOPUP_QTY_MIN}
-              max={TOPUP_QTY_MAX}
-              step={1}
-              value={qty}
-              onChange={(e) => setQty(parseInt(e.target.value, 10))}
-              className="w-full"
-              style={{ accentColor: 'var(--cam-primary-dk)' }}
-              aria-label="Hours quantity"
+              type="number" min={TOPUP_QTY_MIN} max={TOPUP_QTY_MAX} value={qty}
+              onChange={e => { const v = parseInt(e.target.value, 10); if (Number.isFinite(v)) setQty(Math.max(TOPUP_QTY_MIN, Math.min(TOPUP_QTY_MAX, v))); }}
+              style={{ width: 64, padding: '5px 8px', fontSize: 12, fontFamily: 'IBM Plex Mono, monospace', borderRadius: 3, border: `1px solid ${LN.border}`, background: LN.surface, color: LN.text, outline: 'none' }}
+              aria-label="Hours numeric"
             />
-            <div className="flex items-center justify-between text-[10px] mt-1.5" style={{ color: 'var(--text-muted)' }}>
-              <span>{TOPUP_QTY_MIN} hour</span>
-              <span>{TOPUP_QTY_MAX} hours</span>
+          </div>
+        </div>
+        <div style={{ borderTop: `1px solid ${LN.border}`, paddingTop: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 10 }}>Details</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 20px' }}>
+            {['One-time charge, no auto-renew', 'Hours never expire', 'Stack on any subscription', 'Available to subscribers only'].map((f, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <Check size={11} /><span style={{ fontSize: 12, color: LN.muted }}>{f}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: LN.surface, padding: '24px 22px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 16 }}>Summary</div>
+        <div style={{ marginBottom: 16 }}>
+          {[['Hours', `${qty} ${qty === 1 ? 'hr' : 'hrs'}`], ['Rate', '$15/hr'], ['Expires', 'Never']].map(([k, v], i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: 13, color: LN.muted }}>{k}</span>
+              <span style={{ fontSize: 13, fontWeight: i === 2 ? 600 : 400, color: i === 2 ? LN.green : LN.text, fontFamily: 'IBM Plex Mono, monospace' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ borderTop: `1px solid ${LN.border}`, paddingTop: 14, marginBottom: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: LN.text }}>Total</span>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ fontSize: 26, fontWeight: 700, color: LN.text, fontFamily: 'IBM Plex Mono, monospace', lineHeight: 1 }}>${total}</span>
+              <div style={{ fontSize: 11, color: LN.muted }}>one-time</div>
             </div>
           </div>
-
-          {/* Presets + numeric input */}
-          <div className="flex items-center gap-2 flex-wrap mb-5">
-            {presets.map((n) => (
-              <button
-                key={n}
-                onClick={() => setQty(n)}
-                className="text-[11px] font-bold tracking-wider px-3 py-1.5 rounded-md transition-colors"
-                style={{
-                  background: qty === n ? 'var(--cam-primary-dk)' : 'var(--bg-surface)',
-                  color: qty === n ? '#FFFFFF' : 'var(--text-primary)',
-                  border: `1px solid ${qty === n ? 'var(--cam-primary-dk)' : 'var(--border)'}`,
-                }}
-              >
-                {n}h
-              </button>
-            ))}
-            <input
-              type="number"
-              min={TOPUP_QTY_MIN}
-              max={TOPUP_QTY_MAX}
-              value={qty}
-              onChange={(e) => {
-                const v = parseInt(e.target.value, 10);
-                if (Number.isFinite(v)) setQty(Math.max(TOPUP_QTY_MIN, Math.min(TOPUP_QTY_MAX, v)));
-              }}
-              className="w-16 px-2 py-1.5 text-[11px] rounded-md focus:outline-none focus:ring-1"
-              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-              aria-label="Hours numeric input"
-            />
-          </div>
-
-          <button
-            onClick={() => priceId ? checkout(priceId, planName, { quantity: qty }) : navigate('/pricing')}
-            disabled={loading === planName}
-            className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-[transform,background-color,box-shadow,opacity] duration-150 active:scale-[0.98] disabled:opacity-50 hover:scale-[1.01]"
-            style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)' }}
-          >
-            {loading === planName ? 'Processing…' : `Buy ${qty} ${qty === 1 ? 'hour' : 'hours'} — $${total}`}
-          </button>
-          <p className="text-[10.5px] text-center mt-2.5" style={{ color: 'var(--text-muted)' }}>
-            Charged once · Hours never expire · Subscribers only
-          </p>
         </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Team plan card — single-column variant for 3-card grid ──
- * Vertically stacks identity → stat panel → slider/presets → features → CTA
- * so it sits side-by-side with Monthly and Yearly at the same width.
- */
-function TeamPlanCard({ checkout, loading }: {
-  checkout: (priceId: string, planName: string, opts?: { quantity?: number; team?: { seats: number } }) => void;
-  loading: string;
-}) {
-  const [seats, setSeats] = useState(10);
-  const monthly = teamMonthlyPrice(seats);
-  const hours = teamIncludedHours(seats);
-  const presets = [5, 10, 25, 50];
-  const planName = `Team (${seats} seats)`;
-
-  return (
-    <div
-      className="rounded-2xl overflow-hidden flex flex-col transition-[transform,box-shadow] duration-200 active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-lg"
-      style={{ background: 'var(--cam-primary-dk)', border: '2px solid var(--cam-primary-dk)' }}
-    >
-      <div className="p-6 flex flex-col flex-1 text-white">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>TEAM</span>
-          <span className="text-[10px] uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)' }}>5–50 seats · monthly</span>
-        </div>
-        <h3 className="text-[22px] font-extrabold leading-tight mb-1" style={{ fontFamily: 'var(--font-display)' }}>
-          One subscription. Your whole cohort.
-        </h3>
-        <p className="text-[12.5px] leading-relaxed mb-4" style={{ color: 'rgba(255,255,255,0.72)' }}>
-          Pool AI hours across the team. One invoice, per-member usage breakdown.
-        </p>
-
-        {/* Stat panel — live price + seats */}
-        <div className="rounded-xl p-4 mb-4" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-mono)' }}>YOUR TEAM</span>
-            <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-mono)' }}>{seats} seats</span>
-          </div>
-          <div className="flex items-baseline gap-1.5 mb-1">
-            <span className="text-5xl font-extrabold leading-none text-white" style={{ fontFamily: 'var(--font-display)' }}>
-              ${monthly}
-            </span>
-            <span className="text-[13px] font-medium" style={{ color: 'rgba(255,255,255,0.55)' }}>/month</span>
-          </div>
-          <div className="text-[11.5px] mb-3" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
-            {hours} pooled AI hours · every month
-          </div>
-
-          {/* Slider */}
-          <input
-            type="range"
-            min={TEAM_SEATS_MIN}
-            max={TEAM_SEATS_MAX}
-            step={1}
-            value={seats}
-            onChange={(e) => setSeats(parseInt(e.target.value, 10))}
-            className="w-full"
-            style={{ accentColor: 'var(--cam-gold-leaf)' }}
-            aria-label="Team seats"
-          />
-
-          {/* Preset chips */}
-          <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
-            {presets.map((n) => (
-              <button
-                key={n}
-                onClick={() => setSeats(n)}
-                className="text-[10.5px] font-bold tracking-wider px-2.5 py-1 rounded-md transition-colors"
-                style={{
-                  background: seats === n ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
-                  color: seats === n ? 'var(--cam-primary-dk)' : '#FFFFFF',
-                  border: `1px solid ${seats === n ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.14)'}`,
-                  fontFamily: 'var(--font-mono)',
-                }}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <ul className="space-y-2 flex-1 mb-4 text-[12.5px]" style={{ color: 'rgba(255,255,255,0.92)' }}>
-          {[
-            'Pooled hours grow with your team',
-            'One invoice, multiple seats',
-            'Per-member usage + caps',
-            'Pooled top-ups never expire',
-          ].map((f, i) => (
-            <li key={i} className="flex items-start gap-2">
-              <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="var(--cam-gold-leaf)" strokeWidth="2.5"><path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              <span>{f}</span>
-            </li>
-          ))}
-        </ul>
-
         <button
-          onClick={() => checkout('', planName, { team: { seats } })}
-          disabled={loading === planName}
-          className="w-full py-3 text-[12.5px] font-bold rounded-lg cursor-pointer transition-[transform,background-color,box-shadow,opacity] duration-150 active:scale-[0.98] disabled:opacity-50 hover:scale-[1.01]"
-          style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', border: '1px solid var(--cam-gold-leaf)' }}
+          onClick={() => priceId ? checkout(priceId, planName, { quantity: qty }) : navigate('/pricing')}
+          disabled={isLoading || !priceId}
+          style={{ width: '100%', padding: '10px 0', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.green, color: '#fff', border: 'none', cursor: isLoading ? 'wait' : 'pointer', opacity: (isLoading || !priceId) ? 0.7 : 1 }}
         >
-          {loading === planName ? 'Processing…' : `Start Team — $${monthly}/month`}
+          {isLoading ? 'Processing…' : `Buy ${qty} ${qty === 1 ? 'Hour' : 'Hours'}`}
         </button>
-        <p className="text-[10.5px] text-center mt-2.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
-          Cancel any time · Invite team after checkout
-        </p>
+        <p style={{ fontSize: 11, color: LN.dim, textAlign: 'center', marginTop: 8 }}>Subscribers only · No auto-renew</p>
       </div>
     </div>
   );
 }
 
-/* ── Pricing Cards — solo + dynamic team + topup ── */
+// ── Tab navigation ───────────────────────────────────────────────────────────
+const TABS = ['Solo Plans', 'Team Plans', 'AI Hours'] as const;
+type Tab = typeof TABS[number];
+
+// ── Main PricingCards export ─────────────────────────────────────────────────
 export default function PricingCards({
   showFree: _showFree,
   variant: _variant,
@@ -636,31 +577,19 @@ export default function PricingCards({
   const prices = usePlanPrices();
   const { checkout, loading, goToPortal, prepareUrl } = useCheckout();
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<Tab>('Solo Plans');
 
   if (isOwner(user)) {
     return (
-      <div
-        className="rounded-2xl p-8 flex flex-col items-center text-center gap-4"
-        style={{ background: 'var(--bg-surface)', border: '1px solid var(--cam-primary)', boxShadow: '0 0 0 4px color-mix(in oklab, var(--cam-primary) 10%, transparent)' }}
-      >
-        <span
-          className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest"
-          style={{ background: 'color-mix(in oklab, var(--cam-primary) 15%, var(--bg-surface))', color: 'var(--cam-primary)', border: '1px solid var(--cam-primary)' }}
-        >
+      <div style={{ padding: 32, background: LN.card, border: `1px solid ${LN.greenBorder}`, borderRadius: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 16 }}>
+        <span style={{ padding: '3px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', borderRadius: 2, background: LN.greenFade, color: LN.green, border: `1px solid ${LN.greenBorder}`, fontFamily: 'IBM Plex Mono, monospace' }}>
           Admin Access
         </span>
-        <h3 className="text-xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
-          All features unlocked
-        </h3>
-        <p className="text-sm max-w-sm" style={{ color: 'var(--text-secondary)' }}>
-          Your account has owner-level access. Use the billing portal to view invoices, manage payment methods, or adjust subscriptions for your account.
+        <h3 style={{ fontSize: 18, fontWeight: 700, color: LN.text, margin: 0 }}>All features unlocked</h3>
+        <p style={{ fontSize: 13, color: LN.muted, maxWidth: 400, margin: 0 }}>
+          Your account has owner-level access. Use the billing portal to view invoices, manage payment methods, or adjust subscriptions.
         </p>
-        <button
-          onClick={() => goToPortal(prepareUrl)}
-          className="mt-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-[transform,opacity] duration-150 hover:scale-[1.02] active:scale-[0.98]"
-          style={{ background: 'var(--cam-primary)', color: '#fff' }}
-        >
+        <button onClick={() => goToPortal(prepareUrl)} style={{ marginTop: 8, padding: '9px 24px', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.green, color: '#fff', border: 'none', cursor: 'pointer' }}>
           Open Billing Portal
         </button>
       </div>
@@ -668,29 +597,31 @@ export default function PricingCards({
   }
 
   return (
-    <div className="space-y-10">
-      {/* ── Plans: Monthly · Yearly · Team — side by side ── */}
-      <div>
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-sm font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>PLANS</h2>
-          <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Pick the cadence that fits — switch anytime</span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
-          {SOLO_PLANS.map((plan) => (
-            <PlanCardView key={plan.id} plan={plan} prices={prices} checkout={checkout} loading={loading} navigate={navigate} />
-          ))}
-          <TeamPlanCard checkout={checkout} loading={loading} />
-        </div>
+    <div>
+      {/* Linode-style underline tab bar */}
+      <div style={{ display: 'flex', borderBottom: `1px solid ${LN.border}`, marginBottom: 20 }}>
+        {TABS.map(tab => {
+          const isActive = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                padding: '10px 20px', fontSize: 13, fontWeight: isActive ? 600 : 400,
+                color: isActive ? LN.text : LN.muted, background: 'transparent', border: 'none',
+                borderBottom: `2px solid ${isActive ? LN.green : 'transparent'}`,
+                marginBottom: -1, cursor: 'pointer', transition: 'color 0.1s', whiteSpace: 'nowrap',
+              }}
+            >
+              {tab}
+            </button>
+          );
+        })}
       </div>
 
-      {/* ── Hour top-up (add-on for subscribers) ── */}
-      <div>
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-sm font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>HOURS</h2>
-          <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Add-on for subscribers · hours never expire</span>
-        </div>
-        <HourTopupCard prices={prices} checkout={checkout} loading={loading} />
-      </div>
+      {activeTab === 'Solo Plans' && <SoloPlanTable prices={prices} checkout={checkout} loading={loading} />}
+      {activeTab === 'Team Plans' && <TeamPlanSection checkout={checkout} loading={loading} />}
+      {activeTab === 'AI Hours'   && <HoursSection prices={prices} checkout={checkout} loading={loading} />}
     </div>
   );
 }
