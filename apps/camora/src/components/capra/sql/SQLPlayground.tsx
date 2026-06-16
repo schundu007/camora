@@ -231,6 +231,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
     }
   });
   const [submitResult, setSubmitResult] = useState<'correct' | 'wrong' | null>(null);
+  const [dbError, setDbError] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(initialFromUrl?.category ?? SQL_CATEGORIES[0]?.id ?? 'basic-joins');
   const [, setShowHints] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
@@ -262,26 +263,40 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
   }, [solved]);
 
   // ── Initialize sql.js WASM ──────────────────────────────────────────────
-  useEffect(() => {
+  const initDb = useCallback(() => {
     let cancelled = false;
+    setDbError(false);
+    setDbReady(false);
+
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) setDbError(true);
+    }, 12000);
 
     loadSqlJs().then((initFn: any) => {
-      return initFn({ locateFile: () => `${SQL_CDN}/sql-wasm.wasm` });
+      return initFn({ locateFile: (f: string) => `${SQL_CDN}/${f}` });
     }).then((SQL: { Database: new () => SqlJsDatabase }) => {
+      clearTimeout(timeoutId);
       if (cancelled) return;
       const database = new SQL.Database();
       dbRef.current = database;
       setDb(database);
       setDbReady(true);
     }).catch((err: Error) => {
+      clearTimeout(timeoutId);
       console.error('sql.js init failed:', err);
+      if (!cancelled) setDbError(true);
     });
 
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
       dbRef.current?.close();
     };
   }, []);
+
+  useEffect(() => {
+    return initDb();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Initialize problem database tables ──────────────────────────────────
   const initProblemDb = useCallback(
@@ -323,7 +338,12 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
 
   // ── Run query ───────────────────────────────────────────────────────────
   const runQuery = useCallback(() => {
-    if (!db || !code.trim()) return;
+    if (!db) {
+      setError(dbError ? 'SQL engine failed to load. Click Retry above.' : 'SQL engine is still loading — please wait a moment.');
+      setOutputTab('output');
+      return;
+    }
+    if (!code.trim()) return;
     // Reset DB tables before each run so mutations (DELETE/UPDATE) don't persist
     initProblemDb(problem);
     try {
@@ -347,7 +367,12 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
 
   // ── Submit (check correctness) ──────────────────────────────────────────
   const submitQuery = useCallback(() => {
-    if (!db || !code.trim()) return;
+    if (!db) {
+      setError(dbError ? 'SQL engine failed to load. Click Retry above.' : 'SQL engine is still loading — please wait a moment.');
+      setOutputTab('output');
+      return;
+    }
+    if (!code.trim()) return;
     // Reset DB tables
     initProblemDb(problem);
     try {
@@ -671,10 +696,25 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
               >
                 Reset
               </button>
+              {dbError && (
+                <button
+                  onClick={() => initDb()}
+                  className="px-2.5 py-1 rounded text-[11px] font-semibold transition-colors flex items-center gap-1"
+                  style={{ background: '#7f1d1d', color: '#fca5a5', border: '1px solid #b91c1c' }}
+                  title="SQL engine failed to load"
+                >
+                  ↺ Retry
+                </button>
+              )}
+              {!dbReady && !dbError && (
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                  <div className="w-3 h-3 border border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+                  Loading engine…
+                </div>
+              )}
               <button
                 onClick={runQuery}
-                disabled={!dbReady}
-                className="px-3 py-1 rounded text-[11px] font-bold text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                className="px-3 py-1 rounded text-[11px] font-bold text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-1.5"
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                   <polygon points="5 3 19 12 5 21 5 3" />
@@ -683,8 +723,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
               </button>
               <button
                 onClick={submitQuery}
-                disabled={!dbReady}
-                className="px-3 py-1 rounded text-[11px] font-bold text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-1 rounded text-[11px] font-bold text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition-colors"
               >
                 Submit
               </button>
@@ -859,10 +898,22 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
           {!showSuccess && <div className="flex-1 overflow-auto p-4">
             {outputTab === 'output' ? (
               <>
-                {!dbReady && (
+                {!dbReady && !dbError && (
                   <div className="flex items-center gap-2 text-sm text-slate-400 py-8 justify-center">
                     <div className="w-4 h-4 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
-                    Loading SQL engine...
+                    Loading SQL engine…
+                  </div>
+                )}
+                {dbError && (
+                  <div className="flex flex-col items-center gap-3 py-8 text-center">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <p className="text-sm font-medium text-slate-400">SQL engine failed to load.</p>
+                    <p className="text-xs text-slate-500">This usually means the WASM file was blocked by your network or browser.</p>
+                    <button onClick={() => initDb()} className="px-4 py-1.5 rounded text-xs font-bold text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition-colors mt-1">
+                      ↺ Retry
+                    </button>
                   </div>
                 )}
                 {dbReady && !output && !error && (
