@@ -110,7 +110,7 @@ const LoginPage = () => {
 
   const STATS = [
     { value: '1,000+', label: 'Matched Roles' },
-    { value: '600+',   label: 'Study Topics' },
+    { value: '1,400+', label: 'Study Topics' },
     { value: '9,500+', label: 'Practice Problems' },
     { value: 'Live AI', label: 'In Your Interview' },
   ];
