@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Icon } from '../components/shared/Icons';
 import { HeroBand, HeroAccent } from '../components/capra/ui';
+import SiteNav from '../components/shared/SiteNav';
+import SiteFooter from '../components/shared/SiteFooter';
 
 /* ──────────────────────────── Company Logo Mapping ──────────────────────────── */
 
@@ -585,7 +587,8 @@ export default function JobsPage() {
     : jobs;
 
   return (
-    <div style={{ background: 'transparent', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg-app)', minHeight: '100vh' }}>
+      <SiteNav />
 
       {/* ═══════════════════════ Page Content ═══════════════════════ */}
       <div>
@@ -1690,6 +1693,7 @@ export default function JobsPage() {
           }
         }
       `}</style>
+      <SiteFooter />
     </div>
   );
 }
