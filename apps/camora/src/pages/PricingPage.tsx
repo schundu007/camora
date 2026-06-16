@@ -227,6 +227,7 @@ export default function PricingPage() {
 
           {/* FAQ */}
           <section id="faq">
+            <div style={{ maxWidth: 860, margin: '0 auto', width: '100%' }}>
             <SectionLabel>Frequently asked questions</SectionLabel>
             <div style={{ border: `1px solid ${LN.border}`, borderRadius: 4, overflow: 'hidden' }}>
               {FAQS.map((faq, i) => (
@@ -248,6 +249,7 @@ export default function PricingPage() {
                   )}
                 </div>
               ))}
+            </div>
             </div>
           </section>
 
