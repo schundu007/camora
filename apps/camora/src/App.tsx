@@ -137,7 +137,7 @@ const LoginPage = () => {
           </span>
         </div>
 
-        <div className="flex-1 flex flex-col justify-center max-w-md">
+        <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
           <h2 className="text-[40px] font-bold leading-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
             Get the offer.<br />
             <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Every step.</span>
