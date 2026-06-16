@@ -111,14 +111,14 @@ const LoginPage = () => {
   const STATS = [
     { value: '1,000+', label: 'Matched Roles' },
     { value: '600+',   label: 'Study Topics' },
-    { value: '1,300+', label: 'Practice Problems' },
+    { value: '9,500+', label: 'Practice Problems' },
     { value: 'Live AI', label: 'In Your Interview' },
   ];
 
   const STEPS = [
     { letter: 'A', label: 'Apply',    desc: 'AI-matched jobs + tailored resumes' },
     { letter: 'P', label: 'Prepare',  desc: 'System design, DSA & behavioral topics' },
-    { letter: 'P', label: 'Practice', desc: '1,300+ problems with AI feedback' },
+    { letter: 'P', label: 'Practice', desc: '9,500+ problems with AI feedback' },
     { letter: 'A', label: 'Attend',   desc: 'Real-time AI answers during the interview' },
   ];
 
@@ -169,7 +169,7 @@ const LoginPage = () => {
 
           <div className="mt-8 grid grid-cols-2 gap-3 w-full">
             {STATS.map((s, si) => (
-              <div key={s.label} className="rounded-xl px-4 py-3" style={{
+              <div key={s.label} className="rounded-xl px-4 py-3 text-center" style={{
                 background: 'linear-gradient(135deg, rgba(54,131,220,0.10) 0%, rgba(255,255,255,0.03) 50%, rgba(212,160,67,0.07) 100%)',
                 border: '1px solid rgba(54,131,220,0.15)',
                 animation: `statCardGlow ${2.5 + si * 0.4}s ease-in-out ${si * 0.3}s infinite alternate`,
@@ -188,7 +188,7 @@ const LoginPage = () => {
 
           <div className="mt-8 space-y-3 text-left w-full">
             {STEPS.map((s, i) => (
-              <div key={i} className="flex items-start gap-3">
+              <div key={i} className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[11px] font-bold" style={{
                   background: 'linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-gold-leaf) 100%)',
                   color: '#fff',
@@ -196,7 +196,7 @@ const LoginPage = () => {
                 }}>
                   {s.letter}
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <span className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>{s.label} — </span>
                   <span className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>{s.desc}</span>
                 </div>
