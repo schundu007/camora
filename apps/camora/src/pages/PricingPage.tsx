@@ -74,8 +74,8 @@ function CellValue({ value, isTeam }: { value: string; isTeam?: boolean }) {
       <span style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         width: 22, height: 22, borderRadius: '50%',
-        background: isTeam ? 'linear-gradient(135deg, #3683DC, #6366F1)' : 'rgba(54,131,220,0.10)',
-        boxShadow: isTeam ? '0 0 10px rgba(99,102,241,0.35), 0 0 4px rgba(54,131,220,0.50)' : 'none',
+        background: isTeam ? 'linear-gradient(135deg, var(--cam-gold-leaf), #B88930)' : 'rgba(54,131,220,0.10)',
+        boxShadow: isTeam ? '0 0 10px rgba(212,160,67,0.35), 0 0 4px rgba(54,131,220,0.40)' : 'none',
         border: isTeam ? 'none' : '1px solid rgba(54,131,220,0.22)',
       }}>
         <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke={isTeam ? '#fff' : LN.blue} strokeWidth={2.5} aria-hidden="true">
@@ -91,8 +91,8 @@ function CellValue({ value, isTeam }: { value: string; isTeam?: boolean }) {
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-      <div style={{ width: 3, height: 16, borderRadius: 2, background: 'linear-gradient(180deg, #3683DC 0%, #6366F1 100%)', flexShrink: 0 }} />
-      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: '#3683DC', fontFamily: LN.mono }}>
+      <div style={{ width: 3, height: 16, borderRadius: 2, background: 'linear-gradient(180deg, var(--cam-gold-leaf) 0%, #3683DC 100%)', flexShrink: 0 }} />
+      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf-text)', fontFamily: LN.mono }}>
         {children}
       </span>
     </div>
@@ -131,7 +131,7 @@ export default function PricingPage() {
       {/* ── Page title ── */}
       <div style={{ background: LN.surface, borderBottom: `1px solid ${LN.border}`, padding: '36px 32px 30px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
-          <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.025em', background: 'linear-gradient(120deg, #60A5FA 0%, #3683DC 45%, #6366F1 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.025em', background: 'linear-gradient(120deg, #3683DC 0%, var(--cam-gold-leaf) 45%, #60A5FA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             Plans & Pricing
           </h1>
           <p style={{ fontSize: 15, color: LN.muted, margin: 0 }}>
@@ -155,10 +155,10 @@ export default function PricingPage() {
             <div style={{
               display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px',
               background: LN.surface, border: `1px solid ${LN.border}`, borderRadius: 4,
-              borderLeft: `3px solid ${LN.blue}`,
+              borderLeft: '3px solid var(--cam-gold-leaf)',
             }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: LN.blueFade, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke={LN.blue} strokeWidth={2.5} aria-hidden="true">
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(212,160,67,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="var(--cam-gold-leaf)" strokeWidth={2.5} aria-hidden="true">
                   <path d="M13 4 L6 11 L3 8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
@@ -179,7 +179,7 @@ export default function PricingPage() {
             <SectionLabel>Feature comparison</SectionLabel>
             <div style={{ border: `1px solid ${LN.border}`, borderRadius: 4, overflow: 'hidden' }}>
               {/* Header row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: 'linear-gradient(135deg, #0C1120 0%, #141B2E 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: '#0B1B3F', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                 <div style={{ padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)', fontFamily: LN.mono }}>Feature</div>
                 {[
                   { label: 'Free',    sub: '$0 · 7 days' },
@@ -187,9 +187,9 @@ export default function PricingPage() {
                   { label: 'Yearly',  sub: '$99 / yr' },
                   { label: 'Team',    sub: '5–50 seats', accent: true },
                 ].map(col => (
-                  <div key={col.label} style={{ padding: '12px 16px', textAlign: 'center', background: col.accent ? 'rgba(99,102,241,0.18)' : undefined }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: col.accent ? '#A5B4FC' : 'rgba(255,255,255,0.85)' }}>{col.label}</div>
-                    <div style={{ fontSize: 11, color: col.accent ? 'rgba(165,180,252,0.70)' : 'rgba(255,255,255,0.38)', fontFamily: LN.mono, marginTop: 2 }}>{col.sub}</div>
+                  <div key={col.label} style={{ padding: '12px 16px', textAlign: 'center', background: col.accent ? 'rgba(212,160,67,0.15)' : undefined }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: col.accent ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.85)' }}>{col.label}</div>
+                    <div style={{ fontSize: 11, color: col.accent ? 'rgba(212,160,67,0.70)' : 'rgba(255,255,255,0.38)', fontFamily: LN.mono, marginTop: 2 }}>{col.sub}</div>
                   </div>
                 ))}
               </div>
@@ -199,8 +199,8 @@ export default function PricingPage() {
                 <Fragment key={si}>
                   <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: 'rgba(54,131,220,0.04)', borderTop: si > 0 ? `1px solid ${LN.border}` : undefined }}>
                     <div style={{ padding: '8px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 16, height: 1.5, borderRadius: 1, background: 'linear-gradient(90deg, #3683DC, #6366F1)', flexShrink: 0 }} />
-                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#3683DC', fontFamily: LN.mono }}>
+                      <div style={{ width: 16, height: 1.5, borderRadius: 1, background: 'linear-gradient(90deg, var(--cam-gold-leaf), #3683DC)', flexShrink: 0 }} />
+                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf-text)', fontFamily: LN.mono }}>
                         {section.title}
                       </span>
                     </div>
