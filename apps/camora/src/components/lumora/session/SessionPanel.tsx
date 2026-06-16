@@ -4,7 +4,6 @@ import { useSessionStore } from '@/stores/session-store';
 import { StreamingAnswer } from './StreamingAnswer';
 import { AnswerBlocks } from './AnswerBlocks';
 import { Citations } from '@/components/lumora/Citations';
-import { DatabricksThumb, type DatabricksColor } from '@/components/shared/DatabricksThumb';
 
 // LeetCode-style row classification — purely structural (numbered
 // Q.<#> + category pill on the right). Per the navy-palette memory we
@@ -243,22 +242,6 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
   );
 }
 
-/* ─── Quick-prompt thumbnail — wraps the shared DatabricksThumb
-   primitive with a per-category glyph + color. */
-const PROMPT_GLYPH = {
-  coding: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>,
-  design: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
-  behavioral: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg>,
-} as const;
-const PROMPT_COLOR: Record<keyof typeof PROMPT_GLYPH, DatabricksColor> = {
-  coding: 'navy',
-  design: 'navy-lt',
-  behavioral: 'gold',
-};
-const PromptThumb = ({ type }: { type: 'coding' | 'design' | 'behavioral' }) => {
-  return <DatabricksThumb color={PROMPT_COLOR[type]} size={64} icon={PROMPT_GLYPH[type]} />;
-}
-
 /* ─── Lumora Dashboard ─────────────────────────────── */
 const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   onAskQuestion?: (question: string) => void;
@@ -273,16 +256,30 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   }, []);
   const hour = now.getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  // Digital-clock split so we can style HH:MM big and the AM/PM smaller.
   const hh12 = ((now.getHours() + 11) % 12) + 1;
   const mm = String(now.getMinutes()).padStart(2, '0');
   const ampm = now.getHours() < 12 ? 'AM' : 'PM';
   const dateStr = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
 
   const COPILOTS = [
-    { name: 'Coding', desc: 'Real-time coding solutions with multi-approach answers and complexity analysis.', image: '/topic-heroes/coding.jpg', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>, onClick: () => onSwitchToCoding?.() },
-    { name: 'System Design', desc: 'Architecture diagrams and system design answers in real-time.', image: '/topic-heroes/system-design.jpg', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>, onClick: () => onSwitchToDesign?.() },
-    { name: 'Behavioral', desc: 'STAR method answers for behavioral and leadership questions.', image: '/topic-heroes/behavioral.jpg', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg>, onClick: () => onAskQuestion?.('Tell me about yourself and your experience') },
+    {
+      name: 'Coding', desc: 'Multi-approach solutions with complexity analysis.',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>,
+      accent: '#3683DC',
+      onClick: () => onSwitchToCoding?.(),
+    },
+    {
+      name: 'System Design', desc: 'Architecture diagrams generated in real-time.',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
+      accent: '#5B9BD5',
+      onClick: () => onSwitchToDesign?.(),
+    },
+    {
+      name: 'Behavioral', desc: 'STAR-method answers anchored to your stories.',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg>,
+      accent: '#C9A227',
+      onClick: () => onAskQuestion?.('Tell me about yourself and your experience'),
+    },
   ];
 
   const QUICK_PROMPTS = [
@@ -293,6 +290,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
     { text: 'Reverse a linked list iteratively and recursively', type: 'coding' as const },
     { text: 'Describe a time you failed and what you learned', type: 'behavioral' as const },
   ];
+  const PROMPT_ACCENT: Record<string, string> = { design: '#5B9BD5', coding: '#3683DC', behavioral: '#C9A227' };
 
   const handlePromptClick = (prompt: typeof QUICK_PROMPTS[number]) => {
     if (prompt.type === 'coding') onSwitchToCoding?.(prompt.text);
@@ -301,164 +299,184 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   };
 
   return (
-    <div className="flex-1 overflow-auto flex flex-col">
-      {/* Hero — atmospheric dark band with the big digital clock and
-          a soft fade-out into the body (no harsh diagonal divider —
-          per "less boxes/lines" feedback, sections flow seamlessly). */}
-      <div
-        className="relative overflow-hidden"
-        style={{ background: 'var(--cam-hero-bg)' }}
-      >
-        {/* White spotlight at top + cyan wash inside the navy */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse 70% 60% at 80% 30%, rgba(38,97,156,0.14), transparent 60%),' +
-              'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.10), transparent 70%)',
-          }}
-        />
-        <div className="relative px-3 sm:px-4 md:px-6 pt-5 md:pt-7 pb-10 md:pb-12">
+    <div className="flex-1 overflow-auto flex flex-col" style={{ background: 'var(--bg-surface)' }}>
+      <style>{`
+        @keyframes sona-orb-a {
+          0%,100%{transform:translateY(0) scale(1);opacity:.5}
+          50%{transform:translateY(-14px) scale(1.07);opacity:.72}
+        }
+        @keyframes sona-orb-b {
+          0%,100%{transform:translateY(0) scale(1);opacity:.35}
+          50%{transform:translateY(11px) scale(.93);opacity:.55}
+        }
+        @keyframes sona-ready {
+          0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(74,222,128,.6)}
+          50%{opacity:.7;box-shadow:0 0 0 5px rgba(74,222,128,0)}
+        }
+        @keyframes sona-scan {
+          0%{transform:translateY(-100%);opacity:0}
+          10%{opacity:.55}
+          90%{opacity:.55}
+          100%{transform:translateY(100%);opacity:0}
+        }
+        @keyframes sona-dots {
+          0%,100%{opacity:.04}50%{opacity:.08}
+        }
+        @keyframes sona-clock {
+          0%,100%{text-shadow:0 0 18px rgba(54,131,220,.3),0 0 50px rgba(54,131,220,.08)}
+          50%{text-shadow:0 0 28px rgba(54,131,220,.5),0 0 70px rgba(54,131,220,.15)}
+        }
+      `}</style>
+
+      {/* ── Hero ── */}
+      <div className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)', minHeight: 192 }}>
+        {/* Neural orbs */}
+        <div aria-hidden="true" style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
+          <div style={{ position:'absolute', width:300, height:300, borderRadius:'50%', top:'-50px', left:'-50px', background:'radial-gradient(circle,rgba(54,131,220,.18) 0%,transparent 70%)', animation:'sona-orb-a 7s ease-in-out infinite' }} />
+          <div style={{ position:'absolute', width:240, height:240, borderRadius:'50%', top:'5px', right:'-30px', background:'radial-gradient(circle,rgba(91,155,213,.14) 0%,transparent 70%)', animation:'sona-orb-b 9s ease-in-out infinite' }} />
+          <div style={{ position:'absolute', width:160, height:160, borderRadius:'50%', bottom:'-20px', left:'42%', background:'radial-gradient(circle,rgba(201,162,39,.10) 0%,transparent 70%)', animation:'sona-orb-a 11s ease-in-out infinite 2s' }} />
+          <div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(circle,rgba(255,255,255,.22) 1px,transparent 1px)', backgroundSize:'28px 28px', animation:'sona-dots 6s ease-in-out infinite' }} />
+          <div style={{ position:'absolute', left:0, right:0, height:'2px', background:'linear-gradient(90deg,transparent,rgba(54,131,220,.5),rgba(201,162,39,.4),transparent)', animation:'sona-scan 8s linear infinite 1s' }} />
+        </div>
+
+        <div className="relative px-4 md:px-6 pt-5 pb-9">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="flex items-baseline justify-center gap-2 leading-none" style={{ color: 'oklch(97% 0.006 250)', fontFamily: 'var(--font-code)' }}>
-              <span
-                className="font-bold tabular-nums"
-                style={{
-                  fontSize: '60px',
-                  letterSpacing: '-0.02em',
-                  textShadow: '0 0 24px rgba(255,255,255,0.18)',
-                }}
-              >
+            {/* Status badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-3"
+              style={{ background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.12)', backdropFilter:'blur(8px)' }}>
+              <span style={{ width:7, height:7, borderRadius:'50%', background:'#4ADE80', display:'inline-block', flexShrink:0, animation:'sona-ready 2s ease-in-out infinite' }} />
+              <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', color:'rgba(255,255,255,.8)', textTransform:'uppercase' }}>Sona · Ready</span>
+            </div>
+            {/* Clock */}
+            <div className="flex items-baseline justify-center gap-2 leading-none" style={{ fontFamily:'var(--font-code)' }}>
+              <span className="font-bold tabular-nums" style={{ fontSize:62, letterSpacing:'-0.03em', color:'#fff', animation:'sona-clock 4s ease-in-out infinite' }}>
                 {hh12}:{mm}
               </span>
-              <span
-                className="font-semibold tabular-nums"
-                style={{
-                  fontSize: '20px',
-                  color: 'var(--cam-gold-leaf-lt)',
-                  textShadow: '0 0 18px rgba(217,181,67,0.35)',
-                }}
-              >
+              <span className="font-bold tabular-nums" style={{ fontSize:21, color:'var(--cam-gold-leaf-lt)', textShadow:'0 0 14px rgba(217,181,67,.5)' }}>
                 {ampm}
               </span>
             </div>
-            <div className="mt-2 text-sm font-medium" style={{ color: 'oklch(82% 0.008 250)' }}>{dateStr}</div>
-            <h1 className="mt-4 text-xl font-bold" style={{ color: 'oklch(97% 0.006 250)' }}>{greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+            <div className="mt-1.5 text-sm" style={{ color:'rgba(255,255,255,.5)', fontFamily:'var(--font-code)', letterSpacing:'0.04em' }}>{dateStr}</div>
+            <p className="mt-3 text-[15px] font-semibold" style={{ color:'rgba(255,255,255,.88)' }}>
+              {greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''} —&nbsp;
+              <span style={{ color:'var(--cam-gold-leaf-lt)' }}>your AI co-pilot is live.</span>
+            </p>
           </div>
         </div>
-        {/* Soft fade into the body — replaces the diagonal divider */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 bottom-0 h-12 pointer-events-none"
-          style={{ background: 'linear-gradient(180deg, transparent, var(--bg-surface))' }}
-        />
+        <div aria-hidden="true" style={{ position:'absolute', inset:'auto 0 0', height:40, background:'linear-gradient(to bottom,transparent,var(--bg-surface))', pointerEvents:'none' }} />
       </div>
 
-      <div className="px-3 sm:px-4 md:px-6 pt-2 md:pt-3 pb-6 max-w-5xl mx-auto w-full">
+      {/* ── Body ── */}
+      <div className="px-3 sm:px-4 md:px-6 pt-3 pb-6 max-w-5xl mx-auto w-full">
 
-      {/* Launch Now */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--text-muted)' }}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
-          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-code)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.10em', fontWeight: 600 }}>Launch Now</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          {COPILOTS.map(cp => (
-            <button
-              key={cp.name}
-              onClick={cp.onClick}
-              className="group flex items-center gap-3 p-3 rounded-xl text-left transition-[box-shadow,border-color] duration-200"
-              style={{
-                border: '1px solid rgba(38,97,156,0.14)',
-                background: 'rgba(38,97,156,0.04)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(38,97,156,0.35)';
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(38,97,156,0.14)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(38,97,156,0.14)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              <div className="relative shrink-0 rounded-lg overflow-hidden" style={{ width: 44, height: 44, background: 'var(--cam-primary-dk)' }}>
-                <img
-                  src={cp.image}
-                  alt=""
-                  loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover"
-                  style={{ filter: 'grayscale(100%) contrast(1.08) brightness(0.72)' }}
-                />
-                <div aria-hidden="true" className="absolute inset-0" style={{ background: 'var(--cam-primary)', mixBlendMode: 'multiply' }} />
-                <div className="absolute inset-0 flex items-center justify-center">{cp.icon}</div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>{cp.name}</div>
-                <div className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--text-muted)' }}>{cp.desc}</div>
-              </div>
-              <svg className="shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-              </svg>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Quick prompts — each card has a Databricks-style gradient
-          thumbnail (bold navy radial → light) with a large category
-          glyph for instant visual scanning. */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--text-muted)' }}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
-          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-code)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.10em', fontWeight: 600 }}>Try Asking</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-          {QUICK_PROMPTS.map(p => (
-            <button
-              key={p.text}
-              onClick={() => handlePromptClick(p)}
-              className="group flex items-center gap-3 text-left p-5 rounded-xl transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
-              style={{
-                minHeight: 88,
-                background: 'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(38,97,156,0.08) 100%)',
-                border: '1px solid rgba(38,97,156,0.10)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(38,97,156,0.32)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(38,97,156,0.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(38,97,156,0.10)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              <PromptThumb type={p.type} />
-              <span className="text-[13px] leading-snug flex-1" style={{ color: 'var(--text-secondary)' }}>{p.text}</span>
-              <svg
-                className="w-3.5 h-3.5 shrink-0 opacity-0 -translate-x-1 group-hover:opacity-60 group-hover:translate-x-0 transition-[transform,opacity]"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-                style={{ color: 'var(--cam-primary)' }}
+        {/* Co-pilot launch */}
+        <div className="mb-5">
+          <div className="flex items-center gap-2 mb-2.5">
+            <span style={{ display:'inline-block', width:3, height:11, borderRadius:2, background:'#3683DC', flexShrink:0 }} />
+            <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--text-muted)' }}>Launch Co-pilot</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            {COPILOTS.map(cp => (
+              <button
+                key={cp.name}
+                onClick={cp.onClick}
+                className="group text-left rounded-xl p-4 relative overflow-hidden"
+                style={{ background:'rgba(255,255,255,.03)', border:'1px solid rgba(255,255,255,.08)', transition:'border-color .18s,box-shadow .18s,transform .18s' }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLButtonElement;
+                  el.style.borderColor = `${cp.accent}55`;
+                  el.style.boxShadow = `0 4px 22px ${cp.accent}22,inset 0 0 0 1px ${cp.accent}18`;
+                  el.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLButtonElement;
+                  el.style.borderColor = 'rgba(255,255,255,.08)';
+                  el.style.boxShadow = 'none';
+                  el.style.transform = 'none';
+                }}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          ))}
+                <div aria-hidden="true" style={{ position:'absolute', top:0, left:0, width:80, height:80, borderRadius:'50%', background:`radial-gradient(circle,${cp.accent}18 0%,transparent 70%)`, pointerEvents:'none' }} />
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center justify-center rounded-lg" style={{ width:36, height:36, background:`${cp.accent}18`, color:cp.accent, border:`1px solid ${cp.accent}30` }}>
+                    {cp.icon}
+                  </div>
+                  <span style={{ fontFamily:'var(--font-code)', fontSize:9, fontWeight:700, letterSpacing:'0.16em', color:cp.accent, background:`${cp.accent}15`, padding:'2px 7px', borderRadius:4, border:`1px solid ${cp.accent}25` }}>
+                    CO-PILOT
+                  </span>
+                </div>
+                <div className="text-[13px] font-bold mb-1" style={{ color:'var(--text-primary)' }}>{cp.name}</div>
+                <div className="text-[11px] leading-snug" style={{ color:'var(--text-muted)' }}>{cp.desc}</div>
+                <div className="flex items-center gap-1 mt-3 text-[11px] font-semibold" style={{ color:cp.accent }}>
+                  <span>Start session</span>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Suggested prompts */}
+        <div className="mb-5">
+          <div className="flex items-center gap-2 mb-2.5">
+            <span style={{ display:'inline-block', width:3, height:11, borderRadius:2, background:'#C9A227', flexShrink:0 }} />
+            <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--text-muted)' }}>Suggested Prompts</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+            {QUICK_PROMPTS.map(p => {
+              const accent = PROMPT_ACCENT[p.type];
+              return (
+                <button
+                  key={p.text}
+                  onClick={() => handlePromptClick(p)}
+                  className="group text-left rounded-xl px-4 py-3.5 flex items-start gap-3 relative overflow-hidden"
+                  style={{ background:'rgba(255,255,255,.025)', border:'1px solid rgba(255,255,255,.07)', minHeight:76, transition:'border-color .18s,box-shadow .18s,background .18s,transform .18s' }}
+                  onMouseEnter={e => {
+                    const el = e.currentTarget as HTMLButtonElement;
+                    el.style.borderColor = `${accent}45`;
+                    el.style.boxShadow = `0 4px 16px ${accent}18`;
+                    el.style.background = `${accent}09`;
+                    el.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={e => {
+                    const el = e.currentTarget as HTMLButtonElement;
+                    el.style.borderColor = 'rgba(255,255,255,.07)';
+                    el.style.boxShadow = 'none';
+                    el.style.background = 'rgba(255,255,255,.025)';
+                    el.style.transform = 'none';
+                  }}
+                >
+                  <span style={{ display:'inline-block', width:3, borderRadius:2, background:accent, flexShrink:0, alignSelf:'stretch', minHeight:12 }} />
+                  <div className="flex-1 min-w-0">
+                    <span style={{ fontFamily:'var(--font-code)', fontSize:9, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:accent, display:'block', marginBottom:4 }}>{p.type}</span>
+                    <span className="text-[12px] leading-snug" style={{ color:'var(--text-secondary)' }}>{p.text}</span>
+                  </div>
+                  <svg className="w-3 h-3 shrink-0 mt-0.5 opacity-0 group-hover:opacity-50 transition-opacity" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" style={{ color:accent }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Keyboard hints */}
+        <div className="hidden md:flex items-center justify-between pt-3" style={{ borderTop:'1px solid rgba(255,255,255,.06)' }}>
+          <div className="flex items-center gap-4" style={{ fontFamily:'var(--font-code)', fontSize:10, color:'var(--text-muted)' }}>
+            {([['⌘K','focus'],['⌘M','mic'],['⌘B','blank screen']] as const).map(([k,v]) => (
+              <span key={k} className="flex items-center gap-1.5">
+                <kbd style={{ padding:'2px 6px', borderRadius:4, border:'1px solid rgba(255,255,255,.12)', background:'rgba(255,255,255,.05)', fontSize:10 }}>{k}</kbd>
+                {v}
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center gap-1.5" style={{ fontFamily:'var(--font-code)', fontSize:10, color:'rgba(255,255,255,.2)' }}>
+            <span style={{ width:6, height:6, borderRadius:'50%', background:'#4ADE80', display:'inline-block', animation:'sona-ready 2s ease-in-out infinite' }} />
+            AI online
+          </div>
         </div>
       </div>
 
-      {/* Keyboard hints — hidden on mobile (no physical keyboard) */}
-      <div className="hidden md:flex items-center gap-4 text-[10px] pt-4 mt-2" style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--border)' }}>
-        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘K</kbd> focus</span>
-        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘M</kbd> mic</span>
-        <span><kbd className="px-1.5 py-0.5 rounded" style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>⌘B</kbd> blank screen</span>
-      </div>
-      </div>
-      {/* Full-width gold border below content — mirrors the hero strip top border */}
-      <div style={{ borderTop: '2px solid var(--cam-gold-leaf)', flexShrink: 0 }} />
+      <div style={{ borderTop:'1px solid rgba(201,162,39,.22)', flexShrink:0 }} />
     </div>
   );
 }
