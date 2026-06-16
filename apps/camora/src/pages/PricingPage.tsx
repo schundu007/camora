@@ -6,18 +6,22 @@ import SiteFooter from '../components/shared/SiteFooter';
 import SharedPricingCards from '../components/shared/PricingCards';
 import { useAuth } from '../contexts/AuthContext';
 
-// ── Linode cloud console design tokens ──────────────────────────────────────
+// ── Linode/Akamai Cloud Manager tokens — light theme, Akamai blue, Nunito Sans
 const LN = {
-  bg:          '#0D1017',
-  surface:     '#13161E',
-  card:        '#191D27',
-  border:      '#252A36',
-  green:       '#02B159',
-  greenFade:   'rgba(2,177,89,0.10)',
-  greenBorder: 'rgba(2,177,89,0.25)',
-  text:        '#E4E7F0',
-  muted:       '#7C849C',
-  dim:         '#4A5168',
+  bg:         '#F4F5F6',
+  surface:    '#FFFFFF',
+  card:       '#FFFFFF',
+  border:     '#D9DADB',
+  divider:    '#E8E9EA',
+  blue:       '#3683DC',
+  blueFade:   'rgba(54,131,220,0.10)',
+  blueBorder: 'rgba(54,131,220,0.30)',
+  text:       '#1A1A1A',
+  textSub:    '#606060',
+  muted:      '#909099',
+  dim:        '#C0C0C8',
+  font:       "'Nunito Sans', 'Inter', system-ui, sans-serif",
+  mono:       "'IBM Plex Mono', ui-monospace, monospace",
 } as const;
 
 // ── Comparison table data ────────────────────────────────────────────────────
@@ -67,20 +71,20 @@ const FAQS = [
 function CellValue({ value, isTeam }: { value: string; isTeam?: boolean }) {
   if (value === '✓') {
     return (
-      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: '50%', background: isTeam ? LN.green : LN.greenFade }}>
-        <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke={isTeam ? '#fff' : LN.green} strokeWidth={2.5} aria-hidden="true">
+      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: '50%', background: isTeam ? LN.blue : LN.blueFade }}>
+        <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke={isTeam ? '#fff' : LN.blue} strokeWidth={2.5} aria-hidden="true">
           <path d="M13 4 L6 11 L3 8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </span>
     );
   }
   if (value === '—') return <span style={{ color: LN.dim, fontSize: 14 }}>—</span>;
-  return <span style={{ fontSize: 12, color: isTeam ? LN.green : LN.muted, fontFamily: 'IBM Plex Mono, monospace' }}>{value}</span>;
+  return <span style={{ fontSize: 12, color: isTeam ? LN.blue : LN.muted, fontFamily: LN.mono }}>{value}</span>;
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace', marginBottom: 12 }}>
+    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 12 }}>
       {children}
     </div>
   );
@@ -142,10 +146,10 @@ export default function PricingPage() {
             <div style={{
               display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px',
               background: LN.surface, border: `1px solid ${LN.border}`, borderRadius: 4,
-              borderLeft: `3px solid ${LN.green}`,
+              borderLeft: `3px solid ${LN.blue}`,
             }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: LN.greenFade, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke={LN.green} strokeWidth={2.5} aria-hidden="true">
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: LN.blueFade, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke={LN.blue} strokeWidth={2.5} aria-hidden="true">
                   <path d="M13 4 L6 11 L3 8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
@@ -154,7 +158,7 @@ export default function PricingPage() {
                 <span style={{ fontSize: 13, color: LN.muted, marginLeft: 8 }}>1 AI hour on signup, expires after 7 days. Pick a plan any time to continue.</span>
               </div>
               <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
-                <Link to={ctaHref} style={{ padding: '7px 16px', fontSize: 12, fontWeight: 700, borderRadius: 3, background: LN.green, color: '#fff', textDecoration: 'none', display: 'inline-block' }}>
+                <Link to={ctaHref} style={{ padding: '7px 16px', fontSize: 12, fontWeight: 700, borderRadius: 3, background: LN.blue, color: '#fff', textDecoration: 'none', display: 'inline-block' }}>
                   Get started free
                 </Link>
               </div>
@@ -167,16 +171,16 @@ export default function PricingPage() {
             <div style={{ border: `1px solid ${LN.border}`, borderRadius: 4, overflow: 'hidden' }}>
               {/* Header row */}
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: LN.surface, borderBottom: `1px solid ${LN.border}` }}>
-                <div style={{ padding: '10px 20px', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: 'IBM Plex Mono, monospace' }}>Feature</div>
+                <div style={{ padding: '10px 20px', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono }}>Feature</div>
                 {[
                   { label: 'Free',    sub: '$0 · 7 days' },
                   { label: 'Monthly', sub: '$19 / mo' },
                   { label: 'Yearly',  sub: '$99 / yr' },
                   { label: 'Team',    sub: '5–50 seats', accent: true },
                 ].map(col => (
-                  <div key={col.label} style={{ padding: '10px 16px', textAlign: 'center', background: col.accent ? LN.greenFade : undefined }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: col.accent ? LN.green : LN.text }}>{col.label}</div>
-                    <div style={{ fontSize: 11, color: col.accent ? LN.green + 'aa' : LN.dim, fontFamily: 'IBM Plex Mono, monospace', marginTop: 2 }}>{col.sub}</div>
+                  <div key={col.label} style={{ padding: '10px 16px', textAlign: 'center', background: col.accent ? LN.blueFade : undefined }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: col.accent ? LN.blue : LN.text }}>{col.label}</div>
+                    <div style={{ fontSize: 11, color: col.accent ? '#2265BF' : LN.dim, fontFamily: LN.mono, marginTop: 2 }}>{col.sub}</div>
                   </div>
                 ))}
               </div>
@@ -184,12 +188,12 @@ export default function PricingPage() {
               {/* Data rows */}
               {COMPARE_SECTIONS.map((section, si) => (
                 <Fragment key={si}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: '#0F1219', borderTop: si > 0 ? `1px solid ${LN.border}` : undefined }}>
-                    <div style={{ padding: '7px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: LN.dim, fontFamily: 'IBM Plex Mono, monospace' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: LN.bg, borderTop: si > 0 ? `1px solid ${LN.border}` : undefined }}>
+                    <div style={{ padding: '7px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: LN.dim, fontFamily: LN.mono }}>
                       {section.title}
                     </div>
                     <div /><div /><div />
-                    <div style={{ background: LN.greenFade }} />
+                    <div style={{ background: LN.blueFade }} />
                   </div>
                   {section.rows.map((row, ri) => (
                     <div key={`${si}-${ri}`} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', borderTop: `1px solid ${LN.border}`, background: ri % 2 === 0 ? LN.card : LN.bg }}>
@@ -197,7 +201,7 @@ export default function PricingPage() {
                       <div style={{ padding: '11px 16px', textAlign: 'center' }}><CellValue value={row.free} /></div>
                       <div style={{ padding: '11px 16px', textAlign: 'center' }}><CellValue value={row.monthly} /></div>
                       <div style={{ padding: '11px 16px', textAlign: 'center' }}><CellValue value={row.yearly} /></div>
-                      <div style={{ padding: '11px 16px', textAlign: 'center', background: LN.greenFade }}><CellValue value={row.team} isTeam /></div>
+                      <div style={{ padding: '11px 16px', textAlign: 'center', background: LN.blueFade }}><CellValue value={row.team} isTeam /></div>
                     </div>
                   ))}
                 </Fragment>
@@ -243,7 +247,7 @@ export default function PricingPage() {
                 <div style={{ fontSize: 13, color: LN.muted }}>Free hour, no card. Pick a plan when you're ready.</div>
               </div>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <Link to={ctaHref} style={{ padding: '9px 20px', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.green, color: '#fff', textDecoration: 'none', display: 'inline-block' }}>
+                <Link to={ctaHref} style={{ padding: '9px 20px', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.blue, color: '#fff', textDecoration: 'none', display: 'inline-block' }}>
                   {isAuthenticated ? 'Open Camora' : 'Create account — free'}
                 </Link>
                 <a href="mailto:hello@cariara.com?subject=Camora%20Team%20plan" style={{ padding: '9px 20px', fontSize: 13, fontWeight: 600, borderRadius: 3, border: `1px solid ${LN.border}`, color: LN.muted, textDecoration: 'none', display: 'inline-block' }}>
