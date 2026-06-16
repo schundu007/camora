@@ -129,12 +129,12 @@ export default function PricingPage() {
       </div>
 
       {/* ── Page title ── */}
-      <div style={{ background: LN.surface, borderBottom: `1px solid ${LN.border}`, padding: '28px 32px 24px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <h1 style={{ fontSize: 30, fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.025em', background: 'linear-gradient(120deg, #1A1A1A 0%, #3683DC 55%, #6366F1 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+      <div style={{ background: LN.surface, borderBottom: `1px solid ${LN.border}`, padding: '36px 32px 30px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
+          <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.025em', background: 'linear-gradient(120deg, #1A1A1A 0%, #3683DC 55%, #6366F1 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             Plans & Pricing
           </h1>
-          <p style={{ fontSize: 14, color: LN.muted, margin: 0 }}>
+          <p style={{ fontSize: 15, color: LN.muted, margin: 0 }}>
             One free AI hour on signup. Plans from $19/mo. Top-ups at $15/hr, never expire.
           </p>
         </div>
