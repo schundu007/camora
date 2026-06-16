@@ -91,7 +91,8 @@ export const PLANS: PlanCard[] = [...SOLO_PLANS];
 const HOUR_RATE_USD = 15;
 const TEAM_SEATS_MIN = 5;
 const TEAM_SEATS_MAX = 50;
-const teamMonthlyPrice = (seats: number) => seats * 20 - 1;
+const teamMonthlyPrice = (seats: number) =>
+  seats <= 25 ? 49 + (seats - 5) * 10 : 249 + (seats - 25) * 4;
 const teamIncludedHours = (seats: number) => Math.ceil(seats * 0.7);
 
 // ── Price fetching ────────────────────────────────────────────────────────────
