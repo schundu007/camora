@@ -264,80 +264,76 @@ export default function LandingPage() {
         />
 
         <Container className="relative pt-16 pb-20 md:pt-24 md:pb-28">
-          <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] items-center gap-12 lg:gap-16">
+          {/* Centered headline block */}
+          <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
 
-            {/* Left: headline + CTAs */}
-            <div>
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}>
-                <Pill tone="inverse" withDot>
-                  The career platform for engineers
-                </Pill>
-              </motion.div>
-
-              <motion.h1
-                className="mt-6 font-display text-[44px] sm:text-[56px] md:text-[64px] lg:text-[72px] font-bold tracking-tight leading-[1.0]"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.32, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
-              >
-                <span className="block text-[#F0EEE9]">All your prep.</span>
-                <span
-                  className="block"
-                  style={{
-                    background: 'linear-gradient(120deg, #60A5FA 0%, #3683DC 30%, #A855F7 70%, #818CF8 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                  }}
-                >
-                  One trusted platform.
-                </span>
-              </motion.h1>
-
-              <motion.p
-                className="mt-6 max-w-[540px] text-[18px] md:text-[20px] leading-relaxed text-[#9CA3AF]"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
-              >
-                 1,000+ matched roles, 600+ study topics, 1,300+ practice problems, and a live AI copilot in real time: everything from first application to final offer.
-              </motion.p>
-
-              <motion.div
-                className="mt-9 flex flex-wrap items-center gap-3"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.28, delay: 0.16, ease: [0.23, 1, 0.32, 1] }}
-              >
-                <MagneticCTA strength={6}>
-                  <CTAButton to={heroCtaHref} variant="inverse-primary" size="lg" trailingArrow>
-                    {heroCta}
-                  </CTAButton>
-                </MagneticCTA>
-                <MagneticCTA strength={4}>
-                  <CTAButton to="/pricing" variant="inverse-secondary" size="lg">
-                    View pricing
-                  </CTAButton>
-                </MagneticCTA>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.24, delay: 0.22, ease: [0.23, 1, 0.32, 1] }}>
-                <VisitorCountLine />
-              </motion.div>
-            </div>
-
-            {/* Right: live session preview (extracted + memoized so its
-                perpetual motion never re-renders the landing tree) */}
-            <motion.div
-              className="hidden lg:block"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.40, delay: 0.18, ease: [0.23, 1, 0.32, 1] }}
-            >
-              <LiveSessionPreview />
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}>
+              <Pill tone="inverse" withDot>
+                The career platform for engineers
+              </Pill>
             </motion.div>
 
+            <motion.h1
+              className="mt-6 font-display text-[44px] sm:text-[56px] md:text-[64px] lg:text-[72px] font-bold tracking-tight leading-[1.0]"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.32, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
+            >
+              <span className="block text-[#F0EEE9]">All your prep.</span>
+              <span
+                className="block"
+                style={{
+                  background: 'linear-gradient(120deg, #60A5FA 0%, #3683DC 30%, #A855F7 70%, #818CF8 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                One trusted platform.
+              </span>
+            </motion.h1>
+
+            <motion.p
+              className="mt-6 max-w-[600px] text-[18px] md:text-[20px] leading-relaxed text-[#9CA3AF]"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
+            >
+              1,000+ matched roles, 600+ study topics, 1,300+ practice problems, and a live AI copilot in real time — everything from first application to final offer.
+            </motion.p>
+
+            <motion.div
+              className="mt-9 flex flex-wrap justify-center items-center gap-3"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, delay: 0.16, ease: [0.23, 1, 0.32, 1] }}
+            >
+              <MagneticCTA strength={6}>
+                <CTAButton to={heroCtaHref} variant="inverse-primary" size="lg" trailingArrow>
+                  {heroCta}
+                </CTAButton>
+              </MagneticCTA>
+              <MagneticCTA strength={4}>
+                <CTAButton to="/pricing" variant="inverse-secondary" size="lg">
+                  View pricing
+                </CTAButton>
+              </MagneticCTA>
+            </motion.div>
+
+            <motion.div className="flex justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.24, delay: 0.22, ease: [0.23, 1, 0.32, 1] }}>
+              <VisitorCountLine />
+            </motion.div>
           </div>
+
+          {/* Live session preview — below the centered headline */}
+          <motion.div
+            className="mt-16 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.40, delay: 0.28, ease: [0.23, 1, 0.32, 1] }}
+          >
+            <LiveSessionPreview />
+          </motion.div>
         </Container>
 
         <style>{`

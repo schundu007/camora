@@ -592,7 +592,7 @@ export default function PricingCards({
   return (
     <div style={{ fontFamily: LN.font }}>
       {/* Glass segmented pill tab bar */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, padding: 4, background: 'rgba(54,131,220,0.06)', border: '1px solid rgba(54,131,220,0.14)', borderRadius: 10, width: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, padding: 4, background: 'rgba(54,131,220,0.06)', border: '1px solid rgba(54,131,220,0.14)', borderRadius: 10, width: 'fit-content', margin: '0 auto 24px' }}>
         {TABS.map(tab => {
           const isActive = activeTab === tab;
           return (
