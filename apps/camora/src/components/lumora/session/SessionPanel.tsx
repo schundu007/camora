@@ -323,20 +323,30 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
           0%,100%{opacity:.04}50%{opacity:.08}
         }
         @keyframes sona-clock {
-          0%,100%{text-shadow:0 0 18px rgba(54,131,220,.3),0 0 50px rgba(54,131,220,.08)}
-          50%{text-shadow:0 0 28px rgba(54,131,220,.5),0 0 70px rgba(54,131,220,.15)}
+          0%,100%{text-shadow:0 0 20px rgba(54,131,220,.4),0 0 60px rgba(54,131,220,.12),0 0 100px rgba(54,131,220,.04)}
+          50%{text-shadow:0 0 35px rgba(54,131,220,.65),0 0 90px rgba(54,131,220,.22),0 0 140px rgba(54,131,220,.08)}
+        }
+        @keyframes sona-aurora {
+          0%,100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        @keyframes sona-beam {
+          0%,100%{opacity:.3}
+          50%{opacity:.65}
         }
       `}</style>
 
       {/* ── Hero ── */}
-      <div className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)', minHeight: 192 }}>
+      <div className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #07142b 0%, #0d1f3c 25%, #091829 50%, #0d1f3c 75%, #07142b 100%)', backgroundSize: '400% 400%', animation: 'sona-aurora 14s ease infinite', minHeight: 192 }}>
         {/* Neural orbs */}
         <div aria-hidden="true" style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
           <div style={{ position:'absolute', width:300, height:300, borderRadius:'50%', top:'-50px', left:'-50px', background:'radial-gradient(circle,rgba(54,131,220,.18) 0%,transparent 70%)', animation:'sona-orb-a 7s ease-in-out infinite' }} />
           <div style={{ position:'absolute', width:240, height:240, borderRadius:'50%', top:'5px', right:'-30px', background:'radial-gradient(circle,rgba(91,155,213,.14) 0%,transparent 70%)', animation:'sona-orb-b 9s ease-in-out infinite' }} />
           <div style={{ position:'absolute', width:160, height:160, borderRadius:'50%', bottom:'-20px', left:'42%', background:'radial-gradient(circle,rgba(201,162,39,.10) 0%,transparent 70%)', animation:'sona-orb-a 11s ease-in-out infinite 2s' }} />
+          <div style={{ position:'absolute', width:200, height:200, borderRadius:'50%', top:'30%', right:'20%', background:'radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 70%)', animation:'sona-orb-b 13s ease-in-out infinite 3s' }} />
           <div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(circle,rgba(255,255,255,.22) 1px,transparent 1px)', backgroundSize:'28px 28px', animation:'sona-dots 6s ease-in-out infinite' }} />
           <div style={{ position:'absolute', left:0, right:0, height:'2px', background:'linear-gradient(90deg,transparent,rgba(54,131,220,.5),rgba(201,162,39,.4),transparent)', animation:'sona-scan 8s linear infinite 1s' }} />
+          <div aria-hidden="true" style={{ position:'absolute', bottom:0, left:'10%', right:'10%', height:1, background:'linear-gradient(90deg,transparent,rgba(54,131,220,.6),rgba(201,162,39,.5),transparent)', animation:'sona-beam 3s ease-in-out infinite' }} />
         </div>
 
         <div className="relative px-4 md:px-6 pt-5 pb-9">
@@ -387,12 +397,14 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
                   el.style.borderColor = `${cp.accent}55`;
                   el.style.boxShadow = `0 4px 22px ${cp.accent}22,inset 0 0 0 1px ${cp.accent}18`;
                   el.style.transform = 'translateY(-2px)';
+                  el.style.background = `linear-gradient(135deg, rgba(255,255,255,.05) 0%, ${cp.accent}08 100%)`;
                 }}
                 onMouseLeave={e => {
                   const el = e.currentTarget as HTMLButtonElement;
                   el.style.borderColor = 'rgba(255,255,255,.08)';
                   el.style.boxShadow = 'none';
                   el.style.transform = 'none';
+                  el.style.background = 'rgba(255,255,255,.03)';
                 }}
               >
                 <div aria-hidden="true" style={{ position:'absolute', top:0, left:0, width:80, height:80, borderRadius:'50%', background:`radial-gradient(circle,${cp.accent}18 0%,transparent 70%)`, pointerEvents:'none' }} />

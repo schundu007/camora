@@ -14,6 +14,8 @@ import Chip from '@/components/shared/ui/Chip';
 const ExcalidrawWhiteboard = lazy(() => import('../../components/shared/diagrams/ExcalidrawWhiteboard'));
 const DashboardPage = lazy(() => import('./DashboardPage'));
 const SQLPlayground = lazy(() => import('../../components/capra/sql/SQLPlayground'));
+const PlaygroundLayout = lazy(() => import('../../components/lumora/playground/PlaygroundLayout'));
+const AskLayout = lazy(() => import('../../components/lumora/ask/AskLayout'));
 
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -713,6 +715,8 @@ export default function PracticePage() {
               { key: 'code-solver', label: 'Code Solver', icon: <Icon name="code" size={12} /> },
               { key: 'design-solver', label: 'Design Solver', icon: <Icon name="systemDesign" size={12} /> },
               { key: 'sql-editor', label: 'SQL Editor', icon: <Icon name="database" size={12} /> },
+              { key: 'playground', label: 'Playground', icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> },
+              { key: 'ask-sona', label: 'Ask Sona', icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> },
             ].map(tab => (
               <button
                 key={tab.key}
@@ -772,6 +776,47 @@ export default function PracticePage() {
             <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
               <SQLPlayground />
             </Suspense>
+          </div>
+        )}
+
+        {/* ── Playground View ── */}
+        {activeView === 'playground' && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
+              <PlaygroundLayout />
+            </Suspense>
+          </div>
+        )}
+
+        {/* ── Ask Sona View (paywalled) ── */}
+        {activeView === 'ask-sona' && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            {['pro_monthly', 'pro_yearly', 'team', 'lifetime'].includes(user?.plan_type) ? (
+              <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
+                <AskLayout />
+              </Suspense>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center h-full text-center px-6 py-16" style={{ background: 'var(--bg-surface)' }}>
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'rgba(201,162,39,0.12)', border: '1px solid rgba(201,162,39,0.25)' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--cam-gold-leaf-lt)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Ask Sona</h2>
+                <p className="text-sm mb-1 max-w-sm" style={{ color: 'var(--text-muted)' }}>
+                  Get instant AI answers to any interview question — behavioral, coding, system design, or career advice.
+                </p>
+                <p className="text-xs mb-6" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-code)' }}>Available on Pro plan</p>
+                <a
+                  href="/pricing"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white"
+                  style={{ background: 'var(--cam-gold-leaf)', color: '#020617' }}
+                >
+                  Upgrade to Pro
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+              </div>
+            )}
           </div>
         )}
 
