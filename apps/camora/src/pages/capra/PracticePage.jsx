@@ -422,6 +422,18 @@ export default function PracticePage() {
   // Stats
   const { user, subscription } = useAuth();
   const [stats, setStats] = useState(getStats);
+  const [askSonaCredits, setAskSonaCredits] = useState(null);
+
+  useEffect(() => {
+    if (activeView !== 'ask-sona') return;
+    if (isOwner(user) || (subscription?.plan && subscription.plan !== 'free')) return;
+    if (!user) return;
+    setAskSonaCredits(null);
+    fetch(`${API_URL}/api/credits`, { headers: { ...getAuthHeaders() } })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => setAskSonaCredits(typeof data.balance === 'number' ? data.balance : 0))
+      .catch(() => setAskSonaCredits(0));
+  }, [activeView, user?.email, subscription?.plan]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Challenge setup
   const [mode, setMode] = useState('quickfire');
@@ -792,10 +804,14 @@ export default function PracticePage() {
         {/* ── Ask Sona View (paywalled) ── */}
         {activeView === 'ask-sona' && (
           <div className="flex-1 min-h-0 overflow-hidden">
-            {(isOwner(user) || (subscription?.plan && subscription.plan !== 'free')) ? (
+            {(isOwner(user) || (subscription?.plan && subscription.plan !== 'free') || (askSonaCredits !== null && askSonaCredits > 0)) ? (
               <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
                 <AskLayout />
               </Suspense>
+            ) : askSonaCredits === null && !isOwner(user) && subscription?.plan === 'free' ? (
+              <div className="flex-1 flex items-center justify-center h-full">
+                <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+              </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center h-full text-center px-6 py-16" style={{ background: 'var(--bg-surface)' }}>
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'rgba(201,162,39,0.12)', border: '1px solid rgba(201,162,39,0.25)' }}>
@@ -807,7 +823,9 @@ export default function PracticePage() {
                 <p className="text-sm mb-1 max-w-sm" style={{ color: 'var(--text-muted)' }}>
                   Get instant AI answers to any interview question. AI hours are consumed per conversation.
                 </p>
-                <p className="text-xs mb-6" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-code)' }}>You have 0 AI hours remaining</p>
+                <p className="text-xs mb-6" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-code)' }}>
+                  You have {askSonaCredits !== null ? askSonaCredits.toFixed(1) : '0'} AI hours remaining
+                </p>
                 <a
                   href="/pricing#ai-hours"
                   className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold"
