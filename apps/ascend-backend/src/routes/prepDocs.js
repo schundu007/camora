@@ -94,6 +94,30 @@ router.get('/', jwtAuth, async (req, res) => {
   }
 });
 
+router.delete('/company/:slug', jwtAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { slug } = req.params;
+    const docs = await query(
+      'SELECT id, r2_key FROM user_company_docs WHERE user_id = $1 AND company_slug = $2',
+      [userId, slug]
+    );
+    for (const doc of docs.rows) {
+      await r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: doc.r2_key })).catch(() => {});
+      fetch(`${LUMORA_URL}/internal/remove-doc-chunks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': process.env.AI_SERVICES_API_KEY || '' },
+        body: JSON.stringify({ r2_key: doc.r2_key }),
+      }).catch(() => {});
+    }
+    await query('DELETE FROM user_company_docs WHERE user_id = $1 AND company_slug = $2', [userId, slug]);
+    res.json({ success: true, deleted: docs.rows.length });
+  } catch (err) {
+    logger.error({ err }, '[prepDocs] delete-company error');
+    res.status(500).json({ error: 'Delete failed' });
+  }
+});
+
 router.delete('/:id', jwtAuth, async (req, res) => {
   try {
     const userId = req.user.id;
