@@ -184,15 +184,15 @@
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.20);
 
-    --border:        #D6E5F2;
+    --border:        #C8D9ED;
     --border-hover:  #BBCFE4;
     --border-focus:  #3683DC;
 
     --text-primary:  #12141A;
     --text-secondary:#464B54;
     --text-hero:     #12141A;
-    --text-muted:    #6B717C;
-    --text-dimmed:   #868E96;
+    --text-muted:    #64696F;
+    --text-dimmed:   #717880;
 
     --accent:        #3683DC;
     --accent-hover:  #2265BF;
@@ -257,15 +257,10 @@
     --shadow-primary-sm: 0 2px 8px rgba(37,99,235,0.06);
 
     /* ── Linode/iximiuz education light theme ── */
-    --cam-hero-strip:         #EEF5FF;
-    --cam-hero-bg:            linear-gradient(160deg, #FFFFFF 0%, #EEF5FF 100%);
-    --cam-gold-leaf:          var(--accent);
-    --cam-gold-leaf-lt:       #4D94E8;
-    --cam-gold-leaf-dk:       #2265BF;
-    --cam-gold-leaf-text:     var(--accent-text);
-    --cam-gold-leaf-50:       var(--accent-subtle);
+    --cam-hero-strip:         radial-gradient(ellipse 38% 260% at 0% 50%, rgba(54,131,220,0.08), transparent 70%), radial-gradient(ellipse 35% 260% at 100% 50%, rgba(194,150,62,0.06), transparent 70%), linear-gradient(95deg, #F8FBFE 0%, #EEF5FF 40%, #F3F7FC 60%, #F8FBFE 100%);
+    --cam-hero-bg:            linear-gradient(160deg, #FFFFFF 0%, #F0F6FF 40%, #E8F0FB 100%);
     --bg-base:                #F3F7FC;
-    --bg-elevated:            #F8FBFE;
+    --bg-elevated:            #EFF3F8;
     /* Strip-header tokens — dark text on light bg */
     --cam-section-label-text: var(--text-primary);
     --cam-strip-heading:      var(--text-primary);
@@ -454,12 +449,20 @@
 
   /* Selection */
   ::selection { background: rgba(54,131,220,0.40); color: #ffffff; }
+  [data-theme="light"] ::selection {
+    background: rgba(54,131,220,0.18);
+    color: #12141A;
+  }
 
   /* Focus ring — Navy */
   *:focus-visible {
     outline: 2px solid rgba(54,131,220,0.55);
     outline-offset: 2px;
     border-radius: 4px;
+  }
+  [data-theme="light"] *:focus-visible {
+    outline: 2px solid rgba(54,131,220,0.75);
+    outline-offset: 2px;
   }
 
   /* Mobile: iOS momentum scrolling */
@@ -566,6 +569,15 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Light-mode card depth — inset top highlight for editorial surface lift */
+[data-theme="light"] .card {
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+[data-theme="light"] .card-glow:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 4px 16px rgba(54,131,220,0.08), 0 1px 3px rgba(15,23,42,0.06);
+}
+
 /* Buttons */
 .btn-primary {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -593,6 +605,9 @@
 
 /* Section label */
 .section-label { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-text); }
+[data-theme="light"] .section-label {
+  color: var(--cam-gold-leaf, #C2963E);
+}
 
 /* Typography */
 .heading-1 { font-size: 40px; font-weight: 700; letter-spacing: -0.026em; color: var(--text-primary); line-height: 1.08; }
@@ -681,6 +696,10 @@
   color: #ffffff;
   font-weight: 700;
 }
+[data-theme="light"] .tab-group-item-active {
+  background: var(--cam-primary, #3683DC);
+  color: #ffffff;
+}
 
 /* ── Underline tab bar ──────────────────────────────────────────── */
 /* Use for secondary content-area tabs (DocsTabs, topic sub-nav, etc.) */
@@ -707,6 +726,10 @@
 }
 .tab-bar-item:hover:not(.tab-bar-item-active) { color: var(--text-primary); }
 .tab-bar-item-active { color: #3683DC; border-bottom-color: #3683DC; }
+[data-theme="light"] .tab-bar-item-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
 .tab-bar-item-sm { padding: 6px 12px !important; font-size: 12px !important; }
 
 /* ── Filter chips ───────────────────────────────────────────────── */
@@ -736,6 +759,16 @@
 .chip-emerald.chip-active {
   background: #3683DC;
   border-color: #3683DC;
+  color: #ffffff;
+}
+[data-theme="light"] .chip-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+[data-theme="light"] .chip-gold-active {
+  background: var(--cam-gold-leaf);
+  border-color: var(--cam-gold-leaf);
   color: #ffffff;
 }
 
@@ -778,6 +811,11 @@
   background: color-mix(in oklab, var(--success) 10%, transparent);
   color: var(--success);
   border: 1px solid color-mix(in oklab, var(--success) 25%, transparent);
+}
+.badge-gold {
+  background: color-mix(in oklab, var(--cam-gold-leaf) 12%, transparent);
+  color: var(--cam-gold-leaf-text, #8A6B2A);
+  border: 1px solid color-mix(in oklab, var(--cam-gold-leaf) 25%, transparent);
 }
 
 /* ── Additional button variants ─────────────────────────────────── */
@@ -947,9 +985,19 @@
   .input::placeholder { color: var(--text-muted); }
   .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.18); }
 
+  /* Input error state — light mode gets a warm red ring */
+  [data-theme="light"] .input-error {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(220,38,38,0.12);
+  }
+
   /* Shimmer */
   .shimmer {
     background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 100%);
+    background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite;
+  }
+  [data-theme="light"] .shimmer {
+    background: linear-gradient(90deg, rgba(15,23,42,0.02) 0%, rgba(15,23,42,0.06) 50%, rgba(15,23,42,0.02) 100%);
     background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite;
   }
 
@@ -1045,6 +1093,9 @@ body.electron-desktop [contenteditable='true'] {
 
 /* Smooth page transition */
 main, [role="main"] { animation: fadeUp 0.15s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  main, [role="main"] { animation: none; }
+}
 
 /* Staggered solution cards */
 .solution-cards-appear > * { animation: solutionCardIn 0.3s ease-out both; }
@@ -1229,6 +1280,14 @@ img { max-width: 100%; height: auto; }
   -webkit-text-fill-color: transparent;
   animation: aiShimmer 3s ease-in-out infinite;
 }
+[data-theme="light"] .ai-shimmer {
+  background: linear-gradient(90deg, var(--text-secondary) 0%, var(--text-primary) 50%, var(--text-secondary) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: aiShimmer 3s ease-in-out infinite;
+}
 @keyframes aiShimmer {
   0% { background-position: 200% center; }
   100% { background-position: -200% center; }
@@ -1298,6 +1357,12 @@ img { max-width: 100%; height: auto; }
 /* Gradient text on dark backgrounds — navy to gold sweep */
 .ai-gradient-text {
   background: linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, var(--cam-gold-leaf) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+[data-theme="light"] .ai-gradient-text {
+  background: linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-primary) 45%, var(--cam-gold-leaf) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1633,7 +1698,7 @@ img { max-width: 100%; height: auto; }
      answer impossible to track left-to-right. The parent card width is
      capped at ~880px so a single column gives ~80-char line length —
      the typographic sweet spot. Wide screens center the card. */
-  font-size: 14.5px;
+  font-size: var(--fs-answer-body, 16px);
   line-height: 1.65;
   color: var(--text-primary);
   column-count: 1 !important;

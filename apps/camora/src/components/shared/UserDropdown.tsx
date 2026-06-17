@@ -56,7 +56,7 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
   // Hardcode high-contrast values so the username/email read clearly on
   // any surface — bypassing data-theme cascade that was occasionally
   // flipping --text-primary to a light value on the white nav.
-  const textColor = isDark ? '#FFFFFF' : '#020617';
+  const textColor = isDark ? 'var(--cam-strip-heading)' : 'var(--text-primary)';
   const hoverBg = isDark ? 'rgba(255,255,255,0.14)' : 'rgba(2,6,23,0.06)';
   // Glass-pill capsule treatment when the trigger sits on a navy strip
   // (rail bottom). Matches GlassPill / PillToggle grammar so the trigger
@@ -160,7 +160,7 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
                 to="/profile?tab=preferences"
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors"
-                style={{ color: '#d97706' }}
+                style={{ color: 'var(--warn, #d97706)' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
@@ -187,7 +187,10 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
               </button>
               <button
                 onClick={() => { logout(); setOpen(false); }}
-                className="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] font-medium text-red-500 transition-colors hover:bg-red-500/10"
+                className="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] font-medium transition-colors"
+                style={{ color: 'var(--danger)' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--danger-subtle, rgba(239,68,68,0.08))')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
