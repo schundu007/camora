@@ -2499,11 +2499,21 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
   };
 
   const deleteCompany = (name: string) => {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     setPrepData(prev => {
       const newCompanies = prev.companies.filter(c => c !== name);
       const newData = { ...prev.data };
       delete newData[name];
-      return { ...prev, companies: newCompanies, activeCompany: newCompanies[0] || null, data: newData };
+      const next = { ...prev, companies: newCompanies, activeCompany: newCompanies[0] || null, data: newData };
+      if (token) {
+        prepAPI.putState(token, next).catch(() => {});
+        fetch(`${API_URL}/api/v1/prep-docs/company/${encodeURIComponent(slug)}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders(),
+          credentials: 'include',
+        }).catch(() => {});
+      }
+      return next;
     });
   };
 
