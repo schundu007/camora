@@ -1826,10 +1826,10 @@ export default function DocsPage({ onBack }) {
                               borderBottom: '1px solid var(--cam-gold-leaf)',
                             }}
                           >
-                            <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)' }}>
+                            <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}>
                               <Icon name={category.icon} size={12} style={{ color: 'var(--cam-gold-leaf-lt)' }} />
                             </div>
-                            <h3 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap landing-display">{category.name}</h3>
+                            <h3 className="text-[12px] font-bold uppercase tracking-[0.12em] whitespace-nowrap landing-display" style={{ color: 'var(--cam-strip-heading)' }}>{category.name}</h3>
                             <Chip>{categoryDesigns.length} systems</Chip>
                           </div>
                           {/* Designs in Category */}
@@ -1837,7 +1837,7 @@ export default function DocsPage({ onBack }) {
                             {categoryDesigns.map((design) => {
                               const designProblem = `Design ${design.title}. ${design.description || design.subtitle || ''}`;
                               const designLocked = contentAccess.isTopicLocked(activePage, design.id);
-                              const diffBtnStyle = { Easy: { background: 'var(--easy)', color: '#fff' }, Medium: { background: 'var(--medium)', color: 'var(--bg-base)' }, Hard: { background: 'var(--hard)', color: '#fff' } }[design.difficulty] || { background: 'var(--accent)', color: '#fff' };
+                              const diffBtnStyle = { background: 'var(--accent)', color: '#fff' };
                               return (
                                 <div
                                   key={design.id}
