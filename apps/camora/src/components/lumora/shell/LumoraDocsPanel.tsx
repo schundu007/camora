@@ -2507,6 +2507,20 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
     });
   };
 
+  const uploadToResearchDocs = useCallback((file: File) => {
+    const slug = (prepData.activeCompany || 'general')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('company_slug', slug);
+    fetch(`${API_URL}/api/v1/prep-docs/upload`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+      body: fd,
+    }).catch(() => {});
+  }, [prepData.activeCompany]);
+
   const extractFile = useCallback(async (file: File): Promise<string> => {
     if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
       return await file.text();
@@ -2967,17 +2981,17 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <UploadZone label="Job Description" required value={state.jd} fileName={state.jdFile}
-                  onUpload={async (f) => { const t = await extractFile(f); setState(p => ({ ...p, jd: t, jdFile: f.name })); }}
+                  onUpload={async (f) => { uploadToResearchDocs(f); const t = await extractFile(f); setState(p => ({ ...p, jd: t, jdFile: f.name })); }}
                   onPaste={(t) => setState(p => ({ ...p, jd: t }))}
                   onClickOverride={() => { setJdEditText(state.jd || ''); setJdModalOpen(true); }} />
                 <UploadZone label="Resume" required value={state.resume} fileName={state.resumeFile}
-                  onUpload={async (f) => { const t = await extractFile(f); setState(p => ({ ...p, resume: t, resumeFile: f.name })); }}
+                  onUpload={async (f) => { uploadToResearchDocs(f); const t = await extractFile(f); setState(p => ({ ...p, resume: t, resumeFile: f.name })); }}
                   onPaste={(t) => setState(p => ({ ...p, resume: t }))} />
                 <UploadZone label="Cover Letter" value={state.coverLetter} fileName={state.coverLetterFile}
-                  onUpload={async (f) => { const t = await extractFile(f); setState(p => ({ ...p, coverLetter: t, coverLetterFile: f.name })); }}
+                  onUpload={async (f) => { uploadToResearchDocs(f); const t = await extractFile(f); setState(p => ({ ...p, coverLetter: t, coverLetterFile: f.name })); }}
                   onPaste={(t) => setState(p => ({ ...p, coverLetter: t }))} />
                 <UploadZone label="Prep Materials" value={state.prepMaterials} fileName={state.prepMaterialsFile}
-                  onUpload={async (f) => { const t = await extractFile(f); setState(p => ({ ...p, prepMaterials: t, prepMaterialsFile: f.name })); }}
+                  onUpload={async (f) => { uploadToResearchDocs(f); const t = await extractFile(f); setState(p => ({ ...p, prepMaterials: t, prepMaterialsFile: f.name })); }}
                   onPaste={(t) => setState(p => ({ ...p, prepMaterials: t }))} />
               </div>
             </div>
