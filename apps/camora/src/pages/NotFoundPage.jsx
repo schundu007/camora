@@ -4,7 +4,7 @@ import SiteNav from '../components/shared/SiteNav';
 
 export default function NotFoundPage() {
   return (
-    <div className="min-h-screen relative" style={{ background: 'var(--cam-hero-bg)', color: '#FFFFFF' }}>
+    <div className="min-h-screen relative" style={{ background: 'var(--cam-hero-bg)', color: 'var(--cam-strip-heading)' }}>
       <Helmet>
         <title>Page not found — Camora</title>
         <meta name="robots" content="noindex, nofollow" />
@@ -18,8 +18,8 @@ export default function NotFoundPage() {
         <div className="relative z-10 text-center max-w-md">
           {/* 404 */}
           <div className="font-mono text-8xl font-extrabold mb-4 tracking-tight" style={{ color: 'var(--cam-gold-leaf-lt)' }}>404</div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white mb-3">Page not found</h1>
-          <p className="text-sm leading-relaxed mb-10" style={{ color: 'rgba(255,255,255,0.8)' }}>
+          <h1 className="text-2xl font-semibold tracking-tight mb-3" style={{ color: 'var(--cam-strip-heading)' }}>Page not found</h1>
+          <p className="text-sm leading-relaxed mb-10" style={{ color: 'var(--cam-strip-text)' }}>
             The page you are looking for does not exist or has been moved.
           </p>
 
@@ -35,14 +35,14 @@ export default function NotFoundPage() {
             <Link
               to="/capra/prepare"
               className="inline-flex items-center justify-center gap-2 px-6 py-2.5 text-[13px] font-medium transition-colors rounded-full"
-              style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.35)' }}
+              style={{ color: 'var(--cam-strip-heading)', border: '1px solid var(--cam-strip-icon-border)' }}
             >
               Prepare
             </Link>
             <Link
               to="/lumora"
               className="inline-flex items-center justify-center gap-2 px-6 py-2.5 text-[13px] font-medium transition-colors rounded-full"
-              style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.35)' }}
+              style={{ color: 'var(--cam-strip-heading)', border: '1px solid var(--cam-strip-icon-border)' }}
             >
               Live Session
             </Link>
