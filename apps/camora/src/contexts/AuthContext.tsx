@@ -61,6 +61,8 @@ interface AuthContextType {
   isLoading: boolean;
   user: AuthUser | null;
   onboardingCompleted: boolean | null;
+  hasResume: boolean | null;
+  markResumeUploaded: () => void;
   subscription: SubscriptionInfo | null;
   subscriptionLoading: boolean;
   team: TeamInfo | null;
@@ -84,6 +86,8 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   user: null,
   onboardingCompleted: null,
+  hasResume: null,
+  markResumeUploaded: () => {},
   subscription: null,
   subscriptionLoading: true,
   team: null,
@@ -107,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
+  const [hasResume, setHasResume] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
@@ -232,7 +237,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               });
               if (onboardingRes.ok) {
                 const o = await onboardingRes.json();
-                if (!cancelled) setOnboardingCompleted(o.onboarding_completed);
+                if (!cancelled) {
+                  setOnboardingCompleted(o.onboarding_completed);
+                  setHasResume(o.has_resume ?? false);
+                }
               }
             } catch { /* capra backend may not be available */ }
 
@@ -395,7 +403,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, subscription, subscriptionLoading, team, teamLoading, hasTeamAccess, accessLoading, refreshSubscription, refreshTeam, markOnboardingComplete: () => setOnboardingCompleted(true), logout }}>
+    <AuthContext.Provider value={{ token, isAuthenticated: !!token, isLoading, user, onboardingCompleted, hasResume, markResumeUploaded: () => setHasResume(true), subscription, subscriptionLoading, team, teamLoading, hasTeamAccess, accessLoading, refreshSubscription, refreshTeam, markOnboardingComplete: () => setOnboardingCompleted(true), logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../hooks/useTheme';
 import Chip from '../components/shared/ui/Chip';
 import { getAuthHeaders } from '../utils/authHeaders';
 import SiteNav from '../components/shared/SiteNav';
@@ -233,15 +234,8 @@ function ActivityHeatmap() {
   const days = ['Mon', '', 'Wed', '', 'Fri', '', 'Sun'];
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  // Placeholder data — stabilize per-mount with useMemo so the heatmap doesn't
-  // re-randomize on every render (any nearby state change would otherwise
-  // shuffle the entire year). Once the real `/activity` API lands this swaps
-  // to a fetch + state, but the memo dep list stays the same shape.
-  const cells = useMemo(
-    () => Array.from({ length: weeks * 7 }, () => (Math.random() > 0.85 ? Math.ceil(Math.random() * 4) : 0)),
-    [weeks],
-  );
-  const streakCurrent = cells.filter((_, i) => i > cells.length - 14).filter(v => v > 0).length;
+  const cells = useMemo(() => Array.from({ length: weeks * 7 }, () => 0), [weeks]);
+  const streakCurrent = 0;
 
   const getColor = (v: number) => {
     if (v === 0) return 'var(--bg-elevated)';
@@ -254,7 +248,10 @@ function ActivityHeatmap() {
   return (
     <div className="rounded-2xl p-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-bold text-[var(--text-primary)]">Activity</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-base font-bold text-[var(--text-primary)]">Activity</h3>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={{ background: 'rgba(99,102,241,0.08)', color: '#6366f1', borderColor: 'rgba(99,102,241,0.3)' }}>Coming soon</span>
+        </div>
         <select value={year} onChange={e => setYear(e.target.value)} className="text-xs px-2 py-1 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-muted)]">
           <option value="current">Current</option>
           <option value="2025">2025</option>
@@ -372,26 +369,38 @@ function SubscriptionCard() {
 }
 
 /* ── Profile Settings ─────────────────────────────────── */
+const LANG_PREF_KEY = 'camora-lang-pref';
+
 function ProfileSettings() {
-  const [theme, setTheme] = useState('Light');
-  const [language, setLanguage] = useState('Python');
+  const { theme, setTheme } = useTheme();
+  const [language, setLanguage] = useState(() => localStorage.getItem(LANG_PREF_KEY) || 'Python');
+  const [langSaved, setLangSaved] = useState(false);
+
+  const handleLanguageChange = (lang: string) => {
+    setLanguage(lang);
+    localStorage.setItem(LANG_PREF_KEY, lang);
+    window.dispatchEvent(new CustomEvent('camora-lang-change', { detail: lang }));
+    setLangSaved(true);
+    setTimeout(() => setLangSaved(false), 2000);
+  };
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-      <div className="px-5 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+      <div className="px-5 py-3 flex items-center justify-between" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
         <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Profile settings</h3>
+        {langSaved && <span className="text-[11px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
       </div>
       <div className="divide-y divide-[var(--border)]">
         <div className="px-5 py-4 flex items-center justify-between">
           <span className="text-sm text-[var(--text-primary)]">Theme</span>
-          <select value={theme} onChange={e => setTheme(e.target.value)} className="text-sm px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] min-w-[180px]">
-            <option>Light</option>
-            <option>Dark</option>
+          <select value={theme} onChange={e => setTheme(e.target.value as 'light' | 'dark')} className="text-sm px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] min-w-[180px]">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
           </select>
         </div>
         <div className="px-5 py-4 flex items-center justify-between">
           <span className="text-sm text-[var(--text-primary)]">Language preference</span>
-          <select value={language} onChange={e => setLanguage(e.target.value)} className="text-sm px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] min-w-[180px]">
+          <select value={language} onChange={e => handleLanguageChange(e.target.value)} className="text-sm px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] min-w-[180px]">
             {['Python', 'JavaScript', 'TypeScript', 'Java', 'C++', 'Go', 'Rust', 'C#', 'Ruby', 'Swift', 'Kotlin'].map(l => <option key={l}>{l}</option>)}
           </select>
         </div>
