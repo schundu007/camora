@@ -89,7 +89,7 @@ const pillBase = 'flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-b
 export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped, onRemove, onTranscription, isTabActive }: CoFixLayoutProps) => {
   const { token } = useAuth();
   const { theme } = useTheme();
-  const monacoTheme: 'light' | 'vs-dark' = theme === 'light' ? 'light' : 'vs-dark';
+  const monacoTheme: 'vs' | 'vs-dark' = theme === 'light' ? 'vs' : 'vs-dark';
   const isStealthActive = useSessionStore(s => s.isStealthActive);
   const setIsStealthActive = useSessionStore(s => s.setIsStealthActive);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');

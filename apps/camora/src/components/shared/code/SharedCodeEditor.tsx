@@ -7,7 +7,7 @@ interface SharedCodeEditorProps {
   code: string;
   onChange: (code: string) => void;
   readOnly?: boolean;
-  theme?: 'vs-dark' | 'light';
+  theme?: 'vs-dark' | 'vs';
   fontSize?: number;
   height?: string;
   showLineNumbers?: boolean;
@@ -53,6 +53,7 @@ const SharedCodeEditor = ({
           language={language}
           value={code}
           onChange={(val) => onChange(val || '')}
+          beforeMount={(m) => { m.editor.setTheme(theme ?? 'vs-dark'); }}
           onMount={onMount}
           theme={theme}
           options={{

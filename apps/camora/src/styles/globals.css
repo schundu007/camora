@@ -176,10 +176,10 @@
      Every contrast pair below ≥ 4.5:1 (WCAG AA).
      ────────────────────────────────────────────────────────── */
   [data-theme="light"] {
-    --bg-base:     #F3F7FC;
-    --bg-app:      #F3F7FC;
-    --bg-surface:  #FFFFFF;
-    --bg-elevated: #F8FBFE;
+    --bg-base:     #E6EEF8;
+    --bg-app:      #E6EEF8;
+    --bg-surface:  #EFF5FB;
+    --bg-elevated: #F5F9FD;
     --bg-primary: var(--bg-surface);
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.20);
@@ -257,7 +257,7 @@
     --shadow-primary-sm: 0 2px 8px rgba(37,99,235,0.06);
 
     /* ── Linode/iximiuz education light theme ── */
-    --cam-hero-strip:         radial-gradient(ellipse 38% 260% at 0% 50%, rgba(54,131,220,0.08), transparent 70%), radial-gradient(ellipse 35% 260% at 100% 50%, rgba(194,150,62,0.06), transparent 70%), linear-gradient(95deg, #F8FBFE 0%, #EEF5FF 40%, #F3F7FC 60%, #F8FBFE 100%);
+    --cam-hero-strip:         #C0D8F0;
     --cam-hero-bg:            linear-gradient(160deg, #FFFFFF 0%, #F0F6FF 40%, #E8F0FB 100%);
     --cam-gold-leaf:          var(--accent);
     --cam-gold-leaf-lt:       #4D94E8;
