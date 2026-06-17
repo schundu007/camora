@@ -1174,11 +1174,10 @@ const UnifiedMicButton = ({
         <span
           className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded select-none"
           style={{
-            color: '#0a0e1a',
-            background: 'var(--cam-gold-leaf)',
-            border: '1px solid var(--cam-gold-leaf)',
+            color: 'var(--cam-accent-fill-text)',
+            background: 'var(--cam-accent-fill)',
+            border: '1px solid var(--accent)',
             fontFamily: 'var(--font-mono)',
-            boxShadow: '0 0 0 2px rgba(201,162,39,0.45)',
           }}
           title="Sona is always listening during behavioral interviews"
         >
@@ -1192,11 +1191,11 @@ const UnifiedMicButton = ({
           onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
           className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors"
           style={{
-            color: isAutoOn ? '#0a0e1a' : 'var(--cam-strip-text)',
-            background: isAutoOn ? 'var(--cam-gold-leaf)' : 'var(--cam-strip-icon-bg)',
-            border: `1px solid ${isAutoOn ? 'var(--cam-gold-leaf)' : 'var(--cam-strip-icon-border)'}`,
+            color: isAutoOn ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
+            background: isAutoOn ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
+            border: `1px solid ${isAutoOn ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
             fontFamily: 'var(--font-mono)',
-            boxShadow: isAutoOn ? '0 0 0 2px rgba(201,162,39,0.45)' : 'none',
+            boxShadow: isAutoOn ? '0 0 0 2px var(--accent-subtle)' : 'none',
           }}
           title={isAutoOn
             ? 'AUTO is ON — Sona listens continuously. Click or press ` to stop.'

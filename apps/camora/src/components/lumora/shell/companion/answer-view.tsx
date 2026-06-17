@@ -191,7 +191,7 @@ const StarAnswer = ({ sections, streaming }: { sections: { label: StarLabel; bod
             icon={
               <span
                 className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold tabular-nums"
-                style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', fontFamily: FONT_ANSWER }}
+                style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)', fontFamily: FONT_ANSWER }}
               >
                 {s.label[0]}
               </span>
@@ -236,8 +236,8 @@ const ArchetypeBadge = ({ archetype }: { archetype: Archetype }) => {
       }}
     >
       <span className="inline-flex items-center justify-center w-5 h-5 rounded-full"
-        style={{ background: 'var(--cam-gold-leaf)' }}>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary-dk)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        style={{ background: 'var(--cam-accent-fill)' }}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--cam-accent-fill-text)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="9" />
           <line x1="12" y1="8" x2="12" y2="12" />
           <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -455,8 +455,8 @@ const RichText = ({ text }: { text: string }) => {
 
   const renderSeg = (seg: Seg, key: string): React.ReactNode => {
     switch (seg.s) {
-      case 'h1': return <div key={key} className="flex items-center gap-3 px-3 py-2.5 mt-4 mb-2 rounded-sm first:mt-0" style={{ background: 'rgba(38,97,156,0.12)', borderLeft: '3px solid var(--cam-gold-leaf)' }}><span className="font-mono text-[11px] font-bold tracking-widest uppercase" style={{ color: TEXT_PRIMARY }}>{seg.text}</span></div>;
-      case 'h2': return <div key={key} className="flex items-center gap-3 px-3 py-2 mt-3 mb-1.5 rounded-sm first:mt-0" style={{ background: 'rgba(38,97,156,0.08)', borderLeft: '3px solid var(--cam-gold-leaf)' }}><span className="font-mono text-[10px] font-bold tracking-widest uppercase" style={{ color: TEXT_PRIMARY }}>{seg.text}</span></div>;
+      case 'h1': return <div key={key} className="flex items-center gap-3 px-3 py-2.5 mt-4 mb-2 rounded-sm first:mt-0" style={{ background: 'var(--cam-accent-fill)', borderLeft: '3px solid var(--accent)' }}><span className="font-mono text-[11px] font-bold tracking-widest uppercase" style={{ color: TEXT_PRIMARY }}>{seg.text}</span></div>;
+      case 'h2': return <div key={key} className="flex items-center gap-3 px-3 py-2 mt-3 mb-1.5 rounded-sm first:mt-0" style={{ background: 'var(--cam-accent-fill)', borderLeft: '3px solid var(--accent)', opacity: 0.85 }}><span className="font-mono text-[10px] font-bold tracking-widest uppercase" style={{ color: TEXT_PRIMARY }}>{seg.text}</span></div>;
       case 'h3': return (
         <div key={key} className="flex items-center gap-2 mt-2.5 mb-1" style={{ borderLeft: '2px solid var(--accent)', paddingLeft: '8px' }}>
           {seg.num && <span className="flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold font-mono shrink-0" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)' }}>{seg.num}</span>}
@@ -478,7 +478,7 @@ const RichText = ({ text }: { text: string }) => {
       }
       case 'bullet': return <div key={key} className="flex gap-2.5 items-start mt-1"><span className="shrink-0 mt-[10px] w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} /><span style={{ fontSize: '14px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(seg.text)}</span></div>;
       case 'num': return <div key={key} className="flex gap-2.5 items-start mt-1"><span className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-bold tabular-nums mt-[1px]" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)', fontFamily: FONT_ANSWER }}>{seg.n}</span><span style={{ fontSize: '14px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(seg.text)}</span></div>;
-      case 'label': return <div key={key} className="mt-2 flex gap-2.5 items-baseline"><span className="shrink-0 font-mono font-bold text-[10px] tracking-[0.14em] uppercase px-2 py-0.5 rounded" style={{ background: 'var(--cam-primary-dk)', color: 'var(--cam-gold-leaf-lt)' }}>{seg.label}</span><span style={{ fontSize: '13.5px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(seg.body)}</span></div>;
+      case 'label': return <div key={key} className="mt-2 flex gap-2.5 items-baseline"><span className="shrink-0 font-mono font-bold text-[10px] tracking-[0.14em] uppercase px-2 py-0.5 rounded" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>{seg.label}</span><span style={{ fontSize: '13.5px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(seg.body)}</span></div>;
       case 'step': return <div key={key} className="mt-1.5 flex gap-2 items-baseline"><span className="shrink-0 inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-[0.12em]" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)' }}>{seg.step}</span><span style={{ fontSize: '13.5px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(seg.body)}</span></div>;
       case 'para': return /^(Input|Output)[:\s]/i.test(seg.text)
         ? <div key={key} className="mt-1.5 px-3 py-1.5 rounded-md" style={{ background: '#0F1B2D', color: '#E6F4FF', fontFamily: 'var(--font-mono)', fontSize: '12.5px', lineHeight: '1.6' }}>{seg.text}</div>
