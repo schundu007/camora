@@ -634,17 +634,15 @@ export default function JobsPage() {
         <HeroBand
           eyebrow="A · Apply"
           title={<>Find your <HeroAccent>next role</HeroAccent></>}
-          subtitle={
-            total > 0 ? (
-              <><strong className="text-white font-bold">{total.toLocaleString()}</strong>{' '}open roles</>
-            ) : undefined
-          }
+          padding="compact"
           actions={
             <>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-medium text-white/85">Live feeds</span>
-              </div>
+              {total > 0 && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.9)' }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  {total.toLocaleString()} open roles
+                </div>
+              )}
               <button
                 onClick={() => setShowUrlInput(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors"
