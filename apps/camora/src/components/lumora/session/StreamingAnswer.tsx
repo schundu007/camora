@@ -86,7 +86,7 @@ const StreamingQAView = ({ blocks }: { blocks: Record<string, ParsedBlock> }) =>
         <div className="rounded-md border border-[var(--accent)]/15 overflow-hidden">
           <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--cam-gold-leaf-lt)]" />
-            <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">KEY POINTS</span>
+            <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-[var(--cam-strip-heading)]">KEY POINTS</span>
           </div>
           <div className="bg-[var(--accent)]/[0.02] p-3">
             {blocks.ANSWER ? (
@@ -101,7 +101,7 @@ const StreamingQAView = ({ blocks }: { blocks: Record<string, ParsedBlock> }) =>
         <div className="rounded-md border border-[var(--warning)]/15 overflow-hidden">
           <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
             <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--warning-text, var(--cam-gold-leaf-lt))' }} />
-            <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">FOLLOW-UP Q&amp;A</span>
+            <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-[var(--cam-strip-heading)]">FOLLOW-UP Q&amp;A</span>
           </div>
           <div className="bg-[var(--warning)]/[0.02] p-3">
             {blocks.FOLLOWUP ? (
@@ -254,7 +254,7 @@ const StreamingCodingCard = ({
         }}
       >
         <span className={`inline-block w-1.5 h-1.5 rounded-full ${titleColor.startsWith('text-') ? `bg-current ${titleColor}` : ''}`} />
-        <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">
+        <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-[var(--cam-strip-heading)]">
           {title}
         </span>
       </div>
@@ -369,7 +369,7 @@ const StreamingDesignView = ({ blocks }: { blocks: Record<string, ParsedBlock> }
               }}
             >
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--cam-gold-leaf-lt)]" />
-              <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-white">
+              <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-[var(--cam-strip-heading)]">
                 ARCHITECTURE
               </span>
             </div>
@@ -408,7 +408,7 @@ const StreamingDesignView = ({ blocks }: { blocks: Record<string, ParsedBlock> }
           <div className="border border-[var(--warning)]/15 bg-[var(--warning)]/[0.02] overflow-hidden min-w-0">
             <div className="flex items-center gap-2 px-4 py-2 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
               <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--warning-text, var(--cam-gold-leaf-lt))' }} />
-              <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-white">FOLLOW-UP Q&amp;A</span>
+              <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-[var(--cam-strip-heading)]">FOLLOW-UP Q&amp;A</span>
             </div>
             <div className="p-4 overflow-y-auto max-h-[420px]">
               {blocks.FOLLOWUP ? (
@@ -463,7 +463,7 @@ const StreamingGridCard = ({
         }}
       >
         <span className={`inline-block w-1.5 h-1.5 rounded-full ${titleColor.startsWith('text-') ? `bg-current ${titleColor}` : ''}`} />
-        <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-white">
+        <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-[var(--cam-strip-heading)]">
           {title}
         </span>
       </div>

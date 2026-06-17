@@ -1162,7 +1162,7 @@ const UnifiedMicButton = ({
       {!compact && (
         <span
           className="hidden md:inline font-mono text-[9px] font-bold tracking-[0.18em] uppercase shrink-0"
-          style={{ color: 'rgba(255,255,255,0.85)' }}
+          style={{ color: 'var(--cam-strip-text)' }}
           aria-hidden="true"
         >
           MIC
@@ -1192,7 +1192,7 @@ const UnifiedMicButton = ({
           onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
           className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors"
           style={{
-            color: isAutoOn ? '#0a0e1a' : 'rgba(255,255,255,0.85)',
+            color: isAutoOn ? '#0a0e1a' : 'var(--cam-strip-text)',
             background: isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
             border: `1px solid ${isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.18)'}`,
             fontFamily: 'var(--font-mono)',
