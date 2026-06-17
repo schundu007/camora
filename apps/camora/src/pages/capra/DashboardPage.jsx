@@ -149,7 +149,8 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
   // Provider State
   // ---------------------------------------------------------------------------
   const [provider, setProvider] = useLocalStorage('ascend_provider', 'claude');
-  const [model, setModel] = useLocalStorage('ascend_model', 'claude-sonnet-4-20250514');
+  const [model, setModel] = useLocalStorage('ascend_model', 'claude-sonnet-4-6');
+  if (model && model.includes('20250514')) setModel('claude-sonnet-4-6');
   const [autoSwitch, setAutoSwitch] = useLocalStorage('ascend_auto_switch', false);
 
   // ---------------------------------------------------------------------------
