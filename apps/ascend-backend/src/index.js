@@ -42,6 +42,7 @@ import referralRouter from './routes/referral.js';
 import goalCountdownRouter from './routes/goalCountdown.js';
 import gamificationRouter from './routes/gamification.js';
 import scoreCardsRouter from './routes/scoreCards.js';
+import activityRouter from './routes/activity.js';
 import problemsRouter from './routes/problems.js';
 import challengeRouter from './routes/challenge.js';
 import libraryRouter from './routes/library.js';
@@ -1381,6 +1382,7 @@ app.use('/api/gamification', apiLimiter, gamificationRouter);
 // Score cards, certificates, public profiles
 app.use('/api/score-cards', apiLimiter, scoreCardsRouter);
 app.use('/api/challenge', apiLimiter, challengeRouter);
+app.use('/api/activity', apiLimiter, activityRouter);
 app.use('/api/library', apiLimiter, libraryRouter);
 
 // Job URL analysis (scrape + AI analysis) — auth required, AI rate limit
