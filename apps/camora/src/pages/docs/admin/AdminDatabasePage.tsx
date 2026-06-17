@@ -7,7 +7,6 @@ export default function AdminDatabasePage() {
       title="Database schema"
       description="Tables, idempotent migrations, when to manually intervene, common ops queries."
       path="/docs/admin/database"
-      eyebrow="ADMIN RUNBOOK"
       breadcrumbs={[{ label: 'Admin', to: '/docs/admin' }, { label: 'Database' }]}
       onThisPage={[
         { id: 'tables', label: 'Tables' },

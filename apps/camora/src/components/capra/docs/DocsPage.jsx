@@ -1675,7 +1675,6 @@ export default function DocsPage({ onBack }) {
                   {/* Quick Reference */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Cheat Sheet"
                       title="Quick Reference"
                       className="mb-4"
                     />
@@ -1744,7 +1743,6 @@ export default function DocsPage({ onBack }) {
                   {/* Core Concepts Section - Grouped by Category */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Foundations"
                       title="Core Concepts"
                       className="mb-4"
                     />
@@ -1802,7 +1800,6 @@ export default function DocsPage({ onBack }) {
                   {/* System Design Problems Section - Grouped by Category */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Real-World"
                       title="Common System Designs"
                       className="mb-4"
                     />
@@ -1887,7 +1884,6 @@ export default function DocsPage({ onBack }) {
                   {/* Low Level Design Problems Section */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Object-Oriented"
                       title="Low Level Design"
                       className="mb-4"
                     />
@@ -1943,7 +1939,6 @@ export default function DocsPage({ onBack }) {
                   {/* Distributed System Patterns Section */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Advanced"
                       title="Distributed System Patterns"
                       className="mb-4"
                     />
@@ -1992,7 +1987,6 @@ export default function DocsPage({ onBack }) {
                   {/* Microservices Patterns Section */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Architecture"
                       title="Microservices Patterns"
                       className="mb-4"
                     />
@@ -2041,7 +2035,6 @@ export default function DocsPage({ onBack }) {
                   {/* System Design Trade-offs Section */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Critical"
                       title="System Design Trade-offs"
                       className="mb-4"
                     />
@@ -2090,7 +2083,6 @@ export default function DocsPage({ onBack }) {
                   {/* Scalable Systems Section */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Senior"
                       title="Scalable Systems"
                       className="mb-4"
                     />
@@ -2139,7 +2131,6 @@ export default function DocsPage({ onBack }) {
                   {/* Concurrency Section */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Advanced"
                       title="Concurrency & Multithreading"
                       className="mb-4"
                     />
@@ -2207,7 +2198,6 @@ export default function DocsPage({ onBack }) {
                   {/* LLD Learning Topics - Grouped by Category */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Learn"
                       title="Concepts & Patterns"
                       className="mb-4"
                     />
@@ -2264,7 +2254,6 @@ export default function DocsPage({ onBack }) {
                   {/* LLD Practice Problems Section */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Practice"
                       title="Design Problems"
                       className="mb-4"
                     />
@@ -2438,7 +2427,6 @@ export default function DocsPage({ onBack }) {
                   {/* Question Categories Section - Grouped by Category with Progress */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Categories"
                       title="Question Topics"
                       className="mb-4"
                     />
@@ -2491,7 +2479,6 @@ export default function DocsPage({ onBack }) {
                   {/* Company-Specific Section — Upgraded with progress */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Companies"
                       title="Company-Specific Prep"
                       className="mb-4"
                     />
@@ -2541,7 +2528,6 @@ export default function DocsPage({ onBack }) {
                   {/* Session Day Playbook — Modern data-point presentation */}
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Game Day"
                       title="Session Day Playbook"
                       className="mb-4"
                     />
@@ -2573,7 +2559,6 @@ export default function DocsPage({ onBack }) {
                 <>
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Architecture"
                       title="Microservices Patterns"
                       className="mb-4"
                     />
@@ -2724,7 +2709,6 @@ export default function DocsPage({ onBack }) {
                 <>
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Build"
                       title="Projects"
                       className="mb-4"
                     />
@@ -2799,7 +2783,6 @@ export default function DocsPage({ onBack }) {
                 <>
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Learning Paths"
                       title="Roadmaps"
                       className="mb-4"
                     />
@@ -2873,7 +2856,6 @@ export default function DocsPage({ onBack }) {
                 <>
                   <div className="mb-6">
                     <SectionHero
-                      eyebrow="Learn from the Best"
                       title="Engineering Blogs"
                       className="mb-4"
                     />

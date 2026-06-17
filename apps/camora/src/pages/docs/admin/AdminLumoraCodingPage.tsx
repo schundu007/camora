@@ -25,7 +25,6 @@ export default function AdminLumoraCodingPage() {
       title="Coding — Architecture"
       description="Internal architecture reference for the Coding tab: HLD (solver pipeline, endpoints), LLD (input modes, system prompt + JSON contract, 3-pass reliability, JSON extraction, rendering), DDD (bounded contexts), data model, and operational notes."
       path="/docs/admin/lumora-coding"
-      eyebrow="ADMIN · ARCHITECTURE"
       breadcrumbs={[{ label: 'Admin', to: '/docs/admin' }, { label: 'Coding' }]}
       onThisPage={[
         { id: 'overview', label: 'Overview' },

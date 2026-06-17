@@ -13,7 +13,6 @@ export default function LumoraCodingDocsPage() {
       title="Coding"
       description="How to use the Coding tab — four input modes (paste / URL / image / voice), three-approach solutions with auto-run, language switching, timer, and the Sona follow-up sidebar."
       path="/docs/lumora-coding"
-      eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Coding' }]}
       onThisPage={[
         { id: 'what-it-does', label: 'What it does' },

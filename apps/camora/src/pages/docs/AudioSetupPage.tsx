@@ -7,7 +7,6 @@ export default function AudioSetupDocsPage() {
       title="Audio setup"
       description="Camora works with any microphone, speakers, and meeting platform. Pick the path that matches your setup — most users only need the auto-detected default."
       path="/docs/audio-setup"
-      eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Audio setup' }]}
       onThisPage={[
         { id: 'overview', label: 'How Camora hears the interview' },

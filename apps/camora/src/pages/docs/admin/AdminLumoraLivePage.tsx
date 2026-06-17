@@ -25,7 +25,6 @@ export default function AdminLumoraLivePage() {
       title="Lumora Live — Architecture"
       description="Internal architecture reference for Lumora Live: HLD (system context, deployment), LLD (audio pipeline, transcription, Sona stream, voice filter, diagrams), DDD (bounded contexts, aggregates, domain events), data model, and operational notes."
       path="/docs/admin/lumora-live"
-      eyebrow="ADMIN · ARCHITECTURE"
       breadcrumbs={[{ label: 'Admin', to: '/docs/admin' }, { label: 'Lumora Live' }]}
       onThisPage={[
         { id: 'overview', label: 'Overview' },

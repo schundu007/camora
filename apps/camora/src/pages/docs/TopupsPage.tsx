@@ -8,7 +8,6 @@ export default function TopupsDocsPage() {
       title="Top-ups & AI hours"
       description="How AI hours work, what counts against your pool, when to buy a top-up, and how auto top-up keeps long sessions flowing."
       path="/docs/topups"
-      eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Top-ups & AI hours' }]}
       onThisPage={[
         { id: 'how-hours-work', label: 'How AI hours work' },

@@ -390,7 +390,6 @@ export default function DownloadPage() {
           <FadeInSection>
             <SectionHeading
               align="center"
-              eyebrow="All platforms"
               title={<>Pick your <span className="text-[var(--cam-primary)]">build.</span></>}
               lead="Native installers for macOS (Apple Silicon and Intel) and Windows. We auto-detect your platform and recommend the right one."
             />
@@ -457,7 +456,6 @@ export default function DownloadPage() {
           <FadeInSection>
             <SectionHeading
               align="center"
-              eyebrow="Built for interviews"
               title={<>Every feature, <span className="text-[var(--cam-primary)]">unfair advantage.</span></>}
               lead="Designed for the moment that decides the offer."
             />
@@ -489,7 +487,6 @@ export default function DownloadPage() {
           <FadeInSection>
             <SectionHeading
               align="center"
-              eyebrow="System requirements"
               title="Runs on what you already have."
             />
           </FadeInSection>

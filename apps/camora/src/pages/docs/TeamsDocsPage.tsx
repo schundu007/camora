@@ -8,7 +8,6 @@ export default function TeamsDocsPage() {
       title="Team sharing"
       description="Pool Camora AI hours with up to 50 teammates, set per-member caps, and configure auto top-up so calls don't get cut off."
       path="/docs/teams"
-      eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Team sharing' }]}
       onThisPage={[
         { id: 'overview', label: 'Overview' },

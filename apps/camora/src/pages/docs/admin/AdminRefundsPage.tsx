@@ -8,7 +8,6 @@ export default function AdminRefundsPage() {
       title="Refund approval"
       description="Reviewing and approving top-up refund requests via the admin dashboard."
       path="/docs/admin/refunds"
-      eyebrow="ADMIN RUNBOOK"
       breadcrumbs={[{ label: 'Admin', to: '/docs/admin' }, { label: 'Refunds' }]}
       onThisPage={[
         { id: 'flow', label: 'How the flow works' },

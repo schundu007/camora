@@ -7,7 +7,6 @@ export default function AdminEnvVarsPage() {
       title="Environment variables"
       description="Every env var across frontend, ascend-backend, lumora-backend, ai-services. What it does, default value, where to set it."
       path="/docs/admin/env-vars"
-      eyebrow="ADMIN RUNBOOK"
       breadcrumbs={[{ label: 'Admin', to: '/docs/admin' }, { label: 'Env vars' }]}
       onThisPage={[
         { id: 'frontend', label: 'Frontend (Vite)' },

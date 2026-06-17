@@ -23,7 +23,6 @@ export default function AdminLumoraDesignPage() {
       title="System Design — Architecture"
       description="Internal architecture reference for the System Design tab — tagged-text answer rendering, the architecture-diagram generation pipeline, and the multi-tier cache that keeps diagrams fast."
       path="/docs/admin/lumora-design"
-      eyebrow="ADMIN · ARCHITECTURE"
       breadcrumbs={[{ label: 'Admin', to: '/docs/admin' }, { label: 'System Design' }]}
       onThisPage={[
         { id: 'overview', label: 'Overview' },

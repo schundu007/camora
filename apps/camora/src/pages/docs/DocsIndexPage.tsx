@@ -95,7 +95,6 @@ export default function DocsIndexPage() {
       title="Camora documentation"
       description="User guides for everyone using Camora, plus internal runbooks for operators. Pick a topic below or use the sidebar."
       path="/docs"
-      eyebrow="DOCUMENTATION"
       onThisPage={onThisPage}
     >
       <section id="user-guides" className="mb-12 scroll-mt-24">
