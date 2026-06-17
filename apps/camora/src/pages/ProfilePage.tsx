@@ -33,6 +33,10 @@ const ALL_ROLES = [
   'Game Development', 'Blockchain / Web3',
 ];
 
+interface Resume { id: number; filename: string; is_active: boolean; uploaded_at: string; }
+
+const MAX_RESUMES = 5;
+
 function PreferencesTab() {
   const { token } = useAuth();
   const [status, setStatus] = useState<{
@@ -42,24 +46,39 @@ function PreferencesTab() {
     resume_snippet: string | null;
   } | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
+  const [resumes, setResumes] = useState<Resume[]>([]);
   const [resumeTab, setResumeTab] = useState<'upload' | 'text'>('upload');
   const [resumeText, setResumeText] = useState('');
   const [uploading, setUploading] = useState(false);
   const [savingText, setSavingText] = useState(false);
   const [resumeSaved, setResumeSaved] = useState(false);
-  const [deletingResume, setDeletingResume] = useState(false);
+  const [activatingId, setActivatingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [showAddResume, setShowAddResume] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [primaryRole, setPrimaryRole] = useState<string>('');
   const [savingRoles, setSavingRoles] = useState(false);
   const [rolesSaved, setRolesSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch(`${CAPRA_API}/api/onboarding/status`, {
-      credentials: 'include',
-      headers: getAuthHeaders() as unknown as Record<string, string>,
-    })
-      .then(r => r.json())
-      .then(data => { setStatus(data); setSelectedRoles(data.job_roles || []); })
+    Promise.all([
+      fetch(`${CAPRA_API}/api/onboarding/status`, {
+        credentials: 'include',
+        headers: getAuthHeaders() as unknown as Record<string, string>,
+      }).then(r => r.json()),
+      fetch(`${CAPRA_API}/api/onboarding/resumes`, {
+        credentials: 'include',
+        headers: getAuthHeaders() as unknown as Record<string, string>,
+      }).then(r => r.ok ? r.json() : []),
+    ])
+      .then(([statusData, resumesData]) => {
+        const roles: string[] = statusData.job_roles || [];
+        setStatus(statusData);
+        setSelectedRoles(roles);
+        setPrimaryRole(roles[0] || '');
+        setResumes(resumesData);
+      })
       .catch(console.error)
       .finally(() => setLoadingStatus(false));
   }, [token]);
@@ -77,24 +96,15 @@ function PreferencesTab() {
       if (res.ok) {
         const data = await res.json();
         setStatus(prev => prev ? { ...prev, has_resume: true, resume_snippet: (data.text || '').slice(0, 200) } : prev);
+        setResumes(prev => [
+          { id: data.resume_id, filename: file.name, is_active: true, uploaded_at: new Date().toISOString() },
+          ...prev.map(r => ({ ...r, is_active: false })),
+        ]);
         setResumeSaved(true);
+        setShowAddResume(false);
         setTimeout(() => setResumeSaved(false), 3000);
       }
     } finally { setUploading(false); }
-  };
-
-  const handleDeleteResume = async () => {
-    setDeletingResume(true);
-    try {
-      const res = await fetch(`${CAPRA_API}/api/onboarding/resume`, {
-        method: 'DELETE', credentials: 'include',
-        headers: getAuthHeaders() as unknown as Record<string, string>,
-      });
-      if (res.ok) {
-        setStatus(prev => prev ? { ...prev, has_resume: false, resume_snippet: null } : prev);
-        setResumeText('');
-      }
-    } finally { setDeletingResume(false); }
   };
 
   const handleSaveResumeText = async () => {
@@ -107,24 +117,68 @@ function PreferencesTab() {
         body: JSON.stringify({ resume_text: resumeText }),
       });
       if (res.ok) {
+        const data = await res.json();
         setStatus(prev => prev ? { ...prev, has_resume: true, resume_snippet: resumeText.slice(0, 200) } : prev);
+        setResumes(prev => [
+          { id: data.resume_id, filename: data.filename, is_active: true, uploaded_at: new Date().toISOString() },
+          ...prev.map(r => ({ ...r, is_active: false })),
+        ]);
+        setResumeText('');
         setResumeSaved(true);
+        setShowAddResume(false);
         setTimeout(() => setResumeSaved(false), 3000);
       }
     } finally { setSavingText(false); }
   };
 
+  const handleActivateResume = async (id: number) => {
+    setActivatingId(id);
+    try {
+      const res = await fetch(`${CAPRA_API}/api/onboarding/resumes/${id}/activate`, {
+        method: 'POST', credentials: 'include',
+        headers: getAuthHeaders() as unknown as Record<string, string>,
+      });
+      if (res.ok) setResumes(prev => prev.map(r => ({ ...r, is_active: r.id === id })));
+    } finally { setActivatingId(null); }
+  };
+
+  const handleDeleteResume = async (id: number) => {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`${CAPRA_API}/api/onboarding/resumes/${id}`, {
+        method: 'DELETE', credentials: 'include',
+        headers: getAuthHeaders() as unknown as Record<string, string>,
+      });
+      if (res.ok) {
+        const wasActive = resumes.find(r => r.id === id)?.is_active ?? false;
+        const remaining = resumes.filter(r => r.id !== id);
+        if (remaining.length === 0) {
+          setStatus(prev => prev ? { ...prev, has_resume: false, resume_snippet: null } : prev);
+          setResumes([]);
+        } else if (wasActive) {
+          setResumes(remaining.map((r, i) => ({ ...r, is_active: i === 0 })));
+        } else {
+          setResumes(remaining);
+        }
+      }
+    } finally { setDeletingId(null); }
+  };
+
   const handleSaveRoles = async () => {
     if (selectedRoles.length === 0) return;
     setSavingRoles(true);
+    const ordered = primaryRole && selectedRoles.includes(primaryRole)
+      ? [primaryRole, ...selectedRoles.filter(r => r !== primaryRole)]
+      : selectedRoles;
     try {
       const res = await fetch(`${CAPRA_API}/api/onboarding/update-roles`, {
         method: 'POST', credentials: 'include',
         headers: { ...(getAuthHeaders() as object), 'Content-Type': 'application/json' } as Record<string, string>,
-        body: JSON.stringify({ job_roles: selectedRoles }),
+        body: JSON.stringify({ job_roles: ordered }),
       });
       if (res.ok) {
-        setStatus(prev => prev ? { ...prev, job_roles: selectedRoles } : prev);
+        setSelectedRoles(ordered);
+        setStatus(prev => prev ? { ...prev, job_roles: ordered } : prev);
         setRolesSaved(true);
         setTimeout(() => setRolesSaved(false), 3000);
       }
@@ -146,6 +200,8 @@ function PreferencesTab() {
     <div className="py-16 text-center text-sm" style={{ color: 'var(--text-muted)' }}>Loading preferences…</div>
   );
 
+  const atMax = resumes.length >= MAX_RESUMES;
+
   return (
     <div className="space-y-6">
       {/* ── Job Roles ─────────────────────────────────────────── */}
@@ -158,18 +214,60 @@ function PreferencesTab() {
           <div className="flex flex-wrap gap-2 mb-5">
             {ALL_ROLES.map(role => {
               const active = selectedRoles.includes(role);
+              const isPrimary = role === primaryRole;
               return (
-                <button key={role} onClick={() => setSelectedRoles(prev => active ? prev.filter(r => r !== role) : [...prev, role])}
-                  className="px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors border"
-                  style={active
-                    ? { background: 'var(--cam-primary)', color: '#fff', borderColor: 'var(--cam-primary)' }
-                    : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }
+                <button
+                  key={role}
+                  onClick={() => {
+                    if (active) {
+                      const next = selectedRoles.filter(r => r !== role);
+                      setSelectedRoles(next);
+                      if (isPrimary) setPrimaryRole(next[0] || '');
+                    } else {
+                      const next = [...selectedRoles, role];
+                      setSelectedRoles(next);
+                      if (next.length === 1) setPrimaryRole(role);
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors border flex items-center gap-1.5"
+                  style={isPrimary
+                    ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderColor: 'var(--cam-gold-leaf)' }
+                    : active
+                      ? { background: 'var(--cam-primary)', color: '#fff', borderColor: 'var(--cam-primary)' }
+                      : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }
                   }>
+                  {isPrimary && <span style={{ fontSize: '10px' }}>★</span>}
                   {role}
                 </button>
               );
             })}
           </div>
+
+          {/* Primary role picker — only shown when 2+ roles selected */}
+          {selectedRoles.length > 1 && (
+            <div className="mb-5 p-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+              <p className="text-[11px] font-bold uppercase tracking-widest mb-2.5" style={{ color: 'var(--text-muted)' }}>Primary Role</p>
+              <div className="flex flex-wrap gap-2">
+                {selectedRoles.map(r => (
+                  <button
+                    key={r}
+                    onClick={() => setPrimaryRole(r)}
+                    className="px-3 py-1 rounded-lg text-[12px] font-semibold transition-colors border flex items-center gap-1.5"
+                    style={r === primaryRole
+                      ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderColor: 'var(--cam-gold-leaf)' }
+                      : { background: 'var(--bg-surface)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }
+                    }>
+                    {r === primaryRole && <span style={{ fontSize: '10px' }}>★</span>}
+                    {r}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] mt-2" style={{ color: 'var(--text-muted)' }}>
+                Primary role auto-selects job categories and tailors AI coaching.
+              </p>
+            </div>
+          )}
+
           <div className="flex items-center gap-3">
             <button onClick={handleSaveRoles} disabled={savingRoles || selectedRoles.length === 0}
               className="px-4 py-2 rounded-lg text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
@@ -177,82 +275,139 @@ function PreferencesTab() {
               {savingRoles ? 'Saving…' : 'Save Roles'}
             </button>
             {selectedRoles.length > 0 && (
-              <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{selectedRoles.length} selected</span>
+              <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{selectedRoles.length} selected · <strong style={{ color: 'var(--cam-gold-leaf-dk)' }}>{primaryRole}</strong> is primary</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* ── Resume ────────────────────────────────────────────── */}
+      {/* ── Resumes ───────────────────────────────────────────── */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        {/* Header */}
         <div className="px-5 py-3 flex items-center justify-between"
           style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
           <div className="flex items-center gap-3">
-            <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Resume</h3>
-            {status?.has_resume
-              ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={{ background: 'rgba(22,163,74,0.08)', color: '#16a34a', borderColor: 'rgba(22,163,74,0.3)' }}>On file</span>
-              : <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={{ background: 'rgba(217,119,6,0.08)', color: '#d97706', borderColor: 'rgba(217,119,6,0.3)' }}>Not uploaded</span>
-            }
+            <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Resumes</h3>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={
+              resumes.length === 0
+                ? { background: 'rgba(217,119,6,0.08)', color: '#d97706', borderColor: 'rgba(217,119,6,0.3)' }
+                : { background: 'rgba(22,163,74,0.08)', color: '#16a34a', borderColor: 'rgba(22,163,74,0.3)' }
+            }>{resumes.length} / {MAX_RESUMES}</span>
           </div>
           <div className="flex items-center gap-3">
             {resumeSaved && <span className="text-[11px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
-            {status?.has_resume && (
+            {!atMax && (
               <button
-                onClick={handleDeleteResume}
-                disabled={deletingResume}
-                className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-colors disabled:opacity-50"
-                style={{ color: 'var(--danger, #ef4444)', borderColor: 'rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.14)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.06)')}
+                onClick={() => setShowAddResume(v => !v)}
+                className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-colors"
+                style={{ color: 'var(--cam-primary)', borderColor: 'color-mix(in oklab, var(--cam-primary) 40%, transparent)', background: 'color-mix(in oklab, var(--cam-primary) 6%, transparent)' }}
               >
-                {deletingResume ? 'Deleting…' : 'Delete Resume'}
+                {showAddResume ? 'Cancel' : '+ Add Resume'}
               </button>
             )}
           </div>
         </div>
-        <div className="px-5 py-4">
-          <p className="text-[13px] mb-4" style={{ color: 'var(--text-secondary)' }}>
-            Your resume lets Sona give role-specific answers grounded in your actual experience.
+
+        <div className="px-5 py-4 space-y-4">
+          <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+            Upload up to {MAX_RESUMES} resumes. The <strong>active</strong> one is what Sona uses for AI coaching.
           </p>
-          {status?.has_resume && status.resume_snippet && (
-            <div className="mb-4 p-3 rounded-lg text-[12px] font-mono" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-              {status.resume_snippet}…
+
+          {/* Resume list */}
+          {resumes.length > 0 && (
+            <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
+              {resumes.map((resume, i) => (
+                <div key={resume.id}
+                  className="flex items-center gap-3 px-4 py-3"
+                  style={{
+                    borderTop: i > 0 ? '1px solid var(--border)' : 'none',
+                    background: resume.is_active ? 'color-mix(in oklab, var(--cam-primary) 4%, var(--bg-surface))' : 'var(--bg-surface)',
+                  }}>
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium truncate" style={{ color: 'var(--text-primary)' }}>{resume.filename}</p>
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                      {new Date(resume.uploaded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  </div>
+                  {resume.is_active && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0"
+                      style={{ background: 'rgba(22,163,74,0.08)', color: '#16a34a', borderColor: 'rgba(22,163,74,0.3)' }}>
+                      Active
+                    </span>
+                  )}
+                  {!resume.is_active && (
+                    <button
+                      onClick={() => handleActivateResume(resume.id)}
+                      disabled={activatingId === resume.id}
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-colors disabled:opacity-50 flex-shrink-0"
+                      style={{ color: 'var(--cam-primary)', borderColor: 'color-mix(in oklab, var(--cam-primary) 40%, transparent)', background: 'transparent' }}
+                    >
+                      {activatingId === resume.id ? '…' : 'Set Active'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDeleteResume(resume.id)}
+                    disabled={deletingId === resume.id}
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-colors disabled:opacity-50 flex-shrink-0"
+                    style={{ color: 'var(--danger, #ef4444)', borderColor: 'rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.14)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.06)')}
+                  >
+                    {deletingId === resume.id ? 'Deleting…' : 'Delete'}
+                  </button>
+                </div>
+              ))}
             </div>
           )}
-          <div className="flex gap-1 mb-4">
-            {(['upload', 'text'] as const).map(t => (
-              <button key={t} onClick={() => setResumeTab(t)}
-                className="px-3 py-1 rounded text-[11px] font-bold uppercase tracking-wide transition-colors"
-                style={resumeTab === t
-                  ? { background: 'var(--cam-primary)', color: '#fff' }
-                  : { background: 'var(--bg-elevated)', color: 'var(--text-muted)' }
-                }>
-                {t === 'upload' ? 'Upload File' : 'Paste Text'}
-              </button>
-            ))}
-          </div>
-          {resumeTab === 'upload' ? (
-            <>
-              <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt" className="sr-only"
-                onChange={e => { const f = e.target.files?.[0]; if (f) { handleFileUpload(f); e.target.value = ''; } }} />
-              <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                className="w-full py-10 rounded-xl text-[13px] font-medium transition-colors disabled:opacity-50"
-                style={{ border: '2px dashed var(--border)', color: 'var(--text-muted)', background: 'var(--bg-elevated)' }}>
-                {uploading ? 'Uploading…' : '↑  Click to upload PDF, DOCX, or TXT  ·  max 5 MB'}
-              </button>
-            </>
-          ) : (
-            <>
-              <textarea value={resumeText} onChange={e => setResumeText(e.target.value)}
-                placeholder="Paste your full resume here…" rows={9}
-                className="w-full p-3 rounded-lg text-[13px] resize-none outline-none"
-                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
-              <button onClick={handleSaveResumeText} disabled={savingText || !resumeText.trim()}
-                className="mt-2 px-4 py-2 rounded-lg text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
-                style={{ background: 'var(--cam-primary)' }}>
-                {savingText ? 'Saving…' : 'Save Resume'}
-              </button>
-            </>
+
+          {atMax && (
+            <p className="text-[12px] text-center py-2" style={{ color: 'var(--text-muted)' }}>
+              Maximum of {MAX_RESUMES} resumes reached. Delete one to add another.
+            </p>
+          )}
+
+          {/* Add resume form — always shown when empty, toggle via button otherwise */}
+          {(showAddResume || resumes.length === 0) && !atMax && (
+            <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
+              <div className="flex gap-1">
+                {(['upload', 'text'] as const).map(t => (
+                  <button key={t} onClick={() => setResumeTab(t)}
+                    className="px-3 py-1 rounded text-[11px] font-bold uppercase tracking-wide transition-colors"
+                    style={resumeTab === t
+                      ? { background: 'var(--cam-primary)', color: '#fff' }
+                      : { background: 'var(--bg-surface)', color: 'var(--text-muted)' }
+                    }>
+                    {t === 'upload' ? 'Upload File' : 'Paste Text'}
+                  </button>
+                ))}
+              </div>
+              {resumeTab === 'upload' ? (
+                <>
+                  <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt" className="sr-only"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) { handleFileUpload(f); e.target.value = ''; } }} />
+                  <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                    className="w-full py-8 rounded-xl text-[13px] font-medium transition-colors disabled:opacity-50"
+                    style={{ border: '2px dashed var(--border)', color: 'var(--text-muted)', background: 'var(--bg-surface)' }}>
+                    {uploading ? 'Uploading…' : '↑  Click to upload PDF, DOCX, or TXT  ·  max 5 MB'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <textarea value={resumeText} onChange={e => setResumeText(e.target.value)}
+                    placeholder="Paste your full resume here…" rows={9}
+                    className="w-full p-3 rounded-lg text-[13px] resize-none outline-none"
+                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+                  <button onClick={handleSaveResumeText} disabled={savingText || !resumeText.trim()}
+                    className="px-4 py-2 rounded-lg text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
+                    style={{ background: 'var(--cam-primary)' }}>
+                    {savingText ? 'Saving…' : 'Save Resume'}
+                  </button>
+                </>
+              )}
+            </div>
           )}
         </div>
       </div>
