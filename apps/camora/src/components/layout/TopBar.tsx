@@ -62,13 +62,10 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
         className="flex items-center justify-between px-4 sm:px-6 shrink-0 z-50 no-scrollbar"
         style={{
           height: 60,
-          // Dark navy chrome — same look in both light and dark themes,
-          // near-black so it sits visibly above the brighter cam-primary
-          // hero gradients below. 3px gold-leaf underline.
           background: 'var(--cam-hero-strip)',
           borderBottom: '3px solid var(--cam-gold-leaf)',
           boxShadow: '0 6px 22px rgba(0,0,0,0.45)',
-          color: '#FFFFFF',
+          color: 'var(--cam-strip-heading)',
           fontFamily: 'var(--font-sans)',
         }}
       >
@@ -106,9 +103,9 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
             className="hidden lg:flex items-center gap-0.5 ml-4"
             style={{
               padding: 3,
-              border: '1px solid rgba(201,162,39,0.50)',
+              border: '1px solid var(--cam-strip-icon-border)',
               borderRadius: 999,
-              background: 'rgba(3,19,46,0.88)',
+              background: 'var(--cam-strip-icon-bg)',
             }}
           >
             {NAV_LINKS.filter(l => l.href !== '/pricing').map((link) => {
@@ -119,7 +116,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
                   to={link.href}
                   className="px-3 py-1.5 text-[11px] font-bold font-mono uppercase tracking-wider rounded-full transition-[background-color,color] duration-150 active:scale-[0.98] no-underline"
                   style={{
-                    color: active ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)',
+                    color: active ? '#fff' : 'var(--cam-strip-text)',
                     background: active ? 'var(--cam-gold-leaf)' : 'transparent',
                   }}
                 >
@@ -189,12 +186,12 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex items-center justify-center w-10 h-10 min-h-[40px] transition-[background-color,transform] duration-150 active:scale-[0.98] hover:bg-white/15"
+            className="flex items-center justify-center w-10 h-10 min-h-[40px] transition-[background-color,transform] duration-150 active:scale-[0.98]"
             style={{
-              color: '#FFFFFF',
-              border: '1px solid rgba(255,255,255,0.25)',
+              color: 'var(--cam-strip-heading)',
+              border: '1px solid var(--cam-strip-icon-border)',
               borderRadius: 999,
-              background: 'rgba(255,255,255,0.08)',
+              background: 'var(--cam-strip-icon-bg)',
             }}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
@@ -254,7 +251,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           </button>
 
           {/* Avatar — user dropdown menu */}
-          <UserDropdown variant="dark" />
+          <UserDropdown variant={theme === 'dark' ? 'dark' : 'light'} />
 
           {/* Mobile hamburger — pinned right, matches SiteNav and Lumora.
               Opens a dropdown directly below the TopBar with NAV_LINKS
@@ -262,8 +259,8 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
-            className="md:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors hover:bg-white/10"
-            style={{ color: '#FFFFFF' }}
+            className="md:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors"
+            style={{ color: 'var(--cam-strip-heading)' }}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
           >
