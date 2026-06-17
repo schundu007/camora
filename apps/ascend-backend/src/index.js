@@ -55,6 +55,7 @@ import { playgroundRouter } from './routes/playground.js';
 import { playgroundLimiter } from './middleware/playgroundLimiter.js';
 import { askRouter } from './routes/ask.js';
 import learnTopicRouter from './routes/learnTopic.js';
+import prepDocsRouter from './routes/prepDocs.js';
 
 // Same pattern as jobs above — the entire lumora-backend route surface was
 // copied under src/lumora/ so this service can answer /api/v1/transcribe,
@@ -1402,6 +1403,7 @@ app.use('/api/v1/mcq', authenticate, aiLimiter, mcqRouter);
 
 // Learn topic content — Redis L1 + Postgres L2 cache, auto-generated on first visit
 app.use('/api/v1/learn/topic', apiLimiter, learnTopicRouter);
+app.use('/api/v1/prep/docs', apiLimiter, prepDocsRouter);
 
 // Enhanced health check
 app.get('/api/health', (req, res) => {
