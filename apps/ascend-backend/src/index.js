@@ -56,6 +56,7 @@ import { playgroundLimiter } from './middleware/playgroundLimiter.js';
 import { askRouter } from './routes/ask.js';
 import learnTopicRouter from './routes/learnTopic.js';
 import prepDocsRouter from './routes/prepDocs.js';
+import jobAlertsRouter from './routes/jobAlerts.js';
 
 // Same pattern as jobs above — the entire lumora-backend route surface was
 // copied under src/lumora/ so this service can answer /api/v1/transcribe,
@@ -416,6 +417,11 @@ async function runMigrations() {
     await query("ALTER TABLE ai_hour_topups ADD COLUMN IF NOT EXISTS refunded_at TIMESTAMPTZ");
     await query("ALTER TABLE ai_hour_topups ADD COLUMN IF NOT EXISTS refund_reason VARCHAR(100)");
     console.log('[Migrations] refund tracking ensured');
+
+    // Job alerts opt-in
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS job_alerts_enabled BOOLEAN DEFAULT FALSE');
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS job_alerts_last_sent_at TIMESTAMPTZ');
+    console.log('[Migrations] job alerts columns ensured');
 
     // Refund requests are admin-approved, not auto-issued. User submits a
     // request; an admin in /admin/refunds approves it (which then fires the
@@ -1344,6 +1350,7 @@ app.use('/api/v1/problems', apiLimiter, problemsRouter);
 // JOBS_DATABASE_URL is unset, so the frontend's /jobs page surfaces a
 // "jobs db not configured" message instead of an opaque 404.
 app.use('/api/v1/jobs', apiLimiter, jobsRouter);
+app.use('/api/v1/job-alerts', apiLimiter, jobAlertsRouter);
 
 // Lumora route surface — full lumora-backend mounted under src/lumora/.
 // These pair with the existing /api/v1/auth and /api/v1/billing aliases
