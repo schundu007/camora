@@ -744,8 +744,8 @@ export const LumoraShellPage = () => {
                 }}
               >
                 <div className="max-w-3xl mx-auto px-6 py-8 w-full relative">
-                  <h2 className="text-4xl font-extrabold mb-2 text-white" style={{ textShadow: '0 0 28px rgba(255,255,255,0.14)' }}>Sessions</h2>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                  <h2 className="text-4xl font-extrabold mb-2" style={{ color: 'var(--cam-strip-heading)' }}>Sessions</h2>
+                  <p className="text-sm" style={{ color: 'var(--cam-strip-text)' }}>
                     Your session history — <span className="font-bold" style={{ color: 'var(--cam-gold-leaf-lt)', textShadow: '0 0 14px rgba(217,181,67,0.45)' }}>{history.length}</span> saved.
                   </p>
                 </div>
@@ -872,8 +872,8 @@ export const LumoraShellPage = () => {
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto" style={{ background: 'var(--bg-surface)' }}>
               <div className="shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                 <div className="max-w-2xl mx-auto px-6 py-8 w-full">
-                  <h2 className="text-4xl font-extrabold mb-2 text-white">Credits & <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Usage</span></h2>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>Track your AI usage and remaining credits.</p>
+                  <h2 className="text-4xl font-extrabold mb-2" style={{ color: 'var(--cam-strip-heading)' }}>Credits & <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Usage</span></h2>
+                  <p className="text-sm" style={{ color: 'var(--cam-strip-text)' }}>Track your AI usage and remaining credits.</p>
                 </div>
               </div>
               <div className="max-w-2xl mx-auto px-6 pt-5 pb-10 w-full">
