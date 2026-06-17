@@ -965,13 +965,13 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
       {/* Left: mode indicator */}
       <div className="flex items-center gap-1.5">
         <div className="w-2 h-2 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)' }} />
-        <span className="text-sm font-semibold text-white">{currentMode.label}</span>
+        <span className="text-sm font-semibold" style={{ color: 'var(--cam-strip-heading)' }}>{currentMode.label}</span>
       </div>
 
       {/* Center: APPA tabs */}
       <div
         className="hidden md:flex items-center gap-0.5"
-        style={{ padding: 3, border: '1px solid rgba(201,162,39,0.50)', borderRadius: 8, background: 'rgba(3,19,46,0.88)' }}
+        style={{ padding: 3, border: '1px solid var(--cam-strip-icon-border)', borderRadius: 8, background: 'var(--bg-elevated)' }}
       >
         {APPA_TABS.map((tab) => (
           <Link
@@ -980,7 +980,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
             className="px-3 py-1.5 text-sm font-semibold transition-all rounded-md"
             style={tab.label === activeAppaTab
               ? { background: 'var(--cam-gold-leaf)', color: '#020617' }
-              : { background: 'transparent', color: 'rgba(255,255,255,0.85)' }
+              : { background: 'transparent', color: 'var(--cam-strip-text)' }
             }
           >
             {tab.label}
@@ -996,7 +996,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
           ) : (
             <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>{user?.name?.[0] || '?'}</div>
           )}
-          <span className="text-sm font-medium text-white">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
+          <span className="text-sm font-medium" style={{ color: 'var(--cam-strip-heading)' }}>{user?.name?.split(' ')[0] || 'Dashboard'}</span>
         </Link>
       </div>
     </header>
@@ -1147,7 +1147,7 @@ function CodingLayout({
         >
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
-            <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">
+            <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] whitespace-nowrap" style={{ color: 'var(--cam-strip-heading)' }}>
               {ascendMode === 'system-design' ? 'System Design' : 'Problem'}
             </h2>
             {ascendMode === 'system-design' && (
@@ -1156,10 +1156,10 @@ function CodingLayout({
                 aria-label="View saved designs"
                 className="flex-shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-all"
                 style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.16)',
+                  background: 'var(--cam-strip-icon-bg)',
+                  border: '1px solid var(--cam-strip-icon-border)',
                   borderRadius: 999,
-                  color: savedDesignsCount > 0 ? 'var(--cam-gold-leaf-lt)' : 'rgba(255,255,255,0.85)',
+                  color: savedDesignsCount > 0 ? 'var(--cam-gold-leaf-lt)' : 'var(--cam-strip-text)',
                 }}
               >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
@@ -1281,16 +1281,16 @@ function CodingLayout({
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
-                    <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">System Design</h2>
+                    <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] whitespace-nowrap" style={{ color: 'var(--cam-strip-heading)' }}>System Design</h2>
                     <button
                       onClick={onSavedDesignsClick}
                       aria-label="View saved designs"
                       className="flex-shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-all"
                       style={{
-                        background: 'rgba(255,255,255,0.08)',
-                        border: '1px solid rgba(255,255,255,0.16)',
+                        background: 'var(--cam-strip-icon-bg)',
+                        border: '1px solid var(--cam-strip-icon-border)',
                         borderRadius: 999,
-                        color: savedDesignsCount > 0 ? 'var(--cam-gold-leaf-lt)' : 'rgba(255,255,255,0.85)',
+                        color: savedDesignsCount > 0 ? 'var(--cam-gold-leaf-lt)' : 'var(--cam-strip-text)',
                       }}
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
