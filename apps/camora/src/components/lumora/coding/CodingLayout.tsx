@@ -2085,7 +2085,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 className="px-3.5 py-1 text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
                 style={
                   problemTab === 'description'
-                    ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
+                    ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
                     : { color: 'var(--cam-strip-text)', borderRadius: 999 }
                 }
               >Description</button>
@@ -2094,7 +2094,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 className="px-3.5 py-1 text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98] flex items-center gap-1.5"
                 style={
                   problemTab === 'solution'
-                    ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
+                    ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
                     : { color: 'var(--cam-strip-text)', borderRadius: 999 }
                 }
               >
