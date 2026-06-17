@@ -229,13 +229,10 @@ export default function JobsPage() {
     return () => { document.title = 'Camora'; };
   }, []);
 
-  // Map user's onboarding role to job filter category
-  // Covers all 30 roles from OnboardingPage (JOB_ROLES + MORE_ROLES)
-  const getUserCategory = (): string => {
-    const roles = user?.job_roles;
-    if (!roles || roles.length === 0) return 'all';
-    const r = (Array.isArray(roles) ? roles[0] : roles).toLowerCase();
-    // Direct ID matches from onboarding
+  // Map all onboarding roles to job filter categories (multi-role aware)
+  const getUserCategories = (): string[] => {
+    const userRoles = user?.job_roles;
+    if (!userRoles || userRoles.length === 0) return [];
     const roleMap: Record<string, string> = {
       backend: 'backend', frontend: 'frontend', fullstack: 'fullstack',
       devops: 'devops', data: 'data', ml: 'ml', mobile: 'mobile',
@@ -248,34 +245,42 @@ export default function JobsPage() {
       game_dev: 'game_dev', embedded: 'embedded', dba: 'data',
       network: 'network', ai_researcher: 'ml', devsecops: 'devops',
     };
-    if (roleMap[r]) return roleMap[r];
-    // Fuzzy fallback for free-text roles
-    if (r.includes('devops') || r.includes('dev ops')) return 'devops';
-    if (r.includes('sre') || r.includes('site reliability')) return 'sre';
-    if (r.includes('security')) return 'security';
-    if (r.includes('ml') || r.includes('ai') || r.includes('machine learning')) return 'ml';
-    if (r.includes('data')) return 'data';
-    if (r.includes('ios')) return 'ios';
-    if (r.includes('android')) return 'android';
-    if (r.includes('mobile')) return 'mobile';
-    if (r.includes('qa') || r.includes('test')) return 'qa';
-    if (r.includes('embedded') || r.includes('firmware')) return 'embedded';
-    if (r.includes('fullstack') || r.includes('full stack')) return 'fullstack';
-    if (r.includes('frontend') || r.includes('front')) return 'frontend';
-    if (r.includes('backend') || r.includes('back')) return 'backend';
-    if (r.includes('platform')) return 'platform';
-    if (r.includes('cloud') || r.includes('infrastructure')) return 'cloud';
-    if (r.includes('manager')) return 'em';
-    if (r.includes('lead')) return 'tech_lead';
-    if (r.includes('architect')) return 'architect';
-    if (r.includes('blockchain') || r.includes('web3')) return 'blockchain';
-    if (r.includes('game')) return 'game_dev';
-    return 'all';
+    const mapOne = (r: string): string => {
+      if (roleMap[r]) return roleMap[r];
+      if (r.includes('devops') || r.includes('dev ops')) return 'devops';
+      if (r.includes('sre') || r.includes('site reliability')) return 'sre';
+      if (r.includes('security')) return 'security';
+      if (r.includes('ml') || r.includes('ai') || r.includes('machine learning')) return 'ml';
+      if (r.includes('data')) return 'data';
+      if (r.includes('ios')) return 'ios';
+      if (r.includes('android')) return 'android';
+      if (r.includes('mobile')) return 'mobile';
+      if (r.includes('qa') || r.includes('test')) return 'qa';
+      if (r.includes('embedded') || r.includes('firmware')) return 'embedded';
+      if (r.includes('fullstack') || r.includes('full stack')) return 'fullstack';
+      if (r.includes('frontend') || r.includes('front')) return 'frontend';
+      if (r.includes('backend') || r.includes('back')) return 'backend';
+      if (r.includes('platform')) return 'platform';
+      if (r.includes('cloud') || r.includes('infrastructure')) return 'cloud';
+      if (r.includes('manager')) return 'em';
+      if (r.includes('lead')) return 'tech_lead';
+      if (r.includes('architect')) return 'architect';
+      if (r.includes('blockchain') || r.includes('web3')) return 'blockchain';
+      if (r.includes('game')) return 'game_dev';
+      return '';
+    };
+    const list = Array.isArray(userRoles) ? userRoles : [userRoles];
+    const result: string[] = [];
+    for (const r of list) {
+      const cat = mapOne(String(r).toLowerCase());
+      if (cat && !result.includes(cat)) result.push(cat);
+    }
+    return result;
   };
 
   // Filters
   const [search, setSearch] = useState('');
-  const [role, setRole] = useState('all');
+  const [roles, setRoles] = useState<string[]>([]);
   const [roleInitialized, setRoleInitialized] = useState(false);
   const [locationFilter, setLocationFilter] = useState('');
   const [locCountry, setLocCountry] = useState('');
@@ -351,29 +356,30 @@ export default function JobsPage() {
     return { countries: sortDesc(countryCounts), statesByCountry, citiesByState, hasRemote };
   }, [availableLocations]);
 
-  // Auto-detect USA from browser timezone on first load
+  // Auto-detect USA from browser timezone — pre-select country dropdown only.
+  // We do NOT set locationFilter here because the backend ILIKE '%United States%'
+  // won't match locations stored as "San Francisco, CA". The dropdown pre-selection
+  // lets the user drill into a state/city which DOES match.
   useEffect(() => {
-    if (locationFilter) return; // user already has a filter set
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       if (tz.startsWith('America/')) {
         setLocCountry('United States');
-        setLocationFilter('United States');
         setLocationAutoDetected(true);
       }
     } catch {
-      // ignore — no auto-detect on failure
+      // ignore
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Set role from user profile once auth loads
+  // Pre-select all user profile categories once auth loads
   useEffect(() => {
     if (!authLoading && user && !roleInitialized) {
-      const cat = getUserCategory();
-      if (cat !== 'all') setRole(cat);
+      const cats = getUserCategories();
+      if (cats.length > 0) setRoles(cats);
       setRoleInitialized(true);
     }
-  }, [authLoading, user, roleInitialized]);
+  }, [authLoading, user, roleInitialized]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Data
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -470,7 +476,7 @@ export default function JobsPage() {
   const buildJobParams = useCallback((extraOffset?: number) => {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
-    if (role !== 'all') params.set('role', role);
+    if (roles.length > 0) params.set('role', roles.join(','));
     if (locationFilter) params.set('location', locationFilter);
     if (sourceFilter) params.set('source', sourceFilter);
     if (workTypeFilter) params.set('work_type', workTypeFilter);
@@ -483,7 +489,7 @@ export default function JobsPage() {
     params.set('limit', String(PAGE_SIZE));
     if (extraOffset) params.set('offset', String(extraOffset));
     return params;
-  }, [search, role, locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter]);
+  }, [search, roles, locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter]);
 
   /* ── Fetch filter options on mount ── */
   useEffect(() => {
@@ -567,6 +573,7 @@ export default function JobsPage() {
   const clearAllFilters = () => {
     setLocationFilter(''); setLocCountry(''); setLocState(''); setLocCity('');
     setLocationAutoDetected(false);
+    setRoles([]);
     setSourceFilter(''); setWorkTypeFilter('');
     setDepartmentFilter(''); setCompanyFilter(''); setExperienceFilter('');
     setPostedWithinFilter('7'); setSalaryMinFilter(''); setSalaryMaxFilter('');
@@ -574,10 +581,12 @@ export default function JobsPage() {
   };
 
   /* ── Fetch on filter change — debounce search text, instant for category clicks ── */
-  const prevRoleRef = useRef(role);
+  const prevRolesRef = useRef(roles);
   useEffect(() => {
-    const isRoleChange = prevRoleRef.current !== role;
-    prevRoleRef.current = role;
+    const prev = [...prevRolesRef.current].sort().join(',');
+    const curr = [...roles].sort().join(',');
+    const isRoleChange = prev !== curr;
+    prevRolesRef.current = roles;
     if (isRoleChange) {
       // Category click — fetch immediately, no debounce
       fetchJobs();
@@ -586,7 +595,7 @@ export default function JobsPage() {
       const timer = setTimeout(() => fetchJobs(), 300);
       return () => clearTimeout(timer);
     }
-  }, [fetchJobs, search, role, locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter]);
+  }, [fetchJobs, search, roles, locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter]);
 
   /* ── Scroll to top on mount ── */
   useEffect(() => {
@@ -857,16 +866,9 @@ export default function JobsPage() {
                     </button>
                   )}
                 </div>
-                {locationAutoDetected && (
+                {locationAutoDetected && !locationFilter && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>🇺🇸</span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Auto-filtered to United States</span>
-                    <button
-                      onClick={() => { setLocationFilter(''); setLocCountry(''); setLocationAutoDetected(false); }}
-                      style={{ fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginLeft: '2px' }}
-                    >
-                      Show all
-                    </button>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>🇺🇸 United States detected · pick a state below</span>
                   </div>
                 )}
               </div>
@@ -973,17 +975,31 @@ export default function JobsPage() {
                 </div>
               </details>
 
-              {/* Job category — replaces the chip pill strip */}
+              {/* Job category — multi-select checkboxes */}
               <details className="jobs-filter-group">
-                <summary>Job category</summary>
+                <summary style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Job category</span>
+                  {roles.length > 0 && (
+                    <span style={{ fontSize: '10px', fontWeight: 700, background: 'var(--accent)', color: '#fff', borderRadius: '999px', padding: '1px 7px', marginRight: '6px' }}>
+                      {roles.length}
+                    </span>
+                  )}
+                </summary>
                 <div className="jobs-filter-body">
-                  {CATEGORIES.map((cat) => (
+                  <label className="jobs-filter-radio">
+                    <input type="checkbox" checked={roles.length === 0} onChange={() => setRoles([])} />
+                    <span>All</span>
+                  </label>
+                  {CATEGORIES.filter(c => c.value !== 'all').map((cat) => (
                     <label key={cat.value} className="jobs-filter-radio">
                       <input
-                        type="radio"
-                        name="role"
-                        checked={role === cat.value}
-                        onChange={() => setRole(cat.value)}
+                        type="checkbox"
+                        checked={roles.includes(cat.value)}
+                        onChange={() => setRoles(prev =>
+                          prev.includes(cat.value)
+                            ? prev.filter(r => r !== cat.value)
+                            : [...prev, cat.value]
+                        )}
                       />
                       <span>{cat.label}</span>
                     </label>
@@ -1583,13 +1599,15 @@ export default function JobsPage() {
           color: var(--accent);
           background: var(--bg-elevated);
         }
-        .jobs-filter-radio:has(input[type="radio"]:checked) {
+        .jobs-filter-radio:has(input[type="radio"]:checked),
+        .jobs-filter-radio:has(input[type="checkbox"]:checked) {
           color: var(--accent);
           font-weight: 600;
           background: var(--bg-elevated);
           border-left-color: var(--cam-gold-leaf);
         }
-        .jobs-filter-radio input[type="radio"] {
+        .jobs-filter-radio input[type="radio"],
+        .jobs-filter-radio input[type="checkbox"] {
           accent-color: var(--accent);
           margin: 0;
           flex-shrink: 0;
