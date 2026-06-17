@@ -14,6 +14,59 @@ const router = Router();
 // All routes require authentication
 router.use(authenticate);
 
+const CATEGORY_KEYWORDS = {
+  devops: ['devops', 'dev ops', 'devsecops', 'release engineer', 'build engineer', 'deployment engineer', 'automation engineer'],
+  sre: ['sre', 'site reliability', 'reliability engineer', 'production engineer', 'observability engineer'],
+  security: ['security engineer', 'security analyst', 'appsec', 'infosec', 'cybersecurity', 'penetration test', 'red team', 'blue team', 'soc analyst', 'security architect'],
+  ml: ['machine learning', 'ml engineer', 'mlops', 'deep learning', 'nlp engineer', 'ai engineer', 'ai research', 'computer vision', 'generative ai', 'applied scientist', 'research scientist'],
+  data: ['data engineer', 'data scientist', 'data analyst', 'analytics engineer', 'data platform', 'business intelligence', 'bi engineer', 'data architect', 'database engineer', 'dba'],
+  mobile: ['mobile engineer', 'mobile developer', 'ios engineer', 'ios developer', 'android engineer', 'android developer', 'react native developer', 'flutter developer'],
+  qa: ['qa engineer', 'qa analyst', 'quality assurance', 'test engineer', 'sdet', 'test automation', 'quality engineer'],
+  embedded: ['embedded engineer', 'firmware engineer', 'hardware engineer', 'fpga engineer', 'iot engineer', 'robotics engineer'],
+  fullstack: ['full stack', 'fullstack', 'full-stack'],
+  frontend: ['frontend', 'front-end', 'front end', 'ui engineer', 'ux engineer'],
+  backend: ['backend', 'back-end', 'back end', 'server engineer', 'api engineer'],
+  platform: ['platform engineer', 'developer experience', 'developer tools', 'dx engineer', 'internal tools'],
+  cloud: ['cloud engineer', 'cloud architect', 'infrastructure engineer', 'network engineer', 'solutions architect'],
+  tech_lead: ['tech lead', 'technical lead', 'team lead', 'engineering lead', 'lead engineer'],
+  staff: ['staff engineer', 'staff software', 'senior staff'],
+  principal: ['principal engineer', 'distinguished engineer'],
+  em: ['engineering manager', 'eng manager', 'director of engineering', 'vp engineering', 'head of engineering'],
+  tpm: ['technical program manager', 'tpm', 'program manager'],
+  product_manager: ['product manager', 'product owner', 'technical product'],
+  architect: ['solutions architect', 'software architect', 'system architect', 'enterprise architect'],
+  blockchain: ['blockchain engineer', 'web3 engineer', 'smart contract engineer', 'solidity engineer'],
+  game_dev: ['game developer', 'game engineer', 'unity developer', 'unreal engineer', 'gameplay engineer'],
+  ios: ['ios engineer', 'ios developer', 'swift developer'],
+  android: ['android engineer', 'android developer', 'kotlin developer'],
+  network: ['network engineer', 'network architect', 'network operations'],
+};
+
+/**
+ * Build a SQL WHERE snippet + params array for a comma-separated role string.
+ * Returns null if roleStr is empty/falsy.
+ * startIdx: the $N index for the first param.
+ */
+function buildRoleCondition(roleStr, startIdx) {
+  if (!roleStr) return null;
+  const roles = roleStr.split(',').map((r) => r.trim().toLowerCase()).filter(Boolean);
+  if (!roles.length) return null;
+  const params = [];
+  let idx = startIdx;
+  const groups = [];
+  for (const role of roles) {
+    const keywords = CATEGORY_KEYWORDS[role];
+    if (keywords) {
+      const conds = keywords.map((kw) => { params.push(`%${kw}%`); return `title ILIKE $${idx++}`; });
+      groups.push(`(${conds.join(' OR ')})`);
+    } else {
+      params.push(`%${role}%`);
+      groups.push(`title ILIKE $${idx++}`);
+    }
+  }
+  return { where: `(${groups.join(' OR ')})`, params, nextIdx: idx };
+}
+
 /**
  * GET /stats — Job statistics.
  *
@@ -83,53 +136,11 @@ router.get('/', async (req, res, next) => {
       // (react / vue / angular / kubernetes / terraform / aws / azure / gcp)
       // out of role categories — those belong in a separate tech-stack
       // filter, not as title-keyword proxies.
-      const categoryKeywords = {
-        devops: ['devops', 'dev ops', 'devsecops', 'release engineer', 'build engineer', 'deployment engineer', 'automation engineer'],
-        sre: ['sre', 'site reliability', 'reliability engineer', 'production engineer', 'observability engineer'],
-        security: ['security engineer', 'security analyst', 'appsec', 'infosec', 'cybersecurity', 'penetration test', 'red team', 'blue team', 'soc analyst', 'security architect'],
-        ml: ['machine learning', 'ml engineer', 'mlops', 'deep learning', 'nlp engineer', 'ai engineer', 'ai research', 'computer vision', 'generative ai', 'applied scientist', 'research scientist'],
-        data: ['data engineer', 'data scientist', 'data analyst', 'analytics engineer', 'data platform', 'business intelligence', 'bi engineer', 'data architect', 'database engineer', 'dba'],
-        mobile: ['mobile engineer', 'mobile developer', 'ios engineer', 'ios developer', 'android engineer', 'android developer', 'react native developer', 'flutter developer'],
-        qa: ['qa engineer', 'qa analyst', 'quality assurance', 'test engineer', 'sdet', 'test automation', 'quality engineer'],
-        embedded: ['embedded engineer', 'firmware engineer', 'hardware engineer', 'fpga engineer', 'iot engineer', 'robotics engineer'],
-        fullstack: ['full stack', 'fullstack', 'full-stack'],
-        frontend: ['frontend', 'front-end', 'front end', 'ui engineer', 'ux engineer'],
-        backend: ['backend', 'back-end', 'back end', 'server engineer', 'api engineer'],
-        platform: ['platform engineer', 'developer experience', 'developer tools', 'dx engineer', 'internal tools'],
-        cloud: ['cloud engineer', 'cloud architect', 'infrastructure engineer', 'network engineer', 'solutions architect'],
-        tech_lead: ['tech lead', 'technical lead', 'team lead', 'engineering lead', 'lead engineer'],
-        staff: ['staff engineer', 'staff software', 'senior staff'],
-        principal: ['principal engineer', 'distinguished engineer'],
-        em: ['engineering manager', 'eng manager', 'director of engineering', 'vp engineering', 'head of engineering'],
-        tpm: ['technical program manager', 'tpm', 'program manager'],
-        product_manager: ['product manager', 'product owner', 'technical product'],
-        architect: ['solutions architect', 'software architect', 'system architect', 'enterprise architect'],
-        blockchain: ['blockchain engineer', 'web3 engineer', 'smart contract engineer', 'solidity engineer'],
-        game_dev: ['game developer', 'game engineer', 'unity developer', 'unreal engineer', 'gameplay engineer'],
-        ios: ['ios engineer', 'ios developer', 'swift developer'],
-        android: ['android engineer', 'android developer', 'kotlin developer'],
-        network: ['network engineer', 'network architect', 'network operations'],
-      };
-      const roles = req.query.role.split(',').map((r) => r.trim().toLowerCase()).filter(Boolean);
-      const roleCondGroups = [];
-      for (const role of roles) {
-        const keywords = categoryKeywords[role];
-        if (keywords) {
-          const roleConds = keywords.map((kw) => {
-            const cond = `j.title ILIKE $${paramIdx}`;
-            params.push(`%${kw}%`);
-            paramIdx++;
-            return cond;
-          });
-          roleCondGroups.push(`(${roleConds.join(' OR ')})`);
-        } else {
-          roleCondGroups.push(`j.title ILIKE $${paramIdx}`);
-          params.push(`%${role}%`);
-          paramIdx++;
-        }
-      }
-      if (roleCondGroups.length > 0) {
-        conditions.push(`(${roleCondGroups.join(' OR ')})`);
+      const built = buildRoleCondition(req.query.role, paramIdx);
+      if (built) {
+        conditions.push(built.where.replace(/\btitle\b/g, 'j.title'));
+        params.push(...built.params);
+        paramIdx = built.nextIdx;
       }
     }
 
@@ -382,11 +393,32 @@ router.get('/', async (req, res, next) => {
  */
 router.get('/filters', async (req, res, next) => {
   try {
+    // If role filter is active, location/source/company counts reflect only
+    // matching jobs so the sidebar numbers match what the user actually sees.
+    const roleFilter = req.query.role || '';
+    const built = buildRoleCondition(roleFilter, 1);
+    const roleWhere = built
+      ? `AND ${built.where} `
+      : '';
+    const roleParams = built ? built.params : [];
+
     const [sources, locations, departments, companies, salaryRange] = await Promise.all([
-      queryJobs(`SELECT source AS name, COUNT(*) AS count FROM jobs WHERE source IS NOT NULL AND source != '' AND is_active = true GROUP BY source ORDER BY count DESC LIMIT 50`),
-      queryJobs(`SELECT location AS name, COUNT(*) AS count FROM jobs WHERE location IS NOT NULL AND location != '' AND is_active = true GROUP BY location ORDER BY count DESC LIMIT 100`),
-      queryJobs(`SELECT department AS name, COUNT(*) AS count FROM jobs WHERE department IS NOT NULL AND department != '' AND is_active = true GROUP BY department ORDER BY count DESC LIMIT 50`),
-      queryJobs(`SELECT c.name, COUNT(*) AS count FROM jobs j JOIN companies c ON j.company_id = c.id WHERE j.is_active = true GROUP BY c.name ORDER BY count DESC LIMIT 100`),
+      queryJobs(
+        `SELECT source AS name, COUNT(*) AS count FROM jobs WHERE source IS NOT NULL AND source != '' AND is_active = true ${roleWhere}GROUP BY source ORDER BY count DESC LIMIT 50`,
+        roleParams,
+      ),
+      queryJobs(
+        `SELECT location AS name, COUNT(*) AS count FROM jobs WHERE location IS NOT NULL AND location != '' AND is_active = true ${roleWhere}GROUP BY location ORDER BY count DESC LIMIT 200`,
+        roleParams,
+      ),
+      queryJobs(
+        `SELECT department AS name, COUNT(*) AS count FROM jobs WHERE department IS NOT NULL AND department != '' AND is_active = true ${roleWhere}GROUP BY department ORDER BY count DESC LIMIT 50`,
+        roleParams,
+      ),
+      queryJobs(
+        `SELECT name, COUNT(*) AS count FROM (SELECT c.name FROM jobs j JOIN companies c ON j.company_id = c.id WHERE j.is_active = true ${roleWhere}) sub GROUP BY name ORDER BY count DESC LIMIT 100`,
+        roleParams,
+      ),
       queryJobs(`SELECT MIN(salary_min) AS min, MAX(salary_max) AS max FROM jobs WHERE is_active = true AND salary_min IS NOT NULL`),
     ]);
     res.json({
