@@ -69,8 +69,9 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.20)',
       }
     : {
-        background: 'transparent',
-        border: '1px solid transparent',
+        background: 'var(--bg-elevated)',
+        border: '1px solid var(--border)',
+        borderRadius: 999,
       };
 
   const positionStyles: Record<string, string> = {
