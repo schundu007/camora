@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { JSX } from 'react';
-import hljs from 'highlight.js';
+import hljs from '@/lib/hljs';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getAuthHeaders } from '../../../utils/authHeaders';
 import { prepAPI } from '../../../lib/api-client';
