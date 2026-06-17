@@ -252,7 +252,7 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
       {imageUrl && !loading && !generating && (
         <div ref={containerRef}
           className="rounded-lg select-none flex items-center justify-center"
-          style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '300px', maxHeight: '65vh', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '400px', maxHeight: '82vh', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
           onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
           <img src={imageUrl} alt={`Architecture: ${question.slice(0, 50)}`} draggable={false}
             style={{

@@ -94,19 +94,19 @@ def render_layered(spec: dict, out_path: Path) -> None:
         bgcolor=BG_GRAPH,
         rankdir="TB",
         splines="ortho",
-        nodesep="0.25",
-        ranksep="0.45",
-        pad="0.65,0.65",
+        nodesep="0.40",
+        ranksep="0.65",
+        pad="0.85,0.85",
         fontname=FONT_HEADING,
         fontcolor="#0f172a",
         label=(
-            f'<<FONT FACE="{FONT_HEADING}" POINT-SIZE="22" COLOR="#0f172a">'
+            f'<<FONT FACE="{FONT_HEADING}" POINT-SIZE="24" COLOR="#0f172a">'
             f'{_esc(title)}</FONT>>'
             if title else ""
         ),
         labelloc="t",
-        size="16,!",
-        dpi="150",
+        size="16,40",
+        dpi="180",
     )
     g.attr("node", shape="none", margin="0")
     g.attr("edge", color=ARROW_COLOR, penwidth="2.5",
