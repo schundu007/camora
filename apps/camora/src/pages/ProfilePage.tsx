@@ -47,6 +47,7 @@ function PreferencesTab() {
   const [uploading, setUploading] = useState(false);
   const [savingText, setSavingText] = useState(false);
   const [resumeSaved, setResumeSaved] = useState(false);
+  const [deletingResume, setDeletingResume] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [savingRoles, setSavingRoles] = useState(false);
   const [rolesSaved, setRolesSaved] = useState(false);
@@ -80,6 +81,20 @@ function PreferencesTab() {
         setTimeout(() => setResumeSaved(false), 3000);
       }
     } finally { setUploading(false); }
+  };
+
+  const handleDeleteResume = async () => {
+    setDeletingResume(true);
+    try {
+      const res = await fetch(`${CAPRA_API}/api/onboarding/resume`, {
+        method: 'DELETE', credentials: 'include',
+        headers: getAuthHeaders() as unknown as Record<string, string>,
+      });
+      if (res.ok) {
+        setStatus(prev => prev ? { ...prev, has_resume: false, resume_snippet: null } : prev);
+        setResumeText('');
+      }
+    } finally { setDeletingResume(false); }
   };
 
   const handleSaveResumeText = async () => {
@@ -170,13 +185,31 @@ function PreferencesTab() {
 
       {/* ── Resume ────────────────────────────────────────────── */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        {cardHeader(
-          'Resume',
-          status?.has_resume
-            ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={{ background: 'rgba(22,163,74,0.08)', color: '#16a34a', borderColor: 'rgba(22,163,74,0.3)' }}>On file</span>
-            : <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={{ background: 'rgba(217,119,6,0.08)', color: '#d97706', borderColor: 'rgba(217,119,6,0.3)' }}>Not uploaded</span>,
-          resumeSaved,
-        )}
+        <div className="px-5 py-3 flex items-center justify-between"
+          style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
+          <div className="flex items-center gap-3">
+            <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Resume</h3>
+            {status?.has_resume
+              ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={{ background: 'rgba(22,163,74,0.08)', color: '#16a34a', borderColor: 'rgba(22,163,74,0.3)' }}>On file</span>
+              : <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={{ background: 'rgba(217,119,6,0.08)', color: '#d97706', borderColor: 'rgba(217,119,6,0.3)' }}>Not uploaded</span>
+            }
+          </div>
+          <div className="flex items-center gap-3">
+            {resumeSaved && <span className="text-[11px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
+            {status?.has_resume && (
+              <button
+                onClick={handleDeleteResume}
+                disabled={deletingResume}
+                className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-colors disabled:opacity-50"
+                style={{ color: 'var(--danger, #ef4444)', borderColor: 'rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.14)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.06)')}
+              >
+                {deletingResume ? 'Deleting…' : 'Delete Resume'}
+              </button>
+            )}
+          </div>
+        </div>
         <div className="px-5 py-4">
           <p className="text-[13px] mb-4" style={{ color: 'var(--text-secondary)' }}>
             Your resume lets Sona give role-specific answers grounded in your actual experience.
