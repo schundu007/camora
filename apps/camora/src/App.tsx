@@ -315,9 +315,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   // solver/practice flows require setup. Pass the original target
   // through ?redirect= so OnboardingPage can return the user to where
   // they were headed instead of dead-ending on /capra/prepare.
+  // sessionStorage flag is set when user explicitly skips resume upload —
+  // allows free navigation this session while the DB still has
+  // onboarding_completed=false so the gate re-fires on next login.
   const isOnboardingExempt =
     location.pathname.startsWith('/capra/prepare') ||
-    location.pathname === '/capra/onboarding';
+    location.pathname === '/capra/onboarding' ||
+    sessionStorage.getItem('camora_onboarding_skip_resume') === '1';
   if (location.pathname.startsWith('/capra') && onboardingCompleted === false && !isOnboardingExempt) {
     const target = location.pathname + location.search;
     return <Navigate to={`/capra/onboarding?redirect=${encodeURIComponent(target)}`} replace />;

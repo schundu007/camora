@@ -198,6 +198,22 @@ export default function OnboardingPage() {
 
   const fileInputRef = useRef(null);
 
+  // Pre-populate roles if user is returning after a previous skip
+  useEffect(() => {
+    if (!accessToken) return;
+    fetch(`${API_URL}/api/onboarding/status`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      credentials: 'include',
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.job_roles?.length > 0) {
+          setSelectedRoles(data.job_roles);
+        }
+      })
+      .catch(() => {});
+  }, [accessToken]);
+
   const toggleRole = useCallback((roleId) => {
     setSelectedRoles((prev) =>
       prev.includes(roleId)
@@ -320,6 +336,34 @@ export default function OnboardingPage() {
       setSubmitting(false);
     }
   }, [accessToken, selectedRoles, resumeText, searchParams, navigate, celebrate, markOnboardingComplete]);
+
+  // Skip resume — saves roles but leaves onboarding_completed=false so the
+  // gate re-prompts on next login. A sessionStorage flag prevents redirect
+  // loops within the current browser session.
+  const handleSkipResume = useCallback(async () => {
+    setSubmitting(true);
+    setError('');
+    try {
+      await fetch(`${API_URL}/api/onboarding/save-progress`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ job_roles: selectedRoles }),
+      });
+    } catch {
+      // Best-effort — don't block navigation on a network hiccup
+    }
+    sessionStorage.setItem('camora_onboarding_skip_resume', '1');
+    const intended = searchParams.get('redirect');
+    const safeIntended =
+      intended && intended.startsWith('/') && !intended.startsWith('//')
+        ? intended
+        : null;
+    navigate(safeIntended || '/capra/prepare');
+  }, [accessToken, selectedRoles, searchParams, navigate]);
 
   const progressPercent = step === 1 ? 50 : 100;
 
@@ -587,7 +631,7 @@ export default function OnboardingPage() {
                       Back
                     </button>
                     <button
-                      onClick={handleComplete}
+                      onClick={handleSkipResume}
                       disabled={submitting}
                       className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
                     >

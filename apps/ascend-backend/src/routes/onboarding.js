@@ -105,6 +105,25 @@ router.post('/update-roles', authenticate, async (req, res) => {
   }
 });
 
+// Save partial progress — roles only, without marking onboarding complete.
+// Used when user skips resume upload; the gate will re-prompt on next login.
+router.post('/save-progress', authenticate, async (req, res) => {
+  try {
+    const { job_roles } = req.body;
+    if (!job_roles || !Array.isArray(job_roles) || job_roles.length === 0) {
+      return res.status(400).json({ error: 'At least one job role is required' });
+    }
+    await query(
+      'UPDATE users SET job_roles = $1 WHERE id = $2',
+      [JSON.stringify(job_roles), req.user.id]
+    );
+    res.json({ success: true, job_roles });
+  } catch (error) {
+    console.error('Save progress error:', error);
+    res.status(500).json({ error: 'Failed to save progress' });
+  }
+});
+
 // Complete onboarding
 router.post('/complete', authenticate, async (req, res) => {
   try {

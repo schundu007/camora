@@ -242,6 +242,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // doesn't keep retrying. The endpoint is idempotent server-side
             // but the localStorage clear-on-success is the canonical signal.
             if (wasFreshLogin) {
+              // Clear the session skip flag so the onboarding gate re-prompts
+              // if the user still hasn't uploaded a resume.
+              sessionStorage.removeItem('camora_onboarding_skip_resume');
               const referralCode = localStorage.getItem('camora_referral_code');
               if (referralCode) {
                 fetch(`${CAPRA_API_URL}/api/referral/apply`, {
