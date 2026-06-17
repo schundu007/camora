@@ -270,8 +270,8 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           className="flex items-center gap-0.5 shrink-0"
           style={{
             padding: '2px 3px',
-            background: 'rgba(3,19,46,0.88)',
-            border: '1px solid rgba(201,162,39,0.50)',
+            background: 'var(--cam-strip-icon-bg)',
+            border: '1px solid var(--cam-gold-leaf)',
             borderRadius: 8,
           }}
         >
@@ -302,8 +302,8 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           className="flex items-center gap-0.5 shrink-0"
           style={{
             padding: '2px 3px',
-            background: 'rgba(3,19,46,0.88)',
-            border: '1px solid rgba(201,162,39,0.50)',
+            background: 'var(--cam-strip-icon-bg)',
+            border: '1px solid var(--cam-gold-leaf)',
             borderRadius: 8,
           }}
         >
