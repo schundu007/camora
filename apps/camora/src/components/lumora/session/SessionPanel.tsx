@@ -391,20 +391,20 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
                 key={cp.name}
                 onClick={cp.onClick}
                 className="group text-left rounded-xl p-4 relative overflow-hidden"
-                style={{ background:'rgba(255,255,255,.03)', border:'1px solid rgba(255,255,255,.08)', transition:'border-color .18s,box-shadow .18s,transform .18s' }}
+                style={{ background:'var(--cam-strip-icon-bg)', border:'1px solid var(--cam-strip-icon-border)', transition:'border-color .18s,box-shadow .18s,transform .18s' }}
                 onMouseEnter={e => {
                   const el = e.currentTarget as HTMLButtonElement;
                   el.style.borderColor = `${cp.accent}55`;
                   el.style.boxShadow = `0 4px 22px ${cp.accent}22,inset 0 0 0 1px ${cp.accent}18`;
                   el.style.transform = 'translateY(-2px)';
-                  el.style.background = `linear-gradient(135deg, rgba(255,255,255,.05) 0%, ${cp.accent}08 100%)`;
+                  el.style.background = `linear-gradient(135deg, var(--cam-strip-icon-bg) 0%, ${cp.accent}08 100%)`;
                 }}
                 onMouseLeave={e => {
                   const el = e.currentTarget as HTMLButtonElement;
-                  el.style.borderColor = 'rgba(255,255,255,.08)';
+                  el.style.borderColor = 'var(--cam-strip-icon-border)';
                   el.style.boxShadow = 'none';
                   el.style.transform = 'none';
-                  el.style.background = 'rgba(255,255,255,.03)';
+                  el.style.background = 'var(--cam-strip-icon-bg)';
                 }}
               >
                 <div aria-hidden="true" style={{ position:'absolute', top:0, left:0, width:80, height:80, borderRadius:'50%', background:`radial-gradient(circle,${cp.accent}18 0%,transparent 70%)`, pointerEvents:'none' }} />
@@ -441,7 +441,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
                   key={p.text}
                   onClick={() => handlePromptClick(p)}
                   className="group text-left rounded-xl px-4 py-3.5 flex items-start gap-3 relative overflow-hidden"
-                  style={{ background:'rgba(255,255,255,.025)', border:'1px solid rgba(255,255,255,.07)', minHeight:76, transition:'border-color .18s,box-shadow .18s,background .18s,transform .18s' }}
+                  style={{ background:'var(--cam-strip-icon-bg)', border:'1px solid var(--cam-strip-icon-border)', minHeight:76, transition:'border-color .18s,box-shadow .18s,background .18s,transform .18s' }}
                   onMouseEnter={e => {
                     const el = e.currentTarget as HTMLButtonElement;
                     el.style.borderColor = `${accent}45`;
@@ -451,9 +451,9 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
                   }}
                   onMouseLeave={e => {
                     const el = e.currentTarget as HTMLButtonElement;
-                    el.style.borderColor = 'rgba(255,255,255,.07)';
+                    el.style.borderColor = 'var(--cam-strip-icon-border)';
                     el.style.boxShadow = 'none';
-                    el.style.background = 'rgba(255,255,255,.025)';
+                    el.style.background = 'var(--cam-strip-icon-bg)';
                     el.style.transform = 'none';
                   }}
                 >
@@ -472,16 +472,16 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         </div>
 
         {/* Keyboard hints */}
-        <div className="hidden md:flex items-center justify-between pt-3" style={{ borderTop:'1px solid rgba(255,255,255,.06)' }}>
+        <div className="hidden md:flex items-center justify-between pt-3" style={{ borderTop:'1px solid var(--cam-strip-icon-border)' }}>
           <div className="flex items-center gap-4" style={{ fontFamily:'var(--font-code)', fontSize:10, color:'var(--text-muted)' }}>
             {([['⌘K','focus'],['⌘M','mic'],['⌘B','blank screen']] as const).map(([k,v]) => (
               <span key={k} className="flex items-center gap-1.5">
-                <kbd style={{ padding:'2px 6px', borderRadius:4, border:'1px solid rgba(255,255,255,.12)', background:'rgba(255,255,255,.05)', fontSize:10 }}>{k}</kbd>
+                <kbd style={{ padding:'2px 6px', borderRadius:4, border:'1px solid var(--cam-strip-icon-border)', background:'var(--cam-strip-icon-bg)', fontSize:10 }}>{k}</kbd>
                 {v}
               </span>
             ))}
           </div>
-          <div className="flex items-center gap-1.5" style={{ fontFamily:'var(--font-code)', fontSize:10, color:'rgba(255,255,255,.2)' }}>
+          <div className="flex items-center gap-1.5" style={{ fontFamily:'var(--font-code)', fontSize:10, color:'var(--cam-strip-text-muted)' }}>
             <span style={{ width:6, height:6, borderRadius:'50%', background:'#4ADE80', display:'inline-block', animation:'sona-ready 2s ease-in-out infinite' }} />
             AI online
           </div>

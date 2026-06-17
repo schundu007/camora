@@ -83,7 +83,7 @@ export const DocumentUpload = () => {
         className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg transition-[background-color,color,border-color] duration-150 active:scale-[0.98] shrink-0"
         style={documents.length > 0
           ? { background: 'var(--accent-subtle)', color: 'var(--accent-text)', border: '1px solid var(--border)' }
-          : { color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}
+          : { color: 'var(--cam-strip-text-muted)', border: '1px solid var(--cam-strip-icon-border)' }}
         title={`Prep docs (${documents.length})`}
       >
         <DocIcon />

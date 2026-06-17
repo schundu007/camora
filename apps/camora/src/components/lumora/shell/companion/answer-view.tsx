@@ -44,17 +44,17 @@ const LcStripHeader = ({ icon, label, hint, count, right }: {
       {icon ?? (
         <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)' }} />
       )}
-      <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase text-white">
+      <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase text-[var(--cam-strip-heading)]">
         {label}
       </span>
       {hint && (
-        <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.72)' }}>
+        <span className="text-[10px]" style={{ color: 'var(--cam-strip-text-muted)' }}>
           · {hint}
         </span>
       )}
       <span className="ml-auto flex items-center gap-2">
         {count !== undefined && (
-          <span className="text-[10px] font-bold tabular-nums" style={{ color: 'rgba(255,255,255,0.85)' }}>
+          <span className="text-[10px] font-bold tabular-nums" style={{ color: 'var(--cam-strip-text)' }}>
             {count}
           </span>
         )}
@@ -202,8 +202,8 @@ const StarAnswer = ({ sections, streaming }: { sections: { label: StarLabel; bod
               <button
                 onClick={() => navigator.clipboard.writeText(s.body)}
                 className="text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-[background-color,color,transform] active:scale-[0.98]"
-                style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.20)' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; }}
+                style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
               >
                 Copy
@@ -243,10 +243,10 @@ const ArchetypeBadge = ({ archetype }: { archetype: Archetype }) => {
           <line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
       </span>
-      <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase text-white">
+      <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase text-[var(--cam-strip-heading)]">
         {archetype}
       </span>
-      <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.72)' }}>· {ARCHETYPE_HINT[archetype]}</span>
+      <span className="text-[10px]" style={{ color: 'var(--cam-strip-text-muted)' }}>· {ARCHETYPE_HINT[archetype]}</span>
     </div>
   );
 }
@@ -394,8 +394,8 @@ const RichText = ({ text }: { text: string }) => {
           <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(201,162,39,0.85)' }} />
           <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(217,181,67,0.85)' }} />
         </span>
-        <span className="font-mono text-[10px] font-bold tracking-[0.16em] uppercase text-white">{lang || 'code'}</span>
-        <button onClick={() => navigator.clipboard.writeText(content)} className="ml-auto text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-[background-color,color,transform] active:scale-[0.98]" style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.20)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>Copy</button>
+        <span className="font-mono text-[10px] font-bold tracking-[0.16em] uppercase text-[var(--cam-strip-heading)]">{lang || 'code'}</span>
+        <button onClick={() => navigator.clipboard.writeText(content)} className="ml-auto text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-[background-color,color,transform] active:scale-[0.98]" style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>Copy</button>
       </div>
       <pre className="px-4 py-3 overflow-x-auto" style={{ background: '#0F1B2D', color: '#E6F4FF', fontSize: '12.5px', lineHeight: '1.65', fontFamily: 'var(--font-mono)' }}><code>{content}</code></pre>
     </div>
@@ -470,7 +470,7 @@ const RichText = ({ text }: { text: string }) => {
         return (
           <div key={key} className="overflow-x-auto rounded-md border my-2" style={{ borderColor: 'var(--border)' }}>
             <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
-              <thead><tr style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>{hdr.map((c, ci) => <th key={ci} className="font-mono text-[9px] font-bold tracking-wider uppercase px-3 py-2 text-white whitespace-nowrap">{c}</th>)}</tr></thead>
+              <thead><tr style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>{hdr.map((c, ci) => <th key={ci} className="font-mono text-[9px] font-bold tracking-wider uppercase px-3 py-2 text-[var(--cam-strip-heading)] whitespace-nowrap">{c}</th>)}</tr></thead>
               <tbody>{body.map((row, ri) => <tr key={ri} className="border-t" style={{ borderColor: 'var(--border)', background: ri % 2 ? 'rgba(38,97,156,0.025)' : 'transparent' }}>{row.map((c, ci) => <td key={ci} className="px-3 py-1.5" style={{ fontSize: '12.5px', lineHeight: '1.5', color: ci === 0 ? TEXT_PRIMARY : TEXT_SECONDARY, fontWeight: ci === 0 ? 600 : 400, fontFamily: ci === 0 ? 'var(--font-mono)' : FONT_ANSWER }}>{inline(c)}</td>)}</tr>)}</tbody>
             </table>
           </div>
