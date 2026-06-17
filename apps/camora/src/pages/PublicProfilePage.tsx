@@ -154,14 +154,14 @@ export default function PublicProfilePage() {
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold" style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--cam-gold-leaf-lt)', border: '3px solid var(--cam-gold-leaf)' }}>
+              <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold" style={{ background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-gold-leaf-lt)', border: '3px solid var(--cam-gold-leaf)' }}>
                 {profile.name[0]?.toUpperCase() || '?'}
               </div>
             )}
 
             <div className="text-center sm:text-left">
-              <h1 className="text-2xl font-bold text-white tracking-tight">{profile.name}</h1>
-              <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>@{profile.username}</p>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--cam-strip-heading)' }}>{profile.name}</h1>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--cam-strip-text-muted)' }}>@{profile.username}</p>
               <div className="flex items-center gap-3 mt-3 justify-center sm:justify-start">
                 <Chip variant="gold">
                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
@@ -169,7 +169,7 @@ export default function PublicProfilePage() {
                   </svg>
                   Level {profile.level}
                 </Chip>
-                <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                <span className="text-xs font-medium" style={{ color: 'var(--cam-strip-text)' }}>
                   {profile.xp.toLocaleString()} XP
                 </span>
               </div>

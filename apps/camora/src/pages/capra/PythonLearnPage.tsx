@@ -198,7 +198,7 @@ export default function PythonLearnPage() {
       <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.07), transparent 70%)' }} />
         <div className="relative page-wrap pt-14 pb-14">
-          <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 mb-6 text-[12px] font-medium transition-opacity hover:opacity-70" style={{ color: 'rgba(255,255,255,0.55)' }}>
+          <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 mb-6 text-[12px] font-medium transition-opacity hover:opacity-70" style={{ color: 'var(--cam-strip-text-muted)' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
             Back
           </button>
@@ -215,8 +215,8 @@ export default function PythonLearnPage() {
             </div>
             <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)' }}>Learning Library</span>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">Python <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Mastery</span></h1>
-          <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.7)' }}>From variables to async — {PYTHON_TOPICS.length} topics, ~{Math.round(totalMins / 60)}h of material</p>
+          <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--cam-strip-heading)' }}>Python <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Mastery</span></h1>
+          <p className="text-sm mb-5" style={{ color: 'var(--cam-strip-text)' }}>From variables to async — {PYTHON_TOPICS.length} topics, ~{Math.round(totalMins / 60)}h of material</p>
           <div className="flex items-center gap-3 flex-wrap">
             {[
               { label: `${beginnerTopics.length} Beginner Topics`, variant: 'success' as const },

@@ -66,15 +66,15 @@ export default function CompanyQuestionsPage() {
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative max-w-[1100px] mx-auto text-center">
           <img src={company.logo} alt={`${company.name} logo`} className="w-16 h-16 rounded-xl object-contain mx-auto bg-white p-2" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-          <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--cam-strip-heading)' }}>
             {company.name} <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Practice Questions</span>
           </h1>
-          <p className="mt-2 text-lg" style={{ color: 'rgba(255,255,255,0.85)' }}>{company.tagline}</p>
+          <p className="mt-2 text-lg" style={{ color: 'var(--cam-strip-text)' }}>{company.tagline}</p>
 
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <Chip variant="gold">{company.difficulty}</Chip>
-            <Chip variant="default" className="!bg-white/10 !text-white border border-white/20">{company.avgSalary}</Chip>
-            <Chip variant="default" className="!bg-white/10 !text-white border border-white/20">{company.interviewRounds} rounds</Chip>
+            <Chip variant="default">{company.avgSalary}</Chip>
+            <Chip variant="default">{company.interviewRounds} rounds</Chip>
           </div>
         </div>
         <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" className="absolute left-0 bottom-0 w-full pointer-events-none" style={{ height: '6vh', display: 'block' }}>
