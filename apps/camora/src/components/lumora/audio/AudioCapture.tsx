@@ -1193,8 +1193,8 @@ const UnifiedMicButton = ({
           className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors"
           style={{
             color: isAutoOn ? '#0a0e1a' : 'var(--cam-strip-text)',
-            background: isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.08)',
-            border: `1px solid ${isAutoOn ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.18)'}`,
+            background: isAutoOn ? 'var(--cam-gold-leaf)' : 'var(--cam-strip-icon-bg)',
+            border: `1px solid ${isAutoOn ? 'var(--cam-gold-leaf)' : 'var(--cam-strip-icon-border)'}`,
             fontFamily: 'var(--font-mono)',
             boxShadow: isAutoOn ? '0 0 0 2px rgba(201,162,39,0.45)' : 'none',
           }}
@@ -1215,7 +1215,7 @@ const UnifiedMicButton = ({
       {/* Audio-level meter */}
       <div
         className="flex items-end gap-[3px] shrink-0 px-1 py-0.5 rounded"
-        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)' }}
+        style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
         aria-hidden="true"
       >
         {[0, 1, 2, 3, 4].map((i) => {
@@ -1226,7 +1226,7 @@ const UnifiedMicButton = ({
               className="w-[3px] rounded-full transition-all duration-75"
               style={{
                 height: `${8 + i * 2}px`,
-                background: lit ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.25)',
+                background: lit ? 'var(--cam-gold-leaf)' : 'var(--cam-strip-icon-border)',
                 opacity: lit ? 1 : 0.6,
               }}
             />

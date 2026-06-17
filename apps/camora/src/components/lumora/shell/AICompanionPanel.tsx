@@ -920,7 +920,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
           {embedded ? (
             <button
               onClick={() => setMobileRailOpen(v => !v)}
-              className="md:hidden p-2 rounded-md transition-colors hover:bg-white/10"
+              className="md:hidden p-2 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)]"
               style={{ color: 'var(--cam-strip-text)' }}
               title="Questions"
               aria-label="Open questions panel"
@@ -933,13 +933,13 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               <button
                 onClick={exportSession}
                 disabled={messages.length === 0}
-                className="p-1 rounded-md transition-colors hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="p-1 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)] disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ color: 'var(--cam-strip-text)' }}
                 title="Export session (.md)"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
               </button>
-              <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'var(--cam-strip-text)' }} title="New chat">
+              <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)]" style={{ color: 'var(--cam-strip-text)' }} title="New chat">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
               </button>
             </>
@@ -975,11 +975,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         {!embedded && (
           <div className="flex items-center gap-0.5">
             <button onClick={() => setMinimized(true)}
-              className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'var(--cam-strip-text)' }} title="Minimize">
+              className="p-1 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)]" style={{ color: 'var(--cam-strip-text)' }} title="Minimize">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
             </button>
             <button onClick={() => { setMaximized(!maximized); setPosition({ x: 0, y: 0 }); }}
-              className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'var(--cam-strip-text)' }} title={maximized ? 'Restore' : 'Maximize'}>
+              className="p-1 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)]" style={{ color: 'var(--cam-strip-text)' }} title={maximized ? 'Restore' : 'Maximize'}>
               {maximized ? (
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="5" width="14" height="14" rx="1" /><path d="M9 3h10a2 2 0 012 2v10" /></svg>
               ) : (
