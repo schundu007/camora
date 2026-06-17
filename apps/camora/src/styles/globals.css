@@ -277,31 +277,6 @@
     color-scheme: light;
   }
 
-  /* Restore Lumora's dark cockpit when the global theme is light.
-     Background and text tokens go dark; gold-leaf stays as the
-     blue accent inherited from the light theme (navy palette). */
-  [data-theme="light"][data-product="lumora"] {
-    --cam-hero-strip:
-      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(37,99,235,0.28), transparent 70%),
-      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(37,99,235,0.14), transparent 70%),
-      radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.07), transparent 75%),
-      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(37,99,235,0.12), transparent 70%),
-      linear-gradient(95deg, #0E0E11 0%, #141417 30%, #1C1C22 50%, #141417 70%, #0E0E11 100%);
-    --cam-section-label-text: #FFFFFF;
-    --cam-strip-heading:      #FFFFFF;
-    --cam-strip-text:         rgba(255,255,255,0.82);
-    --cam-strip-text-muted:   rgba(255,255,255,0.55);
-    --cam-strip-icon-bg:      rgba(255,255,255,0.10);
-    --cam-strip-icon-border:  rgba(255,255,255,0.16);
-    --bg-base:     #0A0A0C;
-    --bg-app:      #0E0E11;
-    --bg-surface:  #141417;
-    --bg-elevated: #1C1C22;
-    --border:      #26262E;
-    --text-primary:   #F0EEE9;
-    --text-secondary: #9BAAB8;
-    --text-muted:     #647084;
-  }
 
   /* ──────────────────────────────────────────────────────────
      PRODUCT VISUAL IDENTITY

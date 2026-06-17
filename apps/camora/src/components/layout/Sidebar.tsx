@@ -303,8 +303,8 @@ const sections: NavSection[] = [
   {
     title: 'Tools',
     items: [
-      { label: 'Code Solver', path: '/lumora/coding', icon: icons.codeSolver },
-      { label: 'Design Solver', path: '/lumora/design', icon: icons.designSolver },
+      { label: 'Code Solver', path: '/capra/coding', icon: icons.codeSolver },
+      { label: 'Design Solver', path: '/capra/design', icon: icons.designSolver },
     ],
   },
   {
