@@ -1078,7 +1078,7 @@ export default function DocsPage({ onBack }) {
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
                           <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Learning Resources</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           {(() => {
                             const ct = codingTopics.length || 57;
                             const qs = ct > 57 ? codingTopics.reduce((s, t) => s + (t.questions || 0), 0) : 50;
@@ -1094,23 +1094,19 @@ export default function DocsPage({ onBack }) {
                               className="card-lift group rounded-lg overflow-hidden flex flex-col"
                               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                             >
-                              <TopicIllustration name={resource.illustration} />
-                              <div className="p-5">
-                                <div className="flex items-start justify-between mb-3">
+                              <TopicIllustration name={resource.illustration} style={{ aspectRatio: '10 / 1' }} />
+                              <div className="p-3">
+                                <div className="flex items-start justify-between mb-2">
                                   <DatabricksThumb
                                     color={resource.hexColor}
-                                    size={44}
-                                    icon={<Icon name={resource.icon} size={22} style={{ color: '#FFFFFF' }} />}
+                                    size={28}
+                                    icon={<Icon name={resource.icon} size={13} style={{ color: '#FFFFFF' }} />}
                                     title={resource.title}
                                   />
                                   <Chip>{resource.badge}</Chip>
                                 </div>
-                                <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{resource.title}</h3>
-                                <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{resource.desc}</p>
-                                <div className="flex items-center gap-1 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--accent)' }}>
-                                  <span>Explore</span>
-                                  <Icon name="arrowRight" size={12} />
-                                </div>
+                                <h3 className="text-[13px] font-bold mb-0.5" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{resource.title}</h3>
+                                <p className="text-[11px] leading-snug" style={{ color: 'var(--text-muted)' }}>{resource.desc}</p>
                               </div>
                             </a>
                           ))}
