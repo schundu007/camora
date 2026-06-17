@@ -496,13 +496,15 @@ export default function JobsPage() {
     return params;
   }, [search, roles, locationFilter, locCountry, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter, excludeVisaRestrictions]);
 
-  /* ── Fetch filter options on mount ── */
+  /* ── Fetch filter options — re-runs when roles change so counts match real results ── */
   useEffect(() => {
     (async () => {
       try {
         const headers: Record<string, string> = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        const res = await fetch(`${API_URL}/api/v1/jobs/filters`, { headers });
+        const params = new URLSearchParams();
+        if (roles.length > 0) params.set('role', roles.join(','));
+        const res = await fetch(`${API_URL}/api/v1/jobs/filters?${params}`, { headers });
         if (!res.ok) return;
         const data: FiltersResponse = await res.json();
         setAvailableSources(data.sources || []);
@@ -514,7 +516,7 @@ export default function JobsPage() {
         // filter options are optional — fail silently
       }
     })();
-  }, [token]);
+  }, [token, roles]);
 
   /* ── Fetch jobs ── */
   const fetchJobs = useCallback(async () => {
