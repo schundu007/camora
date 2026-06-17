@@ -490,10 +490,11 @@ export default function JobsPage() {
     if (postedWithinFilter) params.set('posted_within', postedWithinFilter);
     if (salaryMinFilter) params.set('min_salary', salaryMinFilter);
     if (salaryMaxFilter) params.set('max_salary', salaryMaxFilter);
+    if (excludeVisaRestrictions) params.set('h1b_only', 'true');
     params.set('limit', String(PAGE_SIZE));
     if (extraOffset) params.set('offset', String(extraOffset));
     return params;
-  }, [search, roles, locationFilter, locCountry, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter]);
+  }, [search, roles, locationFilter, locCountry, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter, excludeVisaRestrictions]);
 
   /* ── Fetch filter options on mount ── */
   useEffect(() => {
@@ -607,15 +608,7 @@ export default function JobsPage() {
     window.scrollTo(0, 0);
   }, []);
 
-  const USC_GC_RE = /\b(us\s*citizen|u\.s\.\s*citizen|usc\s+only|must\s+be\s+(a\s+)?(us|u\.s\.)\s+citizen|green\s*card|permanent\s+resident|gc\s+required|gc\s+holder|requires?\s+citizenship|security\s+clearance|active\s+clearance|secret\s+clearance|top\s+secret|ts\s*\/\s*sci)\b/i;
-
-  /* ── Jobs from API — client-side visa filter applied on top ── */
-  const filteredJobs = excludeVisaRestrictions
-    ? jobs.filter((j) => {
-        const text = [j.title, j.description, j.ai_summary].filter(Boolean).join(' ');
-        return !USC_GC_RE.test(text);
-      })
-    : jobs;
+  const filteredJobs = jobs;
 
   return (
     <div style={{ background: 'var(--bg-app)', minHeight: '100vh' }}>
