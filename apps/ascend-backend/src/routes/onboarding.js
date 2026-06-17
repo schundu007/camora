@@ -105,6 +105,17 @@ router.post('/update-roles', authenticate, async (req, res) => {
   }
 });
 
+// Delete resume — clears resume_text. Gate re-fires on next login.
+router.delete('/resume', authenticate, async (req, res) => {
+  try {
+    await query('UPDATE users SET resume_text = NULL WHERE id = $1', [req.user.id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete resume error:', error);
+    res.status(500).json({ error: 'Failed to delete resume' });
+  }
+});
+
 // Save partial progress — roles only, without marking onboarding complete.
 // Used when user skips resume upload; the gate will re-prompt on next login.
 router.post('/save-progress', authenticate, async (req, res) => {
