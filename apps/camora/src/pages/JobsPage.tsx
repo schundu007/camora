@@ -632,7 +632,6 @@ export default function JobsPage() {
             primitive. Stats line uses live `total` so it reflects the
             current filter set, not a stale marketing number. */}
         <HeroBand
-          eyebrow="A · Apply"
           title={<>Find your <HeroAccent>next role</HeroAccent></>}
           padding="compact"
           actions={
