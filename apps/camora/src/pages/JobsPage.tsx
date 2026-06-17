@@ -920,7 +920,9 @@ export default function JobsPage() {
                       onChange={(e) => {
                         const v = e.target.value;
                         setLocCountry(v); setLocState(''); setLocCity('');
-                        setLocationFilter(v);
+                        // US locations stored as "City, ST" — country-level ILIKE won't match.
+                        // Show all jobs when US is selected; state/city selection provides the real filter.
+                        setLocationFilter(v === 'United States' ? '' : v);
                       }}
                       className="jobs-sidebar-input"
                     >
@@ -937,7 +939,9 @@ export default function JobsPage() {
                       onChange={(e) => {
                         const v = e.target.value;
                         setLocState(v); setLocCity('');
-                        setLocationFilter(v || locCountry);
+                        // When state is cleared, fall back to country-level.
+                        // For US the country filter doesn't match, so clear it.
+                        setLocationFilter(v || (locCountry === 'United States' ? '' : locCountry));
                       }}
                       className="jobs-sidebar-input"
                     >
@@ -964,9 +968,9 @@ export default function JobsPage() {
                       ))}
                     </select>
                   )}
-                  {locationFilter && (
+                  {(locCountry || locationFilter) && (
                     <button
-                      onClick={() => { setLocationFilter(''); setLocCountry(''); setLocState(''); setLocCity(''); }}
+                      onClick={() => { setLocationFilter(''); setLocCountry(''); setLocState(''); setLocCity(''); setLocationAutoDetected(false); }}
                       style={{ fontSize: '12px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}
                     >
                       Clear location
