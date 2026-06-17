@@ -1015,28 +1015,25 @@ export default function DocsPage({ onBack }) {
                                 name={cat.id}
                                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', aspectRatio: 'unset' }}
                               />
-                              {/* Gradient: clear at top, dark at bottom for readability */}
-                              <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(3,10,25,0.6) 45%, rgba(3,10,25,0.93) 100%)' }} />
-                              {/* Overlaid content at bottom */}
-                              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '8px 10px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5 }}>
-                                  <DatabricksThumb
-                                    color={CATEGORY_HEX[cat.id] || 'navy'}
-                                    size={24}
-                                    icon={<Icon name={cat.icon} size={12} style={{ color: '#FFFFFF' }} />}
-                                    title={cat.title}
-                                  />
-                                  <div>
-                                    <h3 className="text-[12px] font-bold leading-tight tracking-tight" style={{ color: '#fff', margin: 0, fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
-                                    <span className="text-[10px] font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
-                                  </div>
+                              {/* Gradient: subtle at top, darker toward centre/bottom */}
+                              <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(3,10,25,0.55) 40%, rgba(3,10,25,0.88) 100%)' }} />
+                              {/* Centred content */}
+                              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px 12px 24px' }}>
+                                <DatabricksThumb
+                                  color={CATEGORY_HEX[cat.id] || 'navy'}
+                                  size={30}
+                                  icon={<Icon name={cat.icon} size={15} style={{ color: '#FFFFFF' }} />}
+                                  title={cat.title}
+                                />
+                                <h3 className="font-bold leading-tight tracking-tight text-center mt-2" style={{ fontSize: '15px', color: '#fff', margin: '8px 0 3px', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
+                                <span className="font-semibold tabular-nums text-center" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
+                              </div>
+                              {/* Progress bar pinned to bottom */}
+                              <div style={{ position: 'absolute', bottom: 8, left: 10, right: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <div style={{ flex: 1, height: '2px', borderRadius: '9999px', background: 'rgba(255,255,255,0.15)' }}>
+                                  <div style={{ width: `${Math.max(cat.progress, 2)}%`, height: '100%', borderRadius: '9999px', background: 'var(--cam-gold-leaf)', transition: 'width 1s' }} />
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                  <div style={{ flex: 1, height: '2px', borderRadius: '9999px', background: 'rgba(255,255,255,0.15)' }}>
-                                    <div style={{ width: `${Math.max(cat.progress, 2)}%`, height: '100%', borderRadius: '9999px', background: 'var(--cam-gold-leaf)', transition: 'width 1s' }} />
-                                  </div>
-                                  <span className="text-[9px] font-bold tabular-nums shrink-0" style={{ color: cat.progress > 0 ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-mono)' }}>{cat.progress}%</span>
-                                </div>
+                                <span className="font-bold tabular-nums shrink-0" style={{ fontSize: '9px', color: cat.progress > 0 ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-mono)' }}>{cat.progress}%</span>
                               </div>
                             </Link>
                             );
