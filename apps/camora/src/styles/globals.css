@@ -632,14 +632,14 @@
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(255,255,255,0.75);
+  color: var(--text-secondary);
   background: transparent;
   border: none;
   cursor: pointer;
   white-space: nowrap;
   transition: color 0.15s ease-out, background-color 0.15s ease-out;
 }
-.tab-group-item:hover:not(.tab-group-item-active) { color: #ffffff; }
+.tab-group-item:hover:not(.tab-group-item-active) { color: var(--text-primary); }
 .tab-group-item-active {
   background: #3683DC;
   color: #ffffff;
