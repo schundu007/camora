@@ -142,14 +142,30 @@ router.get('/', async (req, res, next) => {
     if (req.query.country) {
       const country = req.query.country.trim();
       if (country.toLowerCase() === 'united states' || country.toLowerCase() === 'us') {
-        // US jobs stored as "City, ST" — match 2-letter state abbreviation suffix,
-        // explicit "United States" text, or remote.
-        conditions.push(
-          `(j.location ~ ', [A-Z]{2}$' OR j.location ~ ', [A-Z]{2} ' OR j.location ILIKE $${paramIdx} OR j.location ILIKE $${paramIdx + 1})`
-        );
-        params.push('%United States%');
-        params.push('%remote%');
-        paramIdx += 2;
+        // On-site US: state abbreviation suffix ("San Francisco, CA") or explicit country name.
+        // Remote: include jobs with "remote" in location UNLESS they explicitly restrict to
+        // an unfriendly/non-English-speaking region. Remote jobs open to US/Canada/UK/global
+        // pass through; "Remote - India only", "Remote (LATAM)", "Remote Europe" are excluded.
+        const UNFRIENDLY = [
+          '%india%', '%europe only%', '%europe - %', '% europe%remote%',
+          '%latam%', '%latin america%', '%apac%', '%asia pacific%',
+          '%mena%', '%africa%', '%pakistan%', '%ukraine%',
+          '%philippines%', '%nigeria%', '%brazil%', '%mexico%', '%colombia%',
+        ];
+        const p = paramIdx;
+        params.push('%United States%');  // p
+        params.push('%, USA%');          // p+1
+        params.push('%remote%');         // p+2
+        UNFRIENDLY.forEach((r) => params.push(r)); // p+3 … p+2+N
+        const notClauses = UNFRIENDLY.map((_, i) => `AND NOT j.location ILIKE $${p + 3 + i}`).join(' ');
+        conditions.push(`(
+          j.location ~ ', [A-Z]{2}$'
+          OR j.location ~ ', [A-Z]{2} '
+          OR j.location ILIKE $${p}
+          OR j.location ILIKE $${p + 1}
+          OR (j.location ILIKE $${p + 2} ${notClauses})
+        )`);
+        paramIdx += 3 + UNFRIENDLY.length;
       } else {
         conditions.push(`j.location ILIKE $${paramIdx}`);
         params.push(`%${country}%`);
