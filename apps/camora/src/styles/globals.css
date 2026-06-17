@@ -560,12 +560,14 @@
   background: var(--accent-subtle) !important;
 }
 
-/* Cards */
+/* Cards — vertical padding slightly tighter than horizontal so cards
+   breathe sideways while stacking efficiently. Eliminates the monotony
+   of uniform 24px all-round padding. */
 .card {
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px 24px;
   box-shadow: var(--card-shadow);
   transition: border-color 0.15s ease-out;
 }
@@ -573,7 +575,7 @@
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 16px;
+  padding: 14px 16px;
   box-shadow: var(--card-shadow);
   transition: border-color 0.15s ease-out;
 }
@@ -590,13 +592,72 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Light-mode card depth — inset top highlight for editorial surface lift */
+/* Light-mode card depth — inset top highlight for editorial surface lift.
+   Padding slightly more generous on light (22px 28px) so cards breathe
+   on the brighter, more open surface without feeling boxed-in. */
 [data-theme="light"] .card {
+  padding: 22px 28px;
   box-shadow: var(--shadow-sm), inset 0 1px 0 color-mix(in oklab, var(--cam-on-accent) 90%, transparent);
+}
+[data-theme="light"] .card-sm {
+  padding: 16px 20px;
 }
 [data-theme="light"] .card-glow:hover {
   border-color: var(--border-hover);
   box-shadow: var(--shadow-accent-xs), var(--shadow-xs);
+}
+
+/* ── Light-theme typeset + layout rhythm overrides ──────────────────
+   These extend the base system to exploit the light surface's greater
+   contrast range and editorial openness. Dark mode is dense; light
+   mode should breathe more.                                           */
+
+/* .text-body / .text-body-lg: no max-width override needed — base
+   already sets 72ch / 70ch. Light gets slightly more generous line-
+   height since light-on-white demands more leading for readability. */
+[data-theme="light"] .text-body    { line-height: 1.7; }
+[data-theme="light"] .text-body-lg { line-height: 1.8; }
+
+/* .section-label: accent-text already blue in light. Boost tracking
+   slightly to improve all-caps legibility on the light background. */
+[data-theme="light"] .section-label { letter-spacing: 0.12em; }
+
+/* viz-caption eyebrow: promote from muted to accent-text on light so
+   "Diagram 1 / 3" reads as a navigation signal, not a ghost label. */
+[data-theme="light"] .viz-caption-eyebrow { color: var(--accent-text); }
+
+/* prep-content h2: extra top margin on light for clear section breaks.
+   3rem on dark is enough against the dark surface; 3.75rem on light
+   gives the section heading the air it needs to anchor the eye. */
+[data-theme="light"] .prep-content > h2,
+[data-theme="light"] .prep-content > section > h2 {
+  margin-top: 3.75rem;
+}
+[data-theme="light"] .docs-page section > h2 {
+  margin-top: 3.75rem;
+}
+
+/* prep-content h3: more breathing between subsections on light. */
+[data-theme="light"] .prep-content > h3,
+[data-theme="light"] .prep-content > section > h3,
+[data-theme="light"] .docs-page section h3 {
+  margin-top: 2.5rem;
+}
+
+/* prep-content h4: nudge top margin for clearer lead-in to prose. */
+[data-theme="light"] .prep-content > h4,
+[data-theme="light"] .prep-content > section > h4,
+[data-theme="light"] .docs-page section h4 {
+  margin-top: 1.75rem;
+}
+
+/* prep-content body: tighten measure to 68ch on light for comfortable
+   long-form reading. The dark surface with its lower contrast naturally
+   benefits from a slightly wider measure; light needs tighter control. */
+[data-theme="light"] .prep-content > p,
+[data-theme="light"] .prep-content > section > p,
+[data-theme="light"] .docs-page p {
+  max-width: 68ch;
 }
 
 /* Buttons */
@@ -624,8 +685,8 @@
 .pill { font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; transition: border-color 0.15s ease-out, color 0.15s ease-out, background-color 0.15s ease-out; }
 .pill:hover { border-color: var(--border-hover); color: var(--text-primary); }
 
-/* Section label */
-.section-label { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-text); }
+/* Section label — aligned with .text-label at 11px for consistent eyebrow sizing */
+.section-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.10em; color: var(--accent-text); }
 [data-theme="light"] .section-label {
   color: var(--accent-text);
 }
@@ -633,10 +694,16 @@
 /* Typography */
 .heading-1 { font-size: 40px; font-weight: 700; letter-spacing: -0.026em; color: var(--text-primary); line-height: 1.08; }
 .heading-2 { font-size: 24px; font-weight: 700; letter-spacing: -0.018em; color: var(--text-primary); line-height: 1.24; }
-.heading-3 { font-size: 17px; font-weight: 600; letter-spacing: -0.008em; color: var(--text-primary); line-height: 1.4; }
+/* heading-3: 18px gives a clean 1.33 ratio vs heading-2 (24px) and a clear
+   step above 16px body. At 17px the gap was barely perceptible. */
+.heading-3 { font-size: 18px; font-weight: 600; letter-spacing: -0.008em; color: var(--text-primary); line-height: 1.38; }
 .heading-4 { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); line-height: 1.5; font-family: var(--font-sans); }
-.text-body { font-size: 15px; color: var(--text-secondary); line-height: 1.65; }
-.text-body-lg { font-size: 16px; color: var(--text-secondary); line-height: 1.75; }
+/* text-body: raised to 16px floor (DESIGN.md §3 rule). max-width caps line
+   length at ~72ch — comfortable measure for sustained reading. */
+.text-body { font-size: 16px; color: var(--text-secondary); line-height: 1.65; max-width: 72ch; }
+/* text-body-lg retains the same size but gets a slightly tighter measure
+   (70ch) since it's used on wider editorial surfaces. */
+.text-body-lg { font-size: 16px; color: var(--text-secondary); line-height: 1.75; max-width: 70ch; }
 .text-small { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
 /* ── Extended typography ────────────────────────────────────────── */
@@ -658,9 +725,12 @@
   letter-spacing: 0.12em;
   line-height: 1;
 }
-/* Caption — 12px muted. Helper text, timestamps, footnotes. */
+/* Caption — 12px muted. Helper text, timestamps, footnotes.
+   font-weight: 500 provides weight contrast vs 400-weight body so
+   captions read as a distinct tier rather than just smaller body. */
 .text-caption {
   font-size: 12px;
+  font-weight: 500;
   color: var(--text-muted);
   line-height: 1.5;
 }
@@ -690,14 +760,14 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 3px;
+  padding: 4px;
   border-radius: 999px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   width: fit-content;
 }
 .tab-group-item {
-  padding: 5px 14px;
+  padding: 6px 16px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
