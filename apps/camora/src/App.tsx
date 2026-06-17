@@ -302,7 +302,7 @@ const CapraRootRedirect = () => {
 }
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading, onboardingCompleted } = useAuth();
+  const { isAuthenticated, isLoading, onboardingCompleted, hasResume } = useAuth();
   const location = useLocation();
 
   if (isLoading) return <Loading />;
@@ -322,7 +322,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     location.pathname.startsWith('/capra/prepare') ||
     location.pathname === '/capra/onboarding' ||
     sessionStorage.getItem('camora_onboarding_skip_resume') === '1';
-  if (location.pathname.startsWith('/capra') && onboardingCompleted === false && !isOnboardingExempt) {
+  if (location.pathname.startsWith('/capra') && (onboardingCompleted === false || hasResume === false) && !isOnboardingExempt) {
     const target = location.pathname + location.search;
     return <Navigate to={`/capra/onboarding?redirect=${encodeURIComponent(target)}`} replace />;
   }

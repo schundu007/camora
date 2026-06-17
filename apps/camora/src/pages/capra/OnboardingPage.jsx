@@ -174,7 +174,7 @@ const ACCEPTED_TYPES = {
 const ACCEPTED_EXTENSIONS = ['.pdf', '.docx', '.txt'];
 
 export default function OnboardingPage() {
-  const { token: accessToken, markOnboardingComplete } = useAuth();
+  const { token: accessToken, markOnboardingComplete, markResumeUploaded } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { celebrate } = useCelebration();
@@ -209,6 +209,8 @@ export default function OnboardingPage() {
       .then(data => {
         if (data?.job_roles?.length > 0) {
           setSelectedRoles(data.job_roles);
+          // User already chose roles — send them straight to resume upload
+          setStep(2);
         }
       })
       .catch(() => {});
@@ -329,6 +331,7 @@ export default function OnboardingPage() {
           ? intended
           : null;
       markOnboardingComplete();
+      if (resumeText) markResumeUploaded();
       celebrate({ title: 'Profile complete', subtitle: 'Welcome to Camora — your dashboard is ready.' });
       setTimeout(() => navigate(safeIntended || '/capra/prepare'), 600);
     } catch (err) {

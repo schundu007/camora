@@ -22,7 +22,7 @@ interface UserDropdownProps {
 }
 
 export default function UserDropdown({ variant = 'light', showName = true, compact = false, position = 'below-right' }: UserDropdownProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, hasResume } = useAuth();
   const CAPRA_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
   const switchAccount = async () => {
@@ -154,6 +154,21 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
                 {item.label}
               </Link>
             ))}
+            {hasResume === false && (
+              <Link
+                to="/profile?tab=preferences"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors"
+                style={{ color: '#d97706' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                </span>
+                Upload Resume
+              </Link>
+            )}
 
             {/* Switch account + Sign out */}
             <div style={{ borderTop: '1px solid var(--border)' }}>
