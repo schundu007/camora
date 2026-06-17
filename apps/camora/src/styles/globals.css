@@ -191,8 +191,8 @@
     --text-primary:  #12141A;
     --text-secondary:#464B54;
     --text-hero:     #12141A;
-    --text-muted:    #64696F;
-    --text-dimmed:   #717880;
+    --text-muted:    #5E646B;
+    --text-dimmed:   #6C737A;
 
     --accent:        #3683DC;
     --accent-hover:  #2265BF;
@@ -466,7 +466,7 @@
     border-radius: 4px;
   }
   [data-theme="light"] *:focus-visible {
-    outline: 2px solid rgba(54,131,220,0.75);
+    outline: 2px solid rgba(54,131,220,0.80);
     outline-offset: 2px;
   }
 
@@ -611,7 +611,7 @@
 /* Section label */
 .section-label { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-text); }
 [data-theme="light"] .section-label {
-  color: var(--cam-gold-leaf, #C2963E);
+  color: var(--accent-text);
 }
 
 /* Typography */
@@ -702,7 +702,7 @@
   font-weight: 700;
 }
 [data-theme="light"] .tab-group-item-active {
-  background: var(--cam-primary, #3683DC);
+  background: var(--accent);
   color: #ffffff;
 }
 
@@ -874,6 +874,23 @@
 /* Hide scrollbar */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Skip-to-content — a11y */
+.skip-link {
+  position: absolute;
+  top: -48px;
+  left: 16px;
+  background: var(--accent);
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 0 0 8px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 9999;
+  transition: top 0.15s ease-out;
+  text-decoration: none;
+}
+.skip-link:focus { top: 0; }
 
 /* ══════════════════════════════════════════════════════════════
    BLOCK COMPONENTS (answer rendering — used by Lumora)
