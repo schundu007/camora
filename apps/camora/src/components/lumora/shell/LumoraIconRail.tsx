@@ -43,9 +43,9 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
   // borders/hover so the rail reads as neutral chrome with navy + gold
   // reserved for accents (matches the global Charcoal + Navy Accent rule).
   const itemStyle = (active: boolean): React.CSSProperties => ({
-    color: active ? '#020617' : 'var(--text-secondary)',
-    background: active ? 'var(--cam-gold-leaf)' : 'transparent',
-    border: active ? '1px solid var(--cam-gold-leaf)' : '1px solid transparent',
+    color: active ? 'var(--cam-chip-active-text)' : 'var(--text-secondary)',
+    background: active ? 'var(--cam-chip-active-bg)' : 'transparent',
+    border: active ? '1px solid var(--cam-chip-active-bg)' : '1px solid transparent',
     borderRadius: 999,
     boxShadow: active
       ? '0 0 0 1px rgba(217,181,67,0.55), 0 4px 14px rgba(217,181,67,0.32), inset 0 1px 0 rgba(255,255,255,0.18)'

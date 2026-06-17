@@ -251,7 +251,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
               onClick={() => onInputModeChange(mode)}
               className="px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color] active:scale-[0.98]"
               style={inputMode === mode
-                ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', borderRadius: 999 }
+                ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', borderRadius: 999 }
                 : { color: 'var(--cam-strip-text-muted)', borderRadius: 999 }
               }
             >
@@ -286,8 +286,8 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
                 fontWeight: 700,
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
-                color: answerMode === mode ? '#020617' : 'var(--cam-strip-text)',
-                background: answerMode === mode ? 'var(--cam-gold-leaf)' : 'transparent',
+                color: answerMode === mode ? 'var(--cam-chip-active-text)' : 'var(--cam-strip-text)',
+                background: answerMode === mode ? 'var(--cam-chip-active-bg)' : 'transparent',
               }}
             >
               {mode === 'short' ? 'Short' : 'Detailed'}

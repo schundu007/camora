@@ -180,6 +180,10 @@
     --cam-accent-fill:      var(--cam-gold-leaf);
     --cam-accent-fill-text: var(--cam-primary-dk);
 
+    /* Chip selected state — gold fill + near-black text in dark mode */
+    --cam-chip-active-bg:   var(--cam-gold-leaf);
+    --cam-chip-active-text: #020617;
+
     /* Near-black for immersive surfaces */
     --bg-near-black: #080A0F;
 
@@ -282,6 +286,10 @@
     /* Accent-fill: light override — 12% blue tint so badges don't scream solid blue */
     --cam-accent-fill:      color-mix(in oklab, var(--accent) 12%, #FFFFFF);
     --cam-accent-fill-text: var(--accent-hover);
+
+    /* Chip selected state — 12% blue tint + blue text in light mode */
+    --cam-chip-active-bg:   color-mix(in oklab, var(--accent) 12%, #FFFFFF);
+    --cam-chip-active-text: var(--accent-text);
 
     --bg-near-black: rgba(18,20,26,0.92);
     --shadow-primary-xs: 0 1px 3px rgba(37,99,235,0.04), 0 4px 16px rgba(37,99,235,0.02);

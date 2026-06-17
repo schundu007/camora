@@ -771,12 +771,12 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <button
               onClick={() => setDetailLevel('basic')}
               className="px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-[background-color,color,transform] active:scale-[0.98]"
-              style={detailLevel === 'basic' ? { background: 'var(--cam-gold-leaf)', color: '#020617' } : { color: 'var(--cam-strip-text)' }}
+              style={detailLevel === 'basic' ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' } : { color: 'var(--cam-strip-text)' }}
              >Basic</button>
              <button
                onClick={() => setDetailLevel('full')}
                className="px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-[background-color,color,transform] active:scale-[0.98]"
-              style={detailLevel === 'full' ? { background: 'var(--cam-gold-leaf)', color: '#020617' } : { color: 'var(--cam-strip-text)' }}
+              style={detailLevel === 'full' ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' } : { color: 'var(--cam-strip-text)' }}
             >Full</button>
           </div>
         </div>
@@ -882,7 +882,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
                       className="shrink-0 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
                       style={snapChipCode
-                        ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }
+                        ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
                         : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}>
                       {chip.label}
                     </button>
