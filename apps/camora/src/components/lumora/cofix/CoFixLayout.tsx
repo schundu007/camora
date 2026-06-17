@@ -111,6 +111,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const [error, setError] = useState<string | null>(null);
 
   const [isRunning, setIsRunning] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<'idle' | 'copied' | 'failed'>('idle');
   const [runOutputLog, setRunOutputLog] = useState<Array<{ts: Date; text: string}>>([]);
   const [explainMode, setExplainMode] = useState(false);
 
@@ -440,7 +441,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   }, [isLoading, fixedCode, handleRun]);
 
   const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(fixedCode);
+    if (!fixedCode) return;
+    navigator.clipboard.writeText(fixedCode).then(() => {
+      setCopyFeedback('copied');
+      setTimeout(() => setCopyFeedback('idle'), 2000);
+    }).catch(() => {
+      setCopyFeedback('failed');
+      setTimeout(() => setCopyFeedback('idle'), 2000);
+    });
   }, [fixedCode]);
 
   const handleSendToCoding = useCallback(() => {
@@ -929,14 +937,23 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
                 </button>
                 <button
                   onClick={handleCopy}
-                  className="shrink-0 text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md transition-opacity hover:opacity-90"
-                  style={{
+                  disabled={!fixedCode || copyFeedback !== 'idle'}
+                  className="shrink-0 text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md transition-all disabled:cursor-not-allowed"
+                  style={copyFeedback === 'copied' ? {
+                    background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%)',
+                    border: '1px solid #10b981',
+                    color: '#10b981',
+                  } : copyFeedback === 'failed' ? {
+                    background: 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.1) 100%)',
+                    border: '1px solid var(--danger)',
+                    color: 'var(--danger)',
+                  } : {
                     background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 15%, transparent) 0%, var(--bg-elevated) 100%)',
                     border: '1px solid var(--cam-gold-leaf)',
                     color: 'var(--cam-gold-leaf)',
                   }}
                 >
-                  Copy
+                  {copyFeedback === 'copied' ? '✓ Copied' : copyFeedback === 'failed' ? '✕ Failed' : 'Copy'}
                 </button>
                 <button
                   onClick={() => setShowRefinePopup(v => !v)}
