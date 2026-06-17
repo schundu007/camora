@@ -278,6 +278,9 @@ export default function JobsPage() {
     return result;
   };
 
+  // Sidebar open/collapsed
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   // Filters
   const [search, setSearch] = useState('');
   const [roles, setRoles] = useState<string[]>([]);
@@ -478,6 +481,7 @@ export default function JobsPage() {
     if (search) params.set('search', search);
     if (roles.length > 0) params.set('role', roles.join(','));
     if (locationFilter) params.set('location', locationFilter);
+    if (locCountry && !locationFilter) params.set('country', locCountry);
     if (sourceFilter) params.set('source', sourceFilter);
     if (workTypeFilter) params.set('work_type', workTypeFilter);
     if (departmentFilter) params.set('department', departmentFilter);
@@ -489,7 +493,7 @@ export default function JobsPage() {
     params.set('limit', String(PAGE_SIZE));
     if (extraOffset) params.set('offset', String(extraOffset));
     return params;
-  }, [search, roles, locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter]);
+  }, [search, roles, locationFilter, locCountry, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter]);
 
   /* ── Fetch filter options on mount ── */
   useEffect(() => {
@@ -578,6 +582,7 @@ export default function JobsPage() {
     setDepartmentFilter(''); setCompanyFilter(''); setExperienceFilter('');
     setPostedWithinFilter('7'); setSalaryMinFilter(''); setSalaryMaxFilter('');
     setExcludeVisaRestrictions(false);
+    setSidebarOpen(false);
   };
 
   /* ── Fetch on filter change — debounce search text, instant for category clicks ── */
@@ -841,7 +846,7 @@ export default function JobsPage() {
           <div className="jobs-layout" style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
 
             {/* ── Sidebar — filter rail ── */}
-            <aside
+            {sidebarOpen && <aside
               className="jobs-sidebar"
               style={{
                 width: '280px',
@@ -1150,10 +1155,37 @@ export default function JobsPage() {
                   />
                 </div>
               </details>
-            </aside>
+            </aside>}
 
             {/* ── Main — single-column card list ── */}
             <main style={{ flex: 1, minWidth: 0 }}>
+              {/* Filters toggle bar */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <button
+                  onClick={() => setSidebarOpen(v => !v)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '6px 14px', fontSize: '13px', fontWeight: 600,
+                    color: sidebarOpen ? 'var(--accent)' : 'var(--text-secondary)',
+                    background: sidebarOpen ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
+                    border: `1px solid ${sidebarOpen ? 'var(--accent)' : 'var(--border)'}`,
+                    borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                >
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M7 12h10M11 20h2" />
+                  </svg>
+                  {sidebarOpen ? 'Hide filters' : 'Filters'}
+                  {!sidebarOpen && (roles.length > 0 || locCountry || locationFilter) && (
+                    <span style={{ background: 'var(--accent)', color: '#fff', borderRadius: '999px', fontSize: '10px', fontWeight: 700, padding: '1px 6px' }}>
+                      {[roles.length > 0, locCountry || locationFilter].filter(Boolean).length}
+                    </span>
+                  )}
+                </button>
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                  <strong style={{ color: 'var(--accent)' }}>{total.toLocaleString()}</strong> jobs
+                </span>
+              </div>
           {loading ? (
             /* Loading skeleton — single column to match the new card list */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
