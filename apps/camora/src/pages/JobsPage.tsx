@@ -211,6 +211,13 @@ function timeAgo(dateStr?: string): string | null {
   return `${Math.floor(days / 365)}y ago`;
 }
 
+const REMOTE_COUNTRY_RE = /[-–—()\s](australia|anz|apj|emea|apac|latam|india|europe|mena|japan|korea|china|singapore|brazil|mexico|canada|uk|ireland|germany|netherlands)[\s)]/i;
+
+function extractRemoteCountry(title: string): string | null {
+  const m = REMOTE_COUNTRY_RE.exec(' ' + title.toLowerCase() + ' ');
+  return m ? m[1].toUpperCase() : null;
+}
+
 function detectWorkType(location?: string): string {
   if (!location) return 'Onsite';
   const l = location.toLowerCase();
@@ -294,7 +301,7 @@ export default function JobsPage() {
   const [workTypeFilter, setWorkTypeFilter] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
-  const [experienceFilter, setExperienceFilter] = useState('');
+  const [experienceFilter, setExperienceFilter] = useState<string[]>([]);
   const [postedWithinFilter, setPostedWithinFilter] = useState('3');
   const [salaryMinFilter, setSalaryMinFilter] = useState('');
   const [salaryMaxFilter, setSalaryMaxFilter] = useState('');
@@ -380,6 +387,8 @@ export default function JobsPage() {
     if (!authLoading && user && !roleInitialized) {
       const cats = getUserCategories();
       if (cats.length > 0) setRoles(cats);
+      // Default: exclude intern/entry for any user with saved roles (18+ yr experience pattern)
+      setExperienceFilter(['mid', 'senior', 'staff', 'principal', 'lead']);
       setRoleInitialized(true);
     }
   }, [authLoading, user, roleInitialized]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -486,7 +495,7 @@ export default function JobsPage() {
     if (workTypeFilter) params.set('work_type', workTypeFilter);
     if (departmentFilter) params.set('department', departmentFilter);
     if (companyFilter) params.set('company', companyFilter);
-    if (experienceFilter) params.set('experience', experienceFilter);
+    if (experienceFilter.length > 0) params.set('experience', experienceFilter.join(','));
     if (postedWithinFilter) params.set('posted_within', postedWithinFilter);
     if (salaryMinFilter) params.set('min_salary', salaryMinFilter);
     if (salaryMaxFilter) params.set('max_salary', salaryMaxFilter);
@@ -496,15 +505,17 @@ export default function JobsPage() {
     return params;
   }, [search, roles, locationFilter, locCountry, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter, excludeVisaRestrictions]);
 
-  /* ── Fetch filter options — re-runs when roles change so counts match real results ── */
+  /* ── Fetch filter counts — fires on every filter change so counts always match ── */
   useEffect(() => {
     (async () => {
       try {
         const headers: Record<string, string> = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        const params = new URLSearchParams();
-        if (roles.length > 0) params.set('role', roles.join(','));
-        const res = await fetch(`${API_URL}/api/v1/jobs/filters?${params}`, { headers });
+        // Reuse the same params as the jobs fetch (minus pagination)
+        // so every sidebar count reflects the current filter combination.
+        const p = buildJobParams();
+        p.delete('limit');
+        const res = await fetch(`${API_URL}/api/v1/jobs/filters?${p}`, { headers });
         if (!res.ok) return;
         const data: FiltersResponse = await res.json();
         setAvailableSources(data.sources || []);
@@ -512,11 +523,9 @@ export default function JobsPage() {
         setAvailableDepartments(data.departments || []);
         setAvailableCompanies(data.companies || []);
         if (data.salary_range) setSalaryRange(data.salary_range);
-      } catch {
-        // filter options are optional — fail silently
-      }
+      } catch { /* filter counts are optional */ }
     })();
-  }, [token, roles]);
+  }, [buildJobParams, token]);
 
   /* ── Fetch jobs ── */
   const fetchJobs = useCallback(async () => {
@@ -575,14 +584,14 @@ export default function JobsPage() {
     }
   }, [buildJobParams, token, offset, loadingMore, hasMore]);
 
-  const activeFilterCount = [locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, experienceFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter].filter(Boolean).length + (excludeVisaRestrictions ? 1 : 0);
+  const activeFilterCount = [locationFilter, sourceFilter, workTypeFilter, departmentFilter, companyFilter, postedWithinFilter, salaryMinFilter, salaryMaxFilter].filter(Boolean).length + (experienceFilter.length > 0 ? 1 : 0) + (excludeVisaRestrictions ? 1 : 0);
 
   const clearAllFilters = () => {
     setLocationFilter(''); setLocCountry(''); setLocState(''); setLocCity('');
     setLocationAutoDetected(false);
     setRoles([]);
     setSourceFilter(''); setWorkTypeFilter('');
-    setDepartmentFilter(''); setCompanyFilter(''); setExperienceFilter('');
+    setDepartmentFilter(''); setCompanyFilter(''); setExperienceFilter([]);
     setPostedWithinFilter('7'); setSalaryMinFilter(''); setSalaryMaxFilter('');
     setExcludeVisaRestrictions(false);
     setSidebarOpen(false);
@@ -1013,15 +1022,30 @@ export default function JobsPage() {
 
               {/* Experience */}
               <details className="jobs-filter-group">
-                <summary>Experience</summary>
+                <summary style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Experience</span>
+                  {experienceFilter.length > 0 && experienceFilter.length < EXPERIENCE_LEVELS.length - 1 && (
+                    <span style={{ fontSize: '10px', fontWeight: 700, background: 'var(--accent)', color: '#fff', borderRadius: '999px', padding: '1px 7px', marginRight: '6px' }}>
+                      {experienceFilter.length}
+                    </span>
+                  )}
+                </summary>
                 <div className="jobs-filter-body">
-                  {EXPERIENCE_LEVELS.map((el) => (
+                  <label className="jobs-filter-radio">
+                    <input type="checkbox" checked={experienceFilter.length === 0}
+                      onChange={() => setExperienceFilter([])} />
+                    <span>All Levels</span>
+                  </label>
+                  {EXPERIENCE_LEVELS.filter(el => el.value !== '').map((el) => (
                     <label key={el.value} className="jobs-filter-radio">
                       <input
-                        type="radio"
-                        name="experience"
-                        checked={experienceFilter === el.value}
-                        onChange={() => setExperienceFilter(el.value)}
+                        type="checkbox"
+                        checked={experienceFilter.includes(el.value)}
+                        onChange={() => setExperienceFilter(prev =>
+                          prev.includes(el.value)
+                            ? prev.filter(e => e !== el.value)
+                            : [...prev, el.value]
+                        )}
                       />
                       <span>{el.label}</span>
                     </label>
@@ -1369,7 +1393,9 @@ export default function JobsPage() {
                       {job.location && (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                           <Icon name="mapPin" size={14} />
-                          {job.location.length > 60 ? job.location.slice(0, 60) + '…' : job.location}
+                          {job.location.toLowerCase().includes('remote') && extractRemoteCountry(job.title)
+                            ? `Remote • ${extractRemoteCountry(job.title)}`
+                            : job.location.length > 60 ? job.location.slice(0, 60) + '…' : job.location}
                         </span>
                       )}
                       {workType && (
