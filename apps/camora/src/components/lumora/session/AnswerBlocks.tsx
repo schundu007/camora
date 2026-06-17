@@ -840,7 +840,7 @@ const FollowupList = ({ content }: { content: string }) => {
       {pairs.map((pair, i) => (
         <div key={i}>
           <div className="flex items-start gap-3 mb-2">
-            <span className="font-mono text-[11px] font-bold text-white bg-[var(--accent)] px-2 py-0.5 rounded shrink-0">
+            <span className="font-mono text-[11px] font-bold text-[var(--bg-app)] bg-[var(--accent)] px-2 py-0.5 rounded shrink-0">
               Q{i + 1}
             </span>
             <span className="text-sm font-semibold text-text leading-relaxed">{pair.question}</span>

@@ -106,7 +106,7 @@ function renderMd(text) {
   const inline = s => {
     let r = escHtml(s);
     r = r.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    r = r.replace(/`([^`]+)`/g, '<code style="padding:1px 5px;background:rgba(255,255,255,0.08);border-radius:4px;font-family:monospace;font-size:12px">$1</code>');
+    r = r.replace(/`([^`]+)`/g, '<code style="padding:1px 5px;background:var(--bg-elevated);border-radius:4px;font-family:monospace;font-size:12px;color:var(--text-primary)">$1</code>');
     return r;
   };
   const blocks = [];
@@ -122,11 +122,11 @@ function renderMd(text) {
   return blocks.map((block, bi) => {
     if (block.type === 'code') {
       return (
-        <div key={bi} style={{ margin: '10px 0', borderRadius: 8, overflow: 'hidden', background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <div style={{ padding: '4px 12px', background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-            <span style={{ fontFamily: 'monospace', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.4)' }}>{block.lang}</span>
+        <div key={bi} style={{ margin: '10px 0', borderRadius: 8, overflow: 'hidden', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          <div style={{ padding: '4px 12px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
+            <span style={{ fontFamily: 'monospace', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>{block.lang}</span>
           </div>
-          <pre style={{ margin: 0, padding: '12px', fontFamily: 'monospace', fontSize: 12, color: '#e6edf3', overflowX: 'auto', lineHeight: 1.6 }}>
+          <pre style={{ margin: 0, padding: '12px', fontFamily: 'monospace', fontSize: 12, color: 'var(--text-primary)', overflowX: 'auto', lineHeight: 1.6 }}>
             <code>{block.content}</code>
           </pre>
         </div>
@@ -1506,7 +1506,7 @@ export default function PracticePage() {
               {/* ── Hero Result Card ── */}
               <div style={{ background: 'linear-gradient(135deg, var(--bg-elevated), var(--bg-surface))', borderRadius: 20, padding: '40px 32px', marginBottom: 20, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 24px rgba(38,97,156,0.15)' }}>
                 {/* Decorative grid */}
-                <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+                <div style={{ position: 'absolute', inset: 0, opacity: 0.35, backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 40, flexWrap: 'wrap', justifyContent: 'center' }}>
                   {/* Score ring + grade */}
                   <div style={{ textAlign: 'center' }}>
@@ -1532,7 +1532,7 @@ export default function PracticePage() {
 
                   {/* Radar */}
                   {resultDimensions && (
-                    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 16, padding: 20, border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: 20, border: '1px solid var(--border)' }}>
                       <RadarChart
                         values={DIMENSION_KEYS.map(k => resultDimensions[k] || 0)}
                         labels={DIMENSION_LABELS}

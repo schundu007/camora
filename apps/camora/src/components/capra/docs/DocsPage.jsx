@@ -1675,6 +1675,7 @@ export default function DocsPage({ onBack }) {
                   {/* Quick Reference */}
                   <div className="mb-6">
                     <SectionHero
+                      eyebrow="Reference"
                       title="Quick Reference"
                       className="mb-4"
                     />
@@ -1743,6 +1744,7 @@ export default function DocsPage({ onBack }) {
                   {/* Core Concepts Section - Grouped by Category */}
                   <div className="mb-6">
                     <SectionHero
+                      eyebrow="Fundamentals"
                       title="Core Concepts"
                       className="mb-4"
                     />
@@ -1800,6 +1802,7 @@ export default function DocsPage({ onBack }) {
                   {/* System Design Problems Section - Grouped by Category */}
                   <div className="mb-6">
                     <SectionHero
+                      eyebrow="Design Problems"
                       title="Common System Designs"
                       className="mb-4"
                     />
@@ -1884,6 +1887,7 @@ export default function DocsPage({ onBack }) {
                   {/* Low Level Design Problems Section */}
                   <div className="mb-6">
                     <SectionHero
+                      eyebrow="System Design"
                       title="Low Level Design"
                       className="mb-4"
                     />
