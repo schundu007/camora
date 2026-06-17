@@ -721,8 +721,8 @@ export default function PracticePage() {
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* ── View Tabs — LeetCode navy + gold underline ── */}
         <div className="flex items-center gap-4 px-4 sm:px-6 py-2 flex-shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#FFFFFF', margin: 0, letterSpacing: '-0.01em' }}>Practice</h1>
-          <div style={{ display: 'flex', gap: 2, padding: 3, border: '1px solid rgba(201,162,39,0.50)', borderRadius: 8, background: 'rgba(3,19,46,0.88)' }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--cam-strip-heading)', margin: 0, letterSpacing: '-0.01em' }}>Practice</h1>
+          <div style={{ display: 'flex', gap: 2, padding: 3, border: '1px solid var(--cam-strip-icon-border)', borderRadius: 8, background: 'rgba(3,19,46,0.88)' }}>
             {[
               { key: 'practice', label: 'Mock Interview', icon: <Icon name="play" size={12} /> },
               { key: 'code-solver', label: 'Code Solver', icon: <Icon name="code" size={12} /> },
@@ -739,7 +739,7 @@ export default function PracticePage() {
                   padding: '5px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
                   fontSize: 12, fontWeight: 600,
                   background: activeView === tab.key ? 'var(--cam-gold-leaf)' : 'transparent',
-                  color: activeView === tab.key ? '#020617' : 'var(--cam-strip-text)',
+                  color: activeView === tab.key ? '#020617' : 'rgba(255,255,255,0.75)',
                   transition: 'all 0.15s',
                 }}
               >
