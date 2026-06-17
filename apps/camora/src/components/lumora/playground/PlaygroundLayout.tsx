@@ -5,6 +5,7 @@ import { LanguageTabs } from './LanguageTabs';
 import { PlaygroundEditor } from './PlaygroundEditor';
 import { OutputPane, type RunEntry } from './OutputPane';
 import { playgroundAPI, type PlaygroundLanguage, type ExplainResult } from '../../../lib/capra-api';
+import { useTheme } from '../../../hooks/useTheme';
 
 const DEFAULT_CODE: Record<PlaygroundLanguage, string> = {
   python3:   'print("Hello, World!")\n',
@@ -15,10 +16,6 @@ const DEFAULT_CODE: Record<PlaygroundLanguage, string> = {
 
 const sans: CSSProperties = { fontFamily: 'Plus Jakarta Sans, sans-serif' };
 const mono: CSSProperties = { fontFamily: "'IBM Plex Mono', monospace" };
-
-// ---------------------------------------------------------------------------
-// Detect input() calls in Python code — returns one label per call
-// ---------------------------------------------------------------------------
 
 function detectInputCalls(code: string): string[] {
   const labels: string[] = [];
@@ -38,10 +35,6 @@ function detectInputCalls(code: string): string[] {
   return labels;
 }
 
-// ---------------------------------------------------------------------------
-// Stdin input modal
-// ---------------------------------------------------------------------------
-
 interface InputModalProps {
   labels: string[];
   values: string[];
@@ -57,12 +50,12 @@ const InputModal = ({ labels, values, onChange, onRun, onCancel }: InputModalPro
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.75)' }}
+      style={{ background: 'rgba(0,0,0,0.60)' }}
       onClick={e => { if (e.target === e.currentTarget) onCancel(); }}
     >
       <div
         className="w-full max-w-sm rounded-xl p-6 shadow-2xl"
-        style={{ background: '#0a0e1a', border: '1px solid var(--cam-gold-leaf)' }}
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--cam-gold-leaf)' }}
       >
         <p className="text-[11px] uppercase tracking-widest font-semibold mb-4" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>
           Provide Input Values
@@ -71,7 +64,7 @@ const InputModal = ({ labels, values, onChange, onRun, onCancel }: InputModalPro
         <div className="flex flex-col gap-3">
           {labels.map((label, i) => (
             <div key={i}>
-              <label className="block text-[10px] uppercase tracking-widest mb-1" style={{ color: '#475569', ...sans }}>
+              <label className="block text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)', ...sans }}>
                 {label}
               </label>
               <input
@@ -88,9 +81,9 @@ const InputModal = ({ labels, values, onChange, onRun, onCancel }: InputModalPro
                 }}
                 className="w-full px-3 py-2 rounded-md text-sm outline-none"
                 style={{
-                  background: '#111827',
-                  border: '1px solid #1e293b',
-                  color: '#e2e8f0',
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
                   ...mono,
                 }}
               />
@@ -102,7 +95,7 @@ const InputModal = ({ labels, values, onChange, onRun, onCancel }: InputModalPro
           <button
             onClick={onCancel}
             className="px-4 py-1.5 text-xs rounded-md"
-            style={{ background: 'transparent', border: '1px solid #334155', color: '#64748b', ...sans }}
+            style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', ...sans }}
           >
             Cancel
           </button>
@@ -123,10 +116,6 @@ const InputModal = ({ labels, values, onChange, onRun, onCancel }: InputModalPro
   );
 };
 
-// ---------------------------------------------------------------------------
-// Explain pane
-// ---------------------------------------------------------------------------
-
 interface ExplainState {
   rich: ExplainResult | null;
   loading: boolean;
@@ -137,7 +126,7 @@ interface ExplainState {
 const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
   if (!line) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-2" style={{ color: '#475569', ...sans }}>
+      <div className="flex flex-col items-center justify-center h-full gap-2" style={{ color: 'var(--text-muted)', ...sans }}>
         <span className="text-[28px]">↑</span>
         <span className="text-[13px]">Move cursor to any line</span>
       </div>
@@ -145,9 +134,9 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0d12] overflow-auto">
-      <div className="px-4 py-2 border-b border-[#1e293b] sticky top-0 bg-[#0a0d12] flex items-center gap-2">
-        <span className="text-[9px] uppercase tracking-widest text-[#334155] font-medium" style={sans}>Line {line}</span>
+    <div className="flex flex-col h-full overflow-auto" style={{ background: 'var(--bg-app)' }}>
+      <div className="px-4 py-2 sticky top-0 flex items-center gap-2" style={{ background: 'var(--bg-app)', borderBottom: '1px solid var(--border)' }}>
+        <span className="text-[9px] uppercase tracking-widest font-medium" style={{ ...sans, color: 'var(--text-muted)' }}>Line {line}</span>
         {loading && (
           <span className="w-2.5 h-2.5 border-2 border-t-transparent rounded-full animate-spin"
             style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
@@ -156,32 +145,30 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
 
       <div className="px-4 py-4 flex-1 space-y-5">
         {error ? (
-          <p className="text-[#f87171] text-[12px] leading-relaxed" style={sans}>{error}</p>
+          <p className="text-[12px] leading-relaxed" style={{ ...sans, color: 'var(--danger)' }}>{error}</p>
         ) : loading ? (
-          <p className="text-[#475569] text-[11px] italic" style={sans}>Analysing…</p>
+          <p className="text-[11px] italic" style={{ ...sans, color: 'var(--text-muted)' }}>Analysing…</p>
         ) : rich ? (
           <>
-            {/* What it does */}
             {(rich.what || rich.explanation) && (
               <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#3b82f6', ...sans }}>What it does</div>
-                <p className="text-[13px] leading-relaxed" style={{ color: '#cbd5e1', ...sans }}>{rich.what || rich.explanation}</p>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--accent)', ...sans }}>What it does</div>
+                <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)', ...sans }}>{rich.what || rich.explanation}</p>
               </div>
             )}
 
-            {/* How it works */}
             {rich.how && rich.how.length > 0 && (
               <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: '#3b82f6', ...sans }}>How it works</div>
-                <div className="rounded-lg overflow-hidden border border-[#1e293b]">
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent)', ...sans }}>How it works</div>
+                <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
                   {rich.how.map((step, i) => (
-                    <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 1.4fr', borderTop: i > 0 ? '1px solid #1e293b' : 'none' }}>
-                      <div className="px-3 py-2.5" style={{ background: '#0d1117', borderRight: '1px solid #1e293b' }}>
-                        <pre className="text-[11px] leading-relaxed" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{step.code}</pre>
+                    <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 1.4fr', borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
+                      <div className="px-3 py-2.5" style={{ background: 'var(--bg-base)', borderRight: '1px solid var(--border)' }}>
+                        <pre className="text-[11px] leading-relaxed" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{step.code}</pre>
                       </div>
                       <div className="px-3 py-2.5 flex items-start gap-2">
-                        <span className="shrink-0 mt-0.5 text-[9px] font-bold w-4 h-4 rounded flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)', color: '#3b82f6', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
-                        <span className="text-[12px] leading-relaxed" style={{ color: '#94a3b8', ...sans }}>{step.text}</span>
+                        <span className="shrink-0 mt-0.5 text-[9px] font-bold w-4 h-4 rounded flex items-center justify-center" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
+                        <span className="text-[12px] leading-relaxed" style={{ color: 'var(--text-secondary)', ...sans }}>{step.text}</span>
                       </div>
                     </div>
                   ))}
@@ -189,7 +176,6 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
               </div>
             )}
 
-            {/* State trace */}
             {rich.trace && (
               <div>
                 <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#d97706', ...sans }}>State trace</div>
@@ -199,7 +185,6 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
               </div>
             )}
 
-            {/* Analogy */}
             {rich.analogy && (
               <div>
                 <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#a78bfa', ...sans }}>Think of it as…</div>
@@ -209,46 +194,46 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
               </div>
             )}
 
-            {/* Concepts */}
             {rich.concepts && rich.concepts.length > 0 && (
               <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#334155', ...sans }}>Concepts used</div>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)', ...sans }}>Concepts used</div>
                 <div className="flex flex-wrap gap-1.5">
                   {rich.concepts.map((c, i) => (
-                    <span key={i} className="px-2 py-0.5 rounded text-[10px] font-medium" style={{ background: 'rgba(51,65,85,0.6)', color: '#94a3b8', ...sans }}>{c}</span>
+                    <span key={i} className="px-2 py-0.5 rounded text-[10px] font-medium" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', ...sans }}>{c}</span>
                   ))}
                 </div>
               </div>
             )}
           </>
         ) : (
-          <p className="text-[#475569] text-[11px] italic" style={sans}>No explanation yet</p>
+          <p className="text-[11px] italic" style={{ ...sans, color: 'var(--text-muted)' }}>No explanation yet</p>
         )}
       </div>
     </div>
   );
 };
 
-// ---------------------------------------------------------------------------
-// Main layout
-// ---------------------------------------------------------------------------
-
 export const PlaygroundLayout = () => {
-  const [activeTab, setActiveTab]   = useState<PlaygroundLanguage>('python3');
-  const [running, setRunning]       = useState(false);
-  const [formatting, setFormatting] = useState(false);
-  const [copied, setCopied]         = useState(false);
+  const { theme } = useTheme();
+  const monacoTheme: 'vs' | 'vs-dark' = theme === 'light' ? 'vs' : 'vs-dark';
+
+  const [activeTab, setActiveTab]     = useState<PlaygroundLanguage>('python3');
+  const [running, setRunning]         = useState(false);
+  const [formatting, setFormatting]   = useState(false);
+  const [copied, setCopied]           = useState(false);
   const [explainMode, setExplainMode] = useState(false);
-  const [rightTab, setRightTab]     = useState<'output' | 'explain'>('output');
-  const [runs, setRuns]             = useState<RunEntry[]>([]);
-  const [explain, setExplain]       = useState<ExplainState>({ rich: null, loading: false, line: 0, error: null });
-  const [inputModal, setInputModal] = useState<{ labels: string[]; values: string[] } | null>(null);
+  const [rightTab, setRightTab]       = useState<'output' | 'explain'>('output');
+  const [runs, setRuns]               = useState<RunEntry[]>([]);
+  const [explain, setExplain]         = useState<ExplainState>({ rich: null, loading: false, line: 0, error: null });
+  const [inputModal, setInputModal]   = useState<{ labels: string[]; values: string[] } | null>(null);
 
   const codeRef        = useRef<Record<PlaygroundLanguage, string>>({ ...DEFAULT_CODE });
   const editorRef      = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoInst     = useMonaco();
   const explainTimer   = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentLineRef = useRef(1);
+
+  useEffect(() => { if (monacoInst) monacoInst.editor.setTheme(monacoTheme); }, [monacoInst, monacoTheme]);
 
   const fetchExplain = useCallback((line: number, code: string, lang: PlaygroundLanguage) => {
     if (explainTimer.current) clearTimeout(explainTimer.current);
@@ -287,12 +272,9 @@ export const PlaygroundLayout = () => {
 
   const handleCodeChange = useCallback((value: string) => {
     codeRef.current[activeTab] = value;
-    if (explainMode) {
-      fetchExplain(currentLineRef.current, value, activeTab);
-    }
+    if (explainMode) fetchExplain(currentLineRef.current, value, activeTab);
   }, [activeTab, explainMode, fetchExplain]);
 
-  // Core execution — called with the final stdin string
   const doRun = useCallback(async (code: string, stdin: string) => {
     setRunning(true);
     setRightTab('output');
@@ -308,8 +290,6 @@ export const PlaygroundLayout = () => {
 
   const handleRun = useCallback(async () => {
     const code = codeRef.current[activeTab];
-
-    // For Python, detect input() calls and prompt user before running
     if (activeTab === 'python3') {
       const labels = detectInputCalls(code);
       if (labels.length > 0) {
@@ -317,7 +297,6 @@ export const PlaygroundLayout = () => {
         return;
       }
     }
-
     doRun(code, '');
   }, [activeTab, doRun]);
 
@@ -361,9 +340,7 @@ export const PlaygroundLayout = () => {
     });
   }, [activeTab]);
 
-  const handleClear = useCallback(() => {
-    setRuns([]);
-  }, []);
+  const handleClear = useCallback(() => { setRuns([]); }, []);
 
   const handleEditorMount = useCallback((editor: Monaco.editor.IStandaloneCodeEditor) => {
     editorRef.current = editor;
@@ -387,15 +364,24 @@ export const PlaygroundLayout = () => {
       style={{
         ...sans,
         borderColor: rightTab === tab ? 'var(--cam-gold-leaf)' : 'transparent',
-        color: rightTab === tab ? 'var(--cam-gold-leaf)' : '#475569',
+        color: rightTab === tab ? 'var(--cam-gold-leaf)' : 'var(--text-muted)',
       }}
     >
       {label}
     </button>
   );
 
+  const ghostBtn = (active: boolean) => ({
+    ...sans,
+    background: active
+      ? 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)'
+      : 'var(--bg-elevated)',
+    border: `1px solid ${active ? 'var(--cam-gold-leaf)' : 'var(--border)'}`,
+    color: active ? '#0a0e1a' : 'var(--text-secondary)',
+  });
+
   return (
-    <div className="flex flex-col h-full bg-[#111318] text-white">
+    <div className="flex flex-col h-full" style={{ background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
       {inputModal && (
         <InputModal
           labels={inputModal.labels}
@@ -409,9 +395,9 @@ export const PlaygroundLayout = () => {
       <LanguageTabs active={activeTab} onChange={handleTabChange} />
 
       {/* Toolbar */}
-      <div className="flex items-center px-4 py-2 bg-[#0a0e1a] border-b border-[var(--cam-gold-leaf-dk)]">
+      <div className="flex items-center px-4 py-2" style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--cam-gold-leaf-dk)' }}>
         <div className="flex-1">
-          <span className="text-[10px] text-[var(--cam-gold-leaf-dk)] uppercase tracking-widest font-medium" style={sans}>
+          <span className="text-[10px] uppercase tracking-widest font-medium" style={{ ...sans, color: 'var(--cam-gold-leaf-dk)' }}>
             {activeTab === 'python3' ? 'main.py' : activeTab === 'bash' ? 'script.sh' : activeTab === 'docker' ? 'Dockerfile' : 'main.tf'}
           </span>
         </div>
@@ -421,60 +407,18 @@ export const PlaygroundLayout = () => {
               onClick={handleFormat}
               disabled={formatting}
               className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40"
-              style={{
-                ...sans,
-                background: 'linear-gradient(135deg, rgba(0,47,120,0.55) 0%, rgba(10,14,26,0.85) 100%)',
-                border: '1px solid var(--cam-gold-leaf)',
-                color: 'var(--cam-gold-leaf)',
-              }}
+              style={{ ...sans, ...ghostBtn(false), border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)' }}
             >
               {formatting ? 'Formatting…' : 'Format'}
             </button>
           )}
-          <button
-            onClick={handleCopy}
-            className="text-[11px] font-semibold px-3 py-1 rounded-md transition-all hover:opacity-90"
-            style={copied ? {
-              ...sans,
-              background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)',
-              border: '1px solid var(--cam-gold-leaf)',
-              color: '#0a0e1a',
-            } : {
-              ...sans,
-              background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
-              border: '1px solid var(--cam-gold-leaf-dk)',
-              color: 'var(--cam-gold-leaf-dk)',
-            }}
-          >
+          <button onClick={handleCopy} className="text-[11px] font-semibold px-3 py-1 rounded-md transition-all hover:opacity-90" style={ghostBtn(copied)}>
             {copied ? 'Copied!' : 'Copy'}
           </button>
-          <button
-            onClick={handleToggleExplain}
-            className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90"
-            style={explainMode ? {
-              ...sans,
-              background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)',
-              border: '1px solid var(--cam-gold-leaf)',
-              color: '#0a0e1a',
-            } : {
-              ...sans,
-              background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
-              border: '1px solid var(--cam-gold-leaf-dk)',
-              color: 'var(--cam-gold-leaf-dk)',
-            }}
-          >
+          <button onClick={handleToggleExplain} className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90" style={ghostBtn(explainMode)}>
             Explain
           </button>
-          <button
-            onClick={handleClear}
-            className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90"
-            style={{
-              ...sans,
-              background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
-              border: '1px solid var(--cam-gold-leaf-dk)',
-              color: 'var(--cam-gold-leaf-dk)',
-            }}
-          >
+          <button onClick={handleClear} className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90" style={ghostBtn(false)}>
             Clear
           </button>
           <button
@@ -491,14 +435,13 @@ export const PlaygroundLayout = () => {
           </button>
         </div>
         <div className="flex-1 flex items-center justify-end">
-          <span className="text-[10px] text-[var(--cam-gold-leaf-dk)] hidden md:block" style={sans}>⌘↵ · ⌘L · ⌘D</span>
+          <span className="text-[10px] hidden md:block" style={{ ...sans, color: 'var(--cam-gold-leaf-dk)' }}>⌘↵ · ⌘L · ⌘D</span>
         </div>
       </div>
 
       {/* Split pane */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Editor */}
-        <div className="w-1/2 border-r border-[#1e293b] overflow-hidden">
+        <div className="w-1/2 overflow-hidden" style={{ borderRight: '1px solid var(--border)' }}>
           <PlaygroundEditor
             key={activeTab}
             language={activeTab}
@@ -506,13 +449,13 @@ export const PlaygroundLayout = () => {
             onChange={handleCodeChange}
             onMount={handleEditorMount}
             onCursorChange={handleCursorChange}
+            theme={monacoTheme}
           />
         </div>
 
-        {/* Right pane: Output | Explain */}
         <div className="w-1/2 overflow-hidden flex flex-col">
           {explainMode && (
-            <div className="flex border-b border-[#1e293b] bg-[#0a0d12] shrink-0">
+            <div className="flex shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-app)' }}>
               {tabBtn('Output', 'output')}
               {tabBtn('Explain', 'explain')}
             </div>
