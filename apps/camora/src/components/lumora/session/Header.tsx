@@ -373,7 +373,7 @@ const UserBadge = () => {
             {initials}
           </div>
         )}
-        <span className="hidden lg:inline font-display text-[11px] text-white font-medium truncate max-w-[80px]">
+        <span className="hidden lg:inline font-display text-[11px] font-medium truncate max-w-[80px]" style={{ color: 'var(--cam-strip-heading)' }}>
           {user.name || user.email?.split('@')[0]}
         </span>
       </button>
