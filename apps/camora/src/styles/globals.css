@@ -161,6 +161,13 @@
     --lumora-chrome-shadow: inset 0 -2px 0 var(--accent);
     --lumora-chrome-text:   rgba(240,238,233,0.85);
     --lumora-chrome-hover:  rgba(240,238,233,0.08);
+    /* Lumora active-tab and topbar tokens — theme-aware via [data-theme="light"] overrides */
+    --lumora-tab-active-bg:       var(--cam-gold-leaf);
+    --lumora-tab-active-text:     var(--cam-primary-dk);
+    --lumora-tab-active-shadow:   none;
+    --lumora-topbar-shadow:       0 6px 22px rgba(0,0,0,0.45);
+    --lumora-topbar-border-width: 3px;
+    --lumora-topbar-border-color: var(--cam-gold-leaf);
 
     /* On-accent — text/icon color for any surface painted with --accent.
        White in both themes; extracted here so every .chip-active / .tab-*-active
@@ -258,6 +265,13 @@
     --lumora-chrome-shadow: inset 0 -2px 0 var(--accent);
     --lumora-chrome-text:   rgba(18,20,26,0.75);
     --lumora-chrome-hover:  color-mix(in oklab, var(--accent) 6%, transparent);
+    /* Light-mode overrides: airy chrome, white active pill, subtle shadow */
+    --lumora-tab-active-bg:       #FFFFFF;
+    --lumora-tab-active-text:     var(--accent);
+    --lumora-tab-active-shadow:   0 1px 3px rgba(15,23,42,0.12), 0 0 0 1.5px color-mix(in oklab, var(--accent) 20%, transparent);
+    --lumora-topbar-shadow:       0 2px 6px rgba(15,23,42,0.07);
+    --lumora-topbar-border-width: 1px;
+    --lumora-topbar-border-color: var(--border);
 
     --bg-near-black: rgba(18,20,26,0.92);
     --shadow-primary-xs: 0 1px 3px rgba(37,99,235,0.04), 0 4px 16px rgba(37,99,235,0.02);
@@ -273,7 +287,7 @@
     --light-bg-faint:      #F8F9FA;
 
     /* ── Linode/iximiuz education light theme ── */
-    --cam-hero-strip:         #C0D8F0;
+    --cam-hero-strip:         #F4F8FC;
     --cam-hero-bg:            linear-gradient(160deg, #FFFFFF 0%, #F0F6FF 40%, #E8F0FB 100%);
     --cam-gold-leaf:          var(--accent);
     --cam-gold-leaf-lt:       #4D94E8;
@@ -576,9 +590,9 @@
   font-weight: 700;
 }
 [data-theme="light"] .tab-group-item-active {
-  background: var(--accent);
-  color: #fff;
-  box-shadow: 0 1px 4px rgba(37,99,235,0.28), inset 0 1px 0 rgba(255,255,255,0.18);
+  background: #FFFFFF;
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(15,23,42,0.10), 0 0 0 1.5px color-mix(in oklab, var(--accent) 20%, transparent);
 }
 
 /* ─── BOLDER: tab-bar active item — thicker underline ── */
@@ -591,10 +605,10 @@
 
 /* ─── BOLDER: chip-active — solid blue, strong contrast ── */
 [data-theme="light"] .chip-active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  box-shadow: 0 1px 4px rgba(37,99,235,0.22);
+  background: color-mix(in oklab, var(--accent) 9%, white);
+  border-color: color-mix(in oklab, var(--accent) 28%, transparent);
+  color: var(--accent);
+  box-shadow: none;
   font-weight: 700;
 }
 
@@ -1122,8 +1136,9 @@
   font-weight: 700;
 }
 [data-theme="light"] .tab-group-item-active {
-  background: var(--accent);
-  color: var(--cam-on-accent);
+  background: #FFFFFF;
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(15,23,42,0.10), 0 0 0 1.5px color-mix(in oklab, var(--accent) 20%, transparent);
 }
 [data-theme="light"] .tab-group-item:hover:not(.tab-group-item-active) {
   background: color-mix(in oklab, var(--accent) 8%, transparent);

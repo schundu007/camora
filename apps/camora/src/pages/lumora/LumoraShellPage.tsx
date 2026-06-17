@@ -524,7 +524,7 @@ export const LumoraShellPage = () => {
                   data-active={isActive ? 'true' : 'false'}
                   className="lumora-tab-pill px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-[background-color,color,transform]"
                   style={isActive
-                    ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }
+                    ? { background: 'var(--lumora-tab-active-bg)', color: 'var(--lumora-tab-active-text)', boxShadow: 'var(--lumora-tab-active-shadow)' }
                     : { color: 'var(--lumora-chrome-text)' }}
                 >
                   {tab.label}
