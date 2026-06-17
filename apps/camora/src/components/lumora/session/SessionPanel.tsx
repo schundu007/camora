@@ -144,8 +144,8 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
                 <span
                   className="flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold"
                   style={{
-                    background: 'var(--cam-primary)',
-                    color: '#FFFFFF',
+                    background: 'var(--cam-accent-fill)',
+                    color: 'var(--cam-accent-fill-text)',
                     fontFamily: 'var(--font-code)',
                     animation: 'lumora-pulse-ring 1.6s ease-out infinite',
                   }}
@@ -381,7 +381,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         {/* Co-pilot launch */}
         <div className="mb-5">
           <div className="flex items-center gap-2 mb-2.5">
-            <span style={{ display:'inline-block', width:3, height:11, borderRadius:2, background:'#3683DC', flexShrink:0 }} />
+            <span style={{ display:'inline-block', width:3, height:11, borderRadius:2, background:'var(--accent)', flexShrink:0 }} />
             <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--text-muted)' }}>Launch Co-pilot</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">

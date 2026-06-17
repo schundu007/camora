@@ -836,10 +836,9 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
           <span
             className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-[9px] font-bold flex items-center justify-center"
             style={{
-              background: 'var(--cam-gold-leaf)',
-              color: 'var(--cam-primary-dk)',
-              border: '1.5px solid var(--cam-primary-dk)',
-              boxShadow: '0 0 8px rgba(217,181,67,0.55), 0 1px 3px rgba(0,0,0,0.35)',
+              background: 'var(--cam-accent-fill)',
+              color: 'var(--cam-accent-fill-text)',
+              border: '1.5px solid var(--accent)',
               fontFamily: 'var(--font-mono)',
             }}
           >

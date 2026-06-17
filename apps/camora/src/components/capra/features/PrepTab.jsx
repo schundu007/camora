@@ -119,7 +119,7 @@ export default function PrepTab({ isOpen, onClose }) {
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent)' }} />
             <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>Coding Platforms</span>
-            <span className="px-2 py-0.5 text-xs font-semibold rounded" style={{ background: 'var(--accent)', color: '#FFFFFF' }}>
+            <span className="px-2 py-0.5 text-xs font-semibold rounded" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>
               {connectedCount} connected
             </span>
           </div>

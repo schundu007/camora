@@ -118,8 +118,8 @@ const TopicView = ({ topic }: { topic: Topic }) => {
               <button key={i} onClick={() => setActiveExample(i)}
                 className="font-mono text-[11px] px-3 py-1 rounded-lg transition-colors"
                 style={{
-                  background: i === activeExample ? 'var(--cam-primary)' : 'var(--bg-elevated)',
-                  color: i === activeExample ? 'white' : 'var(--text-muted)',
+                  background: i === activeExample ? 'var(--cam-accent-fill)' : 'var(--bg-elevated)',
+                  color: i === activeExample ? 'var(--cam-accent-fill-text)' : 'var(--text-muted)',
                 }}>
                 {ex.label}
               </button>

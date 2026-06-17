@@ -163,9 +163,9 @@ function ModeButton({
       onClick={onClick}
       className="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.1em] transition-colors"
       style={{
-        background: active ? 'var(--cam-primary)' : 'transparent',
-        color: active ? '#fff' : 'var(--text-secondary)',
-        boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.18)' : 'none',
+        background: active ? 'var(--cam-accent-fill)' : 'transparent',
+        color: active ? 'var(--cam-accent-fill-text)' : 'var(--text-secondary)',
+        boxShadow: 'none',
       }}
     >
       {label}

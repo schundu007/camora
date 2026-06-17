@@ -817,8 +817,8 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         {/* Header */}
                         <div className="prep-content-card-header">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent)' }}>
-                              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                               </svg>
                             </div>

@@ -5856,8 +5856,8 @@ export default function Blind75PracticePage() {
                     <button key={lang} onClick={() => setLanguage(lang)}
                       style={{
                         fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, border: '1px solid var(--border)', cursor: 'pointer',
-                        background: solutionLang === lang ? 'var(--accent)' : 'var(--bg-elevated)',
-                        color: solutionLang === lang ? '#fff' : 'var(--text-secondary)',
+                        background: solutionLang === lang ? 'var(--cam-accent-fill)' : 'var(--bg-elevated)',
+                        color: solutionLang === lang ? 'var(--cam-accent-fill-text)' : 'var(--text-secondary)',
                       }}>
                       {lang === 'python' ? 'Python' : 'JavaScript'}
                     </button>
