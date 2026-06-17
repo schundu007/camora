@@ -1980,23 +1980,45 @@ const FormattedJD = ({ text }: { text: string }) => {
 
   // ─── Pass 3: Run the heuristic section parser on what's LEFT ───
   // Boilerplate lines are gone, so the parser only sees real JD content.
-  const sections: { title: string | null; items: string[] }[] = [];
-  let current: { title: string | null; items: string[] } = { title: null, items: [] };
+  // Lines prefixed with a bullet marker (-, •, *, ◦, etc.) are real bullet
+  // items. All other lines are paragraph text — we buffer consecutive
+  // paragraph lines and join them with a space so word-wrapped source text
+  // (common in Workday/Greenhouse scrapes) doesn't produce one bullet per
+  // wrapped line with the right side left empty.
+  type JDItem = { text: string; kind: 'bullet' | 'para' };
+  const sections: { title: string | null; items: JDItem[] }[] = [];
+  let current: { title: string | null; items: JDItem[] } = { title: null, items: [] };
+  let paraBuffer: string[] = [];
+
+  const flushPara = () => {
+    if (paraBuffer.length > 0) {
+      current.items.push({ text: paraBuffer.join(' '), kind: 'para' });
+      paraBuffer = [];
+    }
+  };
 
   for (const t of linesForParser) {
     if (isHeader(t)) {
+      flushPara();
       if (current.items.length > 0 || current.title) sections.push(current);
       current = { title: t, items: [] };
+    } else if (/^[-•*◦‣▪▸·]\s/.test(t)) {
+      flushPara();
+      current.items.push({ text: t.replace(/^[-•*◦‣▪▸·]\s*/, ''), kind: 'bullet' });
+    } else if (/^\d+[.)]\s/.test(t)) {
+      flushPara();
+      current.items.push({ text: t, kind: 'bullet' });
     } else {
-      current.items.push(t.replace(/^[-•]\s*/, ''));
+      paraBuffer.push(t);
     }
   }
+  flushPara();
   if (current.items.length > 0 || current.title) sections.push(current);
 
   // Hero promotion (job title)
   let heroTitle: string | null = null;
-  if (sections.length > 0 && !sections[0].title && sections[0].items.length === 1 && sections[0].items[0].length < 100) {
-    heroTitle = sections[0].items[0];
+  if (sections.length > 0 && !sections[0].title && sections[0].items.length === 1 && sections[0].items[0].text.length < 100) {
+    heroTitle = sections[0].items[0].text;
     sections.shift();
   }
   if (!heroTitle && sections.length > 0 && sections[0].title && sections[0].items.length === 0 && sections[0].title.length < 100) {
@@ -2025,12 +2047,12 @@ const FormattedJD = ({ text }: { text: string }) => {
   }
 
   // ─── Build final content list: real sections first, then boilerplate buckets ───
-  type ContentSection = { title: string | null; items: string[]; color?: 'warning' | 'success' | 'muted' };
+  type ContentSection = { title: string | null; items: JDItem[]; color?: 'warning' | 'success' | 'muted' };
   const content: ContentSection[] = [...sections];
   for (const b of BUCKETS) {
-    const items = bucketedLines.get(b.title);
-    if (items && items.length > 0) {
-      content.push({ title: b.title, items, color: b.color });
+    const rawItems = bucketedLines.get(b.title);
+    if (rawItems && rawItems.length > 0) {
+      content.push({ title: b.title, items: rawItems.map(t => ({ text: t, kind: 'para' as const })), color: b.color });
     }
   }
 
@@ -2177,7 +2199,14 @@ const FormattedJD = ({ text }: { text: string }) => {
             )}
             <div className="px-5 pl-7 py-4 flex flex-col gap-1.5">
               {sec.items.map((item, j) => {
-                const isNumberedHeading = /^\d+[.)]\s/.test(item);
+                if (item.kind === 'para') {
+                  return (
+                    <p key={j} className="text-[13px] leading-[1.65] mb-0.5" style={{ color: 'var(--text-primary)' }}>
+                      {item.text}
+                    </p>
+                  );
+                }
+                const isNumberedHeading = /^\d+[.)]\s/.test(item.text);
                 if (isNumberedHeading) {
                   return (
                     <div
@@ -2201,7 +2230,7 @@ const FormattedJD = ({ text }: { text: string }) => {
                         className="text-[13px] leading-[1.6] font-semibold"
                         style={{ color: 'var(--cam-gold-leaf-text)' }}
                       >
-                        {item}
+                        {item.text}
                       </p>
                     </div>
                   );
@@ -2221,7 +2250,7 @@ const FormattedJD = ({ text }: { text: string }) => {
                       className="text-[13px] leading-[1.65]"
                       style={{ color: 'var(--text-primary)' }}
                     >
-                      {item}
+                      {item.text}
                     </p>
                   </div>
                 );
