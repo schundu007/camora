@@ -57,6 +57,8 @@ import { askRouter } from './routes/ask.js';
 import learnTopicRouter from './routes/learnTopic.js';
 import prepDocsRouter from './routes/prepDocs.js';
 import jobAlertsRouter from './routes/jobAlerts.js';
+import cron from 'node-cron';
+import { sendJobAlertDigest } from './services/jobAlertEmailService.js';
 
 // Same pattern as jobs above — the entire lumora-backend route surface was
 // copied under src/lumora/ so this service can answer /api/v1/transcribe,
@@ -421,6 +423,14 @@ async function runMigrations() {
     // Job alerts opt-in
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS job_alerts_enabled BOOLEAN DEFAULT FALSE');
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS job_alerts_last_sent_at TIMESTAMPTZ');
+    // Auto-enable job alerts for owner accounts
+    const ownerEmails = (process.env.OWNER_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
+    if (ownerEmails.length) {
+      await query(
+        `UPDATE users SET job_alerts_enabled = true WHERE email = ANY($1) AND job_alerts_enabled = false`,
+        [ownerEmails]
+      );
+    }
     console.log('[Migrations] job alerts columns ensured');
 
     // Refund requests are admin-approved, not auto-issued. User submits a
@@ -1429,6 +1439,36 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
+
+// Daily job alert digest — 8am UTC every day
+cron.schedule('0 8 * * *', async () => {
+  logger.info('[JobAlerts] Running daily digest');
+  try {
+    const { rows: users } = await query(
+      `SELECT id, email, name, job_roles, resume_text FROM users
+       WHERE job_alerts_enabled = true
+         AND (job_alerts_last_sent_at IS NULL OR job_alerts_last_sent_at < NOW() - INTERVAL '20 hours')`
+    );
+    let sent = 0, skipped = 0;
+    for (const user of users) {
+      await new Promise(r => setTimeout(r, 200));
+      try {
+        const ok = await sendJobAlertDigest(user);
+        if (ok) {
+          sent++;
+          await query('UPDATE users SET job_alerts_last_sent_at = NOW() WHERE id = $1', [user.id]);
+        } else {
+          skipped++;
+        }
+      } catch (err) {
+        logger.error({ userId: user.id, err: err.message }, '[JobAlerts] digest error');
+      }
+    }
+    logger.info({ sent, skipped, total: users.length }, '[JobAlerts] Daily digest complete');
+  } catch (err) {
+    logger.error({ err: err.message }, '[JobAlerts] Cron failed');
+  }
+}, { timezone: 'UTC' });
 
 // Start server
 const server = app.listen(PORT, '0.0.0.0', () => {
