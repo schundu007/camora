@@ -368,7 +368,17 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
     if (!tc || !fixedCode || !tc.input.trim()) return;
     setCustomTests(prev => prev.map(t => t.id === id ? { ...t, running: true, result: null } : t));
     try {
-      const testCode = `${fixedCode}\n\n${tc.input}`;
+      // Strip top-level lines in fixedCode that duplicate a registered test input.
+      // Without this, fixedCode's own driver calls (e.g. `print(add(2,7))`) fire
+      // before the test input and pollute the actual output, causing false MISMATCHes.
+      const testInputLines = new Set(customTests.map(t => t.input.trim()).filter(Boolean));
+      const cleanCode = fixedCode.split('\n')
+        .filter(line => {
+          const isTopLevel = !line.startsWith(' ') && !line.startsWith('\t');
+          return !isTopLevel || !testInputLines.has(line.trim());
+        })
+        .join('\n');
+      const testCode = `${cleanCode}\n\n${tc.input}`;
       const resp = await fetch(`${API_URL}/api/v1/coding/execute`, {
         method: 'POST',
         credentials: 'include',
