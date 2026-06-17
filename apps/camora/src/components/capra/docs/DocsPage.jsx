@@ -1293,12 +1293,26 @@ export default function DocsPage({ onBack }) {
                         <button
                           type="button"
                           onClick={clearJobFilter}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded flex-shrink-0 landing-body transition-colors hover:opacity-80"
-                          style={{ color: 'var(--cam-gold-leaf)', background: 'rgba(3,19,46,0.88)', border: '1px solid rgba(201,162,39,0.50)' }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full flex-shrink-0 landing-body"
+                          style={{
+                            background: 'linear-gradient(90deg, #f59e0b, #ef4444, #f59e0b)',
+                            backgroundSize: '200% 100%',
+                            animation: 'filterChipPulse 2s ease-in-out infinite',
+                            color: '#fff',
+                            border: 'none',
+                            boxShadow: '0 0 0 2px rgba(245,158,11,0.4), 0 2px 8px rgba(239,68,68,0.35)',
+                          }}
                         >
                           <Icon name="x" size={12} />
                           Show all topics
                         </button>
+                        <style>{`
+                          @keyframes filterChipPulse {
+                            0%   { background-position: 0% 50%;   box-shadow: 0 0 0 2px rgba(245,158,11,0.4), 0 2px 8px rgba(239,68,68,0.35); }
+                            50%  { background-position: 100% 50%; box-shadow: 0 0 0 4px rgba(239,68,68,0.5), 0 4px 16px rgba(239,68,68,0.45); }
+                            100% { background-position: 0% 50%;   box-shadow: 0 0 0 2px rgba(245,158,11,0.4), 0 2px 8px rgba(239,68,68,0.35); }
+                          }
+                        `}</style>
                       </div>
                       {/* Quick section tabs — switch between coding/design/behavioral in filtered mode */}
                       <div className="px-4 pb-2 flex gap-2 flex-wrap">
