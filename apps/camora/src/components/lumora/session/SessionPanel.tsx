@@ -206,7 +206,7 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
                       background: 'var(--bg-elevated)',
                     }}
                   >
-                    ↺ Regenerate
+                    Try fresh answer
                   </button>
                 </div>
               )}
@@ -275,7 +275,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
       onClick: () => onSwitchToDesign?.(),
     },
     {
-      name: 'Behavioral', desc: 'STAR-method answers anchored to your stories.',
+      name: 'Behavioral', desc: 'STAR answers drawn from your resume and past experience.',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg>,
       accent: '#C9A227',
       onClick: () => onAskQuestion?.('Tell me about yourself and your experience'),
@@ -368,8 +368,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
             </div>
             <div className="mt-1.5 text-sm" style={{ color:'rgba(255,255,255,.5)', fontFamily:'var(--font-code)', letterSpacing:'0.04em' }}>{dateStr}</div>
             <p className="mt-3 text-[15px] font-semibold" style={{ color:'rgba(255,255,255,.88)' }}>
-              {greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''} —&nbsp;
-              <span style={{ color:'var(--cam-gold-leaf-lt)' }}>your AI co-pilot is live.</span>
+              {greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}. <span style={{ color:'var(--cam-gold-leaf-lt)' }}>Sona is ready.</span>
             </p>
           </div>
         </div>
@@ -483,7 +482,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
           </div>
           <div className="flex items-center gap-1.5" style={{ fontFamily:'var(--font-code)', fontSize:10, color:'var(--cam-strip-text-muted)' }}>
             <span style={{ width:6, height:6, borderRadius:'50%', background:'#4ADE80', display:'inline-block', animation:'sona-ready 2s ease-in-out infinite' }} />
-            AI online
+            Sona ready
           </div>
         </div>
       </div>
