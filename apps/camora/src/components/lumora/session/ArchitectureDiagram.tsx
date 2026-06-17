@@ -103,7 +103,7 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
         });
         const data = await r.json();
         if (!cancelled) {
-          if (data.success && data.image_url) {
+          if (data.success && data.image_url && !data.image_url.includes('/static/')) {
             const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
             setImageUrl(url);
             setDiagramCache(key, { type: 'png', data: url, timestamp: Date.now() });
