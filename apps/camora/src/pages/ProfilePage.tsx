@@ -417,72 +417,143 @@ function PreferencesTab() {
 
 /* ── Activity Heatmap ─────────────────────────────────── */
 function ActivityHeatmap() {
-  const [year, setYear] = useState('current');
-  const weeks = 52;
-  const days = ['Mon', '', 'Wed', '', 'Fri', '', 'Sun'];
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const { token } = useAuth();
+  const currentYear = new Date().getFullYear();
+  const [year, setYear] = useState(String(currentYear));
+  const [activityData, setActivityData] = useState<Record<string, number>>({});
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const cells = useMemo(() => Array.from({ length: weeks * 7 }, () => 0), [weeks]);
-  const streakCurrent = 0;
+  useEffect(() => {
+    if (!token) return;
+    setLoading(true);
+    fetch(`${CAPRA_API}/api/activity/heatmap?year=${year}`, {
+      headers: getAuthHeaders() as unknown as Record<string, string>,
+    })
+      .then(r => r.ok ? r.json() : { days: {}, current_streak: 0, longest_streak: 0 })
+      .then(data => {
+        setActivityData(data.days || {});
+        setCurrentStreak(data.current_streak || 0);
+        setLongestStreak(data.longest_streak || 0);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [year, token]);
+
+  // Build a 52-week grid aligned to Jan 1 of the selected year
+  const { cells, monthOffsets } = useMemo(() => {
+    const jan1 = new Date(`${year}-01-01`);
+    // Day of week of Jan 1 (0=Sun → shift to Mon-first: Mon=0..Sun=6)
+    const startDow = (jan1.getDay() + 6) % 7;
+    const totalCells = 53 * 7;
+    const cells: { date: string; value: number }[] = [];
+    for (let i = 0; i < totalCells; i++) {
+      const offset = i - startDow;
+      const d = new Date(jan1);
+      d.setDate(jan1.getDate() + offset);
+      const dateStr = d.toISOString().slice(0, 10);
+      const inYear = d.getFullYear() === parseInt(year);
+      cells.push({ date: dateStr, value: inYear ? (activityData[dateStr] || 0) : -1 });
+    }
+    // Month label positions (week index where each month starts)
+    const monthOffsets: { month: string; col: number }[] = [];
+    let lastMonth = -1;
+    for (let col = 0; col < 53; col++) {
+      const cellIdx = col * 7;
+      if (cellIdx >= totalCells) break;
+      const d = new Date(jan1);
+      d.setDate(jan1.getDate() + (cellIdx - startDow));
+      if (d.getFullYear() === parseInt(year) && d.getMonth() !== lastMonth) {
+        monthOffsets.push({ month: d.toLocaleString('default', { month: 'short' }), col });
+        lastMonth = d.getMonth();
+      }
+    }
+    return { cells, monthOffsets };
+  }, [year, activityData]);
+
+  const DAY_LABELS = ['Mon', '', 'Wed', '', 'Fri', '', 'Sun'];
 
   const getColor = (v: number) => {
+    if (v < 0) return 'transparent';
     if (v === 0) return 'var(--bg-elevated)';
-    if (v === 1) return 'color-mix(in oklab, var(--cam-primary) 20%, var(--bg-elevated))';
-    if (v === 2) return 'color-mix(in oklab, var(--cam-primary) 40%, var(--bg-elevated))';
-    if (v === 3) return 'color-mix(in oklab, var(--cam-primary) 65%, var(--bg-elevated))';
+    if (v <= 2) return 'color-mix(in oklab, var(--cam-primary) 25%, var(--bg-elevated))';
+    if (v <= 4) return 'color-mix(in oklab, var(--cam-primary) 50%, var(--bg-elevated))';
+    if (v <= 7) return 'color-mix(in oklab, var(--cam-primary) 75%, var(--bg-elevated))';
     return 'var(--cam-primary)';
   };
+
+  const years = [];
+  for (let y = currentYear; y >= 2024; y--) years.push(String(y));
 
   return (
     <div className="rounded-2xl p-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <h3 className="text-base font-bold text-[var(--text-primary)]">Activity</h3>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={{ background: 'rgba(99,102,241,0.08)', color: '#6366f1', borderColor: 'rgba(99,102,241,0.3)' }}>Coming soon</span>
-        </div>
-        <select value={year} onChange={e => setYear(e.target.value)} className="text-xs px-2 py-1 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-muted)]">
-          <option value="current">Current</option>
-          <option value="2025">2025</option>
+        <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Activity</h3>
+        <select value={year} onChange={e => setYear(e.target.value)}
+          className="text-xs px-2 py-1 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)]"
+          style={{ color: 'var(--text-muted)' }}>
+          {years.map(y => <option key={y} value={y}>{y === String(currentYear) ? 'Current' : y}</option>)}
         </select>
       </div>
-      <div className="overflow-x-auto">
-        <div className="flex gap-0.5 min-w-[700px]">
-          {/* Day labels */}
-          <div className="flex flex-col gap-0.5 pr-2 pt-5">
-            {days.map((d, i) => (
-              <div key={i} className="h-[11px] text-[9px] text-[var(--text-muted)] leading-[11px]">{d}</div>
-            ))}
-          </div>
-          {/* Weeks */}
-          <div className="flex-1">
-            {/* Month labels */}
-            <div className="flex mb-1">
-              {months.map(m => (
-                <div key={m} className="flex-1 text-[9px] text-[var(--text-muted)]">{m}</div>
+      {loading ? (
+        <div className="h-[88px] flex items-center justify-center">
+          <div className="w-5 h-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <div className="flex gap-0.5" style={{ minWidth: '700px' }}>
+            {/* Day labels */}
+            <div className="flex flex-col gap-[2px] pr-2" style={{ paddingTop: '18px' }}>
+              {DAY_LABELS.map((d, i) => (
+                <div key={i} style={{ height: '11px', fontSize: '9px', color: 'var(--text-muted)', lineHeight: '11px' }}>{d}</div>
               ))}
             </div>
-            <div className="flex gap-[2px]">
-              {Array.from({ length: weeks }, (_, w) => (
-                <div key={w} className="flex flex-col gap-[2px]">
-                  {Array.from({ length: 7 }, (_, d) => {
-                    const idx = w * 7 + d;
-                    return (
-                      <div key={d} className="w-[11px] h-[11px] rounded-[2px]" style={{ background: getColor(cells[idx] || 0) }} />
-                    );
-                  })}
-                </div>
-              ))}
+            {/* Grid */}
+            <div style={{ flex: 1, position: 'relative' }}>
+              {/* Month labels */}
+              <div style={{ display: 'flex', marginBottom: '4px', height: '14px', position: 'relative' }}>
+                {monthOffsets.map(({ month, col }) => (
+                  <div key={`${month}-${col}`} style={{
+                    position: 'absolute',
+                    left: `${(col / 53) * 100}%`,
+                    fontSize: '9px',
+                    color: 'var(--text-muted)',
+                    whiteSpace: 'nowrap',
+                  }}>{month}</div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: '2px' }}>
+                {Array.from({ length: 53 }, (_, w) => (
+                  <div key={w} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    {Array.from({ length: 7 }, (_, d) => {
+                      const cell = cells[w * 7 + d];
+                      return (
+                        <div
+                          key={d}
+                          title={cell && cell.value >= 0 ? `${cell.date}: ${cell.value} activit${cell.value === 1 ? 'y' : 'ies'}` : undefined}
+                          style={{
+                            width: '11px', height: '11px',
+                            borderRadius: '2px',
+                            background: cell ? getColor(cell.value) : 'transparent',
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
       <div className="flex items-center justify-between mt-3">
-        <button className="text-xs text-[var(--text-muted)] px-3 py-1 rounded-lg border border-[var(--border)] hover:bg-[var(--bg-elevated)] transition-colors">
-          View recent activity
-        </button>
-        <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
-          <span>Current streak: <strong className="text-[var(--text-primary)]">{streakCurrent}</strong></span>
-          <span>Longest streak: <strong className="text-[var(--text-primary)]">0</strong></span>
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+          Practice sessions, quizzes &amp; challenges
+        </div>
+        <div className="flex items-center gap-4" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+          <span>Current streak: <strong style={{ color: 'var(--text-primary)' }}>{currentStreak}</strong></span>
+          <span>Longest streak: <strong style={{ color: 'var(--text-primary)' }}>{longestStreak}</strong></span>
         </div>
       </div>
     </div>
