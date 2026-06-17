@@ -32,8 +32,8 @@ export default function CapraLandingPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
           </svg>
         </div>
-        <h1 className="text-3xl font-bold text-white mb-2">Capra</h1>
-        <p className="mb-6" style={{ color: 'rgba(255,255,255,0.85)' }}>Interview preparation powered by AI</p>
+        <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--cam-strip-heading)' }}>Capra</h1>
+        <p className="mb-6" style={{ color: 'var(--cam-strip-text)' }}>Interview preparation powered by AI</p>
         <Link
           to="/capra/prepare"
           className="inline-flex items-center gap-2 px-7 py-3 font-bold uppercase tracking-[0.06em] text-sm rounded-full transition-all hover:scale-[1.02]"

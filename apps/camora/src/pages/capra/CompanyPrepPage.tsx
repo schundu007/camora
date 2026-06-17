@@ -539,10 +539,10 @@ export default function CompanyPrepPage() {
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="page-wrap" style={{ position: 'relative', paddingTop: 32, paddingBottom: 80 }}>
           {/* Breadcrumb on dark */}
-          <nav className="practice-body" style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', color: 'rgba(255,255,255,0.7)' }}>
-            <Link to="/" className="breadcrumb-link" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Home</Link>
+          <nav className="practice-body" style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', color: 'var(--cam-strip-text-muted)' }}>
+            <Link to="/" className="breadcrumb-link" style={{ color: 'var(--cam-strip-text-muted)', textDecoration: 'none' }}>Home</Link>
             <span>/</span>
-            <Link to="/capra/practice" className="breadcrumb-link" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Practice Questions</Link>
+            <Link to="/capra/practice" className="breadcrumb-link" style={{ color: 'var(--cam-strip-text-muted)', textDecoration: 'none' }}>Practice Questions</Link>
             <span>/</span>
             <span style={{ color: 'var(--cam-gold-leaf-lt)', fontWeight: 600 }}>{companyData.name}</span>
           </nav>
@@ -573,7 +573,7 @@ export default function CompanyPrepPage() {
                   style={{
                     fontSize: 32,
                     fontWeight: 800,
-                    color: '#FFFFFF',
+                    color: 'var(--cam-strip-heading)',
                     margin: '0 0 8px',
                     letterSpacing: '-0.02em',
                     lineHeight: 1.2,
@@ -581,10 +581,10 @@ export default function CompanyPrepPage() {
                 >
                   {companyData.name} <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Practice Questions</span>
                 </h1>
-                <p className="practice-body" style={{ fontSize: 15, color: 'rgba(255,255,255,0.85)', margin: 0, lineHeight: 1.6, maxWidth: 640 }}>
+                <p className="practice-body" style={{ fontSize: 15, color: 'var(--cam-strip-text)', margin: 0, lineHeight: 1.6, maxWidth: 640 }}>
                   {companyData.description}
                 </p>
-                <p className="practice-body" style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', margin: '10px 0 0' }}>
+                <p className="practice-body" style={{ fontSize: 13, color: 'var(--cam-strip-text-muted)', margin: '10px 0 0' }}>
                   {totalQuestions} curated questions across {companyData.sections.length} categories
                 </p>
               </div>

@@ -739,7 +739,7 @@ export default function PracticePage() {
                   padding: '5px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
                   fontSize: 12, fontWeight: 600,
                   background: activeView === tab.key ? 'var(--cam-gold-leaf)' : 'transparent',
-                  color: activeView === tab.key ? '#020617' : 'rgba(255,255,255,0.85)',
+                  color: activeView === tab.key ? '#020617' : 'var(--cam-strip-text)',
                   transition: 'all 0.15s',
                 }}
               >

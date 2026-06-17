@@ -439,7 +439,7 @@ export default function LearnTopicPage() {
           type="button"
           onClick={() => navigate(backPath)}
           className="flex items-center gap-1.5 mb-3 text-[12px] font-semibold transition-opacity hover:opacity-70"
-          style={{ color: 'rgba(255,255,255,0.6)' }}
+          style={{ color: 'var(--cam-strip-text-muted)' }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 18l-6-6 6-6" />
@@ -463,14 +463,14 @@ export default function LearnTopicPage() {
         </div>
 
         <div className="flex items-center gap-2 mt-1">
-          <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          <p className="text-[12px]" style={{ color: 'var(--cam-strip-text-muted)' }}>
             {source === 'programiz' ? 'Python Programming' : 'CodeSignal Learn'} · Learning guide
           </p>
           {fromCache && (
             <Chip variant="success">cached</Chip>
           )}
           {streaming && (
-            <span className="flex items-center gap-1.5 text-[11px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <span className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--cam-strip-text-muted)' }}>
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--cam-gold-leaf)' }} />
               Generating…
             </span>

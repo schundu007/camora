@@ -5754,23 +5754,23 @@ export default function Blind75PracticePage() {
       {/* Breadcrumb Bar — LeetCode navy + 2px gold underline (matches /lumora/coding tabs) */}
       <div style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link to="/handbook" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 500 }}>
+          <Link to="/handbook" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: 'var(--cam-strip-text)', fontSize: 13, fontWeight: 500 }}>
             <Icon name="chevronLeft" size={14} aria-hidden="true" />
             Blind 75
           </Link>
-          <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.25)' }} />
+          <div style={{ width: 1, height: 18, background: 'var(--cam-strip-icon-border)' }} />
           <span style={{ fontSize: 14, fontWeight: 700, color: '#FFFFFF' }}>{problem.title}</span>
           <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 6, color: 'var(--cam-primary-dk)', background: 'var(--cam-gold-leaf)' }}>
             {problem.difficulty}
           </span>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{problem.category}</span>
+          <span style={{ fontSize: 11, color: 'var(--cam-strip-text-muted)' }}>{problem.category}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button onClick={() => setActiveTab('practice')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, cursor: 'pointer', border: 'none',
-            background: activeTab === 'practice' ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.1)', color: activeTab === 'practice' ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)' }}>Practice</button>
+            background: activeTab === 'practice' ? 'var(--cam-gold-leaf)' : 'var(--cam-strip-icon-bg)', color: activeTab === 'practice' ? 'var(--cam-primary-dk)' : 'var(--cam-strip-text)' }}>Practice</button>
           <button onClick={() => setActiveTab('solution')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, cursor: 'pointer', border: 'none',
-            background: activeTab === 'solution' ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.1)', color: activeTab === 'solution' ? 'var(--cam-primary-dk)' : 'rgba(255,255,255,0.85)' }}>Solution</button>
-          <a href={problem.leetcode} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.25)', background: 'transparent', color: 'rgba(255,255,255,0.85)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+            background: activeTab === 'solution' ? 'var(--cam-gold-leaf)' : 'var(--cam-strip-icon-bg)', color: activeTab === 'solution' ? 'var(--cam-primary-dk)' : 'var(--cam-strip-text)' }}>Solution</button>
+          <a href={problem.leetcode} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid var(--cam-strip-icon-border)', background: 'transparent', color: 'var(--cam-strip-text)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
             LeetCode <Icon name="externalLink" size={9} aria-hidden="true" />
           </a>
         </div>

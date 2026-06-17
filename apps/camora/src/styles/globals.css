@@ -277,12 +277,13 @@
     color-scheme: light;
   }
 
-  /* Restore Lumora's dark strip when the global theme is light.
-     Lumora must always render as an immersive dark cockpit. */
+  /* Restore Lumora's dark cockpit when the global theme is light.
+     Background and text tokens go dark; gold-leaf stays as the
+     blue accent inherited from the light theme (navy palette). */
   [data-theme="light"][data-product="lumora"] {
     --cam-hero-strip:
       radial-gradient(ellipse 38% 260% at 0% 50%, rgba(37,99,235,0.28), transparent 70%),
-      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(212,160,67,0.14), transparent 70%),
+      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(37,99,235,0.14), transparent 70%),
       radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.07), transparent 75%),
       radial-gradient(ellipse 60% 200% at 50% 50%, rgba(37,99,235,0.12), transparent 70%),
       linear-gradient(95deg, #0E0E11 0%, #141417 30%, #1C1C22 50%, #141417 70%, #0E0E11 100%);
@@ -292,11 +293,14 @@
     --cam-strip-text-muted:   rgba(255,255,255,0.55);
     --cam-strip-icon-bg:      rgba(255,255,255,0.10);
     --cam-strip-icon-border:  rgba(255,255,255,0.16);
-    --cam-gold-leaf:          #D4A043;
-    --cam-gold-leaf-lt:       #E0B155;
-    --cam-gold-leaf-dk:       #B88930;
-    --cam-gold-leaf-text:     #C99A2E;
-    --cam-gold-leaf-50:       rgba(212,160,67,0.08);
+    --bg-base:     #0A0A0C;
+    --bg-app:      #0E0E11;
+    --bg-surface:  #141417;
+    --bg-elevated: #1C1C22;
+    --border:      #26262E;
+    --text-primary:   #F0EEE9;
+    --text-secondary: #9BAAB8;
+    --text-muted:     #647084;
   }
 
   /* ──────────────────────────────────────────────────────────

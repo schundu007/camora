@@ -153,7 +153,7 @@ export default function CodeSignalLearnPage() {
           </h1>
           <Chip variant="gold">{(CODESIGNAL_LEARN_PATHS as LearnPath[]).length} paths</Chip>
         </div>
-        <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
+        <p className="text-[12px]" style={{ color: 'var(--cam-strip-text-muted)' }}>
           421 learning paths from CodeSignal. Use the search or filter to find topics.
         </p>
       </div>
