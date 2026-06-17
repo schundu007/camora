@@ -17,9 +17,10 @@ interface Props {
   onChange:        (value: string) => void;
   onMount:         (editor: Monaco.editor.IStandaloneCodeEditor) => void;
   onCursorChange?: (line: number, code: string) => void;
+  theme?:          'vs' | 'vs-dark';
 }
 
-export const PlaygroundEditor = ({ language, defaultValue, onChange, onMount, onCursorChange }: Props) => {
+export const PlaygroundEditor = ({ language, defaultValue, onChange, onMount, onCursorChange, theme = 'vs-dark' }: Props) => {
   const monaco = useMonaco();
   const editorRef      = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const lintTimer      = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -85,7 +86,8 @@ export const PlaygroundEditor = ({ language, defaultValue, onChange, onMount, on
       defaultValue={defaultValue}
       onChange={handleChange}
       onMount={handleMount}
-      theme="vs-dark"
+      beforeMount={(m) => { m.editor.setTheme(theme); }}
+      theme={theme}
       options={{
         fontSize: 11,
         fontFamily: '"IBM Plex Mono", "Cascadia Code", monospace',
