@@ -216,10 +216,10 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
           <div
             className="inline-flex items-center gap-1 px-1 py-1"
             style={{
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.16)',
+              background: 'var(--cam-strip-icon-bg)',
+              border: '1px solid var(--cam-strip-icon-border)',
               borderRadius: 999,
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
             }}
           >
             {tabs.map(tab => {
@@ -232,7 +232,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
                   style={
                     activeTab === tab.id
                       ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
-                      : { color: 'rgba(255,255,255,0.85)', borderRadius: 999, background: 'transparent' }
+                      : { color: 'var(--cam-strip-text)', borderRadius: 999, background: 'transparent' }
                   }
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -247,7 +247,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
             <button
               onClick={onToggleExpand}
               className="w-7 h-7 rounded-md flex items-center justify-center transition-colors"
-              style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.16)' }}
+              style={{ color: 'var(--cam-strip-text)', background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
               title="Collapse"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -267,7 +267,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
                 onClear?.();
               }}
               className="w-7 h-7 rounded-md flex items-center justify-center transition-colors"
-              style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.16)' }}
+              style={{ color: 'var(--cam-strip-text)', background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
               title="Clear"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

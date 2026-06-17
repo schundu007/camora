@@ -88,14 +88,14 @@ export default function SavedSystemDesignsModal({
         >
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
-            <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">Saved System Designs</h2>
+            <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] whitespace-nowrap" style={{ color: 'var(--cam-strip-heading)' }}>Saved System Designs</h2>
             <span
               className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
               style={{
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.16)',
+                background: 'var(--cam-strip-icon-bg)',
+                border: '1px solid var(--cam-strip-icon-border)',
                 borderRadius: 999,
-                color: 'rgba(255,255,255,0.85)',
+                color: 'var(--cam-strip-text)',
               }}
             >
               {sessions.length} saved
@@ -105,9 +105,9 @@ export default function SavedSystemDesignsModal({
             onClick={onClose}
             className="w-7 h-7 rounded-md flex items-center justify-center transition-all"
             style={{
-              color: 'rgba(255,255,255,0.85)',
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.16)',
+              color: 'var(--cam-strip-text)',
+              background: 'var(--cam-strip-icon-bg)',
+              border: '1px solid var(--cam-strip-icon-border)',
             }}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

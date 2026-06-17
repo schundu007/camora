@@ -1242,7 +1242,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
           {!embedded && <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-              <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">Prep</h2>
+              <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] whitespace-nowrap" style={{ color: 'var(--cam-strip-heading)' }}>Prep</h2>
             </div>
             <div className="flex items-center gap-2">
               {!isDedicatedWindow && (
@@ -1761,20 +1761,20 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
-                <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">Job Description</h2>
+                <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] whitespace-nowrap" style={{ color: 'var(--cam-strip-heading)' }}>Job Description</h2>
                 <span
                   className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
                   style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.16)',
+                    background: 'var(--cam-strip-icon-bg)',
+                    border: '1px solid var(--cam-strip-icon-border)',
                     borderRadius: 999,
-                    color: 'rgba(255,255,255,0.85)',
+                    color: 'var(--cam-strip-text)',
                   }}
                 >
                   {activeCompany || 'No company'}
                 </span>
                 {inputs.jobDescription?.trim() && (
-                  <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  <span className="text-[10px] font-mono" style={{ color: 'var(--cam-strip-text-muted)' }}>
                     {inputs.jobDescription.length.toLocaleString()} chars
                   </span>
                 )}
@@ -1782,7 +1782,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
               <button
                 onClick={() => setShowJDPopup(false)}
                 className="w-7 h-7 rounded-md flex items-center justify-center transition-all"
-                style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.16)' }}
+                style={{ color: 'var(--cam-strip-text)', background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

@@ -565,7 +565,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           }}
         >
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] whitespace-nowrap" style={{ color: 'var(--cam-strip-heading)' }}>
               Cloud Architecture
             </span>
             {diagramData?.cloudProvider && (
@@ -578,25 +578,25 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             <div
               className="flex items-center gap-1 px-1 py-1"
               style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.16)',
+                background: 'var(--cam-strip-icon-bg)',
+                border: '1px solid var(--cam-strip-icon-border)',
                 borderRadius: 999,
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
               }}
             >
               <button
                 onClick={() => setDiagramScale(s => Math.max(0.3, s - 0.15))}
                 className="w-6 h-6 flex items-center justify-center text-xs font-bold"
-                style={{ color: 'rgba(255,255,255,0.85)', borderRadius: 999 }}
+                style={{ color: 'var(--cam-strip-text)', borderRadius: 999 }}
                 title="Zoom out"
               >−</button>
-              <span className="text-[10px] font-mono w-9 text-center tabular-nums" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              <span className="text-[10px] font-mono w-9 text-center tabular-nums" style={{ color: 'var(--cam-strip-text-muted)' }}>
                 {Math.round(diagramScale * 100)}%
               </span>
               <button
                 onClick={() => setDiagramScale(s => Math.min(4, s + 0.15))}
                 className="w-6 h-6 flex items-center justify-center text-xs font-bold"
-                style={{ color: 'rgba(255,255,255,0.85)', borderRadius: 999 }}
+                style={{ color: 'var(--cam-strip-text)', borderRadius: 999 }}
                 title="Zoom in"
               >+</button>
               <button
@@ -608,7 +608,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
               <button
                 onClick={() => setDiagramModal(true)}
                 className="w-6 h-6 flex items-center justify-center"
-                style={{ color: 'rgba(255,255,255,0.85)', borderRadius: 999 }}
+                style={{ color: 'var(--cam-strip-text)', borderRadius: 999 }}
                 title="Full screen"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
@@ -717,7 +717,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           borderBottom: '1px solid var(--cam-gold-leaf)',
         }}
       >
-        <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white">System Design</span>
+        <span className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-strip-heading)' }}>System Design</span>
         {/* Cloud-platform selector — same instance as the docs header,
             backed by useCloudProvider so a flip here propagates to every
             other diagram surface in the same browser. */}

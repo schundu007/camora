@@ -435,7 +435,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
         <div className="flex items-center justify-between px-4 py-2.5 min-h-[44px]" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-white/40" />
-            <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Explanation</span>
+            <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-strip-heading)' }}>Explanation</span>
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center p-6">
@@ -460,7 +460,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
         <div className="flex items-center justify-between px-4 py-2.5 min-h-[44px]" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
-            <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Explanation</span>
+            <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-strip-heading)' }}>Explanation</span>
             <div className="flex gap-0.5 ml-1.5">
               <span className="w-1 h-1 rounded-full animate-bounce bg-brand-400" style={{ animationDelay: '0ms' }} />
               <span className="w-1 h-1 rounded-full animate-bounce bg-brand-400" style={{ animationDelay: '150ms' }} />
@@ -481,7 +481,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
       <div className="flex items-center justify-between px-4 py-2.5 min-h-[44px]" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-2">
           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Explanation</span>
+          <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-strip-heading)' }}>Explanation</span>
         </div>
       </div>
 

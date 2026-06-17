@@ -340,13 +340,13 @@ export default function ProblemPage({ slug, onBack }) {
               <button
                 onClick={onBack}
                 className="p-2 hover:bg-[var(--bg-surface)]/10 rounded transition-colors"
-                style={{ color: 'rgba(255,255,255,0.85)' }}
+                style={{ color: 'var(--cam-strip-text)' }}
               >
                 <Icon name="arrowLeft" size={18} />
               </button>
               <div className="flex items-center gap-3">
-                <span className="text-sm font-mono" style={{ color: 'rgba(255,255,255,0.7)' }}>#{problem.id}</span>
-                <h1 className="text-xl font-bold text-white">{problem.name}</h1>
+                <span className="text-sm font-mono" style={{ color: 'var(--cam-strip-text-muted)' }}>#{problem.id}</span>
+                <h1 className="text-xl font-bold" style={{ color: 'var(--cam-strip-heading)' }}>{problem.name}</h1>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>
                   {problem.difficulty}
                 </span>
@@ -359,7 +359,7 @@ export default function ProblemPage({ slug, onBack }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-2 hover:bg-[var(--bg-surface)]/10"
-                  style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.25)' }}
+                  style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
                 >
                   <Icon name="externalLink" size={14} />
                   LeetCode
