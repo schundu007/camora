@@ -139,6 +139,24 @@ router.get('/', async (req, res, next) => {
       paramIdx++;
     }
 
+    if (req.query.country) {
+      const country = req.query.country.trim();
+      if (country.toLowerCase() === 'united states' || country.toLowerCase() === 'us') {
+        // US jobs stored as "City, ST" — match 2-letter state abbreviation suffix,
+        // explicit "United States" text, or remote.
+        conditions.push(
+          `(j.location ~ ', [A-Z]{2}$' OR j.location ~ ', [A-Z]{2} ' OR j.location ILIKE $${paramIdx} OR j.location ILIKE $${paramIdx + 1})`
+        );
+        params.push('%United States%');
+        params.push('%remote%');
+        paramIdx += 2;
+      } else {
+        conditions.push(`j.location ILIKE $${paramIdx}`);
+        params.push(`%${country}%`);
+        paramIdx++;
+      }
+    }
+
     if (req.query.min_salary) {
       const minSalary = parseInt(req.query.min_salary, 10);
       if (!isNaN(minSalary)) {
