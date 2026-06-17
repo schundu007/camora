@@ -396,7 +396,7 @@
   html {
     @apply antialiased scroll-smooth;
     width: 100%;
-    color-scheme: light;
+    color-scheme: light dark;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;

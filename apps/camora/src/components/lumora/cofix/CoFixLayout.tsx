@@ -98,6 +98,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   useEffect(() => { onSnappedRef.current = onSnapped; }, [onSnapped]);
   const navigate = useNavigate();
   const monaco = useMonaco();
+  useEffect(() => { if (monaco) monaco.editor.setTheme(monacoTheme); }, [monaco, monacoTheme]);
 
   const [inputCode, setInputCode] = useState('');
   const [language, setLanguage] = useState('python');
@@ -878,7 +879,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
             </div>
           )}
 
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0" style={{ background: 'var(--bg-surface)' }}>
             <SharedCodeEditor
               code={inputCode}
               onChange={setInputCode}
@@ -888,7 +889,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
               showLineNumbers
               fontSize={11}
               onMount={handleLeftEditorMount}
-              theme={monacoTheme === 'vs' ? 'light' : 'vs-dark'}
+              theme={monacoTheme}
             />
           </div>
 
