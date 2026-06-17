@@ -131,6 +131,16 @@
     --cam-void:         #0A0A0C;
     --cam-surface-lt:   #1C1C22;
 
+    /* Strip-header semantic tokens — text/icon colors for surfaces that
+       use --cam-hero-strip as their background. Overridden to dark values
+       in [data-theme="light"] so text stays readable on the light bg. */
+    --cam-section-label-text: #FFFFFF;
+    --cam-strip-heading:      #FFFFFF;
+    --cam-strip-text:         rgba(255,255,255,0.82);
+    --cam-strip-text-muted:   rgba(255,255,255,0.55);
+    --cam-strip-icon-bg:      rgba(255,255,255,0.10);
+    --cam-strip-icon-border:  rgba(255,255,255,0.16);
+
     /* Hero gradients — navy + gold atmosphere.
        Warm dark base with navy and gold radial hints. */
     --cam-hero-bg:
@@ -246,7 +256,47 @@
     --shadow-primary-xs: 0 1px 3px rgba(37,99,235,0.04), 0 4px 16px rgba(37,99,235,0.02);
     --shadow-primary-sm: 0 2px 8px rgba(37,99,235,0.06);
 
+    /* ── Linode/iximiuz education light theme ── */
+    --cam-hero-strip:         #F0F1F4;
+    --cam-hero-bg:            linear-gradient(160deg, #FFFFFF 0%, #F4F5F7 100%);
+    --cam-gold-leaf:          var(--accent);
+    --cam-gold-leaf-lt:       #4D94E8;
+    --cam-gold-leaf-dk:       #2265BF;
+    --cam-gold-leaf-text:     var(--accent-text);
+    --cam-gold-leaf-50:       var(--accent-subtle);
+    --bg-base:                #F4F5F7;
+    --bg-elevated:            #EAEBED;
+    /* Strip-header tokens — dark text on light bg */
+    --cam-section-label-text: var(--text-primary);
+    --cam-strip-heading:      var(--text-primary);
+    --cam-strip-text:         var(--text-secondary);
+    --cam-strip-text-muted:   var(--text-muted);
+    --cam-strip-icon-bg:      var(--accent-subtle);
+    --cam-strip-icon-border:  rgba(54,131,220,0.20);
+
     color-scheme: light;
+  }
+
+  /* Restore Lumora's dark strip when the global theme is light.
+     Lumora must always render as an immersive dark cockpit. */
+  [data-theme="light"][data-product="lumora"] {
+    --cam-hero-strip:
+      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(37,99,235,0.28), transparent 70%),
+      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(212,160,67,0.14), transparent 70%),
+      radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.07), transparent 75%),
+      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(37,99,235,0.12), transparent 70%),
+      linear-gradient(95deg, #0E0E11 0%, #141417 30%, #1C1C22 50%, #141417 70%, #0E0E11 100%);
+    --cam-section-label-text: #FFFFFF;
+    --cam-strip-heading:      #FFFFFF;
+    --cam-strip-text:         rgba(255,255,255,0.82);
+    --cam-strip-text-muted:   rgba(255,255,255,0.55);
+    --cam-strip-icon-bg:      rgba(255,255,255,0.10);
+    --cam-strip-icon-border:  rgba(255,255,255,0.16);
+    --cam-gold-leaf:          #D4A043;
+    --cam-gold-leaf-lt:       #E0B155;
+    --cam-gold-leaf-dk:       #B88930;
+    --cam-gold-leaf-text:     #C99A2E;
+    --cam-gold-leaf-50:       rgba(212,160,67,0.08);
   }
 
   /* ──────────────────────────────────────────────────────────

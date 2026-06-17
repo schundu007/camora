@@ -8,14 +8,14 @@ export interface ChipProps {
 }
 
 const variantStyles: Record<NonNullable<ChipProps['variant']>, string> = {
-  default: 'bg-[var(--bg-elevated)] text-[var(--text-primary)]',
+  default: 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]',
   easy: 'bg-[#1E4D78] text-white',
   medium: 'bg-[#D4A043] text-white',
   hard: 'bg-[#DC2626] text-white',
   success: 'bg-[#1E4D78] text-white',
   warning: 'bg-[#D4A043] text-white',
   danger: 'bg-[#DC2626] text-white',
-  gold: 'bg-[var(--cam-gold-leaf)] text-[var(--cam-primary-dk)]',
+  gold: 'bg-[var(--accent-subtle)] text-[var(--accent-text)] border border-[var(--accent)]/20',
 };
 
 export default function Chip({ children, variant = 'default', className = '', title }: ChipProps) {

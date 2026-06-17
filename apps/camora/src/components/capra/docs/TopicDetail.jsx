@@ -15,6 +15,7 @@ import { GENERATED_DIAGRAMS } from '../../../data/capra/topics/__generated/diagr
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 import SharedPricingCards from '../../shared/PricingCards';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useTheme } from '../../../hooks/useTheme';
 import { useCelebration } from '../../shared/Celebration';
 import { generateSlug, getProblemBySlug } from '../../../data/capra/problems.js';
 import { useCloudFormatter } from '../../../hooks/useCloudFormatter.ts';
@@ -480,6 +481,7 @@ export default function TopicDetail({
 }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { theme } = useTheme();
   const { celebrate } = useCelebration();
   const isAdmin = user?.email === 'chundubabu@gmail.com';
   const [adminRegenStatus, setAdminRegenStatus] = useState('');
@@ -759,14 +761,14 @@ export default function TopicDetail({
             ) : (
               <div
                 className="w-9 h-9 rounded flex items-center justify-center flex-shrink-0"
-                style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.16)' }}
+                style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
               >
-                <Icon name={topicDetails.icon} size={18} style={{ color: '#FFFFFF' }} />
+                <Icon name={topicDetails.icon} size={18} style={{ color: theme === 'light' ? 'var(--accent)' : '#FFFFFF' }} />
               </div>
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-[22px] font-bold text-white landing-display tracking-tight" style={{ textWrap: 'balance' }}>{topicDetails.title}</h1>
+                <h1 className="text-[22px] font-bold landing-display tracking-tight" style={{ textWrap: 'balance', color: 'var(--cam-strip-heading)' }}>{topicDetails.title}</h1>
                 {topicDetails.isNew && (
                   <Chip>NEW</Chip>
                 )}
@@ -800,12 +802,12 @@ export default function TopicDetail({
                 )}
               </div>
               {topicDetails.description && (
-                <p className="text-[14px] mt-1.5 landing-body leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)' }}>{fmtCloud(topicDetails.description)}</p>
+                <p className="text-[14px] mt-1.5 landing-body leading-relaxed" style={{ color: 'var(--cam-strip-text)' }}>{fmtCloud(topicDetails.description)}</p>
               )}
               {topicDetails.subtitle && !topicDetails.difficulty && (
-                <p className="text-[12px] mt-1 landing-body" style={{ color: 'rgba(255,255,255,0.65)' }}>{fmtCloud(topicDetails.subtitle)}</p>
+                <p className="text-[12px] mt-1 landing-body" style={{ color: 'var(--cam-strip-text-muted)' }}>{fmtCloud(topicDetails.subtitle)}</p>
               )}
-              <div className="flex items-center gap-x-3 gap-y-1 mt-2 flex-wrap text-[10px] uppercase tracking-[0.12em] landing-mono" style={{ color: 'rgba(255,255,255,0.65)' }}>
+              <div className="flex items-center gap-x-3 gap-y-1 mt-2 flex-wrap text-[10px] uppercase tracking-[0.12em] landing-mono" style={{ color: 'var(--cam-strip-text-muted)' }}>
                 {pageConfig?.title && <span>{pageConfig.title}</span>}
                 <span>ID · {selectedTopic}</span>
                 {(activePage === 'behavioral' || activePage === 'low-level' || isSDStyle) && (

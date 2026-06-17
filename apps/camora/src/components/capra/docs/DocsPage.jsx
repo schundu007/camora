@@ -3,6 +3,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile';
 import { useAppShell } from '../layout/AppShellContext';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useTheme } from '../../../hooks/useTheme';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import TopicIllustration from './TopicIllustration';
@@ -76,6 +77,7 @@ export default function DocsPage({ onBack }) {
   const { isMobile } = useIsMobile();
   const { setActiveSection } = useAppShell();
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const contentAccess = useContentAccess();
   const routerLocation = useLocation();
@@ -890,11 +892,11 @@ export default function DocsPage({ onBack }) {
                             <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>
                               PREPARE
                             </p>
-                            <h1 className="font-bold tracking-tight text-xl md:text-2xl mb-1 text-white" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.1 }}>
+                            <h1 className="font-bold tracking-tight text-xl md:text-2xl mb-1" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.1, color: 'var(--cam-strip-heading)' }}>
                               {user?.name ? <>Welcome back, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>{user.name.split(' ')[0]}</span>.</> : <>Your prep, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>organized.</span></>}
                             </h1>
                           </div>
-                          <div className="flex items-center gap-2 mt-2 flex-wrap" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap" style={{ color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
                             <span style={{ color: 'var(--cam-gold-leaf-lt)', fontWeight: 700 }}>{overviewTotalCompleted}</span>
                             <span>of {overviewTotalTopics} topics completed</span>
                             <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
@@ -998,26 +1000,48 @@ export default function DocsPage({ onBack }) {
                           }}
                         >
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Topic Categories</span>
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-section-label-text)' }}>Topic Categories</span>
                           <Chip className="ml-auto">Browse</Chip>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                          {overviewCategories.map((cat) => {
-                            return (
+                          {overviewCategories.map((cat) => theme === 'light' ? (
+                            <Link
+                              key={cat.id}
+                              to={`/capra/prepare/${cat.href}`}
+                              className="card-lift group rounded-lg flex flex-col active:scale-[0.98]"
+                              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', minHeight: '100px', padding: '14px' }}
+                            >
+                              <div className="flex items-center gap-3 mb-3">
+                                <DatabricksThumb
+                                  color={CATEGORY_HEX[cat.id] || 'navy'}
+                                  size={32}
+                                  icon={<Icon name={cat.icon} size={15} style={{ color: '#FFFFFF' }} />}
+                                  title={cat.title}
+                                />
+                                <h3 className="font-bold leading-tight tracking-tight" style={{ fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
+                              </div>
+                              <div className="mt-auto">
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
+                                  <span style={{ fontSize: '10px', fontWeight: 700, color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{cat.progress}%</span>
+                                </div>
+                                <div style={{ height: '3px', borderRadius: '9999px', background: 'var(--bg-elevated)' }}>
+                                  <div style={{ width: `${Math.max(cat.progress, 2)}%`, height: '100%', borderRadius: '9999px', background: 'var(--accent)', transition: 'width 1s' }} />
+                                </div>
+                              </div>
+                            </Link>
+                          ) : (
                             <Link
                               key={cat.id}
                               to={`/capra/prepare/${cat.href}`}
                               className="card-lift group relative rounded-lg overflow-hidden active:scale-[0.98]"
                               style={{ height: '120px', display: 'block', border: '1px solid rgba(255,255,255,0.08)' }}
                             >
-                              {/* Full-bleed image */}
                               <TopicIllustration
                                 name={cat.id}
                                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', aspectRatio: 'unset' }}
                               />
-                              {/* Gradient: subtle at top, darker toward centre/bottom */}
                               <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(3,10,25,0.55) 40%, rgba(3,10,25,0.88) 100%)' }} />
-                              {/* Centred content */}
                               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px 12px 24px' }}>
                                 <DatabricksThumb
                                   color={CATEGORY_HEX[cat.id] || 'navy'}
@@ -1028,7 +1052,6 @@ export default function DocsPage({ onBack }) {
                                 <h3 className="font-bold leading-tight tracking-tight text-center mt-2" style={{ fontSize: '15px', color: '#fff', margin: '8px 0 3px', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
                                 <span className="font-semibold tabular-nums text-center" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
                               </div>
-                              {/* Progress bar pinned to bottom */}
                               <div style={{ position: 'absolute', bottom: 8, left: 10, right: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <div style={{ flex: 1, height: '2px', borderRadius: '9999px', background: 'rgba(255,255,255,0.15)' }}>
                                   <div style={{ width: `${Math.max(cat.progress, 2)}%`, height: '100%', borderRadius: '9999px', background: 'var(--cam-gold-leaf)', transition: 'width 1s' }} />
@@ -1036,8 +1059,7 @@ export default function DocsPage({ onBack }) {
                                 <span className="font-bold tabular-nums shrink-0" style={{ fontSize: '9px', color: cat.progress > 0 ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-mono)' }}>{cat.progress}%</span>
                               </div>
                             </Link>
-                            );
-                          })}
+                          ))}
                         </div>
                       </div>
 
@@ -1045,7 +1067,7 @@ export default function DocsPage({ onBack }) {
                       <div className="mb-8">
                         <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Learning Path</span>
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-section-label-text)' }}>Learning Path</span>
                         </div>
                         <div className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
@@ -1080,7 +1102,7 @@ export default function DocsPage({ onBack }) {
                       <div className="mb-8">
                         <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Learning Resources</span>
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-section-label-text)' }}>Learning Resources</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           {(() => {
@@ -1121,7 +1143,7 @@ export default function DocsPage({ onBack }) {
                       <div className="mb-8">
                         <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Checklist</span>
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-section-label-text)' }}>Checklist</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
@@ -1174,7 +1196,7 @@ export default function DocsPage({ onBack }) {
                           <div className="mb-8">
                             <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                               <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                              <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Continue Where You Left Off</span>
+                              <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-section-label-text)' }}>Continue Where You Left Off</span>
                             </div>
                             <div className="rounded overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                               {recentItems.map((topic) => (
@@ -1325,7 +1347,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="cpu" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)' }} style={{ fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Arrays & Hashing', 'Trees & Graphs', 'Dynamic Programming', 'Sliding Window', 'Binary Search', 'Backtracking'].map(tag => (
                                 <Chip key={tag}>{tag}</Chip>
@@ -1346,7 +1368,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="systemDesign" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>System Design</h2>
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)' }} style={{ fontFamily: 'var(--font-display)' }}>System Design</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Scalability', 'Load Balancing', 'Caching', 'Database Sharding', 'Message Queues', 'CAP Theorem'].map(tag => (
                                 <Chip key={tag}>{tag}</Chip>
@@ -1367,7 +1389,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="users" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Behavioral Questions</h2>
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)' }} style={{ fontFamily: 'var(--font-display)' }}>Behavioral Questions</h2>
                             <div className="flex flex-wrap gap-2">
                               {['STAR Method', 'Leadership', 'Conflict Resolution', 'Teamwork', 'Failure Stories', 'Company Research'].map(tag => (
                                 <Chip key={tag}>{tag}</Chip>
@@ -1388,7 +1410,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="layers" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)' }} style={{ fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
                             <div className="flex flex-wrap gap-2">
                               {['OOP Principles', 'SOLID', 'Design Patterns', 'Class Diagrams', 'UML', 'Clean Architecture'].map(tag => (
                                 <Chip key={tag}>{tag}</Chip>
@@ -1409,7 +1431,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="grid" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)' }} style={{ fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Service Mesh', 'Circuit Breakers', 'Event Sourcing', 'CQRS', 'API Gateway', 'Saga Pattern'].map(tag => (
                                 <Chip key={tag}>{tag}</Chip>
@@ -1430,7 +1452,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="database" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)' }} style={{ fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Indexing', 'Replication', 'Sharding', 'ACID vs BASE', 'Window Functions', 'CTEs', 'Complex Joins', 'Query Optimization'].map(tag => (
                                 <Chip key={tag}>{tag}</Chip>
@@ -1451,7 +1473,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="code" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)' }} style={{ fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Full-Stack Apps', 'API Design', 'CI/CD', 'Testing', 'Documentation', 'Open Source'].map(tag => (
                                 <Chip key={tag}>{tag}</Chip>
@@ -1472,7 +1494,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="trendingUp" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)' }} style={{ fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Frontend', 'Backend', 'Full-Stack', 'DevOps', 'ML Engineering', 'Staff Engineer'].map(tag => (
                                 <Chip key={tag}>{tag}</Chip>
@@ -1493,7 +1515,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="bookOpen" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)' }} style={{ fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Netflix Tech', 'Uber Engineering', 'Stripe Blog', 'Meta Engineering', 'AWS Architecture', 'Google SRE'].map(tag => (
                                 <Chip key={tag}>{tag}</Chip>
@@ -1514,7 +1536,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="shield" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>Site Reliability Engineering</h2>
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)' }} style={{ fontFamily: 'var(--font-display)' }}>Site Reliability Engineering</h2>
                             <div className="flex flex-wrap gap-2">
                               {['SLOs & SLAs', 'Error Budgets', 'Incident Response', 'Observability', 'On-Call', 'Capacity Planning'].map(tag => (
                                 <Chip key={tag}>{tag}</Chip>
@@ -1535,7 +1557,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="gitMerge" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4 text-white" style={{ fontFamily: 'var(--font-display)' }}>DevOps</h2>
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)' }} style={{ fontFamily: 'var(--font-display)' }}>DevOps</h2>
                             <div className="flex flex-wrap gap-2">
                               {['CI/CD', 'Infrastructure as Code', 'Containers & Kubernetes', 'Monitoring', 'Cloud Native', 'DevSecOps'].map(tag => (
                                 <Chip key={tag}>{tag}</Chip>
