@@ -278,6 +278,21 @@ router.get('/', async (req, res, next) => {
       }
     }
 
+    if (req.query.h1b_only === 'true') {
+      const USC_PATTERNS = [
+        '%us citizen%', '%u.s. citizen%', '%usc only%', '%must be a us citizen%',
+        '%green card%', '%permanent resident%', '%gc required%', '%gc holder%',
+        '%requires citizenship%', '%require citizenship%',
+        '%security clearance%', '%active clearance%', '%secret clearance%',
+        '%top secret%', '%ts/sci%', '%ts / sci%',
+      ];
+      for (const pat of USC_PATTERNS) {
+        conditions.push(`(j.job_description IS NULL OR j.job_description NOT ILIKE $${paramIdx})`);
+        params.push(pat);
+        paramIdx++;
+      }
+    }
+
     if (req.query.posted_within) {
       const days = parseInt(req.query.posted_within, 10);
       if (!isNaN(days) && days > 0 && days <= 365) {
