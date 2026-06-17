@@ -31,8 +31,6 @@ import { ScreenshotStrip, type ScreenshotEntry } from '../../components/lumora/s
 const CodingLayout = lazy(() => import('../../components/lumora/coding/CodingLayout').then(m => ({ default: m.CodingLayout })));
 const DesignLayout = lazy(() => import('../../components/lumora/design/DesignLayout').then(m => ({ default: m.DesignLayout })));
 const CoFixLayout = lazy(() => import('../../components/lumora/cofix/CoFixLayout').then(m => ({ default: m.CoFixLayout })));
-const PlaygroundLayout = lazy(() => import('../../components/lumora/playground/PlaygroundLayout').then(m => ({ default: m.PlaygroundLayout })));
-const AskLayout = lazy(() => import('../../components/lumora/ask/AskLayout').then(m => ({ default: m.AskLayout })));
 
 export const LumoraShellPage = () => {
   const navigate = useNavigate();
@@ -125,7 +123,6 @@ export const LumoraShellPage = () => {
     location.pathname.includes('/coding') ? 'coding' :
     location.pathname.includes('/design') ? 'design' :
     location.pathname.includes('/fix') ? 'cofix' :
-    location.pathname.includes('/playground') ? 'playground' :
     location.pathname.includes('/behavioral') ? 'behavioral' :
     location.pathname.includes('/prepkit') ? 'prepkit' :
     location.pathname.includes('/calendar') ? 'calendar' :
@@ -133,7 +130,7 @@ export const LumoraShellPage = () => {
     location.pathname.includes('/assistants') ? 'assistants' :
     location.pathname.includes('/profile') ? 'profile' :
     location.pathname.includes('/credits') ? 'credits' :
-    location.pathname.includes('/ask') ? 'ask' : 'session';
+    'session';
 
   // Ref tracks the current activeTab so async callbacks (transcription, snap)
   // always route to the tab that was active when the event fired, not the tab
@@ -236,7 +233,6 @@ export const LumoraShellPage = () => {
       behavioral: 'Behavioral Interview | Camora',
       prepkit: 'Prep Kit | Camora',
       calendar: 'Calendar | Camora',
-      ask: 'Ask Sona | Camora',
     };
     document.title = titles[activeTab] || 'Camora';
   }, [activeTab]);
@@ -517,8 +513,6 @@ export const LumoraShellPage = () => {
               { id: 'design', label: 'Design', path: '/lumora/design', title: 'System design assistant' },
               { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral', title: 'Behavioral session assistant' },
               { id: 'cofix', label: 'CoFix', path: '/lumora/fix', title: 'Fix & debug code' },
-              { id: 'playground', label: 'Playground', path: '/lumora/playground', title: 'DevOps Playground' },
-              { id: 'ask', label: 'Ask Sona', path: '/lumora/ask', title: 'Ask anything' },
             ].map(tab => {
               const isActive = activeTab === tab.id;
               return (
@@ -709,28 +703,6 @@ export const LumoraShellPage = () => {
                     onTranscription={handleTranscription}
                     isTabActive={activeTab === 'cofix'}
                   />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-          )}
-
-          {/* Playground tab — lazy mounted */}
-          {mountedTabs.has('playground') && (
-            <div style={{ display: activeTab === 'playground' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
-              <ErrorBoundary>
-                <Suspense fallback={<TabLoading label="Playground" />}>
-                  <PlaygroundLayout />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-          )}
-
-          {/* Ask tab — lazy mounted */}
-          {mountedTabs.has('ask') && (
-            <div style={{ display: activeTab === 'ask' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
-              <ErrorBoundary>
-                <Suspense fallback={<TabLoading label="Ask Sona" />}>
-                  <AskLayout />
                 </Suspense>
               </ErrorBoundary>
             </div>
@@ -1030,8 +1002,6 @@ export const LumoraShellPage = () => {
               {[
                 { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral' },
                 { id: 'cofix',      label: 'CoFix',      path: '/lumora/fix' },
-                { id: 'playground', label: 'Playground', path: '/lumora/playground' },
-                { id: 'ask',        label: 'Ask Sona',   path: '/lumora/ask' },
                 { id: 'calendar',   label: 'Calendar',   path: '/lumora/calendar' },
                 { id: 'sessions',   label: 'Sessions',   path: '/lumora/sessions' },
                 { id: 'assistants', label: 'Assistants', path: '/lumora/assistants' },
