@@ -5,7 +5,10 @@ import { LanguageTabs } from './LanguageTabs';
 import { PlaygroundEditor } from './PlaygroundEditor';
 import { OutputPane, type RunEntry } from './OutputPane';
 import { playgroundAPI, type PlaygroundLanguage, type ExplainResult } from '../../../lib/capra-api';
+<<<<<<< ours
 import { useTheme } from '../../../hooks/useTheme';
+=======
+>>>>>>> theirs
 
 const DEFAULT_CODE: Record<PlaygroundLanguage, string> = {
   python3:   'print("Hello, World!")\n',
@@ -134,9 +137,15 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
   }
 
   return (
+<<<<<<< ours
     <div className="flex flex-col h-full overflow-auto" style={{ background: 'var(--bg-app)' }}>
       <div className="px-4 py-2 sticky top-0 flex items-center gap-2" style={{ background: 'var(--bg-app)', borderBottom: '1px solid var(--border)' }}>
         <span className="text-[9px] uppercase tracking-widest font-medium" style={{ ...sans, color: 'var(--text-muted)' }}>Line {line}</span>
+=======
+    <div className="flex flex-col h-full bg-[#0a0d12] overflow-auto">
+      <div className="px-4 py-2 border-b border-[#1e293b] sticky top-0 bg-[#0a0d12] flex items-center gap-2">
+        <span className="text-[9px] uppercase tracking-widest text-[#334155] font-medium" style={sans}>Line {line}</span>
+>>>>>>> theirs
         {loading && (
           <span className="w-2.5 h-2.5 border-2 border-t-transparent rounded-full animate-spin"
             style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
@@ -147,6 +156,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
         {error ? (
           <p className="text-[12px] leading-relaxed" style={{ ...sans, color: 'var(--danger)' }}>{error}</p>
         ) : loading ? (
+<<<<<<< ours
           <p className="text-[11px] italic" style={{ ...sans, color: 'var(--text-muted)' }}>Analysing…</p>
         ) : rich ? (
           <>
@@ -169,6 +179,32 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
                       <div className="px-3 py-2.5 flex items-start gap-2">
                         <span className="shrink-0 mt-0.5 text-[9px] font-bold w-4 h-4 rounded flex items-center justify-center" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
                         <span className="text-[12px] leading-relaxed" style={{ color: 'var(--text-secondary)', ...sans }}>{step.text}</span>
+=======
+          <p className="text-[#475569] text-[11px] italic" style={sans}>Analysing…</p>
+        ) : rich ? (
+          <>
+            {/* What it does */}
+            {(rich.what || rich.explanation) && (
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#3b82f6', ...sans }}>What it does</div>
+                <p className="text-[13px] leading-relaxed" style={{ color: '#cbd5e1', ...sans }}>{rich.what || rich.explanation}</p>
+              </div>
+            )}
+
+            {/* How it works */}
+            {rich.how && rich.how.length > 0 && (
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: '#3b82f6', ...sans }}>How it works</div>
+                <div className="rounded-lg overflow-hidden border border-[#1e293b]">
+                  {rich.how.map((step, i) => (
+                    <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 1.4fr', borderTop: i > 0 ? '1px solid #1e293b' : 'none' }}>
+                      <div className="px-3 py-2.5" style={{ background: '#0d1117', borderRight: '1px solid #1e293b' }}>
+                        <pre className="text-[11px] leading-relaxed" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{step.code}</pre>
+                      </div>
+                      <div className="px-3 py-2.5 flex items-start gap-2">
+                        <span className="shrink-0 mt-0.5 text-[9px] font-bold w-4 h-4 rounded flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)', color: '#3b82f6', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
+                        <span className="text-[12px] leading-relaxed" style={{ color: '#94a3b8', ...sans }}>{step.text}</span>
+>>>>>>> theirs
                       </div>
                     </div>
                   ))}
@@ -176,6 +212,10 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
               </div>
             )}
 
+<<<<<<< ours
+=======
+            {/* State trace */}
+>>>>>>> theirs
             {rich.trace && (
               <div>
                 <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#d97706', ...sans }}>State trace</div>
@@ -185,6 +225,10 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
               </div>
             )}
 
+<<<<<<< ours
+=======
+            {/* Analogy */}
+>>>>>>> theirs
             {rich.analogy && (
               <div>
                 <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#a78bfa', ...sans }}>Think of it as…</div>
@@ -194,12 +238,22 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
               </div>
             )}
 
+<<<<<<< ours
             {rich.concepts && rich.concepts.length > 0 && (
               <div>
                 <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)', ...sans }}>Concepts used</div>
                 <div className="flex flex-wrap gap-1.5">
                   {rich.concepts.map((c, i) => (
                     <span key={i} className="px-2 py-0.5 rounded text-[10px] font-medium" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', ...sans }}>{c}</span>
+=======
+            {/* Concepts */}
+            {rich.concepts && rich.concepts.length > 0 && (
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#334155', ...sans }}>Concepts used</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {rich.concepts.map((c, i) => (
+                    <span key={i} className="px-2 py-0.5 rounded text-[10px] font-medium" style={{ background: 'rgba(51,65,85,0.6)', color: '#94a3b8', ...sans }}>{c}</span>
+>>>>>>> theirs
                   ))}
                 </div>
               </div>
@@ -222,6 +276,7 @@ export const PlaygroundLayout = () => {
   const [formatting, setFormatting]   = useState(false);
   const [copied, setCopied]           = useState(false);
   const [explainMode, setExplainMode] = useState(false);
+<<<<<<< ours
   const [rightTab, setRightTab]       = useState<'output' | 'explain'>('output');
   const [runs, setRuns]               = useState<RunEntry[]>([]);
   const [explain, setExplain]         = useState<ExplainState>({ rich: null, loading: false, line: 0, error: null });
@@ -231,6 +286,16 @@ export const PlaygroundLayout = () => {
   const editorRef      = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoInst     = useMonaco();
   const explainTimer   = useRef<ReturnType<typeof setTimeout> | null>(null);
+=======
+  const [rightTab, setRightTab]     = useState<'output' | 'explain'>('output');
+  const [runs, setRuns]             = useState<RunEntry[]>([]);
+  const [explain, setExplain]       = useState<ExplainState>({ rich: null, loading: false, line: 0, error: null });
+
+  const codeRef       = useRef<Record<PlaygroundLanguage, string>>({ ...DEFAULT_CODE });
+  const editorRef     = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const monacoInst    = useMonaco();
+  const explainTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
+>>>>>>> theirs
   const currentLineRef = useRef(1);
 
   useEffect(() => { if (monacoInst) monacoInst.editor.setTheme(monacoTheme); }, [monacoInst, monacoTheme]);
