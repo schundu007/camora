@@ -18,6 +18,9 @@ router.post('/reindex-doc', async (req, res) => {
   }
   try {
     const result = await indexR2Doc({ r2Key: r2_key, userId: user_id, companySlug: company_slug });
+    if (result.written > 0) {
+      await query('UPDATE user_company_docs SET indexed_at = NOW() WHERE r2_key = $1', [r2_key]);
+    }
     res.json({ success: true, ...result });
   } catch (err) {
     console.error('[internal/reindex-doc] error:', err.message);
