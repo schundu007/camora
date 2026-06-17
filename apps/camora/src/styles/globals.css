@@ -188,10 +188,10 @@
      Every contrast pair below ≥ 4.5:1 (WCAG AA).
      ────────────────────────────────────────────────────────── */
   [data-theme="light"] {
-    --bg-base:     #E6EEF8;
-    --bg-app:      #E6EEF8;
-    --bg-surface:  #EFF5FB;
-    --bg-elevated: #F5F9FD;
+    --bg-base:     #F2F5F9;
+    --bg-app:      #F2F5F9;
+    --bg-surface:  #F9FAFB;
+    --bg-elevated: #FFFFFF;
     --bg-primary: var(--bg-surface);
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.20);
@@ -287,15 +287,17 @@
     --light-bg-faint:      #F8F9FA;
 
     /* ── Linode/iximiuz education light theme ── */
-    --cam-hero-strip:         #F4F8FC;
-    --cam-hero-bg:            linear-gradient(160deg, #FFFFFF 0%, #F0F6FF 40%, #E8F0FB 100%);
+    --cam-hero-strip:         #EEF2F7;
+    --cam-hero-bg:            linear-gradient(160deg, #FFFFFF 0%, #F4F7FC 40%, #EDF1F8 100%);
     --cam-gold-leaf:          var(--accent);
     --cam-gold-leaf-lt:       #4D94E8;
     --cam-gold-leaf-dk:       #2265BF;
     --cam-gold-leaf-text:     var(--accent-text);
     --cam-gold-leaf-50:       var(--accent-subtle);
-    --bg-base:                #F3F7FC;
-    --bg-elevated:            #EFF3F8;
+    --bg-base:                #EEF2F7;
+    --bg-app:                 #F4F6FA;
+    --bg-surface:             #FAFBFC;
+    --bg-elevated:            #FFFFFF;
     /* Strip-header tokens — dark text on light bg */
     --cam-section-label-text: var(--text-primary);
     --cam-strip-heading:      var(--text-primary);
@@ -746,7 +748,7 @@
    Only fires on the html background layer (not cards/panels). */
 [data-theme="light"] body {
   background-image:
-    radial-gradient(circle, rgba(37,99,235,0.06) 1px, transparent 1px);
+    radial-gradient(circle, rgba(15,23,42,0.04) 1px, transparent 1px);
   background-size: 24px 24px;
   background-attachment: fixed;
 }
@@ -1215,14 +1217,16 @@
   color: var(--cam-on-accent);
 }
 [data-theme="light"] .chip-active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--cam-on-accent);
+  background: color-mix(in oklab, var(--accent) 10%, #FFFFFF);
+  border-color: color-mix(in oklab, var(--accent) 32%, transparent);
+  color: var(--accent-hover);
+  font-weight: 700;
 }
 [data-theme="light"] .chip-gold-active {
-  background: var(--cam-gold-leaf);
-  border-color: var(--cam-gold-leaf);
-  color: #ffffff;
+  background: color-mix(in oklab, var(--accent) 10%, #FFFFFF);
+  border-color: color-mix(in oklab, var(--accent) 32%, transparent);
+  color: var(--accent-hover);
+  font-weight: 700;
 }
 
 /* ── Badges ─────────────────────────────────────────────────────── */
