@@ -177,6 +177,22 @@ router.get('/', async (req, res, next) => {
           OR (j.location ILIKE $${p + 2} ${notClauses})
         )`);
         paramIdx += 3 + UNFRIENDLY.length;
+        // Also exclude jobs whose title reveals a non-US geographic restriction.
+        // e.g. "Staff Solutions Architect - Australia" with location "Remote"
+        // passes the location filter but is clearly Australia-specific.
+        conditions.push(`NOT j.title ILIKE ANY(ARRAY[
+          '% - australia', '% - australia %', '%(australia)%', '% - anz%',
+          '% apj', '% apj %', '%(apj)%', '%- apj%',
+          '% - emea', '% - emea %', '%(emea)%', '% emea %',
+          '% - apac', '% - apac %', '%(apac)%', '% apac %',
+          '% - latam', '% - latam %', '%(latam)%', '% latam %',
+          '% - india', '% - india %', '%(india)%',
+          '% - europe', '% - europe %', '%(europe)%',
+          '% - mena', '% - mena %', '%(mena)%',
+          '% - japan', '% - korea', '% - china',
+          '% - singapore', '% - brazil', '% - mexico',
+          '% - colombia', '% - pakistan', '% - philippines', '% - nigeria'
+        ])`);
       } else {
         conditions.push(`j.location ILIKE $${paramIdx}`);
         params.push(`%${country}%`);
@@ -276,32 +292,37 @@ router.get('/', async (req, res, next) => {
     // the backend filter into agreement with the experience-badge color
     // shown on each card.
     if (req.query.experience) {
-      const level = String(req.query.experience).toLowerCase();
+      const levels = String(req.query.experience).toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
       const SYNONYMS = {
         intern:    ['intern'],
         entry:     ['entry', 'junior', 'jr.', 'associate', 'new grad', 'new-grad', 'graduate'],
+        mid:       null, // handled as negative filter
         senior:    ['senior', 'sr.', 'sr '],
         staff:     ['staff'],
         principal: ['principal', 'distinguished'],
         lead:      ['lead', 'manager', 'director', 'head of'],
       };
-      if (level === 'mid') {
-        // Exclude all keywords that mark a non-mid level. Anything left is
-        // assumed to be mid-level (same heuristic the UI uses).
-        const NEGATIVE_KEYWORDS = [
-          'intern', 'junior', 'jr.', 'jr ', 'associate', 'new grad', 'new-grad',
-          'entry', 'senior', 'sr.', 'sr ', 'staff', 'principal', 'distinguished',
-          'lead', 'manager', 'director', 'head of', 'vp ', 'vice president',
-          'chief', 'fellow',
-        ];
-        const notClauses = NEGATIVE_KEYWORDS.map(() => `j.title NOT ILIKE $${paramIdx++}`).join(' AND ');
-        conditions.push(`(j.title IS NOT NULL AND ${notClauses})`);
-        NEGATIVE_KEYWORDS.forEach((p) => params.push(`%${p}%`));
-      } else {
-        const patterns = SYNONYMS[level] || [level];
-        const orClauses = patterns.map(() => `j.title ILIKE $${paramIdx++}`).join(' OR ');
-        conditions.push(`(${orClauses})`);
-        patterns.forEach((p) => params.push(`%${p}%`));
+      const MID_NEGATIVES = [
+        'intern', 'junior', 'jr.', 'jr ', 'associate', 'new grad', 'new-grad',
+        'entry', 'senior', 'sr.', 'sr ', 'staff', 'principal', 'distinguished',
+        'lead', 'manager', 'director', 'head of', 'vp ', 'vice president',
+        'chief', 'fellow',
+      ];
+      const levelGroups = [];
+      for (const level of levels) {
+        if (level === 'mid') {
+          const notClauses = MID_NEGATIVES.map(() => `j.title NOT ILIKE $${paramIdx++}`).join(' AND ');
+          levelGroups.push(`(j.title IS NOT NULL AND ${notClauses})`);
+          MID_NEGATIVES.forEach((p) => params.push(`%${p}%`));
+        } else {
+          const patterns = SYNONYMS[level] || [level];
+          const orClauses = patterns.map(() => `j.title ILIKE $${paramIdx++}`).join(' OR ');
+          levelGroups.push(`(${orClauses})`);
+          patterns.forEach((p) => params.push(`%${p}%`));
+        }
+      }
+      if (levelGroups.length > 0) {
+        conditions.push(`(${levelGroups.join(' OR ')})`);
       }
     }
 
@@ -390,6 +411,12 @@ router.get('/', async (req, res, next) => {
 
 /**
  * GET /filters — Distinct filter values for dropdowns.
+ *
+ * Query params:
+ *   role          — filter counts to jobs matching this role category
+ *   posted_within — filter counts to jobs posted within N days
+ *   country       — filter counts to jobs in the specified country/region
+ *                   (supports "united states" / "us" with regex location matching)
  */
 router.get('/filters', async (req, res, next) => {
   try {
@@ -402,21 +429,38 @@ router.get('/filters', async (req, res, next) => {
       : '';
     const roleParams = built ? built.params : [];
 
+    let postedWhere = '';
+    if (req.query.posted_within) {
+      const days = parseInt(req.query.posted_within, 10);
+      if (!isNaN(days) && days > 0 && days <= 365) {
+        postedWhere = `AND posted_date >= NOW() - INTERVAL '${days} days' `;
+      }
+    }
+
+    let countryWhere = '';
+    if (req.query.country) {
+      const c = req.query.country.trim().toLowerCase();
+      if (c === 'united states' || c === 'us') {
+        // Only count US-pattern locations + remote in the sidebar
+        countryWhere = `AND (location ~ ', [A-Z]{2}$' OR location ~ ', [A-Z]{2} ' OR location ILIKE '%United States%' OR location ILIKE '%remote%') `;
+      }
+    }
+
     const [sources, locations, departments, companies, salaryRange] = await Promise.all([
       queryJobs(
-        `SELECT source AS name, COUNT(*) AS count FROM jobs WHERE source IS NOT NULL AND source != '' AND is_active = true ${roleWhere}GROUP BY source ORDER BY count DESC LIMIT 50`,
+        `SELECT source AS name, COUNT(*) AS count FROM jobs WHERE source IS NOT NULL AND source != '' AND is_active = true ${roleWhere}${postedWhere}${countryWhere}GROUP BY source ORDER BY count DESC LIMIT 50`,
         roleParams,
       ),
       queryJobs(
-        `SELECT location AS name, COUNT(*) AS count FROM jobs WHERE location IS NOT NULL AND location != '' AND is_active = true ${roleWhere}GROUP BY location ORDER BY count DESC LIMIT 200`,
+        `SELECT location AS name, COUNT(*) AS count FROM jobs WHERE location IS NOT NULL AND location != '' AND is_active = true ${roleWhere}${postedWhere}${countryWhere}GROUP BY location ORDER BY count DESC LIMIT 200`,
         roleParams,
       ),
       queryJobs(
-        `SELECT department AS name, COUNT(*) AS count FROM jobs WHERE department IS NOT NULL AND department != '' AND is_active = true ${roleWhere}GROUP BY department ORDER BY count DESC LIMIT 50`,
+        `SELECT department AS name, COUNT(*) AS count FROM jobs WHERE department IS NOT NULL AND department != '' AND is_active = true ${roleWhere}${postedWhere}${countryWhere}GROUP BY department ORDER BY count DESC LIMIT 50`,
         roleParams,
       ),
       queryJobs(
-        `SELECT name, COUNT(*) AS count FROM (SELECT c.name FROM jobs j JOIN companies c ON j.company_id = c.id WHERE j.is_active = true ${roleWhere}) sub GROUP BY name ORDER BY count DESC LIMIT 100`,
+        `SELECT name, COUNT(*) AS count FROM (SELECT c.name FROM jobs j JOIN companies c ON j.company_id = c.id WHERE j.is_active = true ${roleWhere}${postedWhere}${countryWhere.replace(/\blocation\b/g, 'j.location')}) sub GROUP BY name ORDER BY count DESC LIMIT 100`,
         roleParams,
       ),
       queryJobs(`SELECT MIN(salary_min) AS min, MAX(salary_max) AS max FROM jobs WHERE is_active = true AND salary_min IS NOT NULL`),
