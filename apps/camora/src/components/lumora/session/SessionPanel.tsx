@@ -252,6 +252,8 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   onSwitchToDesign?: (problem?: string) => void;
 }) => {
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const behavioralAccent = theme === 'light' ? '#3683DC' : '#C9A227';
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
