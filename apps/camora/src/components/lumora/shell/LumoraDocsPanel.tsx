@@ -2509,7 +2509,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
         prepAPI.putState(token, next).catch(() => {});
         fetch(`${API_URL}/api/v1/prep-docs/company/${encodeURIComponent(slug)}`, {
           method: 'DELETE',
-          headers: getAuthHeaders(),
+          headers: getAuthHeaders() as Record<string, string>,
           credentials: 'include',
         }).catch(() => {});
       }
@@ -2525,7 +2525,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
     fd.append('company_slug', slug);
     fetch(`${API_URL}/api/v1/prep-docs/upload`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: getAuthHeaders() as Record<string, string>,
       credentials: 'include',
       body: fd,
     }).catch(() => {});

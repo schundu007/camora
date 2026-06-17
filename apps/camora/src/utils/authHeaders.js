@@ -35,11 +35,13 @@ export function getToken() {
  * the user isn't authenticated; callers should pair this with
  * `credentials: 'include'` so the httpOnly cookie can still ride along
  * server-side as a fallback.
+ * @returns {Record<string, string>}
  */
 export function getAuthHeaders() {
+  /** @type {Record<string, string>} */
   const headers = {};
   const token = getToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (token) headers['Authorization'] = `Bearer ${token}`;
   return headers;
 }
 

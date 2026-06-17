@@ -18,6 +18,9 @@
  *   maxWidth:      Tailwind max-width class (default: 'lg:max-w-[85%]')
  *   padding:       'normal' (32px) or 'compact' (20px) vertical padding
  */
+/**
+ * @param {{ eyebrow?: any, title: any, subtitle?: any, actions?: any, maxWidth?: string, padding?: string, className?: string }} props
+ */
 export default function HeroBand({
   eyebrow,
   title,
