@@ -329,8 +329,8 @@ export const AskLayout = () => {
         <span className="text-[11px] uppercase tracking-widest font-bold" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>Ask Sona</span>
         <button
           onClick={() => setShowHistory(h => !h)}
-          className="text-[11px] px-3 py-1.5 rounded-lg font-medium transition-colors hover:bg-white/10"
-          style={{ color: showHistory ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.7)', border: `1px solid ${showHistory ? 'rgba(217,181,67,0.5)' : 'rgba(255,255,255,0.15)'}`, ...sans }}
+          className="text-[11px] px-3 py-1.5 rounded-lg font-medium transition-colors"
+          style={{ color: showHistory ? 'var(--cam-gold-leaf)' : 'var(--cam-strip-text)', border: `1px solid ${showHistory ? 'rgba(217,181,67,0.5)' : 'var(--cam-strip-icon-border)'}`, ...sans }}
         >
           {showHistory ? 'Close' : `History (${history.length})`}
         </button>
@@ -367,7 +367,7 @@ export const AskLayout = () => {
                 <button
                   onClick={() => loadConversation(c.id)}
                   className="flex-1 text-left px-4 py-2.5 text-[13px] flex items-center gap-3 min-w-0"
-                  style={{ color: 'rgba(255,255,255,0.85)', ...sans }}
+                  style={{ color: 'var(--cam-strip-text)', ...sans }}
                 >
                   <span className="truncate">{c.title}</span>
                   <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(217,181,67,0.15)', color: 'var(--cam-gold-leaf)' }}>

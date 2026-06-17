@@ -105,8 +105,8 @@ export function SectionCopyBtn({ getText, title }: { getText: () => string; titl
         });
       }}
       title={title || 'Copy section'}
-      className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded transition-[background-color,transform] hover:bg-white/15 active:scale-[0.98]"
-      style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.25)' }}>
+      className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded transition-[background-color,transform] active:scale-[0.98]"
+      style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}>
       {copied ? 'Copied ✓' : 'Copy'}
     </button>
   );

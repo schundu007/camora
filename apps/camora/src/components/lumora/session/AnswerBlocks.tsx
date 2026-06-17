@@ -545,7 +545,7 @@ const GridCard = ({
             className={`relative inline-block w-1.5 h-1.5 rounded-full ${titleColor.startsWith('text-') ? `bg-current ${titleColor}` : ''}`}
             style={{ filter: 'drop-shadow(0 0 4px currentColor)' }}
           />
-          <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-white">
+          <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-[var(--cam-strip-heading)]">
             {title}
           </span>
         </span>
@@ -575,7 +575,7 @@ const ArchitectureCard = ({ question }: { question: string }) => {
         }}
       >
         <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--cam-gold-leaf-lt)]" />
-        <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-white">
+        <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-[var(--cam-strip-heading)]">
           Architecture
         </span>
       </div>
@@ -968,7 +968,7 @@ const RichTable = ({ rows }: { rows: string[][] }) => {
           <thead>
             <tr style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
               {header.map((cell, ci) => (
-                <th key={ci} className="font-mono text-[9px] font-bold tracking-wider uppercase px-3 py-2 text-white whitespace-nowrap">
+                <th key={ci} className="font-mono text-[9px] font-bold tracking-wider uppercase px-3 py-2 text-[var(--cam-strip-heading)] whitespace-nowrap">
                   {cell}
                 </th>
               ))}
