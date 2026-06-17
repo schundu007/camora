@@ -102,7 +102,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         title="Camora home"
       >
         <CamoraLogo size={expanded ? 22 : 20} />
-        {expanded && <span className="text-sm font-bold whitespace-nowrap text-white" style={{ fontFamily: "var(--font-sans)" }}>Camora</span>}
+        {expanded && <span className="text-sm font-bold whitespace-nowrap" style={{ fontFamily: "var(--font-sans)", color: 'var(--cam-strip-heading)' }}>Camora</span>}
       </Link>
 
       {/* Main nav */}
@@ -201,7 +201,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
           borderTop: '1px solid var(--cam-gold-leaf)',
         }}
       >
-        <UserDropdown variant="dark" showName={expanded} compact={!expanded} position="above-left" />
+        <UserDropdown variant={theme === 'dark' ? 'dark' : 'light'} showName={expanded} compact={!expanded} position="above-left" />
       </div>
 
       <AudioCheckModal isOpen={audioCheckOpen} onClose={() => setAudioCheckOpen(false)} />

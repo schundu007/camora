@@ -58,6 +58,7 @@ interface LumoraTopBarProps {
 export const LumoraTopBar = ({ onTranscription, inline = false }: LumoraTopBarProps) => {
   const { status } = useSessionStore();
   const [showSettings, setShowSettings] = useState(false);
+  const { theme } = useTheme();
 
   if (inline) {
     // Inline mode: just the audio controls, no wrapper header
@@ -90,10 +91,10 @@ export const LumoraTopBar = ({ onTranscription, inline = false }: LumoraTopBarPr
         <div
           className="flex items-center gap-2 px-2.5 py-1.5"
           style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.16)',
+            background: 'var(--cam-strip-icon-bg)',
+            border: '1px solid var(--cam-strip-icon-border)',
             borderRadius: 999,
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
           }}
         >
           <AudioCapture onTranscription={onTranscription} />
@@ -104,7 +105,7 @@ export const LumoraTopBar = ({ onTranscription, inline = false }: LumoraTopBarPr
       <div className="flex items-center gap-2 min-w-[120px] justify-end">
         {/* What context Sona has loaded — green when JD/Resume connected,
             amber when missing. Tooltip lists exactly what's loaded. */}
-        <ContextBadge variant="dark" />
+        <ContextBadge variant={theme === 'dark' ? 'dark' : 'light'} />
 
         {/* Voice enrollment / filter toggle */}
         <VoiceEnrollment disabled={false} />
@@ -113,10 +114,9 @@ export const LumoraTopBar = ({ onTranscription, inline = false }: LumoraTopBarPr
         <div
           className="flex items-center gap-2 px-3 py-1.5"
           style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.16)',
+            background: 'var(--cam-strip-icon-bg)',
+            border: '1px solid var(--cam-strip-icon-border)',
             borderRadius: 999,
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
           }}
           title={status.message}
         >
@@ -127,25 +127,25 @@ export const LumoraTopBar = ({ onTranscription, inline = false }: LumoraTopBarPr
             (status.state === 'listen' || status.state === 'write') ? 'bg-[var(--cam-gold-leaf-lt)] animate-pulse' :
             ''
           }`} />
-          <span className="hidden lg:inline text-xs font-bold" style={{ fontFamily: "var(--font-sans)", color: 'rgba(255,255,255,0.92)' }}>{status.message}</span>
+          <span className="hidden lg:inline text-xs font-bold" style={{ fontFamily: "var(--font-sans)", color: 'var(--cam-strip-text)' }}>{status.message}</span>
         </div>
 
         {/* AI hour budget chip — shown during live interview when running
             low matters most. Always uses dark variant since LumoraTopBar
             is fixed dark navy regardless of theme. */}
-        <HourMeterChip variant="dark" />
+        <HourMeterChip variant={theme === 'dark' ? 'dark' : 'light'} />
 
         <ThemeToggleButton />
 
         {/* Settings gear */}
         <button
           onClick={() => setShowSettings(true)}
-          className="flex items-center justify-center w-9 h-9 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+          className="flex items-center justify-center w-9 h-9 transition-[background-color,transform] active:scale-[0.98]"
           style={{
-            color: '#FFFFFF',
-            border: '1px solid rgba(255,255,255,0.16)',
+            color: 'var(--cam-strip-heading)',
+            border: '1px solid var(--cam-strip-icon-border)',
             borderRadius: 999,
-            background: 'rgba(255,255,255,0.06)',
+            background: 'var(--cam-strip-icon-bg)',
           }}
           title="Settings"
         >
