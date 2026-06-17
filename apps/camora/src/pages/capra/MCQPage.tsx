@@ -209,7 +209,7 @@ export default function MCQPage() {
           {/* type badge */}
           <span style={{
             padding: '2px 10px', borderRadius: 4, fontSize: 11, fontWeight: 700,
-            background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
+            background: 'var(--bg-elevated)', border: '1px solid var(--border)',
             color: 'var(--text-secondary)', letterSpacing: '0.04em',
           }}>
             {type === 'multiple_mcq' ? 'MULTI-MCQ' : 'MCQ'}
@@ -277,7 +277,7 @@ export default function MCQPage() {
                     flexShrink: 0, width: 26, height: 26,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     borderRadius: '50%',
-                    background: isSelected ? 'var(--cam-gold-leaf, #d4af37)' : 'rgba(255,255,255,0.07)',
+                    background: isSelected ? 'var(--cam-gold-leaf, #d4af37)' : 'var(--bg-elevated)',
                     color: isSelected ? '#000' : 'var(--text-secondary)',
                     fontSize: 12, fontWeight: 700,
                   }}>

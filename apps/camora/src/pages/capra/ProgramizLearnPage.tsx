@@ -144,7 +144,7 @@ export default function ProgramizLearnPage() {
           </h1>
           <Chip variant="gold">{PROGRAMIZ_PATHS.length} tutorials</Chip>
         </div>
-        <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
+        <p className="text-[12px]" style={{ color: 'var(--cam-strip-text-muted)' }}>
           Curated Python tutorials from Programiz — from basics to advanced topics.
         </p>
       </div>

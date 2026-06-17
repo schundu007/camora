@@ -215,7 +215,7 @@ export default function PrepPlanPage() {
             onClick={clearPlan}
             disabled={clearing}
             className="px-3 py-1.5 text-xs font-medium rounded-full transition-colors disabled:opacity-50"
-            style={{ color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.3)' }}
+            style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
           >
             {clearing ? 'Clearing...' : 'Clear plan'}
           </button>
