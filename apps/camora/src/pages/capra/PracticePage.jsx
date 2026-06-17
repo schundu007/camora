@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { isOwner } from '../../lib/owner';
 import { dialogConfirm } from '../../components/shared/Dialog';
 import { Allotment } from 'allotment';
 import 'allotment/dist/style.css';
@@ -419,7 +420,7 @@ export default function PracticePage() {
   }, [activeView]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Stats
-  const { user } = useAuth();
+  const { user, subscription } = useAuth();
   const [stats, setStats] = useState(getStats);
 
   // Challenge setup
@@ -791,7 +792,7 @@ export default function PracticePage() {
         {/* ── Ask Sona View (paywalled) ── */}
         {activeView === 'ask-sona' && (
           <div className="flex-1 min-h-0 overflow-hidden">
-            {['pro_monthly', 'pro_yearly', 'team', 'lifetime'].includes(user?.plan_type) ? (
+            {(isOwner(user) || (subscription?.plan && subscription.plan !== 'free')) ? (
               <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
                 <AskLayout />
               </Suspense>
@@ -804,15 +805,15 @@ export default function PracticePage() {
                 </div>
                 <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Ask Sona</h2>
                 <p className="text-sm mb-1 max-w-sm" style={{ color: 'var(--text-muted)' }}>
-                  Get instant AI answers to any interview question — behavioral, coding, system design, or career advice.
+                  Get instant AI answers to any interview question. AI hours are consumed per conversation.
                 </p>
-                <p className="text-xs mb-6" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-code)' }}>Available on Pro plan</p>
+                <p className="text-xs mb-6" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-code)' }}>You have 0 AI hours remaining</p>
                 <a
-                  href="/pricing"
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white"
+                  href="/pricing#ai-hours"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold"
                   style={{ background: 'var(--cam-gold-leaf)', color: '#020617' }}
                 >
-                  Upgrade to Pro
+                  Buy AI Hours
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
               </div>
