@@ -921,18 +921,18 @@ export default function PracticePage() {
 
               {/* Challenge Configuration */}
               <div style={{ marginBottom: 24 }}>
-                <SectionCard title="Start a Challenge" bodyClassName="p-6">
+                <SectionCard title="Start a Challenge" bodyClassName="p-3">
                   {/* Mode cards */}
-                  <div style={{ marginBottom: 22 }}>
-                    <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Mode</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, display: 'block' }}>Mode</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8 }}>
                       {MODES.map(m => (
-                        <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '16px 18px', borderRadius: 14, border: mode === m.id ? '2px solid var(--accent)' : '1px solid var(--border)', background: mode === m.id ? 'var(--accent-subtle)' : 'var(--bg-surface)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                        <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '10px 12px', borderRadius: 10, border: mode === m.id ? '2px solid var(--accent)' : '1px solid var(--border)', background: mode === m.id ? 'var(--accent-subtle)' : 'var(--bg-surface)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                             <DatabricksThumb
                               color={m.hexColor}
-                              size={40}
-                              icon={<Icon name={m.icon} size={20} style={{ color: '#FFFFFF' }} />}
+                              size={28}
+                              icon={<Icon name={m.icon} size={14} style={{ color: '#FFFFFF' }} />}
                               title={m.label}
                             />
                             <span style={{ fontSize: 14, fontWeight: 700, color: mode === m.id ? 'var(--accent)' : 'var(--text-primary)' }}>{m.label}</span>
@@ -945,7 +945,7 @@ export default function PracticePage() {
                   </div>
 
                   {/* Category + Difficulty */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 22 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
                     <div>
                       <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Category</label>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -971,8 +971,8 @@ export default function PracticePage() {
                   </div>
 
                   {/* Company Focus */}
-                  <div style={{ marginBottom: 24 }}>
-                    <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Company Focus</label>
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, display: 'block' }}>Company Focus</label>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {COMPANIES.map(c => (
                         <button key={c.id} onClick={() => setCompany(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px 8px 12px', borderRadius: 10, border: company === c.id ? `2px solid ${c.color}` : '1px solid var(--border)', background: company === c.id ? `${c.color}0d` : 'var(--bg-surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: company === c.id ? c.color : 'var(--text-secondary)', transition: 'all 0.15s' }}>
@@ -989,7 +989,7 @@ export default function PracticePage() {
 
                 {/* CTA Footer */}
                 <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)', textAlign: 'center' }}>
-                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 36px', background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', color: '#FFFFFF', fontSize: 15, fontWeight: 700, borderRadius: 12, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'transform 0.15s, box-shadow 0.15s' }}>
+                  <button onClick={() => startChallenge()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 24px', background: 'linear-gradient(135deg, var(--cam-primary-lt), var(--cam-primary-dk))', color: '#FFFFFF', fontSize: 14, fontWeight: 700, borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'none', transition: 'transform 0.15s, box-shadow 0.15s' }}>
                     <Icon name="play" size={16} style={{ color: '#FFFFFF' }} />
                     Start Challenge
                   </button>
