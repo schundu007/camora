@@ -379,8 +379,10 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
       const output = rawOut.startsWith('(no output) —') ? '(no output)' : rawOut;
       const err = !resp.ok || output.startsWith('Error:') || output.startsWith('Traceback') || /^error:/i.test(output);
       setCustomTests(prev => prev.map(t => t.id === id ? { ...t, running: false, result: output, isErr: err } : t));
+      setRunOutputLog(prev => [...prev, { ts: new Date(), text: `[Test] ${tc.input.trim()}\n${output}` }]);
     } catch (e: any) {
-      setCustomTests(prev => prev.map(t => t.id === id ? { ...t, running: false, result: `Error: ${e.message}`, isErr: true } : t));
+      setCustomTests(prev => prev.map(t => t.id === id ? { ...t, running: false, result: `Error: ${(e as any).message}`, isErr: true } : t));
+      setRunOutputLog(prev => [...prev, { ts: new Date(), text: `[Test] ${tc.input.trim()}\nError: ${(e as any).message}` }]);
     }
   }, [customTests, fixedCode, effectiveLang, token]);
 
