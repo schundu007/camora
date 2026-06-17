@@ -281,6 +281,7 @@ export default function JobsPage() {
   const [locCountry, setLocCountry] = useState('');
   const [locState, setLocState] = useState('');
   const [locCity, setLocCity] = useState('');
+  const [locationAutoDetected, setLocationAutoDetected] = useState(false);
   const [sourceFilter, setSourceFilter] = useState('');
   const [workTypeFilter, setWorkTypeFilter] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
@@ -349,6 +350,21 @@ export default function JobsPage() {
 
     return { countries: sortDesc(countryCounts), statesByCountry, citiesByState, hasRemote };
   }, [availableLocations]);
+
+  // Auto-detect USA from browser timezone on first load
+  useEffect(() => {
+    if (locationFilter) return; // user already has a filter set
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz.startsWith('America/')) {
+        setLocCountry('United States');
+        setLocationFilter('United States');
+        setLocationAutoDetected(true);
+      }
+    } catch {
+      // ignore — no auto-detect on failure
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Set role from user profile once auth loads
   useEffect(() => {
@@ -550,6 +566,7 @@ export default function JobsPage() {
 
   const clearAllFilters = () => {
     setLocationFilter(''); setLocCountry(''); setLocState(''); setLocCity('');
+    setLocationAutoDetected(false);
     setSourceFilter(''); setWorkTypeFilter('');
     setDepartmentFilter(''); setCompanyFilter(''); setExperienceFilter('');
     setPostedWithinFilter('7'); setSalaryMinFilter(''); setSalaryMaxFilter('');
@@ -828,15 +845,29 @@ export default function JobsPage() {
               }}
             >
               {/* Result count + clear */}
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '20px' }}>
-                <div style={{ fontSize: '14px' }}>
-                  <strong style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '15px' }}>{total.toLocaleString()}</strong>
-                  <span style={{ color: 'var(--text-secondary)', marginLeft: '6px' }}>jobs matched</span>
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '14px' }}>
+                    <strong style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '15px' }}>{total.toLocaleString()}</strong>
+                    <span style={{ color: 'var(--text-secondary)', marginLeft: '6px' }}>jobs matched</span>
+                  </div>
+                  {activeFilterCount > 0 && (
+                    <button onClick={clearAllFilters} style={{ fontSize: '13px', fontWeight: 500, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                      Clear filters
+                    </button>
+                  )}
                 </div>
-                {activeFilterCount > 0 && (
-                  <button onClick={clearAllFilters} style={{ fontSize: '13px', fontWeight: 500, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                    Clear filters
-                  </button>
+                {locationAutoDetected && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>🇺🇸</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Auto-filtered to United States</span>
+                    <button
+                      onClick={() => { setLocationFilter(''); setLocCountry(''); setLocationAutoDetected(false); }}
+                      style={{ fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginLeft: '2px' }}
+                    >
+                      Show all
+                    </button>
+                  </div>
                 )}
               </div>
 
