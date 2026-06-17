@@ -823,7 +823,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
         {screenshots.map((s, i) => (
           <div key={s.id} className="relative group shrink-0" title={s.text ? `Page ${i + 1}: ${s.text.slice(0, 80)}…` : `Page ${i + 1}`}>
             <img src={s.dataUrl} alt={`Screenshot ${i + 1}`} className="h-7 w-10 object-cover rounded" style={{ border: '1px solid var(--border-hover)' }} />
-            <span className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>{i + 1}</span>
+            <span className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>{i + 1}</span>
             {onRemove && (
               <button onClick={() => onRemove(s.id)} className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex" style={{ background: 'var(--danger)', color: '#ffffff' }} title="Remove">
                 <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
@@ -849,7 +849,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
             title={isStealthActive ? 'Stealth ON' : 'Block mouse tracking'}
             className={pillBase}
             style={isStealthActive
-              ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }
+              ? { background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }
               : { background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
             }
           >

@@ -244,7 +244,7 @@ export const Header = ({ inputValue, onInputChange, onSubmit, onTranscription, s
                 onClick={() => setResponseFormat(fmt)}
                 className="px-2 py-1 text-[10px] font-bold uppercase tracking-wide transition-[background-color,color]"
                 style={responseFormat === fmt
-                  ? { background: 'var(--cam-primary)', color: '#fff' }
+                  ? { background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }
                   : { color: 'var(--text-muted)', background: 'transparent' }}
                 title={{ auto: 'Auto (default)', concise: 'Concise bullets', detailed: 'Detailed answer', star: 'STAR format' }[fmt]}
               >
