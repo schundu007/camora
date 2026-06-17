@@ -12,6 +12,7 @@ import { sectionsToPrepSections, downloadPrepAsPdf, downloadPrepAsDocx } from '.
 import { useCloudProvider } from '../../../hooks/useCloudProvider';
 import CloudProviderSelector from '../../shared/CloudProviderSelector';
 import Chip from '@/components/shared/ui/Chip';
+import { ResearchDocsCard } from '../prep/ResearchDocsCard';
 
 const STORAGE_KEY = 'lumora_prep_v8'; // v8: fix rawContent unwrapping
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -3008,6 +3009,15 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                   if (added.length) setState(p => ({ ...p, studyDocs: [...p.studyDocs, ...added] }));
                 }}
                 onRemove={(idx) => setState(p => ({ ...p, studyDocs: p.studyDocs.filter((_, i) => i !== idx) }))}
+              />
+            </div>
+
+            {/* Research Docs — RAG-indexed documents Sona reads during live sessions */}
+            <div className="mt-6">
+              <ResearchDocsCard
+                companySlug={prepData.activeCompany
+                  ? prepData.activeCompany.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+                  : 'default'}
               />
             </div>
 
