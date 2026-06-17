@@ -1,79 +1,90 @@
 """
 Pure-Graphviz renderer for Camora's "Layered Design" topic diagrams.
 
-Distinct from diagram.py (which is for AWS / cloud architecture diagrams
-generated via the `diagrams` library and an LLM call). This module is
-deterministic — given the same `layers`/`steps` JSON it produces the
-same PNG every time, so it can be pre-baked at build time and served
-from /public/diagrams/{topicId}/.
+Each layer is a single HTML-table node (guarantees clean top-to-bottom
+stacking without compound-edge drift). The table has three rows:
+  1. Colored header band  — bold layer name, white text
+  2. Purpose row          — italic muted description (BR-wrapped)
+  3. Component chips row  — rounded colored pills, fixed-width cells
 
-Two diagram types:
-  - layered: a stack of horizontal clusters, top to bottom, each cluster
-             a layer with its components as boxes inside. A thin arrow
-             on the right rail connects layers in order.
-  - flow:    a horizontal sequence of step boxes connected by arrows.
-
-Usage (from a build script):
-
+Usage:
     python3 layered_diagram.py layered <out_path.png> < spec.json
     python3 layered_diagram.py flow    <out_path.png> < spec.json
-
-JSON shapes:
-
-    layered: { "title": "...", "layers": [
-        { "name": "...", "purpose": "...", "components": ["...", ...] },
-        ...
-    ]}
-    flow:    { "title": "...", "steps": ["...", ...] }
 """
 
 from __future__ import annotations
 
 import json
 import sys
+import textwrap
 from pathlib import Path
 
 import graphviz
 
 
-# Enterprise architecture palette — white background, colored layers cycling
-# through blue / green / amber / purple to match the excalidraw arch diagrams.
-BG_GRAPH     = "#ffffff"
-ARROW_COLOR  = "#64748b"
-TEXT_PURPOSE = "#475569"
+BG_GRAPH    = "#f8fafc"
+ARROW_COLOR = "#94a3b8"
 
 FONT_HEADING = "Helvetica-Bold"
 FONT_BODY    = "Helvetica"
 
-# Each layer cycles through these palettes (blue → green → amber → purple → rose)
 _LAYER_PALETTES = [
-    {"bg": "#eff6ff", "border": "#3b82f6", "comp_bg": "#3b82f6",  "comp_text": "#ffffff",  "name_color": "#1e3a5f"},
-    {"bg": "#f0fdf4", "border": "#047857", "comp_bg": "#a7f3d0",  "comp_text": "#065f46",  "name_color": "#065f46"},
-    {"bg": "#fffbeb", "border": "#b45309", "comp_bg": "#fef3c7",  "comp_text": "#92400e",  "name_color": "#92400e"},
-    {"bg": "#fdf4ff", "border": "#7c3aed", "comp_bg": "#e9d5ff",  "comp_text": "#5b21b6",  "name_color": "#5b21b6"},
-    {"bg": "#fff1f2", "border": "#be123c", "comp_bg": "#fecdd3",  "comp_text": "#9f1239",  "name_color": "#9f1239"},
+    {
+        "band_bg":    "#1d4ed8",   "band_fg":   "#ffffff",
+        "layer_bg":   "#eff6ff",   "layer_bd":  "#3b82f6",
+        "comp_bg":    "#dbeafe",   "comp_bd":   "#3b82f6",  "comp_fg":  "#1e3a5f",
+        "purpose_fg": "#3b6cb7",
+    },
+    {
+        "band_bg":    "#15803d",   "band_fg":   "#ffffff",
+        "layer_bg":   "#f0fdf4",   "layer_bd":  "#22c55e",
+        "comp_bg":    "#dcfce7",   "comp_bd":   "#16a34a",  "comp_fg":  "#14532d",
+        "purpose_fg": "#166534",
+    },
+    {
+        "band_bg":    "#b45309",   "band_fg":   "#ffffff",
+        "layer_bg":   "#fffbeb",   "layer_bd":  "#f59e0b",
+        "comp_bg":    "#fef3c7",   "comp_bd":   "#d97706",  "comp_fg":  "#78350f",
+        "purpose_fg": "#92400e",
+    },
+    {
+        "band_bg":    "#7c3aed",   "band_fg":   "#ffffff",
+        "layer_bg":   "#fdf4ff",   "layer_bd":  "#a855f7",
+        "comp_bg":    "#f3e8ff",   "comp_bd":   "#9333ea",  "comp_fg":  "#581c87",
+        "purpose_fg": "#6d28d9",
+    },
+    {
+        "band_bg":    "#be123c",   "band_fg":   "#ffffff",
+        "layer_bg":   "#fff1f2",   "layer_bd":  "#f43f5e",
+        "comp_bg":    "#ffe4e6",   "comp_bd":   "#e11d48",  "comp_fg":  "#881337",
+        "purpose_fg": "#9f1239",
+    },
 ]
 
+# Minimum component cell width (points). Prevents slivers when many comps.
+_COMP_CELL_W = 170
 
-def _normalize(s: str) -> str:
-    """Graphviz node IDs must avoid quotes — all labels go through
-    record-style escaping so we just need a stable id for grouping."""
-    return "".join(c if c.isalnum() else "_" for c in s)[:80] or "x"
+
+def _esc(s: str) -> str:
+    return (s.replace("&", "&amp;")
+             .replace("<", "&lt;")
+             .replace(">", "&gt;")
+             .replace('"', "&quot;"))
+
+
+def _br_wrap(text: str, width: int = 72) -> str:
+    """Wrap text into Graphviz HTML <BR/> lines."""
+    return "<BR/>".join(_esc(l) for l in textwrap.wrap(text, width=width))
+
+
+def _plain_wrap(text: str, width: int = 22) -> str:
+    """Wrap text with \\n for plain Graphviz labels."""
+    return "\\n".join(textwrap.wrap(text, width=width))
 
 
 def render_layered(spec: dict, out_path: Path) -> None:
-    """Render a stack of layers with components inside each.
-
-    Layout: each layer is a single Graphviz node whose label is an HTML
-    table (title row + purpose row + component cells). Sequential layers
-    are connected by simple edges, which Graphviz routes center-bottom →
-    center-top automatically — no cluster+compound-edge tricks needed.
-    This avoids the left-rail misalignment that plagued the old cluster
-    approach with splines=ortho.
-    """
     layers = spec.get("layers") or []
-    title = spec.get("title", "")
-
+    title  = spec.get("title", "")
     if not layers:
         raise SystemExit("layered: empty layers")
 
@@ -83,71 +94,88 @@ def render_layered(spec: dict, out_path: Path) -> None:
         bgcolor=BG_GRAPH,
         rankdir="TB",
         splines="ortho",
-        nodesep="0.3",
-        ranksep="0.28",
-        pad="0.5,0.5",
-        fontname=FONT_BODY,
-        fontcolor="#1e293b",
-        label=f"<{_html_escape(title)}>" if title else "",
+        nodesep="0.25",
+        ranksep="0.45",
+        pad="0.65,0.65",
+        fontname=FONT_HEADING,
+        fontcolor="#0f172a",
+        label=(
+            f'<<FONT FACE="{FONT_HEADING}" POINT-SIZE="22" COLOR="#0f172a">'
+            f'{_esc(title)}</FONT>>'
+            if title else ""
+        ),
         labelloc="t",
-        fontsize="20",
+        size="16,!",
+        dpi="150",
     )
     g.attr("node", shape="none", margin="0")
-    g.attr(
-        "edge",
-        color=ARROW_COLOR,
-        penwidth="2.0",
-        arrowsize="0.9",
-        arrowhead="vee",
-    )
+    g.attr("edge", color=ARROW_COLOR, penwidth="2.5",
+           arrowsize="1.0", arrowhead="vee")
 
     for i, layer in enumerate(layers):
-        pal = _LAYER_PALETTES[i % len(_LAYER_PALETTES)]
-        name = _html_escape(layer.get("name", f"Layer {i + 1}"))
-        purpose = _html_escape(layer.get("purpose", ""))
+        pal   = _LAYER_PALETTES[i % len(_LAYER_PALETTES)]
+        name  = _esc(layer.get("name", f"Layer {i + 1}"))
+        purp  = layer.get("purpose", "")
         comps = layer.get("components") or []
-        n = max(len(comps), 1)
+        n     = max(len(comps), 1)
 
-        # Title + purpose rows span all component columns.
-        title_row = (
-            f'<TR><TD COLSPAN="{n}" CELLPADDING="10" BORDER="0">'
-            f'<B><FONT FACE="{FONT_HEADING}" POINT-SIZE="13" COLOR="{pal["name_color"]}">'
-            f'{name}</FONT></B></TD></TR>'
+        # ── Row 1: colored header band ────────────────────────────────────
+        header = (
+            f'<TR>'
+            f'<TD COLSPAN="{n}" BGCOLOR="{pal["band_bg"]}" BORDER="0" '
+            f'    CELLPADDING="11" ALIGN="LEFT">'
+            f'<FONT FACE="{FONT_HEADING}" POINT-SIZE="14" COLOR="{pal["band_fg"]}">'
+            f'&#160;&#160;{name}'
+            f'</FONT>'
+            f'</TD>'
+            f'</TR>'
         )
+
+        # ── Row 2: purpose text (optional, italic, wrapped) ───────────────
         purpose_row = ""
-        if purpose:
+        if purp:
+            wrapped = _br_wrap(purp, width=80)
             purpose_row = (
-                f'<TR><TD COLSPAN="{n}" CELLPADDING="2" BORDER="0">'
-                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="10" COLOR="{TEXT_PURPOSE}">'
-                f'{purpose}</FONT></TD></TR>'
+                f'<TR>'
+                f'<TD COLSPAN="{n}" BGCOLOR="{pal["layer_bg"]}" BORDER="0" '
+                f'    CELLPADDING="8" ALIGN="LEFT">'
+                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="10.5" COLOR="{pal["purpose_fg"]}">'
+                f'<I>{wrapped}</I>'
+                f'</FONT>'
+                f'</TD>'
+                f'</TR>'
             )
 
-        # Component cells — each in its own rounded box cell.
+        # ── Row 3: spacer ─────────────────────────────────────────────────
+        spacer = f'<TR><TD COLSPAN="{n}" BORDER="0" HEIGHT="6"></TD></TR>'
+
+        # ── Row 4: component chips ────────────────────────────────────────
         if comps:
-            comp_cells = "".join(
-                f'<TD BGCOLOR="{pal["comp_bg"]}" STYLE="ROUNDED" BORDER="1"'
-                f' COLOR="{pal["border"]}" CELLPADDING="7">'
-                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="11" COLOR="{pal["comp_text"]}">'
-                f'{_html_escape(c)}</FONT></TD>'
+            cells = "".join(
+                f'<TD BGCOLOR="{pal["comp_bg"]}" STYLE="ROUNDED" BORDER="1" '
+                f'   COLOR="{pal["comp_bd"]}" CELLPADDING="9" WIDTH="{_COMP_CELL_W}">'
+                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="11" COLOR="{pal["comp_fg"]}">'
+                f'<B>{_esc(c)}</B>'
+                f'</FONT>'
+                f'</TD>'
                 for c in comps
             )
-            comp_row = f'<TR>{comp_cells}</TR>'
+            comp_row = f'<TR>{cells}</TR>'
         else:
             comp_row = (
-                f'<TR><TD BORDER="0" CELLPADDING="4">'
-                f'<FONT COLOR="{TEXT_PURPOSE}">(no components)</FONT></TD></TR>'
+                f'<TR><TD BORDER="0" CELLPADDING="6">'
+                f'<FONT COLOR="#94a3b8">(no components)</FONT></TD></TR>'
             )
 
         label = (
             f'<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="6"'
-            f' BGCOLOR="{pal["bg"]}" COLOR="{pal["border"]}" CELLPADDING="0"'
-            f' STYLE="ROUNDED">'
-            + title_row + purpose_row + comp_row +
+            f' BGCOLOR="{pal["layer_bg"]}" COLOR="{pal["layer_bd"]}"'
+            f' CELLPADDING="0" STYLE="ROUNDED">'
+            + header + purpose_row + spacer + comp_row + spacer +
             f'</TABLE>>'
         )
         g.node(f"layer_{i}", label=label)
 
-    # Simple sequential edges — Graphviz routes them center-to-center.
     for i in range(len(layers) - 1):
         g.edge(f"layer_{i}", f"layer_{i + 1}")
 
@@ -155,10 +183,8 @@ def render_layered(spec: dict, out_path: Path) -> None:
 
 
 def render_flow(spec: dict, out_path: Path) -> None:
-    """Horizontal flow of N steps connected by arrows."""
     steps = spec.get("steps") or []
     title = spec.get("title", "")
-
     if not steps:
         raise SystemExit("flow: empty steps")
 
@@ -168,56 +194,45 @@ def render_flow(spec: dict, out_path: Path) -> None:
         bgcolor=BG_GRAPH,
         rankdir="LR",
         splines="ortho",
-        nodesep="0.5",
-        ranksep="0.6",
-        pad="0.4",
+        nodesep="0.6",
+        ranksep="0.7",
+        pad="0.6",
         fontname=FONT_BODY,
-        fontcolor="#1e293b",
-        label=title or "",
+        fontcolor="#0f172a",
+        label=(
+            f'<<FONT FACE="{FONT_HEADING}" POINT-SIZE="20" COLOR="#0f172a">'
+            f'{_esc(title)}</FONT>>'
+            if title else ""
+        ),
         labelloc="t",
-        fontsize="20",
+        size="16,!",
+        dpi="150",
     )
     g.attr(
         "node",
         shape="box",
         style="rounded,filled",
-        fillcolor="#eff6ff",
-        color="#3b82f6",
+        fillcolor="#dbeafe",
+        color="#2563eb",
         fontname=FONT_HEADING,
         fontsize="12",
         fontcolor="#1e3a5f",
-        margin="0.22,0.14",
+        margin="0.26,0.16",
         penwidth="1.8",
     )
-    g.attr(
-        "edge",
-        color=ARROW_COLOR,
-        penwidth="2",
-        arrowsize="1",
-        arrowhead="vee",
-    )
+    g.attr("edge", color=ARROW_COLOR, penwidth="2.2",
+           arrowsize="0.9", arrowhead="vee")
 
     for i, step in enumerate(steps):
-        g.node(f"s{i}", label=step)
+        g.node(f"s{i}", label=_plain_wrap(step, width=24))
     for i in range(len(steps) - 1):
         g.edge(f"s{i}", f"s{i + 1}")
 
     _render_to_file(g, out_path)
 
 
-def _html_escape(s: str) -> str:
-    return (
-        s.replace("&", "&amp;")
-         .replace("<", "&lt;")
-         .replace(">", "&gt;")
-         .replace('"', "&quot;")
-    )
-
-
 def _render_to_file(g: graphviz.Digraph, out_path: Path) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    # graphviz.render() writes <out>.png — strip suffix so it lands at
-    # the path the caller asked for.
     stem = out_path.with_suffix("")
     g.render(filename=str(stem), cleanup=True, format="png")
 
