@@ -921,7 +921,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             <button
               onClick={() => setMobileRailOpen(v => !v)}
               className="md:hidden p-2 rounded-md transition-colors hover:bg-white/10"
-              style={{ color: 'rgba(255,255,255,0.9)' }}
+              style={{ color: 'var(--cam-strip-text)' }}
               title="Questions"
               aria-label="Open questions panel"
               aria-expanded={mobileRailOpen}
@@ -934,12 +934,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 onClick={exportSession}
                 disabled={messages.length === 0}
                 className="p-1 rounded-md transition-colors hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ color: 'rgba(255,255,255,0.85)' }}
+                style={{ color: 'var(--cam-strip-text)' }}
                 title="Export session (.md)"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
               </button>
-              <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }} title="New chat">
+              <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'var(--cam-strip-text)' }} title="New chat">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
               </button>
             </>
@@ -952,11 +952,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             mode is unmistakable on a navy strip. */}
         <div className="flex-1 flex items-center justify-center gap-2 min-w-0">
           <SonaAvatar size={18} />
-          <span className="text-[11px] font-bold tracking-wide text-white">Sona</span>
+          <span className="text-[11px] font-bold tracking-wide" style={{ color: 'var(--cam-strip-heading)' }}>Sona</span>
           {activeAssistant && (
             <span
               className="hidden sm:inline items-center gap-0.5 text-[8px] font-semibold px-1.5 py-0.5 rounded"
-              style={{ background: 'rgba(255,255,255,0.15)', color: 'var(--cam-gold-leaf-lt)', display: 'inline-flex', maxWidth: 140 }}
+              style={{ background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-gold-leaf-lt)', display: 'inline-flex', maxWidth: 140 }}
             >
               <span className="truncate">{activeAssistant.company || activeAssistant.role || 'Custom'}</span>
               <button
@@ -975,11 +975,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         {!embedded && (
           <div className="flex items-center gap-0.5">
             <button onClick={() => setMinimized(true)}
-              className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }} title="Minimize">
+              className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'var(--cam-strip-text)' }} title="Minimize">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
             </button>
             <button onClick={() => { setMaximized(!maximized); setPosition({ x: 0, y: 0 }); }}
-              className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }} title={maximized ? 'Restore' : 'Maximize'}>
+              className="p-1 rounded-md transition-colors hover:bg-white/10" style={{ color: 'var(--cam-strip-text)' }} title={maximized ? 'Restore' : 'Maximize'}>
               {maximized ? (
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="5" width="14" height="14" rx="1" /><path d="M9 3h10a2 2 0 012 2v10" /></svg>
               ) : (
@@ -1157,14 +1157,14 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                       }}
                     >
                       <SonaAvatar size={16} />
-                      <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">Sona</span>
+                      <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona</span>
                       <span className="ml-auto flex items-center gap-1">
                         <button
                           onClick={() => navigator.clipboard.writeText(msg.text)}
                           className="p-1 rounded-md transition-colors"
-                          style={{ color: 'rgba(255,255,255,0.8)' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; e.currentTarget.style.background = 'transparent'; }}
+                          style={{ color: 'var(--cam-strip-text)' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--cam-strip-heading)'; e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--cam-strip-text)'; e.currentTarget.style.background = 'transparent'; }}
                           title="Copy answer"
                           aria-label="Copy answer"
                         >
@@ -1173,9 +1173,9 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                         <button
                           onClick={() => deleteQAPair(i)}
                           className="p-1 rounded-md transition-colors"
-                          style={{ color: 'rgba(255,255,255,0.8)' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; e.currentTarget.style.background = 'transparent'; }}
+                          style={{ color: 'var(--cam-strip-text)' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--cam-strip-heading)'; e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--cam-strip-text)'; e.currentTarget.style.background = 'transparent'; }}
                           title="Delete this Q&A"
                           aria-label="Delete this Q&A"
                         >
@@ -1208,7 +1208,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                       }}
                     >
                       <SonaAvatar size={16} active />
-                      <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white">
+                      <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>
                         Sona is answering…
                       </span>
                     </div>
@@ -1275,7 +1275,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     }}
                   >
                     <SonaAvatar size={14} />
-                    <span className="font-display text-[9px] font-bold tracking-[0.12em] uppercase text-white">Sona</span>
+                    <span className="font-display text-[9px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona</span>
                   </div>
                   <div className="p-3 min-w-0">
                     <AnswerView text={msg.text} />
@@ -1302,7 +1302,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     }}
                   >
                     <SonaAvatar size={14} active />
-                    <span className="font-display text-[9px] font-bold tracking-[0.12em] uppercase text-white">Sona is answering…</span>
+                    <span className="font-display text-[9px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona is answering…</span>
                   </div>
                   <div className="p-3">
                     {streamText ? <><AnswerView text={cleanTags(streamText)} streaming /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--cam-gold-leaf)' }} /></>
