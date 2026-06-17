@@ -49,9 +49,9 @@ export default function AscendModeSelector({
           onClick={() => setShowLanguageModal(true)}
           className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all hover:scale-[1.02] min-h-[36px] touch:min-h-[40px]"
           style={{
-            background: 'var(--accent)',
-            color: 'white',
-            border: '1px solid var(--border)',
+            background: 'var(--cam-accent-fill)',
+            color: 'var(--cam-accent-fill-text)',
+            border: '1px solid var(--accent)',
           }}
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

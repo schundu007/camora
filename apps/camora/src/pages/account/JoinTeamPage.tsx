@@ -92,8 +92,8 @@ export default function JoinTeamPage() {
 
           {status === 'success' && (
             <>
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'var(--accent)' }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={2.5}>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                   <path d="M5 12l5 5L20 7" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>

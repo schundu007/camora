@@ -960,8 +960,8 @@ export default function TopicDetail({
           <div className="rounded mt-4 py-8 px-4" style={{ background: 'linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-app) 100%)', border: '1px solid var(--border)' }}>
             <div className="max-w-2xl mx-auto">
               <div className="text-center mb-6">
-                <div className="w-12 h-12 mx-auto mb-3 rounded flex items-center justify-center" style={{ background: 'var(--accent)' }}>
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                <div className="w-12 h-12 mx-auto mb-3 rounded flex items-center justify-center" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                 </div>
                 <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1 landing-display">Upgrade to unlock all topics</h3>
                 <p className="text-xs text-[var(--text-muted)] landing-body">Choose a plan to access {activePage === 'coding' ? '36+' : activePage === 'system-design' ? '300+' : '50+'} topics with full content</p>
