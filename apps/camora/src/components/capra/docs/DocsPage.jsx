@@ -883,20 +883,18 @@ export default function DocsPage({ onBack }) {
                   {activePage === 'overview' && (
                     <>
                       {/* Hero Banner — LeetCode dark navy band w/ diagonal cut */}
-                      <div className="relative mb-8 rounded-xl overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
+                      <div className="relative mb-4 rounded-lg overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
                         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
-                        <div className="relative p-6 md:p-8">
+                        <div className="relative p-4 md:p-5">
                           <div>
-                            <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>
                               PREPARE
                             </p>
-                            <h1 className="font-bold tracking-tight text-3xl md:text-5xl lg:text-6xl mb-3 text-white" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.05 }}>
+                            <h1 className="font-bold tracking-tight text-xl md:text-2xl mb-1 text-white" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.1 }}>
                               {user?.name ? <>Welcome back, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>{user.name.split(' ')[0]}</span>.</> : <>Your prep, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>organized.</span></>}
                             </h1>
                           </div>
-
-                          {/* Inline progress line — replaces the 4-box metric grid */}
-                          <div className="flex items-center gap-2 mt-5 flex-wrap" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
                             <span style={{ color: 'var(--cam-gold-leaf-lt)', fontWeight: 700 }}>{overviewTotalCompleted}</span>
                             <span>of {overviewTotalTopics} topics completed</span>
                             <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
@@ -935,15 +933,15 @@ export default function DocsPage({ onBack }) {
                         const dailyPool = codingTopics;
                         const daily = dailyPool[seed % dailyPool.length];
                         return (
-                          <div className="mb-8">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>START HERE</p>
-                            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-5" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Pick up where you left off</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="mb-4">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>START HERE</p>
+                            <h2 className="text-base font-bold tracking-tight mb-2" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Pick up where you left off</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                               {/* Continue learning */}
                               {lastTopic && lastTitle ? (
                                 <Link
                                   to={`/capra/prepare/${lastTopic.category || 'coding'}?topic=${encodeURIComponent(lastTopic.topicId)}`}
-                                  className="card-lift rounded-lg p-5 flex flex-col"
+                                  className="card-lift rounded-lg p-3 flex flex-col"
                                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                                 >
                                   <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>CONTINUE</span>
@@ -953,7 +951,7 @@ export default function DocsPage({ onBack }) {
                               ) : (
                                 <Link
                                   to="/capra/prepare/coding"
-                                  className="card-lift rounded-lg p-5 flex flex-col"
+                                  className="card-lift rounded-lg p-3 flex flex-col"
                                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                                 >
                                   <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>NEW HERE</span>
@@ -964,7 +962,7 @@ export default function DocsPage({ onBack }) {
                               {/* Today's challenge */}
                               <Link
                                 to={`/capra/prepare/coding?topic=${encodeURIComponent(daily?.id || '')}`}
-                                className="card-lift rounded-lg p-5 flex flex-col"
+                                className="card-lift rounded-lg p-3 flex flex-col"
                                 style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                               >
                                 <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--warning-text)', fontFamily: 'var(--font-mono)' }}>TODAY'S PICK</span>
@@ -974,7 +972,7 @@ export default function DocsPage({ onBack }) {
                               {/* Practice */}
                               <Link
                                 to="/capra/practice"
-                                className="card-lift rounded-lg p-5 flex flex-col"
+                                className="card-lift rounded-lg p-3 flex flex-col"
                                 style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                               >
                                 <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>PRACTICE</span>
@@ -1003,43 +1001,35 @@ export default function DocsPage({ onBack }) {
                           <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white">Topic Categories</span>
                           <Chip className="ml-auto">Browse</Chip>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                           {overviewCategories.map((cat) => {
-                            const radius = 20;
-                            const circumference = 2 * Math.PI * radius;
-                            const strokeDashoffset = circumference - (cat.progress / 100) * circumference;
                             return (
                             <Link
                               key={cat.id}
                               to={`/capra/prepare/${cat.href}`}
-                              className="card-lift group relative rounded-xl overflow-hidden flex flex-col active:scale-[0.98]"
+                              className="card-lift group relative rounded-lg overflow-hidden flex flex-col active:scale-[0.98]"
                               style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                             >
-                              <TopicIllustration name={cat.id} style={{ aspectRatio: '5 / 1' }} />
-                              <div className="px-4 pt-4 pb-4 flex flex-col items-center text-center gap-3">
+                              <TopicIllustration name={cat.id} style={{ aspectRatio: '10 / 1' }} />
+                              <div className="px-3 pt-2.5 pb-2.5 flex flex-col items-center text-center gap-1.5">
                                 <DatabricksThumb
                                   color={CATEGORY_HEX[cat.id] || 'navy'}
-                                  size={40}
-                                  icon={<Icon name={cat.icon} size={20} style={{ color: '#FFFFFF' }} />}
+                                  size={28}
+                                  icon={<Icon name={cat.icon} size={13} style={{ color: '#FFFFFF' }} />}
                                   title={cat.title}
                                 />
                                 <div>
-                                  <h3 className="text-[20px] font-bold leading-tight tracking-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
-                                  <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
+                                  <h3 className="text-[13px] font-bold leading-tight tracking-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
+                                  <span className="text-[10px] font-semibold tabular-nums" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
                                 </div>
-                                <div className="w-full flex items-center gap-2.5">
-                                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
+                                <div className="w-full flex items-center gap-2">
+                                  <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg-surface)' }}>
                                     <div className="h-full rounded-full transition-colors duration-1000" style={{ width: `${Math.max(cat.progress, 2)}%`, background: 'var(--accent)' }} />
                                   </div>
-                                  <span className="text-[11px] font-bold tabular-nums shrink-0" style={{ color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                  <span className="text-[10px] font-bold tabular-nums shrink-0" style={{ color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                                     {cat.progress}%
                                   </span>
                                 </div>
-                                {cat.description && (
-                                  <p className="w-full text-[11.5px] truncate" style={{ color: 'var(--text-muted)' }}>
-                                    {cat.description}
-                                  </p>
-                                )}
                               </div>
                             </Link>
                             );
