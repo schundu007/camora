@@ -541,11 +541,10 @@ export default function OnboardingPage() {
                         </button>
                       </div>
                     ) : (
-                      <div
+                      <label
                         onDrop={handleDrop}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
-                        onClick={() => fileInputRef.current?.click()}
                         className={`flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-dashed cursor-pointer transition-all duration-200
                           ${dragOver
                             ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
@@ -582,7 +581,7 @@ export default function OnboardingPage() {
                           onChange={handleFileInput}
                           className="hidden"
                         />
-                      </div>
+                      </label>
                     )}
                   </div>
                 )}

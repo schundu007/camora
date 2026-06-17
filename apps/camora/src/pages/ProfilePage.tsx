@@ -385,15 +385,13 @@ function PreferencesTab() {
                 ))}
               </div>
               {resumeTab === 'upload' ? (
-                <>
-                  <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt" className="sr-only"
+                <label
+                  className={`w-full py-8 rounded-xl text-[13px] font-medium transition-colors flex items-center justify-center cursor-pointer${uploading ? ' opacity-50 pointer-events-none' : ''}`}
+                  style={{ border: '2px dashed var(--border)', color: 'var(--text-muted)', background: 'var(--bg-surface)' }}>
+                  <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt" className="hidden"
                     onChange={e => { const f = e.target.files?.[0]; if (f) { handleFileUpload(f); e.target.value = ''; } }} />
-                  <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                    className="w-full py-8 rounded-xl text-[13px] font-medium transition-colors disabled:opacity-50"
-                    style={{ border: '2px dashed var(--border)', color: 'var(--text-muted)', background: 'var(--bg-surface)' }}>
-                    {uploading ? 'Uploading…' : '↑  Click to upload PDF, DOCX, or TXT  ·  max 5 MB'}
-                  </button>
-                </>
+                  {uploading ? 'Uploading…' : '↑  Click to upload PDF, DOCX, or TXT  ·  max 5 MB'}
+                </label>
               ) : (
                 <>
                   <textarea value={resumeText} onChange={e => setResumeText(e.target.value)}
