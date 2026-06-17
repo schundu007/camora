@@ -278,12 +278,15 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
             style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
             onClick={e => e.stopPropagation()}
           >
-            <span className="text-white text-xs font-mono font-bold uppercase tracking-wider">Architecture Diagram</span>
+            <span className="text-xs font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--cam-strip-heading)' }}>Architecture Diagram</span>
             <div className="flex items-center gap-1 text-[var(--text-muted)]">
               <span className="text-[10px] font-mono mr-2 opacity-60">Click outside to close</span>
               <button
                 onClick={() => setIsFullscreen(false)}
-                className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 text-white transition-colors"
+                className="w-7 h-7 flex items-center justify-center rounded transition-colors"
+                style={{ color: 'var(--cam-strip-heading)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                 title="Close"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

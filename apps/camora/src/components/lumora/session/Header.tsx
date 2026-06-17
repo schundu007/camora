@@ -281,7 +281,7 @@ export const Header = ({ inputValue, onInputChange, onSubmit, onTranscription, s
             onChange={(e) => onInputChange(e.target.value)}
             onKeyDown={handleInputKeyDown}
             placeholder="Type or paste question... (⌘K)"
-            className="font-display w-full max-w-2xl bg-transparent border-none outline-none text-sm text-center placeholder:text-white/25 min-w-0"
+            className="font-display w-full max-w-2xl bg-transparent border-none outline-none text-sm text-center placeholder:text-[var(--text-muted)] min-w-0"
             style={{ color: 'var(--text-primary)' }}
           />
           <button
