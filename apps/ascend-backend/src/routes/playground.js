@@ -450,7 +450,6 @@ router.post('/explain', async (req, res, next) => {
       return res.json(EXPLAIN_CACHE.get(cacheKey));
     }
 
-<<<<<<< ours
     const prompt = `You are a beginner-friendly coding tutor. Explain this line from the ${language} code below.
 
 Code (active lines only):
@@ -459,16 +458,6 @@ ${activeCode}
 \`\`\`
 
 Target line: ${targetContent}
-=======
-    const prompt = `You are a beginner-friendly coding tutor. Explain line ${lineNumber} from the ${language} code below.
-
-Code:
-\`\`\`${language}
-${code}
-\`\`\`
-
-Line ${lineNumber}: ${lineContent}
->>>>>>> theirs
 
 Return ONLY a JSON object (no markdown fences). Schema:
 {
@@ -485,12 +474,8 @@ Rules:
 - how: 2-4 entries breaking the line into its meaningful parts (sub-expressions, operator, keyword)
 - trace: use actual variable names and example values from the surrounding code context
 - analogy: avoid tech metaphors — use everyday objects (drawers, sticky notes, recipe cards)
-<<<<<<< ours
-- concepts: 2-4 ${language} concept names a beginner should look up (e.g. "dictionary", "f-string", "for loop")`;
-=======
 - concepts: 2-4 ${language} concept names a beginner should look up (e.g. "dictionary", "f-string", "for loop")
 - If the line is blank, a comment, or a lone bracket, still return the full schema with brief values`;
->>>>>>> theirs
 
     const raw = await callExplain(prompt) ?? '';
     if (!raw) return res.json({ what: '', how: [], concepts: [] });
