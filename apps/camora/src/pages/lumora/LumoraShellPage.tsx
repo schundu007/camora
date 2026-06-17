@@ -552,7 +552,7 @@ export const LumoraShellPage = () => {
               ref={hamburgerRef}
               type="button"
               onClick={() => setMobileMoreOpen((v) => !v)}
-              className="md:hidden flex items-center justify-center w-10 h-10 rounded-md transition-colors"
+              className="md:hidden flex items-center justify-center w-11 h-11 rounded-md transition-colors"
               style={{ color: 'var(--text-primary)' }}
               aria-label={mobileMoreOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={mobileMoreOpen}
@@ -576,7 +576,7 @@ export const LumoraShellPage = () => {
             <div className="flex items-center gap-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
               <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                <strong>Tip:</strong> Mic sensitivity is very low — quiet questions may not be heard. Open Settings (⚙) to adjust.
+                <strong>Tip:</strong> Mic sensitivity is very low. Quiet questions may not be heard. Open Settings (⚙) to adjust.
               </span>
             </div>
             <button onClick={() => setSettingsDismissed(true)} className="text-xs font-bold px-2 py-1 rounded hover:opacity-80" style={{ color: 'var(--accent)' }}>Dismiss</button>
@@ -778,7 +778,7 @@ export const LumoraShellPage = () => {
                       </svg>
                     </div>
                     <p className="text-base font-semibold">No sessions yet</p>
-                    <p className="text-xs mt-1 mb-4" style={{ color: 'var(--text-muted)' }}>Sessions and transcripts will appear here after your first interview.</p>
+                    <p className="text-xs mt-1 mb-4" style={{ color: 'var(--text-muted)' }}>Every question Sona answers is saved here so you can review it after the interview.</p>
                     <Link
                       to="/lumora"
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-[opacity,transform] hover:opacity-90 active:scale-[0.96]"
@@ -787,7 +787,7 @@ export const LumoraShellPage = () => {
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <polygon points="5 3 19 12 5 21 5 3" />
                       </svg>
-                      Start interview
+                      Go to live session
                     </Link>
                   </div>
                 ) : (
@@ -827,7 +827,7 @@ export const LumoraShellPage = () => {
                             onClick={(e) => { e.stopPropagation(); setFocusedEntry(realIdx); navigate('/lumora'); }}
                             className="text-[11px] font-semibold px-3 py-1.5 rounded-md transition-[background-color,color] active:scale-[0.98] shrink-0"
                             style={{ color: 'var(--cam-primary-dk)', background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}
-                          >View</button>
+                          >View answer</button>
                           <button
                             type="button"
                             aria-label="Delete session"
@@ -877,18 +877,18 @@ export const LumoraShellPage = () => {
                 </div>
               </div>
               <div className="max-w-2xl mx-auto px-6 pt-5 pb-10 w-full">
-                <div className="flex items-center gap-5 mb-6 px-4 py-3 rounded-xl" style={{ border: '1px solid var(--border)', background: 'rgba(38,97,156,0.04)' }}>
+                <div className="flex flex-wrap items-center gap-4 mb-6 px-4 py-3 rounded-xl" style={{ border: '1px solid var(--border)', background: 'rgba(38,97,156,0.04)' }}>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xl font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{history.length}</span>
                     <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>sessions</span>
                   </div>
-                  <div className="w-px h-5 shrink-0" style={{ background: 'var(--border)' }} />
+                  <div className="hidden sm:block w-px h-5 shrink-0" style={{ background: 'var(--border)' }} />
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xl font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{history.filter((e: any) => e.question).length}</span>
-                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>questions asked</span>
+                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>questions answered</span>
                   </div>
-                  <div className="w-px h-5 shrink-0" style={{ background: 'var(--border)' }} />
-                  <div className="flex items-center gap-1.5 ml-auto">
+                  <div className="hidden sm:block w-px h-5 shrink-0" style={{ background: 'var(--border)' }} />
+                  <div className="flex items-center gap-1.5 sm:ml-auto">
                     <Chip variant="success">Active</Chip>
                     <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>subscription</span>
                   </div>
@@ -896,7 +896,7 @@ export const LumoraShellPage = () => {
                 <div className="rounded-xl p-4" style={{ border: '1px solid var(--border)' }}>
                   <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Recent Usage</h3>
                   {history.length === 0 ? (
-                    <p className="text-xs text-center py-4" style={{ color: 'var(--text-muted)' }}>No usage yet. Start an interview to see activity.</p>
+                    <p className="text-xs text-center py-4" style={{ color: 'var(--text-muted)' }}>Each interview session uses one credit. Your history and usage appear here after your first session.</p>
                   ) : (
                     <div className="space-y-1.5">
                       {history.slice(-10).reverse().map((e: any, i: number) => (
