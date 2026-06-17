@@ -1264,7 +1264,7 @@ export default function PracticePage() {
                     const data = await res.json();
                     setSdRefDiagram(prev => ({
                       ...prev,
-                      [currentIdx]: data.success && data.image_url
+                      [currentIdx]: data.success && data.image_url && !data.image_url.startsWith('/static/')
                         ? { status: 'cached', url: data.image_url }
                         : { status: 'missing', url: null },
                     }));
