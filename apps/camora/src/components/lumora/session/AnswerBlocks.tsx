@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import hljs from 'highlight.js';
+import hljs from '@/lib/hljs';
 import type { ParsedBlock } from '@/types';
 import { GraphvizDiagram } from './GraphvizDiagram';
 import SharedDiagram from '@/components/shared/diagrams/SharedDiagram';
