@@ -21,10 +21,10 @@ export function PillToggleGroup({ children, className = '' }) {
     <div
       className={`inline-flex items-center gap-1 px-1 py-1 ${className}`}
       style={{
-        background: 'rgba(255,255,255,0.06)',
-        border: '1px solid rgba(255,255,255,0.16)',
+        background: 'var(--cam-strip-icon-bg)',
+        border: '1px solid var(--cam-strip-icon-border)',
         borderRadius: 999,
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
       }}
     >
       {children}
@@ -49,7 +49,7 @@ export function PillToggle({ active, onClick, children, title, className = '' })
               boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
             }
           : {
-              color: 'rgba(255,255,255,0.85)',
+              color: 'var(--cam-strip-text)',
               borderRadius: 999,
               background: 'transparent',
             }

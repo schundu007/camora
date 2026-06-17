@@ -44,17 +44,17 @@ export default function SectionCard({
               style={{ background: accent }}
             />
           )}
-          <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap">
+          <span className="text-[11px] font-bold uppercase tracking-[0.12em] whitespace-nowrap" style={{ color: 'var(--cam-strip-heading)' }}>
             {title}
           </span>
           {count !== undefined && count !== null && (
             <span
               className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
               style={{
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.16)',
+                background: 'var(--cam-strip-icon-bg)',
+                border: '1px solid var(--cam-strip-icon-border)',
                 borderRadius: 999,
-                color: 'rgba(255,255,255,0.85)',
+                color: 'var(--cam-strip-text)',
               }}
             >
               {count}
