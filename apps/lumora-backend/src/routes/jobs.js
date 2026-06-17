@@ -110,20 +110,26 @@ router.get('/', async (req, res, next) => {
         android: ['android engineer', 'android developer', 'kotlin developer'],
         network: ['network engineer', 'network architect', 'network operations'],
       };
-      const role = req.query.role.toLowerCase();
-      const keywords = categoryKeywords[role];
-      if (keywords) {
-        const roleConds = keywords.map((kw) => {
-          const cond = `j.title ILIKE $${paramIdx}`;
-          params.push(`%${kw}%`);
+      const roles = req.query.role.split(',').map((r) => r.trim().toLowerCase()).filter(Boolean);
+      const roleCondGroups = [];
+      for (const role of roles) {
+        const keywords = categoryKeywords[role];
+        if (keywords) {
+          const roleConds = keywords.map((kw) => {
+            const cond = `j.title ILIKE $${paramIdx}`;
+            params.push(`%${kw}%`);
+            paramIdx++;
+            return cond;
+          });
+          roleCondGroups.push(`(${roleConds.join(' OR ')})`);
+        } else {
+          roleCondGroups.push(`j.title ILIKE $${paramIdx}`);
+          params.push(`%${role}%`);
           paramIdx++;
-          return cond;
-        });
-        conditions.push(`(${roleConds.join(' OR ')})`);
-      } else {
-        conditions.push(`j.title ILIKE $${paramIdx}`);
-        params.push(`%${req.query.role}%`);
-        paramIdx++;
+        }
+      }
+      if (roleCondGroups.length > 0) {
+        conditions.push(`(${roleCondGroups.join(' OR ')})`);
       }
     }
 
