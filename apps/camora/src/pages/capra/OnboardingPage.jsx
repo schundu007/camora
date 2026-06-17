@@ -331,7 +331,7 @@ export default function OnboardingPage() {
           ? intended
           : null;
       markOnboardingComplete();
-      if (resumeText) markResumeUploaded();
+      markResumeUploaded(); // "Complete Setup" always clears the resume gate — resume is optional
       celebrate({ title: 'Profile complete', subtitle: 'Welcome to Camora — your dashboard is ready.' });
       setTimeout(() => navigate(safeIntended || '/capra/prepare'), 600);
     } catch (err) {
@@ -620,7 +620,7 @@ export default function OnboardingPage() {
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
                     )}
-                    {submitting ? 'Setting up...' : 'Complete Setup'}
+                    {submitting ? 'Setting up...' : (uploadedFileName || resumeText ? 'Complete Setup' : 'Continue without Resume')}
                   </button>
 
                   <div className="flex items-center justify-between">
