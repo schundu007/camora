@@ -1007,28 +1007,35 @@ export default function DocsPage({ onBack }) {
                             <Link
                               key={cat.id}
                               to={`/capra/prepare/${cat.href}`}
-                              className="card-lift group relative rounded-lg overflow-hidden flex flex-col active:scale-[0.98]"
-                              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+                              className="card-lift group relative rounded-lg overflow-hidden active:scale-[0.98]"
+                              style={{ height: '120px', display: 'block', border: '1px solid rgba(255,255,255,0.08)' }}
                             >
-                              <TopicIllustration name={cat.id} style={{ aspectRatio: '10 / 1' }} />
-                              <div className="px-3 pt-2.5 pb-2.5 flex flex-col items-center text-center gap-1.5">
-                                <DatabricksThumb
-                                  color={CATEGORY_HEX[cat.id] || 'navy'}
-                                  size={28}
-                                  icon={<Icon name={cat.icon} size={13} style={{ color: '#FFFFFF' }} />}
-                                  title={cat.title}
-                                />
-                                <div>
-                                  <h3 className="text-[13px] font-bold leading-tight tracking-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
-                                  <span className="text-[10px] font-semibold tabular-nums" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
-                                </div>
-                                <div className="w-full flex items-center gap-2">
-                                  <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg-surface)' }}>
-                                    <div className="h-full rounded-full transition-colors duration-1000" style={{ width: `${Math.max(cat.progress, 2)}%`, background: 'var(--accent)' }} />
+                              {/* Full-bleed image */}
+                              <TopicIllustration
+                                name={cat.id}
+                                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', aspectRatio: 'unset' }}
+                              />
+                              {/* Gradient: clear at top, dark at bottom for readability */}
+                              <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(3,10,25,0.6) 45%, rgba(3,10,25,0.93) 100%)' }} />
+                              {/* Overlaid content at bottom */}
+                              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '8px 10px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5 }}>
+                                  <DatabricksThumb
+                                    color={CATEGORY_HEX[cat.id] || 'navy'}
+                                    size={24}
+                                    icon={<Icon name={cat.icon} size={12} style={{ color: '#FFFFFF' }} />}
+                                    title={cat.title}
+                                  />
+                                  <div>
+                                    <h3 className="text-[12px] font-bold leading-tight tracking-tight" style={{ color: '#fff', margin: 0, fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
+                                    <span className="text-[10px] font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
                                   </div>
-                                  <span className="text-[10px] font-bold tabular-nums shrink-0" style={{ color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                                    {cat.progress}%
-                                  </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <div style={{ flex: 1, height: '2px', borderRadius: '9999px', background: 'rgba(255,255,255,0.15)' }}>
+                                    <div style={{ width: `${Math.max(cat.progress, 2)}%`, height: '100%', borderRadius: '9999px', background: 'var(--cam-gold-leaf)', transition: 'width 1s' }} />
+                                  </div>
+                                  <span className="text-[9px] font-bold tabular-nums shrink-0" style={{ color: cat.progress > 0 ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-mono)' }}>{cat.progress}%</span>
                                 </div>
                               </div>
                             </Link>
