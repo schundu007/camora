@@ -316,6 +316,9 @@ async function runMigrations() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         UNIQUE(user_id, filename)
       )`,
+
+      `ALTER TABLE lumora_user_doc_chunks ADD COLUMN IF NOT EXISTS source_key TEXT`,
+      `CREATE INDEX IF NOT EXISTS lumora_user_doc_chunks_source_key ON lumora_user_doc_chunks(source_key)`,
     ];
 
     // Postgres error codes for "already exists" — the legitimate swallow
@@ -365,6 +368,7 @@ import companyContextRouter from './routes/companyContext.js';
 import audioPrefsRouter from './routes/audioPreferences.js';
 import usercodeRouter from './routes/usercode.js';
 import githubRouter from './routes/github.js';
+import internalRouter from './routes/internal.js';
 
 // Per-IP rate limiting — previously only ascend had limits. Transcribe/speaker/
 // diagram were wide open to abuse before this.
@@ -418,6 +422,8 @@ app.use('/api/v1/usage', apiLimiter, authenticate, usageRouter);
 app.use('/api/v1/jobs', apiLimiter, jobsRouter); // jobs feed is public-readable
 app.use('/api/v1/stories', apiLimiter, storiesRouter); // stories feed is public-readable
 app.use('/api/v1/github', apiLimiter, authenticate, requirePaidSubscription, githubRouter);
+
+app.use('/internal', internalRouter);
 
 // Global error handler — generic message to client, full details to logs.
 app.use((err, req, res, next) => {

@@ -21,6 +21,10 @@ import { refreshCompanyContext } from '../services/companyContext.js';
 import { indexUserPrepDocs } from '../services/userDocIndexer.js';
 import { buildSessionKit } from '../services/sessionKit.js';
 import { buildWebWatchlist } from '../services/webWatchlist.js';
+import { r2, R2_BUCKET } from '../lib/r2.js';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+
+const slugify = s => String(s).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
 const router = Router();
 
@@ -89,6 +93,14 @@ router.put('/state', async (req, res, next) => {
         .then(() => buildSessionKit({ userId: req.user.id, prepData: data }))
         .then(() => buildWebWatchlist({ userId: req.user.id, prepData: data }))
         .catch((err) => console.warn('[prep] index/kit/watchlist pipeline failed:', err.message));
+
+      const r2Key = `users/${req.user.id}/companies/${slugify(data.activeCompany || 'default')}/prep_state.json`;
+      r2.send(new PutObjectCommand({
+        Bucket: R2_BUCKET,
+        Key: r2Key,
+        Body: serialized,
+        ContentType: 'application/json',
+      })).catch(err => console.warn('[prep] R2 sync failed:', err.message));
     } catch {}
 
     res.json({ updated_at: r.rows[0].updated_at });

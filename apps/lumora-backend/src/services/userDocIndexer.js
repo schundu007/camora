@@ -99,3 +99,31 @@ export async function indexUserPrepDocs({ userId, prepData }) {
   }
   return { written: chunks.length, version };
 }
+
+export async function indexR2Doc({ r2Key, userId, companySlug }) {
+  if (!r2Key || !userId || !companySlug) return { skipped: true };
+  const { fetchR2Text } = await import('../lib/r2.js');
+  const text = await fetchR2Text(r2Key);
+  if (!text || text.trim().length < 20) return { skipped: true };
+
+  const parts = splitForUserDoc(text);
+  const version = Date.now();
+  await query('DELETE FROM lumora_user_doc_chunks WHERE user_id = $1 AND source_key = $2', [userId, r2Key]);
+  const vecs = await embedBatch(parts);
+  for (let i = 0; i < parts.length; i++) {
+    await query(
+      `INSERT INTO lumora_user_doc_chunks
+         (user_id, company_key, doc_kind, section, content, token_count,
+          embedding, metadata, prep_state_version, source_key)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::vector, $8::jsonb, $9, $10)`,
+      [
+        userId, companySlug, 'research_doc', `r2:${i}`, parts[i], estimateTokens(parts[i]),
+        `[${vecs[i].join(',')}]`,
+        JSON.stringify({ r2Key }),
+        version,
+        r2Key,
+      ],
+    );
+  }
+  return { written: parts.length, version };
+}
