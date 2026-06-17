@@ -44,15 +44,15 @@ export default function ContentHeading({
         <span
           className="text-[10px] font-bold landing-mono tabular-nums tracking-[0.18em] px-2 py-0.5 rounded flex-shrink-0"
           style={{
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.16)',
+            background: 'var(--cam-strip-icon-bg)',
+            border: '1px solid var(--cam-strip-icon-border)',
             color: 'var(--cam-gold-leaf, #c9a55d)',
           }}
         >
           {eyebrow}
         </span>
       )}
-      <h3 className="text-[15px] font-bold text-white landing-display tracking-tight min-w-0 leading-snug">
+      <h3 className="text-[15px] font-bold landing-display tracking-tight min-w-0 leading-snug" style={{ color: 'var(--cam-strip-heading)' }}>
         {title}
       </h3>
       {pills && pills.length > 0 && (
@@ -62,10 +62,10 @@ export default function ContentHeading({
               key={i}
               className="text-[10px] font-semibold tracking-wider px-2 py-0.5"
               style={{
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.16)',
+                background: 'var(--cam-strip-icon-bg)',
+                border: '1px solid var(--cam-strip-icon-border)',
                 borderRadius: 999,
-                color: 'rgba(255,255,255,0.85)',
+                color: 'var(--cam-strip-text)',
               }}
             >
               {p}

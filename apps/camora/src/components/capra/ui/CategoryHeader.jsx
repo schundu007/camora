@@ -39,24 +39,24 @@ export default function CategoryHeader({
         <div
           className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
           style={{
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.16)',
+            background: 'var(--cam-strip-icon-bg)',
+            border: '1px solid var(--cam-strip-icon-border)',
           }}
         >
           <Icon name={icon} size={12} style={{ color: 'var(--cam-gold-leaf-lt)' }} />
         </div>
       )}
-      <h3 className="text-[12px] font-bold uppercase tracking-[0.12em] text-white whitespace-nowrap landing-display min-w-0 truncate">
+      <h3 className="text-[12px] font-bold uppercase tracking-[0.12em] whitespace-nowrap landing-display min-w-0 truncate" style={{ color: 'var(--cam-strip-heading)' }}>
         {title}
       </h3>
       {count !== undefined && count !== null && !progress && (
         <span
           className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 flex-shrink-0"
           style={{
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.16)',
+            background: 'var(--cam-strip-icon-bg)',
+            border: '1px solid var(--cam-strip-icon-border)',
             borderRadius: 999,
-            color: 'rgba(255,255,255,0.85)',
+            color: 'var(--cam-strip-text)',
           }}
         >
           {count}
@@ -68,10 +68,10 @@ export default function CategoryHeader({
           <span
             className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 flex-shrink-0"
             style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.16)',
+              background: 'var(--cam-strip-icon-bg)',
+              border: '1px solid var(--cam-strip-icon-border)',
               borderRadius: 999,
-              color: 'rgba(255,255,255,0.85)',
+              color: 'var(--cam-strip-text)',
             }}
           >
             {progress.done}/{progress.total}
@@ -79,8 +79,8 @@ export default function CategoryHeader({
           <div
             className="h-1.5 rounded-full overflow-hidden flex-1 max-w-[120px]"
             style={{
-              background: 'rgba(255,255,255,0.10)',
-              border: '1px solid rgba(255,255,255,0.16)',
+              background: 'var(--cam-strip-icon-bg)',
+              border: '1px solid var(--cam-strip-icon-border)',
             }}
           >
             <div

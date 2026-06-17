@@ -37,8 +37,8 @@ export default function SectionHero({
             <div
               className="inline-flex items-center gap-2 mb-2 px-2.5 py-1 rounded-full"
               style={{
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.16)',
+                background: 'var(--cam-strip-icon-bg)',
+                border: '1px solid var(--cam-strip-icon-border)',
               }}
             >
               <span
@@ -48,16 +48,16 @@ export default function SectionHero({
                   boxShadow: '0 0 8px rgba(217,181,67,0.55)',
                 }}
               />
-              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/85">
+              <span className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--cam-strip-text)' }}>
                 {eyebrow}
               </span>
             </div>
           )}
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-tight">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight leading-tight" style={{ color: 'var(--cam-strip-heading)' }}>
             {title}
           </h2>
           {subtitle && (
-            <p className="text-sm mt-1.5" style={{ color: 'rgba(255,255,255,0.78)' }}>
+            <p className="text-sm mt-1.5" style={{ color: 'var(--cam-strip-text)' }}>
               {subtitle}
             </p>
           )}
