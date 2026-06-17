@@ -133,8 +133,8 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
                 borderBottom: '1px solid var(--cam-gold-leaf)',
               }}
             >
-              <p className="text-xs font-bold truncate text-white">{user.name || 'User'}</p>
-              <p className="text-[10px] truncate" style={{ color: 'rgba(255,255,255,0.72)' }}>{user.email}</p>
+              <p className="text-xs font-bold truncate" style={{ color: 'var(--cam-strip-heading)' }}>{user.name || 'User'}</p>
+              <p className="text-[10px] truncate" style={{ color: 'var(--cam-strip-text-muted)' }}>{user.email}</p>
             </div>
 
             {/* Menu items */}
