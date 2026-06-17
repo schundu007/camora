@@ -1341,14 +1341,14 @@ export default function JobsPage() {
                       background: 'var(--bg-surface)',
                       border: isStale ? '1px solid rgba(245,158,11,0.35)' : '1px solid var(--border)',
                       borderRadius: '8px',
-                      padding: '20px 24px',
+                      padding: '10px 14px',
                       transition: 'border-color 0.15s, background 0.15s',
                     } as React.CSSProperties}
                   >
                     {/* Title row — title left, share/bookmark icons right */}
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '6px' }}>
                       <h3 style={{
-                        fontSize: '17px',
+                        fontSize: '14px',
                         fontWeight: 600,
                         color: 'var(--text-primary)',
                         margin: 0,
@@ -1385,7 +1385,7 @@ export default function JobsPage() {
                     {/* Compact metadata row — icon + value, separated by gaps.
                         Mirrors Google Careers' "Google · Sunnyvale, CA · Mid"
                         rhythm. Uses neutral text-secondary for the row. */}
-                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 18px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px 18px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                         {renderLogo()}
                         <span style={{ fontWeight: 500 }}>{job.company_name}</span>
@@ -1437,12 +1437,12 @@ export default function JobsPage() {
                       const snippet = raw.length > 320 ? raw.slice(0, 320) + '…' : raw;
                       return (
                         <p style={{
-                          margin: '0 0 18px',
+                          margin: '0 0 10px',
                           fontSize: '13px',
-                          lineHeight: '1.65',
+                          lineHeight: '1.55',
                           color: 'var(--text-muted)',
                           display: '-webkit-box',
-                          WebkitLineClamp: 4,
+                          WebkitLineClamp: 3,
                           WebkitBoxOrient: 'vertical',
                           overflow: 'hidden',
                         }}>
@@ -1462,7 +1462,7 @@ export default function JobsPage() {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '6px',
-                          padding: '8px 18px',
+                          padding: '5px 12px',
                           fontSize: '13px',
                           fontWeight: 500,
                           color: 'var(--accent)',
@@ -1590,7 +1590,7 @@ export default function JobsPage() {
         .jobs-grid {
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 6px;
         }
         /* Sidebar filter <details> groups — Google Careers' collapsible
            filter sections. Native disclosure widget gives free
