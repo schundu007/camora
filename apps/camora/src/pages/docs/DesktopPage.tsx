@@ -9,7 +9,6 @@ export default function DesktopDocsPage() {
       title="Desktop app"
       description="Native macOS shell that adds system audio loopback, native screenshot capture, real PDF/DOCX export, and a global show/hide hotkey."
       path="/docs/desktop"
-      eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Desktop app' }]}
       onThisPage={[
         { id: 'why-desktop', label: 'Why use the desktop app' },

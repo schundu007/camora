@@ -13,7 +13,6 @@ export default function ResumePage() {
     <div style={{ minHeight: '100vh' }}>
       {/* Hero band — shared HeroBand primitive matches every Capra surface */}
       <HeroBand
-        eyebrow="AI-Powered"
         title={
           <>
             Resume <HeroAccent>Optimizer</HeroAccent>

@@ -475,7 +475,6 @@ export default function LandingPage() {
             <div className="lg:col-span-5">
               <Reveal>
                 <SectionHeading
-                  eyebrow="Camora · AI copilot"
                   title={<>One tool.<br /><span className="text-[var(--cam-primary)]">Every session.</span></>}
                   lead="Live voice assistance. Coding with three approaches and follow-ups. Multi-cloud architecture on AWS, GCP, Azure. Complete design problems: requirements through API. Company-specific prep for the full loop. Session scoring across every dimension."
                 />
@@ -503,7 +502,6 @@ export default function LandingPage() {
         <Container>
           <Reveal>
             <SectionHeading
-              eyebrow="Only on Camora"
               title="Features that set us apart."
               lead="Live transcription. Architecture diagrams. AI-scored mocks. Built so the live session goes the way you rehearsed."
             />
@@ -568,7 +566,6 @@ export default function LandingPage() {
             <div className="lg:col-span-5">
               <Reveal delay={0.12}>
                 <SectionHeading
-                  eyebrow="Smart prep"
                   title={<>Paste a job URL.<br /><span className="text-[var(--cam-primary)]">Get a prep plan.</span></>}
                   lead="AI analyzes the job description, identifies required skills, and generates a tailored preparation plan with coding topics, system design patterns, and behavioral questions."
                 />
@@ -589,21 +586,18 @@ export default function LandingPage() {
           <Reveal>
             <SectionHeading
               align="center"
-              eyebrow="Built for both sides of the table"
               title={<>One platform. <span className="text-[var(--cam-primary)]">Two audiences.</span></>}
             />
           </Reveal>
 
           <div className="mt-14 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
             <AudienceCard
-              eyebrow="For engineers"
               title="Roles, practice & live AI"
                body="1,000+ engineering roles matched to your skills, 600+ curated study topics with diagrams, and 9,500+ problems with AI feedback. Then live transcription assistance during the session itself: the moment that decides the offer."
               ctaLabel={isAuthenticated ? 'Open dashboard' : 'Start free'}
               ctaHref="/capra/prepare"
             />
             <AudienceCard
-              eyebrow="For recruiters"
               title="Identify top technical talent"
               body="Camora trains engineers, then helps you spot them. Sponsor coding contests, surface candidates ready for the loop, and shorten time-to-hire."
               ctaLabel="Explore partnerships"

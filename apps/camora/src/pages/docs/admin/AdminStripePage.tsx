@@ -7,7 +7,6 @@ export default function AdminStripePage() {
       title="Stripe configuration"
       description="Price IDs to create, webhook events to subscribe to, test mode walkthrough."
       path="/docs/admin/stripe"
-      eyebrow="ADMIN RUNBOOK"
       breadcrumbs={[{ label: 'Admin', to: '/docs/admin' }, { label: 'Stripe' }]}
       onThisPage={[
         { id: 'price-ids', label: 'Price IDs' },

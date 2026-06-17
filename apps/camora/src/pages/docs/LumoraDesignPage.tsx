@@ -13,7 +13,6 @@ export default function LumoraDesignDocsPage() {
       title="System Design"
       description="How to use the System Design tab — asking design questions, the interactive Scale Calculator, scalability tier drill-downs, the architecture diagram, and tips for live design interviews."
       path="/docs/lumora-design"
-      eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'System Design' }]}
       onThisPage={[
         { id: 'what-it-does', label: 'What it does' },

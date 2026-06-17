@@ -14,7 +14,6 @@ export default function LumoraLivePage() {
       title="Live Session"
       description="How to set up and use Camora during a real interview — audio capture, the four answer surfaces, hotkeys, sessions, and troubleshooting."
       path="/docs/lumora-live"
-      eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Live Session' }]}
       onThisPage={[
         { id: 'what-it-does', label: 'What it does' },

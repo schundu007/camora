@@ -8,7 +8,6 @@ export default function AdminOverviewPage() {
       title="Operations overview"
       description="Service map, deployment topology, what runs where, and how the pieces connect."
       path="/docs/admin"
-      eyebrow="ADMIN RUNBOOK"
       breadcrumbs={[{ label: 'Admin', to: '/docs/admin' }, { label: 'Overview' }]}
       onThisPage={[
         { id: 'service-map', label: 'Service map' },

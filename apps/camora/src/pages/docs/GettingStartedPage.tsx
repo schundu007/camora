@@ -8,7 +8,6 @@ export default function GettingStartedPage() {
       title="Getting started"
       description="Sign up, complete onboarding, and run your first prep session in under 5 minutes."
       path="/docs/getting-started"
-      eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Getting started' }]}
       onThisPage={[
         { id: 'sign-up', label: 'Sign up' },

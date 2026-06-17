@@ -207,7 +207,6 @@ export default function PrepPlanPage() {
     <div className="min-h-screen flex flex-col">
       {/* Hero band \u2014 shared HeroBand primitive matches every Capra surface */}
       <HeroBand
-        eyebrow={target_role ? `${target_role}` : 'Prep'}
         title={<>{target_company} <HeroAccent>Prep</HeroAccent></>}
         subtitle={formattedDate}
         actions={

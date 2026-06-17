@@ -8,7 +8,6 @@ export default function PracticeDocsPage() {
       title="Practice"
       description="Timed practice sessions — three modes (Quick Fire, Deep Dive, Mock), per-company filtering, AI grading on a 5-dimension rubric."
       path="/docs/practice"
-      eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Practice' }]}
       onThisPage={[
         { id: 'overview', label: 'Overview' },

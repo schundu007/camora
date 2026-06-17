@@ -8,7 +8,6 @@ export default function AccountDocsPage() {
       title="Account & billing"
       description="Plans, payment methods, cancellation, resume, refunds — everything about the money side of Camora."
       path="/docs/account"
-      eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Account & billing' }]}
       onThisPage={[
         { id: 'plans', label: 'Plans' },

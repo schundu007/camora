@@ -7,7 +7,6 @@ export default function VoiceFilteringDocsPage() {
       title="Voice filtering"
       description="Speaker verification — Camora records your voiceprint once, then transcribes only the interviewer's voice during a live session."
       path="/docs/voice-filtering"
-      eyebrow="USER GUIDE"
       breadcrumbs={[{ label: 'Voice filtering' }]}
       onThisPage={[
         { id: 'why', label: 'Why this exists' },
