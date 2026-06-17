@@ -302,7 +302,7 @@ export default function JobsPage() {
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
   const [experienceFilter, setExperienceFilter] = useState<string[]>([]);
-  const [postedWithinFilter, setPostedWithinFilter] = useState('3');
+  const [postedWithinFilter, setPostedWithinFilter] = useState('14');
   const [salaryMinFilter, setSalaryMinFilter] = useState('');
   const [salaryMaxFilter, setSalaryMaxFilter] = useState('');
   const [excludeVisaRestrictions, setExcludeVisaRestrictions] = useState(false);
@@ -592,7 +592,7 @@ export default function JobsPage() {
     setRoles([]);
     setSourceFilter(''); setWorkTypeFilter('');
     setDepartmentFilter(''); setCompanyFilter(''); setExperienceFilter([]);
-    setPostedWithinFilter('7'); setSalaryMinFilter(''); setSalaryMaxFilter('');
+    setPostedWithinFilter('14'); setSalaryMinFilter(''); setSalaryMaxFilter('');
     setExcludeVisaRestrictions(false);
     setSidebarOpen(false);
   };
