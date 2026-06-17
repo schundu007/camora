@@ -496,6 +496,7 @@ export async function* streamResponse(question, history, options = {}) {
     // by the frontend from useCloudProvider; defaults to 'aws' to match
     // the existing AWS-flavored prompts.
     cloudProvider = 'aws',
+    mode = 'general',
     // Optional AbortSignal passed from the route so a client disconnect can tear
     // down the Anthropic stream instead of letting it burn tokens to completion.
     signal = null,
@@ -507,8 +508,11 @@ export async function* streamResponse(question, history, options = {}) {
   const isShortMode = question.startsWith('[SHORT] ');
   const cleanQuestion = isShortMode ? question.slice(8) : question;
 
-  const isDesign = isDesignQuestion(cleanQuestion);
-  const isCoding = !isDesign && isCodingQuestion(cleanQuestion);
+  const isDesignHeuristic = isDesignQuestion(cleanQuestion);
+  const isCodingHeuristic = !isDesignHeuristic && isCodingQuestion(cleanQuestion);
+  const isBehavioral = mode === 'behavioral';
+  const isDesign = mode === 'design' ? true : (mode === 'coding' || isBehavioral ? false : isDesignHeuristic);
+  const isCoding = mode === 'coding' ? true : (mode === 'design' || isBehavioral ? false : isCodingHeuristic);
 
   // Resolve context — custom assistant context takes priority over defaults
   // Retrieved grounding (Capra KB + user Prep Kit chunks) is prepended
@@ -654,13 +658,16 @@ Think: What would fit on a sticky note that helps someone ace this question?`;
     const codingGrounding = retrievedContext
       ? `${retrievedContext}\n\n---\n\n`
       : '';
+    const codingResumeBlock = resumeContext
+      ? `\n\n=== CANDIDATE BACKGROUND ===\n${resumeContext.slice(0, 3000)}\nThread named projects and metrics into examples where relevant.`
+      : '';
     systemPrompt = codingGrounding + CODING_SYSTEM_PROMPT + `
 
 IMPORTANT CODE FORMATTING RULE:
 - ALL code MUST be wrapped in triple backtick code blocks with language identifier.
 - Example: \`\`\`python\\ncode here\\n\`\`\`
 - NEVER put code outside of code blocks.
-- Separate explanatory text from code blocks clearly.`;
+- Separate explanatory text from code blocks clearly.` + codingResumeBlock;
     maxTokens = MAX_TOKENS_DESIGN;
   } else if (isDesign) {
     // Branch the design prompt by archetype. Frontend may pass an
@@ -672,7 +679,15 @@ IMPORTANT CODE FORMATTING RULE:
     systemPrompt = buildDesignPrompt(resume, technical, detailLevel, cloudProvider, resolvedKind);
     maxTokens = MAX_TOKENS_DESIGN;
   } else {
-    const basePrompt = buildGeneralPrompt(resume, technical) + `
+    let storyAnchorBlock = '';
+    if (isBehavioral) {
+      try {
+        const { buildStoryAnchorBlock } = await import('./storyAnchor.js');
+        const anchor = await buildStoryAnchorBlock(userId, cleanQuestion);
+        storyAnchorBlock = anchor.block;
+      } catch {}
+    }
+    const basePrompt = buildGeneralPrompt(resume, technical) + storyAnchorBlock + `
 
 IMPORTANT CODE FORMATTING RULE:
 - If your answer includes ANY code, it MUST be in triple backtick code blocks with language identifier.
