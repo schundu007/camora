@@ -14,8 +14,8 @@ import Chip from '@/components/shared/ui/Chip';
 const ExcalidrawWhiteboard = lazy(() => import('../../components/shared/diagrams/ExcalidrawWhiteboard'));
 const DashboardPage = lazy(() => import('./DashboardPage'));
 const SQLPlayground = lazy(() => import('../../components/capra/sql/SQLPlayground'));
-const PlaygroundLayout = lazy(() => import('../../components/lumora/playground/PlaygroundLayout'));
-const AskLayout = lazy(() => import('../../components/lumora/ask/AskLayout'));
+const PlaygroundLayout = lazy(() => import('../../components/lumora/playground/PlaygroundLayout').then(m => ({ default: m.PlaygroundLayout })));
+const AskLayout = lazy(() => import('../../components/lumora/ask/AskLayout').then(m => ({ default: m.AskLayout })));
 
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
