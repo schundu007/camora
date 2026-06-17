@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-17T00:00:00Z",
+  "title": "Design System: Camora",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Linode Blue",
+        "canonical": "#3683DC",
+        "tonalRamp": ["#0B1B3F","#0F2A5A","#1A4070","#2265BF","#3683DC","#4D94E8","#7AB3F0","#A8CFF7","#D0E7FC","#EEF5FE"]
+      },
+      "gold-leaf": {
+        "role": "secondary",
+        "displayName": "Warm Gold",
+        "canonical": "#D4A043",
+        "tonalRamp": ["#2A1A05","#4A300A","#7A5C0A","#A8832E","#C2963E","#D4A043","#E0B155","#EECB80","#F5DFB0","#FBF2DC"]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Danger Red",
+        "canonical": "#EF4444",
+        "tonalRamp": ["#2D0A0A","#5A1414","#8B1F1F","#B91C1C","#DC2626","#EF4444","#F87171","#FCA5A5","#FCD4D4","#FEF2F2"]
+      },
+      "bg-app": {
+        "role": "neutral",
+        "displayName": "Void Charcoal",
+        "canonical": "#0E0E11",
+        "tonalRamp": ["#0A0A0C","#0E0E11","#141417","#1C1C22","#26262E","#32323C","#464B54","#647084","#9BAAB8","#F0EEE9"]
+      },
+      "light-bg-app": {
+        "role": "neutral",
+        "displayName": "Education Blue-White",
+        "canonical": "#E6EEF8",
+        "tonalRamp": ["#C0D0E8","#C8D9ED","#D4E3F4","#DDE9F6","#E6EEF8","#EFF5FB","#F3F7FC","#F5F9FD","#F8FBFF","#FFFFFF"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Section headings in prep content and docs pages. Always paired with navy 4px left-strip ::before and fading hairline ::after." },
+      "headline": { "displayName": "Headline", "purpose": "Landing page hero text and largest marketing display only." },
+      "title": { "displayName": "Title", "purpose": "Viz-caption figure titles. text-wrap: balance. Clash Display only." },
+      "body": { "displayName": "Body", "purpose": "Primary reading surface. 72ch max-width. Only in .prep-content and .docs-page contexts." },
+      "body-sm": { "displayName": "Body SM", "purpose": "Card descriptions, supplementary prose outside .prep-content, nav link text." },
+      "label": { "displayName": "Eyebrow Label", "purpose": "Mono eyebrows, figure sequence labels, status IDs. 0.18em tracking uppercase." },
+      "section-label": { "displayName": "Section Label", "purpose": "Inline category labels (DESIGN / DSA / BEHAVIORAL). Always in var(--accent-text)." }
+    },
+    "shadows": [
+      { "name": "shadow-xs", "value": "0 1px 2px rgba(0,0,0,0.4)", "purpose": "Button rest state. Almost imperceptible." },
+      { "name": "shadow-sm", "value": "0 1px 2px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35)", "purpose": "Card rest shadow (--card-shadow). All .card, .card-sm, .block-base, .grid-card." },
+      { "name": "shadow-md", "value": "0 2px 4px rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.45)", "purpose": "Floating chrome: topbar, sidebar drawer overlay." },
+      { "name": "shadow-lg", "value": "0 4px 8px rgba(0,0,0,0.4), 0 12px 32px rgba(0,0,0,0.5)", "purpose": "Popovers, dropdown menus." },
+      { "name": "shadow-xl", "value": "0 8px 16px rgba(0,0,0,0.45), 0 24px 56px rgba(0,0,0,0.55)", "purpose": "Modal scrims, command palette, Shepherd.js tour." },
+      { "name": "shadow-accent-sm", "value": "0 2px 8px rgba(37,99,235,0.22), 0 8px 24px rgba(37,99,235,0.12)", "purpose": "btn-primary:hover glow. Navy-tinted lift." },
+      { "name": "card-lift-hover", "value": "0 6px 20px rgba(37,99,235,0.12), 0 2px 6px rgba(37,99,235,0.06)", "purpose": ".card-lift:hover. Interactive topic and category cards." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "0.15s ease-out", "purpose": "Default for all named property transitions (background-color, border-color, color, opacity)." },
+      { "name": "ease-lift", "value": "200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)", "purpose": ".card-lift transform + box-shadow transitions." },
+      { "name": "ease-spring", "value": "cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "View transition FLIP morphing for lumora tab pills (300ms). Mobile sheet entrance (200ms)." },
+      { "name": "ease-celebration", "value": "320ms cubic-bezier(0.34, 1.56, 0.64, 1)", "purpose": ".celebration-badge scale: slight overshoot on entry, restrained enterprise feel." },
+      { "name": "tab-fade-in", "value": "200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)", "purpose": "Tab content swap entrance. Apply with key={activeTab} so React remounts." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px", "note": ".page-wrap gutter increases to 1.5rem" },
+      { "name": "md", "value": "768px", "note": "Lumora rail appears (--lumora-rail-offset: 80px). Docs mobile relaxations apply below this." },
+      { "name": "lg", "value": "1024px", "note": ".page-wrap gutter increases to 2rem" },
+      { "name": "content-max", "value": "720px (default) / 760px (capra)", "note": "CSS custom property --content-max; overridden by [data-product=capra]" },
+      { "name": "page-max", "value": "1280px", "note": "--page-max on .page-wrap" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The canonical call-to-action. Navy fill, white text, 8px radius. Used for Ask Sona, Save, Submit actions.",
+      "html": "<button class=\"ds-btn-primary\">Ask Sona</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; background: #3683DC; color: #ffffff; font-size: 14px; font-weight: 600; font-family: system-ui, sans-serif; border-radius: 8px; border: none; cursor: pointer; transition: background-color 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.15s ease-out; } .ds-btn-primary:hover { background: #2265BF; box-shadow: 0 2px 8px rgba(37,99,235,0.22), 0 8px 24px rgba(37,99,235,0.12); } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; } .ds-btn-primary:focus-visible { outline: 2px solid rgba(54,131,220,0.55); outline-offset: 2px; border-radius: 8px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Transparent fill with border. Hover accents border and text with navy. Used alongside primary for secondary actions.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; background: transparent; color: #9BAAB8; font-size: 14px; font-weight: 600; font-family: system-ui, sans-serif; border-radius: 8px; border: 1px solid #26262E; cursor: pointer; transition: background-color 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out; } .ds-btn-secondary:hover { border-color: #3683DC; color: #2265BF; } .ds-btn-secondary:active { transform: scale(0.97); } .ds-btn-secondary:focus-visible { outline: 2px solid rgba(54,131,220,0.55); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Utility action button for dense UI (session row controls, filter reset). Tighter padding than secondary.",
+      "html": "<button class=\"ds-btn-ghost\">Clear</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; background: transparent; color: #9BAAB8; font-size: 13px; font-weight: 600; font-family: system-ui, sans-serif; border-radius: 8px; border: 1px solid #26262E; cursor: pointer; transition: background-color 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out; } .ds-btn-ghost:hover { background: #1C1C22; color: #F0EEE9; border-color: #32323C; } .ds-btn-ghost:active { transform: scale(0.97); } .ds-btn-ghost:focus-visible { outline: 2px solid rgba(54,131,220,0.55); outline-offset: 2px; }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip-default",
+      "description": "Toggleable filter pill. Unselected: surface fill with border. Selected: navy fill, white text.",
+      "html": "<button class=\"ds-chip\">System Design</button><button class=\"ds-chip ds-chip-active\">Behavioral</button>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; font-size: 12px; font-weight: 600; font-family: system-ui, sans-serif; border-radius: 9999px; border: 1px solid #26262E; background: #141417; color: #9BAAB8; cursor: pointer; white-space: nowrap; transition: background-color 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out; } .ds-chip:hover:not(.ds-chip-active) { border-color: #32323C; color: #F0EEE9; } .ds-chip-active { background: #3683DC; border-color: #3683DC; color: #ffffff; } .ds-chip:focus-visible { outline: 2px solid rgba(54,131,220,0.55); outline-offset: 2px; }"
+    },
+    {
+      "name": "Badge",
+      "kind": "chip",
+      "refersTo": "badge-primary",
+      "description": "Read-only label. Never interactive. Navy, gold, danger, or muted variants. 10px mono uppercase.",
+      "html": "<span class=\"ds-badge ds-badge-primary\">NEW</span> <span class=\"ds-badge ds-badge-gold\">PRO</span> <span class=\"ds-badge ds-badge-danger\">BETA</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; padding: 2px 8px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; border-radius: 4px; white-space: nowrap; line-height: 1.5; } .ds-badge-primary { background: rgba(54,131,220,0.12); color: #3683DC; border: 1px solid rgba(54,131,220,0.25); } .ds-badge-gold { background: rgba(212,160,67,0.12); color: #8A6B2A; border: 1px solid rgba(212,160,67,0.25); } .ds-badge-danger { background: rgba(239,68,68,0.10); color: #EF4444; border: 1px solid rgba(239,68,68,0.20); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Standard surface container. 12px radius, hairline border, near-invisible rest shadow. Hover darkens border.",
+      "html": "<div class=\"ds-card\"><p style=\"margin:0;font-size:15px;color:#9BAAB8;\">Card content here.</p></div>",
+      "css": ".ds-card { background: #141417; border: 1px solid #26262E; border-radius: 12px; padding: 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35); transition: border-color 0.15s ease-out; } .ds-card:hover { border-color: #32323C; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Standard text field. Elevated fill, hairline border, navy focus ring glow.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Enter your answer…\" />",
+      "css": ".ds-input { width: 100%; background: #1C1C22; border: 1px solid #26262E; color: #F0EEE9; border-radius: 8px; padding: 10px 16px; font-size: 15px; font-family: system-ui, sans-serif; outline: none; transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out; } .ds-input::placeholder { color: #647084; } .ds-input:focus { border-color: #3683DC; box-shadow: 0 0 0 3px rgba(37,99,235,0.18); }"
+    },
+    {
+      "name": "Segmented Tab Group",
+      "kind": "nav",
+      "refersTo": "tab-group-item-active",
+      "description": "Pill-shaped segmented control. JetBrains Mono uppercase. Active pill: navy fill. Container: elevated bg with border.",
+      "html": "<div class=\"ds-tab-group\"><button class=\"ds-tab-item ds-tab-active\">Overview</button><button class=\"ds-tab-item\">Practice</button><button class=\"ds-tab-item\">Solutions</button></div>",
+      "css": ".ds-tab-group { display: flex; align-items: center; gap: 2px; padding: 3px; border-radius: 999px; background: #1C1C22; border: 1px solid #26262E; width: fit-content; } .ds-tab-item { padding: 5px 14px; border-radius: 999px; font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.08em; color: #9BAAB8; background: transparent; border: none; cursor: pointer; white-space: nowrap; transition: color 0.15s ease-out, background-color 0.15s ease-out; } .ds-tab-item:hover:not(.ds-tab-active) { color: #F0EEE9; } .ds-tab-active { background: #3683DC; color: #ffffff; font-weight: 700; }"
+    },
+    {
+      "name": "Section Heading (h2)",
+      "kind": "custom",
+      "refersTo": "display",
+      "description": "The canonical .prep-content / .docs-page h2 with navy left-strip ::before and fading hairline ::after. The visual backbone of every topic page.",
+      "html": "<h2 class=\"ds-section-h2\">System Design Fundamentals</h2>",
+      "css": ".ds-section-h2 { position: relative; font-size: 31px; line-height: 1.18; font-weight: 700; letter-spacing: -0.016em; color: #2265BF; padding-left: 18px; margin-top: 3rem; margin-bottom: 1.1rem; font-family: 'Clash Display', system-ui, sans-serif; text-wrap: balance; } .ds-section-h2::before { content: ''; position: absolute; left: 0; top: 0.25em; bottom: 0.25em; width: 4px; border-radius: 0 9999px 9999px 0; background: #3683DC; } .ds-section-h2::after { content: ''; display: block; height: 1px; margin-top: 0.7rem; margin-left: -18px; max-width: 18rem; background: linear-gradient(90deg, rgba(54,131,220,0.5) 0%, rgba(54,131,220,0.35) 38%, transparent 100%); }"
+    },
+    {
+      "name": "Viz Figcaption",
+      "kind": "custom",
+      "refersTo": "title",
+      "description": "Editorial caption panel below diagram PNGs. Eyebrow + display title + body prose. The signature Camora reading surface.",
+      "html": "<div class=\"ds-viz-caption\"><span class=\"ds-viz-eyebrow\">Diagram 1 / 3</span><p class=\"ds-viz-title\">Write-Ahead Log Architecture</p><div class=\"ds-viz-body\"><p>The WAL ensures durability by persisting mutations before they reach the B-tree pages. Recovery reads the log forward from the last checkpoint.</p></div></div>",
+      "css": ".ds-viz-caption { font-family: system-ui, sans-serif; padding: 1.125rem 1.5rem 1.25rem; border-bottom: 1px solid #26262E; background: color-mix(in oklab, #1C1C22 60%, transparent); } .ds-viz-eyebrow { display: inline-block; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #647084; margin-bottom: 0.625rem; } .ds-viz-title { margin: 0; font-family: 'Clash Display', system-ui, sans-serif; font-size: 1.125rem; line-height: 1.25; font-weight: 600; letter-spacing: -0.012em; color: #F0EEE9; text-wrap: balance; } .ds-viz-body { margin-top: 0.875rem; font-size: 1rem; line-height: 1.7; color: #F0EEE9; text-wrap: pretty; } .ds-viz-body p { margin: 0 0 0.875rem; } .ds-viz-body p:last-child { margin-bottom: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Navy Atlas",
+    "overview": "Camora is built for the focused evening study session — a software engineer at a desk with good light, 3 weeks out from an interview loop, going deep on system design or behavioral preparation. The interface must feel like a very good textbook that also knows your weaknesses: authoritative, efficient, never entertaining for its own sake. The Navy Atlas is the visual metaphor: a navigator's instrument, not a dashboard. Navy #3683DC is the structural metal of the instrument; gold #D4A043 is the signal amber on the instrument face, pointing at what matters next.\n\nThe product spans two surfaces. Capra (the study product) is long-form: section headings, 72ch measure, sustained reading that earns trust through typographic precision. Lumora (the live interview AI) is dense and time-pressured: monospaced timers, status dots, citation tier badges, single-key affordances under 56px chrome. Both share the navy/gold discipline.\n\nThe light theme is a Linode/iximiuz education aesthetic: blue-only, never gold in light mode. --cam-gold-leaf is intentionally aliased to var(--accent) in [data-theme='light']. Blue-only in light; navy-plus-gold in dark.",
+    "keyCharacteristics": [
+      "Dual-theme, single token layer. :root is dark (charcoal substrate). [data-theme='light'] overrides every token. No duplicated stylesheets.",
+      "Two accent roles, four uses. Blue for primary actions, focus rings, structure markers, success/info states. Gold for signal, momentum, problem counts, agenda numerals, list markers, hard-difficulty badges.",
+      "Hairline-first elevation. Surfaces are flat at rest. 1px var(--border) carries every boundary. Shadows appear only on genuinely floating elements.",
+      "19px body floor on Capra prose. .prep-content and .docs-page paragraphs render at 19px/1.75 with a 72ch measure cap.",
+      "Named transitions, never transition-all. Every interactive element specifies properties explicitly.",
+      "prefers-reduced-motion honored at root. Global @media block disables all keyframe animations in one place."
+    ],
+    "rules": [
+      { "name": "The Two-Accent Rule", "body": "Navy and gold are the only saturated colors that may carry meaning. Green for success reuses navy; warning reuses gold; only --danger (red) is allowed beyond navy + gold, and only for destructive actions.", "section": "colors" },
+      { "name": "The Surface-Wash Rule", "body": "When a tint is needed (hover scrim, state background), use color-mix(in oklab, var(--token) X%, transparent). Never a hardcoded rgba(...).", "section": "colors" },
+      { "name": "The Light-Mode Gold Ban", "body": "In [data-theme='light'], --cam-gold-leaf is aliased to var(--accent). This is intentional. Do not restore gold in light mode.", "section": "colors" },
+      { "name": "The 19px Prose Floor", "body": "Body text inside .prep-content and .docs-page renders at 19px. No running prose anywhere drops below 15px.", "section": "typography" },
+      { "name": "The Display-for-Display-Only Rule", "body": "Clash Display is for headings, titles, and the wordmark. It is never a body font. Body belongs to Nunito Sans / Satoshi.", "section": "typography" },
+      { "name": "The Heading-Strip Rule", "body": "Every h2 in .prep-content and .docs-page carries a 4px rounded navy strip ::before and a fading navy gradient hairline ::after. Every h3 carries an 8px navy hexagon glyph. These are structural, not decorative.", "section": "typography" },
+      { "name": "The Hairline-First Rule", "body": "Every container starts with a 1px var(--border) border, no shadow. Add shadow only when the element needs to read as floating above the page.", "section": "elevation" },
+      { "name": "The Flat-at-Rest Rule", "body": "Cards have --shadow-sm as their rest shadow (nearly invisible). The shadow deepens only on state change. A shadowed surface at rest competes with floating chrome for visual hierarchy.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use var(--accent) (#3683DC) for structure and var(--cam-gold-leaf) for signal. These are the only two saturated accents.",
+      "Do keep body prose at 19px in .prep-content and .docs-page. Constrain measure to 72ch.",
+      "Do use color-mix(in oklab, var(--token) X%, transparent) for tints. Never hardcode rgba(...).",
+      "Do name every transition property explicitly. Never transition-all.",
+      "Do wire focus-visible:outline: 2px solid rgba(54,131,220,0.55) on every interactive element.",
+      "Do use .page-wrap on every public page's main content div.",
+      "Do include prefers-reduced-motion opt-outs for keyframe animations.",
+      "Do keep gold in dark mode only. In light mode --cam-gold-leaf equals var(--accent)."
+    ],
+    "donts": [
+      "Don't use border-left or border-right greater than 1px as a decorative accent stripe on cards or callouts.",
+      "Don't use background-clip: text with a gradient fill on body copy, headings, or navigation.",
+      "Don't default to backdrop-blur glassmorphism on cards or panels.",
+      "Don't use the hero-metric template (big number + small label + supporting stats + gradient accent).",
+      "Don't introduce a third saturated hue. Teal, green, purple, and orange all violate the Two-Accent Rule.",
+      "Don't restore gold in light mode. The --cam-gold-leaf: var(--accent) alias is intentional.",
+      "Don't use LeetCode-style gamification chrome: XP bars, confetti animations, streaks, badge walls.",
+      "Don't use window.confirm / window.alert / window.prompt. Use dialogConfirm / dialogAlert via DialogProvider.",
+      "Don't use Mermaid.js for diagrams. Always Graphviz-generated PNGs from the database cache.",
+      "Don't use generic SVG icons or literal emoji characters in rendered component content.",
+      "Don't use transition-all. Name the properties.",
+      "Don't hide destructive or primary actions behind hover-only affordances.",
+      "Don't implement long-press, double-tap, or swipe gesture controls."
+    ]
+  }
+}
