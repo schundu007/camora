@@ -382,13 +382,17 @@ router.post('/lookup', async (req, res) => {
       tried.add(hash);
 
       const result = await query(
-        'SELECT image_url FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_url IS NOT NULL OR image_data IS NOT NULL) LIMIT 1',
+        'SELECT image_url, (image_data IS NOT NULL) AS has_blob FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_url IS NOT NULL OR image_data IS NOT NULL) LIMIT 1',
         [hash]
       );
 
       if (result.rows.length > 0 && result.rows[0].image_url) {
+        let image_url = result.rows[0].image_url;
+        if (image_url.startsWith('/static/') && result.rows[0].has_blob) {
+          image_url = `/api/diagram/image/${hash}`;
+        }
         console.log(`[DiagramLookup] Cache hit for: ${question.slice(0, 50)} (${p}/${direction}/${detailLevel})`);
-        return res.json({ success: true, image_url: result.rows[0].image_url, cached: true });
+        return res.json({ success: true, image_url, cached: true });
       }
     }
 
