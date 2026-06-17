@@ -1972,14 +1972,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       {!embedded && (
       <header className="flex items-center justify-between h-11 px-3 shrink-0 relative z-20" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-2 md:gap-3">
-          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold rounded transition-colors hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.85)' }}>
+          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold rounded transition-colors hover:bg-white/10" style={{ color: 'var(--cam-strip-text)' }}>
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
             <span className="hidden sm:inline">Back</span>
           </button>
-          <div className="h-4 w-px" style={{ background: 'rgba(255,255,255,0.25)' }} />
-          <span className="font-extrabold text-xs md:text-sm text-white" style={{ fontFamily: "var(--font-sans)" }}>Coding</span>
+          <div className="h-4 w-px" style={{ background: 'var(--cam-strip-icon-border)' }} />
+          <span className="font-extrabold text-xs md:text-sm" style={{ fontFamily: "var(--font-sans)", color: 'var(--cam-strip-heading)' }}>Coding</span>
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-2">
@@ -1987,7 +1987,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           {timerDuration > 0 ? (
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
               timerUrgent ? 'bg-red-500/15 border-red-500/30 text-red-300' :
-              timerSeconds === 0 ? 'bg-white/10 border-white/20 text-white opacity-70' :
+              timerSeconds === 0 ? 'opacity-70' :
               'bg-[rgba(38,97,156,0.15)] border-[rgba(38,97,156,0.3)] text-[var(--accent-text)]'
             }`}>
               <div className="relative w-4 h-4">
@@ -1998,7 +1998,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 </svg>
               </div>
               <span>{formatTime(timerSeconds)}</span>
-              <button onClick={stopTimer} className="ml-1 text-white opacity-75 hover:text-red-400 transition-colors" title="Stop timer">
+              <button onClick={stopTimer} className="ml-1 opacity-75 hover:text-red-400 transition-colors" style={{ color: 'var(--cam-strip-text)' }} title="Stop timer">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -2008,7 +2008,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             <div className="flex items-center">
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
-                  className="px-1.5 py-0.5 text-[10px] font-mono text-white opacity-75 hover:text-white hover:bg-white/10 rounded transition-colors"
+                  className="px-1.5 py-0.5 text-[10px] font-mono opacity-75 hover:opacity-100 hover:bg-white/10 rounded transition-colors" style={{ color: 'var(--cam-strip-text)' }}
                   title={`${m} min timer`}>
                   {m}m
                 </button>
@@ -2032,7 +2032,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                   animation: 'coding-pulse-ring 1.4s ease-out infinite',
                 }}
               />
-              <span className="text-white text-[10px] md:text-xs font-bold uppercase tracking-wider">Generating</span>
+              <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--cam-strip-heading)' }}>Generating</span>
             </div>
           )}
 
@@ -2074,8 +2074,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             <div
               className="flex items-center gap-1 px-1 py-1 shrink-0"
               style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.16)',
+                background: 'var(--cam-strip-icon-bg)',
+                border: '1px solid var(--cam-strip-icon-border)',
                 borderRadius: 999,
                 boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
               }}
@@ -2086,7 +2086,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 style={
                   problemTab === 'description'
                     ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
-                    : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
+                    : { color: 'var(--cam-strip-text)', borderRadius: 999 }
                 }
               >Description</button>
               <button
@@ -2095,7 +2095,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 style={
                   problemTab === 'solution'
                     ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
-                    : { color: 'rgba(255,255,255,0.85)', borderRadius: 999 }
+                    : { color: 'var(--cam-strip-text)', borderRadius: 999 }
                 }
               >
                 Solution
@@ -2113,12 +2113,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               onClick={handleNewProblem}
               className="ml-auto shrink-0 flex items-center justify-center w-7 h-7 rounded-md transition-colors"
               style={{
-                color: 'rgba(255,255,255,0.85)',
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.18)',
+                color: 'var(--cam-strip-text)',
+                background: 'var(--cam-strip-icon-bg)',
+                border: '1px solid var(--cam-strip-icon-border)',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-border)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
               title="New Problem — reset everything for a fresh question"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
