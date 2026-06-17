@@ -250,12 +250,12 @@ export const SonaMicButton = ({ onText, onDone, disabled = false, startTrigger, 
                   className="w-[3px] rounded-sm transition-all duration-75"
                   style={{
                     height: active ? `${8 + i * 2}px` : '4px',
-                    background: hasSpeech ? 'var(--cam-primary)' : 'rgba(255,255,255,0.25)',
+                    background: hasSpeech ? 'var(--cam-primary)' : 'var(--cam-strip-icon-bg)',
                   }}
                 />
               ))}
             </div>
-            <span className="text-[10px]" style={{ color: hasSpeech ? 'var(--cam-primary)' : 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-mono)' }}>
+            <span className="text-[10px]" style={{ color: hasSpeech ? 'var(--cam-primary)' : 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}>
               {hasSpeech ? 'Speaking…' : 'Listening…'}
             </span>
           </>
@@ -266,10 +266,10 @@ export const SonaMicButton = ({ onText, onDone, disabled = false, startTrigger, 
                 <span key={i} className="w-1 h-1 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)', animation: reducedMotion ? undefined : `sona-mic-dot-pulse 1.2s ease-in-out ${i * 0.18}s infinite`, opacity: reducedMotion ? 0.6 : undefined }} />
               ))}
             </span>
-            <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-mono)' }}>Transcribing…</span>
+            <span className="text-[10px]" style={{ color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}>Transcribing…</span>
           </>
         ) : (
-          <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-mono)' }}>Ready</span>
+          <span className="text-[10px]" style={{ color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}>Ready</span>
         )}
         {error && <span className="text-[10px]" style={{ color: 'var(--danger)', fontFamily: 'var(--font-mono)' }}>{error}</span>}
         <style>{`

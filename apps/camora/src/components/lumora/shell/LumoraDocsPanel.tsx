@@ -482,7 +482,7 @@ const CodeBlock = ({ code, language = 'code' }: { code: string; language?: strin
     <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${LC.codeHdr}` }}>
       <div
         className="px-3 py-2 flex items-center justify-between"
-        style={{ background: LC.codeHdr, borderBottom: `1px solid rgba(255,255,255,0.06)` }}
+        style={{ background: LC.codeHdr, borderBottom: `1px solid var(--cam-strip-icon-border)` }}
       >
         <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: LC.codeMuted }}>
           {label}
@@ -2713,10 +2713,10 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           aria-label="Open prep sections"
         >
           <span className="flex items-center gap-2 min-w-0">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-white/70 shrink-0">Section</span>
-            <span className="text-[12px] font-bold text-white truncate">{activeSectionLabel}</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--cam-strip-text-muted)] shrink-0">Section</span>
+            <span className="text-[12px] font-bold text-[var(--cam-strip-heading)] truncate">{activeSectionLabel}</span>
           </span>
-          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-white/85 shrink-0">
+          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--cam-strip-text)] shrink-0">
             Sections
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M6 9l6 6 6-6" />
@@ -2734,7 +2734,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
         {/* LeetCode-style sidebar header */}
         <div className="px-3 py-3" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[10px] font-bold uppercase tracking-wider text-white" style={{ fontFamily: "var(--font-sans)" }}>Prep</h2>
+            <h2 className="text-[10px] font-bold uppercase tracking-wider text-[var(--cam-strip-heading)]" style={{ fontFamily: "var(--font-sans)" }}>Prep</h2>
             {/* Mobile-only collapse button so users can dismiss the
                 sidebar without picking a different section. Hidden on
                 ≥sm where the sidebar is permanent chrome. */}
@@ -2742,7 +2742,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
               type="button"
               onClick={() => setMobileSidebarOpen(false)}
               className="sm:hidden shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
-              style={{ color: 'rgba(255,255,255,0.85)' }}
+              style={{ color: 'var(--cam-strip-text)' }}
               aria-label="Close sections"
               title="Close"
             >
@@ -2765,11 +2765,11 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
               }
               style={{
                 color:
-                  !token ? 'rgba(255,255,255,0.55)'
+                  !token ? 'var(--cam-strip-text-muted)'
                   : syncStatus === 'error'  ? '#FCA5A5'
-                  : syncStatus === 'saving' ? 'rgba(255,255,255,0.85)'
+                  : syncStatus === 'saving' ? 'var(--cam-strip-text)'
                   : syncStatus === 'saved'  ? '#A7F3D0'
-                  : 'rgba(255,255,255,0.55)',
+                  : 'var(--cam-strip-text-muted)',
               }}
             >
               <span
@@ -2777,11 +2777,11 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 className="inline-block w-1.5 h-1.5 rounded-full"
                 style={{
                   background:
-                    !token ? 'rgba(255,255,255,0.35)'
+                    !token ? 'var(--cam-strip-icon-border)'
                     : syncStatus === 'error'  ? '#F87171'
                     : syncStatus === 'saving' ? '#FCD34D'
                     : syncStatus === 'saved'  ? '#3B82B9'
-                    : 'rgba(255,255,255,0.35)',
+                    : 'var(--cam-strip-icon-border)',
                 }}
               />
               {!token ? 'Local only' : syncStatus === 'saving' ? 'Saving…' : syncStatus === 'saved' ? 'Saved' : syncStatus === 'error' ? 'Sync failed' : 'Idle'}
