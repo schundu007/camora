@@ -162,6 +162,11 @@
     --lumora-chrome-text:   rgba(240,238,233,0.85);
     --lumora-chrome-hover:  rgba(240,238,233,0.08);
 
+    /* On-accent — text/icon color for any surface painted with --accent.
+       White in both themes; extracted here so every .chip-active / .tab-*-active
+       / .btn-primary uses the same token rather than a bare #ffffff. */
+    --cam-on-accent: #ffffff;
+
     /* Near-black for immersive surfaces */
     --bg-near-black: #080A0F;
 
@@ -246,15 +251,26 @@
     --cam-void:         #F4F3F0;
     --cam-surface-lt:   #EEEDEA;
 
+    --cam-on-accent: #ffffff;
+
     --lumora-chrome-bg:     var(--cam-hero-strip);
     --lumora-chrome-border: rgba(37,99,235,0.15);
     --lumora-chrome-shadow: inset 0 -2px 0 var(--accent);
     --lumora-chrome-text:   rgba(18,20,26,0.75);
-    --lumora-chrome-hover:  rgba(37,99,235,0.06);
+    --lumora-chrome-hover:  color-mix(in oklab, var(--accent) 6%, transparent);
 
     --bg-near-black: rgba(18,20,26,0.92);
     --shadow-primary-xs: 0 1px 3px rgba(37,99,235,0.04), 0 4px 16px rgba(37,99,235,0.02);
     --shadow-primary-sm: 0 2px 8px rgba(37,99,235,0.06);
+
+    /* Light-mode contrast guard tokens — used by the Tailwind class remaps below.
+       These replace bare hex values (#111318, #495057, #6C757D) so the remap
+       block is token-driven and consistent with the rest of the design system. */
+    --light-text-strong:   #111318;  /* Tailwind slate-900 equivalent in light */
+    --light-text-mid:      #495057;  /* Tailwind slate-600 equivalent in light */
+    --light-text-soft:     #6C757D;  /* Tailwind slate-400 equivalent in light */
+    --light-bg-white:      #FFFFFF;
+    --light-bg-faint:      #F8F9FA;
 
     /* ── Linode/iximiuz education light theme ── */
     --cam-hero-strip:         #C0D8F0;
@@ -340,9 +356,9 @@
   [data-theme="light"] .bg-gray-50,
   [data-theme="light"] .bg-slate-50,
   [data-theme="light"] .bg-zinc-50,
-  [data-theme="light"] .bg-neutral-50 { background-color: #FFFFFF !important; }
+  [data-theme="light"] .bg-neutral-50 { background-color: var(--light-bg-white) !important; }
   [data-theme="light"] .bg-gray-100,
-  [data-theme="light"] .bg-slate-100 { background-color: #F8F9FA !important; }
+  [data-theme="light"] .bg-slate-100 { background-color: var(--light-bg-faint) !important; }
 
   [data-theme="light"] .text-slate-700,
   [data-theme="light"] .text-slate-800,
@@ -355,7 +371,7 @@
   [data-theme="light"] .text-zinc-900,
   [data-theme="light"] .text-neutral-700,
   [data-theme="light"] .text-neutral-800,
-  [data-theme="light"] .text-neutral-900 { color: #111318 !important; }
+  [data-theme="light"] .text-neutral-900 { color: var(--light-text-strong) !important; }
 
   [data-theme="light"] .text-slate-500,
   [data-theme="light"] .text-slate-600,
@@ -364,12 +380,12 @@
   [data-theme="light"] .text-zinc-500,
   [data-theme="light"] .text-zinc-600,
   [data-theme="light"] .text-neutral-500,
-  [data-theme="light"] .text-neutral-600 { color: #495057 !important; }
+  [data-theme="light"] .text-neutral-600 { color: var(--light-text-mid) !important; }
 
   [data-theme="light"] .text-slate-400,
   [data-theme="light"] .text-gray-400,
   [data-theme="light"] .text-zinc-400,
-  [data-theme="light"] .text-neutral-400 { color: #6C757D !important; }
+  [data-theme="light"] .text-neutral-400 { color: var(--light-text-soft) !important; }
 
   /* Topic content PNG diagrams were authored against a light background.
      On the dark default they need slight luminance pull to blend. */
@@ -453,20 +469,20 @@
   .no-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
   /* Selection */
-  ::selection { background: rgba(54,131,220,0.40); color: #ffffff; }
+  ::selection { background: color-mix(in oklab, var(--accent) 40%, transparent); color: var(--cam-on-accent); }
   [data-theme="light"] ::selection {
-    background: rgba(54,131,220,0.18);
-    color: #12141A;
+    background: color-mix(in oklab, var(--accent) 18%, transparent);
+    color: var(--text-primary);
   }
 
   /* Focus ring — Navy */
   *:focus-visible {
-    outline: 2px solid rgba(54,131,220,0.55);
+    outline: 2px solid color-mix(in oklab, var(--accent) 55%, transparent);
     outline-offset: 2px;
     border-radius: 4px;
   }
   [data-theme="light"] *:focus-visible {
-    outline: 2px solid rgba(54,131,220,0.80);
+    outline: 2px solid color-mix(in oklab, var(--accent) 80%, transparent);
     outline-offset: 2px;
   }
 
@@ -576,17 +592,17 @@
 
 /* Light-mode card depth — inset top highlight for editorial surface lift */
 [data-theme="light"] .card {
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.9);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 color-mix(in oklab, var(--cam-on-accent) 90%, transparent);
 }
 [data-theme="light"] .card-glow:hover {
   border-color: var(--border-hover);
-  box-shadow: 0 4px 16px rgba(54,131,220,0.08), 0 1px 3px rgba(15,23,42,0.06);
+  box-shadow: var(--shadow-accent-xs), var(--shadow-xs);
 }
 
 /* Buttons */
 .btn-primary {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 10px 20px; background: var(--accent); color: #ffffff;
+  padding: 10px 20px; background: var(--accent); color: var(--cam-on-accent);
   font-size: 14px; font-weight: 600; border-radius: 8px; border: none;
   cursor: pointer; transition: background 0.15s;
 }
@@ -602,7 +618,7 @@
 .btn-secondary:hover { border-color: var(--accent); color: var(--accent-text); }
 
 /* Badges */
-.badge-new { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; color: var(--accent-text); background: rgba(37,99,235,0.12); border: 1px solid rgba(37,99,235,0.25); text-transform: uppercase; }
+.badge-new { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; color: var(--accent-text); background: color-mix(in oklab, var(--accent) 12%, transparent); border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent); text-transform: uppercase; }
 
 /* Pills */
 .pill { font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; transition: border-color 0.15s ease-out, color 0.15s ease-out, background-color 0.15s ease-out; }
@@ -697,13 +713,13 @@
 }
 .tab-group-item:hover:not(.tab-group-item-active) { color: var(--text-primary); }
 .tab-group-item-active {
-  background: #3683DC;
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--cam-on-accent);
   font-weight: 700;
 }
 [data-theme="light"] .tab-group-item-active {
   background: var(--accent);
-  color: #ffffff;
+  color: var(--cam-on-accent);
 }
 
 /* ── Underline tab bar ──────────────────────────────────────────── */
@@ -730,7 +746,7 @@
   transition: color 0.15s ease-out, border-color 0.15s ease-out;
 }
 .tab-bar-item:hover:not(.tab-bar-item-active) { color: var(--text-primary); }
-.tab-bar-item-active { color: #3683DC; border-bottom-color: #3683DC; }
+.tab-bar-item-active { color: var(--accent); border-bottom-color: var(--accent); }
 [data-theme="light"] .tab-bar-item-active {
   color: var(--accent);
   border-bottom-color: var(--accent);
@@ -756,20 +772,20 @@
 }
 .chip:hover:not(.chip-active) { border-color: var(--border-hover); color: var(--text-primary); }
 .chip-active {
-  background: #3683DC;
-  border-color: #3683DC;
-  color: #ffffff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--cam-on-accent);
 }
 .chip-sm { padding: 3px 9px !important; font-size: 11px !important; }
 .chip-emerald.chip-active {
-  background: #3683DC;
-  border-color: #3683DC;
-  color: #ffffff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--cam-on-accent);
 }
 [data-theme="light"] .chip-active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #ffffff;
+  color: var(--cam-on-accent);
 }
 [data-theme="light"] .chip-gold-active {
   background: var(--cam-gold-leaf);
@@ -837,7 +853,7 @@
 
 .btn-danger {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 10px 20px; background: var(--danger); color: #ffffff;
+  padding: 10px 20px; background: var(--danger); color: var(--cam-on-accent);
   font-size: 14px; font-weight: 600; border-radius: 8px;
   border: none; cursor: pointer;
   transition: background-color 0.15s ease-out, opacity 0.15s ease-out;
@@ -881,7 +897,7 @@
   top: -48px;
   left: 16px;
   background: var(--accent);
-  color: #ffffff;
+  color: var(--cam-on-accent);
   padding: 8px 16px;
   border-radius: 0 0 8px 8px;
   font-size: 14px;
@@ -899,8 +915,8 @@
   /* Status indicators */
   .status-dot { @apply w-2 h-2 rounded-none flex-shrink-0 transition-all duration-300; }
   .status-dot-idle { background-color: var(--text-muted); }
-  .status-dot-ready { background-color: var(--success); box-shadow: 0 0 8px rgba(37,99,235,0.6); }
-  .status-dot-listen { background-color: var(--accent); animation: pulse-dot 1.5s ease-in-out infinite; box-shadow: 0 0 8px rgba(37,99,235,0.50); }
+  .status-dot-ready { background-color: var(--success); box-shadow: 0 0 8px color-mix(in oklab, var(--accent) 60%, transparent); }
+  .status-dot-listen { background-color: var(--accent); animation: pulse-dot 1.5s ease-in-out infinite; box-shadow: 0 0 8px color-mix(in oklab, var(--accent) 50%, transparent); }
   .status-dot-transcribe { background-color: var(--cam-gold-leaf); }
   .status-dot-write, .status-dot-search { background-color: var(--accent); animation: pulse-dot 1.5s ease-in-out infinite; }
   .status-dot-error { background-color: var(--danger); }
@@ -995,7 +1011,7 @@
       transform 0.15s ease-out;
   }
   .btn:active { transform: scale(0.97); }
-  .btn:focus-visible { outline: 2px solid rgba(37,99,235,0.55); outline-offset: 2px; }
+  .btn:focus-visible { outline: 2px solid color-mix(in oklab, var(--accent) 55%, transparent); outline-offset: 2px; }
 
   /* Input styles */
   .input {
@@ -1005,7 +1021,7 @@
     transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
   }
   .input::placeholder { color: var(--text-muted); }
-  .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.18); }
+  .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent); }
 
   /* Input error state — light mode gets a warm red ring */
   [data-theme="light"] .input-error {
@@ -1019,7 +1035,10 @@
     background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite;
   }
   [data-theme="light"] .shimmer {
-    background: linear-gradient(90deg, rgba(15,23,42,0.02) 0%, rgba(15,23,42,0.06) 50%, rgba(15,23,42,0.02) 100%);
+    background: linear-gradient(90deg,
+      color-mix(in oklab, var(--text-primary) 2%, transparent) 0%,
+      color-mix(in oklab, var(--text-primary) 6%, transparent) 50%,
+      color-mix(in oklab, var(--text-primary) 2%, transparent) 100%);
     background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite;
   }
 
@@ -1042,7 +1061,7 @@ select { color-scheme: dark; border-radius: 6px; }
 select option { background-color: var(--bg-surface); color: var(--text-primary); padding: 8px; }
 select option:hover, select option:focus, select option:checked { background-color: var(--accent); color: white; }
 [data-theme="light"] select { color-scheme: light; }
-[data-theme="light"] select option { background-color: #ffffff; color: #111318; }
+[data-theme="light"] select option { background-color: var(--light-bg-white); color: var(--light-text-strong); }
 
 /* Highlight.js */
 .hljs { background: transparent !important; }
@@ -1413,7 +1432,7 @@ img { max-width: 100%; height: auto; }
 }
 .card-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.12), 0 2px 6px rgba(37, 99, 235, 0.06);
+  box-shadow: var(--shadow-accent-sm);
   border-color: var(--accent);
 }
 
@@ -1475,8 +1494,8 @@ img { max-width: 100%; height: auto; }
 }
 .session-row:hover {
   transform: translateY(-2px);
-  border-color: rgba(37,99,235,0.35) !important;
-  box-shadow: 0 10px 28px rgba(37,99,235,0.15);
+  border-color: color-mix(in oklab, var(--accent) 35%, transparent) !important;
+  box-shadow: 0 10px 28px color-mix(in oklab, var(--accent) 15%, transparent);
 }
 /* Delete button in session rows — hover handled via CSS */
 .session-delete-btn:hover {
@@ -1489,9 +1508,9 @@ img { max-width: 100%; height: auto; }
 }
 .session-row:hover .session-badge-num {
   box-shadow:
-    0 0 0 2px rgba(37,99,235,0.50),
-    0 4px 14px rgba(37,99,235,0.30),
-    inset 0 1px 0 rgba(255,255,255,0.15);
+    0 0 0 2px color-mix(in oklab, var(--accent) 50%, transparent),
+    0 4px 14px color-mix(in oklab, var(--accent) 30%, transparent),
+    inset 0 1px 0 color-mix(in oklab, var(--cam-on-accent) 15%, transparent);
 }
 @keyframes tab-fade-in {
   from { opacity: 0; transform: translateY(6px); }
@@ -1572,11 +1591,11 @@ img { max-width: 100%; height: auto; }
   margin: -44px 0 0 -44px;
   border-radius: 999px;
   background: var(--cam-primary);
-  color: #FFFFFF;
+  color: var(--cam-on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 20px 50px rgba(37, 99, 235, 0.35), 0 0 0 8px rgba(37, 99, 235, 0.10);
+  box-shadow: 0 20px 50px color-mix(in oklab, var(--accent) 35%, transparent), 0 0 0 8px color-mix(in oklab, var(--accent) 10%, transparent);
   transform: scale(0.7);
   opacity: 0;
   transition:
