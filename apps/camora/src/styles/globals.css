@@ -598,13 +598,34 @@
 [data-theme="light"] .card {
   padding: 22px 28px;
   box-shadow: var(--shadow-sm), inset 0 1px 0 color-mix(in oklab, var(--cam-on-accent) 90%, transparent);
+  transition:
+    border-color 150ms ease-out,
+    box-shadow 150ms ease-out,
+    transform 150ms cubic-bezier(0.25, 1, 0.5, 1);
 }
 [data-theme="light"] .card-sm {
   padding: 16px 20px;
+  transition:
+    border-color 150ms ease-out,
+    box-shadow 150ms ease-out,
+    transform 150ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+[data-theme="light"] .card:hover {
+  border-color: color-mix(in oklab, var(--accent) 35%, var(--border));
+  box-shadow:
+    var(--shadow-accent-xs),
+    var(--shadow-sm),
+    inset 0 1px 0 color-mix(in oklab, var(--cam-on-accent) 90%, transparent);
+  transform: translateY(-1px);
+}
+[data-theme="light"] .card-sm:hover {
+  border-color: color-mix(in oklab, var(--accent) 30%, var(--border));
+  box-shadow: var(--shadow-accent-xs), var(--shadow-xs);
+  transform: translateY(-1px);
 }
 [data-theme="light"] .card-glow:hover {
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow-accent-xs), var(--shadow-xs);
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+  box-shadow: var(--shadow-accent-xs), var(--shadow-sm);
 }
 
 /* ── Light-theme typeset + layout rhythm overrides ──────────────────
@@ -665,25 +686,54 @@
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   padding: 10px 20px; background: var(--accent); color: var(--cam-on-accent);
   font-size: 14px; font-weight: 600; border-radius: 8px; border: none;
-  cursor: pointer; transition: background 0.15s;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    transform 0.12s cubic-bezier(0.25, 1, 0.5, 1);
 }
-.btn-primary:hover { background: var(--accent-hover); box-shadow: var(--shadow-accent-sm); }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary:hover {
+  background: var(--accent-hover);
+  box-shadow: var(--shadow-accent-sm);
+  transform: translateY(-1px);
+}
+.btn-primary:active { transform: scale(0.97) !important; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 .btn-secondary {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   padding: 10px 20px; background: transparent; color: var(--text-secondary);
   font-size: 14px; font-weight: 600; border-radius: 8px;
-  border: 1px solid var(--border); cursor: pointer; transition: border-color 0.15s, color 0.15s;
+  border: 1px solid var(--border); cursor: pointer;
+  transition:
+    background-color 0.15s ease-out,
+    border-color 0.15s ease-out,
+    color 0.15s ease-out,
+    transform 0.12s cubic-bezier(0.25, 1, 0.5, 1);
 }
-.btn-secondary:hover { border-color: var(--accent); color: var(--accent-text); }
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent-text);
+  background: color-mix(in oklab, var(--accent) 5%, transparent);
+  transform: translateY(-1px);
+}
+.btn-secondary:active { transform: scale(0.97) !important; }
 
 /* Badges */
 .badge-new { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; color: var(--accent-text); background: color-mix(in oklab, var(--accent) 12%, transparent); border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent); text-transform: uppercase; }
 
 /* Pills */
 .pill { font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; transition: border-color 0.15s ease-out, color 0.15s ease-out, background-color 0.15s ease-out; }
-.pill:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.pill:hover {
+  border-color: color-mix(in oklab, var(--accent) 35%, var(--border));
+  color: var(--text-primary);
+  background: color-mix(in oklab, var(--accent) 5%, var(--bg-surface));
+}
+[data-theme="light"] .pill:hover {
+  border-color: color-mix(in oklab, var(--accent) 50%, var(--border));
+  color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 6%, var(--bg-surface));
+}
 
 /* Section label — aligned with .text-label at 11px for consistent eyebrow sizing */
 .section-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.10em; color: var(--accent-text); }
@@ -781,7 +831,10 @@
   white-space: nowrap;
   transition: color 0.15s ease-out, background-color 0.15s ease-out;
 }
-.tab-group-item:hover:not(.tab-group-item-active) { color: var(--text-primary); }
+.tab-group-item:hover:not(.tab-group-item-active) {
+  color: var(--text-primary);
+  background: color-mix(in oklab, var(--accent) 6%, transparent);
+}
 .tab-group-item-active {
   background: var(--accent);
   color: var(--cam-on-accent);
@@ -790,6 +843,10 @@
 [data-theme="light"] .tab-group-item-active {
   background: var(--accent);
   color: var(--cam-on-accent);
+}
+[data-theme="light"] .tab-group-item:hover:not(.tab-group-item-active) {
+  background: color-mix(in oklab, var(--accent) 8%, transparent);
+  color: var(--accent);
 }
 
 /* ── Underline tab bar ──────────────────────────────────────────── */
@@ -840,7 +897,16 @@
   white-space: nowrap;
   transition: background-color 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out;
 }
-.chip:hover:not(.chip-active) { border-color: var(--border-hover); color: var(--text-primary); }
+.chip:hover:not(.chip-active) {
+  border-color: color-mix(in oklab, var(--accent) 35%, var(--border));
+  color: var(--text-primary);
+  background: color-mix(in oklab, var(--accent) 5%, var(--bg-surface));
+}
+[data-theme="light"] .chip:hover:not(.chip-active) {
+  border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
+  color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 6%, var(--bg-surface));
+}
 .chip-active {
   background: var(--accent);
   border-color: var(--accent);
@@ -1117,9 +1183,21 @@
     @apply border p-4;
     border-color: var(--border); background-color: var(--bg-surface);
     border-radius: 8px; box-shadow: var(--card-shadow);
-    transition: border-color 0.15s ease-out;
+    transition:
+      border-color 150ms ease-out,
+      box-shadow 150ms ease-out,
+      transform 150ms cubic-bezier(0.25, 1, 0.5, 1);
   }
-  .grid-card:hover { border-color: var(--border-hover); }
+  .grid-card:hover {
+    border-color: color-mix(in oklab, var(--accent) 30%, var(--border));
+    box-shadow: var(--shadow-accent-xs), var(--card-shadow);
+    transform: translateY(-1px);
+  }
+  [data-theme="light"] .grid-card:hover {
+    border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+    box-shadow: var(--shadow-accent-xs), var(--shadow-sm);
+    transform: translateY(-1px);
+  }
   .grid-card-title {
     @apply font-mono text-sm font-bold tracking-widest uppercase mb-3 pb-2 border-b;
     border-color: var(--border);
@@ -1530,10 +1608,18 @@ img { max-width: 100%; height: auto; }
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(43, 99, 148, 0.06) 50%,
+    color-mix(in oklab, var(--accent) 8%, transparent) 50%,
     transparent 100%
   );
   animation: shimmer-sweep 1.6s ease-in-out infinite;
+}
+[data-theme="light"] .shimmer::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--accent) 10%, transparent) 50%,
+    transparent 100%
+  );
 }
 @keyframes shimmer-sweep {
   0%   { transform: translateX(-100%); }
@@ -1783,6 +1869,15 @@ img { max-width: 100%; height: auto; }
 
   /* Continuous ambient animations */
   .shimmer { animation: none; background: var(--bg-elevated); }
+
+  /* Colorize/animate pass — disable new hover transforms */
+  .card:hover, .card-sm:hover,
+  [data-theme="light"] .card:hover, [data-theme="light"] .card-sm:hover,
+  .grid-card:hover, [data-theme="light"] .grid-card:hover,
+  .btn-primary:hover, .btn-secondary:hover,
+  .btn-ghost:active, .btn-primary:active, .btn-secondary:active {
+    transform: none !important;
+  }
 }
 
 /* ───────────────────────────────────────────────────────────────────
