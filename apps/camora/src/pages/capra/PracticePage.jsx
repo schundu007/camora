@@ -853,23 +853,23 @@ export default function PracticePage() {
                 <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                 <div className="relative p-6 md:p-8">
                   <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>PRACTICE</p>
-                  <h1 className="font-bold tracking-tight text-3xl md:text-5xl mb-3 text-white" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.05 }}>
+                  <h1 className="font-bold tracking-tight text-3xl md:text-5xl mb-3" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.05, color: 'var(--cam-strip-heading)' }}>
                     {user?.name
                       ? <>Welcome back, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>{user.name.split(' ')[0]}</span>.</>
                       : <>Your practice, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>sharpened.</span></>}
                   </h1>
-                  <div className="flex items-center gap-2 mt-5 flex-wrap" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+                  <div className="flex items-center gap-2 mt-5 flex-wrap" style={{ color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
                     <span style={{ color: 'var(--cam-gold-leaf-lt)', fontWeight: 700 }}>{stats.totalCompleted}</span>
                     <span>challenges completed</span>
                     {stats.streak > 0 && (
                       <>
-                        <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
+                        <span style={{ color: 'var(--cam-strip-text-muted)' }}>·</span>
                         <span>{stats.streak} day streak</span>
                       </>
                     )}
                     {stats.bestScore > 0 && (
                       <>
-                        <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
+                        <span style={{ color: 'var(--cam-strip-text-muted)' }}>·</span>
                         <span>best score {stats.bestScore}</span>
                       </>
                     )}

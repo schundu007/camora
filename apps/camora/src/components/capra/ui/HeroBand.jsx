@@ -46,8 +46,8 @@ export default function HeroBand({
               <div
                 className="inline-flex items-center gap-2 mb-3 px-2.5 py-1 rounded-full"
                 style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.12)',
+                  background: 'var(--cam-strip-icon-bg)',
+                  border: '1px solid var(--cam-strip-icon-border)',
                 }}
               >
                 <span
@@ -57,18 +57,18 @@ export default function HeroBand({
                     boxShadow: '0 0 8px rgba(217,181,67,0.55)',
                   }}
                 />
-                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/85">
+                <span className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--cam-strip-text)' }}>
                   {eyebrow}
                 </span>
               </div>
             )}
-            <h1 className="text-3xl sm:text-4xl font-extrabold mb-2 text-white tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-4xl font-extrabold mb-2 tracking-tight leading-tight" style={{ color: 'var(--cam-strip-heading)' }}>
               {title}
             </h1>
             {subtitle && (
               <p
                 className="text-sm sm:text-[15px] max-w-2xl"
-                style={{ color: 'rgba(255,255,255,0.85)' }}
+                style={{ color: 'var(--cam-strip-text)' }}
               >
                 {subtitle}
               </p>
