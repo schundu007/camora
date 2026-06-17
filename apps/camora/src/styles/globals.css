@@ -259,6 +259,11 @@
     /* ── Linode/iximiuz education light theme ── */
     --cam-hero-strip:         radial-gradient(ellipse 38% 260% at 0% 50%, rgba(54,131,220,0.08), transparent 70%), radial-gradient(ellipse 35% 260% at 100% 50%, rgba(194,150,62,0.06), transparent 70%), linear-gradient(95deg, #F8FBFE 0%, #EEF5FF 40%, #F3F7FC 60%, #F8FBFE 100%);
     --cam-hero-bg:            linear-gradient(160deg, #FFFFFF 0%, #F0F6FF 40%, #E8F0FB 100%);
+    --cam-gold-leaf:          var(--accent);
+    --cam-gold-leaf-lt:       #4D94E8;
+    --cam-gold-leaf-dk:       #2265BF;
+    --cam-gold-leaf-text:     var(--accent-text);
+    --cam-gold-leaf-50:       var(--accent-subtle);
     --bg-base:                #F3F7FC;
     --bg-elevated:            #EFF3F8;
     /* Strip-header tokens — dark text on light bg */
@@ -485,9 +490,9 @@
   }
 }
 
-/* Lumora chrome tokens in light mode — [data-product="lumora"] inside :root
-   overrides these to off-white; re-apply dark values here at higher source order. */
-[data-theme="light"] [data-product="lumora"] {
+/* Lumora chrome tokens in light mode — both data-theme and data-product live on
+   <html>, so this must be a compound selector (no space), not a descendant combinator. */
+[data-theme="light"][data-product="lumora"] {
   --lumora-chrome-text:  rgba(18,20,26,0.75);
   --lumora-chrome-hover: rgba(37,99,235,0.06);
 }

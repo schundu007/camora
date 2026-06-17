@@ -711,7 +711,7 @@ export default function LandingPage() {
 function AudienceCard({
   eyebrow, title, body, ctaLabel, ctaHref, tone = 'light',
 }: {
-  eyebrow: string; title: string; body: string; ctaLabel: string; ctaHref: string; tone?: 'light' | 'dark';
+  eyebrow?: string; title: string; body: string; ctaLabel: string; ctaHref: string; tone?: 'light' | 'dark';
 }) {
   const dark = tone === 'dark';
   return (
