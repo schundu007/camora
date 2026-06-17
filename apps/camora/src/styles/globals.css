@@ -482,6 +482,13 @@
   }
 }
 
+/* Lumora chrome tokens in light mode — [data-product="lumora"] inside :root
+   overrides these to off-white; re-apply dark values here at higher source order. */
+[data-theme="light"] [data-product="lumora"] {
+  --lumora-chrome-text:  rgba(18,20,26,0.75);
+  --lumora-chrome-hover: rgba(37,99,235,0.06);
+}
+
 /* ── Subtle background mesh (navy-tinted) ──────────────────── */
 #root::after {
   content: '';
