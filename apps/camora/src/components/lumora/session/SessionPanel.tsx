@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSessionStore } from '@/stores/session-store';
+import { useTheme } from '@/hooks/useTheme';
 import { StreamingAnswer } from './StreamingAnswer';
 import { AnswerBlocks } from './AnswerBlocks';
 import { Citations } from '@/components/lumora/Citations';
@@ -80,6 +81,8 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
   // history, so users see "Q.7" land before it gets persisted as #7.
   const activeQNumber = history.length + 1;
   const activeCategory = categorize(question || '', isCodingQuestion, isDesignQuestion);
+  const { theme } = useTheme();
+  const behavioralAccent = theme === 'light' ? '#3683DC' : '#C9A227';
 
   // Home tab = dashboard by default. Past sessions live on /lumora/sessions,
   // not here. Only switch off the dashboard while a question is actively
@@ -277,7 +280,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
     {
       name: 'Behavioral', desc: 'STAR answers drawn from your resume and past experience.',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg>,
-      accent: '#C9A227',
+      accent: behavioralAccent,
       onClick: () => onAskQuestion?.('Tell me about yourself and your experience'),
     },
   ];
@@ -290,7 +293,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
     { text: 'Reverse a linked list iteratively and recursively', type: 'coding' as const },
     { text: 'Describe a time you failed and what you learned', type: 'behavioral' as const },
   ];
-  const PROMPT_ACCENT: Record<string, string> = { design: '#5B9BD5', coding: '#3683DC', behavioral: '#C9A227' };
+  const PROMPT_ACCENT: Record<string, string> = { design: '#5B9BD5', coding: '#3683DC', behavioral: behavioralAccent };
 
   const handlePromptClick = (prompt: typeof QUICK_PROMPTS[number]) => {
     if (prompt.type === 'coding') onSwitchToCoding?.(prompt.text);
@@ -429,7 +432,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         {/* Suggested prompts */}
         <div className="mb-5">
           <div className="flex items-center gap-2 mb-2.5">
-            <span style={{ display:'inline-block', width:3, height:11, borderRadius:2, background:'#C9A227', flexShrink:0 }} />
+            <span style={{ display:'inline-block', width:3, height:11, borderRadius:2, background:'var(--accent)', flexShrink:0 }} />
             <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--text-muted)' }}>Suggested Prompts</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
@@ -487,7 +490,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         </div>
       </div>
 
-      <div style={{ borderTop:'1px solid rgba(201,162,39,.22)', flexShrink:0 }} />
+      <div style={{ borderTop:'1px solid var(--border)', flexShrink:0 }} />
     </div>
   );
 }
