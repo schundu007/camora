@@ -93,9 +93,9 @@ export function usePlaygroundSession() {
         return;
       }
       const data = await res.json();
-      const wsBase = import.meta.env.DEV
-        ? 'ws://localhost:3009'
-        : 'wss://api.cariara.com';
+      // Derive WS URL from the same API base used for REST calls.
+      // http:// → ws://, https:// → wss:// — works on any deployment.
+      const wsBase = API_URL.replace(/^http/, 'ws');
       const sessionWithWs = { ...data, wsUrl: `${wsBase}/playground/ws/${data.sessionId}` };
       setSession(sessionWithWs);
       setStatus('ready');
