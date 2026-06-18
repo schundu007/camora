@@ -691,16 +691,30 @@ If AZ-a fails, AZ-b continues fully independently. Each AZ has its own NAT Gatew
       },
       {
         question: 'What is the difference between VPC peering, Transit Gateway, and PrivateLink? When do you use each?',
-        answer: `VPC Peering: a direct private link between two specific VPCs (in the same or different accounts/regions). Traffic routes through AWS backbone. Non-transitive: if A peers with B, and B peers with C, A cannot reach C through B. Requires non-overlapping CIDRs. Free for traffic within the same AZ; cross-AZ and cross-region transfer costs apply. Best for: small number of VPC pairs, simple mesh topologies, or when you need to control routing precisely.
+        answer: `## VPC Peering
 
-Transit Gateway: a hub-and-spoke routing service. Attach multiple VPCs (and VPNs, Direct Connect) to a Transit Gateway. Each VPC only needs one attachment to the TGW; the TGW routes between all attached networks. Supports thousands of VPCs. Supports route domains (isolating groups of VPCs). Cross-region connectivity via inter-region peering. Cost: per-hour attachment cost plus data processing fee. Best for: large multi-VPC architectures, hub-and-spoke with on-premises connectivity, complex routing policies.
+A **direct private link** between two specific VPCs (same or different accounts/regions). Traffic routes through the AWS backbone. **Non-transitive**: if A peers B and B peers C, A cannot reach C through B. Requires non-overlapping CIDRs. Same-AZ traffic is free; cross-AZ and cross-region incur transfer costs.
 
-PrivateLink: exposes a service (behind an NLB) to other VPCs via interface endpoints (private IPs in the consumer VPC). The service never enters the consumer VPC; only the endpoint IP does. Works across accounts, regions (with interface endpoints), and does not require peering or non-overlapping CIDRs. Used for: SaaS integrations, sharing a service across accounts/VPCs without full peering, AWS service access (SSM, Secrets Manager via interface endpoints). Traffic to AWS services via PrivateLink stays on the AWS backbone and does not go through the internet.
+**Best for**: small number of VPC pairs, simple mesh topologies, precise routing control.
 
-Summary:
-VPC Peering — few VPCs, simple full-mesh
-Transit Gateway — many VPCs, hub-and-spoke, mixed on-premises
-PrivateLink — expose a specific service, not a full network, to other VPCs/accounts`,
+## Transit Gateway
+
+A **hub-and-spoke routing service**. Attach multiple VPCs (and VPNs, Direct Connect) to one TGW. Each VPC only needs one attachment; TGW routes between all attached networks. Supports thousands of VPCs, route domains (for isolation), and cross-region peering.
+
+**Cost**: per-hour attachment cost plus data processing fee.
+**Best for**: large multi-VPC architectures, hybrid cloud (on-premises + AWS), complex routing policies.
+
+## PrivateLink
+
+Exposes a **specific service** (behind an NLB) to other VPCs via interface endpoints (private IPs in the consumer VPC). The service never enters the consumer VPC — only the endpoint IP does. Works across accounts and regions without peering or CIDR constraints.
+
+**Best for**: SaaS integrations, sharing one service across accounts/VPCs without full network peering, AWS service access (SSM, Secrets Manager) that stays off the internet.
+
+## Summary
+
+- **VPC Peering** — few VPCs, simple full-mesh
+- **Transit Gateway** — many VPCs, hub-and-spoke, on-premises connectivity
+- **PrivateLink** — expose one service (not a full network) to other VPCs/accounts`,
       },
     ],
     references: [
@@ -723,15 +737,26 @@ PrivateLink — expose a specific service, not a full network, to other VPCs/acc
         image: '/diagrams/networking/service-mesh-architecture.png',
       },
     ],
-    introduction: `A service mesh is an infrastructure layer that handles service-to-service communication in a microservices architecture. It typically uses a sidecar proxy pattern: a proxy (Envoy) is injected into every pod as a sidecar container. All inbound and outbound network traffic from the application container flows through the sidecar proxy.
+    introduction: `A **service mesh** is an infrastructure layer that handles service-to-service communication in a microservices architecture. It uses a **sidecar proxy pattern**: a proxy (Envoy) is injected into every pod. All inbound and outbound traffic from the application flows through the sidecar, transparent to the application code.
 
-The control plane (Istiod in Istio) distributes configuration to all sidecars: which services exist, their endpoints, traffic policies (retries, timeouts, circuit breakers), and certificate authority (for mTLS). The data plane (the sidecars) enforces these policies on every request.
+## Control plane vs data plane
 
-Key capabilities: mTLS (each sidecar gets a short-lived certificate from the mesh CA; all service-to-service traffic is automatically encrypted and mutually authenticated), traffic management (weighted routing for canary, A/B testing; retries; timeouts; circuit breaking; fault injection for chaos), observability (L7 metrics for every service pair: request rate, error rate, p99 latency; distributed traces via OpenTelemetry; access logs).
+- **Control plane (Istiod)** — distributes configuration to all sidecars: service endpoints, traffic policies (retries, timeouts, circuit breakers), and certificates for mTLS
+- **Data plane (sidecars)** — enforces policies on every request
 
-Istio vs Linkerd: Istio uses Envoy sidecar (powerful, complex, high resource usage); Linkerd uses a Rust-based micro-proxy (lighter, simpler, less feature-rich). Cilium Service Mesh uses eBPF instead of sidecar proxies — kernel-level enforcement with near-zero overhead, no proxy containers.
+## Key capabilities
 
-Sidecar overhead is real: each Envoy sidecar uses ~50-100 MB of RAM and adds ~0.5-2ms to request latency per hop. For high-throughput, latency-sensitive services, this matters. The eBPF-based approach (Cilium) eliminates this at the cost of feature richness.`,
+- **mTLS** — each sidecar gets a short-lived certificate from the mesh CA; all service-to-service traffic is automatically encrypted and mutually authenticated
+- **Traffic management** — weighted routing (canary, A/B), retries, timeouts, circuit breaking, fault injection for chaos testing
+- **Observability** — L7 metrics for every service pair (request rate, error rate, p99 latency), distributed traces via OpenTelemetry, access logs — without any application instrumentation
+
+## Istio vs Linkerd vs Cilium
+
+- **Istio** — Envoy sidecar; powerful, feature-rich, higher resource usage (~50-100 MB RAM per sidecar)
+- **Linkerd** — Rust micro-proxy; lighter, simpler, less feature-rich
+- **Cilium** — eBPF kernel programs instead of sidecar proxies; near-zero overhead, no proxy containers, fewer features
+
+**Sidecar overhead**: each Envoy adds ~0.5-2ms latency per hop. For high-throughput latency-sensitive services, eBPF (Cilium) eliminates this at the cost of some feature richness.`,
     whenToUse: [
       'Implementing zero-trust networking for microservices without modifying application code',
       'Getting L7 observability (request rate, error rate, latency) across all services automatically',
@@ -739,11 +764,11 @@ Sidecar overhead is real: each Envoy sidecar uses ~50-100 MB of RAM and adds ~0.
       'Replacing custom retry/timeout code in services with mesh-level policies',
     ],
     keyConcepts: [
-      { term: 'Sidecar proxy', definition: 'A proxy container (Envoy) injected into every pod by a mutating webhook. All pod network traffic flows through the proxy via iptables REDIRECT rules. Application code is unchanged.' },
-      { term: 'mTLS in mesh', definition: 'Each sidecar gets a certificate from the mesh CA (SPIFFE/SPIRE standard). Sidecars authenticate each other and encrypt traffic. No application code changes needed.' },
-      { term: 'VirtualService (Istio)', definition: 'Defines routing rules: weight-based (canary), header-based (A/B), fault injection (delay/abort), retries, and timeouts. Applied on top of existing Kubernetes Services.' },
-      { term: 'DestinationRule (Istio)', definition: 'Configures what happens after routing: load balancing algorithm, circuit breaker settings, outlier detection, and TLS settings to the destination.' },
-      { term: 'eBPF service mesh (Cilium)', definition: 'Uses eBPF kernel programs instead of sidecar proxies. Near-zero overhead, no sidecar containers. Enforces policies in the kernel networking stack.' },
+      { term: 'Sidecar proxy', definition: '**Envoy container** injected into every pod by a mutating webhook. All pod network traffic flows through the proxy via iptables REDIRECT rules. Application code is unchanged.' },
+      { term: 'mTLS in mesh', definition: 'Each sidecar gets a **short-lived certificate** from the mesh CA (SPIFFE/SPIRE standard). Sidecars authenticate each other and encrypt all traffic automatically. No application code changes needed.' },
+      { term: 'VirtualService (Istio)', definition: 'Defines **routing rules**: weight-based (canary), header-based (A/B), fault injection (delay/abort), retries, and timeouts. Applied on top of existing Kubernetes Services.' },
+      { term: 'DestinationRule (Istio)', definition: 'Configures **post-routing behavior**: load balancing algorithm, circuit breaker settings (outlier detection), and TLS settings to the destination.' },
+      { term: 'eBPF service mesh (Cilium)', definition: 'Uses **eBPF kernel programs** instead of sidecar proxies. Near-zero overhead, no proxy containers, policies enforced in the kernel networking stack.' },
     ],
     pitfalls: [
       'Forgetting that mTLS in the mesh does not encrypt traffic before the sidecar — intra-pod traffic (between app container and sidecar on loopback) is plaintext. Not an issue in practice but worth knowing for threat models.',
@@ -755,13 +780,21 @@ Sidecar overhead is real: each Envoy sidecar uses ~50-100 MB of RAM and adds ~0.
         question: 'How does Istio implement mTLS between two microservices without changing the application code?',
         answer: `The mechanism relies on four components working together:
 
-1. Certificate issuance: when a pod starts, Istio's mutating webhook injects an Envoy sidecar. The sidecar's init container rewrites iptables rules to intercept all inbound/outbound traffic. The sidecar authenticates to Istiod using the pod's Kubernetes service account JWT and receives a short-lived X.509 certificate issued by Istio's built-in CA (or an external CA). The certificate's SPIFFE URI encodes the service identity: spiffe://cluster.local/ns/default/sa/my-service.
+## 1. Certificate issuance
 
-2. Outbound mTLS: when service A calls service B, the app container connects to 127.0.0.1:servicePort. iptables redirects this to the sidecar's outbound port (15001). The sidecar looks up the destination service in its configuration, sees that mTLS is required, establishes a TLS connection to service B's sidecar using its certificate, presenting the SPIFFE identity.
+When a pod starts, Istio's mutating webhook injects an Envoy sidecar. The sidecar's init container rewrites iptables rules to intercept all traffic. The sidecar authenticates to Istiod using the pod's Kubernetes service account JWT and receives a **short-lived X.509 certificate** from Istio's CA. The certificate's SPIFFE URI encodes the service identity: spiffe://cluster.local/ns/default/sa/my-service.
 
-3. Inbound mTLS: service B's sidecar receives the connection on port 15006. It validates the client certificate against the Istio CA certificate. If valid, it forwards the decrypted request to the application on localhost:appPort.
+## 2. Outbound mTLS
 
-4. Policy enforcement: the sidecar can enforce AuthorizationPolicy rules: "only allow requests from service A's SPIFFE identity to endpoint /api/v1/.*". These are applied at the sidecar level, not in the application.
+When service A calls service B, the app connects to 127.0.0.1:servicePort. iptables redirects this to the sidecar's outbound port (15001). The sidecar looks up the destination in its config, sees mTLS is required, and establishes a TLS connection to service B's sidecar presenting its SPIFFE identity certificate.
+
+## 3. Inbound mTLS
+
+Service B's sidecar receives the connection on port 15006. It **validates the client certificate** against the Istio CA. If valid, it forwards the decrypted request to the application on localhost:appPort.
+
+## 4. Policy enforcement
+
+The sidecar enforces **AuthorizationPolicy** rules: "only allow requests from service A's SPIFFE identity to endpoint /api/v1/.*". Applied at the sidecar level, not in the application.
 
 The application code never sees TLS — it sends and receives plaintext on localhost. The mesh handles encryption, authentication, and authorization transparently.`,
       },
@@ -787,19 +820,31 @@ The application code never sees TLS — it sends and receives plaintext on local
         image: '/diagrams/networking/network-debugging-tools-by-layer.png',
       },
     ],
-    introduction: `Effective network debugging follows a structured layered approach: start at the lowest layer that could explain the symptom and work upward. An experienced engineer does not randomly run tools — they form a hypothesis about which layer is failing and choose the tool that confirms or refutes that hypothesis.
+    introduction: `Effective network debugging follows a **structured layered approach**: start at the lowest layer that could explain the symptom and work upward. Form a hypothesis about which layer is failing, then choose the tool that confirms or refutes it.
 
-The debugging ladder:
-Layer 1-2 (Physical/Link): ip -s link show — check error counters, drops, collisions. ethtool eth0 — link speed, duplex, PHY errors.
-Layer 3 (IP): ping (ICMP reachability), ip route get (routing decision), traceroute/mtr (path and per-hop latency).
-Layer 4 (TCP): nc -zv host port (can we connect?), ss -tulpn (what is listening?), tcpdump (what is on the wire?).
-Layer 7 (Application): curl -v (HTTP), openssl s_client (TLS), dig (DNS).
+## Debugging ladder by layer
 
-mtr (Matt's Traceroute) combines traceroute and ping: it continuously sends probes and shows per-hop latency and packet loss in real time. Invaluable for diagnosing intermittent packet loss on a specific hop.
+- **Layer 1-2 (Physical/Link)**: \`ip -s link show\` — check error counters, drops, collisions. \`ethtool eth0\` — link speed, duplex, PHY errors.
+- **Layer 3 (IP)**: \`ping\` (ICMP reachability), \`ip route get\` (routing decision), \`traceroute\` / \`mtr\` (path and per-hop latency).
+- **Layer 4 (TCP)**: \`nc -zv host port\` (can we connect?), \`ss -tulpn\` (what is listening?), \`tcpdump\` (what is on the wire?).
+- **Layer 7 (Application)**: \`curl -v\` (HTTP), \`openssl s_client\` (TLS), \`dig\` (DNS).
 
-ss (socket statistics) is the production standard for listing open connections. ss -s (summary), ss -t state established (all established TCP), ss -tulpn (listening ports with process names), ss -t state time-wait (TIME_WAIT counts).
+## Key tools
 
-Cloud-specific: VPC Flow Logs (AWS) record accept/reject decisions at the ENI level — invaluable for diagnosing security group/NACL issues. Route53 Resolver Query Logs record DNS queries from VPC resources. CloudFront access logs show edge behavior. CloudWatch Network Monitor (new) provides continuous network metrics.`,
+**mtr** combines traceroute and ping: continuously probes each hop and shows real-time loss% and latency. Essential for finding which hop is dropping packets.
+
+**ss** (socket statistics) is the production standard. Common invocations:
+- \`ss -s\` — summary of connection counts
+- \`ss -tulpn\` — all listening sockets with process names and PIDs
+- \`ss -t state established\` — all established TCP connections
+- \`ss -t state time-wait\` — TIME_WAIT count (useful for diagnosing port exhaustion)
+
+## Cloud-specific tools
+
+- **VPC Flow Logs** — per-ENI accept/reject records; invaluable for diagnosing security group/NACL issues
+- **Route53 Resolver Query Logs** — DNS queries from VPC resources
+- **CloudFront access logs** — edge cache behavior and error codes
+- **CloudWatch Network Monitor** — continuous network latency and packet loss metrics`,
     whenToUse: [
       'Systematically diagnosing a network connectivity issue in production',
       'Using mtr to find which network hop is causing packet loss',
@@ -807,11 +852,11 @@ Cloud-specific: VPC Flow Logs (AWS) record accept/reject decisions at the ENI le
       'Building a network debugging runbook for an on-call team',
     ],
     keyConcepts: [
-      { term: 'mtr', definition: 'Combines traceroute and ping. Continuously probes each hop and shows real-time loss% and latency. Essential for finding which hop is losing packets.' },
-      { term: 'VPC Flow Logs', definition: 'AWS logs recording per-ENI network traffic: source IP, destination IP, port, protocol, bytes, and ACCEPT/REJECT action. Stored in CloudWatch Logs or S3. Filter with Logs Insights.' },
-      { term: 'ss -tulpn', definition: 'List all listening TCP/UDP sockets with process name and PID. Faster than netstat. Use to verify a service is listening on the expected port and interface.' },
-      { term: 'tcpdump filtering', definition: 'BPF filter syntax: host <ip> (traffic to/from IP), port 443 (port), tcp (protocol), not port 22 (exclusion). Combine: host 10.0.1.5 and port 5432 and tcp.' },
-      { term: 'MTU issues', definition: 'Maximum Transmission Unit. AWS instances have MTU 9001 (jumbo frames) within a VPC. Crossing an IGW or VPN reduces MTU to 1500. PMTUD (Path MTU Discovery) handles this with ICMP type 3 code 4.' },
+      { term: 'mtr', definition: '**Combines traceroute and ping**. Continuously probes each hop and shows real-time loss% and latency. Essential for finding which specific hop is dropping or delaying packets.' },
+      { term: 'VPC Flow Logs', definition: '**AWS per-ENI network logs**: source IP, destination IP, port, protocol, bytes, and ACCEPT/REJECT action. Stored in CloudWatch Logs or S3. Query with Logs Insights to diagnose SG/NACL issues.' },
+      { term: 'ss -tulpn', definition: 'List all **listening TCP/UDP sockets** with process name and PID. Faster than netstat. Use to verify a service is listening on the expected port and interface (0.0.0.0 vs 127.0.0.1).' },
+      { term: 'tcpdump filtering', definition: '**BPF filter syntax**: host 10.0.1.5 and port 5432 and tcp — combines IP, port, and protocol filters. Use not port 22 to exclude SSH noise.' },
+      { term: 'MTU issues', definition: '**Maximum Transmission Unit**. AWS instances use MTU 9001 (jumbo frames) within a VPC. Crossing an IGW or VPN drops to 1500. PMTUD (Path MTU Discovery) uses ICMP type 3 code 4 — blocking ICMP causes silent packet drops.' },
     ],
     pitfalls: [
       'Diagnosing connectivity issues on the wrong host — check both ends of the connection. A security group on the source instance may block outbound; a NACL on the target subnet may block inbound.',
@@ -823,36 +868,57 @@ Cloud-specific: VPC Flow Logs (AWS) record accept/reject decisions at the ENI le
         question: 'A microservice in Kubernetes cannot reach another microservice in a different namespace. Walk through your diagnosis.',
         answer: `I follow a layered approach from inside the pod outward:
 
-Step 1 — Verify the target service and endpoints:
-kubectl get svc -n target-ns my-service   # Does the Service exist?
-kubectl get endpoints -n target-ns my-service   # Does it have healthy endpoints?
-# If endpoints are empty, the Service selector does not match any pods — check labels.
+## Step 1 — Verify the target service and endpoints
 
-Step 2 — DNS resolution (Layer 7):
+\`\`\`bash
+kubectl get svc -n target-ns my-service
+kubectl get endpoints -n target-ns my-service
+\`\`\`
+
+If endpoints are empty, the Service selector does not match any pods — check labels.
+
+## Step 2 — DNS resolution (Layer 7)
+
+\`\`\`bash
 kubectl exec -n source-ns source-pod -- nslookup my-service.target-ns.svc.cluster.local
-# If this fails, CoreDNS is not resolving it. Check CoreDNS pods and ConfigMap.
-kubectl get pods -n kube-system -l k8s-app=kube-dns   # Are CoreDNS pods running?
+kubectl get pods -n kube-system -l k8s-app=kube-dns
+\`\`\`
 
-Step 3 — TCP connectivity (Layer 4):
+If nslookup fails, CoreDNS is not resolving the name. Check CoreDNS pods and ConfigMap.
+
+## Step 3 — TCP connectivity (Layer 4)
+
+\`\`\`bash
 kubectl exec -n source-ns source-pod -- nc -zv my-service.target-ns.svc.cluster.local 80 -w 3
-# Connection refused → pod is listening on wrong port or not listening at all
-# Connection timed out → NetworkPolicy is blocking traffic
+\`\`\`
 
-Step 4 — NetworkPolicy check:
-kubectl get networkpolicy -n target-ns   # Any policies restricting inbound?
-# A default-deny ingress policy with no exception for source-ns will block traffic.
-kubectl get networkpolicy -n source-ns   # Any policies restricting outbound?
+- **Connection refused** — pod is listening on wrong port or not listening at all
+- **Connection timed out** — NetworkPolicy is blocking traffic
 
-Step 5 — Packet capture on the target pod:
+## Step 4 — NetworkPolicy check
+
+\`\`\`bash
+kubectl get networkpolicy -n target-ns
+kubectl get networkpolicy -n source-ns
+\`\`\`
+
+A default-deny ingress policy with no exception for source-ns will block all cross-namespace traffic.
+
+## Step 5 — Packet capture
+
+\`\`\`bash
 kubectl exec -n target-ns target-pod -- tcpdump -i any -n port 80
-# Then retry the connection. If packets arrive but get no response, it's an app issue.
-# If no packets arrive, the CNI or NetworkPolicy is dropping them.
+\`\`\`
 
-Step 6 — Check CNI plugin logs:
-kubectl logs -n kube-system -l k8s-app=calico-node --tail=50   # For Calico
-# CNI plugins log NetworkPolicy enforcement decisions here.
+If packets arrive but get no response, it is an app issue. If no packets arrive, the CNI or NetworkPolicy is dropping them.
 
-Common root causes: NetworkPolicy blocks cross-namespace traffic, Service selector has a typo, CoreDNS is returning the wrong IP, port number mismatch.`,
+## Step 6 — CNI plugin logs
+
+\`\`\`bash
+kubectl logs -n kube-system -l k8s-app=calico-node --tail=50
+\`\`\`
+
+**Common root causes**: NetworkPolicy blocks cross-namespace traffic, Service selector typo, CoreDNS returning wrong IP, port number mismatch.`,
       },
     ],
     references: [
@@ -880,13 +946,33 @@ Common root causes: NetworkPolicy blocks cross-namespace traffic, Service select
         image: '/diagrams/networking/latency-diagnosis-budget.png',
       },
     ],
-    introduction: `Latency diagnosis requires distinguishing between different types of latency and their causes. Network latency (propagation delay + transmission delay) is largely determined by physics: 1ms per 100km for fiber, 70ms New York to London. Application latency adds queuing delay, processing time, and database round trips on top of network latency.
+    introduction: `Latency diagnosis requires distinguishing between different types of latency and their causes.
 
-Understanding the percentile distribution is essential. Average latency hides outliers. p99 latency is the 99th percentile — 1% of requests are slower than this value. p99.9 (tail latency) is often 5-10x p99. In systems with fan-out (a request calls 10 downstream services), the overall p99 approaches the p99.9 of each individual service. This is why reducing tail latency in microservices matters more than improving average latency.
+## Network vs application latency
 
-Queuing theory (Little's Law): L = λW. L = average number of items in the system; λ = arrival rate; W = average time spent in the system. If arrival rate exceeds service rate, the queue grows without bound and latency spikes. This explains why a service at 80% CPU utilisation shows 2-3x latency compared to 50% utilisation — queuing effects become nonlinear near saturation.
+**Network latency** (propagation + transmission delay) is largely physics: ~1ms per 100km in fiber, ~70ms New York to London. **Application latency** adds queuing delay, processing time, and database round trips on top of network latency.
 
-Common latency sources in cloud environments: DNS resolution (first request to a new hostname, 5-50ms), TCP connection setup (3-way handshake, ~1 RTT), TLS handshake (1-2 RTTs for TLS 1.2, 1 RTT for TLS 1.3), TTFB (time to first byte from origin), database query time, cross-AZ traffic (1-2ms within same region), cross-region traffic (40-200ms depending on distance).`,
+## Percentile distributions matter
+
+Average latency hides outliers. Use percentiles:
+- **p50** — median; half of requests are faster
+- **p99** — 1% of requests are slower than this value
+- **p99.9 (tail latency)** — often 5-10x p99; the worst users experience
+
+In **fan-out systems** (one request calls 10 downstream services), the overall p99 approaches the p99.9 of each individual service. Reducing tail latency matters more than improving average latency in microservices.
+
+## Queuing theory — Little's Law
+
+L = λW (L = items in system, λ = arrival rate, W = time per item). When arrival rate exceeds service rate, the queue grows unboundedly and latency spikes. This explains why a service at **80% CPU shows 2-3x latency** vs 50% CPU — queuing effects are nonlinear near saturation.
+
+## Common latency sources (cloud)
+
+- **DNS resolution** — 5-50ms on first request to a new hostname
+- **TCP handshake** — ~1 RTT (3-way handshake)
+- **TLS handshake** — 1-2 RTTs (TLS 1.2) or 1 RTT (TLS 1.3)
+- **Database queries** — dominant for most OLTP applications
+- **Cross-AZ traffic** — 1-2ms within the same AWS region
+- **Cross-region traffic** — 40-200ms depending on geography`,
     whenToUse: [
       'Diagnosing a p99 latency spike that does not show up in the average',
       'Explaining why a service at 70% CPU shows 3x more latency than at 30% CPU',
@@ -894,11 +980,11 @@ Common latency sources in cloud environments: DNS resolution (first request to a
       'Understanding why fan-out patterns amplify tail latency',
     ],
     keyConcepts: [
-      { term: 'p99 latency', definition: '99th percentile — 1% of requests are slower than this value. Use p99 and p999 for SLOs. Averages hide the long tail that users experience during spikes.' },
-      { term: 'Queuing delay', definition: 'Time waiting for the server to free up capacity. Grows nonlinearly as utilisation approaches 100%. At 90% CPU, queuing delay often exceeds processing time.' },
-      { term: 'RTT (Round Trip Time)', definition: 'Time for a packet to travel from source to destination and back. Propagation delay is ~5ms per 1000km in fiber. TLS handshake adds 1-2 RTTs before data flows.' },
-      { term: 'Connection keep-alive', definition: 'Reusing TCP connections across HTTP requests eliminates the 3-way handshake and TLS renegotiation per request. Essential for high-throughput services.' },
-      { term: 'Hedged requests', definition: 'Sending a duplicate request to a second backend after a small timeout (e.g., 5ms), then using whichever responds first. Effectively eliminates tail latency at the cost of extra backend load.' },
+      { term: 'p99 latency', definition: '**99th percentile** — 1% of requests are slower than this value. Use p99 and p99.9 for SLOs. Averages hide the long tail that users experience during spikes.' },
+      { term: 'Queuing delay', definition: 'Time waiting for the server to free up capacity. **Grows nonlinearly** as utilisation approaches 100%. At 90% CPU, queuing delay often exceeds actual processing time.' },
+      { term: 'RTT (Round Trip Time)', definition: 'Time for a packet to travel from source to destination and back. Propagation delay is ~5ms per 1000km in fiber. **TLS handshake adds 1-2 RTTs** before data flows.' },
+      { term: 'Connection keep-alive', definition: '**Reusing TCP connections** across HTTP requests eliminates the 3-way handshake and TLS renegotiation per request. Essential for high-throughput services.' },
+      { term: 'Hedged requests', definition: 'Sending a **duplicate request** to a second backend after a small timeout (e.g., 5ms), then using whichever responds first. Effectively eliminates tail latency at the cost of extra backend load (~1% overhead).' },
     ],
     pitfalls: [
       'Using average latency in SLOs — a system with 10ms average but 2000ms p99 appears healthy by average but is failing 1% of users. Always use percentile-based SLOs.',
@@ -908,24 +994,39 @@ Common latency sources in cloud environments: DNS resolution (first request to a
     keyQuestions: [
       {
         question: 'Your API p99 latency is 2000ms but p50 is 50ms. What are the most likely causes and how do you diagnose?',
-        answer: `A large gap between p50 and p99 latency indicates tail latency — most requests are fast but a small fraction are very slow. Likely causes:
+        answer: `A large p50-to-p99 gap indicates **tail latency** — most requests are fast but a small fraction are very slow. Likely causes:
 
-1. Garbage collection pauses (JVM, Go): GC stop-the-world events freeze all threads for 50-500ms. The requests in-flight during GC become the slow tail.
-   Diagnosis: correlate GC logs with latency spikes. Look for JVM pause_ms in GC logs or runtime.gc.pause_ns in Go runtime metrics. Fix: tune GC settings (G1GC's MaxGCPauseMillis, Go's GOGC), reduce object allocation, increase heap.
+## 1. Garbage collection pauses (JVM, Go)
 
-2. Lock contention: a shared resource (mutex, database row lock) causes occasional serialization.
-   Diagnosis: thread dump during spike (jstack PID), or async-profiler to capture lock contention flame graphs. Fix: reduce lock scope, use lock-free data structures.
+GC stop-the-world events freeze all threads for 50-500ms. Requests in-flight during GC become the slow tail.
+- **Diagnose**: correlate GC logs with latency spikes; look for JVM pause_ms or Go runtime.gc.pause_ns metrics
+- **Fix**: tune GC (G1GC MaxGCPauseMillis, Go GOGC), reduce object allocation, increase heap
 
-3. Cold cache misses: the 99th percentile request hits an empty cache entry.
-   Diagnosis: correlate cache hit rate with latency percentiles. Redis latency histogram (redis-cli --latency-history). Fix: cache warm-up on startup, stale-while-revalidate.
+## 2. Lock contention
 
-4. Network tail events: packet retransmissions, TCP retransmit timer (default 200ms), or TCP slow start on new connections.
-   Diagnosis: ss -tio | grep retrans, /proc/net/tcp retransmit counters, tcpdump looking for SYN retransmissions.
+A shared resource (mutex, DB row lock) causes occasional serialization.
+- **Diagnose**: thread dump during spike (jstack PID), or async-profiler for lock contention flame graphs
+- **Fix**: reduce lock scope, use lock-free data structures
 
-5. Resource saturation: database connection pool exhausted — requests queue waiting for a connection.
-   Diagnosis: monitor active vs total connections in the pool. If active == max, requests queue. Fix: increase pool size or reduce query duration.
+## 3. Cold cache misses
 
-Tool for diagnosing: add distributed tracing (Jaeger, Tempo). Look at the trace for a slow request — each span shows where the time was spent. The slow span identifies the bottleneck.`,
+The 99th percentile request hits an empty cache entry.
+- **Diagnose**: correlate cache hit rate with latency percentiles; check Redis latency histogram
+- **Fix**: cache warm-up on startup, stale-while-revalidate
+
+## 4. Network tail events
+
+Packet retransmissions (TCP retransmit timer defaults to 200ms) or TCP slow start on new connections.
+- **Diagnose**: \`ss -tio | grep retrans\`, /proc/net/tcp retransmit counters, tcpdump for SYN retransmissions
+- **Fix**: connection keep-alive to avoid new TCP handshakes, tune TCP retransmit timeout
+
+## 5. Resource saturation
+
+Database connection pool exhausted — requests queue waiting for a connection.
+- **Diagnose**: monitor active vs total pool connections; if active == max, requests are queuing
+- **Fix**: increase pool size or reduce query duration
+
+**Best diagnostic tool**: distributed tracing (Jaeger, Tempo). Sample a slow request trace — each span shows exactly where time was spent. The widest span is the bottleneck.`,
       },
     ],
     references: [
