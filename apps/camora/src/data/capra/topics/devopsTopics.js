@@ -31318,7 +31318,7 @@ build --incompatible_strict_action_env
 
 # Remote cache (replace with your endpoint)
 build --remote_cache=grpcs://remote.buildbuddy.io
-build --remote_header=x-buildbuddy-api-key=${BUILDBUDDY_API_KEY}
+build --remote_header=x-buildbuddy-api-key=\${BUILDBUDDY_API_KEY}
 build --experimental_remote_cache_compression
 build --remote_download_minimal
 
