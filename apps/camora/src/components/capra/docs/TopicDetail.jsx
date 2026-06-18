@@ -2745,7 +2745,7 @@ export default function TopicDetail({
         const agenda = [];
         if (topicDetails.introduction)                                          agenda.push({ id: 'overview',     label: 'Overview' });
         if (topicDetails.visualizations?.length)                                agenda.push({ id: 'visual',       label: 'Visual Explanation' });
-        if (topicDetails.whenToUse?.length)                                     agenda.push({ id: 'when-to-use',  label: 'When to Use' });
+        if (topicDetails.whenToUse && (Array.isArray(topicDetails.whenToUse) ? topicDetails.whenToUse.length : true)) agenda.push({ id: 'when-to-use', label: 'When to Use' });
         if (topicDetails.keyConcepts?.length)                                   agenda.push({ id: 'key-concepts', label: 'Key Concepts' });
         if (topicDetails.approach?.length)                                      agenda.push({ id: 'approach',     label: 'Approach' });
         if (topicDetails.pitfalls?.length)                                      agenda.push({ id: 'pitfalls',     label: 'Common Pitfalls' });
@@ -2842,22 +2842,26 @@ export default function TopicDetail({
             </section>
           )}
 
-          {/* ── 3 / When to Use — checklist ── */}
-          {topicDetails.whenToUse && topicDetails.whenToUse.length > 0 && (
+          {/* ── 3 / When to Use — checklist or prose ── */}
+          {topicDetails.whenToUse && (
             <section id="when-to-use" className="scroll-mt-24">
               <ContentHeading title="When to Use" />
               <div className="pt-3">
                 <SlideCard>
-                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2.5">
-                    {topicDetails.whenToUse.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2.5 landing-body">
-                        <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Icon name="check" size={10} className="text-[var(--accent)]" />
-                        </span>
-                        <span className="text-[14px] text-[var(--text-secondary)] leading-relaxed"><FormattedContent content={item} inline /></span>
-                      </li>
-                    ))}
-                  </ul>
+                  {Array.isArray(topicDetails.whenToUse) ? (
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2.5">
+                      {topicDetails.whenToUse.map((item, i) => (
+                        <li key={i} className="flex items-start gap-2.5 landing-body">
+                          <span className="w-5 h-5 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Icon name="check" size={10} className="text-[var(--accent)]" />
+                          </span>
+                          <span className="text-[14px] text-[var(--text-secondary)] leading-relaxed"><FormattedContent content={item} inline /></span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed landing-body">{topicDetails.whenToUse}</p>
+                  )}
                 </SlideCard>
               </div>
             </section>
