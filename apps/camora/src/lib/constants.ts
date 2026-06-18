@@ -63,7 +63,6 @@ export const NAV_LINKS = [
   { label: 'Apply', href: '/jobs' },
   { label: 'Prepare', href: '/capra/prepare' },
   { label: 'Practice', href: '/capra/practice' },
-  { label: 'Playground', href: '/capra/playground' },
   { label: 'Attend', href: '/lumora' },
   { label: 'Pricing', href: '/pricing' },
 ];
