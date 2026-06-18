@@ -439,7 +439,7 @@ Alternative for a single command:
 some_command 2>&1 | tee output.log
 
 Or to capture the exit code of some_command (not tee):
-some_command 2>&1 | tee output.log; exit ${PIPESTATUS[0]}
+some_command 2>&1 | tee output.log; exit \${PIPESTATUS[0]}
 PIPESTATUS[0] gives the exit code of the first command in the pipeline.`,
       },
     ],
