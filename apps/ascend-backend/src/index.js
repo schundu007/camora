@@ -56,6 +56,7 @@ import net from 'net';
 import { verifyToken } from './lib/shared-auth.js';
 import { askRouter } from './routes/ask.js';
 import { playgroundSessionsRouter } from './routes/playgroundSessions.js';
+import { playgroundRouter } from './routes/playground.js';
 import { getSession } from './services/playground/sessionStore.js';
 import { stopJob } from './services/playground/nomadClient.js';
 import learnTopicRouter from './routes/learnTopic.js';
@@ -1438,6 +1439,9 @@ app.use('/api/v1/cara', authenticate, aiLimiter, caraRouter);
 // Learn topic content — Redis L1 + Postgres L2 cache, auto-generated on first visit
 app.use('/api/v1/learn/topic', apiLimiter, learnTopicRouter);
 app.use('/api/v1/prep/docs', apiLimiter, prepDocsRouter);
+
+// Static playground — run/lint/format/explain/share (local process execution)
+app.use('/api/v1/playground', authenticate, apiLimiter, playgroundRouter);
 
 // Playground sessions — disposable Linux VMs (Docker-via-SSH on worker)
 app.use('/api/v1/playground/sessions', authenticate, apiLimiter, playgroundSessionsRouter);
