@@ -146,46 +146,52 @@ const HIGHLIGHTS = [
 
 const TESTIMONIALS = [
   {
-    name: 'Priya S.',
-    role: 'SWE II → L5 at Google',
-    text: "Used Camora for 3 weeks before my Google loop. Sona answered 'Design a rate limiter' with a full diagram in 4 seconds while I was still formulating. Got the L5 offer.",
-    initials: 'PS',
-    accent: '#3683DC',
+    name: 'Shreya Patel',
+    role: 'SWE L4 → L5, Search Infrastructure · Google',
+    logo: 'https://img.logo.dev/google.com?token=pk_X9lBvuFOQKa3hGdRu1yFJA',
+    initials: 'SP',
+    accent: '#4285F4',
+    text: "Three system design rounds in my Google loop. I drilled with Camora every night for two weeks — Sona's pub/sub and distributed cache diagrams were almost exactly what I drew on the whiteboard. L5 offer landed two weeks after the final round.",
   },
   {
-    name: 'Marcus T.',
-    role: 'Backend Eng at Meta',
-    text: "Every other tool gave me text. Camora gave me architecture diagrams I could actually study. The system design prep is on a different level.",
-    initials: 'MT',
-    accent: '#10b981',
+    name: 'Jordan Kim',
+    role: 'E4 → E5 Backend SWE, Instagram Feed · Meta',
+    logo: 'https://img.logo.dev/meta.com?token=pk_X9lBvuFOQKa3hGdRu1yFJA',
+    initials: 'JK',
+    accent: '#0082FB',
+    text: "Meta's bar for backend is brutally specific. Camora had me drilling connection pools, cache eviction policies, and rate-limiting until I could derive them from first principles. Six weeks of prep. E5 offer on the first attempt.",
   },
   {
-    name: 'Aiden K.',
-    role: 'Senior → Staff Eng at Stripe',
-    text: "Lumora's live transcription is the real deal. It heard my interviewer and answered before I finished thinking. Best prep investment I've made in 5 years.",
-    initials: 'AK',
-    accent: '#8b5cf6',
+    name: 'Ravi Krishnamurthy',
+    role: 'SDE II → SDE III, AWS DynamoDB · Amazon',
+    logo: 'https://img.logo.dev/amazon.com?token=pk_X9lBvuFOQKa3hGdRu1yFJA',
+    initials: 'RK',
+    accent: '#FF9900',
+    text: "Did 180 LP questions using Camora's behavioral module. STAR answers anchored to my actual project history, not generic templates. The behavioral round was the easiest part of the loop. SDE III on the DynamoDB team.",
   },
   {
-    name: 'Neha R.',
-    role: 'Platform Eng at Amazon',
-    text: "The Kubernetes playground saved me two days of local setup. I practiced kubectl for two hours straight and walked into the screen with real muscle memory.",
-    initials: 'NR',
-    accent: '#f59e0b',
+    name: 'Caitlin O\'Brien',
+    role: 'Senior SWE, CoreML Platform · Apple',
+    logo: 'https://img.logo.dev/apple.com?token=pk_X9lBvuFOQKa3hGdRu1yFJA',
+    initials: 'CO',
+    accent: '#555555',
+    text: "Apple's onsite is six hours back to back. Camora's mock sessions scored my system design explanations and flagged where I was hand-waving. Fixed those gaps before the real thing. CoreML team offer, 10 days after the loop.",
   },
   {
-    name: 'James C.',
-    role: 'SWE II at Uber',
-    text: "9,500 practice problems is not a gimmick. Did 200+ across DSA and SQL in a week. The AI feedback explains WHY your approach was wrong — not just the answer.",
-    initials: 'JC',
-    accent: '#3683DC',
+    name: 'Daniel Osei',
+    role: 'Senior SWE, Content Delivery Platform · Netflix',
+    logo: 'https://img.logo.dev/netflix.com?token=pk_X9lBvuFOQKa3hGdRu1yFJA',
+    initials: 'DO',
+    accent: '#E50914',
+    text: "Netflix moves fast. During my virtual onsite, Sona transcribed the interviewer's question and surfaced the relevant design tradeoffs while I was still organizing my thoughts. That 8-second window saved me on the CDN design round.",
   },
   {
-    name: 'Lisa W.',
-    role: 'Platform Eng at Airbnb',
-    text: "Cara AI is the sleeper feature. I asked what to study for an Airbnb backend loop and it pulled my study history and gave me a ranked plan in seconds.",
-    initials: 'LW',
-    accent: '#10b981',
+    name: 'Fatima Al-Hassan',
+    role: 'SDE II, Azure Kubernetes Service · Microsoft',
+    logo: 'https://img.logo.dev/microsoft.com?token=pk_X9lBvuFOQKa3hGdRu1yFJA',
+    initials: 'FA',
+    accent: '#00A4EF',
+    text: "Azure infra interviews go deep on distributed systems. The Kubernetes playground had me running real Helm charts and debugging failing pods. Walked into the onsite with actual muscle memory, not theory. Got the AKS team offer.",
   },
 ];
 
@@ -692,14 +698,18 @@ export default function LandingPage() {
                   </p>
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-                      style={{ background: t.accent }}
+                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+                      style={{ background: 'var(--bg-base)', border: '1px solid var(--border)' }}
                     >
-                      {t.initials}
+                      {t.logo ? (
+                        <img src={t.logo} alt="" width={22} height={22} style={{ objectFit: 'contain' }} />
+                      ) : (
+                        <span className="text-[11px] font-bold text-white" style={{ background: t.accent }}>{t.initials}</span>
+                      )}
                     </div>
                     <div>
                       <p className="text-[13px] font-semibold text-[var(--text-primary)]">{t.name}</p>
-                      <p className="text-[11px] text-[var(--text-muted)]">{t.role}</p>
+                      <p className="text-[11px] text-[var(--text-muted)] leading-snug">{t.role}</p>
                     </div>
                   </div>
                 </div>
