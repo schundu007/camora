@@ -9,5 +9,4 @@ exec ttyd \
   --port 7681 \
   --writable \
   --max-clients 1 \
-  --once \
   bash
