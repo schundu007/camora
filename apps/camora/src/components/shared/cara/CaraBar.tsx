@@ -90,102 +90,246 @@ export default function CaraBar() {
 
   if (!open) return null;
 
+  const hasResponse = response !== null;
+
   return (
     <>
-      <button
-        type="button"
-        aria-label="Close Cara"
+      {/* Overlay — plain dark, no blur */}
+      <div
+        aria-hidden="true"
         onClick={() => setOpen(false)}
-        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm cursor-default"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 50,
+          background: 'rgba(0,0,0,0.72)',
+          cursor: 'default',
+        }}
       />
+
+      {/* Panel */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Ask Cara"
-        className="fixed left-1/2 top-[20%] z-50 w-full max-w-lg -translate-x-1/2 rounded-2xl shadow-2xl"
-        style={{ border: '1px solid rgba(212,160,67,0.2)', background: '#1D2126' }}
+        style={{
+          position: 'fixed',
+          left: '50%',
+          top: '20%',
+          zIndex: 51,
+          width: '100%',
+          maxWidth: 540,
+          transform: 'translateX(-50%)',
+          background: 'var(--bg-app)',
+          border: '1px solid var(--border)',
+          borderRadius: 12,
+          boxShadow: 'var(--shadow-xl)',
+          fontFamily: 'var(--font-sans)',
+          overflow: 'hidden',
+        }}
       >
+        {/* Input bar — Spotlight-style: icon + input + send + close in one row */}
         <div
-          className="flex items-center gap-2 px-4 py-3"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '12px 16px',
+          }}
         >
-          <span style={{ color: '#e8c46a', fontSize: 15 }}>✦</span>
-          <span className="text-[13px] font-semibold text-white/90">Ask Cara</span>
-          <span
-            className="ml-auto rounded px-1.5 py-0.5 text-[11px] font-mono text-white/40"
-            style={{ background: 'rgba(255,255,255,0.06)' }}
+          {/* Cara spark icon */}
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 15 15"
+            fill="none"
+            style={{ flexShrink: 0, color: 'var(--accent)' }}
+            aria-hidden="true"
           >
-            ⌘K
-          </span>
+            <path
+              d="M7.5 1v2M7.5 12v2M1 7.5h2M12 7.5h2M3.4 3.4l1.4 1.4M10.2 10.2l1.4 1.4M10.2 4.8l1.4-1.4M3.4 11.6l1.4-1.4"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+          </svg>
+
+          {/* Input */}
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
+            placeholder="Ask Camora anything..."
+            disabled={loading}
+            aria-label="Ask Cara"
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              fontSize: 14,
+              color: 'var(--text-primary)',
+              fontFamily: 'var(--font-sans)',
+              opacity: loading ? 0.55 : 1,
+              transition: 'opacity 120ms',
+              minWidth: 0,
+            }}
+          />
+
+          {/* Send button — icon only */}
           <button
             type="button"
-            aria-label="Close"
-            onClick={() => setOpen(false)}
-            className="ml-2 flex items-center justify-center rounded-md w-6 h-6 text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors"
+            onClick={handleSubmit}
+            disabled={loading || !input.trim()}
+            aria-label="Submit"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 28,
+              height: 28,
+              background: 'none',
+              border: 'none',
+              borderRadius: 6,
+              cursor: loading || !input.trim() ? 'default' : 'pointer',
+              color: input.trim() && !loading ? 'var(--accent)' : 'var(--text-dimmed)',
+              opacity: loading ? 0.45 : 1,
+              transition: 'color 120ms, opacity 120ms',
+              flexShrink: 0,
+              padding: 0,
+            }}
           >
-            ✕
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+              <path
+                d="M2 7.5h11M8.5 3.5l5 4-5 4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Close"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 24,
+              height: 24,
+              background: 'none',
+              border: 'none',
+              borderRadius: 5,
+              cursor: 'pointer',
+              color: 'var(--text-dimmed)',
+              transition: 'color 120ms',
+              flexShrink: 0,
+              padding: 0,
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-dimmed)'; }}
+          >
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+              <path
+                d="M1.5 1.5L9.5 9.5M9.5 1.5L1.5 9.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
           </button>
         </div>
 
-        {lumoraActive ? (
-          <p className="px-4 py-6 text-[13px] text-white/50 text-center">
-            Cara is quiet during live sessions — Sona has you covered.
-          </p>
-        ) : (
-          <div className="p-4 flex flex-col gap-3">
-            <div className="flex gap-2">
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
-                placeholder="What should I study next?"
-                disabled={loading}
-                className="flex-1 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder-white/30 outline-none transition-opacity"
-                style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.10)',
-                  opacity: loading ? 0.6 : 1,
-                }}
-                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(212,160,67,0.4)'; }}
-                onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; }}
-              />
+        {/* Lumora active state */}
+        {lumoraActive && (
+          <div style={{ padding: '12px 16px 16px', textAlign: 'center' }}>
+            <p style={{
+              fontSize: 13,
+              color: 'var(--text-muted)',
+              lineHeight: 1.55,
+              margin: 0,
+            }}>
+              Cara is quiet during live sessions — Sona has you covered.
+            </p>
+          </div>
+        )}
+
+        {/* Separator — only when answer is present */}
+        {!lumoraActive && hasResponse && (
+          <div style={{ height: 1, background: 'var(--border)' }} />
+        )}
+
+        {/* Answer section */}
+        {!lumoraActive && hasResponse && (
+          <div
+            className="cara-answer-in"
+            style={{ padding: '12px 16px 16px' }}
+          >
+            <p style={{
+              fontSize: 14,
+              lineHeight: 1.65,
+              color: 'var(--text-primary)',
+              fontFamily: 'var(--font-sans)',
+              margin: 0,
+            }}>
+              {response!.answer}
+            </p>
+
+            {response!.action && (
               <button
                 type="button"
-                onClick={handleSubmit}
-                disabled={loading || !input.trim()}
-                className="rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-opacity disabled:opacity-40"
-                style={{ background: 'rgba(212,160,67,0.15)', border: '1px solid rgba(212,160,67,0.30)', color: '#e8c46a' }}
+                onClick={handleNavigate}
+                style={{
+                  marginTop: 10,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '5px 11px',
+                  borderRadius: 20,
+                  border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 28%, transparent)',
+                  background: 'var(--cam-gold-leaf-50)',
+                  color: 'var(--cam-gold-leaf-lt)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  fontFamily: 'var(--font-sans)',
+                  letterSpacing: '0.01em',
+                  cursor: 'pointer',
+                  transition: 'background 120ms',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'var(--cam-gold-leaf-50)';
+                }}
               >
-                {loading ? '…' : '↵'}
+                {response!.action.label}
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                  <path
+                    d="M2 5h6M5.5 2.5l3 2.5-3 2.5"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </button>
-            </div>
-
-            {response && (
-              <div
-                className="rounded-xl p-3 flex flex-col gap-2"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-              >
-                <p className="text-[13px] text-white/85 leading-relaxed">{response.answer}</p>
-                {response.action && (
-                  <button
-                    type="button"
-                    onClick={handleNavigate}
-                    className="self-start inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold"
-                    style={{
-                      background: 'rgba(212,160,67,0.12)',
-                      border: '1px solid rgba(212,160,67,0.30)',
-                      color: '#e8c46a',
-                    }}
-                  >
-                    → {response.action.label}
-                  </button>
-                )}
-              </div>
             )}
           </div>
         )}
       </div>
+
+      {/* Placeholder style for input — can't be done inline */}
+      <style>{`
+        [aria-label="Ask Cara"]::placeholder {
+          color: var(--text-dimmed);
+        }
+      `}</style>
     </>
   );
 }

@@ -2927,6 +2927,18 @@ figure:has(> .viz-caption) {
 .cofix-line-fix { background-color: rgba(245, 158, 11, 0.12) !important; }
 .cofix-line-added { background-color: rgba(34, 197, 94, 0.12) !important; }
 
+/* ── Cara command palette animations ── */
+@keyframes caraFadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.cara-answer-in {
+  animation: caraFadeIn 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cara-answer-in { animation: none; }
+}
+
 /* ── Allotment sash — navy accent for CoFix split pane ── */
 .split-view-view > .sash-container > .sash {
   background: var(--accent) !important;
