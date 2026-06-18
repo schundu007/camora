@@ -43,28 +43,28 @@ const APPA: Step[] = [
   {
     key: 'apply', label: 'Apply', href: '/jobs',
     headline: 'Roles matched to your skills',
-    desc: '1,000+ engineering roles with AI-powered matching. Auto-generate tailored resumes and cover letters.',
+    desc: '1,000+ matched roles · tailored resume + cover letter',
     Anim: ApplyAnim,
     icon: Glyph(<><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 12h6M9 8h6M9 16h3" /></>),
   },
   {
     key: 'prepare', label: 'Prepare', href: '/capra/prepare',
     headline: '600+ curated study topics',
-    desc: 'System design, DSA, behavioral, databases. Each with AI explanations and architecture diagrams.',
+    desc: 'System design, DSA, behavioral, databases · diagrams included',
     Anim: PrepareAnim,
     icon: Glyph(<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>),
   },
   {
     key: 'practice', label: 'Practice', href: '/capra/practice',
     headline: '9,500+ problems with AI feedback',
-    desc: 'Coding, DSA, MCQ, system design, SQL — 9,500+ unique problems across 50+ domains with AI scoring.',
+    desc: 'Coding, DSA, MCQ, SQL · 50+ domains · AI scoring',
     Anim: PracticeAnim,
     icon: Glyph(<><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></>),
   },
   {
     key: 'attend', label: 'Attend', href: '/lumora',
     headline: 'Real-time AI in the room',
-    desc: 'Voice transcription captures the question. AI generates instant answers: diagrams, code, STAR coaching.',
+    desc: 'Voice → instant AI answers · diagrams, code, STAR',
     Anim: AttendAnim,
     icon: Glyph(<><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></>),
   },
@@ -634,7 +634,6 @@ export default function LandingPage() {
               <Reveal delay={0.12}>
                 <SectionHeading
                   title={<>Paste a job URL.<br /><span className="text-[var(--cam-primary)]">Get a prep plan.</span></>}
-                  lead="Paste a job URL. Get a tailored prep plan with coding topics, system design, and behavioral questions."
                 />
                 <div className="mt-7">
                   <CTAButton to="/jobs" variant="primary" trailingArrow>
@@ -666,7 +665,7 @@ export default function LandingPage() {
             />
             <AudienceCard
               title="Identify top technical talent"
-              body="Camora trains engineers, then helps you spot them. Sponsor coding contests, surface candidates ready for the loop, and shorten time-to-hire."
+              body="Sponsor contests, surface ready candidates, shorten time-to-hire."
               ctaLabel="Explore partnerships"
               ctaHref="/pricing"
               tone="dark"
@@ -682,7 +681,6 @@ export default function LandingPage() {
             <SectionHeading
               align="center"
               title={<>Engineers who <span className="text-[var(--cam-primary)]">got the offer.</span></>}
-              lead="From engineers who used Camora to land the offer."
             />
           </Reveal>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
