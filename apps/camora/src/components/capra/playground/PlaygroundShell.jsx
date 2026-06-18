@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlaygroundSession } from '@/hooks/usePlaygroundSession';
 import { useDialog } from '@/components/shared/Dialog';
-import EnvironmentPicker, { ENVIRONMENTS, EnvIcon } from './EnvironmentPicker';
+import EnvironmentPicker, { ENVIRONMENTS } from './EnvironmentPicker';
 import TerminalPane from './TerminalPane';
 
 const TERMINAL_PREVIEW = `[32mcamora[0m:[34m~[0m$ `;
@@ -72,92 +72,113 @@ export default function PlaygroundShell() {
 
       {isActive ? (
         <>
-          {/* ── Active: compact tab bar ── */}
+          {/* ── Row 1: Title bar — breadcrumb + timer + controls ── */}
           <div style={{
             flexShrink: 0,
-            height: 40,
+            height: 32,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '0 12px',
-            background: '#161b22',
-            borderBottom: '1px solid rgba(255,255,255,0.07)',
+            padding: '0 10px',
+            background: '#0d1117',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}>
-            {/* Left: terminal tab */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '4px 10px',
-                borderRadius: 6,
-                background: 'rgba(255,255,255,0.07)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                fontSize: 12,
-                fontWeight: 600,
-                color: '#fff',
-                fontFamily: 'var(--font-mono, "IBM Plex Mono", monospace)',
-              }}>
-                <span style={{
-                  width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block',
-                  boxShadow: '0 0 6px #10b981',
-                }} />
-                Term 1
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '1px 5px', borderRadius: 3 }}>⌨</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>Camora Playground</span>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>›</span>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontFamily: '"IBM Plex Mono", monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedEnv.label}</span>
             </div>
-
-            {/* Right: timer + controls */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {/* Timer */}
-              <span style={{
-                fontFamily: 'var(--font-mono, "IBM Plex Mono", monospace)',
-                fontSize: 12,
-                fontWeight: 700,
-                color: timerColor,
-                padding: '3px 8px',
-                borderRadius: 4,
-                background: isRed ? 'rgba(239,68,68,0.12)' : isAmber ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)',
-                border: `1px solid ${isRed ? 'rgba(239,68,68,0.3)' : isAmber ? 'rgba(245,158,11,0.25)' : 'rgba(255,255,255,0.08)'}`,
-                animation: isRed ? 'pulse 1s ease-in-out infinite' : undefined,
-              }}>
-                ⏱ {timerStr}
-              </span>
-
-              {/* Font controls */}
-              <div style={{ display: 'flex', gap: 2 }}>
-                {[['A−', handleFontDec], ['A+', handleFontInc]].map(([label, fn]) => (
-                  <button key={label} type="button" onClick={fn} style={tabBtn}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Instructions toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 5px #10b981' }} />
+              <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, fontWeight: 700, color: timerColor, animation: isRed ? 'pulse 1s ease-in-out infinite' : undefined }}>{timerStr}</span>
+              <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', margin: '0 2px' }} />
+              {[['A−', handleFontDec], ['A+', handleFontInc]].map(([label, fn]) => (
+                <button key={label} type="button" onClick={fn} style={iconBtn} title={label}>{label}</button>
+              ))}
+              <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', margin: '0 2px' }} />
+              {extendAvailable && (
+                <button type="button" onClick={extendSession} style={{ ...iconBtn, color: '#d4a043' }} title="Extend session">+15m</button>
+              )}
               <button
                 type="button"
                 onClick={() => setShowInstructions((v) => !v)}
-                style={{ ...tabBtn, background: showInstructions ? 'rgba(212,160,67,0.15)' : tabBtn.background, color: showInstructions ? '#d4a043' : tabBtn.color, borderColor: showInstructions ? 'rgba(212,160,67,0.4)' : tabBtn.borderColor }}
-                title="Toggle instructions"
-              >
-                ?
-              </button>
-
-              {/* Extend */}
-              {extendAvailable && (
-                <button type="button" onClick={extendSession} style={{ ...tabBtn, color: '#d4a043', borderColor: 'rgba(212,160,67,0.4)' }}>
-                  +15m
-                </button>
-              )}
-
-              {/* End */}
-              <button type="button" onClick={handleEnd} style={{ ...tabBtn, color: '#f87171', borderColor: 'rgba(239,68,68,0.4)' }}>
-                End
-              </button>
+                style={{ ...iconBtn, color: showInstructions ? '#d4a043' : iconBtn.color }}
+                title={showInstructions ? 'Hide instructions' : 'Show instructions'}
+              >{showInstructions ? '⊟' : '⊞'}</button>
+              <button type="button" onClick={handleEnd} style={{ ...iconBtn, color: '#f87171' }} title="End session">⏻</button>
             </div>
           </div>
 
-          {/* ── Active: terminal + optional instructions panel ── */}
+          {/* ── Row 2: Tab bar — iximiuz-style pill chips ── */}
+          <div style={{
+            flexShrink: 0,
+            height: 36,
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 8px',
+            gap: 4,
+            background: '#161b22',
+            borderBottom: '1px solid rgba(255,255,255,0.07)',
+          }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '3px 8px 3px 10px', borderRadius: 6,
+              background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
+              fontSize: 12, fontWeight: 600, color: '#fff',
+              fontFamily: '"IBM Plex Mono", monospace', userSelect: 'none',
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 5px #10b981', flexShrink: 0 }} />
+              {selectedEnv.id === 'ubuntu' ? 'ubuntu-01' : selectedEnv.id === 'docker' ? 'docker-01' : selectedEnv.id === 'agent-sandbox' ? 'agent-01' : 'node-01'}
+              <button type="button" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '0 0 0 2px', fontSize: 11, lineHeight: 1, display: 'flex', alignItems: 'center' }} title="Reload">↻</button>
+            </div>
+            <button type="button" style={{ ...iconBtn, width: 24, height: 24, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 5, fontSize: 14 }} title="Add terminal">+</button>
+            <div style={{ flex: 1 }} />
+            <div style={{ display: 'flex', gap: 2 }}>
+              <button type="button" onClick={() => setShowInstructions(false)} style={{ ...iconBtn, opacity: !showInstructions ? 1 : 0.4 }} title="Single pane">▣</button>
+              <button type="button" onClick={() => setShowInstructions(true)} style={{ ...iconBtn, opacity: showInstructions ? 1 : 0.4 }} title="Split pane">⧉</button>
+            </div>
+          </div>
+
+          {/* ── Active: instructions panel (LEFT) + terminal (RIGHT) ── */}
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            {showInstructions && (
+              <div style={{
+                width: 260, flexShrink: 0, background: '#111827',
+                borderRight: '1px solid rgba(255,255,255,0.08)',
+                overflowY: 'auto', display: 'flex', flexDirection: 'column',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    {selectedEnv.icon} {selectedEnv.label}
+                  </span>
+                  <button type="button" onClick={() => setShowInstructions(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', cursor: 'pointer', fontSize: 15, padding: 0, lineHeight: 1 }}>×</button>
+                </div>
+                <div style={{ padding: '12px 14px', fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, flex: 1 }}>
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 10 }}>
+                    {selectedEnv.category.split(' · ').map((cat) => (
+                      <span key={cat} style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 3, background: `${selectedEnv.color}22`, color: selectedEnv.color }}>{cat}</span>
+                    ))}
+                  </div>
+                  <p style={{ marginBottom: 10, color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>{selectedEnv.desc}</p>
+                  <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 5, padding: '7px 10px', fontFamily: 'monospace', fontSize: 10, color: '#10b981', marginBottom: 10, whiteSpace: 'pre' }}>{'$ whoami\nroot'}</div>
+                  <p style={{ marginBottom: 8, fontSize: 10 }}>Session runs 30 minutes. Environment is ephemeral — all changes lost when session ends.</p>
+                  {selectedEnv.id === 'agent-sandbox' && (
+                    <>
+                      <p style={{ fontWeight: 700, color: '#fff', marginBottom: 6, fontSize: 10 }}>Pre-installed agents:</p>
+                      <ul style={{ margin: 0, paddingLeft: 14, fontSize: 10 }}>
+                        {[['claude', 'Claude Code'], ['codex', 'OpenAI Codex'], ['gemini', 'Gemini CLI']].map(([cmd, name]) => (
+                          <li key={cmd} style={{ marginBottom: 3 }}>{name} — <code style={{ color: '#10b981' }}>{cmd}</code></li>
+                        ))}
+                      </ul>
+                      <div style={{ marginTop: 10, background: 'rgba(212,160,67,0.08)', border: '1px solid rgba(212,160,67,0.2)', borderRadius: 5, padding: '7px 10px', fontSize: 10, color: '#d4a043' }}>
+                        export ANTHROPIC_API_KEY=sk-ant-...
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
             <div style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#0a0a0a' }}>
               <TerminalPane
                 ref={termRef}
@@ -166,50 +187,6 @@ export default function PlaygroundShell() {
                 initialFontSize={fontSize}
               />
             </div>
-
-            {showInstructions && (
-              <div style={{
-                width: 300,
-                flexShrink: 0,
-                background: '#111827',
-                borderLeft: '1px solid rgba(255,255,255,0.08)',
-                overflowY: 'auto',
-                padding: 20,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <EnvIcon icon={selectedEnv.icon} /> {selectedEnv.label}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowInstructions(false)}
-                    style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 16, padding: 0 }}
-                  >
-                    ×
-                  </button>
-                </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>
-                  <p style={{ marginBottom: 12, color: 'rgba(255,255,255,0.45)' }}>{selectedEnv.desc}</p>
-                  <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '8px 12px', fontFamily: 'monospace', fontSize: 11, color: '#10b981', marginBottom: 12 }}>
-                    $ whoami{'\n'}root
-                  </div>
-                  <p style={{ marginBottom: 8 }}>This is a live Linux VM session. Your session runs for 30 minutes. Use the timer to track remaining time.</p>
-                  {selectedEnv.id === 'agent-sandbox' && (
-                    <>
-                      <p style={{ fontWeight: 700, color: '#fff', marginBottom: 6 }}>Pre-installed agents:</p>
-                      <ul style={{ margin: 0, paddingLeft: 16, color: 'rgba(255,255,255,0.6)' }}>
-                        <li>Claude Code — <code style={{ color: '#10b981' }}>claude</code></li>
-                        <li>OpenAI Codex — <code style={{ color: '#10b981' }}>codex</code></li>
-                        <li>Gemini CLI — <code style={{ color: '#10b981' }}>gemini</code></li>
-                      </ul>
-                      <div style={{ marginTop: 12, background: 'rgba(212,160,67,0.08)', border: '1px solid rgba(212,160,67,0.25)', borderRadius: 6, padding: '8px 12px', fontSize: 10, color: '#d4a043' }}>
-                        Set your API keys before running an agent: export ANTHROPIC_API_KEY=...
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         </>
       ) : (
@@ -274,7 +251,7 @@ export default function PlaygroundShell() {
               {/* Selected env info */}
               <div style={{ padding: '0 16px', marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <EnvIcon icon={selectedEnv.icon} />
+                  <span style={{ fontSize: 18 }}>{selectedEnv.icon}</span>
                   <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{selectedEnv.label}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
@@ -393,6 +370,20 @@ const tabBtn = {
   background: 'rgba(255,255,255,0.06)',
   border: '1px solid rgba(255,255,255,0.1)',
   color: 'rgba(255,255,255,0.65)',
+  cursor: 'pointer',
+  userSelect: 'none',
+};
+
+const iconBtn = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  padding: '2px 6px',
+  borderRadius: 4,
+  fontSize: 11,
+  fontWeight: 600,
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.08)',
+  color: 'rgba(255,255,255,0.55)',
   cursor: 'pointer',
   userSelect: 'none',
 };
