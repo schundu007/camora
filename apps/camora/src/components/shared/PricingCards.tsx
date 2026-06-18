@@ -59,6 +59,7 @@ export const SOLO_PLANS: PlanCard[] = [
       'Coding solver + system design',
       'Voice filter + architecture diagrams',
       'Prep — 1,400+ topics (unlimited)',
+      'Playground — live Docker & Kubernetes terminals',
       'Top-ups at $15/hr, never expire',
     ],
     cta: 'Start Monthly',
@@ -409,7 +410,7 @@ function TeamPlanSection({
         <div style={{ borderTop: `1px solid ${LN.divider}`, paddingTop: 16 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 10 }}>Included</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 20px' }}>
-            {['Pooled AI hours across team', 'Per-member usage breakdown', 'Single invoice, multiple seats', 'Pooled top-ups never expire', 'Live session AI co-pilot', 'All Camora features unlocked'].map((f, i) => (
+            {['Pooled AI hours across team', 'Per-member usage breakdown', 'Single invoice, multiple seats', 'Pooled top-ups never expire', 'Live session AI co-pilot', 'Playground — Docker & Kubernetes for every seat', 'All Camora features unlocked'].map((f, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                 <Check size={11} /><span style={{ fontSize: 12, color: LN.textSub }}>{f}</span>
               </div>
