@@ -72,8 +72,8 @@
     --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 10%, transparent);
 
     /* Fonts — Satoshi (all UI) + JetBrains Mono (code) */
-    --font-sans: 'Nunito Sans', 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-display: 'Nunito Sans', 'Satoshi', sans-serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-display: 'Inter', sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     --font-brand: 'Satoshi', sans-serif;
     --font-answer: var(--font-sans);

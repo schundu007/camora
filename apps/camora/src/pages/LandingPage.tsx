@@ -508,13 +508,13 @@ export default function LandingPage() {
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5" style={{ color: 'rgba(212,160,67,0.75)', fontFamily: 'var(--font-mono)' }}>
                           {step.label}
                         </p>
-                        <p className="text-[14px] font-semibold leading-snug" style={{ color: 'rgba(240,238,233,0.92)' }}>
+                        <p className="text-[16px] font-semibold leading-snug" style={{ color: 'rgba(240,238,233,0.92)' }}>
                           {step.headline}
                         </p>
                       </div>
 
                       {/* Description */}
-                      <p className="text-[13px] leading-relaxed" style={{ color: 'rgba(240,238,233,0.68)' }}>
+                      <p className="text-[14px] leading-relaxed" style={{ color: 'rgba(240,238,233,0.68)' }}>
                         {step.desc}
                       </p>
 
@@ -581,12 +581,12 @@ export default function LandingPage() {
                 <Reveal key={f.title} delay={i * 0.06}>
                   <SurfaceCard interactive padding="lg" className="h-full group">
                     <Eyebrow tone="accent">{f.label}</Eyebrow>
-                    <h3 className="mt-2 font-display text-[20px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
+                    <h3 className="mt-2 font-display text-[22px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
                       {f.title}
                     </h3>
-                    <ul className="mt-2 space-y-1">
+                    <ul className="mt-3 space-y-1.5">
                       {f.bullets.map((b) => (
-                        <li key={b} className="flex items-start gap-1.5 text-[13px] text-[var(--text-secondary)]">
+                        <li key={b} className="flex items-start gap-2 text-[15px] text-[var(--text-secondary)]">
                           <span className="mt-[3px] shrink-0 w-1 h-1 rounded-full bg-[var(--accent)] opacity-70" />
                           {b}
                         </li>
@@ -696,7 +696,7 @@ export default function LandingPage() {
                   <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
                     <path d="M0 14V9.33C0 7.96 0.31 6.64 0.93 5.37 1.55 4.1 2.39 2.97 3.45 1.98 4.51 0.99 5.72 0.33 7.08 0L8.33 1.98C7.22 2.37 6.27 3.01 5.48 3.9 4.69 4.79 4.2 5.79 4.02 6.88H6.67V14H0ZM11.67 14V9.33C11.67 7.96 11.98 6.64 12.6 5.37 13.22 4.1 14.06 2.97 15.12 1.98 16.18 0.99 17.39 0.33 18.75 0L20 1.98C18.89 2.37 17.94 3.01 17.15 3.9 16.36 4.79 15.87 5.79 15.69 6.88H18.33V14H11.67Z" fill="var(--cam-gold-leaf, #d4a043)" opacity="0.5"/>
                   </svg>
-                  <p className="flex-1 text-[13.5px] leading-relaxed text-[var(--text-secondary)]">
+                  <p className="flex-1 text-[15px] leading-relaxed text-[var(--text-secondary)]">
                     {t.text}
                   </p>
                   <div className="flex items-center gap-3">
@@ -711,8 +711,8 @@ export default function LandingPage() {
                       )}
                     </div>
                     <div>
-                      <p className="text-[13px] font-semibold text-[var(--text-primary)]">{t.name}</p>
-                      <p className="text-[11px] text-[var(--text-muted)] leading-snug">{t.role}</p>
+                      <p className="text-[14px] font-semibold text-[var(--text-primary)]">{t.name}</p>
+                      <p className="text-[13px] text-[var(--text-muted)] leading-snug">{t.role}</p>
                     </div>
                   </div>
                 </div>

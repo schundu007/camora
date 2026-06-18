@@ -108,7 +108,7 @@ export function SectionHeading({ eyebrow, title, lead, align = 'left', inverse =
       {lead && (
         <p
           className={cn(
-            'text-base md:text-lg leading-relaxed max-w-2xl',
+            'text-lg md:text-xl leading-relaxed max-w-2xl',
             inverse ? 'text-white/72' : 'text-[var(--text-secondary)]',
           )}
         >
