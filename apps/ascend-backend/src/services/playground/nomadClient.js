@@ -57,7 +57,6 @@ export async function scheduleJob(sessionId, environment, scenarioId) {
               Driver: 'docker',
               Config: {
                 image,
-                runtime: 'sysbox-runc',
                 ports: ['ttyd'],
               },
               Env: taskEnv,
