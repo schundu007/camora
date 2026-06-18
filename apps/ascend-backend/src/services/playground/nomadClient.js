@@ -85,18 +85,34 @@ export async function scheduleJob(sessionId, environment, scenarioId) {
 }
 
 export async function getTaskAddress(jobId) {
-  const deadline = Date.now() + 15_000;
+  const deadline = Date.now() + 60_000;
+
+  // Phase 1: wait for Docker port mapping to appear
+  let address = null;
   while (Date.now() < deadline) {
     try {
       const out = await sshExec(`docker port ${jobId} 7681`);
       for (const line of out.split('\n')) {
         const port = parseInt(line.split(':').at(-1), 10);
-        if (port > 0) return { host: WORKER_HOST(), port };
+        if (port > 0) { address = { host: WORKER_HOST(), port }; break; }
       }
+      if (address) break;
     } catch { /* container starting */ }
     await new Promise((r) => setTimeout(r, 500));
   }
-  throw new Error('Timed out waiting for container port mapping');
+  if (!address) throw new Error('Timed out waiting for container port mapping');
+
+  // Phase 2: TCP-probe from the worker until ttyd is actually listening.
+  // Docker-in-Docker containers (pg-docker) wait ~15-30s for dockerd before
+  // starting ttyd, so we probe here rather than retrying in the WS proxy.
+  while (Date.now() < deadline) {
+    try {
+      await sshExec(`nc -z -w1 127.0.0.1 ${address.port}`);
+      return address;
+    } catch { /* ttyd not listening yet */ }
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  throw new Error('Timed out waiting for ttyd to start listening');
 }
 
 export async function stopJob(jobId) {
