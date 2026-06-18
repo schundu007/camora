@@ -713,7 +713,43 @@ export function FeatureMockSessionAnim() {
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   FEATURE 5: PLAYGROUND — terminal with animated kubectl commands
+   FEATURE 5: PRACTICE — coding problem with difficulty + accepted
+   ───────────────────────────────────────────────────────────────── */
+export function FeaturePracticeAnim() {
+  const codeLines = [
+    { text: 'def two_sum(nums, target):', delay: 0.3 },
+    { text: '  seen = {}', delay: 0.8 },
+    { text: '  for i, n in enumerate(nums):', delay: 1.3 },
+    { text: '    if target - n in seen:', delay: 1.8 },
+    { text: '      return [seen[target-n], i]', delay: 2.3 },
+  ];
+  return (
+    <div style={{ ...base, background: '#0D1117', padding: '10px 12px', fontFamily: MONO, display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {/* Header row: problem name + difficulty */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, opacity: 0, animation: 'card-fade-up 0.3s ease-out 0.1s forwards' }}>
+        <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>Two Sum</span>
+        <span style={{ fontSize: 8, fontWeight: 800, padding: '1px 6px', borderRadius: 8, background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }}>EASY</span>
+        <span style={{ marginLeft: 'auto', fontSize: 8, color: 'rgba(255,255,255,0.3)' }}>#1</span>
+      </div>
+
+      {/* Animated code lines */}
+      {codeLines.map((l, i) => (
+        <div key={i} style={{ fontSize: 8.5, color: i === 0 ? '#79c0ff' : i === 1 ? '#e3b341' : 'rgba(255,255,255,0.62)', marginBottom: 2, opacity: 0, animation: `card-fade-up 0.28s ease-out ${l.delay}s forwards`, whiteSpace: 'pre' }}>
+          {l.text}
+        </div>
+      ))}
+
+      {/* Accepted badge */}
+      <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 5, opacity: 0, animation: 'card-fade-up 0.35s ease-out 2.9s forwards' }}>
+        <span style={{ fontSize: 8, fontWeight: 800, color: '#22c55e', letterSpacing: '0.14em' }}>✓ ACCEPTED</span>
+        <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)' }}>· Runtime 98%</span>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   FEATURE 6: PLAYGROUND — terminal with animated kubectl commands
    ───────────────────────────────────────────────────────────────── */
 export function FeaturePlaygroundAnim() {
   const lines = [
