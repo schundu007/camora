@@ -77,6 +77,15 @@ export async function authenticate(req, res, next) {
     }
   }
 
+  // Check ?token= query param (EventSource/SSE cannot send Authorization headers)
+  if (!req.user && req.query?.token) {
+    const jwtUser = await tryJwtAuth(req.query.token);
+    if (jwtUser && !jwtUser.error) {
+      req.user = jwtUser;
+      return next();
+    }
+  }
+
   // No valid authentication found
   return res.status(401).json({
     error: 'Authentication required. Please sign in.',

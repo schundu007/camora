@@ -1370,57 +1370,60 @@ function tryParseToken(token) {
   try { return verifyToken(token); } catch { return null; }
 }
 
-// code-server HTTP proxy — serves VS Code IDE from inside playground containers
-app.use('/playground/ide', async (req, res, next) => {
-  // Auth: Bearer header, SSO cookie, one-time query token, or session cookie
-  let user = null;
-  if (req.headers.authorization?.startsWith('Bearer ')) {
-    const payload = tryParseToken(req.headers.authorization.slice(7));
-    if (payload) user = { id: parseInt(payload.sub, 10) };
-  }
-  if (!user && req.cookies?.cariara_sso) {
-    const payload = tryParseToken(req.cookies.cariara_sso);
-    if (payload) user = { id: parseInt(payload.sub, 10) };
-  }
-  if (!user) {
-    const qt = new URL(req.url, 'http://localhost').searchParams.get('token');
-    if (qt) {
-      const payload = tryParseToken(qt);
-      if (payload) user = { id: parseInt(payload.sub, 10) };
-    }
-  }
-  // session cookie set on a previous authenticated request
-  if (!user) {
-    const pathMatch = req.path.match(/^\/([a-f0-9-]+)/);
-    if (pathMatch && req.cookies?.[`pg_${pathMatch[1]}`]) user = { id: -1, _cookieAuth: pathMatch[1] };
-  }
-  if (!user) return res.status(401).end('Unauthorized');
+// code-server HTTP proxy — /pg-ide/* → container port 8080
+// Express strips /pg-ide prefix so req.url is already the correct path for code-server.
+// Session routing: ?_s=<sessionId>&_t=<jwt> on first load → sets pg_ide cookie for assets.
+app.use('/pg-ide', async (req, res) => {
+  const qs = new URL(req.url, 'http://localhost').searchParams;
 
-  const pathMatch = req.path.match(/^\/([a-f0-9-]+)(\/.*)?$/);
-  if (!pathMatch) return res.status(400).end();
-  const sessionId = pathMatch[1];
-  const rest = (pathMatch[2] || '/') + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '');
+  // Auth: one-time token in ?_t=, SSO cookie, or pg_ide session cookie (asset requests)
+  let userId = null;
+  const qt = qs.get('_t') || qs.get('token');
+  if (qt) {
+    const p = tryParseToken(qt);
+    if (p) userId = parseInt(p.sub, 10);
+  }
+  if (!userId && req.cookies?.cariara_sso) {
+    const p = tryParseToken(req.cookies.cariara_sso);
+    if (p) userId = parseInt(p.sub, 10);
+  }
+  if (!userId && req.cookies?.pg_ide) userId = -1;
+  if (!userId) return res.status(401).end('Unauthorized');
+
+  const sessionId = qs.get('_s') || req.cookies?.pg_ide;
+  if (!sessionId) return res.status(400).end('Missing session');
 
   let session;
-  try {
-    session = await getSession(sessionId);
-  } catch { return res.status(502).end(); }
-
+  try { session = await getSession(sessionId); } catch { return res.status(502).end(); }
   if (!session) return res.status(404).end('Session not found');
-  if (!user._cookieAuth && session.user_id !== user.id) return res.status(403).end('Forbidden');
+  if (userId !== -1 && session.user_id !== userId) return res.status(403).end('Forbidden');
   if (!session.code_server_port) return res.status(503).end('IDE not ready');
 
-  // Set auth cookie so subsequent same-prefix requests work without token
-  res.cookie(`pg_${sessionId}`, '1', { httpOnly: true, maxAge: 3600, path: `/playground/ide/${sessionId}` });
+  res.cookie('pg_ide', sessionId, { httpOnly: true, maxAge: 3600, path: '/pg-ide' });
+
+  const FRAME_ORIGINS = [
+    "'self'",
+    'https://camora.cariara.com',
+    'https://www.camora.cariara.com',
+    'https://capra.cariara.com',
+    'http://localhost:3000',
+    'http://localhost:5173',
+  ].join(' ');
 
   const proxyReq = http.request({
     hostname: session.ttyd_host,
     port: session.code_server_port,
-    path: rest,
+    path: req.url,
     method: req.method,
     headers: { ...req.headers, host: `${session.ttyd_host}:${session.code_server_port}`, connection: 'close' },
   }, (proxyRes) => {
-    res.writeHead(proxyRes.statusCode, proxyRes.headers);
+    const headers = { ...proxyRes.headers };
+    delete headers['content-security-policy'];
+    delete headers['x-frame-options'];
+    res.removeHeader('Content-Security-Policy');
+    res.removeHeader('X-Frame-Options');
+    headers['content-security-policy'] = `default-src * 'unsafe-inline' 'unsafe-eval' blob: data: ws: wss:; frame-ancestors ${FRAME_ORIGINS}`;
+    res.writeHead(proxyRes.statusCode, headers);
     proxyRes.pipe(res, { end: true });
   });
   proxyReq.on('error', () => { if (!res.headersSent) res.status(502).end(); });
@@ -1614,36 +1617,23 @@ const wss = new WebSocketServer({ noServer: true });
 
 server.on('upgrade', (req, socket, head) => {
   const wsMatch = req.url?.match(/^\/playground\/ws\/([a-f0-9-]+)(?:\?.*)?$/);
-  const ideMatch = req.url?.match(/^\/playground\/ide\/([a-f0-9-]+)(\/.*)?$/);
+  const pgIdeMatch = req.url?.startsWith('/pg-ide');
 
-  if (ideMatch) {
-    const sessionId = ideMatch[1];
-    const restPath = (ideMatch[2] || '/') + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '');
+  if (pgIdeMatch) {
     (async () => {
       try {
-        let token = null;
-        const urlObj = new URL(req.url, 'http://localhost');
-        token = urlObj.searchParams.get('token');
-        if (!token && req.headers.cookie) {
-          const m = req.headers.cookie.match(/(?:^|;\s*)cariara_sso=([^;]+)/);
-          if (m) token = decodeURIComponent(m[1]);
-        }
-        let userId = null;
-        if (token) {
-          const payload = verifyToken(token);
-          userId = parseInt(payload.sub, 10);
-        } else {
-          // check session cookie
-          const m = req.headers.cookie?.match(new RegExp(`(?:^|;\\s*)pg_${sessionId}=`));
-          if (m) userId = -1; // cookie auth
-        }
-        if (!userId) { socket.destroy(); return; }
+        // Session ID from pg_ide cookie (set by initial HTTP proxy request)
+        const pgIdeCookie = req.headers.cookie?.match(/(?:^|;\s*)pg_ide=([^;]+)/)?.[1];
+        const sessionId = pgIdeCookie ? decodeURIComponent(pgIdeCookie) : null;
+        if (!sessionId) { socket.destroy(); return; }
+
         const session = await getSession(sessionId);
-        if (!session || (userId !== -1 && session.user_id !== userId) || !session.code_server_port) {
-          socket.destroy(); return;
-        }
+        if (!session || !session.code_server_port) { socket.destroy(); return; }
+
+        // Path relative to /pg-ide (same as HTTP proxy)
+        const wsPath = req.url.replace(/^\/pg-ide/, '') || '/';
         const target = net.connect(session.code_server_port, session.ttyd_host, () => {
-          target.write(`${req.method} ${restPath} HTTP/${req.httpVersion}\r\n`);
+          target.write(`GET ${wsPath} HTTP/${req.httpVersion}\r\n`);
           for (const [key, val] of Object.entries(req.headers)) {
             target.write(`${key}: ${val}\r\n`);
           }
