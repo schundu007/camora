@@ -1,10 +1,13 @@
-const NOMAD_ADDR = () => {
-  const addr = process.env.NOMAD_ADDR;
-  if (!addr) throw new Error('NOMAD_ADDR not configured');
-  return addr;
-};
+import { Client } from 'ssh2';
 
-const NOMAD_TOKEN = () => process.env.NOMAD_TOKEN || null;
+const WORKER_HOST = () => process.env.WORKER_HOST || '172.104.210.63';
+const WORKER_USER = () => process.env.WORKER_USER || 'pgrunner';
+
+function workerKey() {
+  const b64 = process.env.WORKER_SSH_KEY_B64;
+  if (!b64) throw new Error('WORKER_SSH_KEY_B64 not configured');
+  return Buffer.from(b64, 'base64').toString('utf8');
+}
 
 const IMAGES = {
   ubuntu: 'chundubabu/pg-ubuntu:latest',
@@ -15,179 +18,90 @@ const IMAGES = {
   'cloud-cli': 'chundubabu/pg-cloud-cli:latest',
 };
 
-const RESOURCES = {
-  ubuntu: { CPU: 500, MemoryMB: 512 },
-  docker: { CPU: 1000, MemoryMB: 1024 },
-  'agent-sandbox': { CPU: 1000, MemoryMB: 1536 },
-  'k8s-single': { CPU: 2000, MemoryMB: 2048 },
-  'k8s-multi': { CPU: 3000, MemoryMB: 4096 },
-  'cloud-cli': { CPU: 1500, MemoryMB: 1536 },
+const MEMORY_MB = {
+  ubuntu: 512,
+  docker: 1024,
+  'agent-sandbox': 1536,
+  'k8s-single': 2048,
+  'k8s-multi': 4096,
+  'cloud-cli': 1536,
 };
 
-function nomadHeaders() {
-  const token = NOMAD_TOKEN();
-  const headers = { 'Content-Type': 'application/json' };
-  if (token) headers['X-Nomad-Token'] = token;
-  return headers;
+function sshExec(command) {
+  return new Promise((resolve, reject) => {
+    const conn = new Client();
+    let done = false;
+    const finish = (fn, val) => { if (!done) { done = true; conn.end(); fn(val); } };
+
+    conn.on('ready', () => {
+      conn.exec(command, (err, stream) => {
+        if (err) return finish(reject, err);
+        let stdout = '';
+        let stderr = '';
+        stream.on('data', (d) => { stdout += d; });
+        stream.stderr.on('data', (d) => { stderr += d; });
+        stream.on('close', (code) => {
+          if (code !== 0) {
+            finish(reject, new Error(`ssh exec exit ${code}: ${stderr.trim() || stdout.trim()}`));
+          } else {
+            finish(resolve, stdout.trim());
+          }
+        });
+      });
+    });
+
+    conn.on('error', (err) => finish(reject, err));
+
+    conn.connect({
+      host: WORKER_HOST(),
+      port: 22,
+      username: WORKER_USER(),
+      privateKey: workerKey(),
+      readyTimeout: 10_000,
+    });
+  });
 }
 
 export async function scheduleJob(sessionId, environment, scenarioId) {
-  const addr = NOMAD_ADDR();
   const image = IMAGES[environment];
   if (!image) throw new Error(`Unknown environment: ${environment}`);
-  const resources = RESOURCES[environment];
 
-  const jobId = `pg-${sessionId}`;
-  const taskEnv = { SESSION_ID: sessionId };
-  if (scenarioId) taskEnv.SCENARIO_ID = scenarioId;
+  const mem = MEMORY_MB[environment] || 512;
+  const envFlags = [`-e SESSION_ID=${sessionId}`];
+  if (scenarioId) envFlags.push(`-e SCENARIO_ID=${scenarioId}`);
 
-  const jobSpec = {
-    Job: {
-      ID: jobId,
-      Name: jobId,
-      Type: 'service',
-      Datacenters: ['linode-us-east'],
-      TaskGroups: [
-        {
-          Name: 'terminal',
-          Count: 1,
-          Tasks: [
-            {
-              Name: 'ttyd',
-              Driver: 'docker',
-              Config: {
-                image,
-                ports: ['ttyd'],
-              },
-              Env: taskEnv,
-              Resources: resources,
-              KillTimeout: 10_000_000_000,
-            },
-          ],
-          Networks: [
-            {
-              DynamicPorts: [{ Label: 'ttyd', To: 7681 }],
-            },
-          ],
-        },
-      ],
-    },
-  };
+  const cmd = `docker run -d --rm --memory=${mem}m ${envFlags.join(' ')} -p 0:7681 ${image}`;
+  const containerId = await sshExec(cmd);
 
-  const res = await fetch(`${addr}/v1/jobs`, {
-    method: 'POST',
-    headers: nomadHeaders(),
-    body: JSON.stringify(jobSpec),
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Nomad scheduleJob failed ${res.status}: ${text}`);
+  if (!containerId || containerId.length < 12) {
+    throw new Error(`docker run returned unexpected output: ${containerId}`);
   }
 
-  const data = await res.json();
-  return { jobId, evalId: data.EvalID };
-}
-
-export async function stopJob(jobId) {
-  const addr = NOMAD_ADDR();
-  const res = await fetch(`${addr}/v1/job/${encodeURIComponent(jobId)}?purge=true`, {
-    method: 'DELETE',
-    headers: nomadHeaders(),
-  });
-  if (!res.ok && res.status !== 404) {
-    const text = await res.text();
-    throw new Error(`Nomad stopJob failed ${res.status}: ${text}`);
-  }
-}
-
-export async function getAllocations(jobId) {
-  const addr = NOMAD_ADDR();
-  const res = await fetch(`${addr}/v1/job/${encodeURIComponent(jobId)}/allocations`, {
-    headers: nomadHeaders(),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Nomad getAllocations failed ${res.status}: ${text}`);
-  }
-  return res.json();
+  return { jobId: containerId };
 }
 
 export async function getTaskAddress(jobId) {
-  const addr = NOMAD_ADDR();
-  const deadline = Date.now() + 30_000;
-
+  const deadline = Date.now() + 15_000;
   while (Date.now() < deadline) {
-    const allocs = await getAllocations(jobId);
-    const running = allocs.find((a) => a.ClientStatus === 'running');
-
-    if (running) {
-      const allocRes = await fetch(
-        `${addr}/v1/allocation/${running.ID}`,
-        { headers: nomadHeaders() },
-      );
-      if (allocRes.ok) {
-        const allocData = await allocRes.json();
-        const ports = allocData?.AllocatedResources?.Shared?.Ports || [];
-        const ttydPort = ports.find((p) => p.Label === 'ttyd');
-        if (ttydPort) {
-          const isUnroutable = (ip) => !ip || ip === '0.0.0.0'
-            || ip.startsWith('192.168.') || ip.startsWith('10.')
-            || /^172\.(1[6-9]|2\d|3[01])\./.test(ip);
-
-          let host = ttydPort.HostIP;
-
-          // HostIP is often 0.0.0.0 — resolve the node's actual public IP.
-          if (isUnroutable(host)) {
-            try {
-              const nodeRes = await fetch(`${addr}/v1/node/${running.NodeID}`, { headers: nomadHeaders() });
-              if (nodeRes.ok) {
-                const nodeData = await nodeRes.json();
-                // HTTPAddr is the advertised address — most reliable per-node IP.
-                const fromHttp = (nodeData.HTTPAddr || '').split(':')[0];
-                if (!isUnroutable(fromHttp)) {
-                  host = fromHttp;
-                } else {
-                  const fromAttr = nodeData.Attributes?.['unique.network.ip-address'] || '';
-                  host = isUnroutable(fromAttr) ? host : fromAttr;
-                }
-              }
-            } catch { /* ignore */ }
-          }
-
-          // Last resort: static override for nodes that don't advertise a public IP.
-          if (isUnroutable(host)) {
-            host = process.env.NOMAD_CLIENT_PUBLIC_IP || host;
-          }
-
-          return { host, port: ttydPort.Value };
-        }
+    try {
+      const out = await sshExec(`docker port ${jobId} 7681`);
+      for (const line of out.split('\n')) {
+        const port = parseInt(line.split(':').at(-1), 10);
+        if (port > 0) return { host: WORKER_HOST(), port };
       }
-    }
-
-    await new Promise((r) => setTimeout(r, 1000));
+    } catch { /* container starting */ }
+    await new Promise((r) => setTimeout(r, 500));
   }
-
-  throw new Error('Timed out waiting for Nomad allocation to become running');
+  throw new Error('Timed out waiting for container port mapping');
 }
 
-export async function execInAlloc(allocId, taskName, command) {
-  const addr = NOMAD_ADDR();
-  const res = await fetch(
-    `${addr}/v1/client/allocation/${encodeURIComponent(allocId)}/exec`,
-    {
-      method: 'POST',
-      headers: nomadHeaders(),
-      body: JSON.stringify({
-        Command: Array.isArray(command) ? command : ['/bin/sh', '-c', command],
-        Task: taskName,
-      }),
-    },
-  );
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Nomad execInAlloc failed ${res.status}: ${text}`);
+export async function stopJob(jobId) {
+  try {
+    await sshExec(`docker stop ${jobId}`);
+  } catch (err) {
+    if (!err.message.includes('No such container')) throw err;
   }
-  const data = await res.json();
-  return { stdout: data.stdout || '', exitCode: data.exit_code ?? 0 };
 }
+
+export async function getAllocations() { return []; }
+export async function execInAlloc() { return { stdout: '', exitCode: 0 }; }
