@@ -1,21 +1,22 @@
 import { useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlaygroundSession } from '@/hooks/usePlaygroundSession';
-import EnvironmentPicker from './EnvironmentPicker';
-import SessionTimer from './SessionTimer';
+import { useDialog } from '@/components/shared/Dialog';
+import EnvironmentPicker, { ENVIRONMENTS } from './EnvironmentPicker';
 import TerminalPane from './TerminalPane';
 
-const ENV_LABELS = {
-  ubuntu: 'Ubuntu 24.04',
-  docker: 'Docker',
-  'agent-sandbox': 'AI Agent Sandbox',
-  'k8s-single': 'K8s Single-node',
-  'k8s-multi': 'K8s Multi-node',
-  'cloud-cli': 'Cloud CLI',
-};
+const TERMINAL_PREVIEW = `[32mcamora[0m:[34m~[0m$ `;
+
+function formatTime(seconds) {
+  if (seconds == null) return '30:00';
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
 
 export default function PlaygroundShell() {
   const { user } = useAuth();
+  const { confirm } = useDialog();
   const {
     session,
     status,
@@ -29,184 +30,316 @@ export default function PlaygroundShell() {
 
   const [environment, setEnvironment] = useState('ubuntu');
   const [fontSize, setFontSize] = useState(13);
+  const [showInstructions, setShowInstructions] = useState(false);
   const termRef = useRef(null);
 
   const isActive = status === 'ready' && !!session;
   const isCreating = status === 'creating';
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
-  const mins = timeRemaining != null ? Math.floor(timeRemaining / 60) : 0;
-  const secs = timeRemaining != null ? timeRemaining % 60 : 0;
-  const timerStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  const selectedEnv = ENVIRONMENTS.find((e) => e.id === environment) || ENVIRONMENTS[0];
+  const timerStr = formatTime(timeRemaining);
+  const isAmber = timeRemaining != null && timeRemaining < 300;
+  const isRed = timeRemaining != null && timeRemaining < 60;
+  const timerColor = isRed ? '#ef4444' : isAmber ? '#f59e0b' : 'rgba(255,255,255,0.6)';
 
-  const handleClear = useCallback(() => termRef.current?.clear(), []);
-  const handleCopyAll = useCallback(() => termRef.current?.copyAll(), []);
+  const handleEnd = useCallback(async () => {
+    const ok = await confirm({ message: 'End session? The container will be destroyed.', tone: 'danger' });
+    if (ok) destroySession();
+  }, [confirm, destroySession]);
+
   const handleFontInc = useCallback(() => {
-    setFontSize((f) => {
-      const next = Math.min(18, f + 1);
-      termRef.current?.setFontSize(next);
-      return next;
-    });
+    setFontSize((f) => { const n = Math.min(18, f + 1); termRef.current?.setFontSize(n); return n; });
   }, []);
   const handleFontDec = useCallback(() => {
-    setFontSize((f) => {
-      const next = Math.max(10, f - 1);
-      termRef.current?.setFontSize(next);
-      return next;
-    });
+    setFontSize((f) => { const n = Math.max(10, f - 1); termRef.current?.setFontSize(n); return n; });
   }, []);
-  const handleFullscreen = useCallback(() => termRef.current?.requestFullscreen(), []);
 
-  const chipStyle = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 4,
-    padding: '2px 8px',
-    borderRadius: 4,
-    fontSize: 11,
-    fontWeight: 600,
-    cursor: 'pointer',
-    border: '1px solid rgba(255,255,255,0.12)',
-    background: 'rgba(255,255,255,0.05)',
-    color: 'rgba(255,255,255,0.7)',
-    userSelect: 'none',
-  };
+  if (isMobile) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 60px)', padding: 32, textAlign: 'center' }}>
+        <div>
+          <div style={{ fontSize: 40, marginBottom: 16 }}>⌨️</div>
+          <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Playground requires a desktop browser</p>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 8 }}>Open Camora on a laptop or desktop to use the terminal.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 60px)', overflow: 'hidden' }}>
-      {/* Header */}
-      <div
-        style={{
-          flexShrink: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '10px 20px',
-          background: '#0a1628',
-          borderBottom: '1px solid rgba(212,160,67,0.25)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 18 }}>⌨️</span>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>
-              Terminal Playground
-            </div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>
-              Live terminal sessions — Ubuntu, Docker, Kubernetes
-            </div>
-          </div>
-          {isActive && (
-            <span
-              style={{
-                marginLeft: 8,
-                padding: '2px 8px',
-                borderRadius: 4,
-                fontSize: 11,
-                fontWeight: 600,
-                background: 'rgba(212,160,67,0.12)',
-                border: '1px solid rgba(212,160,67,0.35)',
-                color: '#d4a043',
-              }}
-            >
-              {ENV_LABELS[environment] || environment}
-            </span>
-          )}
-        </div>
-        {isActive && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '3px 10px',
-                borderRadius: 20,
-                fontSize: 11,
-                fontWeight: 700,
-                background: 'rgba(16,185,129,0.15)',
-                border: '1px solid rgba(16,185,129,0.35)',
-                color: '#10b981',
-              }}
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  background: '#10b981',
-                  display: 'inline-block',
-                  animation: 'pulse 2s infinite',
-                }}
-              />
-              Live · {timerStr}
-            </span>
-            <button
-              type="button"
-              onClick={destroySession}
-              style={{
-                padding: '3px 10px',
-                borderRadius: 4,
-                fontSize: 11,
-                fontWeight: 600,
-                background: 'transparent',
-                border: '1px solid rgba(239,68,68,0.5)',
-                color: '#f87171',
-                cursor: 'pointer',
-              }}
-            >
-              End Session
-            </button>
-          </div>
-        )}
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 60px)', overflow: 'hidden', background: '#0d1117' }}>
 
-      {/* Mobile guard */}
-      {isMobile ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
-          <div>
-            <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
-              Playground requires a desktop browser with a keyboard.
-            </p>
-            <p style={{ fontSize: 13, marginTop: 8, color: 'var(--text-secondary)' }}>
-              Please open Camora on a laptop or desktop to use the terminal.
-            </p>
+      {isActive ? (
+        <>
+          {/* ── Active: compact tab bar ── */}
+          <div style={{
+            flexShrink: 0,
+            height: 40,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 12px',
+            background: '#161b22',
+            borderBottom: '1px solid rgba(255,255,255,0.07)',
+          }}>
+            {/* Left: terminal tab */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 10px',
+                borderRadius: 6,
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                fontSize: 12,
+                fontWeight: 600,
+                color: '#fff',
+                fontFamily: 'var(--font-mono, "IBM Plex Mono", monospace)',
+              }}>
+                <span style={{
+                  width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block',
+                  boxShadow: '0 0 6px #10b981',
+                }} />
+                Term 1
+              </div>
+            </div>
+
+            {/* Right: timer + controls */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* Timer */}
+              <span style={{
+                fontFamily: 'var(--font-mono, "IBM Plex Mono", monospace)',
+                fontSize: 12,
+                fontWeight: 700,
+                color: timerColor,
+                padding: '3px 8px',
+                borderRadius: 4,
+                background: isRed ? 'rgba(239,68,68,0.12)' : isAmber ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)',
+                border: `1px solid ${isRed ? 'rgba(239,68,68,0.3)' : isAmber ? 'rgba(245,158,11,0.25)' : 'rgba(255,255,255,0.08)'}`,
+                animation: isRed ? 'pulse 1s ease-in-out infinite' : undefined,
+              }}>
+                ⏱ {timerStr}
+              </span>
+
+              {/* Font controls */}
+              <div style={{ display: 'flex', gap: 2 }}>
+                {[['A−', handleFontDec], ['A+', handleFontInc]].map(([label, fn]) => (
+                  <button key={label} type="button" onClick={fn} style={tabBtn}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Instructions toggle */}
+              <button
+                type="button"
+                onClick={() => setShowInstructions((v) => !v)}
+                style={{ ...tabBtn, background: showInstructions ? 'rgba(212,160,67,0.15)' : tabBtn.background, color: showInstructions ? '#d4a043' : tabBtn.color, borderColor: showInstructions ? 'rgba(212,160,67,0.4)' : tabBtn.borderColor }}
+                title="Toggle instructions"
+              >
+                ?
+              </button>
+
+              {/* Extend */}
+              {extendAvailable && (
+                <button type="button" onClick={extendSession} style={{ ...tabBtn, color: '#d4a043', borderColor: 'rgba(212,160,67,0.4)' }}>
+                  +15m
+                </button>
+              )}
+
+              {/* End */}
+              <button type="button" onClick={handleEnd} style={{ ...tabBtn, color: '#f87171', borderColor: 'rgba(239,68,68,0.4)' }}>
+                End
+              </button>
+            </div>
           </div>
-        </div>
+
+          {/* ── Active: terminal + optional instructions panel ── */}
+          <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            <div style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#0a0a0a' }}>
+              <TerminalPane
+                ref={termRef}
+                sessionId={session.sessionId}
+                wsUrl={session.wsUrl}
+                initialFontSize={fontSize}
+              />
+            </div>
+
+            {showInstructions && (
+              <div style={{
+                width: 300,
+                flexShrink: 0,
+                background: '#111827',
+                borderLeft: '1px solid rgba(255,255,255,0.08)',
+                overflowY: 'auto',
+                padding: 20,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>
+                    {selectedEnv.icon} {selectedEnv.label}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowInstructions(false)}
+                    style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 16, padding: 0 }}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>
+                  <p style={{ marginBottom: 12, color: 'rgba(255,255,255,0.45)' }}>{selectedEnv.desc}</p>
+                  <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '8px 12px', fontFamily: 'monospace', fontSize: 11, color: '#10b981', marginBottom: 12 }}>
+                    $ whoami{'\n'}root
+                  </div>
+                  <p style={{ marginBottom: 8 }}>This is a live Linux VM session. Your session runs for 30 minutes. Use the timer to track remaining time.</p>
+                  {selectedEnv.id === 'agent-sandbox' && (
+                    <>
+                      <p style={{ fontWeight: 700, color: '#fff', marginBottom: 6 }}>Pre-installed agents:</p>
+                      <ul style={{ margin: 0, paddingLeft: 16, color: 'rgba(255,255,255,0.6)' }}>
+                        <li>Claude Code — <code style={{ color: '#10b981' }}>claude</code></li>
+                        <li>OpenAI Codex — <code style={{ color: '#10b981' }}>codex</code></li>
+                        <li>Gemini CLI — <code style={{ color: '#10b981' }}>gemini</code></li>
+                      </ul>
+                      <div style={{ marginTop: 12, background: 'rgba(212,160,67,0.08)', border: '1px solid rgba(212,160,67,0.25)', borderRadius: 6, padding: '8px 12px', fontSize: 10, color: '#d4a043' }}>
+                        Set your API keys before running an agent: export ANTHROPIC_API_KEY=...
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       ) : (
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          {/* Sidebar */}
-          <div
-            style={{
-              width: 260,
+        <>
+          {/* ── Idle: two-column layout ── */}
+          <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+
+            {/* Left panel: environment info + launch */}
+            <div style={{
+              width: 280,
               flexShrink: 0,
-              overflowY: 'auto',
-              background: '#111827',
-              borderRight: '1px solid rgba(255,255,255,0.08)',
               display: 'flex',
               flexDirection: 'column',
-              gap: 12,
-              padding: 14,
-            }}
-          >
-            {!isActive ? (
-              <>
-                <EnvironmentPicker
-                  selected={environment}
-                  onChange={setEnvironment}
-                  userPlan={user?.plan_type}
-                  disabled={isCreating}
-                />
+              background: '#111827',
+              borderRight: '1px solid rgba(255,255,255,0.07)',
+              overflowY: 'auto',
+            }}>
+              {/* Header */}
+              <div style={{ padding: '20px 20px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 18 }}>⌨️</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Playground</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.35)', color: '#10b981' }}>
+                    BETA
+                  </span>
+                </div>
+                <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', margin: '0 0 16px', lineHeight: 1.5 }}>
+                  Disposable Linux VMs — start in seconds, no setup required.
+                </p>
+              </div>
+
+              {/* Terminal preview thumbnail */}
+              <div style={{ margin: '0 16px 16px' }}>
+                <div style={{
+                  height: 100,
+                  borderRadius: 8,
+                  background: '#0a0a0a',
+                  border: `2px solid ${selectedEnv.color}44`,
+                  borderTop: `3px solid ${selectedEnv.color}`,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '8px 10px',
+                  fontFamily: '"IBM Plex Mono", monospace',
+                  fontSize: 10,
+                  color: '#e4e4e4',
+                }}>
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }} />
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
+                  </div>
+                  <div style={{ color: '#10b981' }}>
+                    root@{selectedEnv.id}:~$ <span style={{ animation: 'blink 1s step-end infinite' }}>▊</span>
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.3)', marginTop: 4, fontSize: 9 }}>
+                    {selectedEnv.desc}
+                  </div>
+                </div>
+              </div>
+
+              {/* Selected env info */}
+              <div style={{ padding: '0 16px', marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <span style={{ fontSize: 18 }}>{selectedEnv.icon}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{selectedEnv.label}</span>
+                </div>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
+                  {selectedEnv.category.split(' · ').map((cat) => (
+                    <span key={cat} style={{
+                      fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 3,
+                      background: `${selectedEnv.color}22`, color: selectedEnv.color,
+                    }}>
+                      {cat}
+                    </span>
+                  ))}
+                  {selectedEnv.plan === 'free' && (
+                    <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 3, background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>
+                      Free
+                    </span>
+                  )}
+                </div>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', margin: 0, lineHeight: 1.5 }}>
+                  {selectedEnv.desc}
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '0 16px 16px' }} />
+
+              {/* Session config */}
+              <div style={{ padding: '0 16px', marginBottom: 16 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>
+                  Session config
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {[
+                    ['Duration', '30 min'],
+                    ['Login as', 'root'],
+                    ['Network', 'US East'],
+                  ].map(([k, v]) => (
+                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{k}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.65)', fontFamily: '"IBM Plex Mono", monospace' }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Spacer */}
+              <div style={{ flex: 1 }} />
+
+              {/* Launch button */}
+              <div style={{ padding: '0 16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {status === 'error' && error && (
+                  <div style={{ padding: '8px 10px', borderRadius: 6, fontSize: 11, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', marginBottom: 4 }}>
+                    {error}
+                  </div>
+                )}
                 <button
                   type="button"
                   disabled={isCreating}
                   onClick={() => createSession(environment)}
                   style={{
                     width: '100%',
-                    padding: '9px 0',
+                    padding: '11px 0',
                     borderRadius: 8,
                     fontSize: 13,
-                    fontWeight: 700,
+                    fontWeight: 800,
+                    letterSpacing: '0.03em',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -215,131 +348,51 @@ export default function PlaygroundShell() {
                     color: '#1a1200',
                     border: 'none',
                     cursor: isCreating ? 'not-allowed' : 'pointer',
-                    opacity: isCreating ? 0.8 : 1,
+                    opacity: isCreating ? 0.85 : 1,
+                    textTransform: 'uppercase',
                   }}
                 >
                   {isCreating && (
-                    <span
-                      style={{
-                        width: 14,
-                        height: 14,
-                        border: '2px solid currentColor',
-                        borderTopColor: 'transparent',
-                        borderRadius: '50%',
-                        display: 'inline-block',
-                        animation: 'spin 0.7s linear infinite',
-                      }}
-                    />
+                    <span style={{
+                      width: 13, height: 13,
+                      border: '2px solid currentColor',
+                      borderTopColor: 'transparent',
+                      borderRadius: '50%',
+                      display: 'inline-block',
+                      animation: 'spin 0.7s linear infinite',
+                    }} />
                   )}
-                  {isCreating ? 'Starting...' : 'Start Session'}
+                  {isCreating ? 'Starting...' : 'Start Playground'}
                 </button>
-                {status === 'error' && error && (
-                  <div
-                    style={{
-                      padding: '8px 12px',
-                      borderRadius: 8,
-                      fontSize: 12,
-                      background: 'rgba(239,68,68,0.1)',
-                      border: '1px solid rgba(239,68,68,0.3)',
-                      color: '#fca5a5',
-                    }}
-                  >
-                    {error}
-                  </div>
-                )}
-              </>
-            ) : (
-              <SessionTimer
-                timeRemaining={timeRemaining}
-                extendAvailable={extendAvailable}
-                onExtend={extendSession}
-                onEnd={destroySession}
-              />
-            )}
-          </div>
-
-          {/* Terminal column */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0a0a' }}>
-            {isActive && (
-              /* Toolbar */
-              <div
-                style={{
-                  flexShrink: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '4px 12px',
-                  background: '#111',
-                  borderBottom: '1px solid rgba(255,255,255,0.06)',
-                }}
-              >
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button type="button" style={chipStyle} onClick={handleCopyAll} title="Copy all output">
-                    ⎘ Copy
-                  </button>
-                  <button type="button" style={chipStyle} onClick={handleClear} title="Clear terminal">
-                    ✕ Clear
-                  </button>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginRight: 2 }}>
-                    {fontSize}px
-                  </span>
-                  <button type="button" style={{ ...chipStyle, padding: '2px 6px' }} onClick={handleFontDec} title="Decrease font size">
-                    A−
-                  </button>
-                  <button type="button" style={{ ...chipStyle, padding: '2px 6px' }} onClick={handleFontInc} title="Increase font size">
-                    A+
-                  </button>
-                  <button type="button" style={{ ...chipStyle, marginLeft: 4 }} onClick={handleFullscreen} title="Fullscreen">
-                    ⛶
-                  </button>
-                </div>
               </div>
-            )}
+            </div>
 
-            {/* Terminal area */}
-            <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-              {isActive && session?.wsUrl ? (
-                <TerminalPane
-                  ref={termRef}
-                  sessionId={session.sessionId}
-                  wsUrl={session.wsUrl}
-                  initialFontSize={fontSize}
-                />
-              ) : (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div
-                      style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: 16,
-                        margin: '0 auto 16px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 22,
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        color: 'rgba(255,255,255,0.4)',
-                      }}
-                    >
-                      &gt;_
-                    </div>
-                    <p style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-                      Select an environment and start a session
-                    </p>
-                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', margin: '4px 0 0' }}>
-                      Sessions run for 30 minutes
-                    </p>
-                  </div>
-                </div>
-              )}
+            {/* Right panel: environment card grid */}
+            <div style={{ flex: 1, overflowY: 'auto', background: '#0d1117' }}>
+              <EnvironmentPicker
+                selected={environment}
+                onChange={setEnvironment}
+                userPlan={user?.plan_type}
+                disabled={isCreating}
+              />
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
 }
+
+const tabBtn = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  padding: '3px 8px',
+  borderRadius: 5,
+  fontSize: 11,
+  fontWeight: 600,
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  color: 'rgba(255,255,255,0.65)',
+  cursor: 'pointer',
+  userSelect: 'none',
+};
