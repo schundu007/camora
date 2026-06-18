@@ -3,19 +3,23 @@ FROM nestybox/ubuntu-jammy-systemd-docker:latest
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl wget git vim nano jq tmux htop \
     python3 python3-pip python3-venv \
-    nodejs npm \
-    build-essential \
+    build-essential ca-certificates gnupg \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Node.js 20 LTS via NodeSource (apt ships Node 12 which is too old for claude-code)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ARG TTYD_VERSION=1.7.7
 RUN curl -fsSL "https://github.com/tsl0922/ttyd/releases/download/${TTYD_VERSION}/ttyd.x86_64" \
     -o /usr/local/bin/ttyd && chmod +x /usr/local/bin/ttyd
 
-RUN npm install -g @anthropic-ai/claude-code@latest 2>/dev/null || true
+RUN npm install -g @anthropic-ai/claude-code@latest
 
-RUN pip3 install --no-cache-dir google-generativeai 2>/dev/null || true
+RUN pip3 install --no-cache-dir google-generativeai
 
-RUN npm install -g openai 2>/dev/null || true
+RUN npm install -g openai
 
 RUN useradd -m -s /bin/bash camora && \
     echo 'camora ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/camora && \
