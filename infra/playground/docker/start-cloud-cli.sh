@@ -42,4 +42,4 @@ exec ttyd \
   --port 7681 \
   --writable \
   --max-clients 5 \
-  bash
+  su - camora
