@@ -43,6 +43,10 @@ export const devopsTopicCategoryMap = {
   'test-pyramid':                   'cicd',
   'monorepo-build-systems':         'cicd',
   'git-for-devops':                 'cicd',
+  'ace-cicd-tbd-cd-adoption':       'cicd',
+  'ace-cicd-cost-optimized-runner-fleet': 'cicd',
+  'ace-cicd-software-supply-chain-security': 'devsecops',
+  'ace-observability-alerting-pipeline-debug': 'observability',
   // CI/CD Tools — most common first, then cloud-native / advanced
   'github-actions-deep-dive':       'cicdtools',
   'gitlab-ci-deep-dive':            'cicdtools',
@@ -36953,6 +36957,129 @@ Hooks are the extensibility layer that DevOps teams use to enforce quality gates
       'https://git-scm.com/doc',
       'https://www.atlassian.com/git/tutorials',
       'https://docs.github.com/en/get-started/using-git',
+    ],
+  },
+
+  {
+    id: 'ace-cicd-tbd-cd-adoption',
+    title: 'Trunk-Based Development with Continuous Deployment',
+    icon: 'gitMerge',
+    color: '#3b82f6',
+    questions: 3,
+    description: 'Organizational, technical, and cultural changes required to adopt TBD with CD, and how to sequence them.',
+    introduction: 'Trunk-based development with continuous deployment requires sequenced investment in safety mechanisms before shortening branch lifetimes. Build the safety net first, then reduce branch lifetime, then enable progressive delivery.',
+    keyQuestions: [
+      {
+        question: 'Your team wants to adopt trunk-based development with continuous deployment. What organizational, technical, and cultural changes are required, and how do you sequence them?',
+        answer: `Phase 1 — safety net: install feature flags (LaunchDarkly or Flagsmith) so incomplete work can merge to trunk hidden behind a flag, establish automated rollback under 5 minutes, and set a 70% code coverage gate that blocks merges. Phase 2 — branch lifetime reduction: enforce a policy that branches live under 24 hours, auto-delete merged branches via GitHub or GitLab settings, and decompose stories into flag-gated vertical slices small enough to merge daily. Phase 3 — progressive delivery: introduce canary deployments via Argo Rollouts with observability-gated promotion so bad releases auto-rollback before reaching full traffic.
+
+Common failure modes: flag debt explosion (mitigate with TTL enforcement — flags must be removed within 2 sprints of GA), teams carving out a long-lived branch exception that undermines the model, and flaky tests on trunk blocking all engineers simultaneously.
+
+\`\`\`yaml
+# Argo Rollouts canary strategy
+spec:
+  strategy:
+    canary:
+      steps:
+      - setWeight: 5
+      - pause: {duration: 10m}
+      - setWeight: 50
+      - pause: {duration: 10m}
+      - setWeight: 100
+\`\`\``,
+      },
+      {
+        question: 'What is feature flag debt and how do you prevent it?',
+        answer: 'Feature flag debt accumulates when flags created to hide incomplete features are never removed after the feature ships. The symptom: 140 flags in the codebase, 60% for features that shipped 3 months ago. The flags become permanent conditional branches, increasing complexity. Prevention: assign a TTL to every flag at creation time (remove within 2 sprints of the feature going GA to all users), use LaunchDarkly Code References to automatically scan the codebase and identify stale flags, track flag lifecycle in the same ticket as the feature, and run a quarterly flag audit. A flag that outlives its TTL without an explicit extension is treated as a bug.',
+      },
+      {
+        question: 'How do you handle database migrations in a CI/CD pipeline for high-traffic production systems where zero-downtime is required?',
+        answer: 'The expand-contract pattern requires 3 sequential deployments. Deployment 1 (Expand): add the new column as nullable — both old and new app versions can run simultaneously. Deployment 2 (Backfill): run a background job with rate limiting that populates the new column for existing rows; monitor with count queries. Deployment 3 (Contract): deploy the app version that reads only the new column, then make the column NOT NULL and drop the old column in a follow-up migration. The rule: never combine a breaking schema change and a code change in a single deployment. Tools: Flyway or Liquibase for versioned migration tracking. For large tables: pg_repack rewrites the table concurrently without holding access-exclusive locks.',
+      },
+    ],
+    references: [
+      'https://trunkbaseddevelopment.com/',
+      'https://docs.launchdarkly.com/',
+      'https://argoproj.github.io/argo-rollouts/',
+      'https://flywaydb.org/documentation/',
+    ],
+  },
+
+  {
+    id: 'ace-cicd-cost-optimized-runner-fleet',
+    title: 'Cost-Optimized CI Runner Fleet',
+    icon: 'server',
+    color: '#f59e0b',
+    questions: 2,
+    description: 'Designing CI runner fleets with spot/preemptible instances, warm pools, and cross-region spot arbitrage to minimize cost while handling burst.',
+    introduction: 'CI runner cost is dominated by idle capacity during off-hours and cold-start latency during burst. The solution is a hybrid reserved/spot fleet with a warm pool and spot interruption handling.',
+    keyQuestions: [
+      {
+        question: 'How do you design a cost-optimized CI runner fleet that scales to burst capacity during business hours but minimizes cost overnight?',
+        answer: 'Use a reserved plus spot hybrid — never 100% spot because spot interruptions during a build waste the entire job. Keep 20% of baseline capacity on reserved or on-demand instances, run 80% on spot. Warm pool: maintain 2-3 warm runners pre-booted with the build environment so burst jobs absorb without cold-start lag; scale to zero overnight via scheduled ASG actions. Cross-region spot arbitrage: use EC2 Fleet with capacity-optimized allocation strategy across 3 Availability Zones and 3 instance families (m5, m5a, m5n) to reduce interruption probability — AWS fills from the pool with highest spare capacity. For GitHub Actions: use self-hosted runner groups with the --ephemeral flag so each runner handles one job then terminates. Spot interruption handling: poll the EC2 instance metadata service for the 2-minute termination warning, drain the current job, re-queue via SQS, and launch a replacement. Result: 70-80% cost reduction versus persistent on-demand runners.',
+      },
+      {
+        question: 'What strategies prevent CI flakiness from blocking trunk in a trunk-based development model?',
+        answer: 'Flaky test quarantine protocol: track the flakiness rate for every test over a rolling 30-day window. Any test with a flakiness rate above 2% in the past 7 days is automatically quarantined — removed from the main pipeline and moved to a separate flaky-tests pipeline that runs on its own schedule. The test owner is notified with a 72-hour SLA to fix. The quarantine pipeline still runs and reports results but does not block merges to trunk. A weekly review meeting examines the quarantine queue. Detection tooling: Buildkite Test Analytics for automatic flakiness detection across runs, or a custom script that queries the CI API for per-test pass/fail history. The alternative — ignoring flakiness — means trunk breaks multiple times per day, which is incompatible with the trunk-based model where every engineer pulls from the same branch.',
+      },
+    ],
+    references: [
+      'https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/autoscaling-with-self-hosted-runners',
+      'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet.html',
+      'https://buildkite.com/test-analytics',
+    ],
+  },
+
+  {
+    id: 'ace-cicd-software-supply-chain-security',
+    title: 'Software Supply Chain Security',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 2,
+    description: 'SLSA levels, SBOM generation, provenance attestation, and dependency pinning to secure the software supply chain end-to-end.',
+    introduction: 'Supply chain attacks target the build system and dependencies rather than the application itself. Defense requires verifiable provenance for every artifact and a full inventory of every component.',
+    keyQuestions: [
+      {
+        question: 'How do you implement software supply chain security end-to-end in a CI/CD pipeline?',
+        answer: 'SLSA (Supply-chain Levels for Software Artifacts) defines 4 levels: L1 — provenance is generated; L2 — provenance is hosted on a build service; L3 — the build service is hardened (ephemeral, isolated, auditable, no persistent credentials). GitHub Actions achieves SLSA L3 using the slsa-github-generator action, which runs builds in an OIDC-authenticated ephemeral environment and produces a signed provenance attestation. SBOM generation: Syft or cyclonedx-cli generates a Software Bill of Materials in CycloneDX or SPDX format at build time; attach it to the release as a Cosign attestation. Image signing: Cosign keyless signing uses OIDC tokens from the CI environment — no long-lived signing keys to rotate or leak. Verify at admission time using Kyverno or OPA Gatekeeper: only admit pods whose image has a valid Cosign signature and SLSA L2+ provenance from your CI system. Dependency pinning: pin every dependency to exact version AND digest (FROM node:18.19.0@sha256:... not FROM node:18); use Renovate bot for automated updates with CHANGELOG review. Secret scanning: Gitleaks and Semgrep in pre-commit hooks and in CI scan for accidentally committed credentials.',
+      },
+      {
+        question: 'What is the difference between a software bill of materials (SBOM) and provenance attestation?',
+        answer: 'An SBOM answers: what is in this artifact? It is an inventory listing every component, version, and license — equivalent to a food nutrition label. Standard formats: SPDX (Linux Foundation) and CycloneDX (OWASP). A provenance attestation answers: how was this artifact built? It records which source commit, which build system, which builder identity, and at what time — equivalent to a certificate of authenticity. Standard format: in-toto attestation framework with the SLSA provenance predicate. Both are required because each covers a different attack surface. An SBOM without provenance tells you the ingredients but not whether someone tampered with the build process. Provenance without an SBOM tells you the build was clean but not whether a dependency was malicious. Together they enable admission control policies: only admit container images with SLSA L2+ provenance from our CI system AND an SBOM with no critical CVEs.',
+      },
+    ],
+    references: [
+      'https://slsa.dev/',
+      'https://docs.sigstore.dev/',
+      'https://github.com/anchore/syft',
+      'https://github.com/in-toto/in-toto',
+      'https://spdx.dev/',
+      'https://cyclonedx.org/',
+    ],
+  },
+
+  {
+    id: 'ace-observability-alerting-pipeline-debug',
+    title: 'Debugging a Broken Alerting Pipeline',
+    icon: 'alertTriangle',
+    color: '#f97316',
+    questions: 2,
+    description: 'Systematic approach to diagnosing why alerts stopped firing during a production incident.',
+    introduction: 'A broken alerting pipeline is a silent failure: the system is on fire and nobody gets paged. Diagnose it by segmenting it into stages and checking each stage independently.',
+    keyQuestions: [
+      {
+        question: 'Monitoring alerts stopped firing during a production incident. How do you debug a broken alerting pipeline?',
+        answer: 'The Prometheus/Alertmanager pipeline has 5 stages: metric scrape, TSDB storage, rule evaluation, Alertmanager routing, and notification delivery. Check them in order of most-common failure first. Stage 0 — silences and inhibitions (most common cause): run amtool silence query to list active silences; check PagerDuty and Opsgenie for active maintenance windows; review inhibit_rules in alertmanager.yml for a stale critical alert suppressing all warnings. Stage 1 — metric ingestion: check GET /api/v1/targets for scrape targets showing DOWN; use absent() to query for missing metrics; check kubectl logs prometheus-0 for scrape failures. Stage 2 — rule evaluation: check GET /api/v1/rules for lastError on alert rules; confirm the alert is in firing state in Prometheus before blaming Alertmanager. Stage 3 — Alertmanager: run amtool alert query to see active alerts reaching Alertmanager; run amtool config routes test to verify routing; check receiver logs for delivery failures. Stage 4 — notification delivery: check the PagerDuty or Opsgenie event log for delivery attempts. Long-term fix: implement a dead man\'s switch to provide continuous end-to-end pipeline validation.',
+      },
+      {
+        question: 'What is a dead man\'s switch in the context of alerting and why is it the only reliable end-to-end pipeline test?',
+        answer: 'A dead man\'s switch is an alert rule whose expression is always true — for example, the Prometheus expression vector(1). Alertmanager routes this alert to a dedicated receiver that sends a ping to a heartbeat endpoint every 5 minutes. The monitoring provider fires an alert to the on-call engineer if the ping stops arriving for more than 5 minutes. This catches every failure mode that no other test can catch: Prometheus downtime, Alertmanager crashes, network partitions between components, misconfigured routing trees, and expired API tokens. The key insight is that the signal is the absence of a ping rather than the presence of an alert — the inverse of every other alert in the system. Without a dead man\'s switch, the first time you discover the alerting pipeline is broken is during the incident when alerts fail to fire. With one, the alerting system monitors itself continuously.',
+      },
+    ],
+    references: [
+      'https://prometheus.io/docs/alerting/latest/alertmanager/',
+      'https://prometheus.io/docs/alerting/latest/configuration/',
+      'https://www.pagerduty.com/docs/guides/dead-man-snitch-integration-guide/',
     ],
   },
 
