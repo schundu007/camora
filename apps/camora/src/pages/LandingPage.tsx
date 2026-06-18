@@ -8,7 +8,7 @@ import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 import JobUrlAnalysisDemo from '../components/shared/JobUrlAnalysisDemo';
 import {
-  ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles,
+  ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles, FeaturePlaygroundAnim,
   FeatureLiveAIAnim, FeatureJobMatchAnim, FeaturePrepAnim, FeatureMockSessionAnim,
 } from '../components/landing/CardAnimations';
 import CapabilityDeck from '../components/landing/CapabilityDeck';
@@ -119,7 +119,7 @@ const FEATURES = [
     label: 'Playground',
     title: 'Real terminals. Real Docker. Real Kubernetes.',
     desc: 'Spin up a live Ubuntu, Docker, or Kubernetes environment in under 5 seconds. Run kubectl, deploy containers, and demo infra skills — right in your browser. No VM setup required.',
-    Anim: FeatureLiveAIAnim,
+    Anim: FeaturePlaygroundAnim,
   },
 ];
 
