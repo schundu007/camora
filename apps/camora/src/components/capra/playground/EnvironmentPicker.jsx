@@ -1,11 +1,44 @@
 import { isOwner } from '@/lib/owner';
 import { useAuth } from '@/contexts/AuthContext';
 
+const LOGO_TOKEN = 'pk_VzK1OM-OQSCUuysDpOCzKw';
+
+function EnvIcon({ icon }) {
+  if (!icon) return null;
+  if (icon.logos) {
+    return (
+      <div style={{ display: 'flex', gap: 3, alignItems: 'center', flexWrap: 'wrap' }}>
+        {icon.logos.map((d) => (
+          <img
+            key={d}
+            src={`https://img.logo.dev/${d}?token=${LOGO_TOKEN}&size=40&format=png`}
+            width={16}
+            height={16}
+            alt={d}
+            style={{ objectFit: 'contain', borderRadius: 2 }}
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
+        ))}
+      </div>
+    );
+  }
+  return (
+    <img
+      src={`https://img.logo.dev/${icon.logo}?token=${LOGO_TOKEN}&size=40&format=png`}
+      width={28}
+      height={28}
+      alt={icon.logo}
+      style={{ objectFit: 'contain', borderRadius: 4 }}
+      onError={(e) => { e.target.style.display = 'none'; }}
+    />
+  );
+}
+
 export const ENVIRONMENTS = [
   {
     id: 'ubuntu',
     label: 'Ubuntu 24.04',
-    icon: '🖥',
+    icon: { logo: 'ubuntu.com' },
     plan: 'free',
     desc: 'Clean Ubuntu shell',
     category: 'Linux',
@@ -14,7 +47,7 @@ export const ENVIRONMENTS = [
   {
     id: 'docker',
     label: 'Docker',
-    icon: '🐳',
+    icon: { logo: 'docker.com' },
     plan: 'free',
     desc: 'Docker + Compose ready',
     category: 'Containers',
@@ -23,7 +56,7 @@ export const ENVIRONMENTS = [
   {
     id: 'agent-sandbox',
     label: 'AI Agent Sandbox',
-    icon: '🤖',
+    icon: { logo: 'anthropic.com' },
     plan: 'pro',
     desc: 'Claude Code · Codex · Gemini CLI',
     category: 'AI · Programming',
@@ -33,7 +66,7 @@ export const ENVIRONMENTS = [
   {
     id: 'k8s-single',
     label: 'K8s Single-node',
-    icon: '☸',
+    icon: { logo: 'kubernetes.io' },
     plan: 'pro',
     desc: 'Single-node Kubernetes cluster',
     category: 'Kubernetes',
@@ -42,7 +75,7 @@ export const ENVIRONMENTS = [
   {
     id: 'k8s-multi',
     label: 'K8s Multi-node',
-    icon: '☸',
+    icon: { logo: 'kubernetes.io' },
     plan: 'pro',
     desc: 'Multi-node cluster with kubeadm',
     category: 'Kubernetes',
@@ -51,9 +84,9 @@ export const ENVIRONMENTS = [
   {
     id: 'cloud-cli',
     label: 'Cloud CLI',
-    icon: '☁',
+    icon: { logos: ['amazon.com', 'google.com', 'microsoft.com'] },
     plan: 'pro',
-    desc: 'AWS · GCP · Azure CLIs',
+    desc: 'AWS · GCP · Azure · Terraform · K8s',
     category: 'Cloud',
     color: '#f59e0b',
   },
@@ -104,7 +137,9 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 8 }}>
-                <span style={{ fontSize: 22, lineHeight: 1 }}>{env.icon}</span>
+                <span style={{ fontSize: 22, lineHeight: 1, display: 'flex', alignItems: 'center', minHeight: 28 }}>
+                <EnvIcon icon={env.icon} />
+              </span>
                 <span style={{ display: 'flex', gap: 4 }}>
                   {env.badge && (
                     <span style={{
