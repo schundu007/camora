@@ -715,7 +715,7 @@ export default function PracticePage() {
   const finalAvgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
   return (
-    <div className="practice-root" style={{ background: 'transparent', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div className="practice-root" style={{ background: 'transparent', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
       {/* ═══════════ Main Content ═══════════ */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
