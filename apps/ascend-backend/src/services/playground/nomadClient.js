@@ -67,10 +67,14 @@ export async function scheduleJob(sessionId, environment, scenarioId) {
   if (!image) throw new Error(`Unknown environment: ${environment}`);
 
   const mem = MEMORY_MB[environment] || 512;
-  const envFlags = [`-e SESSION_ID=${sessionId}`];
+  const hostname = `playground-${environment}`;
+  const envFlags = [
+    `-e SESSION_ID=${sessionId}`,
+    `-e force_color_prompt=yes`,
+  ];
   if (scenarioId) envFlags.push(`-e SCENARIO_ID=${scenarioId}`);
 
-  const cmd = `docker run -d --rm --memory=${mem}m ${envFlags.join(' ')} -p 0:7681 ${image}`;
+  const cmd = `docker run -d --rm --memory=${mem}m --hostname ${hostname} ${envFlags.join(' ')} -p 0:7681 ${image}`;
   const containerId = await sshExec(cmd);
 
   if (!containerId || containerId.length < 12) {
