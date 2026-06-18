@@ -131,31 +131,33 @@ export async function getTaskAddress(jobId) {
         const ports = allocData?.AllocatedResources?.Shared?.Ports || [];
         const ttydPort = ports.find((p) => p.Label === 'ttyd');
         if (ttydPort) {
-          // NOMAD_CLIENT_PUBLIC_IP always wins — Nomad HostIP is often 0.0.0.0
-          // or a private LAN address (192.168.x/10.x) unreachable from Railway.
-          const envIp = process.env.NOMAD_CLIENT_PUBLIC_IP;
-          let host = envIp || ttydPort.HostIP;
+          const isUnroutable = (ip) => !ip || ip === '0.0.0.0'
+            || ip.startsWith('192.168.') || ip.startsWith('10.')
+            || /^172\.(1[6-9]|2\d|3[01])\./.test(ip);
 
-          // If still unroutable, resolve from Nomad node metadata.
-          const isUnroutable = !host || host === '0.0.0.0'
-            || host.startsWith('192.168.') || host.startsWith('10.')
-            || /^172\.(1[6-9]|2\d|3[01])\./.test(host);
+          let host = ttydPort.HostIP;
 
-          if (isUnroutable) {
+          // HostIP is often 0.0.0.0 — resolve the node's actual public IP.
+          if (isUnroutable(host)) {
             try {
               const nodeRes = await fetch(`${addr}/v1/node/${running.NodeID}`, { headers: nomadHeaders() });
               if (nodeRes.ok) {
                 const nodeData = await nodeRes.json();
-                const nodeIp = (nodeData.HTTPAddr || '').split(':')[0];
-                if (nodeIp && nodeIp !== '0.0.0.0') {
-                  host = nodeIp;
+                // HTTPAddr is the advertised address — most reliable per-node IP.
+                const fromHttp = (nodeData.HTTPAddr || '').split(':')[0];
+                if (!isUnroutable(fromHttp)) {
+                  host = fromHttp;
                 } else {
-                  host = nodeData.Attributes?.['unique.network.ip-address'] || host;
+                  const fromAttr = nodeData.Attributes?.['unique.network.ip-address'] || '';
+                  host = isUnroutable(fromAttr) ? host : fromAttr;
                 }
               }
-            } catch {
-              // ignore — use whatever we have
-            }
+            } catch { /* ignore */ }
+          }
+
+          // Last resort: static override for nodes that don't advertise a public IP.
+          if (isUnroutable(host)) {
+            host = process.env.NOMAD_CLIENT_PUBLIC_IP || host;
           }
 
           return { host, port: ttydPort.Value };
