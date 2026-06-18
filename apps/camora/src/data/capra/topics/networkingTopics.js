@@ -541,35 +541,41 @@ Cloudfront behaviors map URL patterns to cache policies and origins. You can ser
     keyQuestions: [
       {
         question: 'How would you architect a CloudFront distribution to serve both static assets and a dynamic API through the same domain?',
-        answer: `Use CloudFront behaviors (ordered routing rules) to route different URL patterns to different origins with different cache policies.
+        answer: `Use **CloudFront behaviors** (ordered routing rules) to route different URL patterns to different origins with different cache policies.
 
-Architecture:
+## Architecture
+
 Domain: cdn.example.com → CloudFront distribution
 
-Behavior 1 (most specific): /api/*
-  Origin: ALB at api.example.com
-  Cache policy: CachingDisabled (all requests forwarded to origin)
-  Origin request policy: include all headers (preserve Authorization, Content-Type)
-  TTL: 0 (no caching)
+**Behavior 1 — /api/* (most specific)**
+- Origin: ALB at api.example.com
+- Cache policy: CachingDisabled (all requests forwarded to origin)
+- Origin request policy: include all headers (preserve Authorization, Content-Type)
+- TTL: 0
 
-Behavior 2: /static/*
-  Origin: S3 bucket s3://static.example.com
-  Cache policy: long TTL (max-age=31536000, 1 year)
-  Cache key: URL only (no headers, no cookies)
+**Behavior 2 — /static/***
+- Origin: S3 bucket
+- Cache policy: long TTL (max-age=31536000, 1 year)
+- Cache key: URL only (no headers, no cookies)
 
-Behavior 3 (default /*):
-  Origin: ALB at web.example.com (SSR HTML)
-  Cache policy: short TTL (max-age=60s) or CachingDisabled
-  Cache key: URL + Accept-Language header (for language variants)
+**Behavior 3 — /* (default)**
+- Origin: ALB at web.example.com (SSR HTML)
+- Cache policy: short TTL (max-age=60s) or CachingDisabled
+- Cache key: URL + Accept-Language header (for language variants)
 
-Origin shield: enable on the S3 origin to consolidate misses for popular assets.
+Enable **origin shield** on the S3 origin to consolidate misses for popular assets.
 
-Versioned assets: deploy static JS/CSS with content-hash filenames (main.abc123.js). Long TTL is safe because the URL changes when content changes. No manual invalidation needed.
+## Versioned assets
 
-For emergency cache invalidation:
+Deploy static JS/CSS with content-hash filenames (main.abc123.js). Long TTL is safe because the URL changes when content changes — no manual invalidation needed.
+
+## Emergency invalidation
+
+\`\`\`bash
 aws cloudfront create-invalidation --distribution-id E123 --paths "/index.html" "/api/*"
+\`\`\`
 
-This design: static assets are cached at edges indefinitely (low cost, low latency), API is always fresh (bypass cache), HTML pages have a short TTL with fast invalidation capability.`,
+**Result**: static assets cached at edges indefinitely (low cost, low latency), API always fresh (bypass cache), HTML pages short TTL with fast invalidation capability.`,
       },
     ],
     references: [
@@ -598,15 +604,31 @@ This design: static assets are cached at edges indefinitely (low cost, low laten
         image: '/diagrams/networking/aws-vpc-design-connectivity.png',
       },
     ],
-    introduction: `A VPC (Virtual Private Cloud) is an isolated virtual network in AWS. Every VPC has a CIDR block (e.g., 10.0.0.0/16) that defines its address space. Subnets are subdivisions of the VPC CIDR, each associated with one Availability Zone.
+    introduction: `A **VPC (Virtual Private Cloud)** is an isolated virtual network in AWS. Every VPC has a CIDR block (e.g., 10.0.0.0/16) defining its address space. Subnets are subdivisions of the VPC CIDR, each tied to one Availability Zone.
 
-Subnet types and their route tables: public subnets have a route to an Internet Gateway (IGW), enabling direct internet connectivity for resources with Elastic IPs. Private subnets have no IGW route; outbound internet access goes through a NAT Gateway deployed in a public subnet. Isolated subnets have no internet route at all — used for databases and backend services.
+## Subnet types
 
-CIDR planning is critical and hard to undo. AWS reserves 5 IPs per subnet (network address, VPC router, DNS, future use, broadcast). A /24 subnet has 251 usable IPs. A /28 has 11. Common mistake: subnets that are too small for the number of ECS tasks or Lambda VPC functions that will consume IPs. Plan for 2-3x your expected peak. Avoid CIDR conflicts with on-premises networks if you plan VPN or Direct Connect.
+- **Public subnets** — route table has a route to an **Internet Gateway (IGW)**. Resources need a public or Elastic IP for direct internet connectivity.
+- **Private subnets** — no IGW route. Outbound internet access goes through a **NAT Gateway** deployed in a public subnet. Inbound internet access is not possible.
+- **Isolated subnets** — no internet route at all. Used for databases (RDS, ElastiCache) and internal services.
 
-Multi-tier architecture: public subnet (ALB, bastion host), private-app subnet (ECS tasks, EC2 application servers), private-data subnet (RDS, ElastiCache). Security groups control traffic between tiers: ALB security group allows 0.0.0.0/0 on 443; app security group allows traffic only from ALB security group; data security group allows traffic only from app security group.
+## CIDR planning
 
-One NAT Gateway per AZ: a NAT Gateway is single-AZ. If you use one NAT Gateway for all private subnets and that AZ fails, all private subnets lose internet connectivity. Best practice: deploy a NAT Gateway in each AZ and configure each AZ's private subnet route table to use its local NAT Gateway.`,
+CIDR is **hard to undo** — plan carefully upfront. AWS reserves 5 IPs per subnet (network address, VPC router, DNS, future use, broadcast). A /24 has 251 usable IPs; a /28 has only 11. ECS tasks, Lambda VPC functions, and Kubernetes pods each consume an ENI IP. Plan for **2-3x your expected peak**.
+
+Avoid CIDR conflicts with on-premises networks if you plan VPN or Direct Connect.
+
+## Multi-tier architecture
+
+- **Public subnet** — ALB, NAT Gateway, bastion host
+- **Private-app subnet** — ECS tasks, EC2 application servers
+- **Private-data subnet** — RDS, ElastiCache (no internet route)
+
+Security groups chain the tiers: ALB SG allows 0.0.0.0/0:443 → app SG allows only from ALB SG → data SG allows only from app SG.
+
+## NAT Gateway per AZ
+
+A NAT Gateway is **single-AZ**. If you use one NAT Gateway for all private subnets, an AZ failure takes out internet connectivity for all private subnets. Best practice: deploy one NAT Gateway per AZ and configure each AZ's private route table to use its local NAT Gateway.`,
     whenToUse: [
       'Designing a multi-tier VPC for a new AWS workload from scratch',
       'Explaining why private subnets still need a NAT Gateway for outbound internet',
@@ -614,11 +636,11 @@ One NAT Gateway per AZ: a NAT Gateway is single-AZ. If you use one NAT Gateway f
       'Avoiding cross-AZ NAT Gateway traffic costs by deploying per-AZ NAT',
     ],
     keyConcepts: [
-      { term: 'Internet Gateway (IGW)', definition: 'Horizontally scaled, redundant gateway attached to a VPC. Resources in public subnets use it for inbound and outbound internet traffic (requires Elastic IP or public IP).' },
-      { term: 'NAT Gateway', definition: 'Managed NAT device in a public subnet. Allows private subnet resources to initiate outbound internet connections without exposing inbound ports. Single-AZ — deploy one per AZ.' },
-      { term: 'Route table', definition: 'Per-subnet routing rules. Main route table applies to all unassociated subnets. Custom route tables for public (with IGW route) and private (with NAT route) subnets.' },
-      { term: 'VPC Endpoint', definition: 'Private connection between VPC and AWS services (S3, DynamoDB, SSM) without internet. Gateway endpoints (S3, DynamoDB) are free. Interface endpoints use PrivateLink (cost per hour + data).' },
-      { term: 'Security group vs NACL', definition: 'Security groups: stateful, instance-level, allow rules only, evaluated as a set. NACLs: stateless, subnet-level, allow and deny rules, evaluated in order by rule number.' },
+      { term: 'Internet Gateway (IGW)', definition: '**Horizontally scaled, redundant** gateway attached to a VPC. Resources in public subnets use it for inbound and outbound internet traffic (requires Elastic IP or public IP).' },
+      { term: 'NAT Gateway', definition: '**Managed NAT device** in a public subnet. Allows private subnet resources to initiate outbound internet connections without exposing inbound ports. **Single-AZ** — deploy one per AZ for HA.' },
+      { term: 'Route table', definition: '**Per-subnet routing rules**. Main route table applies to all unassociated subnets. Custom route tables for public (with IGW route) and private (with NAT route) subnets.' },
+      { term: 'VPC Endpoint', definition: '**Private connection** between VPC and AWS services (S3, DynamoDB, SSM) without internet. **Gateway endpoints** (S3, DynamoDB) are free. **Interface endpoints** use PrivateLink (per-hour + data cost).' },
+      { term: 'Security group vs NACL', definition: '**Security groups**: stateful, instance-level, allow rules only, evaluated as a set. **NACLs**: stateless, subnet-level, allow and deny rules, evaluated in order by rule number.' },
     ],
     pitfalls: [
       'Choosing a VPC CIDR that overlaps with on-premises networks — VPC peering and VPN/Direct Connect require non-overlapping CIDRs. Use RFC 1918 ranges not used by corporate networks.',
@@ -628,37 +650,44 @@ One NAT Gateway per AZ: a NAT Gateway is single-AZ. If you use one NAT Gateway f
     keyQuestions: [
       {
         question: 'Design the VPC architecture for a three-tier web application that must be highly available across two AZs.',
-        answer: `VPC CIDR: 10.0.0.0/16 (65,536 addresses)
+        answer: `**VPC CIDR**: 10.0.0.0/16 (65,536 addresses)
 
-AZ-a subnets:
+## Subnets
+
+\`\`\`bash
+AZ-a:
   Public:       10.0.0.0/24   (251 IPs — ALB, NAT Gateway)
   Private-app:  10.0.2.0/23   (507 IPs — ECS tasks, EC2)
   Private-data: 10.0.4.0/24   (251 IPs — RDS primary, ElastiCache)
 
-AZ-b subnets:
+AZ-b:
   Public:       10.0.1.0/24
   Private-app:  10.0.6.0/23
   Private-data: 10.0.8.0/24
+\`\`\`
 
-Internet Gateway: attached to VPC (shared).
+## Gateways
 
-NAT Gateway AZ-a: deployed in 10.0.0.0/24 (public-a), has Elastic IP.
-NAT Gateway AZ-b: deployed in 10.0.1.0/24 (public-b), has Elastic IP.
+- **Internet Gateway**: attached to VPC (shared across both AZs)
+- **NAT Gateway AZ-a**: deployed in 10.0.0.0/24 (public-a), has Elastic IP
+- **NAT Gateway AZ-b**: deployed in 10.0.1.0/24 (public-b), has Elastic IP
 
-Route tables:
-  public-rt: 0.0.0.0/0 → IGW (associated with both public subnets)
-  private-app-a-rt: 0.0.0.0/0 → NAT-Gateway-AZ-a
-  private-app-b-rt: 0.0.0.0/0 → NAT-Gateway-AZ-b
-  private-data-rt: no internet route (fully isolated)
+## Route tables
 
-Security groups:
-  alb-sg: inbound 443 from 0.0.0.0/0; outbound 8080 to app-sg
-  app-sg: inbound 8080 from alb-sg; outbound 5432 to data-sg, 443 to internet (for AWS API calls)
-  data-sg: inbound 5432 from app-sg only
+- **public-rt**: 0.0.0.0/0 → IGW (associated with both public subnets)
+- **private-app-a-rt**: 0.0.0.0/0 → NAT-Gateway-AZ-a
+- **private-app-b-rt**: 0.0.0.0/0 → NAT-Gateway-AZ-b
+- **private-data-rt**: no internet route (fully isolated)
 
-This gives AZ-level isolation: if AZ-a fails, AZ-b continues fully independently. Each AZ has its own NAT Gateway, so a NAT failure is contained to one AZ.
+## Security groups
 
-Cost note: two NAT Gateways cost ~$65/month base plus data transfer. For dev environments, use a single NAT Gateway to save cost and accept the reduced redundancy.`,
+- **alb-sg**: inbound 443 from 0.0.0.0/0; outbound 8080 to app-sg
+- **app-sg**: inbound 8080 from alb-sg; outbound 5432 to data-sg, 443 to internet (for AWS API calls)
+- **data-sg**: inbound 5432 from app-sg only
+
+If AZ-a fails, AZ-b continues fully independently. Each AZ has its own NAT Gateway, so a NAT failure is contained to one AZ.
+
+**Cost note**: two NAT Gateways cost ~$65/month base plus data transfer. For dev environments, use a single NAT Gateway to save cost and accept reduced redundancy.`,
       },
       {
         question: 'What is the difference between VPC peering, Transit Gateway, and PrivateLink? When do you use each?',

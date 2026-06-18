@@ -77,7 +77,10 @@ export const linuxTopics = [
     color: '#3b82f6',
     questions: 8,
     description: 'Process lifecycle, states, PID namespaces, fork/exec, zombie processes, and process trees.',
-    visualizations: [],
+    visualizations: [
+      { title: 'Process Lifecycle', caption: 'All five Linux process states (R, S, D, T, Z) and every kernel-driven transition between them, including the fork/exec entry point and zombie reaping path.', image: '/diagrams/linux/linux-processes-lifecycle.png' },
+      { title: 'Process Tree & PID Namespaces', caption: 'How systemd (PID 1) spawns a process tree via fork/exec, where zombie processes appear when a parent skips wait(), and how PID namespaces give containers an isolated PID 1.', image: '/diagrams/linux/linux-processes-tree.png' },
+    ],
     introduction: `Every running program in Linux is a process — an instance of an executable with its own address space, file descriptors, and credentials. Processes are organised in a tree rooted at PID 1 (init or systemd). Each process has a parent (PPID); when a parent exits before its children, those children are re-parented to PID 1.
 
 Process states control scheduling: Running (R) — on a CPU or ready to run; Sleeping (S) — waiting for an event, interruptible; Disk sleep (D) — waiting for I/O, uninterruptible; Stopped (T) — frozen by SIGSTOP or debugger; Zombie (Z) — exited but parent hasn't called wait() yet.
@@ -140,7 +143,10 @@ The practical interview point: if you see hundreds of zombie processes, look at 
     color: '#3b82f6',
     questions: 6,
     description: 'Signal delivery, common signals, signal masking, SIGTERM vs SIGKILL, and graceful shutdown patterns.',
-    visualizations: [],
+    visualizations: [
+      { title: 'Signal Delivery Flow', caption: 'How a signal travels from its source through the pending set and signal mask before landing on a custom handler, the default action, or being ignored.', image: '/diagrams/linux/linux-signals-delivery.png' },
+      { title: 'Key Signals Reference', caption: 'The eight most-cited signals grouped by number, default action, and whether they can be caught — including SIGKILL and SIGSTOP as the two uncatchable exceptions.', image: '/diagrams/linux/linux-signals-cheatsheet.png' },
+    ],
     introduction: `Signals are asynchronous notifications sent to a process by the kernel, another process, or the process itself. There are 64 standard signals (numbered 1-64 on x86-64). Signals interrupt normal execution and invoke a registered handler, the default action (usually terminate or ignore), or are blocked via a signal mask.
 
 The most important signals for production work: SIGTERM (15) — request graceful termination; the default action is terminate, but processes can catch it and clean up. SIGKILL (9) — unconditional termination; cannot be caught, blocked, or ignored. The kernel delivers it directly. SIGINT (2) — Ctrl+C from the terminal. SIGHUP (1) — originally "terminal hangup," now widely used to trigger config reload in daemons. SIGCHLD (17) — sent to parent when a child changes state. SIGUSR1/SIGUSR2 (10/12) — user-defined signals for application-specific purposes.
@@ -206,7 +212,10 @@ Common mistake: using npm start or a shell wrapper as PID 1. The shell traps no 
     color: '#3b82f6',
     questions: 7,
     description: 'VFS layer, inodes, hard vs soft links, ext4 and XFS, mount points, and filesystem capacity diagnosis.',
-    visualizations: [],
+    visualizations: [
+      { title: 'VFS Stack', caption: 'The full path from a user-space open() call down through the VFS abstraction layer, multiple concrete filesystems, the page cache, the block I/O layer, and finally the device driver.', image: '/diagrams/linux/linux-filesystem-vfs.png' },
+      { title: 'Inodes — Hard vs Soft Links', caption: 'Why two hard links share one inode and one link count, while a symlink is its own inode that stores a path string resolved at access time.', image: '/diagrams/linux/linux-filesystem-inodes.png' },
+    ],
     introduction: `Linux uses the Virtual Filesystem Switch (VFS) as an abstraction layer between system calls (open, read, write) and specific filesystem implementations (ext4, XFS, tmpfs, NFS). Every filesystem presents the same VFS interface, so userspace code is filesystem-agnostic.
 
 The inode (index node) is the core data structure. Each file or directory has exactly one inode containing: file type, permissions, owner/group, size, timestamps (atime, mtime, ctime), and pointers to data blocks. Critically, the inode does not contain the filename — filenames live in directory entries (dentries) that map names to inode numbers.
@@ -282,7 +291,10 @@ Fix options:
     color: '#22c55e',
     questions: 8,
     description: 'Variables, arrays, control flow, error handling, trap, and production-grade scripting patterns.',
-    visualizations: [],
+    visualizations: [
+      { title: 'Script Anatomy', caption: 'The canonical top-to-bottom structure of a production-grade Bash script: shebang, set -euo pipefail, readonly variables, local-scoped functions, main logic, and trap-based cleanup.', image: '/diagrams/linux/bash-scripting-anatomy.png' },
+      { title: 'Control Flow Constructs', caption: 'Side-by-side comparison of if/case conditionals, for/while/until loops, function definitions, and array operations — the building blocks of any non-trivial script.', image: '/diagrams/linux/bash-scripting-control-flow.png' },
+    ],
     introduction: `Bash is the dominant shell for system automation in Linux environments. Production scripts must be written with defensive defaults that are not set by the shell unless you opt in.
 
 Always start scripts with: set -euo pipefail. set -e exits on any non-zero return. set -u treats unset variables as errors. set -o pipefail makes a pipeline fail if any command in it fails (without this, echo "data" | grep "x" | process would succeed even though grep found nothing).
@@ -368,7 +380,10 @@ Rule of thumb: always use "$@" when forwarding arguments to another function or 
     color: '#22c55e',
     questions: 5,
     description: 'stdin/stdout/stderr, pipes, here-docs, process substitution, and tee for multi-destination output.',
-    visualizations: [],
+    visualizations: [
+      { title: 'Pipes & File Descriptors', caption: 'How the kernel anonymous pipe buffer connects stdout of one process to stdin of the next, and how 2>/dev/null and 2>&1 redirect or merge stderr.', image: '/diagrams/linux/bash-pipes-redirection-fds.png' },
+      { title: 'Pipeline Chain', caption: 'A real grep | sort | uniq | awk pipeline showing data flowing stage-by-stage, and where set -o pipefail causes the whole pipeline to fail if any stage exits non-zero.', image: '/diagrams/linux/bash-pipes-redirection-chain.png' },
+    ],
     introduction: `Every process inherits three file descriptors: 0 (stdin), 1 (stdout), 2 (stderr). Redirection changes where these point. > file redirects stdout to file (truncating). >> file appends. 2> file redirects stderr. 2>&1 merges stderr into stdout. &> file redirects both to file. < file connects stdin to file.
 
 The pipe operator | connects stdout of the left command to stdin of the right command. Commands in a pipeline run in subshells. This has a critical implication: variable assignments in a pipeline do not affect the parent shell. In bash, the last command in a pipeline runs in the current shell only with lastpipe enabled.
@@ -456,7 +471,9 @@ PIPESTATUS[0] gives the exit code of the first command in the pipeline.`,
     color: '#06b6d4',
     questions: 8,
     description: 'ip, ss, curl, dig, tcpdump, nmap, traceroute, and nc — the production debugging toolkit.',
-    visualizations: [],
+    visualizations: [
+      { title: 'Tools by Use Case', caption: 'Four diagnostic categories — connection state, traffic capture, DNS/routing, and bandwidth — mapped to the specific command-line tools used for each, with their modern replacements called out.', image: '/diagrams/linux/linux-networking-tools-map.png' },
+    ],
     introduction: `Linux networking diagnosis uses a layered approach matching the OSI model — start at the physical/IP layer and work up to the application layer. The core tools and their layer:
 
 Layer 3 (IP): ip addr (interface addresses), ip route (routing table), ping (ICMP reachability), traceroute/tracepath (path discovery).
@@ -550,7 +567,10 @@ This only works for services where you control the client. For production traffi
     color: '#06b6d4',
     questions: 6,
     description: 'Netfilter tables, chains, rules, NAT, connection tracking, and Kubernetes kube-proxy iptables rules.',
-    visualizations: [],
+    visualizations: [
+      { title: 'Packet Flow Through Chains', caption: 'The exact sequence a packet traverses — RAW PREROUTING, NAT PREROUTING, routing decision, FILTER INPUT/FORWARD, FILTER OUTPUT, NAT POSTROUTING — for both locally-destined and forwarded traffic.', image: '/diagrams/linux/linux-iptables-flow.png' },
+      { title: 'Rule Anatomy & Targets', caption: 'The structure of an iptables rule and the five core jump targets (ACCEPT, DROP, REJECT, MASQUERADE, LOG) plus the connection-tracking state match module.', image: '/diagrams/linux/linux-iptables-rules.png' },
+    ],
     introduction: `iptables is the userspace interface to the Linux kernel's Netfilter packet filtering framework. It organises rules into tables, chains, and rules. nftables is the modern replacement with a cleaner syntax and better performance, but iptables knowledge remains essential because Kubernetes kube-proxy still uses iptables mode by default.
 
 Tables and their purposes: filter (default, INPUT/FORWARD/OUTPUT chains — packet filtering), nat (PREROUTING/POSTROUTING — address translation), mangle (packet modification), raw (connection tracking bypass).
@@ -628,7 +648,10 @@ iptables -L INPUT -n -v --line-numbers   # List INPUT rules with counters`,
     color: '#f97316',
     questions: 7,
     description: 'Virtual memory, page cache, OOM killer, swap, huge pages, and container memory limits.',
-    visualizations: [],
+    visualizations: [
+      { title: 'Virtual Address Space Layout', caption: 'The classic high-to-low layout of a Linux process: stack growing down, mmap region for shared libraries, heap growing up, BSS/data/text segments, vDSO, and where the OOM killer intervenes.', image: '/diagrams/linux/linux-memory-management-layout.png' },
+      { title: 'Memory Reclaim & OOM', caption: 'How kswapd reclaims page cache before anonymous pages, uses LRU eviction to push cold pages to swap, and escalates to the OOM killer when no reclaimable memory remains.', image: '/diagrams/linux/linux-memory-management-reclaim.png' },
+    ],
     introduction: `Linux uses a virtual memory system where every process sees a flat 64-bit address space. Physical RAM is managed in 4 KB pages. The kernel maps virtual pages to physical frames using page tables maintained per-process.
 
 The page cache is the kernel's disk cache. When a file is read, its contents are stored in the page cache. Subsequent reads are served from RAM without disk I/O. The page cache uses all "free" memory — Linux deliberately keeps almost no RAM truly idle. The output of free -h shows buffers (kernel data structures) and cached (page cache). "Available" memory (not "free") is the realistic estimate of memory new processes can use, because cache pages are reclaimed on demand.
@@ -725,7 +748,10 @@ This is why setting proper requests and limits in Kubernetes is critical for pro
     color: '#8b5cf6',
     questions: 5,
     description: 'Physical volumes, volume groups, logical volumes, snapshots, thin provisioning, and live resize.',
-    visualizations: [],
+    visualizations: [
+      { title: 'LVM Layer Architecture', caption: 'How physical volumes (disks) aggregate into a volume group, which carves out logical volumes and CoW snapshots, each formatted with a filesystem and mounted independently.', image: '/diagrams/linux/linux-lvm-layers.png' },
+      { title: 'Online LVM Resize', caption: 'Step-by-step flow to grow a logical volume without downtime: add a PV, vgextend, take a safety snapshot, lvextend, then resize2fs or xfs_growfs in place.', image: '/diagrams/linux/linux-lvm-resize.png' },
+    ],
     introduction: `LVM (Logical Volume Manager) adds a layer of abstraction between physical storage and filesystems, enabling dynamic resizing, snapshots, and spanning of multiple disks.
 
 The three-tier hierarchy: Physical Volumes (PVs) — raw disks or partitions initialised for LVM (pvcreate /dev/sdb). Volume Groups (VGs) — pool of PVs combined into a single storage pool (vgcreate myvg /dev/sdb /dev/sdc). Logical Volumes (LVs) — virtual partitions carved from VG storage (lvcreate -L 100G -n data myvg).
@@ -797,7 +823,10 @@ The entire operation is online for XFS and ext4 on LVM. The service never needs 
     color: '#ef4444',
     questions: 6,
     description: 'Key-based authentication, sshd_config hardening, jump hosts, port forwarding, and certificate-based auth.',
-    visualizations: [],
+    visualizations: [
+      { title: 'SSH Authentication Flow', caption: 'The full handshake sequence from TCP connect through ECDH key exchange, host key verification against known_hosts (with TOFU warning on mismatch), and pubkey challenge-response auth.', image: '/diagrams/linux/linux-ssh-hardening-auth.png' },
+      { title: 'sshd Hardening Checklist', caption: 'Seven independent sshd_config knobs — disabling password auth, blocking root login, restricting crypto algorithms, non-default port, idle timeouts, fail2ban, and optional TOTP 2FA.', image: '/diagrams/linux/linux-ssh-hardening-config.png' },
+    ],
     introduction: `SSH is the primary remote access mechanism for Linux servers. Default configurations are deliberately permissive for broad compatibility; production servers require explicit hardening.
 
 Authentication hardening: disable password authentication (PasswordAuthentication no), disable root login (PermitRootLogin no), restrict to specific users/groups (AllowUsers, AllowGroups). Use ed25519 keys — they are faster and the signature is smaller than RSA 2048. RSA 4096 is acceptable; RSA 2048 is the minimum; DSA is broken and should be removed.
@@ -895,7 +924,10 @@ Tools that implement this: HashiCorp Vault SSH Secrets Engine, Teleport, BeyondT
     color: '#f59e0b',
     questions: 7,
     description: 'Unit files, service types, dependency ordering, socket activation, and service hardening directives.',
-    visualizations: [],
+    visualizations: [
+      { title: 'Unit State Machine', caption: 'Every state a systemd service unit passes through — inactive, activating, active, reloading, deactivating, failed — and the systemctl commands or events that drive each transition.', image: '/diagrams/linux/systemd-units-lifecycle.png' },
+      { title: 'Unit File Sections', caption: 'The three mandatory sections of a .service file: [Unit] for ordering and dependencies, [Service] for process config and sandbox hardening, and [Install] for boot-time enablement.', image: '/diagrams/linux/systemd-units-file.png' },
+    ],
     introduction: `systemd is the init system and service manager on virtually all modern Linux distributions. It parallelizes service startup by tracking inter-service dependencies and starting services simultaneously when their dependencies are met.
 
 Unit files live in /usr/lib/systemd/system/ (distribution packages), /etc/systemd/system/ (admin overrides), and ~/.config/systemd/user/ (user units). The [Unit] section declares dependencies and ordering. The [Service] section defines execution. The [Install] section defines how to enable the unit.
@@ -1004,7 +1036,10 @@ If a dependency is stuck, recursively apply the same diagnosis to it.`,
     color: '#f59e0b',
     questions: 6,
     description: 'cgroups v1 vs v2, resource limits, container isolation mechanics, and namespace types.',
-    visualizations: [],
+    visualizations: [
+      { title: 'cgroup v2 Hierarchy', caption: 'How systemd organises all processes under three top-level slices (system, user, machine), with each service unit getting its own leaf cgroup for resource accounting and limits.', image: '/diagrams/linux/systemd-cgroups-hierarchy.png' },
+      { title: 'cgroup Controllers', caption: 'The five cgroup v2 resource controllers — cpu, memory, io, pids, net_cls — and the specific limit directives (CPUQuota, MemoryMax, TasksMax) that map to systemd unit-file settings.', image: '/diagrams/linux/systemd-cgroups-controllers.png' },
+    ],
     introduction: `Control groups (cgroups) and namespaces are the two kernel features that make containers possible. Cgroups provide resource accounting and limiting; namespaces provide isolation of resources between groups of processes.
 
 Cgroups (v2) organise processes into a hierarchy. Each cgroup has resource controllers: cpu (CPU time share and quota), memory (max RSS, swap, page cache), io (disk bandwidth), pids (max processes), network (via tc qdisc or eBPF). When a cgroup's memory limit is exceeded, the kernel OOM-kills a process within that cgroup. Docker and containerd use the memory cgroup for container limits.
