@@ -4,7 +4,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo curl wget git vim nano jq tmux htop netcat-openbsd \
     dnsutils iputils-ping traceroute tcpdump \
     python3 python3-pip \
+    fzf ripgrep socat \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# yq (YAML processor)
+RUN curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64" \
+    -o /usr/local/bin/yq && chmod +x /usr/local/bin/yq
+
+# fx (interactive JSON viewer)
+RUN curl -fsSL "https://github.com/antonmedv/fx/releases/latest/download/fx_linux_amd64" \
+    -o /usr/local/bin/fx && chmod +x /usr/local/bin/fx
+
+# websocat (WebSocket client)
+RUN curl -fsSL "https://github.com/vi/websocat/releases/latest/download/websocat.x86_64-unknown-linux-musl" \
+    -o /usr/local/bin/websocat && chmod +x /usr/local/bin/websocat
+
+# arkade (tool installer)
+RUN curl -fsSL https://get.arkade.dev | sh && mv /root/bin/arkade /usr/local/bin/arkade 2>/dev/null || true
 
 ARG TTYD_VERSION=1.7.7
 RUN curl -fsSL "https://github.com/tsl0922/ttyd/releases/download/${TTYD_VERSION}/ttyd.x86_64" \
@@ -18,7 +34,7 @@ RUN useradd -m -s /bin/bash camora && \
 COPY start-ubuntu.sh /start.sh
 RUN chmod +x /start.sh
 
-RUN printf '\033[1;32m\n  Camora Ubuntu Playground\033[0m\n\n  Pre-installed tools:\n    bash · python3 · pip · git · curl · wget\n    vim · nano · jq · tmux · htop · netcat\n    ping · nslookup · traceroute · tcpdump\n\n\033[0;90m  Happy hacking! Type a command to get started.\033[0m\n\n' > /etc/camora-motd && \
+RUN printf '\033[1;32m\n  Camora Ubuntu Playground\033[0m\n\n  Pre-installed tools:\n    vim · nano · git · tmux · htop · fzf\n    curl · wget · socat · websocat · netcat\n    jq · yq · fx · python3 · pip\n    ripgrep · ping · traceroute · tcpdump\n    arkade \033[0;90m(install more tools)\033[0m\n\n\033[0;90m  Happy hacking! Type a command to get started.\033[0m\n\n' > /etc/camora-motd && \
     echo 'cat /etc/camora-motd' >> /home/camora/.bashrc && \
     chown camora:camora /home/camora/.bashrc
 
