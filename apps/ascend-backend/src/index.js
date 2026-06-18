@@ -1528,6 +1528,7 @@ server.on('upgrade', (req, socket, head) => {
   const sessionId = match[1];
 
   wss.handleUpgrade(req, socket, head, async (ws) => {
+    console.log(`[PlaygroundWS] upgrade sessionId=${sessionId}`);
     try {
       let token = null;
       const authHeader = req.headers.authorization;
@@ -1537,19 +1538,19 @@ server.on('upgrade', (req, socket, head) => {
         const m = req.headers.cookie.match(/(?:^|;\s*)cariara_sso=([^;]+)/);
         if (m) token = decodeURIComponent(m[1]);
       }
-      // Browsers cannot set Authorization headers on WebSocket — accept token as query param
       if (!token) {
         const urlObj = new URL(req.url, 'http://localhost');
         const qToken = urlObj.searchParams.get('token');
         if (qToken) token = qToken;
       }
 
-      if (!token) { ws.close(4401, 'Unauthorized'); return; }
+      if (!token) { console.log('[PlaygroundWS] close: no token'); ws.close(4401, 'Unauthorized'); return; }
 
       let payload;
       try {
         payload = verifyToken(token);
-      } catch {
+      } catch (e) {
+        console.log('[PlaygroundWS] close: bad token', e.message);
         ws.close(4401, 'Invalid token');
         return;
       }
@@ -1558,17 +1559,18 @@ server.on('upgrade', (req, socket, head) => {
       if (!userId) { ws.close(4401, 'Invalid token payload'); return; }
 
       const session = await getSession(sessionId);
-      if (!session) { ws.close(4404, 'Session not found'); return; }
+      if (!session) { console.log('[PlaygroundWS] close: session not found'); ws.close(4404, 'Session not found'); return; }
       if (session.user_id !== userId) { ws.close(4403, 'Forbidden'); return; }
       if (session.status !== 'ready' && session.status !== 'active') {
+        console.log('[PlaygroundWS] close: bad status', session.status);
         ws.close(4400, 'Session not ready');
         return;
       }
 
-      // Use stored host:port — set at session creation time, avoids re-polling Nomad
       const host = session.ttyd_host;
       const port = session.ttyd_port;
-      if (!host || !port) { ws.close(4500, 'Session has no ttyd address'); return; }
+      console.log(`[PlaygroundWS] proxying to ttyd host=${host} port=${port}`);
+      if (!host || !port) { console.log('[PlaygroundWS] close: no ttyd addr'); ws.close(4500, 'Session has no ttyd address'); return; }
 
       createTtydProxy(ws, host, port);
     } catch (err) {
