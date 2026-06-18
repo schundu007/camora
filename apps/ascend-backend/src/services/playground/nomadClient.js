@@ -69,6 +69,15 @@ export async function scheduleJob(sessionId, environment, scenarioId) {
               DynamicPorts: [{ Label: 'ttyd', To: 7681 }],
             },
           ],
+          // Pin playground jobs to the worker node — it has the correct
+          // public IP advertised so getTaskAddress resolves correctly.
+          Constraints: [
+            {
+              LTarget: '${attr.unique.network.ip-address}',
+              Operand: '=',
+              RTarget: process.env.NOMAD_WORKER_IP || '172.104.210.63',
+            },
+          ],
         },
       ],
     },

@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { scheduleJob, getTaskAddress, stopJob } from './nomadClient.js';
 import {
   createSessionRecord,
@@ -42,7 +43,9 @@ export async function createSession({ userId, userEmail, environment, scenarioId
     }
   }
 
-  const { jobId } = await scheduleJob(String(userId), environment, scenarioId);
+  // Unique job ID per session — prevents collisions when same user creates multiple sessions.
+  const jobTag = randomBytes(6).toString('hex');
+  const { jobId } = await scheduleJob(`${userId}-${jobTag}`, environment, scenarioId);
 
   const { host, port } = await getTaskAddress(jobId);
 
