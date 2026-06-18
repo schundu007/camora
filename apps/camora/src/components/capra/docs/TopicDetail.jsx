@@ -3211,7 +3211,7 @@ export default function TopicDetail({
                         className="w-full px-3 py-2.5 flex items-center gap-2.5 bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] transition-colors text-left"
                       >
                         <NumberChip n={index + 1} />
-                        <h4 className="text-[var(--text-primary)] font-semibold text-sm leading-snug landing-display flex-1">{item.question}</h4>
+                        <h4 className="text-[var(--text-primary)] font-semibold text-sm leading-snug landing-display flex-1">{item.question || item.q}</h4>
                         <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
@@ -3220,7 +3220,7 @@ export default function TopicDetail({
                       {isExpanded && (
                         <div className="px-4 py-4 text-sm text-[var(--text-secondary)] leading-relaxed landing-body border-t border-[var(--border)]">
                           {(() => {
-                            const lines = item.answer.split('\n').map(l => l.trim());
+                            const lines = (item.answer || item.a || '').split('\n').map(l => l.trim());
 
                             const blocks = [];
                             let current = null;
