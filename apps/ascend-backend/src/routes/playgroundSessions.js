@@ -1,0 +1,102 @@
+import { Router } from 'express';
+import {
+  createSession,
+  destroySession,
+  extendSession,
+  checkSessionOwner,
+} from '../services/playground/sessionManager.js';
+import { getSession, getSessionHistory } from '../services/playground/sessionStore.js';
+
+export const playgroundSessionsRouter = Router();
+
+playgroundSessionsRouter.post('/', async (req, res) => {
+  const { environment, scenarioId } = req.body;
+  if (!environment) return res.status(400).json({ error: 'environment is required' });
+
+  try {
+    const result = await createSession({
+      userId: req.user.id,
+      userEmail: req.user.email,
+      environment,
+      scenarioId: scenarioId || null,
+      plan: req.user.plan_type || null,
+    });
+    return res.status(201).json({
+      sessionId: result.sessionId,
+      wsUrl: result.wsUrl,
+      expiresAt: result.expiresAt,
+      environment: result.environment,
+    });
+  } catch (err) {
+    if (err.code === 'ENV_NOT_ALLOWED') {
+      return res.status(403).json({ error: 'Environment not available on free tier' });
+    }
+    if (err.code === 'DAILY_LIMIT_REACHED') {
+      return res.status(429).json({ error: 'Daily session limit reached', upgradeUrl: '/pricing' });
+    }
+    if (err.message === 'NOMAD_ADDR not configured') {
+      return res.status(503).json({ error: 'Playground infrastructure not available' });
+    }
+    console.error('[PlaygroundSessions] createSession error:', err.message);
+    return res.status(500).json({ error: 'Failed to create session' });
+  }
+});
+
+playgroundSessionsRouter.get('/history', async (req, res) => {
+  try {
+    const history = await getSessionHistory(req.user.id);
+    return res.json({ sessions: history });
+  } catch (err) {
+    console.error('[PlaygroundSessions] history error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch session history' });
+  }
+});
+
+playgroundSessionsRouter.get('/:id', async (req, res) => {
+  try {
+    const session = await checkSessionOwner(req.params.id, req.user.id);
+    const now = Date.now();
+    const expiresAt = new Date(session.expires_at).getTime();
+    const timeRemaining = Math.max(0, expiresAt - now);
+    const extendAvailable = !session.extended && timeRemaining < 300_000;
+
+    return res.json({
+      ...session,
+      timeRemaining,
+      extendAvailable,
+    });
+  } catch (err) {
+    if (err.status === 403) return res.status(403).json({ error: 'Access denied' });
+    if (err.status === 404) return res.status(404).json({ error: 'Session not found' });
+    console.error('[PlaygroundSessions] getSession error:', err.message);
+    return res.status(500).json({ error: 'Failed to get session' });
+  }
+});
+
+playgroundSessionsRouter.post('/:id/extend', async (req, res) => {
+  try {
+    await checkSessionOwner(req.params.id, req.user.id);
+    const result = await extendSession(req.params.id);
+    return res.json(result);
+  } catch (err) {
+    if (err.status === 403) return res.status(403).json({ error: 'Access denied' });
+    if (err.status === 404) return res.status(404).json({ error: 'Session not found' });
+    if (err.code === 'NOT_ACTIVE') return res.status(400).json({ error: 'Session is not active' });
+    if (err.code === 'ALREADY_EXTENDED') return res.status(400).json({ error: 'Session already extended' });
+    console.error('[PlaygroundSessions] extendSession error:', err.message);
+    return res.status(500).json({ error: 'Failed to extend session' });
+  }
+});
+
+playgroundSessionsRouter.delete('/:id', async (req, res) => {
+  try {
+    await checkSessionOwner(req.params.id, req.user.id);
+    await destroySession(req.params.id);
+    return res.json({ ok: true });
+  } catch (err) {
+    if (err.status === 403) return res.status(403).json({ error: 'Access denied' });
+    if (err.status === 404) return res.status(404).json({ error: 'Session not found' });
+    console.error('[PlaygroundSessions] destroySession error:', err.message);
+    return res.status(500).json({ error: 'Failed to destroy session' });
+  }
+});
