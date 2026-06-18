@@ -53,6 +53,11 @@ import jobsRouter from './routes/jobs.js';
 import mcqRouter from './routes/mcq.js';
 import { playgroundRouter } from './routes/playground.js';
 import { playgroundLimiter } from './middleware/playgroundLimiter.js';
+import { WebSocketServer } from 'ws';
+import { playgroundSessionsRouter } from './routes/playgroundSessions.js';
+import { createTtydProxy } from './services/playground/wsProxy.js';
+import { getSession } from './services/playground/sessionStore.js';
+import { verifyToken } from './lib/shared-auth.js';
 import { askRouter } from './routes/ask.js';
 import learnTopicRouter from './routes/learnTopic.js';
 import prepDocsRouter from './routes/prepDocs.js';
@@ -676,6 +681,33 @@ async function runMigrations() {
     updated_at TIMESTAMPTZ DEFAULT NOW()
   )`);
   await query('CREATE INDEX IF NOT EXISTS idx_learn_topic_slug ON ascend_learn_topic_cache(slug)');
+
+  // Playground terminal sessions
+  try {
+    await query(`CREATE TABLE IF NOT EXISTS playground_sessions (
+      id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id       INTEGER NOT NULL REFERENCES users(id),
+      environment   TEXT NOT NULL,
+      scenario_id   TEXT,
+      nomad_job_id  TEXT,
+      status        TEXT NOT NULL DEFAULT 'provisioning',
+      extended      BOOLEAN DEFAULT FALSE,
+      created_at    TIMESTAMPTZ DEFAULT NOW(),
+      expires_at    TIMESTAMPTZ,
+      destroyed_at  TIMESTAMPTZ
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS idx_playground_sessions_user ON playground_sessions(user_id)');
+    await query('CREATE INDEX IF NOT EXISTS idx_playground_sessions_status ON playground_sessions(status)');
+    await query(`CREATE TABLE IF NOT EXISTS playground_objective_completions (
+      session_id    UUID REFERENCES playground_sessions(id) ON DELETE CASCADE,
+      objective_id  TEXT NOT NULL,
+      completed_at  TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (session_id, objective_id)
+    )`);
+    console.log('[Migrations] playground_sessions tables ensured');
+  } catch (e) {
+    console.warn('[Migrations] playground_sessions migration failed:', e.message);
+  }
   } catch (err) {
     console.warn('[Migrations] Failed to run lumora migrations:', err.message);
   }
@@ -1326,6 +1358,7 @@ app.use('/api/analyze', authenticate, hourBudgetGate, aiLimiter, analyzeRouter);
 app.use('/api/fetch', authenticate, apiLimiter, fetchRouter);
 app.use('/api/run', authenticate, apiLimiter, runRouter);
 app.use('/api/v1/playground', authenticate, playgroundLimiter, playgroundRouter);
+app.use('/api/v1/playground/sessions', authenticate, playgroundSessionsRouter);
 app.use('/api/v1/ask', authenticate, aiLimiter, askRouter);
 app.use('/api/fix', authenticate, hourBudgetGate, aiLimiter, fixRouter);
 app.use('/api/transcribe', authenticate, hourBudgetGate, aiLimiter, transcribeRouter);
@@ -1478,6 +1511,58 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 // Track connections for graceful shutdown
 server.on('connection', (socket) => {
   trackConnection(socket);
+});
+
+// Playground WebSocket proxy — browser ↔ ttyd inside Nomad container
+const wss = new WebSocketServer({ noServer: true });
+
+server.on('upgrade', (req, socket, head) => {
+  const match = req.url?.match(/^\/playground\/ws\/([a-f0-9-]+)$/);
+  if (!match) { socket.destroy(); return; }
+  const sessionId = match[1];
+
+  wss.handleUpgrade(req, socket, head, async (ws) => {
+    try {
+      let token = null;
+      const authHeader = req.headers.authorization;
+      if (authHeader?.startsWith('Bearer ')) {
+        token = authHeader.slice(7);
+      } else if (req.headers.cookie) {
+        const m = req.headers.cookie.match(/(?:^|;\s*)cariara_sso=([^;]+)/);
+        if (m) token = decodeURIComponent(m[1]);
+      }
+
+      if (!token) { ws.close(4401, 'Unauthorized'); return; }
+
+      let payload;
+      try {
+        payload = verifyToken(token);
+      } catch {
+        ws.close(4401, 'Invalid token');
+        return;
+      }
+
+      const userId = parseInt(payload.sub, 10);
+      if (!userId) { ws.close(4401, 'Invalid token payload'); return; }
+
+      const session = await getSession(sessionId);
+      if (!session) { ws.close(4404, 'Session not found'); return; }
+      if (session.user_id !== userId) { ws.close(4403, 'Forbidden'); return; }
+      if (session.status !== 'ready' && session.status !== 'active') {
+        ws.close(4400, 'Session not ready');
+        return;
+      }
+
+      // Resolve ttyd host:port from Nomad job
+      const { getTaskAddress } = await import('./services/playground/nomadClient.js');
+      const { host, port } = await getTaskAddress(session.nomad_job_id);
+
+      createTtydProxy(ws, host, port);
+    } catch (err) {
+      console.error('[PlaygroundWS] upgrade error:', err.message);
+      ws.close(4500, 'Internal error');
+    }
+  });
 });
 
 // Setup graceful shutdown handlers
