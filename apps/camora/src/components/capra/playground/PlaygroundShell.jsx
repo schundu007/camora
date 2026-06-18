@@ -175,7 +175,7 @@ export default function PlaygroundShell() {
           <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
             {/* IDE pane */}
             <div style={{ position: 'absolute', inset: 0, display: activeTab === 'ide' ? 'block' : 'none' }}>
-              <IdePane ideUrl={ideUrl} sessionId={session.sessionId} />
+              <IdePane ideUrl={ideUrl} wsUrl={wsUrl} />
             </div>
             {/* Terminal pane */}
             <div style={{ position: 'absolute', inset: 0, display: activeTab === 'terminal' ? 'block' : 'none', background: '#0a0a0a' }}>

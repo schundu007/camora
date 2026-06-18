@@ -52,7 +52,12 @@ import libraryRouter from './routes/library.js';
 import jobsRouter from './routes/jobs.js';
 import mcqRouter from './routes/mcq.js';
 import http from 'http';
+import net from 'net';
+import { verifyToken } from './lib/shared-auth.js';
 import { askRouter } from './routes/ask.js';
+import { playgroundSessionsRouter } from './routes/playgroundSessions.js';
+import { getSession } from './services/playground/sessionStore.js';
+import { stopJob } from './services/playground/nomadClient.js';
 import learnTopicRouter from './routes/learnTopic.js';
 import prepDocsRouter from './routes/prepDocs.js';
 import jobAlertsRouter from './routes/jobAlerts.js';
@@ -668,6 +673,23 @@ async function runMigrations() {
     updated_at TIMESTAMPTZ DEFAULT NOW()
   )`);
   await query('CREATE INDEX IF NOT EXISTS idx_learn_topic_slug ON ascend_learn_topic_cache(slug)');
+
+  // Playground sessions table
+  await query(`CREATE TABLE IF NOT EXISTS playground_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    environment VARCHAR(50) NOT NULL,
+    scenario_id VARCHAR(100),
+    nomad_job_id VARCHAR(255),
+    status VARCHAR(20) DEFAULT 'provisioning',
+    expires_at TIMESTAMPTZ,
+    ttyd_host VARCHAR(255),
+    ttyd_port INTEGER,
+    code_server_port INTEGER,
+    destroyed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  )`);
+  await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS code_server_port INTEGER');
 
   } catch (err) {
     console.warn('[Migrations] Failed to run lumora migrations:', err.message);
@@ -1417,6 +1439,60 @@ app.use('/api/v1/cara', authenticate, aiLimiter, caraRouter);
 app.use('/api/v1/learn/topic', apiLimiter, learnTopicRouter);
 app.use('/api/v1/prep/docs', apiLimiter, prepDocsRouter);
 
+// Playground sessions — disposable Linux VMs (Docker-via-SSH on worker)
+app.use('/api/v1/playground/sessions', authenticate, apiLimiter, playgroundSessionsRouter);
+
+// code-server HTTP proxy — /pg-ide/* → container port 8080
+// Express strips /pg-ide prefix so req.url is already the correct path for code-server.
+// First load: ?_s=<sessionId>&_t=<jwt> → sets pg_ide cookie so asset requests work without params.
+function pgParseToken(token) {
+  try { return verifyToken(token); } catch { return null; }
+}
+app.use('/pg-ide', async (req, res) => {
+  const qs = new URL(req.url, 'http://localhost').searchParams;
+
+  // Auth: ?_t= token or SSO cookie; asset requests use pg_ide cookie and skip user check
+  let userId = -1;
+  const qt = qs.get('_t');
+  if (qt) { const p = pgParseToken(qt); if (p?.sub) userId = parseInt(p.sub, 10); }
+  if (userId === -1 && req.cookies?.cariara_sso) {
+    const p = pgParseToken(req.cookies.cariara_sso);
+    if (p?.sub) userId = parseInt(p.sub, 10);
+  }
+  const isAssetRequest = !qt && !req.cookies?.cariara_sso && req.cookies?.pg_ide;
+  if (userId === -1 && !isAssetRequest) return res.status(401).end('Unauthorized');
+
+  const sessionId = qs.get('_s') || req.cookies?.pg_ide;
+  if (!sessionId) return res.status(400).end('Missing session');
+
+  let session;
+  try { session = await getSession(sessionId); } catch { return res.status(502).end(); }
+  if (!session) return res.status(404).end('Session not found');
+  if (userId > 0 && session.user_id !== userId) return res.status(403).end('Forbidden');
+  if (!session.ttyd_host || !session.code_server_port) return res.status(503).end('IDE not ready');
+
+  res.cookie('pg_ide', sessionId, { httpOnly: true, maxAge: 3600, path: '/pg-ide', sameSite: 'strict' });
+  res.removeHeader('content-security-policy');
+  res.removeHeader('x-frame-options');
+
+  const proxyReq = http.request({
+    hostname: session.ttyd_host,
+    port: session.code_server_port,
+    path: req.url || '/',
+    method: req.method,
+    headers: { ...req.headers, host: `${session.ttyd_host}:${session.code_server_port}` },
+  }, (proxyRes) => {
+    delete proxyRes.headers['content-security-policy'];
+    delete proxyRes.headers['x-frame-options'];
+    proxyRes.headers['content-security-policy'] =
+      "default-src * 'unsafe-inline' 'unsafe-eval' blob: data: ws: wss:; frame-ancestors 'self' https://camora.cariara.com https://caprab.cariara.com";
+    res.writeHead(proxyRes.statusCode, proxyRes.headers);
+    proxyRes.pipe(res);
+  });
+  proxyReq.on('error', () => { if (!res.headersSent) res.status(502).end(); });
+  req.pipe(proxyReq);
+});
+
 // Enhanced health check
 app.get('/api/health', (req, res) => {
   res.json({
@@ -1466,13 +1542,57 @@ cron.schedule('0 8 * * *', async () => {
 }, { timezone: 'UTC' });
 
 // Start server
-const server = app.listen(PORT, '0.0.0.0', () => {
+const server = http.createServer(app);
+server.listen(PORT, '0.0.0.0', () => {
   logger.info({ port: PORT, env: config.NODE_ENV }, 'Ascend API server started (camora)');
 });
 
 // Track connections for graceful shutdown
 server.on('connection', (socket) => {
   trackConnection(socket);
+});
+
+// WebSocket upgrade handler — proxies /playground/ws/:id to ttyd and /pg-ide/* to code-server
+server.on('upgrade', async (req, socket, head) => {
+  const wsMatch = req.url?.match(/^\/playground\/ws\/([a-f0-9-]+)(?:\?.*)?$/);
+  const pgIdeMatch = req.url?.startsWith('/pg-ide');
+
+  if (wsMatch) {
+    const sessionId = wsMatch[1];
+    const pgIdeCookie = req.headers.cookie?.match(/(?:^|;\s*)pg_ide=([^;]+)/)?.[1];
+    let session;
+    try { session = await getSession(sessionId); } catch { socket.destroy(); return; }
+    if (!session || !session.ttyd_host || !session.ttyd_port) { socket.destroy(); return; }
+    const upstream = net.connect(session.ttyd_port, session.ttyd_host, () => {
+      upstream.write(`GET ${req.url} HTTP/1.1\r\nHost: ${session.ttyd_host}:${session.ttyd_port}\r\n${
+        Object.entries(req.headers).map(([k, v]) => `${k}: ${v}`).join('\r\n')
+      }\r\n\r\n`);
+      upstream.write(head);
+      socket.pipe(upstream).pipe(socket);
+    });
+    upstream.on('error', () => socket.destroy());
+    socket.on('error', () => upstream.destroy());
+    return;
+  }
+
+  if (pgIdeMatch) {
+    const pgIdeCookie = req.headers.cookie?.match(/(?:^|;\s*)pg_ide=([^;]+)/)?.[1];
+    const sessionId = pgIdeCookie ? decodeURIComponent(pgIdeCookie) : null;
+    if (!sessionId) { socket.destroy(); return; }
+    let session;
+    try { session = await getSession(sessionId); } catch { socket.destroy(); return; }
+    if (!session || !session.ttyd_host || !session.code_server_port) { socket.destroy(); return; }
+    const wsPath = req.url.replace(/^\/pg-ide/, '') || '/';
+    const upstream = net.connect(session.code_server_port, session.ttyd_host, () => {
+      upstream.write(`GET ${wsPath} HTTP/1.1\r\nHost: ${session.ttyd_host}:${session.code_server_port}\r\n${
+        Object.entries(req.headers).map(([k, v]) => `${k}: ${v}`).join('\r\n')
+      }\r\n\r\n`);
+      upstream.write(head);
+      socket.pipe(upstream).pipe(socket);
+    });
+    upstream.on('error', () => socket.destroy());
+    socket.on('error', () => upstream.destroy());
+  }
 });
 
 
