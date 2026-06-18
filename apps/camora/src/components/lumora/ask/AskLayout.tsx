@@ -314,7 +314,7 @@ export const AskLayout = () => {
   const sans: React.CSSProperties = { fontFamily: 'Plus Jakarta Sans, sans-serif' };
 
   return (
-    <div className="flex flex-col h-full" style={{ background: 'var(--bg-primary)' }}>
+    <div className="flex flex-col h-full overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
 
       {/* Top bar — navy strip with gold-leaf border */}
       <div className="flex items-center justify-between px-5 h-12 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
@@ -392,7 +392,7 @@ export const AskLayout = () => {
 
       {/* Messages / empty state */}
       {hasMessages ? (
-        <div className="flex-1 overflow-y-auto py-6" style={{ paddingLeft: 'max(1rem, calc(50% - 390px))', paddingRight: 'max(1rem, calc(50% - 390px))' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto py-6" style={{ paddingLeft: 'max(1rem, calc(50% - 390px))', paddingRight: 'max(1rem, calc(50% - 390px))' }}>
           {messages.map((m, i) => (
             <div key={i} className={`mb-6 ${m.role === 'user' ? 'flex justify-end' : ''}`}>
               {m.role === 'user' ? (
@@ -423,7 +423,7 @@ export const AskLayout = () => {
           <div ref={bottomRef} />
         </div>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center px-6">
+        <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-6 overflow-y-auto">
           <h1 className="text-[26px] font-semibold mb-8 text-center" style={{ color: 'var(--text-primary)', ...sans }}>
             Hey <span style={{ color: 'var(--cam-gold-leaf)' }}>{firstName}</span>, what's on your mind?
           </h1>
