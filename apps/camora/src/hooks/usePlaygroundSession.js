@@ -269,7 +269,7 @@ export function usePlaygroundSession() {
 
   // Construct IDE URL (iframe)
   const ideUrl = session?.sessionId
-    ? `${API_URL}/playground/ide/${session.sessionId}/?token=${encodeURIComponent(getStoredToken() || '')}`
+    ? `${API_URL}/pg-ide/?_s=${session.sessionId}&_t=${encodeURIComponent(getStoredToken() || '')}`
     : null;
 
   return {
