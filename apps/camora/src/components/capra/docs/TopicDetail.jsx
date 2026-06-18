@@ -2873,9 +2873,10 @@ export default function TopicDetail({
               <ContentHeading title="Key Concepts" />
               <div className="pt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {topicDetails.keyConcepts.map((kc, i) => {
-                  const codeIdx = kc.definition ? kc.definition.indexOf('```') : -1;
-                  const prose = codeIdx > 0 ? kc.definition.slice(0, codeIdx).trim() : null;
-                  const code  = codeIdx > 0 ? kc.definition.slice(codeIdx).trim() : null;
+                  const kcDef = kc.definition || kc.description || '';
+                  const codeIdx = kcDef ? kcDef.indexOf('```') : -1;
+                  const prose = codeIdx > 0 ? kcDef.slice(0, codeIdx).trim() : null;
+                  const code  = codeIdx > 0 ? kcDef.slice(codeIdx).trim() : null;
                   const splitLayout = !!(prose && code);
                   return (
                     <div
@@ -2893,7 +2894,7 @@ export default function TopicDetail({
                         >
                           {String(i + 1).padStart(2, '0')}
                         </span>
-                        <span className="text-[14px] font-semibold text-[var(--text-primary)] landing-display">{kc.term}</span>
+                        <span className="text-[14px] font-semibold text-[var(--text-primary)] landing-display">{kc.term || kc.title}</span>
                       </div>
                       {splitLayout ? (
                         <div className="flex divide-x divide-[var(--border)] min-h-0">
@@ -2906,7 +2907,7 @@ export default function TopicDetail({
                         </div>
                       ) : (
                         <div className="px-4 py-3 text-[14px] text-[var(--text-secondary)] leading-relaxed landing-body">
-                          <FormattedContent content={kc.definition} color="amber" />
+                          <FormattedContent content={kc.definition || kc.description} color="amber" />
                         </div>
                       )}
                     </div>
@@ -2925,7 +2926,14 @@ export default function TopicDetail({
                   <div key={i} className="flex items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4">
                     <div className="w-7 h-7 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-[12px] font-bold flex-shrink-0 landing-mono">{i + 1}</div>
                     <div className="flex-1 pt-0.5 text-[14px] text-[var(--text-secondary)] leading-relaxed landing-body">
-                      <FormattedContent content={step} inline />
+                      {typeof step === 'string' ? (
+                        <FormattedContent content={step} inline />
+                      ) : (
+                        <>
+                          {step.step && <p className="font-semibold text-[var(--text-primary)] mb-1">{step.step}</p>}
+                          <FormattedContent content={step.details || step.description || ''} inline />
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -2943,7 +2951,16 @@ export default function TopicDetail({
                     <span className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(239, 68, 68, 0.18)' }}>
                       <Icon name="alertTriangle" size={11} style={{ color: '#ef4444' }} />
                     </span>
-                    <span className="text-[14px] text-[var(--text-secondary)] leading-relaxed"><FormattedContent content={item} inline /></span>
+                    <span className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
+                      {typeof item === 'string' ? (
+                        <FormattedContent content={item} inline />
+                      ) : (
+                        <>
+                          {item.title && <span className="font-semibold text-[var(--text-primary)] mr-1">{item.title} —</span>}
+                          <FormattedContent content={item.description || item.detail || ''} inline />
+                        </>
+                      )}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -2974,7 +2991,7 @@ export default function TopicDetail({
                         >
                           Q{String(index + 1).padStart(2, '0')}
                         </span>
-                        <h4 className="text-[var(--text-primary)] font-semibold text-[14px] leading-snug landing-display flex-1">{item.question}</h4>
+                        <h4 className="text-[var(--text-primary)] font-semibold text-[14px] leading-snug landing-display flex-1">{item.question || item.q}</h4>
                         <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
@@ -2982,7 +2999,7 @@ export default function TopicDetail({
                       {isExpanded && (
                         <div className="px-5 py-4 border-t border-[var(--border)]">
                           <div className="prep-content w-full">
-                            <FormattedContent content={item.answer} color="blue" />
+                            <FormattedContent content={item.answer || item.a} color="blue" />
                           </div>
                         </div>
                       )}

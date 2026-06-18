@@ -94,6 +94,13 @@ export const comparisonTopics = [
       'https://docs.aws.amazon.com/lambda/latest/dg/welcome.html',
       'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html',
     ],
+    visualizations: [
+      {
+        title: 'EC2 vs Lambda: When to Use Each',
+        caption: 'Decision map comparing sustained-load EC2 workloads against event-driven Lambda triggers, highlighting cost model and constraint differences.',
+        image: '/diagrams/comparisons/cmp-ec2-vs-lambda-decision.png',
+      },
+    ],
   },
 
   {
@@ -129,6 +136,13 @@ export const comparisonTopics = [
       'https://docs.aws.amazon.com/AmazonECS/latest/developerguide/',
       'https://docs.aws.amazon.com/eks/latest/userguide/',
     ],
+    visualizations: [
+      {
+        title: 'ECS vs EKS: Container Orchestration Tradeoffs',
+        caption: 'Side-by-side feature comparison of AWS-native ECS versus the full Kubernetes API of EKS, with lock-in and ecosystem tradeoffs.',
+        image: '/diagrams/comparisons/cmp-ecs-vs-eks-tradeoffs.png',
+      },
+    ],
   },
 
   {
@@ -162,6 +176,13 @@ export const comparisonTopics = [
     references: [
       'https://aws.amazon.com/serverless/',
       'https://docs.aws.amazon.com/lambda/latest/dg/welcome.html',
+    ],
+    visualizations: [
+      {
+        title: 'Containers vs Serverless: Architecture Spectrum',
+        caption: 'Ownership and cost model differences between container-based and serverless compute, covering cold start, state, and billing.',
+        image: '/diagrams/comparisons/cmp-containers-vs-serverless-spectrum.png',
+      },
     ],
   },
 
@@ -268,6 +289,13 @@ export const comparisonTopics = [
       'https://docs.aws.amazon.com/efs/latest/ug/',
       'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AmazonEBS.html',
     ],
+    visualizations: [
+      {
+        title: 'S3 vs EFS vs EBS: Storage Decision Tree',
+        caption: 'Flow-chart guiding the choice between block storage (EBS), shared filesystem (EFS), and object storage (S3) based on access patterns.',
+        image: '/diagrams/comparisons/cmp-s3-vs-efs-vs-ebs-decision.png',
+      },
+    ],
   },
 
   {
@@ -302,6 +330,13 @@ export const comparisonTopics = [
       'https://docs.aws.amazon.com/rds/',
       'https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/',
     ],
+    visualizations: [
+      {
+        title: 'RDS vs DynamoDB: Database Selection',
+        caption: 'Relational vs key-value trade-offs covering schema flexibility, query capability, ACID guarantees, and horizontal scale characteristics.',
+        image: '/diagrams/comparisons/cmp-rds-vs-dynamodb-selection.png',
+      },
+    ],
   },
 
   {
@@ -335,6 +370,13 @@ export const comparisonTopics = [
     references: [
       'https://aws.amazon.com/nosql/',
       'https://www.postgresql.org/docs/',
+    ],
+    visualizations: [
+      {
+        title: 'SQL vs NoSQL: Data Model Tradeoffs',
+        caption: 'Structured comparison of relational ACID databases against NoSQL document/KV stores across schema, query richness, consistency, and scaling approach.',
+        image: '/diagrams/comparisons/cmp-sql-vs-nosql-tradeoffs.png',
+      },
     ],
   },
 
@@ -474,6 +516,13 @@ export const comparisonTopics = [
       'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/',
       'https://docs.aws.amazon.com/sns/latest/dg/',
     ],
+    visualizations: [
+      {
+        title: 'SQS vs SNS: Queue vs Fan-out Messaging',
+        caption: 'Architecture diagram showing the pull-based SQS queue pattern versus the push-based SNS topic fan-out to multiple subscriber types.',
+        image: '/diagrams/comparisons/cmp-sqs-vs-sns-patterns.png',
+      },
+    ],
   },
 
   {
@@ -541,6 +590,13 @@ export const comparisonTopics = [
     references: [
       'https://docs.aws.amazon.com/msk/latest/developerguide/',
       'https://kafka.apache.org/documentation/',
+    ],
+    visualizations: [
+      {
+        title: 'Kafka vs SQS: Stream vs Queue',
+        caption: 'Contrasts Kafka\'s durable log replay and consumer-group model against SQS managed queuing, with a clear use-case guide for each.',
+        image: '/diagrams/comparisons/cmp-kafka-vs-sqs-stream-vs-queue.png',
+      },
     ],
   },
 
@@ -645,6 +701,13 @@ export const comparisonTopics = [
     references: [
       'https://docs.github.com/en/actions',
       'https://www.jenkins.io/doc/',
+    ],
+    visualizations: [
+      {
+        title: 'GitHub Actions vs Jenkins: CI/CD Platform',
+        caption: 'Cloud-native YAML-driven Actions versus self-hosted Groovy Jenkinsfile pipelines, comparing managed runners, plugin ecosystems, and operational burden.',
+        image: '/diagrams/comparisons/cmp-github-actions-vs-jenkins-cicd.png',
+      },
     ],
   },
 
@@ -818,6 +881,13 @@ export const comparisonTopics = [
       'https://docs.aws.amazon.com/cloudwatch/',
       'https://docs.datadoghq.com/',
     ],
+    visualizations: [
+      {
+        title: 'CloudWatch vs Datadog: Observability Platforms',
+        caption: 'AWS-native CloudWatch versus multi-cloud Datadog, covering APM depth, cost model, alerting capabilities, and scope of integration.',
+        image: '/diagrams/comparisons/cmp-cloudwatch-vs-datadog-observability.png',
+      },
+    ],
   },
 
   {
@@ -851,6 +921,13 @@ export const comparisonTopics = [
     references: [
       'https://prometheus.io/docs/introduction/overview/',
       'https://docs.datadoghq.com/',
+    ],
+    visualizations: [
+      {
+        title: 'Prometheus vs Datadog: Metrics and Alerting',
+        caption: 'Open-source pull-scrape Prometheus with Grafana and Alertmanager versus SaaS Datadog with built-in APM, ML anomaly detection, and unified traces/logs.',
+        image: '/diagrams/comparisons/cmp-prometheus-vs-datadog-metrics.png',
+      },
     ],
   },
 
@@ -990,6 +1067,13 @@ export const comparisonTopics = [
       'https://docs.aws.amazon.com/codedeploy/latest/userguide/deployment-steps-ecs.html',
       'https://argoproj.github.io/argo-rollouts/',
     ],
+    visualizations: [
+      {
+        title: 'Blue-Green vs Canary: Deployment Risk Strategies',
+        caption: 'Traffic routing diagram showing instant full-cutover blue-green versus gradual percentage-based canary with live monitoring and rollback paths.',
+        image: '/diagrams/comparisons/cmp-blue-green-vs-canary-strategies.png',
+      },
+    ],
   },
 
   {
@@ -1023,6 +1107,13 @@ export const comparisonTopics = [
     references: [
       'https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment',
       'https://docs.flagger.app/',
+    ],
+    visualizations: [
+      {
+        title: 'Rolling vs Blue-Green: Instance Update Patterns',
+        caption: 'Compares incremental rolling replacement (mixed-version window, lower cost) against full parallel blue-green environments (clean cutover, instant rollback).',
+        image: '/diagrams/comparisons/cmp-rolling-vs-blue-green-patterns.png',
+      },
     ],
   },
 
@@ -1092,6 +1183,13 @@ export const comparisonTopics = [
       'https://helm.sh/docs/',
       'https://kubectl.docs.kubernetes.io/guides/introduction/kustomize/',
     ],
+    visualizations: [
+      {
+        title: 'Helm vs Kustomize: Kubernetes Config Management',
+        caption: 'Go-template Helm charts with release lifecycle management versus plain-YAML Kustomize overlay patching, including the common hybrid pattern.',
+        image: '/diagrams/comparisons/cmp-helm-vs-kustomize-k8s-config.png',
+      },
+    ],
   },
 
   // ─── NETWORKING ─────────────────────────────────────────────────────────────
@@ -1127,6 +1225,13 @@ export const comparisonTopics = [
     references: [
       'https://docs.aws.amazon.com/elasticloadbalancing/latest/application/',
       'https://docs.aws.amazon.com/elasticloadbalancing/latest/network/',
+    ],
+    visualizations: [
+      {
+        title: 'ALB vs NLB: AWS Load Balancer Selection',
+        caption: 'Layer 7 ALB with path-based routing and WAF versus Layer 4 NLB with static IPs and sub-millisecond latency — matched to workload type.',
+        image: '/diagrams/comparisons/cmp-alb-vs-nlb-selection.png',
+      },
     ],
   },
 
