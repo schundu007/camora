@@ -1580,7 +1580,8 @@ server.on('upgrade', async (req, socket, head) => {
     let session;
     try { session = await getSession(sessionId); } catch { socket.destroy(); return; }
     if (!session?.ttyd_host || !session?.ttyd_port) { socket.destroy(); return; }
-    proxyWs(socket, head, session.ttyd_host, session.ttyd_port, req.url, req.rawHeaders);
+    // ttyd listens at /ws — rewrite path, drop the /playground/ws/:id routing segment
+    proxyWs(socket, head, session.ttyd_host, session.ttyd_port, '/ws', req.rawHeaders);
     return;
   }
 
