@@ -87,10 +87,14 @@ export function usePlaygroundSession() {
         return;
       }
       const data = await res.json();
-      // Derive WS URL from the same API base used for REST calls.
-      // http:// → ws://, https:// → wss:// — works on any deployment.
+      // Browsers cannot set custom headers on WebSocket connections, so pass
+      // the JWT as a query param (?token=...) instead of Authorization header.
       const wsBase = API_URL.replace(/^http/, 'ws');
-      const sessionWithWs = { ...data, wsUrl: `${wsBase}/playground/ws/${data.sessionId}` };
+      const wsToken = getStoredToken() || '';
+      const sessionWithWs = {
+        ...data,
+        wsUrl: `${wsBase}/playground/ws/${data.sessionId}?token=${encodeURIComponent(wsToken)}`,
+      };
       setSession(sessionWithWs);
       setStatus('ready');
       const remaining = Math.max(0, Math.floor((new Date(data.expiresAt).getTime() - Date.now()) / 1000));

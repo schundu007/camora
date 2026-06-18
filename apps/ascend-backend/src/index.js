@@ -1535,6 +1535,12 @@ server.on('upgrade', (req, socket, head) => {
         const m = req.headers.cookie.match(/(?:^|;\s*)cariara_sso=([^;]+)/);
         if (m) token = decodeURIComponent(m[1]);
       }
+      // Browsers cannot set Authorization headers on WebSocket — accept token as query param
+      if (!token) {
+        const urlObj = new URL(req.url, 'http://localhost');
+        const qToken = urlObj.searchParams.get('token');
+        if (qToken) token = qToken;
+      }
 
       if (!token) { ws.close(4401, 'Unauthorized'); return; }
 
