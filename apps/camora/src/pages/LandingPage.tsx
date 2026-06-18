@@ -94,37 +94,37 @@ const FEATURES = [
   {
     label: 'Live AI',
     title: 'Real-time AI during sessions',
-    desc: 'Voice transcription captures the question. AI generates instant answers in seconds. No other tool does this.',
+    bullets: ['Live voice capture + instant answers', 'Architecture diagrams in seconds', 'Works during actual interviews'],
     Anim: FeatureLiveAIAnim,
   },
   {
     label: 'Job Matching',
     title: 'AI-powered job discovery',
-    desc: '1,000+ roles matched to your skills. Auto-generate tailored resumes and cover letters for every application.',
+    bullets: ['1,000+ roles matched to your skills', 'Auto-generate resume + cover letter', 'One-click application tracking'],
     Anim: FeatureJobMatchAnim,
   },
   {
     label: 'Prep',
     title: '600+ topics with diagrams',
-    desc: 'System design, DSA, behavioral, databases — each with AI explanations and company-specific prep.',
+    bullets: ['System design, DSA, behavioral, databases', 'AI explanations + architecture diagrams', 'Company-specific study paths'],
     Anim: FeaturePrepAnim,
   },
   {
     label: 'Mock Interviews',
     title: 'AI-scored practice sessions',
-    desc: 'Timed practice sessions with instant feedback. Scored on communication, accuracy, and code quality.',
+    bullets: ['Timed sessions with instant feedback', 'Scored: communication, code, design', 'Pinpoints exactly where you lost points'],
     Anim: FeatureMockSessionAnim,
   },
   {
     label: 'Playground',
     title: 'Real terminals. Real Docker. Real Kubernetes.',
-    desc: 'Spin up a live Ubuntu, Docker, or Kubernetes environment in under 5 seconds. Run kubectl, deploy containers, and demo infra skills — right in your browser. No VM setup required.',
+    bullets: ['Ubuntu, Docker, Kubernetes — live in browser', 'No VM, no setup, ready in 5 seconds', 'Build real muscle memory before the screen'],
     Anim: FeaturePlaygroundAnim,
   },
   {
     label: 'Practice',
     title: '9,500+ problems with AI feedback',
-    desc: 'Coding, DSA, MCQ, system design, SQL across 50+ domains. AI scores your solution and explains the optimal approach.',
+    bullets: ['DSA, SQL, MCQ, system design, coding', 'AI explains why your approach was wrong', '50+ domains, difficulty-graduated'],
     Anim: FeaturePracticeAnim,
   },
 ];
@@ -148,7 +148,7 @@ const TESTIMONIALS = [
   {
     name: 'Shreya Patel',
     role: 'SWE L4 → L5, Search Infrastructure · Google',
-    logo: 'https://img.logo.dev/google.com?token=pk_X9lBvuFOQKa3hGdRu1yFJA',
+    logoDomain: 'google.com',
     initials: 'SP',
     accent: '#4285F4',
     text: "Three system design rounds in my Google loop. I drilled with Camora every night for two weeks — Sona's pub/sub and distributed cache diagrams were almost exactly what I drew on the whiteboard. L5 offer landed two weeks after the final round.",
@@ -156,7 +156,7 @@ const TESTIMONIALS = [
   {
     name: 'Jordan Kim',
     role: 'E4 → E5 Backend SWE, Instagram Feed · Meta',
-    logo: 'https://img.logo.dev/meta.com?token=pk_X9lBvuFOQKa3hGdRu1yFJA',
+    logoDomain: 'meta.com',
     initials: 'JK',
     accent: '#0082FB',
     text: "Meta's bar for backend is brutally specific. Camora had me drilling connection pools, cache eviction policies, and rate-limiting until I could derive them from first principles. Six weeks of prep. E5 offer on the first attempt.",
@@ -164,7 +164,7 @@ const TESTIMONIALS = [
   {
     name: 'Ravi Krishnamurthy',
     role: 'SDE II → SDE III, AWS DynamoDB · Amazon',
-    logo: 'https://img.logo.dev/amazon.com?token=pk_X9lBvuFOQKa3hGdRu1yFJA',
+    logoDomain: 'amazon.com',
     initials: 'RK',
     accent: '#FF9900',
     text: "Did 180 LP questions using Camora's behavioral module. STAR answers anchored to my actual project history, not generic templates. The behavioral round was the easiest part of the loop. SDE III on the DynamoDB team.",
@@ -172,7 +172,7 @@ const TESTIMONIALS = [
   {
     name: 'Caitlin O\'Brien',
     role: 'Senior SWE, CoreML Platform · Apple',
-    logo: 'https://img.logo.dev/apple.com?token=pk_X9lBvuFOQKa3hGdRu1yFJA',
+    logoDomain: 'apple.com',
     initials: 'CO',
     accent: '#555555',
     text: "Apple's onsite is six hours back to back. Camora's mock sessions scored my system design explanations and flagged where I was hand-waving. Fixed those gaps before the real thing. CoreML team offer, 10 days after the loop.",
@@ -180,7 +180,7 @@ const TESTIMONIALS = [
   {
     name: 'Daniel Osei',
     role: 'Senior SWE, Content Delivery Platform · Netflix',
-    logo: 'https://img.logo.dev/netflix.com?token=pk_X9lBvuFOQKa3hGdRu1yFJA',
+    logoDomain: 'netflix.com',
     initials: 'DO',
     accent: '#E50914',
     text: "Netflix moves fast. During my virtual onsite, Sona transcribed the interviewer's question and surfaced the relevant design tradeoffs while I was still organizing my thoughts. That 8-second window saved me on the CDN design round.",
@@ -188,7 +188,7 @@ const TESTIMONIALS = [
   {
     name: 'Fatima Al-Hassan',
     role: 'SDE II, Azure Kubernetes Service · Microsoft',
-    logo: 'https://img.logo.dev/microsoft.com?token=pk_X9lBvuFOQKa3hGdRu1yFJA',
+    logoDomain: 'microsoft.com',
     initials: 'FA',
     accent: '#00A4EF',
     text: "Azure infra interviews go deep on distributed systems. The Kubernetes playground had me running real Helm charts and debugging failing pods. Walked into the onsite with actual muscle memory, not theory. Got the AKS team offer.",
@@ -364,7 +364,7 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
             >
-              1,000+ matched roles, 600+ study topics, 9,500+ practice problems, and a live AI copilot in real time — everything from first application to final offer.
+              1,000+ matched roles · 600+ study topics · 9,500+ problems · Live AI in the room.
             </motion.p>
 
             <motion.div
@@ -545,7 +545,7 @@ export default function LandingPage() {
               <Reveal>
                 <SectionHeading
                   title={<>One tool.<br /><span className="text-[var(--cam-primary)]">Every session.</span></>}
-                  lead="Live voice assistance. Coding with three approaches and follow-ups. Multi-cloud architecture on AWS, GCP, Azure. Complete design problems: requirements through API. Company-specific prep for the full loop. Session scoring across every dimension."
+                  lead="Voice, code, system design, diagrams, and scoring — every interview format in one tool."
                 />
                 <div className="mt-7 flex items-center gap-4">
                   <CTAButton to="/lumora" variant="primary" size="md" trailingArrow>
@@ -572,7 +572,7 @@ export default function LandingPage() {
           <Reveal>
             <SectionHeading
               title="Features that set us apart."
-              lead="Live transcription. Architecture diagrams. AI-scored mocks. Built so the live session goes the way you rehearsed."
+              lead="Everything you need from first prep to final offer."
             />
           </Reveal>
 
@@ -584,9 +584,14 @@ export default function LandingPage() {
                     <h3 className="mt-2 font-display text-[20px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
                       {f.title}
                     </h3>
-                    <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--text-secondary)]">
-                      {f.desc}
-                    </p>
+                    <ul className="mt-2 space-y-1">
+                      {f.bullets.map((b) => (
+                        <li key={b} className="flex items-start gap-1.5 text-[13px] text-[var(--text-secondary)]">
+                          <span className="mt-[3px] shrink-0 w-1 h-1 rounded-full bg-[var(--accent)] opacity-70" />
+                          {b}
+                        </li>
+                      ))}
+                    </ul>
                     <div className="mt-5 -mx-2 h-32 md:h-36 overflow-hidden rounded-xl relative bg-[var(--bg-elevated)] transition-all duration-300">
                       <f.Anim />
                     </div>
@@ -629,7 +634,7 @@ export default function LandingPage() {
               <Reveal delay={0.12}>
                 <SectionHeading
                   title={<>Paste a job URL.<br /><span className="text-[var(--cam-primary)]">Get a prep plan.</span></>}
-                  lead="AI analyzes the job description, identifies required skills, and generates a tailored preparation plan with coding topics, system design patterns, and behavioral questions."
+                  lead="Paste a job URL. Get a tailored prep plan with coding topics, system design, and behavioral questions."
                 />
                 <div className="mt-7">
                   <CTAButton to="/jobs" variant="primary" trailingArrow>
@@ -655,7 +660,7 @@ export default function LandingPage() {
           <div className="mt-14 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
             <AudienceCard
               title="Roles, practice & live AI"
-               body="1,000+ engineering roles matched to your skills, 600+ curated study topics with diagrams, and 9,500+ problems with AI feedback. Then live transcription assistance during the session itself: the moment that decides the offer."
+               body="Matched roles, curated study topics, 9,500+ problems, and live AI when it counts most."
               ctaLabel={isAuthenticated ? 'Open dashboard' : 'Start free'}
               ctaHref="/capra/prepare"
             />
@@ -677,7 +682,7 @@ export default function LandingPage() {
             <SectionHeading
               align="center"
               title={<>Engineers who <span className="text-[var(--cam-primary)]">got the offer.</span></>}
-              lead="Real results from engineers who used Camora to land roles at top companies."
+              lead="From engineers who used Camora to land the offer."
             />
           </Reveal>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -701,8 +706,8 @@ export default function LandingPage() {
                       className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
                       style={{ background: 'var(--bg-base)', border: '1px solid var(--border)' }}
                     >
-                      {t.logo ? (
-                        <img src={t.logo} alt="" width={22} height={22} style={{ objectFit: 'contain' }} />
+                      {t.logoDomain ? (
+                        <img src={`https://img.logo.dev/${t.logoDomain}?token=${LOGO_TOKEN}&size=32&format=png`} alt="" width={22} height={22} style={{ objectFit: 'contain' }} />
                       ) : (
                         <span className="text-[11px] font-bold text-white" style={{ background: t.accent }}>{t.initials}</span>
                       )}
