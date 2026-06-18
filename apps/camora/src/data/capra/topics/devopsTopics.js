@@ -36530,265 +36530,223 @@ For a new cluster with a small platform team and no existing OPA investment, Kyv
     visualizations: [
       {
         title: 'Core Git Commands — repository operations, branching, remotes, staging',
-        description: `Repository and basic commands:
-  git init                          initialize a new repository in the current directory
-  git clone <repo_url>              clone a repository from a remote URL
-  git status                        show working directory status (modified, staged, untracked)
-  git add <file>                    stage a specific file for commit
-  git add .                         stage all modified files in the working directory
-  git add -A                        stage all modified files including deletions
-  git commit -m "message"           commit staged changes with a message
-  git commit --amend                modify the last commit (message or add changes)
-  git commit --all                  automatically stage tracked files and commit
-  git commit -a                     stage and commit all modified tracked files
-  git commit --no-verify            skip pre-commit hooks (use sparingly)
-  git push                          push committed changes to the remote repository
-  git pull                          fetch and merge changes from the remote
-  git fetch                         download objects and refs without merging
-  git merge <branch>                merge a branch into the current branch
-  git log                           show commit history
-  git log --oneline                 compact one-line commit history
-  git log --graph                   visualize commit history as a graph
-  git log --author="name"           filter commits by author
-  git log --since="2 weeks ago"     filter commits by date
-  git diff                          show unstaged changes vs index
-  git diff --staged                 show staged changes vs last commit
-  git diff <commit_id>              show differences between working dir and a specific commit
-  git show <commit_id>              show details of a commit including diff and metadata
-  git show <commit>:<file>          show a specific file at a particular commit
+        description: `repository and basic operations:
+git init  — initialize a new Git repository in the current directory
+git clone <repo_url>  — clone a repository from a remote URL to your local machine
+git status  — show working directory status: modified, staged, untracked files
+git add <file>  — stage a specific file for the next commit
+git add .  — stage all modified files in the working directory
+git add -A  — stage all modified files including deletions
+git commit -m "message"  — commit staged changes with a descriptive message
+git commit --amend  — modify the last commit (change message or add forgotten changes)
+git commit --all  — automatically stage all tracked files and commit
+git commit -a  — stage and commit all modified tracked files in one step
+git commit --no-verify  — skip pre-commit hooks (use sparingly in emergencies)
+git push  — push committed changes to the remote repository
+git pull  — fetch and merge changes from the remote into current branch
+git fetch  — download objects and refs from remote without merging
+git merge <branch>  — merge a branch into the current branch
+git log  — show the full commit history
+git log --oneline  — compact one-line format showing hash and message
+git log --graph  — visualize commit history as a branch graph
+git log --author="name"  — filter commits by a specific author
+git log --since="2 weeks ago"  — filter commits by date range
+git diff  — show unstaged changes vs the index
+git diff --staged  — show staged changes vs the last commit
+git diff <commit_id>  — show differences between working directory and a specific commit
+git show <commit_id>  — show full details of a commit including diff and metadata
+git show <commit>:<file>  — show a specific file as it was at a particular commit
 
-Branching commands:
-  git branch                        list all branches
-  git branch <name>                 create a new branch
-  git checkout <name>               switch to an existing branch
-  git checkout -b <name>            create and switch to a new branch in one step
-  git switch -c <name>              modern alternative to checkout -b (Git 2.23+)
-  git merge --no-ff <branch>        force a merge commit even when fast-forward is possible
-  git merge --abort                 abort a merge in progress and restore working directory
-  git rebase <branch>               apply current branch commits on top of target branch
-  git rebase -i <commit_id>         interactive rebase — reorder, squash, or amend commits
-  git rebase --continue             continue after resolving rebase conflicts
-  git rebase --abort                abort rebase and restore original state
-  git rebase --skip                 skip the current conflicting commit during rebase
-  git rebase --onto                 rebase onto a new base commit
-  git branch -d <name>              delete a branch safely (only if merged)
-  git branch -D <name>              force delete a branch (even if not merged)
-  git branch -m <old> <new>         rename a branch
-  git remote set-head origin <name> set the default remote branch
+branching commands:
+git branch  — list all local branches
+git branch <name>  — create a new branch at current HEAD
+git checkout <name>  — switch to an existing branch
+git checkout -b <name>  — create and switch to a new branch in one step
+git switch -c <name>  — modern alternative to checkout -b (Git 2.23+)
+git merge --no-ff <branch>  — force a merge commit even when fast-forward is possible
+git merge --abort  — abort a merge in progress and restore the working directory
+git rebase <branch>  — apply current branch commits on top of target branch
+git rebase -i <commit_id>  — interactive rebase: reorder, squash, or amend commits
+git rebase --continue  — continue rebase after resolving conflicts
+git rebase --abort  — abort the rebase and restore original state
+git rebase --skip  — skip the current conflicting commit during rebase
+git rebase --onto  — rebase onto a new base commit
+git branch -d <name>  — delete a branch safely (only if already merged)
+git branch -D <name>  — force delete a branch even if not merged
+git branch -m <old> <new>  — rename a branch
 
-Remote commands:
-  git remote -v                     show remote repository URLs
-  git remote add <name> <url>       add a new remote
-  git remote remove <name>          remove a remote
-  git remote show origin            display detailed info about origin remote
-  git push origin <branch>          push a branch to the remote
-  git push -u origin <branch>       push and set upstream tracking
-  git push --force-with-lease       safe force push — fails if remote was updated since your last fetch
-  git push --force                  force push — overwrites remote history (dangerous on shared branches)
-  git push origin --tags            push all tags to remote
-  git pull origin <branch>          fetch and merge a specific remote branch
-  git fetch origin                  download all remote changes without merging
-  git fetch --all                   fetch from all remotes — used in CI/CD pipelines before builds
-  git fetch --tags                  fetch all tags from remote`,
+remote commands:
+git remote -v  — show all remote repository URLs
+git remote add <name> <url>  — add a new remote repository
+git remote remove <name>  — remove a remote
+git remote show origin  — display detailed info about the origin remote
+git push origin <branch>  — push a branch to the remote repository
+git push -u origin <branch>  — push and set upstream tracking for the branch
+git push --force-with-lease  — safe force push: fails if remote was updated since your last fetch
+git push --force  — force push: overwrites remote history (dangerous on shared branches)
+git push origin --tags  — push all local tags to remote
+git pull origin <branch>  — fetch and merge a specific remote branch
+git fetch origin  — download all remote changes without modifying local branches
+git fetch --all  — fetch from all configured remotes (used in CI/CD before builds)
+git fetch --tags  — fetch all tags from remote`,
       },
       {
-        title: 'Advanced Git — stash, tags, hooks, submodules, bisect, reflog, merge strategies',
-        description: `Staging and undoing changes:
-  git reset                         unstage a file (keep changes in working directory)
-  git reset --soft HEAD~1           move HEAD back one commit, keep changes staged
-  git reset --mixed HEAD~1          move HEAD back one commit, unstage changes (default behavior)
-  git reset --hard HEAD~1           move HEAD back one commit, discard all changes
-  git reset --hard <commit_id>      reset working directory, index, and HEAD to a specific commit
-  git reset --soft <commit_id>      move HEAD only, leave staged changes intact
-  git reset --mixed <commit_id>     reset HEAD and index, keep working directory unchanged
-  git revert <commit_id>            create a new commit that undoes the specified commit (safe for shared branches)
-  git restore <file>                restore a file from the index
-  git restore --staged <file>       remove a file from the staging area
-  git rm --cached <file>            remove from version control but keep on disk (critical for accidentally committed secrets)
-  git cherry-pick <commit_id>       apply changes from a specific commit onto the current branch
-  git pull --rebase                 fetch and rebase local commits on top of remote changes
+        title: 'Advanced Git — stash, tags, hooks, submodules, bisect, reflog',
+        description: `staging and undoing changes:
+git reset  — unstage a file (keeps changes in working directory)
+git reset --soft HEAD~1  — move HEAD back one commit, keep changes staged
+git reset --mixed HEAD~1  — move HEAD back one commit, unstage changes (default)
+git reset --hard HEAD~1  — move HEAD back one commit, discard all changes permanently
+git reset --hard <commit_id>  — reset working directory, index, and HEAD to a specific commit
+git reset --soft <commit_id>  — move HEAD only, leave staged changes intact
+git revert <commit_id>  — create a new commit undoing the specified commit (safe for shared branches)
+git restore <file>  — restore a file from the index to working directory
+git restore --staged <file>  — remove a file from the staging area
+git rm --cached <file>  — remove from version control but keep on disk (use for accidentally committed secrets)
+git cherry-pick <commit_id>  — apply a specific commit from another branch onto current branch
+git pull --rebase  — fetch and rebase local commits on top of remote changes
 
-Stashing (temporary saves):
-  git stash                         stash all staged and unstaged changes
-  git stash list                    list all stashes
-  git stash pop                     apply latest stash and remove it from stash list
-  git stash apply                   apply a stash without removing it
-  git stash drop                    remove a specific stash from the stash list
-  git stash clear                   clear all stashes
-  git stash save "message"          stash with a descriptive message for identification
-  git stash branch <name>           create a new branch from the stash and apply it
+stashing:
+git stash  — save all staged and unstaged changes to a temporary stack
+git stash list  — list all stashes
+git stash pop  — apply latest stash and remove it from the stash list
+git stash apply  — apply a stash without removing it from the list
+git stash drop  — remove a specific stash from the stash list
+git stash clear  — remove all stashes
+git stash save "message"  — stash with a descriptive message for easy identification
+git stash branch <name>  — create a new branch from the stash and apply it
 
-Tags (managing versions and releases):
-  git tag                           list all tags in the repository
-  git tag <name>                    create a lightweight tag at the current commit
-  git tag -a <name> -m "message"    create an annotated tag with a message (preferred for releases)
-  git tag -d <name>                 delete a local tag
-  git tag -s <name>                 create a GPG-signed tag for verified releases
-  git push origin <tag>             push a specific tag to remote
-  git push origin --tags            push all local tags to remote
-  git fetch --tags                  fetch all tags from remote
+tags and releases:
+git tag  — list all tags in the repository
+git tag <name>  — create a lightweight tag at the current commit
+git tag -a <name> -m "message"  — create an annotated tag with metadata (preferred for releases)
+git tag -d <name>  — delete a local tag
+git tag -s <name>  — create a GPG-signed tag for verified releases
+git push origin <tag>  — push a specific tag to the remote
+git push origin --tags  — push all local tags to remote
+git fetch --tags  — fetch all tags from remote
 
-Configuration:
-  git config --global user.name "Name"              set global username
-  git config --global user.email "email"            set global email
-  git config --list                                 list all configuration settings
-  git config --global core.editor vim               set default editor
-  git config --global color.ui true                 enable colored output
-  git config --global alias.st status               create an alias (git st = git status)
-  git config --global alias.<name> <command>        create any custom alias
-  git config --global user.signingkey <key_id>      configure GPG key for commit signing
-  git commit --gpg-sign                             sign a commit with your GPG key
-  git log --show-signature                          verify GPG signatures in log output
+configuration:
+git config --global user.name "Name"  — set global username for all commits
+git config --global user.email "email"  — set global email for all commits
+git config --list  — list all current configuration settings
+git config --global core.editor vim  — set the default text editor
+git config --global color.ui true  — enable colored terminal output
+git config --global alias.st status  — create an alias (git st = git status)
+git config --global alias.<name> <cmd>  — create any custom git alias
+git config --global user.signingkey <key_id>  — configure GPG key for commit signing
+git commit --gpg-sign  — sign a commit with your configured GPG key
+git log --show-signature  — verify and display GPG signatures in log output
 
-Hooks (automated scripts triggered by Git events):
-  pre-commit     runs before a commit is finalized — use for linting, tests, secret scanning
-  commit-msg     runs before commit message is saved — enforce message format (e.g. Jira ticket)
-  post-commit    runs after a commit is made — trigger notifications or CI status
-  pre-push       runs before a push — trigger integration tests to prevent breaking CI
-  post-merge     runs after a merge — ideal for dependency installs or asset rebuilds
-  Hooks live in .git/hooks/ and are NOT committed to version control by default.
-  Use Husky (Node.js) or the pre-commit framework (Python) to version-control hooks.
+git hooks:
+pre-commit  — runs before a commit is finalized; use for linting, tests, secret scanning
+commit-msg  — runs before commit message is saved; enforce Jira tickets or semver format
+post-commit  — runs after a commit is made; trigger notifications or CI status updates
+pre-push  — runs before a push to remote; run integration tests to prevent breaking CI
+post-merge  — runs after a merge; reinstall dependencies or rebuild assets automatically
+Hooks live in .git/hooks/ and are NOT committed to version control by default.
+Use Husky (Node.js) or the pre-commit framework (Python) to share hooks across the team.
 
-Submodules (external repositories embedded in a project):
-  git submodule add <url>                add a submodule to the repository
-  git submodule init                     initialize submodules after cloning a repo
-  git submodule update                   update submodules to the commit in the superproject
-  git submodule update --remote          update to the latest commit from the remote
-  git submodule update --recursive       update all nested submodules recursively
-  git submodule status                   show current commit of each submodule
-  git submodule deinit <path>            remove a submodule from the working directory
-  git submodule foreach <cmd>            run a command in each submodule
-  git subtree add --prefix=<dir> <url>   integrate an external repo as a subdirectory (simpler alternative)
+submodules:
+git submodule add <url>  — add an external repository as a submodule
+git submodule init  — initialize submodules after cloning a repo that contains them
+git submodule update  — update submodules to the commit recorded in the superproject
+git submodule update --remote  — update each submodule to its latest remote commit
+git submodule update --recursive  — update all nested submodules recursively
+git submodule status  — show the current commit SHA of each submodule
+git submodule deinit <path>  — remove a submodule from the working directory
+git submodule foreach <cmd>  — run a shell command inside each submodule
+git subtree add --prefix=<dir> <url>  — embed an external repo as a subdirectory (no .gitmodules)
 
-Searching history and debugging:
-  git blame <file>                  show who last modified each line and when
-  git annotate <file>               alias for blame — shows commit info per line
-  git diff <branch1> <branch2>      show differences between two branches before merging
-  git bisect start                  start binary search for the commit that introduced a bug
-  git bisect bad                    mark current commit as bad (bug is present)
-  git bisect good <commit_id>       mark a commit as good (bug was not present)
-  git bisect reset                  end bisect and restore repository to original state
-  git bisect log                    show the log of the bisect session
-  git reflog                        show all HEAD movements — the ultimate recovery tool
-  git reflog show                   detailed view of HEAD and repository state
-  git reflog expire --expire=now --all  remove expired reflog entries
-  git reflog delete <ref_id>        delete a specific reflog entry
+searching and debugging:
+git blame <file>  — show who last modified each line of a file and when
+git diff <branch1> <branch2>  — show differences between two branches before merging
+git bisect start  — start a binary search to find the commit that introduced a bug
+git bisect bad  — mark the current commit as bad (bug is present here)
+git bisect good <commit_id>  — mark a known-good commit (bug was not present)
+git bisect reset  — end the bisect session and restore the repository
+git reflog  — show every HEAD movement: the ultimate tool for recovering lost work
+git reflog show  — detailed view of HEAD pointer history and repository state
 
-Cleaning and maintenance:
-  git clean -n                      preview which untracked files would be removed (dry run)
-  git clean -f                      remove untracked files from working directory
-  git clean -fd                     remove untracked files and directories
-  git gc                            run garbage collection — clean up unnecessary objects
-  git prune                         remove objects no longer needed in the repository
-  git archive --format=tar --output=out.tar <branch>   create a tarball snapshot of a branch
-  git archive --format=zip --output=out.zip <branch>   create a zip snapshot of a branch
+cleaning and maintenance:
+git clean -n  — preview which untracked files would be removed (dry run, no changes)
+git clean -f  — remove all untracked files from the working directory
+git clean -fd  — remove untracked files and directories
+git gc  — run garbage collection to clean up loose objects and optimize the repository
+git prune  — remove objects no longer referenced anywhere in the repository
 
-Merge strategies:
-  git merge --strategy=ours <branch>    resolve all conflicts by favoring the current branch
-  git merge --strategy=theirs <branch>  resolve all conflicts by favoring the other branch
-  git merge --abort                     abort a merge in progress and restore working directory
-  git mergetool                         open external merge tool (vimdiff, meld, kdiff3)
-  git status                            show which files are in conflict during a merge`,
+merge strategies:
+git merge --strategy=ours <branch>  — resolve all conflicts by keeping the current branch version
+git merge --strategy=theirs <branch>  — resolve all conflicts by keeping the other branch version
+git merge --abort  — abort an in-progress merge and restore the working directory
+git mergetool  — open an external merge conflict resolution tool (vimdiff, meld, kdiff3)`,
       },
       {
-        title: 'Git for DevOps — CI/CD, IaC, GitOps, secrets, rollbacks, team workflows',
-        description: `Git for CI/CD pipelines:
-  git fetch --all              fetch all branches before a build — ensures pipeline tests current code
-  git push --force-with-lease  safe force push in CI environments — fails if remote was updated
-  git rebase origin/main       rebase branch on latest before merging — keeps pipeline history linear
-  git tag <version>            tag releases to trigger version-specific deployments
-  git push --tags              trigger tag-based deployment pipelines (v1.0.0 deploys to prod)
-  git fetch --tags             ensure CI has latest tags before deploying
-  git log --oneline --graph    visualize commit history in pipeline scripts and reports
-  git diff <id1> <id2>         determine changed files to decide whether to trigger a build
+        title: 'Git for DevOps — CI/CD, IaC, GitOps, secrets, rollbacks',
+        description: `CI/CD pipeline integration:
+git fetch --all  — fetch all branches from all remotes before a build starts
+git push --force-with-lease  — safe force push in CI: fails if remote was updated by someone else
+git rebase origin/main  — rebase branch on latest before merging; keeps pipeline history linear
+git tag <version>  — tag releases to trigger version-specific deployment pipelines
+git push --tags  — trigger tag-based deployments (pushing v1.0.0 tag deploys to production)
+git fetch --tags  — ensure CI agent has the latest tags before any deployment step
+git log --oneline --graph  — visualize commit history in pipeline scripts and audit logs
+git diff <id1> <id2>  — detect changed files to decide whether a build should be triggered
 
-Git for Infrastructure as Code (Terraform, Ansible, Helm):
-  git clone <iac_url>           clone repos containing Terraform modules or Kubernetes manifests
-  git checkout <env_branch>     switch to environment-specific branch (dev, staging, prod)
-  git pull origin <env_branch>  sync IaC before applying any configurations or deployments
-  git submodule                 manage shared infrastructure modules across multiple repos
-  Pattern: separate branches per environment; merge feature branches dev -> staging -> prod
+infrastructure as code:
+git clone <iac_url>  — clone repos containing Terraform modules, Ansible playbooks, or Helm charts
+git checkout <env_branch>  — switch to environment-specific branch (dev, staging, production)
+git pull origin <env_branch>  — sync infrastructure code before applying any configuration changes
+git submodule  — manage shared infrastructure modules across multiple IaC repositories
 
-Git hooks for DevOps automation:
-  pre-commit   run linters and formatters before every commit — fail fast, keep main branch clean
-  pre-push     run integration tests before pushing — prevent breaking the shared CI pipeline
-  post-merge   reinstall dependencies, rebuild assets, or update lock files after a merge
-  commit-msg   enforce semantic versioning or Jira ticket references in all commit messages
-  Example: pre-commit hook runs terraform fmt and tflint on every commit to an IaC repo
+devops automation hooks:
+pre-commit  — run linters and secret scanners before every commit; fail fast, keep main green
+pre-push  — run integration tests before pushing; stop broken code reaching the CI pipeline
+post-merge  — reinstall dependencies, rebuild assets, or update lock files after a merge
+commit-msg  — enforce semantic versioning or Jira ticket references in all commit messages
 
-Feature flags with Git:
-  git checkout -b <feature_flag_branch>   develop feature behind a flag on its own branch
-  git merge <flag_branch>                 merge the branch; toggle the flag independently of deployment
-  Benefit: code ships before the feature is enabled — reduces merge conflict risk
+gitops workflow:
+git push  — triggers ArgoCD or Flux to automatically reconcile cluster state with the repository
+git revert <commit>  — production rollback: the GitOps operator reconciles the cluster back automatically
+git clone <gitops_url>  — inspect or modify deployment configurations stored as declarative code
+No direct kubectl apply in production — all changes go through Git commits.
 
-Multi-environment deployments:
-  git checkout <env_branch>         switch to the environment branch before deploying
-  git merge --no-ff <feature>       preserve merge commit history when promoting across environments
-  git tag <release_version>         tag each environment promotion for versioned, repeatable deploys
+secrets management:
+git rm --cached <file>  — remove a file from version control after an accidental commit; rotate the secret immediately
+git commit --amend  — rewrite the most recent commit to remove an accidentally committed secret
+git rebase -i  — rewrite older commits to permanently scrub secrets from repository history
+Add .env, credentials.json, *.pem, *.key to .gitignore before creating those files.
+Use gitleaks or git-secrets in pre-commit hooks to prevent exposure at commit time.
 
-GitOps workflow (ArgoCD, Flux):
-  Git is the single source of truth for infrastructure and application state.
-  git push                          triggers ArgoCD or Flux to reconcile cluster state with the repo
-  git revert <commit>               rollback in production — operator reconciles cluster back automatically
-  Any drift between cluster and repository is detected and corrected by the GitOps operator.
-  No direct kubectl apply in production — all changes go through Git commits.
+production rollbacks:
+git log --oneline  — find the commit hash of the last known stable production state
+git revert <commit_id>  — safe rollback: creates a new commit undoing the change (use this in production)
+git reset --hard <commit_id>  — destructive rollback: discards commits (only for private branches)
+git checkout <commit_id>  — inspect or deploy a specific older version of the codebase
 
-Secrets management (critical):
-  git rm --cached <file>   remove a file from version control after accidental commit — rotate the secret
-  git commit --amend       rewrite the most recent commit to remove an accidentally committed secret
-  git rebase -i            rewrite older commits to permanently remove secrets from history
-  Add files to .gitignore before ever creating them: .env, credentials.json, *.pem, *.key
-  Scanning tools: git-secrets, trufflehog, gitleaks — scan repos for exposed credentials
-  Signed commits: git commit --gpg-sign ensures authenticity in regulated environments
-
-Git commit signing (ensuring authenticity):
-  git config --global user.signingkey <key_id>   configure GPG key
-  git commit --gpg-sign                          sign a commit with your GPG key
-  git tag -s <tag_name>                          create a signed tag
-  git log --show-signature                       verify signatures in log
-  Use case: supply chain security — proves commits came from authorized developers
-
-Production rollbacks with Git:
-  git log --oneline            find the commit hash of the last known stable state
-  git revert <commit_id>       safe rollback — creates a new commit undoing the change (preferred in prod)
-  git reset --hard <commit_id> hard rollback — discards commits (only for private/emergency use)
-  git checkout <commit_id>     inspect or deploy a specific older version
-  CI/CD pattern: tag every production deployment; rollback = retag the previous stable version and push
-
-Git for containerized environments (Docker, Kubernetes):
-  git clone <url>              clone repos containing Dockerfiles, Kubernetes manifests, or Helm charts
-  git tag <version>            trigger image build pipelines; Git tag version maps to Docker image tag
-  git submodule add <url>      include external Helm charts or Dockerfiles as a managed submodule
-  git pull origin <branch>     pull latest code before rebuilding Docker images to include all changes
-
-Team collaboration and code review:
-  git push origin <feature>       push feature branch for pull request and code review
-  git fetch origin <feature>      fetch a colleague's branch to review or test locally
-  git diff <branch>               compare feature branch to main before merging
-  git merge --no-ff               preserve merge context — documents integration points in main history
-
-Quick-fire interview answers:
+team collaboration:
+git push origin <feature>  — push a feature branch to remote for pull request and code review
+git fetch origin <feature>  — fetch a teammate's branch to review or test locally
+git diff <branch>  — compare a feature branch to main before merging to spot issues early
+git merge --no-ff  — preserve merge commit to document feature branch integration points in history
 
 Q: What is the difference between git merge and git rebase?
-A: Merge creates a merge commit that preserves both histories — safe for shared branches. Rebase replays commits on top of the target branch, creating a linear history but rewriting commit SHAs. Golden rule: never rebase commits that exist on a public or shared branch.
+A: merge creates a merge commit preserving both branch histories and is safe for shared branches. rebase replays commits on top of the target, producing a clean linear history but rewriting commit SHAs. Never rebase commits that already exist on a public or shared branch.
 
 Q: When do you use git revert vs git reset --hard?
-A: Revert creates a new commit that undoes the target — safe for shared and production branches. Reset --hard destroys history — only use on private local branches. In production, always prefer revert; it is auditable and safe.
+A: revert creates a new commit that undoes the target — it is safe for shared and production branches because it does not rewrite history. reset --hard destroys history and is only safe on private local branches or in explicit emergency scenarios.
 
 Q: What does git push --force-with-lease do that --force does not?
-A: --force-with-lease checks that the remote ref has not been updated since your last fetch. If someone else pushed, it fails to prevent overwriting their work. --force overwrites unconditionally and can silently destroy others' commits.
+A: --force-with-lease checks that the remote ref has not been updated since your last fetch. If a teammate pushed in the meantime, the command fails to protect their work. --force overwrites unconditionally and can silently destroy commits that others depend on.
 
-Q: How do you remove a secret that was accidentally committed?
-A: Immediately rotate the secret — assume it is already compromised. Then: git rm --cached on the file, add it to .gitignore, git commit --amend if it was the last commit or git rebase -i for older commits. Force-push the rewritten history. For deep history, use BFG Repo Cleaner or git filter-repo.
+Q: How do you remove a secret accidentally committed to Git?
+A: Rotate the secret immediately — assume it is already compromised and being scanned. Then: git rm --cached the file, add it to .gitignore, use git commit --amend if it was the last commit or git rebase -i for older history. Force-push the cleaned history to remote.
 
-Q: What is git bisect used for?
-A: Binary search through commit history to identify which commit introduced a bug. Mark the current commit as bad and a known good commit, then Git checks out the midpoint for you to test. Mark good or bad and repeat. Reduces O(n) manual search to O(log n).
-
-Q: What is git reflog and when do you need it?
-A: Reflog records every movement of HEAD — resets, rebases, checkouts, commits. If you accidentally reset --hard or dropped a stash, reflog shows you the commit hash that was there before. It is your recovery tool for seemingly lost work.
+Q: What is git bisect and when do you use it in DevOps?
+A: git bisect runs a binary search through commit history to find the exact commit that introduced a bug. Mark the current state as bad and a known good commit, Git checks out the midpoint for testing. Repeat until the culprit is found in O(log n) steps instead of O(n) manual search.
 
 Q: How does GitOps use Git differently from standard version control?
-A: In GitOps, the repository is the declarative source of truth for infrastructure state. A git push triggers an operator (ArgoCD, Flux) to reconcile the live cluster. There is no manual kubectl apply in production — Git is the deployment mechanism. Rollbacks are git reverts; audit trail is the Git log.`,
+A: In GitOps, the repository is the declarative single source of truth for all infrastructure state. A git push triggers an operator (ArgoCD, Flux) to reconcile the live cluster to match. There is no direct kubectl apply in production — Git is the deployment mechanism and the audit trail.`,
       },
     ],
     introduction: `Git is the foundation of every DevOps pipeline. Nearly every CI/CD system — GitHub Actions, GitLab CI, Jenkins, CircleCI, Buildkite — is triggered by Git events: push, tag, pull request. Every GitOps operator (ArgoCD, Flux) watches a Git repository as its source of truth. Every Infrastructure as Code workflow stores Terraform modules, Helm charts, and Kubernetes manifests in Git. Mastering Git is not optional for a DevOps engineer — it is the baseline from which everything else operates.
@@ -36876,28 +36834,28 @@ Hooks are the extensibility layer that DevOps teams use to enforce quality gates
     ],
     keyQuestions: [
       {
-        q: 'Explain git fetch vs git pull. When would you use each?',
-        a: 'git fetch downloads objects and refs from the remote without modifying your working directory or current branch — safe to run at any time. git pull is git fetch followed by git merge (or rebase with --rebase). Use fetch when you want to inspect remote changes before integrating, or in CI scripts where you need the remote state without disturbing the working tree. Use pull when you want to integrate remote changes immediately into your current branch.',
+        question: 'Explain git fetch vs git pull. When would you use each?',
+        answer: 'git fetch downloads objects and refs from the remote without modifying your working directory or current branch — safe to run at any time. git pull is git fetch followed by git merge (or rebase with --rebase). Use fetch when you want to inspect remote changes before integrating, or in CI scripts where you need remote state without disturbing the working tree. Use pull when you want to integrate remote changes immediately into your current branch.',
       },
       {
-        q: 'What is the difference between a fast-forward merge and --no-ff?',
-        a: 'A fast-forward merge occurs when the target branch has no new commits since the feature branch diverged — Git simply moves the pointer forward without creating a merge commit, producing a linear history. --no-ff forces a merge commit even when fast-forward is possible, which documents the integration point in history. In DevOps, --no-ff is preferred on main because the merge commit preserves the context that a feature branch was used.',
+        question: 'What is the difference between a fast-forward merge and --no-ff?',
+        answer: 'A fast-forward merge occurs when the target branch has no new commits since the feature branch diverged — Git simply moves the pointer forward without creating a merge commit, producing a linear history. --no-ff forces a merge commit even when fast-forward is possible, which documents the integration point in history. In DevOps, --no-ff is preferred on main because the merge commit preserves the context that a feature branch was used.',
       },
       {
-        q: 'How do you recover work after an accidental git reset --hard?',
-        a: 'Use git reflog — it records every HEAD movement including the state before the reset. Find the commit SHA that was at HEAD before the reset, then run git branch recover <sha> to create a branch at that point, or git checkout -b recover <sha>. Reflog entries expire after 90 days by default, so this works for any recent reset.',
+        question: 'How do you recover work after an accidental git reset --hard?',
+        answer: 'Use git reflog — it records every HEAD movement including the state before the reset. Find the commit SHA that was at HEAD before the reset, then run git branch recover <sha> to create a branch at that point. Reflog entries expire after 90 days by default, so this works for any recent accidental reset or dropped stash.',
       },
       {
-        q: 'Walk me through what happens when a tag push triggers a CI/CD deployment.',
-        a: 'The engineer runs git tag -a v1.2.0 -m "Release 1.2.0" and git push origin v1.2.0. The CI/CD system (GitHub Actions, GitLab CI) detects the tag push event via webhook. A pipeline triggers on: push: tags: [v*]. The pipeline builds the artifact, runs tests, packages a Docker image tagged with the same version, pushes to the container registry, and deploys to production using the versioned image. The tag becomes the audit trail linking the Git commit to the deployed version.',
+        question: 'Walk me through what happens when a tag push triggers a CI/CD deployment.',
+        answer: 'The engineer runs git tag -a v1.2.0 -m "Release 1.2.0" and git push origin v1.2.0. The CI/CD system detects the tag push event via webhook. A pipeline triggers on push: tags: [v*]. The pipeline builds the artifact, runs tests, packages a Docker image tagged with the same version, pushes to the container registry, and deploys to production using the versioned image. The tag becomes the audit trail linking the Git commit to the deployed artifact.',
       },
       {
-        q: 'A developer accidentally pushed AWS access keys to a public GitHub repository. What do you do?',
-        a: 'Immediately rotate the AWS keys — assume they are already compromised and likely being scanned. Then: git rm --cached the file, add it to .gitignore, amend or rebase to remove from history, force-push to rewrite the remote. For deep history rewrites use BFG Repo Cleaner or git filter-repo. Report the exposure in your security incident process. Going forward: add pre-commit hooks with gitleaks or git-secrets to prevent this at commit time.',
+        question: 'A developer accidentally pushed AWS access keys to a public GitHub repository. What do you do?',
+        answer: 'Immediately rotate the AWS keys — assume they are already compromised and being scanned. Then: git rm --cached the file, add it to .gitignore, amend or rebase to remove from history, force-push to rewrite the remote. For deep history rewrites use BFG Repo Cleaner or git filter-repo. Report the exposure in your security incident process. Going forward: add pre-commit hooks with gitleaks or git-secrets to prevent this at commit time.',
       },
       {
-        q: 'How does git bisect work and when would you use it in a DevOps context?',
-        a: 'git bisect performs a binary search through commit history. You mark the current state as bad (bug present) and a known good commit, then Git checks out the midpoint. You test and mark good or bad, repeating until Git identifies the exact offending commit in O(log n) steps. In DevOps, bisect is invaluable after a CI regression: the pipeline was green last Monday and is red today across 200 commits. Bisect finds the culprit in about 8 steps. You can also automate it with git bisect run <test_script>.',
+        question: 'How does git bisect work and when would you use it in a DevOps context?',
+        answer: 'git bisect performs a binary search through commit history. You mark the current state as bad (bug present) and a known good commit, then Git checks out the midpoint for you to test. Mark good or bad, repeat until Git identifies the exact offending commit in O(log n) steps instead of O(n) manual search. In DevOps, bisect is invaluable after a CI regression across hundreds of commits. You can also automate it with git bisect run <test_script>.',
       },
     ],
     references: [
