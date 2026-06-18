@@ -214,6 +214,7 @@ export default function FormattedContent({ content, inline = false }) {
       );
     } else {
       let currentList = [];
+      let currentNumberedList = [];
       let currentCliGroup = [];
       let listKeyCounter = 0;
 
@@ -233,6 +234,38 @@ export default function FormattedContent({ content, inline = false }) {
           </ul>,
         );
         currentList = [];
+      };
+
+      const flushNumberedList = () => {
+        if (currentNumberedList.length === 0) return;
+        const items = currentNumberedList;
+        currentSection.body.push(
+          <ol key={`ol-${blockIdx}-${listKeyCounter++}`} className="grid grid-cols-1 gap-2 my-3">
+            {items.map((item, i) => {
+              const isHeader = item.text.endsWith(':');
+              const text = isHeader ? item.text.slice(0, -1) : item.text;
+              return (
+                <li key={i} className="flex items-start gap-3">
+                  <span
+                    className="inline-flex items-center justify-center min-w-[26px] h-[22px] px-1.5 text-[11px] font-bold landing-mono tabular-nums flex-shrink-0 mt-0.5"
+                    style={{
+                      background: 'color-mix(in oklab, var(--accent) 12%, transparent)',
+                      color: 'var(--accent)',
+                      border: '1px solid color-mix(in oklab, var(--accent) 30%, transparent)',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    {String(item.n).padStart(2, '0')}
+                  </span>
+                  <span className={`text-sm leading-relaxed landing-body ${isHeader ? 'font-semibold text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
+                    {formatInlineText(text)}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>,
+        );
+        currentNumberedList = [];
       };
 
       // Flush accumulated CLI reference rows as a styled two-column card.
@@ -281,7 +314,7 @@ export default function FormattedContent({ content, inline = false }) {
         currentCliGroup = [];
       };
 
-      const flushAll = () => { flushList(); flushCliGroup(); };
+      const flushAll = () => { flushList(); flushNumberedList(); flushCliGroup(); };
 
       // Detect CLI reference line patterns. Returns { cmd, desc } or null.
       // A: Flag rows  — "-d   detach" / "--name <n>   assign a name..."
@@ -294,6 +327,8 @@ export default function FormattedContent({ content, inline = false }) {
       const detectCliRow = (s) => {
         const flagM = s.match(/^(-{1,2}[\w][\w.-]*)(\s+\S+)?\s{2,}(\S.+)$/);
         if (flagM) return { cmd: (flagM[1] + (flagM[2] || '')).trim(), desc: flagM[3] };
+        const hashM = s.match(/^([^#\n]+?)\s{2,}#\s+(.+)$/);
+        if (hashM) return { cmd: hashM[1].trim(), desc: hashM[2] };
         const col2M = s.match(/^(.+?)\s{2,}—\s+(.+)$/);
         if (col2M) return { cmd: col2M[1].trim(), desc: col2M[2] };
         const wordM = s.match(/^([a-z][\w.-]{0,28})\s+—\s+(.+)$/);
@@ -413,8 +448,51 @@ export default function FormattedContent({ content, inline = false }) {
           return;
         }
 
+        // Markdown headings: ## Heading / ### Heading
+        const h2Match = trimmed.match(/^(#{1,3})\s+(.+)$/);
+        if (h2Match) {
+          flushAll();
+          const level = h2Match[1].length;
+          const text = h2Match[2];
+          if (level === 1) {
+            openSection(
+              <h3
+                key={`h-${blockIdx}-${lineIdx}`}
+                className="text-[var(--accent)] font-bold text-[18px] mt-8 mb-2 first:mt-0 landing-display tracking-tight leading-tight"
+              >
+                {text}
+              </h3>,
+            );
+          } else {
+            openSection(
+              <h4
+                key={`h-${blockIdx}-${lineIdx}`}
+                className="text-[var(--text-primary)] font-semibold text-[15px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
+              >
+                {text}
+              </h4>,
+            );
+          }
+          return;
+        }
+
+        // Numbered list: "1. Item text"
+        const numberedMatch = trimmed.match(/^(\d+)\.\s+(.+)$/);
+        if (numberedMatch) {
+          flushList(); flushCliGroup();
+          currentNumberedList.push({ n: parseInt(numberedMatch[1], 10), text: numberedMatch[2] });
+          return;
+        }
+
+        // Pure bash comment line: "# Or: ..."
+        if (trimmed.startsWith('# ')) {
+          flushList(); flushNumberedList();
+          currentCliGroup.push({ cmd: trimmed, desc: '' });
+          return;
+        }
+
         if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
-          flushCliGroup();
+          flushCliGroup(); flushNumberedList();
           currentList.push(trimmed.substring(2));
           return;
         }
