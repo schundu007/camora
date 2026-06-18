@@ -454,6 +454,9 @@ done
 | 3 — Scenarios | Completion checker, ScenarioPanel UI, first 11 scenarios authored | Week 4 |
 | 4 — Cloud CLI + Billing | Cloud CLI image + demo credentials, free tier quota, Pro gate | Week 5 |
 | 5 — Polish | Analytics, Nomad alerting, node autoscaler, image CI pipeline | Week 6 |
+| 6 — Expanded Environments | Terraform, CI/CD (Jenkins), real AWS sandbox, Python env | Week 7–8 |
+| 7 — Advanced UX | Monaco editor pane, multi-terminal tabs, environment reset, course integration | Week 9–10 |
+| 8 — Gamification + Exams | Mock exam mode, achievement badges, leaderboard, certification tracks | Week 11–12 |
 
 ---
 
@@ -464,3 +467,278 @@ done
 3. **Image registry** — Docker Hub public vs. Linode Container Registry private
 4. **Cloud CLI write interception** — shell alias wrapper vs. lightweight proxy binary
 5. **Mobile** — show "desktop only" message on `/capra/playground` for mobile viewports (recommended: yes, terminals need a physical keyboard)
+6. **Real AWS sandboxes** — AWS Organizations + vended accounts vs. LocalStack vs. read-only demo credentials (Section 13.1)
+7. **Monaco editor** — full `@monaco-editor/react` bundle (~2MB) vs. CodeMirror 6 (~300KB, covers 90% of use cases)
+
+---
+
+## 13. KodeKloud-Inspired Advanced Capabilities
+
+> Source: KodeKloud feature analysis (June 2026). These capabilities represent the gap between our current spec and a world-class platform. Phased into Weeks 7–12.
+
+### 13.1 Real Cloud Sandbox Environments
+
+KodeKloud's most visible differentiator: **Launch Real AWS Services** — not just the CLI with read-only creds, but actual AWS accounts provisioned per session.
+
+**Mechanism:** AWS Organizations + Service Control Policies (SCPs).
+
+1. A dedicated AWS root account (`camora-sandbox-root`) runs an Organization with a `SandboxOU`.
+2. On session create, a Lambda vends a fresh member account from a warm pool (pre-created accounts, ~2 min to provision fresh, <5s from pool).
+3. The member account gets a restrictive SCP attached: whitelist only the services the scenario needs (EC2, S3, RDS, EKS — never IAM root, never billing).
+4. Session credentials (temporary IAM role) are injected into the container at start.
+5. On session destroy, the account is purged with `aws nuke` and returned to the pool.
+
+**Cost:** ~$0 per session (free tier services); pool of 10 warm accounts handles bursts. Add `pg-aws-real` image to the Docker image list.
+
+**New environments to add (parallel to AWS):**
+
+| Image | Provider | What's real |
+|---|---|---|
+| `camora/pg-aws-real` | AWS | EC2, S3, RDS, EKS — live, in a sandboxed member account |
+| `camora/pg-terraform` | Linode | Terraform 1.7 + providers (AWS local mock via LocalStack, Linode real) |
+| `camora/pg-cicd` | Linode | Jenkins LTS + pre-wired pipeline repo, or GitHub Actions runner |
+| `camora/pg-python` | Linode | Python 3.12 + pip, Jupyter Lab, common DevOps libs |
+| `camora/pg-ai` | Linode | Jupyter Lab + Ollama (Mistral 7B local) + Claude API via env-injected key |
+
+**Resource quotas for new environments:**
+
+| Environment | CPU | RAM | Disk |
+|---|---|---|---|
+| Terraform | 500 MHz | 1 GB | 3 GB |
+| CI/CD (Jenkins) | 2000 MHz | 2 GB | 10 GB |
+| Python | 500 MHz | 512 MB | 2 GB |
+| AI/LLM | 4000 MHz | 8 GB | 20 GB |
+| AWS Real | 500 MHz | 512 MB | 1 GB (container only; real resources are in AWS) |
+
+### 13.2 Monaco Editor Pane (VS Code in the Browser)
+
+KodeKloud embeds an editor alongside the terminal so users can edit YAML, Dockerfiles, and Python scripts without memorizing vi keybindings.
+
+**Implementation:**
+
+```
+┌───────────────────────────────────────────────────────┐
+│  PREPARE  ›  Playground                               │
+├────────────────────┬──────────────────────────────────┤
+│  Left pane         │  Right pane (tabbed)             │
+│  Monaco Editor     │  [Terminal 1] [Terminal 2] [+]   │
+│  ─────────────     │  ─────────────────────────────   │
+│  deploy.yaml  ×    │  $ kubectl apply -f deploy.yaml  │
+│  service.yaml      │  deployment.apps/nginx created   │
+│                    │  $ █                             │
+│  [Save to /tmp]    │                                  │
+├────────────────────┴──────────────────────────────────┤
+│  Objectives  ⏱ 47:23  [Hint]  [Reset]  [End Session] │
+└───────────────────────────────────────────────────────┘
+```
+
+- Package: `@monaco-editor/react` (lazy-loaded, not in initial bundle)
+- File system bridge: Monaco saves to `/tmp/playground-editor/` inside the container via a thin HTTP endpoint exposed by the `ttyd` sidecar. Users can then `kubectl apply -f /tmp/playground-editor/deploy.yaml` in the terminal.
+- Language auto-detect from file extension: `.yaml` → YAML, `.py` → Python, `.tf` → HCL, `.sh` → Shell, `Dockerfile` → Docker
+- Default split: 40% editor / 60% terminal. Resizable via drag handle.
+- Free-form mode: editor hidden by default; toggled via "Open Editor" button.
+
+New frontend files:
+```
+src/components/capra/playground/
+  EditorPane.jsx         ← Monaco wrapper with file-system bridge
+  TerminalTabs.jsx       ← Multi-tab xterm.js manager
+  PlaygroundSplitView.jsx ← Resizable split between editor and terminals
+```
+
+### 13.3 Multi-Terminal Tabs
+
+K8s scenarios often need simultaneous shells: one watching `kubectl get pods -w`, one editing manifests, one tailing logs.
+
+**Implementation:** Each tab is an independent WebSocket connection to the same session container, connecting to a separate `tmux` window. The backend creates a tmux session on container start (`tmux new-session -d -s main`). Each new tab calls `tmux new-window`, and the WebSocket proxy connects to that window.
+
+- Free tier: 1 terminal tab (current behavior)
+- Pro tier: up to 4 tabs per session
+- Tab UI: thin tab strip above the terminal pane, `[bash] [watch] [logs] [+]`
+- Tab titles: editable on double-click (stored client-side only)
+
+New WebSocket message types:
+```json
+{ "type": "new_tab" }                          // client → server: open new tmux window
+{ "type": "tab_created", "tabId": "w2" }      // server → client
+{ "type": "switch_tab", "tabId": "w2" }       // client → server: redirect WS to window 2
+```
+
+### 13.4 Environment Reset Button
+
+Users inevitably break the cluster or corrupt state. The Reset button restores the environment to its initial scenario state without ending the session or losing the timer.
+
+**Implementation:**
+
+1. On session create, the scenario `setup` script runs and a container filesystem snapshot is saved as a Docker layer (`docker commit pg-session-{id} pg-snapshot-{id}`).
+2. On reset: `docker stop` the running container, `docker run` a new container from the snapshot, reconnect the WebSocket.
+3. Timer does NOT reset — full reset counts as part of the session. One reset per session for free tier; unlimited for Pro.
+4. Reset takes ~8 seconds. Frontend shows a "Resetting environment..." overlay with a spinner.
+
+New API endpoint:
+```
+POST /api/v1/playground/sessions/:id/reset
+Returns: { status: 'resetting', estimatedSeconds: 8 }
+```
+
+New WebSocket message:
+```json
+{ "type": "reset_complete", "timestamp": "..." }
+```
+
+### 13.5 Course-Integrated Lab Launch ("Try It" Buttons)
+
+KodeKloud's killer feature: every piece of theory content has a **Try It** button that launches a pre-configured playground with the relevant scenario already loaded.
+
+**Implementation in Camora:** Each Capra topic section gets an optional `playgroundScenarioId` field in the topic data. If present, a "Try it in Playground" button appears below the topic section. Clicking it navigates to `/capra/playground?scenarioId=k8s-debug-crashloop&source=topic`.
+
+Topic data schema addition:
+```js
+// In networkingTopics.js, cloudTopics.js, etc.
+{
+  title: "Kubernetes NetworkPolicy",
+  content: "...",
+  playgroundScenarioId: "k8s-networkpolicy-isolate",  // links to scenario YAML
+  playgroundEnv: "k8s-single"
+}
+```
+
+Frontend: `TopicDetail.jsx` renders a `<PlaygroundLaunchButton>` component when `playgroundScenarioId` is set. The button is gold-outlined, navy background, positioned at the bottom-right of the topic card.
+
+This is the APPA loop made concrete: **Prepare** (read the topic) → **Practice** (click Try It → playground).
+
+### 13.6 Certification Track Lab Paths
+
+Structured sequences of scenarios mapped to real certification exam objectives.
+
+**Track definitions** stored in `src/data/capra/playgrounds/tracks/`:
+
+```yaml
+id: cka-track
+title: "CKA Exam Prep Track"
+certification: "Certified Kubernetes Administrator"
+totalScenarios: 24
+domains:
+  - name: "Cluster Architecture, Installation & Configuration"
+    weight: 25
+    scenarios: [k8s-install-kubeadm, k8s-upgrade-cluster, k8s-etcd-backup, k8s-rbac-setup]
+  - name: "Workloads & Scheduling"
+    weight: 15
+    scenarios: [k8s-deploy-scale, k8s-rolling-update, k8s-daemonset, k8s-resource-limits]
+  - name: "Services & Networking"
+    weight: 20
+    scenarios: [k8s-networkpolicy-isolate, k8s-ingress-nginx, k8s-dns-debug]
+  - name: "Storage"
+    weight: 10
+    scenarios: [k8s-pv-pvc, k8s-storage-class]
+  - name: "Troubleshooting"
+    weight: 30
+    scenarios: [k8s-debug-crashloop, k8s-node-notready, k8s-service-unreachable]
+```
+
+**Initial tracks:** CKA, CKAD, Docker DCA, Linux RHCSA-style, Terraform Associate.
+
+**Progress tracking:** `playground_track_progress` table — one row per user per track per scenario, with `completed_at` and `time_taken_seconds`.
+
+**UI:** A `/capra/playground/tracks` page showing each track as a card with a progress bar (X/24 scenarios complete). Clicking a track shows the domain breakdown and scenario list as a skill tree.
+
+### 13.7 Mock Exam Mode
+
+Timed multi-scenario exam simulating CKA/CKAD: 15–17 tasks, 2-hour timer, no hints, automated scoring.
+
+**Exam session flow:**
+
+1. User selects exam track and clicks "Start Mock Exam"
+2. A dedicated exam session is created (`type: 'exam'` in `playground_sessions`)
+3. A curated subset of scenarios from the track is shuffled and presented as tasks
+4. 2-hour countdown shown prominently (no extension available)
+5. User works through tasks in any order; can skip and return
+6. On time expiry or "Submit Exam": all objectives run final check simultaneously
+7. Score report: percentage, per-domain breakdown, pass/fail (pass = ≥66% for CKA standard), time per task
+
+**Score report stored in** `playground_exam_results`:
+```sql
+CREATE TABLE playground_exam_results (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       UUID REFERENCES users(id),
+  track_id      TEXT NOT NULL,
+  session_id    UUID REFERENCES playground_sessions(id),
+  score_pct     INTEGER,
+  passed        BOOLEAN,
+  domain_scores JSONB,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+**UI differences from normal mode:** No scenario hints panel. No "Check Progress" button (final check only). Red countdown timer when <15 minutes remain.
+
+### 13.8 Achievement System
+
+Gamification layer: badges for completing scenario categories and milestone accomplishments.
+
+**Badge definitions** (stored as static JSON in `src/data/capra/playgrounds/badges.json`):
+
+| Badge | Trigger |
+|---|---|
+| First Steps | Complete first playground session |
+| Container Captain | Complete all 3 Docker scenarios |
+| K8s Sailor | Complete 5 K8s scenarios |
+| K8s Admiral | Complete all K8s scenarios |
+| CKA Ready | Pass CKA mock exam |
+| Speed Demon | Complete any scenario in under half the estimated time |
+| Streak: 7 Days | Open playground 7 days in a row |
+| Troubleshooter | Complete all 3 troubleshooting scenarios |
+| Cloud Architect | Complete AWS real sandbox scenario |
+| IaC Engineer | Complete Terraform scenario |
+
+**Backend:** `POST /api/v1/playground/sessions/:id/check/:objectiveId` triggers badge evaluation in `badgeEngine.js` after a pass. Earned badges stored in `playground_badges` table. New badges surfaced as a toast notification on the playground page.
+
+### 13.9 Leaderboard
+
+Per-scenario leaderboard showing fastest completion times (time from scenario start to all objectives passed).
+
+- Leaderboard scoped per scenario: `/api/v1/playground/scenarios/:id/leaderboard` returns top 10 with display name, avatar, and `time_taken_seconds`
+- Weekly reset: leaderboard shows all-time and "This week" tabs
+- Displayed in the ScenarioPanel below the objectives list (collapsed by default, one click to expand)
+- Only Pro users appear on the leaderboard (free users still see it, just don't contribute)
+
+### 13.10 Lab Notes Sidebar
+
+Collapsible markdown notes panel alongside the terminal. Users take notes during a session; notes persist to their account and are viewable in a "My Notes" section on `/capra/playground/notes`.
+
+- Rendered with the same `FormattedContent` component used for topic content
+- Notes auto-save on 1-second debounce (no Save button)
+- Linked to the scenario: searching "nginx" in My Notes surfaces all sessions where the user took notes during nginx-related scenarios
+- Stored in `playground_notes` table: `(user_id, session_id, scenario_id, content_md, updated_at)`
+
+### 13.11 Pre-Flight Environment Check
+
+Before a scenario timer starts, a checklist verifies the cluster or container is healthy.
+
+**Check sequence (runs in parallel, 15s timeout total):**
+
+| Check | K8s | Docker | Ubuntu |
+|---|---|---|---|
+| Container responding | ✓ | ✓ | ✓ |
+| All nodes Ready | ✓ | — | — |
+| CoreDNS running | ✓ | — | — |
+| Docker daemon up | — | ✓ | — |
+| Required namespaces exist | ✓ | — | — |
+| Scenario setup script exited 0 | ✓ | ✓ | ✓ |
+
+**UI:** A "Preparing environment…" overlay with a live checklist as each check passes (green checkmark). Once all pass, "Environment Ready" badge appears and the scenario timer starts. If any check fails after 3 retries, show "Environment setup failed" with a Retry button (spawns a fresh container).
+
+### 13.12 AI-Assisted Hint System
+
+When a user clicks Hint in a scenario, instead of revealing a static pre-written hint, the system queries the Ascend backend's AI to generate a contextual hint based on:
+1. The specific objective that hasn't been completed yet
+2. The last 10 commands the user typed (captured from terminal output)
+3. The scenario's domain context
+
+This produces targeted, progressive hints ("You've checked the pod logs — now look at the events section of kubectl describe") rather than generic ones.
+
+**Implementation:**
+- `POST /api/v1/playground/sessions/:id/hint/:objectiveId` — body includes `{ recentCommands: string[] }`
+- Streams the hint back as SSE (same pattern as Lumora answers)
+- First hint is free; subsequent hints for same objective cost 1 Capra credit (free tier gets 3 hints/day total)
+- Hints cached by `(scenarioId, objectiveId, recentCommandsHash)` in Redis with 1-hour TTL
